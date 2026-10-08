@@ -17,3 +17,5 @@
 - Metered quorum $0.333723; native Codex quota tokens not reported. Driver degradation retained in full log/digest.
 - Gate4 base:94fc5ba4d017505849e2adab1e87c8aae8ad0bdc@2026-10-08T13:17:15Z.
 - Cadence: one bounded scheduled iteration; separate roles; park human judgments; report GCP AILANG + GitHub202.
+- CI packaging delta: probe PNGs rejected; retained privately with hash manifest. Final record rechecks CI; gate unchanged.
+- Row173: fleet-owned global binary gate conflicts with literal release PNGs; ticket filed, blocking150 separately from D69.

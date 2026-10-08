@@ -23,3 +23,16 @@ Read-only Python independently compared base and current H2 bodies using edge-wh
 STATUS retains three dated stamps (plus the non-stamp rotation-rule H2). Removed242 appears byte-for-byte in status archive; known-present241 control is present. Queue census with closed1/open150 controls passes:80 closed/172 rows,150 PARKED,172 PARKED. Ledger checker passes56 rows. git diff --check passes. Diff is documentation-only; no tracked code/shared-driver edits. Independent comparison of all six main-checkout mission files to base HEAD is byte-equal: private rotation did not modify main.
 
 Limitations: no whole-repo product tests, release images, fresh seed, or marketing lifecycle acceptance claimed. Numerical sprint rubric is inappropriate for an ADMIN disposition record. Shipping remains subject to exact-head remote CI and the normal controller merge gate; product150 remains parked after ADMIN record shipping.
+
+
+## CI packaging delta — fresh independent verdict
+
+**DELTA ADMIN PASS; score N/A.** Supersedes packaging acceptance of the original32ef208 candidate only. This is acceptance of preservation/disposition corrections, not a claim final CI is green.
+
+Independently queried GitHub run37783874633: exact HEAD32ef2088fbaa9ed44154b896ba5fdc2ed8ed2557, conclusion failure. AIL job successful (13 steps); Go failed at tracked-binary hygiene and later steps skipped. Failed-step log explicitly lists control1.png/control2.png. The original candidate introduced this packaging regression; recorded attribution to OUR packaging rather than environment is accurate.
+
+Read unchanged scripts/verify_go.sh185–219: global Git-binary classification, nonzero enumeration guard, no PNG/image/path exemption. Independently compared gate bytes to base94fc5ba4: identical. Both PNGs in persistent ~/.ailang/state/world-iter246/chrome-control are byte-identical to their committed32ef208 originals, each16271 bytes and SHA25607a78d63d817d16ac801311e024031a0baeaf93fc56089db317cf2cd04c93576; manifest paths/lengths/hashes match. Their staged deletion plus retained text log/source/manifest preserves instrument evidence without weakening a gate. Local-only paths limit third-party portability, clearly disclosed; no product image acceptance or Chrome success inferred.
+
+Reviewed record delta: row173 PARKED/fleet-owned blocking150, explicit measured compatible-resolution resume condition, no World gate repair. This correctly exposes the separate conflict with literal future tracked release PNGs instead of applying the ADMIN storage remedy as a product workaround. D69 remains unchanged OPEN scope/order A/B/default; H2 stays technical, no new generic clock permission question. No ignore/dependency/code edit appears in the delta. Ledger56 and controlled queue census80closed/173 pass; row150 remains PARKED. No new release priority authorization or silent deliverable narrowing.
+
+Final corrected commit must still run the unchanged binary gate and obtain exact-head remote CI before merge. This delta verdict does not retroactively turn the failed32ef208 CI green or score nonexistent product implementation. Fleet ticket dispatch is represented by the banked ID; its messaging backend was not independently queried by this reviewer.

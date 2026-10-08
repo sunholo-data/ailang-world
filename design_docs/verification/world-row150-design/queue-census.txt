@@ -171,7 +171,8 @@ row=169 tag=PARKED class=open line=6151
 row=170 tag=PARKED class=open line=6153
 row=171 tag=PARKED class=open line=6155
 row=172 tag=PARKED class=open line=6157
+row=173 tag=PARKED class=open line=6159
 preamble: 1 unnumbered closed block (line 1952) excluded from rows
 control: row=1 expect=closed got=LANDED ok
 control: row=79 expect=open got=PARKED ok
-census: 80 closed / 172 rows (tagged-open 24, untagged 68) [LANDED 79, ROUTED 1, RULED OUT 0; PARKED 23, IN-SPRINT 0, NEXT 1] [queue_census.sh, charter-blob 11608c7366e2347b0a9c8add52f108ae7f31cb37, controls 1/79]
+census: 80 closed / 173 rows (tagged-open 25, untagged 68) [LANDED 79, ROUTED 1, RULED OUT 0; PARKED 24, IN-SPRINT 0, NEXT 1] [queue_census.sh, charter-blob 2575100e3e236a50a8c993bde83fb77b66ba2d49, controls 1/79]
