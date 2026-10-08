@@ -95,31 +95,7 @@ func TestAGUIRESTGapCrossed(t *testing.T) {
 	if rec.Code != 200 {
 		t.Fatalf("AGUI genesis status=%d, want200: %s", rec.Code, rec.Body)
 	}
-	var got []int64
-	for _, frame := range bytes.Split(rec.Body.Bytes(), []byte("\n\n")) {
-		for _, line := range bytes.Split(frame, []byte("\n")) {
-			if !bytes.HasPrefix(line, []byte("data: ")) {
-				continue
-			}
-			var e struct {
-				Type  string `json:"type"`
-				Value struct {
-					Header struct {
-						EntryIndex int64 `json:"entryIndex"`
-					} `json:"header"`
-				} `json:"value"`
-			}
-			if err := json.Unmarshal(line[6:], &e); err != nil {
-				t.Fatal(err)
-			}
-			if e.Type == "CUSTOM" {
-				got = append(got, e.Value.Header.EntryIndex)
-			}
-		}
-	}
-	if !reflect.DeepEqual(got, []int64{0, 1, 5}) {
-		t.Fatalf("AGUI crosses gap: %v", got)
-	}
+	aguiDrain(t, d, aguiPayload, "", []int64{0, 1, 5})
 }
 
 const aguiPayload = `{"threadId":"t","runId":"r","messages":[]}`
@@ -153,11 +129,14 @@ func aguiFixture(t *testing.T, d *Daemon) []store.LogEntry {
 	}
 	return entries
 }
-func aguiRequest(t *testing.T, d *Daemon, body, header string) *httptest.ResponseRecorder {
+func aguiRequest(t *testing.T, d *Daemon, body, header string, auth ...string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest("POST", "/agui/", strings.NewReader(body))
 	if header != "" {
 		req.Header.Set("Last-Event-ID", header)
+	}
+	if len(auth) > 0 {
+		req.Header.Set("Authorization", auth[0])
 	}
 	rec := httptest.NewRecorder()
 	d.Handler().ServeHTTP(rec, req)
@@ -204,6 +183,70 @@ func requireIndexes(t *testing.T, b []byte, want []int64) {
 		t.Fatalf("indexes=%v want=%v", got, want)
 	}
 }
+
+// aguiDrain follows the bounded-run client contract. It returns complete runs
+// for frame/state oracles as well as checking the exact concatenated replay.
+func aguiDrain(t *testing.T, d *Daemon, body, header string, want []int64, auth ...string) [][]byte {
+	t.Helper()
+	var input map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(body), &input); err != nil {
+		t.Fatal(err)
+	}
+	got := []int64{}
+	var runs [][]byte
+	for n := 0; n < 200; n++ {
+		rec := aguiRequest(t, d, body, header, auth...)
+		b := rec.Body.Bytes()
+		if rec.Code != http.StatusOK || !bytes.HasSuffix(b, []byte("\n\n")) {
+			t.Fatalf("run %d: status=%d or truncated frames", n, rec.Code)
+		}
+		events := aguiEvents(t, b)
+		finished := 0
+		for _, e := range events {
+			switch string(e["type"]) {
+			case `"RUN_ERROR"`:
+				t.Fatalf("run %d: RUN_ERROR: %s", n, b)
+			case `"RUN_FINISHED"`:
+				finished++
+			}
+		}
+		if len(events) == 0 || finished != 1 || string(events[len(events)-1]["type"]) != `"RUN_FINISHED"` {
+			t.Fatalf("run %d: missing/faulty RUN_FINISHED", n)
+		}
+		var result struct {
+			LastIndex *int64 `json:"lastIndex"`
+		}
+		if err := json.Unmarshal(events[len(events)-1]["result"], &result); err != nil || result.LastIndex == nil {
+			t.Fatalf("run %d: invalid terminal cursor: %s", n, events[len(events)-1]["result"])
+		}
+		indexes := aguiIndexes(t, b)
+		cursor := aguiCompleteCursor(t, b)
+		if *result.LastIndex != cursor {
+			t.Fatalf("run %d: terminal cursor=%d complete delta=%d", n, *result.LastIndex, cursor)
+		}
+		got = append(got, indexes...)
+		runs = append(runs, b)
+		if len(indexes) == 0 || (len(want) > 0 && cursor >= want[len(want)-1]) {
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("drained indexes=%v want=%v", got, want)
+			}
+			return runs
+		}
+		if header != "" {
+			header = fmt.Sprint(cursor)
+		} else {
+			input["state"] = json.RawMessage(fmt.Sprintf(`{"schema":"world/agui-state/v1","lastIndex":%d}`, cursor))
+			encoded, err := json.Marshal(input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			body = string(encoded)
+		}
+	}
+	t.Fatalf("drain exceeded 200 bounded runs: delivered %d of %d entries", len(got), len(want))
+	return nil
+}
+
 func TestAGUIGoldenRun(t *testing.T) {
 	d := aguiTestDaemon(t)
 	aguiFixture(t, d)
@@ -231,7 +274,13 @@ func TestAGUIGoldenRun(t *testing.T) {
 			w = c.NextWorld
 			want = append(want, i)
 		}
-		requireIndexes(t, aguiRequest(t, d, aguiPayload, "").Body.Bytes(), want)
+		// A full page must be read again immediately, before the next poll tick.
+		d.aguiBudget = 500 * time.Millisecond
+		d.aguiTick = time.Second
+		runs := aguiDrain(t, d, aguiPayload, "", want)
+		if first := len(aguiIndexes(t, runs[0])); first < 101 {
+			t.Fatalf("first run delivered %d entries; want at least 101 (past a full page)", first)
+		}
 	})
 }
 func TestAGUIResumeExact(t *testing.T) {
@@ -250,7 +299,8 @@ func TestAGUIResumeExact(t *testing.T) {
 			if h.Code != 200 || s.Code != 200 || !bytes.Equal(h.Body.Bytes(), s.Body.Bytes()) {
 				t.Fatalf("header/state resume differs: %d/%d", h.Code, s.Code)
 			}
-			requireIndexes(t, h.Body.Bytes(), want)
+			aguiDrain(t, d, aguiPayload, fmt.Sprint(k), want)
+			aguiDrain(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, k), "", want)
 			match := aguiRequest(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, k), fmt.Sprint(k))
 			if !bytes.Equal(h.Body.Bytes(), match.Body.Bytes()) {
 				t.Fatal("matching cursors differ")
@@ -269,8 +319,7 @@ func TestAGUIResumeExact(t *testing.T) {
 			t.Fatal("refusal contains SSE")
 		}
 	}
-	rec := aguiRequest(t, d, `{"threadId":"t","runId":"r","messages":[],"forwardedProps":{"world":{"after":6}}}`, "")
-	requireIndexes(t, rec.Body.Bytes(), []int64{0, 1, 2, 5, 6})
+	aguiDrain(t, d, `{"threadId":"t","runId":"r","messages":[],"forwardedProps":{"world":{"after":6}}}`, "", []int64{0, 1, 2, 5, 6})
 }
 
 // Test-local stock state application: unknown operations are a hard failure.
@@ -307,7 +356,8 @@ func aguiState(t *testing.T, b []byte) map[string]any {
 func TestAGUIStockClientStateResume(t *testing.T) {
 	d := aguiTestDaemon(t)
 	aguiFixture(t, d)
-	state := aguiState(t, aguiRequest(t, d, aguiPayload, "").Body.Bytes())
+	runs := aguiDrain(t, d, aguiPayload, "", []int64{0, 1, 2, 5, 6})
+	state := aguiState(t, runs[len(runs)-1])
 	h, _, err := d.store.SelectedHead(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
@@ -324,15 +374,14 @@ func TestAGUIStockClientStateResume(t *testing.T) {
 		w = c.NextWorld
 	}
 	b, _ := json.Marshal(state)
-	rec := aguiRequest(t, d, `{"threadId":"t","runId":"r","messages":[],"state":`+string(b)+`}`, "")
-	requireIndexes(t, rec.Body.Bytes(), []int64{7, 8})
+	aguiDrain(t, d, `{"threadId":"t","runId":"r","messages":[],"state":`+string(b)+`}`, "", []int64{7, 8})
 }
 func TestAGUIEntryValueEqualsLogRoute(t *testing.T) {
 	d := aguiTestDaemon(t)
 	aguiFixture(t, d)
-	rec := aguiRequest(t, d, aguiPayload, "")
+	runs := aguiDrain(t, d, aguiPayload, "", []int64{0, 1, 2, 5, 6})
 	n := 0
-	for _, e := range aguiEvents(t, rec.Body.Bytes()) {
+	for _, e := range aguiEvents(t, bytes.Join(runs, nil)) {
 		if string(e["type"]) != `"CUSTOM"` {
 			continue
 		}
@@ -381,7 +430,7 @@ func TestAGUIReadPostureMatchesLog(t *testing.T) {
 		if log.Code != 200 || rec.Code != 200 {
 			t.Fatalf("read auth posture %q: %d %d", auth, log.Code, rec.Code)
 		}
-		requireIndexes(t, rec.Body.Bytes(), []int64{0, 1, 2, 5, 6})
+		aguiDrain(t, d, aguiPayload, "", []int64{0, 1, 2, 5, 6}, auth)
 	}
 }
 func TestAGUIRejectsGET(t *testing.T) {
@@ -852,7 +901,7 @@ func aguiCompleteCursor(t *testing.T, b []byte) int64 {
 func TestAGUISeveranceResumable(t *testing.T) {
 	d := aguiTestDaemon(t)
 	aguiFixture(t, d)
-	full := aguiRequest(t, d, aguiPayload, "").Body.Bytes()
+	full := bytes.Join(aguiDrain(t, d, aguiPayload, "", []int64{0, 1, 2, 5, 6}), nil)
 	requireIndexes(t, full, []int64{0, 1, 2, 5, 6})
 	for cut := 0; cut <= len(full); cut++ {
 		cursor := aguiCompleteCursor(t, full[:cut])
@@ -888,32 +937,21 @@ func TestAGUISeveranceResumable(t *testing.T) {
 				want = append(want, i)
 			}
 		}
-		requireIndexes(t, aguiRequest(t, d, aguiPayload, fmt.Sprint(k)).Body.Bytes(), want)
+		aguiDrain(t, d, aguiPayload, fmt.Sprint(k), want)
+		aguiDrain(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, k), "", want)
 	}
-}
-
-// End replay as soon as its final delta arrives, rather than burning an idle run.
-type aguiReplayRecorder struct {
-	*httptest.ResponseRecorder
-	cancel context.CancelFunc
-}
-
-func (r aguiReplayRecorder) Write(b []byte) (int, error) {
-	n, err := r.ResponseRecorder.Write(b)
-	if bytes.Contains(b, []byte("id: 4999\n")) {
-		r.cancel()
-	}
-	return n, err
 }
 
 func TestAGUISlowReaderCutIsResumable(t *testing.T) {
 	d := aguiTestDaemon(t)
 	d.aguiBudget = 2 * time.Second
 	w := store.World{LogHead: hashref.SumSHA256([]byte("initial"))}
-	for i := int64(0); i < 5000; i++ {
+	// Keep roughly 20 MB of backlog with fewer durable commits. This still
+	// exceeds socket buffering and must be severed before the last entry.
+	for i := int64(0); i < 1000; i++ {
 		c := testCommit(w, i, fmt.Sprint(i))
 		c.Objects = nil
-		c.Entry.Header.WrittenBy = strings.Repeat("large-entry", 400)
+		c.Entry.Header.WrittenBy = strings.Repeat("large-entry", 2000)
 		if err := d.store.Commit(boundedTestContext(t), c); err != nil {
 			t.Fatal(err)
 		}
@@ -951,7 +989,7 @@ func TestAGUISlowReaderCutIsResumable(t *testing.T) {
 		t.Fatal("client deadline, not server severance")
 	}
 	cursor := aguiCompleteCursor(t, prefix)
-	if cursor < 0 || cursor >= 4999 {
+	if cursor < 0 || cursor >= 999 {
 		t.Fatalf("cut cursor=%d", cursor)
 	}
 	// Recorder consumes the remaining large response immediately, with no socket pause.
@@ -960,18 +998,12 @@ func TestAGUISlowReaderCutIsResumable(t *testing.T) {
 		if body == aguiPayload {
 			header = fmt.Sprint(cursor)
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		req := httptest.NewRequest("POST", "/agui/", strings.NewReader(body)).WithContext(ctx)
-		req.Header.Set("Last-Event-ID", header)
-		r := httptest.NewRecorder()
-		d.Handler().ServeHTTP(aguiReplayRecorder{r, cancel}, req)
-		cancel()
+
 		want := []int64{}
-		for i := cursor + 1; i < 5000; i++ {
+		for i := cursor + 1; i < 1000; i++ {
 			want = append(want, i)
 		}
-		requireIndexes(t, r.Body.Bytes(), want)
-		aguiCompleteCursor(t, r.Body.Bytes())
+		aguiDrain(t, d, body, header, want)
 	}
 }
 
