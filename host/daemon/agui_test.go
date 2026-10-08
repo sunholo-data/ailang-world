@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -813,31 +814,88 @@ func TestAGUISlowBodyNeverTruncates(t *testing.T) {
 	if r.Code != 408 || !json.Valid(r.Body.Bytes()) || !strings.Contains(r.Body.String(), "SlowBody") || strings.Contains(r.Body.String(), "data:") {
 		t.Fatalf("slow body: %d %s", r.Code, r.Body)
 	}
+	// Once the body consumes the entire run budget, an entry-anchored run
+	// finishes without polling. This checks the clock without a scheduler-sensitive
+	// wall-time upper bound, and catches anchoring the clock after the body read.
+	d.aguiBodyBound = 5 * time.Second
+	polls := &aguiPollReads{d.reads, make(chan struct{}, 1)}
+	d.reads = polls
 	req = httptest.NewRequest("POST", "/agui/", nil)
-	req.Body = &aguiDelayedBody{data: []byte(aguiPayload), delay: 80 * time.Millisecond}
+	req.Body = &aguiDelayedBody{data: []byte(aguiPayload), delay: d.aguiBudget + 100*time.Millisecond}
 	r = httptest.NewRecorder()
-	start := time.Now()
 	d.Handler().ServeHTTP(r, req)
-	if elapsed := time.Since(start); elapsed > 300*time.Millisecond+d.aguiTick+50*time.Millisecond || !strings.Contains(r.Body.String(), `"RUN_FINISHED"`) {
-		t.Fatalf("entry anchored terminal elapsed=%s body=%s", elapsed, r.Body)
+	if r.Code != http.StatusOK || !strings.Contains(r.Body.String(), `"RUN_FINISHED"`) {
+		t.Fatalf("entry anchored terminal: %d %s", r.Code, r.Body)
 	}
-	// A real stalled body exhausts equal read/write deadlines, yielding clean EOF.
-	srv := httptest.NewUnstartedServer(d.Handler())
-	srv.Config.ReadTimeout = 150 * time.Millisecond
-	srv.Config.WriteTimeout = 150 * time.Millisecond
-	srv.Start()
-	defer srv.Close()
-	conn, err := net.DialTimeout("tcp", srv.Listener.Addr().String(), time.Second)
-	if err != nil {
-		t.Fatal(err)
+	select {
+	case <-polls.polls:
+		t.Fatal("run polled after the body had consumed the entry-anchored budget")
+	default:
 	}
-	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(time.Second))
-	fmt.Fprintf(conn, "POST /agui/ HTTP/1.1\r\nHost: localhost\r\nContent-Length: 500\r\n\r\n")
-	b, err := io.ReadAll(conn)
-	if err != nil || len(b) != 0 {
-		t.Fatalf("stalled body must be zero bytes/EOF: %q %v", b, err)
+
+	stalled := func(t *testing.T, bodyBound, writeTimeout time.Duration, zeroOnly bool) {
+		t.Helper()
+		d.aguiBodyBound = bodyBound
+		srv := httptest.NewUnstartedServer(d.Handler())
+		srv.Config.ReadTimeout = 150 * time.Millisecond
+		srv.Config.WriteTimeout = writeTimeout
+		srv.Start()
+		defer srv.Close()
+		conn, err := net.DialTimeout("tcp", srv.Listener.Addr().String(), 5*time.Second)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer conn.Close()
+		if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := fmt.Fprintf(conn, "POST /agui/ HTTP/1.1\r\nHost: localhost\r\nContent-Length: 500\r\n\r\n"); err != nil {
+			t.Fatal(err)
+		}
+		b, err := io.ReadAll(conn)
+		// ReadAll reports clean EOF as nil. A reset is also a clean severance;
+		// a client deadline timeout is never evidence of server completion.
+		if err != nil && !errors.Is(err, syscall.ECONNRESET) {
+			t.Fatalf("stalled body read: %q %v", b, err)
+		}
+		if len(b) == 0 {
+			return
+		}
+		if zeroOnly || bytes.Contains(b, []byte("data:")) {
+			t.Fatalf("stalled body must have no stream bytes (zeroOnly=%t): %q", zeroOnly, b)
+		}
+		reader := bufio.NewReader(bytes.NewReader(b))
+		resp, err := http.ReadResponse(reader, nil)
+		if err != nil {
+			t.Fatalf("incomplete stalled-body response: %q %v", b, err)
+		}
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil || resp.StatusCode != http.StatusRequestTimeout || resp.Header.Get("Content-Type") != "application/json" || resp.ContentLength < 0 || int64(len(body)) != resp.ContentLength {
+			t.Fatalf("invalid stalled-body response: status=%d headers=%v body=%q err=%v", resp.StatusCode, resp.Header, body, err)
+		}
+		var apiError struct {
+			Error struct {
+				Class string `json:"class"`
+			} `json:"error"`
+		}
+		if err := json.Unmarshal(body, &apiError); err != nil || apiError.Error.Class != "SlowBody" {
+			t.Fatalf("invalid SlowBody JSON: %q %v", body, err)
+		}
+		if extra, err := io.ReadAll(reader); err != nil || len(extra) != 0 {
+			t.Fatalf("bytes after complete stalled-body response: %q %v", extra, err)
+		}
 	}
+	// ReadTimeout starts before header parsing; WriteTimeout starts afterwards.
+	// Depending on scheduling, the body bound can yield a complete 408 or EOF.
+	t.Run("complete-error-or-zero", func(t *testing.T) {
+		stalled(t, 100*time.Millisecond, 150*time.Millisecond, false)
+	})
+	// Keep the body bound above the transport deadlines and expire writes well
+	// before the stalled read returns, deterministically exercising severance.
+	t.Run("server-deadline-zero", func(t *testing.T) {
+		stalled(t, 5*time.Second, 50*time.Millisecond, true)
+	})
 }
 
 // The id oracle is independent of state: an id acknowledges its own complete delta.
