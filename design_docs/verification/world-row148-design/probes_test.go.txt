@@ -1,0 +1,221 @@
+package probe
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
+)
+
+func ctx10() (context.Context, context.CancelFunc) { return context.WithTimeout(context.Background(), 10*time.Second) }
+
+// P1: http.Server.WriteTimeout bounds the WHOLE streamed response, flushes or not.
+func TestP1WriteTimeoutCutsStream(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		f := w.(http.Flusher)
+		for i := 0; ; i++ {
+			if _, err := fmt.Fprintf(w, "id: %d\ndata: x\n\n", i); err != nil {
+				return
+			}
+			f.Flush()
+			select {
+			case <-r.Context().Done():
+				return
+			case <-time.After(250 * time.Millisecond):
+			}
+		}
+	})
+	srv := httptest.NewUnstartedServer(h)
+	srv.Config.WriteTimeout = 2 * time.Second
+	srv.Start()
+	defer srv.Close()
+	start := time.Now()
+	resp, err := http.Post(srv.URL, "application/json", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sc := bufio.NewScanner(resp.Body)
+	last := ""
+	for sc.Scan() {
+		if l := sc.Text(); len(l) > 3 && l[:3] == "id:" {
+			last = l
+		}
+	}
+	t.Logf("P1 WriteTimeout=2s: stream ended after %v, last %q, scanErr=%v", time.Since(start).Round(10*time.Millisecond), last, sc.Err())
+}
+
+func commitN(t testing.TB, s *store.Store, prev store.World, n int) store.World {
+	for i := 0; i < n; i++ {
+		idx := prev.Revision + 1
+		eh := hashref.SumSHA256([]byte(fmt.Sprintf("e-%d", idx)))
+		next := store.World{Ref: hashref.SumSHA256([]byte(fmt.Sprintf("w-%d", idx))), Revision: idx,
+			StateRoot: hashref.SumSHA256([]byte(fmt.Sprintf("s-%d", idx))), LogHead: eh}
+		c := store.Commit{ObservedHead: prev.Ref, NextWorld: next, Entry: store.LogEntry{
+			Header: store.LogHeader{EntryIndex: idx, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("fn")),
+				Interpreter: hashref.SumSHA256([]byte("ip")), PrevEntryHash: prev.LogHead, WrittenBy: "probe"},
+			EntryHash: eh, TransitionRef: hashref.SumSHA256([]byte(fmt.Sprintf("b-%d", idx)))}}
+		ctx, cancel := ctx10()
+		if err := s.Commit(ctx, c); err != nil {
+			cancel()
+			t.Fatalf("commit %d: %v", idx, err)
+		}
+		cancel()
+		prev = next
+	}
+	return prev
+}
+
+func genesis(t testing.TB, s *store.Store) store.World {
+	g := store.World{Ref: hashref.SumSHA256([]byte("g")), StateRoot: hashref.SumSHA256([]byte("gs")), LogHead: hashref.SumSHA256([]byte("gl"))}
+	ctx, cancel := ctx10()
+	defer cancel()
+	if err := s.PutWorld(ctx, g); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SelectHead(ctx, g.Ref); err != nil {
+		t.Fatal(err)
+	}
+	return g
+}
+
+// P2: cost of one tail poll (absent next index + SelectedHead) on a 1000-entry file store.
+func TestP2PollCost(t *testing.T) {
+	db := filepath.Join(t.TempDir(), "w.db")
+	s, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	commitN(t, s, genesis(t, s), 1000)
+	ctx, cancel := ctx10()
+	defer cancel()
+	const N = 20000
+	st := time.Now()
+	for i := 0; i < N; i++ {
+		if _, ok, err := s.GetLogEntry(ctx, 1001); err != nil || ok {
+			t.Fatal(ok, err)
+		}
+	}
+	miss := time.Since(st) / N
+	st = time.Now()
+	for i := 0; i < N; i++ {
+		if _, ok, err := s.GetLogEntry(ctx, int64(1+i%1000)); err != nil || !ok {
+			t.Fatal(ok, err)
+		}
+	}
+	hit := time.Since(st) / N
+	st = time.Now()
+	for i := 0; i < N; i++ {
+		if _, _, err := s.SelectedHead(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	head := time.Since(st) / N
+	t.Logf("P2 per-op on 1000-entry file store: GetLogEntry(absent)=%v GetLogEntry(hit)=%v SelectedHead=%v", miss, hit, head)
+}
+
+// P3: a second writer is refused (in-process and cross-process); a read-only
+// handle sees a writer's new commit on its next read.
+func TestP3SecondWriterAndReadOnlyVisibility(t *testing.T) {
+	if os.Getenv("PROBE_CHILD_DB") != "" {
+		_, err := store.Open(os.Getenv("PROBE_CHILD_DB"))
+		fmt.Printf("CHILD store.Open err=%v isWriterAlreadyActive=%v\n", err, store.IsWriterAlreadyActive(err))
+		return
+	}
+	db := filepath.Join(t.TempDir(), "w.db")
+	s, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	prev := commitN(t, s, genesis(t, s), 3)
+	_, err2 := store.Open(db)
+	t.Logf("P3a in-process second store.Open: isWriterAlreadyActive=%v", store.IsWriterAlreadyActive(err2))
+	cmd := exec.Command(os.Args[0], "-test.run", "^TestP3SecondWriterAndReadOnlyVisibility$", "-test.v")
+	cmd.Env = append(os.Environ(), "PROBE_CHILD_DB="+db)
+	out, _ := cmd.CombinedOutput()
+	t.Logf("P3b child process output:\n%s", out)
+	ro, err := store.OpenReadOnly(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ro.Close()
+	ctx, cancel := ctx10()
+	defer cancel()
+	_, ok4, _ := ro.GetLogEntry(ctx, 4)
+	commitN(t, s, prev, 1)
+	st := time.Now()
+	_, ok4b, err := ro.GetLogEntry(ctx, 4)
+	t.Logf("P3c read-only handle: entry 4 before writer commit ok=%v; after ok=%v err=%v (read took %v)", ok4, ok4b, err, time.Since(st))
+}
+
+// P1 control: same handler, WriteTimeout 0 -> the stream outlives 2 s.
+func TestP1ControlNoWriteTimeout(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		for i := 0; i < 14; i++ {
+			fmt.Fprintf(w, "id: %d\ndata: x\n\n", i)
+			w.(http.Flusher).Flush()
+			time.Sleep(250 * time.Millisecond)
+		}
+	})
+	srv := httptest.NewUnstartedServer(h)
+	srv.Start()
+	defer srv.Close()
+	start := time.Now()
+	resp, err := http.Post(srv.URL, "application/json", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sc := bufio.NewScanner(resp.Body)
+	last := ""
+	for sc.Scan() {
+		if l := sc.Text(); len(l) > 3 && l[:3] == "id:" {
+			last = l
+		}
+	}
+	t.Logf("P1-control WriteTimeout=0: stream ended after %v, last %q, scanErr=%v", time.Since(start).Round(10*time.Millisecond), last, sc.Err())
+}
+
+// P4: does the store refuse a non-dense entry index (gap)?
+func TestP4IndexGap(t *testing.T) {
+	db := filepath.Join(t.TempDir(), "w.db")
+	s, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	prev := commitN(t, s, genesis(t, s), 1) // entry 1
+	idx := int64(5)
+	eh := hashref.SumSHA256([]byte("gap-5"))
+	next := store.World{Ref: hashref.SumSHA256([]byte("w-gap")), Revision: idx, StateRoot: hashref.SumSHA256([]byte("s-gap")), LogHead: eh}
+	c := store.Commit{ObservedHead: prev.Ref, NextWorld: next, Entry: store.LogEntry{
+		Header: store.LogHeader{EntryIndex: idx, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("fn")),
+			Interpreter: hashref.SumSHA256([]byte("ip")), PrevEntryHash: prev.LogHead, WrittenBy: "probe"},
+		EntryHash: eh, TransitionRef: hashref.SumSHA256([]byte("b-gap"))}}
+	ctx, cancel := ctx10()
+	defer cancel()
+	err = s.Commit(ctx, c)
+	_, ok2, _ := s.GetLogEntry(ctx, 2)
+	_, ok5, _ := s.GetLogEntry(ctx, 5)
+	t.Logf("P4 commit index 5 after 1: err=%v; entry2 present=%v entry5 present=%v", err, ok2, ok5)
+	// control: a wrong PrevEntryHash
+	c2 := c
+	c2.ObservedHead = next.Ref
+	c2.Entry.Header.EntryIndex = 6
+	c2.Entry.EntryHash = hashref.SumSHA256([]byte("gap-6"))
+	c2.NextWorld.Ref = hashref.SumSHA256([]byte("w-gap6"))
+	c2.NextWorld.LogHead = c2.Entry.EntryHash
+	c2.Entry.Header.PrevEntryHash = hashref.SumSHA256([]byte("wrong"))
+	t.Logf("P4-control wrong prevEntryHash: err=%v", s.Commit(ctx, c2))
+}

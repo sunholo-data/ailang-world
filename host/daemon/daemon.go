@@ -46,6 +46,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sunholo-data/ailang/serveapi/protocol"
@@ -453,6 +454,14 @@ type Daemon struct {
 	// (row 134 §4.3). Its registry is empty unless both are set.
 	workspace *workspaceTools
 
+	// Per-instance stream bounds and lifetime signals.
+	aguiBudget    time.Duration
+	aguiBodyBound time.Duration
+	aguiTick      time.Duration
+	aguiStop      chan struct{}
+	aguiStopOnce  sync.Once
+	aguiSlots     chan struct{}
+
 	// Health facts resolved once at startup and served verbatim.
 	interpreterRef     string
 	interpreterVersion string
@@ -476,6 +485,7 @@ type readStore interface {
 	GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error)
 	GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error)
 	GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error)
+	LogEntriesAfter(ctx context.Context, after int64, limit int) ([]store.LogEntry, error)
 	GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error)
 	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
@@ -637,6 +647,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 
 	d := &Daemon{
 		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
+		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
+		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s), workspace: workspace,
@@ -735,6 +747,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	d.projection = proj
 
 	d.srv = newServer(d.Handler())
+	d.srv.RegisterOnShutdown(func() { d.aguiStopOnce.Do(func() { close(d.aguiStop) }) })
 	return d, nil
 }
 
@@ -848,6 +861,10 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
+// POST /agui/ is an additive read-only AG-UI 1.0 SSE run, bounded to 18 s
+// from handler entry. Resume with standard state or Last-Event-ID; see
+// docs/QUICKSTART.md, "Watch the world live".
+//
 // The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
 // GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).
 // The tenth registration, GET /workbench, is the unversioned read-only operator renderer: it is
@@ -874,6 +891,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /.well-known/agent.json", d.projection.AgentCard)
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
 	mux.HandleFunc("POST /mcp/", d.projection.MCP)
+	mux.HandleFunc("POST /agui/", d.handleAGUI)
 	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, mux)
 }
 

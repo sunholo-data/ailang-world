@@ -1,0 +1,20 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+)
+
+type h struct {
+	WrittenBy string `json:"writtenBy"`
+	Index     int64  `json:"entryIndex"`
+}
+
+func main() {
+	v := h{WrittenBy: "a<b>&c", Index: 3}
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(v)
+	m, _ := json.Marshal(v)
+	fmt.Printf("encode=%q\nmarshal=%q\nencode==marshal+\\n: %v\n", buf.String(), string(m), buf.String() == string(m)+"\n")
+}

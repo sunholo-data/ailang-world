@@ -1,0 +1,70 @@
+$ go build -o .snap/worldd ./cmd/ailang-worldd
+rc=0 wall=0.426s
+seeded disposable entries 0,1,2,5,6
+$ .snap/worldd serve --db $TMPDIR/world-agui-quickstart-udktmd__/world.db --bind 127.0.0.1:7644
+fixture health HTTP 200; db_path=$TMPDIR/world-agui-quickstart-udktmd__/world.db
+$ curl -N -X POST -H 'Content-Type: application/json' -d '{"threadId":"t","runId":"r","messages":[]}' http://127.0.0.1:7644/agui/
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0data: {"type":"RUN_STARTED","threadId":"t","runId":"r","protocolVersion":"1.0"}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{"schema":"world/agui-state/v1","lastIndex":-1,"logHead":null}}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":0,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000064","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000001","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000c8"}}
+
+id: 0
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":0},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000001"}]}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":1,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000065","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000002","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000c9"}}
+
+id: 1
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":1},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000002"}]}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":2,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000066","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000003","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000ca"}}
+
+id: 2
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":2},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000003"}]}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":5,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000069","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000006","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000cd"}}
+
+id: 5
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":5},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000006"}]}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":6,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:000000000000000000000000000000000000000000000000000000000000006a","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000007","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000ce"}}
+
+id: 6
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":6},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000007"}]}
+
+100  4255    0  4213  100    42   3698     36  0:00:01  0:00:01 --:--:--  3735100  4255    0  4213  100    42   1839     18  0:00:02  0:00:02 --:--:--  1858100  4255    0  4213  100    42   1230     12  0:00:03  0:00:03 --:--:--  1243100  4255    0  4213  100    42    924      9  0:00:04  0:00:04 --:--:--   933100  4255    0  4213  100    42    738      7  0:00:06  0:00:05  0:00:01   745100  4255    0  4213  100    42    615      6  0:00:07  0:00:06  0:00:01     0100  4255    0  4213  100    42    526      5  0:00:08  0:00:07  0:00:01     0100  4255    0  4213  100    42    461      4  0:00:10  0:00:09  0:00:01     0100  4255    0  4213  100    42    409      4  0:00:10  0:00:10 --:--:--     0100  4255    0  4213  100    42    368      3  0:00:14  0:00:11  0:00:03     0100  4255    0  4213  100    42    335      3  0:00:14  0:00:12  0:00:02     0100  4255    0  4213  100    42    307      3  0:00:14  0:00:13  0:00:01     0100  4255    0  4213  100    42    283      2  0:00:21  0:00:14  0:00:07     0100  4255    0  4213  100    42    262      2  0:00:21  0:00:16  0:00:05     0100  4255    0  4213  100    42    245      2  0:00:21  0:00:17  0:00:04     0data: {"type":"RUN_FINISHED","threadId":"t","runId":"r","result":{"lastIndex":6}}
+
+100  4338    0  4296  100    42    238      2  0:00:21  0:00:18  0:00:03    15100  4338    0  4296  100    42    238      2  0:00:21  0:00:18  0:00:03    19
+rc=0 wall=18.023s
+$ curl -N -X POST -H 'Content-Type: application/json' -H 'Last-Event-ID: 1' -d '{"threadId":"t","runId":"r-resume","messages":[]}' http://127.0.0.1:7644/agui/
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0data: {"type":"RUN_STARTED","threadId":"t","runId":"r-resume","protocolVersion":"1.0"}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{"schema":"world/agui-state/v1","lastIndex":1,"logHead":"sha256:0000000000000000000000000000000000000000000000000000000000000002"}}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":2,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000066","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000003","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000ca"}}
+
+id: 2
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":2},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000003"}]}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":5,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000069","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000006","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000cd"}}
+
+id: 5
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":5},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000006"}]}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":6,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:000000000000000000000000000000000000000000000000000000000000006a","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000007","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000ce"}}
+
+id: 6
+data: {"type":"STATE_DELTA","delta":[{"op":"replace","path":"/lastIndex","value":6},{"op":"replace","path":"/logHead","value":"sha256:0000000000000000000000000000000000000000000000000000000000000007"}]}
+
+100  2727    0  2678  100    49   2325     42  0:00:01  0:00:01 --:--:--  2369100  2727    0  2678  100    49   1164     21  0:00:02  0:00:02 --:--:--  1185100  2727    0  2678  100    49    776     14  0:00:03  0:00:03 --:--:--   790100  2727    0  2678  100    49    582     10  0:00:04  0:00:04 --:--:--   592100  2727    0  2678  100    49    466      8  0:00:06  0:00:05  0:00:01   475100  2727    0  2678  100    49    388      7  0:00:07  0:00:06  0:00:01     0100  2727    0  2678  100    49    333      6  0:00:08  0:00:08 --:--:--     0100  2727    0  2678  100    49    291      5  0:00:09  0:00:09 --:--:--     0100  2727    0  2678  100    49    259      4  0:00:12  0:00:10  0:00:02     0100  2727    0  2678  100    49    233      4  0:00:12  0:00:11  0:00:01     0100  2727    0  2678  100    49    212      3  0:00:16  0:00:12  0:00:04     0100  2727    0  2678  100    49    194      3  0:00:16  0:00:13  0:00:03     0100  2727    0  2678  100    49    179      3  0:00:16  0:00:14  0:00:02     0100  2727    0  2678  100    49    167      3  0:00:16  0:00:16 --:--:--     0100  2727    0  2678  100    49    155      2  0:00:24  0:00:17  0:00:07     0data: {"type":"RUN_FINISHED","threadId":"t","runId":"r-resume","result":{"lastIndex":6}}
+
+100  2817    0  2768  100    49    153      2  0:00:24  0:00:18  0:00:06    16100  2817    0  2768  100    49    153      2  0:00:24  0:00:18  0:00:06    21
+rc=0 wall=18.048s
+daemon shutdown rc=0
+ailang-worldd listening on http://127.0.0.1:7644
+

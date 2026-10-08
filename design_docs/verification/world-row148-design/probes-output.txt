@@ -1,0 +1,24 @@
+=== RUN   TestP1WriteTimeoutCutsStream
+    probe_test.go:54: P1 WriteTimeout=2s: stream ended after 2.02s, last "id: 7", scanErr=unexpected EOF
+--- PASS: TestP1WriteTimeoutCutsStream (2.02s)
+=== RUN   TestP2PollCost
+    probe_test.go:124: P2 per-op on 1000-entry file store: GetLogEntry(absent)=10.14µs GetLogEntry(hit)=11.614µs SelectedHead=8.275µs
+--- PASS: TestP2PollCost (1.22s)
+=== RUN   TestP3SecondWriterAndReadOnlyVisibility
+    probe_test.go:143: P3a in-process second store.Open: isWriterAlreadyActive=true
+    probe_test.go:147: P3b child process output:
+        === RUN   TestP3SecondWriterAndReadOnlyVisibility
+        CHILD store.Open err=store: another process already holds the writer lock for "<tmp>/w.db" (lock file "<tmp>/w.db.writer.lock"); only one writer may be active per database isWriterAlreadyActive=true
+        --- PASS: TestP3SecondWriterAndReadOnlyVisibility (0.00s)
+        PASS
+    probe_test.go:159: P3c read-only handle: entry 4 before writer commit ok=false; after ok=true err=<nil> (read took 34.709µs)
+--- PASS: TestP3SecondWriterAndReadOnlyVisibility (0.02s)
+=== RUN   TestP1ControlNoWriteTimeout
+    probe_test.go:187: P1-control WriteTimeout=0: stream ended after 3.52s, last "id: 13", scanErr=<nil>
+--- PASS: TestP1ControlNoWriteTimeout (3.52s)
+=== RUN   TestP4IndexGap
+    probe_test.go:211: P4 commit index 5 after 1: err=<nil>; entry2 present=false entry5 present=true
+    probe_test.go:220: P4-control wrong prevEntryHash: err=<nil>
+--- PASS: TestP4IndexGap (0.01s)
+PASS
+ok  	probe	6.977s
