@@ -1,0 +1,8 @@
+    zz_row148_probe_test.go:34: GAP POST /v1/commit status: idx0=200 idx1=200 idx5(gap)=200
+    zz_row148_probe_test.go:43: GAP GET /v1/log?from=0 -> 2 items [0 1]; GET /v1/log/5 -> 200
+    zz_row148_probe_test.go:71: STALL real POST /v1/commit (ReadTimeout=WriteTimeout=1s): 0 bytes "" err=<nil> after 1s
+    zz_row148_probe_test.go:81: STALL scratch silent-arm: 0 bytes "" err=<nil> after 1s
+    zz_row148_probe_test.go:92: STALL scratch typed-408-arm: 0 bytes "" err=<nil> after 1s
+    zz_row148_probe_test.go:95: STALL control (body sent): 75 bytes "HTTP/1.1 200 OK" err=<nil> after 1s
+    zz_row148_probe_test.go:164: MARGIN 100-entry page, 79474 bytes, 100 Flushes, reading client, n=300: median=815.833µs p99=3.594ms max=4.83125ms
+ok  	github.com/sunholo-data/ailang-world/host/daemon	4.738s

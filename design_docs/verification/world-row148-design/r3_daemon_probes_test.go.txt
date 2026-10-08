@@ -1,0 +1,165 @@
+package daemon
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"sort"
+	"strings"
+	"testing"
+	"time"
+)
+
+// PROBE row 148 r3 — throwaway, not committed in the package.
+
+func TestZZProbeGapEndToEnd(t *testing.T) {
+	d := newHandlerDaemon(t)
+	auth := authHeader(t, d)
+	g := genesisCommit("gap")
+	c1 := testCommit(g.NextWorld, 1, "gap")
+	c5 := testCommit(c1.NextWorld, 5, "gap")
+	for _, c := range []struct {
+		n string
+		c interface{}
+	}{} {
+		_ = c
+	}
+	r0, _ := postCommitRec(t, d, auth, g)
+	r1, _ := postCommitRec(t, d, auth, c1)
+	r5, _ := postCommitRec(t, d, auth, c5)
+	t.Logf("GAP POST /v1/commit status: idx0=%d idx1=%d idx5(gap)=%d", r0.Code, r1.Code, r5.Code)
+	rng := requestRecorder(t, d, http.MethodGet, "/v1/log?from=0&limit=500", nil)
+	var page logRangeResponse
+	_ = json.Unmarshal(rng.Body.Bytes(), &page)
+	idx := []int64{}
+	for _, it := range page.Items {
+		idx = append(idx, it.Header.EntryIndex)
+	}
+	one := requestRecorder(t, d, http.MethodGet, "/v1/log/5", nil)
+	t.Logf("GAP GET /v1/log?from=0 -> %d items %v; GET /v1/log/5 -> %d", len(idx), idx, one.Code)
+}
+
+func rawExchange(t *testing.T, h http.Handler, req string) (string, error, time.Duration) {
+	srv := httptest.NewUnstartedServer(h)
+	srv.Config.ReadTimeout = 1 * time.Second
+	srv.Config.WriteTimeout = 1 * time.Second
+	srv.Start()
+	defer srv.Close()
+	conn, err := net.Dial("tcp", srv.Listener.Addr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	start := time.Now()
+	_, _ = io.WriteString(conn, req)
+	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	got, rerr := io.ReadAll(conn)
+	return string(got), rerr, time.Since(start)
+}
+
+func TestZZProbeStalledBody(t *testing.T) {
+	d := newHandlerDaemon(t)
+	auth := authHeader(t, d)
+	hdr := func(path string) string {
+		return "POST " + path + " HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nAuthorization: " + auth + "\r\nContent-Length: 500\r\n\r\n"
+	}
+	got, err, el := rawExchange(t, d.Handler(), hdr("/v1/commit"))
+	t.Logf("STALL real POST /v1/commit (ReadTimeout=WriteTimeout=1s): %d bytes %q err=%v after %v", len(got), first(got), err, el.Round(10*time.Millisecond))
+	// design arm A: on body read error, write nothing
+	silent := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, rerr := io.ReadAll(r.Body)
+		if rerr != nil {
+			return
+		}
+		w.WriteHeader(200)
+	})
+	got, err, el = rawExchange(t, silent, hdr("/agui/"))
+	t.Logf("STALL scratch silent-arm: %d bytes %q err=%v after %v", len(got), first(got), err, el.Round(10*time.Millisecond))
+	// arm B: on body read error, attempt a typed 408
+	typed := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, rerr := io.ReadAll(r.Body)
+		if rerr != nil {
+			writeAPIError(w, "SlowBody", "request body not received in time", http.StatusRequestTimeout)
+			return
+		}
+		w.WriteHeader(200)
+	})
+	got, err, el = rawExchange(t, typed, hdr("/agui/"))
+	t.Logf("STALL scratch typed-408-arm: %d bytes %q err=%v after %v", len(got), first(got), err, el.Round(10*time.Millisecond))
+	// control: body delivered promptly to the typed arm -> 200
+	got, err, el = rawExchange(t, typed, strings.Replace(hdr("/agui/"), "Content-Length: 500", "Content-Length: 2", 1)+"{}")
+	t.Logf("STALL control (body sent): %d bytes %q err=%v after %v", len(got), first(got), err, el.Round(10*time.Millisecond))
+}
+
+func first(s string) string {
+	if i := strings.Index(s, "\r\n"); i >= 0 {
+		return s[:i]
+	}
+	return s
+}
+
+func TestZZProbeMarginPageWrite(t *testing.T) {
+	g := genesisCommit("margin")
+	world := g.NextWorld
+	frames := make([][]byte, 0, 100)
+	entries := []interface{}{}
+	_ = entries
+	for i := int64(1); i <= 100; i++ {
+		c := testCommit(world, i, "margin-realistic-label")
+		world = c.NextWorld
+		v, _ := json.Marshal(logJSON(c.Entry))
+		frames = append(frames, v)
+	}
+	pageBytes := 0
+	durs := make([]time.Duration, 0, 300)
+	done := make(chan struct{})
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		f := w.(http.Flusher)
+		for it := 0; it < 300; it++ {
+			st := time.Now()
+			n := 0
+			for i, v := range frames {
+				custom, _ := json.Marshal(struct {
+					Type  string          `json:"type"`
+					Name  string          `json:"name"`
+					Value json.RawMessage `json:"value"`
+				}{"CUSTOM", "world.entry.committed", v})
+				var e struct {
+					H struct {
+						I int64 `json:"entryIndex"`
+					} `json:"header"`
+					EH string `json:"entryHash"`
+				}
+				_ = json.Unmarshal(v, &e)
+				delta, _ := json.Marshal(struct {
+					Type  string `json:"type"`
+					Delta []any  `json:"delta"`
+				}{"STATE_DELTA", []any{
+					map[string]any{"op": "replace", "path": "/lastIndex", "value": e.H.I},
+					map[string]any{"op": "replace", "path": "/logHead", "value": e.EH}}})
+				k, _ := fmt.Fprintf(w, "data: %s\n\nid: %d\ndata: %s\n\n", custom, i, delta)
+				n += k
+				f.Flush()
+			}
+			durs = append(durs, time.Since(st))
+			pageBytes = n
+		}
+		close(done)
+	})
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	resp, err := http.Post(srv.URL, "application/json", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sc := bufio.NewReader(resp.Body)
+	_, _ = io.Copy(io.Discard, sc)
+	<-done
+	sort.Slice(durs, func(i, j int) bool { return durs[i] < durs[j] })
+	t.Logf("MARGIN 100-entry page, %d bytes, 100 Flushes, reading client, n=%d: median=%v p99=%v max=%v", pageBytes, len(durs), durs[len(durs)/2], durs[len(durs)*99/100], durs[len(durs)-1])
+}
