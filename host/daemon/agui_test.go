@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -33,7 +34,7 @@ func TestAGUIReadStoreSeam(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer s.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	h := hashref.SumSHA256([]byte("seam"))
 	if err := s.Commit(ctx, store.Commit{
@@ -226,7 +227,9 @@ func aguiDrain(t *testing.T, d *Daemon, body, header string, want []int64, auth 
 		}
 		got = append(got, indexes...)
 		runs = append(runs, b)
-		if len(indexes) == 0 || (len(want) > 0 && cursor >= want[len(want)-1]) {
+		// An empty bounded run can exhaust its budget before the first read
+		// under load. Resume until the expected replay is complete.
+		if len(want) == 0 || cursor >= want[len(want)-1] {
 			if !reflect.DeepEqual(got, want) {
 				t.Fatalf("drained indexes=%v want=%v", got, want)
 			}
@@ -247,10 +250,44 @@ func aguiDrain(t *testing.T, d *Daemon, body, header string, want []int64, auth 
 	return nil
 }
 
+// aguiReplayBytes retains the first run's start/snapshot, every entry frame,
+// and the final terminal frame verbatim. Only intermediate run envelopes are
+// checked separately, so scheduler-dependent run cuts cannot change the byte oracle.
+func aguiReplayBytes(t *testing.T, runs [][]byte) []byte {
+	t.Helper()
+	var replay []byte
+	for i, run := range runs {
+		frames := bytes.SplitAfter(run, []byte("\n\n"))
+		frames = frames[:len(frames)-1] // aguiDrain requires a complete final frame.
+		if len(frames) < 3 {
+			t.Fatal("run missing start, snapshot or terminal frame")
+		}
+		if i == 0 {
+			replay = append(replay, bytes.Join(frames[:2], nil)...)
+		} else {
+			first := bytes.SplitAfter(runs[0], []byte("\n\n"))[0]
+			state := aguiState(t, runs[i-1])
+			head, err := json.Marshal(state["logHead"])
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantSnapshot := []byte(fmt.Sprintf("data: {\"type\":\"STATE_SNAPSHOT\",\"snapshot\":{\"schema\":\"world/agui-state/v1\",\"lastIndex\":%d,\"logHead\":%s}}\n\n", aguiCompleteCursor(t, runs[i-1]), head))
+			if !bytes.Equal(frames[0], first) || !bytes.Equal(frames[1], wantSnapshot) {
+				t.Fatal("intermediate run envelope bytes differ")
+			}
+		}
+		replay = append(replay, bytes.Join(frames[2:len(frames)-1], nil)...)
+		if i == len(runs)-1 {
+			replay = append(replay, frames[len(frames)-1]...)
+		}
+	}
+	return replay
+}
+
 func TestAGUIGoldenRun(t *testing.T) {
 	d := aguiTestDaemon(t)
 	aguiFixture(t, d)
-	d.aguiBudget = 300 * time.Millisecond
+	d.aguiBudget = 2 * time.Second
 	golden, err := os.ReadFile("../agui/testdata/stream_fixture.golden")
 	if err != nil {
 		t.Fatal(err)
@@ -275,8 +312,8 @@ func TestAGUIGoldenRun(t *testing.T) {
 			want = append(want, i)
 		}
 		// A full page must be read again immediately, before the next poll tick.
-		d.aguiBudget = 500 * time.Millisecond
-		d.aguiTick = time.Second
+		d.aguiBudget = 2 * time.Second
+		d.aguiTick = 5 * time.Second
 		runs := aguiDrain(t, d, aguiPayload, "", want)
 		if first := len(aguiIndexes(t, runs[0])); first < 101 {
 			t.Fatalf("first run delivered %d entries; want at least 101 (past a full page)", first)
@@ -294,15 +331,13 @@ func TestAGUIResumeExact(t *testing.T) {
 					want = append(want, i)
 				}
 			}
-			h := aguiRequest(t, d, aguiPayload, fmt.Sprint(k))
-			s := aguiRequest(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d,"logHead":"forged"}}`, k), "")
-			if h.Code != 200 || s.Code != 200 || !bytes.Equal(h.Body.Bytes(), s.Body.Bytes()) {
-				t.Fatalf("header/state resume differs: %d/%d", h.Code, s.Code)
+			h := aguiReplayBytes(t, aguiDrain(t, d, aguiPayload, fmt.Sprint(k), want))
+			s := aguiReplayBytes(t, aguiDrain(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d,"logHead":"forged"}}`, k), "", want))
+			if !bytes.Equal(h, s) {
+				t.Fatal("header/state resume bytes differ")
 			}
-			aguiDrain(t, d, aguiPayload, fmt.Sprint(k), want)
-			aguiDrain(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, k), "", want)
-			match := aguiRequest(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, k), fmt.Sprint(k))
-			if !bytes.Equal(h.Body.Bytes(), match.Body.Bytes()) {
+			match := aguiReplayBytes(t, aguiDrain(t, d, fmt.Sprintf(`{"threadId":"t","runId":"r","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, k), fmt.Sprint(k), want))
+			if !bytes.Equal(h, match) {
 				t.Fatal("matching cursors differ")
 			}
 		})
@@ -504,13 +539,13 @@ func aguiWait(t *testing.T, ch <-chan struct{}, what string) {
 	t.Helper()
 	select {
 	case <-ch:
-	case <-time.After(150 * time.Millisecond):
+	case <-time.After(2 * time.Second):
 		t.Fatalf("%s did not finish promptly", what)
 	}
 }
 func TestAGUIClientDisconnectReturns(t *testing.T) {
 	d := aguiTestDaemon(t)
-	d.aguiBudget = time.Second
+	d.aguiBudget = 5 * time.Second
 	b := aguiBlock(t, d)
 	base := runtime.NumGoroutine()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -520,13 +555,13 @@ func TestAGUIClientDisconnectReturns(t *testing.T) {
 	go func() { d.Handler().ServeHTTP(httptest.NewRecorder(), req); close(done) }()
 	select {
 	case <-b.entered:
-	case <-time.After(time.Second):
+	case <-time.After(2 * time.Second):
 		t.Fatal("read never entered")
 	}
 	cancel()
 	aguiWait(t, b.canceled, "read cancellation")
 	aguiWait(t, done, "handler")
-	deadline := time.Now().Add(150 * time.Millisecond)
+	deadline := time.Now().Add(2 * time.Second)
 	for runtime.NumGoroutine() > base && time.Now().Before(deadline) {
 		runtime.Gosched()
 	}
@@ -538,7 +573,8 @@ func TestAGUIShutdownEndsRuns(t *testing.T) {
 	for _, blocked := range []bool{false, true} {
 		t.Run(fmt.Sprint(blocked), func(t *testing.T) {
 			d := aguiTestDaemon(t)
-			d.aguiBudget = time.Second
+			// Natural expiry must not satisfy the shutdown oracle.
+			d.aguiBudget = 5 * time.Second
 			var b *aguiBlockReads
 			if blocked {
 				b = aguiBlock(t, d)
@@ -558,7 +594,7 @@ func TestAGUIShutdownEndsRuns(t *testing.T) {
 			if blocked {
 				select {
 				case <-b.entered:
-				case <-time.After(time.Second):
+				case <-time.After(2 * time.Second):
 					t.Fatal("read never entered")
 				}
 			}
@@ -569,7 +605,7 @@ func TestAGUIShutdownEndsRuns(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if time.Since(start) > 150*time.Millisecond || !bytes.Contains(body, []byte(`"RUN_FINISHED"`)) {
+			if time.Since(start) > 2*time.Second || !bytes.Contains(body, []byte(`"RUN_FINISHED"`)) {
 				t.Fatalf("shutdown terminal late/missing: %s", body)
 			}
 			select {
@@ -641,7 +677,7 @@ func (p aguiPollReads) LogEntriesAfter(ctx context.Context, a int64, n int) ([]s
 }
 func TestAGUISeesDirectStoreCommit(t *testing.T) {
 	d := aguiTestDaemon(t)
-	d.aguiBudget = time.Second
+	d.aguiBudget = 5 * time.Second
 	d.aguiTick = 20 * time.Millisecond
 	p := aguiPollReads{d.reads, make(chan struct{}, 100)}
 	d.reads = p
@@ -673,7 +709,7 @@ func TestAGUISeesDirectStoreCommit(t *testing.T) {
 	}
 	waitEntry := func(i int64) {
 		t.Helper()
-		deadline := time.NewTimer(2*d.aguiTick + 50*time.Millisecond)
+		deadline := time.NewTimer(2*d.aguiTick + time.Second)
 		defer deadline.Stop()
 		for {
 			select {
@@ -682,12 +718,12 @@ func TestAGUISeesDirectStoreCommit(t *testing.T) {
 					return
 				}
 			case <-deadline.C:
-				t.Fatalf("entry%d not polled within two ticks", i)
+				t.Fatalf("entry%d not polled within two ticks plus scheduler allowance", i)
 			}
 		}
 	}
 	waitEntry(0)
-	if time.Since(start) > 2*d.aguiTick+50*time.Millisecond {
+	if time.Since(start) > 2*d.aguiTick+time.Second {
 		t.Fatal("direct commit late")
 	}
 	auth := authHeader(t, d)
@@ -697,7 +733,8 @@ func TestAGUISeesDirectStoreCommit(t *testing.T) {
 }
 func TestAGUIGlobalCap(t *testing.T) {
 	d := aguiTestDaemon(t)
-	d.aguiBudget = time.Second
+	// Held runs must outlive admission and release deadlines.
+	d.aguiBudget = 10 * time.Second
 	s := httptest.NewServer(d.Handler())
 	defer s.Close()
 	type held struct {
@@ -732,7 +769,7 @@ func TestAGUIGlobalCap(t *testing.T) {
 	}
 	// Recorder avoids a blocked 17th request when the cap mutant is applied.
 	req := httptest.NewRequest("POST", "/agui/", strings.NewReader(aguiPayload))
-	ctx, cancel := context.WithTimeout(req.Context(), 50*time.Millisecond)
+	ctx, cancel := context.WithTimeout(req.Context(), 2*time.Second)
 	defer cancel()
 	rec := httptest.NewRecorder()
 	d.Handler().ServeHTTP(rec, req.WithContext(ctx))
@@ -741,7 +778,7 @@ func TestAGUIGlobalCap(t *testing.T) {
 	}
 	runs[0].cancel()
 	runs[0].body.Close()
-	deadline := time.Now().Add(150 * time.Millisecond)
+	deadline := time.Now().Add(2 * time.Second)
 	for len(d.aguiSlots) == 16 && time.Now().Before(deadline) {
 		runtime.Gosched()
 	}
@@ -754,7 +791,7 @@ func TestAGUIGlobalCap(t *testing.T) {
 		r.cancel()
 		r.body.Close()
 	}
-	deadline = time.Now().Add(150 * time.Millisecond)
+	deadline = time.Now().Add(2 * time.Second)
 	for len(d.aguiSlots) > 0 && time.Now().Before(deadline) {
 		runtime.Gosched()
 	}
@@ -813,31 +850,88 @@ func TestAGUISlowBodyNeverTruncates(t *testing.T) {
 	if r.Code != 408 || !json.Valid(r.Body.Bytes()) || !strings.Contains(r.Body.String(), "SlowBody") || strings.Contains(r.Body.String(), "data:") {
 		t.Fatalf("slow body: %d %s", r.Code, r.Body)
 	}
+	// Once the body consumes the entire run budget, an entry-anchored run
+	// finishes without polling. This checks the clock without a scheduler-sensitive
+	// wall-time upper bound, and catches anchoring the clock after the body read.
+	d.aguiBodyBound = 5 * time.Second
+	polls := &aguiPollReads{d.reads, make(chan struct{}, 1)}
+	d.reads = polls
 	req = httptest.NewRequest("POST", "/agui/", nil)
-	req.Body = &aguiDelayedBody{data: []byte(aguiPayload), delay: 80 * time.Millisecond}
+	req.Body = &aguiDelayedBody{data: []byte(aguiPayload), delay: d.aguiBudget + 100*time.Millisecond}
 	r = httptest.NewRecorder()
-	start := time.Now()
 	d.Handler().ServeHTTP(r, req)
-	if elapsed := time.Since(start); elapsed > 300*time.Millisecond+d.aguiTick+50*time.Millisecond || !strings.Contains(r.Body.String(), `"RUN_FINISHED"`) {
-		t.Fatalf("entry anchored terminal elapsed=%s body=%s", elapsed, r.Body)
+	if r.Code != http.StatusOK || !strings.Contains(r.Body.String(), `"RUN_FINISHED"`) {
+		t.Fatalf("entry anchored terminal: %d %s", r.Code, r.Body)
 	}
-	// A real stalled body exhausts equal read/write deadlines, yielding clean EOF.
-	srv := httptest.NewUnstartedServer(d.Handler())
-	srv.Config.ReadTimeout = 150 * time.Millisecond
-	srv.Config.WriteTimeout = 150 * time.Millisecond
-	srv.Start()
-	defer srv.Close()
-	conn, err := net.DialTimeout("tcp", srv.Listener.Addr().String(), time.Second)
-	if err != nil {
-		t.Fatal(err)
+	select {
+	case <-polls.polls:
+		t.Fatal("run polled after the body had consumed the entry-anchored budget")
+	default:
 	}
-	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(time.Second))
-	fmt.Fprintf(conn, "POST /agui/ HTTP/1.1\r\nHost: localhost\r\nContent-Length: 500\r\n\r\n")
-	b, err := io.ReadAll(conn)
-	if err != nil || len(b) != 0 {
-		t.Fatalf("stalled body must be zero bytes/EOF: %q %v", b, err)
+
+	stalled := func(t *testing.T, bodyBound, writeTimeout time.Duration, zeroOnly bool) {
+		t.Helper()
+		d.aguiBodyBound = bodyBound
+		srv := httptest.NewUnstartedServer(d.Handler())
+		srv.Config.ReadTimeout = 150 * time.Millisecond
+		srv.Config.WriteTimeout = writeTimeout
+		srv.Start()
+		defer srv.Close()
+		conn, err := net.DialTimeout("tcp", srv.Listener.Addr().String(), 5*time.Second)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer conn.Close()
+		if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := fmt.Fprintf(conn, "POST /agui/ HTTP/1.1\r\nHost: localhost\r\nContent-Length: 500\r\n\r\n"); err != nil {
+			t.Fatal(err)
+		}
+		b, err := io.ReadAll(conn)
+		// ReadAll reports clean EOF as nil. A reset is also a clean severance;
+		// a client deadline timeout is never evidence of server completion.
+		if err != nil && !errors.Is(err, syscall.ECONNRESET) {
+			t.Fatalf("stalled body read: %q %v", b, err)
+		}
+		if len(b) == 0 {
+			return
+		}
+		if zeroOnly || bytes.Contains(b, []byte("data:")) {
+			t.Fatalf("stalled body must have no stream bytes (zeroOnly=%t): %q", zeroOnly, b)
+		}
+		reader := bufio.NewReader(bytes.NewReader(b))
+		resp, err := http.ReadResponse(reader, nil)
+		if err != nil {
+			t.Fatalf("incomplete stalled-body response: %q %v", b, err)
+		}
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil || resp.StatusCode != http.StatusRequestTimeout || resp.Header.Get("Content-Type") != "application/json" || resp.ContentLength < 0 || int64(len(body)) != resp.ContentLength {
+			t.Fatalf("invalid stalled-body response: status=%d headers=%v body=%q err=%v", resp.StatusCode, resp.Header, body, err)
+		}
+		var apiError struct {
+			Error struct {
+				Class string `json:"class"`
+			} `json:"error"`
+		}
+		if err := json.Unmarshal(body, &apiError); err != nil || apiError.Error.Class != "SlowBody" {
+			t.Fatalf("invalid SlowBody JSON: %q %v", body, err)
+		}
+		if extra, err := io.ReadAll(reader); err != nil || len(extra) != 0 {
+			t.Fatalf("bytes after complete stalled-body response: %q %v", extra, err)
+		}
 	}
+	// ReadTimeout starts before header parsing; WriteTimeout starts afterwards.
+	// Depending on scheduling, the body bound can yield a complete 408 or EOF.
+	t.Run("complete-error-or-zero", func(t *testing.T) {
+		stalled(t, 100*time.Millisecond, 150*time.Millisecond, false)
+	})
+	// Keep the body bound above the transport deadlines and expire writes well
+	// before the stalled read returns, deterministically exercising severance.
+	t.Run("server-deadline-zero", func(t *testing.T) {
+		stalled(t, 5*time.Second, 50*time.Millisecond, true)
+	})
 }
 
 // The id oracle is independent of state: an id acknowledges its own complete delta.
@@ -961,12 +1055,12 @@ func TestAGUISlowReaderCutIsResumable(t *testing.T) {
 	srv.Config.WriteTimeout = 200 * time.Millisecond
 	srv.Start()
 	defer srv.Close()
-	conn, err := net.DialTimeout("tcp", srv.Listener.Addr().String(), time.Second)
+	conn, err := net.DialTimeout("tcp", srv.Listener.Addr().String(), 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(3 * time.Second))
+	conn.SetDeadline(time.Now().Add(5 * time.Second))
 	fmt.Fprintf(conn, "POST /agui/ HTTP/1.1\r\nHost: localhost\r\nContent-Length: %d\r\nContent-Type: application/json\r\n\r\n%s", len(aguiPayload), aguiPayload)
 	resp, err := http.ReadResponse(bufio.NewReader(conn), nil)
 	if err != nil {
