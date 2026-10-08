@@ -366,3 +366,147 @@ func TestWorkspaceTwoEpisodeConcurrentRegistryExecRace(t *testing.T) {
 		t.Fatalf("healthy ep2 ran %d summaries, want 1", n)
 	}
 }
+
+// joinOnCleanup releases every hold and joins the pending registry calls. It
+// is registered after withHandlerBudget, so it runs first on any exit path and
+// no build goroutine outlives the budget seam.
+func (r *familyRig) joinOnCleanup(eps []string, pending *[]*pendingRegistry) {
+	r.t.Cleanup(func() {
+		for _, ep := range eps {
+			r.clear("hold", ep)
+		}
+		for _, p := range *pending {
+			<-p.done
+		}
+	})
+}
+
+// buildWaiters is how many callers joined ep's in-flight AILANG build (0 when
+// none is in flight).
+func (r *familyRig) buildWaiters(ep string) int {
+	w := r.d.workspace
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if b := w.ailangBuild[ep]; b != nil {
+		return b.waiters
+	}
+	return 0
+}
+
+// logLines counts the operator lines that name ep and the AILANG family.
+func (r *familyRig) logLines(ep string) int {
+	return strings.Count(r.log.String(), `workspace tools unavailable for episode "`+ep+`"`)
+}
+
+// AC2.2: concurrent registry(ep) calls for one episode share one build — one
+// summary subprocess, one result — and each failing caller still prints its
+// own operator line.
+func TestWorkspaceAilangBuildSingleFlight(t *testing.T) {
+	withHandlerBudget(t, 5*time.Second)
+	r := newFamilyRig(t, Config{})
+	var pending []*pendingRegistry
+	r.joinOnCleanup([]string{"ep1", "ep2"}, &pending)
+	joined := func(ep string) bool { return r.buildWaiters(ep) >= 1 || r.summaries(ep) >= 2 }
+
+	// Phase 1: the held build fails; both callers get the failure.
+	r.set("hold", "ep1")
+	a := r.startRegistry("ep1")
+	pending = append(pending, a)
+	waitFor(t, "ep1's first summary", 30*time.Second, func() bool { return r.summaries("ep1") == 1 })
+	b := r.startRegistry("ep1")
+	pending = append(pending, b)
+	waitFor(t, "the second caller to join ep1's build", 30*time.Second, func() bool { return joined("ep1") })
+	r.set("fail", "ep1")
+	r.clear("hold", "ep1")
+	<-a.done
+	<-b.done
+	if n := r.summaries("ep1"); n != 1 {
+		t.Fatalf("two concurrent registry(ep1) calls ran %d summaries, want 1 (single flight)", n)
+	}
+	for _, p := range []*pendingRegistry{a, b} {
+		requireOnlyExec(t, p.reg)
+	}
+	if n := r.logLines("ep1"); n != 2 {
+		t.Fatalf("operator lines for ep1 = %d (%q), want 2: one per failing caller", n, r.log.String())
+	}
+
+	// Phase 2: the held build succeeds; both callers share the one handler.
+	r.set("hold", "ep2")
+	a2 := r.startRegistry("ep2")
+	pending = append(pending, a2)
+	waitFor(t, "ep2's first summary", 30*time.Second, func() bool { return r.summaries("ep2") == 1 })
+	b2 := r.startRegistry("ep2")
+	pending = append(pending, b2)
+	waitFor(t, "the second caller to join ep2's build", 30*time.Second, func() bool { return joined("ep2") })
+	r.clear("hold", "ep2")
+	<-a2.done
+	<-b2.done
+	for _, p := range []*pendingRegistry{a2, b2} {
+		if got := strings.Join(registryNames(p.reg), ","); got != strings.Join(wantWorkspaceEffects, ",") {
+			t.Fatalf("ep2 registry = %s, want all nine", got)
+		}
+	}
+	if a2.reg[broker.EffectWorkspaceRead] != b2.reg[broker.EffectWorkspaceRead] {
+		t.Fatal("the two ep2 callers got different AILANG handlers from one build")
+	}
+	if n := r.summaries("ep2"); n != 1 {
+		t.Fatalf("two concurrent registry(ep2) calls ran %d summaries, want 1", n)
+	}
+}
+
+// AC2.3 (+ AC1.7's registry half): another episode's registry, exec included,
+// returns while ep1's build is still held.
+func TestWorkspaceAilangBuildDoesNotBlockOtherEpisodes(t *testing.T) {
+	withHandlerBudget(t, 5*time.Second)
+	r := newFamilyRig(t, Config{})
+	var pending []*pendingRegistry
+	r.joinOnCleanup([]string{"ep1"}, &pending)
+	r.set("hold", "ep1")
+	ep1 := r.startRegistry("ep1")
+	pending = append(pending, ep1)
+	waitFor(t, "ep1's summary to start", 30*time.Second, func() bool { return r.summaries("ep1") == 1 })
+
+	reg := r.d.workspace.registry("ep2")
+	if got := strings.Join(registryNames(reg), ","); got != strings.Join(wantWorkspaceEffects, ",") {
+		t.Fatalf("ep2 registry while ep1 builds = %s, want all nine", got)
+	}
+	out, err := execCall(t, reg[broker.EffectWorkspaceExec])
+	if err != nil || !strings.Contains(string(out), filepath.Join(r.f.root, "ep2")) {
+		t.Fatalf("exec in ep2 = %s, %v", out, err)
+	}
+	select {
+	case <-ep1.done:
+		t.Fatal("ep1's AILANG build had already finished when ep2's registry returned: ep2 waited on it, or the hold did not hold")
+	default:
+	}
+	r.clear("hold", "ep1")
+	<-ep1.done
+}
+
+// AC2.5: a failed build is retried by the next call, synchronously and
+// uncached: one summary and one operator line per failed call, and a fix takes
+// effect on the very next call.
+func TestWorkspaceFailedBuildRetriesEachCall(t *testing.T) {
+	r := newFamilyRig(t, Config{})
+	r.set("fail", "ep1")
+	for i := 1; i <= 3; i++ {
+		requireOnlyExec(t, r.d.workspace.registry("ep1"))
+		if n := r.summaries("ep1"); n != i {
+			t.Fatalf("after %d failing calls: %d summaries, want %d", i, n, i)
+		}
+		if n := r.logLines("ep1"); n != i {
+			t.Fatalf("after %d failing calls: %d operator lines (%q), want %d", i, n, r.log.String(), i)
+		}
+	}
+	r.clear("fail", "ep1")
+	reg := r.d.workspace.registry("ep1")
+	if got := strings.Join(registryNames(reg), ","); got != strings.Join(wantWorkspaceEffects, ",") {
+		t.Fatalf("registry after the fix = %s, want all nine on the very next call", got)
+	}
+	if n := r.summaries("ep1"); n != 4 {
+		t.Fatalf("summaries = %d, want 4", n)
+	}
+	if n := r.logLines("ep1"); n != 3 {
+		t.Fatalf("operator lines = %d, want still 3 (the fixed call prints none)", n)
+	}
+}

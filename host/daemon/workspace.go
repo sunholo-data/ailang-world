@@ -105,13 +105,29 @@ type workspaceTools struct {
 	packageCacheDigest string
 	errLog             io.Writer
 
-	mu      sync.Mutex
-	handler map[string]episodeTool // episode id -> constructed handler (guarded by mu)
+	// mu guards handler and ailangBuild only. It is never held across the
+	// AILANG build's subprocess, so one episode's stuck build blocks neither
+	// another episode nor exec construction (row 152 M2).
+	mu          sync.Mutex
+	handler     map[string]episodeTool  // episode id -> constructed handler
+	ailangBuild map[string]*ailangBuild // episode id -> the build in flight
 
 	// execMu guards execH only. It is never held with mu, so exec
 	// construction never waits behind an AILANG build (row 152).
 	execMu sync.Mutex
 	execH  map[string]episodeTool // episode id -> constructed exec handler
+}
+
+// ailangBuild is one in-flight AILANG handler build. Callers for the same
+// episode and module root share it: the first runs the build, the rest wait on
+// done and take its result. A failure is never cached: the entry is dropped
+// when the build returns, so the next Binder open builds again.
+type ailangBuild struct {
+	root    string
+	done    chan struct{}
+	tool    broker.Handler
+	err     error
+	waiters int // callers joined onto this build; written under mu, read by tests
 }
 
 // workspaceExec is the verified exec profiles and the archived sandbox that
@@ -408,16 +424,58 @@ func (w *workspaceTools) episodeRoot(episodeID string) (string, bool) {
 	return resolved, true
 }
 
-// episodeHandler returns the episode's cached handler (sandbox is the module
-// root: <worktree>/REL, the worktree itself by default), constructing it on
-// first use (the constructor runs one summary subprocess, so it is built
-// once per episode rather than per Dispatch).
+// episodeHandler returns the episode's AILANG handler (sandbox is the module
+// root: <worktree>/REL, the worktree itself by default). A success is cached
+// per episode. The build runs one summary subprocess, so concurrent callers for
+// the same episode share one in-flight build (single flight) and w.mu is never
+// held across it. A failure is returned to every caller joined to that build
+// and is not cached.
 func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handler, error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	if cached, ok := w.handler[episodeID]; ok && cached.root == sandbox {
+		w.mu.Unlock()
 		return cached.h, nil
 	}
+	if b, ok := w.ailangBuild[episodeID]; ok && b.root == sandbox {
+		b.waiters++
+		w.mu.Unlock()
+		<-b.done
+		return b.tool, b.err
+	}
+	b := &ailangBuild{root: sandbox, done: make(chan struct{})}
+	if w.ailangBuild == nil {
+		w.ailangBuild = map[string]*ailangBuild{}
+	}
+	w.ailangBuild[episodeID] = b
+	w.mu.Unlock()
+
+	// The budget bounds the whole build, mkdirs through the summary
+	// subprocess. The root context stays in this function: the production
+	// context-root census (host/store/context_roots_test.go) pins it here.
+	ctx, cancel := context.WithTimeout(context.Background(), workspaceHandlerBudget)
+	tool, err := w.buildAilangHandler(ctx, episodeID, sandbox)
+	cancel()
+
+	w.mu.Lock()
+	if err == nil {
+		if w.handler == nil {
+			w.handler = map[string]episodeTool{}
+		}
+		w.handler[episodeID] = episodeTool{root: sandbox, h: tool}
+	}
+	if w.ailangBuild[episodeID] == b {
+		delete(w.ailangBuild, episodeID)
+	}
+	b.tool, b.err = tool, err
+	close(b.done)
+	w.mu.Unlock()
+	return tool, err
+}
+
+// buildAilangHandler is the lock-free body of the build: directories, package
+// cache link, lock coverage, policy render and write, and the constructor's
+// one policy-tool summary subprocess, bounded by ctx.
+func (w *workspaceTools) buildAilangHandler(ctx context.Context, episodeID, sandbox string) (broker.Handler, error) {
 	policyDir := filepath.Join(w.stateDir, "policies")
 	cacheDir := filepath.Join(w.stateDir, "cache", episodeID)
 	for _, dir := range []string{policyDir, cacheDir} {
@@ -439,8 +497,6 @@ func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handl
 	if err := writePolicy(policyPath, policy); err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), workspaceHandlerBudget)
-	defer cancel()
 	h, err := broker.NewAilangToolHandler(ctx, broker.AilangToolConfig{
 		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: sandbox, CacheDir: cacheDir,
 		ExamplesDir: w.examplesDir, RunCaps: w.runCaps, PackageCacheDigest: w.packageCacheDigest,
@@ -448,12 +504,7 @@ func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handl
 	if err != nil {
 		return nil, err
 	}
-	tool := verifiedTool{path: w.bin, ref: w.binRef, h: h}
-	if w.handler == nil {
-		w.handler = map[string]episodeTool{}
-	}
-	w.handler[episodeID] = episodeTool{root: sandbox, h: tool}
-	return tool, nil
+	return verifiedTool{path: w.bin, ref: w.binRef, h: h}, nil
 }
 
 // runCapsStartupBudget bounds the startup check of the run variants: one
