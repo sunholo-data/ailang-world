@@ -1540,3 +1540,52 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** clause 4's third row closed (and hygiene row 161); 4 and 5 still UNMET; 1/2/3/6/7 MET.
 
 **Next:** row 152 `w-exec-availability-decoupled-from-ailang-policy` (D-WORLD-65/68), then 93. Rows 165/166 unranked/hygiene.
+
+## 242 — 2026-10-08 — row 152 LANDED: `workspace-exec` stays bound when the AILANG tool handler cannot be built; single-flight AILANG build with no lock across the subprocess; judge 91 → 94; CI 5/5 + merge 2/2 [PRODUCT]
+
+**Kind:** product landing. PR #229 → `c51a9c9` (squash of design `9205d0f`/`2c25707`/`2bb27ad`, plan `f1cbbb0`, C1 `44f222b`, C2 `3d3ee7b`, C3 `d8e9c72`, fix `b14916c`, judge reports `0b2d51e`/`442e7ec`).
+
+**Pick and why:** row 152 `w-exec-availability-decoupled-from-ailang-policy`, next on the D-WORLD-65 path after row 153 (D-WORLD-68 = A). Clause map at `fe7c2a4`: 1/2/3/6/7 MET; 4 UNMET (152 → 93); 5 UNMET (114 after 93, then 139). No orphan worktree, branch or PR on 152; the `.wt-row93` attended branch is row 93's (merged #184), not this row's. Premise re-measured TRUE: `host/daemon/workspace.go` `registry()` returned `broker.Registry{}` on a `sandboxRoot` or `episodeHandler` failure, so `Workspace.Exec` was unbound although `execHandler` takes only `epRoot`.
+
+**Design:** designer Agent `opus` (rotation pointer `claude:claude-opus-5-5`; codex/ollama over ration). 20 → 23 V-rows; probe (stub tool binary whose summary never answers) committed under `design_docs/verification/world-row152-design/`. Measured: a stuck summary leaves the registry empty after 3.0 s on every call (never cached, re-spawned per call); exec built directly runs `exit 0`; another episode's exec construction waited 2.82 s behind the build because both took `w.mu`. Two row premises were false and the controller confirmed both: the M4 `serve.log` has 3 lines and 0 mentions of the sequence (only README F5 prose), and the bound that fired was `workspaceHandlerBudget` = 3 s — `HandlerTimeoutError` prints the handler's own 10 s default regardless. Options chosen: exec bound iff the worktree resolves (a1); the eight AILANG names stay unregistered on failure so R8 refuses only the `ailang-*` tools (b1; a typed failure handler was rejected on measurement — it records a `failed` invocation and debits budget while the client still sees no cause).
+
+**Quorum:** author `claude:claude-opus-5-5` (Claude benched). r1 BLOCKED 3/3 present (glm, kimi, gemini; `gpt6-1-sol` unreachable → N−1): M2's background retry gives a client a stale R8 and races the amended tests' log assertions; the probe evidence was machine-local. r2 dropped the background retry (synchronous per-call retry, one line per failed call as today; the per-call stall cost became row 168), kept single-flight + no lock across the subprocess, committed the probe. r2 BLOCKED 2/3 (gemini PASS): glm asked for a lock inventory (its "one shared map" premise measured false by the controller — `handler`/`execH` are distinct maps at `workspace.go:100–101`, `w.mu` held only at `:346`/`:396`); kimi asked that exec be shown to RUN on every failure path, not just be bound. Neither disputed direction and both gave concrete fixes, so r3 used the narrow-refinement carve-out and applied them verbatim (§15). Quorum spend $0.54.
+
+**Plan:** opus planner (`f1cbbb0`). Pristine baseline all green (`verify_go.sh` rc 0 ~11 min). 14 planner decisions; design defects found at HEAD: AC1.7's ep2 half cannot pass until M2 (moved to C3); `exec_e2e_srt_test.go` reads the exec cache under the old lock (would race under CI `-race`); the module-root test cannot catch MUT-EXEC-USES-SANDBOX; a hold file replaces the FIFO; AC1.9's fault is a regular file planted at `<stateDir>/policies` (chmod tests skip as root).
+
+**Execution:** sonnet executor, one run (C1–C3) + a docs fix round. 17 mutation drills red → restored byte-identical, 0 survivors; tests-first proof (C2 tests red on C0 code). Deviations: the `context.Background()` root stays in `episodeHandler` because `host/store` `TestProductionContextRoots` pins it (the 3 s clock now starts before the mkdirs); reused the existing `waitFor`; `pendingRegistry` struct; srt test switched to `execMu`. Local full `verify_go.sh` red only in `host/broker` (`TestRunBoundedHeadTailTimeoutKeepsPartialOutput` at C0, `TestExecHandlerTimeoutKillsTheGroup` at C3) — row-166 class, broker untouched, broker alone rc=0.
+
+**Judge:** opus Agent, own worktree (`.wt-world-iter242-eval`).
+- **r1: PASS 91, zero blocking.** Bar met; concurrency sound (no lock across the subprocess, the two locks never nested, results published before the done-channel closes). Re-ran 7 executor mutants (6 red; MUT-SHARED-LOCK inert at head — isolation now pinned by C3's MUT-LOCK-ACROSS-SUBPROCESS) and 5 own (3 red, incl. a DATA RACE drill; survivors N1 budget seam unpinned → row 167, N2 an unreachable stale-cache state). N4: QUICKSTART named an effect as a tool and omitted two exec refusals and the 3 s per-call wait. Broker verdict: pre-existing, unrelated.
+- **Fix round** (docs only, `b14916c`): QUICKSTART operator lines.
+- **r2: PASS 94, zero blocking**, N4 closed against the code. Reports in `design_docs/verification/world-iter242/`.
+
+**CI:** PR runs on `d8e9c72` (37715907996) and `0b2d51e` (37717125228) green; final head `442e7ec` PR run 37717956140 + `workflow_dispatch` 37717956427, 37717958812 green — 5/5, code tree identical across all. `host/daemon` `ok` in every leg; the new tests have no `t.Skip`. Merge `c51a9c9` tree-identical to `442e7ec`; dev CI run 37719753086 2/2 success.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #202 since 2026-10-05T12:46:05Z (18 comments); watermark unchanged. Ledger valid 55 rows, ZERO OPEN. Inbox (`mission-world`): fleet `harness-resolved` for `agent-tool:mission-role-pins-unavailable` (ailang#1635, `0ceb1db01`) → row 164 marked RESOLVED BY FLEET and the message acked; older claim messages only.
+
+**Gate 1:** local dev == origin/dev `fe7c2a4`; dev CI on `fe7c2a4` in progress at read, `42a2511` green. Skill: resolved symlink copy byte-identical to origin across `SKILL.md` and all 12 resources.
+
+**Routing evidence:** base=c51a9c91378e104d3674c0f352503746bcb5dfa4@2026-10-08T02:59:34Z (Gate 1 base `fe7c2a4d3155737404f1cb92b475ff7301541442`).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer Agent `opus` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`): 210,219 tok cumulative over create + r2 + r3. Revision fired twice (r2 protocol-mandated, r3 carve-out).
+- Planner Agent `opus` (`agent-tool opus fail-closed:env-pin`): 179,395 tok.
+- Executor Agent `sonnet` (resolver `recipe claude:claude-sonnet-5-5 declared:provider-pin`): 180,499 tok run + fix round, 183,997 cumulative.
+- Evaluator Agent `opus` (resolver `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`): 112,052 tok cumulative over r1 + r2. FLAG: the resolver named a cross-vendor pi lane; the operator's standing request for this fire asked for Agent-tool roles, so the judge ran on opus — independent of the executor's model (sonnet), same vendor, and the same model as designer and planner. judge-independence: same-vendor-different-model.
+- Quorum: glm, kimi, gemini (`gpt6-1-sol` unreachable both rounds). metered=$0.54.
+
+**Ruled out:**
+- A background retry after a failed build (quorum r1: a client that fixes the cause can deterministically get a stale R8; async log lines race tests).
+- A typed failure handler for the eight AILANG names (records a `failed` invocation and debits budget; the record has no cause field).
+- A chmod-based fault for AC1.9 (repo chmod tests skip as root, making it hollow there).
+- Fixing the `HandlerTimeoutError` label here (shared `runBounded` surface with row 166 → row 167).
+
+**Retro:**
+- **(1)** Both quorum rounds blocked on *verification completeness*, not direction; the controller measuring glm's premise first (two distinct maps) kept r3 to verbatim fixes rather than a redesign. Rule 3f paid for itself again.
+- **(2)** Pushing the executor head as a draft PR before the judge started meant CI finished during judging; with the judge's docs-only fix, two PR runs on code-identical heads + one PR run and two dispatches on the final head gave 5/5 without a separate wait.
+- **(3)** The judge found the executor's MUT-SHARED-LOCK drill inert at the final head (valid only at C2). Per-commit drills can go stale across later commits in the same sprint; a final-head re-run of the drill list would catch it. Recorded, not a skill change (one instance).
+- **(4)** No skill change proposed.
+
+**Progress:** clause 4's fourth row closed; 4 and 5 still UNMET; 1/2/3/6/7 MET.
+
+**Next:** row 93 `w-resident-agent-non-inferiority-floor-run` (clause 4), then 114 → 139. Rows 165/166/167/168 unranked/hygiene.
