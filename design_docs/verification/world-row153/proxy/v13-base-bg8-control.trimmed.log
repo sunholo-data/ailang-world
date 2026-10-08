@@ -1,0 +1,26 @@
+=== RUN   TestExecSrtMCPEndToEnd
+PROBE loadSourceAndWorld=12.245583ms
+PROBE capsule exec=/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecSrtMCPEndToEnd858950165/001/state/world.db.artifacts/interpreters/sha256/1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f/ailang srclen=20229 args="{\"phase\":\"plan\",\"args\":{\"args\":[\"-run\",\"T
+PROBE phase=plan took=2.036274333s err=context deadline exceeded
+--- FAIL: TestExecSrtMCPEndToEnd (47.12s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+PROBE loadSourceAndWorld=10.417833ms
+PROBE capsule exec=/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecSrtMCPGrantAndBudget271163516/001/state/world.db.artifacts/interpreters/sha256/1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f/ailang srclen=20229 args="{\"phase\":\"plan\",\"args\":{\"command\":\"ma
+PROBE phase=plan took=2.032587708s err=context deadline exceeded
+--- FAIL: TestExecSrtMCPGrantAndBudget (52.14s)
+=== RUN   TestExecSrtMCPEndToEnd
+--- FAIL: TestExecSrtMCPEndToEnd (47.91s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+--- FAIL: TestExecSrtMCPGrantAndBudget (57.14s)
+=== RUN   TestExecSrtMCPEndToEnd
+PROBE loadSourceAndWorld=1.625292ms
+PROBE capsule exec=/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecSrtMCPEndToEnd430177130/001/state/world.db.artifacts/interpreters/sha256/1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f/ailang srclen=20229 args="{\"phase\":\"plan\",\"args\":{\"args\":[\"-run\",\"T
+PROBE phase=plan took=2.957804542s err=context deadline exceeded
+--- FAIL: TestExecSrtMCPEndToEnd (54.05s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+PROBE loadSourceAndWorld=14.927792ms
+PROBE capsule exec=/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecSrtMCPGrantAndBudget2610397929/001/state/world.db.artifacts/interpreters/sha256/1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f/ailang srclen=20229 args="{\"phase\":\"plan\",\"args\":{\"command\":\"m
+PROBE phase=plan took=2.042134625s err=context deadline exceeded
+--- FAIL: TestExecSrtMCPGrantAndBudget (49.80s)
+RC=1
+DONE

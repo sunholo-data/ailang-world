@@ -1,0 +1,53 @@
+=== RUN   TestExecSrtMCPEndToEnd
+PROBE publish=28.371810709s rig-setup-to-serving=48.883825375s templates[9]: ailang-check=ready ailang-cli=ready ailang-edit=ready ailang-read=ready ailang-run=ready ailang-write=ready builtins-search=ready examples-search=ready workspace-exec=ready
+PROBE capsule srclen=20229 cold=false resolve=93.916µs verify=525.536958ms stage=687.77925ms start=709.396083ms child=555.043166ms total=1.321785375s
+PROBE phase=plan took=1.325124667s err=<nil>
+    exec_e2e_srt_test.go:152: workspace-exec test: map[argv:[printf [%s] -run=TestX a] duration_ms:2239 exit_code:0 limit:<nil> profile:map[argv0_sha256:d7992bc59e048ee061716365839990227ab463d954d87e6c2e7f987c0054fd59 command:test digest:sha256:a1ce9fbbeef30ee600c242afe488ee9218235997fffb44c75a4bb00c9a13f96f project:proj] sandbox:map[cli_sha256:3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e network:
+PROBE capsule srclen=20229 cold=false resolve=120.416µs verify=663.159666ms stage=816.777708ms start=848.26275ms child=548.221584ms total=1.430684083s
+PROBE phase=plan took=1.43125825s err=<nil>
+--- PASS: TestExecSrtMCPEndToEnd (60.79s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+PROBE publish=28.647308625s rig-setup-to-serving=49.322561625s templates[9]: ailang-check=ready ailang-cli=ready ailang-edit=ready ailang-read=ready ailang-run=ready ailang-write=ready builtins-search=ready examples-search=ready workspace-exec=ready
+PROBE capsule srclen=20229 cold=false resolve=119.875µs verify=651.611ms stage=743.246792ms start=774.427208ms child=592.720542ms total=1.393814917s
+PROBE phase=plan took=1.394280292s err=<nil>
+PROBE capsule srclen=20229 cold=false resolve=147.917µs verify=631.394959ms stage=742.578042ms start=778.749625ms child=819.306167ms total=1.6559555s
+PROBE phase=plan took=1.656427458s err=<nil>
+--- PASS: TestExecSrtMCPGrantAndBudget (57.50s)
+=== RUN   TestExecSrtMCPEndToEnd
+    exec_e2e_srt_test.go:143: PublishSet = {Head: Revision:0 Unchanged:false} publish transition registry: entry "workspace-exec"'s source "sha256:51d93ce680eea3031eaf786530b3c2a4d61b3b547440a4e542786695b05c9a05" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...
+--- FAIL: TestExecSrtMCPEndToEnd (50.72s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+    exec_e2e_srt_test.go:210: PublishSet = {Head: Revision:0 Unchanged:false} publish transition registry: entry "examples-search"'s source "sha256:bd6d41cfae833e636cd079352ad4dc63fde37800dd8bdda4da39abbbb2e0e6c7" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...
+--- FAIL: TestExecSrtMCPGrantAndBudget (57.85s)
+=== RUN   TestExecSrtMCPEndToEnd
+PROBE publish=28.663014334s rig-setup-to-serving=51.961796208s templates[9]: ailang-check=ready ailang-cli=ready ailang-edit=ready ailang-read=ready ailang-run=ready ailang-write=ready builtins-search=ready examples-search=ready workspace-exec=ready
+PROBE capsule srclen=20229 cold=false resolve=157.834µs verify=644.179042ms stage=750.648ms start=787.810042ms child=546.915583ms total=1.379603667s
+PROBE phase=plan took=1.380307708s err=<nil>
+    exec_e2e_srt_test.go:152: workspace-exec test: map[argv:[printf [%s] -run=TestX a] duration_ms:2333 exit_code:0 limit:<nil> profile:map[argv0_sha256:d7992bc59e048ee061716365839990227ab463d954d87e6c2e7f987c0054fd59 command:test digest:sha256:a1ce9fbbeef30ee600c242afe488ee9218235997fffb44c75a4bb00c9a13f96f project:proj] sandbox:map[cli_sha256:3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e network:
+PROBE capsule srclen=20229 cold=false resolve=82.917µs verify=647.471084ms stage=745.52775ms start=778.112917ms child=588.031542ms total=1.409924084s
+PROBE phase=plan took=1.410451584s err=<nil>
+--- PASS: TestExecSrtMCPEndToEnd (63.54s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+PROBE publish=28.851093041s rig-setup-to-serving=52.434027959s templates[9]: ailang-check=ready ailang-cli=ready ailang-edit=ready ailang-read=ready ailang-run=ready ailang-write=ready builtins-search=ready examples-search=ready workspace-exec=ready
+PROBE capsule srclen=20229 cold=false resolve=115.958µs verify=686.679292ms stage=798.672958ms start=825.264083ms child=498.365167ms total=1.362669792s
+PROBE phase=plan took=1.363296708s err=<nil>
+PROBE capsule srclen=20229 cold=false resolve=110.208µs verify=681.025958ms stage=781.89425ms start=820.310166ms child=587.545708ms total=1.489755833s
+PROBE phase=plan took=1.49037575s err=<nil>
+--- PASS: TestExecSrtMCPGrantAndBudget (60.52s)
+=== RUN   TestExecSrtMCPEndToEnd
+PROBE publish=28.475265625s rig-setup-to-serving=48.06368575s templates[9]: ailang-check=ready ailang-cli=ready ailang-edit=ready ailang-read=ready ailang-run=ready ailang-write=ready builtins-search=ready examples-search=ready workspace-exec=ready
+PROBE capsule srclen=20229 cold=false resolve=141.5µs verify=663.574875ms stage=818.108583ms start=850.372875ms child=540.812167ms total=1.427986292s
+PROBE phase=plan took=1.428464333s err=<nil>
+    exec_e2e_srt_test.go:152: workspace-exec test: map[argv:[printf [%s] -run=TestX a] duration_ms:2422 exit_code:0 limit:<nil> profile:map[argv0_sha256:d7992bc59e048ee061716365839990227ab463d954d87e6c2e7f987c0054fd59 command:test digest:sha256:a1ce9fbbeef30ee600c242afe488ee9218235997fffb44c75a4bb00c9a13f96f project:proj] sandbox:map[cli_sha256:3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e network:
+PROBE capsule srclen=20229 cold=false resolve=109.916µs verify=649.358916ms stage=757.296458ms start=799.011875ms child=550.563125ms total=1.386071958s
+PROBE phase=plan took=1.38959225s err=<nil>
+--- PASS: TestExecSrtMCPEndToEnd (60.01s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+PROBE publish=28.445801667s rig-setup-to-serving=48.460942666s templates[9]: ailang-check=ready ailang-cli=ready ailang-edit=ready ailang-read=ready ailang-run=ready ailang-write=ready builtins-search=ready examples-search=ready workspace-exec=ready
+PROBE capsule srclen=20229 cold=false resolve=94.5µs verify=643.645208ms stage=767.373292ms start=802.205ms child=518.763667ms total=1.362191s
+PROBE phase=plan took=1.362669334s err=<nil>
+PROBE capsule srclen=20229 cold=false resolve=102µs verify=720.499792ms stage=803.0275ms start=836.449209ms child=559.947333ms total=1.435220459s
+PROBE phase=plan took=1.435922709s err=<nil>
+--- PASS: TestExecSrtMCPGrantAndBudget (56.50s)
+RC=1
+DONE

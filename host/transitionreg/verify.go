@@ -75,6 +75,10 @@ func (e *TransitionSourceInvalidError) Error() string {
 		who, e.Ref.String(), e.Output)
 }
 
+// templateBuildAttempts is the total number of CheckSource attempts
+// EnsureSourceLoadable makes while the only failure is a template build.
+const templateBuildAttempts = 3
+
 // EnsureSourceLoadable proves the canonical source bytes load under the
 // archived interpreter the descriptor pins: host/archive.CheckSource stages
 // the bytes in a scratch root and runs `<archived interpreter> check <file>`
@@ -87,7 +91,20 @@ func EnsureSourceLoadable(ctx context.Context, arch *archive.Archive, interprete
 	if arch == nil {
 		return &PublisherArchiveRequiredError{}
 	}
-	result, err := arch.CheckSource(ctx, interpreter, source)
+	// Row 153: a pass that could not build its compile-cache template is
+	// host-side infrastructure and may be transient (a full disk, a racing
+	// writer), so it is retried; only after templateBuildAttempts does the
+	// typed *archive.TemplateBuildError surface. Both callers (verifyLoadable
+	// and cmd/world-publish) inherit the retry from here.
+	var result archive.CheckResult
+	var err error
+	for attempt := 1; ; attempt++ {
+		result, err = arch.CheckSource(ctx, interpreter, source)
+		var build *archive.TemplateBuildError
+		if err == nil || !errors.As(err, &build) || attempt >= templateBuildAttempts {
+			break
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("publish transition registry: %w", err)
 	}

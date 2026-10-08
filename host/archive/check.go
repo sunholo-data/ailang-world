@@ -49,15 +49,25 @@ type CheckResult struct {
 }
 
 // CheckSource proves canonical source bytes load under the archived
-// interpreter: the bytes are staged in a scratch root and
-// `<archived interpreter> check <file>` runs there, bounded by procbound
-// (a process-wide reservation plus a bounded reap) and a wall-clock context,
-// under the scrubbed child environment — the probeVersion pattern this
-// package already uses for `--version`. `check` parses and type-checks; it
-// never executes the module. ok=false means the interpreter refused the
-// source (non-zero exit, or the binary failed to start); err is reserved for
-// host-side infrastructure failures (scratch root, admission). Callers that
-// need the interpreter's verdict keep Output for their own typed errors.
+// interpreter: the bytes are staged in a scratch root at CapsuleEntryPath (the
+// capsule's own staging path) and `<archived interpreter> check <file>` runs
+// there, bounded by procbound (a process-wide reservation plus a bounded reap)
+// and a wall-clock context, under the scrubbed child environment — the
+// probeVersion pattern this package already uses for `--version`. `check`
+// parses and type-checks; it never executes the module. ok=false means the
+// interpreter refused the source (non-zero exit, or the binary failed to
+// start); err is reserved for host-side infrastructure failures (scratch
+// root, admission, and — row 153 — a passing check whose compile-cache
+// template could not be built, a *TemplateBuildError). Callers that need the
+// interpreter's verdict keep Output for their own typed errors.
+//
+// A passing check is also the template build (row 153): the interpreter is
+// pointed at a private cache directory (AILANG_CACHE_DIR, appended last so an
+// ambient value cannot win), and on success that directory is promoted to the
+// (interpreter, source) template every capsule run copies. A pass that wrote
+// no compile/manifest.json (an interpreter that ignores the variable, a full
+// disk) is a *TemplateBuildError: publishing a transition that would run cold
+// forever is refused rather than silently accepted.
 func (a *Archive) CheckSource(ctx context.Context, interpreter hashref.HashRef, source []byte) (CheckResult, error) {
 	execPath, err := a.Resolve(interpreter)
 	if err != nil {
@@ -68,19 +78,28 @@ func (a *Archive) CheckSource(ctx context.Context, interpreter hashref.HashRef, 
 		return CheckResult{}, fmt.Errorf("check source: create scratch root: %w", err)
 	}
 	defer func() { _ = os.RemoveAll(root) }()
-	const checkFile = "entry.ail"
+	checkFile := filepath.FromSlash(CapsuleEntryPath)
+	if err := os.MkdirAll(filepath.Join(root, filepath.Dir(checkFile)), 0o755); err != nil {
+		return CheckResult{}, fmt.Errorf("check source: create source directory: %w", err)
+	}
 	if err := os.WriteFile(filepath.Join(root, checkFile), source, 0o644); err != nil {
 		return CheckResult{}, fmt.Errorf("check source: stage source: %w", err)
 	}
+	tmp, err := a.NewCapsuleTemplateTmp()
+	if err != nil {
+		return CheckResult{}, fmt.Errorf("check source: create template tmp: %w", err)
+	}
+	defer func() { _ = os.RemoveAll(tmp) }() // a no-op once PromoteTemplate has renamed it away
 	runCtx, cancel := context.WithTimeout(ctx, checkTimeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, execPath, "check", checkFile)
 	cmd.Dir = root
-	// AILANG_RELAX_MODULES=1: the staged file is entry.ail, so a declared
-	// module path never matches it; without the relax flag the verdict depends
-	// on whether the interpreter recognises the scratch root as a temp dir
-	// (macOS resolves it under /private/var and does not) — measured, iter-195.
-	cmd.Env = append(childenv.Scrubbed(os.Environ()), "AILANG_RELAX_MODULES=1")
+	// AILANG_RELAX_MODULES=1: a declared module path never matches the staging
+	// path; without the relax flag the verdict depends on whether the
+	// interpreter recognises the scratch root as a temp dir (macOS resolves it
+	// under /private/var and does not) — measured, iter-195. Staging at the
+	// capsule's path (row 153) changes the name, not that reason.
+	cmd.Env = append(childenv.Scrubbed(os.Environ()), "AILANG_RELAX_MODULES=1", CacheDirEnv+"="+tmp)
 	var stdout, stderr checkBuffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	release, err := procbound.Admit()
@@ -98,7 +117,15 @@ func (a *Archive) CheckSource(ctx context.Context, interpreter hashref.HashRef, 
 		}
 		return CheckResult{Output: output, Passed: false}, nil
 	}
-	return CheckResult{Output: outputHead(stdout.String() + stderr.String()), Passed: true}, nil
+	passed := CheckResult{Output: outputHead(stdout.String() + stderr.String()), Passed: true}
+	if info, err := os.Stat(filepath.Join(tmp, filepath.FromSlash(manifestRel))); err != nil || !info.Mode().IsRegular() {
+		return passed, &TemplateBuildError{Interpreter: interpreter, Source: hashref.SumSHA256(source),
+			Reason: "check passed but wrote no compile/manifest.json"}
+	}
+	if err := a.PromoteTemplate(tmp, interpreter, source); err != nil {
+		return passed, err
+	}
+	return passed, nil
 }
 
 // outputHead keeps captured interpreter output readable in one error line:

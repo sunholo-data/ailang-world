@@ -1,0 +1,191 @@
+{
+  "id": "w-plan-phase-deadline-under-load",
+  "iteration": 241,
+  "row": 153,
+  "closes_row": 161,
+  "clause": "clause-4",
+  "authority": [
+    "design_docs/world-mission.md row 153 (D-WORLD-68 = A, attended 2026-10-07)",
+    "design_docs/planned/w-plan-phase-deadline-under-load.md (r3 carve-out, e37807e)",
+    "design_docs/planned/w-plan-phase-deadline-under-load-sprint-plan.md"
+  ],
+  "estimate": "1.75 day",
+  "scope": "One PR, 7 commits (C0 is a no-commit re-baseline), two executor runs: run 1 = M0, M1, M2, M3a; run 2 = M3b, M4-executor. Host Go + tests + one QUICKSTART paragraph; no .ail, no pin, no tools/launchd.",
+  "environment": [
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "export WORLD_EXEC_SRT_NODE_MODULES=$HOME/.ailang/state/mission-world-iter241/srt/node_modules",
+    "export WORLD_EXEC_NODE=/opt/homebrew/bin/node",
+    "export WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang  # local supplement only; CI skips these e2e"
+  ],
+  "measured_baseline": {
+    "tree": "e37807e (code == 990a6da)",
+    "logs": "~/.ailang/state/mission-world-iter241/planner-baseline/",
+    "./scripts/verify_ail.sh": "rc=0; 16 identities, 40 named tests, 444 se-tools named tests, 9/9 package steps",
+    "go vet ./...": "rc=0",
+    "go build ./... && go test ./... -count=1": "rc=0; 27/27 ok; daemon 168 s tail",
+    "go test -race ./... -count=1 -timeout 8m": "rc=0; daemon 184 s, verifygate 175 s, broker 161 s, coordinator 52 s, projection 14 s",
+    "real-srt -p 1 -v (CI's 20 names)": "rc=0; 20/20 --- PASS",
+    "fork-lock verbose": "rc=0",
+    "row-24 cleanup verbose": "rc=0",
+    "gofmt -l host/ cmd/": "empty",
+    "kernel contracts, ratchet, bench smoke/claims, gate1, census x2, gate0, personal-email x2, floor harness": "all rc=0",
+    "local supplement (tool binary set) ./host/daemon ./cmd/ailang-worldd -v": "rc=0; 236 PASS, 3 pre-existing SKIP (TestWalkRetimedAtScale, TestMeasureStartup, TestSessionPtyChildProcess)",
+    "pre_existing_reds": "none",
+    "pre_existing_flakes_observed": "none locally; row 153/161 signature is CI-parallel-leg-only"
+  },
+  "planner_measurements": {
+    "P-M1": "check-built template under production check env warms a minimal-env capsule run in another root: 27-31 ms vs cold 171-181 ms, identical stdout",
+    "P-M2": "a warm run on a complete template changes no cache content (only compile/manifest.json mtime); with compile/modules/host__capsule__main removed the run adds 5 files",
+    "P-M3": "a stale template (other source) yields byte-identical stdout and silently recompiles 10 files: MUT-STALE-KEY is invisible to output equality",
+    "P-M4": "MOD010 relaxed-module warning appears on stderr only when the interpreter compiles: deterministic warmth witness for se_tools/* sources",
+    "P-M5": "simulated hard failure reds exactly 19 fake-interpreter tests (archive 1, transitionreg 12, daemon 3, cmd/world-publish 3); all real-interpreter rigs pass"
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Re-baseline on HEAD",
+      "deliverable": "Run the sprint plan section 2.3 gate list before any edit; diff against the planner baseline; mismatch stops the run.",
+      "files": [],
+      "acceptance_commands": ["sprint plan section 2.3"],
+      "mutations": []
+    },
+    {
+      "id": "M1",
+      "title": "Typed phase timeout + diagnosable rig (AC1.1-AC1.7)",
+      "commits": ["C1 coordinator + projection", "C2 daemon rig + frozen wire + QUICKSTART"],
+      "files": [
+        "host/coordinator/errors.go",
+        "host/coordinator/effectful.go",
+        "host/coordinator/coordinator.go",
+        "host/coordinator/phase_timeout_test.go",
+        "host/projection/projection.go",
+        "host/projection/projection_test.go",
+        "host/projection/a2a_wire_test.go",
+        "host/daemon/testlog_test.go",
+        "host/daemon/exec_e2e_srt_test.go",
+        "host/daemon/mcp_plan_timeout_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.3",
+        "go test ./host/coordinator/ -count=1 -v -run '^(TestClassifyPhaseErrMatrix|TestA2APlanTimeoutRetrySameTaskID)$'",
+        "go test ./host/projection/ -count=1 -v -run '^(TestA2ADispatch|TestA2APlanTimeoutIsTypedAndNamesThePhase|TestA2AFinishOverrunStaysEffectsUnrecorded)$'",
+        "go test ./host/daemon/ -count=1 -v -run '^TestMCPPlanTimeoutFrozenWire$'"
+      ],
+      "mutations": [
+        {"mutation": "MUT-RELABEL: classifyPhaseErr treats parentErr as nil (parentErr == nil -> true)", "must_fail_test": "TestClassifyPhaseErrMatrix (DE,DE) row"},
+        {"mutation": "MUT-NOWRAP: delete PhaseTimeoutError.Unwrap", "must_fail_test": "TestClassifyPhaseErrMatrix (nil,DE) row; TestMCPPlanTimeoutFrozenWire (wire becomes host callback failed)"},
+        {"mutation": "MUT-ORDER: move the plan-timeout case below the generic deadline case (projection.go:461)", "must_fail_test": "TestA2APlanTimeoutIsTypedAndNamesThePhase (table + wire)"},
+        {"mutation": "MUT-GENERIC: message without phase/budget", "must_fail_test": "TestA2APlanTimeoutIsTypedAndNamesThePhase"},
+        {"mutation": "MUT-ANYPHASE: drop && phase.Phase == \"plan\"", "must_fail_test": "TestA2APlanTimeoutIsTypedAndNamesThePhase finish row"},
+        {"mutation": "MUT-ORDER-FINISH: move the plan-timeout case above the EffectsUnrecorded case (projection.go:437)", "must_fail_test": "TestA2AFinishOverrunStaysEffectsUnrecorded synthetic table row (the e2e arm cannot kill it: design defect D4)"},
+        {"mutation": "MUT-UNWRAP-FINISH: effectful.go:306 return unrecorded(err) -> return Result{}, err", "must_fail_test": "TestA2AFinishOverrunStaysEffectsUnrecorded wire arm"},
+        {"mutation": "MUT-EARLY-INTENT (proxy): c.uncertainIntent.Store(id, struct{}{}) as first line of dispatchEffectful", "must_fail_test": "TestA2APlanTimeoutRetrySameTaskID"},
+        {"mutation": "MUT-SILENT-ERROR proof: second call command where -> no-such-command", "must_fail_test": "TestExecSrtMCPEndToEnd fails at callOK printing {Code Message}, not at where = <nil>"}
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Derived plan cap 4 s (AC2.1-AC2.4)",
+      "commits": ["C3"],
+      "files": [
+        "host/coordinator/effectful.go",
+        "host/coordinator/phase_timeout_test.go",
+        "host/daemon/plan_budget_test.go"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.3",
+        "go test ./host/daemon/ -count=1 -v -run '^(TestPlanPhaseBudgetIsDerived|TestExecMaxTimeoutIsHandlerCapLessOneSecond)$'",
+        "go test ./host/coordinator/ -count=1 -v -run '^TestSlowPlanLeavesHandlerItsCap$'"
+      ],
+      "mutations": [
+        {"mutation": "MUT-GUESS: PlanPhaseBudget = 3 * time.Second", "must_fail_test": "TestPlanPhaseBudgetIsDerived"},
+        {"mutation": "HandlerCap = 9 * time.Second alone", "must_fail_test": "TestPlanPhaseBudgetIsDerived (+ TestExecMaxTimeoutIsHandlerCapLessOneSecond)"},
+        {"mutation": "MUT-STEAL: PlanPhaseBudget = 5 * time.Second", "must_fail_test": "TestSlowPlanLeavesHandlerItsCap (handler deadline - plan return = 9.5 s < 9.9 s)"},
+        {"mutation": "MUT-DEFAULT: New sets planBudget = 2 * PlanPhaseBudget", "must_fail_test": "TestSlowPlanLeavesHandlerItsCap"}
+      ]
+    },
+    {
+      "id": "M3a",
+      "title": "Template built in the publication check, copied into every run, labelled cold runs (AC3.1 build/error/racer/retry, AC3.2-AC3.6)",
+      "commits": ["C4 (optionally C4a archive+transitionreg+fakes, C4b capsule+daemon wiring+tripwire)"],
+      "files": [
+        "host/archive/capsulecache.go",
+        "host/archive/check.go",
+        "host/archive/check_test.go",
+        "host/archive/capsulecache_test.go",
+        "host/transitionreg/verify.go",
+        "host/transitionreg/verify_test.go",
+        "host/transitionreg/template_test.go",
+        "host/capsule/capsule.go",
+        "host/capsule/cachetemplate.go",
+        "host/capsule/cachetemplate_test.go",
+        "host/coordinator/setools_package_test.go",
+        "host/daemon/daemon.go",
+        "host/daemon/registry_publisher_test.go",
+        "host/daemon/workspace_test.go",
+        "host/daemon/testlog_test.go",
+        "cmd/world-publish/transitions_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.3",
+        "go test ./host/archive/ ./host/transitionreg/ ./host/daemon/ ./host/broker/ ./cmd/... -count=1 -v (with WORLD_TOOL_AILANG_BIN): 0 FAIL, 16 TestSeTools*/TestWorkspaceRead* PASS, no tripwire line",
+        "go test ./host/capsule/ ./host/archive/ ./host/transitionreg/ ./host/coordinator/ -count=1 -v -run '^(TestPublishBuildsCapsuleTemplates|TestTemplateRenameRacerIsSuccess|TestPublishRetriesTemplateBuildError|TestCapsuleTemplateIsCopiedNotShared|TestCapsulePromotionSurvivesCrossDevice|TestCapsuleColdRunIsLabelled|TestCapsuleWarmEqualsColdForSeTools|TestCapsuleWarmIsFaster|TestPinnedInterpreterHonoursCacheDir)$'",
+        "./scripts/bench_worldd.sh --smoke"
+      ],
+      "mutations": [
+        {"mutation": "MUT-PUBLISH-NOTEMPLATE: delete the AILANG_CACHE_DIR env append in CheckSource (and, second arm, also the manifest check)", "must_fail_test": "TestPublishBuildsCapsuleTemplates"},
+        {"mutation": "MUT-RACER-ERROR: racer predicate -> false", "must_fail_test": "TestTemplateRenameRacerIsSuccess"},
+        {"mutation": "MUT-WEDGE: templateBuildAttempts = 1", "must_fail_test": "TestPublishRetriesTemplateBuildError"},
+        {"mutation": "MUT-SHARE: AILANG_CACHE_DIR = template dir", "must_fail_test": "TestCapsuleTemplateIsCopiedNotShared (incomplete template gains 5 files)"},
+        {"mutation": "MUT-CROSS-DEVICE-RENAME: PromoteCopy renames the run dir straight into the archive", "must_fail_test": "TestCapsulePromotionSurvivesCrossDevice (EXDEV seam)"},
+        {"mutation": "MUT-SILENT-COLD (run side): delete the cold-compile Fprintf", "must_fail_test": "TestCapsuleColdRunIsLabelled"},
+        {"mutation": "MUT-NO-PROMOTE: delete the PromoteCopy call", "must_fail_test": "TestCapsuleColdRunIsLabelled second-run arm"},
+        {"mutation": "MUT-STALE-KEY: template key = interpreter only", "must_fail_test": "TestCapsuleWarmEqualsColdForSeTools cross-source + warm arms (MOD010 witness); output equality alone survives (P-M3)"},
+        {"mutation": "MUT-NOTEMPLATE: skip copyTree", "must_fail_test": "TestCapsuleWarmIsFaster (MOD010 on warm stderr; ratio)"},
+        {"mutation": "CacheDirEnv = AILANG_CACHE_DIRX (floor-drift emulation)", "must_fail_test": "TestPinnedInterpreterHonoursCacheDir"},
+        {"mutation": "tripwire proof: RemoveAll workspace-exec template after publishSeTools in newExecSrtRig", "must_fail_test": "TestExecSrtMCPEndToEnd via the cold-compile tripwire"}
+      ]
+    },
+    {
+      "id": "M3b",
+      "title": "Daemon per-descriptor template status, rebuild after listener-ready, GC (AC3.1 GC, AC3.7)",
+      "commits": ["C5"],
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/templates.go",
+        "host/daemon/templates_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.3",
+        "go test ./host/daemon/ -count=1 -v -run '^(TestDaemonStartReportsMissingTemplates|TestTemplateGCPrunesStaleInterpDigests)$'",
+        "go test -race ./host/daemon/ -count=1 -v -run '^(TestDaemonStartReportsMissingTemplates|TestTemplateGCPrunesStaleInterpDigests)$'",
+        "local supplement with WORLD_TOOL_AILANG_BIN"
+      ],
+      "mutations": [
+        {"mutation": "MUT-SILENT-COLD (startup): delete the capsule template status Fprintf", "must_fail_test": "TestDaemonStartReportsMissingTemplates (i)"},
+        {"mutation": "MUT-BLOCKING-PREWARM: rebuild synchronously in New", "must_fail_test": "TestDaemonStartReportsMissingTemplates (Run never announces while the gate is held)"},
+        {"mutation": "MUT-SOFT-PUBLISH: CheckSource ignores a missing manifest", "must_fail_test": "TestDaemonStartReportsMissingTemplates (v)"},
+        {"mutation": "MUT-NO-GC: prune loop continues unconditionally", "must_fail_test": "TestTemplateGCPrunesStaleInterpDigests"}
+      ]
+    },
+    {
+      "id": "M4-executor",
+      "title": "Evidence: verification dir + AC3.8/AC4.1 proxy V-row",
+      "commits": ["C6"],
+      "files": ["design_docs/verification/world-row153/"],
+      "acceptance_commands": [
+        "proxy/bg_load.sh 8 4 on the M3b head with the probe patch re-applied uncommitted: 0 plan timeouts, 0 cold compile lines, per-descriptor ready, first-plan child <= 1 s",
+        "bash scripts/check_no_personal_email.sh",
+        "git diff --numstat 990a6da HEAD | awk '$1==\"-\"' (empty: no binaries)"
+      ],
+      "mutations": []
+    }
+  ],
+  "mutation_revert": "Apply each mutation alone on top of the milestone's own commit; run the named test -count=1 -v; require --- FAIL with the stated reason; git checkout -- <file>; require git diff --quiet before the next. A mutation that does not red is a finding to report, never a mutation to strengthen silently.",
+  "controller_owned": ["AC4.2: 5/5 consecutive CI attempts, every attempt recorded", "AC4.3: charter rows 153 LANDED / 161 closed, follow-up rows", "M1/M2 expected CI reruns, counted with signature"],
+  "out_of_scope": "b3 (verify-once) is follow-up row w-capsule-verify-once; FinishPhaseBudget stays 2 s (R2); MCP wire stays host callback timed out until row 159 / ailang#1602; no CI step moves (lever c3 is attended-only)."
+}

@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -144,7 +143,9 @@ func newWSDaemon(t *testing.T, cfg Config) (*Daemon, error) {
 	t.Helper()
 	cfg.BindHost = DefaultBindHost
 	if cfg.ErrorLog == nil {
-		cfg.ErrorLog = io.Discard
+		// Row 153 AC3.6: the default log is the cold-compile tripwire, so no
+		// rig can run a transition without its capsule template unnoticed.
+		cfg.ErrorLog = testOperatorLog(t)
 	}
 	d, err := New(boundedTestContext(t), cfg)
 	if err == nil {
@@ -494,6 +495,14 @@ func publishReadTool(t *testing.T, d *Daemon, interp hashref.HashRef, src string
 		SemanticID: "world/transition-source/v1", Provenance: "workspace_test", Payload: source}
 	if err := d.store.PutObject(ctx, srcObj); err != nil {
 		t.Fatal(err)
+	}
+	// publishReadTool bypasses PublishSet, so it builds the capsule template
+	// itself (row 153 P10) when interp is an interpreter this daemon archived;
+	// callers pinning a fake hash never run the source and are skipped.
+	if _, err := archive.New(d.cfg.DBPath).Resolve(interp); err == nil {
+		if res, err := archive.New(d.cfg.DBPath).CheckSource(ctx, interp, source); err != nil || !res.Passed {
+			t.Fatalf("publishReadTool: build capsule template = (%+v, %v)", res, err)
+		}
 	}
 	desc := transitionreg.Descriptor{ID: "ws.read", TransitionFn: srcObj.Hash, Interpreter: interp, SemanticsEpoch: 1,
 		InputSchema: []byte(`{"type":"object"}`), OutputSchema: []byte(`{"type":"object"}`),

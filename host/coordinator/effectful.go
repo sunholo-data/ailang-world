@@ -33,8 +33,16 @@ import (
 // remaining − HandlerHeadroom); the headroom is the finish phase plus the
 // post-effect writes, so a call whose handler uses its whole cap still
 // commits inside the caller's deadline.
+//
+// PlanPhaseBudget is DERIVED (row 153), not guessed: it is the largest plan
+// cap that still leaves the handler its full cap inside the daemon's 20 s
+// invocation deadline (daemon invokeDeadline, daemon.go:99, pinned by mcp_test.go:165):
+// 20 s − HandlerCap − HandlerHeadroom = 20 − 10 − (2 + 4) = 4 s. Pinned by
+// daemon.TestPlanPhaseBudgetIsDerived and coordinator.TestSlowPlanLeavesHandlerItsCap.
+// FinishPhaseBudget stays 2 s: it is part of the headroom, so raising it would
+// lower the plan cap one-for-one (AC2.4, R2).
 const (
-	PlanPhaseBudget   = 2 * time.Second
+	PlanPhaseBudget   = 4 * time.Second
 	FinishPhaseBudget = 2 * time.Second
 	HandlerCap        = 10 * time.Second
 	HandlerHeadroom   = FinishPhaseBudget + PostEffectBudget
@@ -123,16 +131,33 @@ func detached(ctx context.Context, budget time.Duration) (context.Context, conte
 	return context.WithTimeout(context.WithoutCancel(ctx), budget)
 }
 
+// classifyPhaseErr names why a phase's capsule run ended (row 153). phaseErr is
+// the phase context's error, parentErr the caller's. A phase that ran out of its
+// own budget while the caller was still live is a *PhaseTimeoutError; if the
+// caller's context is done too, the caller's deadline or cancel wins and the
+// error keeps its pre-row-153 text. nil means "not a timeout": the caller falls
+// through to classifyExec.
+func classifyPhaseErr(phase string, budget, elapsed time.Duration, parentErr, phaseErr error) error {
+	if phaseErr == nil {
+		return nil
+	}
+	if parentErr == nil {
+		return &PhaseTimeoutError{Phase: phase, Budget: budget, Elapsed: elapsed}
+	}
+	return fmt.Errorf("coordinator: execute %s phase: %w", phase, phaseErr)
+}
+
 // runPhase runs one convention-v2 phase in the capsule under its own cap.
 func (c *Coordinator) runPhase(ctx context.Context, budget time.Duration, interp hashref.HashRef, src []byte, in phaseInput) ([]byte, error) {
 	pctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
+	start := time.Now()
 	res, err := c.cfg.Runner.RunContext(pctx, capsule.Entry{
 		Interpreter: interp, Source: src, Args: mustJSON(string(mustJSON(in))),
 	})
 	if err != nil {
-		if cerr := pctx.Err(); cerr != nil {
-			return nil, fmt.Errorf("coordinator: execute %s phase: %w", in.Phase, cerr)
+		if cerr := classifyPhaseErr(in.Phase, budget, time.Since(start), ctx.Err(), pctx.Err()); cerr != nil {
+			return nil, cerr
 		}
 		return nil, classifyExec(err)
 	}
@@ -203,7 +228,7 @@ func (c *Coordinator) composeEffectOutput(finishCtx context.Context, interp hash
 				fed[i].Output = canonical
 			}
 		}
-		out, err := c.runPhase(finishCtx, FinishPhaseBudget, interp, src, phaseInput{Phase: "finish", Args: input, Results: fed})
+		out, err := c.runPhase(finishCtx, c.finishBudget, interp, src, phaseInput{Phase: "finish", Args: input, Results: fed})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -257,7 +282,7 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id
 		return Result{}, err
 	}
 	now := c.cfg.Now() // one logical time: the effect requests and the intent
-	planOut, err := c.runPhase(ctx, PlanPhaseBudget, d.Interpreter, src.Payload, phaseInput{Phase: "plan", Args: input})
+	planOut, err := c.runPhase(ctx, c.planBudget, d.Interpreter, src.Payload, phaseInput{Phase: "plan", Args: input})
 	if err != nil {
 		return Result{}, err
 	}
@@ -299,7 +324,7 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id
 	unrecorded := func(cause error) (Result, error) {
 		return Result{}, &EffectsUnrecordedError{InvocationID: id, EffectRecords: records, Cause: cause}
 	}
-	fctx, cancelFinish := detached(ctx, FinishPhaseBudget)
+	fctx, cancelFinish := detached(ctx, c.finishBudget)
 	outBytes, outObj, err := c.composeEffectOutput(fctx, d.Interpreter, src.Payload, input, pl, planRef, results)
 	cancelFinish()
 	if err != nil {
@@ -384,7 +409,7 @@ func (c *Coordinator) Replay(ctx context.Context, invocationID string, open Repl
 	}
 
 	// (1) the plan phase reproduces the recorded plan object.
-	planOut, err := c.runPhase(ctx, PlanPhaseBudget, interp, src, phaseInput{Phase: "plan", Args: input})
+	planOut, err := c.runPhase(ctx, c.planBudget, interp, src, phaseInput{Phase: "plan", Args: input})
 	if err != nil {
 		return nil, err
 	}

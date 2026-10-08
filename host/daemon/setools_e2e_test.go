@@ -724,11 +724,20 @@ type r14Store struct{ *store.Store }
 func (r14Store) Commit(context.Context, store.Commit) error { return &store.ConflictError{} }
 
 // serveR14 rebinds r's projection to a coordinator over r14Store, logging
-// operator refusals to errLog, and serves it from a fresh server.
+// operator refusals to errLog, and serves it from a fresh server. The runner
+// logs to the row-153 tripwire log (judge N9), so a cold compile through this
+// coordinator fails the test.
 func (r *seRig) serveR14(errLog io.Writer) {
+	r.t.Helper()
+	r.serveWith(r14Store{r.d.store}, capsule.New(archive.New(r.f.db), capsule.Config{Log: testOperatorLog(r.t)}), errLog)
+}
+
+// serveWith rebinds r's projection to a coordinator over cs and runner,
+// logging operator refusals to errLog, and serves it from a fresh server.
+func (r *seRig) serveWith(cs coordinator.Store, runner coordinator.Runner, errLog io.Writer) {
 	t := r.t
 	t.Helper()
-	coord, err := coordinator.New(coordinator.Config{Store: r14Store{r.d.store}, Runner: capsule.New(archive.New(r.f.db), capsule.Config{}),
+	coord, err := coordinator.New(coordinator.Config{Store: cs, Runner: runner,
 		Binder: r.d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
 		t.Fatal(err)

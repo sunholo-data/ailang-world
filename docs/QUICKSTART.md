@@ -93,7 +93,31 @@ carrying the route. A2A not-available refusals similarly write
 `ailang-worldd: a2a refusal: tasks/send <invocation-id-or->: "<escaped cause>"`, and MCP refusals write
 `ailang-worldd: mcp refusal: tools/call <invocation-id-or->: "<escaped cause>"` (or `tools/list -`)
 to stderr (or the configured ErrorLog), with embedded newlines escaped. So the terminal running `serve` is where you read *why* a 500 happened — the
-HTTP client is told *that* one happened, and nothing about the host.
+HTTP client is told *that* one happened, and nothing about the host. A transition whose **plan
+phase** runs out of its own time budget (the caller still waiting) answers an A2A `-32603` that
+names the phase and the budget (`transition plan phase exceeded its <budget> budget; nothing ran
+or was committed; resend the same task id`) — nothing ran, so resending the same task id is safe;
+the matching operator line reads `… plan phase exceeded its <budget> budget after <elapsed>`. MCP
+clients see the released handler's fixed `host callback timed out` for the same event.
+
+Publishing a transition (the `world-publish transitions` verb, or anything that calls the registry
+publisher) also **builds that transition's compile-cache template** under
+`<db>.artifacts/capsule-cache/<interpreter-digest>/<source-sha256>/`; every capsule run starts from a
+copy of it, which is what keeps the plan phase fast under load. A publish whose interpreter passes
+the check but writes no template is refused (retried three times first) rather than accepted into a
+registry that would run cold forever. A run that finds no template (a store published before this
+change, or a deleted cache) still works, but is never silent: it writes
+`capsule: cold compile <interpreter-digest>/<source-sha256> (template missing)` to the daemon's
+stderr (or the configured ErrorLog) once, and its success leaves the template behind for the next run.
+
+At startup the daemon states, per transition in the registry head, whether its template is there:
+`ailang-worldd: capsule template <id>: ready` or `… <id>: missing` (a stat each; it never builds
+anything before it serves). Once the listener is up, a background pass rebuilds each `missing` one
+(two at a time, each bounded by the 10 s check limit) and writes `capsule template <id>: rebuilt in
+<duration>` or `… <id>: rebuild failed: <reason>`; a call that arrives first simply runs cold and is
+labelled as above. The same pass prunes `capsule-cache/<digest>/` directories of interpreters no
+transition pins any more (`capsule template gc: pruned <n>: <digests>`) and any `.tmp-*` build
+directory older than twenty seconds.
 
 ```bash
 /tmp/ailang-worldd health

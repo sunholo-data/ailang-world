@@ -1,8 +1,10 @@
 package coordinator
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
@@ -154,3 +156,21 @@ func (e *IntegrityError) Error() string {
 	}
 	return fmt.Sprintf("coordinator: reconcile %s: recorded %s %s", e.InvocationID, e.Object, phrase)
 }
+
+// PhaseTimeoutError (row 153) reports that a convention-v2 phase exhausted its
+// OWN budget while the caller's context was still live: the capsule was slow,
+// not the caller impatient. It unwraps to context.DeadlineExceeded so every
+// existing classifier that treats a deadline as "nothing known" still holds;
+// the surface layer matches the type first to name the phase. Phase is "plan"
+// or "finish"; Elapsed is the wall the phase had used when it was cut off.
+type PhaseTimeoutError struct {
+	Phase           string
+	Budget, Elapsed time.Duration
+}
+
+func (e *PhaseTimeoutError) Error() string {
+	return fmt.Sprintf("coordinator: %s phase exceeded its %s budget after %s", e.Phase, e.Budget, e.Elapsed.Round(10*time.Millisecond))
+}
+
+// Unwrap keeps errors.Is(err, context.DeadlineExceeded) true (AC1.2).
+func (e *PhaseTimeoutError) Unwrap() error { return context.DeadlineExceeded }

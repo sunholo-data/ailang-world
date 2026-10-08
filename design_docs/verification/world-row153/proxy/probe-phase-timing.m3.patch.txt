@@ -1,0 +1,127 @@
+diff -u a/host/capsule/capsule.go b/host/capsule/capsule.go
+--- a/host/capsule/capsule.go	2026-10-08 00:47:30
++++ b/host/capsule/capsule.go	2026-10-08 00:47:47
+@@ -195,13 +195,25 @@
+ // derived from ctx, so the earlier of the caller's deadline and the exec
+ // allowance kills the process group.
+ func (r *Runner) RunContext(parent context.Context, entry Entry) (Result, error) {
+-	execPath, err := r.archive.Resolve(entry.Interpreter)
++	probeT0 := time.Now()
++	var execPath string
++	var probeCold bool
++	probeMark := map[string]time.Duration{}
++	defer func() {
++		if os.Getenv("WORLD_PROBE_PHASE_TIMING") != "" {
++			fmt.Fprintf(os.Stderr, "PROBE capsule srclen=%d cold=%v resolve=%v verify=%v stage=%v start=%v child=%v total=%v\n", len(entry.Source), probeCold, probeMark["resolve"], probeMark["verify"], probeMark["stage"], probeMark["start"], probeMark["child"], time.Since(probeT0))
++		}
++	}()
++	var err error
++	execPath, err = r.archive.Resolve(entry.Interpreter)
++	probeMark["resolve"] = time.Since(probeT0)
+ 	if err != nil {
+ 		return Result{}, err
+ 	}
+ 	if err := verifyExecutable(execPath, entry.Interpreter); err != nil {
+ 		return Result{}, err
+ 	}
++	probeMark["verify"] = time.Since(probeT0)
+ 
+ 	root, err := os.MkdirTemp("", "world-capsule-*")
+ 	if err != nil {
+@@ -218,6 +230,8 @@
+ 	}
+ 
+ 	cacheDir, cold, err := r.seedCache(root, entry.Interpreter, entry.Source)
++	probeCold = cold
++	probeMark["stage"] = time.Since(probeT0)
+ 	if err != nil {
+ 		return Result{}, err
+ 	}
+@@ -274,6 +288,8 @@
+ 		return Result{}, &ExecError{Path: execPath, Err: err}
+ 	}
+ 	started := time.Now()
++	probeMark["start"] = time.Since(probeT0)
++	defer func() { probeMark["child"] = time.Since(started) }()
+ 	closer := time.AfterFunc(r.execTimeout+pipeCloseGrace, func() {
+ 		_ = stdoutPipe.Close()
+ 		_ = stderrPipe.Close()
+diff -u a/host/coordinator/effectful.go b/host/coordinator/effectful.go
+--- a/host/coordinator/effectful.go	2026-10-08 00:47:30
++++ b/host/coordinator/effectful.go	2026-10-08 00:47:47
+@@ -20,6 +20,7 @@
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
++	"os"
+ 	"time"
+ 
+ 	"github.com/sunholo-data/ailang-world/host/broker"
+@@ -152,6 +153,11 @@
+ 	pctx, cancel := context.WithTimeout(ctx, budget)
+ 	defer cancel()
+ 	start := time.Now()
++	defer func() {
++		if os.Getenv("WORLD_PROBE_PHASE_TIMING") != "" {
++			fmt.Fprintf(os.Stderr, "PROBE phase=%s took=%v err=%v\n", in.Phase, time.Since(start), pctx.Err())
++		}
++	}()
+ 	res, err := c.cfg.Runner.RunContext(pctx, capsule.Entry{
+ 		Interpreter: interp, Source: src, Args: mustJSON(string(mustJSON(in))),
+ 	})
+diff -u a/host/daemon/exec_e2e_srt_test.go b/host/daemon/exec_e2e_srt_test.go
+--- a/host/daemon/exec_e2e_srt_test.go	2026-10-08 00:47:30
++++ b/host/daemon/exec_e2e_srt_test.go	2026-10-08 00:47:47
+@@ -29,6 +29,7 @@
+ // profile names three commands in the fixture worktree ep1.
+ func newExecSrtRig(t *testing.T) *seRig {
+ 	t.Helper()
++	probeRig0 := time.Now()
+ 	interp := os.Getenv("AILANG_BIN")
+ 	if interp == "" {
+ 		t.Skipf("SKIP %s: AILANG_BIN unset: the workspace-exec plan runs in the pinned %s", t.Name(), seInterpreterRelease)
+@@ -69,7 +70,9 @@
+ 		t.Fatal("the daemon did not configure the coordinator and workspace-exec")
+ 	}
+ 	seGenesis(t, d)
++	probePub0 := time.Now()
+ 	publishSeTools(t, d, f.db)
++	probePublishReport(t, d, f.db, time.Since(probePub0), time.Since(probeRig0))
+ 	srv := httptest.NewServer(d.Handler())
+ 	t.Cleanup(srv.Close)
+ 	return &seRig{t: t, f: f, d: d, srv: srv, client: &http.Client{Timeout: DefaultClientTimeout}}
+diff -u a/host/daemon/zz_probe_test.go b/host/daemon/zz_probe_test.go
+--- a/host/daemon/zz_probe_test.go	1970-01-01 01:00:00
++++ b/host/daemon/zz_probe_test.go	2026-10-08 00:47:47
+@@ -0,0 +1,31 @@
++package daemon
++
++import (
++	"fmt"
++	"os"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/sunholo-data/ailang-world/host/archive"
++	"github.com/sunholo-data/ailang-world/host/transitionreg"
++)
++
++func probePublishReport(t *testing.T, d *Daemon, db string, pub, rig time.Duration) {
++	t.Helper()
++	_, rev, ok, err := transitionreg.NewReader(d.store).CurrentRevision(boundedTestContext(t))
++	if err != nil || !ok {
++		t.Fatalf("probe: head %v %v", ok, err)
++	}
++	arch := archive.New(db)
++	var st []string
++	for _, desc := range rev.Entries {
++		obj, _, _ := d.store.GetObject(boundedTestContext(t), desc.TransitionFn)
++		state := "missing"
++		if arch.CapsuleTemplateReady(desc.Interpreter, obj.Payload) {
++			state = "ready"
++		}
++		st = append(st, desc.ID+"="+state)
++	}
++	fmt.Fprintf(os.Stderr, "PROBE publish=%v rig-setup-to-serving=%v templates[%d]: %s\n", pub, rig, len(st), strings.Join(st, " "))
++}
