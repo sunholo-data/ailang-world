@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sunholo-data/ailang-world/host/agui"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/workbench"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -275,5 +278,122 @@ func TestWorkbenchLiveStoreError(t *testing.T) {
 	writeWorkbenchError(want, 500, "Internal", workbenchInternalStoreFailureMessage)
 	if r.Body.String() != want.Body.String() || strings.Contains(r.Body.String(), "SECRET") || strings.Contains(r.Body.String(), "<script") {
 		t.Fatalf("error HTML differs from constant sanitized page: %s", r.Body)
+	}
+}
+
+func liveAsset(t *testing.T) []byte {
+	t.Helper()
+	b := workbench.LiveScript
+	if len(b) == 0 {
+		t.Fatal("live asset empty")
+	}
+	return b
+}
+func TestWorkbenchLiveScriptTag(t *testing.T) {
+	d := newHandlerDaemon(t)
+	body := workbenchLiveBody(t, d, "/workbench")
+	if strings.Count(body, "<script") != 1 || !strings.Contains(body, `<script src="/workbench/live.js" defer></script>`) {
+		t.Fatal("success page needs exactly one external deferred script")
+	}
+	if regexp.MustCompile(`\bon[a-z]+\s*=`).MatchString(body) {
+		t.Fatal("inline event handler")
+	}
+}
+func TestWorkbenchErrorPageInert(t *testing.T) {
+	d := newHandlerDaemon(t)
+	if !strings.Contains(workbenchLiveBody(t, d, "/workbench"), `<script src="/workbench/live.js" defer></script>`) {
+		t.Fatal("success-script positive control missing")
+	}
+	for _, tc := range []struct {
+		path   string
+		status int
+	}{{"/workbench?bogus=1", 400}, {"/workbench?from=0&entry=99", 404}, {"/workbench", 500}} {
+		t.Run(strconv.Itoa(tc.status), func(t *testing.T) {
+			if tc.status == 500 {
+				d.reads = &workbenchLatestReads{readStore: d.reads, fail: true}
+			}
+			r := requestRecorder(t, d, "GET", tc.path, nil)
+			if r.Code != tc.status {
+				t.Fatalf("status=%d want %d", r.Code, tc.status)
+			}
+			if strings.Contains(r.Body.String(), "<script") {
+				t.Fatal("error page contains script")
+			}
+		})
+	}
+}
+func TestWorkbenchLiveScriptRoute(t *testing.T) {
+	d := newHandlerDaemon(t)
+	if !d.isProtected(httptest.NewRequest("POST", "/v1/commit", nil)) {
+		t.Fatal("protected positive control")
+	}
+	for _, path := range []string{"/workbench/live.js", "/workbench"} {
+		if d.isProtected(httptest.NewRequest("GET", path, nil)) {
+			t.Fatalf("GET %s protected", path)
+		}
+	}
+	r := requestRecorder(t, d, "GET", "/workbench/live.js", nil)
+	if r.Code != 200 {
+		t.Fatalf("script status=%d want 200", r.Code)
+	}
+	for k, v := range map[string]string{"Content-Type": "text/javascript; charset=utf-8", "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'"} {
+		if r.Header().Get(k) != v {
+			t.Errorf("%s=%q want %q", k, r.Header().Get(k), v)
+		}
+	}
+	if !bytes.Equal(r.Body.Bytes(), liveAsset(t)) {
+		t.Fatal("script differs from asset")
+	}
+	if r := requestRecorder(t, d, "POST", "/workbench/live.js", nil); r.Code != 405 {
+		t.Fatalf("POST script=%d want 405", r.Code)
+	}
+}
+func TestLiveScriptContract(t *testing.T) {
+	script := string(liveAsset(t))
+	extract := func(pattern string) string {
+		t.Helper()
+		m := regexp.MustCompile(pattern).FindStringSubmatch(script)
+		if len(m) != 2 || m[1] == "" {
+			t.Fatalf("missing extraction: %s", pattern)
+		}
+		return m[1]
+	}
+	if got := extract(`const STATE_SCHEMA = "([^"]+)";`); got != agui.StateSchema {
+		t.Fatalf("schema=%s", got)
+	}
+	var regions []string
+	if err := json.Unmarshal([]byte(extract(`const REGIONS = (\[[^\n]+\]);`)), &regions); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{`nav[aria-label="world browser"]`, `section[aria-label="timeline"]`, `section[aria-label="live"]`, `section[aria-label="world graph"]`, `section[aria-label="decisions"]`}
+	if !reflect.DeepEqual(regions, want) {
+		t.Fatalf("REGIONS=%v want exact five without footer %v", regions, want)
+	}
+	if got := extract(`fetch\("([^"]+)", \{method: "POST"`); got != "/agui/" {
+		t.Fatalf("POST path=%s", got)
+	}
+	empty, seeded := newHandlerDaemon(t), newHandlerDaemon(t)
+	c := workbenchLiveREST(t, seeded, []int64{0})
+	variants := []struct {
+		name string
+		d    *Daemon
+		path string
+	}{{"empty", empty, "/workbench"}, {"home", seeded, "/workbench"}, {"entry", seeded, "/workbench?from=0&entry=0"}, {"object", seeded, "/workbench?object=" + c.Objects[0].Hash.String()}}
+	if len(variants) == 0 {
+		t.Fatal("no variants")
+	}
+	for _, v := range variants {
+		t.Run(v.name, func(t *testing.T) {
+			body := workbenchLiveBody(t, v.d, v.path)
+			for _, selector := range regions {
+				label := regexp.MustCompile(`aria-label="([^"]+)"`).FindStringSubmatch(selector)
+				if len(label) != 2 {
+					t.Fatal("invalid selector")
+				}
+				if n := strings.Count(body, `aria-label="`+label[1]+`"`); n != 1 {
+					t.Fatalf("%s count=%d", selector, n)
+				}
+			}
+		})
 	}
 }

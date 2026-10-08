@@ -48,7 +48,7 @@ func TestWorkbenchSecurityHeaders(t *testing.T) {
 		// M22 (delete the `default-src 'none'; ` token) is invisible: measured, that
 		// mutant landed, built rc=0 and left the whole package rc=0 with an empty FAIL
 		// set. A tautological oracle cannot fail at any point in the sprint.
-		"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+		"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
 		"X-Content-Type-Options":  "nosniff",
 		"Referrer-Policy":         "no-referrer",
 	}
@@ -383,7 +383,7 @@ func assertWorkbenchSecurityHeaders(t *testing.T, header http.Header) {
 	wants := map[string]string{
 		"Content-Type":            "text/html; charset=utf-8",
 		"Cache-Control":           "no-store",
-		"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+		"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
 		"X-Content-Type-Options":  "nosniff",
 		"Referrer-Policy":         "no-referrer",
 	}

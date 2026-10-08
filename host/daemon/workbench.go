@@ -17,7 +17,7 @@ import (
 
 const WorkbenchPageLimit = workbench.WorkbenchPageLimit
 
-const workbenchCSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+const workbenchCSP = "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 
 const (
 	unknownWorkbenchKeyMessage           = "unsupported workbench query parameter"
@@ -555,4 +555,13 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = workbench.Render(w, page)
+}
+
+// handleWorkbenchScript serves the one embedded same-origin browser consumer.
+func (d *Daemon) handleWorkbenchScript(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	_, _ = w.Write(workbench.LiveScript)
 }
