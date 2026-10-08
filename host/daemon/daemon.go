@@ -865,6 +865,8 @@ func releaseFromVersion(version string) string {
 // POST /agui/ is an additive read-only AG-UI 1.0 SSE run, bounded to 18 s
 // from handler entry. Resume with standard state or Last-Event-ID; see
 // docs/QUICKSTART.md, "Watch the world live".
+// GET /workbench/live.js serves the embedded same-origin live client; see
+// docs/QUICKSTART.md, "Open the live workbench" for the read-only panes.
 //
 // The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
 // GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).

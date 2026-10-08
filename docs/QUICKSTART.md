@@ -1057,3 +1057,134 @@ opaque strings echoed by the run; `messages`, `tools`, `context` and
 as `GET /v1/log`, including ignoring any Authorization header. It adds no CORS
 headers. At most 16 streams run concurrently; the 17th gets 503 `StreamLimit`
 and `Retry-After: 1`. Send at most 64 KiB and finish the body within 2 s.
+
+## 11. Open the live workbench
+
+Open **http://127.0.0.1:7644/workbench** while your daemon is serving. The page
+is read-only; checked links open stored entries and objects.
+
+- **Live list:** the newest ten entries, newest first, plus the log position at
+  render time. This tail updates even when the oldest-first timeline page is full.
+- **Footer:** with JavaScript enabled, the last verified check, the cursor checked,
+  and the next expected check (within 18 s); new entries and retry reasons are
+  explicit. An empty log is a positive state, not evidence of a dead connection.
+- **Graph:** the newest five entries on the home page, or the selected entry,
+  linked to checked transitionFn, interpreter and transitionRef objects.
+  Dashed UNAVAILABLE targets have no link. The graph carries no grades; on an
+  object page it asks you to select an entry.
+- **Decisions:** read-only approval requests with effect, scope, requester, cost
+  and pending/approve/deny status (including who decided). It reads at most 40
+  approval heads and keeps 20 summaries; truncation is labelled. No requests is
+  stated explicitly, and malformed chains show UNAVAILABLE. Approvals are registry
+  writes, so this pane refreshes on a log-triggered page update, with an as-of entry.
+
+**JavaScript disabled or blocked:** the complete server-rendered page still works;
+its footer says “Live updates: off. Reload to refresh.” With JavaScript enabled,
+new commits appear **without reload**: the client follows `/agui/`, then re-fetches
+this page's own URL and replaces five server-rendered regions. It resumes bounded
+runs at their terminal `lastIndex`, including across log index gaps.
+
+Each visible tab uses one of the daemon's **16** global stream slots. A hidden
+tab aborts its stream and resumes when shown. At the cap the footer says
+“paused: stream limit”; retries use Retry-After and exponential backoff up to
+30 s. Network/run errors are also shown as paused, and failed refreshes retain
+the existing content. “page layout changed, reload required” requires a reload.
+
+For a reproducible rehearsal, use a disposable store, not your live database.
+Run these commands from the repository root in a terminal. Port 7644 must be
+free. The session mint is attended: type `y` at its prompt (§0); the credential
+stays in the temporary directory. This is the same genesis/commit wire recipe
+as §2, with every file placed under `REHEARSAL` and both payloads constructed here.
+
+```bash
+export PIN=$HOME/.pinned-ailang/ailang
+export REHEARSAL=$(mktemp -d)
+unset AILANG_REGISTRY_API_KEY
+go build -o "$REHEARSAL/ailang-worldd" ./cmd/ailang-worldd
+"$REHEARSAL/ailang-worldd" serve --db "$REHEARSAL/world.db" --ailang-bin "$PIN" \
+  >"$REHEARSAL/daemon.log" 2>&1 &
+REHEARSAL_PID=$!
+```
+
+Wait for `listening` in `$REHEARSAL/daemon.log`. This first start creates the
+store and pins the interpreter. Stop it before minting (single-writer authority):
+
+```bash
+kill "$REHEARSAL_PID"
+wait "$REHEARSAL_PID"
+"$REHEARSAL/ailang-worldd" session mint --db "$REHEARSAL/world.db" \
+  --episode workbench-rehearsal --grant world.apply=world:10 --ttl 3600 \
+  --out "$REHEARSAL/session"
+"$REHEARSAL/ailang-worldd" serve --db "$REHEARSAL/world.db" --ailang-bin "$PIN" \
+  >"$REHEARSAL/daemon.log" 2>&1 &
+REHEARSAL_PID=$!
+```
+
+Wait for `listening` in `$REHEARSAL/daemon.log`, then construct genesis entry 0
+and the second commit, entry 1. Object hashes cover the exact base64 payload bytes;
+`observedHead` and `prevEntryHash` in the second commit reference the first.
+
+```bash
+python3 - <<'PY'
+import base64, hashlib, json, os
+from pathlib import Path
+def sha(b): return "sha256:" + hashlib.sha256(b).hexdigest()
+root = Path(os.environ["REHEARSAL"])
+interpreter = sha(Path(os.environ["PIN"]).read_bytes())
+previous_world, previous_entry = "", sha(b"genesis")
+for index, filename in [(0, "genesis.json"), (1, "second.json")]:
+    payload = json.dumps({"goal": "live workbench", "step": index}).encode()
+    obj, entry = sha(payload), sha(f"workbench-entry-{index}".encode())
+    world = sha(f"workbench-world-{index}".encode())
+    commit = {
+        "observedHead": previous_world,
+        "objects": [{"hash": obj, "interfaceHash": sha(b"iface-v1"),
+                     "semanticId": "world/demo/workbench", "provenance": "quickstart",
+                     "payload": base64.b64encode(payload).decode()}],
+        "nextWorld": {"ref": world, "revision": index,
+                      "stateRoot": sha(f"workbench-state-{index}".encode()), "logHead": entry},
+        "entry": {"header": {"entryIndex": index, "semanticsEpoch": 1,
+                             "transitionFn": obj, "interpreter": interpreter,
+                             "prevEntryHash": previous_entry, "writtenBy": "quickstart"},
+                  "entryHash": entry, "transitionRef": obj}}
+    (root / filename).write_text(json.dumps(commit, indent=2))
+    previous_world, previous_entry = world, entry
+PY
+"$REHEARSAL/ailang-worldd" commit --file "$REHEARSAL/genesis.json" \
+  --session "$REHEARSAL/session"
+curl --fail --silent --show-error http://127.0.0.1:7644/workbench >/dev/null
+```
+
+Open http://127.0.0.1:7644/workbench in a visible browser tab. Confirm the live
+list says entry 0 and the footer shows a live check. Keep this tab open and run:
+
+```bash
+"$REHEARSAL/ailang-worldd" commit --file "$REHEARSAL/second.json" \
+  --session "$REHEARSAL/session"
+"$REHEARSAL/ailang-worldd" log get 1
+```
+
+The commit returns `selectedHead`; `log get 1` reports entry 1. Without reload,
+the live list now puts entry 1 above entry 0, the graph gains entry 1, and the
+footer reports the new entry. With JavaScript disabled, the page stays at entry 0
+until you reload. This visual observation is the S7 browser rehearsal; curl alone
+does not prove the live update.
+
+Stop the disposable daemon when finished; retain its transcript for review.
+
+```bash
+kill "$REHEARSAL_PID"
+wait "$REHEARSAL_PID"
+```
+
+The local automated request-trace drill is available to the controller on a
+socket-capable host; it creates its own temporary store, profiles and logs:
+
+```bash
+WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  go test -count=1 -timeout 90s -v ./host/daemon -run '^TestWorkbenchLiveChromeDrill$'
+```
+
+It observes the initial cursor POST, commits the next entry, observes the page
+re-fetch and a later POST with the new cursor, then checks the JavaScript-off
+control. Chrome is optional for ordinary tests/CI; a configured invalid path fails.
