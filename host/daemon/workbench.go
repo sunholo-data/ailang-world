@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/workbench"
@@ -571,6 +572,20 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 	}
 	if page.Graph.Unavailable == "" {
 		page.Graph = workbench.LayoutGraph(graphEntries)
+	}
+
+	approvals, err := broker.RecentApprovals(ctx, d.reads, 40)
+	page.Decisions.Cursor = page.Live.Cursor
+	if errors.Is(err, broker.ErrApprovalChainMalformed) {
+		page.Decisions.Unavailable = "approvals chain is malformed at " + approvals.MalformedRef
+	} else if err != nil {
+		d.writeWorkbenchStoreError(w, r, ctx, err)
+		return
+	} else {
+		page.Decisions.Truncated = approvals.Truncated
+		for _, row := range approvals.Summaries {
+			page.Decisions.Rows = append(page.Decisions.Rows, workbench.DecisionRow{RequestRef: row.RequestRef, Href: "?object=" + row.RequestRef, Effect: row.Effect, Scope: row.Scope, Requester: row.Requester, Cost: row.Cost, Status: row.Status, DecidedBy: row.DecidedBy})
+		}
 	}
 
 	_ = workbench.Render(w, page)
