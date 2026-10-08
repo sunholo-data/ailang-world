@@ -476,6 +476,7 @@ type readStore interface {
 	GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error)
 	GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error)
 	GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error)
+	LogEntriesAfter(ctx context.Context, after int64, limit int) ([]store.LogEntry, error)
 	GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error)
 	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
