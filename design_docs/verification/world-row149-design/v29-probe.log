@@ -1,0 +1,19 @@
+=== RUN   TestV29EmptyStoreMinusOne
+    v29_probe_test.go:47: V29a empty store lastIndex=-1: status=200 content-type="text/event-stream"
+    v29_probe_test.go:66: V29a committed entry 0 after first poll
+    v29_probe_test.go:77: V29a line 0: data: {"type":"RUN_STARTED","threadId":"workbench","runId":"wb-0","protocolVersion":"1.0"}
+    v29_probe_test.go:77: V29a line 1: data: {"type":"STATE_SNAPSHOT","snapshot":{"schema":"world/agui-state/v1","lastIndex":-1,"logHead":null}}
+    v29_probe_test.go:77: V29a line 2: data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":0,"semanticsEpoch":1,"transitionFn":"sha256:69c81a85396836e729f279bf09cd83148955e671f81037a059d6c50c6f620508","interpreter":"sha256:96...
+    v29_probe_test.go:81: V29a DELIVERED entry 0 on the -1 stream
+--- PASS: TestV29EmptyStoreMinusOne (0.03s)
+=== RUN   TestV29PopulatedStoreMinusOne
+    v29_probe_test.go:102: V29b store 0..2 lastIndex=-1: status=200 first frame="data: {\"type\":\"RUN_STARTED\",\"threadId\":\"workbench\",\"runId\":\"wb-0\",\"protocolVersion\":\"1.0\"}"
+    v29_probe_test.go:106: V29b CUSTOM indexes=[0 1 2]
+    v29_probe_test.go:109: V29 control lastIndex=3: status=404 body={"error":{"class":"NotFound","message":"unknown cursor"}}
+    v29_probe_test.go:109: V29 control lastIndex=-2: status=400 body={"error":{"class":"BadRequest","message":"invalid state.lastIndex"}}
+--- PASS: TestV29PopulatedStoreMinusOne (0.04s)
+=== RUN   TestV29EmptyStoreZeroControl
+    v29_probe_test.go:118: V29 control empty store lastIndex=0: status=404 body={"error":{"class":"NotFound","message":"unknown cursor"}}
+--- PASS: TestV29EmptyStoreZeroControl (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.439s

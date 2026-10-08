@@ -1,0 +1,6 @@
+<section aria-label="world graph"><h2>World graph</h2>
+
+<svg role="img" aria-label="checked entry edges" viewBox="0 0 640 140">
+<line x1="296" y1="30" x2="344" y2="30" stroke="currentColor"><title>transitionFn</title></line><line x1="296" y1="30" x2="344" y2="66" stroke="currentColor"><title>interpreter</title></line><line x1="296" y1="30" x2="344" y2="102" stroke="currentColor"><title>transitionRef</title></line>
+<g><a href="/workbench?from=0&amp;entry=9"><rect x="16" y="16" width="280" height="28" fill="none" stroke="currentColor"></rect><text x="16" y="16" dy="20">entry 9</text></a></g><g><a href="/workbench?object=shared"><rect x="344" y="16" width="280" height="28" fill="none" stroke="currentColor"></rect><text x="344" y="16" dy="20">shared</text></a></g><g><a href="/workbench?object=interpreter-0"><rect x="344" y="52" width="280" height="28" fill="none" stroke="currentColor"></rect><text x="344" y="52" dy="20">interpreter-0</text></a></g><g><rect x="344" y="88" width="280" height="28" fill="none" stroke="currentColor" stroke-dasharray="4 3"></rect><text x="344" y="88" dy="20">UNAVAILABLE: missing-0</text></g>
+</svg></section>

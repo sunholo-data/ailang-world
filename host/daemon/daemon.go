@@ -486,6 +486,7 @@ type readStore interface {
 	GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error)
 	GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error)
 	LogEntriesAfter(ctx context.Context, after int64, limit int) ([]store.LogEntry, error)
+	LogEntriesLatest(ctx context.Context, limit int) ([]store.LogEntry, error)
 	GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error)
 	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
@@ -864,6 +865,8 @@ func releaseFromVersion(version string) string {
 // POST /agui/ is an additive read-only AG-UI 1.0 SSE run, bounded to 18 s
 // from handler entry. Resume with standard state or Last-Event-ID; see
 // docs/QUICKSTART.md, "Watch the world live".
+// GET /workbench/live.js serves the embedded same-origin live client; see
+// docs/QUICKSTART.md, "Open the live workbench" for the read-only panes.
 //
 // The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
 // GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).
@@ -884,6 +887,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	mux.HandleFunc("GET /v1/receipts/{id}", d.handleReceipt)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
+	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session

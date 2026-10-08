@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/workbench"
@@ -17,7 +18,7 @@ import (
 
 const WorkbenchPageLimit = workbench.WorkbenchPageLimit
 
-const workbenchCSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+const workbenchCSP = "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 
 const (
 	unknownWorkbenchKeyMessage           = "unsupported workbench query parameter"
@@ -538,5 +539,63 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	latest, err := d.reads.LogEntriesLatest(ctx, 10)
+	if err != nil {
+		d.writeWorkbenchStoreError(w, r, ctx, err)
+		return
+	}
+	page.Live.Cursor = -1
+	if len(latest) > 0 {
+		page.Live.Cursor = latest[0].Header.EntryIndex
+		page.Live.Head = latest[0].EntryHash.String()
+	}
+	for _, entry := range latest {
+		view := entryView(entry)
+		view.SelectHref = pageHref(entry.Header.EntryIndex, entry.Header.EntryIndex)
+		page.Live.Recent = append(page.Live.Recent, view)
+	}
+
+	var graphEntries []workbench.GraphEntry
+	if page.Selected != nil {
+		graphEntries = append(graphEntries, workbench.GraphEntry{Index: page.Selected.EntryIndex, Href: pageHref(from, page.Selected.EntryIndex), Edges: page.Selected.Edges})
+	} else if page.Object == nil {
+		for _, entry := range latest[:min(5, len(latest))] {
+			edges, err := d.entryEdges(ctx, entry)
+			if err != nil {
+				d.writeInternalErrorLog(r, err)
+				page.Graph.Unavailable = "graph checked edges could not be read"
+				graphEntries = nil
+				break
+			}
+			graphEntries = append(graphEntries, workbench.GraphEntry{Index: entry.Header.EntryIndex, Href: pageHref(entry.Header.EntryIndex, entry.Header.EntryIndex), Edges: edges})
+		}
+	}
+	if page.Graph.Unavailable == "" {
+		page.Graph = workbench.LayoutGraph(graphEntries)
+	}
+
+	approvals, err := broker.RecentApprovals(ctx, d.reads, 40)
+	page.Decisions.Cursor = page.Live.Cursor
+	if errors.Is(err, broker.ErrApprovalChainMalformed) {
+		page.Decisions.Unavailable = "approvals chain is malformed at " + approvals.MalformedRef
+	} else if err != nil {
+		d.writeWorkbenchStoreError(w, r, ctx, err)
+		return
+	} else {
+		page.Decisions.Truncated = approvals.Truncated
+		for _, row := range approvals.Summaries {
+			page.Decisions.Rows = append(page.Decisions.Rows, workbench.DecisionRow{RequestRef: row.RequestRef, Href: "?object=" + row.RequestRef, Effect: row.Effect, Scope: row.Scope, Requester: row.Requester, Cost: row.Cost, Status: row.Status, DecidedBy: row.DecidedBy})
+		}
+	}
+
 	_ = workbench.Render(w, page)
+}
+
+// handleWorkbenchScript serves the one embedded same-origin browser consumer.
+func (d *Daemon) handleWorkbenchScript(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	_, _ = w.Write(workbench.LiveScript)
 }
