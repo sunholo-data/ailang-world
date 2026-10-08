@@ -1,0 +1,9 @@
+ 0.000s script hash sha256-2B0qxfomDLK6lImzhAYYm/2gRYZrU3BaG6xPZKEWlKk=
+ 5.002s PAGE self
+ 5.006s SCRIPT fetched
+ 5.007s REPORT RAN-self
+45.021s PAGE hash-sri
+45.033s SCRIPT fetched
+45.038s REPORT RAN-hash-sri
+85.314s PAGE hash-nosri
+125.385s PAGE hash-wrongcsp

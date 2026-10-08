@@ -1,0 +1,47 @@
+// CSP hash-source vs 'self' for an EXTERNAL script (row 149 r2, D2 re-decision).
+package main
+
+import (
+	"crypto/sha256"
+	"encoding/base64"
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+)
+
+var js = []byte("fetch('/report?m=RAN-'+document.currentScript.getAttribute('data-v'),{method:'POST'});\n")
+var start = time.Now()
+
+func logf(f string, a ...any) { fmt.Printf("%6.3fs "+f+"\n", append([]any{time.Since(start).Seconds()}, a...)...) }
+
+func main() {
+	sum := sha256.Sum256(js)
+	h := "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
+	wrong := sha256.Sum256([]byte("other"))
+	hw := "sha256-" + base64.StdEncoding.EncodeToString(wrong[:])
+	logf("script hash %s", h)
+	type variant struct{ csp, tag string }
+	vs := map[string]variant{
+		"self":          {"script-src 'self'", `<script src="/s.js" data-v="self" defer></script>`},
+		"hash-sri":      {"script-src '" + h + "'", `<script src="/s.js" integrity="` + h + `" data-v="hash-sri" defer></script>`},
+		"hash-nosri":    {"script-src '" + h + "'", `<script src="/s.js" data-v="hash-nosri" defer></script>`},
+		"hash-wrongcsp": {"script-src '" + hw + "'", `<script src="/s.js" integrity="` + h + `" data-v="hash-wrongcsp" defer></script>`},
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /page/{v}", func(w http.ResponseWriter, r *http.Request) {
+		v := vs[r.PathValue("v")]
+		logf("PAGE %s", r.PathValue("v"))
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; "+v.csp+"; connect-src 'self'")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, "<!doctype html><html><head><meta charset=utf-8>%s</head><body>p</body></html>", v.tag)
+	})
+	mux.HandleFunc("GET /s.js", func(w http.ResponseWriter, r *http.Request) {
+		logf("SCRIPT fetched")
+		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Write(js)
+	})
+	mux.HandleFunc("POST /report", func(w http.ResponseWriter, r *http.Request) { logf("REPORT %s", r.URL.Query().Get("m")) })
+	http.ListenAndServe("127.0.0.1:"+os.Args[1], mux)
+}
