@@ -4,7 +4,7 @@
   `D-WORLD-64`.** Not yet quorum-reviewed. The loop's designer takes this as its input: re-measure
   §2 at the pick-time base, run the pick-time quorum, then plan. Nothing here waives a gate.
 - **Row 148 is SUPERSEDED here by [`../implemented/w-worldd-agui-event-stream.md`](../implemented/w-worldd-agui-event-stream.md)** (iteration 243, landed `38db793`): bounded 18 s runs + resume (no 30-min connection, frozen D7 `writeTimeout`), resume cursor from AG-UI `state.lastIndex` or `Last-Event-ID`, keyset tail, no session filtering. Rows 149 and 151 consume that interface.
-- **Row 149's parts (D6, D7, §4 row 149, §6 149(a)–(e)) are SUPERSEDED by [`w-workbench-live-and-polish.md`](w-workbench-live-and-polish.md)** (iteration 244/245 pick-time design, base `b702d73`). Rows 150–151 stay here.
+- **Row 149's parts (D6, D7, §4 row 149, §6 149(a)–(e)) are SUPERSEDED by [`w-workbench-live-and-polish.md`](../implemented/w-workbench-live-and-polish.md)** (iteration 244/245 pick-time design, base `b702d73`). Rows 150–151 stay here.
 - Measurement base: `2d53d72` (`origin/dev`, iteration 235 record). All measurements are listed in §10.
 - Rows: **148** `w-worldd-agui-event-stream` · **149** `w-workbench-live-and-polish` ·
   **150** `w-marketing-capture` · **151** `w-agent-generated-projections`. One design, four rows,
