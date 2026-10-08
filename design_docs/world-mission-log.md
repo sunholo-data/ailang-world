@@ -24,33 +24,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 225 — 2026-10-03 — no pick: row 134 still IN-SPRINT attended with no new attended commits since 224; 114 behind 134; 93 still R8-blocked on dev [ADMIN]
-
-**Kind:** bookkeeping-only iteration under the charter's standing rule (d) (D-WORLD-46: BLOCKED MEANS STOP, NOT SIDE WORK). No design doc, plan, code, quorum or product acceptance. Doc-only record, independently judged before merge.
-
-**Pick and why:** NONE. Clause map, re-measured this fire: 1 MET · 2 MET · 3 MET · 6 MET · 7 MET · **4 UNMET**: row 93 not routable; at dev `6b5f4ef`, `host/coordinator/coordinator.go:280-281` still refuses every descriptor with declared effects (R8 `EffectsUnsupportedError`). · **5 UNMET**: row 114 is sequenced behind 134 by the attended D-WORLD-52 ruling (its corpus is World-recorded operation after 134 lands). · Row **134** (critical-path position 1) is still tagged `IN-SPRINT — ATTENDED SESSION … (do not pick)` on dev. `origin/attended/row134` is unchanged since iteration 224: head `bb6b2b2` (2026-10-02T22:06Z), 9 commits ahead of dev; draft PR #180 last updated 22:07Z. No row is routable for the loop, so rule (d) applied: pick nothing.
-
-**Gate 0/1:** kill switch armed (`mission-world.disabled` absent); gh = fleet account; billing tripwire CLEAN (presence only). `mission_directives.sh` → 0 allowlisted directives on #159 since 2026-10-02T19:58:39Z (41 comments; the newest, 23:43:20Z, is iteration 224's own report). Both watermark files written to 23:43:20Z. `mission-world` inbox: no unread. Weekly sweep and rotation not owed (#159 created 2026-09-28T07:01:47Z, mid-week). `dev` == `origin/dev` == `6b5f4ef`; check-runs 2/2 success. Skill drift: the resolved skill (`readlink -f` → V1 main checkout) and the driver-pin copy, `SKILL.md` plus all 12 `resources/*.md` each, are byte-identical to fleet `origin/dev` (per-file `cmp`, no DRIFT lines). Ledger valid, 41 rows, ZERO OPEN. No new ledger rows or attended commits since iteration 224.
-
-**Designer / planner / executor:** not spawned. Gate 2 stopped under rule (d) before routing; the routing table routes a PICK and there was none. Row 134's build roles belong to the attended session. Recorded explicitly because the operator's standing request asks every role to be spawned via the Agent tool.
-
-**Independent evaluator (record):** REQUIRED. Spawned via the Agent tool on the resolved evaluator lane (`sonnet`, fresh separate context, read-only). Verdict in the follow-through below and banked in `design_docs/verification/world-iter225/`.
-
-**Gate 3b:** no product candidate. The doc-only record lands by PR only after the independent verdict and SHA-pinned head CI; `origin/dev` is re-fetched and the ledger's highest ID diffed before merge.
-
-**Routing evidence:** base=6b5f4ef3ca896b48cb164cbd2eebf4e24b3da9fa@2026-10-03T03:22:49Z (Gate 4 first write; == Gate 1 base 6b5f4ef@03:22:00Z). Controller `claude:claude-opus-5-5` (driver routing note: codex over daily ration → planner `opus`, executor `claude:claude-sonnet-5-5`; tok: not reported). Designer/planner/executor: none (no pick). Evaluator `sonnet` via Agent tool (tok: see follow-through). Metered $0.
-
-**Record:** written in a worktree from `origin/dev`. Previous-stamp tell `grep -ci "ITERATION 224"` ≥1, with control `ITERATION 223` ≥1. STATUS count 3 → 3 (add 225, rotate 222 to the archive's end); charter line count unchanged, asserted in-script; no queue or ledger row edited. Manual index row 225 in the same commit (row 118: no fleet rotate-log for World). Dashboard overwritten (namespaced path).
-
-**Ruled out:** picking 134 (IN-SPRINT attended, "do not pick"); picking 114 (sequenced behind 134 by D-WORLD-52); picking 93 (R8 still on dev, re-measured); building on or merging the attended branch from the loop; residual or position-7 rows (rule (d)).
-
-**Retro:** no skill edit; no new friction. Third consecutive block report (223/224/225) with an unchanged blocker. This is the designed behaviour under D-WORLD-46's rule (d), and the attended session has an open, active draft (PR #180), so it is not a stall to escalate. No new decision is asked. Last 20 index rows: HARNESS 0/20. Drift check: no routable UNMET-clause row exists, so no DRIFT alarm.
-
-**Progress**: World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop (rule (d)). The attended session owns row 134.
-
-**Next:** the attended session lands row 134 (draft PR #180) or hands it back `[NEXT]`; then 114 and 93 become routable in that order. Until then each fire is a block report.
-
-**Record follow-through (iteration 225):** the independent evaluator (Agent tool, `sonnet`, fresh separate context, read-only, ~20 s, 33,932 subagent tok) judged record commit `faea72f1d5d6df2ad46e03c5d872ee7adfad3b62` on `6b5f4ef` and returned **PASS 93/100, zero blocking**. It measured first-party: record-only scope (5 files); one stamp in, 222 moved byte-identical to the archive's end; charter 6086 lines before and after; ledger valid, 41 rows, none OPEN; row 134 tagged IN-SPRINT attended; R8 at `coordinator.go:280-281`; `attended/row134` at `bb6b2b2`, 9 ahead; queue census (controls fired) shows tagged-open rows only PARKED 6/79/80 and IN-SPRINT 134. Non-blocking notes: untagged rows not individually audited (rule (d) relied on); gh-dependent Gate 0/1 claims not re-measured by the judge; the verdict file was not yet committed (now banked at `design_docs/verification/world-iter225/evaluator-r1.md`). Merge waits on SHA-pinned head CI and a pre-merge re-fetch of `origin/dev`.
+> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
+> the thing to grep before picking work, so the loop never repeats itself — is in
+> `world-mission-index.md`.
 
 ## 226 — 2026-10-03 — no pick: row 134 still IN-SPRINT attended; attended session drafted row 93's design (`7f4ebff`); 114 behind 134; 93 still R8-blocked on dev [ADMIN]
 
@@ -906,3 +883,35 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** 1.0: clauses4/5 UNMET,1/2/3/6/7 MET; goal unmoved.
 
 **Next:** attended93 M5 FINAL →114 →139. Release branch: D-WORLD-69 A authorizes prerequisites26→105→172→150 only when critical path unroutable; B explicitly narrows150, still needs verified capture design. Unanswered defaults immediately to150 PARKED;151 cannot leapfrog. Banked rows26/105/172 are NOT READY without the ruling; unranked169–171 remain unranked.
+
+## 247 — 2026-10-08 — no product pick: row150 stays parked on unchanged D-WORLD-69; four required native role preflights and independent record judge [ADMIN]
+
+**Kind:** bookkeeping-only block report. No product revision/quorum/plan/implementation, credentials or release.
+
+**Pick and why:** NONE. D-WORLD-69 OPEN defaults immediately to PARK150; D64 cannot authorize26/105/172 or let151 bypass lowest-open150. Clause map:1 MET;2 MET;3 MET;4 UNMET —93 M5 FINAL attended (design §4.5 TTY mints and §M5, latest design history M4, no subsequent completion);5 UNMET —114 after93,139 after114;6 MET;7 MET. Existing row150 quorums r1/r2 BLOCKED by all three present external reviewers; no new round or revision. No critical-path row currently loop-routable.
+
+**Gate 0:** armed; correct GitHub fleet account; billing CLEAN. Allowlisted script found0 directives since2026-10-05T12:46:05Z on#202 (22 comments), ledger valid56/onlyD69 OPEN, no new attended ruling. Initial self-notice helper invocation missed required args (rc2, no verdict); corrected to charter command, rc0 no in-window crash on202/159; control107:4 fired, two valid watermarks. Both watermarks retain newest processed human timestamp. Eight unread messages were historical self-claims or already-delivered v0.52.1 notification, no new authority; triaged against prior landed records. Weekly sweep/rotation not due: current-week issue title,22 comments. PR/worktree/dirty traces run: only old row114 draft166 open, historical dirty eval/design worktrees preserved. No orphan product record to adopt.
+
+**Gate 1:** localdev==origin/dev `84e532272730e75d596757242ba817f5816cbbf0`. Exact-base CI completed success with two expected checks present/success. Authoritative resolved SKILL.md and all12 resources MATCH shared origin/dev; World CWD skill copy absent. Row159 external predicate re-run: upstream1602 OPEN; latest stablev0.52.5 error hooks0/0, CallbackMessage control1. Row173 fleet-owned PNG-gate ticket remains open, no harness-resolved reply. Commands/outputs in `verification/world-iter247/preflight.json`; no compiler/driver/skill changes.
+
+**Design:** operator-required native designer preflight completed, no admissible design revision. Receipt `verification/world-iter247/designer.md`; existing design untouched.
+
+**Plan:** operator-required native planner preflight completed; derive output `codex:gpt-6.1-sol declared:planner-lane-default-pin`; no sprint plan/JSON. Receipt `verification/world-iter247/planner.md`.
+
+**Execution:** operator-required native executor preflight completed; no implementation authorized or attempted. Receipt `verification/world-iter247/executor.md`.
+
+**Judge:** REQUIRED independent native Agent, fresh separate context, requested/accepted `gpt-6.1-sol` pin; amendedD48 FLAG same-model-fresh-context. Independent gate report `verification/world-iter247/independent-gate-review.md` ACCEPTS PARK/no product; terminal report `verification/world-iter247/independent-record-review.md`: ADMIN PASS, score N/A, zero blocking. No numeric product score for a non-implementation, no controller-only acceptance. Exact runtime model attestation unavailable, token counts not reported.
+
+**CI:** product Gate3b N/A (no product candidate). Baseline2/2GREEN on full baseSHA. ADMIN record requires terminal independent acceptance + exact-head CI before merge, then exact merge CI before claiming shipped. No broad local-suite pass claimed for documentation-only work.
+
+**Routing evidence:** base=84e532272730e75d596757242ba817f5816cbbf0@2026-10-08T16:58:55Z from Gate4, same SHA as Gate1. Controller `codex:gpt-6.1-sol` (tok:not reported). Designer/planner/executor native Agent requested/accepted pin `gpt-6.1-sol`, each tok:not reported; exact runtime model not independently attested. Resolvers respectively `recipe codex:gpt-6.1-sol declared:provider-pin`, `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`, `recipe codex:gpt-6.1-sol declared:provider-pin`. Operator explicitly overrides recipe transport to native Agent, FLAGGED; no CLI recipe claimed. Preferred evaluator native pin `sonnet` failed `Unknown model sonnet for spawn_agent` (supported enum OpenAI only); resolver `refuse over-ration:anthropic`; amendedD48 fallback requested/accepted native `gpt-6.1-sol` in fresh separate actor/context, tok:not reported, FLAG `judge-independence:same-model-fresh-context`. All four roles present; generator did not judge itself. Fleet occurrence signature `agent-tool:sonnet-unavailable`, id`inbox_1791478635258_e8f141bd`, blocking none; no harness repair. Metered=$0 this iteration (no new quorum/API call); subscription tokens unknown, never reported as zero. Driver routing note: lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`75` — over daily ration) → handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`75` — over daily ration) → handed to `pi:openrouter/minimax/minimax-m3`; `evaluator`: **pi** lane `openrouter/minimax/minimax-m3` unusable (probe rc=`75`) → advanced to `claude:claude-sonnet-4-6`
+
+**Record:** persistent isolated worktree at full baseSHA; original files privately backed up. STATUS single-line+blank3→3;243 moved byte-identical into status archive; line count unchanged (row129 recurrence remains same-line). Ledger bytes and queue rows unchanged except129 measured occurrence. Fleet CLI rotate-log uses a private registry targeted at this worktree; full bodies preserved apart from boundary blank lines; index IDs verified lossless. Dashboard namespaced/overwritten. Terminal judge and exactSHA CI remain required before shipped.
+
+**Ruled out:**151 bypass; unratified prerequisite promotion/scope cut; third quorum/revision without authority; self-judged acceptance; generic clock/credentials as new human ask; Chrome timeout artifacts as product capture; attended FINAL/session mint by scheduled loop; shared harness repair.
+
+**Retro:** existing fleet escalation lane for sonnet recurrence; no skill/process/routing-policy change or new product discovery. Existing D69 unchanged, no duplicate decision; report fyi. Harness share2/20 (escalations239/240); last3 product landings245/243 moved none,242 clause4. No routable UNMET row idle, no shared-skill DRIFT alarm. Initial self-notice invocation error corrected before verdict; no new process rule warranted.
+
+**Progress:** 1.0:clauses4/5 UNMET,1/2/3/6/7 MET; goal unmoved.
+
+**Next:** attended93 M5 FINAL→114→139. D69 A authorizes26→105→172→150 when critical path unavailable;B explicitly narrows150 subject to normal design gates. Unanswered:150 PARKED immediately,151 cannot leapfrog. None READY for unattended loop; row173 separately needs measured fleet PNG-gate resolution.
