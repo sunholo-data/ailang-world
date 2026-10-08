@@ -1,0 +1,150 @@
+{
+  "id": "w-exec-availability-decoupled-from-ailang-policy",
+  "iteration": 242,
+  "row": 152,
+  "clause": "clause-4",
+  "authority": [
+    "design_docs/world-mission.md row 152 (next after row 153; D-WORLD-65, D-WORLD-68 = A)",
+    "design_docs/planned/w-exec-availability-decoupled-from-ailang-policy.md (r3 carve-out, 2bb27ad)",
+    "design_docs/planned/w-exec-availability-decoupled-from-ailang-policy-sprint-plan.md"
+  ],
+  "estimate": "0.65 day",
+  "scope": "One PR, 3 commits (C0 is a no-commit re-baseline), one executor run. Host Go + tests + one QUICKSTART paragraph + comments; no .ail, no pin, no host/broker change, no tools/launchd, no design_docs/world-mission*.md, no design_docs/verification edits.",
+  "environment": [
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "export WORLD_EXEC_SRT_NODE_MODULES=$HOME/.ailang/state/mission-world-iter241/srt/node_modules",
+    "export WORLD_EXEC_NODE=/opt/homebrew/bin/node",
+    "L=$HOME/.ailang/state/mission-world-iter242/exec"
+  ],
+  "measured_baseline": {
+    "tree": "2bb27ad (code == fe7c2a4)",
+    "logs": "~/.ailang/state/mission-world-iter242/planner-base-*.log",
+    "./scripts/verify_ail.sh": "rc=0; 23 s; 16 identities, 40 named tests, 444 se-tools named tests",
+    "go vet ./...": "rc=0; empty",
+    "./scripts/verify_go.sh": "rc=0; ~11 min; plain daemon 172 s; race daemon 191 s, verifygate 169 s, broker 145 s, coordinator 51 s",
+    "go test ./host/daemon/ -count=1 -race -v -run '^(TestWorkspace|TestExecMaxTimeout)'": "rc=0; 16 s; 25 PASS, 2 pre-existing SKIP (TestWorkspaceSandboxIsTheEpisodeNotTheRoot, TestWorkspaceReadThroughProductionWiring)",
+    "real srt 3 names -p 1 -v (darwin, iter241 srt install)": "rc=0; 14 s; 3/3 PASS",
+    "gofmt -l host/ cmd/": "empty",
+    "check_no_personal_email.sh": "rc=0",
+    "pre_existing_reds": "none",
+    "pre_existing_flakes_observed": "none locally; TestExecSrtMCP* CI flake is controller-counted"
+  },
+  "design_defects": {
+    "D1": "FIFO test assertion is workspace_layout_test.go:907, not :905 (cosmetic)",
+    "D2": "AC1.7 registry(ep2) arm cannot pass at M1: episodeHandler holds w.mu across the build until M2 -> moved to C3",
+    "D3": "exec_e2e_srt_test.go:102-104 execSpawns reads w.execH under w.mu; not in the design file list; must use execMu after AC1.2",
+    "D4": "MUT-EXEC-USES-SANDBOX is not killable by the module-root test (sandboxRoot fails there); killers are the lock-coverage and FIFO amendments (module root tools)",
+    "D5": "errors.As cannot run on an operator line; assert on a direct episodeHandler error",
+    "D6": "publishReadTool commits genesis + CAS from empty head; it cannot be called twice -> one revision with both descriptors",
+    "D7": "a second registry() call in an amended refusal test prints a second operator line and reds the unchanged n==1/exact-log halves",
+    "D8": "FIFO hold is non-deterministic with several readers and ENXIO after a kill; AC2.2 lacks a joined-waiter signal",
+    "D9": "daemon.go:741-743 binder comment becomes false after M1; design says daemon.go untouched",
+    "D10": "design section 8 lists 3 srt names; CI's step greps 20",
+    "D11": "race-detector kills (MUT-EXECH-UNLOCKED, MUT-WRONG-LOCK) are probabilistic"
+  },
+  "milestones": [
+    {
+      "id": "C0",
+      "title": "Re-baseline on HEAD",
+      "deliverable": "Run sprint plan section 2.1 before any edit; diff against section 2; mismatch stops the run.",
+      "files": [],
+      "acceptance_commands": ["sprint plan section 2.1"],
+      "mutations": []
+    },
+    {
+      "id": "C1",
+      "title": "M1 production: two families, two bindings (AC1.1, AC1.2, AC1.3, AC1.5, AC1.6, AC1.8)",
+      "files": [
+        "host/daemon/workspace.go",
+        "host/daemon/daemon.go (comment only)",
+        "host/daemon/workspace_layout_test.go",
+        "host/daemon/exec_e2e_srt_test.go (execSpawns lock only)",
+        "docs/QUICKSTART.md"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.1",
+        "go test ./host/daemon/ -count=1 -race -v -run '^(TestWorkspace|TestExecMaxTimeout)' + --- PASS grep of the C1 PASS list",
+        "go test ./host/daemon/ -count=1 -race -v -run '^(TestExecSrtMCPEndToEnd|TestExecSrtMCPGrantAndBudget|TestExecSrtReplayIsByteEqual)$' + --- PASS grep"
+      ],
+      "pass_list": ["TestWorkspaceModuleRootSymlinkOrMissingIsR8", "TestWorkspacePackageCacheRefusesUnprovisionedRegistry", "TestWorkspacePackageCacheCoversLock", "TestWorkspacePackageCacheLockFIFOIsRefusedPromptly", "TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot", "TestWorkspaceRegistryNeedsBothFlags", "TestWorkspaceEpisodeEscapeIsR8BeforeAnyEffect", "TestWorkspaceModuleRootIsTheSandbox", "TestWorkspaceExecConfiguredBindsTheEpisodeHandler", "TestWorkspaceExecUnbuildableHandlerFails", "TestWorkspaceExecUnconfiguredSpawnsNothing", "TestExecSrtMCPEndToEnd", "TestExecSrtMCPGrantAndBudget", "TestExecSrtReplayIsByteEqual"],
+      "mutations": [
+        {"mutation": "MUT-SANDBOX-GATES-EXEC: return empty registry on sandboxRoot error", "must_fail_test": "TestWorkspaceModuleRootSymlinkOrMissingIsR8"},
+        {"mutation": "MUT-ALL-OR-NOTHING-C1: return empty registry on episodeHandler error", "must_fail_test": "TestWorkspacePackageCacheRefusesUnprovisionedRegistry; TestWorkspacePackageCacheCoversLock; TestWorkspacePackageCacheLockFIFOIsRefusedPromptly"},
+        {"mutation": "MUT-EXEC-USES-SANDBOX: execHandler(episodeID, sandbox)", "must_fail_test": "TestWorkspacePackageCacheCoversLock refusal arms; TestWorkspacePackageCacheLockFIFOIsRefusedPromptly (stdout ep1/tools != ep1)"},
+        {"mutation": "MUT-BIND-REFUSAL-HANDLER: bind Workspace.Exec to execFailedHandler on AILANG failure", "must_fail_test": "all four amended refusal tests (exit_code assertion)"},
+        {"mutation": "MUT-EXEC-BEFORE-EPROOT: bind exec before the episodeRoot check", "must_fail_test": "TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot"}
+      ]
+    },
+    {
+      "id": "C2",
+      "title": "M1 new tests (AC1.4, AC1.7 exec half, AC1.9, concurrent race test)",
+      "files": [
+        "host/daemon/workspace_family_test.go (new)",
+        "host/daemon/workspace_test.go (publishTools generalisation; publishReadTool wrapper unchanged in behaviour)"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.1",
+        "go test ./host/daemon/ -count=1 -race -v -run '^(TestWorkspace|TestExecMaxTimeout)' + --- PASS grep of the C2 PASS list",
+        "tests-first proof: new tests FAIL against fe7c2a4's workspace.go (budget var shim only), then restore and git diff --quiet"
+      ],
+      "pass_list": ["TestWorkspaceExecSurvivesPolicySummaryTimeout", "TestWorkspaceExecSurvivesPolicySummaryTimeout/healthy", "TestWorkspaceExecSurvivesPolicyDirFault", "TestWorkspaceExecNeverWaitsOnAilangBuild", "TestWorkspaceTwoEpisodeConcurrentRegistryExecRace"],
+      "mutations": [
+        {"mutation": "MUT-ALL-OR-NOTHING: empty registry on episodeHandler error", "must_fail_test": "TestWorkspaceExecSurvivesPolicySummaryTimeout (i)"},
+        {"mutation": "MUT-BIND-AILANG-ON-FAIL: eight names bound to execFailedHandler", "must_fail_test": "TestWorkspaceExecSurvivesPolicySummaryTimeout (ii)"},
+        {"mutation": "MUT-EARLY-FAULT-EMPTIES: empty registry for non-summary build errors", "must_fail_test": "TestWorkspaceExecSurvivesPolicyDirFault"},
+        {"mutation": "MUT-SHARED-LOCK: execHandler takes w.mu", "must_fail_test": "TestWorkspaceExecNeverWaitsOnAilangBuild"},
+        {"mutation": "MUT-DOUBLE-BUILD: drop the execH store", "must_fail_test": "TestWorkspaceTwoEpisodeConcurrentRegistryExecRace (pointer equality)"},
+        {"mutation": "MUT-EXECH-UNLOCKED: no lock in execHandler", "must_fail_test": "TestWorkspaceTwoEpisodeConcurrentRegistryExecRace under -race -count=5 (probabilistic; report SURVIVED)"},
+        {"mutation": "MUT-WRONG-LOCK: lookup under execMu, store under w.mu", "must_fail_test": "TestWorkspaceTwoEpisodeConcurrentRegistryExecRace under -race -count=5 (probabilistic; report SURVIVED)"}
+      ]
+    },
+    {
+      "id": "C3",
+      "title": "M2: single-flight AILANG build, no lock across the subprocess (AC2.1-AC2.5, AC1.7 registry half)",
+      "files": [
+        "host/daemon/workspace.go",
+        "host/daemon/workspace_layout.go (comment at :300 only)",
+        "host/daemon/workspace_family_test.go"
+      ],
+      "acceptance_commands": [
+        "sprint plan section 2.1",
+        "go test ./host/daemon/ -count=1 -race -v -run '^(TestWorkspace|TestExecMaxTimeout)' + --- PASS grep of the C3 PASS list",
+        "git diff <C2> -- host/daemon/workspace_test.go host/daemon/workspace_layout_test.go is empty (AC2.4 unedited)"
+      ],
+      "pass_list": ["TestWorkspaceAilangBuildSingleFlight", "TestWorkspaceAilangBuildDoesNotBlockOtherEpisodes", "TestWorkspaceFailedBuildRetriesEachCall", "TestWorkspaceTwoEpisodeConcurrentRegistryExecRace", "TestWorkspacePolicyRenderedPerEpisode", "TestWorkspacePackageCacheLinkedIntoEpisodeHome", "TestWorkspacePackageCacheDigestIsStamped"],
+      "mutations": [
+        {"mutation": "MUT-NO-SINGLEFLIGHT: ignore the in-flight entry", "must_fail_test": "TestWorkspaceAilangBuildSingleFlight (summaries.ep1 == 2)"},
+        {"mutation": "MUT-LOCK-ACROSS-SUBPROCESS: hold w.mu across the build", "must_fail_test": "TestWorkspaceAilangBuildDoesNotBlockOtherEpisodes; TestWorkspaceExecNeverWaitsOnAilangBuild must stay green"},
+        {"mutation": "MUT-NEGATIVE-CACHE: keep the failed entry", "must_fail_test": "TestWorkspaceFailedBuildRetriesEachCall"},
+        {"mutation": "MUT-ASYNC-RETRY: background rebuild, stale failure returned", "must_fail_test": "TestWorkspaceFailedBuildRetriesEachCall call 4 (record not-applied if > 10 lines)"},
+        {"mutation": "MUT-LINE-PER-ATTEMPT: waiters get no error", "must_fail_test": "TestWorkspaceAilangBuildSingleFlight (1 line, want 2)"}
+      ]
+    }
+  ],
+  "planner_decisions": {
+    "PD1": "per-episode hold file polled by the stub instead of a FIFO",
+    "PD2": "waiters counter on the in-flight build entry, read by tests under w.mu",
+    "PD3": "AC1.7 registry(ep2) arm moves to C3",
+    "PD4": "execSpawns uses execMu; 3 srt tests run under -race locally each boundary",
+    "PD5": "MUT-EXEC-USES-SANDBOX killed by lock-coverage and FIFO amendments",
+    "PD6": "errors.As on a direct episodeHandler error",
+    "PD7": "publishTools: one revision, two descriptors; two coordinators over one store/binder",
+    "PD8": "amended refusal tests reuse their single registry() result for the exec call",
+    "PD9": "daemon.go binder comment fixed in C1 (comment only)",
+    "PD10": "race-detector drills at -race -count=5; SURVIVED reported",
+    "PD11": "AILANG family first, exec second in registry()",
+    "PD12": "budget seam 5 s for hold tests, 300 ms for never-answer tests; no elapsed-time assertions",
+    "PD13": "AC1.9 trigger = regular file at <stateDir>/policies (ENOTDIR for every uid; CI runner is unprivileged)",
+    "PD14": "new tests in workspace_family_test.go with the TestWorkspace prefix"
+  },
+  "mutation_revert": "Apply each mutation alone on top of the commit's own tree; run the named test -count=1 -v (-race where stated); require --- FAIL with the stated reason; git checkout -- <file>; require git diff --quiet before the next. A mutation that does not red is a finding to report, never a mutation to change silently.",
+  "executor_wall_clock": "3-3.5 h (4 full gate runs ~15 min each, ~17 drills ~30 min, coding)",
+  "controller_owned": [
+    "AC3.1: charter row 152 LANDED",
+    "design section 10 follow-up rows R1 (w-handler-timeout-names-effective-bound) and R2 (w-binder-builds-only-declared-families)",
+    "note in design_docs/verification/world-row140-m4/README.md that F5's 10 s was the 3 s budget",
+    "CI attempts and TestExecSrtMCP* flake counting"
+  ],
+  "out_of_scope": "HandlerTimeoutError label (R1, touches host/broker/handlers.go and row 166's surface); per-call 3 s stall in a persistently broken episode (R2); client-visible R8 cause (R3, row 159 / ailang#1602)."
+}

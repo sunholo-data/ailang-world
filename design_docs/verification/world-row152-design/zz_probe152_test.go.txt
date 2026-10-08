@@ -1,0 +1,70 @@
+package daemon
+
+// Row 152 design probe (temporary; banked, never committed).
+
+import (
+	"bytes"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/broker"
+)
+
+// slowSummaryToolBin: --version answers; the policy-tool summary sleeps 30 s
+// (a forked grandchild), so only the construction budget can end it.
+func slowSummaryToolBin(t *testing.T, logDir, mode string) string {
+	t.Helper()
+	body := `echo x >> "$log/summaries"; sleep 30; exit 0`
+	if mode == "fail" {
+		body = `echo x >> "$log/summaries"; echo '{"ok":false}'; exit 1`
+	}
+	script := fmt.Sprintf("#!/bin/sh\nlog=%q\nif [ \"$1\" = \"--version\" ]; then echo %q; exit 0; fi\nif [ \"$1\" = \"policy-tool\" ]; then cat >/dev/null; %s; fi\necho x >> \"$log/dispatches\"\nexit 0\n", logDir, ToolBinaryRelease, body)
+	bin := filepath.Join(canonicalTemp(t), "ailang")
+	if err := os.WriteFile(bin, []byte(script), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	return bin
+}
+
+func TestZZProbe152SummaryTimeout(t *testing.T) {
+	for _, mode := range []string{"sleep", "fail"} {
+		t.Run(mode, func(t *testing.T) {
+			f := newWSFixture(t)
+			var log bytes.Buffer
+			d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, ErrorLog: &log,
+				ToolAilangBin: slowSummaryToolBin(t, f.logDir, mode)})
+			d.workspace.exec = &workspaceExec{profile: execProfile(t), sandbox: stubExecSandbox(t, f.stateDir)}
+			for i := 1; i <= 2; i++ {
+				start := time.Now()
+				reg := d.workspace.registry("ep1")
+				t.Logf("PROBE mode=%s call=%d elapsed=%s names=%v execBound=%v summaries=%d",
+					mode, i, time.Since(start).Round(time.Millisecond), registryNames(reg), reg[broker.EffectWorkspaceExec] != nil, f.summaries(t))
+			}
+			t.Logf("PROBE mode=%s log=%q", mode, strings.TrimSpace(log.String()))
+			// Control: the exec handler alone, as registry would build it, runs.
+			epRoot, _ := d.workspace.episodeRoot("ep1")
+			out, err := execCall(t, d.workspace.execHandler("ep1", epRoot))
+			t.Logf("PROBE mode=%s execHandler-direct out=%s err=%v", mode, out, err)
+		})
+	}
+}
+
+// Lock coupling: while ep1's summary holds w.mu, how long does ep2's
+// exec-only lookup wait?
+func TestZZProbe152LockCoupling(t *testing.T) {
+	f := newWSFixture(t)
+	d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, ErrorLog: &bytes.Buffer{},
+		ToolAilangBin: slowSummaryToolBin(t, f.logDir, "sleep")})
+	d.workspace.exec = &workspaceExec{profile: execProfile(t), sandbox: stubExecSandbox(t, f.stateDir)}
+	go func() { _ = d.workspace.registry("ep1") }()
+	time.Sleep(200 * time.Millisecond)
+	ep2, _ := d.workspace.episodeRoot("ep2")
+	start := time.Now()
+	_ = d.workspace.execHandler("ep2", ep2)
+	t.Logf("PROBE lock: execHandler(ep2) waited %s behind ep1's summary", time.Since(start).Round(time.Millisecond))
+	time.Sleep(3 * time.Second)
+}

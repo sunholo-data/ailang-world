@@ -477,6 +477,18 @@ var wsReadReq = transitionreg.EffectRequirement{Effect: broker.EffectWorkspaceRe
 // source is src, pinned to interp.
 func publishReadTool(t *testing.T, d *Daemon, interp hashref.HashRef, src string) {
 	t.Helper()
+	publishTools(t, d, interp, src, wsTool{ID: "ws.read", Effect: broker.EffectWorkspaceRead, Title: "Read", Description: "workspace read fixture"})
+}
+
+// wsTool is one fixture descriptor: access Effect@worktree:0, declaring
+// Effect@worktree:1.
+type wsTool struct{ ID, Effect, Title, Description string }
+
+// publishTools commits a genesis world and publishes one registry revision
+// carrying a descriptor per tool (row 152: ws.exec and ws.read together; the
+// registry head can be set from genesis only once), all sharing src and interp.
+func publishTools(t *testing.T, d *Daemon, interp hashref.HashRef, src string, tools ...wsTool) {
+	t.Helper()
 	ctx := boundedTestContext(t)
 	obj := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
 		SemanticID: "test/genesis", Provenance: "workspace_test", Payload: []byte("genesis-state")}
@@ -504,12 +516,18 @@ func publishReadTool(t *testing.T, d *Daemon, interp hashref.HashRef, src string
 			t.Fatalf("publishReadTool: build capsule template = (%+v, %v)", res, err)
 		}
 	}
-	desc := transitionreg.Descriptor{ID: "ws.read", TransitionFn: srcObj.Hash, Interpreter: interp, SemanticsEpoch: 1,
-		InputSchema: []byte(`{"type":"object"}`), OutputSchema: []byte(`{"type":"object"}`),
-		Access:          transitionreg.EffectRequirement{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope, Cost: 0},
-		DeclaredEffects: []transitionreg.EffectRequirement{wsReadReq}, Title: "Read", Description: "workspace read fixture"}
+	sorted := append([]wsTool(nil), tools...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].ID < sorted[j].ID })
+	var entries []transitionreg.Descriptor
+	for _, tl := range sorted {
+		entries = append(entries, transitionreg.Descriptor{ID: tl.ID, TransitionFn: srcObj.Hash, Interpreter: interp, SemanticsEpoch: 1,
+			InputSchema: []byte(`{"type":"object"}`), OutputSchema: []byte(`{"type":"object"}`),
+			Access:          transitionreg.EffectRequirement{Effect: tl.Effect, Scope: broker.WorkspaceScope, Cost: 0},
+			DeclaredEffects: []transitionreg.EffectRequirement{{Effect: tl.Effect, Scope: broker.WorkspaceScope, Cost: 1}},
+			Title:           tl.Title, Description: tl.Description})
+	}
 	payload, err := transitionreg.EncodeRevision(transitionreg.Revision{SemanticID: transitionreg.SemanticIDV1,
-		InterfaceHash: transitionreg.InterfaceHashV1, Revision: 1, Entries: []transitionreg.Descriptor{desc}})
+		InterfaceHash: transitionreg.InterfaceHashV1, Revision: 1, Entries: entries})
 	if err != nil {
 		t.Fatal(err)
 	}

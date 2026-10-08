@@ -297,8 +297,9 @@ func (w *workspaceTools) checkLockCoverage(episodeID, sandbox string) error {
 			"rebuild the snapshot per QUICKSTART §11", episodeID, lock, why)}
 	}
 	// One open, then Fstat on it: no Lstat/Open window in which the agent can
-	// swap a FIFO in (a blocking open would hold w.mu). O_NONBLOCK makes a
-	// FIFO open return at once and O_NOFOLLOW refuses a symlink (ELOOP).
+	// swap a FIFO in (a blocking open would hold the episode's in-flight
+	// build). O_NONBLOCK makes a FIFO open return at once and O_NOFOLLOW
+	// refuses a symlink (ELOOP).
 	f, err := os.OpenFile(lock, os.O_RDONLY|syscall.O_NONBLOCK|syscall.O_NOFOLLOW, 0)
 	switch {
 	case os.IsNotExist(err):

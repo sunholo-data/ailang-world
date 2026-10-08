@@ -1,0 +1,20 @@
+=== RUN   TestZZProbe152SummaryTimeout
+=== RUN   TestZZProbe152SummaryTimeout/sleep
+    zz_probe152_test.go:44: PROBE mode=sleep call=1 elapsed=3.009s names=[] execBound=false summaries=1
+    zz_probe152_test.go:44: PROBE mode=sleep call=2 elapsed=3.015s names=[] execBound=false summaries=2
+    zz_probe152_test.go:47: PROBE mode=sleep log="ailang-worldd: workspace tools unavailable for episode \"ep1\": broker: policy summary: broker: handler subprocess timed out after 10s (stderr \"\")\nailang-worldd: workspace tools unavailable for episode \"ep1\": broker: policy summary: broker: handler subprocess timed out after 10s (stderr \"\")"
+    zz_probe152_test.go:51: PROBE mode=sleep execHandler-direct out={"exit_code":0,"timed_out":false,"limit":null,"duration_ms":259,"stdout":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestZZProbe152SummaryTimeoutsleep486516811/001/ws/ep1\n","stdout_bytes":111,"stdout_truncated":false,"stdout_sha256":"152f23002225de631c00892956c075f339fc4536c940971df2bf9eda42a1007f","stderr":"","stderr_bytes":0,"stderr_truncated":false,"stderr_sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","argv":["/bin/sh","-c","pwd -P"],"profile":{"project":"proj","digest":"sha256:42833e60829f1e045fadcc275731fec202ca2e291d1c06de54a55ee51568e612","command":"where","argv0_sha256":"c0eaf44f9242d5bbc2e14f4e8b7dccc1eff7f2976d64dc18914d5ef9f373e100"},"sandbox":{"runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:130522ba66ad31d837aad2ac7d7784162ed1b0de7ef09cc329c2b9d3ba772388","read_fence":true,"network":"none"}} err=<nil>
+=== RUN   TestZZProbe152SummaryTimeout/fail
+    zz_probe152_test.go:44: PROBE mode=fail call=1 elapsed=26ms names=[] execBound=false summaries=1
+    zz_probe152_test.go:44: PROBE mode=fail call=2 elapsed=14ms names=[] execBound=false summaries=2
+    zz_probe152_test.go:47: PROBE mode=fail log="ailang-worldd: workspace tools unavailable for episode \"ep1\": broker: policy summary: broker: handler subprocess failed: exit status 1 (output \"{\\\"ok\\\":false}\\n\") (stderr \"\")\nailang-worldd: workspace tools unavailable for episode \"ep1\": broker: policy summary: broker: handler subprocess failed: exit status 1 (output \"{\\\"ok\\\":false}\\n\") (stderr \"\")"
+    zz_probe152_test.go:51: PROBE mode=fail execHandler-direct out={"exit_code":0,"timed_out":false,"limit":null,"duration_ms":124,"stdout":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestZZProbe152SummaryTimeoutfail4002030390/001/ws/ep1\n","stdout_bytes":111,"stdout_truncated":false,"stdout_sha256":"1243d1f8e0ef6f242874fe7763502c078756c09aa06b0e1f609442edd689fee3","stderr":"","stderr_bytes":0,"stderr_truncated":false,"stderr_sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","argv":["/bin/sh","-c","pwd -P"],"profile":{"project":"proj","digest":"sha256:42833e60829f1e045fadcc275731fec202ca2e291d1c06de54a55ee51568e612","command":"where","argv0_sha256":"c0eaf44f9242d5bbc2e14f4e8b7dccc1eff7f2976d64dc18914d5ef9f373e100"},"sandbox":{"runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:27f303e2056535aa1fa6c5353b8352b463d4e78d3144ff930417ea6d96851338","read_fence":true,"network":"none"}} err=<nil>
+--- PASS: TestZZProbe152SummaryTimeout (6.96s)
+    --- PASS: TestZZProbe152SummaryTimeout/sleep (6.57s)
+    --- PASS: TestZZProbe152SummaryTimeout/fail (0.39s)
+=== RUN   TestZZProbe152LockCoupling
+    zz_probe152_test.go:68: PROBE lock: execHandler(ep2) waited 2.82s behind ep1's summary
+--- PASS: TestZZProbe152LockCoupling (6.28s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	13.645s
+rc=0

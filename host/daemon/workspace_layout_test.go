@@ -130,6 +130,42 @@ func TestWorkspaceModuleRootIsTheSandbox(t *testing.T) {
 	}
 }
 
+// configureStubExec gives the daemon a Workspace.Exec profile after New, as
+// workspace_exec_test.go does (row 152: exec must survive an AILANG refusal).
+func configureStubExec(t *testing.T, d *Daemon, f wsFixture) {
+	t.Helper()
+	d.workspace.exec = &workspaceExec{profile: execProfile(t), sandbox: stubExecSandbox(t, f.stateDir)}
+}
+
+// requireOnlyExec fails unless the registry is exactly [Workspace.Exec]: the
+// AILANG family is refused and the exec family is bound (row 152 AC1.5).
+func requireOnlyExec(t *testing.T, reg broker.Registry) {
+	t.Helper()
+	if names := registryNames(reg); strings.Join(names, ",") != broker.EffectWorkspaceExec {
+		t.Fatalf("registry = %v, want exactly [%s]", names, broker.EffectWorkspaceExec)
+	}
+}
+
+// requireExecRunsIn drives one `where` call through the registry's bound exec
+// handler and requires exit 0 with stdout == want. Membership alone is not
+// enough: a refusal handler would also be a member. It reuses the caller's
+// single registry() result, since another registry() call prints another
+// operator line.
+func requireExecRunsIn(t *testing.T, reg broker.Registry, want string) {
+	t.Helper()
+	out, err := execCall(t, reg[broker.EffectWorkspaceExec])
+	if err != nil {
+		t.Fatalf("Workspace.Exec on the refused episode: %v", err)
+	}
+	var res struct {
+		ExitCode *int   `json:"exit_code"`
+		Stdout   string `json:"stdout"`
+	}
+	if err := json.Unmarshal(out, &res); err != nil || res.ExitCode == nil || *res.ExitCode != 0 || strings.TrimSpace(res.Stdout) != want {
+		t.Fatalf("Workspace.Exec = %s (%v), want exit_code 0 and stdout %s", out, err, want)
+	}
+}
+
 func TestWorkspaceModuleRootSymlinkOrMissingIsR8(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
@@ -156,9 +192,9 @@ func TestWorkspaceModuleRootSymlinkOrMissingIsR8(t *testing.T) {
 			var log bytes.Buffer
 			d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, WorkspaceModuleRoot: "tools", ErrorLog: &log,
 				ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)})
-			if reg := d.workspace.registry("ep1"); len(reg) != 0 {
-				t.Fatalf("registry = %v, want empty", registryNames(reg))
-			}
+			configureStubExec(t, d, f)
+			reg := d.workspace.registry("ep1")
+			requireOnlyExec(t, reg)
 			if f.summaries(t) != 0 || f.dispatches(t) != 0 {
 				t.Fatalf("a refused module root ran the tool (summaries %d, dispatches %d)", f.summaries(t), f.dispatches(t))
 			}
@@ -170,6 +206,7 @@ func TestWorkspaceModuleRootSymlinkOrMissingIsR8(t *testing.T) {
 					t.Fatalf("the missing module root was created (lstat: %v)", err)
 				}
 			}
+			requireExecRunsIn(t, reg, filepath.Join(f.root, "ep1"))
 		})
 	}
 }
@@ -583,9 +620,9 @@ func TestWorkspacePackageCacheRefusesUnprovisionedRegistry(t *testing.T) {
 			mkdirs(t, filepath.Dir(link))
 			tc.setup(t, f, link)
 			log.Reset() // drop the startup line: assert on what the episode prints
-			if reg := d.workspace.registry("ep1"); len(reg) != 0 {
-				t.Fatalf("registry = %v, want empty", registryNames(reg))
-			}
+			configureStubExec(t, d, f)
+			reg := d.workspace.registry("ep1")
+			requireOnlyExec(t, reg)
 			want := fmt.Sprintf("ailang-worldd: workspace package cache refused for episode \"ep1\": %s is not empty and was not provisioned by "+
 				"--workspace-package-cache; clear it manually\n", link)
 			if tc.name == "foreign symlink" {
@@ -600,6 +637,7 @@ func TestWorkspacePackageCacheRefusesUnprovisionedRegistry(t *testing.T) {
 				t.Fatalf("a refused episode ran the tool (%d summaries)", n)
 			}
 			tc.check(t, f, link)
+			requireExecRunsIn(t, reg, filepath.Join(f.root, "ep1"))
 		})
 	}
 	t.Run("empty dir is replaced", func(t *testing.T) {
@@ -863,6 +901,9 @@ func TestWorkspacePackageCacheCoversLock(t *testing.T) {
 			cfg := f.cfgWithCache(t, f.pkgcacheDir(), &log)
 			cfg.WorkspaceModuleRoot = "tools"
 			d := mustWSDaemon(t, cfg)
+			if tc.want != "" {
+				configureStubExec(t, d, f)
+			}
 			log.Reset()
 			reg := d.workspace.registry("ep1")
 			if tc.want == "" {
@@ -871,13 +912,16 @@ func TestWorkspacePackageCacheCoversLock(t *testing.T) {
 				}
 				return
 			}
-			if len(reg) != 0 || f.summaries(t) != 0 {
-				t.Fatalf("registry = %v, summaries %d, want empty and 0", registryNames(reg), f.summaries(t))
+			requireOnlyExec(t, reg)
+			if f.summaries(t) != 0 {
+				t.Fatalf("registry = %v, summaries %d, want only Workspace.Exec and 0", registryNames(reg), f.summaries(t))
 			}
 			want := strings.ReplaceAll(tc.want, "%DIR%", f.pkgcacheDir())
 			if n := strings.Count(log.String(), "\n"); n != 1 || (tc.exact && log.String() != want) || (!tc.exact && !strings.Contains(log.String(), want)) {
 				t.Fatalf("operator log (%d lines) = %q, want %q", n, log.String(), want)
 			}
+			// Exec runs in the worktree, not in the module root (<root>/ep1/tools).
+			requireExecRunsIn(t, reg, filepath.Join(f.root, "ep1"))
 		})
 	}
 }
@@ -899,14 +943,17 @@ func TestWorkspacePackageCacheLockFIFOIsRefusedPromptly(t *testing.T) {
 	cfg := f.cfgWithCache(t, f.pkgcacheDir(), &log)
 	cfg.WorkspaceModuleRoot = "tools"
 	d := mustWSDaemon(t, cfg)
+	configureStubExec(t, d, f)
 	log.Reset()
-	done := make(chan int, 1)
-	go func() { done <- len(d.workspace.registry("ep1")) }()
+	done := make(chan broker.Registry, 1)
+	go func() { done <- d.workspace.registry("ep1") }()
 	select {
-	case n := <-done:
-		if n != 0 || !strings.Contains(log.String(), `does not cover episode "ep1": lock `) || !strings.Contains(log.String(), "is not a regular file") {
-			t.Fatalf("registry size %d, log %q, want an empty registry and a not-a-regular-file refusal", n, log.String())
+	case reg := <-done:
+		if names := registryNames(reg); strings.Join(names, ",") != broker.EffectWorkspaceExec ||
+			!strings.Contains(log.String(), `does not cover episode "ep1": lock `) || !strings.Contains(log.String(), "is not a regular file") {
+			t.Fatalf("registry %v, log %q, want only Workspace.Exec and a not-a-regular-file refusal", names, log.String())
 		}
+		requireExecRunsIn(t, reg, filepath.Join(f.root, "ep1"))
 	case <-time.After(2 * time.Second):
 		// Release the blocked open so the goroutine and the daemon's Close can finish.
 		if w, err := os.OpenFile(lock, os.O_RDWR|syscall.O_NONBLOCK, 0); err == nil {

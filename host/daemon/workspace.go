@@ -10,8 +10,12 @@ package daemon
 // one broker.AilangToolHandler running the ARCHIVED tool binary. Anything
 // short of that — a flag missing, an episode id outside the grammar, a
 // worktree that is absent, not a directory, or reached through a symlink —
-// yields an EMPTY registry, so the coordinator refuses a declared effect
-// (R8) before the plan or any effect runs. No confinement is added here:
+// leaves the AILANG names unbound, so the coordinator refuses a declared
+// AILANG effect (R8) before the plan or any effect runs. Row 152: the two
+// families are bound independently. Workspace.Exec needs only the episode
+// worktree, so it is bound whenever that resolves, even when the AILANG
+// handler cannot be built (module root, package cache, policy, summary).
+// No confinement is added here:
 // path, symlink, .git and deny-glob confinement stay AILANG's own (§4.3).
 
 import (
@@ -41,7 +45,9 @@ const ToolBinaryRelease = "AILANG v0.52.1"
 
 // workspaceHandlerBudget bounds one episode handler's construction: the
 // policy write plus the one `policy-tool` summary subprocess (~0.1 s, M4a).
-const workspaceHandlerBudget = 3 * time.Second
+// It is a var only as a test seam (production value 3 s; tests set it with
+// withHandlerBudget, never concurrently with a build).
+var workspaceHandlerBudget = 3 * time.Second
 
 // episodeIDPattern is the §4.3 episode grammar: an episode id names one
 // directory directly under the workspace root, never a path.
@@ -49,10 +55,12 @@ var episodeIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
 
 // ailangToolEffects are the eight effect names an episode's AILANG tool
 // handler serves: row 134's six plus row 135's Ailang.RunEnv and
-// Ailang.RunNet. All eight are ALWAYS bound (R8 refuses a plan whose declared
-// effects lack a handler, and ailang-run declares all three run effects); the
-// operator's run allowlist is enforced inside the handler, never by leaving a
-// name unregistered (§4.2).
+// Ailang.RunNet. All eight are bound together whenever the episode's AILANG
+// handler is built (R8 refuses a plan whose declared effects lack a handler,
+// and ailang-run declares all three run effects); the operator's run
+// allowlist is enforced inside the handler, never by leaving a name
+// unregistered (§4.2). When the handler cannot be built (row 152) none of the
+// eight is bound and R8 refuses only the AILANG transitions.
 var ailangToolEffects = []string{
 	broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
 	broker.EffectAilangRun, broker.EffectAilangRunEnv, broker.EffectAilangRunNet,
@@ -60,8 +68,9 @@ var ailangToolEffects = []string{
 }
 
 // workspaceEffects are the nine names an episode's registry binds: the eight
-// above plus row 140's Workspace.Exec, also ALWAYS bound (workspace-exec
-// declares it). With no exec profile configured its handler is
+// above plus row 140's Workspace.Exec, bound whenever the episode worktree
+// resolves, independently of the AILANG handler (row 152; workspace-exec
+// declares only it). With no exec profile configured its handler is
 // broker.ExecUnconfiguredHandler: a typed refusal that spawns nothing, never
 // an unregistered name; with one, the episode's broker.ExecHandler.
 var workspaceEffects = append(append([]string(nil), ailangToolEffects...), broker.EffectWorkspaceExec)
@@ -96,9 +105,29 @@ type workspaceTools struct {
 	packageCacheDigest string
 	errLog             io.Writer
 
-	mu      sync.Mutex
-	handler map[string]episodeTool // episode id -> constructed handler
-	execH   map[string]episodeTool // episode id -> constructed exec handler
+	// mu guards handler and ailangBuild only. It is never held across the
+	// AILANG build's subprocess, so one episode's stuck build blocks neither
+	// another episode nor exec construction (row 152 M2).
+	mu          sync.Mutex
+	handler     map[string]episodeTool  // episode id -> constructed handler
+	ailangBuild map[string]*ailangBuild // episode id -> the build in flight
+
+	// execMu guards execH only. It is never held with mu, so exec
+	// construction never waits behind an AILANG build (row 152).
+	execMu sync.Mutex
+	execH  map[string]episodeTool // episode id -> constructed exec handler
+}
+
+// ailangBuild is one in-flight AILANG handler build. Callers for the same
+// episode and module root share it: the first runs the build, the rest wait on
+// done and take its result. A failure is never cached: the entry is dropped
+// when the build returns, so the next Binder open builds again.
+type ailangBuild struct {
+	root    string
+	done    chan struct{}
+	tool    broker.Handler
+	err     error
+	waiters int // callers joined onto this build; written under mu, read by tests
 }
 
 // workspaceExec is the verified exec profiles and the archived sandbox that
@@ -301,9 +330,11 @@ func verifyArchivedTool(path string, ref hashref.HashRef) error {
 // enabled reports whether both flags were given.
 func (w *workspaceTools) enabled() bool { return w != nil && w.root != "" && w.bin != "" }
 
-// registry is workspaceRegistry(episodeID) of §4.3: the eight AILANG tool
-// effect names bound to the episode's handler and Workspace.Exec to its own,
-// or an empty registry.
+// registry is workspaceRegistry(episodeID) of §4.3: Workspace.Exec bound to
+// the episode's own handler whenever the worktree resolves, plus the eight
+// AILANG tool effect names bound to the episode's AILANG handler when it can
+// be built. A flag missing or an unsafe worktree yields an empty registry; an
+// AILANG build failure prints its operator line and leaves only Workspace.Exec.
 func (w *workspaceTools) registry(episodeID string) broker.Registry {
 	if !w.enabled() {
 		return broker.Registry{}
@@ -312,27 +343,32 @@ func (w *workspaceTools) registry(episodeID string) broker.Registry {
 	if !ok {
 		return broker.Registry{}
 	}
-	sandbox, err := w.sandboxRoot(episodeID, epRoot)
-	if err != nil {
-		fmt.Fprintf(w.errLog, "ailang-worldd: workspace tools unavailable for episode %q: %v\n", episodeID, err)
-		return broker.Registry{}
-	}
-	h, err := w.episodeHandler(episodeID, sandbox)
-	if err != nil {
+	reg := make(broker.Registry, len(workspaceEffects))
+	// The AILANG family first, exec second: today's operator-line order.
+	if h, err := w.ailangFamily(episodeID, epRoot); err != nil {
 		var refusal *episodeRefusal
 		if errors.As(err, &refusal) {
 			fmt.Fprintln(w.errLog, refusal.line)
 		} else {
 			fmt.Fprintf(w.errLog, "ailang-worldd: workspace tools unavailable for episode %q: %v\n", episodeID, err)
 		}
-		return broker.Registry{}
-	}
-	reg := make(broker.Registry, len(workspaceEffects))
-	for _, name := range ailangToolEffects {
-		reg[name] = h
+	} else {
+		for _, name := range ailangToolEffects {
+			reg[name] = h
+		}
 	}
 	reg[broker.EffectWorkspaceExec] = w.execHandler(episodeID, epRoot)
 	return reg
+}
+
+// ailangFamily resolves the episode's module root and builds (or fetches)
+// its AILANG tool handler: the inputs only the eight AILANG names need.
+func (w *workspaceTools) ailangFamily(episodeID, epRoot string) (broker.Handler, error) {
+	sandbox, err := w.sandboxRoot(episodeID, epRoot)
+	if err != nil {
+		return nil, err
+	}
+	return w.episodeHandler(episodeID, sandbox)
 }
 
 // execHandler is the episode's Workspace.Exec handler: the typed refusal
@@ -343,8 +379,8 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 	if w.exec == nil {
 		return broker.ExecUnconfiguredHandler{}
 	}
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.execMu.Lock()
+	defer w.execMu.Unlock()
 	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot {
 		return cached.h
 	}
@@ -388,16 +424,58 @@ func (w *workspaceTools) episodeRoot(episodeID string) (string, bool) {
 	return resolved, true
 }
 
-// episodeHandler returns the episode's cached handler (sandbox is the module
-// root: <worktree>/REL, the worktree itself by default), constructing it on
-// first use (the constructor runs one summary subprocess, so it is built
-// once per episode rather than per Dispatch).
+// episodeHandler returns the episode's AILANG handler (sandbox is the module
+// root: <worktree>/REL, the worktree itself by default). A success is cached
+// per episode. The build runs one summary subprocess, so concurrent callers for
+// the same episode share one in-flight build (single flight) and w.mu is never
+// held across it. A failure is returned to every caller joined to that build
+// and is not cached.
 func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handler, error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	if cached, ok := w.handler[episodeID]; ok && cached.root == sandbox {
+		w.mu.Unlock()
 		return cached.h, nil
 	}
+	if b, ok := w.ailangBuild[episodeID]; ok && b.root == sandbox {
+		b.waiters++
+		w.mu.Unlock()
+		<-b.done
+		return b.tool, b.err
+	}
+	b := &ailangBuild{root: sandbox, done: make(chan struct{})}
+	if w.ailangBuild == nil {
+		w.ailangBuild = map[string]*ailangBuild{}
+	}
+	w.ailangBuild[episodeID] = b
+	w.mu.Unlock()
+
+	// The budget bounds the whole build, mkdirs through the summary
+	// subprocess. The root context stays in this function: the production
+	// context-root census (host/store/context_roots_test.go) pins it here.
+	ctx, cancel := context.WithTimeout(context.Background(), workspaceHandlerBudget)
+	tool, err := w.buildAilangHandler(ctx, episodeID, sandbox)
+	cancel()
+
+	w.mu.Lock()
+	if err == nil {
+		if w.handler == nil {
+			w.handler = map[string]episodeTool{}
+		}
+		w.handler[episodeID] = episodeTool{root: sandbox, h: tool}
+	}
+	if w.ailangBuild[episodeID] == b {
+		delete(w.ailangBuild, episodeID)
+	}
+	b.tool, b.err = tool, err
+	close(b.done)
+	w.mu.Unlock()
+	return tool, err
+}
+
+// buildAilangHandler is the lock-free body of the build: directories, package
+// cache link, lock coverage, policy render and write, and the constructor's
+// one policy-tool summary subprocess, bounded by ctx.
+func (w *workspaceTools) buildAilangHandler(ctx context.Context, episodeID, sandbox string) (broker.Handler, error) {
 	policyDir := filepath.Join(w.stateDir, "policies")
 	cacheDir := filepath.Join(w.stateDir, "cache", episodeID)
 	for _, dir := range []string{policyDir, cacheDir} {
@@ -419,8 +497,6 @@ func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handl
 	if err := writePolicy(policyPath, policy); err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), workspaceHandlerBudget)
-	defer cancel()
 	h, err := broker.NewAilangToolHandler(ctx, broker.AilangToolConfig{
 		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: sandbox, CacheDir: cacheDir,
 		ExamplesDir: w.examplesDir, RunCaps: w.runCaps, PackageCacheDigest: w.packageCacheDigest,
@@ -428,12 +504,7 @@ func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handl
 	if err != nil {
 		return nil, err
 	}
-	tool := verifiedTool{path: w.bin, ref: w.binRef, h: h}
-	if w.handler == nil {
-		w.handler = map[string]episodeTool{}
-	}
-	w.handler[episodeID] = episodeTool{root: sandbox, h: tool}
-	return tool, nil
+	return verifiedTool{path: w.bin, ref: w.binRef, h: h}, nil
 }
 
 // runCapsStartupBudget bounds the startup check of the run variants: one

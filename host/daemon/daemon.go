@@ -740,7 +740,9 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 
 // binder is the coordinator's production BinderFor: a live binder over the
 // episode's workspace registry (row 134 §4.3) — empty, so R8 refuses every
-// declared effect, unless the episode resolves to a served worktree.
+// declared effect, unless the episode resolves to a served worktree; then
+// Workspace.Exec is bound and the eight AILANG names only when that
+// episode's AILANG handler builds (row 152).
 func (d *Daemon) binder(episodeID string, grants []broker.Capability) transitionreg.Binder {
 	return broker.OpenBinder(d.store, episodeID, grants, d.workspace.registry(episodeID))
 }
