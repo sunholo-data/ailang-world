@@ -1,6 +1,6 @@
 # Row 153 verification evidence (executor side)
 
-Design: `design_docs/planned/w-plan-phase-deadline-under-load.md`. Plan: `...-sprint-plan.md`. Logs: `executor-run1.md` (C0-C4b,
+Design: `design_docs/implemented/w-plan-phase-deadline-under-load.md`. Plan: `...-sprint-plan.md`. Logs: `executor-run1.md` (C0-C4b,
 baseline, run-1 mutation ledger), `executor-run2.md` (C5, C6, run-2 ledger), `mut-run2.log` (verbatim), `proxy/` (scripts and
 trimmed logs). Not here: AC4.2 (5/5 consecutive CI attempts) and AC4.3 (records), which belong to the controller.
 

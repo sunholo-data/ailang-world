@@ -1,15 +1,16 @@
-# World mission dashboard — iteration 238, 2026-10-06
-Latest release: world/core@0.1.1 published attended; no release this run.
-World 1.0: clauses 1/2/3/6/7 MET; 4/5 UNMET.
-Critical path (D-WORLD-65): 136 LANDED → 141 LANDED → 152 → 153 → 93 → 114 → 139 → release.
-Row 141 LANDED this fire: PR #224 → 6eeff52. `--workspace-module-root` (subdirectory sandbox) + `--workspace-package-cache` (read-only registry snapshot); QUICKSTART §11.
-Upstream asks: sunholo-data/ailang#1607 (pkg-docs egress under a policy), #1608 (read-only package root). #1602 still open (row 159).
-New rows: 162 (pkg_docs unrecorded egress), 163 (lock `path` entries outside the sandbox — measure first).
-CI: TestExecSrtMCP* time out in verify_go.sh's parallel -race step on 7/9 attempts since ~14:00Z (pass in the -p 1 srt step) = row 153's defect (attended filed it as hygiene row 161 mid-fire). dev HEAD 6eeff52 green on rerun.
-Next pick: row 152 (default) — or row 153 if Mark answers D-WORLD-68 = A.
-Parked on Mark: D-WORLD-68 (promote row 153 ahead of 152? A recommended; default B).
-Judge: opus Agent, PASS 91 → r2 96, zero blocking — design_docs/verification/world-iter238/.
-Routing: designer/planner/evaluator Agent opus, executor Agent sonnet (codex/ollama/openrouter over ration). $0.58 metered (quorum).
-Quorum: gemini/glm/kimi seated; OpenAI seat (gpt6-1-sol) dead on API credits.
-Gate binary: v0.41.0 pin at ~/.pinned-ailang/ailang (not the v0.52.x tool pin).
-Bookkeeping issue #202; full memory in charter/log/status archive.
+# World mission dashboard — iteration 241 (2026-10-07)
+
+- Outcome: row 153 LANDED (PR #227 → `42a2511`); closes hygiene row 161.
+- What changed: plan-phase timeout is a typed `PhaseTimeoutError` (A2A names the phase, retryable; MCP wire unchanged until row 159 / ailang#1602).
+- Plan cap derived: invokeDeadline − HandlerCap − HandlerHeadroom = 4 s (was an unmeasured 2 s).
+- Root cause: every capsule run cold-compiled the transition + std (5–7× slower); now runs copy a compile-cache template built in the publication check; cold runs are labelled and red in test rigs.
+- Evidence: throttled-proxy plan timeouts 4/4 → 0/12; CI 5/5 concurrent attempts (1 PR run + 4 dispatched) green on the PR head.
+- Judge: opus r1 80 (1 blocking: machine-dependent ratio test) → r2 92, zero blocking.
+- Quorum: r1/r2 BLOCKED at N−1 (gpt6-1-sol unreachable) → r3 narrow-refinement carve-out, reviewers' fixes verbatim.
+- Folded in: iterations 239/240 unjudged drafts (Codex-controller lane park, PR #226) now recorded; row 164 scoped to Codex-controller fires.
+- 1.0: clauses 1/2/3/6/7 MET; 4/5 UNMET.
+- Next: row 152 → 93 → 114 → 139.
+- New rows: 165 (capsule re-hashes 100 MB interpreter per run), 166 (broker head/tail timeout flake).
+- Pending human: none (ledger ZERO OPEN).
+- Dev base at Gate 1: `990a6da`, 2/2 green.
+- Metered $0.49 (quorum); Anthropic subscription roles.
