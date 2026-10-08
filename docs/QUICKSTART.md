@@ -981,11 +981,15 @@ digest of the snapshot that `ai-check`, `test` and `run` resolved against. The e
 therefore names the packages a result depended on. An exec profile's `root` (§10) is independent
 of the module root: it only places a toolchain command's cwd.
 
-**Operator lines.** Each is written once per refused call, and the episode's **AILANG tools**
-(read, write, edit, check, run, discover, cli) stay refused (every declared effect fails) until
-you fix the cause. `workspace-exec` keeps working: it needs only the episode worktree, not the
-module root, the package cache or the policy, so it is refused only when the worktree itself is
-missing or unsafe:
+**Operator lines.** Each is written once per refused call. The episode's AILANG tools
+(`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`, `ailang-run`, `builtins-search`,
+`examples-search`, `ailang-cli`) stay refused (every declared effect fails) until you fix the
+cause. `workspace-exec` is not bound to that build: it needs only the episode worktree, not the
+module root, the package cache or the policy. It is still refused when the worktree is missing or
+unsafe, when no exec profile is configured (or none maps to the episode), and when building the
+episode's exec handler fails. While an AILANG cause persists, each call in that episode,
+`workspace-exec` included, first waits for the failed AILANG build to be retried (up to the 3 s
+construction budget), so fix the cause rather than retrying:
 
 | Line | Cause | What to do |
 |---|---|---|
