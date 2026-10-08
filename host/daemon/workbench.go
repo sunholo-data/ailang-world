@@ -538,5 +538,21 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	latest, err := d.reads.LogEntriesLatest(ctx, 10)
+	if err != nil {
+		d.writeWorkbenchStoreError(w, r, ctx, err)
+		return
+	}
+	page.Live.Cursor = -1
+	if len(latest) > 0 {
+		page.Live.Cursor = latest[0].Header.EntryIndex
+		page.Live.Head = latest[0].EntryHash.String()
+	}
+	for _, entry := range latest {
+		view := entryView(entry)
+		view.SelectHref = pageHref(entry.Header.EntryIndex, entry.Header.EntryIndex)
+		page.Live.Recent = append(page.Live.Recent, view)
+	}
+
 	_ = workbench.Render(w, page)
 }

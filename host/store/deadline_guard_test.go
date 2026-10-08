@@ -101,6 +101,7 @@ func guardFixtures() map[string]guardFixture {
 		"GetObject": simple(ref("missing")), "GetReceipt": simple("guard"),
 		"GetRegistryHead": simple("name"), "GetVerifyResult": simple(ref("transition"), ref("interpreter")),
 		"LogEntriesAfter": simple(int64(-1), 1),
+		"LogEntriesLatest": simple(1),
 		"ListSessions": simple("episode", 1),
 		"GetWorld":     simple(ref("missing")), "MintSession": simple(SessionRow{CredentialID: "credential", EpisodeID: "episode", GrantsJSON: "[]"}),
 		"ObjectCommits":        simple(ref("missing"), int64(0), 1),
