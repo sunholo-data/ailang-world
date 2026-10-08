@@ -1,18 +1,21 @@
-# World mission dashboard — iteration 245 (2026-10-08)
+# World mission dashboard — iteration 246 (2026-10-08)
 
-- Outcome: row 149 LANDED (PR #234 → `b8b6a3f`) — v1.0.0 release row, taken under D-WORLD-64's exception.
-- What changed: the workbench is live. One embedded same-origin script follows `POST /agui/` and re-fetches the page to swap five server-rendered regions; with JS off the page is exactly as before.
-- Also: light/dark theme tokens from the mockups, a status footer the script owns ("quiet is health"), a deterministic SVG graph of entries → objects from checked edges, and a read-only decisions pane from the approvals chain.
-- Safety: CSP widens by exactly `script-src 'self'; connect-src 'self'` (pinned); no inline script, no CDN, no build chain; grades, links and the query grammar stay server-side.
-- Proof: real headless Chrome drill green (JS-on: GET → stream → commit → re-fetch → resume at the next cursor; JS-off: zero stream requests).
-- Orphan: iteration 244 died when the rig's Aqua session was lost; its uncommitted design was verified and adopted.
-- Judge: sonnet r1 91 → r2 92, zero blocking (cross-vendor from the codex executor); 35/35 design mutants red.
-- Quorum: r1 BLOCKED 3/3 → r2 BLOCKED 3/3 (new surfaces, all with fixes) → narrow-refinement carve-out; `gpt6-1-sol` unreachable (N−1).
-- CI: 3/3 on the final head; the new node-harness step ran its three tests (no skips); merge tree-identical.
-- 1.0: clauses 1/2/3/6/7 MET; 4/5 UNMET.
-- Critical path: row 93 M5 FINAL is attended (Mark mints the sessions); 114 → 139 follow it.
-- Next (loop): row 150 `w-marketing-capture` under the same exception, unless 93 M5 lands first.
-- New row: 171 (row-149 residual weak test pins). Unranked: 169, 170, 171.
-- Pending human: no ledger decision (ZERO OPEN); the critical path needs your attended row 93 M5 session.
-- Dev base at Gate 1: `b702d73`; merge `b8b6a3f`.
-- Metered $0.50 (quorum); codex planner/executor and Anthropic designer/judge on subscription.
+- Outcome: row150 PARKED — needs-human-review, D-WORLD-69 OPEN; no seed/release images implemented.
+- Find: production packet producer/read path absent; grade resolver remains unavailable. Proof validator is library-only.
+- Quorum: two BLOCKED rounds, glm/kimi/gemini reject; sonnet absent quota. No freeze or forced pass.
+- Judge: separate native GPT-6.1 Sol independently ACCEPTS discovery/PARK; same-model-fresh-context FLAG under D48.
+- All four operator-required Agent roles spawned; planner/executor preflight only because design gates stayed open.
+- Technical gates: bounded product Chrome lifecycle, byte-field inventory, fresh-seed/normal-clock composition remain unmeasured.
+- D-WORLD-69 A (recommended): retain full showcase; extend blocked-critical-path exception to26→105→172→150.
+- D-WORLD-69 B: explicitly narrow150 to truthful unavailable grades/approvals; defer full showcase to named owners.
+- Default:150 stays parked immediately;151 cannot bypass the lowest-open release-row rule.
+- No separate human ask for normal credential supply or routine demo-local logical-time wiring.
+- 1.0 clauses1/2/3/6/7 MET,4/5 UNMET; goal unmoved.
+- Critical path:93 M5 FINAL attended →114 →139. Nothing on it is presently loop-routable.
+- Banked26/105/new172 need D69 placement; no unauthorized priority jump.
+- Native sonnet unavailable; resolver refuses Anthropic ration. Fleet recurrence ticket filed, no World harness repair.
+- Metered quorum $0.333723; native Codex quota tokens not reported. Driver degradation retained in full log/digest.
+- Gate4 base:94fc5ba4d017505849e2adab1e87c8aae8ad0bdc@2026-10-08T13:17:15Z.
+- Cadence: one bounded scheduled iteration; separate roles; park human judgments; report GCP AILANG + GitHub202.
+- CI packaging delta: probe PNGs rejected; retained privately with hash manifest. Final record rechecks CI; gate unchanged.
+- Row173: fleet-owned global binary gate conflicts with literal release PNGs; ticket filed, blocking150 separately from D69.

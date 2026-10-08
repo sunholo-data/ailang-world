@@ -1,0 +1,6 @@
+Google Chrome 154.0.8037.98
+run 1 TIMEOUT 30s
+run 2 TIMEOUT 30s
+control1.png bytes=16271 sha256=07a78d63d817d16ac801311e024031a0baeaf93fc56089db317cf2cd04c93576
+control2.png bytes=16271 sha256=07a78d63d817d16ac801311e024031a0baeaf93fc56089db317cf2cd04c93576
+byte_identical=True

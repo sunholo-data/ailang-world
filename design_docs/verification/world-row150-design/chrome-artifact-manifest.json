@@ -1,0 +1,18 @@
+{
+  "purpose": "instrument-only, both Chrome commands timed out; no product capture acceptance",
+  "storage": "persistent local run storage; raw PNGs excluded by unchanged tracked-binary gate",
+  "files": [
+    {
+      "name": "control1.png",
+      "path": "/Users/voightkampff/.ailang/state/world-iter246/chrome-control/control1.png",
+      "bytes": 16271,
+      "sha256": "07a78d63d817d16ac801311e024031a0baeaf93fc56089db317cf2cd04c93576"
+    },
+    {
+      "name": "control2.png",
+      "path": "/Users/voightkampff/.ailang/state/world-iter246/chrome-control/control2.png",
+      "bytes": 16271,
+      "sha256": "07a78d63d817d16ac801311e024031a0baeaf93fc56089db317cf2cd04c93576"
+    }
+  ]
+}

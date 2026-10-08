@@ -1,0 +1,2 @@
+Full H2 body multiset byte-identical after whitespace-edge normalization: 237 records. Index numeric IDs 236 -> 237, exactly +246; legacy orphan notices preserved. Main checkout hashes unchanged.
+STATUS: three single-line stamps retained; moved iteration242 appears in archive, known-present241 control; queue93/150/172 preserved. Charter line-count assertion executed before write: after == before + 2 - 2*1.

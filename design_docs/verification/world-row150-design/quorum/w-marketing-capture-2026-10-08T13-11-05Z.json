@@ -1,0 +1,80 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture.md",
+  "iso_ts": "2026-10-08T13:11:05Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.07895060000000001,
+      "tokens_in": 6535,
+      "tokens_out": 15864,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's title promise — reproducible byte-identical release artifacts — is unestablished on both of its legs, yet the doc hard-codes a six-shot contract, a ten-AC acceptance table, and a file census on top of it. Seed leg: §1 and AC3 sketch only logical-time control, but the doc's own V16 verifies that public hashes vary through invocation/task IDs, episode IDs, epoch refs, effect request/budget/result bytes, handler outputs, and credential-expiry-influenced admissibility, and leaves the exact byte inventory PENDING — so AC3 has no candidate mechanism, and its sole determinism mutation (M3, wall clock) drills a channel the doc itself declares insufficient. Capture leg: the only instrument measurement (V13) ended in timeout-failure against static local HTML, not the daemon-served workbench; the repeatability argument rests on the asserted-but-unverified 'Chrome's documented existing --blink-settings=scriptEnabled=false usage', and V14's own finding that the live/workbench regions are server-rendered leaves unexamined the risk that request-time wall-clock text is baked into /workbench HTML — where disabling JavaScript cannot help and AC8 byte-equality becomes structurally impossible. Ratifying this AC table at re-quorum would freeze acceptance criteria that cannot currently converge.",
+        "catch": "Verify the two load-bearing capture premises and close the seed inventory before re-quorum: (a) execute two raw GETs of /workbench from one frozen store minutes apart and diff the responses for request-time wall-clock-derived strings — V14 proves these regions are server-rendered, so the JS-off mitigation does not cover this; (b) add an executed V row showing --blink-settings=scriptEnabled=false is actually honored by Chrome 154 headless screenshot mode and that every shot's required visible content survives with scripts disabled; (c) extend V16 from 'PENDING' to a field-level table of every varying public byte with its source and the normal-path control that makes it deterministic, or mark AC3 explicitly blocked-by-inventory.",
+        "proposed_fix": "Three concrete edits. (1) Rewrite the Goals determinism sentence and AC3 as inventory-contingent: replace 'Fresh seeds must have identical public object/log/world hashes' with 'Target: fresh seeds produce identical public hashes, contingent on a completed field-level byte inventory (V16) demonstrating a normal-path control for every varying public field', and replace M3 with a mutation family M3a–M3d (wall clock in one record; uncontrolled task/episode ID; uncanonicalized handler output bytes; budget byte varying with grant expiry), each of which must independently make AC3 red. (2) In §2, replace 'disable JavaScript via Chrome's documented existing --blink-settings=scriptEnabled=false usage' with: 'PENDING premise: verify Chrome 154 headless screenshot mode honors --blink-settings=scriptEnabled=false and that all required visible content survives; separately verify by response diff that the daemon-served /workbench HTML contains no request-time wall-clock text — if it does, specify a served-content determinism mechanism (e.g., a capture-time parameter or an omitted live-status span) rather than relying on JS-off', and add V rows recording both measurements. (3) Mark the packet.png shotlist row and AC4/AC5 as contingent on H1 option A so the AC table does not hard-code unratified scope, and rejoin V14–V17 into the single verification table (they are currently orphaned from the header by a blank line, so the log does not render as one table)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.105849,
+      "tokens_in": 6588,
+      "tokens_out": 5739,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate 1 failure at the design's weakest joint: the doc asserts 'The no-chromedp constraint remains because the charter explicitly requires it; a reviewer cannot reopen that requirement on its own,' but no verification-log row pins that charter clause. V1's own enumeration of what row 150 'expressly requires' (NORMAL commits, every grade, packet, effect, why, six shots, byte-identical captures) contains no chromedp prohibition, and V12 only verifies go.mod has two direct dependencies — which supports 'no new Go dependency' as a choice, not 'no chromedp' as a charter mandate. This unverified premise is load-bearing twice over: it eliminates the mature alternative (chromedp) in favor of a raw system-Chrome subprocess recipe whose only first-party instrument run, V13, FAILED both times (both Chrome processes wrote a PNG then timed out; no clean exit demonstrated), and it is used to strip future reviewers of the authority to reopen exactly that failing mechanism. The capture leg of this row is thus justified by an asserted constraint against a measured failure.",
+        "catch": "Cite the exact charter text (file and line) that prohibits chromedp, or downgrade the claim to a design preference — and reconcile it with V13: the chosen mechanism has zero observed successful bounded invocations, so the constraint that forbids the fallback must be verified, not asserted. Also flag the secondary unpinned claim that --blink-settings=scriptEnabled=false is 'documented existing usage' — no log entry shows this flag anywhere in the repo or that Chrome 154 honors it for these pages.",
+        "proposed_fix": "Add verification-log row V18: quote the charter clause verbatim with file/line that mandates no-chromedp. If no such clause exists, replace the sentence with: 'We exclude chromedp as a design constraint to preserve the two-dependency go.mod (V12); this is a revisable choice, not a charter mandate, and if the bounded system-Chrome recipe cannot be shown to exit 0 within its deadline (V13 shows two timeouts), evaluation of chromedp is an allowed fallback.' Correspondingly add a gate checkbox under 'Gates remaining before any design freeze': 'A bounded system-Chrome invocation demonstrably exits successfully within deadline; if this cannot be achieved, the capture mechanism constraint is reopened rather than the timeout being absorbed.' Apply the same treatment to the --blink-settings claim: either add a log row pinning its existing in-repo usage or relabel it as a pending assumption."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic headroom 0.8pp is below the 1pp start margin; new routing waits for headroom",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.017182,
+      "tokens_in": 7217,
+      "tokens_out": 229,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Unverified premise and missed conflict surface: The design proposes a Python script (check_marketing_capture.py) to perform pixel-level PNG validation (\u003e32 distinct RGB colors, ink occupancy) claiming it can use the Python 'stdlib' or an 'already-installed image decoder' with 'no implicit installation'. The Python standard library lacks a native PNG decoder, making this impossible in ~150 LOC without silently requiring unapproved dependencies (like Pillow) or arbitrary host tools. Furthermore, it fails to identify or justify why it ignores Go's native 'image/png' standard library, which can perform these exact checks natively and deterministically without external dependencies.",
+        "catch": "Python's standard library has no PNG pixel decoder capable of counting RGB colors or calculating ink occupancy.",
+        "proposed_fix": "Remove the Python verification script. Replace it with a Go-based verification mechanism (e.g., extending demo_test.go or a scoped Go utility) that imports the native 'image/png' package to deterministically assert the color counts and occupancy bounds."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "reject",
+    "note": "Blocked discovery is bankable; implementation remains frozen on H1 scope/order and unmeasured lifecycle/fresh-seed mechanism. No narrowing or exception extension ratified."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The doc's title promise — reproducible byte-identical release artifacts — is unestablished on both of its legs, yet the doc hard-codes a six-shot contract, a ten-AC acceptance table, and a file census on top of it. Seed leg: §1 and AC3 sketch only logical-time control, but the doc's own V16 verifies that public hashes vary through invocation/task IDs, episode IDs, epoch refs, effect request/budget/result bytes, handler outputs, and credential-expiry-influenced admissibility, and leaves the exact byte inventory PENDING — so AC3 has no candidate mechanism, and its sole determinism mutation (M3, wall clock) drills a channel the doc itself declares insufficient. Capture leg: the only instrument measurement (V13) ended in timeout-failure against static local HTML, not the daemon-served workbench; the repeatability argument rests on the asserted-but-unverified 'Chrome's documented existing --blink-settings=scriptEnabled=false usage', and V14's own finding that the live/workbench regions are server-rendered leaves unexamined the risk that request-time wall-clock text is baked into /workbench HTML — where disabling JavaScript cannot help and AC8 byte-equality becomes structurally impossible. Ratifying this AC table at re-quorum would freeze acceptance criteria that cannot currently converge.",
+      "oc-kimi-k3: Gate 1 failure at the design's weakest joint: the doc asserts 'The no-chromedp constraint remains because the charter explicitly requires it; a reviewer cannot reopen that requirement on its own,' but no verification-log row pins that charter clause. V1's own enumeration of what row 150 'expressly requires' (NORMAL commits, every grade, packet, effect, why, six shots, byte-identical captures) contains no chromedp prohibition, and V12 only verifies go.mod has two direct dependencies — which supports 'no new Go dependency' as a choice, not 'no chromedp' as a charter mandate. This unverified premise is load-bearing twice over: it eliminates the mature alternative (chromedp) in favor of a raw system-Chrome subprocess recipe whose only first-party instrument run, V13, FAILED both times (both Chrome processes wrote a PNG then timed out; no clean exit demonstrated), and it is used to strip future reviewers of the authority to reopen exactly that failing mechanism. The capture leg of this row is thus justified by an asserted constraint against a measured failure.",
+      "gemini-3-1-pro: Unverified premise and missed conflict surface: The design proposes a Python script (check_marketing_capture.py) to perform pixel-level PNG validation (\u003e32 distinct RGB colors, ink occupancy) claiming it can use the Python 'stdlib' or an 'already-installed image decoder' with 'no implicit installation'. The Python standard library lacks a native PNG decoder, making this impossible in ~150 LOC without silently requiring unapproved dependencies (like Pillow) or arbitrary host tools. Furthermore, it fails to identify or justify why it ignores Go's native 'image/png' standard library, which can perform these exact checks natively and deterministically without external dependencies.",
+      "controller (in-session): Blocked discovery is bankable; implementation remains frozen on H1 scope/order and unmeasured lifecycle/fresh-seed mechanism. No narrowing or exception extension ratified."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.2019816,
+    "total_tokens_in": 20340,
+    "total_tokens_out": 21832
+  }
+}

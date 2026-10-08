@@ -1,0 +1,80 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture.md",
+  "iso_ts": "2026-10-08T13:05:07Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0490546,
+      "tokens_in": 5581,
+      "tokens_out": 9373,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The six-shot capture recipe's core determinism mechanism rests on an asserted, uncited product premise: that `/workbench` server-renders the shotlist's required visible content (nonempty live timeline, graph, decisions) with JavaScript disabled via `--blink-settings=scriptEnabled=false`, the claimed 'existing JS-off product path'. No verification-log row establishes that any product route renders those regions without JS, and the doc's only empirical capture evidence (V13) tested a static local HTML file, not the product, with both invocations failing their own 30-second bound by timing out. The headline guarantee — byte-identical repeatable captures of the actual product with no chromedp — has therefore never been observed against the product even once. If the timeline/graph are client-rendered, the recipe is unimplementable as specified and the no-chromedp constraint must be reopened, not tuned; even if they are server-rendered, the recipe as written cannot currently produce one successful bounded capture, let alone the two byte-identical passes AC8 requires, yet the doc freezes a shotlist, ten acceptance criteria, a two-day estimate, and A1/A5 axiom self-scores of +1 on top of it.",
+        "catch": "The sentence 'This reuses the existing JS-off product path; no capture-only production query or forged footer' (§2) is the one load-bearing codebase claim in the doc with no V-row, file/line citation, or measurement — contradicting the doc's own closing claim that 'Discovery is complete for the documented code premises.' Verify it by rendering the real `/workbench` and graph/provenance routes with JS disabled and asserting the required DOM regions exist; and the deferred 'completion/termination protocol' for the V13 timeout behavior must be specified in this doc, not left to the implementer, since AC7–AC9 currently have no demonstrated positive path.",
+        "proposed_fix": "Before the design freeze, add two verification rows and revise §2: V14 — start the daemon per the recipe, load `/workbench`, `/workbench?from=N\u0026entry=N`, and the provenance route with `--blink-settings=scriptEnabled=false` and an isolated profile, and record with file/line citations (e.g., the `host/workbench/render.go` templates) that the shotlist's required regions are server-rendered; if any required region is client-rendered, replace the JS-off strategy with a bounded, explicitly specified alternative (e.g., CDP `Page.captureScreenshot` after a quiescence check with the page clock stubbed via a supported existing mechanism) and reopen the no-chromedp constraint as a recorded decision instead of silently keeping it. V15 — specify the completion/termination protocol in-doc (e.g., success := PNG written AND file size stable across two polls at least 2s apart AND supervisor-initiated kill classified as kill-after-complete; timeout without a stable file remains a loud AC9 failure) and re-run it against the actual product routes so the recipe rests on at least one successful bounded invocation. Additionally promote H2's clock wiring from planner deferral to a freeze item with a written sketch (who sets `Coordinator.Config.Now`, how demonstration records are labeled, proof that credential/grant checks are untouched) plus a two-fresh-seed hash-equality measurement; until V14/V15 pass, mark the byte-identity goal, AC3/AC7/AC8, and the A1/A5 scores as PENDING/0 rather than asserting that 'a useful deterministic capture implementation is specified below.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.068049,
+      "tokens_in": 5643,
+      "tokens_out": 3408,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "AC3 (fresh-seed determinism) is unreachable under the doc's own verified constraints. V9 establishes the daemon injects wall-clock Unix time at daemon.go:694; §1 forbids the seed orchestrator from writing history except through the normal authenticated REST/coordinator path; and the conflict-surface and census sections state this row does not modify daemon time behavior. Yet H2 asserts the planner 'may resolve a demo-local logical-time mechanism using the existing Coordinator.Config.Now injection' as agent-resolvable wiring, without a single verification-log row demonstrating an injection point reachable from the CLI through the normal daemon path. The doc's own evidence (V9) shows coordinator Now injection exists only behind a constructor the daemon calls with wall-clock time, so within the stated no-daemon-edit constraint AC3 has no demonstrated mechanism. If such a mechanism does not exist, deterministic fresh seeding requires a daemon change plus the human ratification the doc explicitly refuses to assume — collapsing the headline reproducibility guarantee to frozen-store repeat capture, which the doc itself says 'does not discharge deterministic fresh-world seeding.' The central promise of the design therefore rests on an asserted, not verified, premise.",
+        "catch": "Two further unverified load-bearing premises to fix or verify: (1) The determinism mechanism for capture — Chrome's --blink-settings=scriptEnabled=false — has no verification row showing /workbench renders its required shotlist content (timeline, graph, decisions) server-side. V13's only instrument evidence screenshotted a local source HTML file, not the product with JS disabled; if the workbench hydrates content via JS, JS-off yields blank/partial pages and AC7's required-visible-content checks fail at the recipe's foundation. (2) AC3 assumes wall-clock time is the only per-run varying input to public record/entry/object bytes; no row enumerates other nondeterministic fields (session identity, nonces, credential-derived bytes in envelopes, serialization ordering), so 'identical ordered public hashes' is asserted from time-control alone.",
+        "proposed_fix": "Add two verification-log rows and amend H2 before this doc proceeds to quorum. V14: trace coordinator construction from cmd/ailang-worldd through host/daemon/daemon.go:694 and cite any existing config flag, config file key, or REST/CLI surface by which a seed orchestrator on the normal path causes injected logical time to appear in every recorded write; if no such surface exists, replace the H2 recommendation with: 'Fresh-seed determinism requires a daemon change and attended ratification of demonstration-time semantics; until ratified, row 150 guarantees only byte-repeat capture of one frozen seeded store, and AC3 is descoped to pending.' V15: run headless Chrome with --blink-settings=scriptEnabled=false against a seeded store and assert the shotlist's required DOM content is present; if absent, either restrict capture recipes to server-rendered routes (verified per route) or specify an alternative race-suppression mechanism (DOM-content readiness wait plus frozen-status stub) as an explicit decision with its own measurement. Additionally, extend V7/V8's why/REST readings into a row enumerating which fields of entry/record/object bytes vary per run besides coordinator time, so AC3's exclusion list ('excluding private sessions') is grounded in an actual byte-field inventory rather than assumed."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic headroom 0.7pp is below the 1pp start margin; new routing waits for headroom",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.014638,
+      "tokens_in": 6143,
+      "tokens_out": 196,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design mandates a shell-driven system Chrome capture mechanism and explicitly forbids `chromedp` (Goals), but verification V13 proves this exact shell invocation currently hangs and times out. Mandating an actively failing mechanism while banning the standard programmatic solution without providing a proven workaround violates the requirement to verify factual claims about behavior.",
+        "catch": "V13 explicitly admits the Chrome screenshot process times out without a clean exit, yet the design forbids `chromedp` and defers fixing this broken shell mechanism to the implementer.",
+        "proposed_fix": "Provide a verified system-Chrome command in V13 that reliably captures the screenshot and cleanly exits with status 0 (e.g., using specific timeout or lifecycle flags to prevent the headless hang), or drop the 'no chromedp' constraint and verify a minimal working chromedp implementation in the log."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "reject",
+    "note": "Implementation frozen: verify scope gaps and authority against row150; human decisions cannot be supplied by quorum."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The six-shot capture recipe's core determinism mechanism rests on an asserted, uncited product premise: that `/workbench` server-renders the shotlist's required visible content (nonempty live timeline, graph, decisions) with JavaScript disabled via `--blink-settings=scriptEnabled=false`, the claimed 'existing JS-off product path'. No verification-log row establishes that any product route renders those regions without JS, and the doc's only empirical capture evidence (V13) tested a static local HTML file, not the product, with both invocations failing their own 30-second bound by timing out. The headline guarantee — byte-identical repeatable captures of the actual product with no chromedp — has therefore never been observed against the product even once. If the timeline/graph are client-rendered, the recipe is unimplementable as specified and the no-chromedp constraint must be reopened, not tuned; even if they are server-rendered, the recipe as written cannot currently produce one successful bounded capture, let alone the two byte-identical passes AC8 requires, yet the doc freezes a shotlist, ten acceptance criteria, a two-day estimate, and A1/A5 axiom self-scores of +1 on top of it.",
+      "oc-kimi-k3: AC3 (fresh-seed determinism) is unreachable under the doc's own verified constraints. V9 establishes the daemon injects wall-clock Unix time at daemon.go:694; §1 forbids the seed orchestrator from writing history except through the normal authenticated REST/coordinator path; and the conflict-surface and census sections state this row does not modify daemon time behavior. Yet H2 asserts the planner 'may resolve a demo-local logical-time mechanism using the existing Coordinator.Config.Now injection' as agent-resolvable wiring, without a single verification-log row demonstrating an injection point reachable from the CLI through the normal daemon path. The doc's own evidence (V9) shows coordinator Now injection exists only behind a constructor the daemon calls with wall-clock time, so within the stated no-daemon-edit constraint AC3 has no demonstrated mechanism. If such a mechanism does not exist, deterministic fresh seeding requires a daemon change plus the human ratification the doc explicitly refuses to assume — collapsing the headline reproducibility guarantee to frozen-store repeat capture, which the doc itself says 'does not discharge deterministic fresh-world seeding.' The central promise of the design therefore rests on an asserted, not verified, premise.",
+      "gemini-3-1-pro: The design mandates a shell-driven system Chrome capture mechanism and explicitly forbids `chromedp` (Goals), but verification V13 proves this exact shell invocation currently hangs and times out. Mandating an actively failing mechanism while banning the standard programmatic solution without providing a proven workaround violates the requirement to verify factual claims about behavior.",
+      "controller (in-session): Implementation frozen: verify scope gaps and authority against row150; human decisions cannot be supplied by quorum."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.13174160000000001,
+    "total_tokens_in": 17367,
+    "total_tokens_out": 12977
+  }
+}
