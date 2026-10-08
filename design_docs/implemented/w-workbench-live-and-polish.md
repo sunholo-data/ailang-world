@@ -1,9 +1,9 @@
 # w-workbench-live-and-polish — row 149
 
-- Status: **PLANNED — iteration 244/245 pick-time design, revision r2 (narrow-refinement
+- Status: **IMPLEMENTED 2026-10-08 (iteration 245, PR #234 → `b8b6a3f`) — was PLANNED — iteration 244/245 pick-time design, revision r2 (narrow-refinement
   carve-out after round 2)** (rounds 1 and 2 BLOCKED 3/3 present; no round 3; §12).
   Supersedes the row-149 parts of the attended DRAFT
-  [`w-world-live-surface.md`](w-world-live-surface.md) (D6, D7, §4 row 149, §6 149(a)–(e)).
+  [`w-world-live-surface.md`](../planned/w-world-live-surface.md) (D6, D7, §4 row 149, §6 149(a)–(e)).
   Rows 150–151 stay there.
 - Base `b702d73`. Premises are in §2. Probes are banked under
   `~/.ailang/state/world-iter244-design/` (`probe/` is a scratch Go module `replace`d onto this
@@ -15,7 +15,7 @@
   (V31, V32, V33) are banked in the same `world-iter245/design/` directory.
 - Binding: [coding-standards.md](../coding-standards.md) S2, S3, S6, S7; `D-WORLD-64`;
   [HUMAN-SURFACE.md](../HUMAN-SURFACE.md) P1, P3, P5, §5. Consumes the row-148 interface in
-  [`../implemented/w-worldd-agui-event-stream.md`](../implemented/w-worldd-agui-event-stream.md) §1, D1–D6.
+  [`../implemented/w-worldd-agui-event-stream.md`](w-worldd-agui-event-stream.md) §1, D1–D6.
 
 ## 1. Problem and clause mapping
 
@@ -81,7 +81,7 @@ with a positive control in the same row.
 | V35 | The edge helper the graph reuses checks exactly three entry relations | `sed -n 155-176p host/daemon/workbench.go`; `sed -n 152p host/workbench/render.go`; `grep -n 'stateRoot: <a' host/daemon/workbench_test.go` | `func (d *Daemon) entryEdges(ctx context.Context, entry store.LogEntry) ([]workbench.EdgeView, error)` at `:159`, relations `transitionFn`, `interpreter`, `transitionRef`, each via `checkedEdge` (`:182`, one `d.reads.GetObject`). `stateRoot` is rendered from the world nav (`render.go:152` `{{template "edge" .World.StateRoot}}`) and pinned there (`workbench_test.go:453`, `:791`). |
 | V36 | Row 148's 503 sets `Retry-After: 1` | `grep -n 'Retry-After' host/daemon/*.go \| grep -v _test` | One hit: `host/daemon/agui.go:122: w.Header().Set("Retry-After", "1")`. |
 
-**Draft claims false or stale at `b702d73`** (all in [`w-world-live-surface.md`](w-world-live-surface.md)):
+**Draft claims false or stale at `b702d73`** (all in [`w-world-live-surface.md`](../planned/w-world-live-surface.md)):
 
 1. 149(b) "with JS off, every existing workbench test passes unchanged". **False as worded.**
    Two literal CSP lines must change (V3). Refined in AC0.
