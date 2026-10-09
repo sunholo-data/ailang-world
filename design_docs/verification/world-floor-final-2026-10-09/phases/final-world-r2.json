@@ -1,0 +1,43 @@
+{
+  "abort": null,
+  "arm": "world",
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "world",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 7660
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 29474
+    }
+  ],
+  "capacity_reruns": 0,
+  "commit": "11c50494215f46b4a4f2f478aa682a7bbbeab221",
+  "episodes": {
+    "claude": "fl-cc-r2",
+    "codex": "fl-cx-r2"
+  },
+  "harness_faults": {
+    "claude": 0,
+    "codex": 0
+  },
+  "label": "final-world-r2",
+  "passes": {
+    "claude": 23,
+    "codex": 22
+  },
+  "phase": "world",
+  "prereg": "preregistration.json",
+  "run": 2,
+  "spend_usd_claude": 10.127,
+  "status": "complete",
+  "tasks": 23,
+  "transcripts": ".ailang/state/floor-final/transcripts/final-world-r2",
+  "wall_s": 1225.4
+}

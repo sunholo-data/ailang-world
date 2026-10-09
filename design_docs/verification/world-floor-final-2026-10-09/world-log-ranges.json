@@ -1,0 +1,968 @@
+{
+ "claude/r1/api_call_json/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 4,
+  "log_to": 6,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/ast_patch_roundtrip/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 7,
+  "log_to": 11,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/cli_args/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 12,
+  "log_to": 15,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/config_file_parser/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 16,
+  "log_to": 18,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/contract_bst_validate/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 19,
+  "log_to": 21,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/contract_leap_year/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 22,
+  "log_to": 25,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/contract_roman_numeral/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 26,
+  "log_to": 28,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/csv_to_json_converter/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 29,
+  "log_to": 32,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/effect_composition/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 33,
+  "log_to": 36,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/effect_tracking_io_fs/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 37,
+  "log_to": 39,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/error_handling/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 40,
+  "log_to": 42,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/explicit_dataflow_ssa/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 43,
+  "log_to": 45,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/float_eq/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 46,
+  "log_to": 48,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/higher_order_functions/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 49,
+  "log_to": 51,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/intent_annotated_solver/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 52,
+  "log_to": 54,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/json_transform/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 55,
+  "log_to": 57,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/list_comprehension/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 58,
+  "log_to": 60,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/merge_sort/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 61,
+  "log_to": 63,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/pipeline/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 64,
+  "log_to": 66,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/prompt_injection/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 67,
+  "log_to": 70,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/state_machine_elevator/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 71,
+  "log_to": 73,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/state_machine_vending/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 74,
+  "log_to": 76,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r1/tree_transformation_pipeline/a1": {
+  "episode": "fl-cc-r1",
+  "log_from": 77,
+  "log_to": 79,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/api_call_json/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 169,
+  "log_to": 171,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/ast_patch_roundtrip/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 172,
+  "log_to": 175,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/cli_args/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 176,
+  "log_to": 179,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/config_file_parser/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 180,
+  "log_to": 182,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/contract_bst_validate/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 183,
+  "log_to": 185,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/contract_leap_year/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 186,
+  "log_to": 189,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/contract_roman_numeral/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 190,
+  "log_to": 192,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/csv_to_json_converter/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 193,
+  "log_to": 196,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/effect_composition/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 197,
+  "log_to": 199,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/effect_tracking_io_fs/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 200,
+  "log_to": 202,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/error_handling/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 203,
+  "log_to": 205,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/explicit_dataflow_ssa/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 206,
+  "log_to": 208,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/float_eq/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 209,
+  "log_to": 211,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/higher_order_functions/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 212,
+  "log_to": 214,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/intent_annotated_solver/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 215,
+  "log_to": 217,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/json_transform/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 218,
+  "log_to": 220,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/list_comprehension/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 221,
+  "log_to": 223,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/merge_sort/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 224,
+  "log_to": 226,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/pipeline/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 227,
+  "log_to": 229,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/prompt_injection/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 230,
+  "log_to": 233,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/state_machine_elevator/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 234,
+  "log_to": 236,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/state_machine_vending/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 237,
+  "log_to": 239,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r2/tree_transformation_pipeline/a1": {
+  "episode": "fl-cc-r2",
+  "log_from": 240,
+  "log_to": 242,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/api_call_json/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 331,
+  "log_to": 333,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/ast_patch_roundtrip/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 334,
+  "log_to": 338,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/cli_args/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 339,
+  "log_to": 342,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/config_file_parser/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 343,
+  "log_to": 345,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/contract_bst_validate/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 346,
+  "log_to": 348,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/contract_leap_year/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 349,
+  "log_to": 352,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/contract_roman_numeral/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 353,
+  "log_to": 355,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/csv_to_json_converter/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 356,
+  "log_to": 359,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/effect_composition/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 360,
+  "log_to": 362,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/effect_tracking_io_fs/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 363,
+  "log_to": 365,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/error_handling/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 366,
+  "log_to": 368,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/explicit_dataflow_ssa/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 369,
+  "log_to": 371,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/float_eq/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 372,
+  "log_to": 374,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/higher_order_functions/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 375,
+  "log_to": 377,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/intent_annotated_solver/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 378,
+  "log_to": 380,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/json_transform/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 381,
+  "log_to": 383,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/list_comprehension/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 384,
+  "log_to": 386,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/merge_sort/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 387,
+  "log_to": 389,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/pipeline/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 390,
+  "log_to": 392,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/prompt_injection/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 393,
+  "log_to": 396,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/state_machine_elevator/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 397,
+  "log_to": 399,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/state_machine_vending/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 400,
+  "log_to": 402,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "claude/r3/tree_transformation_pipeline/a1": {
+  "episode": "fl-cc-r3",
+  "log_from": 403,
+  "log_to": 405,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/api_call_json/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 83,
+  "log_to": 85,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/ast_patch_roundtrip/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 86,
+  "log_to": 88,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/cli_args/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 89,
+  "log_to": 93,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/config_file_parser/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 94,
+  "log_to": 99,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/contract_bst_validate/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 100,
+  "log_to": 102,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/contract_leap_year/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 103,
+  "log_to": 106,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/contract_roman_numeral/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 107,
+  "log_to": 110,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/csv_to_json_converter/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 111,
+  "log_to": 114,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/effect_composition/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 115,
+  "log_to": 117,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/effect_tracking_io_fs/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 118,
+  "log_to": 120,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/error_handling/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 121,
+  "log_to": 123,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/explicit_dataflow_ssa/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 124,
+  "log_to": 126,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/float_eq/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 127,
+  "log_to": 129,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/higher_order_functions/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 130,
+  "log_to": 132,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/intent_annotated_solver/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 133,
+  "log_to": 136,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/json_transform/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 137,
+  "log_to": 140,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/list_comprehension/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 141,
+  "log_to": 143,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/merge_sort/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 144,
+  "log_to": 147,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/pipeline/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 148,
+  "log_to": 150,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/prompt_injection/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 151,
+  "log_to": 154,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/state_machine_elevator/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 155,
+  "log_to": 157,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/state_machine_vending/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 158,
+  "log_to": 162,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r1/tree_transformation_pipeline/a1": {
+  "episode": "fl-cx-r1",
+  "log_from": 163,
+  "log_to": 165,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/api_call_json/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 246,
+  "log_to": 248,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/ast_patch_roundtrip/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 249,
+  "log_to": 251,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/cli_args/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 252,
+  "log_to": 256,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/config_file_parser/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 257,
+  "log_to": 261,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/contract_bst_validate/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 262,
+  "log_to": 264,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/contract_leap_year/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 265,
+  "log_to": 268,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/contract_roman_numeral/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 269,
+  "log_to": 272,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/csv_to_json_converter/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 273,
+  "log_to": 276,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/effect_composition/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 277,
+  "log_to": 279,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/effect_tracking_io_fs/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 280,
+  "log_to": 282,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/error_handling/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 283,
+  "log_to": 285,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/explicit_dataflow_ssa/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 286,
+  "log_to": 288,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/float_eq/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 289,
+  "log_to": 291,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/higher_order_functions/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 292,
+  "log_to": 294,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/intent_annotated_solver/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 295,
+  "log_to": 298,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/json_transform/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 299,
+  "log_to": 302,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/list_comprehension/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 303,
+  "log_to": 305,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/merge_sort/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 306,
+  "log_to": 309,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/pipeline/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 310,
+  "log_to": 313,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/prompt_injection/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 314,
+  "log_to": 318,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/state_machine_elevator/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 319,
+  "log_to": 321,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/state_machine_vending/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 322,
+  "log_to": 324,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r2/tree_transformation_pipeline/a1": {
+  "episode": "fl-cx-r2",
+  "log_from": 325,
+  "log_to": 327,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/api_call_json/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 409,
+  "log_to": 411,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/ast_patch_roundtrip/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 412,
+  "log_to": 414,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/cli_args/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 415,
+  "log_to": 419,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/config_file_parser/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 420,
+  "log_to": 424,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/contract_bst_validate/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 425,
+  "log_to": 427,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/contract_leap_year/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 428,
+  "log_to": 431,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/contract_roman_numeral/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 432,
+  "log_to": 435,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/csv_to_json_converter/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 436,
+  "log_to": 439,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/effect_composition/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 440,
+  "log_to": 442,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/effect_tracking_io_fs/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 443,
+  "log_to": 445,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/error_handling/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 446,
+  "log_to": 448,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/explicit_dataflow_ssa/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 449,
+  "log_to": 451,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/float_eq/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 452,
+  "log_to": 454,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/higher_order_functions/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 455,
+  "log_to": 457,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/intent_annotated_solver/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 458,
+  "log_to": 461,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/json_transform/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 462,
+  "log_to": 464,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/list_comprehension/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 465,
+  "log_to": 467,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/merge_sort/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 468,
+  "log_to": 471,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/pipeline/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 472,
+  "log_to": 474,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/prompt_injection/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 475,
+  "log_to": 478,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/state_machine_elevator/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 479,
+  "log_to": 481,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/state_machine_vending/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 482,
+  "log_to": 484,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ },
+ "codex/r3/tree_transformation_pipeline/a1": {
+  "episode": "fl-cx-r3",
+  "log_from": 485,
+  "log_to": 488,
+  "native_write_detected": false,
+  "solution_provenance": "world"
+ }
+}
