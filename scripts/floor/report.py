@@ -114,9 +114,38 @@ def compute_verdict(evidence_dir: str, agents, tasks) -> dict:
         info[a] = stats.informative(s_rows, w_rows, tasks)
     v = stats.verdict(eligible, tests)
     return {'verdict': v, 'eligible': eligible, 'tests': _jsonable(tests), 'informative': info,
+            'drift': _jsonable(drift(evidence_dir, agents, tasks)),
             'thresholds': {'range_max': str(stats.RANGE_MAX), 'delta_min': str(stats.DELTA_MIN),
                            'overhead_max': str(stats.OVERHEAD_MAX), 'min_runs': stats.MIN_RUNS,
                            'deadline_ms': stats.DEADLINE_MS}}
+
+
+DRIFT_FLAG = Fraction(1, 10)
+
+
+def drift(evidence_dir: str, agents, tasks) -> dict:
+    """§4.11 drift probe (informative, never the gate): per task, the probe's shell wall time against
+    Phase 1's median shell wall time; the agent is flagged drift-confounded when the median over
+    tasks of that relative difference exceeds 10% in magnitude. Harness-fault task-runs are skipped."""
+    out = {}
+    for a in agents:
+        paths = sorted(glob.glob(os.path.join(evidence_dir, 'drift', 'runs', a, 'shell', 'r*.jsonl')))
+        if not paths:
+            continue
+        probe = stats.final_rows(load_rows(os.path.join(evidence_dir, 'drift'), a, 'shell'))
+        phase1 = stats.final_rows(load_rows(evidence_dir, a, 'shell'))
+        d_t = {}
+        for t in tasks:
+            pr = [stats._wall(r) for r in probe if r['task'] == t and r['class'] != classify_mod.HARNESS_FAULT]
+            ss = [stats._wall(r) for r in phase1 if r['task'] == t and r['class'] != classify_mod.HARNESS_FAULT]
+            if pr and ss and stats.median(ss) > 0:
+                d_t[t] = stats.median(pr) / stats.median(ss) - 1
+        if not d_t:
+            out[a] = {'tasks': 0, 'median_rel_diff': None, 'drift_confounded': None}
+            continue
+        m = stats.median(d_t.values())
+        out[a] = {'tasks': len(d_t), 'median_rel_diff': m, 'drift_confounded': abs(m) > DRIFT_FLAG}
+    return out
 
 
 def summary_md(result: dict) -> str:
@@ -133,7 +162,25 @@ def summary_md(result: dict) -> str:
             lines.append(f'| {a} | no | — | — | — | — |')
     lines += ['', 'Informative only (never the gate): bootstrap 95% CI for Δ, pooled-median and '
               'total-time ratios — see verdict.json `informative`.', '']
+    for a, d in (result.get('drift') or {}).items():
+        if d.get('median_rel_diff') is None:
+            lines.append(f'- drift probe {a}: no comparable task-runs')
+            continue
+        flag = 'DRIFT-CONFOUNDED overhead' if d['drift_confounded'] else 'within 10%'
+        lines.append(f'- drift probe {a}: median per-task shell time {d["median_rel_diff"]["value"]:+.3f} vs '
+                     f'Phase 1 over {d["tasks"]} tasks ({flag}; informative, the gate value is unchanged)')
+    lines.append('')
     return '\n'.join(lines)
+
+
+def prereg_tasks(pre: dict) -> list:
+    """The gate's task ids from a preregistration: run.prereg_draft writes them under
+    ``live_config.corpus.tasks`` (id → YAML sha256)."""
+    corpus = (pre.get('live_config') or {}).get('corpus') or pre.get('corpus') or {}
+    tasks = corpus.get('tasks') or corpus.get('yaml_sha256')
+    if not tasks:
+        raise SystemExit('the preregistration names no corpus tasks (live_config.corpus.tasks)')
+    return list(tasks)
 
 
 def main(argv=None) -> int:
@@ -144,7 +191,7 @@ def main(argv=None) -> int:
     ap.add_argument('--tasks-from', required=True, help='preregistration.json (corpus.yaml_sha256 keys)')
     a = ap.parse_args(argv)
     with open(a.tasks_from) as f:
-        tasks = sorted(json.load(f)['corpus']['yaml_sha256'])
+        tasks = sorted(prereg_tasks(json.load(f)))
     if a.action == 'seal':
         print(seal(a.evidence, a.agent, tasks))
         return 0

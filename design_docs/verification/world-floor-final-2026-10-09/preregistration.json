@@ -1,0 +1,308 @@
+{
+  "amendments": [
+    "cli_versions.claude 2.1.291 -> 2.1.295 since the 2026-10-06 draft (aaa9b2b6\u2026); no other live_config change",
+    "store: durable FINAL store, not the D-NF-6 live store (schema v2, empty, refused by the binary; row 124)"
+  ],
+  "canary": "one smoke-tier task per (agent, arm) before each phase (\u00a74.9); abort on the first quota/rate-limit evidence",
+  "capacity_rule": {
+    "max_attempts": 3,
+    "never_retried": "timeouts, any other api_error, wrong answers, everything else",
+    "outcome": "the last attempt; every attempt is recorded and reported; 3 capacity faults stay HARNESS_FAULT (eligibility fails honestly)",
+    "retryable": "ONLY a typed provider-capacity api_error whose evidence matches /Selected model is at capacity/ (V-M4-4); both agents, both arms",
+    "source": "design \u00a74.6 capacity rule, D-WORLD-67 (Mark Edmondson, attended 2026-10-06)"
+  },
+  "classification": "design \u00a74.6, scripts/floor/classify.py (pre-registered table; unlisted categories refused)",
+  "config_digest": "9f6f02c0297ce4679be55e9c31ca4e4e23418edf69b2df237d09303c18b62076",
+  "episodes": "one per (agent, run): fl-cc-r<k>, fl-cx-r<k> (\u00a74.5), 8 explicit grants each, --ttl 43200",
+  "kind": "row93-floor-preregistration",
+  "live_config": {
+    "N": 3,
+    "agents": [
+      "claude",
+      "codex"
+    ],
+    "argv_templates": {
+      "claude/shell": [
+        "claude",
+        "-p",
+        "$P",
+        "--model",
+        "claude-opus-5-5",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--disable-slash-commands",
+        "--tools",
+        "Bash,Read,Write,Edit,Glob,Grep",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "{\"mcpServers\":{}}",
+        "--permission-mode",
+        "acceptEdits",
+        "--settings",
+        "{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true,\"allowUnsandboxedCommands\":false},\"enabledPlugins\":{\"cc-plugin-agents-md@builtin\":false,\"cc-plugin-telemetry@builtin\":false,\"cc-plugin-plugin-authoring@builtin\":false},\"autoMemoryEnabled\":false}",
+        "--setting-sources",
+        "",
+        "--max-budget-usd",
+        "5.00"
+      ],
+      "claude/world": [
+        "claude",
+        "-p",
+        "$P",
+        "--model",
+        "claude-opus-5-5",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--disable-slash-commands",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "<private>/<ep>.mcp.json",
+        "--allowedTools",
+        "mcp__world__ailang-read,mcp__world__ailang-write,mcp__world__ailang-edit,mcp__world__ailang-check,mcp__world__ailang-run,mcp__world__builtins-search,mcp__world__examples-search,mcp__world__ailang-cli",
+        "--setting-sources",
+        "",
+        "--settings",
+        "{\"enabledPlugins\":{\"cc-plugin-agents-md@builtin\":false,\"cc-plugin-telemetry@builtin\":false,\"cc-plugin-plugin-authoring@builtin\":false},\"autoMemoryEnabled\":false}",
+        "--max-budget-usd",
+        "5.00"
+      ],
+      "codex/shell": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6.1-sol",
+        "-s",
+        "workspace-write",
+        "-C",
+        "<worktree>",
+        "--disable",
+        "plugins",
+        "--disable",
+        "apps",
+        "--disable",
+        "browser_use",
+        "--disable",
+        "computer_use",
+        "--disable",
+        "image_generation",
+        "--disable",
+        "multi_agent",
+        "-c",
+        "web_search=disabled",
+        "$P"
+      ],
+      "codex/world": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6.1-sol",
+        "-s",
+        "read-only",
+        "-C",
+        "<void/ep>",
+        "--disable",
+        "plugins",
+        "--disable",
+        "apps",
+        "--disable",
+        "browser_use",
+        "--disable",
+        "computer_use",
+        "--disable",
+        "image_generation",
+        "--disable",
+        "multi_agent",
+        "--disable",
+        "shell_tool",
+        "--disable",
+        "unified_exec",
+        "-c",
+        "web_search=disabled",
+        "-c",
+        "mcp_servers.world.url=http://127.0.0.1:7644/mcp/",
+        "-c",
+        "mcp_servers.world.bearer_token_env_var=WORLD_SESSION",
+        "-c",
+        "mcp_servers.world.required=true",
+        "-c",
+        "mcp_servers.world.default_tools_approval_mode=approve",
+        "$P"
+      ]
+    },
+    "cli_versions": {
+      "claude": "2.1.295 (Claude Code)",
+      "codex": "codex-cli 0.159.2"
+    },
+    "config": {
+      "corpus_commit": "76a5aef65c81ac2fb4657fafaeff4a89e9faaf75",
+      "deadline_s": 600,
+      "final": {
+        "N": 3,
+        "canary_task": "fizzbuzz",
+        "canary_tier": "smoke",
+        "claude_max_budget_usd": 5.0,
+        "models": {
+          "claude": "claude-opus-5-5",
+          "codex": "gpt-6.1-sol"
+        },
+        "tier": "core"
+      },
+      "knobs": {
+        "claude_isolation": true,
+        "codex_mcp_approval": "approve",
+        "teaching": "full",
+        "world_tools_wording": "row135-rw"
+      },
+      "schema": "row93-floor-config/1",
+      "smoke": {
+        "N": 1,
+        "canary_task": "fizzbuzz",
+        "canary_tier": "smoke",
+        "claude_max_budget_usd": 1.0,
+        "models": {
+          "claude": "claude-haiku-4-5",
+          "codex": "gpt-6-luna"
+        },
+        "tasks": [
+          "pipeline",
+          "cli_args",
+          "api_call_json",
+          "prompt_injection",
+          "effect_tracking_io_fs",
+          "higher_order_functions"
+        ]
+      },
+      "tool_bin": "~/.pinned-ailang-tools/v0.52.1/ailang"
+    },
+    "corpus": {
+      "canary": {
+        "fizzbuzz": "9c6db32605c99f330cdb69b054bf9c88e243879ce95dc93726469e4ff91bb359"
+      },
+      "commit": "76a5aef65c81ac2fb4657fafaeff4a89e9faaf75",
+      "tasks": {
+        "api_call_json": "1054bfd62ccd12197b5ff7a6649386669875021659db5f3bd446d9818e9c2ecc",
+        "ast_patch_roundtrip": "b14241aa18c8adfa485604d7324dc6b0ee4ba588b637109cbcf20eacfe81badd",
+        "cli_args": "b227fe7dfdd7df131e0babe2b58afe8723d9b93c0ea73eb9ba89b7779e4335b0",
+        "config_file_parser": "3e0b477201898f0ef424fa7080ad176b9f1a8c5caed7416de7db9eb01bcb4cc8",
+        "contract_bst_validate": "743c066c1f0a584c5b0bcd22aad0ca8e7e4b051bb83f1965e2ac3f875ebba424",
+        "contract_leap_year": "f8acb212c4f941a6f9a259faa34db9e64fd6d867edb224ae6337bee8af6a95cf",
+        "contract_roman_numeral": "228af6b937ac826b1881bc31aba0a6ad6abc3b20298b1ca6e44f1ce3a96bd5ab",
+        "csv_to_json_converter": "2f5b8917140783178cf5c21b61836283787cc100b118eb634630bb9e19e311fb",
+        "effect_composition": "f51e195d5175b66760b816f6811e047e40511bab59a292eb74705133d00e8a22",
+        "effect_tracking_io_fs": "857f583187df64ee09cc787d822ae8355277d34f6f8feb9500c62f7138658e8a",
+        "error_handling": "fca6a125bd9ce12b930002292abb727324eab69eb3b88417ffb6b7f96a6cb879",
+        "explicit_dataflow_ssa": "36fce66748a27580e315f44c71cbb1b757fa80620cb2bed709c7b4d8cd26f2c7",
+        "float_eq": "82765a7d20c8e9a5e0e21ab4cfececdc27267d0c8f652cd25ba3697851442c90",
+        "higher_order_functions": "3dd5608ff1a7ef040764e83f69a1df64fcacbd96e3a3fe70b6c6ccec33cdd7e2",
+        "intent_annotated_solver": "2b233eb0a623608113473ebaddac57fe220675a3d5197cc8ddd63a7f57f6ed67",
+        "json_transform": "2b53cf8815bf45c95c44846fcee17409d8b693ca2a0b32230dea7d3d31bcf0bc",
+        "list_comprehension": "85e786611a20769e0379b86a13bb88eaafda627a3137260af06f44ceb9215077",
+        "merge_sort": "9f9d66f7b42a569c1f977436b208f02923f4754760f7ca5d1f16861ccc5de151",
+        "pipeline": "387cd96915afe31c8b8b6088b5c3645fb6ad9049a814d5c176d9fbf81b02fe66",
+        "prompt_injection": "c5068994eb92ff94a3db100e696de7bba7a41d3f8f1270ffb63cd9fc6a770974",
+        "state_machine_elevator": "b7f98dad108fc332e29d58da53f20a5430037e7ca63b6365c46e8e8912485bd4",
+        "state_machine_vending": "43160eb6732b2defd8a838f4fa904fd2503c414d8a93035b1bf449d60463891b",
+        "tree_transformation_pipeline": "17ffba8e0b530cd8d8c4e501ed27d1ce8274145412329df5f8cb70830e6170b5"
+      }
+    },
+    "deadline_s": 600,
+    "grader": "floor-grade/1 (port of ailang runner.go+agent_validation.go @ corpus commit)",
+    "mode": "final",
+    "models": {
+      "claude": "claude-opus-5-5",
+      "codex": "gpt-6.1-sol"
+    },
+    "prompt": {
+      "teaching": "full",
+      "teaching_bytes": 97530,
+      "teaching_sha256": "5887fb82d3d1ad53373bb3a7d053df0c0ab7ce2cce6535f8793ebe1e59fb32a3",
+      "template_sha256": "55269918507ffb516498c1cbd3ec93d564452aebf144a9d6dd3db9a986c47c21",
+      "world_tools_block_sha256": "0947751b254102e1478a61b65b3587f5aa9b3965d5cdeac5b8f1525295f7c80b",
+      "world_tools_wording": "row135-rw"
+    },
+    "rules": {
+      "capacity": {
+        "max_attempts": 3,
+        "pattern": "Selected model is at capacity",
+        "source": "design \u00a74.6, D-WORLD-67"
+      },
+      "thresholds": {
+        "deadline_ms": 600000,
+        "delta_min": "-1/50",
+        "min_runs": 3,
+        "overhead_max": "1/4",
+        "range_max": "1/20"
+      }
+    },
+    "tool_bin_sha256": "0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5",
+    "world_grants": [
+      "--grant",
+      "Workspace.Read=worktree:5000",
+      "--grant",
+      "Workspace.Write=worktree:5000",
+      "--grant",
+      "Ailang.Check=worktree:5000",
+      "--grant",
+      "Ailang.Run=worktree:5000",
+      "--grant",
+      "Ailang.RunEnv=worktree:5000",
+      "--grant",
+      "Ailang.RunNet=worktree:5000",
+      "--grant",
+      "Ailang.Discover=worktree:5000",
+      "--grant",
+      "Ailang.CLI=worktree:5000"
+    ],
+    "world_tools": [
+      "ailang-read",
+      "ailang-write",
+      "ailang-edit",
+      "ailang-check",
+      "ailang-run",
+      "builtins-search",
+      "examples-search",
+      "ailang-cli"
+    ]
+  },
+  "run_protocol": [
+    "Phase 1: shell arms, N runs per agent; commit eligibility.json (report.py seal)",
+    "Phase 2: World arms, N runs per agent",
+    "Drift probe: one extra shell run per agent (informative)",
+    "Verdict: report.py verdict (refuses unless eligibility.json is committed)"
+  ],
+  "statistics": {
+    "N": 3,
+    "T": 23,
+    "eligible": "N>=3 and zero HARNESS_FAULT in S and max_k r_S,k - min_k r_S,k <= 0.05",
+    "informative_only": "pooled-median ratio, total-time ratio, paired bootstrap 95% CI for Delta, per-task tables",
+    "overhead": "O = median_t (median_k wall_W / median_k wall_S - 1) <= 0.25; timeout counts 600 s",
+    "pass_rate": "Delta = R_W - R_S >= -0.02 (point estimate; D-WORLD-55)",
+    "thresholds": {
+      "delta_min": "-1/50",
+      "min_runs": 3,
+      "overhead_max": "1/4",
+      "range_max": "1/20"
+    }
+  },
+  "status": "COMMITTED \u2014 row 93 M5 FINAL (Mark Edmondson, attended 2026-10-09); run.py final refuses unless this file is committed and its config_digest equals the live FINAL config",
+  "store": "durable FINAL store /Users/voightkampff/.ailang/state/floor-final/store/world.db (row 114 reads it); D-NF-6 named the live store ~/.ailang/world/world.db, which is schema v2, empty and refused by the current binary (row 124), measured 2026-10-09; tuning used the scratch store ~/.ailang/state/floor-tune",
+  "tuning_ledger_head": {
+    "last_iteration": 5,
+    "rows": 6,
+    "sha256": "5eb06ff959b90d497e30ac6cb3db16d14646a9a757ebf94da7be6d4604b222ab"
+  }
+}
