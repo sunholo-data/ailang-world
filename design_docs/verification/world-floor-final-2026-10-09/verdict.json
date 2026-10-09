@@ -1,0 +1,586 @@
+{
+  "drift": {
+    "claude": {
+      "drift_confounded": false,
+      "median_rel_diff": {
+        "exact": "-361/11939",
+        "value": -0.03023703827791272
+      },
+      "tasks": 23
+    },
+    "codex": {
+      "drift_confounded": false,
+      "median_rel_diff": {
+        "exact": "1461/41731",
+        "value": 0.035009944645467396
+      },
+      "tasks": 23
+    }
+  },
+  "eligible": {
+    "claude": true,
+    "codex": true
+  },
+  "informative": {
+    "claude": {
+      "bootstrap": {
+        "B": 10000,
+        "paired_by": "task",
+        "seed": 93
+      },
+      "delta_bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "note": "INFORMATIVE ONLY \u2014 never the gate (D-WORLD-55: point estimate)",
+      "per_task": {
+        "api_call_json": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "ast_patch_roundtrip": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "cli_args": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "config_file_parser": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_bst_validate": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_leap_year": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_roman_numeral": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "csv_to_json_converter": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_composition": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_tracking_io_fs": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "error_handling": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "explicit_dataflow_ssa": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "float_eq": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "higher_order_functions": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "intent_annotated_solver": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "json_transform": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "list_comprehension": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "merge_sort": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "prompt_injection": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_elevator": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_vending": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "tree_transformation_pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        }
+      },
+      "pooled_median_ratio": 0.7186716408782338,
+      "total_time_ratio": 0.7302850353217906
+    },
+    "codex": {
+      "bootstrap": {
+        "B": 10000,
+        "paired_by": "task",
+        "seed": 93
+      },
+      "delta_bootstrap_ci95": [
+        -0.043478260869565216,
+        0.0
+      ],
+      "note": "INFORMATIVE ONLY \u2014 never the gate (D-WORLD-55: point estimate)",
+      "per_task": {
+        "api_call_json": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "ast_patch_roundtrip": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "cli_args": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "config_file_parser": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 1,
+          "pass_W": 0
+        },
+        "contract_bst_validate": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_leap_year": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_roman_numeral": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "csv_to_json_converter": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_composition": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_tracking_io_fs": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "error_handling": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "explicit_dataflow_ssa": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "float_eq": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "higher_order_functions": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "intent_annotated_solver": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "json_transform": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "list_comprehension": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "merge_sort": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "prompt_injection": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_elevator": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_vending": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "tree_transformation_pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        }
+      },
+      "pooled_median_ratio": 1.2599474145486416,
+      "total_time_ratio": 1.245954455916131
+    }
+  },
+  "tests": {
+    "claude": {
+      "overhead": {
+        "O": {
+          "exact": "-958/4875",
+          "value": -0.1965128205128205
+        },
+        "o_t": {
+          "api_call_json": {
+            "exact": "-11975/21513",
+            "value": -0.5566401710593595
+          },
+          "ast_patch_roundtrip": {
+            "exact": "27/143",
+            "value": 0.1888111888111888
+          },
+          "cli_args": {
+            "exact": "-972/11939",
+            "value": -0.08141385375659603
+          },
+          "config_file_parser": {
+            "exact": "-6149/20535",
+            "value": -0.2994399805210616
+          },
+          "contract_bst_validate": {
+            "exact": "-677/8311",
+            "value": -0.08145830826615329
+          },
+          "contract_leap_year": {
+            "exact": "-958/4875",
+            "value": -0.1965128205128205
+          },
+          "contract_roman_numeral": {
+            "exact": "-2063/18732",
+            "value": -0.11013239376468076
+          },
+          "csv_to_json_converter": {
+            "exact": "-15476/29213",
+            "value": -0.5297641460993393
+          },
+          "effect_composition": {
+            "exact": "-9005/20517",
+            "value": -0.438904323244139
+          },
+          "effect_tracking_io_fs": {
+            "exact": "-8263/16572",
+            "value": -0.4986121168235578
+          },
+          "error_handling": {
+            "exact": "-8627/18595",
+            "value": -0.46394191987093303
+          },
+          "explicit_dataflow_ssa": {
+            "exact": "-1309/11463",
+            "value": -0.11419349210503359
+          },
+          "float_eq": {
+            "exact": "-12620/21673",
+            "value": -0.5822913302265491
+          },
+          "higher_order_functions": {
+            "exact": "-433/4844",
+            "value": -0.08938893476465731
+          },
+          "intent_annotated_solver": {
+            "exact": "-607/1962",
+            "value": -0.30937818552497454
+          },
+          "json_transform": {
+            "exact": "-1579/11203",
+            "value": -0.14094438989556368
+          },
+          "list_comprehension": {
+            "exact": "-749/3881",
+            "value": -0.19299149703684618
+          },
+          "merge_sort": {
+            "exact": "-2122/12731",
+            "value": -0.16667975807085067
+          },
+          "pipeline": {
+            "exact": "-2591/7147",
+            "value": -0.3625297327550021
+          },
+          "prompt_injection": {
+            "exact": "-4355/17921",
+            "value": -0.24301099269014007
+          },
+          "state_machine_elevator": {
+            "exact": "-736/6993",
+            "value": -0.10524810524810525
+          },
+          "state_machine_vending": {
+            "exact": "-3234/16123",
+            "value": -0.20058301804875023
+          },
+          "tree_transformation_pipeline": {
+            "exact": "-2729/14630",
+            "value": -0.18653451811346547
+          }
+        }
+      },
+      "overhead_passes": true,
+      "pass_rate": {
+        "R_S": {
+          "exact": "1",
+          "value": 1.0
+        },
+        "R_W": {
+          "exact": "1",
+          "value": 1.0
+        },
+        "delta": {
+          "exact": "0",
+          "value": 0.0
+        },
+        "passes": true,
+        "sum_S": 69,
+        "sum_W": 69
+      },
+      "passes": true
+    },
+    "codex": {
+      "overhead": {
+        "O": {
+          "exact": "4220/15879",
+          "value": 0.26575980855217585
+        },
+        "o_t": {
+          "api_call_json": {
+            "exact": "-10399/39684",
+            "value": -0.26204515673823203
+          },
+          "ast_patch_roundtrip": {
+            "exact": "3799/25554",
+            "value": 0.1486655709477968
+          },
+          "cli_args": {
+            "exact": "5212/10871",
+            "value": 0.479440713825775
+          },
+          "config_file_parser": {
+            "exact": "2824/41731",
+            "value": 0.06767151518056122
+          },
+          "contract_bst_validate": {
+            "exact": "2205/12986",
+            "value": 0.1697982442630525
+          },
+          "contract_leap_year": {
+            "exact": "1317/5905",
+            "value": 0.22303132938187975
+          },
+          "contract_roman_numeral": {
+            "exact": "-1955/25776",
+            "value": -0.07584574798261949
+          },
+          "csv_to_json_converter": {
+            "exact": "4675/34619",
+            "value": 0.13504145122620526
+          },
+          "effect_composition": {
+            "exact": "2153/28525",
+            "value": 0.07547765118317265
+          },
+          "effect_tracking_io_fs": {
+            "exact": "1900/5601",
+            "value": 0.33922513836814855
+          },
+          "error_handling": {
+            "exact": "6651/24386",
+            "value": 0.2727384564914295
+          },
+          "explicit_dataflow_ssa": {
+            "exact": "5221/10901",
+            "value": 0.4789468856068251
+          },
+          "float_eq": {
+            "exact": "3187/7326",
+            "value": 0.435025935025935
+          },
+          "higher_order_functions": {
+            "exact": "7301/21971",
+            "value": 0.3323016703836876
+          },
+          "intent_annotated_solver": {
+            "exact": "4385/11514",
+            "value": 0.3808407156505124
+          },
+          "json_transform": {
+            "exact": "4220/15879",
+            "value": 0.26575980855217585
+          },
+          "list_comprehension": {
+            "exact": "9233/26718",
+            "value": 0.3455722733737555
+          },
+          "merge_sort": {
+            "exact": "9364/25367",
+            "value": 0.36914100997358773
+          },
+          "pipeline": {
+            "exact": "17750/18981",
+            "value": 0.9351456719877772
+          },
+          "prompt_injection": {
+            "exact": "4492/30147",
+            "value": 0.1490032175672538
+          },
+          "state_machine_elevator": {
+            "exact": "12144/30997",
+            "value": 0.3917798496628706
+          },
+          "state_machine_vending": {
+            "exact": "6406/37537",
+            "value": 0.1706582838266244
+          },
+          "tree_transformation_pipeline": {
+            "exact": "4359/33980",
+            "value": 0.12828134196586227
+          }
+        }
+      },
+      "overhead_passes": false,
+      "pass_rate": {
+        "R_S": {
+          "exact": "67/69",
+          "value": 0.9710144927536232
+        },
+        "R_W": {
+          "exact": "22/23",
+          "value": 0.9565217391304348
+        },
+        "delta": {
+          "exact": "-1/69",
+          "value": -0.014492753623188406
+        },
+        "passes": true,
+        "sum_S": 67,
+        "sum_W": 66
+      },
+      "passes": false
+    }
+  },
+  "thresholds": {
+    "deadline_ms": 600000,
+    "delta_min": "-1/50",
+    "min_runs": 3,
+    "overhead_max": "1/4",
+    "range_max": "1/20"
+  },
+  "verdict": "FAILS"
+}

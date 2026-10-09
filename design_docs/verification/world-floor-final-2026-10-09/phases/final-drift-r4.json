@@ -1,0 +1,40 @@
+{
+  "abort": null,
+  "arm": "shell",
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 12142
+    },
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 23259
+    }
+  ],
+  "capacity_reruns": 0,
+  "commit": "11c50494215f46b4a4f2f478aa682a7bbbeab221",
+  "episodes": null,
+  "harness_faults": {
+    "claude": 0,
+    "codex": 0
+  },
+  "label": "final-drift-r4",
+  "passes": {
+    "claude": 23,
+    "codex": 22
+  },
+  "phase": "drift",
+  "prereg": "preregistration.json",
+  "run": 4,
+  "spend_usd_claude": 10.6854,
+  "status": "complete",
+  "tasks": 23,
+  "transcripts": ".ailang/state/floor-final/transcripts/final-drift-r4",
+  "wall_s": 1092.9
+}
