@@ -13,7 +13,7 @@ The miss is codex's time overhead alone. The 12th of the 23 sorted per-task over
 
 Run under the committed preregistration `preregistration.json` (config digest `9f6f02c0…2076`, AC5.1 checked
 at the start of every phase). Order per §4.11: Phase 1 shell r1–r3 → `eligibility.json` sealed and committed
-(`11c5049`) before any World row → Phase 2 World r1–r3 → drift probe → `report.py verdict`.
+(original commit `11c5049`, 09:41 CEST, preserved as tag `row93-final-eligibility-sealed`; rebased to `855dbb9`) before any World row → Phase 2 World r1–r3 → drift probe → `report.py verdict`.
 
 ## Phases
 
