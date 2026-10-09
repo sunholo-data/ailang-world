@@ -7,9 +7,13 @@
         under <evidence>/iter-K/runs/<agent>/<arm>/r1.jsonl, then append ONE ledger row (AC4.1).
     run.py digest [--mode smoke|final]       print the live config and its digest
     run.py prereg-draft [--out PATH]         write the FINAL preregistration draft (M5 commits it)
-    run.py final --prereg PATH --phase shell|world --run K
+    run.py final-prepare [--root R]          M5: build the FINAL rig and print the attended mint block
+    run.py final --prereg PATH --phase shell|world|drift [--run K]
         M5 only. REFUSES unless the prereg is committed (git ls-files + clean against HEAD) and its
         ``config_digest`` equals the live FINAL config's digest (AC5.1, MUT-FINAL-NOPREREG).
+        §4.11 order: ``shell`` runs 1..N, then ``report.py seal`` + commit, then ``world`` runs
+        1..N and ``drift`` REFUSE unless eligibility.json is committed. Rows land beside the prereg
+        (``runs/<agent>/<arm>/r<K>.jsonl``; drift under ``drift/``); a rows file is written once.
 
 Refusals that guard the record:
   * AC4.2 — ``iterate`` and ``final`` refuse while the tuning ledger has uncommitted changes
@@ -57,6 +61,11 @@ EVIDENCE = os.path.join(REPO, 'design_docs', 'verification', 'world-floor-m4-202
 DEFAULT_ROOT = os.path.expanduser('~/.ailang/state/floor-tune')
 AILANG_REPO = os.environ.get('FLOOR_AILANG_REPO') or os.path.expanduser('~/dev/sunholo-data/ailang')
 EPISODES = {'claude': 'fl-tune-cc', 'codex': 'fl-tune-cx'}
+# FINAL runs on its own durable store (row 114 reads it later). The design's D-NF-6 "live store",
+# ~/.ailang/world/world.db, is schema v2 with 0 entries and the current binary refuses to open it
+# (row 124), measured 2026-10-09.
+FINAL_ROOT = os.path.expanduser('~/.ailang/state/floor-final')
+PHASES = ('shell', 'world', 'drift')
 SOL = 'benchmark/solution.ail'
 MOCK_PORT = 7655  # the one loopback pair the scratch daemon's ailang-run may reach (canary.serve_argv)
 TEACHING_MODES = ('full', 'compact')
@@ -304,7 +313,9 @@ def prereg_draft(cfg: dict, probes: Probes, ledger: str = LEDGER) -> dict:
     return {
         'kind': PREREG_KIND, 'status': 'DRAFT — M5 commits it (attended); FINAL refuses otherwise',
         'config_digest': config_digest(live), 'live_config': live, 'tuning_ledger_head': ledger_head(ledger),
-        'store': 'LIVE World store (D-NF-6); tuning used the scratch store ~/.ailang/state/floor-tune',
+        'store': f'durable FINAL store {FINAL_ROOT}/store/world.db (row 114 reads it); D-NF-6 named the '
+                 'live store ~/.ailang/world/world.db, which is schema v2, empty and refused by the current '
+                 'binary (row 124), measured 2026-10-09; tuning used the scratch store ~/.ailang/state/floor-tune',
         'episodes': 'one per (agent, run): fl-cc-r<k>, fl-cx-r<k> (§4.5), 8 explicit grants each, --ttl 43200',
         'classification': 'design §4.6, scripts/floor/classify.py (pre-registered table; unlisted categories refused)',
         'statistics': {'T': 23, 'N': 3, 'eligible': 'N>=3 and zero HARNESS_FAULT in S and max_k r_S,k - min_k r_S,k <= 0.05',
@@ -590,7 +601,7 @@ def _size(path: str) -> int:
 
 class Ctx:
     def __init__(self, cfg, mode, probes, L, out_dir, transcripts_dir, *, client=None, tokens=None,
-                 spend_cap=None, spent_before=0.0):
+                 spend_cap=None, spent_before=0.0, episodes=None):
         self.cfg, self.mode, self.probes, self.L = cfg, mode, probes, L
         self.sec = mode_section(cfg, mode)
         self.out_dir, self.tdir = out_dir, transcripts_dir
@@ -600,6 +611,7 @@ class Ctx:
         self.base_cache = {}
         self.spend_cap, self.spent = spend_cap, spent_before
         self.spend_this = 0.0
+        self.episodes = episodes or EPISODES
 
 
 def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str, label: str,
@@ -613,7 +625,7 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
         if ctx.spent + ctx.spend_this + ctx.sec['claude_max_budget_usd'] > ctx.spend_cap:
             raise RunRefused(f'spend cap: ${ctx.spent + ctx.spend_this:.2f} spent + '
                              f'${ctx.sec["claude_max_budget_usd"]:.2f} could exceed ${ctx.spend_cap:.2f}')
-    ep = EPISODES[agent]
+    ep = ctx.episodes[agent]
     wt = ensure_shell_worktree(L, agent) if arm == 'shell' else os.path.join(L['ws'], ep)
     void = os.path.join(L['void'], ep) if arm == 'world' else None
     base = reset_worktree(wt, task_base(L, task, ctx.base_cache))
@@ -911,11 +923,188 @@ def cmd_prereg_draft(a) -> int:
     return 0
 
 
-def cmd_final(a) -> int:
+def final_episodes(k: int) -> dict:
+    """§4.5: one episode per (agent, run)."""
+    return {'claude': f'fl-cc-r{k}', 'codex': f'fl-cx-r{k}'}
+
+
+def final_rows_path(ev: str, phase: str, agent: str, k: int) -> str:
+    if phase == 'drift':
+        return os.path.join(ev, 'drift', 'runs', agent, 'shell', f'r{k}.jsonl')
+    return os.path.join(ev, 'runs', agent, phase, f'r{k}.jsonl')
+
+
+def final_spent(ev: str) -> float:
+    """Claude spend already banked under a FINAL evidence dir (every attempt, canaries included)."""
+    total = 0.0
+    for dirpath, _d, files in os.walk(ev):
+        for name in files:
+            if name.endswith('.jsonl'):
+                for r in read_jsonl(os.path.join(dirpath, name)):
+                    if r.get('agent') == 'claude' and r.get('cost_usd'):
+                        total += float(r['cost_usd'])
+    return round(total, 4)
+
+
+def final_mint_block(L: dict, N: int) -> str:
+    grants = ' '.join(arms.world_grant_args())
+    lines = [
+        '# Row 93 M5 — ATTENDED: publish se-tools and mint the 2N FINAL sessions (design §4.5).',
+        '# Run in a real terminal (an IDE terminal pane works). No daemon may be serving the store.',
+        f'FT={L["root"]}',
+        'cd $FT/repo',
+        'unset AILANG_REGISTRY_API_KEY',
+        'export PIN=$HOME/.pinned-ailang/ailang',
+        '# 0. Nothing may answer here (single-writer lock). This must print nothing:',
+        'curl -sf http://127.0.0.1:7644/v1/health',
+        '# 1. Publish the se-tools transitions (type the phrase it asks for).',
+        '$FT/bin/world-publish transitions --store $FT/store/world.db \\',
+        '  --manifest packages/se-tools/transitions.json --ailang-bin $PIN < /dev/tty',
+        f'# 2. Mint {2 * N} sessions: 8 explicit grants each (never --preset se-tools), 12 h TTL.',
+        '#    Each asks y/N on the terminal: answer y. Phase 2 must START within 12 h.',
+    ]
+    for k in range(1, N + 1):
+        for ep in final_episodes(k).values():
+            lines += [f'$FT/bin/ailang-worldd session new {ep} --db $FT/store/world.db --workspace-root $FT/ws \\',
+                      f'  {grants} \\',
+                      f'  --ttl {arms.SESSION_TTL_S} --out $FT/private/{ep}.session < /dev/tty']
+    lines += ['# 3. Check: six 0600 session files.', 'ls -l $FT/private/*.session']
+    return '\n'.join(lines) + '\n'
+
+
+def cmd_final_prepare(a) -> int:
+    """Build the FINAL rig (no TTY, no spend): binaries, fixture, one worktree + void per episode,
+    the bootstrapped store and genesis; write and print the attended mint block."""
+    import canary
     cfg = load_config(a.config)
-    check_final(a.prereg, cfg, Probes())  # AC5.1 — before any spawn
-    raise RunRefused('FINAL phases are run in the attended M5 session (design §6 M5); the prereg '
-                     'check passed, and this M4 build stops here by design')
+    N = cfg['final']['N']
+    L = _layout(a.root)
+    for k in ('bin', 'store', 'ws', 'void', 'shell'):
+        os.makedirs(L[k], exist_ok=True)
+    canary.private_dir(L)
+    for name in ('ailang-worldd', 'world-publish'):
+        subprocess.run(['go', 'build', '-o', os.path.join(L['bin'], name), f'./cmd/{name}'], cwd=REPO, check=True)
+    canary.seed_repo(L['fixture'])
+    for k in range(1, N + 1):
+        for ep in final_episodes(k).values():
+            wt = os.path.join(L['ws'], ep)
+            if not os.path.isdir(wt):
+                _git_fixture(['worktree', 'add', '-q', '--detach', wt], L['fixture'])
+            os.makedirs(os.path.join(L['void'], ep), exist_ok=True)
+    if not os.path.exists(L['db']):
+        p = canary.start_daemon(L, a.addr, tools=False)  # bootstrap the epoch registry for the pin
+        canary.stop_daemon(p)
+    canary.write_json(L['genesis'], canary.genesis_commit(canary.PIN))
+    block = final_mint_block(L, N)
+    with open(os.path.join(L['root'], 'MINT_BLOCK.sh'), 'w') as f:
+        f.write(block)
+    print(block, end='')
+    return 0
+
+
+def check_final_phase(ev: str, phase: str, run_k: int, N: int, agents) -> None:
+    """§4.11 order and write-once rows (pure guards, before any spawn)."""
+    import report
+    if phase not in PHASES:
+        raise RunRefused(f'unknown phase {phase!r}')
+    if phase != 'drift' and not 1 <= run_k <= N:
+        raise RunRefused(f'--run must be 1..{N} (D-NF-4)')
+    if phase in ('world', 'drift'):
+        try:
+            report.require_sealed(ev)  # AC3.4: no World row before eligibility is committed
+        except report.SealError as e:
+            raise RunRefused(f'§4.11: {e}')
+    for ag in agents:
+        p = final_rows_path(ev, phase, ag, run_k)
+        if os.path.exists(p):
+            raise RunRefused(f'{p} exists: a FINAL rows file is written once (§4.10: no re-running)')
+
+
+def cmd_final(a) -> int:
+    import canary
+    import tokens as tokens_mod
+    cfg = load_config(a.config)
+    probes = Probes()
+    check_final(a.prereg, cfg, probes)  # AC5.1 — before any spawn
+    ev = os.path.dirname(os.path.abspath(a.prereg))
+    N = cfg['final']['N']
+    agents = a.agents.split(',')
+    run_k = N + 1 if a.phase == 'drift' else a.run
+    check_final_phase(ev, a.phase, run_k, N, agents)
+    arm = 'world' if a.phase == 'world' else 'shell'
+    mode = 'final'
+    tasks = mode_tasks(cfg, mode, probes)
+    can = canary_task(cfg, mode, probes)
+    L = _layout(a.root)
+    eps = final_episodes(a.run if a.phase == 'world' else 1)
+    label = f'final-{a.phase}-r{run_k}'
+    tdir = os.path.join(L['root'], 'transcripts', label)
+    toks, client, daemon = {}, None, None
+    if arm == 'world':
+        import world
+        toks = {ag: read_token(os.path.join(L['private'], f'{eps[ag]}.session')) for ag in agents}
+        daemon = canary.start_daemon(L, a.addr)
+        client = world.Client(a.addr)
+    ctx = Ctx(cfg, mode, probes, L, ev, tdir, client=client, tokens=toks, spend_cap=a.spend_cap,
+              spent_before=final_spent(ev), episodes=eps)
+    t0 = time.time()
+    status, abort, canaries = 'complete', None, []
+    try:
+        if client is not None:
+            canary.commit_genesis_if_needed(L, client, toks[agents[0]])
+        for ag in agents:
+            c = run_with_retries(lambda k: run_cell(
+                ctx, ag, arm, can, run_k=run_k, rows_path=os.path.join(ev, 'canary', f'{label}.jsonl'),
+                label=f'{label}-canary', attempt=k))[-1]
+            canaries.append({'agent': ag, 'arm': arm, 'task': can.id, 'class': c['class'], 'wall_ms': c['wall_ms']})
+            print(f'canary {ag}/{arm}: {c["class"]} att={c["attestation"]} {c["wall_ms"]} ms', flush=True)
+            if c['attestation'] or c['error_category'] == 'harness_setup' or c['class'] != classify_mod.PASS:
+                raise RunRefused(f'canary {ag}/{arm} did not pass ({c["class"]} {c["error_category"]} '
+                                 f'{c["attestation"]} {c["cause_evidence"]}): investigate before spending the phase')
+            rows_path = final_rows_path(ev, a.phase, ag, run_k)
+            for t in tasks:
+                if time.time() - t0 > a.max_wall_s:
+                    raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
+                tries = run_with_retries(lambda k: run_cell(
+                    ctx, ag, arm, t, run_k=run_k, rows_path=rows_path, label=label, attempt=k))
+                for prev in tries[:-1]:
+                    print(f'{ag}/{arm}/{t.id}: attempt {prev["attempt"]} capacity fault, re-run (§4.6)', flush=True)
+                r = tries[-1]
+                print(f'{label} {ag}/{t.id}: {r["class"]} {r["error_category"]} {r["wall_ms"]} ms ${r["cost_usd"]} '
+                      f'att={r["attestation"]} prov={(r.get("provenance") or {}).get("solution_provenance")}', flush=True)
+    except (QuotaAbort, RunRefused) as e:
+        status, abort = 'aborted', str(e)
+        print(f'ABORT: {e}', flush=True)
+    finally:
+        if daemon is not None:
+            canary.stop_daemon(daemon)
+    rows = []
+    for ag in agents:
+        rows += read_jsonl(final_rows_path(ev, a.phase, ag, run_k))
+    final = {}
+    for r in sorted(rows, key=lambda r: r.get('attempt', 1)):
+        final[(r['agent'], r['task'])] = r
+    passes = {ag: sum(1 for (g, _t), r in final.items() if g == ag and r['class'] == classify_mod.PASS) for ag in agents}
+    faults = {ag: sum(1 for (g, _t), r in final.items() if g == ag and r['class'] == classify_mod.HARNESS_FAULT)
+              for ag in agents}
+    rec = {'label': label, 'phase': a.phase, 'run': run_k, 'arm': arm, 'episodes': eps if arm == 'world' else None,
+           'status': status, 'abort': abort, 'commit': head_commit(), 'prereg': os.path.basename(a.prereg),
+           'canary': canaries, 'tasks': len(tasks), 'passes': passes, 'harness_faults': faults,
+           'capacity_reruns': sum(1 for r in rows if r.get('attempt', 1) > 1),
+           'spend_usd_claude': round(ctx.spend_this, 4), 'wall_s': round(time.time() - t0, 1),
+           'transcripts': os.path.relpath(tdir, os.path.expanduser('~'))}
+    os.makedirs(os.path.join(ev, 'phases'), exist_ok=True)
+    with open(os.path.join(ev, 'phases', f'{label}.json'), 'w') as f:
+        json.dump(rec, f, indent=2, sort_keys=True)
+        f.write('\n')
+    sess = [os.path.join(L['private'], f'{ep}.session') for k in range(1, N + 1)
+            for ep in final_episodes(k).values()]
+    tg = tokens_mod.scan_dir(ev, tokens_mod.load_tokens([p for p in sess if os.path.exists(p)]))
+    if tg:
+        print(f'AC2.7 FAIL: token findings in {ev}: {tg}', flush=True)
+        return 3
+    print(json.dumps(rec, indent=1, sort_keys=True))
+    return 0 if status == 'complete' else 4
 
 
 def main(argv=None) -> int:
@@ -944,10 +1133,19 @@ def main(argv=None) -> int:
     p = sub.add_parser('prereg-draft')
     p.add_argument('--out', default=os.path.join(EVIDENCE, 'preregistration.draft.json'))
     p.set_defaults(fn=cmd_prereg_draft)
+    p = sub.add_parser('final-prepare')
+    p.add_argument('--root', default=FINAL_ROOT)
+    p.add_argument('--addr', default=arms.DEFAULT_ADDR)
+    p.set_defaults(fn=cmd_final_prepare)
     p = sub.add_parser('final')
     p.add_argument('--prereg', required=True)
-    p.add_argument('--phase', required=True, choices=['shell', 'world'])
-    p.add_argument('--run', type=int, required=True)
+    p.add_argument('--phase', required=True, choices=list(PHASES))
+    p.add_argument('--run', type=int, default=1)
+    p.add_argument('--agents', default='claude,codex')
+    p.add_argument('--root', default=FINAL_ROOT)
+    p.add_argument('--addr', default=arms.DEFAULT_ADDR)
+    p.add_argument('--spend-cap', type=float, default=500.0, help='Claude USD across the whole FINAL dir')
+    p.add_argument('--max-wall-s', type=float, default=4 * 3600)
     p.set_defaults(fn=cmd_final)
     for sp in sub.choices.values():
         sp.add_argument('--config', default=CONFIG)

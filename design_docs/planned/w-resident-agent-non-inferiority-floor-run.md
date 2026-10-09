@@ -326,6 +326,7 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
     - the stale figures were corrected (V34, P4, R2, R3, R5, R10).
 
 **M5 (attended, ~0.5 d of attention within ~4–5 h wall) — FINAL.** Commit the prereg; run the mint block; Phase 1 → commit eligibility → Phase 2 plus the drift probe → verdict → evidence; record PR.
+- **[2026-10-09] M5 runner (attended):** `run.py final-prepare` builds the rig at `~/.ailang/state/floor-final` and prints the 2N-session mint block; `run.py final --phase shell|world|drift --run K` runs one phase-run (canary first, capacity rule, rows written once beside the prereg); `world` and `drift` refuse until `eligibility.json` is committed (§4.11). `report.py verdict` adds the drift probe (median per-task shell time vs Phase 1, flagged beyond ±10%, informative) and reads the task list from the prereg's `live_config.corpus.tasks`. **Store amendment:** FINAL runs on that durable store, not D-NF-6's live store: `~/.ailang/world/world.db` is schema v2 with 0 entries and the current binary refuses it (row 124), measured 2026-10-09. The prereg is `verification/world-floor-final-2026-10-09/preregistration.json` (digest `9f6f02c0…2076`; only `cli_versions.claude` moved since the M4 draft).
 - AC5.1: `--final` refuses unless the prereg is committed and its digest equals the live config.
 - AC5.2: evidence completeness: every expected file present, and 23·N rows per arm.
 
