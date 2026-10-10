@@ -1,0 +1,10 @@
+{
+  "base_commit": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "test": "TestExecHandlerTimeoutKillsTheGroup",
+  "count": 20,
+  "passed": 20,
+  "failed": 0,
+  "returncode": 0,
+  "sha256": "147bc9c9986b26af923cf88e23c66a53b2c5b531d156d476689a44ba51a21863",
+  "interpretation": "Isolated untouched-parent control passes; full candidate suite still fails unchanged test. No unique cause or waiver established."
+}

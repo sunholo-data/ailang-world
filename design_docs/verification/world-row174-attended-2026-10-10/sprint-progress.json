@@ -1,0 +1,75 @@
+{
+  "sprint_id": "w-codex-world-overhead",
+  "status": "not_started",
+  "created": "2026-10-10T07:59:49.050125+00:00",
+  "design_doc": "design_docs/planned/w-codex-world-overhead.md",
+  "sprint_plan": "design_docs/planned/w-codex-world-overhead-sprint-plan.md",
+  "github_issues": [],
+  "base_commit": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "planner_lane": {
+    "derived": "codex:gpt-6.1-sol",
+    "source": "declared:planner-lane-default-pin",
+    "native_inherited_model_fallback": true,
+    "rule": "D-WORLD-48",
+    "actual_model_pin_claimed": false
+  },
+  "registry_reuse": [
+    {
+      "milestone": "M1",
+      "package": "packages/se-tools",
+      "action": "contribute",
+      "reason": "Edit existing local package metadata only; v0.52.1 registry search se-tools attempted, DNS unavailable. No new dependency or external send."
+    },
+    {
+      "milestone": "M2",
+      "package": null,
+      "action": "none",
+      "reason": "Reuse existing scripts/floor runner and fixed configuration; evidence collection is not a package capability. No fresh harness code."
+    }
+  ],
+  "velocity": {
+    "target_loc_per_day": 100,
+    "estimated_total_loc": 200,
+    "estimated_days": 2,
+    "basis": "Narrow change surface; recent 79 commits/7d mix records/product/large FINAL artifacts, not comparable LOC velocity. M2 waits for fixed models and human fences."
+  },
+  "features": [
+    {
+      "id": "M1",
+      "description": "Description-only compaction with immutable-parent equivalence and live tools/list controls",
+      "estimated_loc": 160,
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Pin parent manifest SHA; independently assert exact nine IDs and exact eight floor IDs.",
+        "Complete non-description JSON entries and complete workspace-exec equal parent; all transition .ail sources equal parent.",
+        "Eight non-empty changed descriptions retain decision-bearing semantics; canonical bytes <=10500 and descriptions <=3800 UTF-8 bytes; baseline 13947/7430.",
+        "Live exact-eight-grant tools/list equals manifest rewritten prose and unchanged names/input/output contracts; bank separate wire capture.",
+        "Named mutations fail intended assertions and restored controls pass; real capsule matrix and tamper controls discover tests with zero relevant skips.",
+        "Full verify_ail, Go build/test and verify_go/race gates plus fresh evaluator pass without efficacy or row closure claim."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Implementation is authorized. Controller currently runs verify_ail; controller/evaluator runs full verify_go after scoped tests. No product code changed by planner."
+    },
+    {
+      "id": "M2",
+      "description": "Fresh fixed-model baseline/candidate smoke and no-change candidate repeat; efficacy remains pending",
+      "estimated_loc": 40,
+      "dependencies": [
+        "M1"
+      ],
+      "acceptance_criteria": [
+        "Human types QUICKSTART section 0 publication/mint fences; fixed smoke models available; all four cells fresh without reuse-from.",
+        "Six fixed tasks, N=1, canary, grader, thresholds, config and capacity policy preserved; baseline/candidate use same current client versions.",
+        "Every attempt and product/served-metadata/daemon hashes banked beside config digest; existing ledger guards observed; no harness faults and World pass rate preserved.",
+        "Candidate and no-change repeat: median per-task Codex O<=0.20, Claude O<=0.25 and delta>=-0.02 each; report every run and noise.",
+        "Missing or failing smoke leaves this milestone pending/failed; no FINAL before landing, new committed preregistration and attended mint."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Pending models and attended fences. Byte reduction cannot satisfy efficacy."
+    }
+  ]
+}

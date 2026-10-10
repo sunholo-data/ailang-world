@@ -1,0 +1,15 @@
+{
+  "only_landed_fixture_edit": "host/broker/handlers_capture_test.go",
+  "unchanged_snapshots": {
+    "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+    "host/procbound/procbound.go": "5164a148f12d0f1cf6c741efacbef4277018b225b4b0cfe8f510dc9489cdc7d4",
+    "packages/se-tools/transitions.json": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97"
+  },
+  "original_baseline_red": {
+    "path": "../world-row174-attended-2026-10-10/baseline-partial-output-control.log",
+    "sha256": "91f8d158d57079fa48b2f9c93f9ef7c273b441c71418dae4204a6d43a43091c0"
+  },
+  "fixture_actual_added_lines": 127,
+  "fixture_actual_removed_lines": 10,
+  "loc_variance": "Estimate ~70 LOC; additional finite reap handling, synchronized seam observation, guard arithmetic and exact two-stream diagnostics account for scope (~117 net LOC). Root accepted variance; no cleanup weakened."
+}

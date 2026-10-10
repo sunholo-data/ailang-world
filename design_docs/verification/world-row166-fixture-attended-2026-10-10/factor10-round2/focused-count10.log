@@ -1,0 +1,82 @@
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=96.97275ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=6.102625ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=5.658083ms
+    handlers_capture_test.go:206: calibration C=96.97275ms B=2.97s H=11s R=29.890214583s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=2.973059542s err=broker: handler subprocess timed out after 2.97s kills=[{pgid:51947 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.09s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=132.7225ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=4.206208ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=3.762333ms
+    handlers_capture_test.go:206: calibration C=132.7225ms B=3.328s H=12s R=29.857187125s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.330541084s err=broker: handler subprocess timed out after 3.328s kills=[{pgid:51986 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.48s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=153.994625ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=6.347459ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=5.159709ms
+    handlers_capture_test.go:206: calibration C=153.994625ms B=3.54s H=13s R=29.832739542s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.543689s err=broker: handler subprocess timed out after 3.54s kills=[{pgid:52003 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.71s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=154.183375ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=15.147833ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=7.224875ms
+    handlers_capture_test.go:206: calibration C=154.183375ms B=3.542s H=13s R=29.820194375s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.544445709s err=broker: handler subprocess timed out after 3.542s kills=[{pgid:52021 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.72s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=115.73825ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=4.395834ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=3.784541ms
+    handlers_capture_test.go:206: calibration C=115.73825ms B=3.158s H=12s R=29.875611792s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.160763375s err=broker: handler subprocess timed out after 3.158s kills=[{pgid:52213 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.29s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=151.456125ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=16.751083ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=8.049959ms
+    handlers_capture_test.go:206: calibration C=151.456125ms B=3.515s H=13s R=29.820645125s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.517530625s err=broker: handler subprocess timed out after 3.515s kills=[{pgid:52233 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.70s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=141.472209ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=6.113167ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=5.937375ms
+    handlers_capture_test.go:206: calibration C=141.472209ms B=3.415s H=13s R=29.845760208s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.418927792s err=broker: handler subprocess timed out after 3.415s kills=[{pgid:52255 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.58s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=157.063208ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=13.85875ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=7.187833ms
+    handlers_capture_test.go:206: calibration C=157.063208ms B=3.571s H=13s R=29.819236541s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.573051084s err=broker: handler subprocess timed out after 3.571s kills=[{pgid:52312 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.76s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=113.860542ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=4.118292ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=3.530916ms
+    handlers_capture_test.go:206: calibration C=113.860542ms B=3.139s H=12s R=29.877256583s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.141730041s err=broker: handler subprocess timed out after 3.139s kills=[{pgid:52358 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.27s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=116.344208ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=4.026459ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=3.81225ms
+    handlers_capture_test.go:206: calibration C=116.344208ms B=3.164s H=12s R=29.875067333s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=3.166445167s err=broker: handler subprocess timed out after 3.164s kills=[{pgid:52373 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text:PARTIAL-OUT Bytes:11 Truncated:false SHA256:5b547e70f45a2fa89ad119b9de51dbd41a1f007b5281bda9cf9550afe37f107e} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (3.29s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	35.224s

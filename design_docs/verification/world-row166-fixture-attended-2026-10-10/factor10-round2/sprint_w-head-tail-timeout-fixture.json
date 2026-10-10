@@ -1,0 +1,65 @@
+{
+  "sprint_id": "w-head-tail-timeout-fixture",
+  "status": "not_started",
+  "created": "2026-10-10T08:31:20.178970+00:00",
+  "design_doc": "design_docs/planned/w-head-tail-timeout-fixture.md",
+  "sprint_plan": "design_docs/planned/w-head-tail-timeout-fixture-sprint-plan.md",
+  "github_issues": [],
+  "registry_reuse": [
+    {
+      "milestone": "M1",
+      "package": null,
+      "action": "none",
+      "reason": "Existing host runBounded regression test fixture only; no package capability/dependency."
+    },
+    {
+      "milestone": "M2",
+      "package": null,
+      "action": "none",
+      "reason": "Reuse existing Go/race verification and real subprocess seams; no new package or shared harness."
+    }
+  ],
+  "velocity": {
+    "target_loc_per_day": 70,
+    "estimated_total_loc": 70,
+    "estimated_days": 1,
+    "basis": "One test fixture; ~1-2h implementation plus2-4h finite mutations/gates/review, no comparable LOC velocity extrapolation."
+  },
+  "features": [
+    {
+      "id": "M1",
+      "description": "Finite measured head-tail timeout regression fixture only",
+      "estimated_loc": 70,
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Same executable executes three no-sleep positive controls and one real deadline arm with exact both-stream Text/Bytes/SHA and readiness.",
+        "B=ceil_ms(10*C+2G), H=ceil_seconds(3B+2G); require B+H+G<remaining caller deadline budget; no clamp/skip/retry.",
+        "Readiness observed before delegated original real kill; synchronized observations; exact HandlerTimeoutError.Timeout==B.",
+        "Only handlers_capture_test.go changes; no production/.ail/caps/benchmark/shared harness edits."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Implementation authorized; executable/calibration evidence pending."
+    },
+    {
+      "id": "M2",
+      "description": "Named isolated mutations, bounded plain/race repetitions, full normal Go gate and fresh review",
+      "estimated_loc": 0,
+      "dependencies": [
+        "M1"
+      ],
+      "acceptance_criteria": [
+        "stdout/stderr discard, either printf removed and readiness removal each fail named assertion; all restores exact.",
+        "Two additional deadline-only stdout/stderr loss arms preserve three green calibration controls, reach actual real kill/readiness and exact timeout B, then fail the exercised stream Text/Bytes/SHA assertion; each exact-restored pristine arm passes.",
+        "Disclosed compound timeout-disabled-natural mutant naturally exits/reaps before parent guard and fails required timeout/real-kill assertion; seam restoration cannot race active waiter.",
+        "Focused plain count10 and race count5 all pass under normal defaults with actual discovery and finite outer guard; no retry-until-green.",
+        "Required verify_go normal profile and fresh review pass with unchanged production/runtime caps; evidence remains separate from row174 benchmark."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "All execution/mutation/normal gate/review evidence pending."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+=== RUN   TestSeToolsDescriptorLiveExactEight
+    zz_row174_descriptor_probe_test.go:69: live tools/list: exactly eight descriptors; wire bytes=14054
+    zz_row174_descriptor_probe_test.go:70: each description and complete input/output schema equals published manifest
+--- PASS: TestSeToolsDescriptorLiveExactEight (5.44s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	6.166s

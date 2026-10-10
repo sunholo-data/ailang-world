@@ -1,0 +1,7 @@
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=201.726375ms
+    handlers_capture_test.go:192: control readiness after both printf: stat /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestRunBoundedHeadTailTimeoutKeepsPartialOutput27241610/001/ready: no such file or directory
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.20s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.547s
+FAIL

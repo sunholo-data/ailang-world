@@ -1,0 +1,6 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:89: manifest/floor census: got [ailang-check ailang-cli ailang-edit ailang-read ailang-read ailang-run ailang-write builtins-search examples-search workspace-exec] / [ailang-check ailang-cli ailang-edit ailang-read ailang-read ailang-run ailang-write builtins-search examples-search], want [ailang-check ailang-cli ailang-edit ailang-read ailang-run ailang-write builtins-search examples-search workspace-exec] / [ailang-check ailang-cli ailang-edit ailang-read ailang-run ailang-write builtins-search examples-search]
+--- FAIL: TestSeToolsDescriptorCompaction (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	4.734s
+FAIL

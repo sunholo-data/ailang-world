@@ -1,0 +1,6 @@
+=== RUN   TestSeToolsDescriptorLiveExactEight
+    setools_descriptor_test.go:54: live descriptor equality (description/name/input/output): ailang-check
+--- FAIL: TestSeToolsDescriptorLiveExactEight (6.82s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	10.019s
+FAIL

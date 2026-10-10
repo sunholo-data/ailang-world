@@ -1,0 +1,6 @@
+=== RUN   TestWorkspaceToolBinaryIsArchivedAndVerified
+    workspace_test.go:375: tampered archived tool ran: {"content":"fake:/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorkspaceToolBinaryIsArchivedAndVerified1226970873/001/ws/ep1","ok":true,"policy_digest":"fakedigest","tool":"sha256:44705cc573fc3e6c7f81083fed4cd37beaa8b9a49f45a0b363ac61660330f0d8"}
+--- FAIL: TestWorkspaceToolBinaryIsArchivedAndVerified (1.12s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	1.586s
+FAIL

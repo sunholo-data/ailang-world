@@ -1,0 +1,29 @@
+{
+  "benchmark_run": false,
+  "candidate_commit": "604cee1",
+  "grant_effects": [
+    "Workspace.Read",
+    "Workspace.Write",
+    "Ailang.Check",
+    "Ailang.Run",
+    "Ailang.RunEnv",
+    "Ailang.RunNet",
+    "Ailang.Discover",
+    "Ailang.CLI"
+  ],
+  "kind": "live-test-tools-list-only",
+  "parent_commit": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "payloads": {
+    "candidate": {
+      "bytes": 10368,
+      "file": "tools-list-exact-eight.sse",
+      "sha256": "95c65d9d09262d70b085842d4877542fb739722159493a59af6f036a2ecef9cc"
+    },
+    "parent": {
+      "bytes": 14054,
+      "file": "tools-list-parent-exact-eight.sse",
+      "sha256": "51c1612235f1f0cf8de54d186ba748bf2d7d59465b4efe93f6766fed78ec887a"
+    }
+  },
+  "wire_reduction_fraction": 0.26227408566956023
+}

@@ -1,0 +1,7 @@
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=204.070584ms
+    handlers_capture_test.go:190: exact partial stdout Text/Bytes/SHA/untruncated: {Text: Bytes:0 Truncated:false SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855}
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.21s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.521s
+FAIL

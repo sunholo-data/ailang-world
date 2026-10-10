@@ -1,0 +1,7 @@
+{
+  "host/broker/handlers_capture_test.go": "f8a8ca343ad040554bf592d7a31d2d129e6ce48adfd1d8f8d79e673b88f7b236",
+  "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+  "packages/se-tools/transitions.json": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97",
+  "host/coordinator/setools_descriptor_test.go": "36ec9e8c09e37951cbc783870180202e1daaf098ddfdeb08ad8b2249ffbe5466",
+  "host/daemon/setools_descriptor_test.go": "26e7a1a858d3a60ba940e90b89d2c88061e2af262e2d6ee47d3e272cb5babe85"
+}

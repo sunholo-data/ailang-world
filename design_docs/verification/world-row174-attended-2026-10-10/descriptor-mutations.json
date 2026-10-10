@@ -1,0 +1,77 @@
+{
+  "isolated_copy": "/private/tmp/ailang-world-row174-mutations-20261010",
+  "mutations": [
+    {
+      "mutant": "delete-read",
+      "returncode": 1,
+      "assertion": "manifest/floor census"
+    },
+    {
+      "mutant": "duplicate-read",
+      "returncode": 1,
+      "assertion": "manifest/floor census"
+    },
+    {
+      "mutant": "tenth-entry",
+      "returncode": 1,
+      "assertion": "manifest/floor census"
+    },
+    {
+      "mutant": "net-effect",
+      "returncode": 1,
+      "assertion": "complete non-description equivalence: ailang-read"
+    },
+    {
+      "mutant": "additional-properties",
+      "returncode": 1,
+      "assertion": "complete non-description equivalence: ailang-read"
+    },
+    {
+      "mutant": "remove-output-world",
+      "returncode": 1,
+      "assertion": "complete non-description equivalence: ailang-read"
+    },
+    {
+      "mutant": "transition-file",
+      "returncode": 1,
+      "assertion": "complete non-description equivalence: ailang-read"
+    },
+    {
+      "mutant": "workspace-description",
+      "returncode": 1,
+      "assertion": "complete non-description equivalence: workspace-exec"
+    },
+    {
+      "mutant": "unknown-field",
+      "returncode": 1,
+      "assertion": "complete non-description equivalence: ailang-read"
+    },
+    {
+      "mutant": "old-descriptions",
+      "returncode": 1,
+      "assertion": "candidate byte budget: 13947/7430 exceeds 10500/3800"
+    },
+    {
+      "mutant": "source-byte",
+      "returncode": 1,
+      "assertion": "parent transition source-byte equivalence"
+    },
+    {
+      "mutant": "projection-old-description",
+      "returncode": 1,
+      "assertion": "live descriptor equality (description/name/input/output)"
+    },
+    {
+      "mutant": "disable-interpreter-verification",
+      "returncode": 1,
+      "assertion": "want *HashMismatchError"
+    },
+    {
+      "mutant": "disable-tool-verification",
+      "returncode": 1,
+      "assertion": "tampered archived tool ran"
+    }
+  ],
+  "byte_exact_restore": true,
+  "restored_controls": "PASS"
+}

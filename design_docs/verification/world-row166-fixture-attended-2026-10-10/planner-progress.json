@@ -1,0 +1,56 @@
+{
+  "schema": "row166-fixture-planning/1",
+  "status": "plan_ready_execution_pending",
+  "design": "design_docs/planned/w-head-tail-timeout-fixture.md",
+  "plan": "design_docs/planned/w-head-tail-timeout-fixture-sprint-plan.md",
+  "progress": ".ailang/state/sprints/sprint_w-head-tail-timeout-fixture.json",
+  "observed": {
+    "pipe_close_grace_s": 1,
+    "caller_budget_s": 30,
+    "timeout_error_field": "HandlerTimeoutError.Timeout",
+    "kill_seam": "host/broker/handlers.go killGroup -> real syscall.Kill(-pgid,SIGKILL)"
+  },
+  "execution_evidence": null,
+  "design_caveats": [
+    "Guard includes startup allowance B: B+H+G<R.",
+    "Timeout-only mutant retains B+2G cleanup deadline; natural-success mutation explicitly changes both inner timeout and isolated cleanup guard.",
+    "Readiness deletion may fail positive-control readiness assertion before exercised arm; report exact assertion reached."
+  ],
+  "verification_strengthening": {
+    "authorized_scope": "Two isolated deadline-only stream-loss mutation arms; no landed production/test scope expansion.",
+    "total_mutation_arms": 8,
+    "additional_arms": [
+      "MUT-DEADLINE-STDOUT-LOSS",
+      "MUT-DEADLINE-STDERR-LOSS"
+    ],
+    "required_evidence": "Three controls PASS; actual kill/readiness and exact timeout B reached; exercised affected-stream exact assertion RED; exact-restored pristine GREEN.",
+    "original_mutation_scope": "Early calibration failures are reported honestly, not credited as exercised deadline retention proof.",
+    "execution_status": "pending"
+  },
+  "formula_revision": {
+    "formula": "B=ceil_ms(C+2G)",
+    "hold": "H=ceil_seconds(3B+2G)",
+    "finite_guard": "B+H+G<R",
+    "rationale": "C includes complete positive-control startup, writes, natural exit and drain; two existing grace units suffice as finite scheduling headroom.",
+    "previous_evidence_archive": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2",
+    "revision_execution_status": "pending",
+    "fresh_round3_required": true,
+    "unchanged_requirements": "Eight mutants, plain count10, race count5, full normal Go gate, production and 30s caller deadline unchanged.",
+    "arithmetic_only": [
+      {
+        "C_s": 2.353960541,
+        "B_s": 4.354,
+        "H_s": 16,
+        "total_s": 21.354,
+        "reported_remaining_s": 27.636
+      },
+      {
+        "C_s": 0.756807791,
+        "B_s": 2.757,
+        "H_s": 11,
+        "total_s": 14.757,
+        "reported_remaining_s": 29.234
+      }
+    ]
+  }
+}

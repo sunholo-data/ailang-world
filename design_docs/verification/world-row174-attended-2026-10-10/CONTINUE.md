@@ -1,5 +1,10 @@
 # Attended benchmark continuation
 
+**BLOCKED before step 1:** M1 final normal Go gate is red, round3 FAIL68.
+The separate exec-timeout fixture follow-up needs attended authorization and
+passing normal gates/new review before publication, mint or performance runs.
+
+
 No benchmark inference, publish, or session mint has run in this investigation. The scratch
 store contains bootstrap state only. Its binaries and worktrees are prepared.
 

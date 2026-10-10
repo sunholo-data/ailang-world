@@ -1,0 +1,9 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:94: candidate byte budget: 10340/3833 exceeds 10500/3800
+--- FAIL: TestSeToolsDescriptorCompaction (0.00s)
+=== RUN   TestSeToolsDescriptorSourceEquality
+    setools_descriptor_test.go:140: compared 9 transition sources to parent raw-byte SHA-256
+--- PASS: TestSeToolsDescriptorSourceEquality (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	0.719s
+FAIL
