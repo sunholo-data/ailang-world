@@ -194,10 +194,10 @@ if [ "$HOLD" -gt 0 ]; then sleep "$HOLD"; fi`)
 		C = max(C, elapsed)
 	}
 	const maxDuration = time.Duration(1<<63 - 1)
-	if C <= 0 || C > (maxDuration-2*pipeCloseGrace-time.Millisecond)/10 {
+	if C <= 0 || C > maxDuration-2*pipeCloseGrace-time.Millisecond {
 		t.Fatalf("invalid/overflow calibration C=%s", C)
 	}
-	B := ((10*C + 2*pipeCloseGrace + time.Millisecond - 1) / time.Millisecond) * time.Millisecond
+	B := ((C + 2*pipeCloseGrace + time.Millisecond - 1) / time.Millisecond) * time.Millisecond
 	if B <= 0 || B > (maxDuration-2*pipeCloseGrace-time.Second)/3 {
 		t.Fatalf("invalid/overflow timeout B=%s", B)
 	}

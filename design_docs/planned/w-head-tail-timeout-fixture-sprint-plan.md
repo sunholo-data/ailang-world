@@ -16,8 +16,11 @@ process-group SIGKILL, real captures and standard context. No resettable deadlin
    normal20s handler allowances and one finite boundedTestContext (30s caller deadline).
    Require successful exit, readiness and both exact Text/Bytes/SHA256, untruncated.
    Remove readiness between runs; log each complete control elapsed duration and maximum C.
-3. With existing grace G=pipeCloseGrace=1s, set B=ceil_ms(10*C+2*G) and
-   H=ceil_seconds(3*B+2*G). Immediately before exercised arm measure R=time.Until(callerDeadline).
+3. With existing grace G=pipeCloseGrace=1s, set B=ceil_ms(C+2*G) and
+   H=ceil_seconds(3*B+2*G). C already includes same-executable startup, both writes,
+   natural exit and drain; two existing cleanup-grace units provide finite scheduling
+   headroom without the unsupported tenfold multiplier. Immediately before exercised arm
+   measure R=time.Until(callerDeadline).
    Require B>0, H>=3*B+2*G and B+H+G<R; check overflow/invalid deadline and fail loudly.
    Thus startup allowance B plus natural hold H plus cleanup grace fits remaining30s.
    No clamp, skip, retry or alternate measurement to rescue an insufficient budget.
@@ -80,3 +83,11 @@ Evidence/progress are separate under
 `.ailang/state/sprints/sprint_w-head-tail-timeout-fixture.json`.
 M1 implementation proof plus M2 PASS allows row174 normal gate to resume; it does not close
 row174, publish/mint sessions, or permit FINAL. Root owns executor handoff and commits.
+
+Bounded revision after blocking round2: only the measured-B formula/rationale changes.
+Pre-revision records/mutations/counts are preserved in evidence `factor10-round2/` with
+SHA index. Reported cold C=2.353960541s yields B=4.354s,H=16s,total21.354s<R27.636s;
+reported full-plain C=0.756807791s yields B=2.757s,H=11s,total14.757s<R29.234s.
+These are arithmetic projections, not passing execution proof. Same eight mutants,
+plain count10, race count5, full normal Go gate and FRESH round3 review are mandatory
+for the revised fixture. Previous greens and blocking reds remain historical evidence.

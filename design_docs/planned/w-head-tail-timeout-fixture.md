@@ -33,10 +33,11 @@ Change only the fixture so its setup is measured and its child state is observed
    with fresh real captures and finite existing 20 s test allowances. Require exact
    stdout/stderr, byte counts and hashes, successful exit and the readiness file.
    Log each total control duration and its maximum `C`; remove readiness between runs.
-3. Derive the exercised timeout as `B = 10*C + 2*pipeCloseGrace`, rounded upward to a
-   whole millisecond. The measured term adapts startup/drain allowance to the host;
-   the two existing cleanup-grace units provide finite scheduling headroom. This is
-   a fixture allowance, never a modification of production handler bounds.
+3. Derive the exercised timeout as `B = C + 2*pipeCloseGrace`, rounded upward to a
+   whole millisecond. `C` already measures complete same-executable startup, both
+   writes, natural exit and drain; adding two existing cleanup-grace units supplies
+   finite scheduling headroom without multiplying all that work by an unsupported
+   tenfold factor. This tighter fixture deadline changes no production handler bound.
 4. Derive child hold time `H` as the whole-second ceiling of `3*B + 2*pipeCloseGrace`.
    Require `B + H + pipeCloseGrace < remaining outer deadline`: include startup,
    finite hold and reap headroom inside the ordinary 30 s caller context. If calibration cannot fit, fail
@@ -81,6 +82,15 @@ shared harness remain unchanged. Why host rather than package: this is a Go proc
 capture regression fixture, not a World semantic feature; pure kernel remains untouched.
 Verification still pending: executor must bank measured `C/B/H`, readiness-at-kill,
 all mutations, and full gate before declaring repaired. Calibration is not causal proof.
+**Round2 formula correction (2026-10-10):** retain both controller-reported pristine
+guard-red logs: cold-control `C=2.353960541s` and normal/plain `C=756.807791ms`, each
+after all three controls passed. Old `10*C+2g` failed the finite-fit guard before
+the exercised arm. Revised rounding gives respectively `B=4.354s,H=16s,B+H+g=21.354s`
+against `R=27.636s`, and `B=2.757s,H=11s,B+H+g=14.757s` against `R=29.234s`.
+These arithmetic fits are not passing executions or a unique startup-cause claim;
+later standard-cache green does not erase either red. Fresh round3 evaluation,
+all eight isolated mutants with exact restored greens, repetitions and full gates
+remain required; readiness, retention, actual timeout and cleanup assertions stay fixed.
 Single-site deadline removal is **not** the AC2 mutant: unchanged cleanup bookkeeping
 can return `ErrCleanupIncomplete` at `B+2*pipeCloseGrace`, after which deferred cancel
 can invoke a real kill and reap later. Never claim that runner naturally waits for exit.
