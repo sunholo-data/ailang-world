@@ -1,0 +1,57 @@
+── legs 1-2 AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0)
+── Leg 1: ai-check required-check manifest
+   ✓ swept .ail module set equals the LEG1_MODULES allowlist (22 modules)
+   ai-check design_docs/sketches/effectbroker.ail
+   ai-check design_docs/sketches/effectplan.ail
+   ai-check design_docs/sketches/execargs.ail
+   ai-check design_docs/sketches/logepoch.ail
+   ai-check design_docs/sketches/storejournal.ail
+   ai-check design_docs/sketches/transitions.ail
+   ai-check design_docs/sketches/worlddapi.ail
+   ai-check design_docs/sketches/worldkernel.ail
+   ai-check design_docs/sketches/worldtypes.ail
+   ai-check world/contracts.ail
+   ai-check world/logepoch.ail
+   ai-check world/transitions.ail
+   ai-check world/types.ail
+   ai-check packages/se-tools/se_tools/builtins_search.ail
+   ai-check packages/se-tools/se_tools/check.ail
+   ai-check packages/se-tools/se_tools/cli.ail
+   ai-check packages/se-tools/se_tools/edit.ail
+   ai-check packages/se-tools/se_tools/examples_search.ail
+   ai-check packages/se-tools/se_tools/exec.ail
+   ai-check packages/se-tools/se_tools/read.ail
+   ai-check packages/se-tools/se_tools/run.ail
+   ai-check packages/se-tools/se_tools/write.ail
+   ✓ 16/16 required world/ identities verified across 22 module(s)
+── Leg 2c: execargs sketch named inline tests
+   ✓ all 138 execargs sketch named tests pass
+── Leg 2: named inline tests
+   ✓ all 40 required named tests pass (failed_tests=0)
+── Leg 2b: se-tools named inline tests (per module)
+   ✓ all 444 se-tools named tests pass across 9 modules
+── Leg 3: world package nine-step gate
+── World package step 1/9: required paths
+   ✓ package, manifest, smoke, and 4 allowlisted modules exist
+── World package step 2/9: exact .ail allowlist
+   ✓ find observed exactly 5 expected .ail files; no unexpected .ail file exists
+── World package step 3/9: projection SHA-256 equality
+   ✓ 4/4 projection hashes equal their canonical sources
+── World package step 4/9: frozen manifest
+   ✓ exact package fields, 4 exports, and empty effects
+── World package step 5/9: package check and tests
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 1972, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/voightkampff/.pinned-ailang-package-v0.49.2/ailang'

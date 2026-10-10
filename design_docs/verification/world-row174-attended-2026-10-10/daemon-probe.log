@@ -1,0 +1,35 @@
+=== RUN   TestRow174AttendedProbe
+    zz_row174_probe_test.go:16: tools_list_wire_bytes=16991
+    zz_row174_probe_test.go:26: tool=ailang-read repeat=0 elapsed_ms=172.368 result_bytes=524
+    zz_row174_probe_test.go:26: tool=ailang-read repeat=1 elapsed_ms=135.613 result_bytes=524
+    zz_row174_probe_test.go:26: tool=ailang-read repeat=2 elapsed_ms=147.196 result_bytes=524
+    zz_row174_probe_test.go:26: tool=ailang-read repeat=3 elapsed_ms=141.004 result_bytes=524
+    zz_row174_probe_test.go:26: tool=ailang-read repeat=4 elapsed_ms=136.841 result_bytes=524
+    zz_row174_probe_test.go:26: tool=ailang-read repeat=5 elapsed_ms=135.698 result_bytes=524
+    zz_row174_probe_test.go:26: tool=ailang-write repeat=0 elapsed_ms=136.468 result_bytes=387
+    zz_row174_probe_test.go:26: tool=ailang-write repeat=1 elapsed_ms=136.548 result_bytes=387
+    zz_row174_probe_test.go:26: tool=ailang-write repeat=2 elapsed_ms=147.215 result_bytes=387
+    zz_row174_probe_test.go:26: tool=ailang-write repeat=3 elapsed_ms=140.418 result_bytes=387
+    zz_row174_probe_test.go:26: tool=ailang-write repeat=4 elapsed_ms=139.530 result_bytes=387
+    zz_row174_probe_test.go:26: tool=ailang-write repeat=5 elapsed_ms=140.672 result_bytes=387
+    zz_row174_probe_test.go:26: tool=ailang-run repeat=0 elapsed_ms=174.079 result_bytes=1301
+    zz_row174_probe_test.go:26: tool=ailang-run repeat=1 elapsed_ms=179.596 result_bytes=1301
+    zz_row174_probe_test.go:26: tool=ailang-run repeat=2 elapsed_ms=249.321 result_bytes=1301
+    zz_row174_probe_test.go:26: tool=ailang-run repeat=3 elapsed_ms=500.276 result_bytes=1301
+    zz_row174_probe_test.go:26: tool=ailang-run repeat=4 elapsed_ms=476.506 result_bytes=1301
+    zz_row174_probe_test.go:26: tool=ailang-run repeat=5 elapsed_ms=195.286 result_bytes=1301
+    zz_row174_probe_test.go:30: binary_bytes=100594162 repeat=0 read_hash_ms=44.712
+    zz_row174_probe_test.go:30: binary_bytes=100594162 repeat=1 read_hash_ms=44.235
+    zz_row174_probe_test.go:30: binary_bytes=100594162 repeat=2 read_hash_ms=39.742
+    zz_row174_probe_test.go:30: binary_bytes=100594162 repeat=3 read_hash_ms=40.832
+    zz_row174_probe_test.go:30: binary_bytes=100594162 repeat=4 read_hash_ms=39.739
+    zz_row174_probe_test.go:30: binary_bytes=100594162 repeat=5 read_hash_ms=43.279
+    zz_row174_probe_test.go:30: binary_bytes=104510546 repeat=0 read_hash_ms=71.096
+    zz_row174_probe_test.go:30: binary_bytes=104510546 repeat=1 read_hash_ms=44.309
+    zz_row174_probe_test.go:30: binary_bytes=104510546 repeat=2 read_hash_ms=42.307
+    zz_row174_probe_test.go:30: binary_bytes=104510546 repeat=3 read_hash_ms=41.229
+    zz_row174_probe_test.go:30: binary_bytes=104510546 repeat=4 read_hash_ms=42.010
+    zz_row174_probe_test.go:30: binary_bytes=104510546 repeat=5 read_hash_ms=41.312
+--- PASS: TestRow174AttendedProbe (9.19s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	10.571s

@@ -1,0 +1,32 @@
+package daemon
+
+import (
+ "encoding/json"
+ "os"
+ "testing"
+ "time"
+ "github.com/sunholo-data/ailang-world/host/hashref"
+)
+
+func TestRow174AttendedProbe(t *testing.T) {
+ r := newSeRig(t)
+ token := r.mint("ep1", seGrantEffects...)
+ code, raw := r.post("/mcp/", token, `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
+ if code != 200 { t.Fatal(code) }
+ t.Logf("tools_list_wire_bytes=%d", len(raw))
+ cases := []struct{name string; args map[string]any}{
+  {"ailang-read",map[string]any{"path":"hello.ail"}},
+  {"ailang-write",map[string]any{"path":"made.ail","content":seHelloProgram}},
+  {"ailang-run",map[string]any{"path":"made.ail"}},
+ }
+ for _, c := range cases { for i:=0;i<6;i++ {
+  w,d:=r.call(token,c.name,c.args)
+  if w.Error!=nil || w.Result.IsError { t.Fatalf("%s error %+v",c.name,w) }
+  b,_:=json.Marshal(w.Result.StructuredContent)
+  t.Logf("tool=%s repeat=%d elapsed_ms=%.3f result_bytes=%d", c.name,i,float64(d.Microseconds())/1000,len(b))
+ } }
+ for _, path:=range []string{os.Getenv("AILANG_BIN"),os.Getenv(toolBinEnv)} { for i:=0;i<6;i++ {
+  start:=time.Now(); b,e:=os.ReadFile(path); if e!=nil {t.Fatal(e)}; _=hashref.SumSHA256(b)
+  t.Logf("binary_bytes=%d repeat=%d read_hash_ms=%.3f",len(b),i,float64(time.Since(start).Microseconds())/1000)
+ } }
+}
