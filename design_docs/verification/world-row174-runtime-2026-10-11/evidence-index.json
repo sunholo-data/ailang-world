@@ -2,8 +2,8 @@
   "files": [
     {
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/CONTINUE.md",
-      "bytes": 3400,
-      "sha256": "7ed0e25ff5e060cb658ba7f7fe16de75249c9d1e661001b353c1675f45379dd5"
+      "bytes": 3726,
+      "sha256": "14ea689007a1ad78d62daee8192e942cdf9a038cc43f9c07db5144c7a808e36d"
     },
     {
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-abort.json",

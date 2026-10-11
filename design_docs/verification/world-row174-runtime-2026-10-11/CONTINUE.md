@@ -45,3 +45,8 @@ Report every result/noise. No FINAL before product landing and new committed pre
 Previous handoff world-row174-followup-2026-10-11/CONTINUE.md remains historical and unchanged;
 its planned6/7/8 numbering is superseded only by this consumed iteration6 attempt.
 No external messages, PR or mission ledger/charter changes were made by this runtime attempt.
+
+Raw tools-list .sse captures preserve the required empty line after each SSE frame;
+whole-diff whitespace lint therefore reports an EOF blank-line warning for these two
+wire artifacts. Scoped whitespace lint over all other delivered files passes. The wire
+bytes are preserved, not stripped to satisfy a text-file convention.
