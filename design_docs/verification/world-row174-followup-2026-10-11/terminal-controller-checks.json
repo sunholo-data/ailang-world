@@ -1,0 +1,13 @@
+{
+  "recorded_at_utc": "2026-10-11T18:23:41.845916+00:00",
+  "reviewed_head": "82ef820d10a88137a439c103a4fa79bb32625ce4",
+  "judge_score": 86,
+  "scope": "M1 implementation readiness only, unmerged; M2 UNRUN",
+  "379_candidate_and_review_sources_match": true,
+  "judge_log_hashes_verified": true,
+  "review_tracked_source_diff_empty": true,
+  "historical_banks_rewritten": false,
+  "publish_mint_or_inference_performed": false,
+  "judge_report_sha256": "05245554c3f12c025ba03c450ea2f734425753d70940736f975721d48cd9918a",
+  "raw_diff_whitespace": "Preserved exact evidence context; excluded from product whitespace lint, not edited to manufacture lint PASS"
+}

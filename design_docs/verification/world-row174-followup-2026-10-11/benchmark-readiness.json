@@ -1,0 +1,29 @@
+{
+  "recorded_at_utc": "2026-10-11T18:09:43.293480+00:00",
+  "rig": "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig",
+  "manifest_sha256": "240840ca9a0f8f4c60ac159dd78fce26a6c681200e8a10c64fe0e08c0a228868",
+  "floor_config_sha256": "a0bf41172eda31bfd7c1e409475416da1851775d426ac3b31ce9013fd995eebc",
+  "smoke_config": {
+    "N": 1,
+    "tasks": [
+      "pipeline",
+      "cli_args",
+      "api_call_json",
+      "prompt_injection",
+      "effect_tracking_io_fs",
+      "higher_order_functions"
+    ],
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {
+      "claude": "claude-haiku-4-5",
+      "codex": "gpt-6-luna"
+    },
+    "claude_max_budget_usd": 1.0
+  },
+  "session_file_count": 0,
+  "benchmark_inference": "UNRUN",
+  "publish_mint": "UNRUN in this attended investigation",
+  "human_fence": "QUICKSTART section0, run script yourself in real terminal after M1 accepted; agent must not answer confirmations",
+  "notes": "Port7646 no listener observed2026-10-11. Existing mint helper intentionally requires stopped daemon. Runtime CLI0.162 requires same-current-client baseline/candidate/repeat; historicalFINALimmutable."
+}

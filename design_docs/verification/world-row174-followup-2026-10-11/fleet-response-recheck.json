@@ -25,5 +25,13 @@
       "read_at": "2026-10-08T03:11:58.803151Z"
     }
   ],
-  "recorded_at_utc": "2026-10-11T17:51:34.400166+00:00"
+  "recorded_at_utc": "2026-10-11T17:51:34.400166+00:00",
+  "codex_env_fix_in_current_logged_driver_pin": {
+    "fix_commit": "0ceb1db01df661c3608f0c3520a6eb28bcd6bab2",
+    "driver_pin": "bc078dc1b41308542bbccd3417bf040283e817df",
+    "command": "git merge-base --is-ancestor FIX PIN",
+    "returncode": 0,
+    "scope": "Read-only ancestry check; not a fresh shared-driver test certification. Bare native Sonnet alias limitation remains documented."
+  },
+  "updated_at_utc": "2026-10-11T18:13:39.085780+00:00"
 }
