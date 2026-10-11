@@ -1,0 +1,83 @@
+{
+  "source_head": "82f4283cf0b6488f648e1281c9d576675aff1f95",
+  "base": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "files": [
+    {
+      "source": "design_docs/planned/w-codex-world-overhead.md",
+      "sha256": "9702fe2a7bb38a05423f1da5127b879ac6fafa84465b8f97f926dea7764ccffc",
+      "bytes": 22665,
+      "snapshot": "inherited-row174/design_docs/planned/w-codex-world-overhead.md"
+    },
+    {
+      "source": "design_docs/planned/w-codex-world-overhead-sprint-plan.md",
+      "sha256": "08310c4fd234a30fa1dcb15de004589162bbfbee341ef26253c791024fc41e52",
+      "bytes": 7748,
+      "snapshot": "inherited-row174/design_docs/planned/w-codex-world-overhead-sprint-plan.md"
+    },
+    {
+      "source": "design_docs/planned/w-exec-timeout-stimulus-fixture.md",
+      "sha256": "e3ef5aa0f3d8bd7d1fc74b3336df84c65554205baf1d990518b7d1119e24248f",
+      "bytes": 4229,
+      "snapshot": "inherited-row174/design_docs/planned/w-exec-timeout-stimulus-fixture.md"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/CONTINUE.md",
+      "sha256": "22db8470260ef32a8bc205719ba80c0c9ced7bef480a8de94fa66debd0908b7f",
+      "bytes": 3174,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/CONTINUE.md"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/current-progress.json",
+      "sha256": "5da74e2e14a7f9b9d2f3df76bd9fc098d32f6d6d857b0dbefd12ec500818b78a",
+      "bytes": 4053,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/current-progress.json"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/TIMEOUT-FOLLOWUP.md",
+      "sha256": "9b027163da715b7d6c760bd27347f3f43c43c25c7997c771d4031d1460254ba0",
+      "bytes": 4002,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/TIMEOUT-FOLLOWUP.md"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/evaluation-round1.md",
+      "sha256": "f887b97597c4cdfd801525bf07f5e5ca0fcb17ac3f035ba88aea8cc1bd138673",
+      "bytes": 7030,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/evaluation-round1.md"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/evaluation-round2.md",
+      "sha256": "a9c22f18c599f6fed2a3b2c9a486f792801be0d9ca4be1f22481bea220a9d33d",
+      "bytes": 11652,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/evaluation-round2.md"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/evaluation-round3.md",
+      "sha256": "53e4bf1b6974e1d61161200bcb5007016a87a2803f7da5505445f5af2d35c096",
+      "bytes": 10542,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/evaluation-round3.md"
+    },
+    {
+      "source": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/full-normal-result.json",
+      "sha256": "6c5f7d2f2e86e4d5473cf966a3582088ae58e4a78c60dcdc6ec97817012515d4",
+      "bytes": 571,
+      "snapshot": "inherited-row174/design_docs/verification/world-row174-attended-2026-10-10/round3-independent/full-normal-result.json"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-final-result.json",
+      "sha256": "6c5f7d2f2e86e4d5473cf966a3582088ae58e4a78c60dcdc6ec97817012515d4",
+      "bytes": 571,
+      "snapshot": "inherited-row174/design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-final-result.json"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/verify-go-row166-final.log",
+      "sha256": "ef4d069a420c6791c5eac72febd134b6614562cd84a24e8eb98a5024bb59ebbc",
+      "bytes": 5259,
+      "snapshot": "inherited-row174/design_docs/verification/world-row166-fixture-attended-2026-10-10/verify-go-row166-final.log"
+    }
+  ],
+  "full_candidate_bundle": {
+    "path": "/Users/voightkampff/.ailang/state/mission-world-iter250/row174-attended.bundle",
+    "sha256": "0394be260ffc9a67a3150739660b4847a5f0ec4f0374d791cd09959634d222cf",
+    "note": "Persistent local git bundle; no product landing; prerequisite base required."
+  }
+}
