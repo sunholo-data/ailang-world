@@ -1,0 +1,42 @@
+{
+  "recorded_at_utc": "2026-10-11T18:41:09.879909+00:00",
+  "operator_request": "can you run it with codex? (e..g your quota now?)",
+  "scope": "Codex-only diagnostic baseline/candidate/no-change repeat; partial row174 M2 evidence, not full acceptance",
+  "models": {
+    "codex": "gpt-6-luna"
+  },
+  "agents": [
+    "codex"
+  ],
+  "arms": [
+    "shell",
+    "world"
+  ],
+  "N": 1,
+  "tasks": [
+    "pipeline",
+    "cli_args",
+    "api_call_json",
+    "prompt_injection",
+    "effect_tracking_io_fs",
+    "higher_order_functions"
+  ],
+  "canary": "fizzbuzz",
+  "runner": "unchanged scripts/floor/run.py --agents codex",
+  "floor_config_sha256": "a0bf41172eda31bfd7c1e409475416da1851775d426ac3b31ce9013fd995eebc",
+  "baseline_product_source": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "planned_iterations": {
+    "baseline": 7,
+    "candidate": 8,
+    "repeat": 9
+  },
+  "reuse_from": null,
+  "thresholds": {
+    "codex_O_max": 0.2,
+    "delta_min": -0.02,
+    "harness_faults_max": 0
+  },
+  "human_fence": "Original manifest and both sessions already typed by user. Candidate publication remains separate human-typed step after Codex baseline is banked.",
+  "remaining_full_acceptance": "All-four-cell baseline/candidate/repeat and Claude O<=0.25/delta>=-0.02/no World pass-rate regression remain required. Do not pool this partial run into a full acceptance.",
+  "capacity_policy": "Unchanged quota abort and typed model-capacity retry policy. No model substitutions or billed overage."
+}
