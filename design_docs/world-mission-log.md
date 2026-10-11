@@ -1003,3 +1003,33 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** 1.0: clauses4 and5 unmet; goal unmoved.
 
 **Next:** D71 YES/NO on the existing bounded fixture follow-up; default row174 parked. While it waits, next independently gated D69 exception row26, then105 then172→150; after174 efficacy/landing, new attended93 FINAL, then114→139.
+
+## Attended continuation — 2026-10-11 — D-WORLD-71 single follow-up completed; M1 implementation PASS86, M2 UNRUN [ADMIN handoff]
+
+**Kind:** Current attended implementation evidence and loop handoff; this record contains no product source change/landing, inference, publication or mint. All three earlier FAIL68 reviews and historical FINAL remain immutable.
+
+**Pick and state audit:** Mark requested continuation after a24h fresh check. Fetched origin7f1259a: iteration250 completed05:44UTC/07:44Copenhagen, no product advanced; later08:54/12:54/16:54UTC fires PAUSED-NO-CAPACITY. D71 YES recorded948e115 through canonical attended helper and fast-forward pushed; exact CI38160800885 SUCCESS. Candidate merged updated authority/admin without rebasing old product/review history.
+
+**Design:** Native designer approved existing narrowly bounded exec-timeout fixture proposal under D71; snapshot in new bank. No production bounds/shared helpers/benchmark or shared-harness changes permitted.
+
+**Quorum:** SKIPPED, all four trigger predicates false; no quorum PASS invented.
+
+**Plan:** Required native planner derived `codex:gpt-6.1-sol declared:planner-lane-default-pin`; two milestones: test fixture/scoped proof, then unchanged full normal gates/fresh judge. Initial progress retained; final snapshots record actual acceptance only after terminal verdict.
+
+**Execution:** Executor producta43ff7f changed only existing TestExecHandlerTimeoutKillsTheGroup body/imports. Three real full-trampoline controls measure C; bounded B=C+2g/finite H with ordinary caller fit guard. Two token-owned children proved live in actual leader PGID before delegated real kill; exact stdout/stderr retained; owned cleanup/reap/callback join before seam restoration. Plaincount10 and racecount5 PASS, zero failures/skips/races. Four isolated compiled mutants RED at intended assertions and exact restores GREEN.295add/10remove/file852 size debt retained/scored. Original descriptor M1 remains eight top-level description changes only, schemas/complete workspace-exec/all28 AIL sources preserved.
+
+**Judge:** Required fresh separate-context GPT6.1Sol under amendedD48, FLAG same-model-fresh-context; exact runtime model attestation unavailable, Sonnet absent per Mark. PASS86/100, zero blockers for IMPLEMENTATION READINESS only on82ef820. Independently verified379 exact source identities/full gate-log hashes/pin hashes; own focused/race/live exact-eight checks PASS; own compiled leader-only seam and production stdout-loss RED, exact restored GREEN. No further repair/review authorized. Original performance M2 UNRUN; no runtime efficacy or row closure.
+
+**CI / normal gates:** Controller outside-sandbox exact82ef820 `verify_ail.sh` rc0/24.161s and unchanged complete `verify_go.sh` rc0/535.083s including all plain/race packages.379 start/end sources identical. Known-positive race-control warning is expected instrument proof; complete logs banked. This ADMIN-only origin-based record requires its own exact-head CI; no candidate product remote CI/merge claimed.
+
+**Gate0 / external checks:** Read-only canonical Firestore mission-world inbox and known PNG ticket peek; no send/ack. No PNG resolution in listed32 inbox messages, not proof none anywhere. Current driverbc078dc contains0ceb1db env-forward fix by ancestry; not fresh shared-driver certification. Row173 remains fleet-owned. Existing operator rulings, benchmark tasks/models/N/grader/thresholds, interpreter pins and frozen shared harness preserved.
+
+**Routing evidence:** base=948e115a9a09486699b52beab03efc4b4bc71b2e; source/candidate/admin SHA and UTC recheck in mission-handoff-manifest. Controller/designer/planner/executor/evaluator native `codex:gpt-6.1-sol` (tok:not reported each). Planner declared default pin; evaluator fresh separate context underD48 FLAG. No fabricated token cost, exact weight attestation or cross-vendor independence.
+
+**Ruled out:** Overnight green admin CI as product acceptance; successful repeats as causation proof; raw metadata byte savings as latency efficacy; preferred-judge absence as omission; historical3FAIL retcon; another repair round under this one approval; benchmark model/settings substitution; agent PTY/scripted answers to human publish/mint fence; product push/PR/merge in this record.
+
+**Retro:** The bounded approval discharged actual full-gate failures through discriminating controls and fresh review without waivers. Generic size/long-function debt costs9 rubric points, documentation5. Raw `.diff` evidence context whitespace retained byte-exact, excluded from product whitespace lint; no full evidence-lint claim. No shared skill edit or process-policy change. Log rotation not due; no invented scheduled iteration/status stamp or external digest sent by this attended handoff.
+
+**Progress:** Clauses1/2/3/6/7 MET,4/5 UNMET; no release percentage/ETA. M1 implementation accepted locally, product unmerged; originalM2 performance UNRUN. Candidate172225b and full persistent verified local bundle preserved with prerequisites5ca1115/948e115; all current proof text banked for next loop.
+
+**Next:** Human types original baseline publish/session fences via prepared attended-mint.sh; then same-current-client fresh fixed Haiku4.5/Luna smoke baseline/candidate/no-change repeat, every attempt banked. Only after efficacy/landing and new committed preregistration, new attended93 FINAL →114 three real timed unseeded questions →139 epoch upgrade.156 protected tests and D69 exception26→105→172→150/151 remain before release; PNG gate separate fleet blocker. Full executable handoff:verification/world-row174-followup-2026-10-11/CONTINUE.md.

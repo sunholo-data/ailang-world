@@ -1,21 +1,21 @@
-# World mission dashboard — iteration 250 (2026-10-11)
+# World mission dashboard — attended continuation (2026-10-11)
 
-- Outcome: row174 PARKED on D-WORLD-71; independent ADMIN judge ACCEPT, score N/A.
-- 1.0: clauses1/2/3/6/7 MET;4/5 UNMET; goal unmoved.
-- Critical path:174 → new attended93 FINAL →114 →139. Original FINAL FAILS and bar unchanged.
-- D69/D70 attended A rulings acknowledged; previous D69-OPEN snapshot is historical.
-- Existing attended candidate82f4283/product84d3f5a: third FAIL68; plain Go rc1, race NOT_REACHED.
-- D71 YES (recommended): one existing bounded test-only exec-timeout follow-up, full gates, fresh judge.
-- D71 NO/unanswered: candidate remains parked; no fourth repair/review.
-- M2 additionally requires accepted M1, human-typed publish/mint, fixed-model fresh smoke/repeat evidence.
-- Exception path available underD69:26 →105 →172 →150;151 follows150. No second product picked here.
-- Row159 upstream seam delivered in v0.54.4; now unranked under attended groom, no pin bump.
-- Row173 PNG mechanism remains a fleet ticket; World harness unchanged.
-- Orphan249 three receipts preserved in its branch; no terminal review/record inherited.
-- All four native Agent roles completed preflights; evaluator is a fresh separate context.
-- Native MiniMax evaluator spawn failed Unknown model; GPT6.1Sol fallback underD48 FLAGGED.
-- Designer/planner/executor model pins GPT6.1Sol match resolver; native transport follows operator request.
-- Actual model attestation/tokens unavailable; metered$0.
-- Evidence:verification/world-iter250; twelve byte-exact inherited artifacts plus persistent candidate bundle.
-- Base:5ca111547fdd80480a8d42578fb59942ee8a0b63@2026-10-11T04:59:38Z.
-- Record shipping requires independent terminal review and exact-head CI; no product landing inferred.
+- Row174 M1 implementation ACCEPTED; M2 performance UNRUN, product UNMERGED.
+- D71 YES approved single test-only follow-up complete; no additional repair/review authority.
+- Exact reviewed82ef820: full normal AIL and Go including race PASS;379 source identities unchanged.
+- Fresh independent judge PASS86/100; size/long-function deductions; FLAG same-model-fresh-context.
+- Previous three FAIL68 and historical Codex FINAL26.6%>25% FAIL preserved.
+- Human next: run attended-mint.sh in own terminal for original baseline publish and exact-eight sessions.
+- Then fresh same-client fixed Haiku4.5/Luna smoke baseline/candidate/repeat; no model/settings substitution.
+- Candidate172225b branch and persistent local verified bundle preserved; handoff manifest names paths/hashes.
+- Overnight iteration250 completed05:44UTC; later08:54/12:54/16:54UTC slots paused for capacity.
+- Decision-only948e115 CI38160800885 SUCCESS; this ADMIN record needs its own exact-head CI.
+- Clauses1/2/3/6/7 MET;4/5 UNMET; no measured release percentage or ETA.
+- Critical path174 efficacy/landing →new attended93 FINAL →114 three real timed questions →139 epoch upgrade.
+- Release also needs156 protected test paths; D69 exception26 →105 →172 →150;151 views/capture follows.
+- Driverbc078dc contains0ceb1db env-forward fix; ancestry proof is not fresh driver certification.
+- Row173 PNG-gate response not found in listed canonical inbox; fleet-owned, no World harness changes.
+- Four roles completed: native GPT6.1Sol; every role tokens not reported, exact model attestation unavailable.
+- Planner derived codex:gpt-6.1-sol declared:planner-lane-default-pin; quorum SKIPPED, all triggers false.
+- Evidence and required human/agent steps:verification/world-row174-followup-2026-10-11/CONTINUE.md.
+- This is an attended continuation, not an invented scheduled iteration251 or product release.

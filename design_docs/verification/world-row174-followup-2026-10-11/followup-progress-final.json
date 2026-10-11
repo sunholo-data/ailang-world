@@ -1,0 +1,91 @@
+{
+  "sprint_id": "w-exec-timeout-stimulus-fixture-followup-2026-10-11",
+  "status": "completed",
+  "created": "2026-10-11T17:48:29.690739+00:00",
+  "design_doc": "design_docs/planned/w-exec-timeout-stimulus-fixture.md",
+  "sprint_plan": "design_docs/verification/world-row174-followup-2026-10-11/w-exec-timeout-stimulus-fixture-sprint-plan.md",
+  "github_issues": [],
+  "authority": "D-WORLD-71 YES; one bounded follow-up",
+  "base_commit": "5f6ebfd02e0df4504f871be51af940ac4ff2af00",
+  "planner_lane": {
+    "derived": "codex:gpt-6.1-sol",
+    "source": "declared:planner-lane-default-pin",
+    "native_inherited_model_fallback": true,
+    "rule": "D-WORLD-48 amended",
+    "substitution": "FLAG",
+    "actual_model_pin_claimed": false,
+    "runtime_attestation": null
+  },
+  "registry_reuse": [
+    {
+      "milestone": "M1",
+      "package": null,
+      "action": "none",
+      "reason": "No package-like capability: repair existing Go fixture only."
+    },
+    {
+      "milestone": "M2",
+      "package": null,
+      "action": "none",
+      "reason": "Unchanged existing full gates and evidence review only."
+    }
+  ],
+  "velocity": {
+    "target_loc_per_day": 220,
+    "estimated_total_loc": 220,
+    "estimated_days": 1,
+    "estimated_active_hours": "4\u20136 plus gate/review elapsed time",
+    "basis": "Existing row166 fixture plan ~70 LOC/1\u20132 active hours; richer ownership/cleanup fixture ~220 changed test LOC. Original exec test history 567 insertions; no comparable measured daily velocity."
+  },
+  "quorum": {
+    "triggers": {
+      "freeze_item": false,
+      "shared_override": false,
+      "kpi_or_banked_schema_change": false,
+      "external_premise": false
+    },
+    "status": "SKIPPED"
+  },
+  "features": [
+    {
+      "id": "M1",
+      "description": "Test-only full-trampoline measured fixture and four isolated compiled mutations",
+      "estimated_loc": 220,
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Use one ordinary 30s `boundedTestContext` across three explicit h.Execute full-trampoline short/no-hold controls and exercised arm; do not use f.call or a custom context. Controls require exact stdout/stderr text, bytes, SHA, unique-token/PID child readiness, natural exit/reap; retain each result and maximum complete duration C; remove old markers between calls.",
+        "Keep helper script/profile/argv0 fixed: normal fixture profileF overrides command with /bin/sh and helper/token/data paths; finite hold comes from data, each child atomically publishes token and checked numeric PID. Derive overflow-safe B=ceil_ms(C+2g), H=ceil_seconds(3B+2g), g=pipeCloseGrace. Fail without clamp/skip/retry when B>9000ms or B+H+g>=remaining ordinary caller deadline R. Reconstruct normal parsed profile and handler for arm, preserving digest verification.",
+        "Kill wrapper on exercised call records synchronized observations/errors and always delegates actual kill. Immediately before kill, prove both specific children alive and in actual leader PGID using token/PID ownership, proctest.Check/Signal and Getpgid/signal0. Test-goroutine assertions require actual deadline kill, timed_out, absent exit code, exact two-stream retention, both specific children no longer live. Bounded ps stat observation checks result/status; known absent or explicit zombie/dead passes, unknown/error fails. No global name census.",
+        "Cleanup signals only revalidated proven fixture PID/group; boundedly join callbacks/reap and restore boundedOutstanding baseline before global seam restore. No ambient/sentinel PID signalling or parallelism. Disabled group kill still cleans finite children.",
+        "Compile/run four isolated mutants: group-kill-disabled kills leader only -> specific-child-alive assertion RED; deadline-only stdout-loss -> exact stdout retention RED; deadline-only stderr-loss -> exact stderr retention RED; coherent deadline-disabled-natural removes inner deadline and extends mutant cleanup only to caller deadline minus g -> finite natural exit/reap/no kill and timeout assertion RED. Stream mutants preserve successful controls/readiness and actual kill. Bank exact assertion output, compiled command/status, mutated diff/hash; restore exact original bytes and GREEN after each. Temporary mutants may alter the production seam only in isolated disposable validation trees, never delivered product.",
+        "Scoped plain count10 and race count5 discover the target and finish with zero SKIPs/FAILs, retain already banked parent count20 PASS controls without cause inference. Diff delivers only permitted test body/imports."
+      ],
+      "passes": true,
+      "started": null,
+      "completed": "2026-10-11T18:23:41.845916+00:00",
+      "notes": "Four compiled RED mutants/exact-restored GREEN; plain count10/race count5 PASS. Only approved test body/imports changed. Size/long-function flags retained and scored."
+    },
+    {
+      "id": "M2",
+      "description": "Unchanged full profiles and one fresh separate-context product review",
+      "estimated_loc": 0,
+      "dependencies": [
+        "M1"
+      ],
+      "acceptance_criteria": [
+        "Run unchanged full `scripts/verify_go.sh` profile with released v0.41.0 AILANG_BIN/WORLD_PKG and v0.52.1 WORLD_TOOL, including full normal build/test then race; do not waive, retry to infer cause, weaken or edit gate. Bank exact binaries/version/hash, commands, discovery/status and full output. Full gate failure prevents acceptance.",
+        "`verify_ail.sh` remains unchanged: 16 identities/40 named checks, 444 total, se-tools9/9; prior successful result may be reused only with byte proof for all28 .ail files and exact unchanged gate/pins. Otherwise run fresh unchanged pinned gate. Counts alone do not replace identities.",
+        "After product commit/full gates, obtain one new independent product judge in fresh context with complete rubric/evidence and amended D48 routing preference; unavailable preferred lane -> flagged fresh gpt-6.1-sol context. Record exact attestation unavailable honestly; never Astra or model substitution. Quorum trigger vector all false: freeze item=false, shared override=false, KPI/banked schema change=false, external premise=false. Quorum SKIPPED, never PASS.",
+        "All acceptance remains pending until full gates and fresh judge pass. Row174 M1 is not accepted and original row174 M2 performance remains UNRUN. No efficacy, release percentage, baseline/candidate performance inference, row closure, publication, mint, benchmark human-fence action, PR or external messages. This approval permits no further repair/review rounds; bank failure and return controller if blocked."
+      ],
+      "passes": true,
+      "started": null,
+      "completed": "2026-10-11T18:23:41.845916+00:00",
+      "notes": "Unchanged complete verify_ail and verify_go including full race PASS on 82ef820; 379 source identities unchanged. Fresh separate-context judge PASS86; no efficacy/row closure."
+    }
+  ],
+  "completed": "2026-10-11T18:23:41.845916+00:00",
+  "evaluation_result": "pass",
+  "evaluation_score": 86,
+  "evaluation_scope": "D-WORLD-71 single bounded implementation follow-up only; original row174 M2 performance UNRUN"
+}

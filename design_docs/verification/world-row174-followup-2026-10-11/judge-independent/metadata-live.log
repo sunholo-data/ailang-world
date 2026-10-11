@@ -1,0 +1,14 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:96: canonical eight-tool bytes=10301; description UTF-8 bytes=3794
+--- PASS: TestSeToolsDescriptorCompaction (0.00s)
+=== RUN   TestSeToolsDescriptorSourceEquality
+    setools_descriptor_test.go:140: compared 9 transition sources to parent raw-byte SHA-256
+--- PASS: TestSeToolsDescriptorSourceEquality (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	0.298s
+=== RUN   TestSeToolsDescriptorLiveExactEight
+    setools_descriptor_test.go:69: live tools/list: exactly eight descriptors; wire bytes=10368
+    setools_descriptor_test.go:70: each description and complete input/output schema equals published manifest
+--- PASS: TestSeToolsDescriptorLiveExactEight (3.75s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	4.107s

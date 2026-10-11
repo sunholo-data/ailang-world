@@ -1,0 +1,158 @@
+{
+  "status": "Scoped implementation complete; full normal gate and fresh review pending; M1 acceptance and M2 pending",
+  "authority": "D-WORLD-71 YES, one bounded test-only follow-up",
+  "fixture_file": "host/broker/handlers_exec_m2_test.go",
+  "fixture_sha256": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+  "landed_scope": "Only existing target test body and necessary imports; no production/shared helper/bounds edit",
+  "actual_loc": {
+    "added": 295,
+    "removed": 10,
+    "final_file_lines": 852,
+    "estimate": 220,
+    "flag": "Generic >800-line size FLAG; no World CI size gate. Required ownership/state/finite cleanup kept readable and local; no authorization expansion."
+  },
+  "mutations": {
+    "isolated_copy": "/private/tmp/ailang-world-exec-timeout-mutants-20261011",
+    "all_four_compiled_expected_red": true,
+    "all_four_byte_exact_restored_green": true,
+    "mutations": [
+      {
+        "mutant": "leader-only-kill",
+        "file": "host/broker/handlers_exec_m2_test.go",
+        "mutated_sha256": "865d54c01b8bab138c77b00439a01e5af10fbcc24a1f8edacf6fdbe819030fd3",
+        "diff": "mutation-leader-only-kill.diff",
+        "command": [
+          "go",
+          "test",
+          "./host/broker",
+          "-run",
+          "^TestExecHandlerTimeoutKillsTheGroup$",
+          "-v",
+          "-count=1",
+          "-timeout=600s"
+        ],
+        "returncode": 1,
+        "red_assertion": "specific fixture child alive after deadline",
+        "three_full_trampoline_controls": "PASS",
+        "specific_child_readiness_and_live_group": "PASS",
+        "finite_cleanup": "PASS",
+        "restored_sha256": {
+          "host/broker/handlers_exec_m2_test.go": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+          "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c"
+        },
+        "restored_control": "PASS"
+      },
+      {
+        "mutant": "deadline-stdout-loss",
+        "file": "host/broker/handlers.go",
+        "mutated_sha256": "f6c1b02b715b98ebe5278cd5fdbf281eb48d6bacf44ffd6ee2986fc59644356a",
+        "diff": "mutation-deadline-stdout-loss.diff",
+        "command": [
+          "go",
+          "test",
+          "./host/broker",
+          "-run",
+          "^TestExecHandlerTimeoutKillsTheGroup$",
+          "-v",
+          "-count=1",
+          "-timeout=600s"
+        ],
+        "returncode": 1,
+        "red_assertion": "exact deadline stdout retention",
+        "three_full_trampoline_controls": "PASS",
+        "specific_child_readiness_and_live_group": "PASS",
+        "finite_cleanup": "PASS",
+        "restored_sha256": {
+          "host/broker/handlers_exec_m2_test.go": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+          "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c"
+        },
+        "restored_control": "PASS"
+      },
+      {
+        "mutant": "deadline-stderr-loss",
+        "file": "host/broker/handlers.go",
+        "mutated_sha256": "585fb0dacd7db9a96e26673a88858228b6cac565c7eaa198a0f1997dd82f7162",
+        "diff": "mutation-deadline-stderr-loss.diff",
+        "command": [
+          "go",
+          "test",
+          "./host/broker",
+          "-run",
+          "^TestExecHandlerTimeoutKillsTheGroup$",
+          "-v",
+          "-count=1",
+          "-timeout=600s"
+        ],
+        "returncode": 1,
+        "red_assertion": "exact deadline stderr retention",
+        "three_full_trampoline_controls": "PASS",
+        "specific_child_readiness_and_live_group": "PASS",
+        "finite_cleanup": "PASS",
+        "restored_sha256": {
+          "host/broker/handlers_exec_m2_test.go": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+          "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c"
+        },
+        "restored_control": "PASS"
+      },
+      {
+        "mutant": "deadline-disabled-natural",
+        "file": "host/broker/handlers.go",
+        "mutated_sha256": "e9af8f3fbf1b8c5aef31f3b967cca08c3273db2c0fd122abe873048a26f66677",
+        "diff": "mutation-deadline-disabled-natural.diff",
+        "command": [
+          "go",
+          "test",
+          "./host/broker",
+          "-run",
+          "^TestExecHandlerTimeoutKillsTheGroup$",
+          "-v",
+          "-count=1",
+          "-timeout=600s"
+        ],
+        "returncode": 1,
+        "red_assertion": "real exact-profile timeout required B=",
+        "three_full_trampoline_controls": "PASS",
+        "specific_child_readiness_and_live_group": "natural exit/no kill",
+        "finite_cleanup": "PASS",
+        "restored_sha256": {
+          "host/broker/handlers_exec_m2_test.go": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+          "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c"
+        },
+        "restored_control": "PASS"
+      }
+    ]
+  },
+  "model_lane": {
+    "native_inherited_model_fallback": "FLAG under D-WORLD-48",
+    "exact_runtime_model_attestation": null,
+    "quorum": "SKIPPED, all four triggers false"
+  },
+  "historical_banks": "All earlier evidence left unchanged; preliminary first/refined controls retain their own traces and do not substitute for final-source scoped repeats.",
+  "limitations": "Pass-through srt stub lifecycle fixture only; full normal gates and fresh judge owned by controller. Row174 metadata M1 acceptance pending; original performance M2 UNRUN. No efficacy claim, publish or mint.",
+  "scoped_repetitions": [
+    {
+      "log": "executor-focused-count10.log",
+      "command": "go test ./host/broker -run '^TestExecHandlerTimeoutKillsTheGroup$' -v -count=10 -timeout=600s",
+      "returncode": 0,
+      "runs": 10,
+      "passes": 10,
+      "failures": 0,
+      "skips": 0,
+      "race_reports": 0,
+      "elapsed": "26.729s"
+    },
+    {
+      "log": "executor-focused-race-count5.log",
+      "command": "go test -race ./host/broker -run '^TestExecHandlerTimeoutKillsTheGroup$' -v -count=5 -timeout=600s",
+      "returncode": 0,
+      "runs": 5,
+      "passes": 5,
+      "failures": 0,
+      "skips": 0,
+      "race_reports": 0,
+      "elapsed": "14.572s"
+    }
+  ],
+  "scoped_results": "executor-scoped-results.json",
+  "restoration_and_cleanup": "Every final normal/race trial observed two specific children alive in leader PGID before real kill; confirmed both not live and Outstanding baseline=0; one callback completed and joined before seam restoration. Four mutant and restored runs carry equivalent cleanup logs (natural mutant: no callback)."
+}

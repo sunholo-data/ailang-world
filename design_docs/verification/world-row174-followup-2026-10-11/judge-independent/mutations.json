@@ -1,0 +1,16 @@
+[
+  {
+    "mutant": "leader-only",
+    "file": "host/broker/handlers_exec_m2_test.go",
+    "mutated_sha256": "865d54c01b8bab138c77b00439a01e5af10fbcc24a1f8edacf6fdbe819030fd3",
+    "restored_sha256": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+    "disclosure": "Exact replacement asserted before compiled check; diff reconstructed from exact restored source after run"
+  },
+  {
+    "mutant": "production-stdout",
+    "file": "host/broker/handlers.go",
+    "mutated_sha256": "f6c1b02b715b98ebe5278cd5fdbf281eb48d6bacf44ffd6ee2986fc59644356a",
+    "restored_sha256": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+    "disclosure": "Exact replacement asserted before compiled check; diff reconstructed from exact restored source after run"
+  }
+]

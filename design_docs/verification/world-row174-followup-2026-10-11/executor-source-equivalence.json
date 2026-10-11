@@ -1,0 +1,127 @@
+{
+  "parent": "61d12f7513143d568f9706d589b1b776ce4be93d",
+  "target_body_and_required_imports_only": true,
+  "all_other_tracked_go_byte_equal": 346,
+  "all_ail_sources_byte_equal": [
+    {
+      "path": "design_docs/sketches/effectbroker.ail",
+      "sha256": "fb024188203fc9f8a054fdb080b0cdae8c2271515f1ab6172ce7ccecd81b9773"
+    },
+    {
+      "path": "design_docs/sketches/effectplan.ail",
+      "sha256": "ed8b030b929e10eebe1ba304480d82aa7a4e5a529165631f70fea84a2cbd2014"
+    },
+    {
+      "path": "design_docs/sketches/execargs.ail",
+      "sha256": "a0cd42b7508d49d6b6043d3bce88b76e8d8b53396bb484a1dfb40a5f3a212aad"
+    },
+    {
+      "path": "design_docs/sketches/logepoch.ail",
+      "sha256": "6dadbf5fcf204246d4b6c3b721920e91bcaebd207462ea2c0423cc49b8f2d4de"
+    },
+    {
+      "path": "design_docs/sketches/storejournal.ail",
+      "sha256": "adf0760b69bb6aa48a9314ea123db06584369a2885c09b076be5f89cbf605079"
+    },
+    {
+      "path": "design_docs/sketches/transitions.ail",
+      "sha256": "61b5eb232a54de701458f0998396df7467683b12c1bce133765af757234e2b66"
+    },
+    {
+      "path": "design_docs/sketches/worlddapi.ail",
+      "sha256": "af6e2488fbf82d113b278d6476db364ddd7e810ba429a98e0f83480a45b73671"
+    },
+    {
+      "path": "design_docs/sketches/worldkernel.ail",
+      "sha256": "b68694ab226d327c0385d57f4504ec3ec0f057e2af2c1d8c4c6aef96b5bb03dd"
+    },
+    {
+      "path": "design_docs/sketches/worldtypes.ail",
+      "sha256": "02460fb32643c21fc55b53576616bddc206fea74295237778d63c062bc60a282"
+    },
+    {
+      "path": "host/replay/testdata/transition_fixture.ail",
+      "sha256": "879f42a19d6eec4bf8ccad63c120fdb89c1032f373e5e9b16b82655694324133"
+    },
+    {
+      "path": "packages/se-tools/se_tools/builtins_search.ail",
+      "sha256": "7ed1f8436865c194b2ce30611c0de92a73b0d86bf4776b2a28bf1c8d192e988b"
+    },
+    {
+      "path": "packages/se-tools/se_tools/check.ail",
+      "sha256": "440b6491de07656df8161bb69b09af82e74306fd52b2152744921720c2cbd03b"
+    },
+    {
+      "path": "packages/se-tools/se_tools/cli.ail",
+      "sha256": "ce221e5ebf0c12929a3a36535ac1297ca695ffb0531d79e256c255697c962a70"
+    },
+    {
+      "path": "packages/se-tools/se_tools/edit.ail",
+      "sha256": "2d12856ab07f987c1d26c82b9320503e830817f27b625e7a80320b22ae32f286"
+    },
+    {
+      "path": "packages/se-tools/se_tools/examples_search.ail",
+      "sha256": "bd6d41cfae833e636cd079352ad4dc63fde37800dd8bdda4da39abbbb2e0e6c7"
+    },
+    {
+      "path": "packages/se-tools/se_tools/exec.ail",
+      "sha256": "51d93ce680eea3031eaf786530b3c2a4d61b3b547440a4e542786695b05c9a05"
+    },
+    {
+      "path": "packages/se-tools/se_tools/read.ail",
+      "sha256": "076bd38e834b90d34bcacc3f64f5a863e2dbec04e0aa20d58bb630e874474672"
+    },
+    {
+      "path": "packages/se-tools/se_tools/run.ail",
+      "sha256": "add740e9a157821fbef3de116ad60c2a33fd7fd9ca1d4f103c6efc8106317286"
+    },
+    {
+      "path": "packages/se-tools/se_tools/write.ail",
+      "sha256": "2d90757c61274f6f172551f179b254178f3ccfcedd21ee7955ab2e47d364deda"
+    },
+    {
+      "path": "packages/world-core/_smoke.ail",
+      "sha256": "458b3eaeb225d57704797e5e6e741357ffd7494803ac7401ad66b55dc510028a"
+    },
+    {
+      "path": "packages/world-core/world/contracts.ail",
+      "sha256": "157574f614ec0d57b2c5302534984a84dfbcbaa6591eea560b4275932ab5f071"
+    },
+    {
+      "path": "packages/world-core/world/logepoch.ail",
+      "sha256": "477ed4ce7ee223d032b12ebe998331de38fbe638a09b660a578f296d6ef611b5"
+    },
+    {
+      "path": "packages/world-core/world/transitions.ail",
+      "sha256": "3bc711b44ce0e06dc2d7630502968db8609c64d31982a07d3236e1eb79dead36"
+    },
+    {
+      "path": "packages/world-core/world/types.ail",
+      "sha256": "323cb6d40317e3100d8367b7904a772069798ea9a282fa08064a668f57efed6f"
+    },
+    {
+      "path": "world/contracts.ail",
+      "sha256": "157574f614ec0d57b2c5302534984a84dfbcbaa6591eea560b4275932ab5f071"
+    },
+    {
+      "path": "world/logepoch.ail",
+      "sha256": "477ed4ce7ee223d032b12ebe998331de38fbe638a09b660a578f296d6ef611b5"
+    },
+    {
+      "path": "world/transitions.ail",
+      "sha256": "3bc711b44ce0e06dc2d7630502968db8609c64d31982a07d3236e1eb79dead36"
+    },
+    {
+      "path": "world/types.ail",
+      "sha256": "323cb6d40317e3100d8367b7904a772069798ea9a282fa08064a668f57efed6f"
+    }
+  ],
+  "source_identity_count": 28,
+  "unchanged_snapshots": {
+    "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+    "host/broker/handlers_exec.go": "e86b905acb9d91a6849f3b1c785419ae8cd12eaecc647c17c2c7c8c54d28fabe",
+    "host/procbound/procbound.go": "5164a148f12d0f1cf6c741efacbef4277018b225b4b0cfe8f510dc9489cdc7d4",
+    "packages/se-tools/transitions.json": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97"
+  },
+  "candidate_target_sha256": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c"
+}

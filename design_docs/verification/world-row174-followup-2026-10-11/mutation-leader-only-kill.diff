@@ -1,0 +1,11 @@
+--- host/broker/handlers_exec_m2_test.go
++++ host/broker/handlers_exec_m2_test.go (isolated mutant)
+@@ -662,7 +662,7 @@
+ 				}
+ 			}
+ 		}
+-		o.killErr = originalKill(leader) // Always delegate; never assert in exec's watcher.
++		o.killErr = proctest.Signal(leader, syscall.SIGKILL, syscall.Kill) // Always delegate; never assert in exec's watcher.
+ 		observations = append(observations, o)
+ 		return o.killErr
+ 	}

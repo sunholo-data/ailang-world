@@ -1,0 +1,39 @@
+{
+  "head": "82ef820d10a88137a439c103a4fa79bb32625ce4",
+  "go": "go version go1.26.6 darwin/arm64",
+  "load_at_final_evidence_record": "20:20  5 users, load averages: 9.83 7.82 7.92",
+  "pin_hash_matches": {
+    "AILANG_BIN": true,
+    "WORLD_TOOL_AILANG_BIN": true,
+    "WORLD_PKG_AILANG_BIN": true
+  },
+  "source_identity_count": 379,
+  "source_identity_mismatches": {
+    "start_sources": [],
+    "end_sources": []
+  },
+  "target_sha256": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+  "production_sha256": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+  "logs_sha256": {
+    "restored-race.log": "72350f6787b9139b0a924473a2e7cb4f707732aae2849d1aec0638dbdaa802d9",
+    "mutant-leader-only.log": "3c82fed141c9bdde39c792de3af2098d50d496b1060b35fbf2555a66740657ad",
+    "mutant-production-stdout.log": "a86e7ab95efe9a327ab434aee1a437b74d18bade1d8c07763a9a5959bcdcf4cf",
+    "metadata-live.log": "7ee787b9529469033c354a51ceb6ba0a7128218c07c629955a4008c1aa5f80d3",
+    "focused-plain.log": "8d83abab46b4a2e7292fe361506aebda47af8723ead962889c4d9ad7124edcf5",
+    "restored-production-plain.log": "c799c034504b3ed917892a0f39b7a7efc296a22179894b167552943e8df0a453"
+  },
+  "own_commands": [
+    "go test ./host/broker -run ^TestExecHandlerTimeoutKillsTheGroup$ -count=1 -v -timeout=60s",
+    "go test -race ./host/broker -run ^TestExecHandlerTimeoutKillsTheGroup$ -count=1 -v -timeout=60s",
+    "go test ./host/coordinator ./host/daemon -run ^TestSeToolsDescriptor -count=1 -v -timeout=120s"
+  ],
+  "own_statuses": {
+    "pristine_plain": 0,
+    "metadata_live": 0,
+    "leader_only_test_seam_mutant": 1,
+    "exact_restored_race": 0,
+    "production_stdout_loss_mutant": 1,
+    "exact_restored_production_plain": 0
+  },
+  "sandbox_setup_attempt": "First focused invocation blocked before compilation by Go cache read permission; VOID/setup failure, replaced with authorized outside-sandbox invocation; no product failure or retry-to-green inferred"
+}

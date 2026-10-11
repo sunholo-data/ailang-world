@@ -1,3 +1,5 @@
+Attended2026-10-11 continuation: row174 M1 PASS86/full gates; M2 UNRUN. See `verification/world-row174-followup-2026-10-11/CONTINUE.md` and appended attended log entry. No scheduled iteration number consumed.
+
 # world-mission — ITERATION INDEX
 
 One line per iteration, newest first, covering the live log AND the archive.
