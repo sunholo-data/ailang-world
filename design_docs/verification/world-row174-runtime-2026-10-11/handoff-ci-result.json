@@ -1,0 +1,23 @@
+{
+  "conclusion": "success",
+  "headSha": "ba79d1e8404cdb24c443b9a69198e945eabac88f",
+  "jobs": [
+    {
+      "conclusion": "success",
+      "name": "ailang-code verify gate",
+      "status": "completed",
+      "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38163912112/job/114542371541"
+    },
+    {
+      "conclusion": "success",
+      "name": "go host build + test gate",
+      "status": "completed",
+      "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38163912112/job/114542371661"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38163912112",
+  "recorded_at_utc": "2026-10-11T19:15:06.744136+00:00",
+  "scope": "Earlier ADMIN handoff ba79d1e only; not CI or product landing of candidate/repeat evidence",
+  "required_jobs_present_and_success": true
+}

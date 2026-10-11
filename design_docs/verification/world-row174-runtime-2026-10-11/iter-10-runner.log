@@ -1,0 +1,50 @@
+canary codex/shell: PASS att=[] 17242 ms
+codex/shell/api_call_json: PASS none 25522 ms $None att=[] prov=None r153=None
+codex/shell/cli_args: PASS none 34202 ms $None att=[] prov=None r153=None
+codex/shell/effect_tracking_io_fs: PASS none 15418 ms $None att=[] prov=None r153=None
+codex/shell/higher_order_functions: PASS none 12552 ms $None att=[] prov=None r153=None
+codex/shell/pipeline: PASS none 13419 ms $None att=[] prov=None r153=None
+codex/shell/prompt_injection: PASS none 10446 ms $None att=[] prov=None r153=None
+canary codex/world: PASS att=[] 14213 ms
+codex/world/api_call_json: PASS none 24475 ms $None att=[] prov=world r153=0
+codex/world/cli_args: PASS none 25866 ms $None att=[] prov=world r153=0
+codex/world/effect_tracking_io_fs: PASS none 19317 ms $None att=[] prov=world r153=0
+codex/world/higher_order_functions: PASS none 16198 ms $None att=[] prov=world r153=0
+codex/world/pipeline: PASS none 11470 ms $None att=[] prov=world r153=0
+codex/world/prompt_injection: PASS none 16478 ms $None att=[] prov=world r153=0
+{
+ "summary": {
+  "codex": {
+   "T": 6,
+   "pass_S": 6,
+   "pass_W": 6,
+   "delta": 0.0,
+   "O": 0.1059,
+   "o_t": {
+    "api_call_json": -0.041,
+    "cli_args": -0.244,
+    "effect_tracking_io_fs": 0.253,
+    "higher_order_functions": 0.29,
+    "pipeline": -0.145,
+    "prompt_injection": 0.577
+   },
+   "harness_faults": {
+    "shell": 0,
+    "world": 0
+   },
+   "capacity_reruns": 0,
+   "unclassified": 0
+  }
+ },
+ "row153": {
+  "codex": {
+   "task_runs": 6,
+   "runs_with_callback_timeout": 0,
+   "callback_timeouts": 0,
+   "daemon_deadline_lines": 0
+  }
+ },
+ "spend": 0.0,
+ "wall_s": 260.9,
+ "status": "complete"
+}
