@@ -1,0 +1,64 @@
+{
+  "files": [
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/CONTINUE.md",
+      "bytes": 3400,
+      "sha256": "7ed0e25ff5e060cb658ba7f7fe16de75249c9d1e661001b353c1675f45379dd5"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-abort.json",
+      "bytes": 1306,
+      "sha256": "0dd9f930ace11e0cc73151ad4482f62d2990906064d47f9cc5a4fef40f008e8b"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-preflight/fl-tune-cc-tools-list.canonical.json",
+      "bytes": 13947,
+      "sha256": "4b41e4a345a60df2b88ca625b4846147e441a6b44154a4588e1f4796349ddd75"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-preflight/fl-tune-cc-tools-list.sse",
+      "bytes": 14054,
+      "sha256": "51c1612235f1f0cf8de54d186ba748bf2d7d59465b4efe93f6766fed78ec887a"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-preflight/fl-tune-cx-tools-list.canonical.json",
+      "bytes": 13947,
+      "sha256": "4b41e4a345a60df2b88ca625b4846147e441a6b44154a4588e1f4796349ddd75"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-preflight/fl-tune-cx-tools-list.sse",
+      "bytes": 14054,
+      "sha256": "51c1612235f1f0cf8de54d186ba748bf2d7d59465b4efe93f6766fed78ec887a"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/baseline-preflight/runtime.json",
+      "bytes": 7248,
+      "sha256": "b109a603685749f2a33f807b188284527220c987eb692bdbbc6870c98e118413"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/capture-runtime.py",
+      "bytes": 4228,
+      "sha256": "6475d4dc07f5dd5ab40e26b8d1610ed1056856897e23293011e78e2d24e35cdb"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-6-runner.log",
+      "bytes": 166,
+      "sha256": "efce8894f5a3c7c44aea11aefbdf61c3cf39d31c3d1ef8408f3df391329fc3a1"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-6-transcripts/canary-claude-shell-fizzbuzz.jsonl",
+      "bytes": 4007,
+      "sha256": "fffd1da598603529a3238b20bdec8ec1784b122aafbccd7d70dd2219f805053f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-6-transcripts/canary-claude-shell-fizzbuzz.jsonl.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/token-scan.json",
+      "bytes": 69,
+      "sha256": "7984fca97130a6c4c904e80d97f73c88c04673e9981121c2ace2e81ef0838f79"
+    }
+  ]
+}
