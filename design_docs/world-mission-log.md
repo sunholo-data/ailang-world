@@ -954,3 +954,52 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** 1.0: clauses 4/5 UNMET, 1/2/3/6/7 MET; goal unmoved.
 
 **Next:** attended 93 M5 FINAL → 114 → 139. D-WORLD-69 A authorizes 26 → 105 → 172 → 150 only when the critical path is unroutable; B explicitly narrows 150, still through normal gates. Unanswered: 150 stays PARKED immediately, 151 cannot leapfrog. Row 173 separately needs the measured fleet PNG-gate resolution; row 159 waits on upstream #1602 + a release carrying the typed-error hook.
+
+## 250 — 2026-10-11 — row174 PARKED: inherited third FAIL68 requires bounded follow-up approval; all four Agent roles, independent ADMIN judge; D-WORLD-71 OPEN [ADMIN]
+
+**Kind:** Existing candidate gate assessment and bookkeeping. No product implementation, fourth repair/review, benchmark inference, publication, mint, scope amendment or human self-resolution.
+
+**Pick and why:** Row174 is the D-WORLD-70 critical-path head. Gate2 traces discovered its existing attended candidate at82f4283 and three failed reviews; preserve and assess it rather than duplicate the eight-description compaction. Clause map:1 MET;2 MET;3 MET;4 UNMET —174 needs D71 approval then measured M2 efficacy,93 needs a new attended FINAL after174;5 UNMET —114 follows93 and139 follows114;6 MET;7 MET. D69 makes26→105→172→150 independently admissible while no critical row is routable; this bounded iteration selects no second product.
+
+**Design:** Required native designer independently read existing design/plan, progress, proposed follow-up and normal red. PARK_NEEDS_HUMAN_REVIEW receipt. No new design or quorum needed for this ADMIN disposition; existing proposal remains unapproved. Twelve decision-bearing inherited files banked byte-exact from attended HEAD; SHA manifest and persistent verified git bundle preserve the full candidate beyond its /tmp checkout.
+
+**Quorum:** N/A — bookkeeping-only gate assessment; no new/revised product design or freeze routed. No quorum PASS is invented.
+
+**Plan:** Required native planner derives `codex:gpt-6.1-sol declared:planner-lane-default-pin`, identifies exact YES/NO follow-up and separate human terminal fences. No new sprint plan/handoff. D69 exception path confirmed available, not silently removed by the park.
+
+**Execution:** Required native executor verifies all five recorded product hashes, unchanged exec-timeout test/handler and exactly eight description-only manifest changes; all28 tracked AIL sources unchanged from parent. No source edits/tests/inference by this iteration. Root independently recomputes final normal-log hash and checks snapshot hashes and original ledger/queue preservation.
+
+**Judge:** REQUIRED fresh separate-context native GPT6.1Sol, under amendedD48 fallback; FLAG judge-independence:same-model-fresh-context. Independently ACCEPTS ADMIN park/preflight, score N/A, zero blocking. Its scope excludes any fourth product review or acceptance: inherited product round3 remains FAIL68. Terminal record review is required before shipping. Report `verification/world-iter250/evaluator.md`.
+
+**CI:** Gate1 exact origin5ca111547fdd80480a8d42578fb59942ee8a0b63 run37910776771 completed success, expected2/present2, both jobs green and no non-success steps. Product candidate's prior full normal plain rc1 on TestExecHandlerTimeoutKillsTheGroup, race NOT_REACHED, remains a real blocker; current dev CI green is no waiver. This docs-only record requires its own exact-head remote CI before merge and exact-merge CI; final shipping receipts reported on the bookkeeping issue. No broad local product-suite PASS claimed.
+
+**Gate 0:** World armed; GitHub fleet account; Anthropic billing CLEAN; canonical Firestore mission-world unread list empty. Allowlisted directive helper from absolute driver root:0 of39 comments since2026-10-05T12:46:05Z; crash self-read rc0 with control107:4. Initial authoritative ledger57 rows/ZERO OPEN; final58 rows/ONE OPEN D71. Dual issue/world watermarks updated to newest processed2026-10-11T00:54:40Z. Current issue202 created after this week's Monday07:00-local boundary,39 comments: no rotation/sweep due. Runtime source and all12 skill resource files match fleet origin; World has no local skill copies.
+
+**Gate 1 / attended rulings:** Local shareddev84e5322 was six commits behind origin5ca1115; work performed in a sibling record tree pinned to full Gate1 base. D69 andD70 directly recorded attended A rulings acknowledged without re-asking, rewriting or self-resolution. D70 records FINAL FAILS, unchanged bar,174 priority. Existing row174 attended branch and all shared/old worktrees untouched. External row159 predicate flipped: upstream1602 CLOSED; releasedv0.54.4 methods.go now preserves coded error via errors.As(protocol.JSONRPCError), nonzero code/nonempty message, while old isError/CallbackMessage-only matcher misses this hook. Reclassify as externally delivered but unranked underD46/D69; no unapproved pin bump or priority jump. Row173 fleet PNG ticket remains open.
+
+**Orphan credit:** Iteration249 worktree/evaluator branch contains e5ec562 and three role preflight receipts, no terminal verdict/log/index on origin. Its D69-OPEN/FINAL-absent premises belonged to39aa488 and are superseded by attended origin. No driver death signal in current window; cause UNKNOWN. Credit the residue once here, preserve it, do not claim completed or adopt its stale pick.
+
+**Routing evidence:** base=5ca111547fdd80480a8d42578fb59942ee8a0b63@2026-10-11T04:59:38Z.
+- Controller `codex:gpt-6.1-sol` (tok: not reported).
+- Designer native Agent `gpt-6.1-sol` (tok: not reported), resolver `recipe codex:gpt-6.1-sol declared:provider-pin`.
+- Planner native Agent `gpt-6.1-sol` (tok: not reported), resolver/derive `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`.
+- Executor native Agent `gpt-6.1-sol` (tok: not reported), resolver `recipe codex:gpt-6.1-sol declared:provider-pin`.
+- Evaluator preferred native spawn `pi:openrouter/minimax/minimax-m3` FAILED: `Unknown model` (available native models: gpt-6.1-sol,gpt-6-astra,gpt-6-sol,gpt-6-luna,gpt-5.6-sol). Actual fallback native Agent `gpt-6.1-sol` (tok: not reported), fresh separate context, amendedD48, FLAG same-model-fresh-context. No judge omitted; no controller landing verdict substituted.
+- Native transport for all roles follows this fire's explicit operator Agent-tool request over recipe transport; chosen model pins for first three roles match resolver. Runtime weight attestation unavailable; no CLI-probe/recipe execution claimed. Designer assessment creates no doc, so rotation pointer not advanced.
+- Metered=$0; native subscription counts unavailable, not fabricated as zero consumption. Driver note reproduced verbatim in controller-checks.json and digest; primary designer/evaluator Anthropic ration reroutes retained.
+
+**Ruled out:**
+- Repeating row174 design/implementation: existing clean attended candidate and review history found by traces.
+- Re-asking D69/D70: both RESOLVED attended at current origin; stale local receipts are not current authority.
+- Fourth repair/review on controller authority: Gate3 max3 explicitly requires human review after FAIL3.
+- Baseline20PASS, narrower descriptor/fixture greens or origin CI as a waiver: none discharges the failed full normal gate.
+- Metadata byte compaction as runtime efficacy: fresh baseline/candidate/repeat M2 NOT_RUN.
+- Claiming all product work barred: D69 permits its separately gated release-prerequisite exception.
+- Treating native evaluator error as no judge: recorded actual error and ran required separate fallback.
+- Continuing old row159 external blocker: directly measured new released coded-error hook.
+
+**Retro:** Existing attended work outside origin changes the pick; recording its inherited failure is legitimate progress in the mission memory. Actual native model capabilities differ from provider:model routing strings; explicit error and flagged fallback preserve independent review. A failed shorthand row166 snapshot path was corrected from the actual file census before bank claims; no missing-file claim propagated. Fleet rotate-log resolved its registered main checkout, ignoring worktree CWD; its duplicate preamble write was saved and exactly reversed against the previously clean main HEAD. No archive/index change there. This isolated index row is added manually per charter, no rotation owed (21 live entries <40). No shared skill/harness repair or policy change. Last20 harness share and last3 bar-moving landing audit are in controller-checks.json: no critical row routable, D69 release path retained, no attended regroom change inferred.
+
+**Progress:** 1.0: clauses4 and5 unmet; goal unmoved.
+
+**Next:** D71 YES/NO on the existing bounded fixture follow-up; default row174 parked. While it waits, next independently gated D69 exception row26, then105 then172→150; after174 efficacy/landing, new attended93 FINAL, then114→139.

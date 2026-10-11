@@ -1,0 +1,45 @@
+{
+  "base": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "base_read_at": "2026-10-11T04:59:38Z",
+  "inherited_snapshot_files_verified": 12,
+  "final_normal_log_sha256": "ef4d069a420c6791c5eac72febd134b6614562cd84a24e8eb98a5024bb59ebbc",
+  "inherited_full_normal_returncode": 1,
+  "inherited_race": "NOT_REACHED",
+  "live_product_tests_this_iteration": "NOT_RUN: records-only disposition, no code candidate being landed",
+  "ledger_rows_preserved": 57,
+  "queue_ids_preserved": 176,
+  "harness_share": {
+    "harness": 2,
+    "iterations": 20,
+    "entries": [
+      "| 240 | 2026-10-07 | required planner/judge native pins rejected again; PARKED-ON-LANE all; fleet occurrence filed; UNJUDGED draft #226 [HARNESS] |",
+      "| 239 | 2026-10-07 | row 152 reality-check TRUE; PARKED-ON-LANE: native Agent lacks required planner/judge pins; fleet ticket filed; UNJUDGED draft only [HARNESS] |"
+    ]
+  },
+  "last3_product_landings": [
+    {
+      "iteration": 245,
+      "unmet_clause_moved": "none"
+    },
+    {
+      "iteration": 243,
+      "unmet_clause_moved": "none"
+    },
+    {
+      "iteration": 242,
+      "unmet_clause_moved": "none; prerequisite improvement only"
+    }
+  ],
+  "routing_note": "controller pi:ollama/glm-5.3:cloud \u2192 codex:gpt-6.1-sol (probe ok); lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "preferred_native_evaluator_error": "Unknown model `pi:openrouter/minimax/minimax-m3` for spawn_agent. Available models: gpt-6.1-sol, gpt-6-astra, gpt-6-sol, gpt-6-luna, gpt-5.6-sol",
+  "fallback_evaluator": "gpt-6.1-sol native Agent in fresh separate context; D-WORLD-48; FLAG same-model-fresh-context",
+  "token_reporting": "native Agent/provider token counts unavailable; not reported, not zero",
+  "metered_usd": 0,
+  "skill_directory_comparison": "SKILL.md and all12 resource files MATCH shared origin/dev; World has no local skill directory",
+  "source_candidate_bundle": {
+    "path": "/Users/voightkampff/.ailang/state/mission-world-iter250/row174-attended.bundle",
+    "sha256": "0394be260ffc9a67a3150739660b4847a5f0ec4f0374d791cd09959634d222cf",
+    "note": "Persistent local git bundle; no product landing; prerequisite base required."
+  },
+  "rotate_log_scope": "CLI resolved registered main checkout rather than isolated CWD; only duplicate preamble written, backed up and reversed byte-exact against initially clean HEAD; manual isolated index entry per charter"
+}
