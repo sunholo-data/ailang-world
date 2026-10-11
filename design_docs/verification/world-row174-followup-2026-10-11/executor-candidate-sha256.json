@@ -1,0 +1,9 @@
+{
+  "parent": "61d12f7513143d568f9706d589b1b776ce4be93d",
+  "isolated_copy": "/private/tmp/ailang-world-exec-timeout-mutants-20261011",
+  "sha256": {
+    "host/broker/handlers_exec_m2_test.go": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+    "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c"
+  },
+  "scope": "Only target test body and six required imports; 800-line generic size FLAG, no World CI size gate, no new helper or production edit"
+}

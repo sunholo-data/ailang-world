@@ -1,0 +1,20 @@
+--- host/broker/handlers.go
++++ host/broker/handlers.go (isolated mutant)
+@@ -153,7 +153,7 @@
+ // by truncation.
+ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) ([]byte, error) {
+ 	bounds = bounds.normalized()
+-	runCtx, cancel := context.WithTimeout(ctx, bounds.execTimeout)
++	runCtx, cancel := context.WithCancel(ctx)
+ 	defer cancel()
+ 
+ 	cmd := exec.CommandContext(runCtx, spec.path, spec.args...)
+@@ -314,7 +314,7 @@
+ 		}
+ 		return nil, fmt.Errorf("broker: start handler subprocess: %w", err)
+ 	}
+-	cleanupDeadline := time.Now().Add(bounds.execTimeout + 2*pipeCloseGrace)
++	cleanupDeadline := func() time.Time { d, ok := runCtx.Deadline(); if !ok { panic("mutation requires finite caller deadline") }; return d.Add(-pipeCloseGrace) }()
+ 	done := make(chan error, 1)
+ 	go func() { done <- procbound.Wait(cmd.Wait, time.Until(cleanupDeadline), release) }()
+ 	var waitErr error

@@ -1,0 +1,10 @@
+--- host/broker/handlers.go
++++ host/broker/handlers.go (isolated mutant)
+@@ -324,6 +324,7 @@
+ 	case waitErr = <-done:
+ 	}
+ 	if waitErr != nil && runCtx.Err() == context.DeadlineExceeded {
++		c.stderr = newHeadTailSink(execHeadBytes, execTailBytes, c.hardCap, nil)
+ 		if errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
+ 			return nil, errors.Join(&HandlerTimeoutError{Timeout: bounds.execTimeout}, waitErr)
+ 		}

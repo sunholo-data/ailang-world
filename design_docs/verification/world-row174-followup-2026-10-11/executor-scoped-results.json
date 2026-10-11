@@ -1,0 +1,337 @@
+{
+  "status": "Scoped implementation complete; full normal gate and fresh review pending; M1 acceptance and M2 pending",
+  "source_sha256": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+  "candidate_and_mutation_copy_exact_restored": {
+    "host/broker/handlers_exec_m2_test.go": "238cf6c35ab2761349e8f013b40e7fa4524fe7c42696d5aefe5bd1102073a93c",
+    "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c"
+  },
+  "normal_repetitions": [
+    {
+      "log": "executor-focused-count10.log",
+      "log_sha256": "760730a552d7c24489dbe3e7608b526bc1dce95d39d91997c10ee04879c2a87d",
+      "command": "go test ./host/broker -run '^TestExecHandlerTimeoutKillsTheGroup$' -v -count=10 -timeout=600s",
+      "returncode": 0,
+      "runs": 10,
+      "passes": 10,
+      "failures": 0,
+      "skips": 0,
+      "race_reports": 0,
+      "elapsed": "26.729s",
+      "trials": [
+        {
+          "trial": 1,
+          "calibration": {
+            "C": "267.440667ms",
+            "B": "2.268s",
+            "H": "9s",
+            "R": "29.589449083s",
+            "grace": "1s"
+          },
+          "leader": 13821,
+          "children": [
+            13824,
+            13825
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 2,
+          "calibration": {
+            "C": "242.495375ms",
+            "B": "2.243s",
+            "H": "9s",
+            "R": "29.671815833s",
+            "grace": "1s"
+          },
+          "leader": 13897,
+          "children": [
+            13900,
+            13901
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 3,
+          "calibration": {
+            "C": "271.9495ms",
+            "B": "2.272s",
+            "H": "9s",
+            "R": "29.63012825s",
+            "grace": "1s"
+          },
+          "leader": 13950,
+          "children": [
+            13953,
+            13954
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 4,
+          "calibration": {
+            "C": "252.054ms",
+            "B": "2.253s",
+            "H": "9s",
+            "R": "29.649572834s",
+            "grace": "1s"
+          },
+          "leader": 14021,
+          "children": [
+            14024,
+            14025
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 5,
+          "calibration": {
+            "C": "251.651208ms",
+            "B": "2.252s",
+            "H": "9s",
+            "R": "29.657134209s",
+            "grace": "1s"
+          },
+          "leader": 14086,
+          "children": [
+            14090,
+            14091
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 6,
+          "calibration": {
+            "C": "254.3545ms",
+            "B": "2.255s",
+            "H": "9s",
+            "R": "29.641919167s",
+            "grace": "1s"
+          },
+          "leader": 14141,
+          "children": [
+            14144,
+            14145
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 7,
+          "calibration": {
+            "C": "257.521042ms",
+            "B": "2.258s",
+            "H": "9s",
+            "R": "29.654280417s",
+            "grace": "1s"
+          },
+          "leader": 14235,
+          "children": [
+            14238,
+            14239
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 8,
+          "calibration": {
+            "C": "254.788542ms",
+            "B": "2.255s",
+            "H": "9s",
+            "R": "29.647376125s",
+            "grace": "1s"
+          },
+          "leader": 14317,
+          "children": [
+            14320,
+            14321
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 9,
+          "calibration": {
+            "C": "262.505333ms",
+            "B": "2.263s",
+            "H": "9s",
+            "R": "29.64763625s",
+            "grace": "1s"
+          },
+          "leader": 14384,
+          "children": [
+            14387,
+            14388
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 10,
+          "calibration": {
+            "C": "261.854792ms",
+            "B": "2.262s",
+            "H": "9s",
+            "R": "29.643376959s",
+            "grace": "1s"
+          },
+          "leader": 14450,
+          "children": [
+            14453,
+            14454
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        }
+      ]
+    },
+    {
+      "log": "executor-focused-race-count5.log",
+      "log_sha256": "023b66683ab4835c4922a53aeeffe2770391987fca5a49704b988f37c5171ba5",
+      "command": "go test -race ./host/broker -run '^TestExecHandlerTimeoutKillsTheGroup$' -v -count=5 -timeout=600s",
+      "returncode": 0,
+      "runs": 5,
+      "passes": 5,
+      "failures": 0,
+      "skips": 0,
+      "race_reports": 0,
+      "elapsed": "14.572s",
+      "trials": [
+        {
+          "trial": 1,
+          "calibration": {
+            "C": "242.675084ms",
+            "B": "2.243s",
+            "H": "9s",
+            "R": "29.639692708s",
+            "grace": "1s"
+          },
+          "leader": 17279,
+          "children": [
+            17282,
+            17283
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 2,
+          "calibration": {
+            "C": "254.097125ms",
+            "B": "2.255s",
+            "H": "9s",
+            "R": "29.646255625s",
+            "grace": "1s"
+          },
+          "leader": 17389,
+          "children": [
+            17392,
+            17393
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 3,
+          "calibration": {
+            "C": "260.138041ms",
+            "B": "2.261s",
+            "H": "9s",
+            "R": "29.647432s",
+            "grace": "1s"
+          },
+          "leader": 17441,
+          "children": [
+            17445,
+            17446
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 4,
+          "calibration": {
+            "C": "256.683708ms",
+            "B": "2.257s",
+            "H": "9s",
+            "R": "29.652132583s",
+            "grace": "1s"
+          },
+          "leader": 17499,
+          "children": [
+            17502,
+            17503
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        },
+        {
+          "trial": 5,
+          "calibration": {
+            "C": "251.066083ms",
+            "B": "2.252s",
+            "H": "9s",
+            "R": "29.640286417s",
+            "grace": "1s"
+          },
+          "leader": 17586,
+          "children": [
+            17589,
+            17590
+          ],
+          "child_readiness_live_same_pgid": true,
+          "outstanding_baseline": 0,
+          "completed_callbacks_before_restore": 1,
+          "children_confirmed_not_live": 2
+        }
+      ]
+    }
+  ],
+  "four_mutation_results": "executor-mutations.json",
+  "four_mutation_manifest_sha256": "d65b8c85b3bd4ed19e57566754850eb96976d0a4c81b3ff1e01202c97e6770f7",
+  "source_equivalence": "executor-source-equivalence.json",
+  "diff": "executor-product.diff",
+  "scope": "Only existing TestExecHandlerTimeoutKillsTheGroup body and necessary imports",
+  "loc": {
+    "added": 295,
+    "removed": 10,
+    "final_lines": 852,
+    "estimate": 220,
+    "flag": "Generic >800-line SIZE FLAG; no shared-helper or threshold changes"
+  },
+  "cleanup": "Every final normal/race trial observed two specific children alive in leader PGID before real kill; confirmed both not live and Outstanding baseline=0; one callback completed and joined before seam restoration. Four mutant and restored runs carry equivalent cleanup logs (natural mutant: no callback).",
+  "limitations": "No full gate or fresh review run by executor; no publish/mint/provider inference, no performance or row174 completion claim. D-WORLD-48 native inherited model fallback FLAG; exact model attestation unavailable."
+}
