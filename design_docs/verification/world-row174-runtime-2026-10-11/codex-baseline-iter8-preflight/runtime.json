@@ -1,0 +1,226 @@
+{
+  "checkout": "/private/tmp/ailang-world-row174-baseline-20261010",
+  "commit": "4facca274851720d0052523f2acb7bb5e22c3aec",
+  "health": [
+    200,
+    {
+      "daemon_version": "0.1.0",
+      "db_path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig/store/world.db",
+      "interpreter_ref": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+      "interpreter_version": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+      "status": "ok"
+    }
+  ],
+  "label": "codex-only-baseline-default-port",
+  "load_average": [
+    8.95361328125,
+    9.92333984375,
+    10.68408203125
+  ],
+  "metadata": {
+    "fl-tune-cc": {
+      "canonical_bytes": 13947,
+      "canonical_sha256": "4b41e4a345a60df2b88ca625b4846147e441a6b44154a4588e1f4796349ddd75",
+      "content_type": "text/event-stream",
+      "description_bytes": 7430,
+      "wire_bytes": 14054,
+      "wire_sha256": "51c1612235f1f0cf8de54d186ba748bf2d7d59465b4efe93f6766fed78ec887a"
+    },
+    "fl-tune-cx": {
+      "canonical_bytes": 13947,
+      "canonical_sha256": "4b41e4a345a60df2b88ca625b4846147e441a6b44154a4588e1f4796349ddd75",
+      "content_type": "text/event-stream",
+      "description_bytes": 7430,
+      "wire_bytes": 14054,
+      "wire_sha256": "51c1612235f1f0cf8de54d186ba748bf2d7d59465b4efe93f6766fed78ec887a"
+    }
+  },
+  "preflight": {
+    "fl-tune-cc": {
+      "health": {
+        "daemon_version": "0.1.0",
+        "interpreter_ref": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+        "status": "ok"
+      },
+      "tools": [
+        "ailang-check",
+        "ailang-cli",
+        "ailang-edit",
+        "ailang-read",
+        "ailang-run",
+        "ailang-write",
+        "builtins-search",
+        "examples-search"
+      ]
+    },
+    "fl-tune-cx": {
+      "health": {
+        "daemon_version": "0.1.0",
+        "interpreter_ref": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+        "status": "ok"
+      },
+      "tools": [
+        "ailang-check",
+        "ailang-cli",
+        "ailang-edit",
+        "ailang-read",
+        "ailang-run",
+        "ailang-write",
+        "builtins-search",
+        "examples-search"
+      ]
+    }
+  },
+  "recorded_at_utc": "2026-10-11T18:44:39.467559+00:00",
+  "rig": "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig",
+  "serve_argv": [
+    "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig/bin/ailang-worldd",
+    "serve",
+    "--db",
+    "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig/store/world.db",
+    "--bind",
+    "127.0.0.1:7644",
+    "--ailang-bin",
+    "/Users/voightkampff/.pinned-ailang/ailang",
+    "--workspace-root",
+    "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig/ws",
+    "--tool-ailang-bin",
+    "/Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang",
+    "--examples-dir",
+    "/Users/voightkampff/.ailang/examples",
+    "--run-allow-caps",
+    "Env,Net,Declassify",
+    "--run-net-allow",
+    "127.0.0.1:7655",
+    "--run-net-allow-http"
+  ],
+  "sessions": [
+    {
+      "created_at": 1791743401,
+      "credential_id": "96b5cf85c915f85cde2a29ac555d7a73c8ba627b11a549d9d32be04cbfe1398d",
+      "episode_id": "fl-tune-cc",
+      "expires_at": 1791786601,
+      "grants": [
+        {
+          "Budget": 5000,
+          "Effect": "Workspace.Read",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Workspace.Write",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.Check",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.Run",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.RunEnv",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.RunNet",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.Discover",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.CLI",
+          "ExpiresAt": 1791786601,
+          "Scope": "worktree"
+        }
+      ]
+    },
+    {
+      "created_at": 1791743408,
+      "credential_id": "b2ea9b005b0cdea7b522f1be8ce2b8157c69bb4b2b1ddaceaab462f7a9b22a00",
+      "episode_id": "fl-tune-cx",
+      "expires_at": 1791786608,
+      "grants": [
+        {
+          "Budget": 5000,
+          "Effect": "Workspace.Read",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Workspace.Write",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.Check",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.Run",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.RunEnv",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.RunNet",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.Discover",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        },
+        {
+          "Budget": 5000,
+          "Effect": "Ailang.CLI",
+          "ExpiresAt": 1791786608,
+          "Scope": "worktree"
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "daemon": "b1e85f682ad2c8069188fec46113d8ac53dbba58b1b3fd3c39f4f730553e988a",
+    "floor_config": "a0bf41172eda31bfd7c1e409475416da1851775d426ac3b31ce9013fd995eebc",
+    "interpreter": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+    "manifest": "240840ca9a0f8f4c60ac159dd78fce26a6c681200e8a10c64fe0e08c0a228868",
+    "publisher": "d82eb9fa18ff3f442cce8502b12ebd15b8f15d2b1e1f2980adef8655b8d37256",
+    "runner": "46d513f9534d581915718c92d6fd41a99098be629f4ed212c98dd2cfd4d8bc60",
+    "tool": "0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5"
+  },
+  "versions": {
+    "claude": "2.1.295 (Claude Code)",
+    "codex": "codex-cli 0.162.0",
+    "interpreter": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026",
+    "tool": "AILANG v0.52.1\nCommit: c68ded4\nFull:   c68ded4b2d5e397d3719b32d6be591ad6fcd1bf8\nBuilt:  2026-10-03T09:18:58Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026"
+  }
+}

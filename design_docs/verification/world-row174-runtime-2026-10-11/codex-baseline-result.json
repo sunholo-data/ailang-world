@@ -1,0 +1,55 @@
+{
+  "address": "127.0.0.1:7644",
+  "candidate_publication": "UNRUN; prepared human-typed helper",
+  "codex_tokens": 3796730,
+  "interpretation": "Original manifest baseline only; +9.68% cheap-model smoke overhead does not establish descriptor-patch efficacy or replace historical FINAL Sol+26.6% failure.",
+  "iteration": 8,
+  "model": "gpt-6-luna",
+  "next_unused_iteration": 9,
+  "planned_candidate_iteration": 9,
+  "planned_unchanged_repeat_iteration": 10,
+  "prior_attempts": [
+    {
+      "iteration": 6,
+      "status": "aborted Claude weekly limit"
+    },
+    {
+      "iteration": 7,
+      "status": "aborted agent/daemon endpoint mismatch; six shell tasks passed"
+    }
+  ],
+  "recorded_at_utc": "2026-10-11T18:49:46.475566+00:00",
+  "row153": {
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    }
+  },
+  "runner_exit_code": 0,
+  "scope": "partial Codex diagnostic; full M2 pending",
+  "status": "COMPLETE_CODEX_ONLY_BASELINE",
+  "summary": {
+    "O": 0.0968,
+    "T": 6,
+    "capacity_reruns": 0,
+    "delta": 0.0,
+    "harness_faults": {
+      "shell": 0,
+      "world": 0
+    },
+    "o_t": {
+      "api_call_json": -0.17,
+      "cli_args": -0.361,
+      "effect_tracking_io_fs": 0.807,
+      "higher_order_functions": 0.222,
+      "pipeline": 0.566,
+      "prompt_injection": -0.028
+    },
+    "pass_S": 6,
+    "pass_W": 6,
+    "unclassified": 0
+  },
+  "wall_s": 222.6
+}
