@@ -1,0 +1,31 @@
+canary codex/shell: PASS att=[] 19289 ms
+codex/shell/api_call_json: PASS none 15256 ms $None att=[] prov=None r153=None
+codex/shell/cli_args: PASS none 20102 ms $None att=[] prov=None r153=None
+codex/shell/effect_tracking_io_fs: PASS none 14508 ms $None att=[] prov=None r153=None
+codex/shell/higher_order_functions: PASS none 10835 ms $None att=[] prov=None r153=None
+codex/shell/pipeline: PASS none 15176 ms $None att=[] prov=None r153=None
+codex/shell/prompt_injection: PASS none 12458 ms $None att=[] prov=None r153=None
+canary codex/world: FAIL att=[] 1645 ms
+ABORT: canary codex/world did not pass (FAIL api_error); investigate before spending the phase (or --canary-fail-ok)
+{
+ "summary": {
+  "codex": {
+   "T": 6,
+   "pass_S": 6,
+   "pass_W": 0,
+   "delta": -1.0,
+   "O": null,
+   "o_t": {},
+   "harness_faults": {
+    "shell": 0,
+    "world": 0
+   },
+   "capacity_reruns": 0,
+   "unclassified": 0
+  }
+ },
+ "row153": {},
+ "spend": 0.0,
+ "wall_s": 112.9,
+ "status": "aborted"
+}

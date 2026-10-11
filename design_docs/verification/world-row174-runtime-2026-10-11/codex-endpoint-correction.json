@@ -1,0 +1,18 @@
+{
+  "recorded_at_utc": "2026-10-11T18:44:24.465631+00:00",
+  "consumed_iteration": 7,
+  "runner_exit_code": 4,
+  "shell_tasks_passed": 6,
+  "world_tasks_run": 0,
+  "cause": "runner --addr7646 reaches daemon/preflight, but run_cell omits addr when calling run_agent; agent MCP argv uses arms.DEFAULT_ADDR7644",
+  "evidence": "run.py run_cell call; run_task.py run_agent addr default; arms.py DEFAULT_ADDR; recorded failing canary argv and cause_evidence",
+  "correction": "Run unchanged harness with canonical default 127.0.0.1:7644; confirmed no listener on7644 or7646",
+  "retry_policy": "New iteration8, all Codex shell/World rows fresh. This is a new explicitly recorded endpoint correction attempt, not an in-place task retry or capacity-policy exception.",
+  "models_config_tasks_grader_N_thresholds": "unchanged",
+  "planned_iterations": {
+    "baseline": 8,
+    "candidate": 9,
+    "repeat": 10
+  },
+  "efficacy": "no overhead inferable from missing World rows; original M2 acceptance remains pending"
+}
