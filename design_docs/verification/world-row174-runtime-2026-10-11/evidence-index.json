@@ -2,8 +2,8 @@
   "files": [
     {
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/CODEX-CONTINUE.md",
-      "bytes": 3949,
-      "sha256": "4ff5b67e160cfa6697fee90ce7209ad664694c1c96c174b0e08345c353cc1776"
+      "bytes": 4554,
+      "sha256": "8462d3a0efb688519be607f03a15496d7ba77b491e7710577b8b3bc2ba2f2224"
     },
     {
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/CONTINUE.md",
@@ -109,6 +109,36 @@
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-baseline-result.json",
       "bytes": 1475,
       "sha256": "3cefbdc4d80cce5347c4333c78b7d2bdca94af0affed254094a94d4d55401fd7"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-candidate-iter9-preflight/fl-tune-cc-tools-list.canonical.json",
+      "bytes": 10301,
+      "sha256": "267d8aef5d4e911ab989fae6e04e5639df4faacce424d488f1effbe940600ce6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-candidate-iter9-preflight/fl-tune-cc-tools-list.sse",
+      "bytes": 10368,
+      "sha256": "95c65d9d09262d70b085842d4877542fb739722159493a59af6f036a2ecef9cc"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-candidate-iter9-preflight/fl-tune-cx-tools-list.canonical.json",
+      "bytes": 10301,
+      "sha256": "267d8aef5d4e911ab989fae6e04e5639df4faacce424d488f1effbe940600ce6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-candidate-iter9-preflight/fl-tune-cx-tools-list.sse",
+      "bytes": 10368,
+      "sha256": "95c65d9d09262d70b085842d4877542fb739722159493a59af6f036a2ecef9cc"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-candidate-iter9-preflight/runtime.json",
+      "bytes": 7250,
+      "sha256": "e7b5b19d647c65a71b4a8b8435dcc519675cb041285a4ffaf19fdda441be35c6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-candidate-iter9-result.json",
+      "bytes": 3913,
+      "sha256": "4ab26f7b41cd6091287d00f4e891feb3a02d0b095b6d08dbec2ebe1848c55d10"
     },
     {
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/codex-endpoint-correction.json",
@@ -362,6 +392,151 @@
     },
     {
       "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-8-transcripts/iter8-codex-world-prompt_injection.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-runner.log",
+      "bytes": 1655,
+      "sha256": "eba2d7fb39ac889839974943b57be3678a53d2ab3ce6823b9d06660d7ea859c7"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/canary-codex-shell-fizzbuzz.jsonl",
+      "bytes": 2901,
+      "sha256": "89defc5b6a6a42b50e343197e93a4e6daf81d1ef24b40a534f20c7010933e349"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/canary-codex-shell-fizzbuzz.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/canary-codex-world-fizzbuzz.jsonl",
+      "bytes": 9554,
+      "sha256": "1f7a5b3bfbc19cf7c46b5e76f5ff6a243351e94b0779a7e457efd9fb77fa9cbd"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/canary-codex-world-fizzbuzz.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-api_call_json.jsonl",
+      "bytes": 8144,
+      "sha256": "76af609462bb359e7fc77c53937fecc72e5d7cbda4ee2f4094b11af0bbb88c5d"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-api_call_json.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-cli_args.jsonl",
+      "bytes": 12064,
+      "sha256": "7baf58035f7eafa0b949c84b396a5a916ae39d0e771773f30fab7327ba9d2eea"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-cli_args.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-effect_tracking_io_fs.jsonl",
+      "bytes": 2475,
+      "sha256": "db7d6e07506d932948a4a3c2012c112ee565a866a541741b35e890f327b2831b"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-effect_tracking_io_fs.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-higher_order_functions.jsonl",
+      "bytes": 2855,
+      "sha256": "d380063878f4179df564555da1da021d57f9cddf54ff7dbd6686f28c3200a64b"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-higher_order_functions.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-pipeline.jsonl",
+      "bytes": 3704,
+      "sha256": "aab1b2e3c3c310a80b25f7745bf56de5b592c48438a26493c1c6fb373f8c4e53"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-pipeline.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-prompt_injection.jsonl",
+      "bytes": 2791,
+      "sha256": "6ad08f9f828728424457856f761bbe91841f315272fed0d49e2b8cb77cf40bfa"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-shell-prompt_injection.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-api_call_json.jsonl",
+      "bytes": 16113,
+      "sha256": "d6a50de49cb39357287ad94c4c93e48b7c9b465210fda7b24939a18e38354268"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-api_call_json.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-cli_args.jsonl",
+      "bytes": 10055,
+      "sha256": "e11847982b09b9baa5ab4ad9b1f91b674329e3067523edb0450b89463fe79f58"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-cli_args.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-effect_tracking_io_fs.jsonl",
+      "bytes": 8899,
+      "sha256": "ea0a7e741dbeea0548302ca3eb7f8a029cf80d1fb5227932afee498acd173df9"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-effect_tracking_io_fs.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-higher_order_functions.jsonl",
+      "bytes": 8154,
+      "sha256": "c8fc7365f8edceaf5c7ab4d1be905dd03fa315091759155905562a9de06c9aef"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-higher_order_functions.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-pipeline.jsonl",
+      "bytes": 12510,
+      "sha256": "ec5b6c7a1e6a501241bcd20c2d77bb4bd04fa6272987b2ff7bfbf282b6991d56"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-pipeline.jsonl.stderr",
+      "bytes": 39,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-prompt_injection.jsonl",
+      "bytes": 10328,
+      "sha256": "a720d40461dfe09fc0178e842bc77c5f6812d74129fe3e1b42f5d42e8dddae98"
+    },
+    {
+      "path": "design_docs/verification/world-row174-runtime-2026-10-11/iter-9-transcripts/iter9-codex-world-prompt_injection.jsonl.stderr",
       "bytes": 39,
       "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
     },

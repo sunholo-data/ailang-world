@@ -53,3 +53,13 @@ product landing, committed preregistration and human-typed FINAL sessions.
 
 Current handoff supersedes earlier runtime CONTINUE.md iteration planning for this
 operator-requested partial diagnostic only. Implementation PASS86 is unchanged.
+
+## Update after candidate iteration9
+
+User completed candidate publication into local registry revision2 on2026-10-11.
+Live exact-eight canonical10301/prose3794/wire10368 bytes verified against candidate;
+binary/interpreter/tool/runner/config/client identities match baseline. Candidate9
+COMPLETE/rc0: both canariesPASS, shell6/6, World6/6, O+0.0849, delta0, zero faults,
+attestation/provenance violations, native writes or row153 callback timeouts.
+All evidence/ledger is banked; commit before running unchanged repeat10.
+Claude/full M2 remains pending. Candidate9 alone does not establish improvement.
