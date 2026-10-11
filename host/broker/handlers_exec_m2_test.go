@@ -14,6 +14,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,8 +22,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/procbound"
+	"github.com/sunholo-data/ailang-world/host/proctest"
 )
 
 type execFixture struct {
@@ -390,18 +396,297 @@ func TestExecHandlerHardCapRecordsLimitOutput(t *testing.T) {
 
 // AC2.7 (stub half; the real-srt half is TestExecSrtTimeoutKillsTheGroup).
 func TestExecHandlerTimeoutKillsTheGroup(t *testing.T) {
-	f := newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) { m["timeout_ms"] = 800 }})
-	start := time.Now()
-	r := f.mustRun(t, "sleep")
-	elapsed := time.Since(start)
-	if !r.TimedOut || r.ExitCode != nil || !strings.Contains(r.Stdout, "started") {
-		t.Fatalf("result = %+v, want timed_out with the partial head", r)
+	ctx := boundedTestContext(t)
+	deadline, ok := ctx.Deadline()
+	if !ok || time.Until(deadline) <= 0 {
+		t.Fatal("ordinary finite caller deadline missing")
 	}
-	if elapsed > 800*time.Millisecond+3*time.Second {
-		t.Fatalf("returned after %s; the deadline is 800 ms", elapsed)
+	var helper, datafile, token string
+	var markers [2]string
+	var template map[string]any
+	f := newExecFixture(t, execFixtureOpts{profileF: func(m map[string]any, f *execFixture) {
+		helper, datafile, token = filepath.Join(f.worktree, "timeout-helper.sh"), filepath.Join(f.worktree, "hold"), filepath.Base(filepath.Dir(f.base))
+		markers = [2]string{filepath.Join(f.worktree, "child-a.ready"), filepath.Join(f.worktree, "child-b.ready")}
+		script := `#!/bin/sh
+set -eu
+if [ "$1" = child ]; then
+  hold=$(cat "$3")
+  printf '%s %s\n' "$2" "$$" > "$4.tmp.$$"
+  mv "$4.tmp.$$" "$4"
+  if [ "$hold" -gt 0 ]; then exec sleep "$hold"; fi
+  exit 0
+fi
+/bin/sh "$0" child "$2-a" "$3" "$4" & a=$!
+/bin/sh "$0" child "$2-b" "$3" "$5" & b=$!
+while [ ! -s "$4" ] || [ ! -s "$5" ]; do sleep 0.01; done
+printf 'EXEC-OUT\n'; printf 'EXEC-ERR\n' >&2
+wait "$a"; wait "$b"
+`
+		if err := os.WriteFile(helper, []byte(script), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		m["commands"].(map[string]any)["sleep"] = map[string]any{"argv": []any{"/bin/sh", helper, "leader", token, datafile, markers[0], markers[1]}}
+		template = m
+	}})
+	// Token/PID is published atomically by each real child, never inferred from a name census.
+	readChildren := func() ([2]int, error) {
+		var pids [2]int
+		for i, path := range markers {
+			raw, err := os.ReadFile(path)
+			if err != nil {
+				return pids, err
+			}
+			fields := strings.Fields(string(raw))
+			if len(fields) != 2 || fields[0] != token+[]string{"-a", "-b"}[i] {
+				return pids, fmt.Errorf("child token mismatch: %q", raw)
+			}
+			pid, err := strconv.Atoi(fields[1])
+			if err != nil {
+				return pids, err
+			}
+			if err := proctest.Check(pid); err != nil {
+				return pids, err
+			}
+			pids[i] = pid
+		}
+		if pids[0] == pids[1] {
+			return pids, fmt.Errorf("child PID collision: %v", pids)
+		}
+		return pids, nil
 	}
-	if n := countProcs(t, "sleep 3011"); n != 0 {
-		t.Fatalf("%d group members alive after the deadline (MUT-NO-GROUP-KILL)", n)
+	// ESRCH is known absent; ps must succeed and report a recognized state otherwise.
+	state := func(pid int) (string, error) {
+		err := proctest.Signal(pid, 0, syscall.Kill)
+		if errors.Is(err, syscall.ESRCH) {
+			return "absent", nil
+		}
+		if err != nil {
+			return "", err
+		}
+		probe, cancel := context.WithTimeout(ctx, pipeCloseGrace)
+		defer cancel()
+		out, err := exec.CommandContext(probe, "ps", "-o", "stat=", "-p", strconv.Itoa(pid)).Output()
+		if err != nil {
+			if probe.Err() == nil && errors.Is(proctest.Signal(pid, 0, syscall.Kill), syscall.ESRCH) {
+				return "absent", nil
+			}
+			return "", fmt.Errorf("checked ps pid %d: %w", pid, err)
+		}
+		fields := strings.Fields(string(out))
+		if len(fields) != 1 || !strings.ContainsAny(fields[0][:1], "RSDTtWIUZX") {
+			return "", fmt.Errorf("unknown ps state for %d: %q", pid, out)
+		}
+		if strings.ContainsAny(fields[0][:1], "ZX") {
+			return "dead", nil
+		}
+		return "alive", nil
+	}
+	childDone := func(pid int) error {
+		until := time.Now().Add(pipeCloseGrace)
+		for {
+			status, err := state(pid)
+			if err != nil {
+				return err
+			}
+			if status != "alive" {
+				return nil
+			}
+			if !time.Now().Before(until) || time.Until(deadline) <= 0 {
+				return fmt.Errorf("pid=%d still alive", pid)
+			}
+			time.Sleep(time.Millisecond)
+		}
+	}
+	assertStreams := func(r execResult) {
+		t.Helper()
+		if r.Stdout != "EXEC-OUT\n" || r.StdoutBytes != 9 || r.StdoutSHA256 != sha256Hex([]byte("EXEC-OUT\n")) || r.StdoutTruncated {
+			t.Fatalf("exact deadline stdout retention: %+v", r)
+		}
+		if r.Stderr != "EXEC-ERR\n" || r.StderrBytes != 9 || r.StderrSHA256 != sha256Hex([]byte("EXEC-ERR\n")) || r.StderrTruncated {
+			t.Fatalf("exact deadline stderr retention: %+v", r)
+		}
+	}
+	originalKill := killGroup
+	baseline := procbound.Outstanding()
+	var mu sync.Mutex
+	type observation struct {
+		leader       int
+		pids         [2]int
+		states       [2]string
+		groups       [2]int
+		err, killErr error
+	}
+	var observations []observation
+	// Cleanup never signals an unproven PID/group. Wait joins exec's watcher and copies
+	// before releasing its reservation; the mutex then joins any seam callback.
+	t.Cleanup(func() {
+		mu.Lock()
+		seen := append([]observation(nil), observations...)
+		mu.Unlock()
+		pids, readErr := readChildren()
+		if readErr == nil {
+			for _, pid := range pids {
+				s, err := state(pid)
+				if err != nil {
+					t.Errorf("cleanup unknown child state: %v", err)
+					continue
+				}
+				if s != "alive" {
+					continue
+				}
+				group, err := syscall.Getpgid(pid)
+				owned := false
+				for _, o := range seen {
+					if o.err == nil && group == o.leader && (pid == o.pids[0] || pid == o.pids[1]) {
+						owned = true
+					}
+				}
+				if err != nil || !owned {
+					t.Errorf("cleanup refuses unproven child PID/PGID %d/%d: %v", pid, group, err)
+					continue
+				}
+				t.Logf("cleanup revalidated fixture child pid=%d group=%d; checked SIGKILL", pid, group)
+				if err := proctest.Signal(pid, syscall.SIGKILL, syscall.Kill); err != nil && !errors.Is(err, syscall.ESRCH) {
+					t.Errorf("proven child cleanup: %v", err)
+				}
+			}
+		}
+		for procbound.Outstanding() != baseline && time.Until(deadline) > 0 {
+			time.Sleep(time.Millisecond)
+		}
+		if got := procbound.Outstanding(); got != baseline {
+			t.Errorf("actual leader reap incomplete: Outstanding=%d baseline=%d; seam retained", got, baseline)
+			return
+		}
+		if readErr != nil {
+			t.Errorf("cleanup child ownership unavailable: %v", readErr)
+		} else {
+			for _, pid := range pids {
+				if err := childDone(pid); err != nil {
+					t.Errorf("fixture child cleanup incomplete: %v", err)
+				} else {
+					t.Logf("cleanup specific fixture child %d confirmed not live", pid)
+				}
+			}
+		}
+		mu.Lock()
+		t.Logf("cleanup actual reap baseline=%d; %d completed callbacks joined before seam restore", baseline, len(observations))
+		killGroup = originalKill
+		mu.Unlock()
+	})
+	run := func(hold time.Duration) (execResult, [2]int, time.Duration) {
+		t.Helper()
+		for _, path := range markers {
+			if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+				t.Fatal(err)
+			}
+		}
+		if err := os.WriteFile(datafile, []byte(strconv.FormatInt(int64(hold/time.Second), 10)), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		before := procbound.Outstanding()
+		start := time.Now()
+		out, err := f.h.Execute(ctx, EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, Cost: 1}, []byte(`{"command":"sleep"}`))
+		elapsed := time.Since(start)
+		if err != nil {
+			t.Fatalf("full-trampoline Execute: %v", err)
+		}
+		r := execDecode(t, out)
+		pids, err := readChildren()
+		t.Logf("full-trampoline elapsed=%s result=%s children=%v readiness_err=%v Outstanding=%d baseline=%d", elapsed, out, pids, err, procbound.Outstanding(), before)
+		if err != nil {
+			t.Fatalf("unique child readiness: %v", err)
+		}
+		if got := procbound.Outstanding(); got != before {
+			t.Fatalf("leader/pipe-copy reap incomplete: %d want %d", got, before)
+		}
+		return r, pids, elapsed
+	}
+	var C time.Duration
+	for i := 0; i < 3; i++ {
+		r, pids, elapsed := run(0)
+		if r.TimedOut || r.ExitCode == nil || *r.ExitCode != 0 || r.Limit != nil {
+			t.Fatalf("short control %d natural exit: %+v", i+1, r)
+		}
+		assertStreams(r)
+		for _, pid := range pids {
+			if s, err := state(pid); err != nil || s == "alive" {
+				t.Fatalf("short control child not naturally dead/reaped %d: %s %v", pid, s, err)
+			}
+		}
+		t.Logf("short control %d complete=%s", i+1, elapsed)
+		C = max(C, elapsed)
+	}
+	const maxDuration = time.Duration(1<<63 - 1)
+	if C <= 0 || C > maxDuration-2*pipeCloseGrace-time.Millisecond {
+		t.Fatalf("invalid/overflow C=%s", C)
+	}
+	B := ((C + 2*pipeCloseGrace + time.Millisecond - 1) / time.Millisecond) * time.Millisecond
+	if B <= 0 || B/time.Millisecond > ExecMaxTimeoutMS {
+		t.Fatalf("fixture profile B=%s exceeds existing limit %dms", B, ExecMaxTimeoutMS)
+	}
+	H := ((3*B + 2*pipeCloseGrace + time.Second - 1) / time.Second) * time.Second
+	R := time.Until(deadline)
+	t.Logf("calibration C=%s B=%s H=%s R=%s grace=%s", C, B, H, R, pipeCloseGrace)
+	if H < 3*B+2*pipeCloseGrace || B >= R || H >= R-B || pipeCloseGrace >= R-B-H {
+		t.Fatalf("finite guard B+H+grace must fit remaining caller deadline: B=%s H=%s R=%s", B, H, R)
+	}
+	template["timeout_ms"] = int(B / time.Millisecond)
+	encoded, err := json.Marshal(template)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.profile, err = ParseExecProfile(encoded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.h, err = NewExecHandler(ExecHandlerConfig{Profile: f.profile, Sandbox: f.sandbox, Episode: "ep1", Worktree: f.worktree, WorkspaceRoot: f.root, StateDir: f.state, OperatorHome: f.home})
+	if err != nil {
+		t.Fatal(err)
+	}
+	killGroup = func(leader int) error {
+		mu.Lock()
+		defer mu.Unlock()
+		o := observation{leader: leader}
+		if o.err = proctest.Check(leader); o.err == nil {
+			o.pids, o.err = readChildren()
+		}
+		if o.err == nil {
+			for i, pid := range o.pids {
+				s, err := state(pid)
+				group, groupErr := syscall.Getpgid(pid)
+				o.states[i], o.groups[i] = s, group
+				if err != nil || groupErr != nil || s != "alive" || group != leader {
+					o.err = fmt.Errorf("child readiness/live leader PGID pid=%d state=%s group=%d leader=%d err=%v/%v", pid, s, group, leader, err, groupErr)
+					break
+				}
+			}
+		}
+		o.killErr = originalKill(leader) // Always delegate; never assert in exec's watcher.
+		observations = append(observations, o)
+		return o.killErr
+	}
+	r, pids, elapsed := run(H)
+	mu.Lock()
+	seen := append([]observation(nil), observations...)
+	mu.Unlock()
+	t.Logf("deadline arm elapsed=%s timed_out=%t exit=%s observations=%+v", elapsed, r.TimedOut, r.code(), seen)
+	if !r.TimedOut || r.ExitCode != nil || r.Limit != nil {
+		t.Fatalf("real exact-profile timeout required B=%s: result=%+v observations=%+v", B, r, seen)
+	}
+	if len(seen) == 0 {
+		t.Fatal("real deadline group kill missing")
+	}
+	for _, o := range seen {
+		if o.err != nil || o.killErr != nil {
+			t.Fatalf("specific child readiness before real kill: %+v", o)
+		}
+	}
+	assertStreams(r)
+	for _, pid := range pids {
+		if err := childDone(pid); err != nil {
+			t.Fatalf("specific fixture child alive after deadline: %v", err)
+		}
 	}
 }
 
