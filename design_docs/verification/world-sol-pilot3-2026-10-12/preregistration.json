@@ -1,0 +1,22 @@
+{
+  "recorded_at": "2026-10-12",
+  "operator_request": "Mark, attended 2026-10-12: yeah add the timing; yeah you can run the codex sesssion once ready",
+  "scope": "INFORMATIVE tuning-ledger iteration (next unused: 13). Attribution run, not a tuning change. Not a FINAL; never pooled with one.",
+  "question": "Where does codex/gpt-6.1-sol's fixed ~+6-8 s per-task World overhead go: startup, model turns, tool calls, or teardown?",
+  "single_change_vs_iteration_12": "none in the config (digest identical, 430748e2...); the harness now records per-event arrival times (PR #247) and a row-level 'timing' split. Same model, 23 core tasks, N=1, codex only, rig, product, manifest d171b695, client codex-cli 0.162.0, session fl-tune-cx.",
+  "config": "config.json in this directory (byte-copy of world-sol-pilot2-2026-10-12/config.json)",
+  "config_digest_smoke": "430748e2ed645e79be691183d195994c4eeae81acd9b15ef0c71d8074f03a7f9",
+  "instrument_check_fixed_before_run": "every codex row carries timing != null; startup+turn+teardown within 1% of wall per row; any null row is reported, never imputed",
+  "analysis_fixed_before_run": {
+    "per_task": "World minus shell for startup_ms, model_ms, tool_ms, teardown_ms, and model-turn count (intervals between tool items)",
+    "attribution": "median across tasks of each component's World-shell delta; report the share of the median absolute wall delta each explains",
+    "hypotheses": {
+      "H_startup": "World startup (MCP server connect before first model request) explains >= 50% of the gap",
+      "H_turns": "World takes more model turns (more, smaller tool calls) and model_ms delta is driven by turn count",
+      "H_latency": "same turn count but slower per-turn model latency in World",
+      "H_tool": "tool_ms delta explains >= 50% (already predicted false by the zero-spend probe: ~+0.8 s/task)"
+    },
+    "O_and_delta": "reported as measured under iteration 12's rule (go <= +15%, marginal <= +25%), but this run tunes nothing and O is secondary"
+  },
+  "fence": "No Claude spend. Session already minted by Mark (expires epoch 1791844139). No model substitution; capacity aborts recorded, not retried silently."
+}
