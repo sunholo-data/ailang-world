@@ -2,8 +2,10 @@ package evidence
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -198,4 +200,98 @@ func TestProducerAdmissionRefusesBacklog(t *testing.T) {
 	if got := procbound.Outstanding(); got != before {
 		t.Fatalf("after releasing, outstanding = %d; want the pre-test %d", got, before)
 	}
+}
+
+// pinnedChecker pins the real AILANG_BIN by its bytes and its version line. A
+// binary-dependent arm fails loudly when the variable is unset and never skips.
+func pinnedChecker(t *testing.T) CheckerConfig {
+	t.Helper()
+	bin := os.Getenv("AILANG_BIN")
+	if bin == "" {
+		t.Fatal("AILANG_BIN unset: the producer's binary arms need the pinned v0.41.0 release; never skip")
+	}
+	out, err := exec.Command(bin, "--version").Output()
+	if err != nil {
+		t.Fatalf("pinned binary --version: %v", err)
+	}
+	if line := strings.SplitN(string(out), "\n", 2)[0]; line != "AILANG v0.41.0" {
+		t.Fatalf("AILANG_BIN reports %q; want AILANG v0.41.0", line)
+	}
+	data, err := os.ReadFile(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return CheckerConfig{ExecPath: bin, Compiler: hashref.SumSHA256(data), CompilerVersion: "AILANG v0.41.0"}
+}
+
+func pinnedProducer(t *testing.T, execTimeout time.Duration, maxOut int64) *Producer {
+	t.Helper()
+	p, err := NewProducer(internalTestKey, nopSeams{}, nopSeams{}, pinnedChecker(t), ProducerConfig{
+		ObjectReadTimeout:  time.Second,
+		ObjectWriteTimeout: time.Second,
+		ExecTimeout:        execTimeout,
+		MaxOutputBytes:     maxOut,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+func TestProducerRefusesStdoutOverflowIndependently(t *testing.T) {
+	source, err := os.ReadFile("testdata/aicheck/verifiedpass.ail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	t.Run("real-binary-overflow", func(t *testing.T) {
+		t.Setenv("TMPDIR", t.TempDir())
+		out, err := pinnedProducer(t, 2*time.Minute, 16).runCheck(ctx, source)
+		if !errors.Is(err, ErrOutputLimit) || out != nil {
+			t.Fatalf("real ai-check output over a 16-byte cap: want ErrOutputLimit and nil bytes; got %d bytes, err=%v", len(out), err)
+		}
+	})
+	t.Run("real-binary-control", func(t *testing.T) {
+		tmp := t.TempDir()
+		t.Setenv("TMPDIR", tmp)
+		out, err := pinnedProducer(t, 2*time.Minute, 1<<20).runCheck(ctx, source)
+		if err != nil {
+			t.Fatalf("under the 1 MiB cap the real run must return its JSON: %v", err)
+		}
+		var doc struct {
+			Verify struct {
+				Results []struct {
+					Function string `json:"function"`
+					Status   string `json:"status"`
+				} `json:"results"`
+			} `json:"verify"`
+		}
+		if err := json.Unmarshal(out, &doc); err != nil {
+			t.Fatalf("control output is not ai-check JSON: %v", err)
+		}
+		verified := false
+		for _, r := range doc.Verify.Results {
+			verified = verified || (r.Function == "twicePlusOne" && r.Status == "verified")
+		}
+		if !verified {
+			t.Fatalf("control output lacks twicePlusOne verified: %s", out)
+		}
+		entries, err := os.ReadDir(tmp)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 0 {
+			t.Fatalf("the producer left %d entries in its TMPDIR; scratch must be removed", len(entries))
+		}
+	})
+	t.Run("scripted-stdout-overflow", func(t *testing.T) {
+		p, _ := scriptedProducer(t, `head -c 64 /dev/zero | tr '\0' o`, 10*time.Second, 16)
+		out, err := p.runCheck(ctx, source)
+		if !errors.Is(err, ErrOutputLimit) || out != nil {
+			t.Fatalf("64 stdout bytes over a 16-byte cap: want ErrOutputLimit and nil bytes; got %d bytes, err=%v", len(out), err)
+		}
+		if !strings.Contains(err.Error(), "stdout") {
+			t.Fatalf("detail must name the stdout stream: %v", err)
+		}
+	})
 }

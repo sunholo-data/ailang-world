@@ -1,0 +1,34 @@
+{
+  "file": "fixtures/refuted.ail",
+  "check": {
+    "passed": true,
+    "error_count": 0,
+    "errors": []
+  },
+  "verify": {
+    "available": true,
+    "verified": 0,
+    "counterexample": 1,
+    "skipped": 0,
+    "errors": 0,
+    "results": [
+      {
+        "function": "notTwice",
+        "status": "counterexample",
+        "model": [
+          {
+            "name": "$p_x",
+            "sort": "Int",
+            "value": "0"
+          },
+          {
+            "name": "result",
+            "sort": "Int",
+            "value": "(+ (* 2 $p_x) 1)"
+          }
+        ],
+        "duration": 5819583
+      }
+    ]
+  }
+}

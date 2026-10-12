@@ -1,0 +1,11 @@
+module fixtures/refuted
+
+-- Scratch fixture (row 26 design evidence): the body contradicts the ensures.
+export func notTwice(x: int) -> int ! {}
+ensures { result == 2 * x }
+tests [
+  ((3), 6)
+]
+{
+  2 * x + 1
+}

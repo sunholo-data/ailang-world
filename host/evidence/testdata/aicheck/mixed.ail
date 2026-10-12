@@ -1,0 +1,15 @@
+module fixtures/mixed
+
+-- Scratch fixture (row 26 design evidence): one verifiable contract + one
+-- encoding-error contract in the same module.
+export func good(x: int) -> int ! {}
+ensures { result == x + 1 }
+tests [ ((1), 2) ]
+{ x + 1 }
+
+export func showInt(x: int) -> string ! {}
+ensures { result == "v${x}" }
+tests [ ((1), "v1") ]
+{
+  "v${x}"
+}

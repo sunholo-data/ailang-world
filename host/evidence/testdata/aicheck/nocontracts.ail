@@ -1,0 +1,10 @@
+module fixtures/nocontracts
+
+-- Scratch fixture (row 26 design evidence): a module with NO contracted
+-- function: nothing to verify, so ai-check emits results=[] with rc=0.
+export type Box = { v: int }
+
+export func plain(x: int) -> int
+{
+  x + 1
+}

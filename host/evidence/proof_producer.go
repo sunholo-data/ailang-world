@@ -6,11 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/archive"
+	"github.com/sunholo-data/ailang-world/host/childenv"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/procbound"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -238,4 +242,35 @@ func withRunFailures(primary, killFailure, waitErr error) error {
 		return primary
 	}
 	return errors.Join(errs...)
+}
+
+const (
+	// stagedModule is the only module the checker sees: the source under test,
+	// copied into a scratch root so the checker never reads the caller's tree.
+	stagedModule = "staged/module.ail"
+	// aiCheckZ3Timeout is the checker's own solver budget, inside ExecTimeout.
+	aiCheckZ3Timeout = "5s"
+)
+
+// runCheck stages source in a fresh scratch root and returns the checker's
+// captured stdout. The checker's temp and cache writes are confined to that
+// root, which is removed on return. Relax and cache are set here, after the
+// scrubbed ambient environment, so an inherited value cannot win.
+func (p *Producer) runCheck(ctx context.Context, source []byte) ([]byte, error) {
+	root, err := os.MkdirTemp("", "evidence-producer-*")
+	if err != nil {
+		return nil, fmt.Errorf("evidence: scratch root: %w", err)
+	}
+	defer os.RemoveAll(root)
+	for _, dir := range []string{"staged", "tmp", "cache"} {
+		if err := os.Mkdir(filepath.Join(root, dir), 0o755); err != nil {
+			return nil, fmt.Errorf("evidence: scratch %s: %w", dir, err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(root, stagedModule), source, 0o644); err != nil {
+		return nil, fmt.Errorf("evidence: stage source: %w", err)
+	}
+	env := append(childenv.Scrubbed(os.Environ()), "AILANG_RELAX_MODULES=1",
+		"TMPDIR="+filepath.Join(root, "tmp"), archive.CacheDirEnv+"="+filepath.Join(root, "cache"))
+	return p.runBounded(ctx, root, env, p.cfg.MaxOutputBytes, "ai-check", "-timeout", aiCheckZ3Timeout, stagedModule)
 }

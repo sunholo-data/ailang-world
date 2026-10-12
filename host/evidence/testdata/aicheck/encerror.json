@@ -1,0 +1,22 @@
+{
+  "file": "fixtures/encerror.ail",
+  "check": {
+    "passed": true,
+    "error_count": 0,
+    "errors": []
+  },
+  "verify": {
+    "available": true,
+    "verified": 0,
+    "counterexample": 0,
+    "skipped": 0,
+    "errors": 1,
+    "results": [
+      {
+        "function": "showInt",
+        "status": "error",
+        "reason": "encoding error: cannot encode ensures clause: let value: unsupported application: $builtin.show([x])"
+      }
+    ]
+  }
+}

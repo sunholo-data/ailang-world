@@ -1,0 +1,4 @@
+module fixtures/loaderror
+
+-- Scratch fixture (row 26 design evidence): a parse error (export helper).
+export helper func bad(n: int) -> int { n + 1 }

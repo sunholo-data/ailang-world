@@ -1,0 +1,12 @@
+module fixtures/verifiedpass
+
+-- Scratch fixture (row 26 design evidence): one contract Z3 can prove.
+export func twicePlusOne(x: int) -> int ! {}
+ensures { result == 2 * x + 1 }
+tests [
+  ((0), 1),
+  ((5), 11)
+]
+{
+  2 * x + 1
+}
