@@ -1,0 +1,535 @@
+{
+  "id": "w-workbench-grade-projection",
+  "iteration": 254,
+  "row": 105,
+  "clause": "clause-5 (v1.0.0 release prerequisite; D-WORLD-69 = A)",
+  "authority": [
+    "design_docs/planned/w-workbench-grade-projection.md — quorum r1 BLOCKED (applied), r2 BLOCKED -> narrow-refinement carve-out (reviewers' verbatim fixes)",
+    "design_docs/world-mission.md row 105; D-WORLD-69 = A; D-WORLD-17 = A",
+    "CLAUDE.md; design_docs/coding-standards.md (S2, S6, S7)",
+    "design_docs/planned/w-workbench-grade-projection-sprint-plan.md"
+  ],
+  "estimate": "~1.6 executor days; C1 0.35d, C2 0.15d, C3 0.35d, C4 0.35d, C5 0.4d",
+  "scope": "Plan only (two planning files). Execution: one new production file host/daemon/workbench_grade.go (~190 prod LOC across C1/C3), small daemon.go/workbench.go/main.go edits, one new test file, main_test.go, docs/QUICKSTART.md (S7). Executor runs NO git write command; controller commits C1..C5. No host/evidence, host/store, host/workbench, scripts, .ail, ci.yml or tools/launchd change.",
+  "environment": [
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang   # AILANG v0.41.0 — required by package host/daemon (TestDaemonStartReportsMissingTemplates t.Fatal's without it)",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "Run gate scripts under bash (zsh `for t in $X` does not split).",
+    "Compile fence is `go vet ./...` — `go build ./...` does not compile _test.go.",
+    "verify_go.sh needs >= 20 min allowance (its -race leg hit the 8m verifygate timeout under load at baseline)."
+  ],
+  "measured_baseline": {
+    "tree": "b8581e0 (code base edb1b63 + design-doc commits only)",
+    "go vet ./...": "rc=0",
+    "go test ./host/daemon ./cmd/ailang-worldd -count=1 (no AILANG_BIN)": "rc=1 — only TestDaemonStartReportsMissingTemplates: 'AILANG_BIN is unset ... never skips' (environment requirement, PD5)",
+    "go test ./host/daemon ./cmd/ailang-worldd -count=1 (AILANG_BIN set)": "rc=0, 160 s",
+    "go test -race ./host/daemon -count=1 (AILANG_BIN set)": "rc=0, 197 s",
+    "verify_ail.sh": "rc=0 — '✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 444 se-tools named tests pass'",
+    "verify_go.sh": "rc=1 — non-race leg all ok (host/daemon 210 s); -race -timeout 8m leg: host/verifygate 'panic: test timed out after 8m0s' in TestSeToolsGateArmsAreLoadBearing at load avg ~13; host/daemon -race ok 358 s",
+    "go test -race -timeout 8m ./host/verifygate -count=1 (isolated)": "rc=0, 201 s — the verify_go red is a load-induced timeout, not a tree defect",
+    "logs": "~/.ailang/state/iter254-plan/"
+  },
+  "design_defects": [
+    "D1: the AC4 seam-driven table assumes a fake proofValidator can return arbitrary ValidationResult/ResolutionResult values and an unknown token — impossible: all fields unexported (validator.go:96-115, 200-209). -> PD1",
+    "D2: three reason sentences contain an apostrophe; html/template renders &#39; — raw-substring asserts red on a correct program (measured: rendered == html.EscapeString form, true x3). -> PD2",
+    "D3: identities without a key file silently leave the daemon unconfigured, contradicting D2 'never degrades to a half-configured validator'. -> PD4",
+    "D4: S7 requires usage docs for the two new serve flags; AC7 names six files with no QUICKSTART. Trap: section11ServeLines (quickstart_layout_test.go:28) cuts to EOF and requires exactly one `/tmp/ailang-worldd serve ` line (today line 969), so such a line in '## 11. Open the live workbench' reds TestQuickstartSection11FlagsMatchTheCLI. -> PD7",
+    "D5: design M1 exit gate omits AILANG_BIN (host/daemon baseline rc=1 without it) and uses `go build ./...` as a compile fence. -> PD5",
+    "D6: envelopeFor (authority_test.go:48) is package evidence_test — not importable from package daemon; re-implement with exported codecs. -> PD6"
+  ],
+  "planner_decisions": {
+    "PD1": "Seam = proofValidator{ValidateProof, Resolve}; test double scriptedGrader composes REAL *evidence.Validator instances over a scriptedReader (ref override for invalid_ref/hash-consistent arms, foreign resolver for the refusal arm, zero for no-verdict). Unknown token tested on the pure gradeReasonSentence(evidence.UnsupportedReason(\"future_reason\")).",
+    "PD2": "All sentence assertions via wantGradeUnavailable(reason) = \"<p>GRADE UNAVAILABLE — \"+html.EscapeString(reason)+\"</p>\"; PROVEN line literal <p><span>PROVEN</span></p>.",
+    "PD3": "Bisectability: each of C1..C5 leaves go vet ./..., go test ./host/daemon ./cmd/ailang-worldd and go test -race ./host/daemon green (with AILANG_BIN); no deferred reds, no counts move.",
+    "PD4": "configureGrader refuses ProofKeyFile==\"\" && len(ProofRequiredIdentities)>0 at StageConfig ('--proof-required-identity needs --proof-key-file'); CLI refuses an empty identity ('is empty').",
+    "PD5": "Every gate exports AILANG_BIN=$HOME/.pinned-ailang/ailang; fence is go vet ./...; verify_go.sh >= 20 min; a red only in host/verifygate -race 8m timeout is BASE, recorded not fixed.",
+    "PD6": "Envelope minting in package daemon: EncodeProofReportV1 -> HMAC-SHA-256(key) -> EncodeAuthenticatedEnvelope{Report, MAC, MACValid:true}; stored with Hash=SumSHA256(env), InterfaceHashV1, ProofSemanticID, Provenance bounded-ai-check-producer.",
+    "PD7": "QUICKSTART '## 11. Open the live workbench' gains an Object grade bullet + a runnable check block using \"$GRADE/ailang-worldd\" serve (never `/tmp/ailang-worldd serve`), executed verbatim at C5; AC7 file set becomes 7.",
+    "PD8": "No time.Sleep, sub-second timeout, elapsed-deadline stimulus or t.Parallel (host/daemon is write+fork; 0 t.Parallel today, control 19 in verifygate). Operational stimuli are returned error values. Bounds are 30 s boundedTestContext and 10 s readDeadline ceilings. New tests must add < 15 s to host/daemon -race (358 s of the 480 s verify_go budget at baseline).",
+    "PD9": "Design M1-M3 re-cut to C1-C5 (<= ~250 changed LOC each): C1 daemon wiring + cross-check, C2 CLI, C3 projection, C4 real-store states, C5 seam table/sanitized/sweep/docs/gates.",
+    "PD10": "A validator result with no verdict (zero value) is an operational error errGradeNoVerdict (500), never counted as a mismatch; pinnable via scriptedGrader{zero:true} (M14).",
+    "PD11": "TestProofKeyWiringConstructsTheValidator added as the C1 positive control (kills M15).",
+    "PD12": "Wiring lives in (*Daemon).configureGrader in workbench_grade.go; New calls it after the --ailang-bin block; design mutant M3 therefore edits workbench_grade.go.",
+    "PD13": "countingProofScanStore counts only ObjectsBySemanticID calls with id == evidence.ProofSemanticID (today the only daemon caller is handlers.go:551, the /v1 route).",
+    "PD14": "Enumerating guards measured, none moves: AC10 census (non-test exec sites 12, unchanged; registry_publish_test.go NOT frozen — a new production exec site would need a driver at :1210 in the same milestone); evidence manifest (5 literal-64 sites, untouched; no host/evidence test added); TestPublicAuthoritySurfaceIsFrozen (no host/evidence change); TestProductionContextRoots/TestNoNewDeadlineFreeStoreReads (no context.Background/TODO/WithoutCancel in new production code); TestNoParallelWriteForkPackagesOutsideVerifygate (no t.Parallel); TestSubprocessSinkGate (cmd.Output only); boundary allowlist (host/evidence adds exactly one package to the cmd closure; not forbidden); mcp_test.go daemon.go AST parsers (Handler and projection.New untouched); CLI help/quickstart tests (additive, Contains/regex); no reflection over Config (grep empty, control frozenPublicSurface=4)."
+  },
+  "must_not_change": [
+    "host/evidence/**",
+    "host/store/**",
+    "host/workbench/**",
+    "host/boundary/**",
+    "host/verifygate/**",
+    "host/broker/**",
+    "scripts/verify_go.sh",
+    "scripts/verify_ail.sh",
+    ".github/workflows/ci.yml",
+    "tools/launchd/*",
+    "every .ail",
+    "design_docs/world-mission*.md",
+    "host/daemon/workbench_test.go (incl. TestWorkbenchObjectGrade), handlers_test.go, daemon_test.go, read_deadline_test.go, m7b_deadline_test.go",
+    "host/daemon/workbench.go except the construction-site hunk (lines 40-44 byte-identical)",
+    "host/daemon/daemon.go except Config fields, Daemon.grader, and the configureGrader call (no edit to Handler(), its doc, projection.New literal, releaseFromVersion, checkReadOrdering)"
+  ],
+  "final_changed_files": [
+    "host/daemon/workbench_grade.go",
+    "host/daemon/workbench_grade_test.go",
+    "host/daemon/daemon.go",
+    "host/daemon/workbench.go",
+    "cmd/ailang-worldd/main.go",
+    "cmd/ailang-worldd/main_test.go",
+    "docs/QUICKSTART.md"
+  ],
+  "test_write_rule": "All DBs, key files and fake interpreters under the test's own t.TempDir(); never tracked files, $HOME or ~/.ailang. The pinned binary is only run with --version in the optional observation subtest. No t.Parallel, no time.Sleep.",
+  "mutation_protocol": "One mutant at a time; cp F $TMPDIR/F.orig first; must compile (go vet ./host/daemon ./cmd/ailang-worldd rc=0); run its exact command; the named assertion must fail (build failure, panic, SKIP, zero tests, unrelated failure, timeout are NOT kills); restore with cp + cmp rc=0; rerun green. Ledger: mutant | file:line | command | rc | failing assertion | restore cmp rc | green rc. SURVIVED blocks the milestone. C5 re-drills all of M1-M18.",
+  "milestones": [
+    {
+      "id": "C1",
+      "title": "Validator wiring, key loading, producer-mirroring version line (design M1 daemon half + M3 cross-check)",
+      "design_milestone": "M1 (daemon half) + M3 cross-check",
+      "files": [
+        "host/daemon/workbench_grade.go (new)",
+        "host/daemon/daemon.go (Config.ProofKeyFile, Config.ProofRequiredIdentities before ErrorLog; Daemon.grader after the arch/interpreterHash/templates group; `if err := d.configureGrader(cfg); err != nil { return nil, err }` right after the `if cfg.AilangBin != \"\" {...}` block, before the invokeDeadline check)",
+        "host/daemon/workbench_grade_test.go (new, package daemon)"
+      ],
+      "production_loc_budget": 70,
+      "test_loc_budget": 175,
+      "new_tests": [
+        "TestProofKeyWiringRefusesEveryHalfConfiguration",
+        "TestProofKeyWiringConstructsTheValidator",
+        "TestWorkbenchGradeCompilerVersionDerivationsAgree"
+      ],
+      "implementation": "workbench_grade.go: const proofKeySize=32; consts gradeConfigIdentitiesWithoutKey=\"--proof-required-identity needs --proof-key-file\", gradeConfigNoInterpreter=\"the workbench grade validator needs the pinned interpreter; --ailang-bin is unset\", gradeConfigKeyRefused=\"cannot load the proof key file\", gradeConfigValidatorRefused=\"cannot construct the workbench grade validator\"; type proofValidator interface{ValidateProof(ctx, reportRef, expectedSubject hashref.HashRef) evidence.ValidationResult; Resolve(evidence.ValidatedEvidence) evidence.ResolutionResult}; proofCompilerVersionLine(v) = strings.TrimRight(strings.SplitN(v, \"\\n\", 2)[0], \"\\r\"); loadProofKey(path) ([32]byte, error): os.Open, f.Stat (open file), !IsRegular -> \"%s is not a regular file\", io.ReadAll(io.LimitReader(f, 33)), separate ifs len>32 -> \"%s holds more than 32 bytes; a proof key is exactly 32\", len<32 -> \"%s holds %d bytes; a proof key is exactly 32\"; (d *Daemon) configureGrader(cfg): key==\"\" && len(ids)>0 -> d.abort(StageConfig, gradeConfigIdentitiesWithoutKey, nil); key==\"\" -> nil; interpreterHash.IsZero() -> abort(gradeConfigNoInterpreter, nil); loadProofKey err -> abort(gradeConfigKeyRefused, err); evidence.NewValidator(key, d.store, CompilerConfig{Compiler: d.interpreterHash, CompilerVersion: proofCompilerVersionLine(d.interpreterVersion), ObjectReadTimeout: readDeadline}, cfg.ProofRequiredIdentities) err -> abort(gradeConfigValidatorRefused, err); d.grader = v. No context.Background/TODO/WithoutCancel.",
+      "test_helpers": "gradeTestVersion=\"AILANG v0.41.0 \\r\\nbuild abc\\n\" (V43 discriminating fixture); gradeTestIdentity=\"world/types.ail\"; producerVersionLine (TEST copy of proof_producer.go:328); wantGradeUnavailable(reason)=\"<p>GRADE UNAVAILABLE — \"+html.EscapeString(reason)+\"</p>\"; gradeRig{key, compiler=SumSHA256(fake bytes), version=producerVersionLine(raw), rawVersion=raw stdout of exec.CommandContext(boundedTestContext(t), bin, \"--version\").Output(), bin, keyPath}; writeProofKeyFile; gradeDaemonConfig(t, ids) (fakeInterpreter(t, dir, gradeTestVersion); key file = strings.Repeat(\"K\",32); ErrorLog testErrorLog(t)); newGradeDaemon; gradeReport; mintGradeEnvelope (PD6); storeGradeEnvelope (producer identities); storeGradeSubject; gradePage.",
+      "tests_first": [
+        {
+          "ac": "AC2 + PD4",
+          "tests": "TestProofKeyWiringRefusesEveryHalfConfiguration",
+          "assertions": "control arm constructs; then each arm edits ONE field of gradeDaemonConfig and requires *StartupError Stage==StageConfig and exact Detail; err.Error() never contains strings.Repeat(\"K\",32). Arms: missing-file (gradeConfigKeyRefused, errors.Is fs.ErrNotExist); directory (gradeConfigKeyRefused, 'is not a regular file'); 31-bytes ('holds 31 bytes; a proof key is exactly 32'); 33-bytes ('holds more than 32 bytes'); no-ailang-bin (gradeConfigNoInterpreter, Err nil); no-identities (gradeConfigValidatorRefused, errors.Is evidence.ErrInvalidValidatorConfig, 'required identities are empty'); identities-without-key (gradeConfigIdentitiesWithoutKey).",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "PD11",
+          "tests": "TestProofKeyWiringConstructsTheValidator",
+          "assertions": "configured: d.grader.(*evidence.Validator) ok and non-nil; unconfigured newHandlerDaemon: d.grader == nil.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC3 cross-check (design M11)",
+          "tests": "TestWorkbenchGradeCompilerVersionDerivationsAgree",
+          "assertions": "rig.rawVersion == gradeTestVersion; d.interpreterVersion == rig.rawVersion; p := producerVersionLine(raw) == \"AILANG v0.41.0 \"; proofCompilerVersionLine(d.interpreterVersion) == p ('daemon-side %q != producer-side %q'); control releaseFromVersion(d.interpreterVersion) == \"AILANG v0.41.0\" != p; optional subtest pinned-binary: t.Skip if AILANG_BIN empty, else both derivations of `$AILANG_BIN --version` equal \"AILANG v0.41.0\".",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        }
+      ],
+      "acceptance": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang; export PATH=/opt/homebrew/bin:$PATH; cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design",
+        "go vet ./...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/daemon ./cmd/ailang-worldd -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProofKeyWiringRefusesEveryHalfConfiguration TestProofKeyWiringConstructsTheValidator TestWorkbenchGradeCompilerVersionDerivationsAgree; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/daemon ./cmd/ailang-worldd -count=1",
+        "go test -race ./host/daemon -count=1",
+        "go test -count=1 ./host/daemon -run '^TestWorkbenchObjectGrade$' -v | grep -q '^--- PASS: TestWorkbenchObjectGrade '",
+        "git diff --quiet -- host/evidence host/store host/workbench host/boundary host/verifygate host/broker scripts world .github tools",
+        "git diff --quiet -- host/daemon/workbench_test.go"
+      ],
+      "mutations": [
+        {
+          "mutant": "M2a",
+          "mutation": "workbench_grade.go: `if len(raw) > proofKeySize {` -> `if false && len(raw) > proofKeySize {`",
+          "must_fail_test": "TestProofKeyWiringRefusesEveryHalfConfiguration/33-bytes",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        },
+        {
+          "mutant": "M2b",
+          "mutation": "`if len(raw) < proofKeySize {` -> `if false && len(raw) < proofKeySize {`",
+          "must_fail_test": "TestProofKeyWiringRefusesEveryHalfConfiguration/31-bytes",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        },
+        {
+          "mutant": "M3",
+          "mutation": "`if d.interpreterHash.IsZero() {` -> `if false && d.interpreterHash.IsZero() {` (in configureGrader, PD12)",
+          "must_fail_test": "TestProofKeyWiringRefusesEveryHalfConfiguration/no-ailang-bin",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        },
+        {
+          "mutant": "M11",
+          "mutation": "proofCompilerVersionLine body -> `return strings.TrimSpace(strings.SplitN(verbatim, \"\\n\", 2)[0])`",
+          "must_fail_test": "TestWorkbenchGradeCompilerVersionDerivationsAgree",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        },
+        {
+          "mutant": "M13",
+          "mutation": "`if len(cfg.ProofRequiredIdentities) > 0 {` -> `if false && len(cfg.ProofRequiredIdentities) > 0 {`",
+          "must_fail_test": "TestProofKeyWiringRefusesEveryHalfConfiguration/identities-without-key",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        },
+        {
+          "mutant": "M15",
+          "mutation": "`d.grader = v` -> `d.grader = nil; _ = v`",
+          "must_fail_test": "TestProofKeyWiringConstructsTheValidator",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        },
+        {
+          "mutant": "M16",
+          "mutation": "`if !info.Mode().IsRegular() {` -> `if false && !info.Mode().IsRegular() {`",
+          "must_fail_test": "TestProofKeyWiringRefusesEveryHalfConfiguration/directory",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestProofKeyWiringRefusesEveryHalfConfiguration|TestProofKeyWiringConstructsTheValidator|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        }
+      ],
+      "commit_message": "feat(daemon): workbench grade validator wiring — proof key file, required identities, producer-mirroring version line (row 105 C1)"
+    },
+    {
+      "id": "C2",
+      "title": "Serve flags and usage (design M1 CLI half)",
+      "design_milestone": "M1 (CLI half)",
+      "files": [
+        "cmd/ailang-worldd/main.go (package doc line, usage synopsis line, serve-flags doc block after --exec-max-output-bytes, two flags in runServe, two Config fields)",
+        "cmd/ailang-worldd/main_test.go (TestServeProofFlags)"
+      ],
+      "production_loc_budget": 30,
+      "test_loc_budget": 55,
+      "new_tests": [
+        "TestServeProofFlags"
+      ],
+      "implementation": "proofKeyFile := fs.String(\"proof-key-file\", \"\", ...); fs.Func(\"proof-required-identity\", ..., func(v) error { if v == \"\" { return fmt.Errorf(\"is empty\") }; proofIdentities = append(proofIdentities, v); return nil }); Config literal += ProofKeyFile: *proofKeyFile, ProofRequiredIdentities: proofIdentities. Usage: doc comment + synopsis `[--proof-key-file <file> --proof-required-identity NAME ...]`; serve flags: `  --proof-key-file <file>` and `  --proof-required-identity NAME` entries (exact text in the plan md).",
+      "tests_first": [
+        {
+          "ac": "AC2 (CLI)",
+          "tests": "TestServeProofFlags",
+          "assertions": "(1) serve --help 'serve flags:' block matches (?m)^\\s+--proof-key-file\\b and (?m)^\\s+--proof-required-identity\\b; (2) real run without --ailang-bin (--bind 127.0.0.1:0, 32-byte key file, one identity) -> exitFatal and stderr contains the gradeConfigNoInterpreter text; (3) captureServeConfig: --proof-key-file /k/proof.key --proof-required-identity a --proof-required-identity b -> fields exact; (4) unset -> \"\" and nil; (5) --proof-required-identity \"\" -> exitUsage, stderr 'is empty'.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        }
+      ],
+      "acceptance": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang; export PATH=/opt/homebrew/bin:$PATH; cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design",
+        "go vet ./...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/daemon ./cmd/ailang-worldd -run '^(TestServeProofFlags)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestServeProofFlags; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/daemon ./cmd/ailang-worldd -count=1",
+        "go test -race ./host/daemon -count=1",
+        "go test -count=1 ./host/daemon -run '^TestWorkbenchObjectGrade$' -v | grep -q '^--- PASS: TestWorkbenchObjectGrade '",
+        "git diff --quiet -- host/evidence host/store host/workbench host/boundary host/verifygate host/broker scripts world .github tools",
+        "git diff --quiet -- host/daemon/workbench_test.go",
+        "go test -count=1 ./cmd/ailang-worldd -run '^(TestEveryVerbHasHelp|TestServeWorkspaceFlags|TestServeExecFlagsReachTheDaemonConfig|TestQuickstartSection10FlagsMatchTheCLI|TestQuickstartSection11FlagsMatchTheCLI)$' -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M17a",
+          "mutation": "drop `ProofKeyFile: *proofKeyFile` from the Config literal",
+          "must_fail_test": "TestServeProofFlags (arm 3)",
+          "command": "go test -count=1 -v ./cmd/ailang-worldd -run '^(TestServeProofFlags)$'"
+        },
+        {
+          "mutant": "M17b",
+          "mutation": "`if v == \"\" {` -> `if false && v == \"\" {`",
+          "must_fail_test": "TestServeProofFlags (arm 5)",
+          "command": "go test -count=1 -v ./cmd/ailang-worldd -run '^(TestServeProofFlags)$'"
+        },
+        {
+          "mutant": "M17c",
+          "mutation": "`proofIdentities = append(proofIdentities, v)` -> `proofIdentities = []string{v}`",
+          "must_fail_test": "TestServeProofFlags (arm 3)",
+          "command": "go test -count=1 -v ./cmd/ailang-worldd -run '^(TestServeProofFlags)$'"
+        }
+      ],
+      "commit_message": "feat(ailang-worldd): serve --proof-key-file and --proof-required-identity (row 105 C2)"
+    },
+    {
+      "id": "C3",
+      "title": "The projection and the construction site (design M2)",
+      "design_milestone": "M2",
+      "files": [
+        "host/daemon/workbench_grade.go (gradeCandidateScanLimit=100, 9 frozen sentence consts, errGradeNoVerdict, errGradeResolverRefused, gradeReasonSentences map (11 entries), gradeReasonSentence, objectGradeView)",
+        "host/daemon/workbench.go (construction site only: `grade, err := d.objectGradeView(ctx, ref)` + writeWorkbenchStoreError branch before page.Object; `Grade: grade,`)",
+        "host/daemon/workbench_grade_test.go"
+      ],
+      "production_loc_budget": 90,
+      "test_loc_budget": 90,
+      "new_tests": [
+        "TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning",
+        "TestWorkbenchGradeProvenFromSubjectBoundEnvelope"
+      ],
+      "implementation": "objectGradeView exactly as the plan md: nil grader -> NewGradeUnavailable(objectGradeUnavailableReason) with zero reads; d.reads.ObjectsBySemanticID(ctx, evidence.ProofSemanticID, \"\", 101); err -> return err; truncated := len == 101 then slice to 100; 0 -> gradeReasonNoStoredEvidence; loop: res.Err() -> wrapped error; Validated -> Resolve(sealed).Proven() else errGradeResolverRefused, PROVEN view {Available:true, Label: workbench.GradePROVEN}; !Unsupported -> errGradeNoVerdict (PD10); reason != subject_mismatch && firstFailure==\"\" -> firstFailure = gradeReasonSentence(reason); sentence = firstFailure or gradeReasonBoundElsewhere; + gradeScanTruncation if truncated.",
+      "tests_first": [
+        {
+          "ac": "AC1",
+          "tests": "TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning",
+          "assertions": "newHandlerDaemon + proof-labelled object (world/proof-report/v1, evidence.InterfaceHashV1) + subject; d.reads = countingProofScanStore (counts id==evidence.ProofSemanticID, PD13); both pages 200 with wantGradeUnavailable(objectGradeUnavailableReason) exactly once and no <span>PROVEN</span>; count == 0. Control: configured newGradeDaemon with the wrapper -> count == 1.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC3",
+          "tests": "TestWorkbenchGradeProvenFromSubjectBoundEnvelope",
+          "assertions": "rig.version == \"AILANG v0.41.0 \" (producer-side); premise ValidateProof(envRef, subject).Validated() ok and Resolve(sealed).Proven() ok; subject page 200, count(\"<p><span>PROVEN</span></p>\")==1, no GRADE UNAVAILABLE, no verdict-, no TESTED/ATTESTED/CLAIMED spans; honesty control: the envelope's own page shows wantGradeUnavailable(gradeReasonBoundElsewhere) once.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        }
+      ],
+      "acceptance": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang; export PATH=/opt/homebrew/bin:$PATH; cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design",
+        "go vet ./...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/daemon ./cmd/ailang-worldd -run '^(TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning|TestWorkbenchGradeProvenFromSubjectBoundEnvelope)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning TestWorkbenchGradeProvenFromSubjectBoundEnvelope; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/daemon ./cmd/ailang-worldd -count=1",
+        "go test -race ./host/daemon -count=1",
+        "go test -count=1 ./host/daemon -run '^TestWorkbenchObjectGrade$' -v | grep -q '^--- PASS: TestWorkbenchObjectGrade '",
+        "git diff --quiet -- host/evidence host/store host/workbench host/boundary host/verifygate host/broker scripts world .github tools",
+        "git diff --quiet -- host/daemon/workbench_test.go",
+        "git diff -U0 host/daemon/workbench.go  # only the construction-site hunk; lines 40-44 untouched"
+      ],
+      "mutations": [
+        {
+          "mutant": "M1",
+          "mutation": "move the ObjectsBySemanticID call + its err check above `if d.grader == nil`",
+          "must_fail_test": "TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning|TestWorkbenchGradeProvenFromSubjectBoundEnvelope)$'"
+        },
+        {
+          "mutant": "M4",
+          "mutation": "`ValidateProof(ctx, candidate.Hash, ref)` -> `ValidateProof(ctx, candidate.Hash, candidate.Hash)`",
+          "must_fail_test": "TestWorkbenchGradeProvenFromSubjectBoundEnvelope",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning|TestWorkbenchGradeProvenFromSubjectBoundEnvelope)$'"
+        },
+        {
+          "mutant": "M6",
+          "mutation": "`Label: workbench.GradePROVEN` -> `Label: workbench.GradeTESTED`",
+          "must_fail_test": "TestWorkbenchGradeProvenFromSubjectBoundEnvelope",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning|TestWorkbenchGradeProvenFromSubjectBoundEnvelope)$'"
+        },
+        {
+          "mutant": "M10",
+          "mutation": "PROVEN view += `HasVerdict: true, Verdict: workbench.VerdictPass`",
+          "must_fail_test": "TestWorkbenchGradeProvenFromSubjectBoundEnvelope",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning|TestWorkbenchGradeProvenFromSubjectBoundEnvelope)$'"
+        },
+        {
+          "mutant": "M11 (re-drill)",
+          "mutation": "as C1",
+          "must_fail_test": "TestWorkbenchGradeProvenFromSubjectBoundEnvelope + TestWorkbenchGradeCompilerVersionDerivationsAgree",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning|TestWorkbenchGradeProvenFromSubjectBoundEnvelope|TestWorkbenchGradeCompilerVersionDerivationsAgree)$'"
+        }
+      ],
+      "commit_message": "feat(daemon): workbench object page projects PROVEN from subject-bound proof envelopes (row 105 C3)"
+    },
+    {
+      "id": "C4",
+      "title": "Real-store reason states and the truncation boundary (design M3 real-store half)",
+      "design_milestone": "M3 (real-store half)",
+      "files": [
+        "host/daemon/workbench_grade_test.go"
+      ],
+      "production_loc_budget": 0,
+      "test_loc_budget": 230,
+      "new_tests": [
+        "TestWorkbenchGradeReasonNoStoredEvidence",
+        "TestWorkbenchGradeReasonBoundToOtherSubjects",
+        "TestWorkbenchGradeReasonUnauthenticatedEnvelope",
+        "TestWorkbenchGradeReasonToolMismatch",
+        "TestWorkbenchGradeReasonProofFailed",
+        "TestWorkbenchGradeReasonProofIncomplete",
+        "TestWorkbenchGradeReasonStructuralCandidate",
+        "TestWorkbenchGradeReasonScanTruncationIsDisclosed"
+      ],
+      "implementation": "Tests only. Each constructs its premise with a direct d.store / d.grader.ValidateProof call, then asserts strings.Count(body, wantGradeUnavailable(X))==1 and status 200.",
+      "tests_first": [
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonNoStoredEvidence",
+          "assertions": "premise ObjectsBySemanticID(ProofSemanticID,\"\",1) empty -> gradeReasonNoStoredEvidence",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonBoundToOtherSubjects",
+          "assertions": "envelope for another subject under rig.key; premise subject_mismatch -> gradeReasonBoundElsewhere, no truncation qualifier",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonUnauthenticatedEnvelope",
+          "assertions": "envelope for subject under [32]byte{9,9,9}; premise unauthenticated_report -> gradeReasonUnauthenticated; body lacks the escaped bound-elsewhere sentence",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonToolMismatch",
+          "assertions": "subtests: compiler (Compiler=SumSHA256(\"another compiler\")); trimspace-version (CompilerVersion=releaseFromVersion(rig.rawVersion)); mismatch-sorted-first (store tool-mismatch T + the first foreign envelope grade-foreign-%d, i<64, whose ref.String() < T's; instrument t.Fatal if none; premise: index lists the foreign ref first) -> gradeReasonToolMismatch in all three",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonProofFailed",
+          "assertions": "CheckPassed=false; premise proof_failed -> gradeReasonProofFailed",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonProofIncomplete",
+          "assertions": "Verified=[\"world/other.ail\"]; premise proof_incomplete -> gradeReasonProofIncomplete",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4",
+          "tests": "TestWorkbenchGradeReasonStructuralCandidate",
+          "assertions": "subtests wrong-interface (valid envelope stored with InterfaceHash=SumSHA256(\"not the envelope interface\")), malformed (payload \"not an envelope\"), oversize (bytes.Repeat x, evidence.MaxBytes+1); premise reasons wrong_interface/malformed/oversize -> gradeReasonStructuralCandidate",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC4 (round 2 boundary)",
+          "tests": "TestWorkbenchGradeReasonScanTruncationIsDisclosed",
+          "assertions": "100 foreign envelopes (grade-trunc-%03d): premise 100 rows at limit 101; page == bound-elsewhere WITHOUT the escaped qualifier. Store the 101st: premise 101; page == wantGradeUnavailable(gradeReasonBoundElsewhere+gradeScanTruncation) once. Record -race wall time.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        }
+      ],
+      "acceptance": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang; export PATH=/opt/homebrew/bin:$PATH; cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design",
+        "go vet ./...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/daemon ./cmd/ailang-worldd -run '^(TestWorkbenchGradeReasonNoStoredEvidence|TestWorkbenchGradeReasonBoundToOtherSubjects|TestWorkbenchGradeReasonUnauthenticatedEnvelope|TestWorkbenchGradeReasonToolMismatch|TestWorkbenchGradeReasonProofFailed|TestWorkbenchGradeReasonProofIncomplete|TestWorkbenchGradeReasonStructuralCandidate|TestWorkbenchGradeReasonScanTruncationIsDisclosed)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestWorkbenchGradeReasonNoStoredEvidence TestWorkbenchGradeReasonBoundToOtherSubjects TestWorkbenchGradeReasonUnauthenticatedEnvelope TestWorkbenchGradeReasonToolMismatch TestWorkbenchGradeReasonProofFailed TestWorkbenchGradeReasonProofIncomplete TestWorkbenchGradeReasonStructuralCandidate TestWorkbenchGradeReasonScanTruncationIsDisclosed; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/daemon ./cmd/ailang-worldd -count=1",
+        "go test -race ./host/daemon -count=1",
+        "go test -count=1 ./host/daemon -run '^TestWorkbenchObjectGrade$' -v | grep -q '^--- PASS: TestWorkbenchObjectGrade '",
+        "git diff --quiet -- host/evidence host/store host/workbench host/boundary host/verifygate host/broker scripts world .github tools",
+        "git diff --quiet -- host/daemon/workbench_test.go",
+        "go test -race -count=1 -v ./host/daemon -run '^(TestWorkbenchGrade|TestProofKeyWiring)'   # record wall; budget < 15 s total (PD8)"
+      ],
+      "mutations": [
+        {
+          "mutant": "M7",
+          "mutation": "map `evidence.UnsupportedUnauthenticatedReport: gradeReasonUnauthenticated` -> `: gradeReasonBoundElsewhere`",
+          "must_fail_test": "TestWorkbenchGradeReasonUnauthenticatedEnvelope",
+          "command": "go test -count=1 -v ./host/daemon -run '^TestWorkbenchGradeReason'"
+        },
+        {
+          "mutant": "M7b",
+          "mutation": "map `UnsupportedToolMismatch: gradeReasonToolMismatch` -> `: gradeReasonProofFailed`",
+          "must_fail_test": "TestWorkbenchGradeReasonToolMismatch",
+          "command": "go test -count=1 -v ./host/daemon -run '^TestWorkbenchGradeReason'"
+        },
+        {
+          "mutant": "M8a",
+          "mutation": "delete `if truncated { sentence += gradeScanTruncation }`",
+          "must_fail_test": "TestWorkbenchGradeReasonScanTruncationIsDisclosed (101 arm)",
+          "command": "go test -count=1 -v ./host/daemon -run '^TestWorkbenchGradeReason'"
+        },
+        {
+          "mutant": "M8b",
+          "mutation": "`truncated := len(candidates) == gradeCandidateScanLimit+1` -> `truncated := len(candidates) >= gradeCandidateScanLimit`",
+          "must_fail_test": "TestWorkbenchGradeReasonScanTruncationIsDisclosed (exactly-100 arm)",
+          "command": "go test -count=1 -v ./host/daemon -run '^TestWorkbenchGradeReason'"
+        },
+        {
+          "mutant": "M12",
+          "mutation": "`if reason != evidence.UnsupportedSubjectMismatch && firstFailure == \"\" {` -> `if firstFailure == \"\" {`",
+          "must_fail_test": "TestWorkbenchGradeReasonToolMismatch/mismatch-sorted-first",
+          "command": "go test -count=1 -v ./host/daemon -run '^TestWorkbenchGradeReason'"
+        }
+      ],
+      "commit_message": "test(daemon): every real-store grade reason and the exactly-100 truncation boundary (row 105 C4)"
+    },
+    {
+      "id": "C5",
+      "title": "Seam table, sanitized paths, verdict sweep, QUICKSTART, final gates (design M3 seam half)",
+      "design_milestone": "M3 (seam half) + gates",
+      "files": [
+        "host/daemon/workbench_grade_test.go",
+        "docs/QUICKSTART.md (## 11. Open the live workbench: one '**Object grade:**' bullet after Decisions + an appended 'Check the grade validator wiring' bash block; NO line starting `/tmp/ailang-worldd serve ` (PD7))"
+      ],
+      "production_loc_budget": 0,
+      "test_loc_budget": 220,
+      "new_tests": [
+        "TestWorkbenchGradeReasonMapsEveryUnsupportedReason",
+        "TestWorkbenchGradeScanFailureIsSanitized",
+        "TestWorkbenchGradeValidationReadErrorIsSanitized",
+        "TestWorkbenchGradeValidatorRefusalIsSanitized",
+        "TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels"
+      ],
+      "implementation": "scriptedGrader{v *evidence.Validator; ref *hashref.HashRef; resolver proofValidator; zero bool} and scriptedReader{meta, payload, err} (BusyTimeout 0) — only real-validator results or the zero value (PD1); scriptedRig with one placeholder proof-ID candidate; gradeSeamArms shared table (15 arms, plan md). QUICKSTART text exact in the plan md; the executor runs the bash block verbatim once and records output.",
+      "tests_first": [
+        {
+          "ac": "AC4 (table)",
+          "tests": "TestWorkbenchGradeReasonMapsEveryUnsupportedReason",
+          "assertions": "15 arms (12 tokens via real validators over scriptedReader / ref override; 13 validated+resolved -> PROVEN; 14 validated+foreign resolver -> 500; 15 zero result -> 500); per-arm premise asserted by a direct ValidateProof call; exact escaped sentence; no other sentence constant present; pure check gradeReasonSentence for 11 mapped tokens and UnsupportedReason(\"future_reason\") -> gradeReasonNoneValidated",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC5",
+          "tests": "TestWorkbenchGradeScanFailureIsSanitized",
+          "assertions": "proofScanFailingStore (fails only id==ProofSemanticID): errSentinelInternal -> 500 >Internal<, body lacks internalDetailSentinel, errLog has it; context.DeadlineExceeded (returned value) -> 503 >Timeout<; &store.ReferenceIndexUnavailableError{} -> 503 >ReferenceIndexUnavailable<; no GRADE UNAVAILABLE; control err nil -> 200",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC5",
+          "tests": "TestWorkbenchGradeValidationReadErrorIsSanitized",
+          "assertions": "grader over scriptedReader{err: errSentinelInternal}; premise Err()!=nil; 500 >Internal<, sentinel only in errLog",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC5",
+          "tests": "TestWorkbenchGradeValidatorRefusalIsSanitized",
+          "assertions": "arm 14 grader; premise Validated ok and foreign Resolve Err is evidence.ErrForeignSeal; 500, no <span>PROVEN</span>, errLog contains \"refused the validator's own seal\"",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        },
+        {
+          "ac": "AC6",
+          "tests": "TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels",
+          "assertions": "arms 1-13: no verdict-, no TESTED/ATTESTED/CLAIMED spans; unavailable arms no <span>PROVEN</span>; arm 13 exactly one <p><span>PROVEN</span></p>",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP (except the C1 cross-check's optional pinned-binary observation subtest), no t.Parallel, no time.Sleep."
+        }
+      ],
+      "acceptance": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang; export PATH=/opt/homebrew/bin:$PATH; cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design",
+        "go vet ./...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/daemon ./cmd/ailang-worldd -run '^(TestWorkbenchGradeReasonMapsEveryUnsupportedReason|TestWorkbenchGradeScanFailureIsSanitized|TestWorkbenchGradeValidationReadErrorIsSanitized|TestWorkbenchGradeValidatorRefusalIsSanitized|TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestWorkbenchGradeReasonMapsEveryUnsupportedReason TestWorkbenchGradeScanFailureIsSanitized TestWorkbenchGradeValidationReadErrorIsSanitized TestWorkbenchGradeValidatorRefusalIsSanitized TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/daemon ./cmd/ailang-worldd -count=1",
+        "go test -race ./host/daemon -count=1",
+        "go test -count=1 ./host/daemon -run '^TestWorkbenchObjectGrade$' -v | grep -q '^--- PASS: TestWorkbenchObjectGrade '",
+        "git diff --quiet -- host/evidence host/store host/workbench host/boundary host/verifygate host/broker scripts world .github tools",
+        "git diff --quiet -- host/daemon/workbench_test.go",
+        "bash: run the QUICKSTART 'Check the grade validator wiring' block verbatim (port 7645 free); expected line: GRADE UNAVAILABLE — no stored evidence: the store holds no object with semantic ID world/proof-report/v1",
+        "go test -count=1 ./cmd/ailang-worldd -run '^(TestQuickstartSection10FlagsMatchTheCLI|TestQuickstartSection11FlagsMatchTheCLI)$'",
+        "go test -count=1 ./host/daemon -run '^TestWorkbenchLiveQuickstartControl$'",
+        "grep -rn \"exec\\.Command\" host cmd --include=\"*.go\" | grep -v _test.go | wc -l   # must be 12",
+        "grep -rn \"64 exact\\|evidence_json\\\" 64\\|all 64 required\" --include='*.go' --include='*.sh' host scripts | wc -l   # must be 5",
+        "git diff --stat   # exactly the 7 files of the plan's Frozen section",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh   # rc=0",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh   # >= 20 min timeout; a red ONLY in host/verifygate -race 8m timeout is BASE (PD5)",
+        "full mutation re-drill M1-M18 one at a time on the final tree"
+      ],
+      "mutations": [
+        {
+          "mutant": "M5",
+          "mutation": "after `if sealed, ok := res.Validated(); ok {` return the PROVEN view directly (`_ = sealed`), dropping the Resolve gate",
+          "must_fail_test": "TestWorkbenchGradeValidatorRefusalIsSanitized + table arm 14",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeReasonMapsEveryUnsupportedReason|TestWorkbenchGradeScanFailureIsSanitized|TestWorkbenchGradeValidationReadErrorIsSanitized|TestWorkbenchGradeValidatorRefusalIsSanitized|TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels)$'"
+        },
+        {
+          "mutant": "M9",
+          "mutation": "scan `if err != nil { return workbench.GradeView{}, err }` -> `if err != nil { return workbench.NewGradeUnavailable(gradeReasonNoStoredEvidence), nil }`",
+          "must_fail_test": "TestWorkbenchGradeScanFailureIsSanitized",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeReasonMapsEveryUnsupportedReason|TestWorkbenchGradeScanFailureIsSanitized|TestWorkbenchGradeValidationReadErrorIsSanitized|TestWorkbenchGradeValidatorRefusalIsSanitized|TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels)$'"
+        },
+        {
+          "mutant": "M14",
+          "mutation": "`if !unsupported {` -> `if false && !unsupported {`",
+          "must_fail_test": "TestWorkbenchGradeReasonMapsEveryUnsupportedReason (arm 15)",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeReasonMapsEveryUnsupportedReason|TestWorkbenchGradeScanFailureIsSanitized|TestWorkbenchGradeValidationReadErrorIsSanitized|TestWorkbenchGradeValidatorRefusalIsSanitized|TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels)$'"
+        },
+        {
+          "mutant": "M7c",
+          "mutation": "delete the map entry `evidence.UnsupportedMalformed: gradeReasonStructuralCandidate`",
+          "must_fail_test": "TestWorkbenchGradeReasonMapsEveryUnsupportedReason (arm 7)",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeReasonMapsEveryUnsupportedReason|TestWorkbenchGradeScanFailureIsSanitized|TestWorkbenchGradeValidationReadErrorIsSanitized|TestWorkbenchGradeValidatorRefusalIsSanitized|TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels)$'"
+        },
+        {
+          "mutant": "M18",
+          "mutation": "`if err := res.Err(); err != nil {` -> `if err := res.Err(); false && err != nil {`",
+          "must_fail_test": "TestWorkbenchGradeValidationReadErrorIsSanitized",
+          "command": "go test -count=1 -v ./host/daemon -run '^(TestWorkbenchGradeReasonMapsEveryUnsupportedReason|TestWorkbenchGradeScanFailureIsSanitized|TestWorkbenchGradeValidationReadErrorIsSanitized|TestWorkbenchGradeValidatorRefusalIsSanitized|TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels)$'"
+        }
+      ],
+      "commit_message": "test(daemon): seam-driven grade reason table, sanitized operational paths, PROVEN-only sweep; docs: QUICKSTART object grade (row 105 C5)"
+    }
+  ],
+  "risks": [
+    "host/daemon -race already 358 s of 480 s verify_go budget -> PD8 budget, wall recorded at C4/C5",
+    "verifygate -race 8m timeout under load is BASE -> controller re-runs verify_go",
+    "executor edits a frozen helper file -> template git diff --quiet lines",
+    "raw apostrophe sentence asserted -> PD2",
+    "QUICKSTART /tmp/ailang-worldd serve line -> PD7 + C5 section tests"
+  ]
+}
