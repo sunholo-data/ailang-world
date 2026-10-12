@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -210,5 +212,64 @@ func TestServeWorkspaceFlags(t *testing.T) {
 		"--ailang-bin", filepath.Join(dir, "absent-interpreter")}, &stdout, &stderr)
 	if got != exitFatal || !strings.Contains(stderr.String(), "the workspace root is refused") {
 		t.Fatalf("serve with the store inside --workspace-root: exit %d, stderr %q; want %d and the AC4.5 refusal", got, stderr.String(), exitFatal)
+	}
+}
+
+// TestServeProofFlags pins the row-105 serve flags: the help text, the real
+// startup refusal without --ailang-bin, the Config wiring, the unset default,
+// and the refusal of an empty identity.
+func TestServeProofFlags(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if got := run([]string{"serve", "--help"}, &stdout, &stderr); got != 0 {
+		t.Fatalf("serve --help: exit %d, stderr %q", got, stderr.String())
+	}
+	flags := stdout.String() + stderr.String()
+	if i := strings.Index(flags, "serve flags:"); i >= 0 {
+		flags = flags[i:]
+	}
+	for _, re := range []string{`(?m)^\s+--proof-key-file\b`, `(?m)^\s+--proof-required-identity\b`} {
+		if !regexp.MustCompile(re).MatchString(flags) {
+			t.Errorf("serve --help lacks a flag matching %s", re)
+		}
+	}
+
+	dir := t.TempDir()
+	key := filepath.Join(dir, "proof.key")
+	if err := os.WriteFile(key, []byte(strings.Repeat("K", 32)), 0o600); err != nil {
+		t.Fatalf("write key: %v", err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	// No --ailang-bin: New refuses at StageConfig before Listen, so no socket binds.
+	if got := run([]string{"serve", "--db", filepath.Join(dir, "world.db"), "--bind", "127.0.0.1:0",
+		"--proof-key-file", key, "--proof-required-identity", "world/types.ail"}, &stdout, &stderr); got != exitFatal ||
+		!strings.Contains(stderr.String(), "the workbench grade validator needs the pinned interpreter; --ailang-bin is unset") {
+		t.Fatalf("proof key without --ailang-bin: exit %d, stderr %q; want %d and the pinned-interpreter refusal", got, stderr.String(), exitFatal)
+	}
+
+	got := captureServeConfig(t)
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"serve", "--db", "/x/world.db", "--proof-key-file", "/k/proof.key",
+		"--proof-required-identity", "a", "--proof-required-identity", "b"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("serve with proof flags: exit %d, stderr %q", code, stderr.String())
+	}
+	if got.ProofKeyFile != "/k/proof.key" || !reflect.DeepEqual(got.ProofRequiredIdentities, []string{"a", "b"}) {
+		t.Fatalf("wiring: ProofKeyFile %q, ProofRequiredIdentities %#v; want %q and [a b]", got.ProofKeyFile, got.ProofRequiredIdentities, "/k/proof.key")
+	}
+
+	*got = daemon.Config{}
+	if code := run([]string{"serve", "--db", "/x/world.db"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("serve without proof flags: exit %d, stderr %q", code, stderr.String())
+	}
+	if got.ProofKeyFile != "" || got.ProofRequiredIdentities != nil {
+		t.Fatalf("unset: ProofKeyFile %q, ProofRequiredIdentities %#v; want empty and nil", got.ProofKeyFile, got.ProofRequiredIdentities)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"serve", "--db", "/x/world.db", "--proof-required-identity", ""}, &stdout, &stderr); code != exitUsage ||
+		!strings.Contains(stderr.String(), "is empty") {
+		t.Fatalf("empty identity: exit %d, stderr %q; want %d and %q", code, stderr.String(), exitUsage, "is empty")
 	}
 }

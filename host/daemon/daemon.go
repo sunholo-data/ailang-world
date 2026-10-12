@@ -281,6 +281,17 @@ type Config struct {
 	// directory and hold no symlink and nothing writable; startup refuses
 	// otherwise, and as uid 0. Needs WorkspaceRoot.
 	WorkspacePackageCache string
+	// ProofKeyFile (`--proof-key-file`, row 105 D6) is an operator file holding
+	// exactly 32 bytes: the MAC key the workbench grade validator authenticates
+	// stored proof envelopes under. Empty leaves the daemon unconfigured: every
+	// object page renders objectGradeUnavailableReason and reads no evidence.
+	// Setting it needs AilangBin and at least one ProofRequiredIdentities entry;
+	// startup refuses every half-configuration. The key is never logged.
+	ProofKeyFile string
+	// ProofRequiredIdentities (`--proof-required-identity`, repeatable) are the
+	// identities every validated proof must verify. Refused without ProofKeyFile.
+	ProofRequiredIdentities []string
+
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -432,6 +443,12 @@ type Daemon struct {
 	arch            *archive.Archive
 	interpreterHash hashref.HashRef
 	templates       templateBook
+
+	// grader is the workbench grade validator (row 105): nil unless
+	// --proof-key-file is set, when New wires the *evidence.Validator it built.
+	// It is an interface so a test can compose validator outcomes a real store
+	// cannot produce; production always holds the real validator.
+	grader proofValidator
 
 	scanPageSize   int
 	scanRowBudget  int
@@ -695,6 +712,9 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		if err != nil {
 			return nil, d.abort(StageConfig, "cannot construct invocation coordinator", err)
 		}
+	}
+	if err := d.configureGrader(cfg); err != nil {
+		return nil, err
 	}
 	if invokeDeadline <= 0 || invokeDeadline >= writeTimeout {
 		return nil, d.abort(StageConfig, "invocation deadline must be shorter than write timeout", nil)
