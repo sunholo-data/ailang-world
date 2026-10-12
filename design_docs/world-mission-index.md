@@ -14,6 +14,8 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 252 | 2026-10-12 | row 26 LANDED `0390aa5`: bounded Z3 report producer (resumes orphan 251); judge sonnet PASS 86→88, zero blocking [PRODUCT] |
+| 251 | 2026-10-12 | ORPHAN (capacity-paused twice): row 26 design + 7 real fixtures left uncommitted in `.wt-world-iter251-row26-design`; credited in 252 |
 | 250 | 2026-10-11 | row174 PARKED: inherited third FAIL68 requires bounded follow-up approval; all four Agent roles, independent ADMIN judge; D-WORLD-71 OPEN [ADMIN] |
 | 248 | 2026-10-08 | no product pick: row150 stays parked on unchanged D-WORLD-69; all four roles via recipe transports (no Agent tool in this controller harness, ticket world#248); independent cross-vendor judge ACCEPTS [ADMIN] |
 | 247 | 2026-10-08 | no product pick: row150 stays parked on unchanged D-WORLD-69; four required native role preflights and independent record judge [ADMIN] |

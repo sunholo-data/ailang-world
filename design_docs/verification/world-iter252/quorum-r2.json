@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-bounded-z3-report-producer.md",
+  "iso_ts": "2026-10-12T09:01:58Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.055088000000000005,
+      "tokens_in": 26506,
+      "tokens_out": 173,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is a minor API-referencing typo in D1's constructor refusal logic. The specification lists `Checker.IsZero()` as a refusal condition, but `checker` is a `CheckerConfig` struct. The intent is clearly to check if the compiler identity reference is unset, which requires calling `IsZero()` on the inner `hashref.HashRef` field.",
+        "catch": "D1 states `Checker.IsZero()` as a constructor refusal condition, which is a method call on the `CheckerConfig` struct rather than its `Compiler` field.",
+        "proposed_fix": "Change the D1 refusal specification from `Checker.IsZero()` to `checker.Compiler.IsZero()`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.23702399999999998,
+      "tokens_in": 23993,
+      "tokens_out": 11003,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The verification log contradicts itself at the same measurement base, on the exact receipt that the mandatory gate edit depends on. V22 records `check_evidence_manifest \"$evidence_json\" 37` at verify_go.sh:306 (`/usr/bin/grep -n \"37 exact\\|check_evidence_manifest...\"` → ':295 ... :306'); V35 records the identical call at :302 and asserts 'V22's :306 is superseded by this reading'. Both rows claim the same base (`ba79d1e`), the same day, and an unchanged `verify_go.sh` — a four-line shift between two greps in one session is impossible, so at least one recorded observation was not produced by its recorded command. The doc resolves this editorially ('superseded') instead of by a re-run, then builds Files-to-Modify, the Design Freeze, and the success metrics on ':302' while V22's contradictory row remains in the log. Under Gate 1, any future reader re-running V22's exact command at `ba79d1e` will falsify one receipt — the document's own premise-verification guarantee is broken at the one edit the design says must land in the same commit as the tests.",
+        "catch": "Re-run the exact V22 grep at `ba79d1e` (with the same-call banner control) and correct whichever row's observed output is wrong — 'superseded' is not a verification result, and the log preamble forbids two bases. While re-verifying, also record the per-fixture byte counts V24 claims to have printed: M33's predicted observable quotes `stdout 373 bytes \u003e cap 16`, but no row records 373 (or any byte count) for the verifiedpass fixture, so M33's downstream-observable column currently rests on an unbacked number.",
+        "proposed_fix": "Add a reconciliation row and correct the stale record, e.g.: 'V36 — the manifest-call line, re-measured after the V22/V35 divergence: `/usr/bin/grep -n \"check_evidence_manifest \\\\\"$evidence_json\\\\\"\" scripts/verify_go.sh; /usr/bin/grep -n \"37 exact\" scripts/verify_go.sh` at ba79d1e → observed `:302:check_evidence_manifest \"$evidence_json\" 37`; control `:295:echo ... (37 exact ...)`. V22's recorded `:306` was a transcription error and is struck in place; the Files/Design-Freeze citations of :302 stand on V36.' Then extend V24 (or add a row) with the seven committed fixtures' byte counts (`wc -c design_docs/verification/world-iter251/*.json`) so M33's '373 bytes' prediction cites a row; if the measured size differs, rewrite M33's failure text to the measured value before this doc leaves PLANNED."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 46718,
+      "tokens_out": 3839,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The verification log is internally inconsistent on the exact location of the single literal the design's most emphasized 'frozen' decision requires editing: V22 reports the `37` count-literal call site at `verify_go.sh:306`, while V35 (run from the same stated HEAD `ba79d1e`, no intervening commits) reports it at `:302` and explicitly states 'V22's :306 is superseded by this reading' -- yet V22 itself is left uncorrected in the log and is still cited elsewhere in the doc (e.g. §9 Conflict Surface cites 'scripts/verify_go.sh:27-64, V22' as authoritative for the manifest surface) without any pointer to the correction. A doc whose entire premise-verification discipline rests on 'every sentence cites a row' cannot carry two contradictory measurements of the same artifact at the same frozen base and call that resolved by a footnote buried three rows later.",
+        "catch": "V22 and V35 disagree (306 vs 302) on the line of `check_evidence_manifest \"$evidence_json\" 37` at the same cited HEAD `ba79d1e`; V22 is not retracted or edited, only silently superseded by a later row, and V22 is still referenced as the authority in §9. An implementer or future agent following §9's citation alone would land on the stale line number for a decision the doc calls 'frozen' and 'not a two-literal edit.'",
+        "proposed_fix": "Re-run both greps fresh against `ba79d1e`, determine the true current line number, correct V22's row text in place (don't leave a stale citation standing), and update every downstream reference (High-Impact Decisions table, Files to Modify, §9) to cite the single corrected row. If the discrepancy is explained by differing grep patterns matching different occurrences of the literal `37` rather than drift, say so explicitly in V22's row instead of letting a later row silently supersede it."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-252 controller r2: F1-F5 applied by opus designer revision; controller verified diff (V34/V35 present, AC20 wrapper sentence present, ~430 gone). Premises re-measured first-party before revision: binary 100594162 B; ObjectWriteTimeout=0, ObjectReadTimeout=33, control ErrNoDeadline=16; verify_go.sh:97-109 fails on extra tests."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The verification log contradicts itself at the same measurement base, on the exact receipt that the mandatory gate edit depends on. V22 records `check_evidence_manifest \"$evidence_json\" 37` at verify_go.sh:306 (`/usr/bin/grep -n \"37 exact\\|check_evidence_manifest...\"` → ':295 ... :306'); V35 records the identical call at :302 and asserts 'V22's :306 is superseded by this reading'. Both rows claim the same base (`ba79d1e`), the same day, and an unchanged `verify_go.sh` — a four-line shift between two greps in one session is impossible, so at least one recorded observation was not produced by its recorded command. The doc resolves this editorially ('superseded') instead of by a re-run, then builds Files-to-Modify, the Design Freeze, and the success metrics on ':302' while V22's contradictory row remains in the log. Under Gate 1, any future reader re-running V22's exact command at `ba79d1e` will falsify one receipt — the document's own premise-verification guarantee is broken at the one edit the design says must land in the same commit as the tests.",
+      "claude-sonnet-5@claude-p: The verification log is internally inconsistent on the exact location of the single literal the design's most emphasized 'frozen' decision requires editing: V22 reports the `37` count-literal call site at `verify_go.sh:306`, while V35 (run from the same stated HEAD `ba79d1e`, no intervening commits) reports it at `:302` and explicitly states 'V22's :306 is superseded by this reading' -- yet V22 itself is left uncorrected in the log and is still cited elsewhere in the doc (e.g. §9 Conflict Surface cites 'scripts/verify_go.sh:27-64, V22' as authoritative for the manifest surface) without any pointer to the correction. A doc whose entire premise-verification discipline rests on 'every sentence cites a row' cannot carry two contradictory measurements of the same artifact at the same frozen base and call that resolved by a footnote buried three rows later."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.292112,
+    "total_tokens_in": 97217,
+    "total_tokens_out": 15015
+  }
+}

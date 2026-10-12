@@ -1,6 +1,6 @@
 # w-bounded-z3-report-producer — a bounded, pinned-executable Z3 proof-report producer that mints validator-authenticable envelopes
 
-- **Status**: PLANNED (designed, iteration 251; not implemented)
+- **Status**: IMPLEMENTED (designed iteration 251; landed iteration 252 as `0390aa5`, PR #242; judge sonnet PASS 86 → 88/100, zero blocking)
 - **Queue row**: 26, `w-bounded-z3-report-producer` · clause-2 · **v1.0.0 release prerequisite** — ruled routable by attended `D-WORLD-69` = **A** (2026-10-09, exception path 26 → 105 → 172 → 150). Shed from queue item 17 by attended `D-WORLD-24` arm **A** (Mark Edmondson, issue #68, 2026-08-20T16:04:52Z).
 - **Filed**: 2026-10-12, iteration 251 (designer role, unattended mission stage)
 - **Measurement base**: `ba79d1e` (this worktree HEAD; working tree carries only this document and its evidence directory — V1)
