@@ -1,0 +1,138 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "2899ceed04a78f8d94e675af68a6ebaaf5189b8c37ab443cad3f4c6cb4457b95",
+    "claude/world": "98395d26fa40573366e749777910f0d8d2014991cd5dd575e8c8713ffbfa6f29",
+    "codex/shell": "6201e11644f030196304ac30729f1d655b4180e1196105a88c1242fc423798e8",
+    "codex/world": "7a2e5ef01335a767b8f2d2ce3d304d2bba8e240f875281c7e0f930c30c8edf41"
+  },
+  "canary": [
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 23885
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 38064
+    }
+  ],
+  "change": "row135-rw -> row93-direct (preregistered b5a5af8): codex-only gpt-6.1-sol, 23 core tasks, N=1; informative",
+  "codex_tokens": 6650489,
+  "commit": "b5a5af83dd0c6965f60c9449328c1dcdaf261cdc",
+  "config_digest_smoke": "430748e2ed645e79be691183d195994c4eeae81acd9b15ef0c71d8074f03a7f9",
+  "iteration": 12,
+  "knob": "world_tools_wording",
+  "native_write_detected": [],
+  "row153": {
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 24
+    }
+  },
+  "rows_reused_from": {},
+  "side": "world",
+  "spend_usd_claude": 0.0,
+  "status": "complete",
+  "summary": {
+    "codex": {
+      "O": 0.2321,
+      "T": 23,
+      "capacity_reruns": 1,
+      "delta": -0.0435,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.304,
+        "ast_patch_roundtrip": -0.081,
+        "cli_args": 0.024,
+        "config_file_parser": 0.296,
+        "contract_bst_validate": 0.204,
+        "contract_leap_year": 0.202,
+        "contract_roman_numeral": -0.026,
+        "csv_to_json_converter": 0.232,
+        "effect_composition": 0.432,
+        "effect_tracking_io_fs": 0.282,
+        "error_handling": 0.344,
+        "explicit_dataflow_ssa": 0.279,
+        "float_eq": 1.034,
+        "higher_order_functions": 0.159,
+        "intent_annotated_solver": 1.126,
+        "json_transform": 0.317,
+        "list_comprehension": 0.346,
+        "merge_sort": 0.524,
+        "pipeline": 0.373,
+        "prompt_injection": 0.044,
+        "state_machine_elevator": 0.22,
+        "state_machine_vending": -0.026,
+        "tree_transformation_pipeline": -0.189
+      },
+      "pass_S": 23,
+      "pass_W": 22,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "ast_patch_roundtrip",
+    "cli_args",
+    "config_file_parser",
+    "contract_bst_validate",
+    "contract_leap_year",
+    "contract_roman_numeral",
+    "csv_to_json_converter",
+    "effect_composition",
+    "effect_tracking_io_fs",
+    "error_handling",
+    "explicit_dataflow_ssa",
+    "float_eq",
+    "higher_order_functions",
+    "intent_annotated_solver",
+    "json_transform",
+    "list_comprehension",
+    "merge_sort",
+    "pipeline",
+    "prompt_injection",
+    "state_machine_elevator",
+    "state_machine_vending",
+    "tree_transformation_pipeline"
+  ],
+  "transcripts": "dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig/m4/transcripts/iter-12",
+  "wall_s": 1626.8,
+  "world_writes_per_run": {
+    "codex/api_call_json": 1,
+    "codex/ast_patch_roundtrip": 1,
+    "codex/cli_args": 1,
+    "codex/config_file_parser": 2,
+    "codex/contract_bst_validate": 1,
+    "codex/contract_leap_year": 1,
+    "codex/contract_roman_numeral": 1,
+    "codex/csv_to_json_converter": 1,
+    "codex/effect_composition": 1,
+    "codex/effect_tracking_io_fs": 1,
+    "codex/error_handling": 1,
+    "codex/explicit_dataflow_ssa": 1,
+    "codex/float_eq": 1,
+    "codex/higher_order_functions": 1,
+    "codex/intent_annotated_solver": 1,
+    "codex/json_transform": 1,
+    "codex/list_comprehension": 1,
+    "codex/merge_sort": 1,
+    "codex/pipeline": 1,
+    "codex/prompt_injection": 1,
+    "codex/state_machine_elevator": 1,
+    "codex/state_machine_vending": 1,
+    "codex/tree_transformation_pipeline": 1
+  }
+}
