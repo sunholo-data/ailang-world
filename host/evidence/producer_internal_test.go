@@ -2,8 +2,11 @@ package evidence
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -492,4 +495,104 @@ func TestFixturesRevalidateAgainstFreshBinaryOutput(t *testing.T) {
 			}
 		})
 	}
+}
+
+// mintTestChecker pins the checker identity for mint tests. mint reads only the
+// pin and the version line, never the binary, so the path is never executed.
+func mintTestChecker() CheckerConfig {
+	return CheckerConfig{
+		ExecPath:        "/nonexistent/ailang",
+		Compiler:        hashref.SumSHA256([]byte("pinned checker")),
+		CompilerVersion: "AILANG v0.41.0",
+	}
+}
+
+var mintTestSubject = hashref.SumSHA256([]byte("subject source bytes"))
+
+// identitySet returns count sorted, unique identities of exactly size bytes each,
+// so a test can place the envelope on either side of the validator's read cap
+// through the real codec.
+func identitySet(count, size int) []string {
+	ids := make([]string, count)
+	for i := range ids {
+		ids[i] = fmt.Sprintf("id%03d", i) + strings.Repeat("x", size-5)
+	}
+	return ids
+}
+
+func TestProducerRequiresCallerNamedIdentities(t *testing.T) {
+	checker := mintTestChecker()
+	p := producerFor(t, checker)
+	verified, err := interpretCheck(fixtureBytes(t, "verifiedpass.json"))
+	if err != nil {
+		t.Fatalf("the committed verifiedpass fixture must interpret: %v", err)
+	}
+	t.Run("control", func(t *testing.T) {
+		if err := requireIdentities(verified, []string{"twicePlusOne"}); err != nil {
+			t.Fatalf("a required identity that is verified must pass: %v", err)
+		}
+		env, ref, err := p.mint(mintTestSubject, verified)
+		if err != nil {
+			t.Fatalf("mint: %v", err)
+		}
+		decoded, err := DecodeAuthenticatedEnvelope(env)
+		if err != nil {
+			t.Fatalf("minted envelope must decode: %v", err)
+		}
+		mac := hmac.New(sha256.New, internalTestKey[:])
+		mac.Write(decoded.Report)
+		if !hmac.Equal(mac.Sum(nil), decoded.MAC) {
+			t.Fatal("the MAC does not authenticate the report under the producer key")
+		}
+		report, err := DecodeProofReportV1(decoded.Report)
+		if err != nil {
+			t.Fatalf("minted report must decode: %v", err)
+		}
+		if strings.Join(report.Verified, ",") != "twicePlusOne" || report.Subject != mintTestSubject ||
+			report.Compiler != checker.Compiler || report.CompilerVersion != checker.CompilerVersion {
+			t.Fatalf("report fields do not match the configured subject and pin: %+v", report)
+		}
+		if report.Errors != 0 || report.Counterexamples != 0 || !report.CheckPassed || !report.ProofSucceeded {
+			t.Fatalf("a minted report must be clean: %+v", report)
+		}
+		if ref != hashref.SumSHA256(env) {
+			t.Fatalf("the returned ref %s must address the envelope bytes", ref)
+		}
+	})
+	t.Run("absent", func(t *testing.T) {
+		err := requireIdentities(verified, []string{"absentIdentity", "twicePlusOne"})
+		if !errors.Is(err, ErrRequiredIdentityMissing) || !strings.Contains(err.Error(), "absentIdentity") {
+			t.Fatalf("an unverified required identity must be refused by name: %v", err)
+		}
+	})
+	t.Run("empty", func(t *testing.T) {
+		for _, required := range [][]string{nil, {}} {
+			err := requireIdentities(verified, required)
+			if !errors.Is(err, ErrRequiredIdentityMissing) || !strings.Contains(err.Error(), "no required identities named") {
+				t.Fatalf("an empty requirement must be refused: want ErrRequiredIdentityMissing; got %v", err)
+			}
+		}
+	})
+}
+
+func TestProducerRefusesEnvelopeBeyondValidatorReadCap(t *testing.T) {
+	p := producerFor(t, mintTestChecker())
+	t.Run("over", func(t *testing.T) {
+		env, ref, err := p.mint(mintTestSubject, identitySet(200, 1000))
+		if !errors.Is(err, ErrEnvelopeTooLarge) {
+			t.Fatalf("an envelope past the validator read cap must be refused: want ErrEnvelopeTooLarge; got %v", err)
+		}
+		if env != nil || !ref.IsZero() {
+			t.Fatalf("a refused mint must return no bytes and a zero ref; got %d bytes, ref %s", len(env), ref)
+		}
+	})
+	t.Run("near-bound-control", func(t *testing.T) {
+		env, _, err := p.mint(mintTestSubject, identitySet(190, 1024))
+		if err != nil {
+			t.Fatalf("an envelope under the cap must mint: %v", err)
+		}
+		if len(env) > MaxBytes || len(env) <= MaxBytes-4096 {
+			t.Fatalf("the control must straddle the cap near its bound: envelope %d bytes, cap %d", len(env), MaxBytes)
+		}
+	})
 }

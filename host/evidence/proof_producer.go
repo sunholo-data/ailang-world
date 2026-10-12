@@ -3,6 +3,8 @@ package evidence
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,6 +48,14 @@ var ErrUnverifiedRun = errors.New("evidence: ai-check run is not a clean verific
 // ErrVacuousCheck refuses a run that produced output but verified no function.
 // A green run that proves nothing is refused, never minted.
 var ErrVacuousCheck = errors.New("evidence: ai-check run verified nothing")
+
+// ErrRequiredIdentityMissing refuses a proof that does not verify every
+// identity the caller named, and refuses an empty requirement outright.
+var ErrRequiredIdentityMissing = errors.New("evidence: required identity not verified")
+
+// ErrEnvelopeTooLarge refuses an envelope the validator could not read: its
+// read cap is MaxBytes, so a larger envelope is minted nowhere.
+var ErrEnvelopeTooLarge = errors.New("evidence: proof envelope exceeds the validator read cap")
 
 // ObjectWriter is the write seam of the producer. BusyTimeout reports the
 // store's lock-retry window so the write timeout can be ordered above it.
@@ -377,4 +387,46 @@ func interpretCheck(stdout []byte) ([]string, error) {
 	}
 	sort.Strings(verified)
 	return verified, nil
+}
+
+// requireIdentities admits a verified set only when it contains every named
+// identity. An empty requirement is refused here and nowhere else (PD10).
+func requireIdentities(verified, required []string) error {
+	if len(required) == 0 {
+		return fmt.Errorf("%w: no required identities named", ErrRequiredIdentityMissing)
+	}
+	for _, id := range required {
+		if !containsIdentity(verified, id) {
+			return fmt.Errorf("%w: required identity %q not verified", ErrRequiredIdentityMissing, id)
+		}
+	}
+	return nil
+}
+
+// mint encodes a clean report over the verified set, MACs it under the producer
+// key, and refuses any envelope the validator could not read back.
+func (p *Producer) mint(subject hashref.HashRef, verified []string) ([]byte, hashref.HashRef, error) {
+	report := ProofReportV1{
+		Schema:          ProofReportSchemaV1,
+		Subject:         subject,
+		Compiler:        p.checker.Compiler,
+		CompilerVersion: p.checker.CompilerVersion,
+		Verified:        verified,
+		CheckPassed:     true,
+		ProofSucceeded:  true,
+	}
+	rb, err := EncodeProofReportV1(report)
+	if err != nil {
+		return nil, hashref.HashRef{}, fmt.Errorf("evidence: encode proof report: %w", err)
+	}
+	mac := hmac.New(sha256.New, p.key[:])
+	mac.Write(rb)
+	env, err := EncodeAuthenticatedEnvelope(AuthenticatedEnvelope{Report: rb, MAC: mac.Sum(nil), MACValid: true})
+	if err != nil {
+		return nil, hashref.HashRef{}, fmt.Errorf("evidence: encode envelope: %w", err)
+	}
+	if len(env) > MaxBytes {
+		return nil, hashref.HashRef{}, fmt.Errorf("%w: envelope is %d bytes; validator read cap is %d", ErrEnvelopeTooLarge, len(env), MaxBytes)
+	}
+	return env, hashref.SumSHA256(env), nil
 }

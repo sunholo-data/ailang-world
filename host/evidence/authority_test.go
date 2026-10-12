@@ -326,6 +326,8 @@ var frozenPublicSurface = []string{
 	"value ErrOutputLimit",
 	"value ErrUnmintedAuthority",
 	"value ErrUnorderedTimeouts",
+	"value ErrEnvelopeTooLarge",
+	"value ErrRequiredIdentityMissing",
 	"value ErrUntrustedTool",
 	"value ErrUnverifiedRun",
 	"value ErrVacuousCheck",
