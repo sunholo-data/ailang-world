@@ -5,8 +5,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -381,4 +383,292 @@ func TestProducerSurfacesUncertainWriteOutcome(t *testing.T) {
 	if _, ok, err := s.GetObject(boundedTestContext(t), writer.hash); err != nil || !ok {
 		t.Fatalf("the uncertain commit must be present for the caller's reconcile: ok=%v err=%v", ok, err)
 	}
+}
+
+// decoyStimulus pins the store's one pooled connection with a decoy read of a
+// measured hold, so a store call made inside the window must wait behind it.
+type decoyStimulus struct {
+	t      *testing.T
+	s      *store.Store
+	decoy  hashref.HashRef
+	settle time.Duration
+}
+
+// attemptRecord is what an armed wrapper observed. It is written on the
+// producer's goroutine, so it never calls t.Fatal: the test classifies it after
+// the producer returns.
+type attemptRecord struct {
+	decoyCh     <-chan time.Duration
+	decoyTook   time.Duration
+	decoyJoined bool
+	callElapsed time.Duration
+	instrument  string
+	wouldBe     hashref.HashRef
+}
+
+// join waits for the decoy to finish, once, and returns how long it held.
+func (r *attemptRecord) join() time.Duration {
+	if !r.decoyJoined {
+		r.decoyTook = <-r.decoyCh
+		r.decoyJoined = true
+	}
+	return r.decoyTook
+}
+
+// arm starts the decoy, lets it settle, and checks the stimulus is live: the
+// decoy must still be in flight and the caller's deadline must be intact.
+func (d decoyStimulus) arm(ctx context.Context, rec *attemptRecord) {
+	rec.decoyCh = startDecoyRead(d.t, d.s, d.decoy)
+	time.Sleep(d.settle)
+	select {
+	case took := <-rec.decoyCh:
+		rec.decoyTook, rec.decoyJoined = took, true
+		rec.instrument = fmt.Sprintf("decoy finished in %s before the store call; settle %s is too long for its hold", took, d.settle)
+	default:
+	}
+	if rec.instrument == "" && ctx.Err() != nil {
+		rec.instrument = "caller deadline was spent before the store call; the settle consumed the bound"
+	}
+}
+
+// decoyReader is the real store behind a read seam. Unarmed, it is transparent.
+// Armed, it pins the connection first and times ONLY the real ReadObject call.
+type decoyReader struct {
+	s   *store.Store
+	d   decoyStimulus
+	rec *attemptRecord
+}
+
+func (r decoyReader) ReadObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (store.ObjectMeta, []byte, error) {
+	if r.rec == nil {
+		return r.s.ReadObject(ctx, ref, maxBytes)
+	}
+	r.d.arm(ctx, r.rec)
+	start := time.Now()
+	meta, payload, err := r.s.ReadObject(ctx, ref, maxBytes)
+	r.rec.callElapsed = time.Since(start)
+	return meta, payload, err
+}
+func (r decoyReader) BusyTimeout() time.Duration { return r.s.BusyTimeout() }
+
+// decoyWriter is the real store behind a write seam. Armed, it records the hash it
+// was handed, pins the connection, and times ONLY the real PutObject call.
+type decoyWriter struct {
+	s   *store.Store
+	d   decoyStimulus
+	rec *attemptRecord
+}
+
+func (w decoyWriter) PutObject(ctx context.Context, o store.Object) error {
+	if w.rec == nil {
+		return w.s.PutObject(ctx, o)
+	}
+	w.rec.wouldBe = o.Hash
+	w.d.arm(ctx, w.rec)
+	start := time.Now()
+	err := w.s.PutObject(ctx, o)
+	w.rec.callElapsed = time.Since(start)
+	return err
+}
+func (w decoyWriter) BusyTimeout() time.Duration { return w.s.BusyTimeout() }
+
+// generateWithin runs GenerateProof on its own goroutine under a watchdog. The
+// watchdog catches only a true hang: a correct mint includes hashing the binary
+// and two subprocesses, so it is set far above any deadline the test measures.
+func generateWithin(t *testing.T, p *evidence.Producer, src hashref.HashRef, required []string, watchdog time.Duration) (hashref.HashRef, error) {
+	t.Helper()
+	type result struct {
+		ref hashref.HashRef
+		err error
+	}
+	done := make(chan result, 1)
+	go func() {
+		ref, err := p.GenerateProof(context.Background(), src, required)
+		done <- result{ref, err}
+	}()
+	select {
+	case r := <-done:
+		return r.ref, r.err
+	case <-time.After(watchdog):
+		t.Fatalf("GenerateProof did not return within the %s watchdog: a true hang, not a deadline", watchdog)
+	}
+	return hashref.HashRef{}, nil
+}
+
+// requireDeadlineRefusal is the only PASS for an armed attempt: a deadline refusal
+// that is not a missing-deadline programming error, with a zero ref.
+func requireDeadlineRefusal(t *testing.T, ref hashref.HashRef, err error) {
+	t.Helper()
+	if !errors.Is(err, context.DeadlineExceeded) || errors.Is(err, store.ErrNoDeadline) || !ref.IsZero() {
+		t.Fatalf("a blocked store leg must refuse with DeadlineExceeded and a zero ref: ref=%s err=%v", ref, err)
+	}
+}
+
+// TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout pins the source read
+// leg against a real store whose one connection a decoy holds. The bound is
+// derived from the decoy's measured hold, so the stimulus holds for more than
+// 20x the bound on any machine. The decoy holds the connection and claims nothing
+// about SQLite lock contention.
+func TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout(t *testing.T) {
+	// The stimulus needs at least two Ps, and that is a measurement rather than
+	// a precaution: this driver's SQLite is pure Go, so at GOMAXPROCS=1 the decoy
+	// monopolizes the single P for its whole ~53 ms read and the blocked reader
+	// is never scheduled to join the pool queue at all -- it runs only after the
+	// connection is free, wins it, and exhausts the retry budget. Measured on
+	// unmutated code: 2/10 retry-exhaustion reds at GOMAXPROCS=1, 0/10 at the
+	// default. Declare the instrument's precondition and enforce it instead of
+	// inheriting whatever the harness happens to set.
+	if prev := runtime.GOMAXPROCS(0); prev < 2 {
+		// Announce it. Every other precondition in this file is loud, and a
+		// precondition that silently corrects itself is one nobody can audit.
+		t.Logf("raising GOMAXPROCS %d -> 2 for the duration of this test: the stimulus needs two Ps to exist concurrently", prev)
+		defer runtime.GOMAXPROCS(prev)
+		runtime.GOMAXPROCS(2)
+	}
+	s := openEvidenceStoreWithoutBusyWait(t)
+	pinned := pinnedChecker(t)
+	source, err := os.ReadFile("testdata/aicheck/verifiedpass.ail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srcRef := putSource(t, s, source)
+	decoyRef := putEvidenceObject(t, s, []byte(strings.Repeat("d", 256<<20)))
+	hold := measureGetObject(t, s, decoyRef)
+	if hold < minDecoyHold {
+		t.Fatalf("instrument failure: decoy held the connection for only %v; want at least %v for this stimulus to exist", hold, minDecoyHold)
+	}
+	bound := hold / decoyHoldRatio
+	settle := hold / 40
+	watchdog := 20*hold + 60*time.Second
+	required := []string{"twicePlusOne"}
+	t.Logf("decoy hold=%v -> derived ObjectReadTimeout=%v settle=%v watchdog=%v", hold, bound, settle, watchdog)
+
+	// No-decoy control first: the same producer mints when nothing pins the connection.
+	ctrlP, err := evidence.NewProducer(testKey, decoyReader{s: s}, &countingWriter{s: s}, pinned, evidence.ProducerConfig{
+		ObjectReadTimeout: bound, ObjectWriteTimeout: 3*time.Second + 2*hold, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ref, err := ctrlP.GenerateProof(context.Background(), srcRef, required); err != nil || ref.IsZero() {
+		t.Fatalf("instrument failure: the no-decoy control must mint at the derived bound: ref=%s err=%v", ref, err)
+	}
+
+	d := decoyStimulus{t: t, s: s, decoy: decoyRef, settle: settle}
+	for attempt := 1; attempt <= 5; attempt++ {
+		rec := &attemptRecord{}
+		writer := &countingWriter{s: s}
+		p, err := evidence.NewProducer(testKey, decoyReader{s: s, d: d, rec: rec}, writer, pinned, evidence.ProducerConfig{
+			ObjectReadTimeout: bound, ObjectWriteTimeout: 3*time.Second + 2*hold, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ref, err := generateWithin(t, p, srcRef, required, watchdog)
+		rec.join()
+		switch {
+		case rec.instrument != "":
+			t.Logf("attempt %d: instrument retry: %s", attempt, rec.instrument)
+		case err != nil:
+			requireDeadlineRefusal(t, ref, err)
+			if writer.calls.Load() != 0 {
+				t.Fatalf("a blocked source read must never reach the write: writes=%d", writer.calls.Load())
+			}
+			t.Logf("blocked read refused after store call %v (derived bound %v)", rec.callElapsed, bound)
+			return
+		case rec.callElapsed < 2*bound:
+			t.Logf("attempt %d: the store call won the freed connection in %v; retrying", attempt, rec.callElapsed)
+		default:
+			t.Fatalf("blocked source read minted after exceeding ObjectReadTimeout: store call=%v; want a deadline refusal", rec.callElapsed)
+		}
+	}
+	t.Fatal("instrument failure: the store call won the freed connection in all 5 attempts")
+}
+
+// TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout pins the envelope
+// write leg against a real store whose one connection a decoy holds. The bound is
+// derived from the decoy's measured hold, so the stimulus holds for more than 20x
+// the bound on any machine. The stimulus holds NO SQLite write lock and claims
+// nothing about lock contention: it only pins the store's pooled connection.
+func TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout(t *testing.T) {
+	// The stimulus needs at least two Ps, and that is a measurement rather than
+	// a precaution: this driver's SQLite is pure Go, so at GOMAXPROCS=1 the decoy
+	// monopolizes the single P for its whole ~53 ms read and the blocked reader
+	// is never scheduled to join the pool queue at all -- it runs only after the
+	// connection is free, wins it, and exhausts the retry budget. Measured on
+	// unmutated code: 2/10 retry-exhaustion reds at GOMAXPROCS=1, 0/10 at the
+	// default. Declare the instrument's precondition and enforce it instead of
+	// inheriting whatever the harness happens to set.
+	if prev := runtime.GOMAXPROCS(0); prev < 2 {
+		// Announce it. Every other precondition in this file is loud, and a
+		// precondition that silently corrects itself is one nobody can audit.
+		t.Logf("raising GOMAXPROCS %d -> 2 for the duration of this test: the stimulus needs two Ps to exist concurrently", prev)
+		defer runtime.GOMAXPROCS(prev)
+		runtime.GOMAXPROCS(2)
+	}
+	s := openEvidenceStoreWithoutBusyWait(t)
+	pinned := pinnedChecker(t)
+	base, err := os.ReadFile("testdata/aicheck/verifiedpass.ail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoyRef := putEvidenceObject(t, s, []byte(strings.Repeat("d", 256<<20)))
+	hold := measureGetObject(t, s, decoyRef)
+	if hold < minDecoyHold {
+		t.Fatalf("instrument failure: decoy held the connection for only %v; want at least %v for this stimulus to exist", hold, minDecoyHold)
+	}
+	bound := hold / decoyHoldRatio
+	settle := hold / 40
+	watchdog := 20*hold + 60*time.Second
+	readTimeout := 3*time.Second + 2*hold
+	required := []string{"twicePlusOne"}
+	t.Logf("decoy hold=%v -> derived ObjectWriteTimeout=%v settle=%v watchdog=%v", hold, bound, settle, watchdog)
+
+	// No-decoy control first: the same producer mints when nothing pins the connection.
+	controlSrc := putSource(t, s, base)
+	ctrlP, err := evidence.NewProducer(testKey, s, decoyWriter{s: s}, pinned, evidence.ProducerConfig{
+		ObjectReadTimeout: readTimeout, ObjectWriteTimeout: bound, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ref, err := ctrlP.GenerateProof(context.Background(), controlSrc, required); err != nil || ref.IsZero() {
+		t.Fatalf("instrument failure: the no-decoy control must mint at the derived bound: ref=%s err=%v", ref, err)
+	}
+
+	d := decoyStimulus{t: t, s: s, decoy: decoyRef, settle: settle}
+	for attempt := 1; attempt <= 5; attempt++ {
+		// Each armed attempt uses a source no earlier attempt stored: a won-connection
+		// mint leaves its envelope committed, and a repeat would hide the next result.
+		src := append(append([]byte(nil), base...), strings.Repeat("\n", attempt)...)
+		srcRef := putSource(t, s, src)
+		rec := &attemptRecord{}
+		p, err := evidence.NewProducer(testKey, s, decoyWriter{s: s, d: d, rec: rec}, pinned, evidence.ProducerConfig{
+			ObjectReadTimeout: readTimeout, ObjectWriteTimeout: bound, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ref, err := generateWithin(t, p, srcRef, required, watchdog)
+		rec.join()
+		switch {
+		case rec.instrument != "":
+			t.Logf("attempt %d: instrument retry: %s", attempt, rec.instrument)
+		case err != nil:
+			requireDeadlineRefusal(t, ref, err)
+			if rec.wouldBe.IsZero() {
+				t.Fatal("instrument failure: the armed write never reached the store")
+			}
+			if _, ok, gerr := s.GetObject(boundedTestContext(t), rec.wouldBe); gerr != nil || ok {
+				t.Fatalf("a refused envelope write must leave no object behind: ok=%v err=%v", ok, gerr)
+			}
+			t.Logf("blocked write refused after store call %v (derived bound %v)", rec.callElapsed, bound)
+			return
+		case rec.callElapsed < 2*bound:
+			t.Logf("attempt %d: the store call won the freed connection in %v; retrying", attempt, rec.callElapsed)
+		default:
+			t.Fatalf("blocked envelope write stored after exceeding ObjectWriteTimeout: store call=%v; want a deadline refusal", rec.callElapsed)
+		}
+	}
+	t.Fatal("instrument failure: the store call won the freed connection in all 5 attempts")
 }
