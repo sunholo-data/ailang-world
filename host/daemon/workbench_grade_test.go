@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -569,4 +570,364 @@ func TestWorkbenchGradeReasonScanTruncationIsDisclosed(t *testing.T) {
 		t.Fatalf("premise: stored rows = %d (err %v), want %d", len(rows), err, gradeCandidateScanLimit+1)
 	}
 	wantGradePage(t, d, subject, gradeReasonBoundElsewhere+gradeScanTruncation)
+}
+
+// scriptedReader serves one scripted object read to a real *evidence.Validator.
+type scriptedReader struct {
+	meta    store.ObjectMeta
+	payload []byte
+	err     error
+}
+
+func (r scriptedReader) ReadObject(context.Context, hashref.HashRef, int64) (store.ObjectMeta, []byte, error) {
+	return r.meta, r.payload, r.err
+}
+
+func (r scriptedReader) BusyTimeout() time.Duration { return 0 }
+
+// scriptedGrader returns ONLY results a real *evidence.Validator produced, or the
+// zero value (PD1). It composes real validators; it never fabricates a seal.
+type scriptedGrader struct {
+	v        *evidence.Validator // validates (built over a scriptedReader)
+	ref      *hashref.HashRef    // when non-nil, replaces the candidate ref passed to v
+	resolver proofValidator      // when non-nil, Resolve is delegated here (a DIFFERENT real validator = foreign seal)
+	zero     bool                // when true, ValidateProof returns evidence.ValidationResult{} (no verdict)
+}
+
+func (g scriptedGrader) ValidateProof(ctx context.Context, reportRef, expectedSubject hashref.HashRef) evidence.ValidationResult {
+	if g.zero {
+		return evidence.ValidationResult{}
+	}
+	if g.ref != nil {
+		reportRef = *g.ref
+	}
+	return g.v.ValidateProof(ctx, reportRef, expectedSubject)
+}
+
+func (g scriptedGrader) Resolve(sealed evidence.ValidatedEvidence) evidence.ResolutionResult {
+	if g.resolver != nil {
+		return g.resolver.Resolve(sealed)
+	}
+	return g.v.Resolve(sealed)
+}
+
+// scriptedFixture is a configured daemon with one stored placeholder candidate,
+// so the object page's proof scan is non-empty and the scripted grader runs.
+type scriptedFixture struct {
+	d       *Daemon
+	rig     gradeRig
+	subject hashref.HashRef
+	cand    hashref.HashRef
+}
+
+func scriptedRig(t *testing.T) scriptedFixture {
+	t.Helper()
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-scripted-subject")
+	cand := workbenchTestObject("grade-scripted-candidate", evidence.ProofSemanticID, evidence.InterfaceHashV1)
+	if err := d.store.PutObject(boundedTestContext(t), cand); err != nil {
+		t.Fatalf("PutObject candidate: %v", err)
+	}
+	return scriptedFixture{d: d, rig: rig, subject: subject, cand: cand.Hash}
+}
+
+func newScriptedV(t *testing.T, rig gradeRig, r scriptedReader, key [32]byte) *evidence.Validator {
+	t.Helper()
+	v, err := evidence.NewValidator(key, r, evidence.CompilerConfig{Compiler: rig.compiler,
+		CompilerVersion: rig.version, ObjectReadTimeout: 10 * time.Second}, []string{gradeTestIdentity})
+	if err != nil {
+		t.Fatalf("NewValidator: %v", err)
+	}
+	return v
+}
+
+const (
+	premiseUnsupported = "unsupported" // the validator reports this UnsupportedReason
+	premiseValidated   = "validated"   // the validator seals the candidate
+	premiseNone        = "none"        // the zero result: no verdict at all
+)
+
+// gradeSeamArm is one row of the seam table (C5 AC4): a grader, the premise the
+// test asserts on it directly, and the exact page it must render.
+type gradeSeamArm struct {
+	name     string
+	grader   proofValidator
+	premise  string
+	reason   evidence.UnsupportedReason
+	status   int
+	sentence string // the unavailable sentence ("" for PROVEN and for 500)
+	proven   bool
+}
+
+// gradeSeamArms is the 15-row table, shared by the mapping, the verdict sweep
+// and the sanitized checks. Every grader is a real validator or the zero value.
+func gradeSeamArms(t *testing.T, f scriptedFixture) []gradeSeamArm {
+	t.Helper()
+	rig, subject := f.rig, f.subject
+	good := mintGradeEnvelope(t, rig.key, gradeReport(rig, subject))
+	goodRef := hashref.SumSHA256(good)
+	goodMeta := store.ObjectMeta{InterfaceHash: evidence.InterfaceHashV1, SemanticID: evidence.ProofSemanticID}
+	ptr := func(h hashref.HashRef) *hashref.HashRef { return &h }
+	nv := func(r scriptedReader) *evidence.Validator { return newScriptedV(t, rig, r, rig.key) }
+	withReport := func(mut func(*evidence.ProofReportV1)) []byte {
+		r := gradeReport(rig, subject)
+		mut(&r)
+		return mintGradeEnvelope(t, rig.key, r)
+	}
+	otherEnv := withReport(func(r *evidence.ProofReportV1) { r.Subject = hashref.SumSHA256([]byte("grade-scripted-other")) })
+	toolEnv := withReport(func(r *evidence.ProofReportV1) { r.Compiler = hashref.SumSHA256([]byte("another compiler")) })
+	failEnv := withReport(func(r *evidence.ProofReportV1) { r.Errors = 1 })
+	incEnv := withReport(func(r *evidence.ProofReportV1) { r.Verified = []string{"world/other.ail"} })
+
+	return []gradeSeamArm{
+		{name: "invalid_ref", premise: premiseUnsupported, reason: evidence.UnsupportedInvalidRef, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: good}), ref: &hashref.HashRef{}}},
+		{name: "missing", premise: premiseUnsupported, reason: evidence.UnsupportedMissing, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta}), ref: &goodRef}},
+		{name: "oversize", premise: premiseUnsupported, reason: evidence.UnsupportedOversize, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{err: &store.ObjectTooLargeError{Size: evidence.MaxBytes + 1, MaxBytes: evidence.MaxBytes}})}},
+		{name: "hash_mismatch", premise: premiseUnsupported, reason: evidence.UnsupportedHashMismatch, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: good})}},
+		{name: "wrong_semantic_id", premise: premiseUnsupported, reason: evidence.UnsupportedWrongSemanticID, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: store.ObjectMeta{InterfaceHash: evidence.InterfaceHashV1, SemanticID: "other/id"}, payload: good}), ref: &goodRef}},
+		{name: "wrong_interface", premise: premiseUnsupported, reason: evidence.UnsupportedWrongInterface, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: store.ObjectMeta{InterfaceHash: hashref.SumSHA256([]byte("x")), SemanticID: evidence.ProofSemanticID}, payload: good}), ref: &goodRef}},
+		{name: "malformed", premise: premiseUnsupported, reason: evidence.UnsupportedMalformed, status: 200, sentence: gradeReasonStructuralCandidate,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: []byte("{}")}), ref: ptr(hashref.SumSHA256([]byte("{}")))}},
+		{name: "unauthenticated_report", premise: premiseUnsupported, reason: evidence.UnsupportedUnauthenticatedReport, status: 200, sentence: gradeReasonUnauthenticated,
+			grader: scriptedGrader{v: newScriptedV(t, rig, scriptedReader{meta: goodMeta, payload: good}, [32]byte{7}), ref: &goodRef}},
+		{name: "subject_mismatch", premise: premiseUnsupported, reason: evidence.UnsupportedSubjectMismatch, status: 200, sentence: gradeReasonBoundElsewhere,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: otherEnv}), ref: ptr(hashref.SumSHA256(otherEnv))}},
+		{name: "tool_mismatch", premise: premiseUnsupported, reason: evidence.UnsupportedToolMismatch, status: 200, sentence: gradeReasonToolMismatch,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: toolEnv}), ref: ptr(hashref.SumSHA256(toolEnv))}},
+		{name: "proof_failed", premise: premiseUnsupported, reason: evidence.UnsupportedProofFailed, status: 200, sentence: gradeReasonProofFailed,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: failEnv}), ref: ptr(hashref.SumSHA256(failEnv))}},
+		{name: "proof_incomplete", premise: premiseUnsupported, reason: evidence.UnsupportedProofIncomplete, status: 200, sentence: gradeReasonProofIncomplete,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: incEnv}), ref: ptr(hashref.SumSHA256(incEnv))}},
+		{name: "validated", premise: premiseValidated, status: 200, proven: true,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: good}), ref: &goodRef}},
+		{name: "resolve_refused", premise: premiseValidated, status: 500,
+			grader: scriptedGrader{v: nv(scriptedReader{meta: goodMeta, payload: good}), ref: &goodRef,
+				resolver: newScriptedV(t, rig, scriptedReader{}, rig.key)}},
+		{name: "no_verdict", premise: premiseNone, status: 500,
+			grader: scriptedGrader{zero: true}},
+	}
+}
+
+// checkSeamPremise asserts the arm's validator outcome directly, so no page
+// assertion is made without the premise that produces it.
+func checkSeamPremise(t *testing.T, a gradeSeamArm, cand, subject hashref.HashRef) {
+	t.Helper()
+	res := a.grader.ValidateProof(boundedTestContext(t), cand, subject)
+	switch a.premise {
+	case premiseUnsupported:
+		got, ok := res.Unsupported()
+		if !ok || got != a.reason {
+			t.Fatalf("%s: premise reason = %q (unsupported %v, err %v), want %q", a.name, got, ok, res.Err(), a.reason)
+		}
+	case premiseValidated:
+		if _, ok := res.Validated(); !ok {
+			t.Fatalf("%s: premise: not validated (err %v)", a.name, res.Err())
+		}
+	case premiseNone:
+		_, validated := res.Validated()
+		_, unsupported := res.Unsupported()
+		if validated || unsupported || res.Err() != nil {
+			t.Fatalf("%s: premise: want the zero result, got validated %v unsupported %v err %v", a.name, validated, unsupported, res.Err())
+		}
+	}
+}
+
+// TestWorkbenchGradeReasonMapsEveryUnsupportedReason is the AC4 table: every
+// validator outcome renders its exact sentence, no other sentence appears, and
+// the unknown-token arm runs on the pure production function.
+func TestWorkbenchGradeReasonMapsEveryUnsupportedReason(t *testing.T) {
+	f := scriptedRig(t)
+	arms := gradeSeamArms(t, f)
+	for _, a := range arms {
+		// subject_mismatch is not one of the 11 mapped tokens: the scan loop
+		// turns it into gradeReasonBoundElsewhere, so the map is checked on the rest.
+		if a.premise == premiseUnsupported && a.reason != evidence.UnsupportedSubjectMismatch && gradeReasonSentence(a.reason) != a.sentence {
+			t.Fatalf("%s: gradeReasonSentence(%q) = %q, want %q", a.name, a.reason, gradeReasonSentence(a.reason), a.sentence)
+		}
+	}
+	if got := gradeReasonSentence(evidence.UnsupportedReason("future_reason")); got != gradeReasonNoneValidated {
+		t.Fatalf("unknown token: gradeReasonSentence = %q, want %q", got, gradeReasonNoneValidated)
+	}
+	known := []string{gradeReasonNoStoredEvidence, gradeReasonBoundElsewhere, gradeReasonToolMismatch,
+		gradeReasonProofFailed, gradeReasonProofIncomplete, gradeReasonUnauthenticated,
+		gradeReasonStructuralCandidate, gradeReasonNoneValidated, objectGradeUnavailableReason}
+	for _, a := range arms {
+		f.d.grader = a.grader
+		checkSeamPremise(t, a, f.cand, f.subject)
+		code, body := gradePage(t, f.d, f.subject)
+		if code != a.status {
+			t.Fatalf("%s: status %d, want %d", a.name, code, a.status)
+		}
+		switch {
+		case a.status == http.StatusInternalServerError:
+			if !strings.Contains(body, ">Internal<") {
+				t.Fatalf("%s: 500 body lacks the sanitized Internal marker", a.name)
+			}
+		case a.proven:
+			if c := strings.Count(body, "<p><span>PROVEN</span></p>"); c != 1 {
+				t.Fatalf("%s: PROVEN line count %d, want 1", a.name, c)
+			}
+		default:
+			if c := strings.Count(body, wantGradeUnavailable(a.sentence)); c != 1 {
+				t.Fatalf("%s: line %q count %d, want 1", a.name, a.sentence, c)
+			}
+		}
+		for _, s := range known {
+			if s != a.sentence && strings.Contains(body, wantGradeUnavailable(s)) {
+				t.Fatalf("%s: unexpected grade sentence %q", a.name, s)
+			}
+		}
+	}
+}
+
+// proofScanFailingStore fails the proof-ID scan with err and forwards every
+// other read (the wrapper pattern of workbench_test.go's failing stores).
+type proofScanFailingStore struct {
+	readStore
+	err error
+}
+
+func (s proofScanFailingStore) ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error) {
+	if id == evidence.ProofSemanticID {
+		return nil, s.err
+	}
+	return s.readStore.ObjectsBySemanticID(ctx, id, after, limit)
+}
+
+// TestWorkbenchGradeScanFailureIsSanitized: an operational failure of the proof
+// scan is a sanitized 500 or 503, never a reason sentence (AC5, M9).
+func TestWorkbenchGradeScanFailureIsSanitized(t *testing.T) {
+	cases := []struct {
+		name   string
+		err    error
+		status int
+		marker string
+	}{
+		{"internal", errSentinelInternal, http.StatusInternalServerError, ">Internal<"},
+		{"deadline", context.DeadlineExceeded, http.StatusServiceUnavailable, ">Timeout<"},
+		{"reference-index", &store.ReferenceIndexUnavailableError{}, http.StatusServiceUnavailable, ">ReferenceIndexUnavailable<"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d, _ := newGradeDaemon(t, []string{gradeTestIdentity})
+			subject := storeGradeSubject(t, d, "grade-scan-"+c.name)
+			buf := &bytes.Buffer{}
+			d.errLog = buf
+			d.reads = proofScanFailingStore{readStore: d.reads, err: c.err}
+			code, body := gradePage(t, d, subject)
+			if code != c.status || !strings.Contains(body, c.marker) {
+				t.Fatalf("status %d body %q; want %d with %s", code, body, c.status, c.marker)
+			}
+			if strings.Contains(body, "GRADE UNAVAILABLE") {
+				t.Fatalf("an operational failure rendered a grade reason")
+			}
+			if strings.Contains(body, internalDetailSentinel) {
+				t.Fatalf("the response body leaks the internal detail")
+			}
+			if c.name == "internal" && !strings.Contains(buf.String(), internalDetailSentinel) {
+				t.Fatalf("the operator log lacks the internal detail")
+			}
+		})
+	}
+	t.Run("control", func(t *testing.T) {
+		d, _ := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-scan-control")
+		d.reads = proofScanFailingStore{readStore: d.reads, err: nil}
+		if code, _ := gradePage(t, d, subject); code != http.StatusOK {
+			t.Fatalf("control: status %d, want 200", code)
+		}
+	})
+}
+
+// TestWorkbenchGradeValidationReadErrorIsSanitized: a validator read error is a
+// sanitized 500 with the detail kept in the operator log only (AC5, M18).
+func TestWorkbenchGradeValidationReadErrorIsSanitized(t *testing.T) {
+	f := scriptedRig(t)
+	buf := &bytes.Buffer{}
+	f.d.errLog = buf
+	f.d.grader = scriptedGrader{v: newScriptedV(t, f.rig, scriptedReader{err: errSentinelInternal}, f.rig.key)}
+	if res := f.d.grader.ValidateProof(boundedTestContext(t), f.cand, f.subject); res.Err() == nil {
+		t.Fatalf("premise: the read error did not reach the validator result")
+	}
+	code, body := gradePage(t, f.d, f.subject)
+	if code != http.StatusInternalServerError || !strings.Contains(body, ">Internal<") {
+		t.Fatalf("status %d body %q; want 500 with >Internal<", code, body)
+	}
+	if strings.Contains(body, internalDetailSentinel) {
+		t.Fatalf("the response body leaks the read error detail")
+	}
+	if !strings.Contains(buf.String(), internalDetailSentinel) {
+		t.Fatalf("the operator log lacks the read error detail")
+	}
+}
+
+// TestWorkbenchGradeValidatorRefusalIsSanitized: a resolver that refuses the
+// validator's own seal is a sanitized 500, never PROVEN (AC5, M5).
+func TestWorkbenchGradeValidatorRefusalIsSanitized(t *testing.T) {
+	f := scriptedRig(t)
+	var refusal gradeSeamArm
+	for _, a := range gradeSeamArms(t, f) {
+		if a.name == "resolve_refused" {
+			refusal = a
+		}
+	}
+	f.d.grader = refusal.grader
+	res := refusal.grader.ValidateProof(boundedTestContext(t), f.cand, f.subject)
+	sealed, ok := res.Validated()
+	if !ok {
+		t.Fatalf("premise: not validated (err %v)", res.Err())
+	}
+	foreign := newScriptedV(t, f.rig, scriptedReader{}, f.rig.key)
+	if err := foreign.Resolve(sealed).Err(); !errors.Is(err, evidence.ErrForeignSeal) {
+		t.Fatalf("premise: foreign Resolve err = %v, want evidence.ErrForeignSeal", err)
+	}
+	buf := &bytes.Buffer{}
+	f.d.errLog = buf
+	code, body := gradePage(t, f.d, f.subject)
+	if code != http.StatusInternalServerError || !strings.Contains(body, ">Internal<") {
+		t.Fatalf("status %d; want 500 with >Internal<", code)
+	}
+	if strings.Contains(body, "<span>PROVEN</span>") {
+		t.Fatalf("a refused seal rendered PROVEN")
+	}
+	if !strings.Contains(buf.String(), "refused the validator's own seal") {
+		t.Fatalf("the operator log lacks the refusal detail")
+	}
+}
+
+// TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels: across every validated
+// or unavailable page, no verdict channel or unminted label is rendered, and
+// PROVEN appears exactly once and only on the validated arm (AC6). The markers
+// are the channel's markup, not the bare "verdict-" (see deviation 3): the
+// inline stylesheet always carries .verdict-pass and .verdict-fail.
+func TestWorkbenchGradeNeverRendersVerdictOrUnmintedLabels(t *testing.T) {
+	f := scriptedRig(t)
+	for _, a := range gradeSeamArms(t, f) {
+		if a.status != http.StatusOK {
+			continue
+		}
+		f.d.grader = a.grader
+		code, body := gradePage(t, f.d, f.subject)
+		if code != http.StatusOK {
+			t.Fatalf("%s: status %d, want 200", a.name, code)
+		}
+		for _, m := range []string{`class="verdict-`, `aria-label="test verdict`, "<span>TESTED</span>", "<span>ATTESTED</span>", "<span>CLAIMED</span>"} {
+			if strings.Contains(body, m) {
+				t.Fatalf("%s: page renders %s", a.name, m)
+			}
+		}
+		if a.proven {
+			if c := strings.Count(body, "<p><span>PROVEN</span></p>"); c != 1 {
+				t.Fatalf("%s: PROVEN line count %d, want 1", a.name, c)
+			}
+		} else if strings.Contains(body, "<span>PROVEN</span>") {
+			t.Fatalf("%s: unavailable page renders PROVEN", a.name)
+		}
+	}
 }

@@ -1078,6 +1078,18 @@ is read-only; checked links open stored entries and objects.
   stated explicitly, and malformed chains show UNAVAILABLE. Approvals are registry
   writes, so this pane refreshes on a log-triggered page update, with an as-of entry.
 
+- **Object grade:** an object page shows `PROVEN` only when the daemon holds a
+  proof-envelope validator (`serve --proof-key-file <32-byte file>
+  --proof-required-identity NAME`, both needing `--ailang-bin`) and a stored
+  `world/proof-report/v1` envelope, authenticated under that key, names the object
+  as its subject. Otherwise the page says `GRADE UNAVAILABLE —` and one reason: no
+  validator configured (`no canonical host projection…`), no stored envelopes
+  (`no stored evidence…`), envelopes bound to other objects, an envelope that does
+  not authenticate, a different compiler, a failed proof, a missing identity, or a
+  malformed candidate. At most 100 candidates are checked, and a longer scan says
+  so. Nothing in this release writes envelopes, so a configured daemon shows
+  `no stored evidence` until a producer does.
+
 **JavaScript disabled or blocked:** the complete server-rendered page still works;
 its footer says “Live updates: off. Reload to refresh.” With JavaScript enabled,
 new commits appear **without reload**: the client follows `/agui/`, then re-fetches
@@ -1188,3 +1200,21 @@ WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
 It observes the initial cursor POST, commits the next entry, observes the page
 re-fetch and a later POST with the new cursor, then checks the JavaScript-off
 control. Chrome is optional for ordinary tests/CI; a configured invalid path fails.
+
+**Check the grade validator wiring** (disposable store, port 7645, from the repository root):
+
+```bash
+export PIN=$HOME/.pinned-ailang/ailang
+GRADE=$(mktemp -d)
+go build -o "$GRADE/ailang-worldd" ./cmd/ailang-worldd
+head -c 32 /dev/urandom > "$GRADE/proof.key"
+"$GRADE/ailang-worldd" serve --db "$GRADE/world.db" --ailang-bin "$PIN" --bind 127.0.0.1:7645 \
+  --proof-key-file "$GRADE/proof.key" --proof-required-identity world/types.ail &
+GRADE_PID=$!
+for i in $(seq 1 60); do curl --silent --fail http://127.0.0.1:7645/v1/health >/dev/null && break; sleep 1; done
+HEAD=$(curl --silent --fail http://127.0.0.1:7645/v1/registry/world/epoch-registry/v1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["head"])')
+curl --silent --fail "http://127.0.0.1:7645/workbench?object=$HEAD" | grep -o 'GRADE UNAVAILABLE — [^<]*'
+kill $GRADE_PID; wait $GRADE_PID 2>/dev/null; rm -rf "$GRADE"
+```
+
+Expected: `GRADE UNAVAILABLE — no stored evidence: the store holds no object with semantic ID world/proof-report/v1`.
