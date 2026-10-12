@@ -1,0 +1,27 @@
+{
+  "file": "fixtures/mixed.ail",
+  "check": {
+    "passed": true,
+    "error_count": 0,
+    "errors": []
+  },
+  "verify": {
+    "available": true,
+    "verified": 1,
+    "counterexample": 0,
+    "skipped": 0,
+    "errors": 1,
+    "results": [
+      {
+        "function": "good",
+        "status": "verified",
+        "duration": 4735708
+      },
+      {
+        "function": "showInt",
+        "status": "error",
+        "reason": "encoding error: cannot encode ensures clause: let value: unsupported application: $builtin.show([x])"
+      }
+    ]
+  }
+}
