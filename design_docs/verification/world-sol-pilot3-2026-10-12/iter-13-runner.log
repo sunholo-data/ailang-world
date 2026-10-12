@@ -1,0 +1,102 @@
+canary codex/shell: PASS att=[] 22319 ms
+codex/shell/api_call_json: PASS none 41112 ms $None att=[] prov=None r153=None
+codex/shell/ast_patch_roundtrip: PASS none 28980 ms $None att=[] prov=None r153=None
+codex/shell/cli_args: PASS none 22908 ms $None att=[] prov=None r153=None
+codex/shell/config_file_parser: PASS none 72640 ms $None att=[] prov=None r153=None
+codex/shell/contract_bst_validate: PASS none 43383 ms $None att=[] prov=None r153=None
+codex/shell/contract_leap_year: PASS none 43045 ms $None att=[] prov=None r153=None
+codex/shell/contract_roman_numeral: PASS none 83598 ms $None att=[] prov=None r153=None
+codex/shell/csv_to_json_converter: PASS none 37387 ms $None att=[] prov=None r153=None
+codex/shell/effect_composition: PASS none 26586 ms $None att=[] prov=None r153=None
+codex/shell/effect_tracking_io_fs: PASS none 24093 ms $None att=[] prov=None r153=None
+codex/shell/error_handling: PASS none 27778 ms $None att=[] prov=None r153=None
+codex/shell/explicit_dataflow_ssa: PASS none 22271 ms $None att=[] prov=None r153=None
+codex/shell/float_eq: PASS none 16533 ms $None att=[] prov=None r153=None
+codex/shell/higher_order_functions: PASS none 33872 ms $None att=[] prov=None r153=None
+codex/shell/intent_annotated_solver: PASS none 23965 ms $None att=[] prov=None r153=None
+codex/shell/json_transform: PASS none 39053 ms $None att=[] prov=None r153=None
+codex/shell/list_comprehension: PASS none 47171 ms $None att=[] prov=None r153=None
+codex/shell/merge_sort: PASS none 33849 ms $None att=[] prov=None r153=None
+codex/shell/pipeline: PASS none 30662 ms $None att=[] prov=None r153=None
+codex/shell/prompt_injection: PASS none 60995 ms $None att=[] prov=None r153=None
+codex/shell/state_machine_elevator: PASS none 48100 ms $None att=[] prov=None r153=None
+codex/shell/state_machine_vending: PASS none 42429 ms $None att=[] prov=None r153=None
+codex/shell/tree_transformation_pipeline: PASS none 59519 ms $None att=[] prov=None r153=None
+canary codex/world: PASS att=[] 28416 ms
+codex/world/api_call_json: PASS none 29120 ms $None att=[] prov=world r153=0
+codex/world/ast_patch_roundtrip: PASS none 24807 ms $None att=[] prov=world r153=0
+codex/world/cli_args: PASS none 34063 ms $None att=[] prov=world r153=0
+codex/world/config_file_parser: FAIL logic_error 42242 ms $None att=[] prov=world r153=0
+codex/world/contract_bst_validate: PASS none 39594 ms $None att=[] prov=world r153=0
+codex/world/contract_leap_year: PASS none 29340 ms $None att=[] prov=world r153=0
+codex/world/contract_roman_numeral: PASS none 57821 ms $None att=[] prov=world r153=0
+codex/world/csv_to_json_converter: PASS none 33636 ms $None att=[] prov=world r153=0
+codex/world/effect_composition: PASS none 23960 ms $None att=[] prov=world r153=0
+codex/world/effect_tracking_io_fs: PASS none 29779 ms $None att=[] prov=world r153=0
+codex/world/error_handling: PASS none 24041 ms $None att=[] prov=world r153=0
+codex/world/explicit_dataflow_ssa: PASS none 31475 ms $None att=[] prov=world r153=0
+codex/world/float_eq: PASS none 17903 ms $None att=[] prov=world r153=0
+codex/world/higher_order_functions: PASS none 26969 ms $None att=[] prov=world r153=0
+codex/world/intent_annotated_solver: PASS none 24955 ms $None att=[] prov=world r153=0
+codex/world/json_transform: PASS none 39914 ms $None att=[] prov=world r153=0
+codex/world/list_comprehension: PASS none 24768 ms $None att=[] prov=world r153=0
+codex/world/merge_sort: PASS none 28484 ms $None att=[] prov=world r153=0
+codex/world/pipeline: PASS none 20265 ms $None att=[] prov=world r153=0
+codex/world/prompt_injection: PASS none 22689 ms $None att=[] prov=world r153=0
+codex/world/state_machine_elevator: PASS none 30749 ms $None att=[] prov=world r153=0
+codex/world/state_machine_vending: PASS none 44939 ms $None att=[] prov=world r153=0
+codex/world/tree_transformation_pipeline: PASS none 40271 ms $None att=[] prov=world r153=0
+{
+ "summary": {
+  "codex": {
+   "T": 23,
+   "pass_S": 23,
+   "pass_W": 22,
+   "delta": -0.0435,
+   "O": -0.144,
+   "o_t": {
+    "api_call_json": -0.292,
+    "ast_patch_roundtrip": -0.144,
+    "cli_args": 0.487,
+    "config_file_parser": -0.418,
+    "contract_bst_validate": -0.087,
+    "contract_leap_year": -0.318,
+    "contract_roman_numeral": -0.308,
+    "csv_to_json_converter": -0.1,
+    "effect_composition": -0.099,
+    "effect_tracking_io_fs": 0.236,
+    "error_handling": -0.135,
+    "explicit_dataflow_ssa": 0.413,
+    "float_eq": 0.083,
+    "higher_order_functions": -0.204,
+    "intent_annotated_solver": 0.041,
+    "json_transform": 0.022,
+    "list_comprehension": -0.475,
+    "merge_sort": -0.158,
+    "pipeline": -0.339,
+    "prompt_injection": -0.628,
+    "state_machine_elevator": -0.361,
+    "state_machine_vending": 0.059,
+    "tree_transformation_pipeline": -0.323
+   },
+   "harness_faults": {
+    "shell": 0,
+    "world": 0
+   },
+   "capacity_reruns": 0,
+   "unclassified": 0
+  }
+ },
+ "row153": {
+  "codex": {
+   "task_runs": 23,
+   "runs_with_callback_timeout": 0,
+   "callback_timeouts": 0,
+   "daemon_deadline_lines": 0
+  }
+ },
+ "spend": 0.0,
+ "wall_s": 1691.8,
+ "status": "complete"
+}
+rc=0

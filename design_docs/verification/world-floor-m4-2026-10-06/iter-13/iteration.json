@@ -1,0 +1,138 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "2899ceed04a78f8d94e675af68a6ebaaf5189b8c37ab443cad3f4c6cb4457b95",
+    "claude/world": "98395d26fa40573366e749777910f0d8d2014991cd5dd575e8c8713ffbfa6f29",
+    "codex/shell": "6201e11644f030196304ac30729f1d655b4180e1196105a88c1242fc423798e8",
+    "codex/world": "7a2e5ef01335a767b8f2d2ce3d304d2bba8e240f875281c7e0f930c30c8edf41"
+  },
+  "canary": [
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 22319
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 28416
+    }
+  ],
+  "change": "no config change (preregistered de55d8e): per-event timing attribution (PR #247), row93-direct, codex-only gpt-6.1-sol, 23 core tasks, N=1; informative",
+  "codex_tokens": 6605551,
+  "commit": "de55d8e3d82ebdce9c4dad312e881cf7482736b3",
+  "config_digest_smoke": "430748e2ed645e79be691183d195994c4eeae81acd9b15ef0c71d8074f03a7f9",
+  "iteration": 13,
+  "knob": "world_tools_wording",
+  "native_write_detected": [],
+  "row153": {
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 23
+    }
+  },
+  "rows_reused_from": {},
+  "side": "harness",
+  "spend_usd_claude": 0.0,
+  "status": "complete",
+  "summary": {
+    "codex": {
+      "O": -0.144,
+      "T": 23,
+      "capacity_reruns": 0,
+      "delta": -0.0435,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.292,
+        "ast_patch_roundtrip": -0.144,
+        "cli_args": 0.487,
+        "config_file_parser": -0.418,
+        "contract_bst_validate": -0.087,
+        "contract_leap_year": -0.318,
+        "contract_roman_numeral": -0.308,
+        "csv_to_json_converter": -0.1,
+        "effect_composition": -0.099,
+        "effect_tracking_io_fs": 0.236,
+        "error_handling": -0.135,
+        "explicit_dataflow_ssa": 0.413,
+        "float_eq": 0.083,
+        "higher_order_functions": -0.204,
+        "intent_annotated_solver": 0.041,
+        "json_transform": 0.022,
+        "list_comprehension": -0.475,
+        "merge_sort": -0.158,
+        "pipeline": -0.339,
+        "prompt_injection": -0.628,
+        "state_machine_elevator": -0.361,
+        "state_machine_vending": 0.059,
+        "tree_transformation_pipeline": -0.323
+      },
+      "pass_S": 23,
+      "pass_W": 22,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "ast_patch_roundtrip",
+    "cli_args",
+    "config_file_parser",
+    "contract_bst_validate",
+    "contract_leap_year",
+    "contract_roman_numeral",
+    "csv_to_json_converter",
+    "effect_composition",
+    "effect_tracking_io_fs",
+    "error_handling",
+    "explicit_dataflow_ssa",
+    "float_eq",
+    "higher_order_functions",
+    "intent_annotated_solver",
+    "json_transform",
+    "list_comprehension",
+    "merge_sort",
+    "pipeline",
+    "prompt_injection",
+    "state_machine_elevator",
+    "state_machine_vending",
+    "tree_transformation_pipeline"
+  ],
+  "transcripts": "dev/sunholo-data/ailang-world/.ailang/state/row174-attended-2026-10-10/rig/m4/transcripts/iter-13",
+  "wall_s": 1691.8,
+  "world_writes_per_run": {
+    "codex/api_call_json": 1,
+    "codex/ast_patch_roundtrip": 1,
+    "codex/cli_args": 2,
+    "codex/config_file_parser": 2,
+    "codex/contract_bst_validate": 1,
+    "codex/contract_leap_year": 1,
+    "codex/contract_roman_numeral": 1,
+    "codex/csv_to_json_converter": 1,
+    "codex/effect_composition": 1,
+    "codex/effect_tracking_io_fs": 1,
+    "codex/error_handling": 1,
+    "codex/explicit_dataflow_ssa": 1,
+    "codex/float_eq": 1,
+    "codex/higher_order_functions": 1,
+    "codex/intent_annotated_solver": 1,
+    "codex/json_transform": 1,
+    "codex/list_comprehension": 1,
+    "codex/merge_sort": 1,
+    "codex/pipeline": 1,
+    "codex/prompt_injection": 1,
+    "codex/state_machine_elevator": 1,
+    "codex/state_machine_vending": 1,
+    "codex/tree_transformation_pipeline": 1
+  }
+}
