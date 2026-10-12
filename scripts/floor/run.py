@@ -688,6 +688,7 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
         'output_tokens': ((res.get('usage') or {}).get('output_tokens') if agent == 'claude'
                           else (parsed.get('usage') or {}).get('output_tokens')),
         'num_turns': res.get('num_turns'), 'tool_items': drv.get('tool_items'),
+        'timing': drv.get('timing'),
         'world_tool_errors': world_tool_errors(agent, parsed) if arm == 'world' else None,
         'argv': drv.get('argv'), 'world': drv.get('world'), 'preflight': drv.get('preflight'),
         'void_empty': drv.get('void_empty'), 'mcp_config_deleted': drv.get('mcp_config_deleted'),

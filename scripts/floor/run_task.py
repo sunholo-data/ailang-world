@@ -9,7 +9,10 @@
     ``finish_reason=timeout`` when the deadline kills it;
   * the raw transcript (Claude stream-json / codex ``--json``) to ``transcript_path``, parsed into
     ``tool_items`` (Claude ``tool_use`` names, codex ``item.type`` counts);
-  * the ``void/<ep>`` cwd asserted still empty (World arm).
+  * the ``void/<ep>`` cwd asserted still empty (World arm);
+  * per-line arrival times of the agent's stdout in ``<transcript>.times`` (ms since spawn, one per
+    transcript line; the transcript bytes are unchanged) and, for codex, ``timing``: the wall split
+    into startup / model / tool / teardown (``event_timing``; row 93 overhead attribution, 2026-10-12).
 
 The bearer token never reaches the argv or the transcript path: the Claude World arm reads it from
 a mode-0600 ``<private>/<ep>.mcp.json`` that is created just before the spawn and deleted in a
@@ -24,12 +27,16 @@ import json
 import os
 import signal
 import subprocess
+import threading
 import time
 
 import arms
 import world
 
 KILL_GRACE_S = 5.0
+READER_JOIN_S = 10.0  # a grandchild holding stdout open cannot hang the run
+# codex items that are tool executions (item.started -> item.completed brackets the call)
+CODEX_TOOL_ITEMS = ('mcp_tool_call', 'command_execution', 'file_change', 'web_search')
 
 
 class DriverError(Exception):
@@ -62,13 +69,25 @@ def write_private_mcp_config(private_dir: str, episode: str, token: str, addr: s
     return path
 
 
+def _pump(src, out, times: list, t0: float) -> None:
+    """Copy src -> out byte-exact, line by line, recording each line's arrival in ms since t0."""
+    for line in iter(src.readline, b''):
+        times.append(int(round((time.monotonic() - t0) * 1000)))
+        out.write(line)
+        out.flush()
+
+
 def spawn(argv: list, *, cwd: str, env: dict, transcript_path: str,
           deadline_s: float = arms.DEADLINE_S) -> dict:
-    """Run argv in its own process group; stdout -> transcript, stderr -> transcript + '.stderr'."""
+    """Run argv in its own process group; stdout -> transcript (+ per-line arrival times in
+    transcript + '.times'), stderr -> transcript + '.stderr'."""
+    times: list = []
     with open(transcript_path, 'wb') as out, open(transcript_path + '.stderr', 'wb') as err:
         t0 = time.monotonic()
-        p = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
+        p = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                              stderr=err, start_new_session=True)
+        reader = threading.Thread(target=_pump, args=(p.stdout, out, times, t0), daemon=True)
+        reader.start()
         timed_out = False
         try:
             p.wait(timeout=deadline_s)
@@ -86,8 +105,59 @@ def spawn(argv: list, *, cwd: str, env: dict, transcript_path: str,
                     continue
             p.wait()
         t1 = time.monotonic()
+        reader.join(timeout=READER_JOIN_S)
+        reader_done = not reader.is_alive()
+        if reader_done:
+            p.stdout.close()
+        times_snapshot = list(times)
+    with open(transcript_path + '.times', 'w') as f:
+        json.dump(times_snapshot, f)
     return {'rc': p.returncode, 't0': t0, 't1': t1, 'wall_ms': int(round((t1 - t0) * 1000)),
-            'finish_reason': 'timeout' if timed_out else 'exit'}
+            'finish_reason': 'timeout' if timed_out else 'exit', 'stdout_reader_done': reader_done}
+
+
+def _union_ms(intervals: list) -> int:
+    total, end = 0, None
+    for a, b in sorted(intervals):
+        if end is None or a > end:
+            total += b - a
+            end = b
+        elif b > end:
+            total += b - end
+            end = b
+    return total
+
+
+def event_timing(text: str, times: list, wall_ms: int) -> dict | None:
+    """codex ``--json``: split the wall into startup (spawn -> turn.started), tool (union of
+    item.started -> item.completed for tool items), model (rest of the turn) and teardown (last
+    event -> exit). None when the lines and times do not pair up (never guessed)."""
+    lines = [ln for ln in text.split('\n') if ln.strip()]
+    if not lines or len(lines) != len(times):
+        return None
+    started, tools = {}, []
+    turn_a = turn_b = None
+    for ln, t in zip(lines, times):
+        try:
+            ev = json.loads(ln)
+        except ValueError:
+            continue
+        typ = ev.get('type') or ''
+        it = ev.get('item') or {}
+        if typ == 'turn.started' and turn_a is None:
+            turn_a = t
+        elif typ in ('turn.completed', 'turn.failed'):
+            turn_b = t
+        elif typ == 'item.started' and it.get('type') in CODEX_TOOL_ITEMS:
+            started[it.get('id')] = t
+        elif typ == 'item.completed' and it.get('id') in started:
+            tools.append((started.pop(it.get('id')), t))
+    if turn_a is None or turn_b is None or turn_b < turn_a:
+        return None
+    tool_ms = _union_ms([(max(a, turn_a), min(b, turn_b)) for a, b in tools if b >= a])
+    return {'startup_ms': turn_a, 'turn_ms': turn_b - turn_a, 'tool_ms': tool_ms,
+            'model_ms': turn_b - turn_a - tool_ms, 'teardown_ms': max(0, wall_ms - times[-1]),
+            'tool_calls_timed': len(tools), 'unclosed_tool_items': len(started)}
 
 
 def _json_lines(text: str):
@@ -241,4 +311,10 @@ def run_agent(agent: str, arm: str, *, model: str, prompt_text: str, worktree: s
         parsed = parse_transcript(agent, f.read())
     row['transcript'] = parsed
     row['tool_items'] = parsed['tool_items']
+    row['timing'] = None
+    if agent == 'codex':
+        with open(transcript_path + '.times') as f:
+            times = json.load(f)
+        with open(transcript_path, encoding='utf-8', errors='replace') as f:
+            row['timing'] = event_timing(f.read(), times, row['wall_ms'])
     return row
