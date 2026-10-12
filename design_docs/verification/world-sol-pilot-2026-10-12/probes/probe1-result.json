@@ -1,0 +1,57 @@
+{
+ "world": {
+  "initialize": {
+   "median_ms": 0.8,
+   "min_ms": 0.7,
+   "max_ms": 2.1
+  },
+  "tools/list": {
+   "median_ms": 0.7,
+   "min_ms": 0.6,
+   "max_ms": 0.7
+  },
+  "ailang-read": {
+   "median_ms": 170.8,
+   "min_ms": 162.6,
+   "max_ms": 189.7
+  },
+  "ailang-write": {
+   "median_ms": 169.1,
+   "min_ms": 165.6,
+   "max_ms": 182.3
+  },
+  "ailang-check": {
+   "median_ms": 283.2,
+   "min_ms": 278.7,
+   "max_ms": 288.4
+  },
+  "ailang-run": {
+   "median_ms": 195.7,
+   "min_ms": 188.7,
+   "max_ms": 215.2
+  }
+ },
+ "native": {
+  "read": {
+   "median_ms": 0.1,
+   "min_ms": 0.0,
+   "max_ms": 0.1
+  },
+  "write": {
+   "median_ms": 0.1,
+   "min_ms": 0.1,
+   "max_ms": 0.1
+  },
+  "ailang check": {
+   "median_ms": 18.1,
+   "min_ms": 17.4,
+   "max_ms": 27.8
+  },
+  "ailang run": {
+   "median_ms": 17.7,
+   "min_ms": 16.9,
+   "max_ms": 20.0
+  }
+ },
+ "last_run_output_head": "{\"admitted\":true,\"decision\":{\"allowed_caps\":[\"FS\",\"IO\"],\"declared_effects\":[\"IO\"],\"function\":\"main\",\"ok\":true},\"exit_code\":0,\"limit\":null,\"policy\":{\"caps\":[\"FS\",\"IO\"],\"digest\":\"f509e37dffaba50b3cc0642"
+}

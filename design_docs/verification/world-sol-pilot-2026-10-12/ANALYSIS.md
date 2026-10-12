@@ -45,3 +45,45 @@ Passing needs the median o ≤ +25% at a median shell time around 29 s, i.e. a f
 
 Either result names a product row (cut capsule/round-trip latency, or slim what codex injects) before a
 new FINAL is pre-registered.
+
+## Probes (2026-10-12, attended, zero inference spend): cause found
+
+Scripts in `probes/`. Neither probe made a provider call. Probe 2 points codex at a local mock Responses
+endpoint on 127.0.0.1. Raw request bodies are kept local, not committed, because they carry codex
+client metadata.
+
+**Probe 1, daemon latency** (`probe1.py`, `probes/probe1-result.json`, N=10 each): World MCP calls take
+read 171 ms, write 169 ms, check 283 ms, run 196 ms (initialize/tools-list < 1 ms), against 18 ms natively for
+`ailang check`/`run`. A typical 3–4 call World task therefore spends **< 1 s** in the daemon. **The daemon is
+not the main cost.**
+
+**Probe 2, what codex sends** (codex-cli 0.162.0, exact pilot argv plus a provider override):
+- The first request is *smaller* in World (62,839 bytes) than in shell (67,081 bytes). The only difference
+  is that `exec_command`/`write_stdin` are removed. There is no static per-request bloat.
+- **codex 0.162 runs tools through a JavaScript `exec` "code mode" tool. In the World configuration all 8 World
+  tools are *deferred*:** their schemas are absent from the request and appear only in the runtime `ALL_TOOLS`
+  list (`mcp__world__ailang_read`, …), which the model must inspect via `exec` before it can call them.
+  The shell arm's primary tool, `exec_command`, is declared in full in the `exec` description.
+  Confirmed by a scripted mock that answered request 0 with an `exec` listing `ALL_TOOLS` (request 1 shows the
+  8 World tools only there).
+- These discovery `exec` calls **do not appear in `codex exec --json` output** (the probe's own `exec`
+  call produced no item), which is why the transcripts show *fewer* tool calls for World.
+- One full World request is about 63 KB of codex scaffolding plus the ~25k-token teaching prompt, roughly
+  40–45k tokens. That matches the **+44k quantum** in the World − shell input-token deltas: each quantum is
+  one extra hidden model round trip. At 2–3 s of model latency each, 1–3 extra round trips per task
+  accounts for the **+6–8 s fixed cost**. This is strongly supported, not yet proven by a timed run.
+- `--disable code_mode_host` and `--disable tool_search_always_defer_mcp_tools` (alone or together) leave the
+  request byte-identical. The codex binary exposes no per-server config key for this. **It cannot be switched
+  off from configuration.**
+
+## Implication
+
+The codex World overhead is a **codex tool-exposure tax** (deferred MCP tools → hidden discovery round
+trips), not a World daemon or product cost. Row 174's descriptor work could not have fixed it, which matches
+the data. Candidate fixes:
+1. **Tuning knob (pre-FINAL, existing `world_tools_wording` knob family):** state in the World tools
+   block the exact `tools.mcp__world__*` call names and argument shapes, so the model can call them
+   without a discovery round trip. Equalizes with shell, where codex inlines `exec_command`. Needs one
+   measured smoke iteration (inference spend; Mark's call).
+2. **Upstream/fleet:** ask for a codex setting to inline (not defer) a named MCP server's tools; route as a
+   fleet note, not a local workaround.
