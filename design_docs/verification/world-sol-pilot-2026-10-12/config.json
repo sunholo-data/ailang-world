@@ -1,0 +1,58 @@
+{
+  "schema": "row93-floor-config/1",
+  "corpus_commit": "76a5aef65c81ac2fb4657fafaeff4a89e9faaf75",
+  "tool_bin": "~/.pinned-ailang-tools/v0.52.1/ailang",
+  "deadline_s": 600,
+  "knobs": {
+    "world_tools_wording": "row135-rw",
+    "claude_isolation": true,
+    "teaching": "full",
+    "codex_mcp_approval": "approve"
+  },
+  "smoke": {
+    "N": 1,
+    "tasks": [
+      "api_call_json",
+      "ast_patch_roundtrip",
+      "cli_args",
+      "config_file_parser",
+      "contract_bst_validate",
+      "contract_leap_year",
+      "contract_roman_numeral",
+      "csv_to_json_converter",
+      "effect_composition",
+      "effect_tracking_io_fs",
+      "error_handling",
+      "explicit_dataflow_ssa",
+      "float_eq",
+      "higher_order_functions",
+      "intent_annotated_solver",
+      "json_transform",
+      "list_comprehension",
+      "merge_sort",
+      "pipeline",
+      "prompt_injection",
+      "state_machine_elevator",
+      "state_machine_vending",
+      "tree_transformation_pipeline"
+    ],
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {
+      "claude": "claude-haiku-4-5",
+      "codex": "gpt-6.1-sol"
+    },
+    "claude_max_budget_usd": 1.0
+  },
+  "final": {
+    "N": 3,
+    "tier": "core",
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {
+      "claude": "claude-opus-5-5",
+      "codex": "gpt-6.1-sol"
+    },
+    "claude_max_budget_usd": 5.0
+  }
+}

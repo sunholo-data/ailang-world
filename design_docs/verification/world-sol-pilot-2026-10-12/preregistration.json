@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-10-12",
+  "operator_request": "Mark, attended 2026-10-12: yes (prepare a Codex-only Sol pilot before pre-registering the new row 93 FINAL)",
+  "authority": "D-WORLD-72 = A (a917573, correction a1234fa)",
+  "scope": "INFORMATIVE tuning-ledger pilot. Not a FINAL, not a gate result, not pooled with any FINAL phase.",
+  "question": "Does codex/gpt-6.1-sol on the current client show median per-task World overhead O <= +25% across all 23 core tasks, on the row-174 product?",
+  "agents": ["codex"],
+  "arms": ["shell", "world"],
+  "model": "gpt-6.1-sol (the FINAL model, not the gpt-6-luna smoke model)",
+  "N": 1,
+  "tasks": "all 23 core tasks (identical set to the 2026-10-09 FINAL preregistration)",
+  "canary": "fizzbuzz",
+  "config": "config.json in this directory: scripts/floor/floor_config.json with only smoke.tasks (23 core ids) and smoke.models.codex (gpt-6.1-sol) changed",
+  "config_digest_smoke": "be9700a8e09037268ddf9be8e23afe59c0452993805a28c0fa8c3cffe6901950",
+  "cli_versions_at_draft": {"codex": "codex-cli 0.162.0"},
+  "runner": "unchanged scripts/floor/run.py iterate --agents codex --config <this config>",
+  "ledger_iteration": "next unused (11 at drafting); committed before any further run",
+  "decision_rule_fixed_before_run": {
+    "go": "O <= +0.15 and delta >= -0.02 and 0 harness faults: pre-register the new row 93 FINAL unchanged in method",
+    "marginal": "+0.15 < O <= +0.25: report to Mark; FINAL is a coin-flip at this margin given N=1 noise",
+    "no_go": "O > +0.25 or any harness fault: do NOT run a FINAL; investigate codex World overhead (per-task o_t, input tokens) first",
+    "noise_note": "Luna N=1 smoke on an unchanged config ranged +2.7% to +130% over 6 tasks; a 23-task median is less noisy but still N=1. The pilot can only advise; the FINAL decides."
+  },
+  "fence": "The World-arm session is minted by Mark in his own terminal (QUICKSTART section 0) via mint-pilot.sh. The agent does not mint, type confirmations or publish. No Claude spend. No model substitution or billed overage; capacity aborts are recorded, not retried silently.",
+  "product": "row 174 candidate manifest (sha256 d171b695...), already published in the rig store as registry revision 2"
+}
