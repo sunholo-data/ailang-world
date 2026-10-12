@@ -133,8 +133,11 @@ func TestProducerRefusesStderrOverflowIndependently(t *testing.T) {
 }
 
 func TestProducerExecTimeoutKillsTheWholeProcessGroup(t *testing.T) {
+	// execTimeout is far above the shell's startup and pid writes, so the stimulus
+	// completes inside the bound even when the full parallel suite is loaded.
+	const execTimeout = 5 * time.Second
 	rec := swapKillGroup(t)
-	p, dir := scriptedProducer(t, `sleep 30 & echo $! > "$PIDDIR/grandchild.pid"; echo $$ > "$PIDDIR/child.pid"; wait`, 300*time.Millisecond, 1024)
+	p, dir := scriptedProducer(t, `sleep 30 & echo $! > "$PIDDIR/grandchild.pid"; echo $$ > "$PIDDIR/child.pid"; wait`, execTimeout, 1024)
 	start := time.Now()
 	done := make(chan error, 1)
 	go func() {
@@ -144,8 +147,8 @@ func TestProducerExecTimeoutKillsTheWholeProcessGroup(t *testing.T) {
 	var err error
 	select {
 	case err = <-done:
-	case <-time.After(20 * time.Second):
-		t.Fatalf("runBounded did not return within 20s; want ErrExecTimeout after ExecTimeout=300ms")
+	case <-time.After(30 * time.Second):
+		t.Fatalf("runBounded did not return within 30s; want ErrExecTimeout after ExecTimeout=%s", execTimeout)
 	}
 	grandchild := proctest.ReadPid(t, filepath.Join(dir, "grandchild.pid"))
 	child := proctest.ReadPid(t, filepath.Join(dir, "child.pid"))
@@ -162,8 +165,8 @@ func TestProducerExecTimeoutKillsTheWholeProcessGroup(t *testing.T) {
 	if len(pgids) != 1 || pgids[0] != child {
 		t.Fatalf("killGroup must see exactly the child's group %d; saw %v", child, pgids)
 	}
-	if lag := times[0].Sub(start); lag < 300*time.Millisecond {
-		t.Fatalf("first kill at %s after the call; want at least the 300ms ExecTimeout", lag)
+	if lag := times[0].Sub(start); lag < execTimeout {
+		t.Fatalf("first kill at %s after the call; want at least the %s ExecTimeout", lag, execTimeout)
 	}
 	if !proctest.DeadWithin(t, grandchild, 2*time.Second) {
 		t.Fatalf("grandchild %d survived the process-group kill", grandchild)
