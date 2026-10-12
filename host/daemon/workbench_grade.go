@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,9 +10,12 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/workbench"
 )
 
 const proofKeySize = 32
+
+const gradeCandidateScanLimit = 100
 
 const ( // refusals of configureGrader (row 105 D6, PD4)
 	gradeConfigIdentitiesWithoutKey = "--proof-required-identity needs --proof-key-file"
@@ -91,4 +95,92 @@ func (d *Daemon) configureGrader(cfg Config) error {
 	}
 	d.grader = v
 	return nil
+}
+
+const ( // frozen reason sentences (design D4 table, byte-exact)
+	gradeReasonNoStoredEvidence    = "no stored evidence: the store holds no object with semantic ID world/proof-report/v1"
+	gradeReasonBoundElsewhere      = "stored proof envelopes exist; none is bound to this subject"
+	gradeReasonToolMismatch        = "subject-bound evidence authenticates under the daemon's key but names a compiler other than the daemon's pinned interpreter"
+	gradeReasonProofFailed         = "subject-bound evidence authenticates under the daemon's key but records a failed proof outcome"
+	gradeReasonProofIncomplete     = "subject-bound evidence authenticates under the daemon's key but does not verify every identity the daemon requires"
+	gradeReasonUnauthenticated     = "a stored proof envelope does not authenticate under the daemon's key"
+	gradeReasonStructuralCandidate = "a stored candidate object does not satisfy the proof envelope's identity, content or schema checks"
+	gradeReasonNoneValidated       = "stored proof envelopes exist and none validates for this object"
+	gradeScanTruncation            = " (scan bounded to the first 100 stored candidates)"
+)
+
+var errGradeNoVerdict = errors.New("daemon: the grade validator returned no verdict")
+var errGradeResolverRefused = errors.New("daemon: the grade resolver refused the validator's own seal")
+
+var gradeReasonSentences = map[evidence.UnsupportedReason]string{
+	evidence.UnsupportedUnauthenticatedReport: gradeReasonUnauthenticated,
+	evidence.UnsupportedToolMismatch:          gradeReasonToolMismatch,
+	evidence.UnsupportedProofFailed:           gradeReasonProofFailed,
+	evidence.UnsupportedProofIncomplete:       gradeReasonProofIncomplete,
+	evidence.UnsupportedInvalidRef:            gradeReasonStructuralCandidate,
+	evidence.UnsupportedMissing:               gradeReasonStructuralCandidate,
+	evidence.UnsupportedOversize:              gradeReasonStructuralCandidate,
+	evidence.UnsupportedHashMismatch:          gradeReasonStructuralCandidate,
+	evidence.UnsupportedWrongSemanticID:       gradeReasonStructuralCandidate,
+	evidence.UnsupportedWrongInterface:        gradeReasonStructuralCandidate,
+	evidence.UnsupportedMalformed:             gradeReasonStructuralCandidate,
+}
+
+// gradeReasonSentence maps a non-mismatch validator reason to its frozen
+// sentence; any token outside the map renders the branch invariant.
+func gradeReasonSentence(reason evidence.UnsupportedReason) string {
+	if sentence, ok := gradeReasonSentences[reason]; ok {
+		return sentence
+	}
+	return gradeReasonNoneValidated
+}
+
+// objectGradeView projects the object page's grade (row 105 D4). Unconfigured,
+// it is the constant with zero reads. Configured, it scans at most
+// gradeCandidateScanLimit proof envelopes (fetching one extra row to prove
+// truncation) and renders PROVEN only through ValidateProof -> Resolve.
+func (d *Daemon) objectGradeView(ctx context.Context, ref hashref.HashRef) (workbench.GradeView, error) {
+	if d.grader == nil {
+		return workbench.NewGradeUnavailable(objectGradeUnavailableReason), nil
+	}
+	candidates, err := d.reads.ObjectsBySemanticID(ctx, evidence.ProofSemanticID, "", gradeCandidateScanLimit+1)
+	if err != nil {
+		return workbench.GradeView{}, err
+	}
+	truncated := len(candidates) == gradeCandidateScanLimit+1
+	if truncated {
+		candidates = candidates[:gradeCandidateScanLimit]
+	}
+	if len(candidates) == 0 {
+		return workbench.NewGradeUnavailable(gradeReasonNoStoredEvidence), nil
+	}
+	firstFailure := ""
+	for _, candidate := range candidates {
+		res := d.grader.ValidateProof(ctx, candidate.Hash, ref)
+		if err := res.Err(); err != nil {
+			return workbench.GradeView{}, fmt.Errorf("daemon: validate proof candidate %s: %w", candidate.Hash, err)
+		}
+		if sealed, ok := res.Validated(); ok {
+			resolved := d.grader.Resolve(sealed)
+			if _, proven := resolved.Proven(); !proven {
+				return workbench.GradeView{}, fmt.Errorf("%w: candidate %s: %v", errGradeResolverRefused, candidate.Hash, resolved.Err())
+			}
+			return workbench.GradeView{Available: true, Label: workbench.GradePROVEN}, nil
+		}
+		reason, unsupported := res.Unsupported()
+		if !unsupported {
+			return workbench.GradeView{}, fmt.Errorf("%w: candidate %s", errGradeNoVerdict, candidate.Hash)
+		}
+		if reason != evidence.UnsupportedSubjectMismatch && firstFailure == "" {
+			firstFailure = gradeReasonSentence(reason)
+		}
+	}
+	sentence := gradeReasonBoundElsewhere
+	if firstFailure != "" {
+		sentence = firstFailure
+	}
+	if truncated {
+		sentence += gradeScanTruncation
+	}
+	return workbench.NewGradeUnavailable(sentence), nil
 }

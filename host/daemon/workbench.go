@@ -470,11 +470,16 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			}
 			references.Edges = append(references.Edges, edge)
 		}
+		grade, err := d.objectGradeView(ctx, ref)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
 		page.Object = &workbench.ObjectView{
 			Hash: object.Hash.String(), InterfaceHash: object.InterfaceHash.String(),
 			SemanticID: object.SemanticID, Provenance: object.Provenance,
 			PayloadShown: showPayload, PayloadPreview: string(preview), PayloadTruncated: truncated,
-			Grade: workbench.NewGradeUnavailable(objectGradeUnavailableReason), Edges: edges, Commits: commitView, References: references,
+			Grade: grade, Edges: edges, Commits: commitView, References: references,
 		}
 	}
 

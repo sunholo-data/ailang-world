@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/evidence"
@@ -274,4 +276,104 @@ func TestWorkbenchGradeCompilerVersionDerivationsAgree(t *testing.T) {
 			t.Fatalf("pinned binary: daemon-side %q, producer-side %q, want both %q", got, producerVersionLine(string(out)), "AILANG v0.41.0")
 		}
 	})
+}
+
+// countingProofScanStore counts ObjectsBySemanticID scans of the proof ID only
+// (PD13), so AC1's zero stays honest if another pane scans a different ID.
+type countingProofScanStore struct {
+	readStore
+	calls *atomic.Int32
+}
+
+func (s countingProofScanStore) ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error) {
+	if id == evidence.ProofSemanticID {
+		s.calls.Add(1)
+	}
+	return s.readStore.ObjectsBySemanticID(ctx, id, after, limit)
+}
+
+func TestWorkbenchGradeUnconfiguredServesTheConstantWithoutScanning(t *testing.T) {
+	d := newHandlerDaemon(t)
+	proof := workbenchTestObject("grade-unconfigured-proof", evidence.ProofSemanticID, evidence.InterfaceHashV1)
+	if err := d.store.PutObject(boundedTestContext(t), proof); err != nil {
+		t.Fatalf("PutObject proof: %v", err)
+	}
+	subject := storeGradeSubject(t, d, "grade-unconfigured-subject")
+	var n atomic.Int32
+	d.reads = countingProofScanStore{readStore: d.reads, calls: &n}
+	for _, ref := range []hashref.HashRef{proof.Hash, subject} {
+		code, body := gradePage(t, d, ref)
+		if code != http.StatusOK {
+			t.Fatalf("object page %s: status %d, want 200", ref, code)
+		}
+		if c := strings.Count(body, wantGradeUnavailable(objectGradeUnavailableReason)); c != 1 {
+			t.Fatalf("object page %s: constant grade line count %d, want 1", ref, c)
+		}
+		if strings.Contains(body, "<span>PROVEN</span>") {
+			t.Fatalf("object page %s rendered PROVEN without a validator", ref)
+		}
+	}
+	if got := n.Load(); got != 0 {
+		t.Fatalf("ObjectsBySemanticID(proof) calls = %d, want 0", got)
+	}
+
+	// Control: the same wrapper on a configured daemon counts the scan.
+	cd, _ := newGradeDaemon(t, []string{gradeTestIdentity})
+	var m atomic.Int32
+	cd.reads = countingProofScanStore{readStore: cd.reads, calls: &m}
+	gradePage(t, cd, storeGradeSubject(t, cd, "grade-control-subject"))
+	if got := m.Load(); got != 1 {
+		t.Fatalf("control: ObjectsBySemanticID(proof) calls = %d, want 1", got)
+	}
+}
+
+func TestWorkbenchGradeProvenFromSubjectBoundEnvelope(t *testing.T) {
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-proven-subject")
+	env := mintGradeEnvelope(t, rig.key, gradeReport(rig, subject))
+	envRef := storeGradeEnvelope(t, d, env)
+	if rig.version != "AILANG v0.41.0 " {
+		t.Fatalf("instrument: producer-side version %q, want the discriminating %q", rig.version, "AILANG v0.41.0 ")
+	}
+	res := d.grader.ValidateProof(boundedTestContext(t), envRef, subject)
+	sealed, ok := res.Validated()
+	if !ok {
+		t.Fatalf("premise: ValidateProof did not validate (err %v)", res.Err())
+	}
+	if _, ok := d.grader.Resolve(sealed).Proven(); !ok {
+		t.Fatalf("premise: Resolve did not prove (err %v)", d.grader.Resolve(sealed).Err())
+	}
+
+	code, body := gradePage(t, d, subject)
+	if code != http.StatusOK {
+		t.Fatalf("subject page: status %d, want 200", code)
+	}
+	if c := strings.Count(body, "<p><span>PROVEN</span></p>"); c != 1 {
+		t.Fatalf("subject page: PROVEN line count %d, want 1", c)
+	}
+	if strings.Contains(body, "GRADE UNAVAILABLE") {
+		t.Fatalf("subject page still says GRADE UNAVAILABLE beside PROVEN")
+	}
+	// "verdict-" alone is vacuous: the inline stylesheet always carries
+	// .verdict-pass/.verdict-fail. Assert the channel's own markup
+	// (host/workbench/render_test.go:136 uses the same two markers).
+	for _, marker := range []string{`class="verdict-`, `aria-label="test verdict`} {
+		if strings.Contains(body, marker) {
+			t.Fatalf("subject page rendered a verdict channel: %s", marker)
+		}
+	}
+	for _, label := range []string{"<span>TESTED</span>", "<span>ATTESTED</span>", "<span>CLAIMED</span>"} {
+		if strings.Contains(body, label) {
+			t.Fatalf("subject page rendered unminted label %s", label)
+		}
+	}
+
+	// Honesty control: the envelope's own page is bound elsewhere, never PROVEN.
+	code, body = gradePage(t, d, envRef)
+	if code != http.StatusOK {
+		t.Fatalf("envelope page: status %d, want 200", code)
+	}
+	if c := strings.Count(body, wantGradeUnavailable(gradeReasonBoundElsewhere)); c != 1 {
+		t.Fatalf("envelope page: bound-elsewhere line count %d, want 1", c)
+	}
 }
