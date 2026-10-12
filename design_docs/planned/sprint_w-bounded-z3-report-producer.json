@@ -1,0 +1,855 @@
+{
+  "id": "w-bounded-z3-report-producer",
+  "iteration": 252,
+  "row": 26,
+  "clause": "clause-2 (v1.0.0 release prerequisite; D-WORLD-69 = A)",
+  "authority": [
+    "design_docs/planned/w-bounded-z3-report-producer.md — quorum r1 BLOCKED, r2 BLOCKED, r3 narrow-refinement carve-out (reviewers' verbatim fixes); gemini-3-1-pro passed both rounds",
+    "design_docs/world-mission.md row 26; D-WORLD-24 arm A; D-WORLD-69 = A; D-WORLD-37 = A; D-WORLD-40 = A",
+    "CLAUDE.md; design_docs/coding-standards.md",
+    "design_docs/planned/w-bounded-z3-report-producer-sprint-plan.md"
+  ],
+  "estimate": "~2.3 executor days; M1 0.25d, M2 0.35d, M3 0.2d, M4 0.25d, M5 0.3d, M6 0.2d, M7 0.4d, M8 0.35d",
+  "scope": "Plan only (two planning files). Execution: one production file host/evidence/proof_producer.go (~480 prod LOC across 8 milestones), three test files, 7 fixture modules + 7 pinned-binary JSON outputs + regen.sh, PD1 manifest trio and PD2 frozen-surface list edits. Executor runs NO git command; controller commits C1..C8 (per boundary if it told the executor to stop, else from the final tree). No store, validator, codec, .ail-in-ROOTS, verify_ail.sh, ci.yml or tools/launchd change.",
+  "environment": [
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang   # AILANG v0.41.0, sha256 1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f, 100594162 bytes",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "Run gate scripts under bash (zsh `for t in $X` does not split).",
+    "verify_go.sh needs >= 15 min allowance locally (base 10m18s); a 600 s tool cap is not a gate result."
+  ],
+  "measured_baseline": {
+    "tree": "4dfdba2 (code base ba79d1e + design-doc commits only)",
+    "go vet ./host/evidence/...": "rc=0, 0.23 s",
+    "go test ./host/evidence -count=1": "ok 1.6 s; 37 unique terminal top-level passes",
+    "go test -race ./host/evidence -count=1": "ok 6.1 s",
+    "verify_go.sh --evidence-manifest-check <json> 37": "✓ all 37 required top-level evidence tests passed exactly once (rc=0); with 38 -> rc=1 observed_unique=37 exact_required=38",
+    "focused verifygate (3 tests)": "PASS 1.4 s; full ./host/verifygate ok 157.5 s",
+    "verify_ail.sh": "rc=0, 33 s, '✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 444 se-tools named tests pass' (~/.ailang/state/world-iter252/planner_base_ail.log)",
+    "verify_go.sh": "rc=0, 10m18s wall, '✓ all 37 required…', '✓ go gate PASSED' (~/.ailang/state/world-iter252/planner_base_go.log)",
+    "fixture regen": "awk-extracted 7 modules + ai-check from scratch fixtures/ dir reproduce all 7 committed design fixtures exactly modulo duration (7/7 MATCH)",
+    "producer staging run": "staged/module.ail + RELAX=1 + TMPDIR redirect: verifiedpass rc0 stdout 365 B stderr 200 B (MOD010 warning), 0 tmp entries left; wall 0.02-0.05 s"
+  },
+  "design_defects": [
+    "D1: §9/Files claim verifygate unchanged by an additive manifest edit — false: host/verifygate/evidence_manifest_gate_test.go:16-54,:178 and mission_config_gate_test.go:466-467 hard-code the 37-name set/count (grep -rn \"37 exact\\|evidence_json\\\" 37\\|all 37 required\"). -> PD1",
+    "D2: §9 claims TestPublicAuthoritySurfaceIsFrozen passes unedited — false: frozenPublicSurface (authority_test.go:286-340) is an exact exported-declaration manifest; 15 new exported symbols red it. -> PD2",
+    "D3: AC29 durableAfterCommitHook is unexported in package store (durable.go:46), unreachable from host/evidence; Non-Goals forbid store edits. -> PD3",
+    "D4: AC29 '256 identities at 1 KiB' oversize stimulus is refused by EncodeAuthenticatedEnvelope's own DecodeProofReportV1 (report 263235 > MaxBytes) before ErrEnvelopeTooLarge — M37 unkillable; 200x1000 gives envelope 267963 (measured). -> PD4",
+    "D5: AC25/M39 'real multi-second ai-check run' — measured 0.02-0.05 s; version probe shares ExecTimeout. -> PD5",
+    "D6: AC26 stderr arm with the real binary cannot overflow independently (stderr ~200 B < stdout 250-947 B under producer staging; 0 B in gate layout). -> PD5",
+    "D7: D4 step 4 (verify.available) is unpinnable by any real fixture: every measured available=false shape also has check.passed=false, checked first; status filter similarly masked by counters. -> PD6",
+    "D8: AC20/AC23 classify whole-GenerateProof elapsed vs 2x bound (a correct mint hashes 100 MB + runs two subprocesses -> false red), and the producer derives ctx before the wrapper so a settle sleep spends the deadline (vacuous pass). -> PD7",
+    "D9: design M1 defers the manifest update to M5, but the manifest is an exact set — M1-M4 commits would red verify_go.sh. -> PD1"
+  ],
+  "planner_decisions": {
+    "PD1": "Manifest consistent at every boundary: add each milestone's new names (alphabetical) to REQUIRED_EVIDENCE_TESTS (verify_go.sh) and syntheticEvidenceTests (evidence_manifest_gate_test.go); set N in verify_go.sh:295 banner, :302 call, evidence_manifest_gate_test.go:178 string, and requireVerifyGoProductSequence's repaired-arm anchors. M1 restructures requireVerifyGoProductSequence once: evidenceBanner/evidenceCall vars default to the 37 strings, overridden inside `if repaired`, replacing the two literal needles (mirrors verTokAnchor). baseVerifyGoProductFixture stays 37. Counts M1..M8 = 47,50,51,54,56,58,61,63. TestAttackerChosenValidatorCannotMintForHostAuthority stays syntheticEvidenceTests[0].",
+    "PD2": "frozenPublicSurface += M1 func NewProducer, type CheckerConfig, type ObjectWriter, type Producer, type ProducerConfig, value ErrInvalidProducerConfig; M2 value ErrExecTimeout, value ErrOutputLimit; M4 value ErrUntrustedTool; M5 value ErrUnverifiedRun, value ErrVacuousCheck; M6 value ErrEnvelopeTooLarge, value ErrRequiredIdentityMissing; M7 method Producer.GenerateProof, value MaxSourceBytes (15). No other exported identifier. AC1 review recorded per boundary (nothing returns ResolvedGrade/ResolutionResult/ValidatedEvidence); reflective checks unedited.",
+    "PD3": "Uncertain-write stimulus: uncertainWriter performs the REAL s.PutObject then returns &store.UncertainError{Op:\"put object\", Cause: context.DeadlineExceeded}; BusyTimeout forwards. Wrapper over the real store, not a fake store.",
+    "PD4": "Oversize stimulus: 200 x 1000-byte identities (envelope 267,963 B > MaxBytes, report 200,923 B < MaxBytes); near-bound control 190 x 1024 (envelope 260,669 B) mints.",
+    "PD5": "Scripted hash-pinned #!/bin/sh executables (capsule cleanup_test.go:211-227 precedent) drive the stderr-overflow, exec-timeout, admission, stdout-only-independence and byte-before-exec arms; the real pinned binary drives stdout overflow, version/byte arms, fixtures, end-to-end and decoys.",
+    "PD6": "Derived single-field arms built in-test from the committed verifiedpass.json (check.passed=false, verify.available=false, results[0].status=\"unknown\"); real loaderror arm also asserts detail 'check.passed'. Literals \"\" and \"{\" allowed as trivial non-tool inputs.",
+    "PD7": "Decoy arms: forwarding wrapper over the real store launches startDecoyRead on entry, sleeps settle=hold/40, asserts decoy in flight and ctx.Err()==nil, times ONLY the store call; bound = hold/20; classification on store-call duration (pass on DeadlineExceeded && !ErrNoDeadline; mint < 2x bound -> retry <=5; mint >= 2x -> mutant red); whole-call watchdog 20*hold+60s; opposite leg timeout 3s+2*hold.",
+    "PD8": "Design M1-M5 re-cut to M1-M8 (<= ~260 LOC incl tests each): M1=design M1; M2/M3=design M3 a/b; M4=design M2 (after the runner because the version probe must reuse it — TestSubprocessSinkGate forbids a bytes.Buffer probe); M5/M6=design M4 a/b; M7/M8=design M5 a/b. Stage tests at M2-M6 call unexported stages from an internal test file; GenerateProof lands at M7 (no stub ever).",
+    "PD9": "AC5 constructor names resolved: TestProducerConstructorRefusesNonPositive{ObjectReadTimeout,ObjectWriteTimeout,ExecTimeout,MaxOutputBytes}, TestProducerConstructorRefuses{NilReader,NilWriter,EmptyExecPath,UnsetCompilerIdentity,EmptyCompilerVersion}.",
+    "PD10": "Empty requiredIdentities refused only in requireIdentities (ErrRequiredIdentityMissing 'no required identities named'); no duplicate early guard.",
+    "PD11": "AC30's 'ordered arm produces end-to-end' is discharged by TestProducerEndToEndMintsEnvelopeValidatorAccepts (default 2s window, 3s timeouts) at M7; no test body edited after its milestone.",
+    "PD12": "No t.Parallel in host/evidence tests; no bytes.Buffer/strings.Builder bound to cmd.Stdout/Stderr; tests exec via cmd.Output() or the producer's runner."
+  },
+  "must_not_change": [
+    "host/store/** (no file changes)",
+    "host/evidence/validator.go, report_codec.go, envelope_codec.go, proposal_codec.go, json.go, types.go",
+    "host/evidence/realstore_test.go, codec_test.go, m7b_deadline_test.go",
+    "host/evidence/authority_test.go except frozenPublicSurface additions (PD2)",
+    "host/procbound, host/proctest, host/childenv, host/archive, host/capsule, host/broker",
+    "every .ail under world/, packages/, design_docs/",
+    "scripts/verify_ail.sh",
+    ".github/workflows/ci.yml",
+    "tools/launchd/*",
+    "design_docs/world-mission*.md",
+    "host/verifygate/* except PD1 edits; baseVerifyGoProductFixture untouched",
+    "design_docs/verification/world-iter251/** (read-only source)"
+  ],
+  "test_write_rule": "All DBs, scratch roots, scripts, pid files and fresh ai-check output under the test's own t.TempDir(); never tracked files, $HOME or ~/.ailang. Tracked fixtures are written only by host/evidence/testdata/aicheck/regen.sh run by the executor. Every pid via proctest.ReadPid and proctest.ReapOnCleanup; never signal an unchecked pid. Binary-dependent tests t.Fatal (never t.Skip) when AILANG_BIN is unset or not AILANG v0.41.0.",
+  "mutation_protocol": "One mutant at a time on the boundary tree; must compile (go vet rc=0); run its exact command; the named assertion must fail (build failure, unrecovered panic, SKIP, zero tests, unrelated failure or harness timeout are not kills); restore exact bytes from a $TMPDIR copy without git, verify with cmp, rerun green. Ledger: mutant | file:line | command | rc | failing assertion | restore cmp rc | green rc. SURVIVED blocks the milestone. M8 re-drills M15, M28, M31-M39 on the final tree.",
+  "milestones": [
+    {
+      "id": "C1",
+      "title": "M1 — Constructor, config, ordering pins (design M1)",
+      "design_milestone": "M1",
+      "files": [
+        "host/evidence/proof_producer.go (new)",
+        "host/evidence/producer_test.go (new, package evidence_test)",
+        "host/evidence/producer_realstore_test.go (new, package evidence_test)",
+        "host/evidence/authority_test.go (frozenPublicSurface += func NewProducer, type CheckerConfig, type ObjectWriter, type Producer, type ProducerConfig, value ErrInvalidProducerConfig)",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 90,
+      "manifest_count": 47,
+      "new_tests": [
+        "TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts",
+        "TestProducerConstructorRefusesEmptyCompilerVersion",
+        "TestProducerConstructorRefusesEmptyExecPath",
+        "TestProducerConstructorRefusesNilReader",
+        "TestProducerConstructorRefusesNilWriter",
+        "TestProducerConstructorRefusesNonPositiveExecTimeout",
+        "TestProducerConstructorRefusesNonPositiveMaxOutputBytes",
+        "TestProducerConstructorRefusesNonPositiveObjectReadTimeout",
+        "TestProducerConstructorRefusesNonPositiveObjectWriteTimeout",
+        "TestProducerConstructorRefusesUnsetCompilerIdentity"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC5 (constructor arm)",
+          "tests": "TestProducerConstructorRefusesNonPositiveObjectReadTimeout, TestProducerConstructorRefusesNonPositiveObjectWriteTimeout, TestProducerConstructorRefusesNonPositiveExecTimeout, TestProducerConstructorRefusesNonPositiveMaxOutputBytes, TestProducerConstructorRefusesNilReader, TestProducerConstructorRefusesNilWriter, TestProducerConstructorRefusesEmptyExecPath, TestProducerConstructorRefusesUnsetCompilerIdentity, TestProducerConstructorRefusesEmptyCompilerVersion",
+          "assertions": "validProducerArgs(): fakeReader{} + new fakeWriter{busy} (PutObject nil), CheckerConfig{ExecPath:\"/nonexistent/ailang\", Compiler:testCompiler, CompilerVersion:\"AILANG v0.41.0\"}, ProducerConfig{3s,3s,1m,1<<20}. Helper requireConfigRefusal(t, field, build) recovers panics into t.Fatalf and requires errors.Is(err, evidence.ErrInvalidProducerConfig) && strings.Contains(err.Error(), field). Bounds tested at 0 and negative. Each test also asserts the valid-args control constructs.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC30",
+          "tests": "TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts",
+          "assertions": "Real stores only. ordered: default store (2s) both seams, 3s/3s constructs. read-unordered: reader default, writer no-busy, read 1s write 3s -> ErrUnorderedTimeouts (not ErrInvalidProducerConfig), detail ObjectReadTimeout. write-unordered: reader no-busy, writer default, read 3s write 1s -> ErrUnorderedTimeouts, detail ObjectWriteTimeout. writer-window-only: reader no-busy (0), writer default (2s), 1s/1s -> ErrUnorderedTimeouts. unknown: busyWriter{s,-1ns} -> ErrInvalidProducerConfig. wrapper arm: custom 1500ms store (assert BusyTimeout()==1500ms), writer busyWriter{custom, custom.BusyTimeout()}, reader no-busy: 1800ms/1800ms constructs; 1400ms/1400ms -> ErrUnorderedTimeouts.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "NewProducer: separate ifs in order reader nil, writer nil, ExecPath empty, Compiler.IsZero, CompilerVersion empty, ObjectReadTimeout<=0, ObjectWriteTimeout<=0, ExecTimeout<=0, MaxOutputBytes<=0 (each fmt.Errorf(\"%w: <Field> ...\", ErrInvalidProducerConfig)). Then for (seam,w) in reader/writer BusyTimeout(): w<0 -> ErrInvalidProducerConfig 'BusyTimeout is unknown'; w>0 && ObjectReadTimeout<=w -> ErrUnorderedTimeouts; w>0 && ObjectWriteTimeout<=w -> ErrUnorderedTimeouts (separate ifs). Key copied to new([32]byte) as validator.go:91-92.",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts|TestProducerConstructorRefusesEmptyCompilerVersion|TestProducerConstructorRefusesEmptyExecPath|TestProducerConstructorRefusesNilReader|TestProducerConstructorRefusesNilWriter|TestProducerConstructorRefusesNonPositiveExecTimeout|TestProducerConstructorRefusesNonPositiveMaxOutputBytes|TestProducerConstructorRefusesNonPositiveObjectReadTimeout|TestProducerConstructorRefusesNonPositiveObjectWriteTimeout|TestProducerConstructorRefusesUnsetCompilerIdentity)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts TestProducerConstructorRefusesEmptyCompilerVersion TestProducerConstructorRefusesEmptyExecPath TestProducerConstructorRefusesNilReader TestProducerConstructorRefusesNilWriter TestProducerConstructorRefusesNonPositiveExecTimeout TestProducerConstructorRefusesNonPositiveMaxOutputBytes TestProducerConstructorRefusesNonPositiveObjectReadTimeout TestProducerConstructorRefusesNonPositiveObjectWriteTimeout TestProducerConstructorRefusesUnsetCompilerIdentity; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 47",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M1-a..i",
+          "mutation": "each of the nine per-field refusals -> if false && <cond>",
+          "must_fail_test": "its own TestProducerConstructorRefuses* test",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorRefuses.*)$'"
+        },
+        {
+          "mutant": "M1-j",
+          "mutation": "read pin cfg.ObjectReadTimeout <= w -> false && ...",
+          "must_fail_test": "TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts (read-unordered)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts)$'"
+        },
+        {
+          "mutant": "M1-k",
+          "mutation": "write pin cfg.ObjectWriteTimeout <= w -> false && ...",
+          "must_fail_test": "TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts (write-unordered)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts)$'"
+        },
+        {
+          "mutant": "M1-l",
+          "mutation": "writer.BusyTimeout() -> time.Duration(0)",
+          "must_fail_test": "TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts (writer-window-only)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts)$'"
+        },
+        {
+          "mutant": "M1-m",
+          "mutation": "w < 0 -> false && w < 0",
+          "must_fail_test": "TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts (unknown)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts)$'"
+        }
+      ],
+      "commit_message": "feat(evidence): bounded proof producer constructor with per-field refusals and both ordering pins (row 26 M1)"
+    },
+    {
+      "id": "C2",
+      "title": "M2 — Bounded process-group runner core (design M3 part a)",
+      "design_milestone": "M3 (part a)",
+      "files": [
+        "host/evidence/proof_producer.go",
+        "host/evidence/producer_internal_test.go (new, package evidence)",
+        "host/evidence/authority_test.go (+= value ErrExecTimeout, value ErrOutputLimit)",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 110,
+      "manifest_count": 50,
+      "new_tests": [
+        "TestProducerAdmissionRefusesBacklog",
+        "TestProducerExecTimeoutKillsTheWholeProcessGroup",
+        "TestProducerRefusesStderrOverflowIndependently"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC26 (stderr arm, PD5 scripted)",
+          "tests": "TestProducerRefusesStderrOverflowIndependently",
+          "assertions": "scriptedProducer body `printf '{}'; head -c 64 /dev/zero | tr '\\0' e >&2; exec sleep 30`, cap 16, ExecTimeout 10s -> errors.Is ErrOutputLimit, !ErrExecTimeout, detail 'stderr', nil bytes, elapsed < 5s, killGroup called exactly once. Independence control: same body without sleep, cap 1024 -> returns exactly '{}', nil.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC25",
+          "tests": "TestProducerExecTimeoutKillsTheWholeProcessGroup",
+          "assertions": "body `sleep 30 & echo $! > \"$PIDDIR/grandchild.pid\"; echo $$ > \"$PIDDIR/child.pid\"; wait`, env carries PIDDIR and PATH, ExecTimeout 300ms. Goroutine + 20s watchdog (t.Fatalf on watchdog). proctest.ReadPid both + ReapOnCleanup. errors.Is ErrExecTimeout, not procbound.ErrCleanupIncomplete, killGroup recorded exactly one pgid == child pid, proctest.DeadWithin(grandchild, 2s), first kill >= 300ms after call.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC25",
+          "tests": "TestProducerAdmissionRefusesBacklog",
+          "assertions": "fill procbound to MaxOutstanding (capsule loop, releases deferred); body `touch \"$PIDDIR/ran\"` -> errors.Is procbound.ErrCleanupBacklog, ran absent; Outstanding() back to its pre-test value after release.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "runBounded(ctx, dir, env, limit, args...): execCtx := context.WithTimeout(ctx, p.cfg.ExecTimeout) [M39 line]; exec.CommandContext(execCtx, p.checker.ExecPath, args...); Dir/Env; Setpgid true; Cancel -> killGroup(pid); StdoutPipe+StderrPipe; procbound.Admit() before Start (release on Start failure; expired execCtx at Start -> ErrExecTimeout); closer AfterFunc(ExecTimeout+pipeCloseGrace); concurrent readCapped drains, overflow -> killOnce killGroup; procbound.Wait(cmd.Wait, until started+ExecTimeout+2*pipeCloseGrace, release). Classify: overflow -> ErrOutputLimit naming stream (join kill failure unless procbound.NothingToKill; join ErrCleanupIncomplete), nil bytes; deadline -> ErrExecTimeout; read error wrapped; *exec.ExitError ignored (exit codes advisory); other runErr wrapped; else stdout. readCapped verbatim from capsule (M33 line `if int64(len(data)) > limit`). killGroup package var; pipeCloseGrace = time.Second.",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerAdmissionRefusesBacklog|TestProducerExecTimeoutKillsTheWholeProcessGroup|TestProducerRefusesStderrOverflowIndependently)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerAdmissionRefusesBacklog TestProducerExecTimeoutKillsTheWholeProcessGroup TestProducerRefusesStderrOverflowIndependently; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 50",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M33",
+          "mutation": "readCapped: if int64(len(data)) > limit -> if false && int64(len(data)) > limit",
+          "must_fail_test": "TestProducerRefusesStderrOverflowIndependently",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesStderrOverflowIndependently)$'"
+        },
+        {
+          "mutant": "M39",
+          "mutation": "context.WithTimeout(ctx, p.cfg.ExecTimeout) -> context.WithTimeout(ctx, time.Hour)",
+          "must_fail_test": "TestProducerExecTimeoutKillsTheWholeProcessGroup (watchdog)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerExecTimeoutKillsTheWholeProcessGroup)$'"
+        },
+        {
+          "mutant": "M2-a",
+          "mutation": "overflow kill body killErr = killGroup(...) -> no-op",
+          "must_fail_test": "TestProducerRefusesStderrOverflowIndependently (elapsed < 5s)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesStderrOverflowIndependently)$'"
+        },
+        {
+          "mutant": "M2-b",
+          "mutation": "procbound.Admit() -> func() (func(), error) { return func() {}, nil }()",
+          "must_fail_test": "TestProducerAdmissionRefusesBacklog",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerAdmissionRefusesBacklog)$'"
+        },
+        {
+          "mutant": "M2-c",
+          "mutation": "Setpgid: true -> Setpgid: false",
+          "must_fail_test": "TestProducerExecTimeoutKillsTheWholeProcessGroup",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerExecTimeoutKillsTheWholeProcessGroup)$'"
+        }
+      ],
+      "commit_message": "feat(evidence): bounded process-group runner with independent per-stream caps (row 26 M2)"
+    },
+    {
+      "id": "C3",
+      "title": "M3 — Staging + ai-check invocation + committed pinned-binary fixtures (design M3 part b)",
+      "design_milestone": "M3 (part b)",
+      "files": [
+        "host/evidence/proof_producer.go",
+        "host/evidence/producer_internal_test.go",
+        "host/evidence/testdata/aicheck/{verifiedpass,refuted,encerror,mixed,skippedshape,loaderror,nocontracts}.ail",
+        "host/evidence/testdata/aicheck/{same}.json",
+        "host/evidence/testdata/aicheck/regen.sh",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 45,
+      "manifest_count": 51,
+      "new_tests": [
+        "TestProducerRefusesStdoutOverflowIndependently"
+      ],
+      "fixture_generation": {
+        "extract": "G=design_docs/verification/world-iter251/gen_aicheck_fixtures.sh; D=host/evidence/testdata/aicheck; mkdir -p \"$D\"; for n in verifiedpass refuted encerror mixed skippedshape loaderror nocontracts; do awk -v n=\"$n\" 'index($0,\"fixtures/\" n \".ail\\\" <<\")>0{f=1;next} f&&/^AIL$/{f=0} f' \"$G\" > \"$D/$n.ail\"; done; wc -c \"$D\"/*.ail",
+        "expected_ail_bytes": {
+          "verifiedpass": 229,
+          "refuted": 210,
+          "encerror": 281,
+          "mixed": 349,
+          "skippedshape": 531,
+          "loaderror": 151,
+          "nocontracts": 249
+        },
+        "regen_sh": "bash, set -euo pipefail, cd to own dir; BIN=${AILANG_BIN:?}; assert `$BIN --version 2>/dev/null | head -1` == 'AILANG v0.41.0'; scratch=$(mktemp -d) + trap rm; mkdir $scratch/fixtures; per name: cp <n>.ail $scratch/fixtures/; ( cd $scratch && $BIN ai-check -timeout 5s fixtures/<n>.ail ) > <n>.json 2>/dev/null || true  (rc is data). No .rc/.stderr files.",
+        "run": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash host/evidence/testdata/aicheck/regen.sh",
+        "instrument_check": "for n in verifiedpass refuted encerror mixed skippedshape loaderror nocontracts; do a=$(jq -S -c 'del(.verify.results[]?.duration)' host/evidence/testdata/aicheck/$n.json); b=$(jq -S -c 'del(.verify.results[]?.duration)' design_docs/verification/world-iter251/fixtures/$n.json); [ \"$a\" = \"$b\" ] && echo \"$n MATCH\" || { echo \"$n DIFF\"; exit 1; }; done   # planner-run: 7/7 MATCH"
+      },
+      "tests_first": [
+        {
+          "ac": "AC26 (stdout arm)",
+          "tests": "TestProducerRefusesStdoutOverflowIndependently",
+          "assertions": "pinnedChecker(t) (t.Fatal if AILANG_BIN unset/not v0.41.0; Compiler = SumSHA256(binary bytes)). (a) t.Setenv TMPDIR=t.TempDir(); real binary, cap 16, ExecTimeout 2m: runCheck(verifiedpass.ail) -> ErrOutputLimit, nil bytes. (b) control cap 1<<20 -> JSON contains twicePlusOne verified; TMPDIR dir has 0 entries after return. (c) scripted body `head -c 64 /dev/zero | tr '\\0' o`, cap 16 -> ErrOutputLimit, detail 'stdout'. Measured: staged verifiedpass stdout 365 B, stderr 200 B (MOD010 relax warning) so (a) overflows both; (c) is the stdout-only independence proof.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "runCheck(ctx, source): root := os.MkdirTemp(\"\", \"evidence-producer-*\"); defer os.RemoveAll(root); mkdir root/staged root/tmp root/cache; write root/staged/module.ail 0644; env := append(childenv.Scrubbed(os.Environ()), \"AILANG_RELAX_MODULES=1\", \"TMPDIR=\"+root/tmp, archive.CacheDirEnv+\"=\"+root/cache); return p.runBounded(ctx, root, env, p.cfg.MaxOutputBytes, \"ai-check\", \"-timeout\", aiCheckZ3Timeout, stagedModule).",
+      "acceptance": [
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang bash host/evidence/testdata/aicheck/regen.sh",
+        "<fixture_generation.instrument_check>",
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesStdoutOverflowIndependently)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerRefusesStdoutOverflowIndependently; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 51",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M33",
+          "mutation": "readCapped overflow decision -> if false && ...",
+          "must_fail_test": "TestProducerRefusesStdoutOverflowIndependently (arms a, c; observed 17 bytes returned, nil err; design's 373-byte text measured 365 B under producer staging)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesStdoutOverflowIndependently)$'"
+        },
+        {
+          "mutant": "M3-a",
+          "mutation": "delete defer os.RemoveAll(root)",
+          "must_fail_test": "TestProducerRefusesStdoutOverflowIndependently (control: TMPDIR not empty)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesStdoutOverflowIndependently)$'"
+        }
+      ],
+      "not_drillable": "AILANG_RELAX_MODULES=1 and the TMPDIR assignment: measured, the pinned binary auto-relaxes MOD010 in temp dirs and finds its solver under an inherited TMPDIR, so removing either does not change the verdict under tests run in temp dirs. Ledger records 'not drillable, measured', never 'killed'.",
+      "commit_message": "feat(evidence): stage and run pinned ai-check; commit pinned-binary fixtures + regen.sh (row 26 M3)"
+    },
+    {
+      "id": "C4",
+      "title": "M4 — Pinned executable byte + version verification (design M2)",
+      "design_milestone": "M2",
+      "files": [
+        "host/evidence/proof_producer.go",
+        "host/evidence/producer_internal_test.go",
+        "host/evidence/authority_test.go (+= value ErrUntrustedTool)",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 45,
+      "manifest_count": 54,
+      "new_tests": [
+        "TestProducerRefusesMissingExecutable",
+        "TestProducerRefutesTamperedExecutableBytes",
+        "TestProducerRefutesWrongCompilerVersion"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC24",
+          "tests": "TestProducerRefutesTamperedExecutableBytes",
+          "assertions": "(a) real binary, Compiler = SumSHA256(\"not the pinned binary\") -> ErrUntrustedTool, detail contains 'hash to' and expected digest. (b) scripted exe whose first line after shebang is `touch \"$(dirname \"$0\")/executed\"` (before the --version branch), pinned to a WRONG ref -> ErrUntrustedTool and 'executed' absent (bytes checked before any execution).",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC24",
+          "tests": "TestProducerRefutesWrongCompilerVersion",
+          "assertions": "real binary, correct Compiler, CompilerVersion 'AILANG v9.9.9' -> ErrUntrustedTool, detail contains both 'AILANG v0.41.0' and 'AILANG v9.9.9'; control arm with correct version -> nil.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC24",
+          "tests": "TestProducerRefusesMissingExecutable",
+          "assertions": "ExecPath t.TempDir()/absent -> ErrUntrustedTool, detail 'read executable'.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "verifyTool(ctx): data, err := os.ReadFile(ExecPath) (err -> ErrUntrustedTool 'read executable'); got := hashref.Sum(Compiler.Algo(), data); M35 line `if got.Digest() != p.checker.Compiler.Digest()` -> ErrUntrustedTool 'executable %s bytes hash to %s; want %s'; THEN out, err := p.runBounded(ctx, \"\", childenv.Scrubbed(os.Environ()), versionProbeMaxBytes, \"--version\") (stdout only; err -> ErrUntrustedTool 'version probe' with %w also on err); line := first line TrimRight \\r; M36 line `if line != p.checker.CompilerVersion` -> ErrUntrustedTool 'version line %q; want %q'.",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesMissingExecutable|TestProducerRefutesTamperedExecutableBytes|TestProducerRefutesWrongCompilerVersion)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerRefusesMissingExecutable TestProducerRefutesTamperedExecutableBytes TestProducerRefutesWrongCompilerVersion; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 54",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M35",
+          "mutation": "if got.Digest() != p.checker.Compiler.Digest() -> if false && ...",
+          "must_fail_test": "TestProducerRefutesTamperedExecutableBytes (arm a)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefutesTamperedExecutableBytes)$'"
+        },
+        {
+          "mutant": "M36",
+          "mutation": "if line != p.checker.CompilerVersion -> if false && ...",
+          "must_fail_test": "TestProducerRefutesWrongCompilerVersion",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefutesWrongCompilerVersion)$'"
+        },
+        {
+          "mutant": "M4-a",
+          "mutation": "move byte check below the version probe",
+          "must_fail_test": "TestProducerRefutesTamperedExecutableBytes (arm b: executed exists)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefutesTamperedExecutableBytes)$'"
+        },
+        {
+          "mutant": "M4-b",
+          "mutation": "ReadFile error branch -> if false && err != nil",
+          "must_fail_test": "TestProducerRefusesMissingExecutable (detail)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesMissingExecutable)$'"
+        }
+      ],
+      "commit_message": "feat(evidence): per-run pinned executable byte check before a bounded --version probe (row 26 M4)"
+    },
+    {
+      "id": "C5",
+      "title": "M5 — Strict ai-check interpretation + fresh-binary revalidation (design M4 part a)",
+      "design_milestone": "M4 (part a)",
+      "files": [
+        "host/evidence/proof_producer.go",
+        "host/evidence/producer_internal_test.go",
+        "host/evidence/authority_test.go (+= value ErrUnverifiedRun, value ErrVacuousCheck)",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 70,
+      "manifest_count": 56,
+      "new_tests": [
+        "TestFixturesRevalidateAgainstFreshBinaryOutput",
+        "TestProducerInterpretationMatchesEveryFixtureShape"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC27",
+          "tests": "TestProducerInterpretationMatchesEveryFixtureShape",
+          "assertions": "Committed fixtures: verifiedpass -> [twicePlusOne], nil; refuted -> ErrUnverifiedRun 'verify.counterexample=1'; encerror -> ErrUnverifiedRun 'verify.errors=1'; mixed -> ErrUnverifiedRun 'verify.errors=1'; skippedshape -> ErrUnverifiedRun 'verify.skipped=1'; loaderror -> ErrUnverifiedRun 'check.passed is not true'; nocontracts -> ErrVacuousCheck '0 results records from non-empty output'. Literals: \"\" -> ErrVacuousCheck 'empty ai-check stdout'; \"{\" -> ErrUnverifiedRun 'unparseable'. PD6 derived single-field arms from verifiedpass.json (decode to map, flip ONE field, re-marshal): check.passed=false -> ErrUnverifiedRun 'check.passed'; verify.available=false -> ErrUnverifiedRun 'verify.available'; results[0].status=\"unknown\" -> ErrVacuousCheck '0 verified among 1 results records'.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC27",
+          "tests": "TestFixturesRevalidateAgainstFreshBinaryOutput",
+          "assertions": "pinnedChecker (t.Fatal never skip). For each of 7 committed .ail: fresh := p.runCheck(ctx, src) (cap 1<<20, ExecTimeout 2m); require interpretCheck(fresh) and interpretCheck(committed .json) give the same sentinel identity (or both nil) and the same verified set.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "interpretCheck(stdout): unexported wire struct with check.passed, verify.available/counterexample/skipped/errors/results[{function,status}] and deliberately NO verify.verified field; encoding/json.Unmarshal (unknown fields tolerated). Order: 1 empty (TrimSpace) -> ErrVacuousCheck 'empty ai-check stdout'; 2 unmarshal err -> ErrUnverifiedRun 'unparseable ai-check JSON'; 3 !passed -> 'check.passed is not true'; 4 !available -> 'verify.available is not true'; 5 Errors>0 -> 'verify.errors=%d' [M38]; 6 Counterexample>0 -> 'verify.counterexample=%d'; 7 Skipped>0 -> 'verify.skipped=%d'; 8 verified = functions with status==\"verified\"; 9 ONE guard if len(verified)==0 -> ErrVacuousCheck ('0 results records from non-empty output' | '0 verified among %d results records') [M34]; 10 sort.Strings, return (no dedupe).",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestFixturesRevalidateAgainstFreshBinaryOutput|TestProducerInterpretationMatchesEveryFixtureShape)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestFixturesRevalidateAgainstFreshBinaryOutput TestProducerInterpretationMatchesEveryFixtureShape; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 56",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M34",
+          "mutation": "if len(verified) == 0 -> if false && len(verified) == 0",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (nocontracts)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M38",
+          "mutation": "if d.Verify.Errors > 0 -> if false && ...",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (mixed mints [good]; encerror ErrVacuousCheck)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-a",
+          "mutation": "counterexample branch neutered",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (refuted)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-b",
+          "mutation": "skipped branch neutered",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (skippedshape)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-c",
+          "mutation": "check.passed branch neutered",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (loaderror detail + derived passed arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-d",
+          "mutation": "verify.available branch neutered",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (derived available arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-e",
+          "mutation": "r.Status == \"verified\" -> true",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (derived status arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-f",
+          "mutation": "empty-stdout branch neutered",
+          "must_fail_test": "TestProducerInterpretationMatchesEveryFixtureShape (\"\" arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerInterpretationMatchesEveryFixtureShape)$'"
+        },
+        {
+          "mutant": "M5-g",
+          "mutation": "fixture tamper: committed verifiedpass.json status verified -> error (restore after)",
+          "must_fail_test": "TestFixturesRevalidateAgainstFreshBinaryOutput",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestFixturesRevalidateAgainstFreshBinaryOutput)$'"
+        }
+      ],
+      "commit_message": "feat(evidence): strict ai-check JSON interpretation with one anti-vacuity guard (row 26 M5)"
+    },
+    {
+      "id": "C6",
+      "title": "M6 — Required identities + MAC-tagged canonical mint (design M4 part b)",
+      "design_milestone": "M4 (part b)",
+      "files": [
+        "host/evidence/proof_producer.go",
+        "host/evidence/producer_internal_test.go",
+        "host/evidence/authority_test.go (+= value ErrEnvelopeTooLarge, value ErrRequiredIdentityMissing)",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 50,
+      "manifest_count": 58,
+      "new_tests": [
+        "TestProducerRefusesEnvelopeBeyondValidatorReadCap",
+        "TestProducerRequiresCallerNamedIdentities"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC28",
+          "tests": "TestProducerRequiresCallerNamedIdentities",
+          "assertions": "verified := interpretCheck(verifiedpass.json). control [twicePlusOne] -> nil; p.mint succeeds; DecodeAuthenticatedEnvelope ok; hmac.Equal(HMAC(key, env.Report), env.MAC); decoded Verified==[twicePlusOne], Subject/Compiler/CompilerVersion as configured; ref == SumSHA256(env). absent [absentIdentity, twicePlusOne] -> ErrRequiredIdentityMissing naming absentIdentity. empty nil and []string{} -> ErrRequiredIdentityMissing 'no required identities named'.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC29 (size arm, PD4)",
+          "tests": "TestProducerRefusesEnvelopeBeyondValidatorReadCap",
+          "assertions": "over: 200 identities fmt.Sprintf(\"id%03d\",i)+995 x (report 200,923 B; envelope 267,963 B) -> ErrEnvelopeTooLarge, nil bytes, zero ref. near-bound control: 190 x 1024-byte identities (envelope 260,669 B) mints with MaxBytes-4096 < len(env) <= MaxBytes.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "requireIdentities: len(required)==0 -> ErrRequiredIdentityMissing 'no required identities named' (PD10); M15 line `if !containsIdentity(verified, id)` -> '%w: required identity %q not verified'. mint: ProofReportV1{Schema, Subject, Compiler, CompilerVersion, Verified, 0, 0, true, true} -> EncodeProofReportV1 -> HMAC-SHA-256(p.key, rb) -> EncodeAuthenticatedEnvelope{Report: rb, MAC, MACValid: true}; M37 line `if len(env) > MaxBytes` -> ErrEnvelopeTooLarge; return env, SumSHA256(env).",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesEnvelopeBeyondValidatorReadCap|TestProducerRequiresCallerNamedIdentities)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerRefusesEnvelopeBeyondValidatorReadCap TestProducerRequiresCallerNamedIdentities; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 58",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M15",
+          "mutation": "if !containsIdentity(verified, id) -> if false && !containsIdentity(verified, id)",
+          "must_fail_test": "TestProducerRequiresCallerNamedIdentities (absent arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRequiresCallerNamedIdentities)$'"
+        },
+        {
+          "mutant": "M37",
+          "mutation": "if len(env) > MaxBytes -> if false && len(env) > MaxBytes",
+          "must_fail_test": "TestProducerRefusesEnvelopeBeyondValidatorReadCap (over arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesEnvelopeBeyondValidatorReadCap)$'"
+        },
+        {
+          "mutant": "M6-a",
+          "mutation": "empty-required branch neutered",
+          "must_fail_test": "TestProducerRequiresCallerNamedIdentities (empty arm)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRequiresCallerNamedIdentities)$'"
+        },
+        {
+          "mutant": "M6-b",
+          "mutation": "mac.Write(rb) -> mac.Write(rb[:len(rb)-1])",
+          "must_fail_test": "TestProducerRequiresCallerNamedIdentities (control HMAC)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerRequiresCallerNamedIdentities)$'"
+        }
+      ],
+      "commit_message": "feat(evidence): required identities and MAC-tagged canonical envelope mint bounded by the validator read cap (row 26 M6)"
+    },
+    {
+      "id": "C7",
+      "title": "M7 — Store legs + GenerateProof composition (design M5 part a)",
+      "design_milestone": "M5 (part a)",
+      "files": [
+        "host/evidence/proof_producer.go",
+        "host/evidence/producer_realstore_test.go",
+        "host/evidence/authority_test.go (+= method Producer.GenerateProof, value MaxSourceBytes)",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 70,
+      "manifest_count": 61,
+      "new_tests": [
+        "TestProducerEndToEndMintsEnvelopeValidatorAccepts",
+        "TestProducerMintsValidatorReadableEnvelope",
+        "TestProducerSurfacesUncertainWriteOutcome"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC5 (end-to-end arm) + AC30 ordered produce clause (PD11)",
+          "tests": "TestProducerEndToEndMintsEnvelopeValidatorAccepts",
+          "assertions": "default-window real store (2s), cfg {3s,3s,2m,1<<20}, source testdata/aicheck/verifiedpass.ail via putSource, countingWriter. Subtests in order: mint (context.Background(), [twicePlusOne]) -> ref, calls==1, NewValidator(testKey, s, CompilerConfig{pinned Compiler, 'AILANG v0.41.0', 3s}, [twicePlusOne]).ValidateProof -> Validated ok -> Resolve(...).Proven() == (ResolvedGradeProven, true); idempotent second call same ref; tampered-compiler -> ErrUntrustedTool, zero, calls 0; absent-identity -> ErrRequiredIdentityMissing, zero, calls 0; source-hash-mismatch (tamperReader flips last payload byte) -> error contains 'hash to', zero, calls 0; missing-source -> 'not found', zero, calls 0; oversize-source (MaxSourceBytes+1 object) -> errors.As *store.ObjectTooLargeError, zero, calls 0; write-error countingWriter{fail} -> errors.Is injected, zero ref.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC29",
+          "tests": "TestProducerMintsValidatorReadableEnvelope",
+          "assertions": "after mint: s.ReadObject(ref, MaxBytes) meta.SemanticID==ProofSemanticID, meta.InterfaceHash==InterfaceHashV1, SumSHA256(payload)==ref; decoded report Subject==srcRef, Compiler==pinned, CompilerVersion 'AILANG v0.41.0', Verified [twicePlusOne], Errors 0, Counterexamples 0, CheckPassed, ProofSucceeded; HMAC(testKey, Report)==MAC; calls==1.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC29 (PD3)",
+          "tests": "TestProducerSurfacesUncertainWriteOutcome",
+          "assertions": "uncertainWriter calls REAL s.PutObject then returns &store.UncertainError{Op:'put object', Cause: context.DeadlineExceeded} -> errors.As *store.UncertainError, zero ref, calls==1 (no blind retry); s.GetObject shows the object exists (reconcile is the caller's job).",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "readSource: hashref.Parse(ref.String()) check; readCtx := context.WithTimeout(ctx, p.cfg.ObjectReadTimeout) [M31 line]; p.reader.ReadObject(readCtx, ref, MaxSourceBytes) (err wrapped %w); nil payload -> 'source object %s not found'; hashref.Sum(ref.Algo(), src) digest compare -> 'source %s bytes hash to %s'. GenerateProof: readSource -> verifyTool -> runCheck -> interpretCheck -> requireIdentities -> mint -> writeCtx := context.WithTimeout(ctx, p.cfg.ObjectWriteTimeout) [M32 line] -> M28 line `if err := p.writer.PutObject(writeCtx, store.Object{Hash: ref, InterfaceHash: InterfaceHashV1, SemanticID: ProofSemanticID, Provenance: \"bounded-ai-check-producer\", Payload: env}); err != nil` -> zero ref + 'write proof envelope: %w' (never retried). Every failure returns zero HashRef. const MaxSourceBytes = 1 << 20.",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts|TestProducerMintsValidatorReadableEnvelope|TestProducerSurfacesUncertainWriteOutcome)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerEndToEndMintsEnvelopeValidatorAccepts TestProducerMintsValidatorReadableEnvelope TestProducerSurfacesUncertainWriteOutcome; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 61",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M28",
+          "mutation": "PutObject(...); err != nil -> PutObject(...); false && err != nil",
+          "must_fail_test": "TestProducerEndToEndMintsEnvelopeValidatorAccepts (write-error) and TestProducerSurfacesUncertainWriteOutcome",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts|TestProducerSurfacesUncertainWriteOutcome)$'"
+        },
+        {
+          "mutant": "M7-a",
+          "mutation": "delete p.verifyTool(ctx) call",
+          "must_fail_test": "TestProducerEndToEndMintsEnvelopeValidatorAccepts (tampered-compiler)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts)$'"
+        },
+        {
+          "mutant": "M7-b",
+          "mutation": "source digest compare -> false && ...",
+          "must_fail_test": "TestProducerEndToEndMintsEnvelopeValidatorAccepts (source-hash-mismatch)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts)$'"
+        },
+        {
+          "mutant": "M7-c",
+          "mutation": "MaxSourceBytes in ReadObject call -> MaxSourceBytes<<10",
+          "must_fail_test": "TestProducerEndToEndMintsEnvelopeValidatorAccepts (oversize-source)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts)$'"
+        },
+        {
+          "mutant": "M7-d",
+          "mutation": "delete requireIdentities call",
+          "must_fail_test": "TestProducerEndToEndMintsEnvelopeValidatorAccepts (absent-identity)",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts)$'"
+        },
+        {
+          "mutant": "M7-e",
+          "mutation": "SemanticID: ProofSemanticID -> \"x\"",
+          "must_fail_test": "TestProducerEndToEndMintsEnvelopeValidatorAccepts (mint) and TestProducerMintsValidatorReadableEnvelope",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts|TestProducerMintsValidatorReadableEnvelope)$'"
+        }
+      ],
+      "commit_message": "feat(evidence): GenerateProof composes derived-deadline source read, pinned run, strict mint and bounded envelope write (row 26 M7)"
+    },
+    {
+      "id": "C8",
+      "title": "M8 — Real-store pool decoys + full re-drill + final gates (design M5 part b)",
+      "design_milestone": "M5 (part b)",
+      "files": [
+        "host/evidence/producer_realstore_test.go",
+        "scripts/verify_go.sh (REQUIRED_EVIDENCE_TESTS + :295 banner + :302 count)",
+        "host/verifygate/evidence_manifest_gate_test.go (syntheticEvidenceTests + :178 string)",
+        "host/verifygate/mission_config_gate_test.go (repaired-arm evidenceBanner/evidenceCall)"
+      ],
+      "production_loc_budget": 0,
+      "manifest_count": 63,
+      "new_tests": [
+        "TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout",
+        "TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC23",
+          "tests": "TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout",
+          "assertions": "GOMAXPROCS(2) precondition block copied from realstore_test.go:145-160. openEvidenceStoreWithoutBusyWait; 256 MiB decoy; hold := measureGetObject (>= minDecoyHold); bound := hold/decoyHoldRatio; settle := hold/40. Producer ObjectReadTimeout=bound, ObjectWriteTimeout=3s+2*hold, Exec 2m, reader decoyReader{s, armed}, fresh countingWriter per attempt. No-decoy control mints first. Armed (<=5 attempts, PD7): wrapper starts decoy, sleeps settle, asserts decoy in flight and ctx.Err()==nil, times ONLY the real ReadObject. PASS: errors.Is DeadlineExceeded && !errors.Is store.ErrNoDeadline, zero ref, calls==0. Mint with call < 2*bound -> wait decoy, retry. Mint with call >= 2*bound -> t.Fatalf('blocked source read minted after exceeding ObjectReadTimeout: store call=%v'). Watchdog on whole GenerateProof 20*hold+60s. Exhaustion -> instrument failure.",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        },
+        {
+          "ac": "AC20",
+          "tests": "TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout",
+          "assertions": "Same discipline with ObjectWriteTimeout=bound, ObjectReadTimeout=3s+2*hold, writer decoyWriter{s, armed} (records o.Hash on the armed call). No-decoy control mints first. Armed attempts use a distinct source each (verifiedpass.ail + one more \"\\n\" per attempt). PASS: DeadlineExceeded, !ErrNoDeadline, zero ref, s.GetObject(wouldBe) ok==false. Mutant signature call >= 2*bound -> t.Fatalf('blocked envelope write stored after exceeding ObjectWriteTimeout: store call=%v'). Doc comment states verbatim: the decoy holds the single pooled connection, holds NO SQLite write lock, exercises the pool wait and claims nothing about lock contention (row 111).",
+          "red_first": "Write before implementation. On the pre-milestone tree it is build-red (missing API) - that is NOT a kill; the red-first proof is the milestone's mutation drill on compiling code, where the named assertion must fail. No SKIP; binary-dependent arms t.Fatal when AILANG_BIN is unset or not AILANG v0.41.0."
+        }
+      ],
+      "implementation": "Tests only. No production change.",
+      "acceptance": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout|TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 63",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ],
+      "mutations": [
+        {
+          "mutant": "M31",
+          "mutation": "context.WithTimeout(ctx, p.cfg.ObjectReadTimeout) -> context.WithTimeout(ctx, time.Hour)",
+          "must_fail_test": "TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout)$'"
+        },
+        {
+          "mutant": "M32",
+          "mutation": "context.WithTimeout(ctx, p.cfg.ObjectWriteTimeout) -> context.WithTimeout(ctx, time.Hour)",
+          "must_fail_test": "TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout",
+          "command": "go test -count=1 -v ./host/evidence -run '^(TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout)$'"
+        },
+        {
+          "mutant": "RE-DRILL",
+          "mutation": "M15, M28, M31, M32, M33, M34, M35, M36, M37, M38, M39 once more on the final tree",
+          "must_fail_test": "each with its own milestone's command",
+          "command": "see each milestone"
+        }
+      ],
+      "commit_message": "test(evidence): real-store pool decoys bound both producer store legs; manifest 63 (row 26 M8)"
+    }
+  ],
+  "gates": [
+    {
+      "milestone": "C1",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts|TestProducerConstructorRefusesEmptyCompilerVersion|TestProducerConstructorRefusesEmptyExecPath|TestProducerConstructorRefusesNilReader|TestProducerConstructorRefusesNilWriter|TestProducerConstructorRefusesNonPositiveExecTimeout|TestProducerConstructorRefusesNonPositiveMaxOutputBytes|TestProducerConstructorRefusesNonPositiveObjectReadTimeout|TestProducerConstructorRefusesNonPositiveObjectWriteTimeout|TestProducerConstructorRefusesUnsetCompilerIdentity)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts TestProducerConstructorRefusesEmptyCompilerVersion TestProducerConstructorRefusesEmptyExecPath TestProducerConstructorRefusesNilReader TestProducerConstructorRefusesNilWriter TestProducerConstructorRefusesNonPositiveExecTimeout TestProducerConstructorRefusesNonPositiveMaxOutputBytes TestProducerConstructorRefusesNonPositiveObjectReadTimeout TestProducerConstructorRefusesNonPositiveObjectWriteTimeout TestProducerConstructorRefusesUnsetCompilerIdentity; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 47",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C2",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerAdmissionRefusesBacklog|TestProducerExecTimeoutKillsTheWholeProcessGroup|TestProducerRefusesStderrOverflowIndependently)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerAdmissionRefusesBacklog TestProducerExecTimeoutKillsTheWholeProcessGroup TestProducerRefusesStderrOverflowIndependently; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 50",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C3",
+      "commands": [
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang bash host/evidence/testdata/aicheck/regen.sh",
+        "<fixture_generation.instrument_check>",
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesStdoutOverflowIndependently)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerRefusesStdoutOverflowIndependently; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 51",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C4",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesMissingExecutable|TestProducerRefutesTamperedExecutableBytes|TestProducerRefutesWrongCompilerVersion)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerRefusesMissingExecutable TestProducerRefutesTamperedExecutableBytes TestProducerRefutesWrongCompilerVersion; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 54",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C5",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestFixturesRevalidateAgainstFreshBinaryOutput|TestProducerInterpretationMatchesEveryFixtureShape)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestFixturesRevalidateAgainstFreshBinaryOutput TestProducerInterpretationMatchesEveryFixtureShape; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 56",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C6",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerRefusesEnvelopeBeyondValidatorReadCap|TestProducerRequiresCallerNamedIdentities)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerRefusesEnvelopeBeyondValidatorReadCap TestProducerRequiresCallerNamedIdentities; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 58",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C7",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestProducerEndToEndMintsEnvelopeValidatorAccepts|TestProducerMintsValidatorReadableEnvelope|TestProducerSurfacesUncertainWriteOutcome)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestProducerEndToEndMintsEnvelopeValidatorAccepts TestProducerMintsValidatorReadableEnvelope TestProducerSurfacesUncertainWriteOutcome; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 61",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "C8",
+      "commands": [
+        "go vet ./host/evidence/... ./host/verifygate/...",
+        "log=\"$(mktemp)\"; go test -count=1 -v ./host/evidence -run '^(TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout|TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout)$' >\"$log\" 2>&1; rc=$?; cat \"$log\"; [ $rc -eq 0 ]\nfor t in TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout; do grep -q -- \"^--- PASS: $t \" \"$log\" || { echo \"$t did not PASS\"; exit 1; }; done",
+        "go test ./host/evidence -count=1",
+        "go test -race ./host/evidence -count=1",
+        "ev=\"$(mktemp)\"; go test -json ./host/evidence -count=1 >\"$ev\"; ./scripts/verify_go.sh --evidence-manifest-check \"$ev\" 63",
+        "go test -count=1 ./host/verifygate -run '^(TestEvidenceNamedManifestRejectsUnpinnedTest|TestVerifyGoProductCheckSequence|TestSubprocessSinkGate|TestNoParallelWriteForkPackagesOutsideVerifygate)$'"
+      ]
+    },
+    {
+      "milestone": "final",
+      "commands": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang; export PATH=/opt/homebrew/bin:$PATH",
+        "go vet ./...",
+        "go test -count=1 ./host/verifygate",
+        "go test -race ./host/evidence -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh   # expect '(63 exact top-level tests)', '✓ all 63 required…', '✓ go gate PASSED'",
+        "git diff --stat ba79d1e -- host/store scripts/verify_ail.sh .github tools/launchd world packages   # controller; must be empty"
+      ],
+      "rule": "Run in order; record rc and wall time; verify_go.sh with >= 15 min allowance."
+    }
+  ],
+  "risks": [
+    "CI go-verify leg near budget (base verify_go 10m18s locally; race leg 8m inner timeout); new tests add two 256 MiB decoys and ~12 real-binary runs each hashing 100,594,162 bytes. Report go test -race ./host/evidence wall time at M7/M8; >~90 s locally is a controller finding, never fixed by weakening a test.",
+    "Decoy flake: PD7 copies AC16's discipline and measures the store call only; retry exhaustion is a loud instrument failure.",
+    "ETXTBSY on write-then-exec of scripted executables: no t.Parallel in host/evidence (PD12), capsule precedent.",
+    "Fixture drift on a pin move reds TestFixturesRevalidateAgainstFreshBinaryOutput; regenerate via regen.sh in the same commit as the pin bump.",
+    "Any milestone exceeding ~250 production LOC: executor stops and reports actual LOC, never hides it in a neighbour."
+  ],
+  "controller_owned": [
+    "C1..C8 commits (per boundary if the executor was told to stop, else from the final tree); executor runs no git",
+    "Final verify_ail.sh / verify_go.sh runs with >= 15 min allowance, CI N/N reruns",
+    "Frozen-surface diffstat audit against ba79d1e and merge head",
+    "Recording design defects D1-D9 for the evaluator"
+  ],
+  "coverage": {
+    "milestones": 8,
+    "design_acs": [
+      "AC5",
+      "AC20",
+      "AC23",
+      "AC24",
+      "AC25",
+      "AC26",
+      "AC27",
+      "AC28",
+      "AC29",
+      "AC30"
+    ],
+    "new_top_level_tests": 26,
+    "manifest": "37 -> 63",
+    "design_mutants": [
+      "M15",
+      "M28",
+      "M31",
+      "M32",
+      "M33",
+      "M34",
+      "M35",
+      "M36",
+      "M37",
+      "M38",
+      "M39"
+    ],
+    "planner_mutants": 33,
+    "planner_decisions": 12,
+    "design_defects": 9
+  }
+}
