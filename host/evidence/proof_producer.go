@@ -1,18 +1,32 @@
 package evidence
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os/exec"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/procbound"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 // ErrInvalidProducerConfig refuses a producer whose configuration cannot make
 // a bounded, pinned proof. Each refusal names only its own field.
 var ErrInvalidProducerConfig = errors.New("evidence: invalid producer configuration")
+
+// ErrExecTimeout reports that the checker outlived ExecTimeout. Its process
+// group was killed before the producer returned.
+var ErrExecTimeout = errors.New("evidence: checker exceeded its execution timeout")
+
+// ErrOutputLimit reports that a checker stream exceeded MaxOutputBytes. The
+// group was killed, and no bytes are returned.
+var ErrOutputLimit = errors.New("evidence: checker output exceeded its limit")
 
 // ObjectWriter is the write seam of the producer. BusyTimeout reports the
 // store's lock-retry window so the write timeout can be ordered above it.
@@ -94,4 +108,134 @@ func NewProducer(key [32]byte, reader ObjectReader, writer ObjectWriter, checker
 	keyCopy := new([32]byte)
 	*keyCopy = key
 	return &Producer{key: keyCopy, reader: reader, writer: writer, checker: checker, cfg: cfg}, nil
+}
+
+// pipeCloseGrace bounds the one case the group kill cannot reach: a descendant
+// that left the process group and still holds the pipes.
+const pipeCloseGrace = time.Second
+
+// killGroup SIGKILLs the checker's whole process group. It is a package-level
+// seam so tests can observe or fail the kill.
+var killGroup = func(pgid int) error {
+	return syscall.Kill(-pgid, syscall.SIGKILL)
+}
+
+var errStreamOverflow = errors.New("stream exceeds its output limit")
+
+// readCapped reads at most limit bytes and reports an overflow when the stream
+// holds more. The overflow decision precedes err: ReadAll can report both, and
+// an over-cap stream is an overflow whatever else went wrong.
+func readCapped(pipe io.Reader, limit int64) ([]byte, error) {
+	data, err := io.ReadAll(io.LimitReader(pipe, limit+1))
+	if int64(len(data)) > limit {
+		return data[:limit], errStreamOverflow
+	}
+	if err != nil {
+		return data, err
+	}
+	return bytes.Clone(data), nil
+}
+
+// runBounded runs the pinned checker in its own process group under one
+// wall-clock bound and a per-stream output cap. Exit codes are advisory: only
+// the captured stdout and the bounded classification decide the outcome.
+func (p *Producer) runBounded(ctx context.Context, dir string, env []string, limit int64, args ...string) ([]byte, error) {
+	release, err := procbound.Admit()
+	if err != nil {
+		return nil, err
+	}
+	execCtx, cancel := context.WithTimeout(ctx, p.cfg.ExecTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(execCtx, p.checker.ExecPath, args...)
+	cmd.Dir = dir
+	cmd.Env = env
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Cancel = func() error {
+		if cmd.Process == nil {
+			return nil
+		}
+		return killGroup(cmd.Process.Pid)
+	}
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		release()
+		return nil, fmt.Errorf("evidence: stdout pipe: %w", err)
+	}
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		release()
+		return nil, fmt.Errorf("evidence: stderr pipe: %w", err)
+	}
+	if err := cmd.Start(); err != nil {
+		release()
+		if errors.Is(execCtx.Err(), context.DeadlineExceeded) {
+			return nil, fmt.Errorf("%w: start: %v", ErrExecTimeout, err)
+		}
+		return nil, fmt.Errorf("evidence: start %s: %w", p.checker.ExecPath, err)
+	}
+	started := time.Now()
+	closer := time.AfterFunc(p.cfg.ExecTimeout+pipeCloseGrace, func() {
+		_ = stdoutPipe.Close()
+		_ = stderrPipe.Close()
+	})
+	defer closer.Stop()
+
+	var stdout, stderr []byte
+	var stdoutErr, stderrErr error
+	var killOnce sync.Once
+	var killErr error
+	var wg sync.WaitGroup
+	drain := func(pipe io.Reader, dst *[]byte, dstErr *error) {
+		defer wg.Done()
+		*dst, *dstErr = readCapped(pipe, limit)
+		if errors.Is(*dstErr, errStreamOverflow) {
+			killOnce.Do(func() { killErr = killGroup(cmd.Process.Pid) })
+		}
+	}
+	wg.Add(2)
+	go drain(stdoutPipe, &stdout, &stdoutErr)
+	go drain(stderrPipe, &stderr, &stderrErr)
+	// Reads finish before Wait: the pipes close when the reader returns (os/exec).
+	wg.Wait()
+	runErr := procbound.Wait(cmd.Wait, time.Until(started.Add(p.cfg.ExecTimeout+2*pipeCloseGrace)), release)
+
+	switch {
+	case errors.Is(stdoutErr, errStreamOverflow) || errors.Is(stderrErr, errStreamOverflow):
+		// The group leader may already be an unreaped zombie when the kill fires:
+		// NothingToKill separates that benign answer from a real kill failure.
+		stream := "stderr"
+		if errors.Is(stdoutErr, errStreamOverflow) {
+			stream = "stdout"
+		}
+		var killFailure error
+		if killErr != nil && !procbound.NothingToKill(killErr, func() bool { return procbound.GroupEmpty(cmd.Process.Pid) }) {
+			killFailure = fmt.Errorf("evidence: overflow kill: %w", killErr)
+		}
+		return nil, withRunFailures(fmt.Errorf("%w: %s exceeded %d bytes", ErrOutputLimit, stream, limit), killFailure, runErr)
+	case errors.Is(execCtx.Err(), context.DeadlineExceeded):
+		return nil, withRunFailures(fmt.Errorf("%w after %s", ErrExecTimeout, p.cfg.ExecTimeout), nil, runErr)
+	case stdoutErr != nil || stderrErr != nil:
+		return nil, fmt.Errorf("evidence: read checker output: %w", errors.Join(stdoutErr, stderrErr))
+	}
+	var exitErr *exec.ExitError
+	if runErr != nil && !errors.As(runErr, &exitErr) {
+		return nil, fmt.Errorf("evidence: wait for checker: %w", runErr)
+	}
+	return stdout, nil
+}
+
+// withRunFailures keeps the typed error primary and joins a failed kill and an
+// incomplete cleanup behind it. With neither, it returns primary itself.
+func withRunFailures(primary, killFailure, waitErr error) error {
+	errs := []error{primary}
+	if killFailure != nil {
+		errs = append(errs, killFailure)
+	}
+	if errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
+		errs = append(errs, waitErr)
+	}
+	if len(errs) == 1 {
+		return primary
+	}
+	return errors.Join(errs...)
 }

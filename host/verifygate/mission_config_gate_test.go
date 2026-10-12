@@ -451,8 +451,8 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 	evidenceBanner := `echo "── focused host/evidence named-manifest gate (37 exact top-level tests)"`
 	evidenceCall := `check_evidence_manifest "$evidence_json" 37`
 	if repaired {
-		evidenceBanner = `echo "── focused host/evidence named-manifest gate (47 exact top-level tests)"`
-		evidenceCall = `check_evidence_manifest "$evidence_json" 47`
+		evidenceBanner = `echo "── focused host/evidence named-manifest gate (50 exact top-level tests)"`
+		evidenceCall = `check_evidence_manifest "$evidence_json" 50`
 	}
 	passedAnchor := `echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`
 	needles := []string{

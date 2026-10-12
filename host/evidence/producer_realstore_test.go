@@ -19,8 +19,10 @@ type busyWriter struct {
 	busy time.Duration
 }
 
-func (w busyWriter) PutObject(ctx context.Context, o store.Object) error { return w.s.PutObject(ctx, o) }
-func (w busyWriter) BusyTimeout() time.Duration                          { return w.busy }
+func (w busyWriter) PutObject(ctx context.Context, o store.Object) error {
+	return w.s.PutObject(ctx, o)
+}
+func (w busyWriter) BusyTimeout() time.Duration { return w.busy }
 
 // TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts pins the ordering of
 // the producer's two object timeouts against the REAL store windows of both
