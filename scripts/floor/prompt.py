@@ -88,8 +88,22 @@ WORLD_RUN_NOTE_ROW135 = (
 WORLD_WRITE_NOTE = ('Your own sandbox is read-only and has no shell, but that does not limit these '
                     'tools: `ailang-write` and `ailang-edit` do write files in your worktree.')
 WORLD_RUN_NOTE_ROW135_RW = WORLD_RUN_NOTE_ROW135 + ' ' + WORLD_WRITE_NOTE
+# ``row93-direct`` (2026-10-12, attended): row135-rw plus one note. Zero-spend probes
+# (verification/world-sol-pilot-2026-10-12/ANALYSIS.md) showed codex 0.162 reaches tools through a
+# JavaScript `exec` tool and DEFERS every World tool: its schema is absent from the request and is
+# listed only in the runtime `ALL_TOOLS`, so the model spends hidden discovery round trips (~44k
+# input tokens and ~2-3 s each) before its first World call. Shell's `exec_command` is inlined. The
+# note says the tools need no discovery and names codex's exact JavaScript identifiers; the text is
+# agent-neutral (both agents get one message, design §4.2), and a client exposing MCP tools directly
+# ignores the identifiers. Never the words "ailang run" (MUT-PROMPT-LEAK).
+WORLD_JS_IDENTIFIERS = tuple(f'tools.mcp__world__{name.replace("-", "_")}' for name, _ in WORLD_TOOLS_ROW135)
+WORLD_DIRECT_NOTE = ('These tools are already connected: call them directly with the arguments above, '
+                     'with no search or discovery step first. If your client exposes MCP tools as '
+                     'JavaScript functions, their exact names are '
+                     + ', '.join(f'`{i}`' for i in WORLD_JS_IDENTIFIERS) + '.')
+WORLD_RUN_NOTE_ROW93_DIRECT = WORLD_RUN_NOTE_ROW135_RW + ' ' + WORLD_DIRECT_NOTE
 WORLD_RUN_NOTE = WORLD_RUN_NOTE_ROW135
-WORLD_WORDINGS = ('m1', 'row135', 'row135-rw')
+WORLD_WORDINGS = ('m1', 'row135', 'row135-rw', 'row93-direct')
 DEFAULT_WORLD_WORDING = 'row135'
 
 SHELL_TOOLS_TMPL = ('You have access to the `ailang` command:\n'
@@ -179,6 +193,8 @@ def world_wording(wording: str) -> tuple:
         return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW135, WORLD_STEPS_HEAD_ROW135
     if wording == 'row135-rw':
         return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW135_RW, WORLD_STEPS_HEAD_ROW135
+    if wording == 'row93-direct':
+        return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW93_DIRECT, WORLD_STEPS_HEAD_ROW135
     raise PromptError(f'unknown World tools-block wording {wording!r} (one of {WORLD_WORDINGS})')
 
 

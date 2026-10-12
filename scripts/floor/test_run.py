@@ -322,6 +322,21 @@ class WorldWording(unittest.TestCase):  # knob (a)
             self.assertEqual(test_prompt.disallowed_diff(prompt.render_message('T', s),
                                                          prompt.render_message('T', w)), [])
 
+    def test_row93_direct_adds_only_the_direct_note(self):
+        rw, d = self.render('row135-rw'), self.render('row93-direct')
+        self.assertIn(prompt.WORLD_RUN_NOTE_ROW135_RW, d)
+        self.assertIn('no search or discovery step', d)
+        self.assertNotIn('discovery', rw)
+        # codex's exact identifiers, as listed by its runtime ALL_TOOLS (probe 2, 2026-10-12)
+        self.assertEqual(prompt.WORLD_JS_IDENTIFIERS, tuple(
+            'tools.mcp__world__' + n for n in ('ailang_read', 'ailang_write', 'ailang_edit', 'ailang_check',
+                                               'ailang_run', 'builtins_search', 'examples_search', 'ailang_cli')))
+        for ident in prompt.WORLD_JS_IDENTIFIERS:
+            self.assertIn(f'`{ident}`', d)
+            self.assertNotIn(ident, rw)
+        self.assertNotIn('ailang run', d)  # MUT-PROMPT-LEAK
+        self.assertEqual(d.replace(' ' + prompt.WORLD_DIRECT_NOTE, ''), rw)
+
     def test_unknown_wording_refused(self):
         with self.assertRaises(prompt.PromptError):
             self.render('nope')
