@@ -228,5 +228,56 @@ class Driver(unittest.TestCase):
         self.assertEqual(stat.S_IMODE(os.stat(self.private).st_mode), 0o700)
 
 
+class EventTiming(unittest.TestCase):  # row 93 overhead attribution (2026-10-12)
+    def test_spawn_keeps_bytes_and_times_each_line(self):
+        with tempfile.TemporaryDirectory() as d:
+            tr = os.path.join(d, 't.jsonl')
+            code = ('import sys,time\n'
+                    'sys.stdout.write("a\\n"); sys.stdout.flush(); time.sleep(0.4)\n'
+                    'sys.stdout.write("b\\n"); sys.stdout.flush(); time.sleep(0.3)\n'
+                    'sys.stdout.write("tail-no-newline")')
+            r = run_task.spawn([sys.executable, '-c', code], cwd=d, env=dict(os.environ), transcript_path=tr,
+                               deadline_s=30)
+            self.assertEqual(open(tr, 'rb').read(), b'a\nb\ntail-no-newline')
+            times = json.load(open(tr + '.times'))
+            self.assertEqual(len(times), 3)
+            self.assertTrue(r['stdout_reader_done'])
+            self.assertGreaterEqual(times[1] - times[0], 350)  # the 0.4 s gap is real, not batched
+            self.assertGreaterEqual(times[2] - times[1], 250)
+            self.assertLessEqual(times[-1], r['wall_ms'])
+
+    def test_spawn_deadline_still_kills_and_times(self):
+        with tempfile.TemporaryDirectory() as d:
+            tr = os.path.join(d, 't.jsonl')
+            code = 'import sys,time\nprint("x", flush=True)\ntime.sleep(60)'
+            r = run_task.spawn([sys.executable, '-c', code], cwd=d, env=dict(os.environ), transcript_path=tr,
+                               deadline_s=1)
+            self.assertEqual(r['finish_reason'], 'timeout')
+            self.assertEqual(len(json.load(open(tr + '.times'))), 1)
+
+    def _ev(self, typ, item=None):
+        return json.dumps({'type': typ, **({'item': item} if item else {})})
+
+    def test_event_timing_splits_model_and_tool(self):
+        lines = [self._ev('thread.started'), self._ev('turn.started'),
+                 self._ev('item.completed', {'id': 'm0', 'type': 'agent_message'}),
+                 self._ev('item.started', {'id': 'c1', 'type': 'mcp_tool_call'}),
+                 self._ev('item.started', {'id': 'c2', 'type': 'mcp_tool_call'}),   # overlaps c1
+                 self._ev('item.completed', {'id': 'c1', 'type': 'mcp_tool_call'}),
+                 self._ev('item.completed', {'id': 'c2', 'type': 'mcp_tool_call'}),
+                 self._ev('item.started', {'id': 'c3', 'type': 'command_execution'}),
+                 self._ev('item.completed', {'id': 'c3', 'type': 'command_execution'}),
+                 self._ev('turn.completed')]
+        times = [900, 1000, 3000, 3000, 3200, 3500, 3600, 6000, 6400, 9000]
+        t = run_task.event_timing('\n'.join(lines) + '\n', times, 9500)
+        self.assertEqual(t, {'startup_ms': 1000, 'turn_ms': 8000, 'tool_ms': 1000, 'model_ms': 7000,
+                             'teardown_ms': 500, 'tool_calls_timed': 3, 'unclosed_tool_items': 0})
+
+    def test_event_timing_refuses_unpaired_input(self):
+        lines = [self._ev('turn.started'), self._ev('turn.completed')]
+        self.assertIsNone(run_task.event_timing('\n'.join(lines), [1], 5))
+        self.assertIsNone(run_task.event_timing(self._ev('turn.started'), [1], 5))  # no turn end
+
+
 if __name__ == '__main__':
     unittest.main()
