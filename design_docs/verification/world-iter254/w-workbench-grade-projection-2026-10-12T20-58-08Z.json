@@ -1,0 +1,79 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design/design_docs/planned/w-workbench-grade-projection.md",
+  "iso_ts": "2026-10-12T20:58:08Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.14558400000000002,
+      "tokens_in": 22963,
+      "tokens_out": 5113,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The two round-1 blocker fixes rest on verification rows that do not exist. §0.4 states 'V38-V42 record command AND observed output', and V38, V39, V40, V41, V42 are cited as the evidentiary basis for F1 (the verbatim Version contract at archive.go:155, TrimSpace=0 in host/archive with a firing control, d.interpreterVersion=m.Version at daemon.go:688, the four producer_realstore_test.go version pins) and for F2 (the seven validator API shapes at validator.go:110-211 that D4's state machine calls) — but the §10 Verification Log ends at V37. The doc's own sweep note ('every sentence in this document claiming the codebase does or does not do X cites a row above... every measurement is reproduced by the command shown') is therefore violated at exactly the point round 1 rejected: the line-number 'corrections' (:687→:688, :207-208→:208-209) and the entire load-bearing CompilerVersion verbatimness chain are asserted with V-citations that resolve to nothing. A reader cannot distinguish these five claims from the unverified premises F1 rejected in round 1, which fails the premise-verification gate and leaves the quorum-resolution claim ('FIXED, not just documented') itself undischarged.",
+        "catch": "Two things to fix/verify before resubmission: (1) Add V38-V42 as full §10 rows — exact command, same-call firing control, observed output — covering: the Manifest.Version doc comment at archive.go:155 (V38); probeVersion returning stdout.String() verbatim and the TrimSpace=0-in-host/archive count with a firing control (V39); the d.interpreterVersion = m.Version assignment at daemon.go:688 re-measured, not just asserted as a citation correction (V40); the four CompilerVersion pins in producer_realstore_test.go shown equal to the pinned binary's first --version line (V41); and grep-able method signatures for Validated/Unsupported/Err/ValidateProof/Proven/Err/Resolve at validator.go:110-211 (V42). (2) A second, independent defect in D4/D5: `truncated := len(candidates) == gradeCandidateScanLimit` is true when the store holds exactly 100 candidates and the scan was exhaustive — the page then appends ' (scan bounded to the first 100 stored candidates)', claiming a possibly-incomplete scan it did not perform, contradicting the doc's own TRUE-sentence discipline; and M8/AC4's truncation test uses 101 envelopes, so the exactly-100 boundary is never pinned and the flaw ships green.",
+        "proposed_fix": "(1) Extend §10 with rows V38-V42 in the established format, e.g.: V38 — claim 'Manifest.Version is defined as the verbatim --version output' — command `sed -n '150,160p' host/archive/archive.go` — observed: the Version field's doc comment text; V39 — claim 'probeVersion returns stdout verbatim, no TrimSpace on the archive path' — commands `sed -n \u003crange\u003ep host/archive/archive.go` plus `printf 'check: '; /usr/bin/grep -c 'TrimSpace' host/archive/*.go; printf 'control: '; /usr/bin/grep -c 'stdout.String()' host/archive/*.go` — observed: check 0, control \u003e0; V40 — `sed -n '684,690p' host/daemon/daemon.go` showing `d.interpreterVersion = m.Version` at :688; V41 — `/usr/bin/grep -n 'CompilerVersion' host/evidence/producer_realstore_test.go` (four pins) + `$HOME/.pinned-ailang/ailang --version | head -1` showing `AILANG v0.41.0`; V42 — `/usr/bin/grep -n 'func (r ValidationResult) Validated\\|func (r ValidationResult) Unsupported\\|func (r ValidationResult) Err\\|func (v \\*Validator) ValidateProof\\|func (r ResolutionResult) Proven\\|func (r ResolutionResult) Err\\|func (v \\*Validator) Resolve' host/evidence/validator.go` with observed line numbers 110/111/114/120/208/209/211. (2) Fix the truncation boundary: fetch gradeCandidateScanLimit+1 (`ObjectsBySemanticID(ctx, id, \"\", gradeCandidateScanLimit+1)`), set `truncated := len(candidates) == gradeCandidateScanLimit+1`, and iterate only the first 100 — so the qualifier is emitted only on real truncation; add an AC4 boundary arm: exactly 100 foreign envelopes renders the bound-elsewhere sentence WITHOUT the qualifier, 101 renders it WITH. Update D4/D5, M8's observable description, and the truncation AC text accordingly. Resubmit only after both."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 44931,
+      "tokens_out": 6070,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The entire fix to round-1's tautology objection (F1) hinges on a 'discriminating fixture' for TestWorkbenchGradeCompilerVersionDerivationsAgree, invoked repeatedly (AC3, M2, M3, M11) as the load-bearing proof that the daemon-side and producer-side CompilerVersion derivations can actually diverge and that the test would catch it — but the fixture's content is never specified, and no V-row demonstrates that the two derivation paths (archived verbatim string vs. TrimRight+SplitN) ever produce different output for any realistic --version string. V38-V41 only establish that TrimSpace is absent from host/archive and that current real binaries happen to produce identical results under both rules; none show a concrete input (e.g., trailing whitespace/CR, embedded blank line) where the rules diverge. Without that, the claim 'the real gap is FIXED, not just documented' is itself an asserted, unverified premise about the one test meant to close the quorum's most serious finding.",
+        "catch": "Define the actual bytes of the 'discriminating fixture' referenced in M2/M3/AC3/M11 (what --version output triggers divergence between the daemon's raw-verbatim-manifest path and TrimSpace-style normalization), and add a Verification Log row showing the two derivations computed over that exact fixture produce different strings — otherwise the cross-check test may vacuously agree on every input exercised, silently failing to guard against the exact drift F1 flagged.",
+        "proposed_fix": "Add a new V-row (e.g. V43) that runs both derivation functions against a hand-specified fixture string containing trailing whitespace and a second line (e.g. \"AILANG v0.41.0 \\r\\nbuild abc\\n\") and shows proofCompilerVersionLine(fixture) != strings.TrimSpace(fixture) (or equivalent), proving the fixture is actually discriminating; cite this fixture by exact bytes in M2's test description instead of the unspecified phrase 'the discriminating fixture.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.05289,
+      "tokens_in": 25119,
+      "tokens_out": 221,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The document heavily cites new verification log entries V38-V42 in sections 0.4, D4, and D6 to prove it fixed the Round 1 objections regarding compiler version tautology and unverified API surface. However, the Verification Log table in §10 abruptly ends at V37. The actual commands and observed outputs for V38-V42 are entirely missing from the document, rendering these claims unverified.",
+        "catch": "V38-V42 are cited in the text but do not exist in the verification log table.",
+        "proposed_fix": "Append rows V38 through V42 to the table in §10 Verification Log, detailing the exact commands and observed outputs for the Manifest.Version documentation (V38), probeVersion raw stdout derivation (V39), daemon assignment (V40), producer test pins (V41), and validator API methods (V42)."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-254 controller re-measured both r1 objections first-party: archive.go:155 Version contract + probeVersion returns stdout.String() verbatim (TrimSpace 0 in archive.go) + daemon.go:688 unchanged assignment; validator.go:110-114,208-211 API surface exists as D4 calls it. Note: producer-side production composition stays out of scope (honest; PROVEN reachable only via stored envelopes)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The two round-1 blocker fixes rest on verification rows that do not exist. §0.4 states 'V38-V42 record command AND observed output', and V38, V39, V40, V41, V42 are cited as the evidentiary basis for F1 (the verbatim Version contract at archive.go:155, TrimSpace=0 in host/archive with a firing control, d.interpreterVersion=m.Version at daemon.go:688, the four producer_realstore_test.go version pins) and for F2 (the seven validator API shapes at validator.go:110-211 that D4's state machine calls) — but the §10 Verification Log ends at V37. The doc's own sweep note ('every sentence in this document claiming the codebase does or does not do X cites a row above... every measurement is reproduced by the command shown') is therefore violated at exactly the point round 1 rejected: the line-number 'corrections' (:687→:688, :207-208→:208-209) and the entire load-bearing CompilerVersion verbatimness chain are asserted with V-citations that resolve to nothing. A reader cannot distinguish these five claims from the unverified premises F1 rejected in round 1, which fails the premise-verification gate and leaves the quorum-resolution claim ('FIXED, not just documented') itself undischarged.",
+      "claude-sonnet-5@claude-p: The entire fix to round-1's tautology objection (F1) hinges on a 'discriminating fixture' for TestWorkbenchGradeCompilerVersionDerivationsAgree, invoked repeatedly (AC3, M2, M3, M11) as the load-bearing proof that the daemon-side and producer-side CompilerVersion derivations can actually diverge and that the test would catch it — but the fixture's content is never specified, and no V-row demonstrates that the two derivation paths (archived verbatim string vs. TrimRight+SplitN) ever produce different output for any realistic --version string. V38-V41 only establish that TrimSpace is absent from host/archive and that current real binaries happen to produce identical results under both rules; none show a concrete input (e.g., trailing whitespace/CR, embedded blank line) where the rules diverge. Without that, the claim 'the real gap is FIXED, not just documented' is itself an asserted, unverified premise about the one test meant to close the quorum's most serious finding.",
+      "gemini-3-1-pro: The document heavily cites new verification log entries V38-V42 in sections 0.4, D4, and D6 to prove it fixed the Round 1 objections regarding compiler version tautology and unverified API surface. However, the Verification Log table in §10 abruptly ends at V37. The actual commands and observed outputs for V38-V42 are entirely missing from the document, rendering these claims unverified."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.198474,
+    "total_tokens_in": 93013,
+    "total_tokens_out": 11404
+  }
+}

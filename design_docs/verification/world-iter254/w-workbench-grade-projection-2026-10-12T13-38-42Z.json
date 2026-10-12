@@ -1,0 +1,60 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design/design_docs/planned/w-workbench-grade-projection.md",
+  "iso_ts": "2026-10-12T13:38:42Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.04854,
+      "tokens_in": 23208,
+      "tokens_out": 177,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is the coarse identity validation: because required identities are daemon-wide, a valid proof envelope that satisfies a subject's specific needs but lacks one of the daemon's global identities will be refused with 'proof_incomplete'. The design correctly mitigates this by rendering an honest reason ('does not verify every identity the daemon requires') rather than a fabricated failure, and explicitly scopes per-subject configuration as future work.",
+        "catch": "Verify that `evidence.ValidationResult` and `evidence.ResolutionResult` are fully exported types, and that their methods (`Err()`, `Validated()`, `Unsupported()`, `Proven()`) match the `proofValidator` interface exactly as assumed in the projection loop."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unknown-model",
+      "error": "model \"oc-kimi-k3\" not in models.yml: model not in models.yml",
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unknown-model",
+      "error": "model \"claude-sonnet-5@claude-p\" not in models.yml: model not in models.yml",
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller verified V2 (workbench.go:43 constant, :477 site), V4 (NewValidator signature), V5 (no key/identity Config fields), V6 (interpreterHash/Version held via --ailang-bin), V7 (producer :328 first-line derivation), V11 (Resolve mints only ResolvedGradeProven), V13 (ObjectsBySemanticID, MaxSemanticIDPage=500), V28 (0 non-test callers of NewValidator/GenerateProof) first-party at 07687c2. Pin-version gap: --author unavailable on pinned v0.41.0; Z-AI (oc-glm-5-3) benched manually by seat selection. Design composes with landed row-26 seams; PROVEN-only avoids the gradeOf pass/fail hazard; unconfigured state keeps the constant TRUE with zero reads."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [
+      {
+        "model": "oc-kimi-k3",
+        "reason": "unknown-model"
+      },
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "unknown-model"
+      }
+    ],
+    "total_cost_usd": 0.04854,
+    "total_tokens_in": 23208,
+    "total_tokens_out": 177
+  }
+}

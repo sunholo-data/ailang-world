@@ -1,0 +1,22 @@
+package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+func producer(out string) string { return strings.TrimRight(strings.SplitN(out, "\n", 2)[0], "\r") }
+func release(version string) string {
+	for _, line := range strings.Split(version, "\n") {
+		if t := strings.TrimSpace(line); t != "" {
+			return t
+		}
+	}
+	return "unpinned"
+}
+func main() {
+	for _, f := range []string{"AILANG v0.41.0 \r\nbuild abc\n", "\nAILANG v0.41.0\n", "AILANG v0.41.0\n"} {
+		p, r := producer(f), release(f)
+		fmt.Printf("fixture=%q producer=%q trimspace=%q differ=%v\n", f, p, r, p != r)
+	}
+}

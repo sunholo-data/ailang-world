@@ -1112,3 +1112,127 @@ It re-cut the design's 5 milestones into 8. Plan commit `2f3e5e6`.
 **Progress:** Clauses 1/2/3/6/7 MET; 4 and 5 UNMET. The D-WORLD-69 path advanced 26 ✔ → 105 next.
 
 **Next:** If no critical-path row is loop-routable (93 FINAL is attended), take **row 105** `w-workbench-grade-projection` on the D-WORLD-69 path. Re-check 105's own gate ("PARKED behind item 13's validated-boundary follow-on"), since row 26 now produces real envelopes.
+
+## 254 — 2026-10-13 — row 105 LANDED `9d16a07`: workbench object page projects PROVEN from subject-bound proof envelopes through a daemon-held validator (resumes orphan 253); judge sonnet PASS 88, zero blocking [PRODUCT]
+
+**Kind:** Product sprint, clause 5. It runs on the D-WORLD-69 = A exception path 26 ✔ → **105** → 172 → 150.
+
+**Pick and why:**
+- **Clause map:** 1/2/3/6/7 MET. Clause 4 is UNMET: row 93 FINAL is attended, and its Sol pilots 2 and 3 were recorded attended today. Clause 5 is UNMET: 114 waits on 93, and 139 waits on 114.
+- No critical-path row is loop-routable, so D-WORLD-69 admits row 105. The log for 252 named it as next.
+- **Gate re-checked:** item 13 landed iter-81, item 17 landed iter-108, and the shed row 26 landed `0390aa5`.
+- **Premises re-measured at HEAD:** the constant is still at `workbench.go:43`. Non-test importers of `host/evidence` number 0, against a control of 30 for `host/store`.
+- **Orphan 253 found.** `mission-worktree.sh add` failed with rc 255 because the branch `design/w-workbench-grade-projection` was already checked out in `.wt-world-iter253-row105-design`. The 14:54Z fire (glm-5.3 controller; Anthropic and codex both over ration) had done three things:
+  - committed the design `1945fb2` (glm-5.3 designer, 155 tool calls, 1240 s);
+  - run quorum twice;
+  - left an uncommitted revision.
+
+  It then logged PAUSED-NO-CAPACITY at gate-3 (15:54Z). Self-notices returned rc 0, because a capacity pause posts no crash notice. Orphan 253 is credited here.
+
+**Design and quorum:** the author is `pi:ollama/glm-5.3:cloud`, so the glm seat sat out.
+- **13:38Z run:** a degraded single-reviewer proceed (gemini pass). kimi and sonnet were absent with `unknown-model`, so it is not counted as a pass.
+- **R1 (13:44Z): BLOCKED.**
+  - kimi-k3 objected that D6's version-verbatim premise was unverified and that AC3 was a tautology.
+  - gemini objected that the validator API was unverified.
+  - sonnet was absent (quota).
+
+  The orphan's revision cited V38–V42 but never wrote those rows. The controller re-measured both premises first-party:
+  - `archive.go:155` documents the field contract.
+  - `probeVersion` returns `stdout.String()` verbatim, with TrimSpace 0 in `archive.go`.
+  - `daemon.go:688` assigns the value unchanged.
+  - The validator API sits at `validator.go:110-114` and `:208-211`.
+
+  The revision was then committed as `09f805e`.
+- **R2 (20:58Z): BLOCKED.** kimi-k3, sonnet-5 and gemini all rejected; gpt6-1-sol was absent (unreachable).
+
+  | Objection | Raised by |
+  |---|---|
+  | V38–V42 rows missing from §10 | kimi, gemini |
+  | Exactly-100 truncation boundary claims a truncation it never performed | kimi |
+  | Bytes of the "discriminating fixture" unspecified | sonnet |
+
+  Every objection carried a concrete fix, and none disputed the design's direction.
+
+  **Narrow-refinement carve-out (`b8581e0`).** The controller applied the reviewers' fixes verbatim and re-ran every command at base `edb1b63`:
+  - V38–V42, using kimi's own commands.
+  - V43, using sonnet's fixture `"AILANG v0.41.0 \r\nbuild abc\n"`. The producer derivation gives `"AILANG v0.41.0 "` and TrimSpace gives `"AILANG v0.41.0"`, so they differ. A second discriminating fixture also differs; the control does not.
+  - V44: `MaxSemanticIDPage` = 500 admits 101.
+  - The fetch becomes `+1` with a slice to the first 100.
+  - New boundary arms: 100 envelopes with no qualifier, 101 with the qualifier.
+
+  Metered quorum spend this fire was $0.20 (orphan: $0.27).
+
+**Plan:** opus via the Agent tool (`opus fail-closed:env-pin`), commit `84badaf`. It re-cut the work into 5 milestones, C1–C5, and found 6 design defects, each recorded as a planner decision:
+- PD1: the validator result types have unexported fields, so the stand-in wraps real validators.
+- PD2: HTML escaping of `'` in assertions.
+- PD4: identities without a key were not fail-closed.
+- PD7: QUICKSTART docs, plus a guard on the section-11 parser.
+- PD5: `AILANG_BIN` was missing from the gates, and `go build` was being used as a compile fence.
+- PD6: `envelopeFor` cannot be imported.
+
+PD14 measured every repo-wide enumerating guard: AC10 exec sites stay at 12; the 5 manifest literals stay at 64; the public-authority surface, context-root and parallel guards, the boundary import allowlist and the `mcp_test` parse are all untouched. That closes iteration 252's retro item.
+
+**Execution:** Claude Haiku 5.5 via the Agent tool. The resolver said `recipe claude:claude-haiku-5-5`; the same model ran through the Agent tool, per the operator's standing request.
+- **Run 1 (C1–C3):** `f92736e`, `b06524f`, `9c7d49a`. The first return was a one-line "waiting on the monitor", so it was resumed by `SendMessage` (rule 7 corollary a).
+- **Run 2 (C4–C5):** `3377697`, `8390c6b`, after rebasing onto `edb1b63`.
+- **Mutation re-drill:** M1–M18 on the final tree, 24/24 variants red.
+- **Gates:** `verify_go.sh` rc 0 (652 s) and `verify_ail.sh` rc 0, both on pinned v0.41.0. The QUICKSTART block ran verbatim and printed the expected no-evidence line.
+
+Deviations, each confirmed by the judge:
+- The verdict markers changed, because the plan's `no verdict-` check matches the inline stylesheet at `render.go:168`.
+- M17a was realised as `[:0]`.
+- The mapping sub-check excludes `subject_mismatch`.
+- The QUICKSTART run needed `AILANG_REGISTRY_API_KEY` unset.
+
+**Judge:** sonnet via the Agent tool, in its own worktree `.eval-world-iter254`. It is cross-model and same-vendor as the executor, which is FLAGGED.
+- **Verdict:** PASS 88/100, zero blocking.
+- **Mutations:** 31 of its own; the 3 survivors are listed below. Every other mutation went red, or failed to build where the edit was invalid or left an unused variable.
+- **Honesty:** the reasons are honest, because the MAC check runs before the subject check, so no sentence claims binding early.
+- **Security:** key handling is sound (open+fstat on the handle, regular file only, exactly 32 bytes, no logging), and there is no `context.Background`.
+- **Survivors:**
+  - D: dropping the truncation slice. Reproduced first-party by the controller (`go test ./host/daemon -run Grade` ok with the mutant applied, then restored).
+  - N: last-failure-wins.
+  - AF: an unbounded key `ReadAll`.
+
+  All three went to new row 175.
+
+**CI / Gate 3b:**
+- PR head `8390c6b`: run 38317340125 (pull_request) success, and run 38319365981 (workflow_dispatch) success, so 2/2.
+- Squash merge `9d16a07`: both jobs success (SHA-pinned check-runs, 2 of 2).
+
+**Gate 0 / external checks:**
+- Directives: 0 allowlisted on #246 since 1970 (the watermark file was absent; 4 comments, all the bot's). The watermark now reads `2026-10-12T16:55:07Z`.
+- Self-notices: rc 0 (control 107:4).
+- Mission-world inbox: 0 unread.
+- Ledger: valid, 59 rows, ZERO OPEN.
+- Dev CI: green at base `edb1b63`.
+- Running skill: matches origin on all 13 files.
+
+**Routing evidence:** base=`edb1b63a7f0fdc0e6ce9c533fcef822aa71e131f`@2026-10-12T20:56:02Z. Token counts are as the Agent tool reported them.
+
+| Role | Lane | Tokens |
+|---|---|---|
+| Controller | `claude:claude-opus-5-5` | not reported |
+| Designer | orphan 253's `pi:ollama/glm-5.3:cloud`; the r2 carve-out was controller-applied | not reported |
+| Planner | `opus` | 286,659 |
+| Executor | `haiku`, three segments | 112,321 + 157,914 + 246,580, as reported per resume |
+| Evaluator | `sonnet` | 68,933 |
+
+- The designer rotation pointer read `codex:gpt-6.1-sol`, so the next entry was glm-5.3, which orphan 253 used. The pointer is advanced to `pi:ollama/glm-5.3:cloud`.
+- Quorum seats: kimi-k3, sonnet-5@claude-p and gpt6-1-sol (absent, unreachable), with reserve gemini-3-1-pro.
+- Codex and openrouter were over ration all fire.
+- metered=$0.20.
+
+**Ruled out:**
+- Redesigning row 105: the orphan's doc was sound once its missing V-rows were written.
+- Re-running a designer for R2: every objection was completeness, boundary or fixture work with verbatim fixes.
+- A fix round for survivors D, N and AF: all three are non-blocking, the rendered sentences stay true, and they are filed as row 175.
+- Fixing the `gofmt` base condition in `host/store`: that package is frozen for this sprint, and the condition is not CI-gated.
+
+**Retro:** Two frictions.
+1. **The orphan's revision cited Verification rows it never wrote.** The pause landed mid-revision, and the citations read as done. Two reviewers caught it, which cost a quorum round. *Lesson:* when resuming an orphan's uncommitted doc, grep every cited `V<n>` against the §10 table before re-quorum. The mismatch is mechanical to detect. Instance 1; no skill edit.
+2. **Haiku again ended a turn on a Monitor wait.** The rule-7 sub-agent clause was in the directive, and it ended there anyway. A `SendMessage` resume recovered it at the cost of one cycle. Instance 2 for a World executor; the directive's wording is the lever.
+
+**Progress:** clauses 1/2/3/6/7 MET; 4 and 5 UNMET. The D-WORLD-69 path has advanced 26 ✔ → 105 ✔ → 172 next.
+
+**Next:** if no critical-path row is loop-routable (93 FINAL is attended), take **row 172** `w-decision-packet-production-projection` on the D-WORLD-69 path. It needs a design doc first; the designer rotation's next entry after glm-5.3 is kimi-k3.

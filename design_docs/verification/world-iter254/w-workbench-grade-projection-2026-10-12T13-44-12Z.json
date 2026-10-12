@@ -1,0 +1,64 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter253-row105-design/design_docs/planned/w-workbench-grade-projection.md",
+  "iso_ts": "2026-10-12T13:44:12Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.17057999999999998,
+      "tokens_in": 21250,
+      "tokens_out": 7122,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The single most load-bearing design decision — D6's frozen choice to derive the validator's CompilerVersion by mirroring the producer's raw-first-line spelling (`proofCompilerVersionLine`, with the doc's own warning that any divergence makes EVERY envelope `tool_mismatch` and the feature permanently dead) — rests on an unverified premise: that `d.interpreterVersion` (the archived manifest's `Version`) carries the verbatim, un-normalized `--version` stdout. V7 asserts 'the manifest carries all of it verbatim' inside its observed-output column, but the commands listed for V6/V7 (`sed` on daemon.go:676-689, `ailang --version | head -1`, `wc -l`, greps of the producer and `releaseFromVersion`) never observe the archive manifest writer where `m.Version` is populated (archive.go is cited only :277-283 for byte hashing), nor any actual manifest fixture. If ingestion applies any trim/normalization, the daemon's derivation diverges from the producer's recorded `CompilerVersion` (`proof_producer.go:328` operates on raw process stdout, not on a manifest), and every real row-26 envelope renders `tool_mismatch` while the page still works 'correctly' per its own state machine. Worse, no planned test cross-checks the daemon's derived version against a producer-RECORDED value: AC3 mints its envelope with the fake interpreter's version (risking a self-consistent tautology if the test sources it from the daemon side), so the divergence against the real producer fixtures (the 7 row-26 testdata files, V24) would stay green while production shows nothing but tool_mismatch. This is exactly the gate-1 failure mode: a codebase-behavior claim asserted, not verified, with the entire feature's soundness riding on it.",
+        "catch": "Add the missing verification for the manifest-ingestion half of the version claim: show the site in archive.go where the manifest's `Version` field is populated from the `--version` subprocess output (proving byte-verbatim capture, no TrimSpace/TrimRight at ingestion), or print an archived manifest for the fake interpreter and byte-diff `Version` against the raw `--version` stdout. Simultaneously close the test tautology: AC3/AC4 must pin the daemon's `proofCompilerVersionLine(d.interpreterVersion)` byte-equal to a producer-RECORDED `CompilerVersion` from row 26's existing testdata fixtures (a real captured first line), so manifest-ingestion drift or producer/daemon spelling drift reds a test instead of silently laundering every envelope to `tool_mismatch`. Also confirm in the same row whether `releaseFromVersion` (daemon.go:852-859) mutates `d.interpreterVersion` in place or reads it, since a shared-mutation path would invalidate the verbatim premise after the fact.",
+        "proposed_fix": "Add to §10 a new verification row: 'V38 — the archived manifest's Version is byte-verbatim `--version` stdout. Command: `sed -n \u003cn,\u003cmp' host/daemon/archive.go` (the manifest-construction site inside/around Archive, adjacent to the :277-283 hashing already cited) showing the `Version:` field assigned directly from the captured subprocess bytes with no TrimSpace/TrimRight/SplitN at ingestion; plus `fakeInterpreter`-archived manifest printed and `diff` against raw `--version` output = empty. Control: the same grep with `Trim' shows only `releaseFromVersion`'s separate spelling (:852-859), proving releaseFromVersion does not mutate d.interpreterVersion in place.' Then strengthen AC2/AC3 with one named test: `TestProofCompilerVersionMatchesProducerRecord` — load a row-26 producer fixture (host/evidence/testdata) whose envelope bytes record the real producer-derived `CompilerVersion`, derive `proofCompilerVersionLine(d.interpreterVersion)` from a fake archive, and assert byte-equality with a fixed recorded first line (e.g. a fixture carrying trailing whitespace, which would red a TrimSpace-side spelling). Replace the V7 observed cell's unsupported clause 'the manifest carries all of it verbatim' with the V38 receipt. If V38 cannot be run (ingestion site shows any normalization), the D6 frozen decision is wrong and must be re-derived against the manifest's actual contents before implementation."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: provider-reported Anthropic utilisation exceeds ration or exhausts a window",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.0501,
+      "tokens_in": 23208,
+      "tokens_out": 307,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "PREMISE VERIFICATION: The D4 projection state machine heavily asserts and relies on specific methods on the validator's return types—specifically that `ValidateProof` returns an object with `.Err()`, `.Validated()`, and `.Unsupported()` methods, and that `Resolve` returns an object with a `.Proven()` method. However, no Verification Log entry verifies these APIs. V10 verifies the check order inside `ValidateProof` but not its return signature, and V11 verifies `Resolve` returns a `ResolutionResult` struct but does not verify any `.Proven()` method on it. Unverified premises about the integration surface are grounds to reject.",
+        "catch": "The assumption that the types returned by `ValidateProof` and `Resolve` actually possess the methods `.Err()`, `.Validated()`, `.Unsupported()`, and `.Proven()` is completely unverified in the log.",
+        "proposed_fix": "Add a verification log row (e.g., V38) to prove the existence of these methods: `| V38 | ValidateProof and Resolve return types have the asserted methods | /usr/bin/grep -n \"func (.*) Validated\\|func (.*) Unsupported\\|func (.*) Err\\|func (.*) Proven\" host/evidence/validator.go | (expected output proving the methods exist) |`"
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller verified V2 (workbench.go:43 constant, :477 site), V4 (NewValidator signature), V5 (no key/identity Config fields), V6 (interpreterHash/Version held via --ailang-bin), V7 (producer :328 first-line derivation), V11 (Resolve mints only ResolvedGradeProven), V13 (ObjectsBySemanticID, MaxSemanticIDPage=500), V28 (0 non-test callers of NewValidator/GenerateProof) first-party at 07687c2. First quorum attempt ran on the pinned v0.41.0 binary whose registry lacks oc-kimi-k3/claude-sonnet-5@claude-p (both unknown-model — pin-version gap, recorded); re-run on the PATH v0.54.5 binary that resolves the current reviewer pool. Design composes with landed row-26 seams; PROVEN-only avoids the gradeOf pass/fail hazard; unconfigured state keeps the constant TRUE with zero reads."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The single most load-bearing design decision — D6's frozen choice to derive the validator's CompilerVersion by mirroring the producer's raw-first-line spelling (`proofCompilerVersionLine`, with the doc's own warning that any divergence makes EVERY envelope `tool_mismatch` and the feature permanently dead) — rests on an unverified premise: that `d.interpreterVersion` (the archived manifest's `Version`) carries the verbatim, un-normalized `--version` stdout. V7 asserts 'the manifest carries all of it verbatim' inside its observed-output column, but the commands listed for V6/V7 (`sed` on daemon.go:676-689, `ailang --version | head -1`, `wc -l`, greps of the producer and `releaseFromVersion`) never observe the archive manifest writer where `m.Version` is populated (archive.go is cited only :277-283 for byte hashing), nor any actual manifest fixture. If ingestion applies any trim/normalization, the daemon's derivation diverges from the producer's recorded `CompilerVersion` (`proof_producer.go:328` operates on raw process stdout, not on a manifest), and every real row-26 envelope renders `tool_mismatch` while the page still works 'correctly' per its own state machine. Worse, no planned test cross-checks the daemon's derived version against a producer-RECORDED value: AC3 mints its envelope with the fake interpreter's version (risking a self-consistent tautology if the test sources it from the daemon side), so the divergence against the real producer fixtures (the 7 row-26 testdata files, V24) would stay green while production shows nothing but tool_mismatch. This is exactly the gate-1 failure mode: a codebase-behavior claim asserted, not verified, with the entire feature's soundness riding on it.",
+      "gemini-3-1-pro: PREMISE VERIFICATION: The D4 projection state machine heavily asserts and relies on specific methods on the validator's return types—specifically that `ValidateProof` returns an object with `.Err()`, `.Validated()`, and `.Unsupported()` methods, and that `Resolve` returns an object with a `.Proven()` method. However, no Verification Log entry verifies these APIs. V10 verifies the check order inside `ValidateProof` but not its return signature, and V11 verifies `Resolve` returns a `ResolutionResult` struct but does not verify any `.Proven()` method on it. Unverified premises about the integration surface are grounds to reject."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.22068,
+    "total_tokens_in": 44458,
+    "total_tokens_out": 7429
+  }
+}

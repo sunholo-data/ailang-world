@@ -14,6 +14,8 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 254 | 2026-10-13 | row 105 LANDED `9d16a07`: workbench object page projects PROVEN via a daemon-held validator (resumes orphan 253; r2 carve-out); judge sonnet PASS 88, zero blocking [PRODUCT] |
+| 253 | 2026-10-12 | ORPHAN (capacity-paused at gate-3): row 105 design `1945fb2` + quorum r1/r2-prep + uncommitted revision in `.wt-world-iter253-row105-design`; credited in 254 |
 | 252 | 2026-10-12 | row 26 LANDED `0390aa5`: bounded Z3 report producer (resumes orphan 251); judge sonnet PASS 86→88, zero blocking [PRODUCT] |
 | 251 | 2026-10-12 | ORPHAN (capacity-paused twice): row 26 design + 7 real fixtures left uncommitted in `.wt-world-iter251-row26-design`; credited in 252 |
 | 250 | 2026-10-11 | row174 PARKED: inherited third FAIL68 requires bounded follow-up approval; all four Agent roles, independent ADMIN judge; D-WORLD-71 OPEN [ADMIN] |
