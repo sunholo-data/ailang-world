@@ -1,0 +1,18 @@
+{
+  "recorded_at": "2026-10-12",
+  "operator_request": "Mark, attended 2026-10-12: yes send the message and try a new run with sol",
+  "scope": "INFORMATIVE tuning-ledger iteration (next unused: 12). Not a FINAL; never pooled with one.",
+  "question": "Does the row93-direct World tools wording (PR #244, 23abd2b) remove codex's hidden tool-discovery round trips and cut the fixed World overhead?",
+  "single_change_vs_iteration_11": "knobs.world_tools_wording row135-rw -> row93-direct; everything else identical (model gpt-6.1-sol, 23 core tasks, N=1, codex only, same rig, product, manifest d171b695, client codex-cli 0.162.0, same session fl-tune-cx)",
+  "config": "config.json in this directory",
+  "config_digest_smoke": "430748e2ed645e79be691183d195994c4eeae81acd9b15ef0c71d8074f03a7f9",
+  "baseline": "iteration 11: O=+20.02%, delta 0, 22/23 both arms; median absolute World-shell +5.9 s; World input tokens ~1.7x shell",
+  "decision_rule_fixed_before_run": {
+    "go": "O <= +0.15 and delta >= -0.02 and 0 harness faults: pre-register the new row 93 FINAL with this wording",
+    "marginal": "+0.15 < O <= +0.25: report to Mark",
+    "no_go": "O > +0.25 or any harness fault: wording does not help; await fleet answer on tool inlining",
+    "mechanism_check": "also report median World/shell input-token ratio and median absolute delta; the hypothesis predicts both fall (ratio toward ~1.0-1.2, abs delta toward <= +2 s)",
+    "noise_note": "N=1; a single shell-arm re-run differs from iteration 11's shell arm by run-to-run noise (FINAL per-task shell range median 3.6 s). Interpret O with the mechanism check, not alone."
+  },
+  "fence": "No Claude spend. Session already minted by Mark (expires epoch 1791844139). No model substitution; capacity aborts recorded, not retried silently."
+}
