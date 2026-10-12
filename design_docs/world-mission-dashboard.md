@@ -1,21 +1,13 @@
-# World mission dashboard — attended continuation (2026-10-11)
+# World mission dashboard — iteration 252 (2026-10-12)
 
-- Row174 M1 implementation ACCEPTED; M2 performance UNRUN, product UNMERGED.
-- D71 YES approved single test-only follow-up complete; no additional repair/review authority.
-- Exact reviewed82ef820: full normal AIL and Go including race PASS;379 source identities unchanged.
-- Fresh independent judge PASS86/100; size/long-function deductions; FLAG same-model-fresh-context.
-- Previous three FAIL68 and historical Codex FINAL26.6%>25% FAIL preserved.
-- Human next: run attended-mint.sh in own terminal for original baseline publish and exact-eight sessions.
-- Then fresh same-client fixed Haiku4.5/Luna smoke baseline/candidate/repeat; no model/settings substitution.
-- Candidate172225b branch and persistent local verified bundle preserved; handoff manifest names paths/hashes.
-- Overnight iteration250 completed05:44UTC; later08:54/12:54/16:54UTC slots paused for capacity.
-- Decision-only948e115 CI38160800885 SUCCESS; this ADMIN record needs its own exact-head CI.
-- Clauses1/2/3/6/7 MET;4/5 UNMET; no measured release percentage or ETA.
-- Critical path174 efficacy/landing →new attended93 FINAL →114 three real timed questions →139 epoch upgrade.
-- Release also needs156 protected test paths; D69 exception26 →105 →172 →150;151 views/capture follows.
-- Driverbc078dc contains0ceb1db env-forward fix; ancestry proof is not fresh driver certification.
-- Row173 PNG-gate response not found in listed canonical inbox; fleet-owned, no World harness changes.
-- Four roles completed: native GPT6.1Sol; every role tokens not reported, exact model attestation unavailable.
-- Planner derived codex:gpt-6.1-sol declared:planner-lane-default-pin; quorum SKIPPED, all triggers false.
-- Evidence and required human/agent steps:verification/world-row174-followup-2026-10-11/CONTINUE.md.
-- This is an attended continuation, not an invented scheduled iteration251 or product release.
+- **Latest landing:** row 26 `w-bounded-z3-report-producer` → `0390aa5` (PR #242). Real pinned `ai-check` → MAC envelope → validator `PROVEN`, in-repo.
+- **Judge:** sonnet PASS 86 → 88/100, zero blocking; CI PR 2/2 + merge green.
+- **Attended, landed mid-fire:** row 174 (#243, D-WORLD-72 = A); row 93 Sol pilot records (`995347f`, `c8e6721`).
+- **Clauses:** 1/2/3/6/7 MET; 4 UNMET (new pre-registered attended 93 FINAL); 5 UNMET (114 → 139).
+- **Next loop pick:** D-WORLD-69 path → row **105** `w-workbench-grade-projection` (re-check its gate first), then 172 → 150 → 151.
+- **Parked on Mark:** none (ledger 59 rows, ZERO OPEN). Row 93 FINAL is attended.
+- **Routing this fire:** controller opus; Agent-tool roles opus designer-revision / opus planner / haiku executor / sonnet judge.
+- **Quota:** codex over ration; Ollama glm hit its 5-hour limit overnight (fires 01:10Z/05:27Z paused).
+- **Quorum metered spend:** $0.51.
+- **Orphans:** 251 (capacity) credited in 252.
+- **Evidence:** `design_docs/verification/world-iter252/` (evaluator report, quorum r1/r2 JSON).

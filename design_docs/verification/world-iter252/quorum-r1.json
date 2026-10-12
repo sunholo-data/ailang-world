@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-bounded-z3-report-producer.md",
+  "iso_ts": "2026-10-12T08:57:29Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.053442,
+      "tokens_in": 25125,
+      "tokens_out": 266,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is the producer's application of `cfg.ExecTimeout` independently to both the `--version` probe (D2) and the `ai-check` execution (D3) via separate `context.WithTimeout` derivations. While a `--version` probe is near-instantaneous, this technically allows the subprocess phase to consume up to `2 × ExecTimeout` of the caller's overall budget if both operations were to hang until their maximum bounds. However, because both waits are strictly derived, bounded, and explicitly acknowledged ('the same allowance the check run gets'), it fully satisfies the bounded-waits axiom.",
+        "catch": "Verify that `MaxSourceBytes = 1 MiB` will provide sufficient headroom for auto-generated (non-human-authored) `.ail` modules in upcoming milestones, as it is hardcoded rather than exposed in `ProducerConfig`.",
+        "proposed_fix": "Consider exposing `MaxSourceBytes` in `ProducerConfig` alongside `MaxOutputBytes` if larger composite modules are expected before the v1.0.0 release, to avoid requiring a library-code change when the 1 MiB cap is hit."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.16078499999999998,
+      "tokens_in": 22790,
+      "tokens_out": 6161,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Premise-verification failure in the evidence the design's own falsifiability claims rest on: AC20's scoped reading asserts \"ObjectWriteTimeout reads 0 in *.go today (V7)\", but V7's recorded command never greps the token `ObjectWriteTimeout` — its for-loop covers 13 other tokens (ErrInvalidProducerConfig, ErrUntrustedTool, ErrVacuousCheck, ErrRequiredIdentityMissing, ErrUnverifiedRun, ErrProducerExecTimeout, ErrEnvelopeTooLarge, ErrExecTimeout, ErrOutputLimit, ErrMalformedCheck, ProducerConfig, CheckerConfig, MaxSourceBytes). So an inherited acceptance criterion's negative-existence reading cites a verification row for a measurement that row never performed. The same row is internally inconsistent as recorded: it lists 13 tokens in the command but reports \"all 12 tokens read 0\" in the observed output. A design whose central selling point is falsifiable, command-anchored evidence cannot ship with a verification row whose observation contradicts its own command and which is cited for a claim it does not establish.",
+        "catch": "Fix V7 and everything citing it: (1) re-run the token grep with `ObjectWriteTimeout` (and `ObjectReadTimeout`, since AC23/D1 also introduce it and it already exists in validator.go's config — the 0-read claim would be false for that token, which AC20/AC23 never assert but the corrected row must not imply) as explicit tokens, each with a same-call firing control; (2) correct the \"all 12 tokens\" observation to match the actual token count; (3) either fold the corrected scoped reading into V7's output or add a new V-row and re-point AC20's '(V7)' citation. Also reconcile the two contradictory size figures for the same artifact: 'Files to Modify/Create' says `host/evidence/proof_producer.go` is '~430 prod LOC total across M1-M5' while the Timeline table's per-milestone LOC column (85+65+160+120+70) sums to and states '~500'. Additionally, specify the AC20 decoy orchestration: as written, the producer reads the source object and runs a multi-second subprocess before the envelope write, so a decoy started before GenerateProof blocks the READ (exercising AC23, not AC20); state the mechanism (e.g., a wrapper seam on ObjectWriter.PutObject that launches and confirms the in-flight decoy before calling through, consistent with AC30's wrapper arm) by which the test guarantees the decoy holds the single pooled connection exactly at the write attempt and not at the source read.",
+        "proposed_fix": "Replace V7's command with: `for tok in ErrInvalidProducerConfig ErrUntrustedTool ErrVacuousCheck ErrRequiredIdentityMissing ErrUnverifiedRun ErrEnvelopeTooLarge ErrExecTimeout ErrOutputLimit ProducerConfig CheckerConfig MaxSourceBytes ObjectWriteTimeout; do printf '%s=%s ' \"$tok\" \"$(/usr/bin/grep -rn \"$tok\" host/ cmd/ scripts/ 2\u003e/dev/null | wc -l | tr -d ' ')\"; done; printf '\\ncontrol ErrNoDeadline=%s\\n' \"$(/usr/bin/grep -rn \"ErrNoDeadline\" host/ | wc -l | tr -d ' ')\"` and record the actual per-token counts (dropping the unused ErrProducerExecTimeout/ErrMalformedCheck, and excluding ObjectReadTimeout unless its existing validator.go occurrences are reported accurately rather than claimed as 0). Update the observation line to state the true token count. In AC20, change \"(V7)\" to cite the corrected row and quote its `ObjectWriteTimeout=0` output verbatim. Add one sentence to AC20's stimulus paragraph: 'The decoy is launched from a wrapper on ObjectWriter.PutObject that asserts the decoy GetObject is in flight before calling through to the real store (the same wrapper shape AC30's arm uses); this guarantees the producer's own source read completes before the pool is occupied.' Finally, make the LOC totals agree — either '~500 prod LOC' in both the Timeline and the Files section, or an explicit note that ~430 is the file and ~70 is shared test scaffolding."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 44699,
+      "tokens_out": 5521,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The document imposes on itself an explicit, repeatedly-honored rule ('every sentence ... claiming the codebase does or does not do X cites a row above,' with same-call controls for negative claims), yet the ~100 MB executable-size claim — used twice to ground Axiom A9 (Cost Visibility: 'the byte-hash of a ~100 MB binary') and the Risks table's mitigation for the per-proof ReadFile cost — is never measured anywhere in the 33-row verification log. Every other fact about the pinned binary (hash, version, pool-size, TMPDIR behavior) is pinned by a command in §10; the one fact that actually sizes the per-call cost this axiom score and risk entry depend on is an eyeballed guess.",
+        "catch": "Flag the unmeasured '~100 MB' binary-size premise (A9 table and Risks table) as a violation of the doc's own sweep-note discipline — it is an asserted, not verified, factual claim about the instrument the design's cost-visibility argument leans on. Also flag the internal arithmetic mismatch: 'New files' states proof_producer.go is '~430 prod LOC total across M1-M5' while the Timeline table's per-milestone LOC (85+65+160+120+70) sums to 500, a 70-LOC discrepancy the doc does not reconcile.",
+        "proposed_fix": "Add verification row V34: run `stat -f%z \"$HOME/.pinned-ailang/ailang\"` (or `ls -la`) against the pinned instrument, record the exact byte count, and replace every '~100 MB' reference in the Axiom Compliance table (A9) and Risks table with the measured figure — re-evaluate whether the ReadFile-per-proof cost claim still reads as bounded/low-risk at the true size. Separately, reconcile the '~430 prod LOC' figure in Files to Modify/Create with the Timeline table's summed 500 LOC: either correct the 430 to 500, or state explicitly which milestone's LOC lives outside proof_producer.go and why."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-252 controller: premises spot-checked first-party at ba79d1e (PutObject store.go:543 ctx-threaded; requireDeadline store.go:239; BusyTimeout store.go:370; SetMaxOpenConns(1) store.go:382; ObjectReader interface validator.go:50-53; NewProducer/GenerateProof 0 in prod). One non-blocking defect: Files section says verify_go.sh change is 'exactly two literals' but verify_go.sh:97-109 fails on extra tests not named in REQUIRED_EVIDENCE_TESTS, so every new top-level test name must also be added to that set."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: Premise-verification failure in the evidence the design's own falsifiability claims rest on: AC20's scoped reading asserts \"ObjectWriteTimeout reads 0 in *.go today (V7)\", but V7's recorded command never greps the token `ObjectWriteTimeout` — its for-loop covers 13 other tokens (ErrInvalidProducerConfig, ErrUntrustedTool, ErrVacuousCheck, ErrRequiredIdentityMissing, ErrUnverifiedRun, ErrProducerExecTimeout, ErrEnvelopeTooLarge, ErrExecTimeout, ErrOutputLimit, ErrMalformedCheck, ProducerConfig, CheckerConfig, MaxSourceBytes). So an inherited acceptance criterion's negative-existence reading cites a verification row for a measurement that row never performed. The same row is internally inconsistent as recorded: it lists 13 tokens in the command but reports \"all 12 tokens read 0\" in the observed output. A design whose central selling point is falsifiable, command-anchored evidence cannot ship with a verification row whose observation contradicts its own command and which is cited for a claim it does not establish.",
+      "claude-sonnet-5@claude-p: The document imposes on itself an explicit, repeatedly-honored rule ('every sentence ... claiming the codebase does or does not do X cites a row above,' with same-call controls for negative claims), yet the ~100 MB executable-size claim — used twice to ground Axiom A9 (Cost Visibility: 'the byte-hash of a ~100 MB binary') and the Risks table's mitigation for the per-proof ReadFile cost — is never measured anywhere in the 33-row verification log. Every other fact about the pinned binary (hash, version, pool-size, TMPDIR behavior) is pinned by a command in §10; the one fact that actually sizes the per-call cost this axiom score and risk entry depend on is an eyeballed guess."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.214227,
+    "total_tokens_in": 92614,
+    "total_tokens_out": 11948
+  }
+}

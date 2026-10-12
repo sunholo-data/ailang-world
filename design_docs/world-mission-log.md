@@ -1033,3 +1033,82 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** Clauses1/2/3/6/7 MET,4/5 UNMET; no release percentage/ETA. M1 implementation accepted locally, product unmerged; originalM2 performance UNRUN. Candidate172225b and full persistent verified local bundle preserved with prerequisites5ca1115/948e115; all current proof text banked for next loop.
 
 **Next:** Human types original baseline publish/session fences via prepared attended-mint.sh; then same-current-client fresh fixed Haiku4.5/Luna smoke baseline/candidate/no-change repeat, every attempt banked. Only after efficacy/landing and new committed preregistration, new attended93 FINAL →114 three real timed unseeded questions →139 epoch upgrade.156 protected tests and D69 exception26→105→172→150/151 remain before release; PNG gate separate fleet blocker. Full executable handoff:verification/world-row174-followup-2026-10-11/CONTINUE.md.
+
+## 252 — 2026-10-12 — row 26 LANDED `0390aa5`: bounded Z3 report producer (resumes orphan 251); judge sonnet PASS 86→88, zero blocking [PRODUCT]
+
+**Kind:** Product sprint, clause 2 (v1.0.0 release prerequisite), on the D-WORLD-69 = A exception path 26 → 105 → 172 → 150.
+
+**Pick and why:** Clause map: 1/2/3/6/7 MET; 4 UNMET (row 174 LANDED attended mid-fire via #243 / D-WORLD-72 = A; the new pre-registered row 93 FINAL is attended and its Sol pilot was running attended); 5 UNMET (114 after 93, 139 after 114). No critical-path row was loop-routable, so D-WORLD-69 admits row 26. Gate-2 trace (b) found orphan **251**: fires 01:10Z and 05:27Z both PAUSED-NO-CAPACITY (glm-5.3 runtime bucket limit). It left an uncommitted 474-line design, 7 real pinned-binary fixtures, a generator and a designer receipt in `.wt-world-iter251-row26-design`, with no record. Credited here; this iteration verified and continued it rather than redesigning.
+
+**Design:** Orphan 251's designer (driver banner: `pi:ollama/glm-5.3:cloud`; exact lane UNVERIFIED). The controller spot-checked the premises first-party: `PutObject` store.go:543, `requireDeadline` :239, `BusyTimeout` :370, `SetMaxOpenConns(1)` :382, `ObjectReader` validator.go:50-53. It also found one false claim: "verify_go.sh change is exactly two literals". verify_go.sh:97-109 fails on extra tests, so every new name must also join `REQUIRED_EVIDENCE_TESTS`.
+
+**Quorum:** Author `pi:ollama/glm-5.3:cloud`, so the glm seat sat out.
+- **R1 BLOCKED.** gemini-3-1-pro passed; oc-kimi-k3 and claude-sonnet-5 rejected. Objections:
+  - V7 never grepped `ObjectWriteTimeout`, and its "12 tokens" contradicted the 13 it listed.
+  - AC20's decoy timing was unspecified.
+  - LOC totals said 430 in one place and 500 in another.
+  - "~100 MB" was unmeasured.
+  - The controller measured each before revising: the binary is 100,594,162 B; `ObjectWriteTimeout` is 0; `ObjectReadTimeout` is 33 (a reused field); the control `ErrNoDeadline` is 16.
+  - One opus designer revision applied F1–F5.
+- **R2 BLOCKED** on a single surface: V22's `:306` versus V35's `:302`, an inconsistency R1's fix had introduced. Both reviewers carried concrete fixes and neither disputed the direction.
+- **R3 narrow-refinement carve-out.** The controller applied the reviewers' verbatim fixes: V22 corrected in place, V36 records the call site (`:302`, file unchanged), and V37 records fixture sizes (verifiedpass 373 B, which matches M33). Metered quorum cost $0.51.
+
+**Plan:** opus via the Agent tool (resolver `agent-tool opus fail-closed:env-pin`). It found 9 measured design defects and resolved each as a numbered planner decision:
+- the count 37 is duplicated in `host/verifygate` tests;
+- `TestPublicAuthoritySurfaceIsFrozen` is an exact export list;
+- `durableAfterCommitHook` is unexported;
+- the oversize stimulus is refused by the codec first;
+- `ai-check` takes 0.02–0.05 s, so it cannot drive a timeout;
+- stderr is always smaller than stdout;
+- `available` is unpinnable;
+- whole-call decoy timing;
+- deferring the manifest would leave intermediate commits red.
+
+It re-cut the design's 5 milestones into 8. Plan commit `2f3e5e6`.
+
+**Execution:** Claude Haiku 5.5 via the Agent tool. The resolver said `recipe claude:claude-haiku-5-5`; the operator's standing request was the Agent tool, and the alias is the same model.
+- **Run 1** (M1–M4): `99d93b8`, `4f5b5ba`, `03254fa`, `c6ef145`.
+- **Run 2** (M5–M8): `6b4ba98`, `eaa1ace`, `9c4006f`, `751b6d1`.
+- Every milestone gate was green with named-test mutation drills.
+- The full `verify_go.sh` went red on two things:
+  - **AC10 deterministic:** the new subprocess site `proof_producer.go:178` had no driver, because the plan wrongly froze `host/broker/registry_publish_test.go`. The controller ruled the driver required.
+  - **Load flake** in the new exec-timeout test at 300 ms (`/bin/sh` startup under load).
+- **Fix round 1** (`bc925f5`): an AC10 driver for the version-probe and ai-check environments separately. Both `Scrubbed` mutants red; ExecTimeout raised to 5 s.
+- **Fix round 2** (`dfc9cea`) addressed the judge's findings:
+  - The AC20/AC23 no-decoy controls get a 30 s bound. The judge had measured 3/8 concurrent failures, now 0/8; the controller's independent 8-way batch was also 8/8 green.
+  - A caller cancel is now a `context.Canceled` error. New test; manifest at 64.
+- **Bisect note:** branch commits M2–M8 are red on AC10 (CI on `c6ef145` failed on exactly that test). The squash-merge keeps dev green.
+
+**Judge:** sonnet via the Agent tool, in a separate context, with a different model from the executor (same vendor, FLAGGED).
+- **R1: PASS 86/100, zero blocking.** 36 self-chosen mutations, 29 red. The 7 survivors were sort, Provenance, start-failure release, pipe-closer AfterFunc, NothingToKill, the cleanup join, and the version-probe cap. Fixtures were regenerated: 6 exact, and `mixed` differs only in `duration`. Findings: the AC20 control load flake, the caller-cancel mislabel, and a deferred TOCTOU.
+- **R2: PASS 88/100, zero blocking.** M31/M32/M33/M39 still red, the cancel branch is mutation-killed, and the manifest is consistent at 64. Remaining nit: the `controlBound` const sits between a doc comment and its func.
+
+**CI / Gate 3b:**
+- PR head `dfc9cea`: run 38240415818 (pull_request) and 38240447060 (workflow_dispatch) both success, 2/2.
+- `bc925f5`: 38238109692 success. `c6ef145`: failure (AC10, fixed above).
+- Merge `0390aa5`: verify gate and Go gate both success (SHA-pinned check-runs, 2 of 2).
+- Attended #243 (row 174) landed mid-fire. No file overlap, and `git merge-tree` was clean. Its changes are test-only fixes to exactly the two broker load flakes this sprint's local `verify_go.sh` hit (`TestExecHandlerTimeoutKillsTheGroup`, `TestRunBoundedHeadTailTimeoutKeepsPartialOutput`; both already recorded in log entries above).
+
+**Gate0 / external checks:** 0 allowlisted directives on #202 since `2026-10-11T00:54:40Z`. Self-notices: 0 crash notices since watermarks (control 107:4). Mission-world inbox: 0 unread. Ledger valid; during the fire it went from 58 to 59 rows when attended D-WORLD-72 was RESOLVED, with ZERO OPEN. Dev CI was green at base. Running skill matches origin on all 12 files.
+
+**Routing evidence:** base=`ba79d1e8404cdb24c443b9a69198e945eabac88f`@2026-10-12T08:55:45Z. Token counts are as reported by the Agent tool.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: orphan 251's designer was `pi:ollama/glm-5.3:cloud` (tok: not reported). The revision ran on `opus` via the Agent tool (53,620 tok); the resolver said `recipe claude:claude-opus-5-5 declared:provider-pin`, which is the same model.
+- Planner `opus` (274,703 tok).
+- Executor `haiku`: run 1 207,414 tok; run 2 plus 2 fix rounds 274,136 tok cumulative.
+- Evaluator `sonnet` (95,620 tok cumulative; independence: cross-model, same-vendor, FLAG).
+- Quorum seats: gemini-3-1-pro, oc-kimi-k3, claude-sonnet-5@claude-p; reserve gpt6-1-sol unused.
+- Codex was over ration all fire.
+
+**Ruled out:**
+- Redesigning row 26 (the orphan's design was salvageable).
+- Force-passing R2 (carve-out applied with verbatim fixes only).
+- Treating the AC10 red as a flake: it is deterministic and the guard worked.
+- Treating the broker timeout reds as caused by this sprint (pre-existing, now fixed upstream by #243).
+- Trusting the executor's "0/8" without a re-run: re-measured, 8/8 green.
+
+**Retro:** One `[HARNESS]`-free friction: the plan froze a test file that a cross-package guard (AC10 subprocess-site enumeration) requires every new exec site to edit. Planner directives should name repo-wide enumerating guards: the AC10 subprocess sites, the evidence manifest, and the public-authority surface. Instance 1; no skill edit.
+
+**Progress:** Clauses 1/2/3/6/7 MET; 4 and 5 UNMET. The D-WORLD-69 path advanced 26 ✔ → 105 next.
+
+**Next:** If no critical-path row is loop-routable (93 FINAL is attended), take **row 105** `w-workbench-grade-projection` on the D-WORLD-69 path. Re-check 105's own gate ("PARKED behind item 13's validated-boundary follow-on"), since row 26 now produces real envelopes.
