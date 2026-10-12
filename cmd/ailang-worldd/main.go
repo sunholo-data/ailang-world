@@ -16,6 +16,7 @@
 //	                    [--exec-profile <file> ... --exec-sandbox <dir>]
 //	                    [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
 //	                    [--exec-max-output-bytes N]
+//	                    [--proof-key-file <file> --proof-required-identity NAME ...]
 //	ailang-worldd [--addr http://127.0.0.1:7644] health
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
 //	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
@@ -79,6 +80,7 @@ Usage:
                       [--exec-profile <file> ... --exec-sandbox <dir>]
                       [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
                       [--exec-max-output-bytes N]
+                      [--proof-key-file <file> --proof-required-identity NAME ...]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -196,6 +198,16 @@ serve flags:
   --exec-max-output-bytes N
                        kill a workspace-exec command whose stdout or stderr
                        passes N bytes (default 67108864, 64 MiB)
+  --proof-key-file <file>
+                       a file holding exactly 32 bytes: the MAC key the
+                       workbench grade validator authenticates stored proof
+                       envelopes under. Needs --ailang-bin and at least one
+                       --proof-required-identity; read once at startup and
+                       never logged. Unset, every object page reads "no
+                       canonical host projection" and reads no evidence
+  --proof-required-identity NAME
+                       an identity every validated proof must verify
+                       (repeatable; needs --proof-key-file)
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
             3 integrity refusal (why: a broken link; call --strict: ok:false;
@@ -404,6 +416,15 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		execMaxOutput = n
 		return nil
 	})
+	proofKeyFile := fs.String("proof-key-file", "", "a file holding exactly 32 bytes: the workbench grade validator's MAC key")
+	var proofIdentities []string
+	fs.Func("proof-required-identity", "an identity every validated proof must verify (repeatable; needs --proof-key-file)", func(v string) error {
+		if v == "" {
+			return fmt.Errorf("is empty")
+		}
+		proofIdentities = append(proofIdentities, v)
+		return nil
+	})
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}
@@ -437,7 +458,8 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
 		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,
-		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache}
+		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache,
+		ProofKeyFile: *proofKeyFile, ProofRequiredIdentities: proofIdentities}
 	return serveResult(runDaemon(ctx, cfg, stdout), stderr)
 }
 
