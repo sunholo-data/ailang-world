@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -31,6 +32,10 @@ var ErrExecTimeout = errors.New("evidence: checker exceeded its execution timeou
 // ErrOutputLimit reports that a checker stream exceeded MaxOutputBytes. The
 // group was killed, and no bytes are returned.
 var ErrOutputLimit = errors.New("evidence: checker output exceeded its limit")
+
+// ErrUntrustedTool refuses a checker whose bytes or version line are not the
+// pinned ones. It is reported before the checker runs on any input.
+var ErrUntrustedTool = errors.New("evidence: checker is not the pinned tool")
 
 // ObjectWriter is the write seam of the producer. BusyTimeout reports the
 // store's lock-retry window so the write timeout can be ordered above it.
@@ -273,4 +278,32 @@ func (p *Producer) runCheck(ctx context.Context, source []byte) ([]byte, error) 
 	env := append(childenv.Scrubbed(os.Environ()), "AILANG_RELAX_MODULES=1",
 		"TMPDIR="+filepath.Join(root, "tmp"), archive.CacheDirEnv+"="+filepath.Join(root, "cache"))
 	return p.runBounded(ctx, root, env, p.cfg.MaxOutputBytes, "ai-check", "-timeout", aiCheckZ3Timeout, stagedModule)
+}
+
+// versionProbeMaxBytes caps the --version probe's output on each stream.
+const versionProbeMaxBytes = 4 << 10
+
+// verifyTool proves the checker's bytes and then its version line. The bytes
+// are hashed before anything executes, so a tampered binary never runs.
+func (p *Producer) verifyTool(ctx context.Context) error {
+	data, err := os.ReadFile(p.checker.ExecPath)
+	if err != nil {
+		return fmt.Errorf("%w: read executable %s: %v", ErrUntrustedTool, p.checker.ExecPath, err)
+	}
+	got, err := hashref.Sum(p.checker.Compiler.Algo(), data)
+	if err != nil {
+		return fmt.Errorf("%w: hash executable %s: %v", ErrUntrustedTool, p.checker.ExecPath, err)
+	}
+	if got.Digest() != p.checker.Compiler.Digest() {
+		return fmt.Errorf("%w: executable %s bytes hash to %s; want %s", ErrUntrustedTool, p.checker.ExecPath, got, p.checker.Compiler)
+	}
+	out, err := p.runBounded(ctx, "", childenv.Scrubbed(os.Environ()), versionProbeMaxBytes, "--version")
+	if err != nil {
+		return fmt.Errorf("%w: version probe: %w", ErrUntrustedTool, err)
+	}
+	line := strings.TrimRight(strings.SplitN(string(out), "\n", 2)[0], "\r")
+	if line != p.checker.CompilerVersion {
+		return fmt.Errorf("%w: version line %q; want %q", ErrUntrustedTool, line, p.checker.CompilerVersion)
+	}
+	return nil
 }

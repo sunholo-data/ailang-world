@@ -295,3 +295,86 @@ func TestProducerRefusesStdoutOverflowIndependently(t *testing.T) {
 		}
 	})
 }
+
+// producerFor builds a producer around an explicit checker with default bounds.
+func producerFor(t *testing.T, checker CheckerConfig) *Producer {
+	t.Helper()
+	p, err := NewProducer(internalTestKey, nopSeams{}, nopSeams{}, checker, ProducerConfig{
+		ObjectReadTimeout:  time.Second,
+		ObjectWriteTimeout: time.Second,
+		ExecTimeout:        time.Minute,
+		MaxOutputBytes:     1 << 20,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// writeScript writes an executable #!/bin/sh file into a fresh temp dir.
+func writeScript(t *testing.T, script string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "ailang")
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestProducerRefutesTamperedExecutableBytes(t *testing.T) {
+	ctx := context.Background()
+	t.Run("real-binary-wrong-pin", func(t *testing.T) {
+		checker := pinnedChecker(t)
+		real := checker.Compiler
+		checker.Compiler = hashref.SumSHA256([]byte("not the pinned binary"))
+		err := producerFor(t, checker).verifyTool(ctx)
+		if !errors.Is(err, ErrUntrustedTool) {
+			t.Fatalf("a binary whose bytes miss the pin must be refused: want ErrUntrustedTool; got %v", err)
+		}
+		if !strings.Contains(err.Error(), "hash to") || !strings.Contains(err.Error(), real.String()) {
+			t.Fatalf("detail must name the hash to the real bytes (%s): %v", real, err)
+		}
+	})
+	t.Run("scripted-executed-before-check", func(t *testing.T) {
+		// The touch sits BEFORE the version branch, so any execution leaves the marker.
+		body := "#!/bin/sh\ntouch \"$(dirname \"$0\")/executed\"\nif [ \"$1\" = \"--version\" ]; then echo \"AILANG scripted\"; exit 0; fi\n"
+		path := writeScript(t, body)
+		wrong := CheckerConfig{ExecPath: path, Compiler: hashref.SumSHA256([]byte("wrong bytes")), CompilerVersion: "AILANG scripted"}
+		if err := producerFor(t, wrong).verifyTool(ctx); !errors.Is(err, ErrUntrustedTool) {
+			t.Fatalf("a script pinned to the wrong bytes must be refused: want ErrUntrustedTool; got %v", err)
+		}
+		if _, err := os.Stat(filepath.Join(filepath.Dir(path), "executed")); err == nil {
+			t.Fatal("the tampered executable ran before its bytes were checked")
+		}
+		right := CheckerConfig{ExecPath: path, Compiler: hashref.SumSHA256([]byte(body)), CompilerVersion: "AILANG scripted"}
+		if err := producerFor(t, right).verifyTool(ctx); err != nil {
+			t.Fatalf("control: the pinned bytes and version must pass: %v", err)
+		}
+		if _, err := os.Stat(filepath.Join(filepath.Dir(path), "executed")); err != nil {
+			t.Fatalf("control did not execute the probe, so the marker proves nothing: %v", err)
+		}
+	})
+}
+
+func TestProducerRefutesWrongCompilerVersion(t *testing.T) {
+	ctx := context.Background()
+	checker := pinnedChecker(t)
+	wrong := checker
+	wrong.CompilerVersion = "AILANG v9.9.9"
+	err := producerFor(t, wrong).verifyTool(ctx)
+	if !errors.Is(err, ErrUntrustedTool) || !strings.Contains(err.Error(), "AILANG v0.41.0") || !strings.Contains(err.Error(), "AILANG v9.9.9") {
+		t.Fatalf("a wrong version pin must name both lines: want ErrUntrustedTool with v0.41.0 and v9.9.9; got %v", err)
+	}
+	if err := producerFor(t, checker).verifyTool(ctx); err != nil {
+		t.Fatalf("control: the correct version must pass: %v", err)
+	}
+}
+
+func TestProducerRefusesMissingExecutable(t *testing.T) {
+	checker := pinnedChecker(t)
+	checker.ExecPath = filepath.Join(t.TempDir(), "absent")
+	err := producerFor(t, checker).verifyTool(context.Background())
+	if !errors.Is(err, ErrUntrustedTool) || !strings.Contains(err.Error(), "read executable") {
+		t.Fatalf("a missing executable must be refused by name: want ErrUntrustedTool with read executable; got %v", err)
+	}
+}
