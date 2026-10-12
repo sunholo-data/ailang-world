@@ -1,0 +1,28 @@
+{
+ "recorded_at_utc": "2026-10-12T10:30:02.429393+00:00",
+ "commit": "4a0feb48cb610215d8d902487c6ee3a850767111",
+ "load_average": [
+  3.90380859375,
+  5.5810546875,
+  6.37939453125
+ ],
+ "versions": {
+  "codex": "codex-cli 0.162.0",
+  "interpreter": "AILANG v0.41.0",
+  "tool": "AILANG v0.52.1"
+ },
+ "sha256": {
+  "manifest": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97",
+  "pilot_config": "3782c66484e8cf2281917dcb1759baaab15c43273dbd3bf1ef155e1b1f0ebda4",
+  "runner": "46d513f9534d581915718c92d6fd41a99098be629f4ed212c98dd2cfd4d8bc60",
+  "daemon": "b1e85f682ad2c8069188fec46113d8ac53dbba58b1b3fd3c39f4f730553e988a",
+  "interpreter": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+  "tool": "0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5"
+ },
+ "session": {
+  "episode": "fl-tune-cx",
+  "credential_id": "5ce20c2fd5024265ac8b8b3f4ac6a9e8e3af2bb3fcefcefe27569da41896836a",
+  "expires_at": 1791844139,
+  "minted_by": "Mark, own terminal, 2026-10-12 12:29 CEST"
+ }
+}
