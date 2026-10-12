@@ -430,3 +430,69 @@ func (p *Producer) mint(subject hashref.HashRef, verified []string) ([]byte, has
 	}
 	return env, hashref.SumSHA256(env), nil
 }
+
+// MaxSourceBytes bounds the source object a proof is minted from. The store read
+// refuses a larger payload before it is materialized.
+const MaxSourceBytes = 1 << 20
+
+// readSource reads the source object under its own derived deadline and proves
+// its bytes hash to the ref that was asked for before anything runs on them.
+func (p *Producer) readSource(ctx context.Context, ref hashref.HashRef) ([]byte, error) {
+	if _, err := hashref.Parse(ref.String()); err != nil {
+		return nil, fmt.Errorf("evidence: invalid source ref: %w", err)
+	}
+	readCtx, cancel := context.WithTimeout(ctx, p.cfg.ObjectReadTimeout)
+	defer cancel()
+	_, src, err := p.reader.ReadObject(readCtx, ref, MaxSourceBytes)
+	if err != nil {
+		return nil, fmt.Errorf("evidence: read source %s: %w", ref, err)
+	}
+	if src == nil {
+		return nil, fmt.Errorf("evidence: source object %s not found", ref)
+	}
+	got, err := hashref.Sum(ref.Algo(), src)
+	if err != nil {
+		return nil, fmt.Errorf("evidence: hash source %s: %w", ref, err)
+	}
+	if got.Digest() != ref.Digest() {
+		return nil, fmt.Errorf("evidence: source %s bytes hash to %s", ref, got)
+	}
+	return src, nil
+}
+
+// GenerateProof mints and stores a proof for sourceRef. It runs the pinned checker
+// on the staged source and admits the result only if every requiredIdentity was
+// verified. Every failure returns the zero HashRef, and the write is never retried.
+func (p *Producer) GenerateProof(ctx context.Context, sourceRef hashref.HashRef, requiredIdentities []string) (hashref.HashRef, error) {
+	src, err := p.readSource(ctx, sourceRef)
+	if err != nil {
+		return hashref.HashRef{}, err
+	}
+	if err := p.verifyTool(ctx); err != nil {
+		return hashref.HashRef{}, err
+	}
+	stdout, err := p.runCheck(ctx, src)
+	if err != nil {
+		return hashref.HashRef{}, err
+	}
+	verified, err := interpretCheck(stdout)
+	if err != nil {
+		return hashref.HashRef{}, err
+	}
+	if err := requireIdentities(verified, requiredIdentities); err != nil {
+		return hashref.HashRef{}, err
+	}
+	env, ref, err := p.mint(sourceRef, verified)
+	if err != nil {
+		return hashref.HashRef{}, err
+	}
+	writeCtx, cancel := context.WithTimeout(ctx, p.cfg.ObjectWriteTimeout)
+	defer cancel()
+	if err := p.writer.PutObject(writeCtx, store.Object{
+		Hash: ref, InterfaceHash: InterfaceHashV1, SemanticID: ProofSemanticID,
+		Provenance: "bounded-ai-check-producer", Payload: env,
+	}); err != nil {
+		return hashref.HashRef{}, fmt.Errorf("evidence: write proof envelope: %w", err)
+	}
+	return ref, nil
+}

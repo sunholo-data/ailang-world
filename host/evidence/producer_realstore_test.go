@@ -2,12 +2,18 @@ package evidence_test
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"errors"
+	"os"
+	"os/exec"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/evidence"
+	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -108,4 +114,271 @@ func containsAll(s string, needles ...string) bool {
 		}
 	}
 	return true
+}
+
+// pinnedChecker pins the real AILANG_BIN by its bytes and its version line. The
+// external-package twin of the internal helper: it fails loudly and never skips.
+func pinnedChecker(t *testing.T) evidence.CheckerConfig {
+	t.Helper()
+	bin := os.Getenv("AILANG_BIN")
+	if bin == "" {
+		t.Fatal("AILANG_BIN unset: the producer's binary arms need the pinned v0.41.0 release; never skip")
+	}
+	out, err := exec.Command(bin, "--version").Output()
+	if err != nil {
+		t.Fatalf("pinned binary --version: %v", err)
+	}
+	if line := strings.SplitN(string(out), "\n", 2)[0]; line != "AILANG v0.41.0" {
+		t.Fatalf("AILANG_BIN reports %q; want AILANG v0.41.0", line)
+	}
+	data, err := os.ReadFile(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return evidence.CheckerConfig{ExecPath: bin, Compiler: hashref.SumSHA256(data), CompilerVersion: "AILANG v0.41.0"}
+}
+
+// countingWriter forwards to a real store and counts attempts. A non-nil fail is
+// returned without touching the store, so the write leg is refused before commit.
+type countingWriter struct {
+	s     *store.Store
+	calls atomic.Int32
+	fail  error
+}
+
+func (w *countingWriter) PutObject(ctx context.Context, o store.Object) error {
+	w.calls.Add(1)
+	if w.fail != nil {
+		return w.fail
+	}
+	return w.s.PutObject(ctx, o)
+}
+func (w *countingWriter) BusyTimeout() time.Duration { return w.s.BusyTimeout() }
+
+// tamperReader returns the real metadata with the payload's last byte flipped:
+// a source whose bytes no longer hash to the ref that was asked for.
+type tamperReader struct{ s *store.Store }
+
+func (r tamperReader) ReadObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (store.ObjectMeta, []byte, error) {
+	meta, payload, err := r.s.ReadObject(ctx, ref, maxBytes)
+	if err != nil || len(payload) == 0 {
+		return meta, payload, err
+	}
+	tampered := append([]byte(nil), payload...)
+	tampered[len(tampered)-1] ^= 0xff
+	return meta, tampered, nil
+}
+func (r tamperReader) BusyTimeout() time.Duration { return r.s.BusyTimeout() }
+
+// uncertainWriter commits through the real store and then reports the outcome as
+// uncertain, the way a timed-out commit can. It records the hash it was handed.
+type uncertainWriter struct {
+	s     *store.Store
+	calls atomic.Int32
+	hash  hashref.HashRef
+}
+
+func (w *uncertainWriter) PutObject(ctx context.Context, o store.Object) error {
+	w.calls.Add(1)
+	w.hash = o.Hash
+	if err := w.s.PutObject(ctx, o); err != nil {
+		return err
+	}
+	return &store.UncertainError{Op: "put object", Cause: context.DeadlineExceeded}
+}
+func (w *uncertainWriter) BusyTimeout() time.Duration { return w.s.BusyTimeout() }
+
+// putSource stores a source object the producer can read back and verify.
+func putSource(t *testing.T, s *store.Store, src []byte) hashref.HashRef {
+	t.Helper()
+	ref := hashref.SumSHA256(src)
+	if err := s.PutObject(boundedTestContext(t), store.Object{
+		Hash: ref, InterfaceHash: hashref.SumSHA256([]byte("test/ail-source")),
+		SemanticID: "test/ail-source", Provenance: "producer-test", Payload: src,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	return ref
+}
+
+// producerWith builds the ordered production configuration: 3s object timeouts
+// above the 2s default store window, a 2 minute checker, and 1 MiB of output.
+func producerWith(t *testing.T, reader evidence.ObjectReader, writer evidence.ObjectWriter, checker evidence.CheckerConfig) *evidence.Producer {
+	t.Helper()
+	p, err := evidence.NewProducer(testKey, reader, writer, checker, evidence.ProducerConfig{
+		ObjectReadTimeout:  3 * time.Second,
+		ObjectWriteTimeout: 3 * time.Second,
+		ExecTimeout:        2 * time.Minute,
+		MaxOutputBytes:     1 << 20,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// TestProducerEndToEndMintsEnvelopeValidatorAccepts runs the whole producer against
+// the real store and the pinned binary, then has the production validator accept
+// what it minted. Each refusal arm must leave the writer untouched.
+func TestProducerEndToEndMintsEnvelopeValidatorAccepts(t *testing.T) {
+	s, _ := openEvidenceStore(t)
+	pinned := pinnedChecker(t)
+	source, err := os.ReadFile("testdata/aicheck/verifiedpass.ail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srcRef := putSource(t, s, source)
+	ctx := context.Background()
+	required := []string{"twicePlusOne"}
+
+	t.Run("mint", func(t *testing.T) {
+		writer := &countingWriter{s: s}
+		ref, err := producerWith(t, s, writer, pinned).GenerateProof(ctx, srcRef, required)
+		if err != nil || ref.IsZero() || writer.calls.Load() != 1 {
+			t.Fatalf("the verified source must mint once: ref=%s err=%v calls=%d", ref, err, writer.calls.Load())
+		}
+		v, err := evidence.NewValidator(testKey, s, evidence.CompilerConfig{
+			Compiler: pinned.Compiler, CompilerVersion: "AILANG v0.41.0", ObjectReadTimeout: 3 * time.Second,
+		}, required)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sealed, ok := v.ValidateProof(boundedTestContext(t), ref, srcRef).Validated()
+		if !ok {
+			t.Fatal("the production validator must accept the producer's envelope")
+		}
+		if grade, proven := v.Resolve(sealed).Proven(); !proven || grade != evidence.ResolvedGradeProven {
+			t.Fatalf("the sealed evidence must resolve as proven: grade=%v proven=%v", grade, proven)
+		}
+	})
+	t.Run("idempotent", func(t *testing.T) {
+		first, err := producerWith(t, s, &countingWriter{s: s}, pinned).GenerateProof(ctx, srcRef, required)
+		if err != nil {
+			t.Fatal(err)
+		}
+		second, err := producerWith(t, s, &countingWriter{s: s}, pinned).GenerateProof(ctx, srcRef, required)
+		if err != nil || second != first {
+			t.Fatalf("a repeated mint must return the identical ref: first=%s second=%s err=%v", first, second, err)
+		}
+	})
+	t.Run("tampered-compiler", func(t *testing.T) {
+		bad := pinned
+		bad.Compiler = hashref.SumSHA256([]byte("not the pinned binary"))
+		writer := &countingWriter{s: s}
+		ref, err := producerWith(t, s, writer, bad).GenerateProof(ctx, srcRef, required)
+		if !errors.Is(err, evidence.ErrUntrustedTool) || !ref.IsZero() || writer.calls.Load() != 0 {
+			t.Fatalf("a tampered checker must be refused with no write: ref=%s err=%v calls=%d", ref, err, writer.calls.Load())
+		}
+	})
+	t.Run("absent-identity", func(t *testing.T) {
+		writer := &countingWriter{s: s}
+		ref, err := producerWith(t, s, writer, pinned).GenerateProof(ctx, srcRef, []string{"absentIdentity"})
+		if !errors.Is(err, evidence.ErrRequiredIdentityMissing) || !ref.IsZero() || writer.calls.Load() != 0 {
+			t.Fatalf("an unverified identity must be refused with no write: ref=%s err=%v calls=%d", ref, err, writer.calls.Load())
+		}
+	})
+	t.Run("source-hash-mismatch", func(t *testing.T) {
+		writer := &countingWriter{s: s}
+		ref, err := producerWith(t, tamperReader{s: s}, writer, pinned).GenerateProof(ctx, srcRef, required)
+		if err == nil || !strings.Contains(err.Error(), "hash to") || !ref.IsZero() || writer.calls.Load() != 0 {
+			t.Fatalf("source bytes that miss their ref must be refused with no write: ref=%s err=%v calls=%d", ref, err, writer.calls.Load())
+		}
+	})
+	t.Run("missing-source", func(t *testing.T) {
+		writer := &countingWriter{s: s}
+		missing := hashref.SumSHA256([]byte("never stored"))
+		ref, err := producerWith(t, s, writer, pinned).GenerateProof(ctx, missing, required)
+		if err == nil || !strings.Contains(err.Error(), "not found") || !ref.IsZero() || writer.calls.Load() != 0 {
+			t.Fatalf("an absent source must be refused by name with no write: ref=%s err=%v calls=%d", ref, err, writer.calls.Load())
+		}
+	})
+	t.Run("oversize-source", func(t *testing.T) {
+		big := putSource(t, s, make([]byte, evidence.MaxSourceBytes+1))
+		writer := &countingWriter{s: s}
+		ref, err := producerWith(t, s, writer, pinned).GenerateProof(ctx, big, required)
+		var tooLarge *store.ObjectTooLargeError
+		if !errors.As(err, &tooLarge) || !ref.IsZero() || writer.calls.Load() != 0 {
+			t.Fatalf("a source past MaxSourceBytes must be refused as too large: ref=%s err=%v calls=%d", ref, err, writer.calls.Load())
+		}
+	})
+	t.Run("write-error", func(t *testing.T) {
+		injected := errors.New("injected not-committed")
+		writer := &countingWriter{s: s, fail: injected}
+		ref, err := producerWith(t, s, writer, pinned).GenerateProof(ctx, srcRef, required)
+		if !errors.Is(err, injected) || !ref.IsZero() {
+			t.Fatalf("a failed write must surface its error with a zero ref: ref=%s err=%v", ref, err)
+		}
+	})
+}
+
+// TestProducerMintsValidatorReadableEnvelope reads the minted object back through the
+// store and checks every field the validator and a reviewer rely on.
+func TestProducerMintsValidatorReadableEnvelope(t *testing.T) {
+	s, _ := openEvidenceStore(t)
+	pinned := pinnedChecker(t)
+	source, err := os.ReadFile("testdata/aicheck/verifiedpass.ail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srcRef := putSource(t, s, source)
+	writer := &countingWriter{s: s}
+	ref, err := producerWith(t, s, writer, pinned).GenerateProof(context.Background(), srcRef, []string{"twicePlusOne"})
+	if err != nil {
+		t.Fatalf("mint: %v", err)
+	}
+	meta, payload, err := s.ReadObject(boundedTestContext(t), ref, evidence.MaxBytes)
+	if err != nil {
+		t.Fatalf("the minted object must read back: %v", err)
+	}
+	if meta.SemanticID != evidence.ProofSemanticID || meta.InterfaceHash != evidence.InterfaceHashV1 {
+		t.Fatalf("stored identity %q/%s is not the validator's proof identity", meta.SemanticID, meta.InterfaceHash)
+	}
+	if hashref.SumSHA256(payload) != ref {
+		t.Fatalf("the payload does not hash to the returned ref %s", ref)
+	}
+	env, err := evidence.DecodeAuthenticatedEnvelope(payload)
+	if err != nil {
+		t.Fatalf("payload must decode as an envelope: %v", err)
+	}
+	report, err := evidence.DecodeProofReportV1(env.Report)
+	if err != nil {
+		t.Fatalf("report must decode: %v", err)
+	}
+	if report.Subject != srcRef || report.Compiler != pinned.Compiler || report.CompilerVersion != "AILANG v0.41.0" ||
+		strings.Join(report.Verified, ",") != "twicePlusOne" || report.Errors != 0 || report.Counterexamples != 0 ||
+		!report.CheckPassed || !report.ProofSucceeded {
+		t.Fatalf("minted report fields are wrong: %+v", report)
+	}
+	mac := hmac.New(sha256.New, testKey[:])
+	mac.Write(env.Report)
+	if !hmac.Equal(mac.Sum(nil), env.MAC) {
+		t.Fatal("the envelope MAC does not authenticate its report")
+	}
+	if writer.calls.Load() != 1 {
+		t.Fatalf("a clean mint writes exactly once; calls=%d", writer.calls.Load())
+	}
+}
+
+// TestProducerSurfacesUncertainWriteOutcome: an uncertain write is reported as
+// uncertain, never retried, and the committed object is reachable for reconcile.
+func TestProducerSurfacesUncertainWriteOutcome(t *testing.T) {
+	s, _ := openEvidenceStore(t)
+	pinned := pinnedChecker(t)
+	source, err := os.ReadFile("testdata/aicheck/verifiedpass.ail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srcRef := putSource(t, s, source)
+	writer := &uncertainWriter{s: s}
+	ref, err := producerWith(t, s, writer, pinned).GenerateProof(context.Background(), srcRef, []string{"twicePlusOne"})
+	var uncertain *store.UncertainError
+	if !errors.As(err, &uncertain) || !ref.IsZero() {
+		t.Fatalf("an uncertain write must surface as *store.UncertainError with a zero ref: ref=%s err=%v", ref, err)
+	}
+	if writer.calls.Load() != 1 {
+		t.Fatalf("an uncertain write must never be retried blind; calls=%d", writer.calls.Load())
+	}
+	if _, ok, err := s.GetObject(boundedTestContext(t), writer.hash); err != nil || !ok {
+		t.Fatalf("the uncertain commit must be present for the caller's reconcile: ok=%v err=%v", ok, err)
+	}
 }
