@@ -3,12 +3,14 @@ package evidence
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -36,6 +38,14 @@ var ErrOutputLimit = errors.New("evidence: checker output exceeded its limit")
 // ErrUntrustedTool refuses a checker whose bytes or version line are not the
 // pinned ones. It is reported before the checker runs on any input.
 var ErrUntrustedTool = errors.New("evidence: checker is not the pinned tool")
+
+// ErrUnverifiedRun refuses an ai-check run that did not verify its module clean:
+// a failed check, an unavailable verifier, or any error, counterexample or skip.
+var ErrUnverifiedRun = errors.New("evidence: ai-check run is not a clean verification")
+
+// ErrVacuousCheck refuses a run that produced output but verified no function.
+// A green run that proves nothing is refused, never minted.
+var ErrVacuousCheck = errors.New("evidence: ai-check run verified nothing")
 
 // ObjectWriter is the write seam of the producer. BusyTimeout reports the
 // store's lock-retry window so the write timeout can be ordered above it.
@@ -306,4 +316,65 @@ func (p *Producer) verifyTool(ctx context.Context) error {
 		return fmt.Errorf("%w: version line %q; want %q", ErrUntrustedTool, line, p.checker.CompilerVersion)
 	}
 	return nil
+}
+
+// aiCheckReport is the strict subset of ai-check's JSON the producer reads.
+// It deliberately has no field for verify.verified: the verified set comes only
+// from the results records (D4 step 8).
+type aiCheckReport struct {
+	Check struct {
+		Passed bool `json:"passed"`
+	} `json:"check"`
+	Verify struct {
+		Available      bool `json:"available"`
+		Counterexample int  `json:"counterexample"`
+		Skipped        int  `json:"skipped"`
+		Errors         int  `json:"errors"`
+		Results        []struct {
+			Function string `json:"function"`
+			Status   string `json:"status"`
+		} `json:"results"`
+	} `json:"verify"`
+}
+
+// interpretCheck turns captured ai-check stdout into the sorted set of verified
+// functions. Each refusal is one branch with its own detail fragment, applied in
+// a fixed order. Unknown JSON fields are tolerated.
+func interpretCheck(stdout []byte) ([]string, error) {
+	if len(bytes.TrimSpace(stdout)) == 0 {
+		return nil, fmt.Errorf("%w: empty ai-check stdout", ErrVacuousCheck)
+	}
+	var d aiCheckReport
+	if err := json.Unmarshal(stdout, &d); err != nil {
+		return nil, fmt.Errorf("%w: unparseable ai-check JSON: %v", ErrUnverifiedRun, err)
+	}
+	if !d.Check.Passed {
+		return nil, fmt.Errorf("%w: check.passed is not true", ErrUnverifiedRun)
+	}
+	if !d.Verify.Available {
+		return nil, fmt.Errorf("%w: verify.available is not true", ErrUnverifiedRun)
+	}
+	if d.Verify.Errors > 0 {
+		return nil, fmt.Errorf("%w: verify.errors=%d", ErrUnverifiedRun, d.Verify.Errors)
+	}
+	if d.Verify.Counterexample > 0 {
+		return nil, fmt.Errorf("%w: verify.counterexample=%d", ErrUnverifiedRun, d.Verify.Counterexample)
+	}
+	if d.Verify.Skipped > 0 {
+		return nil, fmt.Errorf("%w: verify.skipped=%d", ErrUnverifiedRun, d.Verify.Skipped)
+	}
+	var verified []string
+	for _, r := range d.Verify.Results {
+		if r.Status == "verified" {
+			verified = append(verified, r.Function)
+		}
+	}
+	if len(verified) == 0 {
+		if len(d.Verify.Results) == 0 {
+			return nil, fmt.Errorf("%w: 0 results records from non-empty output", ErrVacuousCheck)
+		}
+		return nil, fmt.Errorf("%w: 0 verified among %d results records", ErrVacuousCheck, len(d.Verify.Results))
+	}
+	sort.Strings(verified)
+	return verified, nil
 }

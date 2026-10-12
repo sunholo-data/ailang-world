@@ -39,6 +39,7 @@ REQUIRED_EVIDENCE_TESTS = {
     "TestEnvelopeCarriesTheReportItAlreadyDecoded",
     "TestEnvelopeStrictRefusals",
     "TestFailedProofReportIsRefused",
+    "TestFixturesRevalidateAgainstFreshBinaryOutput",
     "TestIncompleteProofReportIsRefused",
     "TestInvalidProofRefIsRefused",
     "TestMalformedProofReportIsRefused",
@@ -62,6 +63,7 @@ REQUIRED_EVIDENCE_TESTS = {
     "TestProducerConstructorRefusesNonPositiveObjectWriteTimeout",
     "TestProducerConstructorRefusesUnsetCompilerIdentity",
     "TestProducerExecTimeoutKillsTheWholeProcessGroup",
+    "TestProducerInterpretationMatchesEveryFixtureShape",
     "TestProducerRefusesMissingExecutable",
     "TestProducerRefusesStderrOverflowIndependently",
     "TestProducerRefusesStdoutOverflowIndependently",
@@ -309,14 +311,14 @@ echo "── go build ./..."
 go version
 go build ./...
 
-echo "── focused host/evidence named-manifest gate (54 exact top-level tests)"
+echo "── focused host/evidence named-manifest gate (56 exact top-level tests)"
 evidence_json="$(mktemp "${TMPDIR:-/tmp}/verify-go-evidence.XXXXXX")"
 trap 'rm -f "$evidence_json"' EXIT
 set +e
 go test -json ./host/evidence -count=1 >"$evidence_json"
 evidence_test_rc=$?
 set -e
-check_evidence_manifest "$evidence_json" 54
+check_evidence_manifest "$evidence_json" 56
 if [ "$evidence_test_rc" -ne 0 ]; then
   echo "verify_go.sh: FATAL: host/evidence go test exited rc=$evidence_test_rc" >&2
   exit "$evidence_test_rc"

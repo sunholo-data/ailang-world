@@ -378,3 +378,118 @@ func TestProducerRefusesMissingExecutable(t *testing.T) {
 		t.Fatalf("a missing executable must be refused by name: want ErrUntrustedTool with read executable; got %v", err)
 	}
 }
+
+// verdictClass names an interpretCheck outcome for comparison: the sentinel it
+// wraps, "ok" for a verified set, or the raw text of anything unexpected.
+func verdictClass(err error) string {
+	switch {
+	case err == nil:
+		return "ok"
+	case errors.Is(err, ErrUnverifiedRun):
+		return "unverified"
+	case errors.Is(err, ErrVacuousCheck):
+		return "vacuous"
+	default:
+		return "other: " + err.Error()
+	}
+}
+
+// fixtureBytes reads one committed ai-check fixture. Fixtures are read-only
+// inputs: no test writes them (regen.sh is the only writer).
+func fixtureBytes(t *testing.T, name string) []byte {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join("testdata", "aicheck", name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+
+// flippedVerifiedPass derives an ai-check output from the committed verifiedpass
+// fixture by changing exactly one field. The derived arms pin branches that no
+// real pinned run can reach, so each is labelled a derivation, never tool output.
+func flippedVerifiedPass(t *testing.T, mutate func(doc map[string]any)) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := json.Unmarshal(fixtureBytes(t, "verifiedpass.json"), &doc); err != nil {
+		t.Fatal(err)
+	}
+	mutate(doc)
+	out, err := json.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+func TestProducerInterpretationMatchesEveryFixtureShape(t *testing.T) {
+	type arm struct {
+		name     string
+		stdout   []byte
+		want     error // nil: the run verifies and verified is the expected set
+		detail   string
+		verified []string
+	}
+	arms := []arm{
+		{name: "verifiedpass", stdout: fixtureBytes(t, "verifiedpass.json"), verified: []string{"twicePlusOne"}},
+		{name: "refuted", stdout: fixtureBytes(t, "refuted.json"), want: ErrUnverifiedRun, detail: "verify.counterexample=1"},
+		{name: "encerror", stdout: fixtureBytes(t, "encerror.json"), want: ErrUnverifiedRun, detail: "verify.errors=1"},
+		{name: "mixed", stdout: fixtureBytes(t, "mixed.json"), want: ErrUnverifiedRun, detail: "verify.errors=1"},
+		{name: "skippedshape", stdout: fixtureBytes(t, "skippedshape.json"), want: ErrUnverifiedRun, detail: "verify.skipped=1"},
+		{name: "loaderror", stdout: fixtureBytes(t, "loaderror.json"), want: ErrUnverifiedRun, detail: "check.passed is not true"},
+		{name: "nocontracts", stdout: fixtureBytes(t, "nocontracts.json"), want: ErrVacuousCheck, detail: "0 results records from non-empty output"},
+		{name: "literal-empty", stdout: []byte(""), want: ErrVacuousCheck, detail: "empty ai-check stdout"},
+		{name: "literal-unparseable", stdout: []byte("{"), want: ErrUnverifiedRun, detail: "unparseable"},
+		{name: "derived-check-passed-false", want: ErrUnverifiedRun, detail: "check.passed",
+			stdout: flippedVerifiedPass(t, func(d map[string]any) { d["check"].(map[string]any)["passed"] = false })},
+		{name: "derived-verify-unavailable", want: ErrUnverifiedRun, detail: "verify.available",
+			stdout: flippedVerifiedPass(t, func(d map[string]any) { d["verify"].(map[string]any)["available"] = false })},
+		{name: "derived-status-unknown", want: ErrVacuousCheck, detail: "0 verified among 1 results records",
+			stdout: flippedVerifiedPass(t, func(d map[string]any) {
+				d["verify"].(map[string]any)["results"].([]any)[0].(map[string]any)["status"] = "unknown"
+			})},
+	}
+	for _, a := range arms {
+		a := a
+		t.Run(a.name, func(t *testing.T) {
+			got, err := interpretCheck(a.stdout)
+			if a.want == nil {
+				if err != nil || strings.Join(got, ",") != strings.Join(a.verified, ",") {
+					t.Fatalf("want verified %v with nil error; got %v, err=%v", a.verified, got, err)
+				}
+				return
+			}
+			if !errors.Is(err, a.want) {
+				t.Fatalf("want %v; got %v (verified %v)", a.want, err, got)
+			}
+			if !strings.Contains(err.Error(), a.detail) {
+				t.Fatalf("detail %q missing from %v", a.detail, err)
+			}
+			if len(got) != 0 {
+				t.Fatalf("a refused run must return no verified set; got %v", got)
+			}
+		})
+	}
+}
+
+// TestFixturesRevalidateAgainstFreshBinaryOutput re-runs every committed module
+// through the pinned binary. A pin move that changes the JSON shape reds here:
+// the fixtures are never trusted as frozen truth.
+func TestFixturesRevalidateAgainstFreshBinaryOutput(t *testing.T) {
+	p := pinnedProducer(t, 2*time.Minute, 1<<20)
+	for _, name := range []string{"verifiedpass", "refuted", "encerror", "mixed", "skippedshape", "loaderror", "nocontracts"} {
+		name := name
+		t.Run(name, func(t *testing.T) {
+			fresh, err := p.runCheck(context.Background(), fixtureBytes(t, name+".ail"))
+			if err != nil {
+				t.Fatalf("fresh ai-check run: %v", err)
+			}
+			gotFresh, errFresh := interpretCheck(fresh)
+			gotCommitted, errCommitted := interpretCheck(fixtureBytes(t, name+".json"))
+			if verdictClass(errFresh) != verdictClass(errCommitted) || strings.Join(gotFresh, ",") != strings.Join(gotCommitted, ",") {
+				t.Fatalf("fresh verdict %s %v differs from committed verdict %s %v: the pinned binary's output moved",
+					verdictClass(errFresh), gotFresh, verdictClass(errCommitted), gotCommitted)
+			}
+		})
+	}
+}

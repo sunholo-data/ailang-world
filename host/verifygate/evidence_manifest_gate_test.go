@@ -28,6 +28,7 @@ var syntheticEvidenceTests = []string{
 	"TestEnvelopeCarriesTheReportItAlreadyDecoded",
 	"TestEnvelopeStrictRefusals",
 	"TestFailedProofReportIsRefused",
+	"TestFixturesRevalidateAgainstFreshBinaryOutput",
 	"TestIncompleteProofReportIsRefused",
 	"TestInvalidProofRefIsRefused",
 	"TestMalformedProofReportIsRefused",
@@ -51,6 +52,7 @@ var syntheticEvidenceTests = []string{
 	"TestProducerConstructorRefusesNonPositiveObjectWriteTimeout",
 	"TestProducerConstructorRefusesUnsetCompilerIdentity",
 	"TestProducerExecTimeoutKillsTheWholeProcessGroup",
+	"TestProducerInterpretationMatchesEveryFixtureShape",
 	"TestProducerRefusesMissingExecutable",
 	"TestProducerRefusesStderrOverflowIndependently",
 	"TestProducerRefusesStdoutOverflowIndependently",
@@ -192,7 +194,7 @@ func runSyntheticEvidenceGate(t *testing.T, root string, tests []string, exact i
 func requireSyntheticEvidenceControl(t *testing.T, root string) {
 	t.Helper()
 	rc, out := runSyntheticEvidenceGate(t, root, syntheticEvidenceTests, len(syntheticEvidenceTests))
-	if rc != 0 || !strings.Contains(out, "all 54 required top-level evidence tests passed exactly once") {
+	if rc != 0 || !strings.Contains(out, "all 56 required top-level evidence tests passed exactly once") {
 		t.Fatalf("pristine synthetic control did not reach success: rc=%d\n%s", rc, out)
 	}
 }
