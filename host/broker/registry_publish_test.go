@@ -26,6 +26,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/capsule"
 	"github.com/sunholo-data/ailang-world/host/childenv"
+	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/pkgproj"
 	"github.com/sunholo-data/ailang-world/host/replay"
@@ -1203,6 +1204,10 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// bounded git site; its child must see neither the registry
 		// credential nor any GIT_* redirect.
 		"host/worktree/worktree.go": {driveWorktreeAdd, driveWorktreeRemove},
+		// Row 26 (w-bounded-z3-report-producer): the bounded proof producer's one
+		// exec site runs the pinned checker for its version probe and its ai-check
+		// run; both children must be scrubbed like every other World subprocess.
+		"host/evidence/proof_producer.go": {driveEvidenceProducer},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -1279,6 +1284,64 @@ func driveWorktreeRemove(t *testing.T, probe string) {
 	t.Helper()
 	if err := worktree.Remove(boundedTestContext(t), probe, t.TempDir(), filepath.Join(t.TempDir(), "ep")); err != nil {
 		t.Fatalf("worktree.Remove via the probe: %v", err)
+	}
+}
+
+// ac10SourceReader serves one fixed source object, so the producer's source
+// hash check passes and the run reaches its checker launch.
+type ac10SourceReader struct{ src []byte }
+
+func (r ac10SourceReader) ReadObject(context.Context, hashref.HashRef, int64) (store.ObjectMeta, []byte, error) {
+	return store.ObjectMeta{}, r.src, nil
+}
+func (r ac10SourceReader) BusyTimeout() time.Duration { return 0 }
+
+// ac10Writer is never reached: the probe's refusal stops the mint first.
+type ac10Writer struct{}
+
+func (ac10Writer) PutObject(context.Context, store.Object) error { return nil }
+func (ac10Writer) BusyTimeout() time.Duration                    { return 0 }
+
+// driveEvidenceProducer makes the producer launch probe through its one exec
+// site, using only host/evidence's exported API. A wrapper around probe records
+// the VERSION probe's environment in its own file, apart from the ai-check run's
+// (which the probe records), so the guard observes both launches. The version
+// line must pass for the ai-check run to start; the probe's refusal is the
+// expected outcome, and the launch is the measurement.
+func driveEvidenceProducer(t *testing.T, probe string) {
+	t.Helper()
+	dir := t.TempDir()
+	versionDump := filepath.Join(dir, "version.env")
+	wrapper := filepath.Join(dir, "producer-probe")
+	body := "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then /usr/bin/env > " + shellQuote(versionDump) +
+		"\necho 'ailang version v0.30.0 (AC10 probe)'\nexit 0\nfi\nexec " + shellQuote(probe) + " \"$@\"\n"
+	if err := os.WriteFile(wrapper, []byte(body), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	wrapperBytes, err := os.ReadFile(wrapper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := []byte("module world/transition\n")
+	p, err := evidence.NewProducer([32]byte{}, ac10SourceReader{src: src}, ac10Writer{}, evidence.CheckerConfig{
+		ExecPath:        wrapper,
+		Compiler:        hashref.SumSHA256(wrapperBytes),
+		CompilerVersion: "ailang version v0.30.0 (AC10 probe)",
+	}, evidence.ProducerConfig{
+		ObjectReadTimeout:  5 * time.Second,
+		ObjectWriteTimeout: 5 * time.Second,
+		ExecTimeout:        20 * time.Second,
+		MaxOutputBytes:     64 << 10,
+	})
+	if err != nil {
+		t.Fatalf("host/evidence/proof_producer.go: construct producer: %v", err)
+	}
+	_, err = p.GenerateProof(boundedTestContext(t), hashref.SumSHA256(src), []string{"x"})
+	if !errors.Is(err, evidence.ErrUnverifiedRun) {
+		t.Fatalf("host/evidence/proof_producer.go: the producer must reach its ai-check launch through the probe: want ErrUnverifiedRun; got %v", err)
+	}
+	if childenv.Has(readEnvDump(t, versionDump), RegistryCredentialVariable) {
+		t.Fatalf("host/evidence/proof_producer.go: the version probe observed %s", RegistryCredentialVariable)
 	}
 }
 

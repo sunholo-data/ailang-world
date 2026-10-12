@@ -28,6 +28,7 @@ var syntheticEvidenceTests = []string{
 	"TestEnvelopeCarriesTheReportItAlreadyDecoded",
 	"TestEnvelopeStrictRefusals",
 	"TestFailedProofReportIsRefused",
+	"TestFixturesRevalidateAgainstFreshBinaryOutput",
 	"TestIncompleteProofReportIsRefused",
 	"TestInvalidProofRefIsRefused",
 	"TestMalformedProofReportIsRefused",
@@ -39,13 +40,39 @@ var syntheticEvidenceTests = []string{
 	"TestOtherwisePerfectReportWithoutMACIsUnauthenticated",
 	"TestOversizeProofReportIsRefused",
 	"TestPayloadHashMismatchIsRefused",
+	"TestProducerAdmissionRefusesBacklog",
+	"TestProducerCallerCancelIsAnError",
+	"TestProducerConstructorPinsBusyTimeoutBelowBothTimeouts",
+	"TestProducerConstructorRefusesEmptyCompilerVersion",
+	"TestProducerConstructorRefusesEmptyExecPath",
+	"TestProducerConstructorRefusesNilReader",
+	"TestProducerConstructorRefusesNilWriter",
+	"TestProducerConstructorRefusesNonPositiveExecTimeout",
+	"TestProducerConstructorRefusesNonPositiveMaxOutputBytes",
+	"TestProducerConstructorRefusesNonPositiveObjectReadTimeout",
+	"TestProducerConstructorRefusesNonPositiveObjectWriteTimeout",
+	"TestProducerConstructorRefusesUnsetCompilerIdentity",
+	"TestProducerEndToEndMintsEnvelopeValidatorAccepts",
+	"TestProducerExecTimeoutKillsTheWholeProcessGroup",
+	"TestProducerInterpretationMatchesEveryFixtureShape",
+	"TestProducerMintsValidatorReadableEnvelope",
+	"TestProducerRefusesEnvelopeBeyondValidatorReadCap",
+	"TestProducerRefusesMissingExecutable",
+	"TestProducerRefusesStderrOverflowIndependently",
+	"TestProducerRefusesStdoutOverflowIndependently",
+	"TestProducerRefutesTamperedExecutableBytes",
+	"TestProducerRefutesWrongCompilerVersion",
+	"TestProducerRequiresCallerNamedIdentities",
+	"TestProducerSurfacesUncertainWriteOutcome",
 	"TestProofReportCanonicalRoundTrip",
 	"TestProofReportCaps",
 	"TestProofReportStrictRefusals",
 	"TestProposalStrictRefusals",
 	"TestPublicAuthoritySurfaceIsFrozen",
 	"TestReaderWaitBoundsCannotBeLostThroughWrapper",
+	"TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout",
 	"TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout",
+	"TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout",
 	"TestTruncatedTailReportIsRefusedNotPanicked",
 	"TestValidatorMintIdentitiesAreDistinct",
 	"TestWrongInterfaceIsRefused",
@@ -175,7 +202,7 @@ func runSyntheticEvidenceGate(t *testing.T, root string, tests []string, exact i
 func requireSyntheticEvidenceControl(t *testing.T, root string) {
 	t.Helper()
 	rc, out := runSyntheticEvidenceGate(t, root, syntheticEvidenceTests, len(syntheticEvidenceTests))
-	if rc != 0 || !strings.Contains(out, "all 37 required top-level evidence tests passed exactly once") {
+	if rc != 0 || !strings.Contains(out, "all 64 required top-level evidence tests passed exactly once") {
 		t.Fatalf("pristine synthetic control did not reach success: rc=%d\n%s", rc, out)
 	}
 }

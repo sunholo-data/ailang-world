@@ -1,0 +1,30 @@
+{
+  "file": "fixtures/skippedshape.ail",
+  "check": {
+    "passed": true,
+    "error_count": 0,
+    "errors": []
+  },
+  "verify": {
+    "available": true,
+    "verified": 0,
+    "counterexample": 0,
+    "skipped": 1,
+    "errors": 0,
+    "results": [
+      {
+        "function": "usesSibling",
+        "status": "skipped",
+        "reason": "SMT declaration closure could not resolve a required sort (cannot encode function body: unresolvable SMT declaration types: calls user function \"renderRef\" that is not SMT-encodable in this context)",
+        "rejections": [
+          {
+            "Code": "UNENCODABLE_TYPE",
+            "Message": "cannot encode function body: unresolvable SMT declaration types: calls user function \"renderRef\" that is not SMT-encodable in this context",
+            "Location": "",
+            "Hint": "The function uses a type shape whose required SMT sorts cannot be declared"
+          }
+        ]
+      }
+    ]
+  }
+}

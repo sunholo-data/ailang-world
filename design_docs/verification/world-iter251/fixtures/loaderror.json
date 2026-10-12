@@ -1,0 +1,22 @@
+{
+  "file": "fixtures/loaderror.ail",
+  "check": {
+    "passed": false,
+    "error_count": 1,
+    "errors": [
+      {
+        "code": "ERROR",
+        "message": "module loading error: failed to load fixtures/loaderror.ail: parse errors in fixtures/loaderror.ail:\nPAR_EXPORT_REQUIRES_FUNC at fixtures/loaderror.ail:4:8: export must be followed by 'func' or 'type', got 'helper'\n\nSuggestion: Use 'export func name(...) { ... }' or 'export type Name = ...'",
+        "file": "fixtures/loaderror.ail"
+      }
+    ]
+  },
+  "verify": {
+    "available": false,
+    "verified": 0,
+    "counterexample": 0,
+    "skipped": 0,
+    "errors": 0,
+    "results": []
+  }
+}

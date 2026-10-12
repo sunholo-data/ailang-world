@@ -1,0 +1,12 @@
+module fixtures/encerror
+
+-- Scratch fixture (row 26 design evidence): interpolation in ensures is
+-- unencodable (world/logepoch.ail records the same class on v0.41.0).
+export func showInt(x: int) -> string ! {}
+ensures { result == "v${x}" }
+tests [
+  ((1), "v1")
+]
+{
+  "v${x}"
+}

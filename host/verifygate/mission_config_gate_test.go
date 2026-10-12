@@ -446,6 +446,14 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 		missionAnchor = `check_mission_config`
 		verTokAnchor = `if [ "$ver_tok" != 'v0.41.0' ]; then`
 	}
+	// The evidence manifest count moves with each row-26 milestone, so the
+	// repaired arm tracks the live script and the historical fixture stays at 37.
+	evidenceBanner := `echo "── focused host/evidence named-manifest gate (37 exact top-level tests)"`
+	evidenceCall := `check_evidence_manifest "$evidence_json" 37`
+	if repaired {
+		evidenceBanner = `echo "── focused host/evidence named-manifest gate (64 exact top-level tests)"`
+		evidenceCall = `check_evidence_manifest "$evidence_json" 64`
+	}
 	passedAnchor := `echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`
 	needles := []string{
 		`if [ -z "${AILANG_BIN:-}" ]; then`,
@@ -463,8 +471,8 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 		`if ! grep -q 'WARNING: DATA RACE' <<<"$race_control_output"; then`,
 		`echo "── go build ./..."`,
 		`go build ./...`,
-		`echo "── focused host/evidence named-manifest gate (37 exact top-level tests)"`,
-		`check_evidence_manifest "$evidence_json" 37`,
+		evidenceBanner,
+		evidenceCall,
 		`echo "── go test ./... -count=1"`,
 		`go test ./... -count=1`,
 		`echo "── go test ./... -count=1 -race -timeout 8m"`,

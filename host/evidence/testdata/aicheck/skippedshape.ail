@@ -1,0 +1,13 @@
+module fixtures/skippedshape
+
+-- Scratch fixture (row 26 design evidence): ensures calls a sibling user
+-- function that is not SMT-encodable in this context — the cacheKey shape
+-- recorded in world/logepoch.ail. ai-check SKIPS the contract and exits 0.
+export func renderRef(algo: string, digest: string) -> string { "${algo}:${digest}" }
+
+export func usesSibling(algo: string, digest: string) -> string ! {}
+ensures { result == renderRef(algo, digest) }
+tests [ (("sha256", "aa"), "sha256:aa") ]
+{
+  renderRef(algo, digest)
+}
