@@ -1,0 +1,166 @@
+{
+  "Claude": "unrun due observed weekly limit",
+  "candidate_and_repeat_meet_codex_target": true,
+  "full_M2_accepted": false,
+  "historical_FINAL": "unchanged failed Sol O+26.57598%",
+  "interpretation": "N1 and visible run-to-run shell variation do not establish causal efficacy or predict a new FINAL. No pooling or favorable selection.",
+  "prior_aborts": [
+    {
+      "cause": "Claude seven-day rate limit",
+      "iteration": 6
+    },
+    {
+      "cause": "daemon7646/agent7644 endpoint mismatch",
+      "iteration": 7
+    }
+  ],
+  "product_landed": false,
+  "recorded_at_utc": "2026-10-11T19:14:15.771076+00:00",
+  "runs": [
+    {
+      "cell_medians": {
+        "shell": {
+          "input_tokens": 209753.0,
+          "wall_ms": 13312.5
+        },
+        "world": {
+          "input_tokens": 312142.5,
+          "wall_ms": 15988.5
+        }
+      },
+      "codex_tokens": 3796730,
+      "diagnostic_target_met": true,
+      "iteration": 8,
+      "label": "Original baseline",
+      "median_per_task_O_exact": 0.09684936382099675,
+      "status": "complete",
+      "summary": {
+        "O": 0.0968,
+        "T": 6,
+        "capacity_reruns": 0,
+        "delta": 0.0,
+        "harness_faults": {
+          "shell": 0,
+          "world": 0
+        },
+        "o_t": {
+          "api_call_json": -0.17,
+          "cli_args": -0.361,
+          "effect_tracking_io_fs": 0.807,
+          "higher_order_functions": 0.222,
+          "pipeline": 0.566,
+          "prompt_injection": -0.028
+        },
+        "pass_S": 6,
+        "pass_W": 6,
+        "unclassified": 0
+      },
+      "task_overhead": {
+        "api_call_json": -0.1701146961089077,
+        "cli_args": -0.3605877335814531,
+        "effect_tracking_io_fs": 0.8072589792060492,
+        "higher_order_functions": 0.2215345485375159,
+        "pipeline": 0.5663157894736842,
+        "prompt_injection": -0.02783582089552239
+      },
+      "wall_s": 222.6
+    },
+    {
+      "cell_medians": {
+        "shell": {
+          "input_tokens": 230352.0,
+          "wall_ms": 14609.5
+        },
+        "world": {
+          "input_tokens": 307587.5,
+          "wall_ms": 16616.5
+        }
+      },
+      "codex_tokens": 3741234,
+      "diagnostic_target_met": true,
+      "iteration": 9,
+      "label": "Candidate",
+      "median_per_task_O_exact": 0.08486267226688833,
+      "status": "complete",
+      "summary": {
+        "O": 0.0849,
+        "T": 6,
+        "capacity_reruns": 0,
+        "delta": 0.0,
+        "harness_faults": {
+          "shell": 0,
+          "world": 0
+        },
+        "o_t": {
+          "api_call_json": -0.568,
+          "cli_args": 0.003,
+          "effect_tracking_io_fs": 0.435,
+          "higher_order_functions": 0.851,
+          "pipeline": 0.097,
+          "prompt_injection": 0.072
+        },
+        "pass_S": 6,
+        "pass_W": 6,
+        "unclassified": 0
+      },
+      "task_overhead": {
+        "api_call_json": -0.568408158917825,
+        "cli_args": 0.0027316433566433565,
+        "effect_tracking_io_fs": 0.4354974704890388,
+        "higher_order_functions": 0.8508328192473782,
+        "pipeline": 0.09723449930546786,
+        "prompt_injection": 0.0724908452283088
+      },
+      "wall_s": 233.6
+    },
+    {
+      "cell_medians": {
+        "shell": {
+          "input_tokens": 272410.5,
+          "wall_ms": 14418.5
+        },
+        "world": {
+          "input_tokens": 307541.5,
+          "wall_ms": 17897.5
+        }
+      },
+      "codex_tokens": 3893078,
+      "diagnostic_target_met": true,
+      "iteration": 10,
+      "label": "Unchanged candidate repeat",
+      "median_per_task_O_exact": 0.10593140305019338,
+      "status": "complete",
+      "summary": {
+        "O": 0.1059,
+        "T": 6,
+        "capacity_reruns": 0,
+        "delta": 0.0,
+        "harness_faults": {
+          "shell": 0,
+          "world": 0
+        },
+        "o_t": {
+          "api_call_json": -0.041,
+          "cli_args": -0.244,
+          "effect_tracking_io_fs": 0.253,
+          "higher_order_functions": 0.29,
+          "pipeline": -0.145,
+          "prompt_injection": 0.577
+        },
+        "pass_S": 6,
+        "pass_W": 6,
+        "unclassified": 0
+      },
+      "task_overhead": {
+        "api_call_json": -0.04102343076561398,
+        "cli_args": -0.24372843693351265,
+        "effect_tracking_io_fs": 0.25288623686600076,
+        "higher_order_functions": 0.2904716379859783,
+        "pipeline": -0.14524182129815932,
+        "prompt_injection": 0.5774459123109325
+      },
+      "wall_s": 260.9
+    }
+  ],
+  "scope": "Codex-only gpt-6-luna N1 diagnostic; full four-cell row174 M2 pending"
+}

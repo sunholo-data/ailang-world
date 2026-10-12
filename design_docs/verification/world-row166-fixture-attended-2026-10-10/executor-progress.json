@@ -1,0 +1,149 @@
+{
+  "status": "Current revised fixture implementation, eight mutation/restored-control pairs, plain count10 and race count5 verified; full normal gates and fresh round3 evaluation pending with controller",
+  "revision": "B=ceil_ms(C+2G); H=ceil_seconds(3B+2G); finite30s parent guard and exact assertions preserved",
+  "only_fixture_changed_lines": 2,
+  "fixture_sha256": "f8a8ca343ad040554bf592d7a31d2d129e6ce48adfd1d8f8d79e673b88f7b236",
+  "immutable_factor10_archive_verified": 36,
+  "prior_blocking_results": "Both old normal-gate and cold-review guard REDs preserved in factor10-round2; old greens do not discharge current revision",
+  "isolated_copy": "/private/tmp/ailang-world-row166-mutations-round3-20261010",
+  "source_scope": "Production handlers/procbound/descriptors byte-equal revision-before snapshots; no .ail, benchmark, handler-bound or harness edits",
+  "model_lane": "Native inherited-model fallback flagged under D-WORLD-48; no independently enforced executor model pin or quorum claim",
+  "current_mutation_summary": {
+    "total": 8,
+    "expected_red": 8,
+    "byte_exact_restores": 8,
+    "fresh_restored_green": 8,
+    "deadline_only_stream_resets": "Both preserve all three no-sleep controls and reach readiness before successful real kill, then fail exact retained-stream assertion.",
+    "positive_control_losses": "Unconditional stream/printf/readiness losses fail calibration before exercised arm; not credited as deadline retention proof.",
+    "natural_deadline_disabled": "Two isolated production-line mutations only: WithCancel and finite caller-minus-grace cleanup deadline; current C100.522292ms B2.101s H9s elapsed9.019095708s err=nil kills=[] Outstanding0/baseline0; both exact11-byte streams retained; timeout assertion RED."
+  },
+  "current_plain_count10": {
+    "discovered": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "three_controls_each": 30,
+    "ready_real_kill_each": 10,
+    "outstanding_at_baseline_each": 10,
+    "calibrations": [
+      {
+        "C": "102.88325ms",
+        "B": "2.103s",
+        "H": "9s",
+        "R": "29.884241542s",
+        "grace": "1s"
+      },
+      {
+        "C": "157.586834ms",
+        "B": "2.158s",
+        "H": "9s",
+        "R": "29.822131s",
+        "grace": "1s"
+      },
+      {
+        "C": "148.007125ms",
+        "B": "2.149s",
+        "H": "9s",
+        "R": "29.839072s",
+        "grace": "1s"
+      },
+      {
+        "C": "158.738042ms",
+        "B": "2.159s",
+        "H": "9s",
+        "R": "29.824400125s",
+        "grace": "1s"
+      },
+      {
+        "C": "132.31625ms",
+        "B": "2.133s",
+        "H": "9s",
+        "R": "29.85667575s",
+        "grace": "1s"
+      },
+      {
+        "C": "146.610333ms",
+        "B": "2.147s",
+        "H": "9s",
+        "R": "29.840338334s",
+        "grace": "1s"
+      },
+      {
+        "C": "152.232625ms",
+        "B": "2.153s",
+        "H": "9s",
+        "R": "29.826624167s",
+        "grace": "1s"
+      },
+      {
+        "C": "150.135666ms",
+        "B": "2.151s",
+        "H": "9s",
+        "R": "29.837322333s",
+        "grace": "1s"
+      },
+      {
+        "C": "159.449709ms",
+        "B": "2.16s",
+        "H": "9s",
+        "R": "29.8201055s",
+        "grace": "1s"
+      },
+      {
+        "C": "135.110375ms",
+        "B": "2.136s",
+        "H": "9s",
+        "R": "29.85351375s",
+        "grace": "1s"
+      }
+    ]
+  },
+  "current_race_count5": {
+    "discovered": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "data_races": 0,
+    "three_controls_each": 15,
+    "ready_real_kill_each": 5,
+    "outstanding_at_baseline_each": 5,
+    "calibrations": [
+      {
+        "C": "90.124959ms",
+        "B": "2.091s",
+        "H": "9s",
+        "R": "29.899774s",
+        "grace": "1s"
+      },
+      {
+        "C": "147.427583ms",
+        "B": "2.148s",
+        "H": "9s",
+        "R": "29.832826958s",
+        "grace": "1s"
+      },
+      {
+        "C": "149.383708ms",
+        "B": "2.15s",
+        "H": "9s",
+        "R": "29.835773833s",
+        "grace": "1s"
+      },
+      {
+        "C": "151.3505ms",
+        "B": "2.152s",
+        "H": "9s",
+        "R": "29.824659416s",
+        "grace": "1s"
+      },
+      {
+        "C": "150.266958ms",
+        "B": "2.151s",
+        "H": "9s",
+        "R": "29.83334725s",
+        "grace": "1s"
+      }
+    ]
+  },
+  "final_exact_restoration_and_archive_sha_check": "PASS"
+}

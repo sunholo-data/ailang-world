@@ -1,0 +1,14 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:94: candidate byte budget: 13947/7430 exceeds 10500/3800
+    setools_descriptor_test.go:107: description unchanged: ailang-read
+    setools_descriptor_test.go:107: description unchanged: ailang-write
+    setools_descriptor_test.go:107: description unchanged: ailang-edit
+    setools_descriptor_test.go:107: description unchanged: ailang-check
+    setools_descriptor_test.go:107: description unchanged: ailang-run
+    setools_descriptor_test.go:107: description unchanged: builtins-search
+    setools_descriptor_test.go:107: description unchanged: examples-search
+    setools_descriptor_test.go:107: description unchanged: ailang-cli
+--- FAIL: TestSeToolsDescriptorCompaction (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	3.569s
+FAIL

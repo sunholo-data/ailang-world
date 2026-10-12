@@ -1,0 +1,9 @@
+{
+  "product_commit": "38c61e479c84e8b1a57c39f6766f4086ea0122c9",
+  "completed": "2026-10-10T08:46:14.590068+00:00",
+  "returncode": 1,
+  "plain": "FAIL: finite fixture guard C756.807791ms B9.569s H31s R29.234203208s",
+  "race": "NOT_REACHED",
+  "all_started_product_files_unchanged": true,
+  "log_sha256": "c82e1c80679edbfaa6ae877df2e0ad3729b60a36600e6e6c4c237987d5020655"
+}

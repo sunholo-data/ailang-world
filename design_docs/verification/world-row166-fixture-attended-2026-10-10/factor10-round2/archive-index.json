@@ -1,0 +1,185 @@
+{
+  "scope": "Immutable pre-revision factor10 records, mutations, repeats, normal gate and blocking round2; not proof for revised formula.",
+  "files": [
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-deadline-disabled-natural.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-deadline-disabled-natural.log",
+      "sha256": "029a8c7c098ac17f066f3fb100233d935ecc98e1a49c231da3deb6a536dd5693"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-start.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/normal-go-start.json",
+      "sha256": "0ea33c8612b9ee47a1fb406e82440a243b9d020e98908cc21109af2583383634"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations.py",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations.py",
+      "sha256": "678503357ebee19a9b62bd34aeedaf50a5dae87709c75e98a85dbae757587702"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/executor-progress.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/executor-progress.json",
+      "sha256": "085cc1a79eb5a92f1606e5b14b93c8267b8dba64cf40d1e00143a9e7ecab052c"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/before-sha256.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/before-sha256.json",
+      "sha256": "1ca55ba3f4dd3e2042aab613c05bc517dc7a35a6d1e1836899c698c08af2cc56"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations-run.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations-run.log",
+      "sha256": "cb76afe9957a89436e81b94221cc0b35e9f4f946bfc965b9adcc57df5431c19e"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations-progress.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations-progress.json",
+      "sha256": "1ec598fbbfb81955e2f55d79f4450d6989beda89aa2d3e3844f7dafbc1aa0ceb"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-snapshot.sha256.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-snapshot.sha256.json",
+      "sha256": "17a9962c1ead5828e02ca8b5103244153d63681755070c20f7628f55ce5ceec1"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stderr-discard.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stderr-discard.log",
+      "sha256": "fe193c08af8c1721023754f84c60150fa06149d4e29c83a70ccec69e2c24fede"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stderr-printf-removed.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stderr-printf-removed.log",
+      "sha256": "61411f36811db8914692112cea1017e2e0777a9784eaf961057b0197825ed5f5"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/verify-go-row166-repair.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/verify-go-row166-repair.log",
+      "sha256": "c82e1c80679edbfaa6ae877df2e0ad3729b60a36600e6e6c4c237987d5020655"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stdout-discard.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stdout-discard.log",
+      "sha256": "a89711d69156c5a2f7d40a799b6765f5d45924b0cde6f046d9b00e02aa48290d"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stderr-printf-removed.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stderr-printf-removed.log",
+      "sha256": "aba37aa8a7c9266cc1384c5ac16e42d7630948462a5109d7ccbe4af80595e0e0"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/deadline-retention-mutations.py",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/deadline-retention-mutations.py",
+      "sha256": "d26882145cf253073be23002b0eba6c752a8f9606ac4a998663403eba3e237e7"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/scope-and-baseline.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/scope-and-baseline.json",
+      "sha256": "d5864bd9b0edac7f2ec19eda7a870d678cd5fca5225ac9c14b326dfb0866a794"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-deadline-stdout-reset.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-deadline-stdout-reset.log",
+      "sha256": "a29fd113782f42fa673b75c64acca32b09e2e55cce68bf3aae9a96eed3a3228b"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stdout-printf-removed.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stdout-printf-removed.log",
+      "sha256": "f1d8c54de3514b55080540d36d3d5b3b3d1e230d6b76509f2a3b4a74d77eeb17"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-deadline-stderr-reset.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-deadline-stderr-reset.log",
+      "sha256": "4debdc77df963d3b7ca5261fad334600033dcba1c9e349e940bd77ee9924e8df"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/deadline-retention-mutations-run.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/deadline-retention-mutations-run.log",
+      "sha256": "f43187e3be7059dfec9e0619eafc3ebb2517ed8e392335a645c681c58deee9c2"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-deadline-stdout-reset.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-deadline-stdout-reset.log",
+      "sha256": "0b0086f939a36180dcd5bf09b3187208c5555f808fe1880b2f34965e80237042"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-deadline-disabled-natural.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-deadline-disabled-natural.log",
+      "sha256": "64db9ccd3107cd17ad592a99a02d12fc5131bb2547069a864498e3f631d65e46"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stdout-printf-removed.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stdout-printf-removed.log",
+      "sha256": "f719f6eb982abe96e45507dd97f81fd77051352016653f519e11ef116883370e"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-deadline-stderr-reset.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-deadline-stderr-reset.log",
+      "sha256": "d9495cfc80587af96a6e3a42299bbbd6065f101390ce9798e943db7951d35a6c"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/final-source-equality.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/final-source-equality.json",
+      "sha256": "3f1144723f531efae89919de3694a0e7505bb9940f5afae062e751f8a3052198"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/judge-round2-cold-guard-red.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/judge-round2-cold-guard-red.log",
+      "sha256": "e371e3a927415dc428df46871993b8455cf1bed3db8288a8478149c423243ec8"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/focused-count10.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/focused-count10.log",
+      "sha256": "a066627372850722c45c801f2284a01e2849e55428dc2dcb1a473cce914bf314"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/planner-progress.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/planner-progress.json",
+      "sha256": "4e0c0c58790d09ca80a77dc1143a63fcedd39635dd22e1e3cf333cc1fc12f52a"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/focused-first.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/focused-first.log",
+      "sha256": "0f65a39d618f66198dc7b7f5a8a195132d644be6b00d479cde61023ed2c26132"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-readiness-removed.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-readiness-removed.log",
+      "sha256": "427464519ff23ade25d742fc557bf387f5d955974f69bd9f7686a494f55ae798"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stdout-discard.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stdout-discard.log",
+      "sha256": "cdba71e890e6511673a7272806fcd3691a8f8dcf842455f7088577f2c84c68d8"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations.json",
+      "sha256": "f737fafcb9973ab173bbbc91a75a10bdae6f6dfb3f7d5d5703dc9ba93900b542"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-readiness-removed.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-readiness-removed.log",
+      "sha256": "d5e1a528f51d07e72c0172c7f11c8b527d8a4aac074295320a2497adcfc20d29"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stderr-discard.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stderr-discard.log",
+      "sha256": "8dfd0ffc01adba40a7284be0089af9d8303c9c1f666921ad9e302d473164c6b1"
+    },
+    {
+      "source": "design_docs/verification/world-row166-fixture-attended-2026-10-10/focused-race-count5.log",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/focused-race-count5.log",
+      "sha256": "6541360640fa1cbb7b5f667afb2f5f873e705087c9c72838a6763ed115f5b803"
+    },
+    {
+      "source": "design_docs/planned/w-head-tail-timeout-fixture-sprint-plan.md",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/w-head-tail-timeout-fixture-sprint-plan.md",
+      "sha256": "6c6c006ce42c5f1c490bf73b2ea453ed004d0f72be24793bfef9fc58f5bb458a"
+    },
+    {
+      "source": ".ailang/state/sprints/sprint_w-head-tail-timeout-fixture.json",
+      "archived": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/sprint_w-head-tail-timeout-fixture.json",
+      "sha256": "3586b75a0cbfd51bdbb00627a71975d6241092303601f98b19d4f999eb855cdc"
+    }
+  ]
+}

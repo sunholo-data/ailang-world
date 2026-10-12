@@ -1,0 +1,602 @@
+{
+  "product_commit": "84d3f5afd982b0b8f0ed1dc779bdee41e54a45a8",
+  "verdict": "round3 FAIL68; M1 unapproved; M2 NOT_RUN; boundedfollowup proposed pending humanreview",
+  "files": [
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/baseline-exec-timeout-count20.log",
+      "sha256": "147bc9c9986b26af923cf88e23c66a53b2c5b531d156d476689a44ba51a21863"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/baseline-exec-timeout-result.json",
+      "sha256": "38baf0ec3a67175991161ae25866dc5c76f26db7ee995f15eede576573b3a2a7"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/before-sha256.json",
+      "sha256": "1ca55ba3f4dd3e2042aab613c05bc517dc7a35a6d1e1836899c698c08af2cc56"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/current-progress.json",
+      "sha256": "dfc292b4bc8fb02ba2a5b805293de73a5cf67063f252f63ea01a647deb1aa835"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/deadline-retention-mutations-run.log",
+      "sha256": "f43187e3be7059dfec9e0619eafc3ebb2517ed8e392335a645c681c58deee9c2"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/deadline-retention-mutations.py",
+      "sha256": "d26882145cf253073be23002b0eba6c752a8f9606ac4a998663403eba3e237e7"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/executor-progress.json",
+      "sha256": "f991801e2cd4b4fc6cab308199083878b83ef8b2f9e8838a42df847591ca3d30"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/archive-index.json",
+      "sha256": "94c576ac5569e17c5ce9d43fd772e737a12e1ff3e79f06e6c8768a927bed1863"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/before-sha256.json",
+      "sha256": "1ca55ba3f4dd3e2042aab613c05bc517dc7a35a6d1e1836899c698c08af2cc56"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/deadline-retention-mutations-run.log",
+      "sha256": "f43187e3be7059dfec9e0619eafc3ebb2517ed8e392335a645c681c58deee9c2"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/deadline-retention-mutations.py",
+      "sha256": "d26882145cf253073be23002b0eba6c752a8f9606ac4a998663403eba3e237e7"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/executor-progress.json",
+      "sha256": "085cc1a79eb5a92f1606e5b14b93c8267b8dba64cf40d1e00143a9e7ecab052c"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/final-source-equality.json",
+      "sha256": "3f1144723f531efae89919de3694a0e7505bb9940f5afae062e751f8a3052198"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations-progress.json",
+      "sha256": "1ec598fbbfb81955e2f55d79f4450d6989beda89aa2d3e3844f7dafbc1aa0ceb"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations-run.log",
+      "sha256": "cb76afe9957a89436e81b94221cc0b35e9f4f946bfc965b9adcc57df5431c19e"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations.json",
+      "sha256": "f737fafcb9973ab173bbbc91a75a10bdae6f6dfb3f7d5d5703dc9ba93900b542"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-mutations.py",
+      "sha256": "678503357ebee19a9b62bd34aeedaf50a5dae87709c75e98a85dbae757587702"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/fixture-snapshot.sha256.json",
+      "sha256": "17a9962c1ead5828e02ca8b5103244153d63681755070c20f7628f55ce5ceec1"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/focused-count10.log",
+      "sha256": "a066627372850722c45c801f2284a01e2849e55428dc2dcb1a473cce914bf314"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/focused-first.log",
+      "sha256": "0f65a39d618f66198dc7b7f5a8a195132d644be6b00d479cde61023ed2c26132"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/focused-race-count5.log",
+      "sha256": "6541360640fa1cbb7b5f667afb2f5f873e705087c9c72838a6763ed115f5b803"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/judge-round2-cold-guard-red.log",
+      "sha256": "e371e3a927415dc428df46871993b8455cf1bed3db8288a8478149c423243ec8"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-deadline-disabled-natural.log",
+      "sha256": "029a8c7c098ac17f066f3fb100233d935ecc98e1a49c231da3deb6a536dd5693"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-deadline-stderr-reset.log",
+      "sha256": "4debdc77df963d3b7ca5261fad334600033dcba1c9e349e940bd77ee9924e8df"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-deadline-stdout-reset.log",
+      "sha256": "0b0086f939a36180dcd5bf09b3187208c5555f808fe1880b2f34965e80237042"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-readiness-removed.log",
+      "sha256": "d5e1a528f51d07e72c0172c7f11c8b527d8a4aac074295320a2497adcfc20d29"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stderr-discard.log",
+      "sha256": "fe193c08af8c1721023754f84c60150fa06149d4e29c83a70ccec69e2c24fede"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stderr-printf-removed.log",
+      "sha256": "61411f36811db8914692112cea1017e2e0777a9784eaf961057b0197825ed5f5"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stdout-discard.log",
+      "sha256": "a89711d69156c5a2f7d40a799b6765f5d45924b0cde6f046d9b00e02aa48290d"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/mutation-stdout-printf-removed.log",
+      "sha256": "f1d8c54de3514b55080540d36d3d5b3b3d1e230d6b76509f2a3b4a74d77eeb17"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/normal-go-result-round2.json",
+      "sha256": "f1fcb96431a49910c770a5e2dc0afdd7104fb29286581dc96abffef10890a836"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/normal-go-start.json",
+      "sha256": "0ea33c8612b9ee47a1fb406e82440a243b9d020e98908cc21109af2583383634"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/planner-progress.json",
+      "sha256": "4e0c0c58790d09ca80a77dc1143a63fcedd39635dd22e1e3cf333cc1fc12f52a"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-deadline-disabled-natural.log",
+      "sha256": "64db9ccd3107cd17ad592a99a02d12fc5131bb2547069a864498e3f631d65e46"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-deadline-stderr-reset.log",
+      "sha256": "d9495cfc80587af96a6e3a42299bbbd6065f101390ce9798e943db7951d35a6c"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-deadline-stdout-reset.log",
+      "sha256": "a29fd113782f42fa673b75c64acca32b09e2e55cce68bf3aae9a96eed3a3228b"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-readiness-removed.log",
+      "sha256": "427464519ff23ade25d742fc557bf387f5d955974f69bd9f7686a494f55ae798"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stderr-discard.log",
+      "sha256": "8dfd0ffc01adba40a7284be0089af9d8303c9c1f666921ad9e302d473164c6b1"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stderr-printf-removed.log",
+      "sha256": "aba37aa8a7c9266cc1384c5ac16e42d7630948462a5109d7ccbe4af80595e0e0"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stdout-discard.log",
+      "sha256": "cdba71e890e6511673a7272806fcd3691a8f8dcf842455f7088577f2c84c68d8"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/restored-stdout-printf-removed.log",
+      "sha256": "f719f6eb982abe96e45507dd97f81fd77051352016653f519e11ef116883370e"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/scope-and-baseline.json",
+      "sha256": "d5864bd9b0edac7f2ec19eda7a870d678cd5fca5225ac9c14b326dfb0866a794"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/sprint_w-head-tail-timeout-fixture.json",
+      "sha256": "3586b75a0cbfd51bdbb00627a71975d6241092303601f98b19d4f999eb855cdc"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/verify-go-row166-repair.log",
+      "sha256": "c82e1c80679edbfaa6ae877df2e0ad3729b60a36600e6e6c4c237987d5020655"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/factor10-round2/w-head-tail-timeout-fixture-sprint-plan.md",
+      "sha256": "6c6c006ce42c5f1c490bf73b2ea453ed004d0f72be24793bfef9fc58f5bb458a"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/final-source-equality.json",
+      "sha256": "3f1144723f531efae89919de3694a0e7505bb9940f5afae062e751f8a3052198"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations-progress.json",
+      "sha256": "ced9585b75189d5b9858381f51e0bd7fd54b059de3295bc2fe10aec32dcf7ebd"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations-run.log",
+      "sha256": "cb76afe9957a89436e81b94221cc0b35e9f4f946bfc965b9adcc57df5431c19e"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations.json",
+      "sha256": "cdde04a4252cf70b53e369364ffecce15155eab1a26c22f150ea1a7506653a29"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-mutations.py",
+      "sha256": "4134cb7db77788e6edd8ff922272df1b71edaf18f093aef82b634ff974ef20f6"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/fixture-snapshot.sha256.json",
+      "sha256": "1366d5b64a16217b75d797bd2b27a44c9d20a3fdc0f12523bdb6b2d4def24b65"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/focused-count10.log",
+      "sha256": "f9c3dae0d384e309b4d640d8b8268a4c16cfd904b0990c4587dc27f28166c288"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/focused-first.log",
+      "sha256": "0f65a39d618f66198dc7b7f5a8a195132d644be6b00d479cde61023ed2c26132"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/focused-race-count5.log",
+      "sha256": "f989627c32a7d6f052a6836947a44485dd51d9b67e73930fcd62fd77f295e927"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/judge-round2-cold-guard-red.log",
+      "sha256": "e371e3a927415dc428df46871993b8455cf1bed3db8288a8478149c423243ec8"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-deadline-disabled-natural.log",
+      "sha256": "6f995ed9076fb76d380b326112eeff77a4440cd2b5cf968f90acf774bdcd4013"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-deadline-stderr-reset.log",
+      "sha256": "7c41a4fa4bedea4d25161eb633ff25e6769d5420be00de45557f21707c0e1389"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-deadline-stdout-reset.log",
+      "sha256": "1690ee9b167e49e482b6b3b37e79ac52cd9107675e179e343c0420de61116de0"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-readiness-removed.log",
+      "sha256": "c1aaf06ec16fd703ea6735f98e41279219f5a756359c3da062842f3381e13b91"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stderr-discard.log",
+      "sha256": "d31f1e37293ff7ce8f6e40edab4403bec627e0caa00c59d1f9eb2096ee3360a1"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stderr-printf-removed.log",
+      "sha256": "4add99629b3fc82ca0991fd774e83776e9d92a76db29758625b2ac2cb4b9f89c"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stdout-discard.log",
+      "sha256": "6f4c75f8cd36069c45c42d2ff8f8de33b394b24ada2d6dff034e92018a19be60"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/mutation-stdout-printf-removed.log",
+      "sha256": "b5cbcf5687a22835fe2b7b55023b3d74c8b7bf42360ba38fccd4cc5959c08fb9"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-final-result.json",
+      "sha256": "6c5f7d2f2e86e4d5473cf966a3582088ae58e4a78c60dcdc6ec97817012515d4"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-final-start.json",
+      "sha256": "17aa9d945db973a474f0193041f03e0e96f17276a06945976ac2f0cd19b8162f"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-result-round2.json",
+      "sha256": "f1fcb96431a49910c770a5e2dc0afdd7104fb29286581dc96abffef10890a836"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/normal-go-start.json",
+      "sha256": "0ea33c8612b9ee47a1fb406e82440a243b9d020e98908cc21109af2583383634"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/planner-progress.json",
+      "sha256": "0d7b1b276b21bbc331f0299fb0ebdbf541f4d8817b8037e4fe2ccc65a8060013"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-deadline-disabled-natural.log",
+      "sha256": "0f7b39c1ff9019e37a562d6a4fb1534ed6306a48a64595be396846b5970dc688"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-deadline-stderr-reset.log",
+      "sha256": "5a52200992f3d222b2c851e5f8a3764ba19b6ea4bccd7e26ba5edcddcd7af08a"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-deadline-stdout-reset.log",
+      "sha256": "2c156ee0db71c7f0b2e1c94f3b6ae61eb380d481d5d534f858369dda40f9c126"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-readiness-removed.log",
+      "sha256": "8062d57dcb8af2124abbab5ba06bc5ad29d16ed09a976efac987182eacd3f94d"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stderr-discard.log",
+      "sha256": "4625991cb64a9ca33069145ad1e586bd3b44eeb36efb5109c14b26e44876973a"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stderr-printf-removed.log",
+      "sha256": "9bfec0347cc7ec05b5f20cf25fd87ad498b7ee986658616c51ca731bddae1e43"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stdout-discard.log",
+      "sha256": "0eb2d2c2c2d8222237fefc5f40c383f318c6da82213246f433181db13ca038d6"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/restored-stdout-printf-removed.log",
+      "sha256": "43c9f66412f012f1a1121fb3446008398ecd5bd4c102c8b206e782a40335dc7f"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/revision-before-sha256.json",
+      "sha256": "56d7433edf36fe6275a95d3a6540e6861a0f50a9a6b33106e9c6967fb7489147"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/revision-source-equality.json",
+      "sha256": "ae1acb638679f3bd50a28eac7984c79e396bcb1aa6ebf60673302d408719af82"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/scope-and-baseline.json",
+      "sha256": "d5864bd9b0edac7f2ec19eda7a870d678cd5fca5225ac9c14b326dfb0866a794"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/verify-go-row166-final.log",
+      "sha256": "ef4d069a420c6791c5eac72febd134b6614562cd84a24e8eb98a5024bb59ebbc"
+    },
+    {
+      "path": "design_docs/verification/world-row166-fixture-attended-2026-10-10/verify-go-row166-repair.log",
+      "sha256": "c82e1c80679edbfaa6ae877df2e0ad3729b60a36600e6e6c4c237987d5020655"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/CONTINUE.md",
+      "sha256": "22db8470260ef32a8bc205719ba80c0c9ced7bef480a8de94fa66debd0908b7f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/README.md",
+      "sha256": "b0b4bd07d2116f1ea261daffd80a94df8c619d1124d10d17076470930a1466db"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/TIMEOUT-FOLLOWUP.md",
+      "sha256": "9b027163da715b7d6c760bd27347f3f43c43c25c7997c771d4031d1460254ba0"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/attended-mint.sh",
+      "sha256": "bcf58690ed45add8b0a5cce1a62a69ecaed994c7607857e336f6d7121bd99eb9"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/attended-publish-candidate.sh",
+      "sha256": "9f1f381864677c12f1c0a20922317569bf16a68f5819f84aee703b994e417df9"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/baseline-partial-output-control.log",
+      "sha256": "91f8d158d57079fa48b2f9c93f9ef7c273b441c71418dae4204a6d43a43091c0"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/candidate-profile.json",
+      "sha256": "a97c77eb7c311909b2d37a34600b1154b24512eb3ca48a2963a74b179fafe6b6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/codex-driver-fix-deployed.json",
+      "sha256": "e2f23ef4958ba26ac704d2aac42de18a5974faa76bfdc57a99f8e13544de0716"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/current-progress.json",
+      "sha256": "5da74e2e14a7f9b9d2f3df76bd9fc098d32f6d6d857b0dbefd12ec500818b78a"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/daemon-probe.log",
+      "sha256": "889221800a680a6f473c8abccdc13b6d7afa0baa35f57ec537201061c756997b"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/daemon_probe_test.go.txt",
+      "sha256": "845acdbf731bd44e19802390ac638ffc94f3e7eae18ec53ba4b4f0a3129a8858"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/descriptor-green.log",
+      "sha256": "da8df9b4c7d8019b0387288ab376d2a16eb683d3e37d549dbe3a17825611f4ab"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/descriptor-mid-red.log",
+      "sha256": "60a8be8a621569ad7c1492cfc3d1352506746ba68cdfdb1e5f5d27a33bcb7d52"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/descriptor-mutations-run.log",
+      "sha256": "619afd18430902b9481ec5d957b5365d356ec3084ff94acb9a7ae4dd59154ec5"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/descriptor-mutations.json",
+      "sha256": "67ded1a1e25d9cbe023b894c060f0da99c8dbbb582d372640531706da907b0a7"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/descriptor-mutations.py",
+      "sha256": "d36d7def9bf093dd14117e35a4482dd5c70883c6581ec577e293c1b31554cb9f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/descriptor-red.log",
+      "sha256": "b91790ebea7d1e96ca7aac007072c67b9f88f3266b79d5297f74f381b6e1a77c"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/evaluation-round1.md",
+      "sha256": "f887b97597c4cdfd801525bf07f5e5ca0fcb17ac3f035ba88aea8cc1bd138673"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/evaluation-round2.md",
+      "sha256": "a9c22f18c599f6fed2a3b2c9a486f792801be0d9ca4be1f22481bea220a9d33d"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/evaluation-round3.md",
+      "sha256": "53e4bf1b6974e1d61161200bcb5007016a87a2803f7da5505445f5af2d35c096"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/executor-m1-report.json",
+      "sha256": "86c2861d9f914825872b24d75df1c8271ee9d4d9b8e436e7657a50af483d6c32"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/final-profile.json",
+      "sha256": "ba66d9e71327dd15ec24dece1059fde912f7392c0f8b2993dc54ccee32aa6ab6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/final-text-token-scan.json",
+      "sha256": "d2149af7a47d0bbd924c26c2d3bcdc023563de881cc8be66fc11c061e310b56e"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/live-descriptor-comparison.json",
+      "sha256": "a792c08de3e27123a979bf1b8bb5ec3afdacc1303cd19810de4b4a827b4fafec"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-additional-properties.log",
+      "sha256": "6e5c3b7cf78cc9ab3a0e38c9ba142e086a39da67496a7cacaf93efe8cd82e6eb"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-delete-read.log",
+      "sha256": "0fc4f1eb89743df0066df492f58f12a609f0432587fb9f46febb754a1e818ee9"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-disable-interpreter-verification.log",
+      "sha256": "aaf6b779ee431860b17ece5900f1922793083337855d8cb71d0f0985ea49c9de"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-disable-tool-verification.log",
+      "sha256": "6fc0b49e30bac03a7463335f4a581f9050a165fd55ffea686904a526416ce410"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-duplicate-read.log",
+      "sha256": "ba47ec9173783d5ff58d80ac97ee87a0107e8df89056b5817acc91b8ddc1f606"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-net-effect.log",
+      "sha256": "78593b38d9b390ed5a631cdc07858bc5c9519fc5b2df5c28c35d09950d962a73"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-old-descriptions.log",
+      "sha256": "4dad2b9d8da47cb9744bfc48bd9deec5f06b3dc08f1427392d463e8c8f5946c6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-projection-old-description.log",
+      "sha256": "e5e7fb9c6f4e2f74b134beb78771ddaeb49a3cda4d1f0f667c80b447aca4a8af"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-remove-output-world.log",
+      "sha256": "909d16e4f1b21f9d61f32736d724c1af0a818a2425997816e40d9aeda4d6df1f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-restored-controls.log",
+      "sha256": "77acbac1fac7af402fdcba7e068da29b95354e90f43e8be675bcd4cff9574950"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-source-byte.log",
+      "sha256": "19610bc177bffc6c212c820e510a853477c6bf80cebc6a3d245048269172a0f7"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-tenth-entry.log",
+      "sha256": "b3591b193b58ab4f1bb13a57d08997830b20d8a59a7456a261f90db42bfd2636"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-transition-file.log",
+      "sha256": "98bb9ee83cd3757ce7c05e20bb5d299b9713059ee8f16de5924800ca5ceff695"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-unknown-field.log",
+      "sha256": "7166a0d262e66fc303a1c72779caf716358ed7b311986a537dba4542f0a91292"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/mutation-workspace-description.log",
+      "sha256": "318ddc88e373b1abd1dceb0b24c29ae51faa65978e540fd68f2f4b4266aa3129"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/parent-live-descriptor.log",
+      "sha256": "98c1089ba3a04744cc59bc6daf2625adb06876b127dcb8f3cb59411d6730b0f0"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/profile_final.py",
+      "sha256": "95cc3df6756bb708fd48b4fda7342d2d551684c30efb21fa83f8c07c372e4b91"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/deadline-stdout-mutant.log",
+      "sha256": "bebe6071702f1677b07fc0c7b4a1982df795d5c54621b41ca9425324316c2396"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/descriptor-green.log",
+      "sha256": "5390a390e827ff837da4bd39f3eee205023a317289bff26b7125a6b92fb478a6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/descriptor-live.log",
+      "sha256": "c40650a9fc4a03628734455a47af438b5f48430c454d37b40e83ac9bc8a35d37"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/fixture-green.log",
+      "sha256": "e371e3a927415dc428df46871993b8455cf1bed3db8288a8478149c423243ec8"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/restored.log",
+      "sha256": "e2271692a088ec7737dc7b90b6b2269db0c2432cd24dc2628ebb3a79b4203b52"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/sha256.json",
+      "sha256": "cc1eac1b6733d9c00750f83920a8027116aab10694076643cdbc3b30771afa6f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round2-independent/standard-pristine.log",
+      "sha256": "0070540a345eebb084cb7292782b55a32615190d2b9b1a2165a3eb155b73a685"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/deadline-stdout-mutant.log",
+      "sha256": "9c9929684f41bd9c9a873123a4099ca37b2fd638cab2dc24c4eeef596d2b4016"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/descriptors.log",
+      "sha256": "d25ccc376188b4f8b10eb5c552088e715bf4cd1bce6c476ff738766928ee0ceb"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/equality.json",
+      "sha256": "25f709cb52aab0dd8e892c6cafaa5cc161ae03f3afa40d0aa8250cc36f6c50a7"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/full-normal-hashes.json",
+      "sha256": "a74dbd2f8f1d22e56931ce6ca1eb556fffe8751970209e866d96cb0e9e435f24"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/full-normal-result.json",
+      "sha256": "6c5f7d2f2e86e4d5473cf966a3582088ae58e4a78c60dcdc6ec97817012515d4"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/pristine.log",
+      "sha256": "c5251406058be2d871a681b2925bc13c11ffec27083177dc59ed357866b9783f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/restored.log",
+      "sha256": "e8fedc04d0d0ab68ca0d6ba13ebd19c65761b98709a7a9ffa8032e1b02a42c7f"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/round3-independent/sha256.json",
+      "sha256": "88d2ae34f65d0be60525cf91f182dfab623d824793ea73f6a0c54c3ca1695454"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/runtime-before.json",
+      "sha256": "573e6d4314fd05dcdc79f271e61fbccb288a58c592209ac721924c630de70124"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/runtime-candidate.json",
+      "sha256": "aca58b1959eeab9a5d581728ddb84169c461bed54809ed2da0620b57b70467e6"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/scoped-controls.log",
+      "sha256": "67ad8c9e6d3484ac76da5cffbfa45b29e56112cc7d7f8f6248e38b2ea7b11998"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/source-equality.json",
+      "sha256": "ce7335a1ae18a34cc116cce588c8053631ae11c843ffbb02546c4dc45a8c3e11"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/sprint-progress.json",
+      "sha256": "752b2e62a58c1aec10e7c8a12655bf0b80f29d4ae77d322e1427f94645554993"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/token-scan.log",
+      "sha256": "3af7260547d913881a35f6b1ccd7084a63a8f944274773ad22328e3204f8fae9"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/tools-list-exact-eight.sse",
+      "sha256": "95c65d9d09262d70b085842d4877542fb739722159493a59af6f036a2ecef9cc"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/tools-list-parent-exact-eight.sse",
+      "sha256": "51c1612235f1f0cf8de54d186ba748bf2d7d59465b4efe93f6766fed78ec887a"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/verify-ail-wrong-env.log",
+      "sha256": "40f40140d0037fe0b28980720b34bd687c60d79be6a53283099dd42d70dcc916"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/verify-ail.log",
+      "sha256": "c9a036dde81a82c0a4bb8133dc3eab6d49504b616603d70c16d0a5305ab24bad"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/verify-go-first-red.log",
+      "sha256": "99a470be35a2187b87bede10ed5ace7f060f4d928afdf6547f155a1063bb7d69"
+    },
+    {
+      "path": "design_docs/verification/world-row174-attended-2026-10-10/verify-go.log",
+      "sha256": "bc975d6f068904622ce58c3768d9f4d984e880ee381c213bb78699c2602c97e3"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "product_commit": "84d3f5afd982b0b8f0ed1dc779bdee41e54a45a8",
+  "completed": "2026-10-10T08:57:30.644004+00:00",
+  "returncode": 1,
+  "plain": "FAIL: TestExecHandlerTimeoutKillsTheGroup (800ms) TimedOut=true empty stdout; row166 repaired test passes",
+  "race": "NOT_REACHED",
+  "all_started_product_files_unchanged": true,
+  "log_sha256": "ef4d069a420c6791c5eac72febd134b6614562cd84a24e8eb98a5024bb59ebbc",
+  "judge_round3_required_result": "FAIL: normal gate red",
+  "failing_test_and_production_unmodified_from_parent": true,
+  "unique_cause_established": false
+}

@@ -1,0 +1,295 @@
+{
+  "codex": {
+    "shell": {
+      "completed_item_types": {
+        "agent_message": 142,
+        "command_execution": 223,
+        "file_change": 67
+      },
+      "completed_tools": {},
+      "duplicated_text_and_structured_results": 0,
+      "median_cached_input_tokens": 93184,
+      "median_input_tokens": 126334,
+      "median_output_tokens": 717,
+      "median_uncached_input_tokens": 34605,
+      "median_wall_ms_pooled_context_only": 28525,
+      "result_json_bytes": {},
+      "result_text_utf8_bytes": 0,
+      "rows": 69,
+      "structured_result_canonical_bytes": 0,
+      "turn_started_counts": {
+        "1": 69
+      }
+    },
+    "world": {
+      "completed_item_types": {
+        "agent_message": 138,
+        "mcp_tool_call": 245
+      },
+      "completed_tools": {
+        "ailang-check": 6,
+        "ailang-cli": 20,
+        "ailang-read": 69,
+        "ailang-run": 70,
+        "ailang-write": 76,
+        "builtins-search": 4
+      },
+      "duplicated_text_and_structured_results": 245,
+      "median_cached_input_tokens": 214784,
+      "median_input_tokens": 261841,
+      "median_output_tokens": 658,
+      "median_uncached_input_tokens": 47034,
+      "median_wall_ms_pooled_context_only": 35940,
+      "result_json_bytes": {
+        "ailang-check": {
+          "count": 6,
+          "max": 619,
+          "median": 619.0,
+          "total": 3714
+        },
+        "ailang-cli": {
+          "count": 20,
+          "max": 15324,
+          "median": 14564.0,
+          "total": 258366
+        },
+        "ailang-read": {
+          "count": 69,
+          "max": 1131,
+          "median": 1131,
+          "total": 78039
+        },
+        "ailang-run": {
+          "count": 70,
+          "max": 3385,
+          "median": 3105.0,
+          "total": 219751
+        },
+        "ailang-write": {
+          "count": 76,
+          "max": 865,
+          "median": 865.0,
+          "total": 65740
+        },
+        "builtins-search": {
+          "count": 4,
+          "max": 1877,
+          "median": 686.0,
+          "total": 3806
+        }
+      },
+      "result_text_utf8_bytes": 283896,
+      "rows": 69,
+      "structured_result_canonical_bytes": 283896,
+      "turn_started_counts": {
+        "1": 69
+      }
+    }
+  },
+  "descriptor_reconstruction": {
+    "canonical_list_bytes": 10301,
+    "description_utf8_bytes": 3794,
+    "input_schema_canonical_bytes": 2824,
+    "manifest_sha256": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97",
+    "output_schema_canonical_bytes": 3106,
+    "qualification": "Current manifest, canonical compact JSON; not a banked FINAL tools/list wire response.",
+    "tools": {
+      "ailang-check": 1203,
+      "ailang-cli": 1953,
+      "ailang-edit": 1029,
+      "ailang-read": 796,
+      "ailang-run": 2384,
+      "ailang-write": 883,
+      "builtins-search": 1208,
+      "examples-search": 836
+    }
+  },
+  "median_per_task_overhead": 0.26575980855217574,
+  "source": "design_docs/verification/world-floor-final-2026-10-09",
+  "tasks": [
+    {
+      "overhead": -0.26204515673823203,
+      "shell_median_completed_command_and_file_items": 7,
+      "shell_median_wall_ms": 39684,
+      "task": "api_call_json",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 29285
+    },
+    {
+      "overhead": 0.14866557094779687,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 25554,
+      "task": "ast_patch_roundtrip",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 29353
+    },
+    {
+      "overhead": 0.479440713825775,
+      "shell_median_completed_command_and_file_items": 5,
+      "shell_median_wall_ms": 21742,
+      "task": "cli_args",
+      "world_median_completed_mcp_calls": 5,
+      "world_median_wall_ms": 32166
+    },
+    {
+      "overhead": 0.06767151518056114,
+      "shell_median_completed_command_and_file_items": 6,
+      "shell_median_wall_ms": 41731,
+      "task": "config_file_parser",
+      "world_median_completed_mcp_calls": 5,
+      "world_median_wall_ms": 44555
+    },
+    {
+      "overhead": 0.16979824426305257,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 38958,
+      "task": "contract_bst_validate",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 45573
+    },
+    {
+      "overhead": 0.22303132938187975,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 29525,
+      "task": "contract_leap_year",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 36110
+    },
+    {
+      "overhead": -0.07584574798261945,
+      "shell_median_completed_command_and_file_items": 5,
+      "shell_median_wall_ms": 51552,
+      "task": "contract_roman_numeral",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 47642
+    },
+    {
+      "overhead": 0.13504145122620526,
+      "shell_median_completed_command_and_file_items": 5,
+      "shell_median_wall_ms": 34619,
+      "task": "csv_to_json_converter",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 39294
+    },
+    {
+      "overhead": 0.07547765118317273,
+      "shell_median_completed_command_and_file_items": 5,
+      "shell_median_wall_ms": 28525,
+      "task": "effect_composition",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 30678
+    },
+    {
+      "overhead": 0.3392251383681486,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 22404,
+      "task": "effect_tracking_io_fs",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 30004
+    },
+    {
+      "overhead": 0.27273845649142947,
+      "shell_median_completed_command_and_file_items": 3,
+      "shell_median_wall_ms": 24386,
+      "task": "error_handling",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 31037
+    },
+    {
+      "overhead": 0.4789468856068251,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 21802,
+      "task": "explicit_dataflow_ssa",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 32244
+    },
+    {
+      "overhead": 0.4350259350259351,
+      "shell_median_completed_command_and_file_items": 3,
+      "shell_median_wall_ms": 14652,
+      "task": "float_eq",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 21026
+    },
+    {
+      "overhead": 0.33230167038368763,
+      "shell_median_completed_command_and_file_items": 3,
+      "shell_median_wall_ms": 21971,
+      "task": "higher_order_functions",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 29272
+    },
+    {
+      "overhead": 0.3808407156505125,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 23028,
+      "task": "intent_annotated_solver",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 31798
+    },
+    {
+      "overhead": 0.26575980855217574,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 31758,
+      "task": "json_transform",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 40198
+    },
+    {
+      "overhead": 0.3455722733737556,
+      "shell_median_completed_command_and_file_items": 3,
+      "shell_median_wall_ms": 26718,
+      "task": "list_comprehension",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 35951
+    },
+    {
+      "overhead": 0.3691410099735877,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 25367,
+      "task": "merge_sort",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 34731
+    },
+    {
+      "overhead": 0.9351456719877773,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 18981,
+      "task": "pipeline",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 36731
+    },
+    {
+      "overhead": 0.14900321756725377,
+      "shell_median_completed_command_and_file_items": 5,
+      "shell_median_wall_ms": 30147,
+      "task": "prompt_injection",
+      "world_median_completed_mcp_calls": 4,
+      "world_median_wall_ms": 34639
+    },
+    {
+      "overhead": 0.3917798496628706,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 30997,
+      "task": "state_machine_elevator",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 43141
+    },
+    {
+      "overhead": 0.1706582838266244,
+      "shell_median_completed_command_and_file_items": 3,
+      "shell_median_wall_ms": 37537,
+      "task": "state_machine_vending",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 43943
+    },
+    {
+      "overhead": 0.12828134196586216,
+      "shell_median_completed_command_and_file_items": 4,
+      "shell_median_wall_ms": 33980,
+      "task": "tree_transformation_pipeline",
+      "world_median_completed_mcp_calls": 3,
+      "world_median_wall_ms": 38339
+    }
+  ]
+}

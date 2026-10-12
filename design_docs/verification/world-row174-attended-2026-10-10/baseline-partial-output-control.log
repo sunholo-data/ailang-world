@@ -1,0 +1,50 @@
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+--- PASS: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:122: partial stdout = ""
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (0.30s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	6.365s
+FAIL

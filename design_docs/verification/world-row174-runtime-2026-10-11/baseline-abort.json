@@ -1,0 +1,41 @@
+{
+  "benchmark_task_runs": 0,
+  "candidate_publication": "UNRUN; only after completed fresh baseline",
+  "candidate_runs": 0,
+  "codex_tokens": 0,
+  "completed_cells": 0,
+  "efficacy": "M2 pending; no performance inference",
+  "human_baseline_publish_mint": "completed by user 2026-10-11; verified live exact-eight tool sets for both sessions",
+  "implementation": "M1 accepted PASS86; unchanged",
+  "iteration": 6,
+  "next_unused_iteration": 7,
+  "rate_limit_info": {
+    "isUsingOverage": false,
+    "overageDisabledReason": "org_level_disabled",
+    "overageStatus": "rejected",
+    "rateLimitType": "seven_day",
+    "resetsAt": 1791781200,
+    "status": "rejected",
+    "unifiedWindows": {
+      "five_hour": {
+        "resetsAt": 1791761400,
+        "utilization": 0
+      },
+      "seven_day": {
+        "resetsAt": 1791781200,
+        "utilization": 1
+      }
+    }
+  },
+  "recorded_at_utc": "2026-10-11T18:35:16.150861+00:00",
+  "repeat_runs": 0,
+  "reset_copenhagen": "2026-10-12T07:00:00+02:00",
+  "runner_exit_code": 4,
+  "scratch_daemon": "runner stopped it in finally; absence independently checked",
+  "session_expires_copenhagen": {
+    "fl-tune-cc": "2026-10-12T08:30:01+02:00",
+    "fl-tune-cx": "2026-10-12T08:30:08+02:00"
+  },
+  "spend_usd_claude": 0,
+  "status": "ABORTED_RATE_LIMIT"
+}

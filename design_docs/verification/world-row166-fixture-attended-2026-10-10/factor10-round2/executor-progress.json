@@ -1,0 +1,145 @@
+{
+  "status": "Scoped M1 implementation and M2 mutation/plain/race proofs complete; full normal Go gate/fresh review pending with controller",
+  "test": "TestRunBoundedHeadTailTimeoutKeepsPartialOutput",
+  "fixture_sha256": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73",
+  "production_handlers_sha256": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+  "implementation_scope": "Only existing handlers_capture_test.go test body/imports changed; 127 added/10 removed lines. No production bounds, .ail, schemas, authority, benchmark or shared harness changed.",
+  "plain_count10": {
+    "discovered": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "three_controls_each": 30,
+    "ready_real_kill_each": 10,
+    "outstanding_at_baseline_each": 10,
+    "calibrations": [
+      {
+        "C": "96.97275ms",
+        "B": "2.97s",
+        "H": "11s",
+        "R": "29.890214583s",
+        "grace": "1s"
+      },
+      {
+        "C": "132.7225ms",
+        "B": "3.328s",
+        "H": "12s",
+        "R": "29.857187125s",
+        "grace": "1s"
+      },
+      {
+        "C": "153.994625ms",
+        "B": "3.54s",
+        "H": "13s",
+        "R": "29.832739542s",
+        "grace": "1s"
+      },
+      {
+        "C": "154.183375ms",
+        "B": "3.542s",
+        "H": "13s",
+        "R": "29.820194375s",
+        "grace": "1s"
+      },
+      {
+        "C": "115.73825ms",
+        "B": "3.158s",
+        "H": "12s",
+        "R": "29.875611792s",
+        "grace": "1s"
+      },
+      {
+        "C": "151.456125ms",
+        "B": "3.515s",
+        "H": "13s",
+        "R": "29.820645125s",
+        "grace": "1s"
+      },
+      {
+        "C": "141.472209ms",
+        "B": "3.415s",
+        "H": "13s",
+        "R": "29.845760208s",
+        "grace": "1s"
+      },
+      {
+        "C": "157.063208ms",
+        "B": "3.571s",
+        "H": "13s",
+        "R": "29.819236541s",
+        "grace": "1s"
+      },
+      {
+        "C": "113.860542ms",
+        "B": "3.139s",
+        "H": "12s",
+        "R": "29.877256583s",
+        "grace": "1s"
+      },
+      {
+        "C": "116.344208ms",
+        "B": "3.164s",
+        "H": "12s",
+        "R": "29.875067333s",
+        "grace": "1s"
+      }
+    ]
+  },
+  "mutation_summary": {
+    "total": 8,
+    "all_expected_red": true,
+    "all_byte_exact_restores": true,
+    "all_fresh_restored_green": true,
+    "planned_six": "Unconditional capture/printf/readiness losses fail positive control before deadline branch; openly recorded in fixture-mutations.json.",
+    "added_two": "Each deadline-only capture reset passes all three controls, observes readiness before successful real kill and then fails that exact retained-stream assertion.",
+    "natural_deadline_disabled": "Two disclosed production-line mutations in isolated copy only; C90.732ms/B2.908s/H11s; actual elapsed11.015870959s, err=nil, zero kills, real reap Outstanding0/baseline0; exact two11-byte snapshots and hashes retained; required timeout-B assertion fails."
+  },
+  "notes": "Measured calibration provides a finite fixture allowance; no unique root cause or row174 efficacy claimed. Full gate and fresh evaluator owned by root. Original baseline RED immutable and referenced in scope-and-baseline.json.",
+  "race_count5": {
+    "discovered": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "data_races": 0,
+    "three_controls_each": 15,
+    "ready_real_kill_each": 5,
+    "outstanding_at_baseline_each": 5,
+    "calibrations": [
+      {
+        "C": "220.063458ms",
+        "B": "4.201s",
+        "H": "15s",
+        "R": "29.764744291s",
+        "grace": "1s"
+      },
+      {
+        "C": "132.945708ms",
+        "B": "3.33s",
+        "H": "12s",
+        "R": "29.854582584s",
+        "grace": "1s"
+      },
+      {
+        "C": "145.296625ms",
+        "B": "3.453s",
+        "H": "13s",
+        "R": "29.834538166s",
+        "grace": "1s"
+      },
+      {
+        "C": "127.7545ms",
+        "B": "3.278s",
+        "H": "12s",
+        "R": "29.86174525s",
+        "grace": "1s"
+      },
+      {
+        "C": "144.267667ms",
+        "B": "3.443s",
+        "H": "13s",
+        "R": "29.842646959s",
+        "grace": "1s"
+      }
+    ]
+  }
+}

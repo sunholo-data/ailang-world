@@ -1,0 +1,190 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:96: canonical eight-tool bytes=10301; description UTF-8 bytes=3794
+--- PASS: TestSeToolsDescriptorCompaction (0.00s)
+=== RUN   TestSeToolsDescriptorSourceEquality
+    setools_descriptor_test.go:140: compared 9 transition sources to parent raw-byte SHA-256
+--- PASS: TestSeToolsDescriptorSourceEquality (0.00s)
+=== RUN   TestSeToolsExecDescriptor
+--- PASS: TestSeToolsExecDescriptor (0.00s)
+=== RUN   TestSeToolsExecPlans
+=== RUN   TestSeToolsExecPlans/command_only
+=== RUN   TestSeToolsExecPlans/command_and_args
+=== RUN   TestSeToolsExecPlans/empty_args_kept
+=== RUN   TestSeToolsExecPlans/16_args
+=== RUN   TestSeToolsExecPlans/512-byte_item
+=== RUN   TestSeToolsExecPlans/512_bytes_of_2-byte_characters
+=== RUN   TestSeToolsExecPlans/32-char_id
+=== RUN   TestSeToolsExecPlans/args_verbatim_(the_grammar_is_the_handler's)
+=== RUN   TestSeToolsExecPlans/uppercase_id
+=== RUN   TestSeToolsExecPlans/flag_as_id
+=== RUN   TestSeToolsExecPlans/executable_path_as_id
+=== RUN   TestSeToolsExecPlans/33-char_id
+=== RUN   TestSeToolsExecPlans/non-ASCII_id
+=== RUN   TestSeToolsExecPlans/17_args
+=== RUN   TestSeToolsExecPlans/513-byte_item
+=== RUN   TestSeToolsExecPlans/514_bytes_of_2-byte_characters
+=== RUN   TestSeToolsExecPlans/empty_item
+=== RUN   TestSeToolsExecPlans/NUL_in_an_item
+=== RUN   TestSeToolsExecPlans/args_as_a_string
+=== RUN   TestSeToolsExecPlans/non-string_item
+=== RUN   TestSeToolsExecPlans/unknown_key
+=== RUN   TestSeToolsExecPlans/non-object_arguments
+--- PASS: TestSeToolsExecPlans (3.47s)
+    --- PASS: TestSeToolsExecPlans/command_only (0.22s)
+    --- PASS: TestSeToolsExecPlans/command_and_args (0.08s)
+    --- PASS: TestSeToolsExecPlans/empty_args_kept (0.08s)
+    --- PASS: TestSeToolsExecPlans/16_args (0.08s)
+    --- PASS: TestSeToolsExecPlans/512-byte_item (0.08s)
+    --- PASS: TestSeToolsExecPlans/512_bytes_of_2-byte_characters (0.08s)
+    --- PASS: TestSeToolsExecPlans/32-char_id (0.08s)
+    --- PASS: TestSeToolsExecPlans/args_verbatim_(the_grammar_is_the_handler's) (0.08s)
+    --- PASS: TestSeToolsExecPlans/uppercase_id (0.08s)
+    --- PASS: TestSeToolsExecPlans/flag_as_id (0.08s)
+    --- PASS: TestSeToolsExecPlans/executable_path_as_id (0.08s)
+    --- PASS: TestSeToolsExecPlans/33-char_id (0.08s)
+    --- PASS: TestSeToolsExecPlans/non-ASCII_id (0.08s)
+    --- PASS: TestSeToolsExecPlans/17_args (0.09s)
+    --- PASS: TestSeToolsExecPlans/513-byte_item (0.08s)
+    --- PASS: TestSeToolsExecPlans/514_bytes_of_2-byte_characters (0.08s)
+    --- PASS: TestSeToolsExecPlans/empty_item (0.08s)
+    --- PASS: TestSeToolsExecPlans/NUL_in_an_item (0.08s)
+    --- PASS: TestSeToolsExecPlans/args_as_a_string (0.08s)
+    --- PASS: TestSeToolsExecPlans/non-string_item (0.08s)
+    --- PASS: TestSeToolsExecPlans/unknown_key (0.08s)
+    --- PASS: TestSeToolsExecPlans/non-object_arguments (0.08s)
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/ailang-read
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/ailang-write
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/ailang-edit
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/ailang-check
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/ailang-run
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/builtins-search
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/examples-search
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/ailang-cli
+=== RUN   TestSeToolsPlansAdmittedByPlanLaw/workspace-exec
+--- PASS: TestSeToolsPlansAdmittedByPlanLaw (3.78s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/ailang-read (0.27s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/ailang-write (0.27s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/ailang-edit (0.27s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/ailang-check (0.29s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/ailang-run (0.33s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/builtins-search (0.31s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/examples-search (0.28s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/ailang-cli (0.29s)
+    --- PASS: TestSeToolsPlansAdmittedByPlanLaw/workspace-exec (0.30s)
+=== RUN   TestSeToolsPathPredicateRefusesBeforeAnyEffect
+--- PASS: TestSeToolsPathPredicateRefusesBeforeAnyEffect (3.11s)
+=== RUN   TestSeToolsCLIRefusesFmtWriteBeforeAnyEffect
+--- PASS: TestSeToolsCLIRefusesFmtWriteBeforeAnyEffect (1.39s)
+=== RUN   TestSeToolsFinishPhases
+=== RUN   TestSeToolsFinishPhases/ailang-check
+=== RUN   TestSeToolsFinishPhases/builtins-search
+    setools_package_test.go:391: builtins finish over a 17289-byte inventory: 252.0115ms
+=== RUN   TestSeToolsFinishPhases/builtins-search_refuses_a_truncated_inventory
+    setools_package_test.go:413: builtins finish over a 75994-byte inventory: 78.680791ms
+--- PASS: TestSeToolsFinishPhases (1.84s)
+    --- PASS: TestSeToolsFinishPhases/ailang-check (0.24s)
+    --- PASS: TestSeToolsFinishPhases/builtins-search (0.27s)
+    --- PASS: TestSeToolsFinishPhases/builtins-search_refuses_a_truncated_inventory (0.09s)
+=== RUN   TestSeToolsSharedCoreIsByteIdentical
+--- PASS: TestSeToolsSharedCoreIsByteIdentical (0.00s)
+=== RUN   TestSeToolsRunPlansStdinArgvCaps
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/no_new_args
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/args_json_only
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/stdin
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/stdin_at_the_bound
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/argv
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/Env_->_RunEnv
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/Net_->_RunNet
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/Declassify_stays_Run
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/argv_verbatim
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/32_argv_items
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/Env+Net_refused
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/unknown_cap
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/duplicate_cap
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/caps_as_a_string
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/33_argv_items
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/1025-byte_argv_item
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/NUL_in_argv
+=== RUN   TestSeToolsRunPlansStdinArgvCaps/65537-byte_stdin
+--- PASS: TestSeToolsRunPlansStdinArgvCaps (2.46s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/no_new_args (0.24s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/args_json_only (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/stdin (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/stdin_at_the_bound (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/argv (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/Env_->_RunEnv (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/Net_->_RunNet (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/Declassify_stays_Run (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/argv_verbatim (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/32_argv_items (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/Env+Net_refused (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/unknown_cap (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/duplicate_cap (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/caps_as_a_string (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/33_argv_items (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/1025-byte_argv_item (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/NUL_in_argv (0.08s)
+    --- PASS: TestSeToolsRunPlansStdinArgvCaps/65537-byte_stdin (0.08s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	16.809s
+=== RUN   TestSeToolsDescriptorLiveExactEight
+    setools_descriptor_test.go:68: live tools/list: exactly eight descriptors; wire bytes=10368
+    setools_descriptor_test.go:69: each description and complete input/output schema equals published manifest
+--- PASS: TestSeToolsDescriptorLiveExactEight (5.18s)
+=== RUN   TestSeToolsE2EBinaryVersions
+--- PASS: TestSeToolsE2EBinaryVersions (0.06s)
+=== RUN   TestSeToolsMCPEndToEnd
+    setools_e2e_test.go:541: TIMING tools/call ailang-check                      245 ms
+    setools_e2e_test.go:541: TIMING tools/call ailang-cli                        153 ms
+    setools_e2e_test.go:541: TIMING tools/call ailang-edit                       137 ms
+    setools_e2e_test.go:541: TIMING tools/call ailang-read                       168 ms
+    setools_e2e_test.go:541: TIMING tools/call ailang-read (L-ARGS refusal)       86 ms
+    setools_e2e_test.go:541: TIMING tools/call ailang-run                        175 ms
+    setools_e2e_test.go:541: TIMING tools/call ailang-write                      136 ms
+    setools_e2e_test.go:541: TIMING tools/call builtins-search                   256 ms
+    setools_e2e_test.go:541: TIMING tools/call examples-search                   163 ms
+--- PASS: TestSeToolsMCPEndToEnd (4.91s)
+=== RUN   TestSeToolsExamplesSearchWithoutCorpusRefuses
+--- PASS: TestSeToolsExamplesSearchWithoutCorpusRefuses (5.03s)
+=== RUN   TestSeToolsWorkspaceExecWithoutProfileRefuses
+--- PASS: TestSeToolsWorkspaceExecWithoutProfileRefuses (3.48s)
+=== RUN   TestSeToolsQuickstartPayloadsVerbatim
+--- PASS: TestSeToolsQuickstartPayloadsVerbatim (3.45s)
+=== RUN   TestSeToolsMCPVisibilityFollowsGrants
+--- PASS: TestSeToolsMCPVisibilityFollowsGrants (3.99s)
+=== RUN   TestSeToolsA2AEndToEnd
+--- PASS: TestSeToolsA2AEndToEnd (3.73s)
+=== RUN   TestSeToolsA2APostEffectFailureIsMapped
+--- PASS: TestSeToolsA2APostEffectFailureIsMapped (3.45s)
+=== RUN   TestSeToolsMCPPostEffectFailureIsLogged
+--- PASS: TestSeToolsMCPPostEffectFailureIsLogged (3.55s)
+=== RUN   TestSeToolsSurfaceTaggedInLog
+--- PASS: TestSeToolsSurfaceTaggedInLog (3.62s)
+=== RUN   TestSeToolsModuleRootResolvesBareImports
+--- PASS: TestSeToolsModuleRootResolvesBareImports (2.24s)
+=== RUN   TestSeToolsPackageCacheResolvesRegistryImports
+    testlog_test.go:56: ailang-worldd: workspace package cache /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestSeToolsPackageCacheResolvesRegistryImports2271929120/002/pkgcache: 1 packages, read-only, sha256:c6975a2e95ed91b646f9dcaef5978538af59ec5990c977997761a49f51ec71d9
+--- PASS: TestSeToolsPackageCacheResolvesRegistryImports (2.43s)
+=== RUN   TestSeToolsRunBenchmarkTasksEndToEnd
+    setools_run_e2e_test.go:187: pipeline: stdout "2\n4\n6\n8\n10\n" (219 ms)
+    setools_run_e2e_test.go:187: cli_args: stdout "15\n" (286 ms)
+    setools_run_e2e_test.go:187: api_call_json: stdout "200\n" (203 ms)
+    setools_run_e2e_test.go:187: prompt_injection: stdout "1\n" (187 ms)
+--- PASS: TestSeToolsRunBenchmarkTasksEndToEnd (5.49s)
+=== RUN   TestSeToolsRunEnvGrantAndBudget
+--- PASS: TestSeToolsRunEnvGrantAndBudget (5.15s)
+=== RUN   TestSeToolsRunReplayIsByteEqual
+--- PASS: TestSeToolsRunReplayIsByteEqual (4.70s)
+=== RUN   TestWorkspaceToolBinaryIsArchivedAndVerified
+--- PASS: TestWorkspaceToolBinaryIsArchivedAndVerified (0.91s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	62.006s
+=== RUN   TestMCPListExactSetPerSession
+--- PASS: TestMCPListExactSetPerSession (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.887s
+=== RUN   TestF1PinnedInterpreterHashMismatchRefusedBeforeExec
+--- PASS: TestF1PinnedInterpreterHashMismatchRefusedBeforeExec (2.48s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/capsule	3.564s

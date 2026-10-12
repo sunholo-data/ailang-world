@@ -1,0 +1,12 @@
+{
+  "parent": "84d3f5afd982b0b8f0ed1dc779bdee41e54a45a8",
+  "all_tracked_ail_sources_equal": true,
+  "all_production_go_sources_equal": true,
+  "counts": {
+    "ail": 28,
+    "production_go": 118
+  },
+  "se_tools_manifest_equal": true,
+  "fixture_sha256": "f8a8ca343ad040554bf592d7a31d2d129e6ce48adfd1d8f8d79e673b88f7b236",
+  "fixture_changes": "Two existing lines only: calibrated B formula and corresponding overflow bound. Assertions/context/hold/readiness/cleanup unchanged."
+}

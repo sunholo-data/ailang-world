@@ -1,0 +1,10 @@
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=2.353960541s
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=4.666375ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=4.4415ms
+    handlers_capture_test.go:206: calibration C=2.353960541s B=25.54s H=1m19s R=27.636286083s grace=1s
+    handlers_capture_test.go:209: finite fixture guard: B+H+grace must fit remaining caller deadline (C=2.353960541s B=25.54s H=1m19s R=27.636286083s)
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (2.36s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	6.172s
+FAIL

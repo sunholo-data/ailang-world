@@ -1,0 +1,12 @@
+=== RUN   TestRunBoundedHeadTailTimeoutKeepsPartialOutput
+    handlers_capture_test.go:186: no-sleep control 1 elapsed=91.918292ms
+    handlers_capture_test.go:186: no-sleep control 2 elapsed=5.838333ms
+    handlers_capture_test.go:186: no-sleep control 3 elapsed=4.69475ms
+    handlers_capture_test.go:206: calibration C=91.918292ms B=2.092s H=9s R=29.896556709s grace=1s
+    handlers_capture_test.go:229: deadline arm elapsed=2.09561275s err=broker: handler subprocess timed out after 2.092s kills=[{pgid:85729 ready:true err:<nil>}] Outstanding=0 baseline=0
+    handlers_capture_test.go:230: deadline snapshots stdout={Text: Bytes:0 Truncated:false SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855} stderr={Text:PARTIAL-ERR Bytes:11 Truncated:false SHA256:2b31e399b838748199db2b3b38deb54a3429129b89f0aad25a9ed8585b4206f4}
+    handlers_capture_test.go:243: exact partial stdout Text/Bytes/SHA/untruncated: {Text: Bytes:0 Truncated:false SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855}
+--- FAIL: TestRunBoundedHeadTailTimeoutKeepsPartialOutput (2.20s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	2.542s
+FAIL

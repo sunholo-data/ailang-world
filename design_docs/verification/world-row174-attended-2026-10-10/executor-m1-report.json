@@ -1,0 +1,41 @@
+{
+  "status": "M1 metadata candidate implemented; full Go gate/fresh evaluation owned by controller; M2 pending",
+  "parent": "5ca111547fdd80480a8d42578fb59942ee8a0b63",
+  "manifest_sha256": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97",
+  "exact_wire_sha256": "95c65d9d09262d70b085842d4877542fb739722159493a59af6f036a2ecef9cc",
+  "canonical_descriptor_bytes": 10301,
+  "description_utf8_bytes": 3794,
+  "live_sse_bytes": 10368,
+  "changed_top_level_descriptions": [
+    "ailang-read",
+    "ailang-write",
+    "ailang-edit",
+    "ailang-check",
+    "ailang-run",
+    "builtins-search",
+    "examples-search",
+    "ailang-cli"
+  ],
+  "non_description_fields_equal": true,
+  "all_tracked_ail_sources_equal": true,
+  "scoped_top_level_passes": 29,
+  "scoped_subtest_passes": 52,
+  "scoped_skips": 0,
+  "semantic_review": {
+    "run": "Exact default IO/FS, extra operator enablement, Env/Net exclusion and separate grants, loopback Net restriction, stdin/argv, args_json, timeout, denied non-execution, FS budget-zero behavior, decision.missing_from_policy action and inner-refusal exit-zero warning retained.",
+    "edit": "Exact-once replacement and context guidance retained.",
+    "check": "Structured diagnostics, field shape and line/column-in-message retained.",
+    "builtins": "Real inventory filters, max ten query matches, degraded fields, usage followup and invalid/truncated inventory refusal retained.",
+    "cli": "Complete operation allowlist, argument selection, admitted flags, fmt-write refusal and save-via-write retained.",
+    "shared": "Path/policy confinement, unknown-key refusal, effect costs, committed World entries and plan/effect provenance retained; property prose unchanged."
+  },
+  "usage_docs": "Existing QUICKSTART contains operator startup/cap/session/net, builtin degraded shape and verbatim payload examples; no missing use guidance requiring doc changes found.",
+  "scope_limits": "No efficacy claim; row174 and clause4 remain unmet. No provider inference, messages, commits, schema/authority/transport/AIl/model/harness/grader changes by executor.",
+  "mutation_controls": {
+    "intended_failures": 14,
+    "isolated_copy": "/private/tmp/ailang-world-row174-mutations-20261010",
+    "byte_exact_restore": true,
+    "restored_controls": "PASS",
+    "manifest": "descriptor-mutations.json"
+  }
+}

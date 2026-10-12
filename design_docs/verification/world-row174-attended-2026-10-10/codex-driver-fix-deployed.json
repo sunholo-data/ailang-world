@@ -1,0 +1,8 @@
+{
+  "driver_calls_forwarder_at_line": 2301,
+  "driver_sources_helper_at_line": 886,
+  "forwarding_helper_matches_current_core": true,
+  "helper_sha256": "ac6c86c99a9a65af083105f2cdbe316fa63c7d9eb898f202ed61fdf9e0d63d81",
+  "scope": "read-only actual World driver pin; no scheduler/shared-driver changes",
+  "world_running_driver_pin": "939beb6fd1deef15296fc55f455e9e68e049659b"
+}

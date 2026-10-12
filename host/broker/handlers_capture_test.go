@@ -11,9 +11,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/procbound"
 )
 
 // repeatStream is what `yes 0123456789abcdef | head -c n` writes.
@@ -111,17 +117,128 @@ func TestRunBoundedHeadTailHardCapKillsTheGroup(t *testing.T) {
 
 // On the deadline the partial head/tail stays readable.
 func TestRunBoundedHeadTailTimeoutKeepsPartialOutput(t *testing.T) {
-	script := writeExecutable(t, "printf 'PARTIAL-OUT'; printf 'PARTIAL-ERR' >&2; sleep 30")
-	capture := newCaptureHeadTail(execHeadBytes, execTailBytes, 64<<20)
-	_, err := runBounded(boundedTestContext(t), handlerBounds{execTimeout: 300 * time.Millisecond},
-		handlerCommand{path: script, dir: t.TempDir(), env: []string{"PATH=/usr/bin:/bin"}, capture: capture})
-	if !errors.Is(err, ErrHandlerTimeout) {
-		t.Fatalf("err = %v, want ErrHandlerTimeout", err)
+	ctx := boundedTestContext(t)
+	deadline, ok := ctx.Deadline()
+	if !ok || time.Until(deadline) <= 0 {
+		t.Fatal("finite caller deadline missing/expired")
 	}
-	if s := capture.stdout.snapshot(); s.Text != "PARTIAL-OUT" {
-		t.Fatalf("partial stdout = %q", s.Text)
+	dir := t.TempDir()
+	ready := filepath.Join(dir, "ready")
+	script := writeExecutable(t, `printf 'PARTIAL-OUT'; printf 'PARTIAL-ERR' >&2
+: > "$READY"
+if [ "$HOLD" -gt 0 ]; then sleep "$HOLD"; fi`)
+	assertStreams := func(c *captureHeadTail) {
+		t.Helper()
+		for name, want := range map[string]string{"stdout": "PARTIAL-OUT", "stderr": "PARTIAL-ERR"} {
+			sink := c.stdout
+			if name == "stderr" {
+				sink = c.stderr
+			}
+			if s := sink.snapshot(); s.Text != want || s.Bytes != int64(len(want)) || s.Truncated || s.SHA256 != sha256Hex([]byte(want)) {
+				t.Fatalf("exact partial %s Text/Bytes/SHA/untruncated: %+v", name, s)
+			}
+		}
 	}
-	if s := capture.stderr.snapshot(); s.Text != "PARTIAL-ERR" {
-		t.Fatalf("partial stderr = %q", s.Text)
+	originalKill := killGroup
+	var mu sync.Mutex
+	type observation struct {
+		pgid  int
+		ready bool
+		err   error
 	}
+	var kills []observation
+	// Wait owns the reservation until the actual cmd.Wait reap/pipe-copy join.
+	// On any failure keep the seam installed until that reservation is released.
+	reap := func(base int64) bool {
+		t.Helper()
+		if procbound.Outstanding() != base {
+			mu.Lock()
+			for _, k := range kills {
+				_ = originalKill(k.pgid)
+			}
+			mu.Unlock()
+			for procbound.Outstanding() != base && time.Until(deadline) > 0 {
+				time.Sleep(time.Millisecond)
+			}
+		}
+		if got := procbound.Outstanding(); got != base {
+			t.Errorf("incomplete actual reap: Outstanding=%d want %d", got, base)
+			return false
+		}
+		return true
+	}
+	run := func(bound, hold time.Duration) (*captureHeadTail, error, time.Duration) {
+		t.Helper()
+		if err := os.Remove(ready); err != nil && !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		base := procbound.Outstanding()
+		defer reap(base)
+		capture := newCaptureHeadTail(execHeadBytes, execTailBytes, 64<<20)
+		start := time.Now()
+		_, err := runBounded(ctx, handlerBounds{execTimeout: bound}, handlerCommand{path: script, dir: dir,
+			env: []string{"PATH=/usr/bin:/bin", "READY=" + ready, fmt.Sprintf("HOLD=%d", hold/time.Second)}, capture: capture})
+		return capture, err, time.Since(start)
+	}
+	var C time.Duration
+	for i := 0; i < 3; i++ {
+		capture, err, elapsed := run(20*time.Second, 0)
+		t.Logf("no-sleep control %d elapsed=%s", i+1, elapsed)
+		if err != nil {
+			t.Fatalf("no-sleep control %d: %v", i+1, err)
+		}
+		assertStreams(capture)
+		if _, err := os.Stat(ready); err != nil {
+			t.Fatalf("control readiness after both printf: %v", err)
+		}
+		C = max(C, elapsed)
+	}
+	const maxDuration = time.Duration(1<<63 - 1)
+	if C <= 0 || C > maxDuration-2*pipeCloseGrace-time.Millisecond {
+		t.Fatalf("invalid/overflow calibration C=%s", C)
+	}
+	B := ((C + 2*pipeCloseGrace + time.Millisecond - 1) / time.Millisecond) * time.Millisecond
+	if B <= 0 || B > (maxDuration-2*pipeCloseGrace-time.Second)/3 {
+		t.Fatalf("invalid/overflow timeout B=%s", B)
+	}
+	H := ((3*B + 2*pipeCloseGrace + time.Second - 1) / time.Second) * time.Second
+	R := time.Until(deadline)
+	t.Logf("calibration C=%s B=%s H=%s R=%s grace=%s", C, B, H, R, pipeCloseGrace)
+	// Subtractions avoid overflow when checking the full startup/hold/reap allowance.
+	if H < 3*B+2*pipeCloseGrace || B >= R || H >= R-B || pipeCloseGrace >= R-B-H {
+		t.Fatalf("finite fixture guard: B+H+grace must fit remaining caller deadline (C=%s B=%s H=%s R=%s)", C, B, H, R)
+	}
+	base := procbound.Outstanding()
+	t.Cleanup(func() {
+		if reap(base) {
+			killGroup = originalKill
+		}
+	})
+	killGroup = func(pgid int) error {
+		mu.Lock()
+		defer mu.Unlock()
+		_, statErr := os.Stat(ready) // Observe before delegating the real process-group kill.
+		err := originalKill(pgid)
+		kills = append(kills, observation{pgid, statErr == nil, err})
+		return err
+	}
+	capture, err, elapsed := run(B, H)
+	mu.Lock()
+	observed := append([]observation(nil), kills...)
+	mu.Unlock()
+	t.Logf("deadline arm elapsed=%s err=%v kills=%+v Outstanding=%d baseline=%d", elapsed, err, observed, procbound.Outstanding(), base)
+	t.Logf("deadline snapshots stdout=%+v stderr=%+v", capture.stdout.snapshot(), capture.stderr.snapshot())
+	var timeout *HandlerTimeoutError
+	if !errors.Is(err, ErrHandlerTimeout) || !errors.As(err, &timeout) || timeout.Timeout != B {
+		t.Fatalf("exact timeout B=%s required: err=%v real-kills=%d", B, err, len(observed))
+	}
+	if len(observed) == 0 {
+		t.Fatal("real deadline group kill missing")
+	}
+	for _, k := range observed {
+		if !k.ready {
+			t.Fatalf("readiness before real deadline kill missing: %+v", k)
+		}
+	}
+	assertStreams(capture)
 }

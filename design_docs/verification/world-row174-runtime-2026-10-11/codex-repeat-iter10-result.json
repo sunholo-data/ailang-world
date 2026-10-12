@@ -1,0 +1,168 @@
+{
+  "abort": null,
+  "all_tasks_pass_and_provenance_valid": true,
+  "canary": [
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 17242
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 14213
+    }
+  ],
+  "candidate_publication": "User typed 2026-10-11; local revision2",
+  "codex_diagnostic_target_met": true,
+  "codex_tokens": 3893078,
+  "config_digest_smoke": "679f7e20716163d0a4d043a0f91a1e474c040d20359b04bc0d4acb0b9ec74217",
+  "full_M2_acceptance": false,
+  "iteration": 10,
+  "label": "repeat",
+  "model": "gpt-6-luna",
+  "product_commit": "1861723f20f0eae2e4c3eaa1c1c728507b7c4799",
+  "recorded_at_utc": "2026-10-11T19:14:15.708199+00:00",
+  "row153": {
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    }
+  },
+  "rows_reused_from": {},
+  "runner_exit_code": 0,
+  "scope": "operator-requested Codex-only diagnostic; Claude and full four-cell M2 acceptance pending",
+  "status": "complete",
+  "summary": {
+    "O": 0.1059,
+    "T": 6,
+    "capacity_reruns": 0,
+    "delta": 0.0,
+    "harness_faults": {
+      "shell": 0,
+      "world": 0
+    },
+    "o_t": {
+      "api_call_json": -0.041,
+      "cli_args": -0.244,
+      "effect_tracking_io_fs": 0.253,
+      "higher_order_functions": 0.29,
+      "pipeline": -0.145,
+      "prompt_injection": 0.577
+    },
+    "pass_S": 6,
+    "pass_W": 6,
+    "unclassified": 0
+  },
+  "task_outcomes": {
+    "shell": [
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "api_call_json",
+        "wall_ms": 25522
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "cli_args",
+        "wall_ms": 34202
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "effect_tracking_io_fs",
+        "wall_ms": 15418
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "higher_order_functions",
+        "wall_ms": 12552
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "pipeline",
+        "wall_ms": 13419
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "prompt_injection",
+        "wall_ms": 10446
+      }
+    ],
+    "world": [
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "api_call_json",
+        "wall_ms": 24475
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "cli_args",
+        "wall_ms": 25866
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "effect_tracking_io_fs",
+        "wall_ms": 19317
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "higher_order_functions",
+        "wall_ms": 16198
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "pipeline",
+        "wall_ms": 11470
+      },
+      {
+        "attempt": 1,
+        "attestation": [],
+        "class": "PASS",
+        "error_category": "none",
+        "task": "prompt_injection",
+        "wall_ms": 16478
+      }
+    ]
+  },
+  "wall_s": 260.9
+}

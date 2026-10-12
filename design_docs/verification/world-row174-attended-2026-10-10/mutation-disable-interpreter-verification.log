@@ -1,0 +1,6 @@
+=== RUN   TestF1PinnedInterpreterHashMismatchRefusedBeforeExec
+    capsule_test.go:112: error = <nil> <nil>, want *HashMismatchError
+--- FAIL: TestF1PinnedInterpreterHashMismatchRefusedBeforeExec (2.17s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/capsule	3.923s
+FAIL

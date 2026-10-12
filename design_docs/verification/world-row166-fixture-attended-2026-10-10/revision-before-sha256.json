@@ -1,0 +1,6 @@
+{
+  "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73",
+  "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+  "host/procbound/procbound.go": "5164a148f12d0f1cf6c741efacbef4277018b225b4b0cfe8f510dc9489cdc7d4",
+  "packages/se-tools/transitions.json": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97"
+}

@@ -1,0 +1,59 @@
+{
+  "ail_equal_count": 28,
+  "entry_differences": [
+    [
+      "ailang-read",
+      [
+        "description"
+      ]
+    ],
+    [
+      "ailang-write",
+      [
+        "description"
+      ]
+    ],
+    [
+      "ailang-edit",
+      [
+        "description"
+      ]
+    ],
+    [
+      "ailang-check",
+      [
+        "description"
+      ]
+    ],
+    [
+      "ailang-run",
+      [
+        "description"
+      ]
+    ],
+    [
+      "builtins-search",
+      [
+        "description"
+      ]
+    ],
+    [
+      "examples-search",
+      [
+        "description"
+      ]
+    ],
+    [
+      "ailang-cli",
+      [
+        "description"
+      ]
+    ],
+    [
+      "workspace-exec",
+      []
+    ]
+  ],
+  "fixture_sha": "240840ca9a0f8f4c60ac159dd78fce26a6c681200e8a10c64fe0e08c0a228868",
+  "head": "84d3f5afd982b0b8f0ed1dc779bdee41e54a45a8"
+}

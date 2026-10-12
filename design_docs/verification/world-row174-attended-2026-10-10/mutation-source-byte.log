@@ -1,0 +1,7 @@
+=== RUN   TestSeToolsDescriptorSourceEquality
+    setools_descriptor_test.go:137: parent transition source-byte equivalence: packages/se-tools/se_tools/read.ail got 14c4742aa04f55f34764fbc41e6957482aa1a53d6fcb530788d972547e564319 want 076bd38e834b90d34bcacc3f64f5a863e2dbec04e0aa20d58bb630e874474672
+    setools_descriptor_test.go:140: compared 9 transition sources to parent raw-byte SHA-256
+--- FAIL: TestSeToolsDescriptorSourceEquality (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	3.553s
+FAIL

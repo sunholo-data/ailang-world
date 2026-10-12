@@ -1,0 +1,7 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:96: canonical eight-tool bytes=10301; description UTF-8 bytes=3794
+    setools_descriptor_test.go:113: complete non-description equivalence: ailang-read
+--- FAIL: TestSeToolsDescriptorCompaction (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	5.111s
+FAIL

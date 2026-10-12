@@ -1,0 +1,37 @@
+=== RUN   TestSeToolsDescriptorCompaction
+    setools_descriptor_test.go:96: canonical eight-tool bytes=10301; description UTF-8 bytes=3794
+--- PASS: TestSeToolsDescriptorCompaction (0.00s)
+=== RUN   TestSeToolsDescriptorSourceEquality
+    setools_descriptor_test.go:140: compared 9 transition sources to parent raw-byte SHA-256
+--- PASS: TestSeToolsDescriptorSourceEquality (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	1.945s
+=== RUN   TestSeToolsDescriptorLiveExactEight
+--- FAIL: TestSeToolsDescriptorLiveExactEight (8.24s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 50 [running]:
+testing.tRunner.func1.2({0x103df19a0, 0x21aaad0fcf0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x103df19a0?, 0x21aaad0fcf0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x103eefc40, 0x21aaaf0c300})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/host/daemon.newSeRigWith(0x21aaacf6488, 0x21aaabb7ad8)
+	/private/tmp/ailang-world-row174-evaluator-20261010/host/daemon/setools_e2e_test.go:151 +0x348
+github.com/sunholo-data/ailang-world/host/daemon.newSeRig(0x21aaacf6488)
+	/private/tmp/ailang-world-row174-evaluator-20261010/host/daemon/setools_e2e_test.go:126 +0x3c
+github.com/sunholo-data/ailang-world/host/daemon.TestSeToolsDescriptorLiveExactEight(0x21aaacf6488)
+	/private/tmp/ailang-world-row174-evaluator-20261010/host/daemon/setools_descriptor_test.go:16 +0x28
+testing.tRunner(0x21aaacf6488, 0x103ee6760)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	10.285s
+FAIL

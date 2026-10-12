@@ -1,0 +1,8 @@
+ABORT: claude/shell/fizzbuzz: rate_limit: rate_limit_event status ['rejected']
+{
+ "summary": {},
+ "row153": {},
+ "spend": 0.0,
+ "wall_s": 1.7,
+ "status": "aborted"
+}

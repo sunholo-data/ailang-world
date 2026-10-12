@@ -1,0 +1,92 @@
+[
+  {
+    "mutant": "stdout-discard",
+    "red_assertion": "exact partial stdout Text/Bytes/SHA/untruncated",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": false,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  },
+  {
+    "mutant": "stderr-discard",
+    "red_assertion": "exact partial stderr Text/Bytes/SHA/untruncated",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": false,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  },
+  {
+    "mutant": "stdout-printf-removed",
+    "red_assertion": "exact partial stdout Text/Bytes/SHA/untruncated",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": false,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  },
+  {
+    "mutant": "stderr-printf-removed",
+    "red_assertion": "exact partial stderr Text/Bytes/SHA/untruncated",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": false,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  },
+  {
+    "mutant": "readiness-removed",
+    "red_assertion": "control readiness after both printf",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": false,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  },
+  {
+    "mutant": "deadline-disabled-natural",
+    "red_assertion": "exact timeout B=",
+    "returncode": 1,
+    "natural_exit_reap_before_parent_guard": true,
+    "compound_mutation": "WithTimeout -> WithCancel; runHeadTail cleanupDeadline -> required caller deadline minus existing pipeCloseGrace (two changed production lines only)",
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  },
+  {
+    "mutant": "deadline-stdout-reset",
+    "red_assertion": "exact partial stdout Text/Bytes/SHA/untruncated",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": true,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS",
+    "three_positive_controls_and_ready_real_deadline_kill": true
+  },
+  {
+    "mutant": "deadline-stderr-reset",
+    "red_assertion": "exact partial stderr Text/Bytes/SHA/untruncated",
+    "returncode": 1,
+    "exercised_deadline_arm_reached": true,
+    "byte_exact_restored_sha256": {
+      "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+      "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73"
+    },
+    "restored_control": "PASS"
+  }
+]

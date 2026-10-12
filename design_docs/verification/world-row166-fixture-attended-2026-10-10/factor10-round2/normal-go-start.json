@@ -1,0 +1,15 @@
+{
+  "phase": "normal-go-repair-gate-start",
+  "product_commit": "38c61e479c84e8b1a57c39f6766f4086ea0122c9",
+  "started": "2026-10-10T08:41:01.913319+00:00",
+  "sha256": {
+    "host/broker/handlers_capture_test.go": "8d41e1de3034309c64a178556c4e3ea96818f0cab03d8e04c8ed65c5a518ae73",
+    "host/broker/handlers.go": "e4659a6d23b74a7334b255cbb7ad05ea465994f7fe77e6339c1fdc1ce279096c",
+    "packages/se-tools/transitions.json": "d171b69548ba99bade5d74b34e9b7e0ce676829fc62a7f54587ce054bd138c97",
+    "host/coordinator/setools_descriptor_test.go": "36ec9e8c09e37951cbc783870180202e1daaf098ddfdeb08ad8b2249ffbe5466",
+    "host/daemon/setools_descriptor_test.go": "26e7a1a858d3a60ba940e90b89d2c88061e2af262e2d6ee47d3e272cb5babe85"
+  },
+  "tracked_diff": [
+    "design_docs/verification/world-row174-attended-2026-10-10/README.md"
+  ]
+}
