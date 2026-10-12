@@ -509,6 +509,11 @@ func requireDeadlineRefusal(t *testing.T, ref hashref.HashRef, err error) {
 // derived from the decoy's measured hold, so the stimulus holds for more than
 // 20x the bound on any machine. The decoy holds the connection and claims nothing
 // about SQLite lock contention.
+// controlBound is the generous bound for no-decoy control arms. A control that
+// shares the derived bound's ~10 ms scale measures scheduler load under the full
+// parallel suite, not the producer.
+const controlBound = 30 * time.Second
+
 func TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout(t *testing.T) {
 	// The stimulus needs at least two Ps, and that is a measurement rather than
 	// a precaution: this driver's SQLite is pure Go, so at GOMAXPROCS=1 the decoy
@@ -544,14 +549,17 @@ func TestRealStoreBlockedSourceReadReturnsWithinObjectReadTimeout(t *testing.T) 
 	t.Logf("decoy hold=%v -> derived ObjectReadTimeout=%v settle=%v watchdog=%v", hold, bound, settle, watchdog)
 
 	// No-decoy control first: the same producer mints when nothing pins the connection.
+	// The control proves only that the producer and the real store mint end to end
+	// with no decoy. It makes no claim about the derived bound, so it gets a generous
+	// read bound: a deadline here would measure load, not the stimulus.
 	ctrlP, err := evidence.NewProducer(testKey, decoyReader{s: s}, &countingWriter{s: s}, pinned, evidence.ProducerConfig{
-		ObjectReadTimeout: bound, ObjectWriteTimeout: 3*time.Second + 2*hold, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
+		ObjectReadTimeout: controlBound, ObjectWriteTimeout: 3*time.Second + 2*hold, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ref, err := ctrlP.GenerateProof(context.Background(), srcRef, required); err != nil || ref.IsZero() {
-		t.Fatalf("instrument failure: the no-decoy control must mint at the derived bound: ref=%s err=%v", ref, err)
+		t.Fatalf("the no-decoy control must mint end to end with no decoy: ref=%s err=%v", ref, err)
 	}
 
 	d := decoyStimulus{t: t, s: s, decoy: decoyRef, settle: settle}
@@ -626,14 +634,16 @@ func TestRealStoreBlockedEnvelopeWriteReturnsWithinObjectWriteTimeout(t *testing
 
 	// No-decoy control first: the same producer mints when nothing pins the connection.
 	controlSrc := putSource(t, s, base)
+	// Generous write bound for the control: it proves only that the producer and the
+	// real store mint end to end with no decoy, not anything about the derived bound.
 	ctrlP, err := evidence.NewProducer(testKey, s, decoyWriter{s: s}, pinned, evidence.ProducerConfig{
-		ObjectReadTimeout: readTimeout, ObjectWriteTimeout: bound, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
+		ObjectReadTimeout: readTimeout, ObjectWriteTimeout: controlBound, ExecTimeout: 2 * time.Minute, MaxOutputBytes: 1 << 20,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ref, err := ctrlP.GenerateProof(context.Background(), controlSrc, required); err != nil || ref.IsZero() {
-		t.Fatalf("instrument failure: the no-decoy control must mint at the derived bound: ref=%s err=%v", ref, err)
+		t.Fatalf("the no-decoy control must mint end to end with no decoy: ref=%s err=%v", ref, err)
 	}
 
 	d := decoyStimulus{t: t, s: s, decoy: decoyRef, settle: settle}

@@ -243,6 +243,10 @@ func (p *Producer) runBounded(ctx context.Context, dir string, env []string, lim
 		return nil, withRunFailures(fmt.Errorf("%w: %s exceeded %d bytes", ErrOutputLimit, stream, limit), killFailure, runErr)
 	case errors.Is(execCtx.Err(), context.DeadlineExceeded):
 		return nil, withRunFailures(fmt.Errorf("%w after %s", ErrExecTimeout, p.cfg.ExecTimeout), nil, runErr)
+	case execCtx.Err() != nil:
+		// The caller cancelled: the group was killed, and the run did not finish.
+		// Never a clean result; the caller's cancellation stays reachable.
+		return nil, withRunFailures(fmt.Errorf("evidence: checker run cancelled: %w", execCtx.Err()), nil, runErr)
 	case stdoutErr != nil || stderrErr != nil:
 		return nil, fmt.Errorf("evidence: read checker output: %w", errors.Join(stdoutErr, stderrErr))
 	}

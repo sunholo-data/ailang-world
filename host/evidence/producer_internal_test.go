@@ -173,6 +173,58 @@ func TestProducerExecTimeoutKillsTheWholeProcessGroup(t *testing.T) {
 	}
 }
 
+// TestProducerCallerCancelIsAnError: a run the caller cancels is never a clean
+// result. The group is killed, and the error keeps context.Canceled reachable.
+func TestProducerCallerCancelIsAnError(t *testing.T) {
+	rec := swapKillGroup(t)
+	p, dir := scriptedProducer(t, `sleep 30 & echo $! > "$PIDDIR/grandchild.pid"; echo $$ > "$PIDDIR/child.pid"; wait`, time.Minute, 1024)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		_, err := p.runBounded(ctx, dir, runEnv(dir), 1024)
+		done <- err
+	}()
+	// Cancel only once the group is live, so the cancel lands on a running checker.
+	started := time.Now()
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "child.pid")); err == nil {
+			break
+		}
+		if time.Since(started) > 20*time.Second {
+			t.Fatalf("the scripted checker never wrote its pid files; the cancel would test nothing")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	var err error
+	select {
+	case err = <-done:
+	case <-time.After(30 * time.Second):
+		t.Fatalf("runBounded did not return within 30s of the caller's cancel")
+	}
+	grandchild := proctest.ReadPid(t, filepath.Join(dir, "grandchild.pid"))
+	child := proctest.ReadPid(t, filepath.Join(dir, "child.pid"))
+	proctest.ReapOnCleanup(t, grandchild)
+	proctest.ReapOnCleanup(t, child)
+
+	if err == nil {
+		t.Fatalf("a caller-cancelled run must not return a clean result; got nil error")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("a caller cancel must stay reachable as context.Canceled: got %v", err)
+	}
+	if errors.Is(err, ErrVacuousCheck) || errors.Is(err, ErrExecTimeout) {
+		t.Fatalf("a caller cancel must not be classified as vacuous or as a timeout: %v", err)
+	}
+	if pgids, _ := rec.snapshot(); len(pgids) != 1 || pgids[0] != child {
+		t.Fatalf("the cancel must kill exactly the child's group %d; killGroup saw %v", child, pgids)
+	}
+	if !proctest.DeadWithin(t, grandchild, 2*time.Second) {
+		t.Fatalf("grandchild %d survived the cancel's group kill", grandchild)
+	}
+}
+
 func TestProducerAdmissionRefusesBacklog(t *testing.T) {
 	p, dir := scriptedProducer(t, `touch "$PIDDIR/ran"`, 10*time.Second, 1024)
 	before := procbound.Outstanding()
