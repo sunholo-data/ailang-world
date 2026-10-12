@@ -1,10 +1,12 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"html"
 	"net/http"
 	"os"
@@ -376,4 +378,195 @@ func TestWorkbenchGradeProvenFromSubjectBoundEnvelope(t *testing.T) {
 	if c := strings.Count(body, wantGradeUnavailable(gradeReasonBoundElsewhere)); c != 1 {
 		t.Fatalf("envelope page: bound-elsewhere line count %d, want 1", c)
 	}
+}
+
+// wantGradePremise checks the validator's own verdict on ref, so a page
+// assertion is never made without the reason it depends on.
+func wantGradePremise(t *testing.T, d *Daemon, ref, subject hashref.HashRef, want evidence.UnsupportedReason) {
+	t.Helper()
+	res := d.grader.ValidateProof(boundedTestContext(t), ref, subject)
+	got, ok := res.Unsupported()
+	if !ok || got != want {
+		t.Fatalf("premise: ValidateProof(%s) reason = %q (unsupported %v, err %v), want %q", ref, got, ok, res.Err(), want)
+	}
+}
+
+// wantGradePage requires the subject page to show exactly one grade line with
+// the given sentence (escaped as the template renders it).
+func wantGradePage(t *testing.T, d *Daemon, ref hashref.HashRef, sentence string) {
+	t.Helper()
+	code, body := gradePage(t, d, ref)
+	if code != http.StatusOK {
+		t.Fatalf("object page %s: status %d, want 200", ref, code)
+	}
+	if c := strings.Count(body, wantGradeUnavailable(sentence)); c != 1 {
+		t.Fatalf("object page %s: line %q count %d, want 1", ref, sentence, c)
+	}
+}
+
+// storeRawProofCandidate stores a proof-labelled object with an arbitrary
+// interface and payload, for the structural-candidate reasons.
+func storeRawProofCandidate(t *testing.T, d *Daemon, iface hashref.HashRef, payload []byte) hashref.HashRef {
+	t.Helper()
+	obj := store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: iface,
+		SemanticID: evidence.ProofSemanticID, Provenance: "bounded-ai-check-producer", Payload: payload}
+	if err := d.store.PutObject(boundedTestContext(t), obj); err != nil {
+		t.Fatalf("PutObject candidate: %v", err)
+	}
+	return obj.Hash
+}
+
+func TestWorkbenchGradeReasonNoStoredEvidence(t *testing.T) {
+	d, _ := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-no-evidence-subject")
+	if rows, err := d.store.ObjectsBySemanticID(boundedTestContext(t), evidence.ProofSemanticID, "", 1); err != nil || len(rows) != 0 {
+		t.Fatalf("premise: stored proof rows = %d (err %v), want 0", len(rows), err)
+	}
+	wantGradePage(t, d, subject, gradeReasonNoStoredEvidence)
+}
+
+func TestWorkbenchGradeReasonBoundToOtherSubjects(t *testing.T) {
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-bound-subject")
+	other := hashref.SumSHA256([]byte("grade-other-subject"))
+	envRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, gradeReport(rig, other)))
+	wantGradePremise(t, d, envRef, subject, evidence.UnsupportedSubjectMismatch)
+	wantGradePage(t, d, subject, gradeReasonBoundElsewhere)
+	_, body := gradePage(t, d, subject)
+	if strings.Contains(body, html.EscapeString(gradeScanTruncation)) {
+		t.Fatalf("a 1-candidate scan carried the truncation qualifier")
+	}
+}
+
+func TestWorkbenchGradeReasonUnauthenticatedEnvelope(t *testing.T) {
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-unauth-subject")
+	foreign := [32]byte{9, 9, 9}
+	envRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, foreign, gradeReport(rig, subject)))
+	wantGradePremise(t, d, envRef, subject, evidence.UnsupportedUnauthenticatedReport)
+	wantGradePage(t, d, subject, gradeReasonUnauthenticated)
+	_, body := gradePage(t, d, subject)
+	if strings.Contains(body, html.EscapeString(gradeReasonBoundElsewhere)) {
+		t.Fatalf("an unauthenticated envelope was reported as bound elsewhere")
+	}
+}
+
+func TestWorkbenchGradeReasonToolMismatch(t *testing.T) {
+	t.Run("compiler", func(t *testing.T) {
+		d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-tool-compiler")
+		report := gradeReport(rig, subject)
+		report.Compiler = hashref.SumSHA256([]byte("another compiler"))
+		envRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, report))
+		wantGradePremise(t, d, envRef, subject, evidence.UnsupportedToolMismatch)
+		wantGradePage(t, d, subject, gradeReasonToolMismatch)
+	})
+	t.Run("trimspace-version", func(t *testing.T) {
+		d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-tool-trimspace")
+		report := gradeReport(rig, subject)
+		report.CompilerVersion = releaseFromVersion(rig.rawVersion)
+		envRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, report))
+		wantGradePremise(t, d, envRef, subject, evidence.UnsupportedToolMismatch)
+		wantGradePage(t, d, subject, gradeReasonToolMismatch)
+	})
+	t.Run("mismatch-sorted-first", func(t *testing.T) {
+		d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-tool-sorted")
+		report := gradeReport(rig, subject)
+		report.Compiler = hashref.SumSHA256([]byte("another compiler"))
+		toolRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, report))
+		var foreignRef hashref.HashRef
+		found := false
+		for i := 0; i < 64 && !found; i++ {
+			foreignSubject := hashref.SumSHA256([]byte(fmt.Sprintf("grade-foreign-%d", i)))
+			env := mintGradeEnvelope(t, rig.key, gradeReport(rig, foreignSubject))
+			if hashref.SumSHA256(env).String() < toolRef.String() {
+				foreignRef = storeGradeEnvelope(t, d, env)
+				found = true
+			}
+		}
+		if !found {
+			t.Fatal("no foreign envelope sorts before the tool-mismatch candidate")
+		}
+		rows, err := d.store.ObjectsBySemanticID(boundedTestContext(t), evidence.ProofSemanticID, "", 10)
+		if err != nil || len(rows) < 2 || rows[0].Hash != foreignRef {
+			t.Fatalf("premise: the foreign envelope must scan first (err %v, rows %d)", err, len(rows))
+		}
+		wantGradePremise(t, d, foreignRef, subject, evidence.UnsupportedSubjectMismatch)
+		wantGradePremise(t, d, toolRef, subject, evidence.UnsupportedToolMismatch)
+		wantGradePage(t, d, subject, gradeReasonToolMismatch)
+	})
+}
+
+func TestWorkbenchGradeReasonProofFailed(t *testing.T) {
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-proof-failed")
+	report := gradeReport(rig, subject)
+	report.CheckPassed = false
+	envRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, report))
+	wantGradePremise(t, d, envRef, subject, evidence.UnsupportedProofFailed)
+	wantGradePage(t, d, subject, gradeReasonProofFailed)
+}
+
+func TestWorkbenchGradeReasonProofIncomplete(t *testing.T) {
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-proof-incomplete")
+	report := gradeReport(rig, subject)
+	report.Verified = []string{"world/other.ail"}
+	envRef := storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, report))
+	wantGradePremise(t, d, envRef, subject, evidence.UnsupportedProofIncomplete)
+	wantGradePage(t, d, subject, gradeReasonProofIncomplete)
+}
+
+func TestWorkbenchGradeReasonStructuralCandidate(t *testing.T) {
+	t.Run("wrong-interface", func(t *testing.T) {
+		d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-structural-iface")
+		env := mintGradeEnvelope(t, rig.key, gradeReport(rig, subject))
+		ref := storeRawProofCandidate(t, d, hashref.SumSHA256([]byte("not the envelope interface")), env)
+		wantGradePremise(t, d, ref, subject, evidence.UnsupportedWrongInterface)
+		wantGradePage(t, d, subject, gradeReasonStructuralCandidate)
+	})
+	t.Run("malformed", func(t *testing.T) {
+		d, _ := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-structural-malformed")
+		ref := storeRawProofCandidate(t, d, evidence.InterfaceHashV1, []byte("not an envelope"))
+		wantGradePremise(t, d, ref, subject, evidence.UnsupportedMalformed)
+		wantGradePage(t, d, subject, gradeReasonStructuralCandidate)
+	})
+	t.Run("oversize", func(t *testing.T) {
+		d, _ := newGradeDaemon(t, []string{gradeTestIdentity})
+		subject := storeGradeSubject(t, d, "grade-structural-oversize")
+		ref := storeRawProofCandidate(t, d, evidence.InterfaceHashV1, bytes.Repeat([]byte("x"), evidence.MaxBytes+1))
+		wantGradePremise(t, d, ref, subject, evidence.UnsupportedOversize)
+		wantGradePage(t, d, subject, gradeReasonStructuralCandidate)
+	})
+}
+
+// TestWorkbenchGradeReasonScanTruncationIsDisclosed pins the exactly-100
+// boundary: 100 candidates are a full scan with no qualifier, and the 101st
+// row makes the scan bounded and says so.
+func TestWorkbenchGradeReasonScanTruncationIsDisclosed(t *testing.T) {
+	d, rig := newGradeDaemon(t, []string{gradeTestIdentity})
+	subject := storeGradeSubject(t, d, "grade-trunc-subject")
+	for i := 0; i < gradeCandidateScanLimit; i++ {
+		other := hashref.SumSHA256([]byte(fmt.Sprintf("grade-trunc-%03d", i)))
+		storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, gradeReport(rig, other)))
+	}
+	if rows, err := d.store.ObjectsBySemanticID(boundedTestContext(t), evidence.ProofSemanticID, "", gradeCandidateScanLimit+1); err != nil || len(rows) != gradeCandidateScanLimit {
+		t.Fatalf("premise: stored rows = %d (err %v), want %d", len(rows), err, gradeCandidateScanLimit)
+	}
+	wantGradePage(t, d, subject, gradeReasonBoundElsewhere)
+	_, body := gradePage(t, d, subject)
+	if strings.Contains(body, html.EscapeString(gradeScanTruncation)) {
+		t.Fatalf("a 100-candidate scan carried the truncation qualifier")
+	}
+
+	other := hashref.SumSHA256([]byte(fmt.Sprintf("grade-trunc-%03d", gradeCandidateScanLimit)))
+	storeGradeEnvelope(t, d, mintGradeEnvelope(t, rig.key, gradeReport(rig, other)))
+	if rows, err := d.store.ObjectsBySemanticID(boundedTestContext(t), evidence.ProofSemanticID, "", gradeCandidateScanLimit+1); err != nil || len(rows) != gradeCandidateScanLimit+1 {
+		t.Fatalf("premise: stored rows = %d (err %v), want %d", len(rows), err, gradeCandidateScanLimit+1)
+	}
+	wantGradePage(t, d, subject, gradeReasonBoundElsewhere+gradeScanTruncation)
 }
