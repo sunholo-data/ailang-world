@@ -7,6 +7,7 @@
 - **Next loop pick:** row 176 if D-WORLD-73 = A; else row 150 once the fleet resolves the PNG ticket; else rule (d) again.
 - **Parked on Mark:** **D-WORLD-73** (bind `Human.Approve` in the daemon? A = bind, B = hold; default B). Ledger 60 rows, ONE OPEN.
 - **Routing this fire:** controller opus; evaluator sonnet (Agent tool) judged the record; no designer/planner/executor (no pick).
+- **Quota:** no routing note this fire (`MISSION_ROUTING_NOTE` empty; planner/executor resolve to `codex:gpt-6.1-sol`), so the codex over-ration note of 258 no longer applies; unused.
 - **Metered spend:** $0.
 - **Orphans:** none new (255 already credited in 256).
 - **Evidence:** `design_docs/verification/world-iter259/`.
