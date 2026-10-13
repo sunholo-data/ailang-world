@@ -1,6 +1,6 @@
 # w-decision-packet-production-projection — the coordinator mints `world/decision-packet/v1` on the effectful commit that requests `Human.Approve`, and the workbench object page validates and projects it
 
-- **Status**: **planned** (designed iteration 255, designer role, unattended mission stage)
+- **Status**: **planned** (designed iteration 255, designer role, unattended mission stage; quorum round 1 BLOCKED 3/3 on completeness/verification only → this one revision pass, §0.5)
 - **Queue row**: 172, `w-decision-packet-production-projection` · release prerequisite (moves no clause) · on the attended `D-WORLD-69` = **A** path 26 → 105 → **172** → 150 (rows 26 `0390aa5` and 105 `9d16a07` have landed). Owns the packet residual of row 150.
 - **Measurement base**: `e869bfe4ec4aa0523bbe059494b7bf62d762a6e9` (V1); every V-row below was run first-party in this worktree.
 - **Instrument**: `$HOME/.pinned-ailang/ailang`, AILANG **v0.41.0**, sha256 `1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f` (V24). The one `.ail` this design proposes was checked, Z3-verified, inline-tested and mutation-probed with that binary; the checked artifact is banked as `design_docs/verification/world-row172-design/decisionpacket.ail.txt` with its log `sketch-check.log` (`.txt` so the exact Leg-1 module manifest is not perturbed before M1 lands it, V23).
@@ -24,6 +24,18 @@
 ### 0.4 Citation drift from the row-150 review, corrected
 
 The row-150 review cites the daemon coordinator's wall-clock `Now` at `daemon.go:694`; at base it is **`daemon.go:711`** (`Now: func() int64 { return time.Now().Unix() }`), while `coordinator.Config.Now` is the injected seam (`coordinator.go:52`, required at `:78`) (V7). This design reads no clock: the packet's times are the coordinator's one logical `now` (D3). Whether the daemon's tick source stays Unix seconds is **not** this row's decision — the review's H2 says a new production clock knob affecting invocation/expiry authority warrants its own freeze (V28); row 150 owns that question.
+
+### 0.5 Quorum round 1 → revision
+
+Round 1 was BLOCKED 3/3 (`gemini-3-1-pro`, `oc-glm-5-3`, `oc-kimi-k3`); no objection disputed the direction. The common gap: the validator's anchor hops had no §10 rows. Every fix below was re-measured first-party at `e869bfe` (V35–V43); no measurement contradicted the controller's figures.
+
+- **Anchor hops unverified (all three):** `LogEntry` shape → V35; the record-v2 field names (`TransitionFn`, `Plan`, `Effects`; unexported, so decoded in-package) → V36, used verbatim in D1/D5/D6; the readStore method set ⊇ PacketReader → V37 (now cited in D5 in place of V14/V17).
+- **`oc-glm-5-3` — would an extra commit object break replay/reconcile?** No: V38 shows that both paths read the record only. Added AC3b `TestReplayReconcileToleratesPacketObject` and mutation MP8; D1 is unchanged.
+- **Determinism of code 7's scan:** V39 (`ORDER BY hash_ref`); D5 now says "the first 100 by `hash_ref` order".
+- **M4's route:** V40.
+- **`oc-kimi-k3` — the REST-forgery residual stated conditionally:** rewritten in the measured direction in D5, from V41 (the REST entry's `transitionRef` is caller-supplied).
+- **`oc-glm-5-3` — D2 is an irreversible freeze:** now flagged next to D4, change cost **high**, with V42 for the item-15 content-addressed-wire-type discipline.
+- **D4 (controller):** the authority analysis is now stated in Risks; the flag is kept.
 
 ## Axiom Compliance
 
@@ -61,13 +73,14 @@ The row-150 review cites the daemon coordinator's wall-clock `Now` at `daemon.go
 | Decision | Why High Impact | Chosen By | Change Cost |
 |----------|-----------------|-----------|-------------|
 | **D1 Producer = the coordinator's effectful commit**, gated on the plan's one effect being `Human.Approve` with status OK; the packet rides in `Commit.Objects` | The only path where a stored proposal (plan) and a broker-minted request coexist under one logical `now` (V8, V10); atomic with the record, so a packet exists iff its invocation committed | agent (V4, V8) | low |
-| **D2 `proposalHash` = the plan object ref** | No `Proposal` object exists (V4); the plan is the pure, pre-effect proposal (V8) | agent | low (a `/v2` packet may later point at a real `Proposal`) |
+| **D2a `proposalHash` = the plan object ref** | No `Proposal` object exists (V4); the plan is the pure, pre-effect proposal (V8) | agent | low (a `/v2` packet may later point at a real `Proposal`) |
 | **D3 Lifecycle fields: `createdAt` = the invocation's `now`; `deadlineAt` = the authorizing `Human.Approve` grant's `ExpiresAt`; `policy` = `Cancel`; `escalationsRemaining` = 0** | No default is invented: the deadline is the effect's existing strict TTL (HUMAN-SURFACE:161-162, V25); `Cancel` is the one policy whose Z3-proven outcome is the ratified "typed rejected-timeout" unconditionally (`types.ail:174`, V25); a live grant makes the schedule well-formed by a proven law (`mintedScheduleWellFormed`, V24) | agent, citing ratified text | low |
+| **D2b The v1 canonical byte form and `packetHash` rule (D2 below) — an IRREVERSIBLE freeze** | The first stored packet fixes these bytes forever: content addresses and `packetHash` depend on them, and amendments are `/v2`, never in-place (item-15 discipline, `w-decision-lifecycle-freeze.md:149-151`, V42) | agent — **flagged for controller/quorum confirmation**, like D4 | **high** (irreversible once a packet is stored) |
 | **D4 The daemon binds `Human.Approve` (only), serialized by a daemon-held mutex; REST refuses `world/decision-packet/v1` objects** | Without the binding the producer has no production reach (V6); without serialization the approvals head can lose an append (V20); without the reservation REST can forge the label (V15) | agent — **flagged for controller/quorum confirmation** (an effect-surface widening; see Risks) | low |
 | **D5 Validation is relational, anchored in two writer-exclusive facts**: the packet's first carrying commit must be its record's first carrying commit, and its request must be in the broker-only approvals chain | REST can forge objects and commits but cannot re-be the first carrier of an existing record nor move the approvals head (V14, V16) | agent | med |
 | **D6 Projection on the existing object page** (no new route or query key), evidence via row 105 | Row 105's grade path is the only PROVEN path (V18); no new key keeps the page grammar unchanged | agent | low |
 
-**Design freeze:** D1–D6 rest on measurements in §10; only D4's effect-surface widening is flagged for explicit confirmation (the controller may route it as a `D-WORLD` ask; the default if unanswered is to land M1 and M3's validator and hold M2's daemon binding).
+**Design freeze:** D1–D6 rest on measurements in §10; two decisions are flagged for explicit confirmation: D2b's byte-form freeze (irreversible) and D4's effect-surface widening (the controller may route it as a `D-WORLD` ask; the default if unanswered is to land M1 and M3's validator and hold M2's daemon binding).
 
 ## Solution Design
 
@@ -97,7 +110,7 @@ Payload: compact JSON, members in the frozen field order, refs as canonical `Has
 {"packetHash":"sha256:…","proposalHash":"sha256:…","requestRef":"sha256:…","createdAt":1700,"deadlineAt":1760,"escalationsRemaining":0,"policy":"Cancel"}
 ```
 
-`packetHash` is the self-hash the type comment cites (precedent `Proposal.proposalHash`): `SumSHA256` of the canonical **body** — the same object minus `packetHash`, same member order. The stored object's content address is `SumSHA256(payload)`; its interface hash is `SumSHA256("world/decision-packet/v1")` and provenance `coordinator:<surface>`, the coordinator's `object()` convention (V8). Decoding is strict: `DisallowUnknownFields`, one value, re-encode byte-equal, both refs parse, `policyCode(policy) >= 0`, `packetHash` recomputes. A semantic-ID constant `DecisionPacketV1` joins `plan.go`'s constants.
+`packetHash` is the self-hash the type comment cites (precedent `Proposal.proposalHash`): `SumSHA256` of the canonical **body** — the same object minus `packetHash`, same member order. The stored object's content address is `SumSHA256(payload)`; its interface hash is `SumSHA256("world/decision-packet/v1")` and provenance `coordinator:<surface>`, the coordinator's `object()` convention (V8). Decoding is strict: `DisallowUnknownFields`, one value, re-encode byte-equal, both refs parse, `policyCode(policy) >= 0`, `packetHash` recomputes. A semantic-ID constant `DecisionPacketV1` joins `plan.go`'s constants. **This byte form is an irreversible freeze (D2b):** once one packet is stored, any change is a `world/decision-packet/v2`, which is the discipline item 15 fixed for content-addressed wire types (`w-decision-lifecycle-freeze.md:149-151`, V42). The bytes above are therefore part of the ratification surface of this design, not an implementation detail.
 
 ### D3 — Where each lifecycle field comes from (no invented default, no clock)
 
@@ -117,19 +130,19 @@ Payload: compact JSON, members in the frozen field order, refs as canonical `Has
 
 ### D5 — The validator (`coordinator.ValidatePacket`)
 
-`ValidatePacket(ctx, r PacketReader, obj store.Object) (PacketResult, error)`, where `PacketReader` is the subset `{GetObject, GetLogEntry, ObjectCommits, ObjectsBySemanticID, GetRegistryHead}` the daemon's `readStore` already provides (V14, V17). Each step measures one boolean, then `packetRefusal` (the Go mirror of the Z3-verified law) picks the first failure. Store errors return `err` and never become a code.
+`ValidatePacket(ctx, r PacketReader, obj store.Object) (PacketResult, error)`, where `PacketReader` is the subset `{GetObject, GetLogEntry, ObjectCommits, ObjectsBySemanticID, GetRegistryHead}` of the daemon's 11-method `readStore` (`daemon.go:501-513`, V37), so the daemon passes `d.reads` unchanged. `GetLogEntry` returns `store.LogEntry{Header, EntryHash, TransitionRef}` (`store.go:136`, V35). The record is decoded into the package's own unexported `recordV2` (`plan.go:39-50`, V36): the validator lives in package `coordinator`, so it decodes the record directly and needs no new export. Each step measures one boolean, then `packetRefusal` (the Go mirror of the Z3-verified law) picks the first failure. Store errors return `err` and never become a code.
 
 | Code | Fact (measured in this order; a step whose prerequisite failed is false) | Reads |
 |---|---|---|
 | 1 bytes | D2's strict decode; interface hash and `packetHash` recompute | 0 |
-| 2 carried | `ObjectCommits(packet, 0, 1)` → first entry E; entry E's `transitionRef` R is a `world/invocation-record/v2`; `ObjectCommits(R, 0, 1)` first == E | 2 lookups + entry + R |
-| 3 proposal | `R.plan == proposalHash` and that object is `world/effect-plan/v1` | 1 |
-| 4 request | `R.effects` has exactly one ref; `broker.DecodeRecord` (`record.go:58`) → `Human.Approve`, allowed, not failed; its result (`world/effect-result/v1`, the handler output verbatim, `broker.go:311,319`, V11) parses to `requestRef`; the request object is `world/approval-request/v1` with effect `Human.Approve` and the record's scope | 3 |
+| 2 carried | `ObjectCommits(packet, 0, 1)` → first entry E; `GetLogEntry(E).TransitionRef` = R and R is a `world/invocation-record/v2` that decodes into `recordV2`; `ObjectCommits(R, 0, 1)` first == E | 2 lookups + entry + R |
+| 3 proposal | `R.Plan == proposalHash.String()` and that object is `world/effect-plan/v1` | 1 |
+| 4 request | `R.Effects` has exactly one ref; `broker.DecodeRecord` (`record.go:58`) → `Human.Approve`, allowed, not failed; its result (`world/effect-result/v1`, the handler output verbatim, `broker.go:311,319`, V11) parses to `requestRef`; the request object is `world/approval-request/v1` with effect `Human.Approve` and the record's scope | 3 |
 | 5 anchored | `requestRef` is among `RecentApprovals(ctx, r, 40)` summaries (V17); a malformed chain is false with its ref named | ≤ 80 |
 | 6 lifecycle | `lifecycleOk(createdAt, request.now, deadlineAt, escalationsRemaining, policyCode)` | 0 |
-| 7 unique | no OTHER object among `ObjectsBySemanticID(DecisionPacketV1, "", 101)` (first 100 read) decodes to the same `requestRef` | 1 page + ≤ 100 |
+| 7 unique | no OTHER object among `ObjectsBySemanticID(DecisionPacketV1, "", 101)` — the first 100 **by `hash_ref` order** (`ORDER BY hash_ref`, `objects_by_semantic_id.go:19-20`, V39), so the scan is deterministic — decodes to the same `requestRef` | 1 page + ≤ 100 |
 
-**Why the anchors hold.** The record's invocation ID makes its bytes unique per invocation, so a later REST commit that re-carries the real record with a forged packet is caught by code 2 (`commit_objects` is append-only membership; V14). A fully fabricated chain needs a request in the approvals chain, which only the broker's `appendApprovalHead` moves (V16); a fabricated chain that names a REAL request collides with the genuine packet under code 7. **Declared residual:** a request minted by `world-publish` has no genuine packet, so a pre-reservation REST fabrication naming one passes codes 1–7. After M2 REST cannot write packet objects at all, so this needs direct DB tampering or a store written before M2.
+**Why the anchors hold (measured direction).** A REST commit's entry `transitionRef` is caller-supplied (`logEntryRequest.TransitionRef`, `handlers.go:116`; parsed at `:820`; stored at `:860`, V41), so a REST forger CAN point a new entry at a real record R. That forgery **fails code 2**: R carries its invocation ID, so its bytes are unique to one invocation, and R's first carrier in the append-only `commit_objects` membership is the genuine coordinator commit (V14), never the forger's later entry. To pass code 2 a forger must therefore fabricate a NEW, label-forged `world/invocation-record/v2`, plus its `world/effect-plan/v1`, `world/effect-record/v1` and `world/effect-result/v1`, all through REST's semantic-ID passthrough (V15, Future Work #2). Even then, code 5 requires a `requestRef` that the broker-only approvals chain holds (V16), and naming a real request whose genuine packet exists collides under code 7. **Declared residual:** a request minted by `world-publish` has no genuine packet, so before M2 a REST forger that fabricates that whole label-forged chain (record v2, plan, effect record, effect result and packet) naming such a request passes codes 1–7. After M2 the REST reservation refuses the packet label itself, which closes this; what remains is direct DB tampering, or a store written before M2.
 
 **Bounded states are not verdicts.** If code 5 fails and `RecentApprovals` reported `Truncated`, or code 7 passed on a truncated scan, the sentence says "not established within the bound" rather than refuting or affirming membership or uniqueness (D6).
 
@@ -148,7 +161,7 @@ When `?object=<ref>` names an object whose `SemanticID == DecisionPacketV1`, the
 | code 6 | `not a validated decision packet: its lifecycle fields disagree with its request's logical time or are not the v1 producer's` |
 | code 7 | `not a validated decision packet: another stored packet names the same approval request` |
 
-A **validated** panel additionally renders: `createdAt`/`deadlineAt` as logical integers with the fixed note `logical times; this host emits no Timeout transition (item 7 owns the emitter), so this page does not state whether the deadline has passed`; `policy Cancel · escalationsRemaining 0`; links to the proposal (plan), the request, and entry #E; the request's status as the approvals chain reports it, labelled `approvals chain: pending | approve by <who> | deny by <who>` (approvals keep their name); and **evidence** — two grade lines, `proposal <ref>` and `transition function <R.transitionFn>`, each exactly `d.objectGradeView(ctx, ref)` (`workbench_grade.go:142`, V18). PROVEN can appear only through row 105's validator. A **refused** panel renders the sentence alone: no links, status or evidence are claimed for a packet that does not validate.
+A **validated** panel additionally renders: `createdAt`/`deadlineAt` as logical integers with the fixed note `logical times; this host emits no Timeout transition (item 7 owns the emitter), so this page does not state whether the deadline has passed`; `policy Cancel · escalationsRemaining 0`; links to the proposal (`R.Plan`), the request, and entry #E; the request's status as the approvals chain reports it, labelled `approvals chain: pending | approve by <who> | deny by <who>` (approvals keep their name); and **evidence** — two grade lines, `proposal <ref>` and `transition function <R.TransitionFn>`, the latter using `R.TransitionFn`; each line is exactly `d.objectGradeView(ctx, ref)` (`workbench_grade.go:142`, V18). PROVEN can appear only through row 105's validator. A **refused** panel renders the sentence alone: no links, status or evidence are claimed for a packet that does not validate.
 
 ### D7 — Bounds and cost
 
@@ -218,7 +231,8 @@ No Timeout emitter, DEFER or escalation (item 7); no `EscalateBounded`/`ExecuteI
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| D4's `Human.Approve` binding is judged an authority-class change | Med | Flagged; M1 + M3's validator are independent of it and can land first; the default if refused is hold M2's binding |
+| D4's `Human.Approve` binding is judged an authority-class change | Med | **Analysis (stated, not deferred):** the binding stays within the existing authority model. `Human.Approve` still needs a skill that DECLARES it AND a live, budgeted, exact-scope grant (`Decide`, `decide.go:48`, V13). Grants come only from attended session minting. A request never decides: decisions stay operator-only (`DecideApproval`), and publish consumption also needs a publish-shaped scope. The flag is kept for confirmation; if refused, M1 and M3's validator land and M2's binding is held |
+| D2b's byte form proves wrong after packets are stored | Med | It is irreversible by design (amendments are `/v2`, V42); hence the flag and the high change cost |
 | Pending requests on the daemon can never be decided there | Med | Honest: the panel shows the chain's `pending` and states that no Timeout is emitted; deciding is item 7's scope |
 | The deadline is the grant expiry, coarser than a per-decision TTL | Low | It is the ratified "strict TTL" the effect already carries; a declared per-packet TTL is a `/v2` question |
 | Daemon `now` is wall-clock seconds, so packets differ across runs | Med (row 150) | Unchanged by design (V7, V28); row 150 owns its clock decision |
@@ -231,6 +245,8 @@ No Timeout emitter, DEFER or escalation (item 7); no `EscalateBounded`/`ExecuteI
 **AC2 — the packet's fields are the commit's facts.** `TestProducerPacketBindsInvocationFacts`: `createdAt` == the request object's `now` == the intent's `LogicalTime`; `deadlineAt` == the authorizing grant's `ExpiresAt` (two live grants with distinct expiries, the test asserting the one `broker.Decide` allows first); `proposalHash` == the v2 record's `plan`; `requestRef` == the pending output's ref; `policy` `Cancel`, budget 0; `packetHash` recomputes. Killed by MP2–MP4, MP6, MP7.
 
 **AC3 — the packet is carried by the invocation's own commit.** `TestProducerPacketIsCarriedByTheInvocationCommit`: `ObjectCommits(packet)` == `[E]` == `ObjectCommits(record)`'s first entry, plus a daemon end-to-end arm (`TestDaemonInvocationMintsDecisionPacket`: real daemon, fake interpreter, a skill declaring `Human.Approve`, a session holding the grant). Killed by MP5 and MD2.
+
+**AC3b — replay and reconcile tolerate the packet object.** `TestReplayReconcileToleratesPacketObject`: after AC3's commit, `Coordinator.Replay` succeeds and its recomposed output equals the committed output byte-for-byte. A resent task ID reconciles through `committed()` with the same `Result` as a packet-free invocation of an otherwise identical skill (the `Output` bytes are equal). Both paths read the record and the objects it names, never the commit's object list (V38). Killed by MP8.
 
 **AC4 — a produced packet validates and renders the validated panel.** `TestWorkbenchPacketValidated`: the AC3 store; the packet's object page contains the validated sentence exactly once, the three links, `approvals chain: pending`, two grade lines equal to `objectGradeView` on the proposal and the transition function, and the logical-time note. Non-packet object pages are byte-identical to base, with zero added `ObjectsBySemanticID(DecisionPacketV1…)` calls (counting wrapper). Killed by MV10–MV12.
 
@@ -255,6 +271,7 @@ No Timeout emitter, DEFER or escalation (item 7); no `EscalateBounded`/`ExecuteI
 | MP5 | packet stored with `PutObject` instead of `Commit.Objects` | AC3 | `ObjectCommits(packet) = []` |
 | MP6 | policy token `"EscalateBounded"` | AC2, AC9 | field assertion; drift `producerFieldsOk` |
 | MP7 | `packetHash` hashed over the full payload | AC2, AC4 | recompute mismatch; the produced packet refuses with code 1 |
+| MP8 | the replay/reconcile path enumerates the commit's objects and treats any object the record does not name as divergence | AC3b | `Replay` returns `diverged("record", …)` / reconcile an `IntegrityError` for the packet-carrying invocation |
 | MV1 | drop the canonical re-encode check | AC5 (1) | whitespace arm renders validated |
 | MV2 | drop the `packetHash` recompute | AC5 (1b) | wrong-hash arm passes code 1 |
 | MV3 | drop `ObjectCommits(R) first == E` | AC5 (2) | re-carry forgery validates |
@@ -283,7 +300,7 @@ Structurally unreachable branches (the `AuthorizingGrant` miss after an allowed 
 | `verify_ail.sh` Leg-1 exact module manifest + `REQUIRED_VERIFIED` (V23) | +1 module line, +1 sketch entry in the SAME commit as the sketch; `EXACT_TOTAL_VERIFIED=16` counts `world/` only and does not move; S8's six-file floor is untouched (no `world/` change) |
 | TR.C broker binding boundary (`invoke_boundary_test.go:274`, `wantCount = 3`, V22) | No new `Invoke`/`Session` site; the daemon puts a `Handler` in a `Registry` map, which the gate does not scan for |
 | Workspace registry exact-key tests (`workspace_test.go:203-213`, V21) | Untouched: the binding is added in `d.binder`, not in `registry()` |
-| Coordinator replay and reconcile (`effectful.go:354+`, `coordinator.go:202+`) | The packet is outside the recomposed output and is not referenced by the v2 record; replay and `committed()` read the record only. Commits for other effects are unchanged |
+| Coordinator replay and reconcile (`effectful.go:354+`, `coordinator.go:202+`, V38) | The packet is outside the recomposed output and is not referenced by the v2 record; replay and `committed()` read the record and the objects it names only (`ObjectCommits` appears 0 times in non-test `host/coordinator`), pinned by AC3b. Commits for other effects are unchanged |
 | `why` (`why.go:181,665`, V26) | Walks the record and does not enumerate commit objects; unchanged |
 | Row 105 grade projection (`workbench_grade.go`, V18) | Consumed unchanged; `TestWorkbenchObjectGrade` and its file untouched |
 | Row 149 decisions pane (`workbench.go:582-585`, V17) | Unchanged; daemon-minted requests now appear there, as approvals |
@@ -331,4 +348,14 @@ All commands were run from this worktree root at `e869bfe` on 2026-10-13 with `/
 | V33 | world-publish's times are operator-supplied logical values | `grep -n "\"now\", 0, \"logical time of this act\"\|RequestedAt: opts.now" cmd/world-publish/main.go` | `:157`, `:572` |
 | V34 | Existing coordinator tests never request `Human.Approve` | `grep -rn "Human" host/coordinator/*_test.go \| wc -l` | `0` — the producer hook cannot change any existing arm |
 
-**Sweep note:** every "the code does / does not" sentence above cites a row; the negative rows V2, V4, V6, V15, V16, V19, V21, V30 and V34 carry same-call controls or are exact enumerations.
+| V35 | `LogEntry` shape (the code-2 hop) | `sed -n 134,140p host/store/store.go` | `:136 type LogEntry struct { Header LogHeader; EntryHash hashref.HashRef; TransitionRef hashref.HashRef }` |
+| V36 | Record v2 fields, unexported, in package `coordinator` | `sed -n 38,51p host/coordinator/plan.go` | `:39 type recordV2 struct` with `InvocationID invocationId, EpisodeID episodeId, SkillID skillId, TransitionFn string transitionFn, Interpreter interpreter, SemanticsEpoch int64 semanticsEpoch, Input input, Output output, Plan string plan, Effects []string effects` (closing `}` at `:50`) |
+| V37 | `readStore` ⊇ PacketReader | `sed -n 494,513p host/daemon/daemon.go`; `awk '/type readStore interface/,/^}/' host/daemon/daemon.go \| grep -c "ctx context.Context"`; `grep -n "six" host/daemon/daemon.go` | `:501-513`, **11** methods incl. `GetObject`, `GetLogEntry`, `GetRegistryHead`, `ObjectsBySemanticID`, `ObjectCommits`; observation only: the doc comment at `:487`/`:493` still says "six" (stale comment, not touched by this row) |
+| V38 | Replay/reconcile never enumerate commit objects | `grep -n "ObjectCommits" host/coordinator/*.go \| grep -v _test \| wc -l`; control `grep -c ObjectCommits host/daemon/daemon.go`; `grep -n "Objects" host/coordinator/*.go \| grep -v _test`; `sed -n 202,258p host/coordinator/coordinator.go`; `sed -n 354,480p host/coordinator/effectful.go` | `0`; control `1`; `Objects` only at `plan.go:77,151,154` (the builder); `committed()` reads record → output → world by ref; `Replay` reads record → source/input/plan by the record's refs → effect records → recomposes and compares output bytes (`bytes.Equal(outBytes, committed.OutputBytes)`) — no commit object list is read |
+| V39 | The semantic-ID scan is deterministic | `sed -n 18,20p host/store/objects_by_semantic_id.go` | "hash_ref is the PRIMARY KEY, so it is a unique total order"; `:19-20 … FROM objects WHERE semantic_id = ? AND hash_ref > ? ORDER BY hash_ref LIMIT ?` |
+| V40 | M4's lookup route exists | `grep -n "by-semantic-id" host/daemon/daemon.go` | `:903 mux.HandleFunc("GET /v1/objects/by-semantic-id/{name...}", d.handleObjectsBySemanticID)` |
+| V41 | A REST entry's `transitionRef` is caller-supplied | `grep -n "TransitionRef" host/daemon/handlers.go` | `:116 TransitionRef string \`json:"transitionRef"\`` (`logEntryRequest`); `:820 transitionRef, err := parseRef(r.Entry.TransitionRef, "entry.transitionRef")`; `:860 … TransitionRef: transitionRef` |
+| V42 | The content-addressed wire-type discipline D2b honours | `sed -n 149,151p design_docs/implemented/w-decision-lifecycle-freeze.md` | "amendments after freeze are NEW versions (the reserved semantic ID `world/decision-packet/v1` becomes `/v2`), never in-place edits — the same discipline as the frozen `LogHeader` and every content-addressed wire type" |
+| V43 | Revision base: code unchanged since `e869bfe` | `git rev-parse --short HEAD; git log --oneline e869bfe..HEAD; git diff --stat e869bfe HEAD` | HEAD `955fbc0` = `e869bfe` + the controller's commit of this design alone (3 files: this doc, `decisionpacket.ail.txt`, `sketch-check.log`) — every V35–V42 row observes the `e869bfe` code |
+
+**Sweep note:** every "the code does / does not" sentence above cites a row; the negative rows V2, V4, V6, V15, V16, V19, V21, V30, V34 and V38 carry same-call controls or are exact enumerations. Every validator anchor hop is now a row: entry → `TransitionRef` (V35), record-v2 fields (V36), reader methods (V37), commit membership (V14), effect record and result (V11, V12), approvals chain (V16, V17), scan order (V39); and so are the replay/reconcile independence (V38), the REST entry surface (V41) and the freeze discipline (V42).
