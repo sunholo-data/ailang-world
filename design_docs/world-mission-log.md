@@ -1236,3 +1236,85 @@ Deviations, each confirmed by the judge:
 **Progress:** clauses 1/2/3/6/7 MET; 4 and 5 UNMET. The D-WORLD-69 path has advanced 26 ✔ → 105 ✔ → 172 next.
 
 **Next:** if no critical-path row is loop-routable (93 FINAL is attended), take **row 172** `w-decision-packet-production-projection` on the D-WORLD-69 path. It needs a design doc first; the designer rotation's next entry after glm-5.3 is kimi-k3.
+
+## 256 — 2026-10-13 — row 172 LANDED `d36b148`: coordinator mints `world/decision-packet/v1` on the effectful `Human.Approve` commit; validated object-page projection; daemon binding split to row 176 and PARKED on D-WORLD-73 (resumes orphan 255); judge sonnet PASS 86 → 92, zero blocking [PRODUCT]
+
+**Kind:** Product sprint, release prerequisite (moves no clause). It runs on the D-WORLD-69 = A exception path 26 ✔ → 105 ✔ → **172** → 150.
+
+**Pick and why:**
+- **Clause map:** 1/2/3/6/7 MET. Clause 4 is UNMET (row 93 FINAL is attended). Clause 5 is UNMET (114 waits on 93, 139 on 114). No critical-path row is loop-routable, so D-WORLD-69 admits row 172, which 254's log named as next.
+- **Orphan 255 found.** Gate 0's self-notice scan returned rc 1: a crash notice for the 02:55Z fire (rc=143), which the driver log shows was **STALL-killed**: "claude made NO PROGRESS across 5 samples (600s) with a descendant alive ≥2400s" at gate-3. The trace `git worktree list` showed `.wt-world-iter255-row172-design` on `design/w-decision-packet-production-projection`, holding:
+  - the design `955fbc0` (designer opus via the Agent tool — out of rotation turn: the pointer read glm-5.3, so kimi-k3 was next);
+  - quorum r1 (`8c175c8` revision) and r2, both BLOCKED 3/3;
+  - the narrow-refinement carve-out `b72428a`;
+  - an uncommitted 1,167-line sprint plan with no sprint JSON (the planner was still running when the controller was killed).
+
+  Orphan 255 is credited here.
+- **Carve-out re-checked:** the r2 synthesis (`.ailang/state/mission-quorum/…T01-21-02Z.json`) holds three rejects — gemini (V44 for `validatePublishApproval`), glm-5.3 (TR.C census unmeasured; quickstart precedent; read count) and kimi-k3 (code 7 non-monotone under same-second request collapse → pair scope). Every one carried a concrete `proposed_fix`, and none disputed the direction, so the orphan's carve-out was admissible.
+
+**D4 → D-WORLD-73 (filed this iteration).** The design flags D4 — the daemon binding `Human.Approve`, an effect-surface widening — for explicit confirmation, with the default "land M1 and M3's validator and hold M2's daemon binding". Unattended, I took the default and filed the ask: step C4.2 is HELD and split to new row 176. The planner measured that, with the binding held, no production path stores a packet (PD29), so the D2b byte-form freeze lands, pinned by the codec golden test, but is not yet exercised in production.
+
+**Plan:** opus via the Agent tool (`opus fail-closed:env-pin`), told to verify and finish the orphan's plan rather than re-plan. It confirmed every r2 carve-out fix was carried and fixed six defects:
+- a wrong sketch line number (MV7 drift: 161, not 162);
+- the `decideOver` description;
+- PD28: `RecentApprovals` keeps 20 distinct requests, so code 5's frozen "newest 40 approval heads" sentence is false for the 21st–40th (kept verbatim and recorded; QUICKSTART states the real bound);
+- per-milestone full gates that could not fit two runs (PD30/31);
+- D4 handled as an "if refused" contingency instead of held throughout;
+- a route regexp that crossed newlines (PD33).
+
+Plan committed `0e93503`.
+
+**Execution:** Claude Haiku 5.5 via the Agent tool (resolver `recipe claude:claude-haiku-5-5`; same model, operator's standing request).
+- **Run A (C1–C3):** `1bcaef5`, `20b885d`, `7cfb2c6`; 18 mutants red; F1–F4 boundary gates green; sha256 manifest of the 13 run-A files.
+- **Run B (C4.1, C5–C7):** `167f3e3`, `c1ab9fd`, `3fc6320`, `02e9c53`; a 16-mutant re-drill, all red. The first return was "waiting for the Monitor" (instance 3 for a World Haiku executor), recovered by `SendMessage` with an explicit foreground until-loop.
+- **Fix round r2:** `29a8aa7`, test-only, aimed at the judge's survivors (below).
+
+Deviations, all adjudicated: MV8, MV12 and MP3 were rewritten as compiling variants (the plan's forms left unused variables); red-first was not captured for C2/C3; and the `-race` time on `host/daemon` was 252 s against 221 s (+31 s over the +15 s budget, carried to row 176's residuals).
+
+**Judge:** sonnet via the Agent tool, in its own worktree `.eval-world-iter256`. It is cross-model and same-vendor as the executor (FLAGGED).
+- **r1 at `02e9c53`: PASS 86/100, zero blocking.** 15 of its own mutations. Survivors: M1 (request/record scope check), M2 (`er.Failed`), M8 (`len(pl.Effects) == 1` → `>= 1`) and M12 (packet SemanticID check). M9 and M10 survived but are equivalent. The one SKIP is the pre-existing `TestWorkbenchLiveChromeDrill` (`WORLD_CHROME` unset; file unchanged).
+- **The controller reproduced M1 first-party:** `go test ./host/daemon ./host/coordinator -run 'Packet|Producer|DecisionPacket'` ok with the mutant applied (20 `=== RUN` in the daemon subset as control), then restored with cmp.
+- **Fix round, r2 at `29a8aa7`: PASS 92/100, zero blocking.** M1 and M2 are killed by new arms in `TestWorkbenchPacketRefusals`, and M12 by the new `TestValidatePacketBytesCheckNeedsThePacketLabel`. M8 is proven **equivalent**: `maxPlanEffectsV1 = 1` (`effectplan.go:32`) and `parsePlan` refuses n>1 (`:125`) before `effectful.go:336`; the controller read the refusal path, and the judge confirmed the constant. The delta touched only test files.
+
+**Gates:**
+- `verify_go.sh` rc=0 at `29a8aa773b38b775cd830c01e37f4d8b4f2d0e4a`: 56 `ok` lines, "all 64 required top-level evidence tests passed exactly once", go gate PASSED with pinned v0.41.0.
+- `verify_ail.sh` rc=0 (23 modules, 16 required identities).
+- **An instrument failure, not a verdict:** my first `verify_go.sh` launch wrote `rc=1` without the script ever running, because zsh aborted the `&&` chain on an unmatched `rm -f ….*` glob. I deleted the bogus rc and re-ran under `bash -c`. The first `verify_go.sh` on `02e9c53` was stopped deliberately: it shared the worktree with the executor's mutation fix round.
+
+**CI / Gate 3b:** PR head `29a8aa7`: run 38356642850 (pull_request) success and run 38356672288 (workflow_dispatch) success, so 2/2 (earlier head `02e9c53`: run 38355004814 success). Squash merge `d36b148` (tree byte-identical to `29a8aa7`, `git diff --stat` empty): both jobs success (SHA-pinned check-runs, 2 of 2, run 38358875474).
+
+**Gate 0 / external checks:**
+- Directives: 0 allowlisted on #246 since `2026-10-12T23:40:31Z` (6 comments, all the bot's).
+- Self-notices: rc 1, one crash notice (the 255 fire), control 107:4.
+- Ledger: valid, 59 → 60 rows; ZERO OPEN → ONE OPEN (D-WORLD-73).
+- Dev CI: green at base `e869bfe`, 2/2 checks.
+- Running skill: matches origin on all 13 files.
+- CLAIM sent to mission-control (`inbox_1791867384931_d8db7593`).
+
+**Routing evidence:** base=`e869bfe4ec4aa0523bbe059494b7bf62d762a6e9`@2026-10-13T04:55:35Z. Token counts are as the Agent tool reported them.
+
+| Role | Lane | Tokens |
+|---|---|---|
+| Controller | `claude:claude-opus-5-5` | not reported |
+| Designer | orphan 255's opus (Agent tool); no designer this fire | not reported |
+| Planner | `opus` (resolver `agent-tool opus fail-closed:env-pin`) | 227,698 |
+| Executor | `haiku` for pin `claude:claude-haiku-5-5` (resolver `recipe … declared:provider-pin`) | 172,045 (A) + 103,094 + 199,326 (B, resumed) + 231,276 (fix round) |
+| Evaluator | `sonnet` (resolver `agent-tool sonnet declared:alias-pin`) | 69,096 (r1) + 74,450 (r2) |
+
+- Codex was over ration all fire (`MISSION_OVER_RATION=codex`).
+- The designer rotation pointer is set to `claude:claude-opus-5-5`, the lane orphan 255 actually used; the next entry is `codex:gpt-6.1-sol`.
+- metered=$0 this fire (orphan 255's quorum: $0.28).
+
+**Ruled out:**
+- Redesigning or re-quorum: the orphan's design and admissible carve-out stand.
+- Landing the daemon binding on the controller's own call: the design explicitly flags D4 for confirmation, so it is an authority-surface widening the human should rule on.
+- Filing the four judge survivors as a hygiene row: each was a one-arm test fix, so a fix round + r2 cost about 10 minutes.
+
+**Retro:**
+1. **A foreground planner over 40 minutes gets the controller STALL-killed.** The watchdog kills a controller showing no progress for 600 s while any descendant has lived ≥2400 s, and a foreground Agent spawn is exactly that shape. This fire's spawns ran 12.6, 18.4 and 28.8 minutes (B including its resume). *Lesson:* bound every role to under ~35 minutes (split runs, as this plan did), or background it and poll in-turn. Instance 1 on World attributed to this watchdog arm.
+2. **Haiku ended a turn on a Monitor wait a third time**, even with the directive's wait rule. The resume message that named the exact `until … date +%s` loop worked first time. *Lesson:* put that literal loop in the initial directive, not just the rule.
+3. **zsh glob abort gave a fake `rc=1`**: an unmatched glob in `rm -f` broke the `&&` chain before the gate ran. *Lesson:* run multi-step gate launchers under `bash -c` (instance 7 of the zsh class).
+
+**Progress:** clauses 1/2/3/6/7 MET; 4 and 5 UNMET. D-WORLD-69 path: 26 ✔ → 105 ✔ → 172 ✔ → 150.
+
+**Next:** if no critical-path row is loop-routable (93 FINAL is attended), take **row 150** only once fleet row 173's PNG gate resolves. Otherwise the loop has no D-WORLD-69 row left, so file a rule-(d) ask for the next exception row. Row 176 runs on D-WORLD-73 = A.

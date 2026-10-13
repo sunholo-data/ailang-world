@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-decision-packet-production-projection.md",
+  "iso_ts": "2026-10-13T01:15:06Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.033888,
+      "tokens_in": 15270,
+      "tokens_out": 279,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design's relational validation chain (D5) and evidence projection (D6) rely on traversing `entry E's transitionRef R` and extracting `R.plan`, `R.effects`, and `R.transitionFn` from the invocation record. However, the Verification Log (§10) completely fails to verify the struct schemas of `store.LogEntry` and `InvocationRecordV2` to prove these fields actually exist, violating the Premise Verification gate.",
+        "catch": "You cannot confidently design a host-side validator that strictly traverses object relations without verifying the exact shape and field names of the Go structs you are decoding (LogEntry, InvocationRecordV2, and EffectPlan).",
+        "proposed_fix": "Add a verification row in §10 that dumps the struct definitions (e.g., `sed -n '/type LogEntry struct/,/}/p' host/store/types.go` and the equivalent for `InvocationRecord` in `host/coordinator/record.go`). Then, correct D1, D5, and D6 to use the exact, verified Go field names (which are likely capitalized, such as `TransitionRef`, `PlanRef`, and `TransitionFn`)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0874504,
+      "tokens_in": 14008,
+      "tokens_out": 15418,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design's single most load-bearing compatibility claim — §9's 'replay and committed() read the record only' and A2's 'Replay is untouched' — is asserted from bare file:line pointers (effectful.go:354+, coordinator.go:202+) with NO logged verification row, violating the doc's own sweep-note discipline ('every the-code-does sentence above cites a row'; rows V1–V34 contain nothing on replay/reconcile). It is not a harmless gap: D1 deliberately appends a fifth object to Commit.Objects, and commit_objects exists precisely to record commit-object membership (V14). If replay or reconcile ever enumerates a commit's object set — a plausible consistency check given that membership table — every Human.Approve invocation's replay breaks or flags divergence, which would flip A2 from 0 to negative after M2 lands. No test would catch it: V34 shows zero existing coordinator tests request Human.Approve, and AC1–AC9 contain no replay/reconcile arm. The doc flags D4 for controller confirmation while leaving this higher-blast-radius premise under D1 at 'low' cost, unverified.",
+        "catch": "Before M2, verify whether coordinator replay/reconcile/committed() reads commit_objects or a commit's Objects beyond the v2 record (grep ObjectCommits/commit_objects/Objects over host/coordinator replay paths plus sed of effectful.go:354+ and coordinator.go:202+), and add a replay regression arm to the ACs. Secondarily: code 7's 'first 100 stored packets' bound presupposes ObjectsBySemanticID pagination is ORDER BY-deterministic — no V row verifies it, yet A1's +1 ('one store state renders one page') rests on it; and D2's canonical byte form is an irreversible freeze (code 1's byte-equality makes it unmendable after the first stored packet) that gets no flagging while the reversible D4 does.",
+        "proposed_fix": "Add a §10 row: V35 — claim 'replay/reconcile recomposes from the record and never enumerates commit-object membership'; commands: grep -n 'ObjectCommits\\|commit_objects\\|\\.Objects' over host/coordinator/coordinator.go and the replay code at effectful.go:354+, with sed of the recompose path, plus a same-call positive control (e.g., grep commit_objects in host/store showing who does read it). Add AC3b TestReplayReconcileToleratesPacketObject: after AC3's commit, run the episode's replay/reconcile and assert success with output identical to a packet-free invocation; kill it with a mutation (make the replay path enumerate commit objects → AC3b reds) and wire it into the §8 table. If V35 instead shows replay audits commit objects, D1 must change before any milestone lands (packet joins the recomposed output, or the audit explicitly skips DecisionPacketV1 — either way a new decision row). Also add one V row for ObjectsBySemanticID's ORDER BY (code 7's determinism) and one for the GET /v1/objects/by-semantic-id route M4's quickstart depends on, and either flag D2 for the same controller/quorum confirmation as D4 or add a V row showing the chosen form satisfies the item-15 'content-addressed wire type' discipline (V28 :151)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.160302,
+      "tokens_in": 13889,
+      "tokens_out": 7909,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's central security mechanism — D5 code 2 and the 'Why the anchors hold' argument that makes a fabricated packet unvalidatable — rests on a read path whose connective tissue is asserted, never measured. The verification log proves the endpoints (plan committed at :121/:132 per V8; result is handler output per V11; commit_objects insert at store.go:1196 per V14) but contains no row establishing: (a) that a store log entry exposes a `transitionRef` naming the invocation record; (b) that the `world/invocation-record/v2` Go struct actually has the `plan`, `effects`, and `transitionFn` accessors that codes 2–4 and D6's evidence line dereference (V12 greps `EffectRecord`, a different struct); (c) that `GetLogEntry` and `ObjectsBySemanticID` exist on the daemon's `readStore` — the PacketReader claim 'the daemon's readStore already provides (V14, V17)' cites rows that grep only ObjectCommits and RecentApprovals, so 'already provides' is unverified for two of five methods; and (d) what transition value a REST-origin commit entry carries — V16 checked `commitRequest` for registry fields only. Consequence: the D5 'Declared residual' (a pre-reservation REST fabrication naming a world-publish-minted request passes codes 1–7) is unfalsifiable as written — its truth hinges on whether REST commits can set transitionRef and whether a fabricated record+result pair satisfies code 4, neither of which was measured. A 34-row verification log that omits the anchor hops of the one novel validator is a premise-verification failure on the doc's load-bearing claim.",
+        "catch": "D5, codes 2–4, the 'Why the anchors hold' paragraph, and the PacketReader sentence. Verify before M3: the store entry struct and how `store.Commit` derives transitionRef (including the `handleCommit` call site — the V16-style check for the transition field); the record-v2 struct field names in host/coordinator; and the full `readStore` method set. Then restate the residual in the direction the measurements support — if REST-origin entries carry a zero transitionRef, the world-publish forgery fails code 2 and the residual narrows to direct DB tampering (doc currently overstates it); if REST can set it, the residual stands but must note the forgery additionally requires fabricating the record and result objects.",
+        "proposed_fix": "Append three rows to §10 and patch two paragraphs. V35 (entry anchor): `grep -n 'type Entry struct\\|TransitionRef\\|transition_ref' host/store/*.go | grep -v _test` plus `sed -n` of the `handleCommit` → `store.Commit` call site, recording whether a REST-origin entry carries a zero, derived, or caller-supplied transitionRef. V36 (record accessors): `grep -n 'RecordV2\\|Plan\\b\\|Effects\\b\\|TransitionFn' host/coordinator/*.go | grep -v _test` confirming the exact struct fields codes 2–4 and D6's transition-function evidence line will use. V37 (PacketReader surface): `grep -n 'readStore' host/daemon/*.go | grep -v _test` enumerating its methods; for any of {GetLogEntry, ObjectsBySemanticID} not already implemented, add the wrapper to the M3 'Modified' file list and re-estimate the ~90 LOC. Rewrites: (1) in D5 replace 'the daemon's readStore already provides (V14, V17)' with citations to V37; (2) rewrite the 'Declared residual' paragraph conditionally on V35 — either 'REST-origin commits carry no transitionRef, so a fabrication naming a world-publish request fails code 2; the residual is limited to direct DB tampering and pre-M2 stores' or 'REST commits may set transitionRef, so the fabrication additionally requires a label-forged record and result object (Future Work #2); the residual stands as stated'. No design change is needed if the measurements confirm the happy path; what is required is that the anchor claim be measured like every other claim in the doc."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read the full doc: premises V2/V4/V6/V7 re-measured first-party at e869bfe (0 vs ctrl 1; daemon Human 0; daemon.go:711). D4 binding judged within the existing authority model: Human.Approve still needs a declared effect and a live attended-minted grant; it requests, never decides. Sprint-sized (3.3d), Z3 sketch checked on pinned v0.41.0."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The design's relational validation chain (D5) and evidence projection (D6) rely on traversing `entry E's transitionRef R` and extracting `R.plan`, `R.effects`, and `R.transitionFn` from the invocation record. However, the Verification Log (§10) completely fails to verify the struct schemas of `store.LogEntry` and `InvocationRecordV2` to prove these fields actually exist, violating the Premise Verification gate.",
+      "oc-glm-5-3: The design's single most load-bearing compatibility claim — §9's 'replay and committed() read the record only' and A2's 'Replay is untouched' — is asserted from bare file:line pointers (effectful.go:354+, coordinator.go:202+) with NO logged verification row, violating the doc's own sweep-note discipline ('every the-code-does sentence above cites a row'; rows V1–V34 contain nothing on replay/reconcile). It is not a harmless gap: D1 deliberately appends a fifth object to Commit.Objects, and commit_objects exists precisely to record commit-object membership (V14). If replay or reconcile ever enumerates a commit's object set — a plausible consistency check given that membership table — every Human.Approve invocation's replay breaks or flags divergence, which would flip A2 from 0 to negative after M2 lands. No test would catch it: V34 shows zero existing coordinator tests request Human.Approve, and AC1–AC9 contain no replay/reconcile arm. The doc flags D4 for controller confirmation while leaving this higher-blast-radius premise under D1 at 'low' cost, unverified.",
+      "oc-kimi-k3: The doc's central security mechanism — D5 code 2 and the 'Why the anchors hold' argument that makes a fabricated packet unvalidatable — rests on a read path whose connective tissue is asserted, never measured. The verification log proves the endpoints (plan committed at :121/:132 per V8; result is handler output per V11; commit_objects insert at store.go:1196 per V14) but contains no row establishing: (a) that a store log entry exposes a `transitionRef` naming the invocation record; (b) that the `world/invocation-record/v2` Go struct actually has the `plan`, `effects`, and `transitionFn` accessors that codes 2–4 and D6's evidence line dereference (V12 greps `EffectRecord`, a different struct); (c) that `GetLogEntry` and `ObjectsBySemanticID` exist on the daemon's `readStore` — the PacketReader claim 'the daemon's readStore already provides (V14, V17)' cites rows that grep only ObjectCommits and RecentApprovals, so 'already provides' is unverified for two of five methods; and (d) what transition value a REST-origin commit entry carries — V16 checked `commitRequest` for registry fields only. Consequence: the D5 'Declared residual' (a pre-reservation REST fabrication naming a world-publish-minted request passes codes 1–7) is unfalsifiable as written — its truth hinges on whether REST commits can set transitionRef and whether a fabricated record+result pair satisfies code 4, neither of which was measured. A 34-row verification log that omits the anchor hops of the one novel validator is a premise-verification failure on the doc's load-bearing claim."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2816404,
+    "total_tokens_in": 43167,
+    "total_tokens_out": 23606
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-decision-packet-production-projection.md",
+  "iso_ts": "2026-10-13T01:21:02Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.038349999999999995,
+      "tokens_in": 17837,
+      "tokens_out": 223,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "D4's authority analysis justifies the safety of binding Human.Approve in the daemon by claiming that 'publish consumption requires an operator decision AND a publish-shaped scope (`validatePublishApproval`, `approve.go:486+`)', but neither `validatePublishApproval` nor `approve.go:486+` are measured anywhere in the §10 Verification Log. An unverified premise used to justify an authority-class effect-surface widening violates the premise verification gate.",
+        "catch": "Missing verification log entry for `validatePublishApproval`.",
+        "proposed_fix": "Add a new V-row (e.g., V44) to §10 verifying the safeguard's existence and shape: `grep -n \"func validatePublishApproval\" host/broker/approve.go` (and optionally checking the scope enforcement), and cite this new V-row in D4's Authority Analysis and the Risks \u0026 Mitigations table."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0711516,
+      "tokens_in": 16358,
+      "tokens_out": 10966,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design's entire production-reach decision (D4, the daemon's `Human.Approve` binding — its 4th production broker-effect binding site) is cleared against the TR.C broker-binding boundary solely by the claim that the gate \"does not scan for\" Registry-map insertions, but V22 does not verify that claim: its command only locates `const wantCount = 3` at `invoke_boundary_test.go:274`, and the load-bearing assertion \"the identities are publish_op.go only\" appears in the Observed column with no command at all. Nothing in §10 shows what TR.C's census actually enumerates or what invariant it was erected to pin, so the argument that a new daemon binding site is out of the gate's scope is asserted, not measured — precisely the kind of unverified premise this rubric rejects. Worse, the doc itself demonstrates it knows how to handle a discovered boundary-gate defect (the REST semantic-ID passthrough is queued as Future Work #2), yet the TR.C blindspot it relies on is neither closed (no census extension in M2) nor queued, leaving the gate permanently green while the boundary it names is widened.",
+        "catch": "Two further premises cited without rows: M4's \"the `quickstart_exec_test.go` precedent\" (the milestone's gate depends on a test file whose existence and QUICKSTART-executing behavior are never measured), and A5/D7's \"≤ 80 reads\" figure for one `RecentApprovals` call (V17 verifies the 40-head bound and the 20-row paging but not the read count).",
+        "proposed_fix": "Add V44 to §10: `sed -n '240,276p' host/broker/invoke_boundary_test.go` plus the TR.C definition text, quoting the census's actual enumeration mechanism and its stated invariant. Then replace §9's TR.C cell with: \"TR.C pins \u003cquoted invariant\u003e; its census enumerates \u003cmechanism from V44\u003e, verified rather than asserted, so the daemon's `Registry` insertion is outside the scan. Because a production broker-effect binding is exactly what this census was erected to bound, M2 extends it in the same commit as the binding — `wantCount = 4`, adding the `host/daemon/daemon.go` site to the identity list — or, if the controller rules the census extension a separate row, Future Work gains #5: 'TR.C is blind to Registry-map insertions (found by row 172).'\" Also add V45: `ls cmd/ailang-worldd/quickstart_exec_test.go; grep -n \"QUICKSTART\" cmd/ailang-worldd/quickstart_exec_test.go` to substantiate the M4 precedent, and a row counting `RecentApprovals`'s per-head reads to substantiate the 80-read figure in A5/D7."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.171372,
+      "tokens_in": 16179,
+      "tokens_out": 8189,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "D5 code 7 (uniqueness on requestRef) is unsound against the row's OWN producer, using facts the doc itself banked. ApprovalRequest identity is {effect,scope,cost,requester,now} (V10, Future Work #3), and the daemon's `now` after M2 is `time.Now().Unix()` — SECOND granularity (V7, and the doc's own risk row). Two genuine, allowed, successful `Human.Approve` invocations in the same second with the same scope/requester (different plans, possibly different episodes; entirely plausible once D4 gives the daemon production reach) produce byte-identical request payloads and therefore the SAME `requestRef`. D1 then mints K1 and K2, both genuine, both naming that ref. Code 7 ('no OTHER object ... decodes to the same requestRef') now refuses BOTH — and non-monotonically: a page rendered 'validated' for K1 flips to the code-7 sentence the moment K2 commits, contradicting the A1 claim that the verdict is a pure function that 'one store state renders one page' in any stable sense and silently violating the primary goal's implicit promise that produced packets validate. The doc notices the enabling defect but isolates it as 'pre-existing, not absorbed' Future Work #3 without ever connecting it to the code-7 law this row introduces — there is no AC arm, no Risks row, and no analysis. The pre-M2 forgery defense also leans on code-7 collisions ('naming a real request whose genuine packet exists collides under code 7', D5), so weakening code 7 without re-deriving that argument is not a free edit. This is a self-inconsistency inside the design, not an external integration worry: the producer can mint objects its own validator permanently refuses.",
+        "catch": "Reconcile Future Work #3 with D5/D1 before M2, not 'later'. Verify and answer: when two genuine invocations share one `requestRef` (same-second clock, content-identical request), what does code 7 render for each packet, and does a previously validated packet page flipping to a refusal sentence violate this design's own A1/determinism claim? The AC set (AC1/AC3/AC4/AC5 arm 7) never exercises two genuine packets on one request ref, so the failure is currently invisible to the test plan, and the Risks table omits it.",
+        "proposed_fix": "Add a subsection to D5 and a Risks row: 'Request-identity collapse interacts with code 7. ApprovalRequest identity excludes the invocation and plan (V10) and the daemon clock is second-granular (V7), so two genuine same-second same-scope approvals mint K1,K2 sharing requestRef. Fix: scope code 7 to the (requestRef, proposalHash) PAIR — a packet is unique iff no other stored packet decodes to the same requestRef AND the same proposalHash — and re-derive the D5 forgery argument for the weaker law: a forger naming a real request with a fabricated plan no longer trips code 7, so label-forgery resistance rests on codes 2 (first-carrier of a record whose plan is proposalHash) and 5 (broker-only chain), which is unchanged against REST since V16; the pre-M2 declared residual shrinks only in that the forged-plan arm is now covered by code 3 rather than code 7. Both genuine packets then validate and each links to its own plan.' Concretely: (1) change the `packetRefusal` sketch law and Go mirror to take proposalHash into the uniqueness comparison, re-run Z3 and the drift suite, add the two genuine-duplicate rows to the 42 inline tests; (2) add AC5 arm 7b 'a second packet naming the same request BUT a different proposalHash renders validated' and AC5 arm 7 kept for the same (requestRef, proposalHash) pair; (3) add AC1/AC3 arm: two same-`now` same-scope allowed approvals in one test store mint two packets that both validate; (4) add MP8b: mutation reverting the pair-scope to requestRef-only kills arm 7b; (5) add a Risks row disclosing the non-monotonicity hazard that the pair-scope resolves. Alternatively, if the pair-scope is judged to weaken the anti-forgery story unacceptably, condition M2 on landing the Future Work #3 broker fix (fold an invocation/plan discriminator into the approval-request payload as `world/approval-request/v2`) FIRST and state that ordering in the Timeline — but the doc may not ship D1's producer and D5's code 7 together with the collapse unaddressed."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2: controller measured all r1 anchor-hop premises first-party (LogEntry store.go:136, recordV2 plan.go:39, readStore 11 methods daemon.go:501, coordinator ObjectCommits 0 vs ctrl 1, ORDER BY hash_ref, REST transitionRef caller-supplied handlers.go:820) and handed measurements to the designer; revision adds V35-V43, AC3b, D2b."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: D4's authority analysis justifies the safety of binding Human.Approve in the daemon by claiming that 'publish consumption requires an operator decision AND a publish-shaped scope (`validatePublishApproval`, `approve.go:486+`)', but neither `validatePublishApproval` nor `approve.go:486+` are measured anywhere in the §10 Verification Log. An unverified premise used to justify an authority-class effect-surface widening violates the premise verification gate.",
+      "oc-glm-5-3: The design's entire production-reach decision (D4, the daemon's `Human.Approve` binding — its 4th production broker-effect binding site) is cleared against the TR.C broker-binding boundary solely by the claim that the gate \"does not scan for\" Registry-map insertions, but V22 does not verify that claim: its command only locates `const wantCount = 3` at `invoke_boundary_test.go:274`, and the load-bearing assertion \"the identities are publish_op.go only\" appears in the Observed column with no command at all. Nothing in §10 shows what TR.C's census actually enumerates or what invariant it was erected to pin, so the argument that a new daemon binding site is out of the gate's scope is asserted, not measured — precisely the kind of unverified premise this rubric rejects. Worse, the doc itself demonstrates it knows how to handle a discovered boundary-gate defect (the REST semantic-ID passthrough is queued as Future Work #2), yet the TR.C blindspot it relies on is neither closed (no census extension in M2) nor queued, leaving the gate permanently green while the boundary it names is widened.",
+      "oc-kimi-k3: D5 code 7 (uniqueness on requestRef) is unsound against the row's OWN producer, using facts the doc itself banked. ApprovalRequest identity is {effect,scope,cost,requester,now} (V10, Future Work #3), and the daemon's `now` after M2 is `time.Now().Unix()` — SECOND granularity (V7, and the doc's own risk row). Two genuine, allowed, successful `Human.Approve` invocations in the same second with the same scope/requester (different plans, possibly different episodes; entirely plausible once D4 gives the daemon production reach) produce byte-identical request payloads and therefore the SAME `requestRef`. D1 then mints K1 and K2, both genuine, both naming that ref. Code 7 ('no OTHER object ... decodes to the same requestRef') now refuses BOTH — and non-monotonically: a page rendered 'validated' for K1 flips to the code-7 sentence the moment K2 commits, contradicting the A1 claim that the verdict is a pure function that 'one store state renders one page' in any stable sense and silently violating the primary goal's implicit promise that produced packets validate. The doc notices the enabling defect but isolates it as 'pre-existing, not absorbed' Future Work #3 without ever connecting it to the code-7 law this row introduces — there is no AC arm, no Risks row, and no analysis. The pre-M2 forgery defense also leans on code-7 collisions ('naming a real request whose genuine packet exists collides under code 7', D5), so weakening code 7 without re-deriving that argument is not a free edit. This is a self-inconsistency inside the design, not an external integration worry: the producer can mint objects its own validator permanently refuses."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2808736,
+    "total_tokens_in": 50374,
+    "total_tokens_out": 19378
+  }
+}

@@ -14,6 +14,8 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 256 | 2026-10-13 | row 172 LANDED `d36b148`: coordinator mints `world/decision-packet/v1` on the effectful Human.Approve commit + validated object-page projection; daemon binding split to row 176, PARKED on D-WORLD-73 (resumes orphan 255); judge sonnet PASS 86→92 [PRODUCT] |
+| 255 | 2026-10-13 | ORPHAN (STALL-killed rc=143 at gate-3, foreground planner >40 min): row 172 design `955fbc0` + quorum r1/r2 + carve-out `b72428a` + uncommitted plan in `.wt-world-iter255-row172-design`; credited in 256 |
 | 254 | 2026-10-13 | row 105 LANDED `9d16a07`: workbench object page projects PROVEN via a daemon-held validator (resumes orphan 253; r2 carve-out); judge sonnet PASS 88, zero blocking [PRODUCT] |
 | 253 | 2026-10-12 | ORPHAN (capacity-paused at gate-3): row 105 design `1945fb2` + quorum r1/r2-prep + uncommitted revision in `.wt-world-iter253-row105-design`; credited in 254 |
 | 252 | 2026-10-12 | row 26 LANDED `0390aa5`: bounded Z3 report producer (resumes orphan 251); judge sonnet PASS 86→88, zero blocking [PRODUCT] |
