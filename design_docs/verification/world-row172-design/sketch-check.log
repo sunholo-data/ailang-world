@@ -1,0 +1,44 @@
+$ cd <scratch> && ~/.pinned-ailang/ailang check sketches/decisionpacket.ail
+→ Type checking sketches/decisionpacket.ail...
+→ Effect checking...
+
+✓ No errors found!
+rc=0
+
+$ ~/.pinned-ailang/ailang verify sketches/decisionpacket.ail
+
+→ Verifying contracts in sketches/decisionpacket.ail
+  Solver: Z3 version 4.16.0 - 64 bit
+
+  ✓ VERIFIED mintedScheduleWellFormed  4.814333ms
+  ✓ VERIFIED producerFieldsOk  4.467791ms
+  ✓ VERIFIED sameRef  4.18125ms
+  ✓ VERIFIED lifecycleOk  4.925791ms
+  ✓ VERIFIED packetRefusal  4.313042ms
+  ✓ VERIFIED policyCode  4.090458ms
+  ✓ VERIFIED scheduleWellFormed  4.540625ms
+  ✓ VERIFIED mintable  4.343458ms
+
+  8 exported functions: 8 verified
+
+
+$ ~/.pinned-ailang/ailang test sketches/decisionpacket.ail (summary)
+  ✓ Passed: 42
+  ✗ Failed: 0
+$ MUTANT A: mintedScheduleWellFormed body escalation 0 -> -1; ailang verify
+  ✗ VIOLATION mintedScheduleWellFormed
+    Counterexample:
+      $p_grantExpiresAt: Int = 1
+      $p_now: Int = 0
+--
+  8 exported functions: 7 verified, 1 violations
+
+$ MUTANT B: packetRefusal lifecycle code 6 -> 0; ailang verify
+  ✗ VIOLATION packetRefusal
+    Counterexample:
+      $p_proposalOk: Bool = true
+      $p_lifecycleOk: Bool = false
+--
+  8 exported functions: 7 verified, 1 violations
+
+1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f

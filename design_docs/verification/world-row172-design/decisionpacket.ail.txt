@@ -1,0 +1,148 @@
+module sketches/decisionpacket
+
+-- Compiler-checked sketch for w-decision-packet-production-projection (queue
+-- row 172): the PURE laws of the world/decision-packet/v1 producer and of the
+-- workbench validator. host/coordinator/decisionpacket.go mirrors every law
+-- below by name; host/coordinator/decisionpacket_drift_test.go reads THIS file
+-- and evaluates every inline test row through the Go mirror. Hashing, JSON
+-- canonical form and store reads are host-boundary Go (coding-standards S2).
+
+-- A content reference as the law sees it (mirrors hashref.HashRef).
+export type Ref = {
+  algo: string,
+  digest: string
+}
+
+-- The frozen TimeoutPolicy set (world/types.ail), as wire tokens. -1 = not a
+-- member. A bare ADT field in a record is Z3-unencodable (item 15, V-P2), so
+-- the law speaks in codes; the Go mirror maps tokens to these codes.
+export func policyCode(token: string) -> int ! {}
+ensures { result == (if token == "Cancel" then 0
+                     else if token == "EscalateBounded" then 1
+                     else if token == "ExecuteIfGranted" then 2
+                     else 0 - 1) }
+tests [
+  ("Cancel", 0),
+  ("EscalateBounded", 1),
+  ("ExecuteIfGranted", 2),
+  ("cancel", -1),
+  ("", -1)
+]
+{
+  if token == "Cancel" then 0
+  else if token == "EscalateBounded" then 1
+  else if token == "ExecuteIfGranted" then 2
+  else 0 - 1
+}
+
+-- Restates world/types.ail wellFormedSchedule (a sketch cannot import world/).
+export func scheduleWellFormed(createdAt: int, deadlineAt: int, escalationsRemaining: int) -> bool ! {}
+ensures { result == (createdAt >= 0 && deadlineAt > createdAt && escalationsRemaining >= 0) }
+tests [
+  ((0, 1, 0), true),
+  ((5, 5, 0), false),
+  ((-1, 3, 0), false),
+  ((2, 9, -1), false)
+]
+{
+  createdAt >= 0 && deadlineAt > createdAt && escalationsRemaining >= 0
+}
+
+-- P1: the v1 producer mints only under a live Human.Approve grant
+-- (broker capabilityLive: now >= 0 && now < expiresAt).
+export func mintable(now: int, grantExpiresAt: int) -> bool ! {}
+ensures { result == (now >= 0 && now < grantExpiresAt) }
+tests [
+  ((0, 1), true),
+  ((7, 7), false),
+  ((-1, 5), false)
+]
+{
+  now >= 0 && now < grantExpiresAt
+}
+
+-- P2: every packet the producer mints has a well-formed schedule:
+-- createdAt = now, deadlineAt = the grant's expiry, escalationsRemaining = 0.
+export func mintedScheduleWellFormed(now: int, grantExpiresAt: int) -> bool ! {}
+ensures { (not (now >= 0 && now < grantExpiresAt)) || result }
+tests [
+  ((0, 1), true),
+  ((3, 100), true)
+]
+{
+  scheduleWellFormed(now, grantExpiresAt, 0)
+}
+
+-- P3: the v1 producer's lifecycle fields: policy Cancel (code 0) with no
+-- escalation budget — the ratified typed rejected-timeout resolution.
+export func producerFieldsOk(policy: int, escalationsRemaining: int) -> bool ! {}
+ensures { result == (policy == 0 && escalationsRemaining == 0) }
+tests [
+  ((0, 0), true),
+  ((1, 0), false),
+  ((0, 1), false),
+  ((-1, 0), false)
+]
+{
+  policy == 0 && escalationsRemaining == 0
+}
+
+-- Two refs name the same content.
+export func sameRef(a: Ref, b: Ref) -> bool ! {}
+ensures { result == (a.algo == b.algo && a.digest == b.digest) }
+tests [
+  (({ algo: "sha256", digest: "aa" }, { algo: "sha256", digest: "aa" }), true),
+  (({ algo: "sha256", digest: "aa" }, { algo: "sha256", digest: "ab" }), false),
+  (({ algo: "sha256", digest: "aa" }, { algo: "sha512", digest: "aa" }), false)
+]
+{
+  a.algo == b.algo && a.digest == b.digest
+}
+
+-- V: the validator's ORDERED refusal law. Each argument is one host-measured
+-- fact; the result is the code of the FIRST failing check (0 = validated):
+-- 1 packet bytes (canonical decode + packetHash recompute), 2 carrying commit,
+-- 3 proposal binding, 4 request binding (effect result), 5 approvals-chain
+-- anchor, 6 lifecycle fields (createdAt = request now, schedule, producer
+-- fields), 7 duplicate packet for the request.
+export func packetRefusal(bytesOk: bool, carriedOk: bool, proposalOk: bool, requestOk: bool,
+                          anchoredOk: bool, lifecycleOk: bool, uniqueOk: bool) -> int ! {}
+ensures { (result == 0) == (bytesOk && carriedOk && proposalOk && requestOk && anchoredOk && lifecycleOk && uniqueOk)
+          && result >= 0 && result <= 7 }
+tests [
+  ((true, true, true, true, true, true, true), 0),
+  ((false, false, false, false, false, false, false), 1),
+  ((true, false, true, true, true, true, true), 2),
+  ((true, true, false, false, true, true, true), 3),
+  ((true, true, true, false, true, true, true), 4),
+  ((true, true, true, true, false, true, true), 5),
+  ((true, true, true, true, true, false, true), 6),
+  ((true, true, true, true, true, true, false), 7)
+]
+{
+  if not bytesOk then 1
+  else if not carriedOk then 2
+  else if not proposalOk then 3
+  else if not requestOk then 4
+  else if not anchoredOk then 5
+  else if not lifecycleOk then 6
+  else if not uniqueOk then 7
+  else 0
+}
+
+-- The lifecycle check the validator applies (fact 6 above).
+export func lifecycleOk(createdAt: int, requestNow: int, deadlineAt: int,
+                        escalationsRemaining: int, policy: int) -> bool ! {}
+ensures { result == (createdAt == requestNow && createdAt >= 0 && deadlineAt > createdAt
+                     && policy == 0 && escalationsRemaining == 0) }
+tests [
+  ((10, 10, 20, 0, 0), true),
+  ((10, 11, 20, 0, 0), false),
+  ((10, 10, 10, 0, 0), false),
+  ((10, 10, 20, 1, 0), false),
+  ((10, 10, 20, 0, 2), false)
+]
+{
+  createdAt == requestNow && scheduleWellFormed(createdAt, deadlineAt, escalationsRemaining)
+    && producerFieldsOk(policy, escalationsRemaining)
+}
