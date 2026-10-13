@@ -1318,3 +1318,96 @@ Deviations, all adjudicated: MV8, MV12 and MP3 were rewritten as compiling varia
 **Progress:** clauses 1/2/3/6/7 MET; 4 and 5 UNMET. D-WORLD-69 path: 26 ✔ → 105 ✔ → 172 ✔ → 150.
 
 **Next:** if no critical-path row is loop-routable (93 FINAL is attended), take **row 150** only once fleet row 173's PNG gate resolves. Otherwise the loop has no D-WORLD-69 row left, so file a rule-(d) ask for the next exception row. Row 176 runs on D-WORLD-73 = A.
+
+## 257 — 2026-10-13 — no pick: rule (d) block report; the D-WORLD-69 path's last row (150) is still blocked on fleet row 173, whose ticket had left the fleet queue unresolved, so it is re-filed; row 120 closed as already fixed by attended `c2476ff` [ADMIN]
+
+**Kind:** bookkeeping-only iteration under the charter's standing rule (d) (D-WORLD-46). No design doc, plan, code or product acceptance. The record covers STATUS (stamp plus rotation of 252 to the archive), the row-120 close, a row-173 note, the log, the index and the dashboard. An independent judge reviewed it before merge.
+
+**Pick and why:** NONE.
+- **Clause map at `2baf62c`:** 1/2/3/6/7 MET.
+  - Clause 4 is UNMET. Row 93's new pre-registered FINAL is attended (D-WORLD-70 = A, D-WORLD-72 = A; Sol pilots are running attended, the latest being `edb1b63`), so it is not loop-routable.
+  - Clause 5 is UNMET. Row 114 waits on the new 93 FINAL (D-WORLD-70: "then 114 → 139"), and 139 waits on 114.
+- **The D-WORLD-69 exception path** is 26 ✔ → 105 ✔ → 172 ✔ → **150**. Row 150's own tag says it resumes only when fleet row 173 resolves the PNG gate.
+- **Row 173's predicate, re-run this iteration (not transcribed):**
+  - `ailang mission ticket open --json` lists 52 signatures, and none contains `png`.
+  - In `mission-fleet`, the iter-246 filing (`inbox_1791466110794_90c512a9`) shows as **read**.
+  - No `harness-resolved` reply for this signature is in `mission-world`. 12 other `harness-resolved` replies are there (`ailang messages list --inbox mission-world --limit 100`), which shows the channel works. The count was first written as nine from a `head`-truncated listing; the judge caught it.
+  - At HEAD, `scripts/verify_go.sh`'s tracked-binary gate (`:212–246`) is unchanged and still has no image allowance.
+  - So the ticket left the fleet queue without being resolved (unread means open). The blocker is still real, but the fleet can no longer see it.
+- **Row 176** is PARKED on D-WORLD-73, which is OPEN with default B (hold).
+
+Rule (d) therefore applies: no row is picked, and no hygiene or residual side work is done.
+
+**Actions taken:**
+1. **Re-filed the fleet ticket** under the same signature `ci:world:tracked-binary-rejects-release-png` as `inbox_1791881840796_78032a58` (`--blocking item`). Evidence is committed at `design_docs/verification/world-iter257/png-ticket-evidence.txt` (copy at `~/.ailang/state/world-iter257/`). It is confirmed listed: `1 item ci:world:tracked-binary-rejects-release-png (world; first 2026-10-13 08:57)`. A dated note is appended to row 173.
+2. **Closed row 120** (`w-quickstart-commit-omits-session`, clause-7) as already fixed, found while looking for a routable row.
+   - `git log -S'commit --file /tmp/genesis.json --session' -- docs/QUICKSTART.md` returns only `c2476ff`: attended, #193, 2026-10-03, row 137.
+   - At `2baf62c`, every `commit --file` site in QUICKSTART carries `--session`, and `session mint` comes before the first commit.
+   - It was closed on the doc text, without a daemon repro (the row itself was never reproduced). No CI regression guard was added, because rule (d) forbids side work. That is a known gap against the ghost-close rule, and it is stated here rather than hidden.
+3. **No new ask.** Iteration 256's Next said to "file a rule-(d) ask for the next exception row". D-WORLD-73 already is that ask: row 176 is the only row whose unblock is a one-word human answer, and it is also row 150's showcase-packet prerequisite. A second ask would duplicate it.
+
+**Block report (each row, its exact blocker, and the one action that unblocks it):**
+- **93** (clause 4): new pre-registered FINAL, attended. Action: Mark runs the FINAL.
+- **114** (clause 5): after the 93 FINAL (D-WORLD-70). Action: the FINAL lands.
+- **139** (clause 5): after 114.
+- **150** (release; D-WORLD-69 exception): fleet row 173, PNG gate. Action: the fleet resolves `ci:world:tracked-binary-rejects-release-png` (re-filed and open).
+- **176** (release prerequisite): D-WORLD-73 OPEN. Action: D-WORLD-73 = A.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` is absent). gh is `sunholo-voight-kampff`. Billing tripwire CLEAN.
+- `mission_directives.sh` found **0** allowlisted directives on #246 since `2026-10-13T02:01:58Z` (7 comments), so the watermark is unchanged.
+- `mission_gate0_self_notices.sh` returned rc 1 with one crash notice: rc=143 at 02:01:58Z, the 02:55Z fire (orphan 255, STALL-killed). Control 107:4 ok. Iteration 256 already resumed and credited it, so there is no new orphan.
+- Traces: no open PR except #166 (row 114 draft, preserved). The worktrees are the 252/256 record trees and orphan 255's design tree, all consumed.
+- The `mission-world` unread inbox is empty.
+- #246 is this week's thread, so there is no rotation or sweep.
+
+**Gate 1:**
+- Local `dev` was 2 behind and was fast-forwarded. `dev` == `origin/dev` == `2baf62c`, with check-runs 2/2 success. The last four `CI` runs on `dev` all succeeded.
+- **Skill drift:** the resolved symlink target matches the V1 checkout's `origin/dev` on all 13 files (SKILL.md plus 12 resources). Every rule was read from the resolved target.
+
+**Designer / planner / executor:** not spawned. There was no pick (rule (d)), so there was nothing to design, plan or execute (precedent: iterations 227 and 232–235). The operator's standing request for Agent-tool roles applies here to the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It ran through the Agent tool on `sonnet` (resolver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`) in a fresh, read-only context, and judged the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=2baf62c9fa0ac4b6ad39a44079bcc699884afb6a@2026-10-13T08:57:36Z (Gate 4; Gate 1 read the same SHA at 08:55:41Z).
+- Controller: `claude:claude-opus-5-5` (tok: not reported).
+- `$MISSION_ROUTING_NOTE`: the planner and executor codex lanes were over daily ration (rc 75), so they went to `opus` / `claude:claude-haiku-5-5`. These were unused, since there was no pick.
+- Designer/planner/executor: none.
+- Evaluator: Agent `sonnet` (tok: see follow-through).
+- Metered: $0.
+
+**Ruled out:**
+- Picking 150 (fleet-blocked) or 176 (D-WORLD-73 OPEN, default hold).
+- Picking 93, 114 or 139 (attended or sequenced behind the attended FINAL).
+- Any MET-clause hygiene or residual row (rule (d)), and adding a regression guard for the row-120 close (the same rule).
+- Repairing the PNG gate in World: row 173 is fleet-owned, and World changes neither the gate nor the deliverable.
+- Filing a duplicate rule-(d) ask (D-WORLD-73 covers it).
+- `ailang mission rotate-log world`: the live log is 27 entries (under ~40), and the index row was written by hand, as in 232–235.
+
+**Retro:**
+1. **"Read" is not "resolved" in the ticket queue.** A ticket marked read without a `harness-resolved` reply drops out of `ticket open`, so a blocked row's predicate has to be the open list *and* the reply, not the open list alone. Re-filing under the same signature is the cheap repair. This is instance 1 on World. If it recurs, it is a fleet ticket in its own right (the resolver should be the only thing that marks a ticket read).
+2. **A queue row filed from a code reading can be fixed by an attended docs pass without anyone touching the row.** Row 120 sat open for 10 days after `c2476ff`. No skill change is proposed.
+
+**Progress:** World 1.0 clauses 4/5 UNMET and 1/2/3/6/7 MET. The goal did not move.
+
+**Next:**
+- If D-WORLD-73 = A, take **row 176**.
+- Otherwise, if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**.
+- Otherwise, rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 257):** the independent evaluator judged record commit `277c500` on `2baf62c` and returned **PASS 91/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (46,179 tok, 40 s).
+- **Verified by the judge:**
+  - scope: 6 record files, no code;
+  - the STATUS rotation: 3 live stamps, the 252 stamp archived byte-identical, and a charter line count unchanged;
+  - the ledger: valid with 60 rows, D-WORLD-73 the only OPEN row;
+  - the rule-(d) premise;
+  - the PNG ticket: now open, the old filing read, and no resolution reply;
+  - the row-120 close: 5 of 5 sites carry `--session`, and the change came only from `c2476ff`;
+  - the cited SHAs, the keyword and email hygiene, 0 directives on #246, and dev CI 2/2.
+- **Non-blocking findings and what was done:**
+  - **N1:** the count of `harness-resolved` replies was wrong (9, from a `head`-truncated listing). It was re-measured and fixed above.
+  - **N4:** the evidence path pointed at local state. It now points at the committed copy.
+  - **N2:** row 173's older `:185–219` line cite is left as historical.
+  - **N3:** the row-120 close sits close to the line on side work. It is disclosed, and no change was made.
+- The report is in `design_docs/verification/world-iter257/evaluator-r1.md`.
+
