@@ -1,0 +1,594 @@
+{
+ "sprint_id": "w-decision-packet-production-projection",
+ "queue_item": 172,
+ "title": "The coordinator mints world/decision-packet/v1 on the effectful commit that requests Human.Approve; the workbench object page validates and projects it (D4 daemon binding HELD as D-WORLD-73)",
+ "status": "pending",
+ "created": "2026-10-13",
+ "planner": "mission-control iteration 255 sprint-planner (killed mid-run, rc=143); reviewed, re-measured and finished by iteration 256 sprint-planner",
+ "design_doc": "design_docs/planned/w-decision-packet-production-projection.md",
+ "sprint_plan": "design_docs/planned/w-decision-packet-production-projection-sprint-plan.md",
+ "base_commit": "b72428a (code = e869bfe4ec4aa0523bbe059494b7bf62d762a6e9 + three design-only files)",
+ "branch": "design/w-decision-packet-production-projection",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter255-row172-design",
+ "github_issues": [],
+ "environment": {
+  "AILANG_BIN": "$HOME/.pinned-ailang/ailang",
+  "ailang_version": "AILANG v0.41.0, sha256 1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+  "PATH_prefix": "/opt/homebrew/bin",
+  "notes": [
+   "The pinned binary is the ONLY gate instrument.",
+   "The Bash tool shell is zsh: run gate scripts with bash; zsh does not word-split $X.",
+   "Use /usr/bin/grep in scripts (the rig grep is ugrep).",
+   "go build is not a compile fence for _test.go files: use go test -run '^$' ./... and go vet ./...",
+   "The executor must NOT run scripts/verify_go.sh; the controller runs it after run B.",
+   "The executor runs no git write (no add/commit/stash/checkout/restore/branch). Mutant restores use cp + cmp, never git checkout.",
+   "Known base flakes: TestExecSrtMCP* (CI), TestCommitInvocationReceiptIdentity under -race; re-run once alone, report by name."
+  ]
+ },
+ "ratification": {
+  "D2b": "Byte form and packetHash rule are an IRREVERSIBLE freeze once a packet is stored (design D2b). With D4 held no production path stores a packet (plan PD29), so the freeze is landed and test-pinned but not yet exercised in production.",
+  "D4": "HELD. The controller files D-WORLD-73 with the design's default: land M1 and M3's validator and hold M2's daemon binding. Step C4.2 (binding + serialization: AC3 daemon arm, AC8, MD2, MD3) is not implemented this sprint; host/daemon/daemon.go is frozen."
+ },
+ "ratified_deferrals_do_not_fix": [
+  "Do NOT implement C4.2 (d.binder Human.Approve binding, humanMu, human field, serializedHandler). D-WORLD-73 is held.",
+  "Do NOT change the frozen refusal sentences, including code 5's 'newest 40 approval heads' wording (PD28 is reported, not fixed).",
+  "Do NOT absorb Future Work #1 (approvals-head CAS), #2 (general REST semantic-ID passthrough), #3 (request-identity collapse), #5 (TR.C blindness to Registry insertions).",
+  "Do NOT edit invoke_boundary_test.go (TR.C wantCount stays 3) or any existing _test.go except host/verifygate/module_manifest_gate_test.go's five PD3 sites."
+ ],
+ "executor_runs": [
+  {
+   "id": "A",
+   "milestones": [
+    "C1",
+    "C2",
+    "C3"
+   ],
+   "target_minutes": 45,
+   "ends_with": "run-A boundary full gate F1-F4 (RACE='./host/coordinator ./host/broker') + sha256 manifest ~/.ailang/state/iter256-plan/runA.sha256"
+  },
+  {
+   "id": "B",
+   "milestones": [
+    "C4.1",
+    "C5",
+    "C6",
+    "C7"
+   ],
+   "target_minutes": 45,
+   "starts_with": "shasum -a 256 -c ~/.ailang/state/iter256-plan/runA.sha256 (all OK)",
+   "ends_with": "run-B boundary full gate F1-F4 (RACE='./host/coordinator ./host/daemon ./host/workbench') + C7 re-drill of 16 run-B mutants; rollover to a short run B2 if 40 min used before the re-drill (PD31)"
+  }
+ ],
+ "features": [
+  {
+   "id": "C1",
+   "name": "Sketch, gate manifest, Go law mirrors, drift",
+   "title": "Sketch, gate manifest, Go law mirrors, drift",
+   "executor_run": "A",
+   "description": "See plan section C1.",
+   "files": [
+    "design_docs/sketches/decisionpacket.ail",
+    "scripts/verify_ail.sh",
+    "host/verifygate/module_manifest_gate_test.go",
+    "host/coordinator/decisionpacket.go",
+    "host/coordinator/decisionpacket_drift_test.go"
+   ],
+   "closes_acceptance_criteria": [
+    "AC9"
+   ],
+   "advances_acceptance_criteria": [],
+   "acceptance_criteria": [
+    "AC9: TestDecisionPacketSketchRows evaluates all 37 rows of the 9 laws through the Go mirrors; name sets equal; shape rules (PD4)",
+    "verify_ail.sh: 23 modules, unchanged banner; REQUIRED_VERIFIED names all 9 decisionpacket identities",
+    "verifygate: three named tests PASS with the five PD3 sites moved to 25/23",
+    "Mutants MS1, MS2, MS3, MS4, MP8b-drift, MV7-drift each killed; restores cmp rc=0"
+   ],
+   "acceptance": [
+    "AC9: TestDecisionPacketSketchRows evaluates all 37 rows of the 9 laws through the Go mirrors; name sets equal; shape rules (PD4)",
+    "verify_ail.sh: 23 modules, unchanged banner; REQUIRED_VERIFIED names all 9 decisionpacket identities",
+    "verifygate: three named tests PASS with the five PD3 sites moved to 25/23",
+    "Mutants MS1, MS2, MS3, MS4, MP8b-drift, MV7-drift each killed; restores cmp rc=0"
+   ],
+   "estimated_days": 0.4,
+   "dependencies": [],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  },
+  {
+   "id": "C2",
+   "name": "Canonical codec and mintPacket (D2 byte freeze)",
+   "title": "Canonical codec and mintPacket (D2 byte freeze)",
+   "executor_run": "A",
+   "description": "See plan section C2.",
+   "files": [
+    "host/coordinator/plan.go",
+    "host/coordinator/decisionpacket.go",
+    "host/coordinator/decisionpacket_test.go"
+   ],
+   "closes_acceptance_criteria": [],
+   "advances_acceptance_criteria": [
+    "AC2"
+   ],
+   "acceptance_criteria": [
+    "TestDecisionPacketCodec: golden bytes byte-exact, round trip, 7 refusal arms errors.Is errPacketEncoding, mintPacket fields + errPacketSchedule arms",
+    "Mutants MV1, MV2, MP7, MP6 killed"
+   ],
+   "acceptance": [
+    "TestDecisionPacketCodec: golden bytes byte-exact, round trip, 7 refusal arms errors.Is errPacketEncoding, mintPacket fields + errPacketSchedule arms",
+    "Mutants MV1, MV2, MP7, MP6 killed"
+   ],
+   "estimated_days": 0.4,
+   "dependencies": [
+    "previous milestone"
+   ],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  },
+  {
+   "id": "C3",
+   "name": "Broker exports and the coordinator producer",
+   "title": "Broker exports and the coordinator producer",
+   "executor_run": "A",
+   "description": "See plan section C3.",
+   "files": [
+    "host/broker/decide.go",
+    "host/broker/approve.go",
+    "host/broker/packet_exports_test.go",
+    "host/coordinator/effectful.go",
+    "host/coordinator/coordinator.go",
+    "host/coordinator/decisionpacket.go",
+    "host/coordinator/decisionpacket_producer_test.go"
+   ],
+   "closes_acceptance_criteria": [
+    "AC1",
+    "AC2",
+    "AC3b"
+   ],
+   "advances_acceptance_criteria": [
+    "AC3"
+   ],
+   "acceptance_criteria": [
+    "AC1 incl. the two-approvals arm (2 packets, equal RequestRef, distinct ProposalHash)",
+    "AC2 (deadline 1760 from the PD22 ladder)",
+    "AC3 coordinator arm + two-approvals carriers",
+    "AC3b (PD9 form)",
+    "TestPacketBrokerExports",
+    "TR.C green with its file unmodified",
+    "Mutants MP1-MP8, MB1 killed",
+    "Run-A boundary full gate F1-F4 green; sha256 manifest written"
+   ],
+   "acceptance": [
+    "AC1 incl. the two-approvals arm (2 packets, equal RequestRef, distinct ProposalHash)",
+    "AC2 (deadline 1760 from the PD22 ladder)",
+    "AC3 coordinator arm + two-approvals carriers",
+    "AC3b (PD9 form)",
+    "TestPacketBrokerExports",
+    "TR.C green with its file unmodified",
+    "Mutants MP1-MP8, MB1 killed",
+    "Run-A boundary full gate F1-F4 green; sha256 manifest written"
+   ],
+   "estimated_days": 0.6,
+   "dependencies": [
+    "previous milestone"
+   ],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  },
+  {
+   "id": "C4.1",
+   "name": "REST reservation of world/decision-packet/v1",
+   "title": "REST reservation of world/decision-packet/v1",
+   "executor_run": "B",
+   "description": "See plan section C4.1.",
+   "files": [
+    "host/daemon/handlers.go",
+    "host/daemon/decisionpacket_daemon_test.go"
+   ],
+   "closes_acceptance_criteria": [
+    "AC7"
+   ],
+   "advances_acceptance_criteria": [],
+   "acceptance_criteria": [
+    "Run-A sha256 manifest check all OK at run-B start",
+    "AC7: 400 BadRequest with the exact message, packet page empty, control commit 200",
+    "Red-first recorded (200 before the insertion)",
+    "host/daemon/daemon.go untouched",
+    "Mutant MD1 killed"
+   ],
+   "acceptance": [
+    "Run-A sha256 manifest check all OK at run-B start",
+    "AC7: 400 BadRequest with the exact message, packet page empty, control commit 200",
+    "Red-first recorded (200 before the insertion)",
+    "host/daemon/daemon.go untouched",
+    "Mutant MD1 killed"
+   ],
+   "estimated_days": 0.25,
+   "dependencies": [
+    "previous milestone"
+   ],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  },
+  {
+   "id": "C4.2",
+   "name": "Human.Approve daemon binding + serialization",
+   "title": "Human.Approve daemon binding + serialization",
+   "executor_run": "-",
+   "description": "See plan section C4.2.",
+   "files": [
+    "host/daemon/daemon.go (NOT modified this sprint)"
+   ],
+   "closes_acceptance_criteria": [],
+   "advances_acceptance_criteria": [],
+   "acceptance_criteria": [
+    "HELD by D-WORLD-73: AC3 daemon arm, AC8, MD2, MD3 are not implemented, written, run or reported this sprint"
+   ],
+   "acceptance": [
+    "HELD by D-WORLD-73: AC3 daemon arm, AC8, MD2, MD3 are not implemented, written, run or reported this sprint"
+   ],
+   "estimated_days": 0.0,
+   "dependencies": [],
+   "status": "held",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": "D-WORLD-73"
+  },
+  {
+   "id": "C5",
+   "name": "Validator, projection, validated page",
+   "title": "Validator, projection, validated page",
+   "executor_run": "B",
+   "description": "See plan section C5.",
+   "files": [
+    "host/coordinator/decisionpacket_validate.go",
+    "host/workbench/render.go",
+    "host/daemon/workbench_packet.go",
+    "host/daemon/workbench.go",
+    "host/daemon/workbench_packet_test.go"
+   ],
+   "closes_acceptance_criteria": [
+    "AC4"
+   ],
+   "advances_acceptance_criteria": [
+    "AC5"
+   ],
+   "acceptance_criteria": [
+    "AC4: validated sentence exactly once, three links, approvals chain: pending, logical-time note, two grade lines equal objectGradeView",
+    "Non-packet page has no packet section and zero packet scans (counting wrapper); packet page exactly 1 scan",
+    "TestWorkbenchObjectGrade green with workbench_test.go unmodified; host/workbench all PASS",
+    "Mutants MV12, MP7-page, MV3-genuine killed"
+   ],
+   "acceptance": [
+    "AC4: validated sentence exactly once, three links, approvals chain: pending, logical-time note, two grade lines equal objectGradeView",
+    "Non-packet page has no packet section and zero packet scans (counting wrapper); packet page exactly 1 scan",
+    "TestWorkbenchObjectGrade green with workbench_test.go unmodified; host/workbench all PASS",
+    "Mutants MV12, MP7-page, MV3-genuine killed"
+   ],
+   "estimated_days": 0.7,
+   "dependencies": [
+    "previous milestone"
+   ],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  },
+  {
+   "id": "C6",
+   "name": "Forged and mismatched packets; evidence only through row 105",
+   "title": "Forged and mismatched packets; evidence only through row 105",
+   "executor_run": "B",
+   "description": "See plan section C6.",
+   "files": [
+    "host/daemon/workbench_packet_test.go"
+   ],
+   "closes_acceptance_criteria": [
+    "AC3",
+    "AC5",
+    "AC6"
+   ],
+   "advances_acceptance_criteria": [],
+   "acceptance_criteria": [
+    "AC5: arm 0 positive control validated; arms 1,1b,2,3,3b,4,5,5b,6,6b,7 render their exact sentences with no links; arm 7b both validated",
+    "AC6: configured PROVEN on the transition-function line only via objectGradeView; unconfigured both lines the row-105 constant",
+    "New daemon tests add < 15 s",
+    "Mutants MV1-MV11, MP8b killed"
+   ],
+   "acceptance": [
+    "AC5: arm 0 positive control validated; arms 1,1b,2,3,3b,4,5,5b,6,6b,7 render their exact sentences with no links; arm 7b both validated",
+    "AC6: configured PROVEN on the transition-function line only via objectGradeView; unconfigured both lines the row-105 constant",
+    "New daemon tests add < 15 s",
+    "Mutants MV1-MV11, MP8b killed"
+   ],
+   "estimated_days": 0.6,
+   "dependencies": [
+    "previous milestone"
+   ],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  },
+  {
+   "id": "C7",
+   "name": "S7 usage (D4-held text), executed doc test, final gates, re-drill",
+   "title": "S7 usage (D4-held text), executed doc test, final gates, re-drill",
+   "executor_run": "B",
+   "description": "See plan section C7.",
+   "files": [
+    "docs/QUICKSTART.md",
+    "host/daemon/workbench_packet_test.go"
+   ],
+   "closes_acceptance_criteria": [
+    "S7"
+   ],
+   "advances_acceptance_criteria": [],
+   "acceptance_criteria": [
+    "QUICKSTART held-variant text appended verbatim (PD32)",
+    "TestQuickstartDecisionPacketSection: static checks (contains D-WORLD-73, {\"items\":[]}; no --grant Human.Approve=), empty listing on a held daemon, produced packet listed and validated",
+    "cmd/ailang-worldd Quickstart tests and the five daemon quickstart controls PASS",
+    "git status lists exactly the 21-path final set; daemon.go untouched",
+    "Run-B boundary full gate F1-F4 green; run-A manifest still OK",
+    "Re-drill of 16 run-B mutants on the final tree (or rollover to B2 per PD31)"
+   ],
+   "acceptance": [
+    "QUICKSTART held-variant text appended verbatim (PD32)",
+    "TestQuickstartDecisionPacketSection: static checks (contains D-WORLD-73, {\"items\":[]}; no --grant Human.Approve=), empty listing on a held daemon, produced packet listed and validated",
+    "cmd/ailang-worldd Quickstart tests and the five daemon quickstart controls PASS",
+    "git status lists exactly the 21-path final set; daemon.go untouched",
+    "Run-B boundary full gate F1-F4 green; run-A manifest still OK",
+    "Re-drill of 16 run-B mutants on the final tree (or rollover to B2 per PD31)"
+   ],
+   "estimated_days": 0.4,
+   "dependencies": [
+    "previous milestone"
+   ],
+   "status": "pending",
+   "passes": false,
+   "started": null,
+   "completed": null,
+   "notes": ""
+  }
+ ],
+ "acceptance_criteria_map": {
+  "AC1": {
+   "status": "in",
+   "closed_by": "C3",
+   "tests": [
+    "TestProducerMintsPacketForApprovalOnly"
+   ],
+   "mutants": [
+    "MP1",
+    "MP5"
+   ]
+  },
+  "AC2": {
+   "status": "in",
+   "closed_by": "C3",
+   "advanced_by": [
+    "C2"
+   ],
+   "tests": [
+    "TestProducerPacketBindsInvocationFacts",
+    "TestDecisionPacketCodec"
+   ],
+   "mutants": [
+    "MP2",
+    "MP3",
+    "MP4",
+    "MP6",
+    "MP7",
+    "MB1"
+   ]
+  },
+  "AC3_coordinator_and_two_approvals": {
+   "status": "in",
+   "closed_by": "C6",
+   "advanced_by": [
+    "C3"
+   ],
+   "tests": [
+    "TestProducerPacketIsCarriedByTheInvocationCommit",
+    "TestWorkbenchPacketRefusals/7b-collapsed-request"
+   ],
+   "mutants": [
+    "MP5",
+    "MP8b"
+   ]
+  },
+  "AC3_daemon_arm": {
+   "status": "held",
+   "held_by": "D-WORLD-73",
+   "tests": [
+    "TestDaemonInvocationMintsDecisionPacket (not written)"
+   ],
+   "mutants": [
+    "MD2 (not drilled)"
+   ]
+  },
+  "AC3b": {
+   "status": "in",
+   "closed_by": "C3",
+   "tests": [
+    "TestReplayReconcileToleratesPacketObject"
+   ],
+   "mutants": [
+    "MP8"
+   ]
+  },
+  "AC4": {
+   "status": "in",
+   "closed_by": "C5",
+   "tests": [
+    "TestWorkbenchPacketValidated"
+   ],
+   "mutants": [
+    "MV12",
+    "MP7-page",
+    "MV3-genuine"
+   ]
+  },
+  "AC5": {
+   "status": "in",
+   "closed_by": "C6",
+   "tests": [
+    "TestWorkbenchPacketRefusals"
+   ],
+   "mutants": [
+    "MV1",
+    "MV2",
+    "MV3",
+    "MV4",
+    "MV5",
+    "MV6",
+    "MV7",
+    "MV8",
+    "MV9",
+    "MV11",
+    "MP8b"
+   ]
+  },
+  "AC6": {
+   "status": "in",
+   "closed_by": "C6",
+   "tests": [
+    "TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive"
+   ],
+   "mutants": [
+    "MV10"
+   ]
+  },
+  "AC7": {
+   "status": "in",
+   "closed_by": "C4.1",
+   "tests": [
+    "TestRESTCommitRefusesDecisionPacketObjects"
+   ],
+   "mutants": [
+    "MD1"
+   ]
+  },
+  "AC8": {
+   "status": "held",
+   "held_by": "D-WORLD-73",
+   "tests": [
+    "TestHumanApproveIsSerializedAcrossEpisodes (not written)"
+   ],
+   "mutants": [
+    "MD3 (not drilled)"
+   ]
+  },
+  "AC9": {
+   "status": "in",
+   "closed_by": "C1",
+   "tests": [
+    "TestDecisionPacketSketchRows",
+    "scripts/verify_ail.sh"
+   ],
+   "mutants": [
+    "MS1",
+    "MS2",
+    "MS3",
+    "MS4",
+    "MP8b-drift",
+    "MV7-drift"
+   ]
+  },
+  "S7": {
+   "status": "in",
+   "closed_by": "C7",
+   "tests": [
+    "TestQuickstartDecisionPacketSection"
+   ]
+  }
+ },
+ "pre_registered": {
+  "verify_ail_after_C1": "✓ swept .ail module set equals the LEG1_MODULES allowlist (23 modules); banner unchanged: ✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 444 se-tools named tests pass (measured in a scratch copy, plan R8)",
+  "MS4": "rc=1, ✗ design_docs/sketches/decisionpacket.ail: required identity (decisionpacket, samePair) MISSING from verify.results[] (vanished silently, V20); control without the REQUIRED_VERIFIED entry: rc=0 (plan R9)",
+  "MS1": "rc=1, ✗ design_docs/sketches/decisionpacket.ail: verify.counterexample == 1 (plan R9)",
+  "drift_rows": "9 laws, 37 rows; policyCode line 28 want -1; samePair line 144 want false; lifecycleOk line 161 want false (plan R10)",
+  "verifygate_counts": "24/22 -> 25/23; '22 module(s)' -> '23 module(s)'; ai-check lines 22 -> 23; LEG1 literal gains decisionpacket.ail as its first line",
+  "TR.C": "wantCount stays 3; outside stays 0; invoke_boundary_test.go not edited",
+  "production_packet_writers": 0,
+  "final_changed_files": 21
+ },
+ "doc_defects_found": [
+  {
+   "id": "I255-PD1..PD27",
+   "summary": "Iteration 255's planner defects against the design (ObjectCommits sentinel -1, 9 not 8 identities, verifygate counts omitted, MP5/MP8/MV12/AC3b concrete forms, etc.)",
+   "resolution": "See plan PD1-PD27; re-checked by iteration 256 (anchors R1-R17)."
+  },
+  {
+   "id": "I256-1",
+   "severity": "minor",
+   "summary": "MV7-drift expected 'sketch line 162'; the parser reports line 161.",
+   "resolution": "Fixed in C1's mutation table (R10)."
+  },
+  {
+   "id": "I256-2",
+   "severity": "minor",
+   "summary": "Anchor text said decideOver returns the FIRST allowed grant; it returns the first allowed among grants[1:] in preference to an allowed grants[0].",
+   "resolution": "Anchor corrected; AuthorizingGrant delegates to decideOver so producer and session agree; tests keep a non-Human.Approve grant at index 0 (PD22)."
+  },
+  {
+   "id": "I256-3",
+   "severity": "design-wording",
+   "summary": "Code 5's bounded sentence says 'newest 40 approval heads' but RecentApprovals keeps only 20 distinct requests (approvals_view.go:103-106).",
+   "resolution": "PD28: sentence kept verbatim (design-frozen); reported to the controller; QUICKSTART states the real bound."
+  },
+  {
+   "id": "I256-4",
+   "severity": "plan-killing for a 45-min small-model run",
+   "summary": "Per-milestone full suite + -race (~8.5 min x 7) cannot fit two ~45-min runs.",
+   "resolution": "PD30 fast gates + run-boundary full gates; PD31 re-drill scope + rollover."
+  },
+  {
+   "id": "I256-5",
+   "severity": "major",
+   "summary": "D4 hold left as an 'if refused' contingency with a compose-your-own QUICKSTART sentence; daemon.go still in the changed-file set.",
+   "resolution": "C4.2 marked HELD everywhere; daemon.go frozen; held QUICKSTART text verbatim (PD32); AC list, census, re-drill and file set updated."
+  },
+  {
+   "id": "I256-6",
+   "severity": "minor",
+   "summary": "C7 route regexp [^ |\"']+ crosses a newline when the URL ends a line.",
+   "resolution": "PD33: [^\\s|\"')]+."
+  }
+ ],
+ "risk_level": "medium",
+ "top_risks": [
+  "Executor implements the HELD C4.2 binding (mitigated: daemon.go in the frozen-tree diff check at every fast gate).",
+  "A verifygate count site missed (mitigated: five sites by line, three named verifygate tests in C1's gate).",
+  "Run B overruns (mitigated: PD31 rollover to a short B2 re-drill run).",
+  "Forged-chain fixture entry indexes collide with publishTools commits (mitigated: commitObjects chains from the selected head).",
+  "D2b freeze becomes live only when D-WORLD-73 binds; the golden in TestDecisionPacketCodec pins it until then."
+ ],
+ "handoff": {
+  "to": "sprint-executor (Claude Haiku 5.5), two runs",
+  "plan_path": "design_docs/planned/w-decision-packet-production-projection-sprint-plan.md",
+  "progress_path": "sprint_w-decision-packet-production-projection.json",
+  "estimated_duration": "~3.35 executor-days of planned work; two ~45-min executor runs",
+  "total_loc_estimate": "~410 prod (minus ~30 held in C4.2) + ~1100 test",
+  "controller_after_run_B": [
+   "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh (outside any sandbox)",
+   "commit per milestone boundary",
+   "file D-WORLD-73 (D4) and report PD28's wording finding"
+  ]
+ },
+ "execution": {}
+}
