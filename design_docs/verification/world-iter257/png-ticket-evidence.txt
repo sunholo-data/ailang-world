@@ -1,0 +1,7 @@
+World iteration 257 (2026-10-13): re-file of ci:world:tracked-binary-rejects-release-png (first filed iter-246, message inbox_1791466110794_90c512a9).
+Predicate re-run this iteration: `ailang mission ticket open --json` lists 52 signatures and NONE contains "png" (grep -ci png = 0),
+while `ailang messages list --inbox mission-fleet` shows the original filing as READ (○). No `harness-resolved` reply for this signature
+reached the mission-world inbox (9 other harness-resolved replies are present there, so the channel works).
+Unread == open in the fleet queue, so the ticket left the fleet queue without a resolution. Re-filing so it is open again.
+World row 173 / row 150 (D-WORLD-69 = A exception path, the last remaining row) stay blocked on it.
+Blocker at HEAD 2baf62c: scripts/verify_go.sh tracked-binary hygiene gate (lines ~212-246) rejects every git-classified binary blob, no image allowance.

@@ -14,6 +14,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 257 | 2026-10-13 | NO PICK (rule (d)): D-WORLD-69 path's last row 150 still blocked on fleet row 173; PNG-gate ticket had left the fleet queue unresolved → re-filed `inbox_1791881840796_78032a58`; row 120 closed as already fixed by attended `c2476ff`; D-WORLD-73 OPEN [ADMIN] |
 | 256 | 2026-10-13 | row 172 LANDED `d36b148`: coordinator mints `world/decision-packet/v1` on the effectful Human.Approve commit + validated object-page projection; daemon binding split to row 176, PARKED on D-WORLD-73 (resumes orphan 255); judge sonnet PASS 86→92 [PRODUCT] |
 | 255 | 2026-10-13 | ORPHAN (STALL-killed rc=143 at gate-3, foreground planner >40 min): row 172 design `955fbc0` + quorum r1/r2 + carve-out `b72428a` + uncommitted plan in `.wt-world-iter255-row172-design`; credited in 256 |
 | 254 | 2026-10-13 | row 105 LANDED `9d16a07`: workbench object page projects PROVEN via a daemon-held validator (resumes orphan 253; r2 carve-out); judge sonnet PASS 88, zero blocking [PRODUCT] |
