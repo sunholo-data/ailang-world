@@ -10,10 +10,11 @@ import (
 
 // Semantic IDs of the three immutable objects one invocation records.
 const (
-	InputV1  = "world/invocation-input/v1"
-	OutputV1 = "world/invocation-output/v1"
-	RecordV1 = "world/invocation-record/v1"
-	RecordV2 = "world/invocation-record/v2"
+	InputV1          = "world/invocation-input/v1"
+	OutputV1         = "world/invocation-output/v1"
+	RecordV1         = "world/invocation-record/v1"
+	RecordV2         = "world/invocation-record/v2"
+	DecisionPacketV1 = "world/decision-packet/v1" // row 172: minted only by dispatchEffectful
 )
 
 // writtenBy is the entry header's WrittenBy and the objects' (advisory,
