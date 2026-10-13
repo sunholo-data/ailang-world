@@ -1,0 +1,26 @@
+# iteration 259 — rule (d) block predicates, re-run 2026-10-13T16:55:52Z
+## origin/dev
+15456df15c81e8922ab28e78f84ce6d2584dc054
+## dev check-runs
+checks=2
+  ailang-code verify gate: success
+  go host build + test gate: success
+## ledger --open
+D-WORLD-73	OPEN	**Row 176 (split from row 172): may the daemon bind `Human.Approve` in production (design D4: 
+## ledger --check
+decision ledger valid: 60 rows
+## fleet ticket open list (png signature lines)
+1   item   ci:world:tracked-binary-rejects-release-png  (world; first 2026-10-13 08:57)
+## control: total open tickets listed
+52
+## harness-resolved replies in mission-world (all) / for png signature
+# instrument: `ailang messages list -inbox mission-world -limit 300 -json | jq` on category/title (a first text-grep attempt with double-dash flags read 0/0 and was discarded as an instrument failure: the control 'all' must be >=12, as in 258)
+12
+0
+## verify_go.sh tracked-binary gate: png allowance count
+0
+## attended row-93 branches
+attended/row93-final 3807893 2026-10-09 10:59:50 +0200
+attended/floor-event-timing 4710458 2026-10-12 14:14:58 +0200
+## open PRs
+166 design-row114-kimi-20260930
