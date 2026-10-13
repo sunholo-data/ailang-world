@@ -1331,7 +1331,7 @@ Deviations, all adjudicated: MV8, MV12 and MP3 were rewritten as compiling varia
 - **Row 173's predicate, re-run this iteration (not transcribed):**
   - `ailang mission ticket open --json` lists 52 signatures, and none contains `png`.
   - In `mission-fleet`, the iter-246 filing (`inbox_1791466110794_90c512a9`) shows as **read**.
-  - No `harness-resolved` reply for this signature is in `mission-world`. Nine other `harness-resolved` replies are there, which shows the channel works.
+  - No `harness-resolved` reply for this signature is in `mission-world`. 12 other `harness-resolved` replies are there (`ailang messages list --inbox mission-world --limit 100`), which shows the channel works. The count was first written as nine from a `head`-truncated listing; the judge caught it.
   - At HEAD, `scripts/verify_go.sh`'s tracked-binary gate (`:212–246`) is unchanged and still has no image allowance.
   - So the ticket left the fleet queue without being resolved (unread means open). The blocker is still real, but the fleet can no longer see it.
 - **Row 176** is PARKED on D-WORLD-73, which is OPEN with default B (hold).
@@ -1339,7 +1339,7 @@ Deviations, all adjudicated: MV8, MV12 and MP3 were rewritten as compiling varia
 Rule (d) therefore applies: no row is picked, and no hygiene or residual side work is done.
 
 **Actions taken:**
-1. **Re-filed the fleet ticket** under the same signature `ci:world:tracked-binary-rejects-release-png` as `inbox_1791881840796_78032a58` (`--blocking item`). Evidence is banked at `~/.ailang/state/world-iter257/png-ticket-evidence.txt`. It is confirmed listed: `1 item ci:world:tracked-binary-rejects-release-png (world; first 2026-10-13 08:57)`. A dated note is appended to row 173.
+1. **Re-filed the fleet ticket** under the same signature `ci:world:tracked-binary-rejects-release-png` as `inbox_1791881840796_78032a58` (`--blocking item`). Evidence is committed at `design_docs/verification/world-iter257/png-ticket-evidence.txt` (copy at `~/.ailang/state/world-iter257/`). It is confirmed listed: `1 item ci:world:tracked-binary-rejects-release-png (world; first 2026-10-13 08:57)`. A dated note is appended to row 173.
 2. **Closed row 120** (`w-quickstart-commit-omits-session`, clause-7) as already fixed, found while looking for a routable row.
    - `git log -S'commit --file /tmp/genesis.json --session' -- docs/QUICKSTART.md` returns only `c2476ff`: attended, #193, 2026-10-03, row 137.
    - At `2baf62c`, every `commit --file` site in QUICKSTART carries `--session`, and `session mint` comes before the first commit.
@@ -1394,3 +1394,20 @@ Rule (d) therefore applies: no row is picked, and no hygiene or residual side wo
 - If D-WORLD-73 = A, take **row 176**.
 - Otherwise, if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**.
 - Otherwise, rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 257):** the independent evaluator judged record commit `277c500` on `2baf62c` and returned **PASS 91/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (46,179 tok, 40 s).
+- **Verified by the judge:**
+  - scope: 6 record files, no code;
+  - the STATUS rotation: 3 live stamps, the 252 stamp archived byte-identical, and a charter line count unchanged;
+  - the ledger: valid with 60 rows, D-WORLD-73 the only OPEN row;
+  - the rule-(d) premise;
+  - the PNG ticket: now open, the old filing read, and no resolution reply;
+  - the row-120 close: 5 of 5 sites carry `--session`, and the change came only from `c2476ff`;
+  - the cited SHAs, the keyword and email hygiene, 0 directives on #246, and dev CI 2/2.
+- **Non-blocking findings and what was done:**
+  - **N1:** the count of `harness-resolved` replies was wrong (9, from a `head`-truncated listing). It was re-measured and fixed above.
+  - **N4:** the evidence path pointed at local state. It now points at the committed copy.
+  - **N2:** row 173's older `:185–219` line cite is left as historical.
+  - **N3:** the row-120 close sits close to the line on side work. It is disclosed, and no change was made.
+- The report is in `design_docs/verification/world-iter257/evaluator-r1.md`.
+
