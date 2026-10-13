@@ -1,0 +1,31 @@
+# iteration 260 — rule (d) block predicates, re-run 2026-10-13T20:56:11Z
+## origin/dev
+6189258113350aca60456ddae9b84a1bd4402d78
+## dev check-runs
+checks=2
+  ailang-code verify gate: success
+  go host build + test gate: success
+## ledger --open
+D-WORLD-73	OPEN	**Row 176 (split from row 172): may the daemon bind `Human.Approve` in production (design D4: an effect-
+## ledger --check
+decision ledger valid: 60 rows
+## fleet ticket open list (png signature lines)
+1   item   ci:world:tracked-binary-rejects-release-png  (world; first 2026-10-13 08:57)
+## control: total open tickets listed
+52
+## harness-resolved replies in mission-world (all) / for png signature
+# instrument: ailang messages list -inbox mission-world -limit 500 -json | jq on category and title+payload (control 'all' must be >=12)
+12
+0
+## verify_go.sh tracked-binary gate: png allowance count
+0
+## attended row-93 branches
+attended/row93-final 3807893 2026-10-09 10:59:50 +0200
+attended/floor-event-timing 4710458 2026-10-12 14:14:58 +0200
+## open PRs
+166 design-row114-kimi-20260930
+## Gate 0/1 instruments (banked per 259 judge N3)
+billing tripwire: CLEAN
+mission_directives #246 since 2026-10-13T13:22:37Z: 0 directives (11 comments)
+mission_gate0_self_notices: rc=1, 1 crash notice rc=143 at 2026-10-13T02:01:58Z (orphan 255, credited by 256); control 107:4 ok
+skill drift: resolved symlink target vs ailang origin/dev — SKILL.md + 12 resources all 'same' (per-file cmp)
