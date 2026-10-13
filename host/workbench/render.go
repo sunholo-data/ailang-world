@@ -55,6 +55,7 @@ type ObjectView struct {
 	Edges            []EdgeView
 	Commits          *CommitView
 	References       *ReferenceView
+	Packet           *PacketView // row 172: set only on world/decision-packet/v1 pages
 }
 
 type CommitView struct {
@@ -71,6 +72,24 @@ type ReferenceView struct {
 	Continued bool
 	NextHref  string
 	FirstHref string
+}
+
+// PacketView is the decision-packet panel (row 172 D6). A refused packet
+// carries only Sentence; links, status and evidence exist only when Validated.
+type PacketView struct {
+	Validated                 bool
+	Sentence                  string
+	EntryIndex                int64
+	EntryHref                 string
+	ProposalRef, ProposalHref string
+	RequestRef, RequestHref   string
+	CreatedAt, DeadlineAt     int64
+	Policy                    string
+	Escalations               int64
+	ApprovalStatus            string
+	TransitionFnRef           string
+	ProposalGrade             GradeView
+	TransitionGrade           GradeView
 }
 
 type EntryView struct {
@@ -206,7 +225,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 <dt>interface</dt><dd><span class="hash" title="{{.InterfaceHash}}" aria-label="{{.InterfaceHash}}">{{.InterfaceHash}}</span></dd>
 <dt>semantic ID</dt><dd>{{.SemanticID}}</dd><dt>provenance</dt><dd>{{.Provenance}}</dd></dl>
 {{if .Grade.Available}}<p><span>{{.Grade.Label}}</span>{{if .Grade.HasVerdict}} {{if eq .Grade.Verdict "FAIL"}}<span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: {{.Grade.Verdict}}</span>{{else}}<span class="verdict-pass" aria-label="test verdict PASS">✓ verdict: {{.Grade.Verdict}}</span>{{end}}{{end}}</p>{{else}}<p>GRADE UNAVAILABLE — {{with .Grade.Unavailable}}{{.}}{{else}}no grade reason was supplied{{end}}</p>{{end}}
-{{if .PayloadShown}}<p id="payload-label">raw bytes, not interpreted HTML</p><pre class="payload" aria-labelledby="payload-label">{{.PayloadPreview}}</pre>{{if .PayloadTruncated}}<p>truncated</p>{{end}}{{end}}
+{{with .Packet}}{{template "packet" .}}{{end}}{{if .PayloadShown}}<p id="payload-label">raw bytes, not interpreted HTML</p><pre class="payload" aria-labelledby="payload-label">{{.PayloadPreview}}</pre>{{if .PayloadTruncated}}<p>truncated</p>{{end}}{{end}}
 {{end}}
 </section>
 <section aria-label="live" aria-live="polite" data-live-cursor="{{.Live.Cursor}}">
@@ -239,7 +258,9 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 const partialsHTML = `{{define "edge"}}<p>{{.Relation}}: {{if edgeUnavailable .}}<span class="unavailable" role="note">UNAVAILABLE: {{.Missing}}</span>{{else}}<a href="{{workbenchHref .Href}}" class="hash" title="{{.Target}}" aria-label="{{.Target}}">{{.Target}}</a>{{end}}</p>{{end}}
 {{define "entryFields"}}<dt>entry hash</dt><dd><span class="hash" title="{{.EntryHash}}" aria-label="{{.EntryHash}}">{{.EntryHash}}</span></dd>
 <dt>previous entry</dt><dd><span class="hash" title="{{.PrevEntryHash}}" aria-label="{{.PrevEntryHash}}">{{.PrevEntryHash}}</span></dd>
-<dt>semantics epoch</dt><dd>{{.SemanticsEpoch}}</dd><dt>written by</dt><dd>{{.WrittenBy}}</dd>{{end}}`
+<dt>semantics epoch</dt><dd>{{.SemanticsEpoch}}</dd><dt>written by</dt><dd>{{.WrittenBy}}</dd>{{end}}
+{{define "packet"}}<section aria-label="decision packet"><h3>decision packet</h3><p>{{.Sentence}}</p>{{if .Validated}}<p>createdAt {{.CreatedAt}} · deadlineAt {{.DeadlineAt}} — logical times; this host emits no Timeout transition (item 7 owns the emitter), so this page does not state whether the deadline has passed</p><p>policy {{.Policy}} · escalationsRemaining {{.Escalations}}</p><p>proposal: <a href="{{workbenchHref .ProposalHref}}" class="hash">{{.ProposalRef}}</a></p><p>approval request: <a href="{{workbenchHref .RequestHref}}" class="hash">{{.RequestRef}}</a></p><p>committed at: <a href="{{workbenchHref .EntryHref}}">entry {{.EntryIndex}}</a></p><p>approvals chain: {{.ApprovalStatus}}</p><p>evidence: proposal <span class="hash">{{.ProposalRef}}</span> — {{template "packetGrade" .ProposalGrade}}</p><p>evidence: transition function <span class="hash">{{.TransitionFnRef}}</span> — {{template "packetGrade" .TransitionGrade}}</p>{{end}}</section>{{end}}
+{{define "packetGrade"}}{{if .Available}}<span>{{.Label}}</span>{{if .HasVerdict}} verdict: {{.Verdict}}{{end}}{{else}}GRADE UNAVAILABLE — {{with .Unavailable}}{{.}}{{else}}no grade reason was supplied{{end}}{{end}}{{end}}`
 
 var pageTemplate = template.Must(template.Must(template.New("workbench").Funcs(template.FuncMap{
 	"edgeUnavailable": edgeUnavailable,

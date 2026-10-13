@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 24 || ailFiles != 22 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 24 / 22", files, ailFiles)
+	if files != 25 || ailFiles != 23 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 25 / 23", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 22 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 23 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 24 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 24", files)
+	if files != 25 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 25", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 22 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 22", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 23 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 23", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -559,6 +559,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	const old = `LEG1_MODULES=(
+  design_docs/sketches/decisionpacket.ail
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail
   design_docs/sketches/execargs.ail

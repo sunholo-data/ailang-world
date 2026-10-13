@@ -153,8 +153,8 @@ command -v python3 >/dev/null 2>&1 || {
 # The manifest is keyed by (repo-relative module file, bare function name): ai-check emits BARE
 # names in verify.results[].function (V17). Sketches are excluded from the world/ total, so a
 # contracted sketch can neither mask a required identity nor perturb the total. Sketches carry EMPTY
-# required sets except design_docs/sketches/effectplan.ail and design_docs/sketches/execargs.ail,
-# whose law proofs are gated by name.
+# required sets except design_docs/sketches/effectplan.ail, design_docs/sketches/execargs.ail and
+# design_docs/sketches/decisionpacket.ail, whose law proofs are gated by name.
 # The packages/se-tools transitions (row 134 M5) are likewise outside world/: their contracts are
 # gated by name per module, and they never count toward the world/ total (the S8 floor).
 GATE_LEG_TIMEOUT_S=120   # wall-clock cap per ai-check module leg (Standing Rule 6, V26)
@@ -172,6 +172,7 @@ ROOTS=(
 # add/remove is a ONE-LINE edit here, in the SAME commit. Repo-relative paths, matching
 # the sweep's $mod key.
 LEG1_MODULES=(
+  design_docs/sketches/decisionpacket.ail
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail
   design_docs/sketches/execargs.ail
@@ -339,6 +340,12 @@ REQUIRED_VERIFIED = {
         "noDotDotSegment", "pathOk", "flagNameOf", "flagValueOf", "flagRuleMatches",
         "consumesNext", "digitByteOk", "intValueOk", "regexValueOk", "flagValueOk",
         "pkgpatternOk", "testfileOk", "positionalOk", "dashDashOk", "argCountOk"},
+    # The decision-packet law (queue row 172 M1): Go mirrors in host/coordinator/decisionpacket.go,
+    # bound by host/coordinator/decisionpacket_drift_test.go. A sketch, so excluded from the world/
+    # total: gated by name without moving the S8 floor.
+    "design_docs/sketches/decisionpacket.ail": {
+        "policyCode", "scheduleWellFormed", "mintable", "mintedScheduleWellFormed",
+        "producerFieldsOk", "sameRef", "packetRefusal", "samePair", "lifecycleOk"},
     # The software-engineering transitions (queue row 134 M5): each self-contained module
     # carries the contracted path predicate, its own L-ARGS key law and the convention-v2
     # input-key law. Outside world/, so excluded from the total below: gated by name

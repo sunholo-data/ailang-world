@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -835,6 +836,9 @@ func decodeCommit(r commitRequest) (store.Commit, error) {
 	}
 	objects := make([]store.Object, len(r.Objects))
 	for i, object := range r.Objects {
+		if object.SemanticID == coordinator.DecisionPacketV1 { // row 172 D4: REST may not forge the packet label (MD1 target)
+			return store.Commit{}, fmt.Errorf("objects[%d].semanticId: %s is minted only by the invocation coordinator", i, coordinator.DecisionPacketV1)
+		}
 		hash, err := parseRef(object.Hash, fmt.Sprintf("objects[%d].hash", i))
 		if err != nil {
 			return store.Commit{}, err

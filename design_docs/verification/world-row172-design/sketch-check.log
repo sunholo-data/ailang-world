@@ -1,0 +1,63 @@
+# Revision r2 (row 172 quorum round 2): packetRefusal fact 7 is pair-scoped; samePair law added.
+$ cd <scratch> && ~/.pinned-ailang/ailang check sketches/decisionpacket.ail
+→ Type checking sketches/decisionpacket.ail...
+→ Effect checking...
+
+✓ No errors found!
+rc=0
+
+$ ~/.pinned-ailang/ailang verify sketches/decisionpacket.ail
+
+→ Verifying contracts in sketches/decisionpacket.ail
+  Solver: Z3 version 4.16.0 - 64 bit
+
+  ✓ VERIFIED samePair  5.036ms
+  ✓ VERIFIED sameRef  4.655042ms
+  ✓ VERIFIED mintable  4.559834ms
+  ✓ VERIFIED lifecycleOk  5.178791ms
+  ✓ VERIFIED packetRefusal  4.646042ms
+  ✓ VERIFIED producerFieldsOk  4.422791ms
+  ✓ VERIFIED scheduleWellFormed  4.43575ms
+  ✓ VERIFIED mintedScheduleWellFormed  4.535167ms
+  ✓ VERIFIED policyCode  4.301708ms
+
+  9 exported functions: 9 verified
+
+
+$ ~/.pinned-ailang/ailang test sketches/decisionpacket.ail (summary)
+  ✓ Passed: 46
+  ✗ Failed: 0
+
+$ ~/.pinned-ailang/ailang ai-check sketches/decisionpacket.ail (verify block summary)
+verify.errors 0 verified 9 of 9
+
+$ MUTANT A: mintedScheduleWellFormed body escalation 0 -> -1; ailang verify
+  ✗ VIOLATION mintedScheduleWellFormed
+    Counterexample:
+      $p_grantExpiresAt: Int = 1
+      $p_now: Int = 0
+--
+  9 exported functions: 8 verified, 1 violations
+
+$ MUTANT B: packetRefusal lifecycle code 6 -> 0; ailang verify
+  ✗ VIOLATION packetRefusal
+    Counterexample:
+      $p_proposalOk: Bool = true
+      $p_lifecycleOk: Bool = false
+--
+  9 exported functions: 8 verified, 1 violations
+
+$ MUTANT C: samePair reverted to requestRef-only (body); ailang verify + test
+  ✗ VIOLATION samePair
+    Counterexample:
+      $p_aProposal: Ref = (mk_Ref "!4!" "!0!")
+      result: Bool = (ite (= (algo $p_aRequest) (algo $p_bRequest)
+      $p_bRequest: Ref = (mk_Ref "!2!" "!3!")
+      $p_aRequest: Ref = (mk_Ref "!2!" "!3!")
+--
+  9 exported functions: 8 verified, 1 violations
+
+  ✗ samePair_test_2 (22.407958ms)
+  ✓ Passed: 45
+  ✗ Failed: 1
+1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f

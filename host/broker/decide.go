@@ -81,6 +81,17 @@ func decideOver(grants []Capability, r EffectRequest) (int, Decision) {
 	return bestIndex, best
 }
 
+// AuthorizingGrant returns the grant decideOver selects for r when it allows
+// r (row 172 D3: the packet deadline is that grant's expiry); ok is false when
+// no grant allows r.
+func AuthorizingGrant(grants []Capability, r EffectRequest) (Capability, bool) {
+	i, d := decideOver(grants, r)
+	if !d.Allowed || i < 0 {
+		return Capability{}, false
+	}
+	return grants[i], true // MB1 target
+}
+
 // Allows evaluates a descriptor requirement over a captured ledger snapshot.
 func Allows(snap CapabilitySnapshot, req Requirement) Decision {
 	_, decision := decideOver(snap.grants, EffectRequest{

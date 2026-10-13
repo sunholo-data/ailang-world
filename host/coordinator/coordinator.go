@@ -331,7 +331,7 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 		return Result{}, err
 	}
 	if len(d.DeclaredEffects) != 0 {
-		return c.dispatchEffectful(ctx, call.Surface, id, call.EpisodeID, input, bound, d)
+		return c.dispatchEffectful(ctx, call.Surface, id, call.EpisodeID, input, bound, d, grants)
 	}
 	src, world, err := c.loadSourceAndWorld(ctx, d)
 	if err != nil {

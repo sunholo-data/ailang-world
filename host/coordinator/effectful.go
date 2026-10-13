@@ -271,7 +271,7 @@ func (c *Coordinator) composeEffectOutput(finishCtx context.Context, interp hash
 // dispatchEffectful runs an effectful descriptor's invocation. The caller
 // holds the episode lock and bound the descriptor over seeded grants.
 func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id, episodeID string, input []byte,
-	bound *transitionreg.Bound, d transitionreg.Descriptor) (Result, error) {
+	bound *transitionreg.Bound, d transitionreg.Descriptor, grants []broker.Capability) (Result, error) {
 	// R8: every declared effect must have a handler in this binder, decided
 	// before any effect — or the plan — runs.
 	if missing := bound.Unhandled(); len(missing) != 0 {
@@ -330,7 +330,20 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id
 	if err != nil {
 		return unrecorded(err)
 	}
+	// Row 172 D1: an allowed, successful Human.Approve mints the decision
+	// packet that rides in this invocation's own commit.
+	var packet *store.Object
+	if len(pl.Effects) == 1 && pl.Effects[0].Requirement.Effect == broker.EffectHumanApprove && results[0].Status == StatusOK { // MP1 target
+		obj, err := mintApprovalPacket(grants, pl.Effects[0], results[0], now, planRef, surface)
+		if err != nil {
+			return unrecorded(err)
+		}
+		packet = &obj
+	}
 	p := planEffectInvocation(world, surface, id, episodeID, d, input, outBytes, pl.Canonical, records, now)
+	if packet != nil {
+		p = withPacket(p, *packet)
+	}
 	pctx, cancelPost := detached(ctx, PostEffectBudget)
 	defer cancelPost()
 	res, err := c.appendAndCommit(pctx, id, p, outBytes, outObj)
