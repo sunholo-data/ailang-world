@@ -1526,3 +1526,8 @@ Rule (d) therefore applies again: no row picked, no side work, no new ask (D-WOR
 **Progress:** World 1.0 clauses 4/5 UNMET and 1/2/3/6/7 MET. Goal unmoved.
 
 **Next:** if D-WORLD-73 = A, take **row 176**; else if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**; else rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 260):** the independent evaluator judged record commit `cc054bd` on `6189258` and returned **PASS 94/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (39,504 tok, 27 s, 5 tool calls).
+- **Verified by the judge:** the rule-(d) premise (unmoved `origin/dev`; ledger `--open` = D-WORLD-73 only; png ticket listed among 52; 12 `harness-resolved` replies, 0 for png; no png allowance in `verify_go.sh`; attended branches unchanged; 0 directives); the STATUS rotation (257 stamp md5-identical at the archive end); log/index/dashboard/evidence consistency; cited SHAs; email hygiene; no closing keyword; no missed loop-routable row for clause 4 or 5.
+- **Non-blocking:** N1 follow-through absent at judging → added here; N2 open-PR list excludes the record's own #253 (accepted); N3 queue rows read at header/sequencing depth only; N4 idle cadence correctly surfaced.
+- The report is in `design_docs/verification/world-iter260/evaluator-r1.md`.
