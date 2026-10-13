@@ -1446,3 +1446,8 @@ Rule (d) therefore applies again: no row picked, no side work, no new ask (D-WOR
 **Progress:** World 1.0 clauses 4/5 UNMET and 1/2/3/6/7 MET. Goal unmoved.
 
 **Next:** if D-WORLD-73 = A, take **row 176**; else if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**; else rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 258):** the independent evaluator judged record commit `31979b7` on `eabc113` and returned **PASS 93/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (42,901 tok, 32 s, 5 tool calls).
+- **Verified by the judge:** the rule-(d) premise (ledger `--open` = D-WORLD-73 only; 53 open tickets with exactly one png line; 12 `harness-resolved` replies counted from an untruncated listing, 0 for png; no png allowance in `verify_go.sh`; `attended/row93-final` last touched 2026-10-09); `origin/dev` still `eabc113` and 0 directives on #246; the STATUS rotation (3 stamps, the 254 stamp archived byte-identical, charter line count unchanged, row 176 present); the log/index/dashboard counts and cited SHAs; the email hygiene; no closing keyword; no code.
+- **Non-blocking:** N1 — the judge did not re-run the kill switch, billing tripwire, skill-drift or self-notices checks (accepted as consistent with 257; disclosed here). N2 — retro item 1 judged accurate, no change.
+- The report is in `design_docs/verification/world-iter258/evaluator-r1.md`.
