@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -177,4 +178,35 @@ func mintPacket(now, grantExpiresAt int64, proposal, request hashref.HashRef, by
 	payload := EncodeDecisionPacket(DecisionPacket{ProposalHash: proposal, RequestRef: request, CreatedAt: now,
 		DeadlineAt: grantExpiresAt, EscalationsRemaining: 0, Policy: "Cancel"}) // MP6 target: "Cancel"
 	return object(by, DecisionPacketV1, payload), nil
+}
+
+// C3 — the producer (row 172 D1, D3). dispatchEffectful calls mintApprovalPacket
+// only for an allowed, successful Human.Approve, and withPacket puts the packet
+// in the invocation's own commit.
+
+var errPacketGrant = errors.New("coordinator: no seeded grant authorizes the executed Human.Approve request")
+
+// mintApprovalPacket mints the packet for one executed Human.Approve. The
+// deadline is the expiry of the grant the broker's decision selects (D3); the
+// request ref is the pending output's requestRef.
+func mintApprovalPacket(grants []broker.Capability, e PlannedEffect, res EffectResult, now int64,
+	planRef hashref.HashRef, surface Surface) (store.Object, error) {
+	req := broker.EffectRequest{Effect: e.Requirement.Effect, Scope: e.Requirement.Scope, Cost: e.Requirement.Cost, Now: now}
+	grant, ok := broker.AuthorizingGrant(grants, req)
+	if !ok {
+		return store.Object{}, errPacketGrant // structurally unreachable after an allowed dispatch
+	}
+	request, err := broker.ParsePendingApproval(res.Output)
+	if err != nil {
+		return store.Object{}, err
+	}
+	return mintPacket(now, grant.ExpiresAt, planRef, request, writtenBy(surface)) // MP2/MP3/MP4 targets
+}
+
+// withPacket returns p with obj appended to the invocation's objects, so the
+// packet is carried by the invocation's own commit (MP5 target).
+func withPacket(p plan, obj store.Object) plan {
+	objects := append(append([]store.Object(nil), p.Objects...), obj)
+	p.Objects, p.Commit.Objects = objects, objects // MP5 target
+	return p
 }

@@ -93,6 +93,36 @@ type pendingWire struct {
 	RequestRef string `json:"requestRef"`
 }
 
+// ApprovalRequest is a decoded world/approval-request/v1 object.
+type ApprovalRequest struct {
+	Effect, Scope string
+	Cost          int64
+	Requester     string
+	Now           int64
+}
+
+// ParsePendingApproval returns the request ref of a Human.Approve handler
+// output ({"status":"pending","requestRef":…}).
+func ParsePendingApproval(output []byte) (hashref.HashRef, error) {
+	var w pendingWire
+	if err := decodeApprovalJSON(output, &w); err != nil {
+		return hashref.HashRef{}, err
+	}
+	if w.Status != "pending" {
+		return hashref.HashRef{}, fmt.Errorf("broker: approval output status %q, want pending", w.Status)
+	}
+	return hashref.Parse(w.RequestRef)
+}
+
+// DecodeApprovalRequest strictly decodes a world/approval-request/v1 payload.
+func DecodeApprovalRequest(payload []byte) (ApprovalRequest, error) {
+	var w approvalRequestWire
+	if err := decodeApprovalJSON(payload, &w); err != nil {
+		return ApprovalRequest{}, err
+	}
+	return ApprovalRequest{Effect: w.Effect, Scope: w.Scope, Cost: w.Cost, Requester: w.Requester, Now: w.Now}, nil
+}
+
 type observedDecisionWire struct {
 	Status   string          `json:"status"`
 	Decision json.RawMessage `json:"decision"`
