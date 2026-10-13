@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -306,5 +307,23 @@ func TestReplayReconcileToleratesPacketObject(t *testing.T) {
 	}
 	if got := len(packetObjects(t, r)); got != 1 {
 		t.Fatalf("packets after resend = %d, want 1", got)
+	}
+}
+
+// TestProducerMintsNoPacketForMultiEffectPlan (M8 guard): L1 refuses a two-effect
+// plan before the producer's single-effect condition is reached, so no packet is
+// minted for it. The L1 cap is what makes the `== 1` condition equivalent to `>= 1`.
+func TestProducerMintsNoPacketForMultiEffectPlan(t *testing.T) {
+	plan := `{"plan":"world/effect-plan/v1","effects":[` +
+		`{"id":"e1","effect":"Human.Approve","scope":"demo","cost":1,"payload":{"requester":"coord-test"}},` +
+		`{"id":"e2","effect":"Workspace.Read","scope":"worktree","cost":1,"payload":{"op":"read","path":"a.txt"}}],"finish":false,"result":null}`
+	r, _ := fxRig(t, true, approveReq, fxReadReq)
+	c := r.fxCoordinator(r.st, &phaseRunner{plan: plan}, broker.Registry{broker.EffectHumanApprove: broker.NewHumanHandler(r.st), fxRead: &probe{}})
+	_, err := c.Dispatch(boundedTestContext(t), r.call("fx", "t1", []broker.Capability{invokeGrant, approveGrant(1760), {Effect: fxRead, Scope: fxScope, ExpiresAt: 1000, Budget: 5}}))
+	if err == nil || !strings.Contains(err.Error(), "violates L1") {
+		t.Fatalf("Dispatch err = %v, want an L1 refusal of the two-effect plan", err)
+	}
+	if n := len(packetObjects(t, r)); n != 0 {
+		t.Fatalf("packets = %d, want 0 for a two-effect plan", n)
 	}
 }

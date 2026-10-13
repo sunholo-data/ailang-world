@@ -199,6 +199,7 @@ type forgedChain struct {
 	packet      coordinator.DecisionPacket // the packet this chain carries
 	rawPacket   []byte                     // when non-nil, replaces EncodeDecisionPacket(packet)
 	extra       []store.Object             // more objects in the same commit
+	failed      bool                       // the effect record's Failed bit
 }
 
 func forgedPlanPayload(label string) []byte { return []byte(`{"forged":"` + label + `"}`) }
@@ -247,7 +248,7 @@ func commitForgedChain(t *testing.T, d *Daemon, f *forgedChain) (store.Object, i
 	t.Helper()
 	result := forgeObject(broker.EffectResultV1, []byte(`{"status":"pending","requestRef":"`+f.request.String()+`"}`))
 	er := forgeObject(broker.EffectRecordV1, broker.EncodeRecord(broker.EffectRecord{Effect: broker.EffectHumanApprove, Scope: f.scope,
-		Cost: 1, BudgetBefore: 5, BudgetAfter: 4, Allowed: true, RequestRef: hashref.SumSHA256([]byte("forge-effect-request-" + f.label)), ResultRef: result.Hash}))
+		Cost: 1, BudgetBefore: 5, BudgetAfter: 4, Allowed: true, Failed: f.failed, RequestRef: hashref.SumSHA256([]byte("forge-effect-request-" + f.label)), ResultRef: result.Hash}))
 	recPayload, err := json.Marshal(forgedRecordV2{InvocationID: "forge-" + f.label, EpisodeID: "forge", SkillID: "forge",
 		TransitionFn: f.tf.String(), Interpreter: hashref.SumSHA256([]byte("forge-interp")).String(), SemanticsEpoch: 1,
 		Input: hashref.SumSHA256([]byte("forge-in-" + f.label)).String(), Output: hashref.SumSHA256([]byte("forge-out-" + f.label)).String(),
@@ -371,6 +372,20 @@ func TestWorkbenchPacketRefusals(t *testing.T) {
 		q2 := approvalRequestInChain(t, d, scope, "forge-other", packetNow)
 		f := newForgedChain("c4", q, scope)
 		f.packet.RequestRef = q2
+		p, _ := commitForgedChain(t, d, f)
+		wantRefused(t, d, p.Hash, packetRefusedRequest)
+	})
+	t.Run("4b-scope-mismatch", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		q := approvalRequestInChain(t, d, "other-scope", "forge", packetNow)
+		p, _ := commitForgedChain(t, d, newForgedChain("c4b", q, scope))
+		wantRefused(t, d, p.Hash, packetRefusedRequest)
+	})
+	t.Run("4c-failed-effect", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		q := approvalRequestInChain(t, d, scope, "forge", packetNow)
+		f := newForgedChain("c4c", q, scope)
+		f.failed = true
 		p, _ := commitForgedChain(t, d, f)
 		wantRefused(t, d, p.Hash, packetRefusedRequest)
 	})
