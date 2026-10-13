@@ -1218,3 +1218,15 @@ kill $GRADE_PID; wait $GRADE_PID 2>/dev/null; rm -rf "$GRADE"
 ```
 
 Expected: `GRADE UNAVAILABLE — no stored evidence: the store holds no object with semantic ID world/proof-report/v1`.
+
+**Inspect a decision packet** (row 172). The invocation coordinator mints a `world/decision-packet/v1` object only when a skill's plan requests exactly one `Human.Approve` effect, the binder in use binds `Human.Approve`, and a live grant for that exact effect and scope authorizes it. **This release's daemon does not bind `Human.Approve`** (decision `D-WORLD-73` is held), so a daemon on this release mints no packets and the listing below returns `{"items":[]}`. REST commits cannot store an object with this semantic ID either (`400 BadRequest`). A request never decides anything: decisions stay operator-only. When a packet exists, it rides in its invocation's own commit: `createdAt` is the invocation's logical time, `deadlineAt` is the authorizing grant's expiry, `policy` is `Cancel` and `escalationsRemaining` is `0`.
+
+List packets and open the first one's object page while the daemon serves on 7644:
+
+```bash
+curl --silent --fail http://127.0.0.1:7644/v1/objects/by-semantic-id/world/decision-packet/v1
+PACKET=$(curl --silent --fail http://127.0.0.1:7644/v1/objects/by-semantic-id/world/decision-packet/v1 | python3 -c 'import json,sys; items=json.load(sys.stdin)["items"]; print(items[0]["hash"] if items else "")')
+[ -n "$PACKET" ] && curl --silent --fail "http://127.0.0.1:7644/workbench?object=$PACKET" | grep -o 'decision packet validated[^<]*\|not a validated decision packet[^<]*'
+```
+
+A produced packet reads `decision packet validated: committed with its invocation record at entry #N; …`. The page links the proposal (the invocation's `world/effect-plan/v1` plan), the approval request and entry N. It shows `approvals chain: pending` until an operator decides, and two evidence lines graded only by the object-grade validator above. Any other object labelled `world/decision-packet/v1` reads `not a validated decision packet: …` with the first failing check and no links. The checks are bytes, carrying commit, proposal, request, approvals-chain anchor, lifecycle fields and duplicate pair. The anchor check reads the newest 40 approval heads and keeps at most the newest 20 distinct requests; beyond that it reports "not established" rather than a verdict. The duplicate check reads the first 100 stored packets. The times are logical; this host emits no Timeout transition, so the page does not say whether the deadline has passed.

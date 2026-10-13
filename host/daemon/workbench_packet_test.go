@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"os"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -487,4 +489,71 @@ func TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive(t *testing.T) {
 			t.Fatalf("want two unavailable grade lines; section=%s", sec)
 		}
 	})
+}
+
+// TestQuickstartDecisionPacketSection (S7; PD15, PD32, PD33): the executed QUICKSTART section describes what the daemon does.
+func TestQuickstartDecisionPacketSection(t *testing.T) {
+	guide, err := os.ReadFile("../../docs/QUICKSTART.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, section, ok := strings.Cut(string(guide), "**Inspect a decision packet** (row 172).")
+	if !ok {
+		t.Fatal("QUICKSTART decision-packet section not found")
+	}
+	for _, want := range []string{"D-WORLD-73", `{"items":[]}`, "http://127.0.0.1:7644/v1/objects/by-semantic-id/world/decision-packet/v1",
+		"/workbench?object=$PACKET", "decision packet validated", "not a validated decision packet", "approvals chain: pending", "400 BadRequest"} {
+		if !strings.Contains(section, want) {
+			t.Fatalf("section lacks %q", want)
+		}
+	}
+	if strings.Contains(section, "--grant Human.Approve=") {
+		t.Fatal("section documents a grant that cannot mint a packet while D-WORLD-73 is held")
+	}
+	for _, line := range strings.Split(section, "\n") {
+		if strings.HasPrefix(line, "/tmp/ailang-worldd serve ") || strings.HasPrefix(line, "|") {
+			t.Fatalf("section line %q is a served-daemon command or a table row", line)
+		}
+	}
+	route := regexp.MustCompile(`http://127\.0\.0\.1:7644(/v1/objects/by-semantic-id/[^\s|"')]+)`).FindStringSubmatch(section)
+	if len(route) != 2 || route[1] != "/v1/objects/by-semantic-id/world/decision-packet/v1" {
+		t.Fatalf("documented route = %v", route)
+	}
+
+	// Held-release arm: a Human.Approve skill alone mints nothing, so the documented listing is empty.
+	d0 := newHandlerDaemon(t)
+	publishHumanTool(t, d0)
+	if rec := requestRecorder(t, d0, http.MethodGet, route[1], nil); rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != `{"items":[]}` {
+		t.Fatalf("empty listing = %d %s", rec.Code, rec.Body)
+	}
+
+	// Produced-packet arm: the documented listing, then the documented object page.
+	d := newHandlerDaemon(t)
+	publishHumanTool(t, d)
+	res, k := producePacket(t, d, humanPlan("e1"), "t1")
+	rec := requestRecorder(t, d, http.MethodGet, route[1], nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("listing status = %d; body=%s", rec.Code, rec.Body)
+	}
+	var listing struct {
+		Items []struct {
+			Hash string `json:"hash"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &listing); err != nil {
+		t.Fatal(err)
+	}
+	if len(listing.Items) == 0 || listing.Items[0].Hash != k.Hash.String() {
+		t.Fatalf("listing = %+v, want first item %s", listing, k.Hash)
+	}
+	if !strings.Contains(section, "http://127.0.0.1:7644/workbench?object=$PACKET") {
+		t.Fatal("section lacks the documented object-page URL")
+	}
+	page := requestRecorder(t, d, http.MethodGet, strings.Replace("/workbench?object=$PACKET", "$PACKET", listing.Items[0].Hash, 1), nil)
+	if page.Code != http.StatusOK {
+		t.Fatalf("object page status = %d", page.Code)
+	}
+	if !strings.Contains(page.Body.String(), html.EscapeString(fmt.Sprintf(packetValidatedFormat, res.EntryIndex))) {
+		t.Fatalf("object page lacks the validated sentence for entry %d", res.EntryIndex)
+	}
 }
