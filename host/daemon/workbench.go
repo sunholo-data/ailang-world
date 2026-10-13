@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/workbench"
@@ -475,11 +476,19 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			d.writeWorkbenchStoreError(w, r, ctx, err)
 			return
 		}
+		var packet *workbench.PacketView
+		if object.SemanticID == coordinator.DecisionPacketV1 { // row 172 D6 (MV12 target)
+			var packetErr error
+			if packet, packetErr = d.packetView(ctx, object); packetErr != nil {
+				d.writeWorkbenchStoreError(w, r, ctx, packetErr)
+				return
+			}
+		}
 		page.Object = &workbench.ObjectView{
 			Hash: object.Hash.String(), InterfaceHash: object.InterfaceHash.String(),
 			SemanticID: object.SemanticID, Provenance: object.Provenance,
 			PayloadShown: showPayload, PayloadPreview: string(preview), PayloadTruncated: truncated,
-			Grade: grade, Edges: edges, Commits: commitView, References: references,
+			Grade: grade, Edges: edges, Commits: commitView, References: references, Packet: packet,
 		}
 	}
 
