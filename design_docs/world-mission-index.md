@@ -14,6 +14,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 263 | 2026-10-14 | NO PICK (rule (d)), 7th idle fire in a row: nothing moved since 262 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
 | 262 | 2026-10-14 | NO PICK (rule (d)), 6th idle fire in a row: nothing moved since 261 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
 | 261 | 2026-10-14 | NO PICK (rule (d)), 5th idle fire in a row: nothing moved since 260 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
 | 260 | 2026-10-13 | NO PICK (rule (d)), 4th idle fire in a row: nothing moved since 259 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
