@@ -1531,3 +1531,43 @@ Rule (d) therefore applies again: no row picked, no side work, no new ask (D-WOR
 - **Verified by the judge:** the rule-(d) premise (unmoved `origin/dev`; ledger `--open` = D-WORLD-73 only; png ticket listed among 52; 12 `harness-resolved` replies, 0 for png; no png allowance in `verify_go.sh`; attended branches unchanged; 0 directives); the STATUS rotation (257 stamp md5-identical at the archive end); log/index/dashboard/evidence consistency; cited SHAs; email hygiene; no closing keyword; no missed loop-routable row for clause 4 or 5.
 - **Non-blocking:** N1 follow-through absent at judging → added here; N2 open-PR list excludes the record's own #253 (accepted); N3 queue rows read at header/sequencing depth only; N4 idle cadence correctly surfaced.
 - The report is in `design_docs/verification/world-iter260/evaluator-r1.md`.
+
+## 261 — 2026-10-14 — no pick: rule (d) block report; fifth consecutive idle fire — nothing on the critical path moved since iteration 260 (D-WORLD-73 open, fleet PNG ticket open and unanswered, row 93 FINAL attended) [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). No design, plan, code or product acceptance. The record is the STATUS stamp (with 258 rotated to the archive), this entry, the index row, the dashboard and a predicate evidence file. An independent judge reviewed it before merge.
+
+**Pick and why:** NONE. This fire started ≈3.5 h after iteration 260's record merged (`afc96a6`, 21:21Z) and `origin/dev` has not moved since; the newest remote branch is 260's own record branch.
+- **Clause map at `afc96a6`:** 1/2/3/6/7 MET. Clause 4 UNMET: row 93's new pre-registered FINAL is attended (D-WORLD-70 = A, D-WORLD-72 = A); the attended branches are unchanged (`attended/row93-final` `3807893` 2026-10-09, `attended/floor-event-timing` `4710458` 2026-10-12). Clause 5 UNMET: 114 waits on the new FINAL, 139 on 114.
+- **D-WORLD-69 exception path:** 26 ✔ → 105 ✔ → 172 ✔ → **150**, still blocked on fleet row 173.
+- **Row 173 predicate, re-run (not transcribed):** `ailang mission ticket open` lists `1 item ci:world:tracked-binary-rejects-release-png (world; first 2026-10-13 08:57)` among **51** open tickets (52 at iteration 260: the fleet closed some other ticket in between, so it is working, just not on this one); `mission-world` holds 12 `harness-resolved` replies (control: the channel works) and 0 for this signature (matched on title and payload); `scripts/verify_go.sh` at HEAD has 0 png mentions.
+- **Row 176:** PARKED on D-WORLD-73, OPEN, default B (hold). `mission_decisions.sh --check` valid, 60 rows; `--open` lists only D-WORLD-73.
+
+Rule (d) therefore applies again: no row picked, no side work, no new ask (D-WORLD-73 already is the one-word unblock for the loop's next product row).
+
+**Block report (unchanged from 257–260):** 93 → Mark runs the FINAL · 114 → the FINAL lands · 139 → after 114 · 150 → fleet resolves `ci:world:tracked-binary-rejects-release-png` · 176 → D-WORLD-73 = A.
+
+**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-13T13:22:37Z` (13 comments, all the loop's own). `mission_gate0_self_notices.sh` rc 1 on the same 02:01:58Z rc=143 notice (orphan 255), credited by 256; control 107:4 ok. Traces: open PRs = #166 only (row 114 draft, preserved); no iteration worktree without a record (260's branch merged). `mission-world` unread inbox empty (`-unread -json` → null). #246 is this week's thread (no rotation, no weekly sweep).
+
+**Gate 1:** `dev` == `origin/dev` == `afc96a6`; check-runs 2/2 success. Skill drift: the resolved symlink target matches the V1 checkout's `origin/dev` (`42652c19e`) on `SKILL.md` and all 12 resources (per-file `cmp`); all rules read from the resolved target.
+
+**Designer / planner / executor:** not spawned — no pick under rule (d), so nothing to design, plan or execute (precedent 227, 232–235, 257–260). The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED; Agent tool, `sonnet` (resolver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`), fresh read-only foreground context, judging the record commit before merge. See follow-through.
+
+**Routing evidence:** base=afc96a6e2dc2e72dc08770c66071e272a45185ff@2026-10-14T00:56:11Z (Gate 4). Controller `claude:claude-opus-5-5` (tok: not reported). Resolver: designer `claude:claude-opus-5-5`, planner/executor `codex:gpt-6.1-sol` (recipe); unused. Evaluator: Agent `sonnet` (tok: see follow-through). Metered: $0.
+
+**Ruled out:** picking 150 (fleet-blocked), 176 (D-WORLD-73 open, default hold), 93/114/139 (attended or sequenced behind the attended FINAL); any MET-clause hygiene or residual row (rule (d)); re-filing the PNG ticket (open and listed — a re-file would duplicate it); a second rule-(d) ask (D-WORLD-73 covers it); `ailang mission rotate-log world` (index row hand-written as in 257–260).
+
+**Retro:**
+1. **Idle cadence, instance 5 in a row (257–261).** Unchanged diagnosis and no loop-side lever: D-WORLD-46 forbids side work, and pacing the driver is fleet/attended territory. Surfaced again in the digest; the levers are an attended answer to D-WORLD-73, a fleet reply on the PNG ticket, or a driver back-off on consecutive rule-(d) fires.
+2. **Instrument check held:** a first `ailang messages list -inbox mission-world -json` without `-limit` returned 20 rows and counted 9 `harness-resolved` replies; the ≥12 control from 259 flagged the truncation, and `-limit 500` read 12. The evidence file records the instrument with the limit. No new rule (already in memory).
+3. **Drift check (2c):** last three landings 172, 105, 26, all on the D-WORLD-69 path; no routable UNMET-clause row, so DRIFT is not met.
+
+**Progress:** World 1.0 clauses 4/5 UNMET and 1/2/3/6/7 MET. Goal unmoved.
+
+**Next:** if D-WORLD-73 = A, take **row 176**; else if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**; else rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 261):** the independent evaluator judged record commit `9217658` on `afc96a6` and returned **PASS 93/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (47,993 tok, 27 s, 6 tool calls).
+- **Verified by the judge:** the rule-(d) premise (unmoved `origin/dev`; ledger `--open` = D-WORLD-73 only; png ticket listed; 12 `harness-resolved` replies, 0 for png; no png allowance in `verify_go.sh`; attended branches unchanged); no loop-routable UNMET-clause row; the STATUS rotation (258 stamp byte-identical at the archive end); log/index/dashboard/evidence consistency; cited SHAs; email hygiene; no closing keyword.
+- **Non-blocking:** N1 the V1 skill SHA is not checkable from this repo (accepted); N2 follow-through absent at judging → added here; N3 judge did not re-run Gate 0 scripts or dev check-runs (the record's own evidence file banks them); N4 idle cadence surfaced in the digest.
+- The report is in `design_docs/verification/world-iter261/evaluator-r1.md`.
