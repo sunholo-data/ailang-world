@@ -1,0 +1,42 @@
+{
+  "abort": null,
+  "arms": [
+    "shell"
+  ],
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 17193
+    },
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 17637
+    }
+  ],
+  "capacity_reruns": 0,
+  "commit": "fd321b6e8a0298ef6dd6a56e5b41d1d277b0b973",
+  "episodes": null,
+  "harness_faults": {
+    "claude/shell": 0,
+    "codex/shell": 0
+  },
+  "label": "final-shell-r1",
+  "passes": {
+    "claude/shell": 23,
+    "codex/shell": 23
+  },
+  "phase": "shell",
+  "prereg": "preregistration.json",
+  "run": 1,
+  "spend_usd_claude": 10.8169,
+  "status": "complete",
+  "tasks": 23,
+  "transcripts": ".ailang/state/floor-final-2026-10-14/transcripts/final-shell-r1",
+  "wall_s": 1033.7
+}
