@@ -1728,3 +1728,8 @@ Rule (d) applies again: no row picked, no side work, and no new ask (D-WORLD-73 
 **Progress:** World 1.0 clauses 4/5 UNMET and 1/2/3/6/7 MET. The goal has not moved.
 
 **Next:** if D-WORLD-73 = A, take **row 176**; else if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**; else rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 265):** the independent evaluator judged record commit `e2f092b` on `46b578a` and returned **PASS 93/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (42,954 tok, 27 s, 5 tool calls).
+- **Verified by the judge:** the rule-(d) premise (unmoved `origin/dev`; ledger `--open` = D-WORLD-73 only; 51 open fleet tickets with the png line found in the FULL list, which closes 264's N1; 12 `harness-resolved` replies, 0 for png; attended row-93 branches unchanged); the STATUS rotation (262 stamp byte-identical in the archive); consistency across the record files; the cited SHAs; email hygiene; no closing keyword. Its own Queue re-read found no loop-routable clause-4/5 row.
+- **Non-blocking:** N1 the ≈3.5 h interval was not tied down (13:21Z → 16:55Z is consistent). N2 a trailer model-name remark; no change. N3 "51 unchanged since 261" is inherited. N4 the V1 skill SHAs live in the other repo.
+- The report is in `design_docs/verification/world-iter265/evaluator-r1.md`.
