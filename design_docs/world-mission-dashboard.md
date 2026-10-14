@@ -1,13 +1,21 @@
-# World mission dashboard — iteration 265 (2026-10-14)
+# World mission dashboard — iteration 266 (2026-10-14)
 
-- **This fire:** row 176 LANDED `8511bad` (PR #261), so the daemon binds `Human.Approve`, serialized daemon-wide. It ran after Mark's mid-fire attended ruling D-WORLD-73 = A, which arrived after the fire's rule-(d) no-pick record (`e7edffa`).
-- **Latest landing:** row 176 `w-decision-packet-daemon-binding` → `8511bad` (PR #261, iteration 265; judge sonnet PASS 90).
-- **Fleet blocker:** `ci:world:tracked-binary-rejects-release-png` (row 173 → row 150) is open in the fleet queue (`inbox_1791881840796_78032a58`), no resolution reply yet (fleet open list 51, unchanged since 261).
-- **Clauses:** 1/2/3/6/7 MET; 4 UNMET (attended 93 FINAL, preregistered `fd321b6`); 5 UNMET (114 → 139 after the FINAL).
-- **Next loop pick:** row 150 once the fleet resolves the PNG ticket (176 landed, so its showcase packet is now producible); else rule (d).
-- **Parked on Mark:** none. Ledger 61 rows, ZERO OPEN (D-WORLD-73 and D-WORLD-74 resolved attended 2026-10-14).
-- **Routing this fire:** controller opus; executor `codex:gpt-6.1-sol` (recipe); evaluator sonnet (Agent tool) judged both the record and row 176; designer/planner not spawned (ready-made plan step C4.2).
-- **Quota:** no routing note this fire (`MISSION_ROUTING_NOTE` empty); codex bucket used once for the row-176 executor (83,482 tok); Anthropic for the controller and two sonnet judges.
-- **Metered spend:** $0.
+- **This fire:** the fleet resolved the PNG gate (`2d14dbd`), which unparked row 150 (`w-marketing-capture`). This fire produced design r4, a 17-milestone sprint plan, and **M1a LANDED `28ff4db`** (PR #264): the `packages/world-demo` evidence law.
+- **Latest landing:** row 150 M1a → `28ff4db` (iteration 266; judge sonnet PASS 88, zero blocking). Merge CI 2/2.
+- **Row 150 state:** 1 of 17 milestones done. NEXT: M1b (convention-v2 approval plan + descriptor), then M2a… in plan order (`design_docs/planned/w-marketing-capture-sprint-plan.md`). The release PNGs need a separate ATTENDED capture run (descriptor publish + one `session mint`).
+- **Measured this fire (Chrome 155.0.8059.41):**
+  - `scriptEnabled=false` writes NO PNG yet exits rc 0.
+  - Headless Chrome follows the OS appearance, so every shot pins `preferredColorScheme`.
+  - Five real-content shots were byte-identical across two passes.
+  - The workbench payload flag is `1`, not `true`.
+- **Clauses:** 1/2/3/6/7 MET. 4 UNMET: the attended row 93 paired FINAL recorded FAILS at `c21f303`, so the next step is Mark's. 5 UNMET: 114 → 139 after a passing FINAL.
+- **Parked on Mark:** D-WORLD-75 (row 150 determinism scope: frozen-store captures; fresh-seed equality not claimed). The default is A, and nothing blocks on it. The ledger has 62 rows, ONE OPEN.
+- **Routing this fire:**
+  - Controller: opus.
+  - Designer, planner and executor: `codex:gpt-6.1-sol` (recipe).
+  - Quorum r3: glm/kimi/sonnet.
+  - Evaluator: sonnet (Agent tool).
+- **Quota:** codex bucket 3 runs (150k + 205k + 109k tok). Anthropic: the controller plus one sonnet judge.
+- **Metered spend:** $0.23 (quorum).
 - **Orphans:** none new (255 already credited in 256).
-- **Evidence:** `design_docs/verification/world-iter265/`.
+- **Evidence:** `design_docs/verification/world-iter266/`, `design_docs/verification/world-row150-design/iter266-*`.
