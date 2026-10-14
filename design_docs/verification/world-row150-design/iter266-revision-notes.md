@@ -32,7 +32,7 @@ Run these after the proposed tooling is implemented on a socket/browser-capable 
 `ADDR` is the scratch capture daemon's loopback URL; `PACKET` and `ENTRY` come from
 its seed manifest, never a guessed route. All these commands fail on timeout.
 
-Raw HTML repeatability, including request-time strings (2 seconds apart):
+Raw HTML repeatability, including request-time strings (2 seconds apart). **Executed by the controller in simulation (design V24, `iter266-real-capture-probe-output.txt`): five routes byte-identical with the single live.js tag stripped; this command remains M6 acceptance on the real flag:**
 
 ```bash
 python3 - "$ADDR" "$PACKET" "$ENTRY" <<'PY'
