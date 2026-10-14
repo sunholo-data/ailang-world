@@ -400,6 +400,13 @@ type Daemon struct {
 	// request reads, and no /v1 route reaches them.
 	reads readStore
 
+	// humanMu serializes Human.Approve across episodes (row 172 D4): the
+	// broker's approvals-head append reads then sets without compare-and-set.
+	humanMu sync.Mutex
+	// human is the Human.Approve handler d.binder binds: serializedHandler
+	// over broker.NewHumanHandler(store). A field so AC8 can wrap a probe.
+	human broker.Handler
+
 	// drainTimeout bounds the graceful shutdown. New always sets it to the D7
 	// shutdownTimeout; it is a field rather than a direct constant reference so
 	// the bound is (a) assertable as wiring and (b) shrinkable in tests, which
@@ -671,6 +678,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s), workspace: workspace,
 	}
+	d.human = serializedHandler{mu: &d.humanMu, h: broker.NewHumanHandler(s)}
 	release := unpinnedRelease
 	if cfg.ToolAilangBin != "" {
 		bin, ref, err := archiveToolBinary(archive.New(cfg.DBPath), cfg.ToolAilangBin)
@@ -777,8 +785,23 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 // declared effect, unless the episode resolves to a served worktree; then
 // Workspace.Exec is bound and the eight AILANG names only when that
 // episode's AILANG handler builds (row 152).
+// Row 172 adds Human.Approve, serialized daemon-wide, so an invocation can request approval and mint its decision packet.
 func (d *Daemon) binder(episodeID string, grants []broker.Capability) transitionreg.Binder {
-	return broker.OpenBinder(d.store, episodeID, grants, d.workspace.registry(episodeID))
+	reg := d.workspace.registry(episodeID)   // a fresh map per call
+	reg[broker.EffectHumanApprove] = d.human // row 172 D4 (MD2 target)
+	return broker.OpenBinder(d.store, episodeID, grants, reg)
+}
+
+// serializedHandler runs one Execute at a time across every episode (row 172 D4).
+type serializedHandler struct {
+	mu *sync.Mutex
+	h  broker.Handler
+}
+
+func (s serializedHandler) Execute(ctx context.Context, req broker.EffectRequest, payload []byte) ([]byte, error) {
+	s.mu.Lock()         // MD3 target
+	defer s.mu.Unlock() // MD3 target
+	return s.h.Execute(ctx, req, payload)
 }
 
 func (d *Daemon) bootstrapRegistry(ctx context.Context, release string) error {
