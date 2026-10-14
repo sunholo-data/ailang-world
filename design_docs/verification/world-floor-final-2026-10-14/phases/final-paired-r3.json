@@ -1,0 +1,64 @@
+{
+  "abort": null,
+  "arms": [
+    "shell",
+    "world"
+  ],
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 26132
+    },
+    {
+      "agent": "claude",
+      "arm": "world",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 8399
+    },
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 13831
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 22534
+    }
+  ],
+  "capacity_reruns": 0,
+  "commit": "4f15e17c9d6b375091a8e56a6eebeb6bcfa9e344",
+  "episodes": {
+    "claude": "fl-cc-r3",
+    "codex": "fl-cx-r3"
+  },
+  "harness_faults": {
+    "claude/shell": 0,
+    "claude/world": 0,
+    "codex/shell": 0,
+    "codex/world": 0
+  },
+  "label": "final-paired-r3",
+  "passes": {
+    "claude/shell": 23,
+    "claude/world": 23,
+    "codex/shell": 22,
+    "codex/world": 22
+  },
+  "phase": "paired",
+  "prereg": "preregistration.json",
+  "run": 3,
+  "spend_usd_claude": 4.2192,
+  "status": "complete",
+  "tasks": 23,
+  "transcripts": ".ailang/state/floor-final-2026-10-14/transcripts/final-paired-r3",
+  "wall_s": 2034.7
+}

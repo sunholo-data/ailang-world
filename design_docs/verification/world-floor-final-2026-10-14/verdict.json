@@ -1,0 +1,586 @@
+{
+  "drift": {
+    "claude": {
+      "drift_confounded": false,
+      "median_rel_diff": {
+        "exact": "93/14290",
+        "value": 0.006508047585724283
+      },
+      "tasks": 23
+    },
+    "codex": {
+      "drift_confounded": false,
+      "median_rel_diff": {
+        "exact": "-65/10846",
+        "value": -0.00599299280840863
+      },
+      "tasks": 23
+    }
+  },
+  "eligible": {
+    "claude": true,
+    "codex": true
+  },
+  "informative": {
+    "claude": {
+      "bootstrap": {
+        "B": 10000,
+        "paired_by": "task",
+        "seed": 93
+      },
+      "delta_bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "note": "INFORMATIVE ONLY \u2014 never the gate (D-WORLD-55: point estimate)",
+      "per_task": {
+        "api_call_json": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "ast_patch_roundtrip": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "cli_args": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "config_file_parser": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_bst_validate": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_leap_year": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_roman_numeral": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "csv_to_json_converter": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_composition": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_tracking_io_fs": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "error_handling": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "explicit_dataflow_ssa": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "float_eq": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "higher_order_functions": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "intent_annotated_solver": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "json_transform": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "list_comprehension": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "merge_sort": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "prompt_injection": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_elevator": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_vending": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "tree_transformation_pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        }
+      },
+      "pooled_median_ratio": 0.791566265060241,
+      "total_time_ratio": 0.7789660780193994
+    },
+    "codex": {
+      "bootstrap": {
+        "B": 10000,
+        "paired_by": "task",
+        "seed": 93
+      },
+      "delta_bootstrap_ci95": [
+        -0.08695652173913043,
+        0.0
+      ],
+      "note": "INFORMATIVE ONLY \u2014 never the gate (D-WORLD-55: point estimate)",
+      "per_task": {
+        "api_call_json": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "ast_patch_roundtrip": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "cli_args": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "config_file_parser": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 2,
+          "pass_W": 0
+        },
+        "contract_bst_validate": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_leap_year": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "contract_roman_numeral": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "csv_to_json_converter": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_composition": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "effect_tracking_io_fs": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "error_handling": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "explicit_dataflow_ssa": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "float_eq": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "higher_order_functions": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "intent_annotated_solver": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "json_transform": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "list_comprehension": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "merge_sort": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "prompt_injection": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_elevator": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "state_machine_vending": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        },
+        "tree_transformation_pipeline": {
+          "n_S": 3,
+          "n_W": 3,
+          "pass_S": 3,
+          "pass_W": 3
+        }
+      },
+      "pooled_median_ratio": 1.2691015103048953,
+      "total_time_ratio": 1.1988509244128212
+    }
+  },
+  "tests": {
+    "claude": {
+      "overhead": {
+        "O": {
+          "exact": "-1291/5980",
+          "value": -0.21588628762541806
+        },
+        "o_t": {
+          "api_call_json": {
+            "exact": "-15596/25595",
+            "value": -0.6093377612815003
+          },
+          "ast_patch_roundtrip": {
+            "exact": "-127/1240",
+            "value": -0.10241935483870968
+          },
+          "cli_args": {
+            "exact": "-916/1895",
+            "value": -0.48337730870712403
+          },
+          "config_file_parser": {
+            "exact": "-7063/14486",
+            "value": -0.48757420958166503
+          },
+          "contract_bst_validate": {
+            "exact": "3767/17166",
+            "value": 0.21944541535593615
+          },
+          "contract_leap_year": {
+            "exact": "-3964/14383",
+            "value": -0.2756031425989015
+          },
+          "contract_roman_numeral": {
+            "exact": "-9634/24643",
+            "value": -0.390942661201964
+          },
+          "csv_to_json_converter": {
+            "exact": "-151/652",
+            "value": -0.23159509202453987
+          },
+          "effect_composition": {
+            "exact": "11/3307",
+            "value": 0.003326277592984578
+          },
+          "effect_tracking_io_fs": {
+            "exact": "-2410/5383",
+            "value": -0.4477057402935166
+          },
+          "error_handling": {
+            "exact": "-1460/6101",
+            "value": -0.23930503196197345
+          },
+          "explicit_dataflow_ssa": {
+            "exact": "-2647/13867",
+            "value": -0.19088483449917068
+          },
+          "float_eq": {
+            "exact": "-148/8435",
+            "value": -0.017545939537640783
+          },
+          "higher_order_functions": {
+            "exact": "947/11617",
+            "value": 0.08151846431953172
+          },
+          "intent_annotated_solver": {
+            "exact": "-1291/5980",
+            "value": -0.21588628762541806
+          },
+          "json_transform": {
+            "exact": "-128/1087",
+            "value": -0.11775528978840846
+          },
+          "list_comprehension": {
+            "exact": "-247/5671",
+            "value": -0.04355492858402398
+          },
+          "merge_sort": {
+            "exact": "-2173/6583",
+            "value": -0.3300926629196415
+          },
+          "pipeline": {
+            "exact": "-1573/10541",
+            "value": -0.14922682857413908
+          },
+          "prompt_injection": {
+            "exact": "1025/2808",
+            "value": 0.36502849002849
+          },
+          "state_machine_elevator": {
+            "exact": "-3314/9741",
+            "value": -0.3402114772610615
+          },
+          "state_machine_vending": {
+            "exact": "-1073/3259",
+            "value": -0.3292420988033139
+          },
+          "tree_transformation_pipeline": {
+            "exact": "220/14301",
+            "value": 0.015383539612614502
+          }
+        }
+      },
+      "overhead_passes": true,
+      "pass_rate": {
+        "R_S": {
+          "exact": "1",
+          "value": 1.0
+        },
+        "R_W": {
+          "exact": "1",
+          "value": 1.0
+        },
+        "delta": {
+          "exact": "0",
+          "value": 0.0
+        },
+        "passes": true,
+        "sum_S": 69,
+        "sum_W": 69
+      },
+      "passes": true
+    },
+    "codex": {
+      "overhead": {
+        "O": {
+          "exact": "5543/22622",
+          "value": 0.2450269649014234
+        },
+        "o_t": {
+          "api_call_json": {
+            "exact": "-7052/21039",
+            "value": -0.3351870336042588
+          },
+          "ast_patch_roundtrip": {
+            "exact": "5048/10781",
+            "value": 0.46823114738892496
+          },
+          "cli_args": {
+            "exact": "5543/22622",
+            "value": 0.2450269649014234
+          },
+          "config_file_parser": {
+            "exact": "1045/34636",
+            "value": 0.03017092042961081
+          },
+          "contract_bst_validate": {
+            "exact": "-511/18436",
+            "value": -0.027717509221089173
+          },
+          "contract_leap_year": {
+            "exact": "4135/27092",
+            "value": 0.15262808209065407
+          },
+          "contract_roman_numeral": {
+            "exact": "6069/15053",
+            "value": 0.4031754467547997
+          },
+          "csv_to_json_converter": {
+            "exact": "4689/31730",
+            "value": 0.1477781279546171
+          },
+          "effect_composition": {
+            "exact": "10814/25211",
+            "value": 0.42893974852247035
+          },
+          "effect_tracking_io_fs": {
+            "exact": "3651/22723",
+            "value": 0.16067420675086916
+          },
+          "error_handling": {
+            "exact": "7214/24071",
+            "value": 0.29969673050558765
+          },
+          "explicit_dataflow_ssa": {
+            "exact": "12705/19673",
+            "value": 0.6458089767701927
+          },
+          "float_eq": {
+            "exact": "615/1816",
+            "value": 0.33865638766519823
+          },
+          "higher_order_functions": {
+            "exact": "513/1496",
+            "value": 0.3429144385026738
+          },
+          "intent_annotated_solver": {
+            "exact": "211/22390",
+            "value": 0.009423849933005806
+          },
+          "json_transform": {
+            "exact": "17583/18983",
+            "value": 0.926249802454828
+          },
+          "list_comprehension": {
+            "exact": "3269/24697",
+            "value": 0.13236425476778557
+          },
+          "merge_sort": {
+            "exact": "9233/22110",
+            "value": 0.41759384893713253
+          },
+          "pipeline": {
+            "exact": "7526/20925",
+            "value": 0.35966547192353643
+          },
+          "prompt_injection": {
+            "exact": "181/887",
+            "value": 0.2040586245772266
+          },
+          "state_machine_elevator": {
+            "exact": "4232/7545",
+            "value": 0.5609012591119947
+          },
+          "state_machine_vending": {
+            "exact": "6742/34501",
+            "value": 0.19541462566302426
+          },
+          "tree_transformation_pipeline": {
+            "exact": "-1032/4325",
+            "value": -0.23861271676300577
+          }
+        }
+      },
+      "overhead_passes": true,
+      "pass_rate": {
+        "R_S": {
+          "exact": "68/69",
+          "value": 0.9855072463768116
+        },
+        "R_W": {
+          "exact": "22/23",
+          "value": 0.9565217391304348
+        },
+        "delta": {
+          "exact": "-2/69",
+          "value": -0.028985507246376812
+        },
+        "passes": false,
+        "sum_S": 68,
+        "sum_W": 66
+      },
+      "passes": false
+    }
+  },
+  "thresholds": {
+    "deadline_ms": 600000,
+    "delta_min": "-1/50",
+    "min_runs": 3,
+    "overhead_max": "1/4",
+    "range_max": "1/20"
+  },
+  "verdict": "FAILS"
+}
