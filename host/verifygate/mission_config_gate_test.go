@@ -163,6 +163,15 @@ fi
 		t.Fatal(err)
 	}
 	writeFile(t, filepath.Join(root, "scripts", "mission_decisions.sh"), validator, 0o755)
+	// The tracked-binary gate runs before the mission gate, so the controlled-stage fixture
+	// carries the real gate and its arms rather than skipping them.
+	for _, name := range []string{"tracked_binary_gate.sh", "test_tracked_binary_gate.sh"} {
+		gate, err := os.ReadFile(filepath.Join(repoRoot, "scripts", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, filepath.Join(root, "scripts", name), gate, 0o755)
+	}
 	writeFile(t, filepath.Join(root, "design_docs", "world-mission.md"), []byte(ledger), 0o644)
 	if controlledStop {
 		shim := "#!/bin/sh\nif [ \"${1:-}\" = --version ]; then echo 'AILANG v0.41.0'; exit 0; fi\nexit 0\n"
@@ -454,14 +463,27 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 		evidenceBanner = `echo "── focused host/evidence named-manifest gate (64 exact top-level tests)"`
 		evidenceCall = `check_evidence_manifest "$evidence_json" 64`
 	}
+	// The tracked-binary gate moved into scripts/tracked_binary_gate.sh (fleet ticket
+	// ci:world:tracked-binary-rejects-release-png), so the repaired script anchors on its
+	// adversarial arms and its allowance-declaring call instead of the inline numstat block.
+	binaryAnchors := []string{
+		`if [ "$tracked_total" -eq 0 ]; then`,
+		`echo "   ✓ 0 binary blobs among $tracked_total tracked files"`,
+	}
+	if repaired {
+		binaryAnchors = []string{
+			`bash scripts/test_tracked_binary_gate.sh`,
+			`bash scripts/tracked_binary_gate.sh --allow-png 'website/static/img/v1/' \`,
+		}
+	}
 	passedAnchor := `echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`
 	needles := []string{
 		`if [ -z "${AILANG_BIN:-}" ]; then`,
 		verTokAnchor,
 		`echo "── AILANG_BIN=$AILANG_BIN ($ver)"`,
 		`echo "── tracked-binary hygiene gate"`,
-		`if [ "$tracked_total" -eq 0 ]; then`,
-		`echo "   ✓ 0 binary blobs among $tracked_total tracked files"`,
+		binaryAnchors[0],
+		binaryAnchors[1],
 		missionBanner,
 		missionAnchor,
 		`ACTIVE_GO=$(go env GOVERSION)      # observe; never assign`,
