@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/capsule"
@@ -134,5 +136,159 @@ func TestRESTCommitRefusesDecisionPacketObjects(t *testing.T) {
 	control := testCommit(g, 1, "ac7-control")
 	if rec := requestRecorderAuth(t, d, authHeader(t, d), http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(control))); rec.Code != http.StatusOK {
 		t.Fatalf("control status = %d, want 200; body=%s", rec.Code, rec.Body)
+	}
+}
+
+// TestDaemonInvocationMintsDecisionPacket (AC3): the production binder reaches Human.Approve.
+func TestDaemonInvocationMintsDecisionPacket(t *testing.T) {
+	d := newHandlerDaemon(t)
+	publishHumanTool(t, d)
+	c := humanCoordinator(t, d, d.binder, humanPlan("e1"))
+	ctx := boundedTestContext(t)
+	res, err := c.Dispatch(ctx, humanCall(t, d, "ep1", "t1"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := packetCount(t, d); n != 1 {
+		t.Fatalf("packetCount = %d, want 1", n)
+	}
+	k := packetForEntry(t, d, res.EntryIndex)
+	entries, err := d.store.ObjectCommits(ctx, res.RecordRef, -1, 1)
+	if err != nil || len(entries) != 1 || entries[0] != res.EntryIndex {
+		t.Fatalf("record ObjectCommits = %v (err=%v), want [%d]", entries, err, res.EntryIndex)
+	}
+	p, err := coordinator.DecodeDecisionPacket(k.Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.CreatedAt != packetNow || p.DeadlineAt != packetExpiry {
+		t.Fatalf("packet times = %d/%d, want %d/%d", p.CreatedAt, p.DeadlineAt, packetNow, packetExpiry)
+	}
+	page, err := broker.RecentApprovals(ctx, d.store, 40)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, summary := range page.Summaries {
+		if summary.RequestRef == p.RequestRef.String() && summary.Status == "pending" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("recent approvals lack pending request %s: %+v", p.RequestRef, page.Summaries)
+	}
+	sh, ok := d.human.(serializedHandler)
+	if !ok || sh.mu != &d.humanMu {
+		t.Fatalf("Human.Approve handler = %T, want serializedHandler with daemon mutex", d.human)
+	}
+	c2 := humanCoordinator(t, d, d.binder, humanPlan("e2"))
+	res2, err := c2.Dispatch(ctx, humanCall(t, d, "ep1", "t2"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := packetCount(t, d); n != 2 {
+		t.Fatalf("packetCount = %d, want 2", n)
+	}
+	k1 := packetForEntry(t, d, res.EntryIndex)
+	k2 := packetForEntry(t, d, res2.EntryIndex)
+	if k1.Hash != k.Hash || k2.Hash == k1.Hash || res2.EntryIndex == res.EntryIndex {
+		t.Fatalf("two packets not first-carried by their own entries: %s at %d, %s at %d", k1.Hash, res.EntryIndex, k2.Hash, res2.EntryIndex)
+	}
+}
+
+type concurrencyProbe struct {
+	mu       sync.Mutex
+	cur, max int
+	second   chan struct{}
+	once     sync.Once
+}
+
+func (p *concurrencyProbe) Execute(ctx context.Context, _ broker.EffectRequest, _ []byte) ([]byte, error) {
+	p.mu.Lock()
+	p.cur++
+	p.max = max(p.max, p.cur)
+	if p.cur == 2 {
+		p.once.Do(func() { close(p.second) })
+	}
+	p.mu.Unlock()
+	select {
+	case <-p.second:
+	case <-time.After(200 * time.Millisecond):
+	case <-ctx.Done():
+	}
+	p.mu.Lock()
+	p.cur--
+	p.mu.Unlock()
+	return []byte(`{"status":"pending","requestRef":"` + hashref.SumSHA256([]byte("ac8")).String() + `"}`), nil
+}
+
+// TestHumanApproveIsSerializedAcrossEpisodes (AC8): one daemon mutex covers every episode.
+func TestHumanApproveIsSerializedAcrossEpisodes(t *testing.T) {
+	d := newHandlerDaemon(t)
+	publishHumanTool(t, d)
+	sh := d.human.(serializedHandler)
+	probe := &concurrencyProbe{second: make(chan struct{})}
+	d.human = serializedHandler{mu: sh.mu, h: probe}
+	dispatchPair := func(episodeA, episodeB, taskA, taskB string) [2]error {
+		c := humanCoordinator(t, d, d.binder, humanPlan("e1"))
+		calls := []coordinator.Call{humanCall(t, d, episodeA, taskA), humanCall(t, d, episodeB, taskB)}
+		ctx := boundedTestContext(t)
+		var wg sync.WaitGroup
+		var errs [2]error
+		for i := range calls {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				_, errs[i] = c.Dispatch(ctx, calls[i])
+			}(i)
+		}
+		done := make(chan struct{})
+		go func() { wg.Wait(); close(done) }()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("concurrent Human.Approve dispatches did not finish")
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		}
+		return errs
+	}
+	errs := dispatchPair("epA", "epB", "a", "b")
+	if probe.max != 1 {
+		t.Fatalf("serialized probe max = %d, want 1", probe.max)
+	}
+	t.Logf("serialized probe max = %d", probe.max)
+	requireOneCommitted(t, errs)
+	// CONTROL: an unwrapped fresh probe must observe both episodes concurrently.
+	probe2 := &concurrencyProbe{second: make(chan struct{})}
+	d.human = probe2
+	errs = dispatchPair("epC", "epD", "c", "d")
+	if probe2.max != 2 {
+		t.Fatalf("unwrapped probe max = %d, want 2", probe2.max)
+	}
+	t.Logf("CONTROL unwrapped probe max = %d", probe2.max)
+	requireOneCommitted(t, errs)
+}
+
+// requireOneCommitted accepts a world-head conflict on the slower of two
+// concurrent dispatches: both plan against the same selected head, so the store
+// rejects the second commit as stale (store.ConflictError: callers re-plan).
+// That is the store's optimistic concurrency, not Human.Approve's; the probe max
+// above is what AC8 measures. Any other error, or no commit at all, fails.
+func requireOneCommitted(t *testing.T, errs [2]error) {
+	t.Helper()
+	committed := 0
+	for _, err := range errs {
+		switch {
+		case err == nil:
+			committed++
+		case store.IsConflict(err):
+			t.Logf("world-head conflict (expected for one of two concurrent commits): %v", err)
+		default:
+			t.Error(err)
+		}
+	}
+	if committed == 0 {
+		t.Error("neither concurrent Human.Approve dispatch committed")
 	}
 }

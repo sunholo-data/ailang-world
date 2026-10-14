@@ -522,8 +522,8 @@ func TestQuickstartDecisionPacketSection(t *testing.T) {
 			t.Fatalf("section lacks %q", want)
 		}
 	}
-	if strings.Contains(section, "--grant Human.Approve=") {
-		t.Fatal("section documents a grant that cannot mint a packet while D-WORLD-73 is held")
+	if !strings.Contains(section, "--grant Human.Approve=worktree:1") {
+		t.Fatal("section lacks --grant Human.Approve=worktree:1")
 	}
 	for _, line := range strings.Split(section, "\n") {
 		if strings.HasPrefix(line, "/tmp/ailang-worldd serve ") || strings.HasPrefix(line, "|") {
@@ -535,7 +535,7 @@ func TestQuickstartDecisionPacketSection(t *testing.T) {
 		t.Fatalf("documented route = %v", route)
 	}
 
-	// Held-release arm: a Human.Approve skill alone mints nothing, so the documented listing is empty.
+	// Fresh-store arm: a Human.Approve skill alone mints nothing, so the documented listing is empty.
 	d0 := newHandlerDaemon(t)
 	publishHumanTool(t, d0)
 	if rec := requestRecorder(t, d0, http.MethodGet, route[1], nil); rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != `{"items":[]}` {
