@@ -219,8 +219,8 @@ before and after both passes; an unexpected mutation invalidates the result.
 
 | Filename | Actual route | CSS viewport | Required content |
 |---|---|---|---|
-| workbench-light.png | `/workbench` | 1440×1100 | selected head, nonempty live list, graph and pending approval |
-| workbench-dark.png | `/workbench` | 1440×1100 | same data, measured dark CSS tokens |
+| workbench-light.png | `/workbench` | 1440×1100 | header (selected world, revision, log head) and the nonempty timeline, i.e. what the one-column layout puts in the viewport (V25, render.go:184); the graph and the pending approval are carried by graph.png and packet.png, not required here |
+| workbench-dark.png | `/workbench` | 1440×1100 | same regions as workbench-light, measured dark CSS tokens |
 | packet.png | `/workbench?object=<S6 packet hash>` | 1440×1400 | validated packet, real proposal/request links, pending status, four-grade evidence roster |
 | graph.png | `/workbench?from=N&entry=N`, N=S5 entry | 1440×1100 | selected entry and checked graph targets; no invented evidence graph |
 | provenance.png | `/workbench?object=<S5 record ref>&payload=1` (V26) | 1440×1400 | invocation payload, stored input/plan/effect/output references; accompanying why JSON is the actual walk |
