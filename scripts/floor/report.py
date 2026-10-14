@@ -11,8 +11,9 @@ separately … only then run the paired arms"):
      (``git diff --quiet HEAD --``). Only then are World rows read. The sealed eligibility must
      also equal a recomputation from the shell rows (a sealed file cannot be swapped).
 
-Evidence layout (§4.8): ``<dir>/runs/<agent>/<arm>/r<k>.jsonl``, ``eligibility.json``,
-``verdict.json``, ``summary.md``.
+Evidence layout (§4.8): Phase 1 ``<dir>/runs/<agent>/shell/r<k>.jsonl`` (eligibility only),
+Phase 2 ``<dir>/paired/runs/<agent>/<arm>/r<k>.jsonl`` (the gate's Δ and O, D-WORLD-74 = A),
+``eligibility.json``, ``verdict.json``, ``summary.md``.
 """
 from __future__ import annotations
 
@@ -29,6 +30,7 @@ import classify as classify_mod  # noqa: E402
 import stats  # noqa: E402
 
 ELIGIBILITY = 'eligibility.json'
+PAIRED = 'paired'  # D-WORLD-74: the interleaved Phase 2 rows, both arms
 
 
 class SealError(Exception):
@@ -108,8 +110,9 @@ def compute_verdict(evidence_dir: str, agents, tasks) -> dict:
     for a in agents:
         if not eligible[a]:
             continue
-        s_rows = load_rows(evidence_dir, a, 'shell')
-        w_rows = load_rows(evidence_dir, a, 'world')
+        paired = os.path.join(evidence_dir, PAIRED)  # never Phase 1's shell rows (MUT-UNPAIRED-SHELL)
+        s_rows = load_rows(paired, a, 'shell')
+        w_rows = load_rows(paired, a, 'world')
         tests[a] = stats.agent_tests(s_rows, w_rows, tasks)
         info[a] = stats.informative(s_rows, w_rows, tasks)
     v = stats.verdict(eligible, tests)
@@ -124,15 +127,16 @@ DRIFT_FLAG = Fraction(1, 10)
 
 
 def drift(evidence_dir: str, agents, tasks) -> dict:
-    """§4.11 drift probe (informative, never the gate): per task, the probe's shell wall time against
-    Phase 1's median shell wall time; the agent is flagged drift-confounded when the median over
-    tasks of that relative difference exceeds 10% in magnitude. Harness-fault task-runs are skipped."""
+    """Drift readout (informative, never the gate): per task, Phase 2's paired shell wall time against
+    Phase 1's median shell wall time; flagged when the median over tasks of that relative difference
+    exceeds 10% in magnitude. Under D-WORLD-74 the gate's arms share their time windows, so a flag
+    reports how much the clock moved between phases, not a confound of O. Harness faults are skipped."""
     out = {}
     for a in agents:
-        paths = sorted(glob.glob(os.path.join(evidence_dir, 'drift', 'runs', a, 'shell', 'r*.jsonl')))
+        paths = sorted(glob.glob(os.path.join(evidence_dir, PAIRED, 'runs', a, 'shell', 'r*.jsonl')))
         if not paths:
             continue
-        probe = stats.final_rows(load_rows(os.path.join(evidence_dir, 'drift'), a, 'shell'))
+        probe = stats.final_rows(load_rows(os.path.join(evidence_dir, PAIRED), a, 'shell'))
         phase1 = stats.final_rows(load_rows(evidence_dir, a, 'shell'))
         d_t = {}
         for t in tasks:
@@ -164,11 +168,11 @@ def summary_md(result: dict) -> str:
               'total-time ratios — see verdict.json `informative`.', '']
     for a, d in (result.get('drift') or {}).items():
         if d.get('median_rel_diff') is None:
-            lines.append(f'- drift probe {a}: no comparable task-runs')
+            lines.append(f'- drift {a}: no comparable task-runs')
             continue
-        flag = 'DRIFT-CONFOUNDED overhead' if d['drift_confounded'] else 'within 10%'
-        lines.append(f'- drift probe {a}: median per-task shell time {d["median_rel_diff"]["value"]:+.3f} vs '
-                     f'Phase 1 over {d["tasks"]} tasks ({flag}; informative, the gate value is unchanged)')
+        flag = 'beyond 10%' if d['drift_confounded'] else 'within 10%'
+        lines.append(f'- drift {a}: median per-task paired shell time {d["median_rel_diff"]["value"]:+.3f} vs '
+                     f'Phase 1 over {d["tasks"]} tasks ({flag}; informative, the paired gate value is unchanged)')
     lines.append('')
     return '\n'.join(lines)
 
