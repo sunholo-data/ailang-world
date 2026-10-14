@@ -4,7 +4,7 @@ go vet ./... rc=0 (1 s); go test -run '^$' ./... rc=0 (11 s)
 go test -count=1 ./host/daemon -run 'Quickstart|Packet|Commit|Handler|REST|MCPMount|MCPDaemonBudget|Workspace' rc=0 (24 s)
 go test -count=1 ./host/broker -run TestRegistryDispatchBindingBoundary -v → --- PASS (wantCount 3)
 ## after the executor + controller AC8 correction
-3/3 runs: --- PASS TestDaemonInvocationMintsDecisionPacket · --- PASS TestHumanApproveIsSerializedAcrossEpisodes (serialized probe max = 1; CONTROL unwrapped probe max = 2; exactly one store.ConflictError per pair) · --- PASS TestQuickstartDecisionPacketSection
+3/3 runs: --- PASS TestDaemonInvocationMintsDecisionPacket · --- PASS TestHumanApproveIsSerializedAcrossEpisodes (serialized probe max = 1; CONTROL unwrapped probe max = 2; exactly one store.ConflictError per pair observed in each run (the test requires >=1 commit and tolerates 0 conflicts)) · --- PASS TestQuickstartDecisionPacketSection
 MD3 (delete Lock + defer Unlock) → FAIL "serialized probe max = 2, want 1"; restored (cmp)
 MD2 (delete reg[broker.EffectHumanApprove] = d.human) → FAIL "declares effects with no registered handler [Human.Approve]"; restored (cmp)
 F1 ./scripts/verify_ail.sh rc=0 (38 s): 16 required identities, 40 named tests, 444 se-tools named tests
@@ -13,4 +13,4 @@ F3 go test -race ./host/daemon -count=1 rc=0 (209 s wall; package 205.166 s; pla
 TR.C TestRegistryDispatchBindingBoundary: PASS unchanged (wantCount 3; a map insertion is invisible to the detector — design V45, Future Work #5)
 ## CI
 PR #261 head 618e27c: ailang-code verify gate SUCCESS; go host build + test gate SUCCESS
-merge 8511bad: see the log entry's Gate 3b line
+merge 8511bad: CI run 38612159525 completed success; check-runs 2/2
