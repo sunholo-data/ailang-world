@@ -497,6 +497,14 @@ class CapacityRule(unittest.TestCase):  # §4.6 capacity rule, D-WORLD-67
         with mock.patch.object(run, 'MAX_ATTEMPTS', 4):
             self.assertNotEqual(d, run.config_digest(run.live_config(c, 'final', p)))
 
+    def test_run_order_is_in_the_final_digest_only(self):  # D-WORLD-74: AC5.1 refuses a reordered FINAL
+        c, p = cfg(), FakeProbes()
+        self.assertEqual(run.live_config(c, 'final', p)['rules']['order'], run.RUN_ORDER)
+        self.assertNotIn('order', run.live_config(c, 'smoke', p)['rules'])  # tuning digests stay comparable
+        d = run.config_digest(run.live_config(c, 'final', p))
+        with mock.patch.object(run, 'RUN_ORDER', dict(run.RUN_ORDER, counterbalance='shell first always')):
+            self.assertNotEqual(d, run.config_digest(run.live_config(c, 'final', p)))
+
     def test_prereg_carries_the_rule(self):
         pre = run.prereg_draft(cfg(), FakeProbes(), ledger='/nonexistent/ledger.jsonl')
         rule = pre['capacity_rule']

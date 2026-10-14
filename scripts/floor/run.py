@@ -8,12 +8,15 @@
     run.py digest [--mode smoke|final]       print the live config and its digest
     run.py prereg-draft [--out PATH]         write the FINAL preregistration draft (M5 commits it)
     run.py final-prepare [--root R]          M5: build the FINAL rig and print the attended mint block
-    run.py final --prereg PATH --phase shell|world|drift [--run K]
+    run.py final --prereg PATH --phase shell|paired [--run K]
         M5 only. REFUSES unless the prereg is committed (git ls-files + clean against HEAD) and its
         ``config_digest`` equals the live FINAL config's digest (AC5.1, MUT-FINAL-NOPREREG).
-        §4.11 order: ``shell`` runs 1..N, then ``report.py seal`` + commit, then ``world`` runs
-        1..N and ``drift`` REFUSE unless eligibility.json is committed. Rows land beside the prereg
-        (``runs/<agent>/<arm>/r<K>.jsonl``; drift under ``drift/``); a rows file is written once.
+        §4.11 order (D-WORLD-74 = A): ``shell`` runs 1..N, then ``report.py seal`` + commit, then
+        ``paired`` runs 1..N REFUSE unless eligibility.json is committed. A paired run takes each
+        task through shell and World back to back, in the counterbalanced order ``paired_order``
+        fixes, so provider-latency drift falls on both arms alike. Phase 1 rows land beside the
+        prereg (``runs/<agent>/shell/r<K>.jsonl``), paired rows under
+        ``paired/runs/<agent>/<arm>/r<K>.jsonl``; a rows file is written once.
 
 Refusals that guard the record:
   * AC4.2 — ``iterate`` and ``final`` refuse while the tuning ledger has uncommitted changes
@@ -65,7 +68,15 @@ EPISODES = {'claude': 'fl-tune-cc', 'codex': 'fl-tune-cx'}
 # ~/.ailang/world/world.db, is schema v2 with 0 entries and the current binary refuses to open it
 # (row 124), measured 2026-10-09.
 FINAL_ROOT = os.path.expanduser('~/.ailang/state/floor-final')
-PHASES = ('shell', 'world', 'drift')
+PHASES = ('shell', 'paired')
+# D-WORLD-74 = A (Mark, attended 2026-10-14; supersedes D-NF-5 = A): ledger iterations 11-13 measured
+# the sequential arms' O at +20.0%, +23.2% and -14.4% with only the tools wording changed, because
+# each arm ran in its own ~15-minute window of provider latency. The gate's rows now come from
+# PAIRED runs in this order, pinned in the FINAL digest (live_config rules.order).
+RUN_ORDER = {'phase1': 'shell x N, eligibility sealed and committed first (V36)',
+             'phase2': 'paired x N: per agent and run, each task runs shell and World back to back',
+             'counterbalance': 'World first iff (task index + run) is odd; tasks in corpus order',
+             'gate_rows': 'Delta and O from the paired rows only', 'source': 'D-WORLD-74 = A'}
 SOL = 'benchmark/solution.ail'
 MOCK_PORT = 7655  # the one loopback pair the scratch daemon's ailang-run may reach (canary.serve_argv)
 TEACHING_MODES = ('full', 'compact')
@@ -291,7 +302,9 @@ def live_config(cfg: dict, mode: str, probes: Probes) -> dict:
                                'source': 'design §4.6, D-WORLD-67'},
                   'thresholds': {'range_max': str(stats.RANGE_MAX), 'delta_min': str(stats.DELTA_MIN),
                                  'overhead_max': str(stats.OVERHEAD_MAX), 'min_runs': stats.MIN_RUNS,
-                                 'deadline_ms': stats.DEADLINE_MS}},
+                                 'deadline_ms': stats.DEADLINE_MS},
+                  # FINAL only, so smoke digests stay comparable across tuning iterations.
+                  **({'order': dict(RUN_ORDER)} if mode == 'final' else {})},
     }
 
 
@@ -325,9 +338,10 @@ def prereg_draft(cfg: dict, probes: Probes, ledger: str = LEDGER) -> dict:
                                       'overhead_max': str(stats.OVERHEAD_MAX), 'min_runs': stats.MIN_RUNS},
                        'informative_only': 'pooled-median ratio, total-time ratio, paired bootstrap 95% CI for Delta, per-task tables'},
         'run_protocol': ['Phase 1: shell arms, N runs per agent; commit eligibility.json (report.py seal)',
-                         'Phase 2: World arms, N runs per agent',
-                         'Drift probe: one extra shell run per agent (informative)',
-                         'Verdict: report.py verdict (refuses unless eligibility.json is committed)'],
+                         'Phase 2: paired runs, N per agent: each task shell and World back to back, '
+                         'World first iff (task index + run) is odd (D-WORLD-74 = A)',
+                         'Verdict: report.py verdict (refuses unless eligibility.json is committed); '
+                         'Delta and O from the paired rows; drift = paired shell vs Phase 1 shell (informative)'],
         'canary': 'one smoke-tier task per (agent, arm) before each phase (§4.9); abort on the first quota/rate-limit evidence',
         'capacity_rule': {'source': 'design §4.6 capacity rule, D-WORLD-67 (Mark Edmondson, attended 2026-10-06)',
                           'retryable': 'ONLY a typed provider-capacity api_error whose evidence matches '
@@ -929,10 +943,18 @@ def final_episodes(k: int) -> dict:
     return {'claude': f'fl-cc-r{k}', 'codex': f'fl-cx-r{k}'}
 
 
-def final_rows_path(ev: str, phase: str, agent: str, k: int) -> str:
-    if phase == 'drift':
-        return os.path.join(ev, 'drift', 'runs', agent, 'shell', f'r{k}.jsonl')
-    return os.path.join(ev, 'runs', agent, phase, f'r{k}.jsonl')
+def final_rows_path(ev: str, phase: str, agent: str, k: int, arm: str = 'shell') -> str:
+    if phase == 'paired':
+        return os.path.join(ev, 'paired', 'runs', agent, arm, f'r{k}.jsonl')
+    if phase != 'shell' or arm != 'shell':
+        raise RunRefused(f'phase {phase!r} has no {arm} rows')
+    return os.path.join(ev, 'runs', agent, 'shell', f'r{k}.jsonl')
+
+
+def paired_order(task_index: int, run_k: int) -> tuple:
+    """D-WORLD-74: the arm order for one task of one paired run. Alternating by task balances each
+    run (12/11 at T=23); adding the run flips every task's order between consecutive runs."""
+    return ('world', 'shell') if (task_index + run_k) % 2 else ('shell', 'world')
 
 
 def final_spent(ev: str) -> float:
@@ -1008,17 +1030,18 @@ def check_final_phase(ev: str, phase: str, run_k: int, N: int, agents) -> None:
     import report
     if phase not in PHASES:
         raise RunRefused(f'unknown phase {phase!r}')
-    if phase != 'drift' and not 1 <= run_k <= N:
+    if not 1 <= run_k <= N:
         raise RunRefused(f'--run must be 1..{N} (D-NF-4)')
-    if phase in ('world', 'drift'):
+    if phase == 'paired':
         try:
             report.require_sealed(ev)  # AC3.4: no World row before eligibility is committed
         except report.SealError as e:
             raise RunRefused(f'§4.11: {e}')
     for ag in agents:
-        p = final_rows_path(ev, phase, ag, run_k)
-        if os.path.exists(p):
-            raise RunRefused(f'{p} exists: a FINAL rows file is written once (§4.10: no re-running)')
+        for arm in (('shell', 'world') if phase == 'paired' else ('shell',)):
+            p = final_rows_path(ev, phase, ag, run_k, arm)
+            if os.path.exists(p):
+                raise RunRefused(f'{p} exists: a FINAL rows file is written once (§4.10: no re-running)')
 
 
 def cmd_final(a) -> int:
@@ -1030,18 +1053,19 @@ def cmd_final(a) -> int:
     ev = os.path.dirname(os.path.abspath(a.prereg))
     N = cfg['final']['N']
     agents = a.agents.split(',')
-    run_k = N + 1 if a.phase == 'drift' else a.run
+    run_k = a.run
     check_final_phase(ev, a.phase, run_k, N, agents)
-    arm = 'world' if a.phase == 'world' else 'shell'
+    paired = a.phase == 'paired'
+    arms_run = ('shell', 'world') if paired else ('shell',)
     mode = 'final'
     tasks = mode_tasks(cfg, mode, probes)
     can = canary_task(cfg, mode, probes)
     L = _layout(a.root)
-    eps = final_episodes(a.run if a.phase == 'world' else 1)
+    eps = final_episodes(run_k if paired else 1)
     label = f'final-{a.phase}-r{run_k}'
     tdir = os.path.join(L['root'], 'transcripts', label)
     toks, client, daemon = {}, None, None
-    if arm == 'world':
+    if paired:
         import world
         toks = {ag: read_token(os.path.join(L['private'], f'{eps[ag]}.session')) for ag in agents}
         daemon = canary.start_daemon(L, a.addr)
@@ -1054,25 +1078,28 @@ def cmd_final(a) -> int:
         if client is not None:
             canary.commit_genesis_if_needed(L, client, toks[agents[0]])
         for ag in agents:
-            c = run_with_retries(lambda k: run_cell(
-                ctx, ag, arm, can, run_k=run_k, rows_path=os.path.join(ev, 'canary', f'{label}.jsonl'),
-                label=f'{label}-canary', attempt=k))[-1]
-            canaries.append({'agent': ag, 'arm': arm, 'task': can.id, 'class': c['class'], 'wall_ms': c['wall_ms']})
-            print(f'canary {ag}/{arm}: {c["class"]} att={c["attestation"]} {c["wall_ms"]} ms', flush=True)
-            if c['attestation'] or c['error_category'] == 'harness_setup' or c['class'] != classify_mod.PASS:
-                raise RunRefused(f'canary {ag}/{arm} did not pass ({c["class"]} {c["error_category"]} '
-                                 f'{c["attestation"]} {c["cause_evidence"]}): investigate before spending the phase')
-            rows_path = final_rows_path(ev, a.phase, ag, run_k)
-            for t in tasks:
-                if time.time() - t0 > a.max_wall_s:
-                    raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
-                tries = run_with_retries(lambda k: run_cell(
-                    ctx, ag, arm, t, run_k=run_k, rows_path=rows_path, label=label, attempt=k))
-                for prev in tries[:-1]:
-                    print(f'{ag}/{arm}/{t.id}: attempt {prev["attempt"]} capacity fault, re-run (§4.6)', flush=True)
-                r = tries[-1]
-                print(f'{label} {ag}/{t.id}: {r["class"]} {r["error_category"]} {r["wall_ms"]} ms ${r["cost_usd"]} '
-                      f'att={r["attestation"]} prov={(r.get("provenance") or {}).get("solution_provenance")}', flush=True)
+            for arm in arms_run:
+                c = run_with_retries(lambda k: run_cell(
+                    ctx, ag, arm, can, run_k=run_k, rows_path=os.path.join(ev, 'canary', f'{label}.jsonl'),
+                    label=f'{label}-canary', attempt=k))[-1]
+                canaries.append({'agent': ag, 'arm': arm, 'task': can.id, 'class': c['class'], 'wall_ms': c['wall_ms']})
+                print(f'canary {ag}/{arm}: {c["class"]} att={c["attestation"]} {c["wall_ms"]} ms', flush=True)
+                if c['attestation'] or c['error_category'] == 'harness_setup' or c['class'] != classify_mod.PASS:
+                    raise RunRefused(f'canary {ag}/{arm} did not pass ({c["class"]} {c["error_category"]} '
+                                     f'{c["attestation"]} {c["cause_evidence"]}): investigate before spending the phase')
+            for i, t in enumerate(tasks):
+                for arm in (paired_order(i, run_k) if paired else arms_run):
+                    if time.time() - t0 > a.max_wall_s:
+                        raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
+                    rows_path = final_rows_path(ev, a.phase, ag, run_k, arm)
+                    tries = run_with_retries(lambda k: run_cell(
+                        ctx, ag, arm, t, run_k=run_k, rows_path=rows_path, label=label, attempt=k))
+                    for prev in tries[:-1]:
+                        print(f'{ag}/{arm}/{t.id}: attempt {prev["attempt"]} capacity fault, re-run (§4.6)', flush=True)
+                    r = tries[-1]
+                    print(f'{label} {ag}/{arm}/{t.id}: {r["class"]} {r["error_category"]} {r["wall_ms"]} ms '
+                          f'${r["cost_usd"]} att={r["attestation"]} '
+                          f'prov={(r.get("provenance") or {}).get("solution_provenance")}', flush=True)
     except (QuotaAbort, RunRefused) as e:
         status, abort = 'aborted', str(e)
         print(f'ABORT: {e}', flush=True)
@@ -1081,14 +1108,17 @@ def cmd_final(a) -> int:
             canary.stop_daemon(daemon)
     rows = []
     for ag in agents:
-        rows += read_jsonl(final_rows_path(ev, a.phase, ag, run_k))
+        for arm in arms_run:
+            rows += read_jsonl(final_rows_path(ev, a.phase, ag, run_k, arm))
     final = {}
     for r in sorted(rows, key=lambda r: r.get('attempt', 1)):
-        final[(r['agent'], r['task'])] = r
-    passes = {ag: sum(1 for (g, _t), r in final.items() if g == ag and r['class'] == classify_mod.PASS) for ag in agents}
-    faults = {ag: sum(1 for (g, _t), r in final.items() if g == ag and r['class'] == classify_mod.HARNESS_FAULT)
-              for ag in agents}
-    rec = {'label': label, 'phase': a.phase, 'run': run_k, 'arm': arm, 'episodes': eps if arm == 'world' else None,
+        final[(r['agent'], r['arm'], r['task'])] = r
+    passes = {f'{ag}/{x}': sum(1 for (g, y, _t), r in final.items() if (g, y) == (ag, x) and r['class'] == classify_mod.PASS)
+              for ag in agents for x in arms_run}
+    faults = {f'{ag}/{x}': sum(1 for (g, y, _t), r in final.items()
+                               if (g, y) == (ag, x) and r['class'] == classify_mod.HARNESS_FAULT)
+              for ag in agents for x in arms_run}
+    rec = {'label': label, 'phase': a.phase, 'run': run_k, 'arms': list(arms_run), 'episodes': eps if paired else None,
            'status': status, 'abort': abort, 'commit': head_commit(), 'prereg': os.path.basename(a.prereg),
            'canary': canaries, 'tasks': len(tasks), 'passes': passes, 'harness_faults': faults,
            'capacity_reruns': sum(1 for r in rows if r.get('attempt', 1) > 1),

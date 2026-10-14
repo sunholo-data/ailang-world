@@ -40,8 +40,9 @@ class Seal(unittest.TestCase):
         subprocess.run(GIT + ['init', '-q', self.repo], check=True)
         self.ev = os.path.join(self.repo, 'world-floor-test')
         for a in AGENTS:
-            write_runs(self.ev, a, 'shell', {1: 21, 2: 21, 3: 22})
-            write_runs(self.ev, a, 'world', {1: 21, 2: 21, 3: 21}, wall=11_000)
+            write_runs(self.ev, a, 'shell', {1: 21, 2: 21, 3: 22})  # Phase 1: eligibility only
+            write_runs(os.path.join(self.ev, 'paired'), a, 'shell', {1: 21, 2: 21, 3: 22})
+            write_runs(os.path.join(self.ev, 'paired'), a, 'world', {1: 21, 2: 21, 3: 21}, wall=11_000)
         self.calls = []
         self._orig = (stats.agent_tests, report.load_rows)
 
@@ -113,6 +114,18 @@ class Seal(unittest.TestCase):
         self.assertEqual(r['tests']['codex']['pass_rate']['delta']['exact'], '-1/69')
         self.assertIn('agent_tests', self.calls)
         self.assertIn('Floor verdict: HOLDS', report.summary_md(r))
+
+    def test_gate_reads_the_paired_shell_rows_not_phase_1(self):
+        # MUT-UNPAIRED-SHELL (D-WORLD-74): Phase 1 ran in a slower window; the paired shell rows are
+        # what the World rows are compared against. Reading Phase 1 here would give O = 11000/30000 - 1.
+        for a in AGENTS:
+            write_runs(self.ev, a, 'shell', {1: 21, 2: 21, 3: 22}, wall=30_000)
+        report.seal(self.ev, AGENTS, T)
+        self.git('add', '.')
+        self.git('commit', '-qm', 'seal')
+        r = report.compute_verdict(self.ev, AGENTS, T)
+        self.assertEqual(r['tests']['codex']['overhead']['O']['exact'], '1/10')
+        self.assertTrue(r['drift']['codex']['drift_confounded'])  # informative: the clock moved 3x
 
     def test_seal_is_once(self):
         report.seal(self.ev, AGENTS, T)

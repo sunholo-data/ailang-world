@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Row 93 M5 — the FINAL phase guards (§4.11 order, write-once rows), the mint block (§4.5), the
-drift probe (§4.11, informative) and the prereg task list report.py reads."""
+"""Row 93 M5 — the FINAL phase guards (§4.11 order, write-once rows), the paired order (D-WORLD-74),
+the mint block (§4.5), the drift readout (informative) and the prereg task list report.py reads."""
 import glob
 import json
 import os
@@ -43,22 +43,29 @@ class PhaseGuards(unittest.TestCase):
             with self.assertRaisesRegex(run.RunRefused, r'--run must be 1\.\.3'):
                 run.check_final_phase(self.ev, 'shell', k, 3, AGENTS)
 
-    def test_world_and_drift_refused_before_the_seal(self):
-        for phase, k in (('world', 1), ('drift', 4)):
-            with self.assertRaisesRegex(run.RunRefused, '§4.11'):
-                run.check_final_phase(self.ev, phase, k, 3, AGENTS)
+    def test_old_sequential_phases_are_gone(self):
+        # D-WORLD-74: a sequential World phase would put the arms in separate time windows again.
+        for phase in ('world', 'drift'):
+            with self.assertRaisesRegex(run.RunRefused, 'unknown phase'):
+                run.check_final_phase(self.ev, phase, 1, 3, AGENTS)
 
-    def test_world_refused_with_an_uncommitted_seal(self):
+    def test_paired_refused_before_the_seal(self):
+        with self.assertRaisesRegex(run.RunRefused, '§4.11'):
+            run.check_final_phase(self.ev, 'paired', 1, 3, AGENTS)
+
+    def test_paired_refused_with_an_uncommitted_seal(self):
         for a in AGENTS:
             write_runs(self.ev, a, 'shell', {1: 21, 2: 21, 3: 21})
         report.seal(self.ev, AGENTS, T)
         with self.assertRaisesRegex(run.RunRefused, 'not committed'):
-            run.check_final_phase(self.ev, 'world', 1, 3, AGENTS)
+            run.check_final_phase(self.ev, 'paired', 1, 3, AGENTS)
 
-    def test_world_allowed_after_the_committed_seal(self):
+    def test_paired_allowed_after_the_committed_seal(self):
         self.seal()
-        run.check_final_phase(self.ev, 'world', 1, 3, AGENTS)
-        run.check_final_phase(self.ev, 'drift', 4, 3, AGENTS)
+        for k in (1, 2, 3):
+            run.check_final_phase(self.ev, 'paired', k, 3, AGENTS)
+        with self.assertRaisesRegex(run.RunRefused, r'--run must be 1\.\.3'):
+            run.check_final_phase(self.ev, 'paired', 4, 3, AGENTS)
 
     def test_rows_are_written_once(self):
         run.check_final_phase(self.ev, 'shell', 2, 3, ['claude', 'codex'])  # nothing exists yet
@@ -68,10 +75,48 @@ class PhaseGuards(unittest.TestCase):
             run.check_final_phase(self.ev, 'shell', 2, 3, ['claude', 'codex'])
         run.check_final_phase(self.ev, 'shell', 3, 3, ['claude', 'codex'])
 
+    def test_paired_rows_are_written_once_per_arm(self):
+        self.seal()
+        for arm in ('shell', 'world'):
+            p = run.final_rows_path(self.ev, 'paired', 'codex', 1, arm)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            open(p, 'w').close()
+            with self.assertRaisesRegex(run.RunRefused, 'written once'):
+                run.check_final_phase(self.ev, 'paired', 1, 3, AGENTS)
+            os.remove(p)
+        run.check_final_phase(self.ev, 'paired', 1, 3, AGENTS)
+
     def test_rows_paths(self):
-        self.assertEqual(run.final_rows_path('E', 'world', 'codex', 2), os.path.join('E', 'runs', 'codex', 'world', 'r2.jsonl'))
-        self.assertEqual(run.final_rows_path('E', 'drift', 'claude', 4),
-                         os.path.join('E', 'drift', 'runs', 'claude', 'shell', 'r4.jsonl'))
+        self.assertEqual(run.final_rows_path('E', 'shell', 'codex', 2), os.path.join('E', 'runs', 'codex', 'shell', 'r2.jsonl'))
+        self.assertEqual(run.final_rows_path('E', 'paired', 'codex', 2, 'world'),
+                         os.path.join('E', 'paired', 'runs', 'codex', 'world', 'r2.jsonl'))
+        self.assertEqual(run.final_rows_path('E', 'paired', 'claude', 1, 'shell'),
+                         os.path.join('E', 'paired', 'runs', 'claude', 'shell', 'r1.jsonl'))
+        with self.assertRaises(run.RunRefused):
+            run.final_rows_path('E', 'shell', 'codex', 1, 'world')  # Phase 1 has no World rows
+
+
+class PairedOrder(unittest.TestCase):
+    """D-WORLD-74: both arms of a task run back to back, the order counterbalanced."""
+
+    def test_each_task_runs_both_arms_once(self):
+        for k in (1, 2, 3):
+            for i in range(23):
+                self.assertEqual(sorted(run.paired_order(i, k)), ['shell', 'world'])
+
+    def test_each_run_is_balanced(self):
+        for k in (1, 2, 3):
+            firsts = [run.paired_order(i, k)[0] for i in range(23)]
+            self.assertLessEqual(abs(firsts.count('world') - firsts.count('shell')), 1)
+
+    def test_order_flips_between_consecutive_runs(self):
+        for k in (1, 2):
+            for i in range(23):
+                self.assertEqual(run.paired_order(i, k), tuple(reversed(run.paired_order(i, k + 1))))
+
+    def test_adjacent_tasks_alternate(self):
+        for i in range(22):
+            self.assertNotEqual(run.paired_order(i, 1)[0], run.paired_order(i + 1, 1)[0])
 
 
 class MintBlock(unittest.TestCase):
@@ -99,9 +144,9 @@ class Drift(unittest.TestCase):
 
     def test_flags_only_beyond_ten_percent(self):
         write_runs(self.ev, 'a', 'shell', {1: 21, 2: 21, 3: 21}, wall=10_000)
-        write_runs(os.path.join(self.ev, 'drift'), 'a', 'shell', {4: 21}, wall=11_000)  # +10%: not beyond
+        write_runs(os.path.join(self.ev, 'paired'), 'a', 'shell', {1: 21, 2: 21, 3: 21}, wall=11_000)  # +10%
         write_runs(self.ev, 'b', 'shell', {1: 21, 2: 21, 3: 21}, wall=10_000)
-        write_runs(os.path.join(self.ev, 'drift'), 'b', 'shell', {4: 21}, wall=11_100)  # +11%
+        write_runs(os.path.join(self.ev, 'paired'), 'b', 'shell', {1: 21, 2: 21, 3: 21}, wall=11_100)  # +11%
         d = report.drift(self.ev, ['a', 'b', 'c'], T)
         self.assertFalse(d['a']['drift_confounded'])
         self.assertTrue(d['b']['drift_confounded'])
@@ -110,7 +155,7 @@ class Drift(unittest.TestCase):
 
     def test_negative_drift_counts_too(self):
         write_runs(self.ev, 'a', 'shell', {1: 21, 2: 21, 3: 21}, wall=10_000)
-        write_runs(os.path.join(self.ev, 'drift'), 'a', 'shell', {4: 21}, wall=8_000)
+        write_runs(os.path.join(self.ev, 'paired'), 'a', 'shell', {1: 21}, wall=8_000)
         self.assertTrue(report.drift(self.ev, ['a'], T)['a']['drift_confounded'])
 
 

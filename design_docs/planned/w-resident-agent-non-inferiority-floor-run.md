@@ -257,11 +257,12 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 - **Ledger:** every change appends a row: `date, knob, side, before/after smoke Δ and O, commit`.
 - **Final:** only the run labelled FINAL against a committed prereg counts, and it is reported whatever it shows. No re-running until it passes.
 
-### 4.11 Run protocol (honours V36)
-1. **Phase 1:** the shell arms, N runs per agent. Then `eligibility.json` is committed.
-2. **Phase 2:** the World arms, N runs per agent.
-3. **Drift probe:** one extra shell run per agent, informative only. If its per-task median time differs from Phase 1 by more than 10%, the report flags the overhead as "drift-confounded". The gate value does not change.
-4. **Verdict.**
+### 4.11 Run protocol (honours V36; amended by D-WORLD-74 = A, 2026-10-14)
+1. **Phase 1:** the shell arms, N runs per agent. Then `eligibility.json` is committed. Phase 1 decides eligibility only.
+2. **Phase 2 — paired:** N runs per agent. In each run every task goes through shell and World back to back. World runs first when (task index + run) is odd, so each run is balanced 12/11 and every task's order flips between runs. Rows land under `paired/runs/<agent>/<arm>/`.
+3. **Verdict:** Δ and O come from Phase 2's paired rows only. Phase 2's shell rows compared with Phase 1 give an informative drift readout (flagged beyond ±10%), which no longer confounds O.
+
+**Why it changed (measured):** ledger iterations 11–13 ran the arms sequentially, codex-only on gpt-6.1-sol. With only the tools wording changing, O went +20.0% → +23.2% → −14.4%. The shell median moved 30.4 → 29.0 → 37.4 s and the World median 35.1 → 36.3 → 29.3 s, because each arm sat in its own ~15-minute window of provider latency. Iteration 13's per-event timing put the World-attributable cost at ≈ +1 s/task of MCP tool latency (`verification/world-sol-pilot3-2026-10-12/RESULT.md`). The order is pinned in the FINAL digest (`live_config.rules.order`), so a FINAL against a pre-D-WORLD-74 prereg is refused by AC5.1. Cost: 3N run-sets instead of 2N + 1.
 
 ## 5. Premises
 
@@ -346,6 +347,10 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 | MUT-RANGE-STRICT: `<` for `≤` | AC3.2 (T=20) |
 | MUT-MEAN: mean overhead instead of median | AC3.2 outlier fixture |
 | MUT-SEAL-ORDER: World stats computed before eligibility | AC3.4 |
+| MUT-UNPAIRED-SHELL: verdict compares World against Phase 1's shell rows (D-WORLD-74) | `test_report` paired-shell test |
+| MUT-SHELL-FIRST / MUT-NO-RUN-FLIP: paired order not counterbalanced | `test_final.PairedOrder` |
+| MUT-SEQUENTIAL-WORLD: a sequential World phase accepted again | `test_final` old-phases test |
+| MUT-ORDER-NOT-DIGESTED: the run order left out of the FINAL digest | `test_run` run-order digest test |
 | MUT-FINAL-NOPREREG | AC5.1 |
 | MUT-EXEC-GRANT: World-arm grants include `Workspace.Exec` [2026-10-06] | `test_arms.py` (exec absent from tools and grants) |
 | MUT-CODEX-NOAPPROVE: the codex World approve override dropped [D-WORLD-67] | `test_arms.ArgvGoldens.test_codex_world_tools_are_approved` + the golden |
@@ -369,7 +374,7 @@ The bar is unchanged: point estimate, with the bootstrap CI reported as context.
   - C (rejected): exclude them.
 - **D-NF-4 — N.**
   - **Rec.:** N=3. A larger N lowers the chance of a false fail on Δ but raises the risk the shell arm is ineligible (§9 R1/R2).
-- **D-NF-5 — order.**
+- **D-NF-5 — order.** **[Superseded 2026-10-14 by D-WORLD-74 = A: Phase 1 shell + sealed eligibility, then paired counterbalanced runs; see §4.11.]**
   - **A (rec., per V36):** phases plus a drift probe.
   - B: interleave the arms per task while still sealing eligibility first. Better for measuring overhead, but departs from the row's wording.
 - **D-NF-6 — store.**
