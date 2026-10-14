@@ -1,0 +1,10 @@
+Iteration 266 — row 150 landing gates (controller, outside the sandbox)
+base go test ./... at c21f303 (worktree 335c182, docs-only diff): rc=0, 28 ok packages   [~/.ailang/state/world-iter266/baseline]
+M1a focused (controller re-run, f59a76e): TestWorldDemoEvidencePinnedManifest PASS; TestWorldDemoLegacyGradeDrift PASS; TestDecisionPacketCodec PASS
+M1a with AILANG_BIN unset: TestWorldDemoEvidencePinnedManifest FAIL "AILANG_BIN unset ... never skip" (fail-closed, matches host/evidence, host/archive precedent; CI sets AILANG_BIN)
+go build ./... && go test ./... (7dfc76f, AILANG_BIN=pin): rc=0, 28 ok packages
+go test -race ./host/coordinator (7dfc76f): rc=0 (64 s)
+verify_ail.sh: rc 0 (executor in-sandbox and judge outside)
+PR #264 head 7dfc76f check-runs 2/2 success
+Gate 3b: merge 28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6 CI run 38646357337 completed success; check-runs 2/2 (ailang-code verify gate, go host build + test gate)
+Design-phase controller measurements: design_docs/verification/world-row150-design/iter266-*.md (Chrome 155 exit/flags, colour scheme, real-content capture probe)
