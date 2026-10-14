@@ -1687,3 +1687,8 @@ Rule (d) applies again: no row picked, no side work, and no new ask (D-WORLD-73 
 **Progress:** World 1.0 clauses 4/5 UNMET and 1/2/3/6/7 MET. The goal has not moved.
 
 **Next:** if D-WORLD-73 = A, take **row 176**; else if the fleet resolves `ci:world:tracked-binary-rejects-release-png`, take **row 150**; else rule (d) again. Row 93's FINAL stays attended.
+
+**Record follow-through (iteration 264):** the independent evaluator judged record commit `7b7a2c9` on `0da5372` and returned **PASS 88/100, zero blocking**. It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (39,600 tok, 28 s, 5 tool calls).
+- **Verified by the judge:** the rule-(d) premise (unmoved `origin/dev`; ledger `--open` = D-WORLD-73 only; 51 open fleet tickets; 12 `harness-resolved` replies, 0 for png; attended row-93 branches unchanged); the STATUS rotation (261 stamp `cmp`-identical in the archive); consistency across the record files; the cited SHAs; email hygiene; no closing keyword. Its own Queue re-read found no loop-routable clause-4/5 row.
+- **Non-blocking:** N1 its `ticket open` read was truncated to 10 lines, so the png line is evidenced by the controller's full-list grep. N2 it did not trace row 114's D-WORLD-70 sequencing (accepted by judges 257–263). N3 the archive blank line is cosmetic. N4 the Gate 0 scripts were not re-run by the judge.
+- The report is in `design_docs/verification/world-iter264/evaluator-r1.md`.
