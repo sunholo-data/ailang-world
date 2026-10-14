@@ -1,0 +1,64 @@
+module evidence
+
+-- Package evidence law, independent of the frozen world/ constructor surface.
+-- Codes: 0 = refusal, 1 = CLAIMED, 2 = ATTESTED, 3 = TESTED.
+-- No predicate can mint PROVEN; authenticated proof resolution is a host duty.
+export func legacyGradeCode(kind: string) -> int ! {}
+requires { true }
+ensures { result == (if kind == "TestReport" then 3
+  else if kind == "CompilerOutput" || kind == "HumanApproval" || kind == "RecordedEffect" then 2
+  else if kind == "AiReview" || kind == "ProofReceipt" then 1 else 0),
+  result >= 0, result <= 3 }
+tests [
+  ("CompilerOutput", 2),
+  ("TestReport", 3),
+  ("HumanApproval", 2),
+  ("AiReview", 1),
+  ("RecordedEffect", 2),
+  ("ProofReceipt", 1),
+  ("unknown", 0),
+  ("PROVEN", 0)
+]
+{
+  if kind == "TestReport" then 3
+  else if kind == "CompilerOutput" || kind == "HumanApproval" || kind == "RecordedEffect" then 2
+  else if kind == "AiReview" || kind == "ProofReceipt" then 1 else 0
+}
+
+-- NEW package-level kind for human/demo-authored commentary. This is neither
+-- an AiReview nor a new kernel Evidence constructor. Unknown kinds refuse.
+export func authoredClaimGradeCode(kind: string) -> int ! {}
+requires { true }
+ensures { result == (if kind == "authored-claim" then 1 else 0),
+  result >= 0, result <= 1 }
+tests [
+  ("authored-claim", 1),
+  ("AiReview", 0),
+  ("ProofReceipt", 0),
+  ("PROVEN", 0),
+  ("unknown", 0)
+]
+{
+  if kind == "authored-claim" then 1 else 0
+}
+
+-- Admission of roster KIND names only. This does not validate refs or assign
+-- grades. In particular proof-envelope still requires ValidateProof -> Resolve.
+export func rosterKindAllowed(kind: string) -> bool ! {}
+requires { true }
+ensures { result == (kind == "test-invocation" || kind == "recorded-effect"
+  || kind == "authored-claim" || kind == "proof-envelope") }
+tests [
+  ("test-invocation", true),
+  ("recorded-effect", true),
+  ("authored-claim", true),
+  ("proof-envelope", true),
+  ("unknown", false),
+  ("AiReview", false),
+  ("PROVEN", false),
+  ("ProofReceipt", false)
+]
+{
+  kind == "test-invocation" || kind == "recorded-effect"
+    || kind == "authored-claim" || kind == "proof-envelope"
+}
