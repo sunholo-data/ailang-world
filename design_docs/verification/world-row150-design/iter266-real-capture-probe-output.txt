@@ -1,0 +1,11 @@
+    zz_iter266_probe_test.go:64: HTML /workbench bytes=13740 equal=true script_tags=0 style_tags=1
+    zz_iter266_probe_test.go:64: HTML /workbench?object=sha256:56d8a4cd341113d219d11fc6bde54b4c3d702f1ed531f8d7fdda426ee9242911 bytes=13489 equal=true script_tags=0 style_tags=1
+    zz_iter266_probe_test.go:64: HTML /workbench?object=sha256:56d8a4cd341113d219d11fc6bde54b4c3d702f1ed531f8d7fdda426ee9242911&payload=1 bytes=13627 equal=true script_tags=0 style_tags=1
+    zz_iter266_probe_test.go:64: HTML /workbench?from=0&entry=1 bytes=13319 equal=true script_tags=0 style_tags=1
+    zz_iter266_probe_test.go:64: HTML /workbench?from=6&entry=6 bytes=8727 equal=true script_tags=0 style_tags=1
+    zz_iter266_probe_test.go:109: SHOT light identical=true a860c364ad66815088b7 | a860c364ad66815088b7
+    zz_iter266_probe_test.go:109: SHOT dark identical=true 443fe006518dfeb08f5b | 443fe006518dfeb08f5b
+    zz_iter266_probe_test.go:109: SHOT object identical=true 5f66489ef794cd22962b | 5f66489ef794cd22962b
+    zz_iter266_probe_test.go:109: SHOT graph identical=true 7bde2750fd9882608511 | 7bde2750fd9882608511
+    zz_iter266_probe_test.go:109: SHOT phone identical=true f4ebefb044e35b0079c4 | f4ebefb044e35b0079c4
+ok  	github.com/sunholo-data/ailang-world/host/daemon	16.377s

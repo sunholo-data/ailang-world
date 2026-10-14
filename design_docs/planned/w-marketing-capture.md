@@ -1,12 +1,12 @@
 # W-Marketing-Capture — reproducible, truthful release images
 
-**Status:** REVISED (iteration 266); colour-scheme forcing MEASURED by the controller (V23). Still-mode HTML equality (M6) and six-shot product PNG equality (M7) are acceptance measurements of the milestones that build them, not passes. Mechanisms and planner work are specified.
+**Status:** REVISED r4 (iteration 266, controller bounded revision under the narrow-refinement carve-out after r3 BLOCKED). Colour forcing (V23), server-HTML stability and script inventory (V24) and real-content two-pass capture (V25) MEASURED by the controller. Product six-shot equality on the seeded demo store remains M7 acceptance, with a named residual path if it fails (M7 fallback).
 **Target:** World v1.0.0, queue row 150 / D-WORLD-64
 **Priority:** P1 release · **Estimated:** eight executor runs, each ≤30 min, plus attended release capture
 **Created:** 2026-10-08 · **Revised:** iteration 266, 2026-10-14
 **Base:** `c21f30310e04941afd3ccfb6b8748177db7b06c8` · branch `design/w-marketing-capture-r3`
 **Planner-Lane:** codex-ok for the milestones below after design quorum/freeze
-**Dependencies:** rows 148/149, 26/105/172/176 and fleet PNG allowance landed; attended publish and mint for release data
+**Dependencies:** rows 148 (`38db793`+`9319e6b`), 149 (`b8b6a3f`), 26/105/172/176 and fleet PNG allowance landed; attended publish and mint for release data
 
 ## Problem statement
 
@@ -68,8 +68,13 @@ Executed results and exact controller commands are in
 | V19 | `scripts/verify_go.sh:221`; `scripts/tracked_binary_gate.sh:33,64`; allowance command in revision notes | PASS at HEAD: zero binary blobs / 3516 files. Allowed PNG names/chunks/caps are described below. Gate reads committed blobs, not working-tree screenshots. |
 | V20 | `go.mod:5`; Go standard packages image/png, hash/crc32; `website/static/AGENTS.md` read | Use Go standard-library PNG decoding and CRC checking; no Python image decoder or implicit installation. Static guide adds no capture authorization. |
 | V21 | Exact dark probe and `capture_marketing.sh ... --verify-twice` in revision notes | PENDING (M7 acceptance): actual product file completion/content, two complete byte-equal passes. Freeze cannot claim these as observed. |
-| V23 | Controller, iteration 266: the revision-notes dark probe, then a flag matrix (`iter266-colour-scheme-probes.md`), Chrome 155.0.8059.41 on a macOS host with `AppleInterfaceStyle=Dark` | The dark probe FAILED its LIGHT arm: with no flag headless Chrome reports `prefers-color-scheme: dark` (`true|#1f1e1b`), i.e. it follows the host OS appearance. `--force-dark-mode` was indistinguishable from that default. `--blink-settings=preferredColorScheme=1` → light (`false|#f7f6f2`) and `=0` → dark, and with `--screenshot` both exit rc=0 AND write the PNG (the two hashes differ; `=0` equals the `--force-dark-mode` bytes). So EVERY shot pins its scheme explicitly: light shots `preferredColorScheme=1`, the dark shot `preferredColorScheme=0`; `--force-dark-mode` is not used. Behaviour on a Light-OS host is unmeasured; the explicit setting is the host-independent choice, and M7's verifier still asserts the per-shot scheme from pixels. |
 | V22 | Protected-path git-show/read comparison in revision notes | OBSERVATION: 12 tracked protected paths; HEAD/current aggregate SHA256 both 05852e6f08c102b42ab5952c4928a75779815512000a319de518d64e2a0f6202; line counts 7363/7363. No protected write. |
+| V23 | Controller, iteration 266: the revision-notes dark probe, then a flag matrix (`iter266-colour-scheme-probes.md`), Chrome 155.0.8059.41 on a macOS host with `AppleInterfaceStyle=Dark` | The dark probe FAILED its LIGHT arm: with no flag headless Chrome reports `prefers-color-scheme: dark` (`true|#1f1e1b`), i.e. it follows the host OS appearance. `--force-dark-mode` was indistinguishable from that default. `--blink-settings=preferredColorScheme=1` → light (`false|#f7f6f2`) and `=0` → dark, and with `--screenshot` both exit rc=0 AND write the PNG (the two hashes differ; `=0` equals the `--force-dark-mode` bytes). So EVERY shot pins its scheme explicitly: light shots `preferredColorScheme=1`, the dark shot `preferredColorScheme=0`; `--force-dark-mode` is not used. Behaviour on a Light-OS host is unmeasured; the explicit setting is the host-independent choice, and M7's verifier still asserts the per-shot scheme from pixels. |
+| V24 | Controller, iteration 266: `grep -n '<script\|<style\|nonce' host/workbench/render.go`; scratch probe `iter266-real-capture-probe_test.go.txt` (never committed) on a 7-entry store built by the existing test helper `workbenchLiveREST` (`host/daemon/workbench_graph_test.go:36`), two GETs 2 s apart per route, output `iter266-real-capture-probe-output.txt` | render.go emits exactly ONE script tag, `<script src="/workbench/live.js" defer></script>` (render.go:192), and ONE inline `<style>` (render.go:179); NO inline script, NO nonce. With that tag stripped, `/workbench`, `?object=<ref>`, `?object=<ref>&payload=1`, `?from=0&entry=1` and `?from=6&entry=6` returned byte-identical HTML across the two requests with 0 script tags: the complete varying-byte inventory of the server-rendered regions on this store is EMPTY. |
+| V25 | Same probe: Chrome 155.0.8059.41, controller-proven base flags + `--force-device-scale-factor=1 --lang=en-US --blink-settings=preferredColorScheme=1|0`, two isolated-profile passes per shot through a loopback proxy that strips the V24 tag (the proposed still mode, simulated); hashes `iter266-real-capture-sha256.txt` | light 1440×1100, dark 1440×1100, object+payload 1440×1400, graph 1440×1100 and phone 390×844 of REAL server-rendered content (timeline, SVG graph, object payload) were each byte-identical across the two passes (sizes 63–137 KB). This is real-content evidence on a test-helper store, not the seeded demo store; M7 re-measures on that. `--screenshot` captures the VIEWPORT only: on 1440×1100 the light shot showed header and timeline, with the graph and decisions panes below the fold, so the shot list must choose routes/viewports that put each required region in view (M7 rectangles). |
+| V26 | `host/daemon/workbench.go:303-304,421` | The workbench `payload` flag accepts only `0`/`1`; `payload=true` is `400 BadRequest — malformed payload flag` (measured in V24's first run). The REST `/v1/objects/{ref}?payload=true` form is a different endpoint and stays as written in S4. The provenance shot route is `?object=<ref>&payload=1`. |
+| V27 | `host/daemon/workbench_packet.go:75-78`; `host/workbench/render.go:262`; QUICKSTART §11 "Inspect a decision packet" | A validated packet renders `approvals chain: <status>` from the broker's approval record, plus ` by <decider>` only once decided; QUICKSTART documents `approvals chain: pending` until an operator decides. This is the source of packet.png's "pending" content. |
+| V28 | `world/types.ail:23-29,44-49` | Evidence kinds mapping to CLAIMED are `AiReview(HashRef, float)` and a raw `ProofReceipt`. An `ai_check` report is compiler output (`CompilerOutput` → ATTESTED), NOT an `AiReview`; the seed produces no AI review, so no real `AiReview` exists to name. |
 
 ## High-impact decisions
 
@@ -83,19 +88,24 @@ handler output and budgets remain real. Captures freeze public state, not clocks
 Fresh-seed equality is a documented residual for Mark (V12); no approval is requested here.
 
 **D2 — server-controlled stills, browser JS enabled.** Add explicit
-`serve --workbench-still` (default false) after V14's negative search. It suppresses
-only the external live.js tag on successful workbench pages. All server-rendered
+`serve --workbench-still` (default false). It suppresses the single script emission the
+renderer has, `<script src="/workbench/live.js" defer></script>` (render.go:192, V24) —
+there is no inline script and no nonce to pin, and the stripped server HTML was
+byte-identical across repeated requests on every workbench route (V24), so nothing
+else needs freezing on the measured store. If M6/M7's repeat-GET on the seeded demo
+store ever finds varying bytes, the flag's scope is NOT silently widened: the varying
+element is reported and the M7 fallback below applies. All server-rendered
 regions and the truthful “Live updates: off. Reload to refresh.” footer remain.
 It changes no commits, permissions, expiry, CSP, grade resolution or default live
 behavior. The caption says “static capture of recorded history.” Neither broken
 JS-disabling Chrome flag is used. This is a new projection option, not a measured
-existing option. Its HTML/browser measurements are freeze/acceptance work in V15/V21.
+existing option. V24/V25 measured its premise by simulation; M6 asserts it on the real flag.
 
 **D3 — show grades of evidence, not invented object grades.** Add a bounded evidence
 roster to the validated packet view, sourced from its carrying invocation's input.
 Keep packet v1 bytes and its existing two subject-grade lines. Those lines may
-honestly remain unavailable; the roster separately shows actual TESTED, ATTESTED,
-CLAIMED reports and a subject-bound PROVEN report. Never promote report text to an
+honestly remain unavailable; the roster separately shows actual TESTED and ATTESTED
+reports, a truthful demo-authored CLAIMED claim, and a subject-bound PROVEN report. Never promote report text to an
 object's grade. Why this is not a package: orchestration, HTTP adapters and rendering
 belong to the host; the demo domain transition and evidence-kind law belong in a
 small AILANG package. No new world/ exports or Go module requirement.
@@ -117,6 +127,9 @@ acceptance measurements passed.
 | r2-1 / oc-kimi-k3 | refuted | Charter line 6130 explicitly says “No Go dependency (no chromedp).” V1 pins the formerly uncited premise; V13/D2 remove the failing flag. No fallback dependency is authorized. |
 | r2-3 / gemini-3-1-pro | fixed | Go image/png decoder and chunk verifier, V20; Python is supervisor only. No Python pixel script or optional installed decoder. |
 | r2-controller | fixed | H1 resolved; capture lifecycle explicit below; fresh-seed scope openly residual, no exception extension inferred. |
+| r3 / oc-glm-5-3 | fixed (reviewer's verbatim alternative) | D3 + roster paragraph: authored-claim kind via package predicates, drift-tested, rendered "demo-authored"; no AiReview cast; kind-resolution check → UNAVAILABLE + seed refusal; rows render producer/author. The reviewer's FIRST alternative (name S3's ai_check report as an AiReview) rests on a false premise and was not applied: V28. Its two V-row requests: packet pending status V27; 390×844 layout V25 (phone shot rendered real content, byte-identical). |
+| r3 / oc-kimi-k3 | fixed | (a) repeat-GET run now, V24: empty varying-byte inventory; D2 now enumerates the one suppressed tag. (b) inline-script V-row: V24 (none). (c) 148/149 SHAs in the Dependencies header. (d) V22/V23 reordered; contingency = M7 fallback (no silent widening of the flag). |
+| r3 / claude-sonnet-5@claude-p | fixed | Real-content dual-pass capture V25 (five shots byte-identical); M7 fallback clause added verbatim from the proposed fix. |
 
 ## Approach
 
@@ -171,8 +184,13 @@ TESTED names S3's test invocation record; validate its carrying commit, single
 Ailang.CLI effect/request/result, argv test, JSON success, ≥1 named passing test,
 zero failed/skipped/vacuous skips; show verdict pass. ATTESTED names the real S2
 RecordedEffect; decode RecordConsistent and check request/result hashes. CLAIMED
-names S1's stored commentary as AiReview(ref,0.0), explicitly demo-authored;
-this is a real claim text, not a model-run or human-approval receipt.
+names a demo-authored claim through a truthful authored-claim kind added by the new
+package's kind predicates, drift-tested against world/types.gradeOf's CLAIMED mapping,
+and rendered "demo-authored" in its roster row and in captions.md. S1's commentary is
+never cast as AiReview (no AI review produced it, V28); the AiReview kind is not reused
+for non-AI text. The packet projection verifies that every roster ref resolves to an
+object of its declared kind; a kind mismatch yields UNAVAILABLE and seed refusal, and
+each roster row renders its producer/author.
 PROVEN names S4 envelope plus source subject; only ValidateProof→Resolve can
 supply that grade. These are evidence-constructor grades (V8); lower grades do
 not assert authenticated source binding. Link all report/subject refs and disclose
@@ -205,7 +223,7 @@ before and after both passes; an unexpected mutation invalidates the result.
 | workbench-dark.png | `/workbench` | 1440×1100 | same data, measured dark CSS tokens |
 | packet.png | `/workbench?object=<S6 packet hash>` | 1440×1400 | validated packet, real proposal/request links, pending status, four-grade evidence roster |
 | graph.png | `/workbench?from=N&entry=N`, N=S5 entry | 1440×1100 | selected entry and checked graph targets; no invented evidence graph |
-| provenance.png | `/workbench?object=<S5 record ref>&payload=true` | 1440×1400 | invocation payload, stored input/plan/effect/output references; accompanying why JSON is the actual walk |
+| provenance.png | `/workbench?object=<S5 record ref>&payload=1` (V26) | 1440×1400 | invocation payload, stored input/plan/effect/output references; accompanying why JSON is the actual walk |
 | phone.png | `/workbench` | 390×844 | selected world, readable responsive timeline; no requirement that all desktop panels fit above the fold |
 
 Use controller-proven base flags plus screenshot, viewport, scale=1, lang=en-US;
@@ -265,9 +283,9 @@ images require the separate attended run. Split again if a run cannot meet that 
 | M2 | cmd/ailang-worldd/demo.go, demo_seed.go, demo_test.go; main.go dispatch/help; QUICKSTART seed preparation | C2: session-authenticated goal/candidate commits and existing read/test calls; no hidden Mint. Remove bearer header: successful-seed assertion reds with SessionAbsent. Remove empty-world guard: nonempty-store refusal assertion reds. |
 | M3 | cmd/ailang-worldd/demo_proof.go and tests; HTTP producer reader/writer adapters | C3: real pin/source/key producer result validates and is REST-carried. Mutate source bytes: hash check reds before mint; wrong key: PROVEN assertion reds. Null verified set: producer refusal assertion; bypass HTTP writer: REST-carrying-commit assertion reds. |
 | M4 | demo_seed.go integration/manifest; CLI why tests | C4: approval invocation produces exactly one anchored packet, effect budget delta and complete why set. Replace coordinator call with plain REST object: coordinator=true assertion reds. Remove effect link: named-link assertion reds. |
-| M5 | host/daemon/workbench_packet_evidence.go and tests; host/workbench render structures/template; package law drift test | C5: roster displays actual four evidence grades; existing object-grade lines stay truthful. Mutate commentary kind to PROVEN: claim cannot promote assertion reds; substitute arbitrary test text: TESTED refusal assertion reds; bad record hash: unavailable assertion. |
+| M5 | host/daemon/workbench_packet_evidence.go and tests; host/workbench render structures/template; package law drift test | C5: roster displays actual four evidence grades; existing object-grade lines stay truthful. Mutate commentary kind to PROVEN: claim cannot promote assertion reds; substitute arbitrary test text: TESTED refusal assertion reds; bad record hash: unavailable assertion. Point the CLAIMED roster ref at an object of another kind: kind-resolution assertion reds (UNAVAILABLE + seed refusal). |
 | M6 | serve flag in main.go/daemon.go, workbench Page/render flag and tests | C6: still HTML contains all regions/no script/static footer; default retains live script. Force script emission in still mode: no-script assertion reds; hide graph: required-region assertion reds; invert default flag: default-script assertion reds. |
-| M7 | scripts/capture_marketing.sh, scripts/marketing_capture.py supervisor, scripts/marketingcheck/*.go standard-library verifier and tests | C7–C9: timeout/cleanup, six files, decoded content, exact bytes and gate rules. Fake Chrome rc=0/no file, hanging child, uniform PNG, missing shot, altered byte, forbidden chunk, bad CRC, trailing byte and cap+1 each trigger their corresponding named assertion. |
+| M7 | scripts/capture_marketing.sh, scripts/marketing_capture.py supervisor, scripts/marketingcheck/*.go standard-library verifier and tests | C7–C9: timeout/cleanup, six files, decoded content, exact bytes and gate rules. Fake Chrome rc=0/no file, hanging child, uniform PNG, missing shot, altered byte, forbidden chunk, bad CRC, trailing byte and cap+1 each trigger their corresponding named assertion. **Fallback:** if raw-byte equality fails on content-bearing shots for a cause other than colour-scheme/script-timestamp, the design documents that as a new residual (parallel to the fresh-seed-equality residual already carved out for Mark) rather than silently loosening the acceptance bar to pixel-similarity; the varying element is named with both hashes. |
 | M8 | docs/QUICKSTART.md reproduction; README.md; website/docs/getting-started/marketing-capture.md; captions/manifest text | C10: links resolve and recipe/help match flags. Mutate one filename or serve flag: link/runbook assertion reds. Controller later runs V15/V21, attended seed and promotes six PNGs; an unminted unattended run must refuse. |
 
 ## Acceptance criteria
@@ -312,10 +330,15 @@ No completed end-to-end or clause movement is claimed by this design.
 
 ## Review status
 
-R1/r2 remain historical BLOCKED quorums; neither is retroactively a pass. Dispositions:
-7 fixed, 1 refuted, 0 unanswered objections; absent reviewers are not approvals.
+R1/r2 (iteration 246) and r3 (iteration 266, `quorum/w-marketing-capture-2026-10-14T21-13-09Z.json`,
+glm/kimi/sonnet reject, OpenAI benched as author vendor, no absentee) remain BLOCKED rounds;
+none is retroactively a pass. r3's three objections each carried a concrete reviewer fix and
+none disputed the design direction, so r4 is the controller's bounded revision applying those
+fixes under the Gate-2 narrow-refinement carve-out (plus measurements V24–V28). Round surfaces:
+r3 = evidence-roster kind (D3) and capture byte-stability (D2/M7). Dispositions r1–r3: 10 fixed,
+1 refuted, 0 unanswered; absent reviewers are not approvals.
 Q1 normal-path composition, Q2 determinism scope/residual, Q4 PNG/wiring and Q5 bounded
 milestones are specified with first-party rows. Q3: colour forcing measured (V23); the
 V15/V21 product measurements are M6/M7 acceptance, run on the code those milestones add. No additional human scope
-question is open. The controller must measure those premises and re-quorum before
-calling this design frozen; tooling/tests and attended release capture remain distinct.
+question is open; Mark's only residual is fresh-seed hash equality (D1). Tooling/tests and the
+attended release capture remain distinct.

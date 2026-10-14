@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture.md",
+  "iso_ts": "2026-10-14T21:13:09Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.10018060000000001,
+      "tokens_in": 8207,
+      "tokens_out": 20157,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "D3 fabricates an evidence kind for the release roster: it casts S1's human-authored commentary as AiReview(ref,0.0) when no AI review produced that artifact. That cast flows into the roster input, the public manifest, and the packet.png evidence rows, directly contradicting the doc's own bar (\"without fabricating receipts, packets or grades\"), its claim that the roster shows \"actual TESTED, ATTESTED, CLAIMED reports\" (the CLAIMED entry is authored commentary, not a report), and the row's stated purpose of producing truthful release images. Worse, the specified projection performs strict shape/hash checks on TESTED/ATTESTED/PROVEN refs but never verifies that a CLAIMED ref resolves to a genuine AiReview-kind object, so the mislabel ships silently — a provenance misrepresentation in exactly the trust boundary (\"explicit evidence-constructor labels preserve the trust boundary\") the doc claims to protect. A genuine AiReview is already produced and retained by the same seed (S3's demo-check ai_check report, V17/V8), so the fabricated cast is unnecessary.",
+        "catch": "Verify and fix the CLAIMED roster line's kind sourcing: either name S3's real ai_check AiReview report as the CLAIMED ref, or add a truthful authored-claim kind via the new package's kind predicates — do not reuse the AiReview kind for non-AI text. Additionally, no verification-log row establishes that the workbench renders the minted packet's status as \"pending\" or that the 390×844 viewport yields a readable responsive timeline, yet both are pinned as M7 required content.",
+        "proposed_fix": "Replace D3's CLAIMED sentence with: \"CLAIMED names the S3 demo-check invocation's genuine ai_check AiReview report (V17; V8 mapping AiReview→CLAIMED), retained by the seed with its raw bytes; S1's commentary remains goal narrative and is never cast into an evidence kind. The packet projection verifies that every roster ref resolves to an object of its declared kind (an AiReview ref must be an actual ai_check-produced report); a kind mismatch yields UNAVAILABLE and seed refusal, and each roster row renders its producer/author.\" If an authored human claim must also be demonstrated, add a truthful authored-claim kind through the new package's predicates, drift-tested against world/types.gradeOf's CLAIMED mapping, and render \"demo-authored\" in the row plus captions.md. Amend the roster-limit paragraph to add the kind-resolution check, update the Goals line from \"actual ... CLAIMED reports\" to match, and add verification-log rows (file:line) for (a) the workbench's rendered status text for a granted, undecided Human.Approve packet and (b) the 390×844 workbench layout before M7 treats them as required content."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.132642,
+      "tokens_in": 8184,
+      "tokens_out": 7206,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design freezes a mechanism (D2: `serve --workbench-still` that \"suppresses only the external live.js tag\") whose load-bearing feasibility premise for charter 150(b) — that the remaining server-rendered workbench HTML is byte-stable across repeated requests — is explicitly unmeasured: V15's raw repeat-GET probe is PENDING and V21's two-pass byte equality is unexecuted. V14 is only a keyword grep (`capture|script|Date|theme|prefers-color`); a negative search for those strings cannot disclose the actual per-request variance surface (inline scripts with nonces, cache-busting asset URLs, relative-time rendering, per-request IDs in the server-rendered regions). If the deferred probe finds any varying bytes, D2 as specified is insufficient and the design needs material rework rather than measurement — so the design cannot be called specified-and-frozen, only specified-and-hopeful. The doc half-acknowledges this (\"controller must measure those premises and re-quorum before calling this design frozen\") yet simultaneously declares \"No additional human scope question is open\" and requests planner-lane codex-ok after freeze, putting eight milestones of implementation planning ahead of the one measurement that can invalidate the central mechanism.",
+        "catch": "Two things to fix or verify before re-quorum: (1) V14's grep never states whether render.go / workbench templates emit any inline \u003cscript\u003e blocks, yet C6 requires still HTML with \"no script\" while D2 suppresses only the *external* live.js tag — if any inline script exists, the \"no script\" acceptance assertion and the flag's suppression scope are contradictory as written. (2) The Dependencies header asserts \"rows 148/149 … landed\" but no verification-log row (V1–V23) establishes what 148/149 are or cites their landing commits; V2 only backs 26/105/172/176 and the PNG allowance. Minor: the log lists V23 before V22 while the r2-0 disposition claims the table is contiguous/ordered.",
+        "proposed_fix": "Make the premises freeze-blocking instead of acceptance-deferred, and pin the flag semantics to measured evidence: (a) Run the raw repeat-GET probe now against the existing workbench routes (`/workbench`, `/workbench?object=…`, `/workbench?from=N\u0026entry=N`) — the still flag is not required for this, since it only removes one script tag — diff two responses, and add a V-row logging the complete inventory of varying bytes; then rewrite D2 to enumerate exactly which elements the flag suppresses or freezes (e.g., \"suppresses all script emission and pins X/Y/Z\"), replacing the current \"suppresses only the external live.js tag.\" (b) Add a V-row stating explicitly whether render.go/templates emit any inline \u003cscript\u003e; if none, cite it as the premise joining D2 to C6's \"no script\" assertion; if any exist, re-specify D2's suppression scope and C6 accordingly. (c) Add commit-ID verification rows for declared dependencies 148/149 or remove them from the header. (d) Reorder V22/V23 or drop the contiguity claim in the r2-0 disposition. Keep freeze explicitly conditioned on logged V15/V21 results, with a stated contingency (e.g., which additional server-side stabilization is in scope) if the repeat-GET diff is non-empty."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 22844,
+      "tokens_out": 6787,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The core 150(b) acceptance criterion — two byte-identical capture passes — is only empirically demonstrated for a trivial Chrome base recipe (V13: 'isolated runs byte-identical, IHDR/IDAT/IEND only'), not for the actual six shots rendering real dynamic content (live graph, packet roster, timeline, phone viewport). V21 explicitly marks the real byte-equality probe as PENDING and unexecuted. The design freezes M7's acceptance bar (exact SHA256 match across passes) on an unproven extrapolation from a blank/static recipe to content-heavy pages, where anti-aliasing, font hinting, subpixel rendering, or layout timing jitter could break byte-identity for reasons unrelated to the colour-scheme or script-timestamp issues already probed and fixed (D2/V23).",
+        "catch": "No contingency is specified for what happens if the real-content two-pass byte-equality test fails for a cause other than the two already-mitigated ones (JS footer timestamp, colour-scheme drift). If M7 fails on a genuinely non-deterministic rendering artifact, the milestone has no fallback (e.g., tolerance window, pixel-diff instead of raw-byte equality, deterministic-font pinning check) — it simply reds, and the doc gives no guidance on whether that is a scope revision, a new residual for Mark, or a blocking defect.",
+        "proposed_fix": "Before M7 is executed/frozen as final acceptance, run one real-content dual-pass capture probe (same route/data as packet.png or graph.png, not the base recipe) and record its SHA256 equality result as a new V-row. If it is not already executed, add an explicit fallback clause to M7's acceptance text: if raw-byte equality fails on content-bearing shots for a cause other than colour-scheme/script-timestamp, the design documents that as a new residual (parallel to the fresh-seed-equality residual already carved out for Mark) rather than silently loosening the acceptance bar to pixel-similarity."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Iter-266 controller: prerequisites 26/105/172/176 + fleet PNG allowance landed and re-measured; Chrome 155 capture and colour-scheme forcing measured first-party (V13, V23); fresh-seed hash equality is an honest named residual, not claimed; 8 bounded milestones with mutations. Pass."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: D3 fabricates an evidence kind for the release roster: it casts S1's human-authored commentary as AiReview(ref,0.0) when no AI review produced that artifact. That cast flows into the roster input, the public manifest, and the packet.png evidence rows, directly contradicting the doc's own bar (\"without fabricating receipts, packets or grades\"), its claim that the roster shows \"actual TESTED, ATTESTED, CLAIMED reports\" (the CLAIMED entry is authored commentary, not a report), and the row's stated purpose of producing truthful release images. Worse, the specified projection performs strict shape/hash checks on TESTED/ATTESTED/PROVEN refs but never verifies that a CLAIMED ref resolves to a genuine AiReview-kind object, so the mislabel ships silently — a provenance misrepresentation in exactly the trust boundary (\"explicit evidence-constructor labels preserve the trust boundary\") the doc claims to protect. A genuine AiReview is already produced and retained by the same seed (S3's demo-check ai_check report, V17/V8), so the fabricated cast is unnecessary.",
+      "oc-kimi-k3: The design freezes a mechanism (D2: `serve --workbench-still` that \"suppresses only the external live.js tag\") whose load-bearing feasibility premise for charter 150(b) — that the remaining server-rendered workbench HTML is byte-stable across repeated requests — is explicitly unmeasured: V15's raw repeat-GET probe is PENDING and V21's two-pass byte equality is unexecuted. V14 is only a keyword grep (`capture|script|Date|theme|prefers-color`); a negative search for those strings cannot disclose the actual per-request variance surface (inline scripts with nonces, cache-busting asset URLs, relative-time rendering, per-request IDs in the server-rendered regions). If the deferred probe finds any varying bytes, D2 as specified is insufficient and the design needs material rework rather than measurement — so the design cannot be called specified-and-frozen, only specified-and-hopeful. The doc half-acknowledges this (\"controller must measure those premises and re-quorum before calling this design frozen\") yet simultaneously declares \"No additional human scope question is open\" and requests planner-lane codex-ok after freeze, putting eight milestones of implementation planning ahead of the one measurement that can invalidate the central mechanism.",
+      "claude-sonnet-5@claude-p: The core 150(b) acceptance criterion — two byte-identical capture passes — is only empirically demonstrated for a trivial Chrome base recipe (V13: 'isolated runs byte-identical, IHDR/IDAT/IEND only'), not for the actual six shots rendering real dynamic content (live graph, packet roster, timeline, phone viewport). V21 explicitly marks the real byte-equality probe as PENDING and unexecuted. The design freezes M7's acceptance bar (exact SHA256 match across passes) on an unproven extrapolation from a blank/static recipe to content-heavy pages, where anti-aliasing, font hinting, subpixel rendering, or layout timing jitter could break byte-identity for reasons unrelated to the colour-scheme or script-timestamp issues already probed and fixed (D2/V23)."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.23282260000000002,
+    "total_tokens_in": 39235,
+    "total_tokens_out": 34150
+  }
+}

@@ -1,0 +1,111 @@
+package daemon
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+)
+
+// Iteration-266 controller measurement only; never committed.
+func TestIter266CaptureProbe(t *testing.T) {
+	chrome := os.Getenv("WORLD_CHROME")
+	out := os.Getenv("PROBE_OUT")
+	if chrome == "" || out == "" {
+		t.Skip("probe env unset")
+	}
+	d := newHandlerDaemon(t)
+	c := workbenchLiveREST(t, d, []int64{0, 1, 2, 3, 4, 5, 6})
+	obj := c.Objects[0].Hash.String()
+	h := d.Handler()
+	strip := []byte(`<script src="/workbench/live.js" defer></script>`)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/workbench" {
+			h.ServeHTTP(w, r)
+			return
+		}
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, r)
+		body := bytes.Replace(rec.Body.Bytes(), strip, nil, 1)
+		for k, v := range rec.Header() {
+			if k != "Content-Length" {
+				w.Header()[k] = v
+			}
+		}
+		w.WriteHeader(rec.Code)
+		w.Write(body)
+	}))
+	defer srv.Close()
+	routes := []string{"/workbench", "/workbench?object=" + obj, "/workbench?object=" + obj + "&payload=1", "/workbench?from=0&entry=1", "/workbench?from=6&entry=6"}
+	for _, p := range routes {
+		get := func() []byte {
+			resp, err := http.Get(srv.URL + p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Logf("ROUTE %s status %d", p, resp.StatusCode)
+			}
+			return b
+		}
+		a := get()
+		time.Sleep(2 * time.Second)
+		b := get()
+		t.Logf("HTML %s bytes=%d equal=%v script_tags=%d style_tags=%d", p, len(a), bytes.Equal(a, b), bytes.Count(a, []byte("<script")), bytes.Count(a, []byte("<style")))
+		if !bytes.Equal(a, b) {
+			al, bl := strings.Split(string(a), "\n"), strings.Split(string(b), "\n")
+			for i := 0; i < len(al) && i < len(bl); i++ {
+				if al[i] != bl[i] {
+					t.Logf("  DIFF line %d: %.200q vs %.200q", i, al[i], bl[i])
+				}
+			}
+		}
+	}
+	shots := []struct{ name, route, size, pcs string }{
+		{"light", "/workbench", "1440,1100", "1"}, {"dark", "/workbench", "1440,1100", "0"},
+		{"object", "/workbench?object=" + obj + "&payload=1", "1440,1400", "1"},
+		{"graph", "/workbench?from=0&entry=1", "1440,1100", "1"}, {"phone", "/workbench", "390,844", "1"},
+	}
+	for _, s := range shots {
+		var sums []string
+		for run := 1; run <= 2; run++ {
+			png := filepath.Join(out, fmt.Sprintf("%s-%d.png", s.name, run))
+			os.Remove(png)
+			args := []string{"--headless=new", "--no-first-run", "--no-default-browser-check", "--disable-background-networking", "--user-data-dir=" + filepath.Join(out, fmt.Sprintf("prof-%s-%d", s.name, run)), "--screenshot=" + png, "--window-size=" + s.size, "--force-device-scale-factor=1", "--lang=en-US", "--blink-settings=preferredColorScheme=" + s.pcs, srv.URL + s.route}
+			cmd := exec.Command(chrome, args...)
+			cmd.Stdin = nil
+			done := make(chan error, 1)
+			if err := cmd.Start(); err != nil {
+				t.Fatal(err)
+			}
+			go func() { done <- cmd.Wait() }()
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Logf("SHOT %s run %d err %v", s.name, run, err)
+				}
+			case <-time.After(30 * time.Second):
+				cmd.Process.Kill()
+				<-done
+				t.Logf("SHOT %s run %d TIMEOUT", s.name, run)
+			}
+			b, err := os.ReadFile(png)
+			if err != nil {
+				sums = append(sums, "NOFILE")
+				continue
+			}
+			sums = append(sums, fmt.Sprintf("%x/%d", sha256.Sum256(b), len(b)))
+		}
+		t.Logf("SHOT %s identical=%v %s | %s", s.name, sums[0] == sums[1] && sums[0] != "NOFILE", sums[0][:20], sums[1][:20])
+	}
+}
