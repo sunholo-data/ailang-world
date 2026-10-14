@@ -5,9 +5,8 @@
 #   tracked_binary_gate.sh [--allow-png <dir/> --png-file-cap <bytes> --png-dir-cap <bytes>]
 #
 # With no flags NOTHING binary is allowed. The allowance is declared by the CALLER so the
-# policy stays readable in verify_go.sh. Design: ailang
-# design_docs/planned/m-world-release-png-allowance.md (fleet ticket
-# ci:world:tracked-binary-rejects-release-png; fleet-authored under D-WORLD-DRIVER-1).
+# policy stays readable in verify_go.sh. Design: design_docs/implemented/w-release-png-allowance.md
+# (fleet ticket ci:world:tracked-binary-rejects-release-png; fleet-authored, D-WORLD-DRIVER-1).
 #
 # HISTORY. SM.A (squash 13315da) committed a 15.7 MB compiled darwin/arm64 `ailang-worldd`
 # Mach-O into the repository root. It passed the codex executor, a sonnet evaluator scoring
