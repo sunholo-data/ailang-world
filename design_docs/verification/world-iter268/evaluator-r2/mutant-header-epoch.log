@@ -1,0 +1,4 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+    demo_test.go:314: commit0 frozen header identity mismatch
+--- FAIL: TestDemoSeedAuthenticatedCommits (1.61s)
+FAIL

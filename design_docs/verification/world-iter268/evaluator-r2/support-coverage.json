@@ -1,0 +1,20 @@
+[
+  {
+    "name": "state-root-coverage",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "[]byte(observed + \"\\n\" + o.Hash)",
+    "new": "[]byte(o.Hash)",
+    "deterministic_expected_mutant_sha256": "a413f2acc77f41f764b72f743d8af81e6744412b9c1a6e01851aa5d0fddd080c",
+    "landed_hash_observed": false,
+    "scope": "sequential script wrote exact variant and build0/test0, then finally restored; no live SHA observation banked for this exploratory supporting drill, so coverage survivor observation only, not formal mutation certification"
+  },
+  {
+    "name": "entry-hash-coverage",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "entryHash := hashref.SumSHA256(encoded).String()",
+    "new": "entryHash := hashref.SumSHA256(append(encoded, 0)).String()",
+    "deterministic_expected_mutant_sha256": "1bc911b5e67997a22dca0c3eb11aba4ba8d0722165e695ec7c01fe9f1c122b36",
+    "landed_hash_observed": false,
+    "scope": "sequential script wrote exact variant and build0/test0, then finally restored; no live SHA observation banked for this exploratory supporting drill, so coverage survivor observation only, not formal mutation certification"
+  }
+]

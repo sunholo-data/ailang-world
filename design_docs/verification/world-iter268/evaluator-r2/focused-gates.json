@@ -1,0 +1,131 @@
+[
+  {
+    "name": "regressions",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "./host/boundary",
+      "-run",
+      "^(TestQuickstartSection11FlagsMatchTheCLI|TestWorldBoundaryDependencyAllowlist|TestWorldBoundaryRecordingWriter)$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 5.788
+  },
+  {
+    "name": "subprocess-audit",
+    "argv": [
+      "go",
+      "test",
+      "./host/broker",
+      "-run",
+      "^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 33.292
+  },
+  {
+    "name": "TestDemoSeedAuthenticatedCommits",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 4.303
+  },
+  {
+    "name": "TestDemoSeedPreflightRefusals",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 52.208
+  },
+  {
+    "name": "TestDemoSeedHelpPreparation",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedHelpPreparation$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.717
+  },
+  {
+    "name": "TestDemoSeedCommitFailures",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedCommitFailures$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 3.493
+  },
+  {
+    "name": "TestSessionMint_RequiresControllingTerminal",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestSessionMint_RequiresControllingTerminal$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 1.096
+  },
+  {
+    "name": "TestRESTCommitRefusesDecisionPacketObjects",
+    "argv": [
+      "go",
+      "test",
+      "./host/daemon",
+      "-run",
+      "^TestRESTCommitRefusesDecisionPacketObjects$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 1.461
+  }
+]

@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+    demo_test.go:441: wrong refusal: want "db/health identity" got "ailang-worldd demo seed: cannot open read-only authority view\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.89s)
+    --- FAIL: TestDemoSeedPreflightRefusals/wrong-db (0.89s)
+FAIL

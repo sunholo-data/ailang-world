@@ -1,0 +1,4 @@
+=== RUN   TestRESTCommitRefusesDecisionPacketObjects
+--- PASS: TestRESTCommitRefusesDecisionPacketObjects (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.343s

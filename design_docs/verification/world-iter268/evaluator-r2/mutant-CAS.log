@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+    demo_test.go:434: cas-change: refusal changed public inventory: commits1 before0
+--- FAIL: TestDemoSeedPreflightRefusals (0.94s)
+    --- FAIL: TestDemoSeedPreflightRefusals/cas-change (0.94s)
+FAIL

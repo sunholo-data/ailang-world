@@ -1,0 +1,310 @@
+[
+  {
+    "path": ".github/workflows/ci.yml",
+    "sha256": "036d765549b25e36aed9e8e185956b54666c701349934fd14f9e24f03874fba7",
+    "newlines": 388,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "design_docs/world-mission.md",
+    "sha256": "7613bcc7bd084e0ded3bf5715c1cea3421deaf32ed1194edb76aa6b5fddf7161",
+    "newlines": 6176,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "go.mod",
+    "sha256": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+    "newlines": 20,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "go.sum",
+    "sha256": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+    "newlines": 57,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/authority_test.go",
+    "sha256": "6bec783f0912a2856298903c721b11e2627c564a2d0227c876f04eb904ef37ed",
+    "newlines": 584,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/codec_test.go",
+    "sha256": "6143efdd8a6b4671cf43a16f274798a448475010b681e86bd161034491044ab9",
+    "newlines": 258,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/envelope_codec.go",
+    "sha256": "6710e18d0f1b7a28b9ec955d58d754f6d4c665d41c991a83a2b20422b1f36dee",
+    "newlines": 84,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/json.go",
+    "sha256": "0025dca637d2bb66567aa85a8b261e7712330bea443a1b224c58db3cfd38405a",
+    "newlines": 83,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/m7b_deadline_test.go",
+    "sha256": "9fec0d4267a9039421c988abf06edb81f35662a53bc6e8b905d2dcb81bd5fb28",
+    "newlines": 15,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/producer_internal_test.go",
+    "sha256": "94fe9a51fd5efecbbb8c2bbd5158497537206810b650939e94caa4c49387f34f",
+    "newlines": 653,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/producer_realstore_test.go",
+    "sha256": "cd4583c13fa9fe1329165e5d4378848d7eceba1bec50c315779a07715cac86ff",
+    "newlines": 684,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/producer_test.go",
+    "sha256": "c27aa6a33ce474cff3e6728b95a578b3c97e75ef42f94f3cbf59215b91c056d8",
+    "newlines": 156,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/proof_producer.go",
+    "sha256": "63c934e860943e326b9c0aa2b50bf2574fce0a2f40faaccdc9fe79ab54a1049b",
+    "newlines": 502,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/proposal_codec.go",
+    "sha256": "ed757fd9c7c25f039c7d125019dbbd37af022089abbbfac04750b52a21e71abb",
+    "newlines": 36,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/realstore_test.go",
+    "sha256": "000d9beae2032169855eef75b55bc20b04ad9d83d84f03ce1484977e6531762a",
+    "newlines": 346,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/report_codec.go",
+    "sha256": "695ee9c99ccfcd1dc043fe68465c0bda855ad01707531629af0cd8da7252c768",
+    "newlines": 100,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/encerror.ail",
+    "sha256": "8f3605fd1d5e14a41e2bd8dc00231c6fae07d4f36dc633ccfe1afa6cc28e379a",
+    "newlines": 12,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/encerror.json",
+    "sha256": "29492c36b2449b1de35e147f213bd40ac1f9ec93f56634e23bf07633d52ee5b9",
+    "newlines": 22,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/loaderror.ail",
+    "sha256": "0ceb17a495a884ca5245fe0b03f8504f152991e34f1a5ed160a690873d7ee855",
+    "newlines": 4,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/loaderror.json",
+    "sha256": "fec0945528dc06818c829091e66046ec7d731b46c64b4f402536b7a6f327942d",
+    "newlines": 22,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/mixed.ail",
+    "sha256": "071621bd1c6a68ce4c03a449e623e9ed40d8aeee51e2c793b136d7bea357734e",
+    "newlines": 15,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/mixed.json",
+    "sha256": "35f4e8c44c85e0b105c1e4e235e5de7b696851fd966526c1116ee6b36bf7287e",
+    "newlines": 27,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/nocontracts.ail",
+    "sha256": "4c0c60143cc6c5dfdf71bcb68f89ac14d3c0a74da3335ad2ad05b92fd80e145a",
+    "newlines": 10,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/nocontracts.json",
+    "sha256": "93005215512b2d81eab534deed665de0b3835f5614ef5018dfe4a0305c90ff15",
+    "newlines": 16,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/refuted.ail",
+    "sha256": "82f58dda0dfbddcec430f62ef92b3453739299760c2b799df55befbbafb98462",
+    "newlines": 11,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/refuted.json",
+    "sha256": "61520389449f81e78c84e91599d1ec0979ae085ff7de29f36b482f5b7d0dd087",
+    "newlines": 34,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/regen.sh",
+    "sha256": "2d2c823dabc23dab4236ae9b1408b0574f6c59fa2677bb88e8dfd7c87ed57301",
+    "newlines": 20,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/skippedshape.ail",
+    "sha256": "44b7ac5633b58dbd7885a8597a31218d31fb04baa64b43ba0157b3988915a69e",
+    "newlines": 13,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/skippedshape.json",
+    "sha256": "3006d06071003d0ddb5c2e068831f6d6a4f67d400efdf62d9b6d2f1e034c15ac",
+    "newlines": 30,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/verifiedpass.ail",
+    "sha256": "f132ccf7633a6ad7b8e567e40c1e667d444fb51f2ff11ee4c319cc27cee40cf2",
+    "newlines": 12,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/testdata/aicheck/verifiedpass.json",
+    "sha256": "d2b394ba52e723bf2e1e67c992bd05e4262ca0c991584976ea9b3d973f4a4647",
+    "newlines": 22,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/types.go",
+    "sha256": "1cd0b4cc9f965d4bee1d1a762833cf5ab754449ff4fb453ef7e261013b9e8dc3",
+    "newlines": 79,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "host/evidence/validator.go",
+    "sha256": "d9de07eb6087605c5d54d256b0022c04865db8e4a1f307410dce2ec29b12b4d7",
+    "newlines": 222,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "scripts/tracked_binary_gate.sh",
+    "sha256": "dfc03d5727c1d1c73933785fe83c40960626b11ffe7f38066e6ec3dee9d978eb",
+    "newlines": 154,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "scripts/verify_ail.sh",
+    "sha256": "a6095668352a89fa67548a08b2f578ab84ee5f9abfb9538bf0d61b42ea38f2ee",
+    "newlines": 612,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "tools/launchd/README.md",
+    "sha256": "aeb663f2e95b4f1e168ad7a1bb687fa81ea516b4dcad78863bed7fea1b304793",
+    "newlines": 48,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "tools/launchd/derive-planner-lane.sh",
+    "sha256": "a7c52f4852026dccd7e26d5cb058957ca7d8496073d43a87c9c1a4bc91837451",
+    "newlines": 109,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "tools/launchd/mission-template.plist",
+    "sha256": "aaf57d459ae5917e8acdf69cee287586189469090da830dbba27729d09cd7dc0",
+    "newlines": 33,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "tools/launchd/test_mission_stall.sh",
+    "sha256": "5e8c04072015274e54486f2d2df8d638d1e1c5f46fd55e07e89dc30b68daae33",
+    "newlines": 221,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "tools/launchd/testdata/planner-lane/n-no-backtick-bullet.md",
+    "sha256": "833205678140b5b47079994eabd145e1c414e2d8a890a280e54b35fc17876006",
+    "newlines": 12,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "world/contracts.ail",
+    "sha256": "157574f614ec0d57b2c5302534984a84dfbcbaa6591eea560b4275932ab5f071",
+    "newlines": 168,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "world/logepoch.ail",
+    "sha256": "477ed4ce7ee223d032b12ebe998331de38fbe638a09b660a578f296d6ef611b5",
+    "newlines": 139,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "world/transitions.ail",
+    "sha256": "3bc711b44ce0e06dc2d7630502968db8609c64d31982a07d3236e1eb79dead36",
+    "newlines": 104,
+    "equals_head": true,
+    "equals_base": true
+  },
+  {
+    "path": "world/types.ail",
+    "sha256": "323cb6d40317e3100d8367b7904a772069798ea9a282fa08064a668f57efed6f",
+    "newlines": 283,
+    "equals_head": true,
+    "equals_base": true
+  }
+]

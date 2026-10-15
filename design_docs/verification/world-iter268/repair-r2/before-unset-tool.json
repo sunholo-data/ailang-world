@@ -1,0 +1,16 @@
+{
+  "command": [
+    "go",
+    "test",
+    "./cmd/ailang-worldd",
+    "-run",
+    "^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+    "-count=1",
+    "-timeout",
+    "120s",
+    "-v"
+  ],
+  "rc": 1,
+  "seconds": 4.3335349559783936,
+  "WORLD_TOOL_AILANG_BIN": "unset"
+}

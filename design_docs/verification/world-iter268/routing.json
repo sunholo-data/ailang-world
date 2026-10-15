@@ -28,7 +28,7 @@
   "executor": {
     "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
     "actual": "gpt-6.1-sol",
-    "status": "completed M2a r1;29 compiling drills,6 focused gates; full Go FAIL",
+    "status": "completed implementation plus r1/r2 repairs",
     "tokens": "not reported"
   },
   "evaluator": {
@@ -41,8 +41,24 @@
     ],
     "fallback": "gpt-6.1-sol fresh independent context, D-WORLD-48 / Gate3 lines243-256",
     "actual": "gpt-6.1-sol",
-    "status": "r1 FAIL65/100;3blocking, independent fresh context",
-    "tokens": "not reported"
+    "status": "r1 FAIL65/3blocking; r2 FAIL70/1blocking; r3 awaiting candidate freeze",
+    "tokens": "not reported",
+    "rounds": [
+      {
+        "round": 1,
+        "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+        "verdict": "FAIL",
+        "score": 65,
+        "blocking": 3
+      },
+      {
+        "round": 2,
+        "head": "7ba691b732d327f6b38a16223152b876e7d197df",
+        "verdict": "FAIL",
+        "score": 70,
+        "blocking": 1
+      }
+    ]
   },
   "judge_independence": "same-model-fresh-context FLAG; distinct generator and judge agents",
   "over_ration": [
@@ -53,10 +69,5 @@
   "metered_usd": 0,
   "ticket_id": "inbox_1792040381066_9861a560",
   "worktree_ticket_id": "inbox_1792040662419_a05590e2",
-  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805",
-  "repair_executor": {
-    "actual": "gpt-6.1-sol",
-    "status": "completed7 compiling repair drills and8commands/10namedtests; fullcandidatepending",
-    "tokens": "not reported"
-  }
+  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805"
 }

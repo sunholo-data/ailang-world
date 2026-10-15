@@ -1,0 +1,4 @@
+=== RUN   TestDemoSeedHelpPreparation
+--- PASS: TestDemoSeedHelpPreparation (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.785s

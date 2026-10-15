@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+    demo_test.go:394: required tool pin absent
+--- FAIL: TestDemoSeedPreflightRefusals (2.22s)
+    --- FAIL: TestDemoSeedPreflightRefusals/pin-mismatch (2.22s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	3.477s
+FAIL

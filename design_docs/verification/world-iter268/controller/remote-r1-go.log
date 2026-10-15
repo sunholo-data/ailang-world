@@ -1,0 +1,916 @@
+﻿2026-10-15T05:16:05.6653299Z Current runner version: '2.337.0'
+2026-10-15T05:16:05.6678676Z ##[group]Runner Image Provisioner
+2026-10-15T05:16:05.6679710Z Hosted Compute Agent
+2026-10-15T05:16:05.6680379Z Version: 20261012.601
+2026-10-15T05:16:05.6681104Z Commit: f3dc54e1fb89da6852db922499a0233137369e1d
+2026-10-15T05:16:05.6682201Z Build Date: 2026-10-12T17:48:21Z
+2026-10-15T05:16:05.6682935Z Worker ID: {5edf3604-7e9a-46a6-bdc3-b66df801fe14}
+2026-10-15T05:16:05.6683767Z Region: westus
+2026-10-15T05:16:05.6684316Z Cloud: Azure
+2026-10-15T05:16:05.6684889Z ##[endgroup]
+2026-10-15T05:16:05.6686408Z ##[group]Operating System
+2026-10-15T05:16:05.6687066Z Ubuntu
+2026-10-15T05:16:05.6687666Z 24.04.5
+2026-10-15T05:16:05.6688232Z LTS
+2026-10-15T05:16:05.6688802Z ##[endgroup]
+2026-10-15T05:16:05.6689421Z ##[group]Runner Image
+2026-10-15T05:16:05.6690062Z Image: ubuntu-24.04
+2026-10-15T05:16:05.6690717Z Version: 20261012.334.1
+2026-10-15T05:16:05.6692202Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-15T05:16:05.6693862Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-15T05:16:05.6694890Z ##[endgroup]
+2026-10-15T05:16:05.6698103Z ##[group]GITHUB_TOKEN Permissions
+2026-10-15T05:16:05.6700258Z Actions: write
+2026-10-15T05:16:05.6700974Z ArtifactMetadata: write
+2026-10-15T05:16:05.6701881Z Attestations: write
+2026-10-15T05:16:05.6702454Z Checks: write
+2026-10-15T05:16:05.6703163Z CodeQuality: write
+2026-10-15T05:16:05.6703728Z Contents: write
+2026-10-15T05:16:05.6704333Z CopilotRequests: write
+2026-10-15T05:16:05.6704935Z Deployments: write
+2026-10-15T05:16:05.6705495Z Discussions: write
+2026-10-15T05:16:05.6706150Z Drives: write
+2026-10-15T05:16:05.6706698Z Issues: write
+2026-10-15T05:16:05.6707379Z Metadata: read
+2026-10-15T05:16:05.6707978Z Models: read
+2026-10-15T05:16:05.6708507Z Packages: write
+2026-10-15T05:16:05.6709197Z Pages: write
+2026-10-15T05:16:05.6709833Z PullRequests: write
+2026-10-15T05:16:05.6710514Z RepositoryProjects: write
+2026-10-15T05:16:05.6711479Z SecurityEvents: write
+2026-10-15T05:16:05.6712257Z Statuses: write
+2026-10-15T05:16:05.6712941Z VulnerabilityAlerts: read
+2026-10-15T05:16:05.6713555Z ##[endgroup]
+2026-10-15T05:16:05.6715622Z Secret source: Actions
+2026-10-15T05:16:05.6716701Z Cache mode: write
+2026-10-15T05:16:05.6717412Z Prepare workflow directory
+2026-10-15T05:16:05.7165404Z Prepare all required actions
+2026-10-15T05:16:05.7213331Z Getting action download info
+2026-10-15T05:16:06.0653076Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-15T05:16:06.1953016Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-10-15T05:16:06.8092145Z Complete job name: go host build + test gate
+2026-10-15T05:16:06.9177617Z ##[group]Run actions/checkout@v4
+2026-10-15T05:16:06.9179017Z with:
+2026-10-15T05:16:06.9179896Z   repository: sunholo-data/ailang-world
+2026-10-15T05:16:06.9189832Z   token: ***
+2026-10-15T05:16:06.9190704Z   ssh-strict: true
+2026-10-15T05:16:06.9191714Z   ssh-user: git
+2026-10-15T05:16:06.9192587Z   persist-credentials: true
+2026-10-15T05:16:06.9193535Z   clean: true
+2026-10-15T05:16:06.9194398Z   sparse-checkout-cone-mode: true
+2026-10-15T05:16:06.9195427Z   fetch-depth: 1
+2026-10-15T05:16:06.9196258Z   fetch-tags: false
+2026-10-15T05:16:06.9197129Z   show-progress: true
+2026-10-15T05:16:06.9198006Z   lfs: false
+2026-10-15T05:16:06.9198808Z   submodules: false
+2026-10-15T05:16:06.9199716Z   set-safe-directory: true
+2026-10-15T05:16:06.9200709Z   allow-unsafe-pr-checkout: false
+2026-10-15T05:16:06.9202448Z env:
+2026-10-15T05:16:06.9203228Z   Z3_VER: 4.16.0
+2026-10-15T05:16:06.9204480Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:16:06.9206023Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:16:06.9206906Z ##[endgroup]
+2026-10-15T05:16:07.0258729Z Syncing repository: sunholo-data/ailang-world
+2026-10-15T05:16:07.0262888Z ##[group]Getting Git version info
+2026-10-15T05:16:07.0266000Z Working directory is '/home/runner/work/ailang-world/ailang-world'
+2026-10-15T05:16:07.0268595Z [command]/usr/bin/git version
+2026-10-15T05:16:07.0360376Z git version 2.55.0
+2026-10-15T05:16:07.0386326Z ##[endgroup]
+2026-10-15T05:16:07.0403818Z Temporarily overriding HOME='/home/runner/work/_temp/9f9ecf12-8d21-44ea-9cf0-a61365d99ddd' before making global git config changes
+2026-10-15T05:16:07.0407174Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-15T05:16:07.0410304Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ailang-world/ailang-world
+2026-10-15T05:16:07.0462526Z Deleting the contents of '/home/runner/work/ailang-world/ailang-world'
+2026-10-15T05:16:07.0468706Z ##[group]Initializing the repository
+2026-10-15T05:16:07.0473769Z [command]/usr/bin/git init /home/runner/work/ailang-world/ailang-world
+2026-10-15T05:16:07.0595786Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-15T05:16:07.0599750Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-15T05:16:07.0604082Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-15T05:16:07.0607308Z hint: call:
+2026-10-15T05:16:07.0609015Z hint:
+2026-10-15T05:16:07.0610670Z hint: 	git config --global init.defaultBranch <name>
+2026-10-15T05:16:07.0612936Z hint:
+2026-10-15T05:16:07.0614937Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-15T05:16:07.0618097Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-15T05:16:07.0620628Z hint:
+2026-10-15T05:16:07.0626588Z hint: 	git branch -m <name>
+2026-10-15T05:16:07.0628230Z hint:
+2026-10-15T05:16:07.0630389Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-15T05:16:07.0634624Z Initialized empty Git repository in /home/runner/work/ailang-world/ailang-world/.git/
+2026-10-15T05:16:07.0642021Z [command]/usr/bin/git remote add origin https://github.com/sunholo-data/ailang-world
+2026-10-15T05:16:07.0692031Z ##[endgroup]
+2026-10-15T05:16:07.0694723Z ##[group]Disabling automatic garbage collection
+2026-10-15T05:16:07.0697137Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-15T05:16:07.0729386Z ##[endgroup]
+2026-10-15T05:16:07.0730829Z ##[group]Setting up auth
+2026-10-15T05:16:07.0737722Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-15T05:16:07.0774128Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-15T05:16:07.1156806Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-15T05:16:07.1199290Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-15T05:16:07.1427627Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-15T05:16:07.1464293Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-15T05:16:07.1687655Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-15T05:16:07.1729100Z ##[endgroup]
+2026-10-15T05:16:07.1731705Z ##[group]Fetching the repository
+2026-10-15T05:16:07.1740170Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +125b5fa50fb6da40ee6ce4e36ab805ee74482299:refs/remotes/pull/267/merge
+2026-10-15T05:16:08.4410057Z From https://github.com/sunholo-data/ailang-world
+2026-10-15T05:16:08.4412201Z  * [new ref]         125b5fa50fb6da40ee6ce4e36ab805ee74482299 -> pull/267/merge
+2026-10-15T05:16:08.4414799Z ##[endgroup]
+2026-10-15T05:16:08.4415377Z ##[group]Determining the checkout info
+2026-10-15T05:16:08.4418104Z ##[endgroup]
+2026-10-15T05:16:08.4424175Z [command]/usr/bin/git sparse-checkout disable
+2026-10-15T05:16:08.4485844Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-15T05:16:08.4516806Z ##[group]Checking out the ref
+2026-10-15T05:16:08.4520599Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/267/merge
+2026-10-15T05:16:08.7578081Z Note: switching to 'refs/remotes/pull/267/merge'.
+2026-10-15T05:16:08.7578725Z 
+2026-10-15T05:16:08.7579229Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-15T05:16:08.7580474Z changes and commit them, and you can discard any commits you make in this
+2026-10-15T05:16:08.7582083Z state without impacting any branches by switching back to a branch.
+2026-10-15T05:16:08.7582755Z 
+2026-10-15T05:16:08.7583205Z If you want to create a new branch to retain commits you create, you may
+2026-10-15T05:16:08.7584294Z do so (now or later) by using -c with the switch command. Example:
+2026-10-15T05:16:08.7584930Z 
+2026-10-15T05:16:08.7585210Z   git switch -c <new-branch-name>
+2026-10-15T05:16:08.7585641Z 
+2026-10-15T05:16:08.7585910Z Or undo this operation with:
+2026-10-15T05:16:08.7586301Z 
+2026-10-15T05:16:08.7586534Z   git switch -
+2026-10-15T05:16:08.7586873Z 
+2026-10-15T05:16:08.7587463Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-15T05:16:08.7588216Z 
+2026-10-15T05:16:08.7589041Z HEAD is now at 125b5fa Merge 67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c into 39066a46c1ac13c994bacb162b8d4b754d5ec083
+2026-10-15T05:16:08.7597978Z ##[endgroup]
+2026-10-15T05:16:08.7646076Z [command]/usr/bin/git log -1 --format=%H
+2026-10-15T05:16:08.7674795Z 125b5fa50fb6da40ee6ce4e36ab805ee74482299
+2026-10-15T05:16:08.7943090Z ##[group]Run actions/setup-go@v5
+2026-10-15T05:16:08.7943465Z with:
+2026-10-15T05:16:08.7943745Z   go-version: 1.26.6
+2026-10-15T05:16:08.7944059Z   check-latest: false
+2026-10-15T05:16:08.7947086Z   token: ***
+2026-10-15T05:16:08.7947400Z   cache: true
+2026-10-15T05:16:08.7947673Z env:
+2026-10-15T05:16:08.7947932Z   Z3_VER: 4.16.0
+2026-10-15T05:16:08.7948352Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:16:08.7948850Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:16:08.7949155Z ##[endgroup]
+2026-10-15T05:16:08.9230834Z Setup go version spec 1.26.6
+2026-10-15T05:16:08.9240709Z Attempting to download 1.26.6...
+2026-10-15T05:16:08.9348819Z (node:2280) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-15T05:16:08.9349805Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-15T05:16:09.5087930Z matching 1.26.6...
+2026-10-15T05:16:09.5138507Z Acquiring 1.26.6 from https://github.com/actions/go-versions/releases/download/1.26.6-31764261251/go-1.26.6-linux-x64.tar.gz
+2026-10-15T05:16:10.0582087Z Extracting Go...
+2026-10-15T05:16:10.0709126Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/c69cb2f5-e01a-47bc-a283-1f50ad6137ec -f /home/runner/work/_temp/70d6fc6a-dff1-4dbd-b346-320d2269e3d0
+2026-10-15T05:16:11.7952216Z Successfully extracted go to /home/runner/work/_temp/c69cb2f5-e01a-47bc-a283-1f50ad6137ec
+2026-10-15T05:16:11.7953081Z Adding to the cache ...
+2026-10-15T05:16:18.0104658Z Successfully cached go to /opt/hostedtoolcache/go/1.26.6/x64
+2026-10-15T05:16:18.0116617Z Added go to the path
+2026-10-15T05:16:18.0117175Z Successfully set up Go version 1.26.6
+2026-10-15T05:16:18.0403792Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOMODCACHE
+2026-10-15T05:16:18.0468283Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOCACHE
+2026-10-15T05:16:18.0521824Z /home/runner/go/pkg/mod
+2026-10-15T05:16:18.0551168Z /home/runner/.cache/go-build
+2026-10-15T05:16:18.3405915Z Cache hit for: setup-go-Linux-x64-ubuntu24-go-1.26.6-ff9735e8e906e00f22d7fcded73c2730f92fc22913fff84a38492189dffb1c49
+2026-10-15T05:16:18.3543752Z (node:2280) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-15T05:16:19.6074693Z Received 4267450 of 12656058 (33.7%), 4.1 MBs/sec
+2026-10-15T05:16:19.6905234Z Received 12656058 of 12656058 (100.0%), 11.1 MBs/sec
+2026-10-15T05:16:19.6905922Z Cache Size: ~12 MB (12656058 B)
+2026-10-15T05:16:19.6932501Z [command]/usr/bin/tar -xf /home/runner/work/_temp/f475e999-527f-4506-af38-85b139973fc5/cache.tzst -P -C /home/runner/work/ailang-world/ailang-world --use-compress-program unzstd
+2026-10-15T05:16:19.8152437Z Cache restored successfully
+2026-10-15T05:16:19.8166678Z Cache restored from key: setup-go-Linux-x64-ubuntu24-go-1.26.6-ff9735e8e906e00f22d7fcded73c2730f92fc22913fff84a38492189dffb1c49
+2026-10-15T05:16:19.8194304Z go version go1.26.6 linux/amd64
+2026-10-15T05:16:19.8194918Z 
+2026-10-15T05:16:19.8195650Z ##[group]go env
+2026-10-15T05:16:19.8974390Z AR='ar'
+2026-10-15T05:16:19.8975170Z CC='gcc'
+2026-10-15T05:16:19.8976022Z CGO_CFLAGS='-O2 -g'
+2026-10-15T05:16:19.8976499Z CGO_CPPFLAGS=''
+2026-10-15T05:16:19.8976886Z CGO_CXXFLAGS='-O2 -g'
+2026-10-15T05:16:19.8977301Z CGO_ENABLED='1'
+2026-10-15T05:16:19.8977707Z CGO_FFLAGS='-O2 -g'
+2026-10-15T05:16:19.8978125Z CGO_LDFLAGS='-O2 -g'
+2026-10-15T05:16:19.8978496Z CXX='g++'
+2026-10-15T05:16:19.8978843Z GCCGO='gccgo'
+2026-10-15T05:16:19.8979209Z GO111MODULE=''
+2026-10-15T05:16:19.8979561Z GOAMD64='v1'
+2026-10-15T05:16:19.8979905Z GOARCH='amd64'
+2026-10-15T05:16:19.8980255Z GOAUTH='netrc'
+2026-10-15T05:16:19.8980602Z GOBIN=''
+2026-10-15T05:16:19.8980986Z GOCACHE='/home/runner/.cache/go-build'
+2026-10-15T05:16:19.8981661Z GOCACHEPROG=''
+2026-10-15T05:16:19.8982012Z GODEBUG=''
+2026-10-15T05:16:19.8982868Z GOENV='/home/runner/.config/go/env'
+2026-10-15T05:16:19.8983348Z GOEXE=''
+2026-10-15T05:16:19.8983695Z GOEXPERIMENT=''
+2026-10-15T05:16:19.8984063Z GOFIPS140='off'
+2026-10-15T05:16:19.8984415Z GOFLAGS=''
+2026-10-15T05:16:19.8985576Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build3423300152=/tmp/go-build -gno-record-gcc-switches'
+2026-10-15T05:16:19.8986797Z GOHOSTARCH='amd64'
+2026-10-15T05:16:19.8987189Z GOHOSTOS='linux'
+2026-10-15T05:16:19.8987549Z GOINSECURE=''
+2026-10-15T05:16:19.8988070Z GOMOD='/home/runner/work/ailang-world/ailang-world/go.mod'
+2026-10-15T05:16:19.8988708Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-10-15T05:16:19.8989176Z GONOPROXY=''
+2026-10-15T05:16:19.8989524Z GONOSUMDB=''
+2026-10-15T05:16:19.8989921Z GOOS='linux'
+2026-10-15T05:16:19.8990285Z GOPATH='/home/runner/go'
+2026-10-15T05:16:19.8990691Z GOPRIVATE=''
+2026-10-15T05:16:19.8991377Z GOPROXY='https://proxy.golang.org,direct'
+2026-10-15T05:16:19.8991986Z GOROOT='/opt/hostedtoolcache/go/1.26.6/x64'
+2026-10-15T05:16:19.8992516Z GOSUMDB='sum.golang.org'
+2026-10-15T05:16:19.8992936Z GOTELEMETRY='local'
+2026-10-15T05:16:19.8993412Z GOTELEMETRYDIR='/home/runner/.config/go/telemetry'
+2026-10-15T05:16:19.8993959Z GOTMPDIR=''
+2026-10-15T05:16:19.8994329Z GOTOOLCHAIN='go1.26.6'
+2026-10-15T05:16:19.8994925Z GOTOOLDIR='/opt/hostedtoolcache/go/1.26.6/x64/pkg/tool/linux_amd64'
+2026-10-15T05:16:19.8995569Z GOVCS=''
+2026-10-15T05:16:19.8995915Z GOVERSION='go1.26.6'
+2026-10-15T05:16:19.8996301Z GOWORK=''
+2026-10-15T05:16:19.8996673Z PKG_CONFIG='pkg-config'
+2026-10-15T05:16:19.8996928Z 
+2026-10-15T05:16:19.8997451Z ##[endgroup]
+2026-10-15T05:16:19.9232489Z ##[group]Run go version
+2026-10-15T05:16:19.9233002Z [36;1mgo version[0m
+2026-10-15T05:16:19.9233396Z [36;1mgo env GOVERSION[0m
+2026-10-15T05:16:19.9543890Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:16:19.9544332Z env:
+2026-10-15T05:16:19.9544654Z   Z3_VER: 4.16.0
+2026-10-15T05:16:19.9545235Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:16:19.9545948Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:16:19.9546330Z ##[endgroup]
+2026-10-15T05:16:19.9714142Z go version go1.26.6 linux/amd64
+2026-10-15T05:16:19.9740562Z go1.26.6
+2026-10-15T05:16:19.9780593Z ##[group]Run set -euo pipefail
+2026-10-15T05:16:19.9781118Z [36;1mset -euo pipefail[0m
+2026-10-15T05:16:19.9781829Z [36;1m# ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the[0m
+2026-10-15T05:16:19.9782490Z [36;1m# replay tests drive the released ailang as a subprocess and byte-compare its[0m
+2026-10-15T05:16:19.9783095Z [36;1m# output against goldens (testdata/recorded_result.bytes, recorded_world_hash.txt)[0m
+2026-10-15T05:16:19.9783679Z [36;1m# that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.[0m
+2026-10-15T05:16:19.9784234Z [36;1m# MEASURED 2026-09-22: it is not. All 10 replay tests reproduce the goldens[0m
+2026-10-15T05:16:19.9784768Z [36;1m# byte-exactly under v0.41.0, with a discriminating control (binary unset -> 13[0m
+2026-10-15T05:16:19.9785300Z [36;1m# SKIPs, so the arms really do drive the subprocess). The goldens are stable[0m
+2026-10-15T05:16:19.9785865Z [36;1m# across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost[0m
+2026-10-15T05:16:19.9786403Z [36;1m# world eleven releases of drift against the language it exists to exercise.[0m
+2026-10-15T05:16:19.9786799Z [36;1m#[0m
+2026-10-15T05:16:19.9787109Z [36;1m# Pin the TAG, not `latest`: a silent bump is how a goldens mismatch or a[0m
+2026-10-15T05:16:19.9787648Z [36;1m# world-package hash break arrives without a red step naming it. Moving this pin[0m
+2026-10-15T05:16:19.9788202Z [36;1m# is a deliberate edit, and host/replay re-verifies the goldens on the new tag.[0m
+2026-10-15T05:16:19.9788752Z [36;1m# Without AILANG_BIN, host/replay's pinnedBinary and verifygate's requirePinned[0m
+2026-10-15T05:16:19.9789292Z [36;1m# t.Skip() and CI is false-green — hence the loud assert below.[0m
+2026-10-15T05:16:19.9789807Z [36;1mbase="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"[0m
+2026-10-15T05:16:19.9790327Z [36;1mcurl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"[0m
+2026-10-15T05:16:19.9790824Z [36;1mcurl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"[0m
+2026-10-15T05:16:19.9791603Z [36;1m# the published checksum names the release asset, not our local filename[0m
+2026-10-15T05:16:19.9792127Z [36;1mecho "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -[0m
+2026-10-15T05:16:19.9792533Z [36;1mmkdir -p "$HOME/.local/bin"[0m
+2026-10-15T05:16:19.9792869Z [36;1mtar -xzf pinned.tar.gz -C "$HOME/.local/bin" ailang[0m
+2026-10-15T05:16:19.9793231Z [36;1mchmod +x "$HOME/.local/bin/ailang"[0m
+2026-10-15T05:16:19.9793629Z [36;1m# Assert the pinned version loudly so a tag drift is a red step here,[0m
+2026-10-15T05:16:19.9794055Z [36;1m# not a silent goldens mismatch downstream.[0m
+2026-10-15T05:16:19.9794473Z [36;1m# Same no-pipe form as the world-package install above. This site has[0m
+2026-10-15T05:16:19.9794966Z [36;1m# never gone red, but only by ACCIDENT OF SIZE: `--version` is 167 bytes,[0m
+2026-10-15T05:16:19.9795447Z [36;1m# which fits the 64 KiB pipe buffer, so `echo` never blocks and never[0m
+2026-10-15T05:16:19.9795926Z [36;1m# takes SIGPIPE. That is a property of the output length, not of the[0m
+2026-10-15T05:16:19.9796396Z [36;1m# shape — the shape is the same race, one verbose release away.[0m
+2026-10-15T05:16:19.9796799Z [36;1mver="$("$HOME/.local/bin/ailang" --version)"[0m
+2026-10-15T05:16:19.9797095Z [36;1mecho "$ver"[0m
+2026-10-15T05:16:19.9797315Z [36;1mcase "$ver" in[0m
+2026-10-15T05:16:19.9797548Z [36;1m  *'AILANG v0.41.0'*) ;;[0m
+2026-10-15T05:16:19.9797854Z [36;1m  *) echo "✗ AILANG_BIN is not v0.41.0" >&2; exit 1 ;;[0m
+2026-10-15T05:16:19.9798165Z [36;1mesac[0m
+2026-10-15T05:16:19.9798442Z [36;1mecho "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"[0m
+2026-10-15T05:16:19.9864634Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:16:19.9864905Z env:
+2026-10-15T05:16:19.9865100Z   Z3_VER: 4.16.0
+2026-10-15T05:16:19.9865435Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:16:19.9866069Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:16:19.9866432Z ##[endgroup]
+2026-10-15T05:16:21.7363374Z pinned.tar.gz: OK
+2026-10-15T05:16:22.3652406Z AILANG v0.41.0
+2026-10-15T05:16:22.3652997Z Commit: 24ee108
+2026-10-15T05:16:22.3653428Z Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+2026-10-15T05:16:22.3653968Z Built:  2026-09-21T15:50:02Z
+2026-10-15T05:16:22.3654228Z 
+2026-10-15T05:16:22.3654406Z The AI-First Programming Language
+2026-10-15T05:16:22.3654932Z Copyright (c) 2025-2026
+2026-10-15T05:16:22.3736992Z ##[group]Run set -euo pipefail
+2026-10-15T05:16:22.3737345Z [36;1mset -euo pipefail[0m
+2026-10-15T05:16:22.3737680Z [36;1m# 9/OD-11, RATIFIED: "Yes you can install z3 on cicd".[0m
+2026-10-15T05:16:22.3738191Z [36;1m# host/verifygate's shim arms run scripts/verify_ail.sh end to end. Without a solver[0m
+2026-10-15T05:16:22.3738770Z [36;1m# `ai-check` reports verify.available=false and every contract vanishes from[0m
+2026-10-15T05:16:22.3739337Z [36;1m# verify.results[] (V20/V27), so the gate reds at leg 1 and the accept-arms could only[0m
+2026-10-15T05:16:22.3739941Z [36;1m# assert markers emitted BEFORE Z3 matters — they were green in a lane where the gate[0m
+2026-10-15T05:16:22.3740557Z [36;1m# they drive was red. Same version and sha as job 1, from the workflow-level pin above.[0m
+2026-10-15T05:16:22.3741025Z [36;1mZ3_DIR="z3-${Z3_VER}-x64-glibc-2.39"[0m
+2026-10-15T05:16:22.3741788Z [36;1mcurl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"[0m
+2026-10-15T05:16:22.3742322Z [36;1mecho "${Z3_SHA}  z3.zip" | sha256sum -c -[0m
+2026-10-15T05:16:22.3742625Z [36;1munzip -q z3.zip[0m
+2026-10-15T05:16:22.3742958Z [36;1msudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3[0m
+2026-10-15T05:16:22.3743320Z [36;1mz3 --version[0m
+2026-10-15T05:16:22.3806668Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:16:22.3806932Z env:
+2026-10-15T05:16:22.3807128Z   Z3_VER: 4.16.0
+2026-10-15T05:16:22.3807473Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:16:22.3807885Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:16:22.3808144Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-10-15T05:16:22.3808423Z ##[endgroup]
+2026-10-15T05:16:24.0970221Z z3.zip: OK
+2026-10-15T05:16:25.2106778Z Z3 version 4.16.0 - 64 bit
+2026-10-15T05:16:25.2158490Z ##[group]Run set -euo pipefail
+2026-10-15T05:16:25.2158835Z [36;1mset -euo pipefail[0m
+2026-10-15T05:16:25.2159226Z [36;1m[ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }[0m
+2026-10-15T05:16:25.2159867Z [36;1msudo apt-get update -qq[0m
+2026-10-15T05:16:25.2160207Z [36;1msudo apt-get install -y -qq bubblewrap socat ripgrep[0m
+2026-10-15T05:16:25.2160656Z [36;1msudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0[0m
+2026-10-15T05:16:25.2161097Z [36;1mPIN=design_docs/verification/world-row140-m0/pin.json[0m
+2026-10-15T05:16:25.2161890Z [36;1mV=$(jq -r .version "$PIN"); WANT=$(jq -r .cli_sha256 "$PIN")[0m
+2026-10-15T05:16:25.2162252Z [36;1mmkdir -p "$RUNNER_TEMP/srt"[0m
+2026-10-15T05:16:25.2162805Z [36;1m( cd "$RUNNER_TEMP/srt" && npm init -y >/dev/null && npm install --no-audit --no-fund "@anthropic-ai/sandbox-runtime@$V" )[0m
+2026-10-15T05:16:25.2163608Z [36;1mGOT=$(sha256sum "$RUNNER_TEMP/srt/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js" | cut -d' ' -f1)[0m
+2026-10-15T05:16:25.2164171Z [36;1mecho "srt $V cli.js sha256 $GOT (pinned $WANT)"[0m
+2026-10-15T05:16:25.2164630Z [36;1m[ "$GOT" = "$WANT" ] || { echo "::error::srt cli.js digest drifted from pin.json"; exit 1; }[0m
+2026-10-15T05:16:25.2165170Z [36;1mpython3 design_docs/verification/world-row140-m0/m0_matrix.py \[0m
+2026-10-15T05:16:25.2165621Z [36;1m  --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \[0m
+2026-10-15T05:16:25.2166021Z [36;1m  --node "$(command -v node)" --seccomp-read allowread[0m
+2026-10-15T05:16:25.2166493Z [36;1m# Row 140 M2: the real-srt handler tests read the same pinned install and node, in[0m
+2026-10-15T05:16:25.2166986Z [36;1m# every later step (verify_go.sh's go test included).[0m
+2026-10-15T05:16:25.2167648Z [36;1mecho "WORLD_EXEC_SRT_NODE_MODULES=$RUNNER_TEMP/srt/node_modules" >> "$GITHUB_ENV"[0m
+2026-10-15T05:16:25.2168143Z [36;1mecho "WORLD_EXEC_NODE=$(command -v node)" >> "$GITHUB_ENV"[0m
+2026-10-15T05:16:25.2230420Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:16:25.2230691Z env:
+2026-10-15T05:16:25.2230886Z   Z3_VER: 4.16.0
+2026-10-15T05:16:25.2231505Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:16:25.2231917Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:16:25.2232182Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-10-15T05:16:25.2232490Z ##[endgroup]
+2026-10-15T05:16:33.8982040Z Selecting previously unselected package bubblewrap.
+2026-10-15T05:16:33.9956621Z (Reading database ... 
+2026-10-15T05:16:33.9957128Z (Reading database ... 5%
+2026-10-15T05:16:33.9957477Z (Reading database ... 10%
+2026-10-15T05:16:33.9957773Z (Reading database ... 15%
+2026-10-15T05:16:33.9958056Z (Reading database ... 20%
+2026-10-15T05:16:33.9958498Z (Reading database ... 25%
+2026-10-15T05:16:33.9958949Z (Reading database ... 30%
+2026-10-15T05:16:33.9959418Z (Reading database ... 35%
+2026-10-15T05:16:33.9959835Z (Reading database ... 40%
+2026-10-15T05:16:33.9960118Z (Reading database ... 45%
+2026-10-15T05:16:33.9960406Z (Reading database ... 50%
+2026-10-15T05:16:34.0541094Z (Reading database ... 55%
+2026-10-15T05:16:34.4740925Z (Reading database ... 60%
+2026-10-15T05:16:34.7996899Z (Reading database ... 65%
+2026-10-15T05:16:35.1328418Z (Reading database ... 70%
+2026-10-15T05:16:35.5124011Z (Reading database ... 75%
+2026-10-15T05:16:35.9766595Z (Reading database ... 80%
+2026-10-15T05:16:36.6887969Z (Reading database ... 85%
+2026-10-15T05:16:37.4851825Z (Reading database ... 90%
+2026-10-15T05:16:38.2078447Z (Reading database ... 95%
+2026-10-15T05:16:38.2079070Z (Reading database ... 100%
+2026-10-15T05:16:38.2079667Z (Reading database ... 203540 files and directories currently installed.)
+2026-10-15T05:16:38.2125613Z Preparing to unpack .../bubblewrap_0.9.0-1ubuntu0.3_amd64.deb ...
+2026-10-15T05:16:38.2204082Z Unpacking bubblewrap (0.9.0-1ubuntu0.3) ...
+2026-10-15T05:16:38.2658279Z Selecting previously unselected package ripgrep.
+2026-10-15T05:16:38.2784020Z Preparing to unpack .../ripgrep_14.1.0-1_amd64.deb ...
+2026-10-15T05:16:38.2790984Z Unpacking ripgrep (14.1.0-1) ...
+2026-10-15T05:16:38.3180995Z Selecting previously unselected package socat.
+2026-10-15T05:16:38.3306875Z Preparing to unpack .../socat_1.8.0.0-4ubuntu0.1_amd64.deb ...
+2026-10-15T05:16:38.3314306Z Unpacking socat (1.8.0.0-4ubuntu0.1) ...
+2026-10-15T05:16:38.4140473Z Setting up bubblewrap (0.9.0-1ubuntu0.3) ...
+2026-10-15T05:16:38.4192410Z Setting up socat (1.8.0.0-4ubuntu0.1) ...
+2026-10-15T05:16:38.4210987Z Setting up ripgrep (14.1.0-1) ...
+2026-10-15T05:16:38.4231031Z Processing triggers for man-db (2.12.0-4build2) ...
+2026-10-15T05:16:38.4250602Z Not building database; man-db/auto-update is not 'true'.
+2026-10-15T05:16:39.7628203Z 
+2026-10-15T05:16:39.7628739Z Running kernel seems to be up-to-date.
+2026-10-15T05:16:39.7629241Z 
+2026-10-15T05:16:39.7629441Z No services need to be restarted.
+2026-10-15T05:16:39.7629677Z 
+2026-10-15T05:16:39.7629830Z No containers need to be restarted.
+2026-10-15T05:16:39.7630068Z 
+2026-10-15T05:16:39.7630253Z No user sessions are running outdated binaries.
+2026-10-15T05:16:39.7630533Z 
+2026-10-15T05:16:39.7630815Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-10-15T05:16:40.7159150Z kernel.apparmor_restrict_unprivileged_userns = 0
+2026-10-15T05:16:47.0659906Z 
+2026-10-15T05:16:47.0660433Z added 5 packages in 1s
+2026-10-15T05:16:47.0795770Z srt 0.0.78 cli.js sha256 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e (pinned 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e)
+2026-10-15T05:16:47.2384706Z META {"platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39", "machine": "x86_64", "srt_version": "0.0.78", "cli_sha256": "3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e", "node": "/usr/local/bin/node", "node_version": "v22.23.3", "bwrap": "bubblewrap 0.9.0", "socat": "socat by Gerhard Rieger and contributors - see www.dest-unreach.org", "rg": "ripgrep 14.1.0", "userns_sysctl": "0"}
+2026-10-15T05:16:47.6114524Z [PASS] sanity: srt from whole-tree archive runs (V42): expected 'rc 0 + M0-ALIVE'; observed 'rc 0: M0-ALIVE'
+2026-10-15T05:16:47.7000118Z [PASS] (info) V42 package-dir-only archive fails to load: expected 'non-zero, module not found'; observed "rc 1: node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' importe"
+2026-10-15T05:16:48.0311766Z [PASS] arm1 write inside worktree: expected "WORLD-PROBE-WROTE + readback 'x'"; observed "WORLD-PROBE-WROTE readback='x'"
+2026-10-15T05:16:48.2737736Z [PASS] arm1b write inside episode exec cache: expected 'WORLD-PROBE-WROTE'; observed 'WORLD-PROBE-WROTE'
+2026-10-15T05:16:48.6445889Z [PASS] arm2 write sibling episode refused: expected 'control WROTE; sandboxed REFUSED; file absent'; observed 'control=WORLD-PROBE-WROTE; sbx=WORLD-PROBE-REFUSED ENOENT; exists=False'
+2026-10-15T05:16:48.9740023Z [PASS] arm2 write $HOME: host unchanged: expected 'host absent (macOS: REFUSED; Linux: REFUSED or WROTE-into-tmpfs)'; observed 'WORLD-PROBE-WROTE; host exists=False'
+2026-10-15T05:16:49.2088509Z [PASS] arm2 write state dir: host unchanged: expected 'host absent (macOS: REFUSED; Linux: REFUSED or WROTE-into-tmpfs)'; observed 'WORLD-PROBE-WROTE; host exists=False'
+2026-10-15T05:16:49.5664671Z [PASS] arm3 read decoy $HOME/.ailang-worldd-exec-probe-decoy-m0 refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:49.8286315Z [PASS] arm3 read decoy $HOME/.world-row140-m0-lgdrp71g/state/exec-probe/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:50.0937557Z [PASS] arm3 read decoy $HOME/.world-row140-m0-lgdrp71g/workspace/.exec-probe-sibling/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:50.4317792Z [PASS] arm3b read sibling episode file refused (V35): expected 'REFUSED'; observed 'WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:50.6669171Z [PASS] V42 child cannot read the archived cli.js: expected 'REFUSED'; observed 'WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:50.8862520Z [PASS] V8 ls $HOME leaks nothing: expected 'ran; BASE not listed (macOS rc!=0; Linux masked: empty)'; observed 'rc 0: '
+2026-10-15T05:16:51.1293922Z [PASS] (info) V8 system path /etc/hosts stays readable (R-140-1): expected 'READ'; observed 'WORLD-PROBE-READ'
+2026-10-15T05:16:51.3618010Z [PASS] V8 own worktree readable under denied $HOME: expected 'READ'; observed 'WORLD-PROBE-READ'
+2026-10-15T05:16:51.6083186Z [PASS] arm4 /tmp/claude write refused (rendered denyWrite): expected 'REFUSED'; observed 'WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:51.8448873Z [FAIL] (info) V4 /tmp/claude writable WITHOUT World's denyWrite: expected 'WROTE (srt default)'; observed 'WORLD-PROBE-REFUSED ENOENT'
+2026-10-15T05:16:52.1796483Z [PASS] V6/V35 write .git refused: expected 'REFUSED; bytes unchanged'; observed 'WORLD-PROBE-REFUSED EROFS; changed=False'
+2026-10-15T05:16:52.4129764Z [FAIL] (info) V6/V35 write .GITHUB/x refused: expected 'REFUSED; bytes unchanged'; observed 'WORLD-PROBE-WROTE; changed=True'
+2026-10-15T05:16:52.7483796Z [PASS] V6/V35 write .github/x refused: expected 'REFUSED; bytes unchanged'; observed 'WORLD-PROBE-REFUSED EROFS; changed=False'
+2026-10-15T05:16:52.9952856Z [PASS] V50 write .git/HEAD refused (.git a dir WITHOUT hooks/ or config): expected 'REFUSED token; HEAD bytes unchanged'; observed "rc 0: WORLD-PROBE-REFUSED EROFS; HEAD='ref: refs/heads/dev\\n'; host .git also holds []; out='WORLD-PROBE-REFUSED EROFS'"
+2026-10-15T05:16:53.2407661Z [PASS] V50 write .git/HEAD refused (.git a dir WITH hooks/ and config): expected 'REFUSED token; HEAD bytes unchanged'; observed "rc 0: WORLD-PROBE-REFUSED EROFS; HEAD='ref: refs/heads/dev\\n'; host .git also holds ['config', 'hooks']; out='WORLD-PROBE-REFUSED EROFS'"
+2026-10-15T05:16:53.4914563Z [PASS] V50 control: .git/HEAD WRITTEN without World's .git denies: expected 'WROTE (srt alone leaves .git/HEAD open, V5)'; observed "rc 0: WORLD-PROBE-WROTE; HEAD='x'; host .git also holds []; out='WORLD-PROBE-WROTE'"
+2026-10-15T05:16:53.6986289Z [PASS] (info) V50 hazard: .git deny WITHOUT the leading .git/hooks + .git/config entries: expected "Linux: bwrap aborts (Can't create file at …/.git/hooks); macOS: REFUSED"; observed 'rc 1: None; out="bwrap: Can\'t create file at /home/runner/.world-row140-m0-lgdrp71g/workspace/epo/.git/hooks: Read-only file system"'
+2026-10-15T05:16:53.9017219Z [PASS] arm5 SIGTERM self-kill -> 143 via trampoline: expected 143; observed 143
+2026-10-15T05:16:54.2121900Z [PASS] arm5 SIGINT self-kill -> 130 via trampoline: expected 130; observed 130
+2026-10-15T05:16:54.5146051Z [PASS] arm5 SIGKILL self-kill -> 137 via trampoline: expected 137; observed 137
+2026-10-15T05:16:54.7173637Z [PASS] arm5 exit 3 -> 3: expected 3; observed 3
+2026-10-15T05:16:54.9324715Z [PASS] V11 missing binary -> 127: expected 127; observed 127
+2026-10-15T05:16:55.1480721Z [PASS] (info) V11 bare srt (no trampoline) SIGTERM rc: expected '0 on macOS 0.0.71/0.0.78 (the hazard)'; observed 143
+2026-10-15T05:16:55.3617423Z [PASS] V41 child env == rendered K=V set (no proxy vars, no TMPDIR=/tmp/claude): expected ['CI=1', 'HOME=/home/runner/.world-row140-m0-lgdrp71g/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=/home/runner/.world-row140-m0-lgdrp71g/state/exec-cache/ep1/proj/tmp']; observed ['CI=1', 'HOME=/home/runner/.world-row140-m0-lgdrp71g/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=/home/runner/.world-row140-m0-lgdrp71g/state/exec-cache/ep1/proj/tmp']
+2026-10-15T05:16:55.5771389Z [PASS] V12 argv verbatim after -- (incl. -c, -s, X=Y): expected '[a b][$(id)][-c][--][X=Y][-s][/nonexistent.json]'; observed '[a b][$(id)][-c][--][X=Y][-s][/nonexistent.json]'
+2026-10-15T05:16:55.8802273Z [PASS] (info) V12 WITHOUT -- srt takes -c (the hazard): expected 'OPTION-INJECTED executed'; observed 'rc 0: OPTION-INJECTED'
+2026-10-15T05:16:56.1012981Z [PASS] V3 grandchild write outside refused: expected 'ran; absent'; observed 'WORLD-PROBE-RAN; exists=False'
+2026-10-15T05:16:59.3177104Z [PASS] V3 orphan write (2 s after srt exits) refused: expected 'ran; absent'; observed 'WORLD-PROBE-RAN; exists=False'
+2026-10-15T05:16:59.6221395Z [PASS] V3 write through symlink to sibling refused: expected 'ran; absent'; observed 'WORLD-PROBE-RAN; exists=False'
+2026-10-15T05:17:00.5026833Z [PASS] arm6 raw loopback connect refused (live listener): expected 'control CONNECTED count 1; sbx not CONNECTED; count stays 1'; observed 'control=WORLD-PROBE-CONNECTED n0=1; sbx=WORLD-PROBE-REFUSED ECONNREFUSED n1=1'
+2026-10-15T05:17:01.0132049Z [PASS] arm6 loopback via srt proxy env (no trampoline) refused: expected 'ran; count unchanged'; observed "WORLD-PROBE-RAN\n000 rc=7\ncurl: (7) Failed to connect to 127.0.0.1 port 39415 after 0 ms: Couldn't connect to server n2=1"
+2026-10-15T05:17:01.5232027Z [PASS] arm6 loopback with --noproxy refused: expected 'ran; count unchanged'; observed "WORLD-PROBE-RAN\n rc=7\ncurl: (7) Failed to connect to 127.0.0.1 port 39415 after 0 ms: Couldn't connect to server n3=1"
+2026-10-15T05:17:01.7496848Z [PASS] V9 external https refused (allowedDomains=[]): expected 'ran; no 200'; observed 'WORLD-PROBE-RAN\n000 rc=56\ncurl: (56) CONNECT tunnel failed, response 403'
+2026-10-15T05:17:02.0935971Z [PASS] (info) V9 bind 127.0.0.1 (allowLocalBinding=false): expected 'macOS REFUSED; Linux binds inside its own netns'; observed 'WORLD-PROBE-BOUND'
+2026-10-15T05:17:06.4416766Z [PASS] V9 child listener unreachable from host: expected 'BOUND-and-unreachable or REFUSED'; observed 'WORLD-PROBE-BOUND 34949; host reached=False'
+2026-10-15T05:17:06.7752651Z [PASS] (info) V9 direct DNS: expected 'REFUSED (macOS)'; observed 'WORLD-PROBE-REFUSED EAI_AGAIN'
+2026-10-15T05:17:09.8065597Z [PASS] V13 killpg(srt group) leaves no sleeper: expected 'before 2, after 0'; observed 'before 2, after 0'
+2026-10-15T05:17:09.8326455Z SUMMARY gating 35/35 pass; failed: []
+2026-10-15T05:17:09.8535935Z ##[group]Run set -euo pipefail
+2026-10-15T05:17:09.8536510Z [36;1mset -euo pipefail[0m
+2026-10-15T05:17:09.8537200Z [36;1m[ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }[0m
+2026-10-15T05:17:09.8538407Z [36;1m[ -n "${WORLD_EXEC_SRT_NODE_MODULES:-}" ] || { echo "::error::WORLD_EXEC_SRT_NODE_MODULES is unset"; exit 1; }[0m
+2026-10-15T05:17:09.8539490Z [36;1m[ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }[0m
+2026-10-15T05:17:09.8542238Z [36;1mtests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"[0m
+2026-10-15T05:17:09.8546860Z [36;1mtests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"[0m
+2026-10-15T05:17:09.8550323Z [36;1mtests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual"[0m
+2026-10-15T05:17:09.8551799Z [36;1mlog="$RUNNER_TEMP/exec-srt-verbose.log"[0m
+2026-10-15T05:17:09.8552336Z [36;1mrc=0[0m
+2026-10-15T05:17:09.8552908Z [36;1mgo test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v \[0m
+2026-10-15T05:17:09.8553677Z [36;1m  -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?[0m
+2026-10-15T05:17:09.8554233Z [36;1mcat "$log"[0m
+2026-10-15T05:17:09.8554726Z [36;1m[ "$rc" -eq 0 ] || exit "$rc"[0m
+2026-10-15T05:17:09.8555194Z [36;1mfor t in $tests; do[0m
+2026-10-15T05:17:09.8555656Z [36;1m  grep -q -- "^--- PASS: $t " "$log" \[0m
+2026-10-15T05:17:09.8556329Z [36;1m    || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }[0m
+2026-10-15T05:17:09.8556966Z [36;1mdone[0m
+2026-10-15T05:17:09.8557636Z [36;1mgrep -q -- "^    --- PASS: TestExecStartupRefusalTable/probe-package-only " "$log" \[0m
+2026-10-15T05:17:09.8558887Z [36;1m  || { echo "::error::TestExecStartupRefusalTable/probe-package-only did not PASS on linux (SKIP?)"; exit 1; }[0m
+2026-10-15T05:17:09.8635480Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:17:09.8635750Z env:
+2026-10-15T05:17:09.8635945Z   Z3_VER: 4.16.0
+2026-10-15T05:17:09.8636282Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:17:09.8636688Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:17:09.8636941Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-10-15T05:17:09.8637333Z   WORLD_EXEC_SRT_NODE_MODULES: /home/runner/work/_temp/srt/node_modules
+2026-10-15T05:17:09.8637721Z   WORLD_EXEC_NODE: /usr/local/bin/node
+2026-10-15T05:17:09.8637989Z ##[endgroup]
+2026-10-15T05:19:02.8726129Z go: downloading github.com/sunholo-data/ailang v0.47.2
+2026-10-15T05:19:02.8727617Z go: downloading modernc.org/sqlite v1.54.0
+2026-10-15T05:19:02.8728532Z go: downloading golang.org/x/sys v0.48.0
+2026-10-15T05:19:02.8729406Z go: downloading modernc.org/libc v1.74.1
+2026-10-15T05:19:02.8730084Z go: downloading github.com/dustin/go-humanize v1.0.1
+2026-10-15T05:19:02.8730704Z go: downloading github.com/google/uuid v1.6.0
+2026-10-15T05:19:02.8731418Z go: downloading modernc.org/mathutil v1.7.1
+2026-10-15T05:19:02.8731971Z go: downloading modernc.org/memory v1.11.0
+2026-10-15T05:19:02.8732777Z go: downloading github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
+2026-10-15T05:19:02.8733580Z === RUN   TestExecSrtStartupProbePasses
+2026-10-15T05:19:02.8735011Z     exec_probe_srt_test.go:25: TIMING ArchiveExecSandbox took 6.861176591s
+2026-10-15T05:19:02.8736096Z     exec_probe_srt_test.go:31: TIMING the startup probe took 2.442197894s
+2026-10-15T05:19:02.8736834Z --- PASS: TestExecSrtStartupProbePasses (9.32s)
+2026-10-15T05:19:02.8737492Z === RUN   TestExecSrtProbeRefusesAPackageOnlySandbox
+2026-10-15T05:19:02.8738762Z     exec_probe_srt_test.go:54: TIMING ArchiveExecSandbox took 218.60495ms
+2026-10-15T05:19:02.8739668Z --- PASS: TestExecSrtProbeRefusesAPackageOnlySandbox (0.99s)
+2026-10-15T05:19:02.8740552Z === RUN   TestExecProbePassThroughShimFailsEveryConfinementArm
+2026-10-15T05:19:02.8742146Z     exec_probe_test.go:179: TIMING ArchiveExecSandbox took 183.308306ms
+2026-10-15T05:19:02.8750073Z     exec_probe_test.go:182: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /tmp/TestExecProbePassThroughShimFailsEveryConfinementArm1919069527/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-ea2360909dca3708: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:39387
+2026-10-15T05:19:02.8757484Z --- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm (1.76s)
+2026-10-15T05:19:02.8758316Z === RUN   TestExecProbeNoopShimFailsArm1
+2026-10-15T05:19:02.8759365Z     exec_probe_test.go:209: TIMING ArchiveExecSandbox took 183.718943ms
+2026-10-15T05:19:02.8760161Z --- PASS: TestExecProbeNoopShimFailsArm1 (0.69s)
+2026-10-15T05:19:02.8760782Z === RUN   TestExecProbeZeroShimFailsArm5
+2026-10-15T05:19:02.8761891Z     exec_probe_test.go:222: TIMING ArchiveExecSandbox took 184.212164ms
+2026-10-15T05:19:02.8762654Z --- PASS: TestExecProbeZeroShimFailsArm5 (1.77s)
+2026-10-15T05:19:02.8763331Z === RUN   TestExecProbeFailingToolchainFailsArm7
+2026-10-15T05:19:02.8764247Z     exec_probe_test.go:230: TIMING ArchiveExecSandbox took 183.913449ms
+2026-10-15T05:19:02.8765051Z --- PASS: TestExecProbeFailingToolchainFailsArm7 (1.77s)
+2026-10-15T05:19:02.8765625Z === RUN   TestExecProbeMissingClientFailsTheRefusalArms
+2026-10-15T05:19:02.8766162Z     exec_probe_test.go:243: TIMING ArchiveExecSandbox took 183.480861ms
+2026-10-15T05:19:02.8766650Z --- PASS: TestExecProbeMissingClientFailsTheRefusalArms (0.71s)
+2026-10-15T05:19:02.8767071Z === RUN   TestQuickstartSection10ProfilesLoad
+2026-10-15T05:19:02.8767438Z --- PASS: TestQuickstartSection10ProfilesLoad (0.02s)
+2026-10-15T05:19:02.8767781Z === RUN   TestExecSrtGoTest
+2026-10-15T05:19:02.8768044Z --- PASS: TestExecSrtGoTest (9.67s)
+2026-10-15T05:19:02.8768334Z === RUN   TestExecSrtExitStatusAndArgv
+2026-10-15T05:19:02.8768654Z --- PASS: TestExecSrtExitStatusAndArgv (1.53s)
+2026-10-15T05:19:02.8769039Z === RUN   TestExecSrtRefusalsSpawnNothing
+2026-10-15T05:19:02.8769376Z --- PASS: TestExecSrtRefusalsSpawnNothing (0.31s)
+2026-10-15T05:19:02.8769712Z === RUN   TestExecSrtConfinementMatrix
+2026-10-15T05:19:02.8770027Z === RUN   TestExecSrtConfinementMatrix/w-sibling
+2026-10-15T05:19:02.8770993Z     handlers_exec_srt_test.go:332: linux /tmp/TestExecSrtConfinementMatrix3171850246/001/workspace/ep2/pwn.txt: token "WORLD-PROBE-REFUSED ENOENT", host "<absent>" -> "<absent>"
+2026-10-15T05:19:02.8772326Z === RUN   TestExecSrtConfinementMatrix/w-home
+2026-10-15T05:19:02.8773199Z     handlers_exec_srt_test.go:332: linux /home/runner/.world-m2-exec-home-6659-1792041497585724032: token "WORLD-PROBE-WROTE", host "<absent>" -> "<absent>"
+2026-10-15T05:19:02.8774205Z === RUN   TestExecSrtConfinementMatrix/w-tmpclaude
+2026-10-15T05:19:02.8775043Z     handlers_exec_srt_test.go:332: linux /tmp/claude/world-m2-6659-1792041497585724032: token "WORLD-PROBE-REFUSED EROFS", host "<absent>" -> "<absent>"
+2026-10-15T05:19:02.8776005Z === RUN   TestExecSrtConfinementMatrix/w-gitptr
+2026-10-15T05:19:02.8777285Z     handlers_exec_srt_test.go:332: linux /tmp/TestExecSrtConfinementMatrix3171850246/001/workspace/ep1/.git: token "WORLD-PROBE-REFUSED EROFS", host "gitdir: /nonexistent/.git/worktrees/ep1\n" -> "gitdir: /nonexistent/.git/worktrees/ep1\n"
+2026-10-15T05:19:02.8778285Z === RUN   TestExecSrtConfinementMatrix/w-github-upper
+2026-10-15T05:19:02.8779275Z     handlers_exec_srt_test.go:332: linux /tmp/TestExecSrtConfinementMatrix3171850246/001/workspace/ep1/.GITHUB/x: token "WORLD-PROBE-REFUSED ENOENT", host "<absent>" -> "<absent>"
+2026-10-15T05:19:02.8780425Z     handlers_exec_srt_test.go:343: not gating on linux: a case-sensitive volume makes .GITHUB a different, non-special dir (V49)
+2026-10-15T05:19:02.8781025Z === RUN   TestExecSrtConfinementMatrix/r-decoy
+2026-10-15T05:19:02.8782536Z     handlers_exec_srt_test.go:332: linux /home/runner/.world-m2-exec-decoy-6659-1792041497585724032: token "WORLD-PROBE-REFUSED ENOENT", host "DECOY-NOT-A-SECRET\n" -> "DECOY-NOT-A-SECRET\n"
+2026-10-15T05:19:02.8783361Z === RUN   TestExecSrtConfinementMatrix/r-sibling
+2026-10-15T05:19:02.8784491Z     handlers_exec_srt_test.go:332: linux /tmp/TestExecSrtConfinementMatrix3171850246/001/workspace/ep2/notes.txt: token "WORLD-PROBE-REFUSED ENOENT", host "SIBLING-EPISODE-FILE\n" -> "SIBLING-EPISODE-FILE\n"
+2026-10-15T05:19:02.8785380Z --- PASS: TestExecSrtConfinementMatrix (5.00s)
+2026-10-15T05:19:02.8785823Z     --- PASS: TestExecSrtConfinementMatrix/w-sibling (0.55s)
+2026-10-15T05:19:02.8786282Z     --- PASS: TestExecSrtConfinementMatrix/w-home (0.46s)
+2026-10-15T05:19:02.8786745Z     --- PASS: TestExecSrtConfinementMatrix/w-tmpclaude (0.47s)
+2026-10-15T05:19:02.8787220Z     --- PASS: TestExecSrtConfinementMatrix/w-gitptr (0.46s)
+2026-10-15T05:19:02.8787694Z     --- PASS: TestExecSrtConfinementMatrix/w-github-upper (0.56s)
+2026-10-15T05:19:02.8788163Z     --- PASS: TestExecSrtConfinementMatrix/r-decoy (0.55s)
+2026-10-15T05:19:02.8788625Z     --- PASS: TestExecSrtConfinementMatrix/r-sibling (0.46s)
+2026-10-15T05:19:02.8789004Z === RUN   TestExecSrtGitHeadIsNotWritable
+2026-10-15T05:19:02.8789348Z --- PASS: TestExecSrtGitHeadIsNotWritable (0.87s)
+2026-10-15T05:19:02.8789693Z === RUN   TestExecSrtTimeoutKillsTheGroup
+2026-10-15T05:19:02.8790033Z --- PASS: TestExecSrtTimeoutKillsTheGroup (2.95s)
+2026-10-15T05:19:02.8790398Z === RUN   TestExecSrtPycacheStaysOutOfTheWorktree
+2026-10-15T05:19:02.8790790Z --- PASS: TestExecSrtPycacheStaysOutOfTheWorktree (0.81s)
+2026-10-15T05:19:02.8791448Z === RUN   TestExecSrtProfileEnvNeverReachesTheHostNode
+2026-10-15T05:19:02.8791889Z --- PASS: TestExecSrtProfileEnvNeverReachesTheHostNode (1.21s)
+2026-10-15T05:19:02.8792250Z PASS
+2026-10-15T05:19:02.8792542Z ok  	github.com/sunholo-data/ailang-world/host/broker	39.384s
+2026-10-15T05:19:02.8792904Z === RUN   TestExecSrtMCPEndToEnd
+2026-10-15T05:19:02.8797898Z     exec_e2e_srt_test.go:149: workspace-exec test: map[argv:[printf [%s] -run=TestX a] duration_ms:210 exit_code:0 limit:<nil> profile:map[argv0_sha256:e6b0e5cee964f1bbee2111700cabb1b1c9d15821b062f197dd8efa2993d202ab command:test digest:sha256:a1ce9fbbeef30ee600c242afe488ee9218235997fffb44c75a4bb00c9a13f96f project:proj] sandbox:map[cli_sha256:3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e network:none read_fence:true runtime:@anthropic-ai/sandbox-runtime settings_digest:sha256:fa90ac2aad8c6efecbfe651a21a45c4a7d709c640caad5f2a2079a3a104a963e version:0.0.78] stderr: stderr_bytes:0 stderr_sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stderr_truncated:false stdout:[-run=TestX][a] stdout_bytes:15 stdout_sha256:d19a47adb548cb3cf679a090358ff973f9021717a33687c0bf275a6553cff96e stdout_truncated:false timed_out:false world:map[effects:[map[id:e1 record:sha256:1196df2f9e0a2300063cf9b954b220cbacaedd477c045fd625a115b95da38d69 status:ok]] plan:sha256:f1396d83906becbd8ce27c435d8a81388bfaff0bc8aa26d3f87adb8a7f55824f]] (486 ms)
+2026-10-15T05:19:02.8802333Z --- PASS: TestExecSrtMCPEndToEnd (7.43s)
+2026-10-15T05:19:02.8802783Z === RUN   TestExecSrtMCPGrantAndBudget
+2026-10-15T05:19:02.8803111Z --- PASS: TestExecSrtMCPGrantAndBudget (7.09s)
+2026-10-15T05:19:02.8803438Z === RUN   TestExecSrtReplayIsByteEqual
+2026-10-15T05:19:02.8803751Z --- PASS: TestExecSrtReplayIsByteEqual (7.09s)
+2026-10-15T05:19:02.8804080Z === RUN   TestExecStartupRefusalTable
+2026-10-15T05:19:02.8804406Z === RUN   TestExecStartupRefusalTable/argv0-missing
+2026-10-15T05:19:02.8806130Z     exec_startup_test.go:454: argv0-missing: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableargv0-missing1866438029/001/outside/profiles/proj.json: exec profile: commands.test.argv: argv[0] "cargo" does not resolve on path [/usr/local/bin /usr/bin /bin] to an executable
+2026-10-15T05:19:02.8807480Z === RUN   TestExecStartupRefusalTable/env-bad-name
+2026-10-15T05:19:02.8808958Z     exec_startup_test.go:454: env-bad-name: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableenv-bad-name3254727076/001/outside/profiles/proj.json: exec profile: env: "A-B" is not a variable name (^[A-Za-z_][A-Za-z0-9_]*$)
+2026-10-15T05:19:02.8810113Z === RUN   TestExecStartupRefusalTable/env-world-owned
+2026-10-15T05:19:02.8812016Z     exec_startup_test.go:454: env-world-owned: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableenv-world-owned2850393924/001/outside/profiles/proj.json: exec profile: env: "HTTPS_PROXY" is World-owned; a profile cannot set it
+2026-10-15T05:19:02.8813230Z === RUN   TestExecStartupRefusalTable/episode-bad-id
+2026-10-15T05:19:02.8814367Z     exec_startup_test.go:454: episode-bad-id: daemon startup failed at config: the exec configuration is refused: --exec-episode-project ../x=proj: episode "../x" is outside the episode grammar ^[a-z0-9][a-z0-9-]{0,63}$
+2026-10-15T05:19:02.8815325Z === RUN   TestExecStartupRefusalTable/episode-no-project
+2026-10-15T05:19:02.8816398Z     exec_startup_test.go:454: episode-no-project: daemon startup failed at config: the exec configuration is refused: --exec-episode-project ep1=other: names no configured profile (projects: proj)
+2026-10-15T05:19:02.8817247Z === RUN   TestExecStartupRefusalTable/episode-not-pair
+2026-10-15T05:19:02.8818145Z     exec_startup_test.go:454: episode-not-pair: daemon startup failed at config: the exec configuration is refused: --exec-episode-project ep1: is not EP=PROJECT
+2026-10-15T05:19:02.8818871Z === RUN   TestExecStartupRefusalTable/episode-twice
+2026-10-15T05:19:02.8819830Z     exec_startup_test.go:454: episode-twice: daemon startup failed at config: the exec configuration is refused: --exec-episode-project ep1=proj: maps episode "ep1" a second time
+2026-10-15T05:19:02.8820641Z === RUN   TestExecStartupRefusalTable/episode-without-profile
+2026-10-15T05:19:02.8822445Z     exec_startup_test.go:454: episode-without-profile: daemon startup failed at config: the exec configuration is refused: --exec-episode-project: needs --exec-profile (it configures workspace-exec, which is off without a profile)
+2026-10-15T05:19:02.8823464Z === RUN   TestExecStartupRefusalTable/max-output-without-profile
+2026-10-15T05:19:02.8824746Z     exec_startup_test.go:454: max-output-without-profile: daemon startup failed at config: the exec configuration is refused: --exec-max-output-bytes: needs --exec-profile (it configures workspace-exec, which is off without a profile)
+2026-10-15T05:19:02.8825744Z === RUN   TestExecStartupRefusalTable/max-output-zero
+2026-10-15T05:19:02.8826642Z     exec_startup_test.go:454: max-output-zero: daemon startup failed at config: the exec configuration is refused: --exec-max-output-bytes -1: must be at least 1
+2026-10-15T05:19:02.8827591Z === RUN   TestExecStartupRefusalTable/no-sandbox
+2026-10-15T05:19:02.8828762Z     exec_startup_test.go:454: no-sandbox: daemon startup failed at config: the exec configuration is refused: --exec-sandbox: is required with --exec-profile: an installed @anthropic-ai/sandbox-runtime@0.0.78 (node_modules)
+2026-10-15T05:19:02.8829802Z === RUN   TestExecStartupRefusalTable/no-workspace-tools
+2026-10-15T05:19:02.8831098Z     exec_startup_test.go:454: no-workspace-tools: daemon startup failed at config: the exec configuration is refused: the --exec-* flags need the workspace tools (--workspace-root and --tool-ailang-bin): workspace-exec runs in an episode worktree
+2026-10-15T05:19:02.8832571Z === RUN   TestExecStartupRefusalTable/node-absent
+2026-10-15T05:19:02.8834304Z     exec_startup_test.go:454: node-absent: daemon startup failed at config: the exec configuration is refused: --exec-node /tmp/TestExecStartupRefusalTablenode-absent2305433463/001/outside/no-such-node: does not resolve: lstat /tmp/TestExecStartupRefusalTablenode-absent2305433463/001/outside/no-such-node: no such file or directory
+2026-10-15T05:19:02.8835656Z === RUN   TestExecStartupRefusalTable/node-in-cache
+2026-10-15T05:19:02.8838361Z     exec_startup_test.go:454: node-in-cache: daemon startup failed at config: the exec configuration is refused: --exec-node /tmp/TestExecStartupRefusalTablenode-in-cache77850357/001/state/exec-cache/ep1/proj/node: resolves to /tmp/TestExecStartupRefusalTablenode-in-cache77850357/001/state/exec-cache/ep1/proj/node, inside an exec cache /tmp/TestExecStartupRefusalTablenode-in-cache77850357/001/state/exec-cache: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.8840433Z === RUN   TestExecStartupRefusalTable/node-in-root
+2026-10-15T05:19:02.8843053Z     exec_startup_test.go:454: node-in-root: daemon startup failed at config: the exec configuration is refused: --exec-node /tmp/TestExecStartupRefusalTablenode-in-root1766154739/001/ws/bin/node: resolves to /tmp/TestExecStartupRefusalTablenode-in-root1766154739/001/ws/bin/node, inside the workspace root /tmp/TestExecStartupRefusalTablenode-in-root1766154739/001/ws: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.8844967Z === RUN   TestExecStartupRefusalTable/node-in-state
+2026-10-15T05:19:02.8847460Z     exec_startup_test.go:454: node-in-state: daemon startup failed at config: the exec configuration is refused: --exec-node /tmp/TestExecStartupRefusalTablenode-in-state1334323228/001/state/bin/node: resolves to /tmp/TestExecStartupRefusalTablenode-in-state1334323228/001/state/bin/node, inside the state dir /tmp/TestExecStartupRefusalTablenode-in-state1334323228/001/state: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.8849408Z === RUN   TestExecStartupRefusalTable/node-too-old
+2026-10-15T05:19:02.8850694Z     exec_startup_test.go:454: node-too-old: daemon startup failed at config: the exec configuration is refused: --exec-node /tmp/TestExecStartupRefusalTablenode-too-old2633111546/001/outside/old/node: version v18.19.0 is below 20.11 (srt's engines)
+2026-10-15T05:19:02.8852035Z === RUN   TestExecStartupRefusalTable/node-without-profile
+2026-10-15T05:19:02.8853200Z     exec_startup_test.go:454: node-without-profile: daemon startup failed at config: the exec configuration is refused: --exec-node: needs --exec-profile (it configures workspace-exec, which is off without a profile)
+2026-10-15T05:19:02.8854101Z === RUN   TestExecStartupRefusalTable/probe-missing
+2026-10-15T05:19:02.8855753Z     exec_startup_test.go:454: probe-missing: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableprobe-missing3478901695/001/outside/profiles/proj.json: exec profile: probe: argv[0] "cargo" does not resolve on path [/usr/local/bin /usr/bin /bin] to an executable
+2026-10-15T05:19:02.8857197Z === RUN   TestExecStartupRefusalTable/probe-no-client
+2026-10-15T05:19:02.8865357Z     exec_startup_test.go:454: probe-no-client: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (5 of 7 arms): arm1-write-inside: a write inside the scratch worktree: token "", read back "" (exit 127; stderr "/usr/bin/env: '/tmp/TestExecStartupRefusalTableprobe-no-client1307248779/001/outside/no-such-node': No such file or directory"); arm2-write-outside: a write to a sibling episode: token "" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=false (exit 127; stderr "/usr/bin/env: '/tmp/TestExecStartupRefusalTableprobe-no-client1307248779/001/outside/no-such-node': No such file or directory"); arm3-read-fence: a read of decoy /tmp/TestExecStartupRefusalTableprobe-no-client1307248779/001/home/.ailang-worldd-exec-probe-decoy: token "", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 127; stderr "/usr/bin/env: '/tmp/TestExecStartupRefusalTableprobe-no-client1307248779/001/outside/no-such-node': No such file or directory"); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-198985039331b0af: token "", on the host: present=false (exit 127; stderr "/usr/bin/env: '/tmp/TestExecStartupRefusalTableprobe-no-client1307248779/001/outside/no-such-node': No such file or directory"); arm6-network: a raw connect to World's live listener: token "", accepts 1 (want a refusal and still 1; exit 127; stderr "/usr/bin/env: '/tmp/TestExecStartupRefusalTableprobe-no-client1307248779/001/outside/no-such-node': No such file or directory"); a connect through srt's proxy environment: token "", accepts 1 (want a refusal and still 1; exit 127; stderr ""); reverse leg: no token from the child's listener (""; exit 127; stderr "")
+2026-10-15T05:19:02.8871804Z === RUN   TestExecStartupRefusalTable/probe-noop
+2026-10-15T05:19:02.8876983Z     exec_startup_test.go:454: probe-noop: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (6 of 7 arms): arm1-write-inside: a write inside the scratch worktree: token "", read back "" (exit 0; stderr ""); arm2-write-outside: a write to a sibling episode: token "" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=false (exit 0; stderr ""); arm3-read-fence: a read of decoy /tmp/TestExecStartupRefusalTableprobe-noop1716401601/001/home/.ailang-worldd-exec-probe-decoy: token "", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-9570d9595dbf9c91: token "", on the host: present=false (exit 0; stderr ""); arm5-exit-status: a TERM self-kill reported exit 0; stderr "", want exit 143; arm6-network: a raw connect to World's live listener: token "", accepts 1 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "", accepts 1 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no token from the child's listener (""; exit 0; stderr "")
+2026-10-15T05:19:02.8881069Z === RUN   TestExecStartupRefusalTable/probe-package-only
+2026-10-15T05:19:02.8898943Z     exec_startup_test.go:454: probe-package-only: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (7 of 7 arms): arm1-write-inside: a write inside the scratch worktree: token "", read back "" (exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); arm2-write-outside: a write to a sibling episode: token "" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=false (exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); arm3-read-fence: a read of decoy /tmp/TestExecStartupRefusalTableprobe-package-only2511432133/001/home/.ailang-worldd-exec-probe-decoy: token "", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-75c9a9eb7cfff94b: token "", on the host: present=false (exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); arm5-exit-status: a TERM self-kill reported exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…", want exit 143; arm6-network: a raw connect to World's live listener: token "", accepts 1 (want a refusal and still 1; exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); a connect through srt's proxy environment: token "", accepts 1 (want a refusal and still 1; exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); reverse leg: no token from the child's listener (""; exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"); arm7-toolchain: probe "sh -c echo toolchain-ok": exit 1; stderr "node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' imported from /tmp/TestExecStartupRefusalTablep…"; stdout ""
+2026-10-15T05:19:02.8911486Z === RUN   TestExecStartupRefusalTable/probe-passthrough
+2026-10-15T05:19:02.8917350Z     exec_startup_test.go:454: probe-passthrough: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /tmp/TestExecStartupRefusalTableprobe-passthrough183967689/001/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-90aafa71078ba55f: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:37887
+2026-10-15T05:19:02.8921538Z === RUN   TestExecStartupRefusalTable/probe-toolchain
+2026-10-15T05:19:02.8926943Z     exec_startup_test.go:454: probe-toolchain: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (5 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /tmp/TestExecStartupRefusalTableprobe-toolchain513107817/001/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-1bb7127bc7e8dc31: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:35287; arm7-toolchain: probe "sh -c exit 3": exit 3; stderr ""; stdout ""
+2026-10-15T05:19:02.8931498Z === RUN   TestExecStartupRefusalTable/probe-zero
+2026-10-15T05:19:02.8936775Z     exec_startup_test.go:454: probe-zero: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (5 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /tmp/TestExecStartupRefusalTableprobe-zero786276369/001/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS|ENOENT (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-4abbefe22e6b682e: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm5-exit-status: a TERM self-kill reported exit 0; stderr "Terminated", want exit 143; arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:36543
+2026-10-15T05:19:02.8945096Z === RUN   TestExecStartupRefusalTable/profile-absent
+2026-10-15T05:19:02.8947700Z     exec_startup_test.go:454: profile-absent: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableprofile-absent3150809187/001/outside/nope.json: does not exist
+2026-10-15T05:19:02.8949441Z === RUN   TestExecStartupRefusalTable/profile-in-cache
+2026-10-15T05:19:02.8952755Z     exec_startup_test.go:454: profile-in-cache: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableprofile-in-cache268025363/001/state/exec-cache/ep1/proj/proj.json: resolves to /tmp/TestExecStartupRefusalTableprofile-in-cache268025363/001/state/exec-cache/ep1/proj/proj.json, inside an exec cache /tmp/TestExecStartupRefusalTableprofile-in-cache268025363/001/state/exec-cache: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.8955155Z === RUN   TestExecStartupRefusalTable/profile-in-root
+2026-10-15T05:19:02.8972027Z     exec_startup_test.go:454: profile-in-root: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableprofile-in-root3751860442/001/ws/proj.json: resolves to /tmp/TestExecStartupRefusalTableprofile-in-root3751860442/001/ws/proj.json, inside the workspace root /tmp/TestExecStartupRefusalTableprofile-in-root3751860442/001/ws: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.8975424Z === RUN   TestExecStartupRefusalTable/profile-in-state
+2026-10-15T05:19:02.8980989Z     exec_startup_test.go:454: profile-in-state: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableprofile-in-state3074634769/001/state/proj.json: resolves to /tmp/TestExecStartupRefusalTableprofile-in-state3074634769/001/state/proj.json, inside the state dir /tmp/TestExecStartupRefusalTableprofile-in-state3074634769/001/state: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.8983744Z === RUN   TestExecStartupRefusalTable/project-twice
+2026-10-15T05:19:02.8985118Z     exec_startup_test.go:454: project-twice: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableproject-twice4267109449/001/outside/profiles/b.json: project "proj" is configured twice
+2026-10-15T05:19:02.8986183Z === RUN   TestExecStartupRefusalTable/readroot-decoy
+2026-10-15T05:19:02.8988632Z     exec_startup_test.go:454: readroot-decoy: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTablereadroot-decoy3307291438/001/outside/profiles/proj.json: exec profile: read_roots: "/tmp/TestExecStartupRefusalTablereadroot-decoy3307291438/001/home/.ailang-worldd-exec-probe-decoy" equals or contains the probe decoy /tmp/TestExecStartupRefusalTablereadroot-decoy3307291438/001/home/.ailang-worldd-exec-probe-decoy
+2026-10-15T05:19:02.8990520Z === RUN   TestExecStartupRefusalTable/readroot-home
+2026-10-15T05:19:02.8993002Z     exec_startup_test.go:454: readroot-home: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTablereadroot-home4183313840/001/outside/profiles/proj.json: exec profile: read_roots: "/tmp/TestExecStartupRefusalTablereadroot-home4183313840/001/home" equals or is an ancestor of the operator HOME /tmp/TestExecStartupRefusalTablereadroot-home4183313840/001/home, which it would re-open
+2026-10-15T05:19:02.8994792Z === RUN   TestExecStartupRefusalTable/readroot-home-symlink
+2026-10-15T05:19:02.8997740Z     exec_startup_test.go:454: readroot-home-symlink: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTablereadroot-home-symlink2997136401/001/outside/profiles/proj.json: exec profile: read_roots: "/tmp/TestExecStartupRefusalTablereadroot-home-symlink2997136401/001/outside/homelink" (its realpath "/tmp/TestExecStartupRefusalTablereadroot-home-symlink2997136401/001/home") equals or is an ancestor of the operator HOME /tmp/TestExecStartupRefusalTablereadroot-home-symlink2997136401/001/home, which it would re-open
+2026-10-15T05:19:02.9000010Z === RUN   TestExecStartupRefusalTable/readroot-in-state
+2026-10-15T05:19:02.9002538Z     exec_startup_test.go:454: readroot-in-state: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTablereadroot-in-state3019268676/001/outside/profiles/proj.json: exec profile: read_roots: "/tmp/TestExecStartupRefusalTablereadroot-in-state3019268676/001/state" equals or is an ancestor of the state dir /tmp/TestExecStartupRefusalTablereadroot-in-state3019268676/001/state, which it would re-open
+2026-10-15T05:19:02.9004378Z === RUN   TestExecStartupRefusalTable/readroot-root-ancestor
+2026-10-15T05:19:02.9006807Z     exec_startup_test.go:454: readroot-root-ancestor: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTablereadroot-root-ancestor2800654999/001/outside/profiles/proj.json: exec profile: read_roots: "/tmp/TestExecStartupRefusalTablereadroot-root-ancestor2800654999/001" equals or is an ancestor of the operator HOME /tmp/TestExecStartupRefusalTablereadroot-root-ancestor2800654999/001/home, which it would re-open
+2026-10-15T05:19:02.9008674Z === RUN   TestExecStartupRefusalTable/readroot-slash
+2026-10-15T05:19:02.9010012Z     exec_startup_test.go:454: readroot-slash: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTablereadroot-slash1681467955/001/outside/profiles/proj.json: exec profile: read_roots: "/" is "/"
+2026-10-15T05:19:02.9011537Z === RUN   TestExecStartupRefusalTable/root-escapes
+2026-10-15T05:19:02.9013222Z     exec_startup_test.go:454: root-escapes: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableroot-escapes1711990244/001/outside/profiles/proj.json: exec profile: root: "../other" is not a clean relative path inside the worktree
+2026-10-15T05:19:02.9014445Z === RUN   TestExecStartupRefusalTable/sandbox-in-cache
+2026-10-15T05:19:02.9017349Z     exec_startup_test.go:454: sandbox-in-cache: daemon startup failed at config: the exec configuration is refused: --exec-sandbox /tmp/TestExecStartupRefusalTablesandbox-in-cache3086222742/001/state/exec-cache/ep1/proj/node_modules: resolves to /tmp/TestExecStartupRefusalTablesandbox-in-cache3086222742/001/state/exec-cache/ep1/proj/node_modules, inside an exec cache /tmp/TestExecStartupRefusalTablesandbox-in-cache3086222742/001/state/exec-cache: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.9019591Z === RUN   TestExecStartupRefusalTable/sandbox-in-root
+2026-10-15T05:19:02.9022478Z     exec_startup_test.go:454: sandbox-in-root: daemon startup failed at config: the exec configuration is refused: --exec-sandbox /tmp/TestExecStartupRefusalTablesandbox-in-root2331841898/001/ws/tools/node_modules: resolves to /tmp/TestExecStartupRefusalTablesandbox-in-root2331841898/001/ws/tools/node_modules, inside the workspace root /tmp/TestExecStartupRefusalTablesandbox-in-root2331841898/001/ws: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.9024871Z === RUN   TestExecStartupRefusalTable/sandbox-in-state
+2026-10-15T05:19:02.9028343Z     exec_startup_test.go:454: sandbox-in-state: daemon startup failed at config: the exec configuration is refused: --exec-sandbox /tmp/TestExecStartupRefusalTablesandbox-in-state1109938771/001/state/tools/node_modules: resolves to /tmp/TestExecStartupRefusalTablesandbox-in-state1109938771/001/state/tools/node_modules, inside the state dir /tmp/TestExecStartupRefusalTablesandbox-in-state1109938771/001/state: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.9030433Z === RUN   TestExecStartupRefusalTable/sandbox-not-srt
+2026-10-15T05:19:02.9032577Z     exec_startup_test.go:454: sandbox-not-srt: daemon startup failed at config: the exec configuration is refused: --exec-sandbox /tmp/TestExecStartupRefusalTablesandbox-not-srt778442205/001/outside: is neither a node_modules holding @anthropic-ai/sandbox-runtime nor that package's directory (install it with npm install @anthropic-ai/sandbox-runtime@0.0.78)
+2026-10-15T05:19:02.9034028Z === RUN   TestExecStartupRefusalTable/sandbox-other-digest
+2026-10-15T05:19:02.9036117Z     exec_startup_test.go:454: sandbox-other-digest: daemon startup failed at config: the exec configuration is refused: --exec-sandbox /tmp/TestExecStartupRefusalTablesandbox-other-digest1789470266/001/outside/srt/node_modules: broker: exec sandbox: dist/cli.js sha256 97b8d14c57d0d21e2c23a84234e353cc77665a36de82af36b81daa4065f43c98 is not the pinned 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e
+2026-10-15T05:19:02.9037771Z === RUN   TestExecStartupRefusalTable/sandbox-other-version
+2026-10-15T05:19:02.9039426Z     exec_startup_test.go:454: sandbox-other-version: daemon startup failed at config: the exec configuration is refused: --exec-sandbox /tmp/TestExecStartupRefusalTablesandbox-other-version3665770996/001/outside/srt/node_modules: broker: exec sandbox: @anthropic-ai/sandbox-runtime is 0.0.77; only 0.0.78 is measured (M0)
+2026-10-15T05:19:02.9040905Z === RUN   TestExecStartupRefusalTable/sandbox-without-profile
+2026-10-15T05:19:02.9042399Z     exec_startup_test.go:454: sandbox-without-profile: daemon startup failed at config: the exec configuration is refused: --exec-sandbox: needs --exec-profile (it configures workspace-exec, which is off without a profile)
+2026-10-15T05:19:02.9043450Z === RUN   TestExecStartupRefusalTable/seed-in-root
+2026-10-15T05:19:02.9046096Z     exec_startup_test.go:454: seed-in-root: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableseed-in-root630714070/001/outside/profiles/proj.json caches.GOCACHE.seed: resolves to /tmp/TestExecStartupRefusalTableseed-in-root630714070/001/ws/seed, inside the workspace root /tmp/TestExecStartupRefusalTableseed-in-root630714070/001/ws: the confinement stack (srt, node, libnode, profiles, cache seeds) must lie outside the workspace root, the state dir and every exec cache
+2026-10-15T05:19:02.9048138Z === RUN   TestExecStartupRefusalTable/timeout-cap
+2026-10-15T05:19:02.9050022Z     exec_startup_test.go:454: timeout-cap: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTabletimeout-cap780202759/001/outside/profiles/proj.json: exec profile: timeout_ms: 9001 is outside 1–9000 (HandlerCap − 1 000 ms, D-140-4)
+2026-10-15T05:19:02.9051483Z === RUN   TestExecStartupRefusalTable/unknown-key
+2026-10-15T05:19:02.9052852Z     exec_startup_test.go:454: unknown-key: daemon startup failed at config: the exec configuration is refused: --exec-profile /tmp/TestExecStartupRefusalTableunknown-key4157825821/001/outside/profiles/proj.json: exec profile: profile: unknown key "network"
+2026-10-15T05:19:02.9053934Z --- PASS: TestExecStartupRefusalTable (8.46s)
+2026-10-15T05:19:02.9054407Z     --- PASS: TestExecStartupRefusalTable/argv0-missing (0.02s)
+2026-10-15T05:19:02.9054899Z     --- PASS: TestExecStartupRefusalTable/env-bad-name (0.02s)
+2026-10-15T05:19:02.9055399Z     --- PASS: TestExecStartupRefusalTable/env-world-owned (0.02s)
+2026-10-15T05:19:02.9055894Z     --- PASS: TestExecStartupRefusalTable/episode-bad-id (0.02s)
+2026-10-15T05:19:02.9056411Z     --- PASS: TestExecStartupRefusalTable/episode-no-project (0.02s)
+2026-10-15T05:19:02.9056926Z     --- PASS: TestExecStartupRefusalTable/episode-not-pair (0.02s)
+2026-10-15T05:19:02.9057420Z     --- PASS: TestExecStartupRefusalTable/episode-twice (0.02s)
+2026-10-15T05:19:02.9057949Z     --- PASS: TestExecStartupRefusalTable/episode-without-profile (0.01s)
+2026-10-15T05:19:02.9058539Z     --- PASS: TestExecStartupRefusalTable/max-output-without-profile (0.02s)
+2026-10-15T05:19:02.9059074Z     --- PASS: TestExecStartupRefusalTable/max-output-zero (0.01s)
+2026-10-15T05:19:02.9059545Z     --- PASS: TestExecStartupRefusalTable/no-sandbox (0.01s)
+2026-10-15T05:19:02.9060037Z     --- PASS: TestExecStartupRefusalTable/no-workspace-tools (0.01s)
+2026-10-15T05:19:02.9060526Z     --- PASS: TestExecStartupRefusalTable/node-absent (0.01s)
+2026-10-15T05:19:02.9060992Z     --- PASS: TestExecStartupRefusalTable/node-in-cache (0.01s)
+2026-10-15T05:19:02.9061765Z     --- PASS: TestExecStartupRefusalTable/node-in-root (0.01s)
+2026-10-15T05:19:02.9062250Z     --- PASS: TestExecStartupRefusalTable/node-in-state (0.01s)
+2026-10-15T05:19:02.9062734Z     --- PASS: TestExecStartupRefusalTable/node-too-old (0.02s)
+2026-10-15T05:19:02.9063239Z     --- PASS: TestExecStartupRefusalTable/node-without-profile (0.01s)
+2026-10-15T05:19:02.9063740Z     --- PASS: TestExecStartupRefusalTable/probe-missing (0.02s)
+2026-10-15T05:19:02.9064224Z     --- PASS: TestExecStartupRefusalTable/probe-no-client (0.72s)
+2026-10-15T05:19:02.9064712Z     --- PASS: TestExecStartupRefusalTable/probe-noop (0.70s)
+2026-10-15T05:19:02.9065210Z     --- PASS: TestExecStartupRefusalTable/probe-package-only (0.99s)
+2026-10-15T05:19:02.9065737Z     --- PASS: TestExecStartupRefusalTable/probe-passthrough (1.78s)
+2026-10-15T05:19:02.9066247Z     --- PASS: TestExecStartupRefusalTable/probe-toolchain (1.79s)
+2026-10-15T05:19:02.9066881Z     --- PASS: TestExecStartupRefusalTable/probe-zero (1.78s)
+2026-10-15T05:19:02.9067354Z     --- PASS: TestExecStartupRefusalTable/profile-absent (0.02s)
+2026-10-15T05:19:02.9067846Z     --- PASS: TestExecStartupRefusalTable/profile-in-cache (0.02s)
+2026-10-15T05:19:02.9068454Z     --- PASS: TestExecStartupRefusalTable/profile-in-root (0.02s)
+2026-10-15T05:19:02.9068944Z     --- PASS: TestExecStartupRefusalTable/profile-in-state (0.02s)
+2026-10-15T05:19:02.9069425Z     --- PASS: TestExecStartupRefusalTable/project-twice (0.02s)
+2026-10-15T05:19:02.9069900Z     --- PASS: TestExecStartupRefusalTable/readroot-decoy (0.02s)
+2026-10-15T05:19:02.9070380Z     --- PASS: TestExecStartupRefusalTable/readroot-home (0.02s)
+2026-10-15T05:19:02.9070892Z     --- PASS: TestExecStartupRefusalTable/readroot-home-symlink (0.02s)
+2026-10-15T05:19:02.9071563Z     --- PASS: TestExecStartupRefusalTable/readroot-in-state (0.02s)
+2026-10-15T05:19:02.9072094Z     --- PASS: TestExecStartupRefusalTable/readroot-root-ancestor (0.02s)
+2026-10-15T05:19:02.9072622Z     --- PASS: TestExecStartupRefusalTable/readroot-slash (0.02s)
+2026-10-15T05:19:02.9073098Z     --- PASS: TestExecStartupRefusalTable/root-escapes (0.02s)
+2026-10-15T05:19:02.9073581Z     --- PASS: TestExecStartupRefusalTable/sandbox-in-cache (0.02s)
+2026-10-15T05:19:02.9074074Z     --- PASS: TestExecStartupRefusalTable/sandbox-in-root (0.02s)
+2026-10-15T05:19:02.9074569Z     --- PASS: TestExecStartupRefusalTable/sandbox-in-state (0.02s)
+2026-10-15T05:19:02.9075058Z     --- PASS: TestExecStartupRefusalTable/sandbox-not-srt (0.02s)
+2026-10-15T05:19:02.9075567Z     --- PASS: TestExecStartupRefusalTable/sandbox-other-digest (0.02s)
+2026-10-15T05:19:02.9076108Z     --- PASS: TestExecStartupRefusalTable/sandbox-other-version (0.02s)
+2026-10-15T05:19:02.9076668Z     --- PASS: TestExecStartupRefusalTable/sandbox-without-profile (0.01s)
+2026-10-15T05:19:02.9077178Z     --- PASS: TestExecStartupRefusalTable/seed-in-root (0.02s)
+2026-10-15T05:19:02.9077649Z     --- PASS: TestExecStartupRefusalTable/timeout-cap (0.02s)
+2026-10-15T05:19:02.9078122Z     --- PASS: TestExecStartupRefusalTable/unknown-key (0.02s)
+2026-10-15T05:19:02.9078446Z PASS
+2026-10-15T05:19:02.9078737Z ok  	github.com/sunholo-data/ailang-world/host/daemon	30.082s
+2026-10-15T05:19:02.9110425Z ##[group]Run set -euo pipefail
+2026-10-15T05:19:02.9110764Z [36;1mset -euo pipefail[0m
+2026-10-15T05:19:02.9111068Z [36;1m: "${WORLD_EXEC_NODE:?WORLD_EXEC_NODE is required}"[0m
+2026-10-15T05:19:02.9111640Z [36;1m[ -x "$WORLD_EXEC_NODE" ][0m
+2026-10-15T05:19:02.9111977Z [36;1mlog="$RUNNER_TEMP/workbench-live-verbose.log"[0m
+2026-10-15T05:19:02.9112763Z [36;1mgo test -race -count=1 -timeout 60s -v ./host/workbench ./host/daemon -run '^(TestLiveScriptPure|TestLiveScriptAssetNonEmpty|TestLiveScriptContract)$' >"$log" 2>&1[0m
+2026-10-15T05:19:02.9113474Z [36;1mcat "$log"[0m
+2026-10-15T05:19:02.9113875Z [36;1mfor t in TestLiveScriptPure TestLiveScriptAssetNonEmpty TestLiveScriptContract; do[0m
+2026-10-15T05:19:02.9114498Z [36;1m  grep -q -- "^--- PASS: $t " "$log" || { echo "$t did not PASS (SKIP or zero tests)"; exit 1; }[0m
+2026-10-15T05:19:02.9114934Z [36;1mdone[0m
+2026-10-15T05:19:02.9176095Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:19:02.9176348Z env:
+2026-10-15T05:19:02.9176579Z   Z3_VER: 4.16.0
+2026-10-15T05:19:02.9176911Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:19:02.9177309Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:19:02.9177565Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-10-15T05:19:02.9177944Z   WORLD_EXEC_SRT_NODE_MODULES: /home/runner/work/_temp/srt/node_modules
+2026-10-15T05:19:02.9178320Z   WORLD_EXEC_NODE: /usr/local/bin/node
+2026-10-15T05:19:02.9178578Z ##[endgroup]
+2026-10-15T05:19:48.7841378Z === RUN   TestLiveScriptAssetNonEmpty
+2026-10-15T05:19:48.7842066Z --- PASS: TestLiveScriptAssetNonEmpty (0.00s)
+2026-10-15T05:19:48.7842654Z === RUN   TestLiveScriptPure
+2026-10-15T05:19:48.7843175Z --- PASS: TestLiveScriptPure (0.79s)
+2026-10-15T05:19:48.7844032Z PASS
+2026-10-15T05:19:48.7844521Z ok  	github.com/sunholo-data/ailang-world/host/workbench	1.813s
+2026-10-15T05:19:48.7845028Z === RUN   TestLiveScriptContract
+2026-10-15T05:19:48.7845446Z     workbench_live_test.go:376: REST commit 0: 200
+2026-10-15T05:19:48.7845814Z === RUN   TestLiveScriptContract/empty
+2026-10-15T05:19:48.7846123Z === RUN   TestLiveScriptContract/home
+2026-10-15T05:19:48.7846421Z === RUN   TestLiveScriptContract/entry
+2026-10-15T05:19:48.7846715Z === RUN   TestLiveScriptContract/object
+2026-10-15T05:19:48.7847035Z --- PASS: TestLiveScriptContract (0.14s)
+2026-10-15T05:19:48.7847421Z     --- PASS: TestLiveScriptContract/empty (0.00s)
+2026-10-15T05:19:48.7847825Z     --- PASS: TestLiveScriptContract/home (0.01s)
+2026-10-15T05:19:48.7848220Z     --- PASS: TestLiveScriptContract/entry (0.01s)
+2026-10-15T05:19:48.7848625Z     --- PASS: TestLiveScriptContract/object (0.01s)
+2026-10-15T05:19:48.7848920Z PASS
+2026-10-15T05:19:48.7849198Z ok  	github.com/sunholo-data/ailang-world/host/daemon	1.157s
+2026-10-15T05:19:48.7916843Z ##[group]Run ./scripts/verify_go.sh
+2026-10-15T05:19:48.7917164Z [36;1m./scripts/verify_go.sh[0m
+2026-10-15T05:19:48.7979023Z shell: /usr/bin/bash -e {0}
+2026-10-15T05:19:48.7979276Z env:
+2026-10-15T05:19:48.7979459Z   Z3_VER: 4.16.0
+2026-10-15T05:19:48.7979812Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-10-15T05:19:48.7980212Z   GOTOOLCHAIN: go1.26.6
+2026-10-15T05:19:48.7980466Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-10-15T05:19:48.7980844Z   WORLD_EXEC_SRT_NODE_MODULES: /home/runner/work/_temp/srt/node_modules
+2026-10-15T05:19:48.7981526Z   WORLD_EXEC_NODE: /usr/local/bin/node
+2026-10-15T05:19:48.7981798Z ##[endgroup]
+2026-10-15T05:19:48.8311563Z ── AILANG_BIN=/home/runner/.local/bin/ailang (AILANG v0.41.0
+2026-10-15T05:19:48.8312241Z Commit: 24ee108
+2026-10-15T05:19:48.8312694Z Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+2026-10-15T05:19:48.8313161Z Built:  2026-09-21T15:50:02Z
+2026-10-15T05:19:48.8313350Z 
+2026-10-15T05:19:48.8313529Z The AI-First Programming Language
+2026-10-15T05:19:48.8313813Z Copyright (c) 2025-2026)
+2026-10-15T05:19:48.8314138Z ── tracked-binary hygiene gate
+2026-10-15T05:19:48.9204086Z ok 01-valid-png-in-dir
+2026-10-15T05:19:48.9926118Z ok 02-valid-png-outside-dir (not-allowlisted)
+2026-10-15T05:19:49.0587222Z ok 03-renamed-binary (bad-signature)
+2026-10-15T05:19:49.1252501Z ok 04-polyglot-after-iend (trailing-bytes)
+2026-10-15T05:19:49.1904127Z ok 05-text-chunk (chunk-not-allowed:tEXt)
+2026-10-15T05:19:49.2573010Z ok 06-corrupt-idat (bad-crc)
+2026-10-15T05:19:49.4158519Z ok 07-over-file-cap (file-cap-exceeded)
+2026-10-15T05:19:50.3355875Z ok 08-over-dir-cap (dir-cap-exceeded)
+2026-10-15T05:19:50.4014695Z ok 09-gitattributes-in-dir (bad-signature)
+2026-10-15T05:19:50.4670847Z ok 10-gitattributes-tree-wide (not-allowlisted)
+2026-10-15T05:19:50.5109102Z ok 11-empty-tree (enumerated 0 blobs)
+2026-10-15T05:19:50.5751128Z ok 12-nul-past-8000-bytes (not-allowlisted)
+2026-10-15T05:19:50.7407199Z ok 13-row150-deliverable-names
+2026-10-15T05:19:50.8297667Z ok 14-bad-name-and-subdir (not-allowlisted)
+2026-10-15T05:19:50.8971936Z ok 15-no-allowance-no-images (not-allowlisted)
+2026-10-15T05:19:50.8972707Z test_tracked_binary_gate: 15 passed, 0 failed
+2026-10-15T05:19:51.1668335Z    ✓ 0 binary blobs among 3664 tracked files
+2026-10-15T05:19:51.1772091Z ── World mission-input gate (decision ledger)
+2026-10-15T05:19:51.1909356Z decision ledger valid: 62 rows
+2026-10-15T05:19:51.1914518Z    World decision-ledger validated; centralized runtime currency is NOT certified here.
+2026-10-15T05:19:51.2014533Z    ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+2026-10-15T05:19:51.2015327Z ── race-detector known-positive control
+2026-10-15T05:19:51.2038199Z go version go1.26.6 linux/amd64
+2026-10-15T05:19:52.3711879Z ==================
+2026-10-15T05:19:52.3712257Z WARNING: DATA RACE
+2026-10-15T05:19:52.3712550Z Read at 0x00c00009c038 by goroutine 9:
+2026-10-15T05:19:52.3713509Z   main.main.func1()
+2026-10-15T05:19:52.3715055Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x99
+2026-10-15T05:19:52.3715997Z 
+2026-10-15T05:19:52.3716187Z Previous write at 0x00c00009c038 by goroutine 7:
+2026-10-15T05:19:52.3716570Z   main.main.func1()
+2026-10-15T05:19:52.3717462Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+2026-10-15T05:19:52.3718062Z 
+2026-10-15T05:19:52.3718195Z Goroutine 9 (running) created at:
+2026-10-15T05:19:52.3718513Z   main.main()
+2026-10-15T05:19:52.3719380Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-10-15T05:19:52.3719978Z 
+2026-10-15T05:19:52.3720109Z Goroutine 7 (finished) created at:
+2026-10-15T05:19:52.3720424Z   main.main()
+2026-10-15T05:19:52.3721966Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-10-15T05:19:52.3722665Z ==================
+2026-10-15T05:19:52.3722898Z ==================
+2026-10-15T05:19:52.3723129Z WARNING: DATA RACE
+2026-10-15T05:19:52.3723385Z Write at 0x00c00009c038 by goroutine 9:
+2026-10-15T05:19:52.3723712Z   main.main.func1()
+2026-10-15T05:19:52.3724552Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+2026-10-15T05:19:52.3725122Z 
+2026-10-15T05:19:52.3725273Z Previous write at 0x00c00009c038 by goroutine 7:
+2026-10-15T05:19:52.3725626Z   main.main.func1()
+2026-10-15T05:19:52.3726441Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+2026-10-15T05:19:52.3726991Z 
+2026-10-15T05:19:52.3727113Z Goroutine 9 (running) created at:
+2026-10-15T05:19:52.3727406Z   main.main()
+2026-10-15T05:19:52.3728204Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-10-15T05:19:52.3728990Z 
+2026-10-15T05:19:52.3729197Z Goroutine 7 (finished) created at:
+2026-10-15T05:19:52.3729669Z   main.main()
+2026-10-15T05:19:52.3730965Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-10-15T05:19:52.3731898Z ==================
+2026-10-15T05:19:52.3732132Z control finished, shared = 36578
+2026-10-15T05:19:52.3732386Z Found 2 data race(s)
+2026-10-15T05:19:52.3732597Z exit status 66
+2026-10-15T05:19:52.3733011Z ── go build ./...
+2026-10-15T05:19:52.3756730Z go version go1.26.6 linux/amd64
+2026-10-15T05:19:54.0210733Z ── focused host/evidence named-manifest gate (64 exact top-level tests)
+2026-10-15T05:20:08.9887309Z    ✓ all 64 required top-level evidence tests passed exactly once
+2026-10-15T05:20:08.9934755Z ── go test ./... -count=1
+2026-10-15T05:20:08.9961942Z go version go1.26.6 linux/amd64
+2026-10-15T05:20:29.3612711Z --- FAIL: TestDemoSeedPreflightRefusals (12.51s)
+2026-10-15T05:20:29.3614228Z     --- FAIL: TestDemoSeedPreflightRefusals/pin-mismatch (0.36s)
+2026-10-15T05:20:29.3615737Z         demo_test.go:358: required tool pin absent
+2026-10-15T05:20:29.3622564Z --- FAIL: TestQuickstartSection11FlagsMatchTheCLI (0.00s)
+2026-10-15T05:20:29.3624579Z     quickstart_layout_test.go:61: QUICKSTART §11 holds 2 serve lines, want 1
+2026-10-15T05:20:29.3625675Z FAIL
+2026-10-15T05:20:29.3626614Z FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	17.597s
+2026-10-15T05:20:44.6982186Z ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	32.539s
+2026-10-15T05:20:44.6990378Z ok  	github.com/sunholo-data/ailang-world/host/agui	9.141s
+2026-10-15T05:20:44.6992484Z ok  	github.com/sunholo-data/ailang-world/host/archive	2.822s
+2026-10-15T05:20:44.6993810Z ok  	github.com/sunholo-data/ailang-world/host/authority	0.205s
+2026-10-15T05:20:44.6995054Z --- FAIL: TestWorldBoundaryDependencyAllowlist (0.78s)
+2026-10-15T05:20:44.7028548Z     allowlist_world_test.go:764: ENUMERATION group=host/store exact_count=141 baseline_net/http/httputil=0 dependencies=["internal/goarch" "unsafe" "internal/abi" "internal/unsafeheader" "internal/cpu" "internal/bytealg" "internal/byteorder" "internal/chacha8rand" "internal/coverage/rtcov" "internal/godebugs" "internal/goexperiment" "internal/goos" "internal/profilerecord" "internal/runtime/atomic" "internal/runtime/syscall/linux" "math/bits" "internal/strconv" "internal/runtime/cgroup" "internal/runtime/exithook" "internal/runtime/gc" "internal/runtime/sys" "internal/runtime/gc/scan" "internal/asan" "internal/msan" "internal/race" "internal/runtime/math" "internal/runtime/maps" "internal/runtime/pprof/label" "internal/stringslite" "internal/trace/tracev2" "runtime" "internal/reflectlite" "errors" "sync/atomic" "internal/sync" "internal/synctest" "sync" "internal/bisect" "internal/godebug" "internal/oserror" "cmp" "iter" "slices" "syscall" "time" "context" "io" "unicode" "unicode/utf8" "bytes" "math" "strconv" "reflect" "internal/fmtsort" "path" "io/fs" "internal/filepathlite" "internal/syscall/unix" "internal/poll" "internal/syscall/execenv" "internal/testlog" "os" "fmt" "database/sql/driver" "maps" "math/rand/v2" "database/sql" "embed" "encoding" "encoding/base64" "strings" "unicode/utf16" "encoding/json" "github.com/sunholo-data/ailang-world/host/canon" "hash" "crypto" "crypto/internal/fips140deps/godebug" "crypto/internal/fips140" "crypto/internal/fips140/alias" "crypto/internal/fips140deps/byteorder" "crypto/internal/fips140deps/cpu" "crypto/internal/impl" "crypto/internal/fips140/sha256" "crypto/internal/constanttime" "crypto/internal/fips140/subtle" "crypto/internal/fips140/sha3" "crypto/internal/fips140/sha512" "crypto/internal/fips140/hmac" "crypto/internal/fips140/check" "crypto/internal/fips140/aes" "crypto/internal/fips140deps/time" "crypto/internal/entropy/v1.0.0" "crypto/internal/sysrand" "crypto/internal/fips140/drbg" "crypto/internal/fips140/aes/gcm" "crypto/fips140" "crypto/internal/fips140only" "crypto/subtle" "crypto/cipher" "crypto/internal/boring/sig" "crypto/internal/boring" "crypto/sha256" "encoding/hex" "github.com/sunholo-data/ailang-world/host/hashref" "encoding/binary" "sort" "golang.org/x/sys/unix" "math/rand" "math/big" "regexp/syntax" "regexp" "github.com/dustin/go-humanize" "crypto/md5" "crypto/internal/randutil" "crypto/internal/rand" "crypto/rand" "crypto/sha1" "vendor/golang.org/x/net/dns/dnsmessage" "internal/nettrace" "internal/singleflight" "weak" "unique" "net/netip" "runtime/cgo" "net" "github.com/google/uuid" "modernc.org/libc/uuid/uuid" "github.com/remyoudompheng/bigfft" "modernc.org/mathutil" "modernc.org/memory" "path/filepath" "os/exec" "os/signal" "runtime/debug" "modernc.org/libc" "modernc.org/libc/sys/types" "modernc.org/sqlite/lib" "modernc.org/sqlite/vtab" "net/url" "modernc.org/sqlite" "github.com/sunholo-data/ailang-world/host/store"]
+2026-10-15T05:20:44.7086372Z     allowlist_world_test.go:764: ENUMERATION group=host/replay exact_count=145 baseline_net/http/httputil=0 dependencies=["internal/goarch" "unsafe" "internal/abi" "internal/unsafeheader" "internal/cpu" "internal/bytealg" "internal/byteorder" "internal/chacha8rand" "internal/coverage/rtcov" "internal/godebugs" "internal/goexperiment" "internal/goos" "internal/profilerecord" "internal/runtime/atomic" "internal/runtime/syscall/linux" "math/bits" "internal/strconv" "internal/runtime/cgroup" "internal/runtime/exithook" "internal/runtime/gc" "internal/runtime/sys" "internal/runtime/gc/scan" "internal/asan" "internal/msan" "internal/race" "internal/runtime/math" "internal/runtime/maps" "internal/runtime/pprof/label" "internal/stringslite" "internal/trace/tracev2" "runtime" "internal/reflectlite" "errors" "sync/atomic" "internal/sync" "internal/synctest" "sync" "io" "iter" "unicode" "unicode/utf8" "bytes" "internal/bisect" "internal/godebug" "internal/oserror" "cmp" "slices" "syscall" "time" "context" "math" "strconv" "reflect" "internal/fmtsort" "path" "io/fs" "internal/filepathlite" "internal/syscall/unix" "internal/poll" "internal/syscall/execenv" "internal/testlog" "os" "fmt" "hash" "crypto" "crypto/internal/fips140deps/godebug" "strings" "crypto/internal/fips140" "crypto/internal/fips140/alias" "crypto/internal/fips140deps/byteorder" "crypto/internal/fips140deps/cpu" "crypto/internal/impl" "crypto/internal/fips140/sha256" "crypto/internal/constanttime" "crypto/internal/fips140/subtle" "crypto/internal/fips140/sha3" "crypto/internal/fips140/sha512" "crypto/internal/fips140/hmac" "crypto/internal/fips140/check" "crypto/internal/fips140/aes" "crypto/internal/fips140deps/time" "crypto/internal/entropy/v1.0.0" "crypto/internal/sysrand" "crypto/internal/fips140/drbg" "crypto/internal/fips140/aes/gcm" "crypto/fips140" "crypto/internal/fips140only" "crypto/subtle" "crypto/cipher" "crypto/internal/boring/sig" "crypto/internal/boring" "crypto/sha256" "encoding/hex" "encoding" "encoding/base64" "unicode/utf16" "encoding/json" "github.com/sunholo-data/ailang-world/host/childenv" "github.com/sunholo-data/ailang-world/host/hashref" "github.com/sunholo-data/ailang-world/host/procbound" "path/filepath" "os/exec" "sort" "github.com/sunholo-data/ailang-world/host/archive" "github.com/sunholo-data/ailang-world/host/canon" "database/sql/driver" "maps" "math/rand/v2" "database/sql" "embed" "encoding/binary" "golang.org/x/sys/unix" "math/rand" "math/big" "regexp/syntax" "regexp" "github.com/dustin/go-humanize" "crypto/md5" "crypto/internal/randutil" "crypto/internal/rand" "crypto/rand" "crypto/sha1" "vendor/golang.org/x/net/dns/dnsmessage" "internal/nettrace" "internal/singleflight" "weak" "unique" "net/netip" "runtime/cgo" "net" "github.com/google/uuid" "modernc.org/libc/uuid/uuid" "github.com/remyoudompheng/bigfft" "modernc.org/mathutil" "modernc.org/memory" "os/signal" "runtime/debug" "modernc.org/libc" "modernc.org/libc/sys/types" "modernc.org/sqlite/lib" "modernc.org/sqlite/vtab" "net/url" "modernc.org/sqlite" "github.com/sunholo-data/ailang-world/host/store" "github.com/sunholo-data/ailang-world/host/replay"]
+2026-10-15T05:20:44.7164285Z     allowlist_world_test.go:764: ENUMERATION group=cmd/ailang-worldd exact_count=239 baseline_net/http/httputil=0 dependencies=["internal/goarch" "unsafe" "internal/abi" "internal/unsafeheader" "internal/cpu" "internal/bytealg" "internal/byteorder" "internal/chacha8rand" "internal/coverage/rtcov" "internal/godebugs" "internal/goexperiment" "internal/goos" "internal/profilerecord" "internal/runtime/atomic" "internal/runtime/syscall/linux" "math/bits" "internal/strconv" "internal/runtime/cgroup" "internal/runtime/exithook" "internal/runtime/gc" "internal/runtime/sys" "internal/runtime/gc/scan" "internal/asan" "internal/msan" "internal/race" "internal/runtime/math" "internal/runtime/maps" "internal/runtime/pprof/label" "internal/stringslite" "internal/trace/tracev2" "runtime" "internal/reflectlite" "errors" "sync/atomic" "internal/sync" "internal/synctest" "sync" "io" "iter" "unicode" "unicode/utf8" "bytes" "strings" "bufio" "internal/bisect" "internal/godebug" "internal/oserror" "cmp" "slices" "syscall" "time" "context" "hash" "strconv" "crypto" "crypto/internal/fips140deps/godebug" "crypto/internal/fips140" "crypto/internal/fips140/alias" "crypto/internal/fips140deps/byteorder" "crypto/internal/fips140deps/cpu" "crypto/internal/impl" "crypto/internal/fips140/sha256" "crypto/internal/constanttime" "crypto/internal/fips140/subtle" "crypto/internal/fips140/sha3" "crypto/internal/fips140/sha512" "crypto/internal/fips140/hmac" "crypto/internal/fips140/check" "crypto/internal/fips140/aes" "crypto/internal/fips140deps/time" "crypto/internal/entropy/v1.0.0" "internal/syscall/unix" "math" "path" "io/fs" "internal/filepathlite" "internal/poll" "internal/syscall/execenv" "internal/testlog" "os" "crypto/internal/sysrand" "crypto/internal/fips140/drbg" "crypto/internal/fips140/aes/gcm" "crypto/fips140" "crypto/internal/fips140only" "crypto/subtle" "crypto/cipher" "crypto/internal/boring/sig" "crypto/internal/boring" "crypto/sha256" "reflect" "internal/fmtsort" "fmt" "encoding/hex" "encoding" "encoding/base64" "unicode/utf16" "encoding/json" "flag" "math/rand/v2" "crypto/internal/randutil" "crypto/internal/rand" "math/rand" "math/big" "crypto/rand" "encoding/xml" "github.com/sunholo-data/ailang-world/host/childenv" "github.com/sunholo-data/ailang-world/host/hashref" "maps" "runtime/cgo" "os/user" "path/filepath" "archive/tar" "sort" "compress/flate" "encoding/binary" "hash/crc32" "compress/gzip" "os/exec" "regexp/syntax" "regexp" "github.com/sunholo-data/ailang-world/host/pkgproj" "github.com/sunholo-data/ailang-world/host/procbound" "database/sql/driver" "database/sql" "embed" "github.com/sunholo-data/ailang-world/host/canon" "golang.org/x/sys/unix" "github.com/dustin/go-humanize" "crypto/md5" "crypto/sha1" "vendor/golang.org/x/net/dns/dnsmessage" "internal/nettrace" "internal/singleflight" "weak" "unique" "net/netip" "net" "github.com/google/uuid" "modernc.org/libc/uuid/uuid" "github.com/remyoudompheng/bigfft" "modernc.org/mathutil" "modernc.org/memory" "os/signal" "runtime/debug" "modernc.org/libc" "modernc.org/libc/sys/types" "modernc.org/sqlite/lib" "modernc.org/sqlite/vtab" "net/url" "modernc.org/sqlite" "github.com/sunholo-data/ailang-world/host/store" "container/list" "crypto/aes" "crypto/des" "crypto/internal/fips140/nistec/fiat" "crypto/internal/fips140/nistec" "crypto/internal/fips140/ecdh" "crypto/internal/fips140/edwards25519/field" "crypto/ecdh" "crypto/elliptic" "crypto/internal/boring/bbig" "crypto/internal/fips140/bigmod" "crypto/internal/fips140/ecdsa" "crypto/internal/fips140cache" "crypto/sha3" "crypto/internal/fips140hash" "crypto/sha512" "internal/saferio" "encoding/asn1" "vendor/golang.org/x/crypto/cryptobyte/asn1" "vendor/golang.org/x/crypto/cryptobyte" "crypto/ecdsa" "crypto/internal/fips140/edwards25519" "crypto/internal/fips140/ed25519" "crypto/ed25519" "crypto/internal/fips140/hkdf" "crypto/hkdf" "crypto/hmac" "crypto/internal/fips140/mlkem" "crypto/mlkem" "vendor/golang.org/x/crypto/internal/alias" "vendor/golang.org/x/crypto/chacha20" "vendor/golang.org/x/crypto/internal/poly1305" "vendor/golang.org/x/sys/cpu" "vendor/golang.org/x/crypto/chacha20poly1305" "crypto/hpke" "crypto/internal/fips140/tls12" "crypto/internal/fips140/tls13" "crypto/rc4" "crypto/internal/fips140/rsa" "crypto/rsa" "crypto/tls/internal/fips140tls" "crypto/dsa" "crypto/x509/pkix" "encoding/pem" "crypto/x509" "crypto/tls" "vendor/golang.org/x/text/transform" "log/internal" "log" "vendor/golang.org/x/text/unicode/bidi" "vendor/golang.org/x/text/secure/bidirule" "vendor/golang.org/x/text/unicode/norm" "vendor/golang.org/x/net/idna" "net/textproto" "vendor/golang.org/x/net/http/httpguts" "vendor/golang.org/x/net/http/httpproxy" "vendor/golang.org/x/net/http2/hpack" "mime" "mime/quotedprintable" "mime/multipart" "net/http/httptrace" "net/http/internal" "net/http/internal/ascii" "net/http/internal/httpcommon" "net/http" "github.com/sunholo-data/ailang-world/host/broker" "github.com/sunholo-data/ailang-world/host/authority" "github.com/sunholo-data/ailang-world/host/archive" "github.com/sunholo-data/ailang-world/host/capsule" "github.com/sunholo-data/ailang-world/host/registry" "github.com/sunholo-data/ailang-world/host/transitionreg" "github.com/sunholo-data/ailang-world/host/coordinator" "github.com/sunholo-data/ailang-world/host/agui" "github.com/sunholo-data/ailang-world/host/evidence" "github.com/sunholo-data/ailang/serveapi/protocol" "github.com/sunholo-data/ailang/serveapi/protocol/hostcall" "github.com/sunholo-data/ailang/serveapi/protocol/mcphttp" "github.com/sunholo-data/ailang-world/host/projection" "html" "text/template/parse" "text/template" "html/template" "github.com/sunholo-data/ailang-world/host/workbench" "github.com/sunholo-data/ailang-world/host/daemon" "github.com/sunholo-data/ailang-world/host/pinfetch" "github.com/sunholo-data/ailang-world/host/worktree" "github.com/sunholo-data/ailang-world/cmd/ailang-worldd"]
+2026-10-15T05:20:44.7254995Z ##[error]    allowlist_world_test.go:773: cmd/ailang-worldd/demo_seed.go: forbidden registry/HTTP/cloud dependency "github.com/sunholo-data/ailang-world/host/registry"
+2026-10-15T05:20:44.7266300Z --- FAIL: TestWorldBoundaryRecordingWriter (1.15s)
+2026-10-15T05:20:44.7267773Z     --- FAIL: TestWorldBoundaryRecordingWriter/recording_cmd_ailang-worldd (0.23s)
+2026-10-15T05:20:44.7273433Z         allowlist_world_test.go:1277: OVERLAY path=cmd/ailang-worldd/main.go arm=cmd/ailang-worldd baseline_sha256=be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c mutant_sha256=7611de99d63c59d7e3b87e81778afac7b4f16033a0bab0f8c470f15d26801bed mutant=/tmp/TestWorldBoundaryRecordingWriterrecording_cmd_ailang-worldd4227758068/001/mutant__cmd__ailang-worldd__main.go overlay_json=/tmp/TestWorldBoundaryRecordingWriterrecording_cmd_ailang-worldd4227758068/001/overlay.json
+2026-10-15T05:20:44.7276357Z         allowlist_world_test.go:1277: AC1b nowrite_control equal=true
+2026-10-15T05:20:44.7277924Z         allowlist_world_test.go:1277: AC1b arm=cmd/ailang-worldd path=cmd/ailang-worldd/main.go probe_fired=20/20 tmpdir_dev=2049 repo_dev=2049
+2026-10-15T05:20:44.7280564Z         allowlist_world_test.go:1277: AC1b arm=cmd/ailang-worldd path=cmd/ailang-worldd/main.go sha256=be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c size=25731 mode=-rw-r--r-- inode=8936025 mtime_ns_equal=true
+2026-10-15T05:20:44.7285016Z ##[error]        allowlist_world_test.go:1277: guard failure did not name exact path cmd/ailang-worldd/main.go: cmd/ailang-worldd/demo_seed.go: forbidden registry/HTTP/cloud dependency "github.com/sunholo-data/ailang-world/host/registry"
+2026-10-15T05:20:44.7287547Z FAIL
+2026-10-15T05:20:44.7288101Z FAIL	github.com/sunholo-data/ailang-world/host/boundary	4.464s
+2026-10-15T05:22:32.7646196Z --- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential (0.07s)
+2026-10-15T05:22:32.7647856Z     registry_publish_test.go:1158: AC10(a) re-derived N = 10 production subprocess launch sites in 10 files:
+2026-10-15T05:22:32.7649227Z     registry_publish_test.go:1161:     cmd/ailang-worldd/demo_seed.go:77 exec.CommandContext
+2026-10-15T05:22:32.7650422Z     registry_publish_test.go:1161:     host/archive/archive.go:470 exec.CommandContext
+2026-10-15T05:22:32.7653314Z     registry_publish_test.go:1161:     host/archive/check.go:95 exec.CommandContext
+2026-10-15T05:22:32.7654569Z     registry_publish_test.go:1161:     host/broker/handlers.go:159 exec.CommandContext
+2026-10-15T05:22:32.7658070Z     registry_publish_test.go:1161:     host/capsule/capsule.go:236 exec.CommandContext
+2026-10-15T05:22:32.7659873Z     registry_publish_test.go:1161:     host/evidence/proof_producer.go:178 exec.CommandContext
+2026-10-15T05:22:32.7661559Z     registry_publish_test.go:1161:     host/pkgproj/iface.go:171 exec.CommandContext
+2026-10-15T05:22:32.7662912Z     registry_publish_test.go:1161:     host/pkgproj/pkgproj.go:247 exec.Command
+2026-10-15T05:22:32.7664223Z     registry_publish_test.go:1161:     host/replay/replay.go:336 exec.CommandContext
+2026-10-15T05:22:32.7665582Z     registry_publish_test.go:1161:     host/worktree/worktree.go:72 exec.CommandContext
+2026-10-15T05:22:32.7669455Z     registry_publish_test.go:1213: AC10(a): 10 files carry subprocess sites [cmd/ailang-worldd/demo_seed.go host/archive/archive.go host/archive/check.go host/broker/handlers.go host/capsule/capsule.go host/evidence/proof_producer.go host/pkgproj/iface.go host/pkgproj/pkgproj.go host/replay/replay.go host/worktree/worktree.go] but 9 have drivers; every enumerated site must be DRIVEN
+2026-10-15T05:22:32.7672747Z FAIL
+2026-10-15T05:22:32.7673247Z FAIL	github.com/sunholo-data/ailang-world/host/broker	132.423s
+2026-10-15T05:22:32.7673900Z ok  	github.com/sunholo-data/ailang-world/host/canon	0.003s
+2026-10-15T05:22:32.7674506Z ok  	github.com/sunholo-data/ailang-world/host/capsule	19.041s
+2026-10-15T05:22:32.7675124Z ok  	github.com/sunholo-data/ailang-world/host/childenv	0.003s
+2026-10-15T05:22:32.7675721Z ok  	github.com/sunholo-data/ailang-world/host/coordinator	70.449s
+2026-10-15T05:23:24.8373713Z ailang-worldd: internal error: POST /agui/: failure
+2026-10-15T05:23:24.8374717Z ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+2026-10-15T05:23:24.8376130Z ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+2026-10-15T05:23:24.8376796Z ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: database is closed
+2026-10-15T05:23:24.8377396Z ailang-worldd: internal error: GET /v1/objects/by-semantic-id/x: host-secret-detail
+2026-10-15T05:23:24.8377955Z ailang-worldd: internal error: GET /workbench: private commit read detail
+2026-10-15T05:23:24.8378452Z ailang-worldd: internal error: GET /workbench: private table detail
+2026-10-15T05:23:24.8378915Z ailang-worldd: internal error: GET /workbench: SECRET approval I/O
+2026-10-15T05:23:24.8379610Z ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+2026-10-15T05:23:24.8380509Z ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+2026-10-15T05:23:24.8382154Z ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+2026-10-15T05:23:24.8382784Z ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+2026-10-15T05:23:24.8383243Z --- FAIL: TestQuickstartDecisionPacketSection (0.00s)
+2026-10-15T05:23:24.8384225Z     workbench_packet_test.go:530: section line "/tmp/ailang-worldd serve --db \"$DEMO_DIR/world.db\" --ailang-bin \"$PIN\" \\" is a served-daemon command or a table row
+2026-10-15T05:23:24.8385065Z ailang-worldd: internal error: GET /workbench: reference source relation mismatch
+2026-10-15T05:23:24.8385468Z FAIL
+2026-10-15T05:23:24.8385757Z FAIL	github.com/sunholo-data/ailang-world/host/daemon	164.461s
+2026-10-15T05:23:24.8386189Z ok  	github.com/sunholo-data/ailang-world/host/evidence	19.880s
+2026-10-15T05:23:24.8386610Z ok  	github.com/sunholo-data/ailang-world/host/hashref	0.007s
+2026-10-15T05:23:24.8387023Z ok  	github.com/sunholo-data/ailang-world/host/pinfetch	0.196s
+2026-10-15T05:23:24.8387440Z ok  	github.com/sunholo-data/ailang-world/host/pkgproj	13.078s
+2026-10-15T05:23:24.8387865Z ok  	github.com/sunholo-data/ailang-world/host/procbound	0.018s
+2026-10-15T05:23:24.8388278Z ok  	github.com/sunholo-data/ailang-world/host/proctest	0.003s
+2026-10-15T05:23:24.8388702Z ok  	github.com/sunholo-data/ailang-world/host/projection	13.775s
+2026-10-15T05:23:24.8389131Z ok  	github.com/sunholo-data/ailang-world/host/ptytest	0.029s
+2026-10-15T05:23:24.8389532Z ok  	github.com/sunholo-data/ailang-world/host/registry	0.027s
+2026-10-15T05:23:24.8389932Z ok  	github.com/sunholo-data/ailang-world/host/replay	6.609s
+2026-10-15T05:23:24.8390328Z ok  	github.com/sunholo-data/ailang-world/host/runbook	0.877s
+2026-10-15T05:23:24.8390727Z ok  	github.com/sunholo-data/ailang-world/host/store	13.237s
+2026-10-15T05:23:24.8391390Z ok  	github.com/sunholo-data/ailang-world/host/transitionreg	0.999s
+2026-10-15T05:26:54.5466023Z ok  	github.com/sunholo-data/ailang-world/host/verifygate	305.035s
+2026-10-15T05:26:54.5467033Z ok  	github.com/sunholo-data/ailang-world/host/workbench	0.604s
+2026-10-15T05:26:54.5467943Z ok  	github.com/sunholo-data/ailang-world/host/worktree	0.079s
+2026-10-15T05:26:54.5468833Z FAIL
+2026-10-15T05:26:54.5886343Z ##[error]Process completed with exit code 1.
+2026-10-15T05:26:54.6081750Z Post job cleanup.
+2026-10-15T05:26:54.6922316Z [command]/usr/bin/git version
+2026-10-15T05:26:54.6968037Z git version 2.55.0
+2026-10-15T05:26:54.7007037Z Temporarily overriding HOME='/home/runner/work/_temp/7a583004-9736-4a52-a411-1350456fa2a4' before making global git config changes
+2026-10-15T05:26:54.7008385Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-15T05:26:54.7012855Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ailang-world/ailang-world
+2026-10-15T05:26:54.7052734Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-15T05:26:54.7087686Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-15T05:26:54.7340831Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-15T05:26:54.7367494Z http.https://github.com/.extraheader
+2026-10-15T05:26:54.7379384Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-15T05:26:54.7416361Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-15T05:26:54.7694173Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-15T05:26:54.7734904Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-15T05:26:54.8152109Z Cleaning up orphan processes
+2026-10-15T05:26:54.8528649Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

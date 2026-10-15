@@ -1,0 +1,11 @@
+{
+  "start_epoch": 1792042082.562469,
+  "head": "7ba691b732d327f6b38a16223152b876e7d197df",
+  "files": {
+    "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+    "cmd/ailang-worldd/demo_seed.go": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361",
+    "cmd/ailang-worldd/demo_test.go": "c088beff63629ba6381eaf0dd940fef14f85150249a97ac07cab1e29bc0bf069",
+    "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c",
+    "docs/QUICKSTART.md": "9e868e155cc7f0baa2173858f52cfedb37a856420944f131b94cdad8ff199fbe"
+  }
+}

@@ -1,0 +1,4 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+    demo_test.go:285: successful seed commit stage must reach explicit incomplete boundary: code=1 out= err=ailang-worldd demo seed: commit refused HTTP 401 SessionAbsent; stop and inspect history
+--- FAIL: TestDemoSeedAuthenticatedCommits (0.90s)
+FAIL

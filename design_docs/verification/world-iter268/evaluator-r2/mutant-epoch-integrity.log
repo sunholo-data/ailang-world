@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/epoch-hash
+    demo_test.go:441: wrong refusal: want "epoch registry object mismatch" got "ailang-worldd demo seed: registry: decode: invalid character 'a' in literal true (expecting 'r')\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.92s)
+    --- FAIL: TestDemoSeedPreflightRefusals/epoch-hash (0.92s)
+FAIL
