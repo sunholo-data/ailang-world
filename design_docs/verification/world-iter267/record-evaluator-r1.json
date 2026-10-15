@@ -1,0 +1,110 @@
+{
+  "result": "fail",
+  "score": 88,
+  "round": 1,
+  "class": "ADMIN record review",
+  "candidate_sha": "0338b57a840971f47e87a93adf2d236b45affd21",
+  "base_sha": "52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b",
+  "independent_judge": "Native GPT-6.1-Sol; separate from record author; same-model-fresh-context FLAG under amended D-WORLD-48",
+  "blocking_findings": [
+    {
+      "id": "R267-B1",
+      "severity": "blocking",
+      "file": "design_docs/planned/sprint_w-marketing-capture.json",
+      "line": 632,
+      "summary": "New snapshot-path process correction is not propagated to machine-readable executor directives",
+      "evidence": "All 17 milestones still direct snapshots into .snap/M<id>/ inside the worktree, including future M2a at line776. New sprint-plan correction requires external $HOME/.ailang/state/world-iter<N>/snap/M<k>/.",
+      "rule": "world-mission.md:1376: A correction is not applied until it reaches EVERY artifact that restates it; charter external snapshot guardrail remains binding.",
+      "required_change": "Correct all JSON executor snapshot directives or explicitly override them in the JSON itself with the external canonical location; preserve gates and milestone states. Keep an auditable note of the superseded location.",
+      "scope": "ADMIN record correction only; product source and original PASS90 remain accepted."
+    }
+  ],
+  "checks": {
+    "record_parent": "52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b",
+    "record_paths": 21,
+    "docs_only": true,
+    "source_tree_unchanged": true,
+    "reviewed_and_merge_source_trees_identical": true,
+    "statuses": [
+      267,
+      266,
+      265
+    ],
+    "retained_266_265_byte_exact": true,
+    "archive_old_prefix_unchanged": true,
+    "archive_suffix_exact_old_264_stamp_plus_blank": true,
+    "queue_added": [
+      177
+    ],
+    "queue_existing_changes": [
+      129,
+      150
+    ],
+    "ledger_rows": 62,
+    "ledger_byte_identical": true,
+    "ledger_open": [
+      "D-WORLD-75"
+    ],
+    "milestones_completed": [
+      "M1a",
+      "M1b"
+    ],
+    "future_pending": 15,
+    "dashboard_lines": 12,
+    "live_log_entries": 36,
+    "last20_primary_harness": "0/20",
+    "all_changed_paths_tracked": true,
+    "ignored_changed_paths": [],
+    "ignore_knownbad_control_fires": true,
+    "commit_autoclose_match": false,
+    "autoclose_knownbad_control_fires": true,
+    "privacy_signature_matches": [],
+    "original_judge_artifacts_byte_identical": true,
+    "source_pr_ci": {
+      "id": 38665538475,
+      "sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "required_checks": "2/2 success"
+    },
+    "source_merge_ci": {
+      "id": 38667006325,
+      "sha": "52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "required_checks": "2/2 success"
+    },
+    "issue246": "OPEN",
+    "live_fleet_ticket": "unread, signature present in mission ticket open --json",
+    "record_base_helper_matches": true,
+    "diffcheck": "Only archive:542 new blank line at EOF, required exact rotation suffix; accepted"
+  },
+  "category_scores": {
+    "source_verdict_and_shas": 25,
+    "evidence_traceability": 24,
+    "state_preservation": 25,
+    "privacy_tracking_hygiene": 14,
+    "process_correction_consistency": 0
+  },
+  "commands": [
+    "git diff 52ae7ff 0338b57 -- design_docs/... (record state/doc/evidence review)",
+    "Python git-show byte comparisons for STATUS/archive/queue/ledger/source trees/milestones",
+    "gh run view 38667006325 --repo sunholo-data/ailang-world --json headSha,event,status,conclusion,jobs",
+    "gh run view 38665538475 --repo sunholo-data/ailang-world --json headSha,event,status,conclusion,jobs",
+    "gh issue view 246 --repo sunholo-data/ailang-world --json number,state,createdAt",
+    "ailang messages read --peek --json inbox_1792025993522_f0ff3084",
+    "ailang mission ticket open --json",
+    "git check-ignore -v <21 changed paths>; positive control .ailang/known-control",
+    "git diff --check 52ae7ff 0338b57",
+    "git status --short"
+  ],
+  "limitations": [
+    "No duplicate product full suites: unchanged product exact-head local and remote evidence inspected.",
+    "Gate0 billing/provider quota/watermark history is banked controller evidence, not newly rerun.",
+    "Record PR title/body does not yet exist; controller must scan it for autoclose triggers before publication."
+  ],
+  "token_usage": null,
+  "finalized_at": "2026-10-15T02:09:39.107438+00:00"
+}
