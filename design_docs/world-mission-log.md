@@ -1864,7 +1864,7 @@ Immutable reports and raw logs are banked under `verification/world-iter268/`. S
 
 **Gate 1:** local dev was 1 behind (iteration 269's record) and was fast-forwarded to `0a1e21c`. Dev CI on `0a1e21c`: 2/2 success. The `91ada43` failure was the known `verify_go.sh: FATAL: -race leg timed out after 600s` flake class, and the head after it is green.
 
-**Gate 2 — clause map:** 1/2/3/6/7 MET. 4: the attended 2026-10-15 FINAL (`verification/world-floor-final-2026-10-15/README.md`) reads **HOLDS** for both agents (Δ 0; O claude −17.9%, codex −5.7%), so the floor is met by evidence; the row-93 tag and the formal clause-4 call stay with the attended session. 5 UNMET: 114 is sequenced after a passing FINAL (D-58/D-70) and is now routable; 139 follows 114. **Pick: row 114.** Iteration 269's Next said the same. Reality check: no attended or orphan work on 114 (worktrees and remote branches scanned; draft #166 last touched 2026-09-30). D-WORLD-52 = A (attended) authorizes exactly this step: correct the missing premise evidence, then a fresh full author-excluding quorum.
+**Gate 2 — clause map:** 1/2/3/6/7 MET. 4: the attended 2026-10-15 FINAL (`verification/world-floor-final-2026-10-15/README.md`) reads **HOLDS** for both agents (Δ 0; O claude −17.9%, codex −5.7%); the row-93 tag and the formal clause-4 call stay with the attended session. 5 UNMET: 114 is sequenced after a passing FINAL (D-58/D-70) and is now routable; 139 follows 114. **Pick: row 114.** Iteration 269's Next said the same. Reality check: no attended or orphan work on 114 (worktrees and remote branches scanned; draft #166 last touched 2026-09-30). D-WORLD-52 = A (attended) authorizes exactly this step: correct the missing premise evidence, then a fresh full author-excluding quorum.
 
 **Design:** Agent `opus` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, Agent tool per the operator request; the rotation pointer stays `codex:gpt-6.1-sol` because the driver resolved the designer to opus, with Ollama at its weekly limit and OpenAI out of credits). r4 `d626ed2` (213 lines, down from 244):
 - §16 rebuilt as V1–V11 with no gaps, every row re-measured this session (`design_docs/verification/world-iter270/designer/evidence.md`).
@@ -1903,6 +1903,6 @@ The planner found problems the doc had not covered:
 
 **Retro:** Skill lane: none. Process lane: the quorum ran at 1 of 3 external seats for the second fire running, both times on quota. Reported as an observation (rule 8(e)), not an ask. Backlog lane: the judge's notes 1–2 are recorded as owed fold-ins in row 114's tag.
 
-**Progress:** World 1.0: 5 of 7 clauses MET. Clause 4 is met by the attended FINAL's evidence, with the formal call left to the attended session. Clause 5 moved from "blocked design" to "executable protocol pending one freeze".
+**Progress:** World 1.0: 5 of 7 clauses MET as charter-tagged; clause 4's evidence reads HOLDS (the call is attended). Clause 5 moved from "blocked design" to "executable protocol pending one freeze".
 
 **Next:** on D-WORLD-76 = A, run the Q1 plan from M0, folding in the owed MU-4 and D4 notes first. Otherwise, row 150 M2b.
