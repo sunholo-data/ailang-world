@@ -1,0 +1,82 @@
+=== RUN   TestWorldDemoApprovalExactOnePlan
+=== RUN   TestWorldDemoApprovalExactOnePlan/malformed-json
+=== RUN   TestWorldDemoApprovalExactOnePlan/nonobject
+=== RUN   TestWorldDemoApprovalExactOnePlan/unknown-input
+=== RUN   TestWorldDemoApprovalExactOnePlan/unknown-phase
+=== RUN   TestWorldDemoApprovalExactOnePlan/finish-phase
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-phase
+=== RUN   TestWorldDemoApprovalExactOnePlan/wrong-phase-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-args
+=== RUN   TestWorldDemoApprovalExactOnePlan/nonobject-args
+=== RUN   TestWorldDemoApprovalExactOnePlan/unknown-args
+=== RUN   TestWorldDemoApprovalExactOnePlan/duplicate-input-key
+=== RUN   TestWorldDemoApprovalExactOnePlan/duplicate-arg-key
+=== RUN   TestWorldDemoApprovalExactOnePlan/duplicate-entry-key
+=== RUN   TestWorldDemoApprovalExactOnePlan/caller-grade
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-goal
+=== RUN   TestWorldDemoApprovalExactOnePlan/empty-goal
+=== RUN   TestWorldDemoApprovalExactOnePlan/goal-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-candidates
+=== RUN   TestWorldDemoApprovalExactOnePlan/candidates-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/one-candidate
+=== RUN   TestWorldDemoApprovalExactOnePlan/three-candidates
+=== RUN   TestWorldDemoApprovalExactOnePlan/duplicate-candidates
+=== RUN   TestWorldDemoApprovalExactOnePlan/empty-candidate
+=== RUN   TestWorldDemoApprovalExactOnePlan/candidate-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/candidate-a-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-roster
+=== RUN   TestWorldDemoApprovalExactOnePlan/roster-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-kind
+=== RUN   TestWorldDemoApprovalExactOnePlan/unknown-kind
+=== RUN   TestWorldDemoApprovalExactOnePlan/duplicate-kind
+=== RUN   TestWorldDemoApprovalExactOnePlan/kind-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-ref
+=== RUN   TestWorldDemoApprovalExactOnePlan/empty-ref
+=== RUN   TestWorldDemoApprovalExactOnePlan/ref-type
+=== RUN   TestWorldDemoApprovalExactOnePlan/duplicate-ref
+=== RUN   TestWorldDemoApprovalExactOnePlan/roster-nonobject
+=== RUN   TestWorldDemoApprovalExactOnePlan/missing-roster-entry
+=== RUN   TestWorldDemoApprovalExactOnePlan/extra-roster-entry
+=== RUN   TestWorldDemoApprovalExactOnePlan/pinned-manifest
+--- PASS: TestWorldDemoApprovalExactOnePlan (5.76s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/malformed-json (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/nonobject (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/unknown-input (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/unknown-phase (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/finish-phase (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-phase (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/wrong-phase-type (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-args (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/nonobject-args (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/unknown-args (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/duplicate-input-key (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/duplicate-arg-key (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/duplicate-entry-key (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/caller-grade (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-goal (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/empty-goal (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/goal-type (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-candidates (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/candidates-type (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/one-candidate (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/three-candidates (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/duplicate-candidates (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/empty-candidate (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/candidate-type (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/candidate-a-type (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-roster (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/roster-type (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-kind (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/unknown-kind (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/duplicate-kind (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/kind-type (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-ref (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/empty-ref (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/ref-type (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/duplicate-ref (0.13s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/roster-nonobject (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/missing-roster-entry (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/extra-roster-entry (0.14s)
+    --- PASS: TestWorldDemoApprovalExactOnePlan/pinned-manifest (0.48s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	5.978s

@@ -1,0 +1,141 @@
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── tracked-binary hygiene gate
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+test_tracked_binary_gate: 15 passed, 0 failed
+   ✓ 0 binary blobs among 3530 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 62 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c00011c048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c00011c048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 6 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 9 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c00011c048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c00011c048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 6 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 9 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 38436
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (64 exact top-level tests)
+   ✓ all 64 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	3.879s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	40.028s
+ok  	github.com/sunholo-data/ailang-world/host/agui	3.203s
+ok  	github.com/sunholo-data/ailang-world/host/archive	34.192s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.652s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	2.805s
+ok  	github.com/sunholo-data/ailang-world/host/broker	116.498s
+ok  	github.com/sunholo-data/ailang-world/host/canon	0.640s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	59.845s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	1.017s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	49.523s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	192.242s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	25.829s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	2.020s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	2.234s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	39.858s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.032s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.117s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.002s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.066s
+ok  	github.com/sunholo-data/ailang-world/host/registry	1.981s
+ok  	github.com/sunholo-data/ailang-world/host/replay	43.554s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	3.811s
+ok  	github.com/sunholo-data/ailang-world/host/store	12.298s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	50.590s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	164.301s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	1.494s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	1.475s
+── go test ./... -count=1 -race -timeout 8m
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	7.635s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	42.075s
+ok  	github.com/sunholo-data/ailang-world/host/agui	4.317s
+ok  	github.com/sunholo-data/ailang-world/host/archive	35.188s
+ok  	github.com/sunholo-data/ailang-world/host/authority	2.369s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	4.181s
+ok  	github.com/sunholo-data/ailang-world/host/broker	165.991s
+ok  	github.com/sunholo-data/ailang-world/host/canon	2.519s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	62.887s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.433s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	56.109s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	220.580s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	35.300s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	4.387s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	4.299s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	41.622s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	3.753s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.641s
+ok  	github.com/sunholo-data/ailang-world/host/projection	19.240s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	3.835s
+ok  	github.com/sunholo-data/ailang-world/host/registry	4.016s
+ok  	github.com/sunholo-data/ailang-world/host/replay	43.506s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	7.116s
+ok  	github.com/sunholo-data/ailang-world/host/store	27.724s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	49.226s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	192.118s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.386s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	4.635s
+✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)

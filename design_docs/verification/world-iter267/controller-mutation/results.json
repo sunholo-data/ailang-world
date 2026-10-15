@@ -1,0 +1,58 @@
+{
+  "source_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+  "restored_byte_identical": true,
+  "results": [
+    {
+      "name": "mutant-check",
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "elapsed_s": 0.09
+    },
+    {
+      "name": "mutant-build",
+      "argv": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "elapsed_s": 0.2
+    },
+    {
+      "name": "mutant-test",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "elapsed_s": 0.73
+    },
+    {
+      "name": "pristine",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "elapsed_s": 7.25
+    }
+  ]
+}

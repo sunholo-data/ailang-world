@@ -1,0 +1,1388 @@
+[
+  {
+    "name": "M1b-two-effects",
+    "case": null,
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "2decf7d951702af0a6d832128e573c50ed62523d55438d8eca57fb7824330bfa",
+    "edit": {
+      "old": "kv(\"payload\", jo([kv(\"requester\", js(\"demo\"))]))])])),",
+      "new": "kv(\"payload\", jo([kv(\"requester\", js(\"demo\"))]))]), jo([kv(\"id\", js(\"e2\")), kv(\"effect\", js(\"Human.Approve\")), kv(\"scope\", js(\"worktree\")), kv(\"cost\", jint(1)), kv(\"payload\", jo([kv(\"requester\", js(\"demo\"))]))])])),"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.066,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-two-effects-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.098,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-two-effects-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.717,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-two-effects-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 6.377,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-two-effects-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-roster-count",
+    "case": "missing-roster-entry",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "d978b0f3534020285feece2a7af82c71f093f8098f0ad25ac88f085158720279",
+    "edit": {
+      "old": "Some(\"roster count\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.062,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-count-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.102,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-count-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^missing-roster-entry$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.853,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-count-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.078,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-count-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-roster-entry-schema",
+    "case": "caller-grade",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "1f83ee4e16e2ba61ed8963209daa50608200cb177618ce452fd6c4515748ec36",
+    "edit": {
+      "old": "Some(\"roster entry schema\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.066,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-entry-schema-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.104,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-entry-schema-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^caller-grade$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.957,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-entry-schema-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.517,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-entry-schema-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-roster-kind",
+    "case": "unknown-kind",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "b964c444083b7b1b053f67a5305e6bd0206b800f204d76e6df9977825f09ad84",
+    "edit": {
+      "old": "Some(\"roster kind\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.07,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-kind-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.107,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-kind-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^unknown-kind$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.949,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-kind-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 8.594,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-kind-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-roster-ref",
+    "case": "empty-ref",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "8f92be808f14619adcf3a9e96f9397fe5eb7d6e7f6a55a2ea549791845e7d527",
+    "edit": {
+      "old": "Some(\"roster ref\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.077,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-ref-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.11,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-ref-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^empty-ref$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.265,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-ref-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 10.023,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-ref-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-duplicate-kind",
+    "case": "duplicate-kind",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "641615157e77731bb0149729465bc2756f0d248724ad4c6b51b47ca36cba9c9f",
+    "edit": {
+      "old": "Some(\"duplicate kind\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.084,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-kind-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.112,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-kind-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^duplicate-kind$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.089,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-kind-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.849,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-kind-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-duplicate-ref",
+    "case": "duplicate-ref",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "f2b23e66e5984a094371b239aebdaf608af8383f09975d24a0a6878323d82567",
+    "edit": {
+      "old": "Some(\"duplicate ref\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.071,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-ref-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.107,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-ref-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^duplicate-ref$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.976,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-ref-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.418,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-duplicate-ref-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-missing-roster",
+    "case": "missing-roster",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "cb4505ac9f469c72f26c00ec08ea00de1b008cb130dd818f320b9dd5fd956132",
+    "edit": {
+      "old": "Some(\"missing roster\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.067,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-roster-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.103,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-roster-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^missing-roster$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.944,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-roster-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.162,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-roster-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-roster-array",
+    "case": "roster-type",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "947b620139cc7378a890ba96409c75c7bcb75991d1a260e6f1e78f0f0cbb6747",
+    "edit": {
+      "old": "Some(\"roster array\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.064,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-array-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.103,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-array-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^roster-type$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.905,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-array-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.197,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-roster-array-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-missing-candidates",
+    "case": "missing-candidates",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "9b6aa0a4dcf413a3ebec285c57991907075fc3bdeca581bb63a9df1a813478c7",
+    "edit": {
+      "old": "Some(\"missing candidates\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.064,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-candidates-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.108,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-candidates-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^missing-candidates$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.919,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-candidates-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.214,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-candidates-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-candidates-array",
+    "case": "candidates-type",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "bbc4861b5cb43b93154fdbb83a81a3f42fab942b23ec46303d83c15a8c35ce7e",
+    "edit": {
+      "old": "Some(\"candidates array\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.065,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidates-array-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.102,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidates-array-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^candidates-type$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.908,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidates-array-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.087,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidates-array-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-candidate-a-string",
+    "case": "candidate-a-type",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "a784dacfb7a43c83fbc5a2eff3b608976039b7c476a4c593f5a8382143d7f20e",
+    "edit": {
+      "old": "Some(\"candidate a string\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.065,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-a-string-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.112,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-a-string-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^candidate-a-type$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.879,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-a-string-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.263,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-a-string-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-candidate-b-string",
+    "case": "candidate-type",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "d39882607a06376d51eb3d9edf9f2d592b4c29581bf51d15b6243408365aa3ee",
+    "edit": {
+      "old": "Some(\"candidate b string\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.065,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-b-string-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.11,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-b-string-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^candidate-type$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.911,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-b-string-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 8.899,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-b-string-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-distinct-nonempty-candidates",
+    "case": "duplicate-candidates",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "4ee0732dbe2a22dbc471a0a84e3005ab9a4790c95615bf5a18e3408bccd5a94c",
+    "edit": {
+      "old": "Some(\"distinct nonempty candidates\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.086,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-distinct-nonempty-candidates-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.113,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-distinct-nonempty-candidates-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^duplicate-candidates$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.263,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-distinct-nonempty-candidates-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 9.485,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-distinct-nonempty-candidates-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-candidate-count",
+    "case": "one-candidate",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "af7a00a2b585310d8e9bef2b1ee11990605d51c9fa7faecdd96814d5d7010e1b",
+    "edit": {
+      "old": "Some(\"candidate count\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.069,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-count-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.117,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-count-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^one-candidate$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.954,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-count-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.364,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-candidate-count-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-args-schema",
+    "case": "unknown-args",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "30396bc460fd0e948afe84ef1ceda6271ae503292bcbe7cc60ba862d314336cc",
+    "edit": {
+      "old": "Some(\"args schema\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.066,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-args-schema-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.105,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-args-schema-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^unknown-args$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.94,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-args-schema-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.156,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-args-schema-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-goal-string",
+    "case": "empty-goal",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "338cd0b69a4616420fc03b01a65954765e1cffc94b0184494050a5b11d80a6a2",
+    "edit": {
+      "old": "Some(\"goal string\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.063,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-goal-string-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.104,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-goal-string-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^empty-goal$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.908,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-goal-string-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.231,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-goal-string-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-input-schema",
+    "case": "unknown-input",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "0f842a71fbec9bccd6c56e71e0e1ecdc0522a065400d445d42be49e1e7c1529e",
+    "edit": {
+      "old": "Some(\"input schema\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.064,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-input-schema-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.102,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-input-schema-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^unknown-input$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.891,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-input-schema-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.21,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-input-schema-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-plan-phase-required",
+    "case": "unknown-phase",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "bc464d3e31e102c53805556c46d3d86e5a3c95f5df5a2f4d36c96196f4c05f13",
+    "edit": {
+      "old": "Some(\"plan phase required\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.063,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-plan-phase-required-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.105,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-plan-phase-required-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^unknown-phase$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.939,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-plan-phase-required-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.171,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-plan-phase-required-pristine.log"
+    }
+  },
+  {
+    "name": "refusal-missing-args",
+    "case": "missing-args",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "d1fd7c43867c9e0710090d915aaf2695552abf0a583377a09b0997e1625ce0ca",
+    "edit": {
+      "old": "Some(\"missing args\")",
+      "new": "None"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.065,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-args-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.108,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-args-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^missing-args$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.888,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-args-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.197,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/refusal-missing-args-pristine.log"
+    }
+  },
+  {
+    "name": "json-decode-refusal",
+    "case": "malformed-json",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "31b465796a6df6cf45e2e8bf01e34c70fc6e13c0e03e4147f94f437869279ceb",
+    "edit": {
+      "old": "Err(_) => refusal()",
+      "new": "Err(_) => approvalPlan()"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.064,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/json-decode-refusal-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.107,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/json-decode-refusal-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^malformed-json$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.915,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/json-decode-refusal-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.454,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/json-decode-refusal-pristine.log"
+    }
+  },
+  {
+    "name": "terminal-refusal",
+    "case": "nonobject",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "035e61b6d2bad4c85dd810669b803f25c78023a69311fe8f5c71ce6d7821dac3",
+    "edit": {
+      "old": "then approvalPlan() else refusal()",
+      "new": "then approvalPlan() else approvalPlan()"
+    },
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.081,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/terminal-refusal-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.115,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/terminal-refusal-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$/^nonobject$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.224,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/terminal-refusal-kill.log"
+    },
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 9.709,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/terminal-refusal-pristine.log"
+    }
+  }
+]

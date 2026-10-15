@@ -1,0 +1,1 @@
+{"plan":"world/effect-plan/v1","effects":[{"id":"e1","effect":"Human.Approve","scope":"worktree","cost":1,"payload":{"requester":"demo"}}],"finish":false,"result":null}

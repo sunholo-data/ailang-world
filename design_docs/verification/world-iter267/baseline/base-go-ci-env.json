@@ -1,0 +1,17 @@
+{
+  "name": "base-go-ci-env",
+  "cmd": [
+    "bash",
+    "scripts/verify_go.sh"
+  ],
+  "rc": 0,
+  "elapsed_s": 431.56,
+  "sha": "57941bf7410c7462d755cd3a94748eaf76d66288",
+  "platform": "darwin/arm64",
+  "removed_keys": [
+    "GOOGLE_CLOUD_PROJECT",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "OTEL_RESOURCE_ATTRIBUTES",
+    "OTLP_GOOGLE_CLOUD_PROJECT"
+  ]
+}

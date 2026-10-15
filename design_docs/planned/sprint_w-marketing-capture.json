@@ -430,7 +430,7 @@
         "packages/world-demo/README.md",
         "host/coordinator/world_demo_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestWorldDemoEvidencePinnedManifest",
         "TestWorldDemoLegacyGradeDrift"
@@ -538,7 +538,13 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "commit": "28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6",
+        "iteration": 266,
+        "review": "PASS 88/100, zero blocking; recorded in landed commit message",
+        "baseline_recheck": "Iteration267: TestWorldDemoEvidencePinnedManifest and TestWorldDemoLegacyGradeDrift named PASS under pinned v0.41.0"
+      }
     },
     {
       "id": "M1b",

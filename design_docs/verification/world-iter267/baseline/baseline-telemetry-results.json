@@ -1,0 +1,19 @@
+[
+  {
+    "arm": "inherited",
+    "rc": 1,
+    "elapsed_s": 2.21,
+    "removed_keys": []
+  },
+  {
+    "arm": "ci-environment",
+    "rc": 0,
+    "elapsed_s": 1.93,
+    "removed_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ]
+  }
+]

@@ -1,0 +1,6 @@
+=== RUN   TestWorldDemoApprovalExactOnePlan
+    world_demo_test.go:338: open /Users/voightkampff/dev/sunholo-data/.wt-world-iter267/packages/world-demo/approve.ail: no such file or directory
+--- FAIL: TestWorldDemoApprovalExactOnePlan (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	0.328s
+FAIL

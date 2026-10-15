@@ -1,0 +1,237 @@
+[
+  {
+    "label": "binary-version",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "--version"
+    ],
+    "rc": 0,
+    "seconds": 0.017,
+    "load": [
+      4.45458984375,
+      4.15966796875,
+      3.748046875
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/binary-version.log"
+  },
+  {
+    "label": "prompt-version",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "prompt",
+      "--version-active"
+    ],
+    "rc": 0,
+    "seconds": 0.015,
+    "load": [
+      4.45458984375,
+      4.15966796875,
+      3.748046875
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/prompt-version.log"
+  },
+  {
+    "label": "TestWorldDemoApprovalExactOnePlan",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "go",
+      "test",
+      "-run",
+      "^TestWorldDemoApprovalExactOnePlan$",
+      "./host/coordinator",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 6.297,
+    "load": [
+      4.73828125,
+      4.22314453125,
+      3.77294921875
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/TestWorldDemoApprovalExactOnePlan.log"
+  },
+  {
+    "label": "TestProducerMintsNoPacketForMultiEffectPlan",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "go",
+      "test",
+      "-run",
+      "^TestProducerMintsNoPacketForMultiEffectPlan$",
+      "./host/coordinator",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.54,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/TestProducerMintsNoPacketForMultiEffectPlan.log"
+  },
+  {
+    "label": "TestWorldDemoLegacyGradeDrift",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "go",
+      "test",
+      "-run",
+      "^TestWorldDemoLegacyGradeDrift$",
+      "./host/coordinator",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.826,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/TestWorldDemoLegacyGradeDrift.log"
+  },
+  {
+    "label": "TestWorldDemoEvidencePinnedManifest",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "go",
+      "test",
+      "-run",
+      "^TestWorldDemoEvidencePinnedManifest$",
+      "./host/coordinator",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.853,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/TestWorldDemoEvidencePinnedManifest.log"
+  },
+  {
+    "label": "approve-check",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267/packages/world-demo",
+    "cmd": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "check",
+      "approve.ail"
+    ],
+    "rc": 0,
+    "seconds": 0.028,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/approve-check.log"
+  },
+  {
+    "label": "approve-tests",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267/packages/world-demo",
+    "cmd": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "test",
+      "--format",
+      "json",
+      "approve.ail"
+    ],
+    "rc": 0,
+    "seconds": 0.454,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/approve-tests.log"
+  },
+  {
+    "label": "approve-ai",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267/packages/world-demo",
+    "cmd": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "ai-check",
+      "-timeout",
+      "5s",
+      "approve.ail"
+    ],
+    "rc": 0,
+    "seconds": 0.04,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/approve-ai.log"
+  },
+  {
+    "label": "README-quickstart",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "bash",
+      "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/README-quickstart.sh"
+    ],
+    "rc": 0,
+    "seconds": 0.085,
+    "load": [
+      4.9990234375,
+      4.28564453125,
+      3.79736328125
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/README-quickstart.log"
+  },
+  {
+    "label": "verify-ail",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "bash",
+      "scripts/verify_ail.sh"
+    ],
+    "rc": 0,
+    "seconds": 35.596,
+    "load": [
+      5.08056640625,
+      4.3671875,
+      3.84521484375
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/verify-ail.log"
+  },
+  {
+    "label": "protected-diff",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "cmd": [
+      "git",
+      "diff",
+      "--exit-code",
+      "--",
+      "world",
+      "go.mod",
+      "go.sum",
+      "tools/launchd",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "seconds": 0.006,
+    "load": [
+      5.08056640625,
+      4.3671875,
+      3.84521484375
+    ],
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/protected-diff.log"
+  }
+]

@@ -1,0 +1,8 @@
+=== RUN   TestCheckSourceUnderPinnedInterpreter
+--- PASS: TestCheckSourceUnderPinnedInterpreter (0.90s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/archive	1.046s
+=== RUN   TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter
+--- PASS: TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter (1.36s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	1.566s
