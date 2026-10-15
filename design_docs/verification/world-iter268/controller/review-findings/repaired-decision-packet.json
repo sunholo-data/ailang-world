@@ -1,0 +1,17 @@
+{
+  "head": "7ba691b732d327f6b38a16223152b876e7d197df",
+  "command": [
+    "go",
+    "test",
+    "./host/daemon",
+    "-run",
+    "^TestQuickstartDecisionPacketSection$",
+    "-count=1",
+    "-timeout",
+    "45s",
+    "-v"
+  ],
+  "rc": 0,
+  "wall_seconds": 1.44,
+  "output": "repaired-decision-packet.log"
+}

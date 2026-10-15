@@ -1,0 +1,12 @@
+{
+  "id": "inbox_1792040379744_d82fd711",
+  "message_id": "inbox_1792040379744_d82fd711",
+  "from_agent": "mission-world",
+  "to_inbox": "controlplane",
+  "message_type": "notification",
+  "title": "[fyi] Mission world iteration268 CLAIM row150 M2a",
+  "payload": "Iteration268 CLAIM row150 M2a authenticated demo seed/preflight under D-WORLD-69 exception. Base39066a46c1ac13c994bacb162b8d4b754d5ec083. Native Agent designer/planner/executor gpt-6.1-sol; required separate fresh-context evaluator gpt-6.1-sol per D-WORLD-48 after Sonnet Unknown model. No attended publish/mint/release or harness edits.",
+  "simhash": -8217977445999912200,
+  "status": "unread",
+  "created_at": "2026-10-15T04:59:39.744734Z"
+}

@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+    demo_test.go:278: commit0 frozen header identity mismatch
+--- FAIL: TestDemoSeedAuthenticatedCommits (1.01s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.368s
+FAIL

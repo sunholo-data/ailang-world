@@ -1,0 +1,22 @@
+[
+  {
+    "command": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "--version"
+    ],
+    "rc": 0,
+    "seconds": 0.015254020690917969,
+    "stdout": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang",
+      "--version"
+    ],
+    "rc": 0,
+    "seconds": 0.015423059463500977,
+    "stdout": "AILANG v0.52.1\nCommit: c68ded4\nFull:   c68ded4b2d5e397d3719b32d6be591ad6fcd1bf8\nBuilt:  2026-10-03T09:18:58Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+    "stderr": ""
+  }
+]

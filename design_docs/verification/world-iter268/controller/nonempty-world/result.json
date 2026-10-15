@@ -1,0 +1,70 @@
+{
+  "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+  "source_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+  "results": [
+    {
+      "label": "pristine",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter268",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^world-only$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 8.756
+    },
+    {
+      "label": "mutated-build",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter268",
+      "command": [
+        "go",
+        "build",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.701
+    },
+    {
+      "label": "mutated-assertion",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter268",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^world-only$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 7.165
+    },
+    {
+      "label": "restored",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter268",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^world-only$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 4.374
+    }
+  ],
+  "restored": true,
+  "finding": "composite emptiness guard removal allows five real commits on an unselected World with initially empty head/log"
+}

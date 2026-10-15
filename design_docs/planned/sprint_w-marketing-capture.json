@@ -724,7 +724,7 @@
           "command": "go test -run '^TestDemoSeedHelpPreparation$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
         }
       ],
-      "implementation": "Add dispatch/help and the preflight/REST stage only; intermediate CLI must explicitly refuse incomplete S2-S6, with no success manifest. No stub claims a complete seed. Use normal public commit headers and sole-writer HTTP API. Keep daemon configuration operator-owned; seed --db is a health identity check, never another writable store.",
+      "implementation": "Add dispatch/help and the preflight/REST stage only; intermediate CLI must explicitly refuse incomplete S2-S6, with no success manifest. No stub claims a complete seed. Use normal public commit headers and sole-writer HTTP API. Keep daemon configuration operator-owned. Iteration268: --db first matches daemon health identity; bounded existing store.OpenReadOnly + authority resolver/broker grant predicates/EffectSpend may inspect required grants, expiry and budget before domain commits. Use existing bounded ScanUnreadableWorlds(ctx, empty-afterRef, 1).Scanned to reject any stored World row, including unselected World with empty head/log; no generic all-object emptiness claim. Close read-only handle before writes; all writes remain daemon HTTP with bearer/CAS. No competing writable store, Mint or new endpoint. Add missing-world.apply arm with other grants valid and no inventory change. Named independent evaluator target; preserves existing C2. Pin hash/version validation reuses the daemon-startup archive manifest through existing read-only archive.ReadManifest, matching its Hash/Size/Version to local pin bytes and health; no new subprocess or registry environment inheritance.",
       "acceptance": [
         "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
@@ -775,7 +775,7 @@
         ],
         "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
-        "additional": ""
+        "additional": "Iteration268: --db first matches daemon health identity; bounded existing store.OpenReadOnly + authority resolver/broker grant predicates/EffectSpend may inspect required grants, expiry and budget before domain commits. Use existing bounded ScanUnreadableWorlds(ctx, empty-afterRef, 1).Scanned to reject any stored World row, including unselected World with empty head/log; no generic all-object emptiness claim. Close read-only handle before writes; all writes remain daemon HTTP with bearer/CAS. No competing writable store, Mint or new endpoint. Add missing-world.apply arm with other grants valid and no inventory change. Named independent evaluator target; preserves existing C2. Pin hash/version validation reuses the daemon-startup archive manifest through existing read-only archive.ReadManifest, matching its Hash/Size/Version to local pin bytes and health; no new subprocess or registry environment inheritance."
       },
       "measured_baseline": [
         {

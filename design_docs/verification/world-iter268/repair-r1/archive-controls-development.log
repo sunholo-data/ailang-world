@@ -1,0 +1,16 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+=== RUN   TestDemoSeedPreflightRefusals/archive-absent
+=== RUN   TestDemoSeedPreflightRefusals/archive-hash
+=== RUN   TestDemoSeedPreflightRefusals/archive-size
+=== RUN   TestDemoSeedPreflightRefusals/archive-version
+--- PASS: TestDemoSeedPreflightRefusals (5.57s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-version (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/readonly-db (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-absent (0.94s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-hash (0.98s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-size (0.96s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-version (0.87s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	5.931s

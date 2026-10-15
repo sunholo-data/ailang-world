@@ -1,0 +1,113 @@
+{
+  "deliberate_refusals_and_support": {
+    "manifest absent": [
+      "manifest",
+      "manifest"
+    ],
+    "db/health identity": [
+      "wrong-db",
+      "db-identity"
+    ],
+    "pin readable": [
+      "pin-absent",
+      "pin-read"
+    ],
+    "pin hash": [
+      "health-interpreter",
+      "pin-hash"
+    ],
+    "pin version": [
+      "health-version",
+      "pin-version"
+    ],
+    "session resolution denial": [
+      "unknown-session/expired-session",
+      "session-denied"
+    ],
+    "episode binding": [
+      "wrong-episode",
+      "episode"
+    ],
+    "live sufficient grant": [
+      "missing-grant/expired-grant/insufficient-budget",
+      "grant"
+    ],
+    "remaining spend": [
+      "spent-budget",
+      "spent-budget"
+    ],
+    "public world/log empty": [
+      "world-only/nonempty",
+      "M2a-nonempty/world-scan"
+    ],
+    "epoch object integrity": [
+      "epoch-hash",
+      "epoch-object"
+    ],
+    "epoch decode": [
+      "epoch-decode",
+      "epoch-decode"
+    ],
+    "epoch nomination": [
+      "epoch-candidate",
+      "epoch-nomination"
+    ],
+    "required GET absence": [
+      "health-absent/missing-epoch",
+      "required-resource"
+    ],
+    "HTTP read refusal": [
+      "health-down/health-malformed",
+      "read-error"
+    ],
+    "source present": [
+      "source-absent",
+      "source-read"
+    ],
+    "CAS stable": [
+      "cas-change",
+      "CAS"
+    ],
+    "commit status": [
+      "commit-denied",
+      "commit-status"
+    ],
+    "commit response": [
+      "commit-response",
+      "commit-response"
+    ],
+    "commit transport uncertainty": [
+      "commit-uncertain",
+      "commit-uncertain"
+    ],
+    "required CLI fields": [
+      "missing-db/missing-pin/missing-key/missing-manifest",
+      "required-flags"
+    ],
+    "positional refusal": [
+      "positional",
+      "positional"
+    ],
+    "unknown subcommand": [
+      "unknown-verb",
+      "unknown-subcommand"
+    ],
+    "bearer and stored supporting headers": [
+      "TestDemoSeedAuthenticatedCommits",
+      "M2a-bearer/header-interpreter/header-epoch/carrying-reference"
+    ],
+    "read-only authority open failure": [
+      "readonly-db",
+      "readonly-open"
+    ]
+  },
+  "unprovoked_operational_error_passthrough": [
+    "filepath.Abs error (working directory disappears)",
+    "read-only authority SQLite query error",
+    "EffectSpend SQLite query error",
+    "ScanUnreadableWorlds SQLite query error",
+    "json.Marshal error for fixed primitive-only commit struct (not representable by supported input)",
+    "head/log/object GET transport or decode errors reuse tested worldReader machinery; not independently forced at every call site"
+  ],
+  "defensive_null_binding": "Resolver contract returns success or denial; wrong-episode branch drilled; impossible nil/nil result not injected through production resolver."
+}

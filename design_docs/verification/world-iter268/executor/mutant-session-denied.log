@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+    demo_test.go:400: wrong refusal: want "SessionExpired" got "ailang-worldd demo seed: demo episode session required\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.91s)
+    --- FAIL: TestDemoSeedPreflightRefusals/expired-session (0.91s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.229s
+FAIL

@@ -1,0 +1,17 @@
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential
+    registry_publish_test.go:1158: AC10(a) re-derived N = 10 production subprocess launch sites in 10 files:
+    registry_publish_test.go:1161:     cmd/ailang-worldd/demo_seed.go:77 exec.CommandContext
+    registry_publish_test.go:1161:     host/archive/archive.go:470 exec.CommandContext
+    registry_publish_test.go:1161:     host/archive/check.go:95 exec.CommandContext
+    registry_publish_test.go:1161:     host/broker/handlers.go:159 exec.CommandContext
+    registry_publish_test.go:1161:     host/capsule/capsule.go:236 exec.CommandContext
+    registry_publish_test.go:1161:     host/evidence/proof_producer.go:178 exec.CommandContext
+    registry_publish_test.go:1161:     host/pkgproj/iface.go:171 exec.CommandContext
+    registry_publish_test.go:1161:     host/pkgproj/pkgproj.go:247 exec.Command
+    registry_publish_test.go:1161:     host/replay/replay.go:336 exec.CommandContext
+    registry_publish_test.go:1161:     host/worktree/worktree.go:72 exec.CommandContext
+    registry_publish_test.go:1213: AC10(a): 10 files carry subprocess sites [cmd/ailang-worldd/demo_seed.go host/archive/archive.go host/archive/check.go host/broker/handlers.go host/capsule/capsule.go host/evidence/proof_producer.go host/pkgproj/iface.go host/pkgproj/pkgproj.go host/replay/replay.go host/worktree/worktree.go] but 9 have drivers; every enumerated site must be DRIVEN
+--- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential (0.90s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	1.388s
+FAIL

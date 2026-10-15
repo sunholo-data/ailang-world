@@ -1,0 +1,60 @@
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential
+    registry_publish_test.go:1158: AC10(a) re-derived N = 9 production subprocess launch sites in 9 files:
+    registry_publish_test.go:1161:     host/archive/archive.go:470 exec.CommandContext
+    registry_publish_test.go:1161:     host/archive/check.go:95 exec.CommandContext
+    registry_publish_test.go:1161:     host/broker/handlers.go:159 exec.CommandContext
+    registry_publish_test.go:1161:     host/capsule/capsule.go:236 exec.CommandContext
+    registry_publish_test.go:1161:     host/evidence/proof_producer.go:178 exec.CommandContext
+    registry_publish_test.go:1161:     host/pkgproj/iface.go:171 exec.CommandContext
+    registry_publish_test.go:1161:     host/pkgproj/pkgproj.go:247 exec.Command
+    registry_publish_test.go:1161:     host/replay/replay.go:336 exec.CommandContext
+    registry_publish_test.go:1161:     host/worktree/worktree.go:72 exec.CommandContext
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/archive.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/archive.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/check.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/check.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver1
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver2
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver3
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver4
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/capsule/capsule.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/capsule/capsule.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/evidence/proof_producer.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/evidence/proof_producer.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/iface.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/iface.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/pkgproj.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/pkgproj.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/replay/replay.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/replay/replay.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/worktree/worktree.go
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/worktree/worktree.go/driver0
+=== RUN   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/worktree/worktree.go/driver1
+--- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential (29.17s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/archive.go (2.57s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/archive.go/driver0 (2.57s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/check.go (2.91s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/archive/check.go/driver0 (2.91s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go (9.00s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver0 (2.22s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver1 (1.46s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver2 (1.28s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver3 (1.28s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/broker/handlers.go/driver4 (2.77s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/capsule/capsule.go (1.26s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/capsule/capsule.go/driver0 (1.26s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/evidence/proof_producer.go (2.53s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/evidence/proof_producer.go/driver0 (2.53s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/iface.go (1.46s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/iface.go/driver0 (1.46s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/pkgproj.go (1.35s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/pkgproj/pkgproj.go/driver0 (1.35s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/replay/replay.go (1.39s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/replay/replay.go/driver0 (1.39s)
+    --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/worktree/worktree.go (2.92s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/worktree/worktree.go/driver0 (1.56s)
+        --- PASS: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/worktree/worktree.go/driver1 (1.35s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	32.310s

@@ -1,0 +1,176 @@
+[
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.7,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ],
+    "source_sha256": {
+      "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+      "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+      "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c"
+    }
+  },
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 28.408,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ],
+    "source_sha256": {
+      "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+      "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+      "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c"
+    }
+  },
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedHelpPreparation$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.627,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ],
+    "source_sha256": {
+      "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+      "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+      "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c"
+    }
+  },
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestSessionMint_RequiresControllingTerminal$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "45s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.621,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ],
+    "source_sha256": {
+      "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+      "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+      "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c"
+    }
+  },
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestRESTCommitRefusesDecisionPacketObjects$",
+      "./host/daemon",
+      "-count=1",
+      "-timeout",
+      "45s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.671,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ],
+    "source_sha256": {
+      "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+      "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+      "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c"
+    }
+  },
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 3.317,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ],
+    "source_sha256": {
+      "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+      "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+      "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c"
+    }
+  }
+]

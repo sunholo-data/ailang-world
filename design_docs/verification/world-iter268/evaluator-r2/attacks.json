@@ -1,0 +1,1017 @@
+[
+  {
+    "name": "manifest",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "!os.IsNotExist(err) {",
+    "new": "false && !os.IsNotExist(err) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^manifest$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "f058d936be137f8a98f40c541742cf25e4fad92f33204633db2668ac769f21c2",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^manifest$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.047,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "db-identity",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if want != got {",
+    "new": "if false && (want != got) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^wrong-db$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "d54b78ef6797952327d2b3866ba3682d4f071f993a4e372bf90f984e91a09a98",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^wrong-db$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.244,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "pin-hash",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if pinRef.String() != h.InterpreterRef {",
+    "new": "if false && (pinRef.String() != h.InterpreterRef) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-interpreter$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "774ccc4b1f2787be447a8e19d1ecb77ac7a64755abff394a7dd5bd0ece8c1ee1",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^health-interpreter$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.02,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "archive-absence",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn h, 0, fmt.Errorf(\"interpreter archive manifest unavailable\")",
+    "new": "if false && err != nil {\n\t\treturn h, 0, fmt.Errorf(\"interpreter archive manifest unavailable\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-absent$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "e99557aa790d31799bbe9c133b74964a1565cef0fb567944811acf6e85811024",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^archive-absent$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.093,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "archive-hash",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))",
+    "new": "false && manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-hash$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "5f7c108a70b5ed2c45f2cf6675a90c84384c494581416b8c1bbb0171eefe4a1d",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^archive-hash$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.109,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "archive-size",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))",
+    "new": "manifest.Hash != pinRef.String() || false && manifest.Size != int64(len(pin))",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-size$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "7eb6d9d2bd394efa7acd58ce9e85c59d92dea64f0c16ff6a2c7a2a8428d34c46",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^archive-size$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.963,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "archive-health-version",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "manifest.Version != h.InterpreterVersion || !strings.HasPrefix",
+    "new": "false && manifest.Version != h.InterpreterVersion || !strings.HasPrefix",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-version$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "af7a998bc7474f53c7abd0b3545a044968a4f7cfae1bb4e1f19f896262424c58",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^health-version$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.586,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "archive-release",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "|| !strings.HasPrefix(manifest.Version, \"AILANG v0.41.0\\n\")",
+    "new": "|| false && !strings.HasPrefix(manifest.Version, \"AILANG v0.41.0\\n\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-release$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "422d0992c466415c4b67705fa564b08b968a74b5fbcbd84d0953ec71b20c9a3a",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^archive-release$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.545,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "nonempty",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if hasWorld || hasHead || ref != \"\" || len(page) != 0 {",
+    "new": "if false && (hasWorld || hasHead || ref != \"\" || len(page) != 0) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^world-only$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "9ef01ca73dc00ff448c45b4fd668e05ca7d0550b65d4e160fccbe4bc248207ca",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^world-only$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.196,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "epoch-integrity",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if !ok || hashref.SumSHA256(obj.Payload).String() != rh.Head {",
+    "new": "if false && (!ok || hashref.SumSHA256(obj.Payload).String() != rh.Head) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "48f259461e198066bfff855a10232065fefd979004dd91f03af4156ea0b39499",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.231,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "epoch-decode",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err := json.Unmarshal(obj.Payload, &reg); err != nil {",
+    "new": "if err := json.Unmarshal(obj.Payload, &reg); false && err != nil {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^epoch-decode$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "58c5e32f9e947ca913de9354049554e0e8ad2867c4e5637a9a101012b388c147",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^epoch-decode$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.159,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "epoch-nomination",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "candidate == \"AILANG v0.41.0\"",
+    "new": "candidate != \"\"",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "c423c62fd031ccfbd8a87ab41a47aa4d2e2607397dcbcea04d369127c9ef5fc9",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.128,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "session-denial",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if out.Denied != nil {",
+    "new": "if false && (out.Denied != nil) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^expired-session$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "bd09fc9b5a339586fc2c6d0e37654f10c13a96bbbca9cec9bfc341cd4345cc5a",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^expired-session$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.115,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "episode",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "out.Success == nil || out.Success.EpisodeID != \"demo\"",
+    "new": "out.Success == nil",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "50d17524cc9386ede7c952b90131a05c0f7012d8bbb2cc658d77d1971bd54a86",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.118,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "grant",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if !broker.Allows(snap, req).Allowed {",
+    "new": "if false && (!broker.Allows(snap, req).Allowed) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^missing-grant$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "034e1a3ea89463b828c5b6945899cc07b76d7c933766eab63c6561cc533a253b",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^missing-grant$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.13,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "spend",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "caps[i].Budget -= spend[",
+    "new": "caps[i].Budget -= 0 * spend[",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^spent-budget$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "eb3d1cc6296e8a492da237f7638c203779a8c8e1066b671982a3e88b8ddb714a",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^spent-budget$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.066,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "world-row-scan",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "worlds.Scanned > 0",
+    "new": "worlds.Scanned > 1",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^world-only$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "59578f7a1f4223b9b7c42a4e072169cb1c15010b4c85637fd22734f58045a572",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^world-only$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.076,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "CAS",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if actual != observed || has != (observed != \"\") {",
+    "new": "if false && (actual != observed || has != (observed != \"\")) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^cas-change$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "f15949efa43faf0a910154c71f288e51d42f24527a4b9a0b1c520a0afc90bdb6",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^cas-change$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.119,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "required-GET",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if !ok {",
+    "new": "if false && (!ok) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-absent$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "83e123808f55841ed0bdd36b45deb6a9b75ed1e72535a5950bb6a495e199c350",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^health-absent$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.083,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "GET-read-error",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn err\n\t}\n\tif !ok {",
+    "new": "if false && err != nil {\n\t\treturn err\n\t}\n\tif !ok {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-down$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "a1dd113f763c2385df3d6f6532bf665ae6e9074676c88428ba51c9dc8a97013d",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^health-down$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.593,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "pin-read",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn h, 0, fmt.Errorf(\"cannot read interpreter pin\")",
+    "new": "if false && err != nil {\n\t\treturn h, 0, fmt.Errorf(\"cannot read interpreter pin\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^pin-absent$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "fb7749072d68f8099c909bc575c3ac0d2517de7b2c2d1de6ec0c52db77585006",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^pin-absent$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.824,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "source-read",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn fmt.Errorf(\"prepare worktree",
+    "new": "if false && err != nil {\n\t\treturn fmt.Errorf(\"prepare worktree",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^source-absent$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "dbb9c1b1d0008af9412ef7bb172d474eb00a35647804dd9403292445ac040f52",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^source-absent$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.765,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "readonly-open",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn false, fmt.Errorf(\"cannot open read-only authority view\")",
+    "new": "if err != nil {\n\t\treturn false, fmt.Errorf(\"incorrect read-only refusal\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^readonly-db$",
+    "expected": "wrong refusal",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "4927653feeec30c4c1d1bc5b9ffbcfc7b4f20a35ed902dab6d2c0efe75f6d5ba",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^readonly-db$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.072,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "required-flags",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "if o.db == \"\" || o.pin == \"\" || o.key == \"\" || o.manifest == \"\" {",
+    "new": "if false && (o.db == \"\" || o.pin == \"\" || o.key == \"\" || o.manifest == \"\") {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^missing-key$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "3d9c0267408b64ca280c758bc8e6b0aa44984c077078bd645d84ab223c2dbad0",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^missing-key$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.088,
+    "assertion_kill": true,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  },
+  {
+    "name": "positional",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "if fs.NArg() != 0 {",
+    "new": "if false && (fs.NArg() != 0) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^positional$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "0d57728198701adbb3876ca46ab7b0886e244f9b1b92b367babb1ff1380a5adb",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^positional$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.409,
+    "assertion_kill": true,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  },
+  {
+    "name": "subcommand",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "len(args) == 0 || args[0] != \"seed\"",
+    "new": "len(args) == 0",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^unknown-verb$",
+    "expected": "refusal changed public inventory",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "6bb53e6baeb8099158d9511263ff41fb138aa2f1e2b2c8972a51024e880ae36a",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^unknown-verb$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.231,
+    "assertion_kill": true,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  },
+  {
+    "name": "commit-status",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if status != 200 {",
+    "new": "if false && status != 200 {",
+    "pattern": "^TestDemoSeedCommitFailures$/^commit-denied$",
+    "expected": "commit refusal boundary",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "2be71b977467948bfba6d88f613c56d112d25287b639bfa09e7e803d6545b847",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedCommitFailures$/^commit-denied$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.93,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "commit-response",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref {",
+    "new": "if false && (json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref) {",
+    "pattern": "^TestDemoSeedCommitFailures$/^commit-response$",
+    "expected": "no retries",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "6c17d7b509b81e75dd1738f95406986cfbecec29d2b12af625e2e06f52254502",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedCommitFailures$/^commit-response$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.808,
+    "assertion_kill": false,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "commit-transport",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\t\treturn fmt.Errorf(\"commit outcome uncertain",
+    "new": "if false && err != nil {\n\t\t\treturn fmt.Errorf(\"commit outcome uncertain",
+    "pattern": "^TestDemoSeedCommitFailures$/^commit-uncertain$",
+    "expected": "commit refusal boundary",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "adf8856d4cca93bb289aa42cccbaf2faf65e06d28c10a40a03608d42a5ced66e",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedCommitFailures$/^commit-uncertain$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 3.294,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "bearer",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "bytes.NewReader(data), \"Bearer \"+token)",
+    "new": "bytes.NewReader(data), \"\")",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "SessionAbsent",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "6eb6b7628cda60ceae993b33d37a4019bbca77c602c8822c349d2056a0c5ab36",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedAuthenticatedCommits$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.11,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "header-interpreter",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "Interpreter: interpreter,",
+    "new": "Interpreter: o.Hash,",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "frozen header identity mismatch",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "378c0dbab130bbdcdcdba05c36f3540e1c5c28432fe1db88d2a78ed974a6c69f",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedAuthenticatedCommits$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 3.854,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "header-epoch",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "SemanticsEpoch: epoch,",
+    "new": "SemanticsEpoch: epoch+1,",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "frozen header identity mismatch",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "5f5f5599faf2239ba89c6a836439c1335bdbade8fc822633d16bff4565f85ad4",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedAuthenticatedCommits$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.816,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "carrying",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "TransitionRef: o.Hash}}",
+    "new": "TransitionRef: interpreter}}",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "no real carrying entry",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "d069a6417b86af91300ef73d38c74cf036e95bf9f8eb6ed84377a474ce398b40",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedAuthenticatedCommits$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 2.143,
+    "assertion_kill": true,
+    "restored_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+  },
+  {
+    "name": "doc-command",
+    "file": "docs/QUICKSTART.md",
+    "old": "\"$DEMO_BIN\" demo seed --addr",
+    "new": "\"$OTHER_BIN\" demo seed --addr",
+    "pattern": "^TestDemoSeedHelpPreparation$",
+    "expected": "demo artifact command wiring missing",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "a030603b8d4b6a887ea2ccda666e7a0ed0829140d66e555cdce2a3502630b49c",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeedHelpPreparation$",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 1.638,
+    "assertion_kill": true,
+    "restored_sha256": "9e868e155cc7f0baa2173858f52cfedb37a856420944f131b94cdad8ff199fbe"
+  },
+  {
+    "name": "timeout-coverage",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "budgetContext(90 * time.Second)",
+    "new": "budgetContext(24 * time.Hour)",
+    "pattern": "^TestDemoSeed",
+    "expected": "",
+    "build_argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "./cmd/ailang-worldd"
+    ],
+    "build_rc": 0,
+    "mutant_sha256": "27088e897e8eedf4f656b7820a293ee84b3339588213285f4c3dadea587017f8",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/mutant.test",
+      "-test.run=^TestDemoSeed",
+      "-test.v",
+      "-test.count=1",
+      "-test.timeout=120s"
+    ],
+    "rc": 0,
+    "seconds": 53.857,
+    "assertion_kill": false,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  }
+]

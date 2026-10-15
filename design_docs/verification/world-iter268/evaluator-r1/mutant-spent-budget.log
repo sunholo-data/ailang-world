@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+    demo_test.go:395: spent-budget: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.94s)
+    --- FAIL: TestDemoSeedPreflightRefusals/spent-budget (0.94s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.274s
+FAIL

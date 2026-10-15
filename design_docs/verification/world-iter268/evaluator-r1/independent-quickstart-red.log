@@ -1,0 +1,6 @@
+=== RUN   TestQuickstartSection11FlagsMatchTheCLI
+    quickstart_layout_test.go:61: QUICKSTART §11 holds 2 serve lines, want 1
+--- FAIL: TestQuickstartSection11FlagsMatchTheCLI (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.211s
+FAIL

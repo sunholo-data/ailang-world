@@ -1,0 +1,4 @@
+=== RUN   TestQuickstartDecisionPacketSection
+--- PASS: TestQuickstartDecisionPacketSection (0.02s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.646s

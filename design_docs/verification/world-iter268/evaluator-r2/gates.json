@@ -1,0 +1,262 @@
+[
+  {
+    "name": "ci-env-unset-toolpin",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 1,
+    "seconds": 2.74
+  },
+  {
+    "name": "decision-packet-doc",
+    "argv": [
+      "go",
+      "test",
+      "./host/daemon",
+      "-run",
+      "^TestQuickstartDecisionPacketSection$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 1.175
+  },
+  {
+    "name": "state-root-coverage-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/state-root-coverage.test",
+      "./cmd/ailang-worldd"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 1.002
+  },
+  {
+    "name": "state-root-coverage",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 2.913
+  },
+  {
+    "name": "entry-hash-coverage-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/entry-hash-coverage.test",
+      "./cmd/ailang-worldd"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.938
+  },
+  {
+    "name": "entry-hash-coverage",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 2.973
+  },
+  {
+    "name": "response-mutant-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/response.test",
+      "./cmd/ailang-worldd"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.589
+  },
+  {
+    "name": "response-mutant-assertion",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-response$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 1,
+    "seconds": 2.913
+  },
+  {
+    "name": "M2a-own-revert-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r2-backups/revert.test",
+      "./cmd/ailang-worldd"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.945
+  },
+  {
+    "name": "M2a-own-revert",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^(TestDemoSeedAuthenticatedCommits|TestDemoSeedPreflightRefusals|TestDemoSeedHelpPreparation|TestDemoSeedCommitFailures|TestSessionMint_RequiresControllingTerminal)$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 1,
+    "seconds": 59.692
+  },
+  {
+    "name": "restored-TestDemoSeedAuthenticatedCommits",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 2.288
+  },
+  {
+    "name": "restored-TestDemoSeedPreflightRefusals",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 60.94
+  },
+  {
+    "name": "restored-TestDemoSeedHelpPreparation",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedHelpPreparation$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 1.256
+  },
+  {
+    "name": "restored-TestDemoSeedCommitFailures",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedCommitFailures$",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 6.34
+  },
+  {
+    "name": "gofmt",
+    "argv": [
+      "gofmt",
+      "-l",
+      "cmd/ailang-worldd/demo.go",
+      "cmd/ailang-worldd/demo_seed.go",
+      "cmd/ailang-worldd/demo_test.go",
+      "cmd/ailang-worldd/main.go"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.021
+  },
+  {
+    "name": "vet",
+    "argv": [
+      "go",
+      "vet",
+      "./cmd/ailang-worldd"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.411
+  },
+  {
+    "name": "code-doc-diffcheck",
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "39066a46c1ac13c994bacb162b8d4b754d5ec083",
+      "HEAD",
+      "--",
+      "cmd/ailang-worldd/demo.go",
+      "cmd/ailang-worldd/demo_seed.go",
+      "cmd/ailang-worldd/demo_test.go",
+      "cmd/ailang-worldd/main.go",
+      "docs/QUICKSTART.md"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+    "rc": 0,
+    "seconds": 0.011
+  }
+]

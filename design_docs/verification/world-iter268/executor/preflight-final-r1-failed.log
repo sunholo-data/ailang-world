@@ -1,0 +1,86 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+=== RUN   TestDemoSeedPreflightRefusals/nonempty
+=== RUN   TestDemoSeedPreflightRefusals/absent-session
+=== RUN   TestDemoSeedPreflightRefusals/unknown-session
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+=== RUN   TestDemoSeedPreflightRefusals/expired-grant
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+=== RUN   TestDemoSeedPreflightRefusals/health-interpreter
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+=== RUN   TestDemoSeedPreflightRefusals/insufficient-budget
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+=== RUN   TestDemoSeedPreflightRefusals/positional
+=== RUN   TestDemoSeedPreflightRefusals/missing-db
+=== RUN   TestDemoSeedPreflightRefusals/missing-pin
+=== RUN   TestDemoSeedPreflightRefusals/missing-key
+=== RUN   TestDemoSeedPreflightRefusals/missing-manifest
+=== RUN   TestDemoSeedPreflightRefusals/health-absent
+=== RUN   TestDemoSeedPreflightRefusals/health-malformed
+=== RUN   TestDemoSeedPreflightRefusals/health-down
+=== RUN   TestDemoSeedPreflightRefusals/missing-epoch
+=== RUN   TestDemoSeedPreflightRefusals/epoch-hash
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-absent
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+=== RUN   TestDemoSeedPreflightRefusals/epoch-candidate
+=== RUN   TestDemoSeedPreflightRefusals/source-absent
+=== RUN   TestDemoSeedPreflightRefusals/unknown-verb
+    demo_test.go:401: preflight must refuse before stage: 1  usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE
+            --ailang-bin PIN --proof-key-file KEY --manifest FILE [--addr URL]
+        
+        Prepare a disposable demo worktree and publish descriptors, then mint the demo
+        session at a controlling terminal (QUICKSTART section 12). Seed never mints,
+        publishes, creates a worktree or opens another writable database.
+        --db identifies the daemon's store and permits read-only grant inspection.
+        --session is a private session file (default WORLD_SESSION).
+        --ailang-bin is the capsule/proof pin (v0.41.0); serve's separate
+        --tool-ailang-bin must be v0.52.1 for the workspace tools.
+        --proof-key-file is the private operator key required by later proof stages.
+        --manifest is a new output path; existing files are refused.
+        --addr is the daemon URL, also accepted as the global client flag.
+        
+        This incremental build implements preflight and S1 domain commits only.
+        S2-S6 incomplete: the command refuses completion and writes no success manifest.
+        Do not retry a partial seed; inspect its recorded history first.
+--- FAIL: TestDemoSeedPreflightRefusals (28.15s)
+    --- PASS: TestDemoSeedPreflightRefusals/manifest (0.83s)
+    --- PASS: TestDemoSeedPreflightRefusals/nonempty (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/absent-session (0.85s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-session (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-session (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-grant (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-grant (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-db (0.84s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-interpreter (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-version (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/insufficient-budget (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/spent-budget (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-episode (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/cas-change (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/positional (0.85s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-db (0.84s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-pin (0.83s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-key (0.84s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-manifest (0.82s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-absent (0.83s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-malformed (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-down (0.83s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-epoch (0.89s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-hash (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/readonly-db (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-absent (0.83s)
+    --- PASS: TestDemoSeedPreflightRefusals/world-only (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-decode (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-candidate (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/source-absent (0.92s)
+    --- FAIL: TestDemoSeedPreflightRefusals/unknown-verb (0.86s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	28.417s
+FAIL

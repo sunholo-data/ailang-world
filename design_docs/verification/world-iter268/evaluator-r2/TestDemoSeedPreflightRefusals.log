@@ -1,0 +1,78 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+=== RUN   TestDemoSeedPreflightRefusals/nonempty
+=== RUN   TestDemoSeedPreflightRefusals/absent-session
+=== RUN   TestDemoSeedPreflightRefusals/unknown-session
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+=== RUN   TestDemoSeedPreflightRefusals/expired-grant
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+=== RUN   TestDemoSeedPreflightRefusals/health-interpreter
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+=== RUN   TestDemoSeedPreflightRefusals/insufficient-budget
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+=== RUN   TestDemoSeedPreflightRefusals/positional
+=== RUN   TestDemoSeedPreflightRefusals/missing-db
+=== RUN   TestDemoSeedPreflightRefusals/missing-pin
+=== RUN   TestDemoSeedPreflightRefusals/missing-key
+=== RUN   TestDemoSeedPreflightRefusals/missing-manifest
+=== RUN   TestDemoSeedPreflightRefusals/health-absent
+=== RUN   TestDemoSeedPreflightRefusals/health-malformed
+=== RUN   TestDemoSeedPreflightRefusals/health-down
+=== RUN   TestDemoSeedPreflightRefusals/missing-epoch
+=== RUN   TestDemoSeedPreflightRefusals/epoch-hash
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-absent
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+=== RUN   TestDemoSeedPreflightRefusals/epoch-candidate
+=== RUN   TestDemoSeedPreflightRefusals/source-absent
+=== RUN   TestDemoSeedPreflightRefusals/unknown-verb
+=== RUN   TestDemoSeedPreflightRefusals/archive-absent
+=== RUN   TestDemoSeedPreflightRefusals/archive-hash
+=== RUN   TestDemoSeedPreflightRefusals/archive-size
+=== RUN   TestDemoSeedPreflightRefusals/archive-version
+=== RUN   TestDemoSeedPreflightRefusals/archive-release
+--- PASS: TestDemoSeedPreflightRefusals (50.44s)
+    --- PASS: TestDemoSeedPreflightRefusals/manifest (2.45s)
+    --- PASS: TestDemoSeedPreflightRefusals/nonempty (1.69s)
+    --- PASS: TestDemoSeedPreflightRefusals/absent-session (1.49s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-session (1.77s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-session (1.64s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-grant (1.85s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-grant (1.66s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-db (1.63s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (1.73s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-interpreter (1.64s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-version (1.64s)
+    --- PASS: TestDemoSeedPreflightRefusals/insufficient-budget (1.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/spent-budget (1.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-episode (1.83s)
+    --- PASS: TestDemoSeedPreflightRefusals/cas-change (1.09s)
+    --- PASS: TestDemoSeedPreflightRefusals/positional (1.05s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-db (1.08s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-pin (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-key (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-manifest (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-absent (1.09s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-malformed (1.09s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-down (1.08s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-epoch (1.13s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-hash (1.08s)
+    --- PASS: TestDemoSeedPreflightRefusals/readonly-db (1.08s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-absent (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/world-only (1.49s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-decode (1.44s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-candidate (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/source-absent (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-verb (1.59s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-absent (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-hash (1.60s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-size (1.20s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-version (1.15s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-release (0.93s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	51.689s

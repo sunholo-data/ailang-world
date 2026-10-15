@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+    demo_test.go:431: wrong-episode: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.92s)
+    --- FAIL: TestDemoSeedPreflightRefusals/wrong-episode (0.92s)
+FAIL

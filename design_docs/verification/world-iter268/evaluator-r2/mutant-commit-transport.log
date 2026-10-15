@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedCommitFailures
+=== RUN   TestDemoSeedCommitFailures/commit-uncertain
+    demo_test.go:501: commit refusal boundary want "commit outcome uncertain": code1 out"" err"ailang-worldd demo seed: commit refused HTTP 0 ; stop and inspect history\n"
+--- FAIL: TestDemoSeedCommitFailures (1.54s)
+    --- FAIL: TestDemoSeedCommitFailures/commit-uncertain (1.54s)
+FAIL

@@ -1,0 +1,68 @@
+{
+  "head": "7ba691b732d327f6b38a16223152b876e7d197df",
+  "mutation": "state root observed newline object hash -> object hash only",
+  "rows": [
+    {
+      "label": "pristine",
+      "command": [
+        "go",
+        "test",
+        "./cmd/ailang-worldd",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 3.88
+    },
+    {
+      "label": "mutant-build",
+      "command": [
+        "go",
+        "build",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/controller/hash-survivor/scratch-worldd",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.52
+    },
+    {
+      "label": "mutant-authenticated",
+      "command": [
+        "go",
+        "test",
+        "./cmd/ailang-worldd",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 3.72
+    },
+    {
+      "label": "restored",
+      "command": [
+        "go",
+        "test",
+        "./cmd/ailang-worldd",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 3.12
+    }
+  ],
+  "restored": true,
+  "source_sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361"
+}

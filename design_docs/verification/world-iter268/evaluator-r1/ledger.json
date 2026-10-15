@@ -1,0 +1,38 @@
+[
+  {
+    "name": "independent-subprocess-audit-red",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$",
+      "./host/broker",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.402,
+    "expected_assertion": null,
+    "named_green": false
+  },
+  {
+    "name": "independent-sentinel-leak-observation",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestEvaluatorR1VersionProbeInheritsCredential$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.261,
+    "expected_assertion": null,
+    "named_green": true
+  }
+]

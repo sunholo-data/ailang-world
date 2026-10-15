@@ -1,0 +1,36 @@
+[
+  {
+    "label": "base",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267-record",
+    "command": [
+      "go",
+      "test",
+      "./host/broker",
+      "-run",
+      "^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$",
+      "-count=1",
+      "-timeout",
+      "90s",
+      "-v"
+    ],
+    "rc": 0,
+    "wall": 33.148
+  },
+  {
+    "label": "candidate",
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter268",
+    "command": [
+      "go",
+      "test",
+      "./host/broker",
+      "-run",
+      "^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$",
+      "-count=1",
+      "-timeout",
+      "90s",
+      "-v"
+    ],
+    "rc": 1,
+    "wall": 4.44
+  }
+]

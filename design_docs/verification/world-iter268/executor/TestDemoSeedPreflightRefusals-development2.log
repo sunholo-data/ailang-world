@@ -1,0 +1,44 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+=== RUN   TestDemoSeedPreflightRefusals/nonempty
+=== RUN   TestDemoSeedPreflightRefusals/absent-session
+=== RUN   TestDemoSeedPreflightRefusals/unknown-session
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+=== RUN   TestDemoSeedPreflightRefusals/expired-grant
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+=== RUN   TestDemoSeedPreflightRefusals/health-interpreter
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+=== RUN   TestDemoSeedPreflightRefusals/insufficient-budget
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+=== RUN   TestDemoSeedPreflightRefusals/positional
+=== RUN   TestDemoSeedPreflightRefusals/missing-db
+=== RUN   TestDemoSeedPreflightRefusals/missing-pin
+=== RUN   TestDemoSeedPreflightRefusals/missing-key
+=== RUN   TestDemoSeedPreflightRefusals/missing-manifest
+--- PASS: TestDemoSeedPreflightRefusals (20.99s)
+    --- PASS: TestDemoSeedPreflightRefusals/manifest (0.87s)
+    --- PASS: TestDemoSeedPreflightRefusals/nonempty (1.56s)
+    --- PASS: TestDemoSeedPreflightRefusals/absent-session (1.38s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-session (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-session (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-grant (1.45s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-grant (1.40s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-db (0.85s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-interpreter (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-version (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/insufficient-budget (1.45s)
+    --- PASS: TestDemoSeedPreflightRefusals/spent-budget (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-episode (0.96s)
+    --- PASS: TestDemoSeedPreflightRefusals/cas-change (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/positional (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-db (1.10s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-pin (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-key (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-manifest (0.92s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	21.332s

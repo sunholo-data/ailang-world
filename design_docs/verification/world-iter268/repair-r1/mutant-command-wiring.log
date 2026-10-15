@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedHelpPreparation
+    demo_test.go:453: demo artifact command wiring missing "$DEMO_BIN" serve
+--- FAIL: TestDemoSeedHelpPreparation (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.335s
+FAIL

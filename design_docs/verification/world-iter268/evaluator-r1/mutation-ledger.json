@@ -1,0 +1,542 @@
+[
+  {
+    "name": "green-AuthenticatedCommits",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 3.023,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "green-PreflightRefusals",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 34.961,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "green-HelpPreparation",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedHelpPreparation$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.64,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "green-CommitFailures",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 3.881,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "green-mint",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestSessionMint_RequiresControllingTerminal$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.752,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "green-no-forgery",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestRESTCommitRefusesDecisionPacketObjects$",
+      "./host/daemon",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.42,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "mutant-bearer",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.961,
+    "expected_assertion": "SessionAbsent",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-unselected-world",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^world-only$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.928,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-world-scan",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^world-only$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.948,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-grant-check",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^missing-grant$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.022,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-spent-budget",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^spent-budget$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.965,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-manifest",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^manifest$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.925,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-identity",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^wrong-db$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.923,
+    "expected_assertion": "wrong refusal",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-pin-hash",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-interpreter$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.871,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-pin-version",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-version$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.11,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-episode",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.936,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-session-denial",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^expired-session$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.919,
+    "expected_assertion": "wrong refusal",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-epoch-hash",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.94,
+    "expected_assertion": "wrong refusal",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-epoch-nomination",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.939,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-CAS",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^cas-change$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.936,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-commit-status",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-denied$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.941,
+    "expected_assertion": "commit refusal boundary",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-commit-response",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-response$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.932,
+    "expected_assertion": "no retries",
+    "compiling_assertion_kill": false
+  },
+  {
+    "name": "mutant-header",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.1,
+    "expected_assertion": "frozen header identity mismatch",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-carrying",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.154,
+    "expected_assertion": "no real carrying entry",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-flags",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^missing-key$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 3.014,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "mutant-positional",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^positional$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.003,
+    "expected_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "restored-AuthenticatedCommits",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.768,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "restored-PreflightRefusals",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 31.715,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "restored-HelpPreparation",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedHelpPreparation$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.626,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "restored-CommitFailures",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 4.835,
+    "expected_assertion": null,
+    "named_green": true
+  }
+]

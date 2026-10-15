@@ -1,0 +1,7 @@
+{
+  "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+  "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+  "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c",
+  "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+  "docs/QUICKSTART.md": "03b7842693c4b6034d5d911a60ed4d7449ecdc7a0abbbfb0691a092fc6aeca07"
+}

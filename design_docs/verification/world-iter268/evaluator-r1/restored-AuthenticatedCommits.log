@@ -1,0 +1,4 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+--- PASS: TestDemoSeedAuthenticatedCommits (1.12s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.361s

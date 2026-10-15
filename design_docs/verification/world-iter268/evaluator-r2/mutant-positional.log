@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/positional
+    demo_test.go:431: positional: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.19s)
+    --- FAIL: TestDemoSeedPreflightRefusals/positional (1.19s)
+FAIL

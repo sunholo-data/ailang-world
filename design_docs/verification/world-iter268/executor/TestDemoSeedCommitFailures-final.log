@@ -1,0 +1,10 @@
+=== RUN   TestDemoSeedCommitFailures
+=== RUN   TestDemoSeedCommitFailures/commit-denied
+=== RUN   TestDemoSeedCommitFailures/commit-response
+=== RUN   TestDemoSeedCommitFailures/commit-uncertain
+--- PASS: TestDemoSeedCommitFailures (2.69s)
+    --- PASS: TestDemoSeedCommitFailures/commit-denied (0.90s)
+    --- PASS: TestDemoSeedCommitFailures/commit-response (0.90s)
+    --- PASS: TestDemoSeedCommitFailures/commit-uncertain (0.90s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	2.936s

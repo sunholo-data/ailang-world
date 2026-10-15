@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+    demo_test.go:395: missing-grant: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.94s)
+    --- FAIL: TestDemoSeedPreflightRefusals/missing-grant (0.94s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.336s
+FAIL

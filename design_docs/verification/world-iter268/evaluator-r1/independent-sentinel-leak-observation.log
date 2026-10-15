@@ -1,0 +1,5 @@
+=== RUN   TestEvaluatorR1VersionProbeInheritsCredential
+    evaluator_r1_probe_test.go:25: CONFIRMED actual demoPreflight version child inherited the sentinel registry credential; no real credential used
+--- PASS: TestEvaluatorR1VersionProbeInheritsCredential (0.20s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.550s

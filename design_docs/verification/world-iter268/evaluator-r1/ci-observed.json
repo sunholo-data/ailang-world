@@ -1,0 +1,26 @@
+{
+  "headRefOid": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+  "state": "OPEN",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-15T05:16:45Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/38685858770/job/116260404701",
+      "name": "ailang-code verify gate",
+      "startedAt": "2026-10-15T05:16:04Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "0001-01-01T00:00:00Z",
+      "conclusion": "",
+      "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/38685858770/job/116260404883",
+      "name": "go host build + test gate",
+      "startedAt": "2026-10-15T05:16:04Z",
+      "status": "IN_PROGRESS",
+      "workflowName": "CI"
+    }
+  ]
+}

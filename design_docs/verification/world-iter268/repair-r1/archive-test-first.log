@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/archive-absent
+    demo_test.go:431: archive-absent: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.15s)
+    --- FAIL: TestDemoSeedPreflightRefusals/archive-absent (1.15s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.506s
+FAIL

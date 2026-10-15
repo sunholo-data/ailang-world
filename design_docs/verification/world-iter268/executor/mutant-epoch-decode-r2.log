@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+    demo_test.go:405: wrong refusal: want "registry: decode" got "ailang-worldd demo seed: interpreter has no nominated epoch\n"
+--- FAIL: TestDemoSeedPreflightRefusals (1.00s)
+    --- FAIL: TestDemoSeedPreflightRefusals/epoch-decode (1.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.305s
+FAIL

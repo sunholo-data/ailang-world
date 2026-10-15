@@ -1,0 +1,4 @@
+=== RUN   TestQuickstartSection11FlagsMatchTheCLI
+--- PASS: TestQuickstartSection11FlagsMatchTheCLI (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.233s

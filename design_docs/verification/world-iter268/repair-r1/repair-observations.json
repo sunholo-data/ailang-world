@@ -1,0 +1,44 @@
+{
+  "protected_paths": 12,
+  "protected_sha_and_lines_equal": true,
+  "all_quickstart_before_section12_byte_equal": true,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "--",
+        "world",
+        "go.mod",
+        "go.sum",
+        "tools/launchd",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gofmt",
+        "-l",
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

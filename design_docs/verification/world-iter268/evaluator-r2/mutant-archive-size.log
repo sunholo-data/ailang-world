@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/archive-size
+    demo_test.go:431: archive-size: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.98s)
+    --- FAIL: TestDemoSeedPreflightRefusals/archive-size (0.98s)
+FAIL

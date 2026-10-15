@@ -1,0 +1,42 @@
+{
+  "protected_count": 12,
+  "equal_sha_and_line_count": true,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "--",
+        "world",
+        "go.mod",
+        "go.sum",
+        "tools/launchd",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gofmt",
+        "-l",
+        "cmd/ailang-worldd/demo_test.go"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

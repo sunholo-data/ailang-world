@@ -1,0 +1,18 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+=== RUN   TestDemoSeedPreflightRefusals/epoch-candidate
+=== RUN   TestDemoSeedPreflightRefusals/source-absent
+--- PASS: TestDemoSeedPreflightRefusals (2.78s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-decode (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-candidate (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/source-absent (0.92s)
+=== RUN   TestDemoSeedCommitFailures
+=== RUN   TestDemoSeedCommitFailures/commit-denied
+=== RUN   TestDemoSeedCommitFailures/commit-response
+=== RUN   TestDemoSeedCommitFailures/commit-uncertain
+--- PASS: TestDemoSeedCommitFailures (2.79s)
+    --- PASS: TestDemoSeedCommitFailures/commit-denied (0.93s)
+    --- PASS: TestDemoSeedCommitFailures/commit-response (0.92s)
+    --- PASS: TestDemoSeedCommitFailures/commit-uncertain (0.94s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	5.908s

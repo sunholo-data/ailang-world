@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+--- PASS: TestDemoSeedPreflightRefusals (4.47s)
+    --- PASS: TestDemoSeedPreflightRefusals/world-only (4.47s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	7.354s

@@ -1,0 +1,102 @@
+{
+  "runDemo": {
+    "mutated": [
+      "unknown subcommand",
+      "positional arguments",
+      "required flags",
+      "90s overall budget (SURVIVES)"
+    ],
+    "existing_helpers_exercised": [
+      "parseVerbFlags help/flags",
+      "resolveSession absent token"
+    ],
+    "propagation": [
+      "demoSeedDomain error"
+    ],
+    "success_boundary": "explicit incomplete exit1/no manifest, authenticated test"
+  },
+  "demoGet": {
+    "mutated": [
+      "HTTP read error",
+      "absent required GET"
+    ]
+  },
+  "demoPreflight": {
+    "mutated": [
+      "existing manifest",
+      "DB/health identity",
+      "pin read",
+      "pin hash",
+      "archive unavailable",
+      "archive Hash",
+      "archive Size",
+      "archive/health Version equality",
+      "v0.41.0 version prefix",
+      "nonempty world/head/log",
+      "registry object integrity",
+      "registry wire decode",
+      "epoch nomination"
+    ],
+    "propagation_not_per_site_mutated": [
+      "demoGet health",
+      "demoGrants",
+      "headState read",
+      "log page read",
+      "demoGet registry",
+      "object read"
+    ],
+    "unprovoked_operational": [
+      "filepath.Abs failure for db",
+      "filepath.Abs failure for health db"
+    ]
+  },
+  "demoGrants": {
+    "mutated": [
+      "session denial",
+      "episode mismatch",
+      "live sufficient grants",
+      "subtract persisted spend",
+      "world-row scan threshold"
+    ],
+    "diagnostic_only_mutation": [
+      "OpenReadOnly failure message (wrong refusal assertion; not a bypass kill)"
+    ],
+    "unprovoked_operational": [
+      "OpenReadOnly actual error path is exercised by readonly-db",
+      "ResolveContext SQLite query error",
+      "EffectSpend SQLite query error",
+      "ScanUnreadableWorlds SQLite query error"
+    ],
+    "defensive_contract": "nil success/denial pair not injected; resolver promises either denial or success"
+  },
+  "demoSeedDomain": {
+    "mutated": [
+      "source read",
+      "CAS mismatch",
+      "commit transport uncertainty",
+      "HTTP status",
+      "response selectedHead/JSON guard",
+      "bearer"
+    ],
+    "propagation_not_per_site_mutated": [
+      "preflight error",
+      "headState read"
+    ],
+    "nonrepresentable_supported_input": "json.Marshal of fixed strings/int64/slices/bytes struct cannot fail through supported input; no arbitrary interface/float/channel field"
+  },
+  "supporting_diff": {
+    "mutated": [
+      "frozen interpreter header",
+      "semantics epoch header",
+      "carrying transition reference",
+      "new documentation artifact command"
+    ],
+    "observed_survivors": [
+      "StateRoot derivation changed to hash(o.Hash) only: authenticated test remains green",
+      "entryHash changed to hash(append(encoded,0)): authenticated test remains green",
+      "90s command budget changed to24h: all four TestDemoSeed top-level tests remain green"
+    ],
+    "main_dispatch_help": "own-M2a production revert kills each three named M2a acceptance tests and extra commit-failure test; earlier mint regression stays green",
+    "scope": "No blanket mutation completeness, no whole-repo test coverage, no direct Linux certification."
+  }
+}

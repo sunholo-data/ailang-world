@@ -1,0 +1,4 @@
+# github.com/sunholo-data/ailang-world/cmd/ailang-worldd [github.com/sunholo-data/ailang-world/cmd/ailang-worldd.test]
+cmd/ailang-worldd/demo_seed.go:13:2: "strings" imported and not used
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd [build failed]
+FAIL

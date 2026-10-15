@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+--- PASS: TestDemoSeedPreflightRefusals (0.89s)
+    --- PASS: TestDemoSeedPreflightRefusals/readonly-db (0.89s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.142s

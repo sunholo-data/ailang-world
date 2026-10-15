@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-absent
+    demo_test.go:405: wrong refusal: want "cannot read interpreter pin" got "ailang-worldd demo seed: interpreter pin mismatch\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.94s)
+    --- FAIL: TestDemoSeedPreflightRefusals/pin-absent (0.94s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.268s
+FAIL

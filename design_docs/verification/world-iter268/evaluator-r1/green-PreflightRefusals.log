@@ -1,0 +1,68 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+=== RUN   TestDemoSeedPreflightRefusals/nonempty
+=== RUN   TestDemoSeedPreflightRefusals/absent-session
+=== RUN   TestDemoSeedPreflightRefusals/unknown-session
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+=== RUN   TestDemoSeedPreflightRefusals/expired-grant
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+=== RUN   TestDemoSeedPreflightRefusals/health-interpreter
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+=== RUN   TestDemoSeedPreflightRefusals/insufficient-budget
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+=== RUN   TestDemoSeedPreflightRefusals/positional
+=== RUN   TestDemoSeedPreflightRefusals/missing-db
+=== RUN   TestDemoSeedPreflightRefusals/missing-pin
+=== RUN   TestDemoSeedPreflightRefusals/missing-key
+=== RUN   TestDemoSeedPreflightRefusals/missing-manifest
+=== RUN   TestDemoSeedPreflightRefusals/health-absent
+=== RUN   TestDemoSeedPreflightRefusals/health-malformed
+=== RUN   TestDemoSeedPreflightRefusals/health-down
+=== RUN   TestDemoSeedPreflightRefusals/missing-epoch
+=== RUN   TestDemoSeedPreflightRefusals/epoch-hash
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-absent
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+=== RUN   TestDemoSeedPreflightRefusals/epoch-candidate
+=== RUN   TestDemoSeedPreflightRefusals/source-absent
+=== RUN   TestDemoSeedPreflightRefusals/unknown-verb
+--- PASS: TestDemoSeedPreflightRefusals (34.30s)
+    --- PASS: TestDemoSeedPreflightRefusals/manifest (0.96s)
+    --- PASS: TestDemoSeedPreflightRefusals/nonempty (1.02s)
+    --- PASS: TestDemoSeedPreflightRefusals/absent-session (1.08s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-session (0.98s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-session (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-grant (1.01s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-grant (1.11s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-db (1.04s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (1.55s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-interpreter (1.28s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-version (1.12s)
+    --- PASS: TestDemoSeedPreflightRefusals/insufficient-budget (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/spent-budget (1.01s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-episode (1.49s)
+    --- PASS: TestDemoSeedPreflightRefusals/cas-change (1.65s)
+    --- PASS: TestDemoSeedPreflightRefusals/positional (0.86s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-db (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-pin (1.67s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-key (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-manifest (1.66s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-absent (0.84s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-malformed (0.84s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-down (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-epoch (0.99s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-hash (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/readonly-db (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-absent (0.98s)
+    --- PASS: TestDemoSeedPreflightRefusals/world-only (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-decode (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-candidate (1.05s)
+    --- PASS: TestDemoSeedPreflightRefusals/source-absent (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-verb (0.87s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	34.555s
