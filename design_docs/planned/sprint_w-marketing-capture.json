@@ -560,7 +560,7 @@
         "packages/world-demo/README.md",
         "host/coordinator/world_demo_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestWorldDemoApprovalExactOnePlan"
       ],
@@ -647,7 +647,18 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "passes": true,
+      "completed": "2026-10-15T02:04:31.655763+00:00",
+      "completion_evidence": {
+        "commit": "52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b",
+        "iteration": 267,
+        "pr": 266,
+        "reviewed_sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+        "evaluation": "PASS90/100, zero blocking; same-model-fresh-context FLAG",
+        "ci": "PR38665538475 + merge38667006325 required2/2success",
+        "notes": "C1 discharged; E267-S1 separately queued177. Future milestones not completed."
+      }
     },
     {
       "id": "M2a",

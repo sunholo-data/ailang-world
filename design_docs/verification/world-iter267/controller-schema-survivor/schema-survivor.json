@@ -1,0 +1,24 @@
+{
+  "base": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+  "original_sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+  "mutant_sha256": "c53c7d7916413eda22f3f9bfd107f408d974af3addcddab2c52d4e0900076053",
+  "mutation": "outputSchema.required world -> decision",
+  "restored_byte_identical": true,
+  "results": [
+    {
+      "name": "schema-mutant-check",
+      "rc": 0,
+      "elapsed_s": 0.3
+    },
+    {
+      "name": "schema-mutant-build",
+      "rc": 0,
+      "elapsed_s": 0.99
+    },
+    {
+      "name": "schema-mutant-test",
+      "rc": 0,
+      "elapsed_s": 14.41
+    }
+  ]
+}

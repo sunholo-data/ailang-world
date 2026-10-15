@@ -1,0 +1,19 @@
+{
+  "name": "candidate-go",
+  "cmd": [
+    "bash",
+    "scripts/verify_go.sh"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+  "sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+  "rc": 0,
+  "elapsed_s": 664.54,
+  "platform": "darwin/arm64",
+  "removed_telemetry_keys": [
+    "GOOGLE_CLOUD_PROJECT",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "OTEL_RESOURCE_ATTRIBUTES",
+    "OTLP_GOOGLE_CLOUD_PROJECT"
+  ],
+  "log": "/Users/voightkampff/.ailang/state/world-iter267/candidate-go.log"
+}

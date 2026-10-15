@@ -1,21 +1,12 @@
-# World mission dashboard — iteration 266 (2026-10-14)
+# World mission dashboard — iteration267 (2026-10-15)
 
-- **This fire:** the fleet resolved the PNG gate (`2d14dbd`), which unparked row 150 (`w-marketing-capture`). This fire produced design r4, a 17-milestone sprint plan, and **M1a LANDED `28ff4db`** (PR #264): the `packages/world-demo` evidence law.
-- **Latest landing:** row 150 M1a → `28ff4db` (iteration 266; judge sonnet PASS 88, zero blocking). Merge CI 2/2.
-- **Row 150 state:** 1 of 17 milestones done. NEXT: M1b (convention-v2 approval plan + descriptor), then M2a… in plan order (`design_docs/planned/w-marketing-capture-sprint-plan.md`). The release PNGs need a separate ATTENDED capture run (descriptor publish + one `session mint`).
-- **Measured this fire (Chrome 155.0.8059.41):**
-  - `scriptEnabled=false` writes NO PNG yet exits rc 0.
-  - Headless Chrome follows the OS appearance, so every shot pins `preferredColorScheme`.
-  - Five real-content shots were byte-identical across two passes.
-  - The workbench payload flag is `1`, not `true`.
-- **Clauses:** 1/2/3/6/7 MET. 4 UNMET: the attended row 93 paired FINAL recorded FAILS at `c21f303`, so the next step is Mark's. 5 UNMET: 114 → 139 after a passing FINAL.
-- **Parked on Mark:** D-WORLD-75 (row 150 determinism scope: frozen-store captures; fresh-seed equality not claimed). The default is A, and nothing blocks on it. The ledger has 62 rows, ONE OPEN.
-- **Routing this fire:**
-  - Controller: opus.
-  - Designer, planner and executor: `codex:gpt-6.1-sol` (recipe).
-  - Quorum r3: glm/kimi/sonnet.
-  - Evaluator: sonnet (Agent tool).
-- **Quota:** codex bucket 3 runs (150k + 205k + 109k tok). Anthropic: the controller plus one sonnet judge.
-- **Metered spend:** $0.23 (quorum).
-- **Orphans:** none new (255 already credited in 256).
-- **Evidence:** `design_docs/verification/world-iter266/`, `design_docs/verification/world-row150-design/iter266-*`.
+- **This fire:** row150 M1b LANDED52ae7ff(PR266), standalone demo approval source/descriptor, strict refusals, real-pin acceptance and complete payload docs.
+- **Independent judge:** PASS90/100, zero blocking. Preferred native Sonnet Unknown model; REQUIRED distinct native Sol6.1 fresh context ran, FLAG same-model-fresh-context.
+- **Validation:** pinned0.41.0 AIL and unchanged Go build/plain/race PASS. Exact PR/mergeCI2/2GREEN.26 executor compiling mutations killed; controller required mutation reproduced.12 protected paths unchanged.
+- **Row150:**2/17done; NEXT M2a then M2b→M3a. Release captures attended publish+session mint; no release performed.
+- **Clauses:**1/2/3/6/7MET;4UNMET(attended FINAL FAILS);5UNMET(114 after passing FINAL,139 after114). Goal unmoved; D69 exception authorizes release prep.
+- **Parked on Mark:**D-WORLD-75 only, unchanged; frozen-store scope vs fresh-seed equality. Recommend/defaultA; no current code block.
+- **Follow-up:**177 output-schema assertion gap, nonblocking E267-S1, below critical/release work.
+- **Routing:**all four roles native; designer/planner/executor Sol6.1 model pins preserved, recipe→native override FLAGGED; judge fallback explicit. Controller Codex; role tokens unreported.
+- **Metered:**$0.00; last20 primary [HARNESS]0/20. Sonnet recurrence fleet ticket, no harness repair.
+- **Evidence:**design_docs/verification/world-iter267/; source mergeCI38667006325, PRCI38665538475.

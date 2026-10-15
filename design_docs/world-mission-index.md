@@ -14,6 +14,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 267 | 2026-10-15 | row150 M1b approval/descriptor LANDED52ae7ff(PR266); native four roles, REQUIRED fresh-context Sol evaluator PASS90 (Sonnet unsupported FLAG); full local/PR/merge CI green; supporting output-schema survivor separately queued177 [PRODUCT] |
 | 266 | 2026-10-14 | fleet PNG fix (`2d14dbd`) unparked row 150: design r4 (codex designer; quorum r3 BLOCKED → controller carve-out + Chrome 155/colour/real-capture measurements), 17-milestone plan, M1a `packages/world-demo` evidence law LANDED `28ff4db` (PR #264, judge sonnet PASS 88); D-WORLD-75 filed [PRODUCT] |
 | 265 | 2026-10-14 | rule-(d) no-pick record (`e7edffa`), then Mark's mid-fire attended D-WORLD-73 = A → row 176 LANDED `8511bad` (PR #261): daemon binds `Human.Approve`, serialized daemon-wide; codex executor, controller-corrected AC8 (world-head conflict), judge sonnet PASS 90 [PRODUCT] |
 | 264 | 2026-10-14 | NO PICK (rule (d)), 8th idle fire in a row: nothing moved since 263 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |

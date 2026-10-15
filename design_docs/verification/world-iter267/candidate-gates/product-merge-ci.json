@@ -1,0 +1,30 @@
+{
+  "run": {
+    "id": 38667006325,
+    "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38667006325",
+    "name": "CI",
+    "head_sha": "52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b",
+    "head_branch": "dev",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "checks": {
+    "total_count": 2,
+    "check_runs": [
+      {
+        "name": "ailang-code verify gate",
+        "status": "completed",
+        "conclusion": "success",
+        "details_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38667006325/job/116201144485"
+      },
+      {
+        "name": "go host build + test gate",
+        "status": "completed",
+        "conclusion": "success",
+        "details_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38667006325/job/116201144359"
+      }
+    ]
+  },
+  "green": true
+}

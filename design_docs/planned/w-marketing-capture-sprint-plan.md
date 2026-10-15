@@ -109,6 +109,8 @@ Seed whole orchestration is supervised with300s bound; source-proof leg90s. Capt
 
 ## C11 observations and mutation discipline
 
+**Snapshot-path correction (iteration267):** charter snapshot guardrail supersedes every .snap/M<k>/ location below. Use $HOME/.ailang/state/world-iter<N>/snap/M<k>/ outside the checkout for source copies and OBS_OUT; never create Go snapshots inside the worktree. Location only changes; gates/protected-file policy do not.
+
 Protected OBSERVATION uses SHA256 plus newline count on both sides, never writes protected originals. Include recursive tools/launchd subtree (12 paths measured, including testdata). At each run, capture observation before and after, compare sorted path/hash/line triples and scoped read-only diff. Preserve initial sprint observation for final comparison; any inherited difference is a finding, not permission to restore. The copied-input comparator mutation lives in TestMarketingProtectedObservationComparator; inventory mutation makes a genuine extra commit in a disposable test store.
 
 Exact per-boundary observation command (run before/after with OBS_OUT naming only a .snap file):
@@ -165,7 +167,7 @@ Each mutant is a temporary compiling guard/data edit and must reach its specifie
 
 ## M1a — Package evidence law and non-vacuous pinned manifest
 
-Design M1; 22 minutes; dependency: base; status **completed** — landed iteration 266 in `28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6` (PASS 88/100, zero blocking; commit evidence). Iteration 267 independently reran both named evidence/legacy-drift tests under v0.41.0: PASS. All other milestone statuses remain pending.
+Design M1; 22 minutes; dependency: base; status **completed** — landed iteration 266 in `28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6` (PASS 88/100, zero blocking; commit evidence). Iteration 267 independently reran both named evidence/legacy-drift tests under v0.41.0: PASS. At initial M1a metadata reconciliation, other milestones were pending; M1b completion is recorded below.
 
 Exact executor files:
 
@@ -221,7 +223,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M1b — Convention-v2 approval plan, descriptor and package docs
 
-Design M1; 25 minutes; dependency: M1a; status **pending**.
+Design M1; 25 minutes; dependency: M1a; status **completed** — iteration267 merge52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b, PR #266; REQUIRED fresh-context evaluator PASS90/100, zero blocking; exact PR/merge CI2/2GREEN. Supporting output-schema gap carried as charter177; later milestones pending.
 
 Exact executor files:
 

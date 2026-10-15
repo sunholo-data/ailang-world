@@ -1,0 +1,464 @@
+{
+  "evaluation_result": "pass",
+  "evaluation_score": 90,
+  "evaluation_round": 1,
+  "reviewed_sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+  "base_sha": "57941bf7410c7462d755cd3a94748eaf76d66288",
+  "scope": "M1b",
+  "model_flag": "same-model-fresh-context",
+  "blocking_findings": [],
+  "findings": [
+    {
+      "id": "E267-S1",
+      "severity": "nonblocking",
+      "file": "packages/world-demo/transitions.json",
+      "line": 60,
+      "summary": "Output schema output contract mutation survives complete M1b gate",
+      "disposition": "separate queue under rule3n(b); no scope expansion",
+      "mutation": "required world -> decision",
+      "scope": "TestWorldDemoApprovalExactOnePlan only"
+    }
+  ],
+  "category_scores": {
+    "tests": 20,
+    "lint_type_verification": 10,
+    "acceptance": 30,
+    "code_quality": 10,
+    "documentation": 10,
+    "design_fidelity": 10
+  },
+  "own_evidence": [
+    {
+      "name": "pristine-approval",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 18.795,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/pristine-approval.log"
+    },
+    {
+      "name": "pristine-support",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemo(LegacyGradeDrift|EvidencePinnedManifest)$|^TestProducerMintsNoPacketForMultiEffectPlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 2.348,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/pristine-support.log"
+    },
+    {
+      "name": "two-effects-check",
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/packages/world-demo",
+      "rc": 0,
+      "seconds": 0.168,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/two-effects-check.log"
+    },
+    {
+      "name": "two-effects-build",
+      "argv": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 0.58,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/two-effects-build.log"
+    },
+    {
+      "name": "two-effects-red",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 1,
+      "seconds": 1.418,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/two-effects-red.log"
+    },
+    {
+      "mutation": "two-effects",
+      "landed_sha256": "4e4bf9b69d44339e9495ef2230a0441edab852ba52ed7e1a5e10decc1a66239e",
+      "assertion": "len(plan.effects)==1: got 2"
+    },
+    {
+      "name": "two-effects-restored",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 13.931,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/two-effects-restored.log"
+    },
+    {
+      "name": "missing-goal-refusal-check",
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/packages/world-demo",
+      "rc": 0,
+      "seconds": 0.135,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/missing-goal-refusal-check.log"
+    },
+    {
+      "name": "missing-goal-refusal-build",
+      "argv": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 0.185,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/missing-goal-refusal-build.log"
+    },
+    {
+      "name": "missing-goal-refusal-red",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 1,
+      "seconds": 12.776,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/missing-goal-refusal-red.log"
+    },
+    {
+      "mutation": "missing-goal-refusal",
+      "landed_sha256": "338cd0b69a4616420fc03b01a65954765e1cffc94b0184494050a5b11d80a6a2",
+      "assertion": "zero-effects refusal required"
+    },
+    {
+      "name": "missing-goal-refusal-restored",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 12.525,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/missing-goal-refusal-restored.log"
+    },
+    {
+      "name": "kind-law-check",
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/packages/world-demo",
+      "rc": 0,
+      "seconds": 0.114,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/kind-law-check.log"
+    },
+    {
+      "name": "kind-law-build",
+      "argv": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 0.127,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/kind-law-build.log"
+    },
+    {
+      "name": "kind-law-red",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoLegacyGradeDrift$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 1,
+      "seconds": 1.272,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/kind-law-red.log"
+    },
+    {
+      "mutation": "kind-law",
+      "landed_sha256": "44266652ac74532fbfa1a8c1fdd9fb431505f2c450b8a2a89074cfd0e9b9720a",
+      "assertion": "roster kind AiReview"
+    },
+    {
+      "name": "kind-law-restored",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoLegacyGradeDrift$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 1.243,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/kind-law-restored.log"
+    },
+    {
+      "name": "descriptor-cost-check",
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/packages/world-demo",
+      "rc": 0,
+      "seconds": 0.11,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/descriptor-cost-check.log"
+    },
+    {
+      "name": "descriptor-cost-build",
+      "argv": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 0.134,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/descriptor-cost-build.log"
+    },
+    {
+      "name": "descriptor-cost-red",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 1,
+      "seconds": 1.813,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/descriptor-cost-red.log"
+    },
+    {
+      "mutation": "descriptor-cost",
+      "landed_sha256": "ac563c263c0ba0181ac0a8f1cf45de66881f9cf8877207139d1a3ef169bf31f5",
+      "assertion": "approval descriptor:"
+    },
+    {
+      "name": "descriptor-cost-restored",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 12.864,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/descriptor-cost-restored.log"
+    }
+  ],
+  "support_probe": [
+    {
+      "mutation": "descriptor-output-schema",
+      "original_sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+      "mutant_sha256": "c53c7d7916413eda22f3f9bfd107f408d974af3addcddab2c52d4e0900076053",
+      "mutation_detail": "required world replaced by decision; pending/refusal outputs never carry decision"
+    },
+    {
+      "name": "output-schema-check",
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/packages/world-demo",
+      "rc": 0,
+      "seconds": 0.026,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/output-schema-check.log"
+    },
+    {
+      "name": "output-schema-build",
+      "argv": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 0.109,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/output-schema-build.log"
+    },
+    {
+      "name": "output-schema-survivor",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 11.769,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/output-schema-survivor.log"
+    },
+    {
+      "name": "output-schema-restored",
+      "argv": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "rc": 0,
+      "seconds": 11.692,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/evaluator-snap/output-schema-restored.log"
+    }
+  ],
+  "platform": "darwin/arm64",
+  "token_usage": null,
+  "gate_source": "local",
+  "local_gates": {
+    "ail": {
+      "name": "candidate-ail",
+      "cmd": [
+        "bash",
+        "scripts/verify_ail.sh"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+      "sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+      "rc": 0,
+      "elapsed_s": 66.19,
+      "platform": "darwin/arm64",
+      "removed_telemetry_keys": [
+        "GOOGLE_CLOUD_PROJECT",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_RESOURCE_ATTRIBUTES",
+        "OTLP_GOOGLE_CLOUD_PROJECT"
+      ],
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/candidate-ail.log"
+    },
+    "go": {
+      "name": "candidate-go",
+      "cmd": [
+        "bash",
+        "scripts/verify_go.sh"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+      "sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+      "rc": 0,
+      "elapsed_s": 664.54,
+      "platform": "darwin/arm64",
+      "removed_telemetry_keys": [
+        "GOOGLE_CLOUD_PROJECT",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_RESOURCE_ATTRIBUTES",
+        "OTLP_GOOGLE_CLOUD_PROJECT"
+      ],
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/candidate-go.log"
+    }
+  },
+  "remote_ci": {
+    "head_sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+    "status": "in_progress",
+    "conclusion": "",
+    "jobs": [
+      {
+        "name": "go host build + test gate",
+        "status": "in_progress",
+        "conclusion": "",
+        "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38665538475/job/116196530606"
+      },
+      {
+        "name": "ailang-code verify gate",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38665538475/job/116196530676"
+      }
+    ]
+  },
+  "merge_authorized": false,
+  "merge_condition": "Require remote exact-head CI GREEN before controller merge",
+  "finalized_at": "2026-10-15T01:37:00.908403+00:00",
+  "report_path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/design_docs/verification/world-iter267/evaluator-r1.md",
+  "machine_report_path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267/design_docs/verification/world-iter267/evaluator-r1.json",
+  "restoration": "All own modified production bytes restored; final product diff empty; mutation subprocesses terminal"
+}
