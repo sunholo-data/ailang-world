@@ -1,0 +1,272 @@
+{
+  "base": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "record": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+  "reviewed_source": "763c60a20358f486df395043131557c1143735ba",
+  "checks": [
+    {
+      "name": "exact-record-head",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "ADMIN-only-scope",
+      "pass": true,
+      "detail": {
+        "paths": 171
+      }
+    },
+    {
+      "name": "source-reviewed-merge-trees-equal",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "five-product-paths-byte-equal",
+      "pass": true,
+      "detail": {
+        "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+        "cmd/ailang-worldd/demo_seed.go": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361",
+        "cmd/ailang-worldd/demo_test.go": "36c9d27b6307be1f0995de7067a8a9f92c683e41b770ac6bd7a50d67f35c4126",
+        "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c",
+        "docs/QUICKSTART.md": "9e868e155cc7f0baa2173858f52cfedb37a856420944f131b94cdad8ff199fbe"
+      }
+    },
+    {
+      "name": "frozen-paths-byte-equal",
+      "pass": true,
+      "detail": {
+        "paths": 11,
+        "files": [
+          "go.mod",
+          "go.sum",
+          "tools/launchd/README.md",
+          "tools/launchd/derive-planner-lane.sh",
+          "tools/launchd/mission-template.plist",
+          "tools/launchd/test_mission_stall.sh",
+          "tools/launchd/testdata/planner-lane/n-no-backtick-bullet.md",
+          "world/contracts.ail",
+          "world/logepoch.ail",
+          "world/transitions.ail",
+          "world/types.ail"
+        ]
+      }
+    },
+    {
+      "name": "ledger-whole-bytes-preserved",
+      "pass": true,
+      "detail": {
+        "rows": 62
+      }
+    },
+    {
+      "name": "only-D75-open",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "status-three-single-lines",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "status-current-268-267-266",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "old-status267266-unchanged",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "status-archive-prefix-and-exact265",
+      "pass": true,
+      "detail": {
+        "old_lines": 542,
+        "new_lines": 544
+      }
+    },
+    {
+      "name": "status-before-queue-edit-arithmetic",
+      "pass": true,
+      "detail": {
+        "before": 6176,
+        "after_rotation_before_queue_edits": 6176,
+        "moved": 1
+      }
+    },
+    {
+      "name": "queue-177-to179",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "queue-other176-lines-byte-equal",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "row150-only-current-tag-changed",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "charter-entire-other-content-preserved",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "old-live36-numbered-plus-note",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "old-live-all37-body-interiors-exact",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "old-archive-all-body-interiors-and-headings-exact",
+      "pass": true,
+      "detail": {
+        "records": 218
+      }
+    },
+    {
+      "name": "live40-numbered",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "attended-note-rotated-body-exact",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "only265-historical-numbered-title-corrected",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "265-correction-supported-in-old-body",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "index257-to258-no-lost-ids",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "index-one-attended-row",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "three-markers-faithful-to-old-index",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "single-live-archive-notice",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "last20-full-headline-primary-HARNESS0",
+      "pass": true,
+      "detail": {
+        "ids": [
+          248,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255,
+          256,
+          257,
+          258,
+          259,
+          260,
+          261,
+          262,
+          263,
+          264,
+          265,
+          266,
+          267,
+          268
+        ],
+        "harness": [],
+        "positive_control_any_old_harness": true
+      }
+    },
+    {
+      "name": "17-milestones3-complete14-pending",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "other16-milestone-objects-deep-equal",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "M2a-no-requirement-or-gate-change",
+      "pass": true,
+      "detail": {
+        "new_fields": [
+          "completed",
+          "completion_evidence",
+          "passes"
+        ]
+      }
+    },
+    {
+      "name": "M2a-completion-exact-source",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "17external-snapshots-in-each-plan",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "130-R3-manifest-byte-hash-and-size",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "all-prior-r1r2-report-and-raw-bytes-preserved",
+      "pass": true,
+      "detail": {
+        "files": 174
+      }
+    },
+    {
+      "name": "dashboard-under40lines",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "gate4-full-base-ISO-in-entry-and-status",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "all-new-candidate-artifacts-tracked",
+      "pass": true,
+      "detail": {
+        "files": 162
+      }
+    },
+    {
+      "name": "record-commit-no-auto-close-keyword-with-control",
+      "pass": true,
+      "detail": null
+    }
+  ],
+  "failures": []
+}

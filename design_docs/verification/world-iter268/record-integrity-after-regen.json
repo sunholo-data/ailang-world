@@ -1,5 +1,7 @@
 {
-  "all_before_regen_entry_bodies_preserved": true,
+  "historical_interior_body_bytes_preserved": true,
+  "record_boundary_blank_LFs_normalized_by_CLI": true,
+  "current_entry_268_progress_label_repaired_after_regeneration": true,
   "old_full_entries_preserved": 36,
   "headline265_only_header_changed": true,
   "log_entries_after": 40,

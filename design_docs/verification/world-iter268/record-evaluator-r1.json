@@ -1,0 +1,191 @@
+{
+  "mission": "world",
+  "iteration": 268,
+  "scope": "ADMIN prepublication record-content review only; no new product verdict",
+  "round": 1,
+  "result": "FAIL",
+  "score": 76,
+  "blocking_count": 1,
+  "blocking": [
+    {
+      "id": "R268-REC-B1",
+      "path": "design_docs/world-mission-log.md",
+      "line": 1851,
+      "issue": "Current **Progress:** label is unparsed; actual weekly consumer returns iteration227 progress",
+      "repair": "Change current label only to **Progress**: and return for independent record review",
+      "evidence": "record-evaluator-r1/progress-parser.json"
+    }
+  ],
+  "nonblocking": [
+    {
+      "id": "R268-REC-N1",
+      "issue": "Qualify body preservation: interiors byte-identical, five inter-record LF separator changes",
+      "evidence": "record-evaluator-r1/boundary-normalization.json"
+    }
+  ],
+  "reviewed_record_commit": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+  "source_merge_base": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "gate4_base_read": "2026-10-15T06:18:07Z",
+  "judge": "native Agent gpt-6.1-sol, fresh separate context, neither author nor product judge",
+  "judge_independence": "same-model-fresh-context FLAG",
+  "token_usage": "not reported / unknown",
+  "product_verdict": "existing R3 PASS90 unchanged; no new product verdict",
+  "publication_ci": {
+    "status": "future; no record PR at reviewed head",
+    "required_before_iteration_complete": [
+      "final record pull_request exact-SHA both required jobs SUCCESS",
+      "record merge push exact-SHA both required jobs SUCCESS"
+    ],
+    "no_pending_credit": true
+  },
+  "rubric": {
+    "tests_pass": 0,
+    "lint_clean": 10,
+    "record_acceptance": 27,
+    "record_quality": 15,
+    "documentation": 14,
+    "design_fidelity": 10,
+    "total": 76,
+    "hard_fail": "required current-progress integration fails"
+  },
+  "independent_integrity": {
+    "pass_count": 39,
+    "check_count": 39,
+    "failures": [],
+    "evidence": "record-evaluator-r1/integrity.json"
+  },
+  "independent_shell_gates": {
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r1",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "commands": [
+      {
+        "name": "ledger",
+        "command": [
+          "bash",
+          "scripts/mission_decisions.sh",
+          "--check",
+          "--file",
+          "design_docs/world-mission.md"
+        ],
+        "rc": 0,
+        "seconds": 0.04,
+        "terminal": true
+      },
+      {
+        "name": "open-decisions",
+        "command": [
+          "bash",
+          "scripts/mission_decisions.sh",
+          "--open",
+          "--file",
+          "design_docs/world-mission.md"
+        ],
+        "rc": 0,
+        "seconds": 0.035,
+        "terminal": true
+      },
+      {
+        "name": "mission-config",
+        "command": [
+          "bash",
+          "scripts/verify_go.sh",
+          "--mission-config-check"
+        ],
+        "rc": 0,
+        "seconds": 0.04,
+        "terminal": true
+      },
+      {
+        "name": "privacy",
+        "command": [
+          "bash",
+          "scripts/check_no_personal_email.sh"
+        ],
+        "rc": 0,
+        "seconds": 0.632,
+        "terminal": true
+      },
+      {
+        "name": "metadata-diffcheck",
+        "command": [
+          "git",
+          "diff",
+          "--check",
+          "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+          "HEAD",
+          "--",
+          "design_docs/world-mission.md",
+          "design_docs/world-mission-log.md",
+          "design_docs/world-mission-log-archive.md",
+          "design_docs/world-mission-index.md",
+          "design_docs/world-mission-status-archive.md",
+          "design_docs/world-mission-dashboard.md",
+          "design_docs/planned"
+        ],
+        "rc": 0,
+        "seconds": 0.035,
+        "terminal": true
+      },
+      {
+        "name": "ignore-positive-control",
+        "command": [
+          "git",
+          "check-ignore",
+          "-v",
+          ".ailang/record-evaluator-control"
+        ],
+        "rc": 0,
+        "seconds": 0.013,
+        "terminal": true
+      },
+      {
+        "name": "ignore-report",
+        "command": [
+          "git",
+          "check-ignore",
+          "-v",
+          "design_docs/verification/world-iter268/record-evaluator-r1.json"
+        ],
+        "rc": 1,
+        "seconds": 0.012,
+        "terminal": true
+      }
+    ]
+  },
+  "parser_integration": {
+    "head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+    "authored_line": "**Progress:** World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+    "current_entry_line": 1851,
+    "pattern": "^\\s*-?\\s*\\*\\*Progress\\*\\*\\s*[:\u2014-]?\\s*(.+)$",
+    "authored_matches": false,
+    "minimal_corrected_control": "**Progress**: World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+    "control_matches": true,
+    "value_unchanged": true,
+    "actual_unmodified_goal_distance_function_result": "World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 \u2192 138 \u2192\u2026",
+    "actual_latest_matching_record": {
+      "line": 80,
+      "heading": "## 227 \u2014 2026-10-03 \u2014 no pick: rows 135 and 138 in active attended execution; 140 \u2192 93 \u2192 114 \u2192 139 sequenced behind them (D-WORLD-58); D-WORLD-61 asks positions for rows 136/141 [ADMIN]",
+      "value": "World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 \u2192 138 \u2192 140)."
+    },
+    "control_goal_distance_result": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+    "function_source_sha256": "1f1ec88c43943bd2148ad2d41db5164d9eebcbf6d7730698149318848d613e46"
+  },
+  "source_ci_evidence": "record-evaluator-r1/source-ci-validation.json",
+  "source_clean_evidence": "record-evaluator-r1/source-clean.json",
+  "limits": [
+    "ADMIN content only; final publication PR and merge CI future",
+    "No duplicate broad product Go/AIL suite",
+    "No product mutation or new product acceptance",
+    "Whole charter structure scanned; operative current rules read; not every historic narrative semantically read",
+    "Historical controller/product-judge measurements remain attributed",
+    "No git writes, shared-original mutations, inbox reads/writes, production publish/mint or release",
+    "All own commands terminal; no spawned subprocess remains outstanding"
+  ],
+  "role_cap": {
+    "launch_approx": "2026-10-15T06:25:00Z",
+    "deadline_approx": "2026-10-15T06:55:00Z",
+    "finished_at": "2026-10-15T06:34:48.643619+00:00"
+  },
+  "report_path": "design_docs/verification/world-iter268/record-evaluator-r1.md",
+  "raw_directory": "design_docs/verification/world-iter268/record-evaluator-r1/"
+}

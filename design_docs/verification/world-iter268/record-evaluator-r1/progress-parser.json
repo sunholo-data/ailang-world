@@ -1,0 +1,18 @@
+{
+  "head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+  "authored_line": "**Progress:** World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "current_entry_line": 1851,
+  "pattern": "^\\s*-?\\s*\\*\\*Progress\\*\\*\\s*[:\u2014-]?\\s*(.+)$",
+  "authored_matches": false,
+  "minimal_corrected_control": "**Progress**: World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "control_matches": true,
+  "value_unchanged": true,
+  "actual_unmodified_goal_distance_function_result": "World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 \u2192 138 \u2192\u2026",
+  "actual_latest_matching_record": {
+    "line": 80,
+    "heading": "## 227 \u2014 2026-10-03 \u2014 no pick: rows 135 and 138 in active attended execution; 140 \u2192 93 \u2192 114 \u2192 139 sequenced behind them (D-WORLD-58); D-WORLD-61 asks positions for rows 136/141 [ADMIN]",
+    "value": "World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 \u2192 138 \u2192 140)."
+  },
+  "control_goal_distance_result": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "function_source_sha256": "1f1ec88c43943bd2148ad2d41db5164d9eebcbf6d7730698149318848d613e46"
+}

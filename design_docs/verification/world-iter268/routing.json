@@ -83,9 +83,17 @@
   "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805",
   "record_evaluator": {
     "configured_model": "gpt-6.1-sol",
-    "actual": null,
-    "status": "awaiting independent record review",
+    "actual": "gpt-6.1-sol",
+    "status": "r1 FAIL; Progress parser defect repaired; awaiting fresh r2 content review",
     "tokens": "not reported",
-    "judge_independence": "same-model-fresh-context FLAG"
+    "judge_independence": "same-model-fresh-context FLAG",
+    "rounds": [
+      {
+        "round": 1,
+        "head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+        "verdict": "FAIL",
+        "finding": "R268-REC-B1"
+      }
+    ]
   }
 }
