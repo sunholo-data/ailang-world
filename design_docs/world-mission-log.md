@@ -1842,7 +1842,7 @@ The planner found problems the doc had not covered:
 - r2 **PASS 86/100, zero blocking**; all ten r1 survivors killed at the right assertion. Non-blocking: the S2 mismatch arm is pin-only (survives in pin-less CI; fake-A2A control suggested); the actual pin is asserted from the daemon archive manifest rather than carried in the S3 record; `demo.go` still prints the S1-only message; production refuses at S2 until descriptors are published (attended, as designed); the A2A path on `contracts.ail` refuses at `success=false` first, so the real arms never reach the skipped/vacuous branches (unit controls cover them).
 - Reports: `design_docs/verification/world-iter271/evaluator/`; executor gate logs and mutation ledgers in `…/executor/`.
 
-**Gate 3b:** PR #273 CI 2/2 on head `ea4b95d` (ailang-code verify 42 s; go host build + test 22m46s). Squash-merged `07d1d9f` after re-fetch showed origin/dev unmoved; merge-push CI recorded in the record PR.
+**Gate 3b:** PR #273 CI 2/2 on head `ea4b95d` (ailang-code verify 42 s; go host build + test 22m46s). Squash-merged `07d1d9f` after re-fetch showed origin/dev unmoved. Merge-push run 38823972883: ailang-code verify success; go gate **failure** — log 99,407 B, 84 `--- PASS`, 0 FAIL, ending `verify_go.sh: FATAL: -race leg timed out after 600s` (rc 124), the same flake class as iterations 269/270. `07d1d9f^{tree}` == `ea4b95d^{tree}` (byte-identical to the green PR head), so it was re-run with `gh run rerun --failed`; the re-run verdict is in the record PR. 4th instance in about two days → new queue row 181.
 
 **Routing evidence:** base=3789b7a159ea72d7ca66e51169ddeab2e747021e@2026-10-15T22:34:01Z. Controller `claude-opus-5-5` (tok: not reported) · designer not spawned (no doc needed) · planner not spawned (plan exists, M2b ready-made) · executor Agent `haiku` for resolver `recipe claude:claude-haiku-5-5` (r1 118,691 tok; fix round 151,743 tok cumulative) · evaluator Agent `sonnet` (r1 55,591 tok; r2 76,070 tok cumulative). Metered $0.
 
@@ -1851,7 +1851,7 @@ The planner found problems the doc had not covered:
 - Landing on r1 with the survivors noted as follow-ups: the judge classed them BLOCKING and the plan requires non-vacuous gates.
 - Editing `demo.go`'s success text: outside M2b's file allowlist; noted for a later milestone.
 
-**Retro:** Skill lane: none. Process lane: a haiku executor shipped guards with positive tests only; the judge caught it. Next fires' executor directives should require one named negative control per guard up front (directive wording, not a skill edit). Backlog lane: the judge's non-blocking notes (pin-less S2 mismatch control; pin in the S3 record; `demo.go` message) belong to M3a+/M8b fold-ins, recorded in row 150's tag.
+**Retro:** Skill lane: none. Process lane: a haiku executor shipped guards with positive tests only; the judge caught it. Next fires' executor directives should require one named negative control per guard up front (directive wording, not a skill edit). Backlog lane: new row 181 (CI `-race` leg 600 s cap trips on unchanged trees; 4 instances; ungroomed, position is Mark's). The judge's non-blocking notes (pin-less S2 mismatch control; pin in the S3 record; `demo.go` message) belong to M3a+/M8b fold-ins, recorded in row 150's tag.
 
 **Progress**: World 1.0: 5 of 7 clauses MET as charter-tagged (4's evidence reads HOLDS; the call is attended); goal unmoved. Release row 150 advanced to 4/17 milestones.
 
