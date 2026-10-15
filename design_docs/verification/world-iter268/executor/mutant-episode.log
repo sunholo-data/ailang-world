@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+    demo_test.go:390: wrong-episode: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.58s)
+    --- FAIL: TestDemoSeedPreflightRefusals/wrong-episode (1.57s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.902s
+FAIL

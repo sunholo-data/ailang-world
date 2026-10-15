@@ -110,6 +110,8 @@ Usage:
   ailang-worldd session revoke --db <path> <credential_id-hash> | --episode <ep>
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
+  ailang-worldd [--addr <url>] demo seed --db PATH --session FILE --ailang-bin PIN
+                    --proof-key-file KEY --manifest FILE [--addr URL]
   ailang-worldd help [<verb>]
 
   '<verb> --help' and 'help <verb>' print a verb's help (exit 0).
@@ -286,6 +288,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 			return exitUsage
 		}
 		return runServe(rest[1:], stdout, stderr)
+
+	case "demo":
+		return runDemo(*addr, rest[1:], stdout, stderr)
 
 	case "health":
 		return runClientGet(*addr, "/v1/health", rest[1:], stdout, stderr)
@@ -509,6 +514,14 @@ var ownHelpVerbs = map[string]bool{
 // text of their own, from the usage block itself, so the two cannot drift.
 func genericVerbHelp(rest []string) (string, bool) {
 	verb := rest[0]
+	if verb == "demo" {
+		for _, a := range rest[1:] {
+			if a == "--help" || a == "-h" || a == "-help" {
+				return demoHelp, true
+			}
+		}
+		return "", false
+	}
 	if ownHelpVerbs[verb] || (verb == "log" && len(rest) > 1 && rest[1] == "tail") {
 		return "", false
 	}

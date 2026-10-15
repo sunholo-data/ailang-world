@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+    demo_test.go:247: successful seed commit stage must reach explicit incomplete boundary: code=1 out= err=ailang-worldd demo seed: commit refused HTTP 401 SessionAbsent; stop and inspect history
+--- FAIL: TestDemoSeedAuthenticatedCommits (0.94s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.274s
+FAIL

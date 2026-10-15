@@ -1,0 +1,57 @@
+{
+  "iteration": 268,
+  "base": "39066a46c1ac13c994bacb162b8d4b754d5ec083",
+  "controller": "codex:gpt-6.1-sol",
+  "transport_override": "native Agent explicitly requested by operator, overrides provider recipe transport only",
+  "designer": {
+    "rotation_next": "pi:ollama/glm-5.3:cloud",
+    "attempts": [
+      {
+        "model": "pi:ollama/glm-5.3:cloud",
+        "error": "Unknown model `pi:ollama/glm-5.3:cloud` for spawn_agent"
+      },
+      {
+        "model": "pi:ollama/kimi-k3:cloud",
+        "error": "Unknown model `pi:ollama/kimi-k3:cloud` for spawn_agent"
+      }
+    ],
+    "actual": "gpt-6.1-sol",
+    "status": "completed readiness only; approved existing design reused",
+    "tokens": "not reported"
+  },
+  "planner": {
+    "resolver": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+    "actual": "gpt-6.1-sol",
+    "status": "completed readiness and measured preflight clarification",
+    "tokens": "not reported"
+  },
+  "executor": {
+    "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "actual": "gpt-6.1-sol",
+    "status": "running",
+    "tokens": "not reported"
+  },
+  "evaluator": {
+    "resolver": "agent-tool sonnet declared:alias-pin",
+    "attempts": [
+      {
+        "model": "sonnet",
+        "error": "Unknown model `sonnet` for spawn_agent. Available models: gpt-6.1-sol, gpt-6-astra, gpt-6-sol, gpt-6-luna, gpt-5.6-sol"
+      }
+    ],
+    "fallback": "gpt-6.1-sol fresh independent context, D-WORLD-48 / Gate3 lines243-256",
+    "actual": null,
+    "status": "awaiting committed candidate",
+    "tokens": "not reported"
+  },
+  "judge_independence": "same-model-fresh-context FLAG; distinct generator and judge agents",
+  "over_ration": [
+    "anthropic",
+    "openrouter"
+  ],
+  "anthropic_available": false,
+  "metered_usd": 0,
+  "ticket_id": "inbox_1792040381066_9861a560",
+  "worktree_ticket_id": "inbox_1792040662419_a05590e2",
+  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805"
+}

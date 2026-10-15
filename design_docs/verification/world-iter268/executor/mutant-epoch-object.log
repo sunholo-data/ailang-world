@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/epoch-hash
+    demo_test.go:400: wrong refusal: want "epoch registry object mismatch" got "ailang-worldd demo seed: registry: decode: invalid character 'a' in literal true (expecting 'r')\n"
+--- FAIL: TestDemoSeedPreflightRefusals (1.57s)
+    --- FAIL: TestDemoSeedPreflightRefusals/epoch-hash (1.57s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.896s
+FAIL

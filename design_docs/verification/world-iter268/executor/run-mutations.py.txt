@@ -1,0 +1,48 @@
+import os,subprocess,pathlib,time,json,hashlib
+root=pathlib.Path.cwd();out=pathlib.Path.home()/'.ailang/state/world-iter268/snap/M2a';env=os.environ.copy();env['AILANG_BIN']=str(pathlib.Path.home()/'.pinned-ailang/ailang');env['WORLD_TOOL_AILANG_BIN']=str(pathlib.Path.home()/'.pinned-ailang-tools/v0.52.1/ailang')
+for k in ['GOOGLE_CLOUD_PROJECT','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_RESOURCE_ATTRIBUTES','OTLP_GOOGLE_CLOUD_PROJECT']:env.pop(k,None)
+paths={n:root/'cmd/ailang-worldd'/n for n in ['demo_seed.go','demo.go']};original={n:p.read_text() for n,p in paths.items()}
+mutants=[]
+def m(name,old,new,test,assertion,file='demo_seed.go'):mutants.append((name,file,old,new,test,assertion))
+pre='^TestDemoSeedPreflightRefusals$/'
+happy='^TestDemoSeedAuthenticatedCommits$'
+m('M2a-bearer','bytes.NewReader(data), "Bearer "+token)','bytes.NewReader(data), "")',happy,'SessionAbsent')
+m('M2a-nonempty','if hasWorld || hasHead || ref != "" || len(page) != 0 {','if false && (hasWorld || hasHead || ref != "" || len(page) != 0) {',pre+'^world-only$','refusal changed public inventory')
+m('manifest','!os.IsNotExist(err) {','false && !os.IsNotExist(err) {',pre+'^manifest$','refusal changed public inventory')
+m('db-identity','if want != got {','if false && want != got {',pre+'^wrong-db$','wrong refusal')
+m('pin-hash','if hashref.SumSHA256(pin).String() != h.InterpreterRef {','if false && hashref.SumSHA256(pin).String() != h.InterpreterRef {',pre+'^health-interpreter$','refusal changed public inventory')
+m('pin-version','if err != nil || strings.TrimSpace(string(version)) != strings.TrimSpace(h.InterpreterVersion) || !strings.HasPrefix(string(version), "AILANG v0.41.0\\n") {','if false && (err != nil || strings.TrimSpace(string(version)) != strings.TrimSpace(h.InterpreterVersion) || !strings.HasPrefix(string(version), "AILANG v0.41.0\\n")) {',pre+'^health-version$','refusal changed public inventory')
+m('session-denied','if out.Denied != nil {','if false && out.Denied != nil {',pre+'^expired-session$','wrong refusal')
+m('episode','if out.Success == nil || out.Success.EpisodeID != "demo" {','if out.Success == nil {',pre+'^wrong-episode$','refusal changed public inventory')
+m('grant','if !broker.Allows(snap, req).Allowed {','if false && !broker.Allows(snap, req).Allowed {',pre+'^missing-grant$','refusal changed public inventory')
+m('spent-budget','caps[i].Budget -= spend[store.EffectKey{Effect: caps[i].Effect, Scope: caps[i].Scope}]','caps[i].Budget -= 0 * spend[store.EffectKey{Effect: caps[i].Effect, Scope: caps[i].Scope}]',pre+'^spent-budget$','refusal changed public inventory')
+m('world-scan','return worlds.Scanned > 0, nil','return worlds.Scanned > 1, nil',pre+'^world-only$','refusal changed public inventory')
+m('epoch-object','if !ok || hashref.SumSHA256(obj.Payload).String() != rh.Head {','if false && (!ok || hashref.SumSHA256(obj.Payload).String() != rh.Head) {',pre+'^epoch-hash$','wrong refusal')
+m('epoch-nomination','if candidate == "AILANG v0.41.0" {','if candidate != "" {',pre+'^epoch-candidate$','refusal changed public inventory')
+m('CAS','if actual != observed || has != (observed != "") {','if false && (actual != observed || has != (observed != "")) {',pre+'^cas-change$','refusal changed public inventory')
+m('commit-status','if status != 200 {','if false && status != 200 {','^TestDemoSeedCommitFailures$/^commit-denied$','commit refusal boundary')
+m('commit-response','if json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref {','if false && (json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref) {','^TestDemoSeedCommitFailures$/^commit-response$','no retries')
+m('commit-uncertain','if err != nil {\n\t\t\treturn fmt.Errorf("commit outcome uncertain; inspect history, never retry automatically")','if false && err != nil {\n\t\t\treturn fmt.Errorf("commit outcome uncertain; inspect history, never retry automatically")','^TestDemoSeedCommitFailures$/^commit-uncertain$','commit refusal boundary')
+m('required-flags','if o.db == "" || o.pin == "" || o.key == "" || o.manifest == "" {','if false && (o.db == "" || o.pin == "" || o.key == "" || o.manifest == "") {',pre+'^missing-key$','refusal changed public inventory',file='demo.go')
+m('positional','if fs.NArg() != 0 {','if false && fs.NArg() != 0 {',pre+'^positional$','refusal changed public inventory',file='demo.go')
+m('header-interpreter','Interpreter: interpreter,','Interpreter: o.Hash,',happy,'frozen header identity mismatch')
+m('header-epoch','SemanticsEpoch: epoch,','SemanticsEpoch: epoch + 1,',happy,'frozen header identity mismatch')
+m('carrying-reference','TransitionRef: o.Hash}}','TransitionRef: interpreter}}',happy,'no real carrying entry')
+results=[]
+try:
+ for name,file,old,new,test,assertion in mutants:
+  source=original[file]
+  if source.count(old)!=1:results.append({'mutant':name,'instrument_error':'replacement count '+str(source.count(old))});print(name,'INSTRUMENT',flush=True);continue
+  paths[file].write_text(source.replace(old,new,1));start=time.time();cmd=['go','test','-run',test,'./cmd/ailang-worldd','-count=1','-timeout','120s','-v']
+  try:r=subprocess.run(cmd,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=150)
+  finally:
+   paths[file].write_text(source)
+   assert paths[file].read_text()==source
+  log=r.stdout;(out/('mutant-'+name+'.log')).write_text(log)
+  invalid=('build failed' in log or '[build failed]' in log or 'panic:' in log or 'no tests to run' in log or 'SKIP' in log)
+  killed=r.returncode!=0 and '--- FAIL: TestDemoSeed' in log and assertion in log and not invalid
+  rec={'mutant':name,'file':file,'command':cmd,'rc':r.returncode,'seconds':round(time.time()-start,3),'required_assertion':assertion,'compiling_assertion_kill':killed,'restored_sha256':hashlib.sha256(paths[file].read_bytes()).hexdigest()};results.append(rec);(out/'mutation-ledger.json').write_text(json.dumps(results,indent=2));print(name,r.returncode,killed,round(time.time()-start,2),flush=True)
+finally:
+ for n,p in paths.items():assert p.read_text()==original[n]
+(out/'mutation-ledger.json').write_text(json.dumps(results,indent=2))
+print('TERMINAL',len(results),'killed',sum(x.get('compiling_assertion_kill',False) for x in results),flush=True)

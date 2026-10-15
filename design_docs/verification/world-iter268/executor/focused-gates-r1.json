@@ -1,0 +1,48 @@
+[
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 2.891,
+    "named_top_level_pass": true,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ]
+  },
+  {
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 28.816,
+    "named_top_level_pass": false,
+    "no_skip": true,
+    "removed_environment_keys": [
+      "GOOGLE_CLOUD_PROJECT",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_RESOURCE_ATTRIBUTES",
+      "OTLP_GOOGLE_CLOUD_PROJECT"
+    ]
+  }
+]

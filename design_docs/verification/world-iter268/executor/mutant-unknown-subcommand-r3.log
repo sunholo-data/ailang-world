@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/unknown-verb
+    demo_test.go:395: unknown-verb: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.52s)
+    --- FAIL: TestDemoSeedPreflightRefusals/unknown-verb (1.52s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	2.495s
+FAIL

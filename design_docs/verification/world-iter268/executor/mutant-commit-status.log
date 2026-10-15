@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedCommitFailures
+=== RUN   TestDemoSeedCommitFailures/commit-denied
+    demo_test.go:451: commit refusal boundary want "HTTP 403 Denied": code1 out"" err"ailang-worldd demo seed: commit response mismatch; inspect history\n"
+--- FAIL: TestDemoSeedCommitFailures (0.91s)
+    --- FAIL: TestDemoSeedCommitFailures/commit-denied (0.91s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.217s
+FAIL

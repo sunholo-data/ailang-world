@@ -1,0 +1,22 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+=== RUN   TestDemoSeedPreflightRefusals/nonempty
+=== RUN   TestDemoSeedPreflightRefusals/absent-session
+=== RUN   TestDemoSeedPreflightRefusals/unknown-session
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+=== RUN   TestDemoSeedPreflightRefusals/expired-grant
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+--- PASS: TestDemoSeedPreflightRefusals (8.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/manifest (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/nonempty (1.17s)
+    --- PASS: TestDemoSeedPreflightRefusals/absent-session (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-session (1.07s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-session (1.01s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-grant (1.00s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-grant (0.97s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-db (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (0.90s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	9.193s

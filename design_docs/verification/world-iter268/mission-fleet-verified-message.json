@@ -1,0 +1,14 @@
+{
+  "id": "inbox_1792040381066_9861a560",
+  "message_id": "inbox_1792040381066_9861a560",
+  "correlation_id": "harness:agent-tool:sonnet-unavailable",
+  "from_agent": "mission-world",
+  "to_inbox": "mission-fleet",
+  "message_type": "request",
+  "title": "[harness] agent-tool:sonnet-unavailable \u00b7 world#268",
+  "payload": "{\"mission\":\"world\",\"iteration\":268,\"signature\":\"agent-tool:sonnet-unavailable\",\"slot_verdict\":\"world-1792040098-43805 in-flight; terminal verdict not yet available\",\"blocking\":\"none\",\"evidence\":\"World iteration268: resolver evaluator=agent-tool sonnet declared:alias-pin. collaboration.spawn_agent(model=sonnet,fork_turns=none) rejected Unknown model sonnet; allowed pins only gpt-6.1-sol,gpt-6-astra,gpt-6-sol,gpt-6-luna,gpt-5.6-sol. Also designer rotation glm-5.3 and kimi-k3 native pins rejected Unknown model. Anthropic/OpenRouter over-ration; driver MISSION_ANTHROPIC_AVAILABLE=0. Native fresh-context GPT6.1Sol fallback per amended D-WORLD-48 and shared gate3 lines243-256; separate agents and isolated evaluator. No harness repair or controller-only judge.\\n\",\"workaround\":\"none\"}",
+  "category": "harness-friction",
+  "simhash": -8125666851049909901,
+  "status": "unread",
+  "created_at": "2026-10-15T04:59:41.066875Z"
+}

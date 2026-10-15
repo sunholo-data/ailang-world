@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+    demo_test.go:395: readonly-db: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.91s)
+    --- FAIL: TestDemoSeedPreflightRefusals/readonly-db (0.91s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.297s
+FAIL

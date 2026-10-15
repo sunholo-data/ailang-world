@@ -1,0 +1,582 @@
+[
+  {
+    "mutant": "M2a-bearer",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.937,
+    "required_assertion": "SessionAbsent",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "M2a-nonempty",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^world-only$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.643,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "manifest",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^manifest$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.913,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "db-identity",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^wrong-db$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.674,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "pin-hash",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-interpreter$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.875,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "pin-version",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-version$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.627,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "session-denied",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^expired-session$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.901,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "episode",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.592,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "grant",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^missing-grant$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.913,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "spent-budget",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^spent-budget$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.577,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "world-scan",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^world-only$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.875,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "epoch-object",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.563,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "epoch-nomination",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.884,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "CAS",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^cas-change$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.564,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "commit-status",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-denied$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.862,
+    "required_assertion": "commit refusal boundary",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "commit-uncertain",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-uncertain$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.889,
+    "required_assertion": "commit refusal boundary",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "required-flags",
+    "file": "demo.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^missing-key$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.903,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  },
+  {
+    "mutant": "positional",
+    "file": "demo.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^positional$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.898,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  },
+  {
+    "mutant": "header-interpreter",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.939,
+    "required_assertion": "frozen header identity mismatch",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "header-epoch",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.572,
+    "required_assertion": "frozen header identity mismatch",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "carrying-reference",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedAuthenticatedCommits$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.987,
+    "required_assertion": "no real carrying entry",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "commit-response",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-response$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.929,
+    "required_assertion": "commit refusal boundary",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "source-read",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^source-absent$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.952,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "pin-read",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^pin-absent$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.943,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "required-resource",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-absent$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.909,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "read-error",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-down$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.983,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "epoch-decode",
+    "file": "demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^epoch-decode$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.972,
+    "required_assertion": "wrong refusal",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  },
+  {
+    "mutant": "unknown-subcommand",
+    "file": "demo.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^unknown-verb$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.986,
+    "required_assertion": "refusal changed public inventory",
+    "compiling_assertion_kill": true,
+    "restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+  },
+  {
+    "mutant": "readonly-open",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^readonly-db$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.9230799674987793,
+    "compiling_assertion_kill": true,
+    "required_assertion": "refusal changed public inventory",
+    "source_restored_sha256": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae"
+  }
+]

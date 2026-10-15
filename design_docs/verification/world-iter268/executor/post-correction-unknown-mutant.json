@@ -1,0 +1,17 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-run",
+    "^TestDemoSeedPreflightRefusals$/^unknown-verb$",
+    "./cmd/ailang-worldd",
+    "-count=1",
+    "-timeout",
+    "120s",
+    "-v"
+  ],
+  "rc": 1,
+  "seconds": 3.1486289501190186,
+  "compiling_assertion_kill": true,
+  "source_restored_sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60"
+}

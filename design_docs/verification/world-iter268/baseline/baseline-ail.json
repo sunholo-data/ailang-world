@@ -1,0 +1,17 @@
+{
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267-record",
+  "head": "39066a46c1ac13c994bacb162b8d4b754d5ec083",
+  "command": [
+    "bash",
+    "scripts/verify_ail.sh"
+  ],
+  "rc": 0,
+  "wall_seconds": 27.47,
+  "bound": 300,
+  "removed_env_keys": [
+    "GOOGLE_CLOUD_PROJECT",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "OTEL_RESOURCE_ATTRIBUTES",
+    "OTLP_GOOGLE_CLOUD_PROJECT"
+  ]
+}

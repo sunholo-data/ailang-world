@@ -1230,3 +1230,82 @@ PACKET=$(curl --silent --fail http://127.0.0.1:7644/v1/objects/by-semantic-id/wo
 ```
 
 A produced packet reads `decision packet validated: committed with its invocation record at entry #N; …`. The page links the proposal (the invocation's `world/effect-plan/v1` plan), the approval request and entry N. It shows `approvals chain: pending` until an operator decides, and two evidence lines graded only by the object-grade validator above. Any other object labelled `world/decision-packet/v1` reads `not a validated decision packet: …` with the first failing check and no links. The checks are bytes, carrying commit, proposal, request, approvals-chain anchor, lifecycle fields and duplicate pair. The anchor check reads the newest 40 approval heads and keeps at most the newest 20 distinct requests; beyond that it reports "not established" rather than a verdict. The duplicate check reads the first 100 stored packets. The times are logical; this host emits no Timeout transition, so the page does not say whether the deadline has passed.
+
+## 12. Prepare the release demo seed (incremental tooling)
+
+`ailang-worldd demo seed --help` describes the shipped boundary: **S1 domain
+commits only; S2-S6 incomplete**. A valid prepared run records a goal, two candidate
+descriptions, the unchanged `world/logepoch.ail` source and explicitly demo-authored
+commentary, then returns exit 1 and writes **no success manifest**. This is not a
+complete demo or release capture. Inspect a partial store rather than retrying it.
+Later read/test/check, proof and pending-approval stages are separate milestones.
+
+Run from the repository root. Create a disposable worktree explicitly; the seed
+never runs a hidden git operation. Keep the store, session, key and manifest outside
+the worktree. The capsule/proof interpreter is v0.41.0; workspace tools use the
+separate v0.52.1 tool pin. These pins are not interchangeable.
+
+```bash
+export PIN=$HOME/.pinned-ailang/ailang
+export TOOLPIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang
+export DEMO_DIR=$(mktemp -d /tmp/world-demo-release.XXXXXX)
+export DEMO_WS=$DEMO_DIR/workspaces
+mkdir -p "$DEMO_WS"
+git worktree add --detach "$DEMO_WS/demo" HEAD
+test -f "$DEMO_WS/demo/world/logepoch.ail"
+go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
+go build -o /tmp/world-publish ./cmd/world-publish
+python3 - <<'PY'
+import json, os
+from pathlib import Path
+root = Path(os.environ['DEMO_DIR'])
+entries = json.loads(Path('packages/se-tools/transitions.json').read_text())
+entries += json.loads(Path('packages/world-demo/transitions.json').read_text())
+(root / 'transitions.json').write_text(json.dumps(entries, indent=2) + '\n')
+key = root / 'proof.key'
+fd = os.open(key, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+with os.fdopen(fd, 'wb') as f:
+    f.write(os.urandom(32))
+PY
+```
+
+With the daemon **stopped**, a person publishes the combined descriptor manifest
+and types the exact confirmation phrase printed by the publisher. Then the person
+mints one demo session and types `y` at the prompt (typed confirmation is required;
+never pipe it or impersonate an operator):
+
+```bash
+/tmp/world-publish transitions --store "$DEMO_DIR/world.db" \
+  --manifest "$DEMO_DIR/transitions.json" --ailang-bin "$PIN"
+/tmp/ailang-worldd session mint --db "$DEMO_DIR/world.db" --episode demo \
+  --grant world.apply=world:10 --grant Workspace.Read=worktree:1 \
+  --grant Ailang.CLI=worktree:2 --grant Human.Approve=worktree:1 \
+  --ttl 3600 --out "$DEMO_DIR/session"
+```
+
+Start the sole writer in another terminal, using the same paths and private key:
+
+```bash
+/tmp/ailang-worldd serve --db "$DEMO_DIR/world.db" --ailang-bin "$PIN" \
+  --workspace-root "$DEMO_WS" --tool-ailang-bin "$TOOLPIN" \
+  --proof-key-file "$DEMO_DIR/proof.key" \
+  --proof-required-identity sameRef --proof-required-identity servesEntry
+```
+
+Then, from the repository root in the prepared shell:
+
+```bash
+/tmp/ailang-worldd demo seed --addr http://127.0.0.1:7644 \
+  --db "$DEMO_DIR/world.db" --session "$DEMO_DIR/session" --ailang-bin "$PIN" \
+  --proof-key-file "$DEMO_DIR/proof.key" --manifest "$DEMO_DIR/manifest.json"
+```
+
+The current command intentionally ends with `S2-S6 incomplete`. No manifest is
+created and no later-stage success is claimed. An unminted run refuses without
+opening `/dev/tty` or printing credentials. Preflight checks the absent manifest,
+empty public world/log, daemon/database identity, interpreter hash/version and the
+session's remaining live grants using an existing **read-only** authority view.
+Bootstrap registries and session rows are allowed. Public writes always go through
+session-authenticated REST commits with observed-head CAS; a changed head, uncertain
+commit or refusal stops the command without automatic retries. The proof key is
+reserved for the later proof stage; this milestone does not consume or expose it.
