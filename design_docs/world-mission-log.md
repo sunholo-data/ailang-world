@@ -1857,3 +1857,52 @@ Immutable reports and raw logs are banked under `verification/world-iter268/`. S
 **Mid-fire (attended):** after this fix merged, the attended session landed `91ada43`: row 93 FINAL (2026-10-15) Phase 2 verdict **HOLDS**, with Δ 0 for both agents (69/69 vs 69/69), O claude −17.9% and codex −5.7%, 414/414 graded cells PASS, 0 harness faults and 18/18 canaries. It changes no charter text. Row 93's tag and the clause-4 call are the attended session's to record, so this record leaves both as charter-tagged. **Record PR CI:** run 38760030176 attempt 1 failed the go job only on `verify_go.sh: FATAL: -race leg timed out after 600s` (every finished package `ok`; diff vs `8d4ee0c` is docs-only). Attempt 2 on the byte-identical tree passed, so it was a slow-runner flake.
 
 **Next:** re-read row 93 / clause 4 first. If the attended record marks the FINAL as passing, row 114 (sequenced after a passing FINAL) is the critical-path pick. Otherwise row 150 M2b, then M3a. D-WORLD-75 default A unchanged.
+
+## 270 — 2026-10-15 — row 114 protocol r4 (D-WORLD-52 premise correction) + Q1 sprint plan; quorum PROCEED N−1; judge PASS 88; execution holds on D-WORLD-76 [PRODUCT]
+
+**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-15T16:55:14Z` (26 comments). `mission_gate0_self_notices.sh` reported the same 2026-10-13T02:01:58Z rc=143 notice (orphan 255), already credited by 256; control 107:4 ok, watermarks 2/2. Open PRs: #166 only (row 114's old draft, preserved). `mission-world` unread: one fleet `harness-resolved` reply for `quorum:invalid-absent-on-quoted-literals` (`514ca3bc3`, #1824). No queue row carries that `[HARNESS]` tag, so the reply unparks nothing; acknowledged. Skill directory: all 14 files byte-identical to origin/dev at the resolved symlink target.
+
+**Gate 1:** local dev was 1 behind (iteration 269's record) and was fast-forwarded to `0a1e21c`. Dev CI on `0a1e21c`: 2/2 success. The `91ada43` failure was the known `verify_go.sh: FATAL: -race leg timed out after 600s` flake class, and the head after it is green.
+
+**Gate 2 — clause map:** 1/2/3/6/7 MET. 4: the attended 2026-10-15 FINAL (`verification/world-floor-final-2026-10-15/README.md`) reads **HOLDS** for both agents (Δ 0; O claude −17.9%, codex −5.7%); the row-93 tag and the formal clause-4 call stay with the attended session. 5 UNMET: 114 is sequenced after a passing FINAL (D-58/D-70) and is now routable; 139 follows 114. **Pick: row 114.** Iteration 269's Next said the same. Reality check: no attended or orphan work on 114 (worktrees and remote branches scanned; draft #166 last touched 2026-09-30). D-WORLD-52 = A (attended) authorizes exactly this step: correct the missing premise evidence, then a fresh full author-excluding quorum.
+
+**Design:** Agent `opus` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, Agent tool per the operator request; the rotation pointer stays `codex:gpt-6.1-sol` because the driver resolved the designer to opus, with Ollama at its weekly limit and OpenAI out of credits). r4 `d626ed2` (213 lines, down from 244):
+- §16 rebuilt as V1–V11 with no gaps, every row re-measured this session (`design_docs/verification/world-iter270/designer/evidence.md`).
+- B confinement is the existing `ailang_only` read-only (question-kind) lane, `{Read, AilangRead, AilangCheck}`; escapes are refused; there is no grep tool.
+- The W channel is a Claude Code 2.1.300 allowlist of the World client's read verbs against a served COPY of the store.
+- The corpus is K1/K2/K3, the 2026-10-14, 2026-10-15 and 2026-10-09 FINAL stores, declared by sha256. Every run used copies; no daemon touched an original.
+- Q1 ("why did codex's World arm fail `config_file_parser` 0/3 on 2026-10-14?") is answerable from K1's effect records alone. The diagnosis entered the repo in `c21f303`, after the rig's `fd321b6`.
+- Q2 (the 2026-10-09 overhead) will probably end `UNANSWERABLE(evidence)`: World records no token counts.
+- C1–C3 (the CI incidents) are `NOT-RUN(NO-CORPUS)`.
+
+**Quorum r1** (`--author claude:claude-opus-5-5`, Anthropic benched): **PROCEED at N−1.** `gemini-4-argon` PASS (two non-blocking notes). `gpt6-1-sol` was absent (OpenAI 429, no credits); `oc-glm-5-3` and `oc-kimi-k3` were absent (Ollama Pro weekly limit, 429). Each was re-run alone (`--seats 1`) and still absent: rc 3, $0. These are capacity absences, quoted here, not a silent pass. Metered $0.0188.
+
+**Plan:** Agent `opus` (`agent-tool opus fail-closed:env-pin`). `880e18a` `w-provenance-teeth-unseeded-baselined-walk-sprint-plan.md` (96 lines): M0 freeze gate (stop unless D-WORLD-76 is RESOLVED A) → M1 pre-reveal controls on the pinned v0.41.0, including a live end-to-end B `pi` run → M2 ground truth and B's root → M3 seal → M4 B first → M5 W → M6 accounting → M7 artifact. It fixes gemini note 1 (the scratch binary is named `worldd-client`) with a one-line doc edit.
+
+The planner found problems the doc had not covered:
+- B's lane calls a bare `ailang` from PATH, which is v0.54.10-dirty, not the pin. The plan puts a `pinbin` symlink first on PATH.
+- The lane prompt tells the model to run programs, which contradicts read-only.
+- `--setting-sources ""` does not stop CLAUDE.md discovery. The plan adds a canary control.
+- The rig's `ws/*` and `fixture/` contain `.git` directories.
+
+**Execute:** NOT spawned, and this is not a spawn failure. D-WORLD-52's text says execution needs an explicit freeze of D2–D5, which are designer proposals. That is a judgment park, filed as **D-WORLD-76** (A = freeze as written, recommended; default B = hold).
+
+**Independent evaluation:** Agent `sonnet` (`agent-tool sonnet declared:alias-pin`; generator opus ≠ judge sonnet), in its own detached worktree (removed). **PASS 88/100, zero blocking.**
+- It reproduced V2, V4, V7, V9 (counts and the first two writes) and V10, the plan-M2 scan (0 hits at `fd321b6`, 2 on the `c21f303` README control), and 4 of the planner's findings first-party.
+- It did not re-run V5, V6 or V8 live.
+- Non-blocking: reword MU-4 (the canary is the mechanism; `--setting-sources` only covers settings); widen the D4 scan phrases; B's model `zai/glm-5.3` is not named in D-52; V_W's latency counts inside the 300 s envelope.
+- Report: `~/.ailang/state/world-iter270-eval-r1.md`.
+
+**Routing evidence:** base=0a1e21c283e6df65760583df90f8540f81e8c6be@2026-10-15T16:31:30Z. Controller `claude-opus-5-5` (tok: not reported) · designer Agent `opus` (125,140 tok) · planner Agent `opus` (100,963 tok) · executor not spawned (execution gated on D-WORLD-76, not a lane failure) · evaluator Agent `sonnet` (70,594 tok). Metered $0.0188 (quorum).
+
+**Ruled out:**
+- Running Q1 now on the loop's own freeze of D2–D5: D-52 reserves the freeze, and D3b is an authority boundary for the walker.
+- Holding the doc until the quorum is fuller: the absences are capacity with no reset in reach, the judge found nothing a missing seat should block on, and the thin quorum is stated in D-76 option B.
+- Merging draft #166: it is superseded by r4 on dev and stays preserved.
+- `rotate-log`: World rotates only through an isolated registry copy, and the index row here is hand-written.
+
+**Retro:** Skill lane: none. Process lane: the quorum ran at 1 of 3 external seats for the second fire running, both times on quota. Reported as an observation (rule 8(e)), not an ask. Backlog lane: the judge's notes 1–2 are recorded as owed fold-ins in row 114's tag.
+
+**Progress:** World 1.0: 5 of 7 clauses MET as charter-tagged; clause 4's evidence reads HOLDS (the call is attended). Clause 5 moved from "blocked design" to "executable protocol pending one freeze".
+
+**Next:** on D-WORLD-76 = A, run the Q1 plan from M0, folding in the owed MU-4 and D4 notes first. Otherwise, row 150 M2b.

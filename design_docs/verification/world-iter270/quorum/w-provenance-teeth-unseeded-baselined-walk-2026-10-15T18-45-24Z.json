@@ -1,0 +1,75 @@
+{
+  "doc": "design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md",
+  "iso_ts": "2026-10-15T18:45:24Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.018798000000000002,
+      "tokens_in": 8059,
+      "tokens_out": 268,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §5 PR (W channel), the scratch directory comment says 'holding only a copy of the rig's ailang-worldd', whereas the `--allowedTools` pattern uses `./worldd-client`. Also, §17 notes that B's confinement was only tested at the flag and policy-tool layer on a dirty dev build (`v0.54.10-dirty`), leaving an end-to-end live `pi` invocation on the pinned release unverified prior to PR.",
+        "catch": "Ensure the binary name in W's scratch directory matches the `--allowedTools` prefix (`./worldd-client` vs `./ailang-worldd`), or `claude` will fail the PR `head` control due to a command-not-found or allowlist mismatch.",
+        "proposed_fix": "In §5 PR (W bullet), clarify that the rig's `ailang-worldd` binary is copied into W's scratch directory as `./worldd-client` (or update the `--allowedTools` pattern to `./ailang-worldd`)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: You reached your Pro weekly limit. Max is $100/month for $300 of usage, with no 5-hour or weekly caps: https://ollama.com/settings/billing (ref: 854c78eb-b504-4969-8b82-abbdb105ca43)",
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: You reached your Pro weekly limit. Max is $100/month for $300 of usage, with no 5-hour or weekly caps: https://ollama.com/settings/billing (ref: 8419a356-a248-4076-b2f2-773c04fd273d)",
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read r4 head: every r3 objection mapped to a re-measured V-row; D-52A confinement (ailang_only read-only) and declared corpus K1-K3 pinned with sha256; Q1 unseeded answer located in K1 effect records; D2/D3b/D4/D5 left as proposals for freeze."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      },
+      {
+        "model": "oc-glm-5-3",
+        "reason": "unreachable"
+      },
+      {
+        "model": "oc-kimi-k3",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.018798000000000002,
+    "total_tokens_in": 8059,
+    "total_tokens_out": 268
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "doc": "design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md",
+  "iso_ts": "2026-10-15T18:45:38Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: You reached your Pro weekly limit. Max is $100/month for $300 of usage, with no 5-hour or weekly caps: https://ollama.com/settings/billing (ref: 111b3c53-d15a-426b-a1af-9ed38db81dde)",
+      "landed": null
+    }
+  ],
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "no reviewer produced a verdict (all absent) — refusing to proceed on zero signal"
+    ],
+    "absent_reviewers": [
+      {
+        "model": "oc-glm-5-3",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0,
+    "total_tokens_in": 0,
+    "total_tokens_out": 0
+  }
+}

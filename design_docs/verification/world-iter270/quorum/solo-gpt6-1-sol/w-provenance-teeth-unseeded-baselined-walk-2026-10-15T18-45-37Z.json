@@ -1,0 +1,31 @@
+{
+  "doc": "design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md",
+  "iso_ts": "2026-10-15T18:45:37Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    }
+  ],
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "no reviewer produced a verdict (all absent) — refusing to proceed on zero signal"
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0,
+    "total_tokens_in": 0,
+    "total_tokens_out": 0
+  }
+}
