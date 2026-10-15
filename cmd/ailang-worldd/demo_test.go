@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
@@ -674,6 +675,16 @@ func TestDemoSeedReadTestCheck(t *testing.T) {
 			t.Fatalf("%s lacks retained invocation/effect refs: %+v", run.Task, run)
 		}
 	}
+	// Retained pin: the daemon archived the tool binary and refused anything but
+	// v0.52.1 at startup; the test records that archived release for this run.
+	toolBytes, err := os.ReadFile(tool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	toolRef := hashref.SumSHA256(toolBytes)
+	if m, err := archive.New(r.db).ReadManifest(toolRef); err != nil || !strings.Contains(m.Version, "v0.52.1") {
+		t.Fatalf("retained tool pin %s is not v0.52.1: %v %q", toolRef, err, m.Version)
+	}
 	if d := after[store.EffectKey{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope}] - before[store.EffectKey{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope}]; d != 1 {
 		t.Fatalf("Workspace.Read budget delta = %d, want 1", d)
 	}
@@ -717,16 +728,119 @@ func testDemoRealRefusalArms(t *testing.T) {
 		t.Fatal("non-test op must be refused")
 	}
 	for _, p := range []string{"bad/malformed.ail", "bad/nogen.ail"} {
-		run, err := demoTestStage(ctx, c, r.token, demoTestTask, "test", p)
-		if err == nil {
-			_, err = demoValidateTestReport(run.Stdout)
-		}
-		if err == nil {
+		// The validator decides on the real stdout even when the CLI exits
+		// non-zero; a refusal must be a validator refusal, not an accepted run.
+		run, _ := demoTestStage(ctx, c, r.token, demoTestTask, "test", p)
+		_, verr := demoValidateTestReport(run.Stdout)
+		t.Logf("%s: exit=%d validator=%v", p, run.ExitCode, verr)
+		if verr == nil {
 			t.Fatalf("%s: real refusal arm was accepted: %+v", p, run)
 		}
 	}
-	stages, err := demoRunToolStages(ctx, c, r.token, []byte("not the committed source"))
-	if err == nil || stages.Read.Content == "" {
-		t.Fatalf("read bytes mismatch must refuse after S2: %v", err)
+	// S2 mismatch arm: fresh task IDs; the error must name the S2 read-bytes
+	// mismatch itself, not a later S3 refusal (the B1 control).
+	stages, err := demoRunStages(ctx, c, r.token, []byte("not the committed source"), "-mismatch")
+	if err == nil || !strings.Contains(err.Error(), "S2 read bytes differ") {
+		t.Fatalf("S2 read-bytes mismatch must be named: err=%v", err)
 	}
+	if stages.Read.Content == "" || stages.Test.Task != "" {
+		t.Fatalf("mismatch arm must stop after S2: read=%q test=%+v", stages.Read.Content, stages.Test)
+	}
+}
+
+// TestDemoSeedToolGuardControls: unit controls for the report, ai_check,
+// op-allowlist and A2A guards. They need no pins, so ordinary CI runs them.
+func TestDemoSeedToolGuardControls(t *testing.T) {
+	cases := []struct{ name, report, want string }{
+		{"success-false", `{"success":false,"failed_tests":0,"passed_tests":3,"skipped_tests":0,"vacuous_skips":0}`, "success=false is refused"},
+		{"failed-tests", `{"success":true,"failed_tests":1,"passed_tests":3,"skipped_tests":0,"vacuous_skips":0}`, "failed_tests=1 is refused"},
+		{"skipped-tests", `{"success":true,"failed_tests":0,"passed_tests":3,"skipped_tests":2,"vacuous_skips":0}`, "skipped_tests=2 is refused"},
+		{"vacuous-skips", `{"success":true,"failed_tests":0,"passed_tests":3,"skipped_tests":0,"vacuous_skips":4}`, "vacuous_skips=4 is refused"},
+		{"zero-passes", `{"success":true,"failed_tests":0,"passed_tests":0,"skipped_tests":0,"vacuous_skips":0}`, "zero named passes"},
+		{"null", `null`, "null report is refused"},
+	}
+	for _, c := range cases {
+		t.Run("report-"+c.name, func(t *testing.T) {
+			_, err := demoValidateTestReport(c.report)
+			if err == nil || !strings.Contains(err.Error(), c.want) {
+				t.Fatalf("report %s: err=%v, want %q", c.name, err, c.want)
+			}
+		})
+	}
+	t.Run("report-positive", func(t *testing.T) {
+		if _, err := demoValidateTestReport(`{"success":true,"failed_tests":0,"passed_tests":10,"skipped_tests":0,"vacuous_skips":0}`); err != nil {
+			t.Fatalf("clean report refused: %v", err)
+		}
+	})
+	aiCases := []struct{ name, report, want string }{
+		{"null", `null`, "null ai_check report is refused"},
+		{"verified-zero", `{"check":{"passed":true,"error_count":0},"verify":{"available":true,"verified":0,"counterexample":0,"errors":0}}`, "verified=0 is refused"},
+		{"check-failed", `{"check":{"passed":false,"error_count":0},"verify":{"available":true,"verified":2,"counterexample":0,"errors":0}}`, "check.passed=false is refused"},
+		{"error-count", `{"check":{"passed":true,"error_count":3},"verify":{"available":true,"verified":2,"counterexample":0,"errors":0}}`, "error_count=3 is refused"},
+	}
+	for _, c := range aiCases {
+		t.Run("ai-"+c.name, func(t *testing.T) {
+			err := demoValidateAICheck(c.report)
+			if err == nil || !strings.Contains(err.Error(), c.want) {
+				t.Fatalf("ai_check %s: err=%v, want %q", c.name, err, c.want)
+			}
+		})
+	}
+	t.Run("ai-positive", func(t *testing.T) {
+		if err := demoValidateAICheck(`{"check":{"passed":true,"error_count":0},"verify":{"available":true,"verified":2,"counterexample":0,"errors":0}}`); err != nil {
+			t.Fatalf("clean ai_check refused: %v", err)
+		}
+	})
+
+	// A fake /a2a/ that counts requests and answers with the given task.
+	fakeA2A := func(t *testing.T, state string, meta, data map[string]any) (*client, *int) {
+		t.Helper()
+		var calls int
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			calls++
+			body := map[string]any{"jsonrpc": "2.0", "id": 9, "result": map[string]any{
+				"status": map[string]any{"state": state}, "metadata": meta,
+				"artifacts": []any{map[string]any{"parts": []any{map[string]any{"type": "data", "data": data}}}}}}
+			_ = json.NewEncoder(w).Encode(body)
+		}))
+		t.Cleanup(srv.Close)
+		return newClient(srv.URL), &calls
+	}
+	goodData := map[string]any{"content": "x", "world": map[string]any{"effects": []any{map[string]any{"record": "sha256:" + strings.Repeat("a", 64)}}}}
+	goodMeta := map[string]any{"invocation_id": "a2a:demo:t"}
+	ctx := boundedTestContext(t)
+	t.Run("a2a-positive", func(t *testing.T) {
+		c, _ := fakeA2A(t, "completed", goodMeta, goodData)
+		if _, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{}); err != nil {
+			t.Fatalf("complete task refused: %v", err)
+		}
+	})
+	t.Run("a2a-non-completed", func(t *testing.T) {
+		c, _ := fakeA2A(t, "working", goodMeta, goodData)
+		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
+		if err == nil || !strings.Contains(err.Error(), "tasks/send refused") {
+			t.Fatalf("non-completed state accepted: %v", err)
+		}
+	})
+	t.Run("a2a-missing-invocation", func(t *testing.T) {
+		c, _ := fakeA2A(t, "completed", map[string]any{}, goodData)
+		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
+		if err == nil || !strings.Contains(err.Error(), "invocation or effect record reference absent") {
+			t.Fatalf("missing invocation id accepted: %v", err)
+		}
+	})
+	t.Run("a2a-missing-effect-record", func(t *testing.T) {
+		c, _ := fakeA2A(t, "completed", goodMeta, map[string]any{"content": "x"})
+		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
+		if err == nil || !strings.Contains(err.Error(), "invocation or effect record reference absent") {
+			t.Fatalf("missing effect record accepted: %v", err)
+		}
+	})
+	t.Run("op-allowlist-before-dispatch", func(t *testing.T) {
+		c, calls := fakeA2A(t, "completed", goodMeta, goodData)
+		_, err := demoTestStage(ctx, c, "tok", demoTestTask, "shell", demoLogepochPath)
+		if err == nil || !strings.Contains(err.Error(), "refuses unlisted op") || *calls != 0 {
+			t.Fatalf("unlisted op: err=%v dispatches=%d", err, *calls)
+		}
+	})
 }

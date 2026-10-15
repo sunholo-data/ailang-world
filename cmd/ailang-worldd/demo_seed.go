@@ -313,10 +313,14 @@ func demoValidateTestReport(stdout string) (demoTestReport, error) {
 		return demoTestReport{}, fmt.Errorf("test report is not JSON: %w", err)
 	}
 	switch {
-	case !rep.Success || rep.Failed != 0:
-		return rep, fmt.Errorf("failing test report is refused")
-	case rep.Skipped != 0 || rep.VacuousSkips != 0:
-		return rep, fmt.Errorf("skipped or vacuous tests are refused")
+	case !rep.Success:
+		return rep, fmt.Errorf("test report success=false is refused")
+	case rep.Failed != 0:
+		return rep, fmt.Errorf("failed_tests=%d is refused", rep.Failed)
+	case rep.Skipped != 0:
+		return rep, fmt.Errorf("skipped_tests=%d is refused", rep.Skipped)
+	case rep.VacuousSkips != 0:
+		return rep, fmt.Errorf("vacuous_skips=%d is refused", rep.VacuousSkips)
 	case rep.Passed == 0:
 		return rep, fmt.Errorf("zero named passes are refused")
 	}
@@ -416,8 +420,14 @@ func demoTestStage(ctx context.Context, c *client, token, task, op, path string)
 // demoRunToolStages executes S2 (read, bytes must equal the committed source)
 // and S3 (test then ai_check). It stops at the first refusal.
 func demoRunToolStages(ctx context.Context, c *client, token string, source []byte) (demoToolStages, error) {
+	return demoRunStages(ctx, c, token, source, "")
+}
+
+// demoRunStages is demoRunToolStages with a task-ID suffix, so a control arm
+// can use fresh A2A task IDs. The S2 mismatch is named before S3 is dispatched.
+func demoRunStages(ctx context.Context, c *client, token string, source []byte, suffix string) (demoToolStages, error) {
 	var s demoToolStages
-	read, out, err := demoA2ASend(ctx, c, token, demoReadTask, "ailang-read", map[string]any{"path": demoLogepochPath})
+	read, out, err := demoA2ASend(ctx, c, token, demoReadTask+suffix, "ailang-read", map[string]any{"path": demoLogepochPath})
 	if err != nil {
 		return s, err
 	}
@@ -426,14 +436,14 @@ func demoRunToolStages(ctx context.Context, c *client, token string, source []by
 	if read.Content != string(source) {
 		return s, fmt.Errorf("S2 read bytes differ from committed %s", demoLogepochPath)
 	}
-	s.Test, err = demoTestStage(ctx, c, token, demoTestTask, "test", demoLogepochPath)
+	s.Test, err = demoTestStage(ctx, c, token, demoTestTask+suffix, "test", demoLogepochPath)
 	if err != nil {
 		return s, err
 	}
 	if _, err = demoValidateTestReport(s.Test.Stdout); err != nil {
 		return s, err
 	}
-	s.Check, err = demoTestStage(ctx, c, token, demoCheckTask, "ai_check", demoLogepochPath)
+	s.Check, err = demoTestStage(ctx, c, token, demoCheckTask+suffix, "ai_check", demoLogepochPath)
 	if err != nil {
 		return s, err
 	}
@@ -465,9 +475,17 @@ func demoValidateAICheck(stdout string) error {
 	if err := json.Unmarshal([]byte(stdout), &rep); err != nil {
 		return fmt.Errorf("ai_check output is not JSON: %w", err)
 	}
-	if !rep.Check.Passed || rep.Check.ErrorCount != 0 || !rep.Verify.Available || rep.Verify.Verified == 0 ||
-		rep.Verify.Counterexample != 0 || rep.Verify.Errors != 0 {
-		return fmt.Errorf("ai_check did not succeed")
+	switch {
+	case !rep.Check.Passed:
+		return fmt.Errorf("ai_check check.passed=false is refused")
+	case rep.Check.ErrorCount != 0:
+		return fmt.Errorf("ai_check check.error_count=%d is refused", rep.Check.ErrorCount)
+	case !rep.Verify.Available:
+		return fmt.Errorf("ai_check verify unavailable is refused")
+	case rep.Verify.Verified == 0:
+		return fmt.Errorf("ai_check verify.verified=0 is refused")
+	case rep.Verify.Counterexample != 0 || rep.Verify.Errors != 0:
+		return fmt.Errorf("ai_check verify counterexample or errors is refused")
 	}
 	return nil
 }
