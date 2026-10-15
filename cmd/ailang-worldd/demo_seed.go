@@ -9,16 +9,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/hashref"
-	"github.com/sunholo-data/ailang-world/host/registry"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -69,19 +68,29 @@ func demoPreflight(ctx context.Context, o demoOptions, token string, r worldRead
 	if err != nil {
 		return h, 0, fmt.Errorf("cannot read interpreter pin")
 	}
-	if hashref.SumSHA256(pin).String() != h.InterpreterRef {
+	pinRef := hashref.SumSHA256(pin)
+	if pinRef.String() != h.InterpreterRef {
 		return h, 0, fmt.Errorf("interpreter pin mismatch")
 	}
-	probeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	version, err := exec.CommandContext(probeCtx, o.pin, "--version").Output()
-	if err != nil || strings.TrimSpace(string(version)) != strings.TrimSpace(h.InterpreterVersion) || !strings.HasPrefix(string(version), "AILANG v0.41.0\n") {
-		return h, 0, fmt.Errorf("interpreter version mismatch")
-	}
+
 	hasWorld, err := demoGrants(ctx, want, token)
 	if err != nil {
 		return h, 0, err
 	}
+	// Startup already obtained the bounded, credential-scrubbed --version
+	// output. Cross-check its existing read-only sidecar against the matching
+	// local bytes and health; the seed launches no additional subprocess.
+	manifest, err := archive.New(want).ReadManifest(pinRef)
+	if err != nil {
+		return h, 0, fmt.Errorf("interpreter archive manifest unavailable")
+	}
+	if manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin)) {
+		return h, 0, fmt.Errorf("interpreter archive identity mismatch")
+	}
+	if manifest.Version != h.InterpreterVersion || !strings.HasPrefix(manifest.Version, "AILANG v0.41.0\n") {
+		return h, 0, fmt.Errorf("interpreter version mismatch")
+	}
+
 	ref, hasHead, err := headState(ctx, r.c)
 	if err != nil {
 		return h, 0, err
@@ -106,9 +115,17 @@ func demoPreflight(ctx context.Context, o demoOptions, token string, r worldRead
 	if !ok || hashref.SumSHA256(obj.Payload).String() != rh.Head {
 		return h, 0, fmt.Errorf("epoch registry object mismatch")
 	}
-	reg, err := registry.Decode(obj.Payload)
-	if err != nil {
-		return h, 0, err
+	// Read the registry's existing wire shape; nomination authority remains
+	// in the daemon's content-addressed registry, not a new CLI dependency.
+	var reg struct {
+		SemanticID string `json:"semantic_id"`
+		Epochs     []struct {
+			Epoch      int64    `json:"epoch"`
+			Candidates []string `json:"candidates"`
+		} `json:"epochs"`
+	}
+	if err := json.Unmarshal(obj.Payload, &reg); err != nil {
+		return h, 0, fmt.Errorf("registry: decode: %w", err)
 	}
 	for _, ep := range reg.Epochs {
 		for _, candidate := range ep.Candidates {

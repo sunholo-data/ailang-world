@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+    demo_test.go:395: world-only: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.93s)
+    --- FAIL: TestDemoSeedPreflightRefusals/world-only (0.93s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.243s
+FAIL

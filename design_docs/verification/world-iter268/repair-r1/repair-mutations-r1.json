@@ -1,0 +1,128 @@
+[
+  {
+    "mutant": "epoch-decode",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^epoch-decode$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 3.8386409282684326,
+    "compiling_assertion_kill": true,
+    "restored": true
+  },
+  {
+    "mutant": "command-wiring",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedHelpPreparation$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.0117480754852295,
+    "compiling_assertion_kill": true,
+    "restored": true
+  },
+  {
+    "mutant": "archive-absence",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^archive-absent$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.9305789470672607,
+    "compiling_assertion_kill": true,
+    "restored": true
+  },
+  {
+    "mutant": "archive-hash",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^archive-hash$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.0701701641082764,
+    "compiling_assertion_kill": true,
+    "restored": true
+  },
+  {
+    "mutant": "archive-size",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^archive-size$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.876741886138916,
+    "compiling_assertion_kill": true,
+    "restored": true
+  },
+  {
+    "mutant": "archive-health-version",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^health-version$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.8374788761138916,
+    "compiling_assertion_kill": true,
+    "restored": true
+  },
+  {
+    "mutant": "archive-release",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^archive-release$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 0.2213129997253418,
+    "compiling_assertion_kill": false,
+    "restored": true
+  }
+]

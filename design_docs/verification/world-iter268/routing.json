@@ -28,7 +28,7 @@
   "executor": {
     "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
     "actual": "gpt-6.1-sol",
-    "status": "running",
+    "status": "completed M2a r1;29 compiling drills,6 focused gates; full Go FAIL",
     "tokens": "not reported"
   },
   "evaluator": {
@@ -40,8 +40,8 @@
       }
     ],
     "fallback": "gpt-6.1-sol fresh independent context, D-WORLD-48 / Gate3 lines243-256",
-    "actual": null,
-    "status": "awaiting committed candidate",
+    "actual": "gpt-6.1-sol",
+    "status": "r1 FAIL65/100;3blocking, independent fresh context",
     "tokens": "not reported"
   },
   "judge_independence": "same-model-fresh-context FLAG; distinct generator and judge agents",
@@ -53,5 +53,10 @@
   "metered_usd": 0,
   "ticket_id": "inbox_1792040381066_9861a560",
   "worktree_ticket_id": "inbox_1792040662419_a05590e2",
-  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805"
+  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805",
+  "repair_executor": {
+    "actual": "gpt-6.1-sol",
+    "status": "completed7 compiling repair drills and8commands/10namedtests; fullcandidatepending",
+    "tokens": "not reported"
+  }
 }

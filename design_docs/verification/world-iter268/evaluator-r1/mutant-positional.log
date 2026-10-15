@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/positional
+    demo_test.go:395: positional: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.95s)
+    --- FAIL: TestDemoSeedPreflightRefusals/positional (0.95s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.292s
+FAIL

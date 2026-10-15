@@ -1,0 +1,934 @@
+{
+  "sprint": "w-marketing-capture",
+  "iteration": 268,
+  "row": 150,
+  "milestone": "M2a",
+  "round": 1,
+  "reviewed_sha": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+  "base_sha": "39066a46c1ac13c994bacb162b8d4b754d5ec083",
+  "result": "FAIL",
+  "blocking_count": 3,
+  "score": 65,
+  "max_score": 100,
+  "judge_independence": "same-model-fresh-context",
+  "agent": "native Agent GPT-6.1 Sol; separate from generator; preferred Sonnet unavailable per controller routing evidence",
+  "tokens_actual": "unknown",
+  "platform": "darwin/arm64",
+  "rubric": {
+    "tests_pass": {
+      "score": 0,
+      "max": 20,
+      "reason": "Exact-head controller verify_go terminal rc1 plus own independently reproduced regressions; HARD FAIL."
+    },
+    "lint_clean": {
+      "score": 10,
+      "max": 10,
+      "reason": "Affected-package go vet rc0, gofmt empty and production-only diffcheck rc0; repo profile has no make lint target."
+    },
+    "acceptance_criteria": {
+      "score": 30,
+      "max": 30,
+      "met": 3,
+      "total": 3,
+      "reason": "Three narrow M2a acceptance behaviors directly run; earlier milestones and future S2-S6 excluded."
+    },
+    "code_quality": {
+      "score": 10,
+      "max": 15,
+      "reason": "-5 capped deduction for newly added functions exceeding50lines; no new file >800, no TODO/HACK/FIXME. Deliberate pending later milestones not incomplete-artifact defect."
+    },
+    "documentation": {
+      "score": 10,
+      "max": 15,
+      "reason": "No changelog update (0/5); executable CLI generator/runbook equivalent (5/5); design accurately remains incremental/planned (5/5). Integration regression separately blocks."
+    },
+    "design_fidelity": {
+      "score": 5,
+      "max": 10,
+      "reason": "Read-only authority clarification preserves sole writer and grants; direct forbidden import and ambient credential inheritance violate existing architecture."
+    },
+    "regression_surface_coverage": {
+      "triggered": false,
+      "score": null
+    },
+    "performance_verification": {
+      "triggered": false,
+      "score": null
+    }
+  },
+  "findings": [
+    {
+      "id": "R1-B1",
+      "severity": "blocking",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "line": 21,
+      "title": "Direct registry import violates existing boundary gate",
+      "evidence": "independent-boundary-red.log: TestWorldBoundaryDependencyAllowlist refuses host/registry; recording writer also reds on masked attribution. Equivalent local wire decoder/removal of this import makes both named tests green in attribution-local-wire-decode-boundary-green.log.",
+      "fix": "Use public wire decoding without forbidden direct host/registry import; preserve gate and allowlist."
+    },
+    {
+      "id": "R1-B2",
+      "severity": "blocking",
+      "file": "docs/QUICKSTART.md",
+      "line": 1289,
+      "title": "New section breaks existing QUICKSTART command binding",
+      "evidence": "independent-quickstart-red.log: TestQuickstartSection11FlagsMatchTheCLI: QUICKSTART \u00a711 holds 2 serve lines, want1. Replacing only docs with base makes the same test green.",
+      "fix": "Make the existing section11 parser stop at the next heading (explicitly extend test-file scope), or restructure the new documented invocation without weakening the old assertion."
+    },
+    {
+      "id": "R1-B3",
+      "severity": "blocking",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "line": 77,
+      "title": "New interpreter probe inherits ambient registry publish credential",
+      "evidence": "independent-subprocess-audit-red.log: 10 production subprocess files /9drivers. Independent sentinel-probe.go.txt drives actual demoPreflight probe; independent-sentinel-leak-observation.log confirms sentinel inherited. No real credential used.",
+      "fix": "Reuse existing archived interpreter identity path instead of adding a process, or use existing childenv scrub plus a real driven launch-site gate. Never whitelist the site without proving scrub."
+    }
+  ],
+  "focused_commands": [
+    {
+      "name": "green-AuthenticatedCommits",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 3.023,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "green-PreflightRefusals",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 34.961,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "green-HelpPreparation",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedHelpPreparation$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 0.64,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "green-CommitFailures",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedCommitFailures$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 3.881,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "green-mint",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestSessionMint_RequiresControllingTerminal$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 0.752,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "green-no-forgery",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestRESTCommitRefusesDecisionPacketObjects$",
+        "./host/daemon",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 1.42,
+      "expected_assertion": null,
+      "named_green": true
+    }
+  ],
+  "mutation_commands": [
+    {
+      "name": "mutant-bearer",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.961,
+      "expected_assertion": "SessionAbsent",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-unselected-world",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^world-only$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.928,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-world-scan",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^world-only$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.948,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-grant-check",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^missing-grant$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.022,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-spent-budget",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^spent-budget$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.965,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-manifest",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^manifest$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.925,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-identity",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^wrong-db$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.923,
+      "expected_assertion": "wrong refusal",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-pin-hash",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^health-interpreter$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.871,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-pin-version",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^health-version$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.11,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-episode",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.936,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-session-denial",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^expired-session$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.919,
+      "expected_assertion": "wrong refusal",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-epoch-hash",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.94,
+      "expected_assertion": "wrong refusal",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-epoch-nomination",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.939,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-CAS",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^cas-change$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.936,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-commit-status",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedCommitFailures$/^commit-denied$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.941,
+      "expected_assertion": "commit refusal boundary",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-commit-response",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedCommitFailures$/^commit-response$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.932,
+      "expected_assertion": "no retries",
+      "compiling_assertion_kill": false
+    },
+    {
+      "name": "mutant-header",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.1,
+      "expected_assertion": "frozen header identity mismatch",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-carrying",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.154,
+      "expected_assertion": "no real carrying entry",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-flags",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^missing-key$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 3.014,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "mutant-positional",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$/^positional$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.003,
+      "expected_assertion": "refusal changed public inventory",
+      "compiling_assertion_kill": true
+    }
+  ],
+  "restored_commands": [
+    {
+      "name": "restored-AuthenticatedCommits",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedAuthenticatedCommits$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 1.768,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "restored-PreflightRefusals",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedPreflightRefusals$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 31.715,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "restored-HelpPreparation",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedHelpPreparation$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 0.626,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "restored-CommitFailures",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedCommitFailures$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 4.835,
+      "expected_assertion": null,
+      "named_green": true
+    }
+  ],
+  "additional_commands": [
+    {
+      "name": "independent-quickstart-red",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestQuickstartSection11FlagsMatchTheCLI$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.597,
+      "expected_assertion": null,
+      "named_green": false
+    },
+    {
+      "name": "independent-boundary-red",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldBoundary(DependencyAllowlist|RecordingWriter)$",
+        "./host/boundary",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 1.384,
+      "expected_assertion": null,
+      "named_green": false
+    },
+    {
+      "name": "attribution-quickstart-base-doc-green",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestQuickstartSection11FlagsMatchTheCLI$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 0.641,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "attribution-local-wire-decode-boundary-green",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldBoundary(DependencyAllowlist|RecordingWriter)$",
+        "./host/boundary",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 1.157,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "M2a-own-production-revert",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeed(AuthenticatedCommits|PreflightRefusals|HelpPreparation)$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 55.944,
+      "expected_assertion": null,
+      "named_green": false
+    },
+    {
+      "name": "mutant-response-correct-assertion",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedCommitFailures$/^commit-response$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.809,
+      "expected_assertion": "commit refusal boundary",
+      "compiling_assertion_kill": true
+    },
+    {
+      "name": "final-restored-happy-help",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeed(AuthenticatedCommits|HelpPreparation|CommitFailures)$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.658,
+      "expected_assertion": null,
+      "named_green": true
+    },
+    {
+      "name": "quality-0",
+      "command": [
+        "gofmt",
+        "-l",
+        "cmd/ailang-worldd/demo.go",
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/main.go",
+        "cmd/ailang-worldd/demo_test.go"
+      ],
+      "rc": 0,
+      "seconds": 0.005
+    },
+    {
+      "name": "quality-1",
+      "command": [
+        "go",
+        "vet",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.392
+    },
+    {
+      "name": "quality-2",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "39066a46c1ac13c994bacb162b8d4b754d5ec083",
+        "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+        "--",
+        "cmd/ailang-worldd/demo.go",
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/main.go",
+        "cmd/ailang-worldd/demo_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "rc": 0,
+      "seconds": 0.009
+    },
+    {
+      "name": "independent-subprocess-audit-red",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$",
+        "./host/broker",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 2.402,
+      "expected_assertion": null,
+      "named_green": false
+    },
+    {
+      "name": "independent-sentinel-leak-observation",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestEvaluatorR1VersionProbeInheritsCredential$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 1.261,
+      "expected_assertion": null,
+      "named_green": true
+    }
+  ],
+  "distinct_mutants": 20,
+  "compiling_named_assertion_kills": 20,
+  "mutation_mapping_correction": "Initial commit-response expected no retries, actual named failure was commit refusal boundary; rerun under corrected assertion killed. Initial mismatch not counted as predicted assertion kill.",
+  "own_production_revert": "Only M2a new production Go files removed and main.go restored from base via external copies; all3new named acceptance tests compile and FAIL. No M1a/M1b changes.",
+  "named_preflight_target": {
+    "sole_writer_preserved": true,
+    "new_authority_in_read_only_preflight": false,
+    "close_before_commits": true,
+    "real_empty_head_unselected_world_mutation": "PASS as kill: actual5log entries after suppressing guard; no CAS-masked claim",
+    "separate_subprocess_authority_regression": "R1-B3"
+  },
+  "source_restored_sha256": {
+    "cmd/ailang-worldd/demo.go": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+    "cmd/ailang-worldd/demo_seed.go": "834d3b6bc775aa3735013a82d4e713ec2a921256d0b068cd772e9b99ff1c48ae",
+    "cmd/ailang-worldd/main.go": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c",
+    "cmd/ailang-worldd/demo_test.go": "8bd519b27d16317b1ec8e0aecc72f774e05876ab9b3326589ba3a1355cefbcdd",
+    "docs/QUICKSTART.md": "03b7842693c4b6034d5d911a60ed4d7449ecdc7a0abbbfb0691a092fc6aeca07"
+  },
+  "controller_gates": {
+    "ail": {
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2",
+      "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+      "command": [
+        "bash",
+        "scripts/verify_ail.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 27.31,
+      "bound": 300,
+      "removed_env_keys": [
+        "GOOGLE_CLOUD_PROJECT",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_RESOURCE_ATTRIBUTES",
+        "OTLP_GOOGLE_CLOUD_PROJECT"
+      ],
+      "source_after": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c"
+    },
+    "go": {
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2",
+      "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+      "command": [
+        "bash",
+        "scripts/verify_go.sh"
+      ],
+      "rc": 1,
+      "wall_seconds": 366.33,
+      "bound": 900,
+      "removed_env_keys": [
+        "GOOGLE_CLOUD_PROJECT",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_RESOURCE_ATTRIBUTES",
+        "OTLP_GOOGLE_CLOUD_PROJECT"
+      ],
+      "source_after": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c"
+    }
+  },
+  "ci_observed": {
+    "headRefOid": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T05:16:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/38685858770/job/116260404701",
+        "name": "ailang-code verify gate",
+        "startedAt": "2026-10-15T05:16:04Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/38685858770/job/116260404883",
+        "name": "go host build + test gate",
+        "startedAt": "2026-10-15T05:16:04Z",
+        "status": "IN_PROGRESS",
+        "workflowName": "CI"
+      }
+    ]
+  },
+  "remote_pass_claim": false,
+  "merge_gate": "FAIL; repair and fresh evaluation required. PRGo still in progress at final observation; controller owns exact-head2/2and any unfinished race gates.",
+  "unmeasured": [
+    "all-platform behavior",
+    "individual SQLite resolver/EffectSpend/world-scan operational errors",
+    "disappearing-CWD filepath.Abs failure",
+    "every inherited worldReader transport callsite",
+    "fixed primitive commit marshal failure cannot be represented by supported inputs",
+    "90s context timeout mutation not performed",
+    "attended publication/mint/full-demo/capture/release not executed"
+  ],
+  "source_tree_mutations_only": "Own isolated worktree; external byte copies restored; no git checkout/reset/commit/push, no inbox, no spawned agents",
+  "generated_at": "2026-10-15T05:23:26.427761+00:00"
+}

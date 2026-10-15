@@ -87,6 +87,42 @@ func newDemoTestRig(t *testing.T, mode string) *demoTestRig {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if strings.HasPrefix(mode, "archive-") {
+		pinBytes, e := os.ReadFile(pin)
+		if e != nil {
+			t.Fatal(e)
+		}
+		sidecar := filepath.Join(r.db+".artifacts", "interpreters", "sha256", hashref.SumSHA256(pinBytes).Digest(), "manifest.json")
+		if mode == "archive-absent" {
+			if e := os.Remove(sidecar); e != nil {
+				t.Fatal(e)
+			}
+		} else {
+			raw, e := os.ReadFile(sidecar)
+			if e != nil {
+				t.Fatal(e)
+			}
+			var manifest map[string]any
+			if e = json.Unmarshal(raw, &manifest); e != nil {
+				t.Fatal(e)
+			}
+			switch mode {
+			case "archive-hash":
+				manifest["hash"] = hashref.SumSHA256([]byte("other")).String()
+			case "archive-size":
+				manifest["size"] = 1
+			case "archive-version", "archive-release":
+				manifest["version"] = "AILANG v0.99.0\n"
+			}
+			raw, e = json.Marshal(manifest)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = os.WriteFile(sidecar, raw, 0644); e != nil {
+				t.Fatal(e)
+			}
+		}
+	}
 	h := d.Handler()
 	headReads := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -130,7 +166,7 @@ func newDemoTestRig(t *testing.T, mode string) *demoTestRig {
 			_ = json.NewEncoder(w).Encode(o)
 			return
 		}
-		if req.URL.Path == "/v1/health" && (mode == "readonly-db" || mode == "health-interpreter" || mode == "health-version") {
+		if req.URL.Path == "/v1/health" && (mode == "readonly-db" || mode == "health-interpreter" || mode == "health-version" || mode == "archive-release") {
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, req)
 			var health daemon.HealthResponse
@@ -322,7 +358,7 @@ func TestDemoSeedAuthenticatedCommits(t *testing.T) {
 	}
 }
 func TestDemoSeedPreflightRefusals(t *testing.T) {
-	for _, mode := range []string{"manifest", "nonempty", "absent-session", "unknown-session", "expired-session", "missing-grant", "expired-grant", "wrong-db", "pin-mismatch", "health-interpreter", "health-version", "insufficient-budget", "spent-budget", "wrong-episode", "cas-change", "positional", "missing-db", "missing-pin", "missing-key", "missing-manifest", "health-absent", "health-malformed", "health-down", "missing-epoch", "epoch-hash", "readonly-db", "pin-absent", "world-only", "epoch-decode", "epoch-candidate", "source-absent", "unknown-verb"} {
+	for _, mode := range []string{"manifest", "nonempty", "absent-session", "unknown-session", "expired-session", "missing-grant", "expired-grant", "wrong-db", "pin-mismatch", "health-interpreter", "health-version", "insufficient-budget", "spent-budget", "wrong-episode", "cas-change", "positional", "missing-db", "missing-pin", "missing-key", "missing-manifest", "health-absent", "health-malformed", "health-down", "missing-epoch", "epoch-hash", "readonly-db", "pin-absent", "world-only", "epoch-decode", "epoch-candidate", "source-absent", "unknown-verb", "archive-absent", "archive-hash", "archive-size", "archive-version", "archive-release"} {
 		t.Run(mode, func(t *testing.T) {
 			r := newDemoTestRig(t, mode)
 			args := r.args()
@@ -400,7 +436,7 @@ func TestDemoSeedPreflightRefusals(t *testing.T) {
 			if code != exitUsage || errOut == "" || strings.Contains(errOut, "S1 domain commits recorded; S2-S6 incomplete") {
 				t.Fatalf("preflight must refuse before stage: %d %s %s", code, out, errOut)
 			}
-			expected := map[string]string{"manifest": "manifest must", "nonempty": "nonempty public", "absent-session": "no session credential", "unknown-session": "SessionUnknown", "expired-session": "SessionExpired", "missing-grant": "world.apply@world grant", "expired-grant": "world.apply@world grant", "wrong-db": "db/health identity", "pin-mismatch": "interpreter pin mismatch", "health-interpreter": "interpreter pin mismatch", "health-version": "interpreter version mismatch", "insufficient-budget": "world.apply@world grant", "spent-budget": "Ailang.CLI@worktree grant", "wrong-episode": "demo episode session required", "cas-change": "unexpected CAS head", "positional": "unexpected positional", "missing-db": "are required", "missing-pin": "are required", "missing-key": "are required", "missing-manifest": "are required", "health-absent": "required resource absent", "health-malformed": "malformed body", "health-down": "HTTP 503", "missing-epoch": "required resource absent", "epoch-hash": "epoch registry object mismatch", "readonly-db": "cannot open read-only authority", "pin-absent": "cannot read interpreter pin", "world-only": "nonempty public", "epoch-decode": "registry: decode", "epoch-candidate": "no nominated epoch", "source-absent": "prepare worktree containing", "unknown-verb": "usage:"}[mode]
+			expected := map[string]string{"manifest": "manifest must", "nonempty": "nonempty public", "absent-session": "no session credential", "unknown-session": "SessionUnknown", "expired-session": "SessionExpired", "missing-grant": "world.apply@world grant", "expired-grant": "world.apply@world grant", "wrong-db": "db/health identity", "pin-mismatch": "interpreter pin mismatch", "health-interpreter": "interpreter pin mismatch", "health-version": "interpreter version mismatch", "insufficient-budget": "world.apply@world grant", "spent-budget": "Ailang.CLI@worktree grant", "wrong-episode": "demo episode session required", "cas-change": "unexpected CAS head", "positional": "unexpected positional", "missing-db": "are required", "missing-pin": "are required", "missing-key": "are required", "missing-manifest": "are required", "health-absent": "required resource absent", "health-malformed": "malformed body", "health-down": "HTTP 503", "missing-epoch": "required resource absent", "epoch-hash": "epoch registry object mismatch", "readonly-db": "cannot open read-only authority", "pin-absent": "cannot read interpreter pin", "world-only": "nonempty public", "epoch-decode": "registry: decode", "epoch-candidate": "no nominated epoch", "source-absent": "prepare worktree containing", "unknown-verb": "usage:", "archive-absent": "interpreter archive manifest unavailable", "archive-hash": "interpreter archive identity mismatch", "archive-size": "interpreter archive identity mismatch", "archive-version": "interpreter version mismatch", "archive-release": "interpreter version mismatch"}[mode]
 			if expected == "" || !strings.Contains(errOut, expected) {
 				t.Fatalf("wrong refusal: want %q got %q", expected, errOut)
 			}
@@ -442,6 +478,15 @@ func TestDemoSeedHelpPreparation(t *testing.T) {
 	for _, s := range []string{"demo seed", "world/logepoch.ail", "packages/world-demo/transitions.json", "typed", "git worktree add", "Human.Approve=worktree:1", "S2-S6"} {
 		if !bytes.Contains(doc, []byte(s)) {
 			t.Errorf("preparation docs missing %s", s)
+		}
+	}
+	_, preparation, ok := strings.Cut(string(doc), "## 12. Prepare the release demo seed")
+	if !ok {
+		t.Fatal("demo preparation section absent")
+	}
+	for _, command := range []string{`export DEMO_BIN=$DEMO_DIR/ailang-worldd`, `go build -o "$DEMO_BIN" ./cmd/ailang-worldd`, `"$DEMO_BIN" session mint`, `"$DEMO_BIN" serve`, `"$DEMO_BIN" demo seed`} {
+		if !strings.Contains(preparation, command) {
+			t.Errorf("demo artifact command wiring missing %s", command)
 		}
 	}
 }

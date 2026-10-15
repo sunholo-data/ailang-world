@@ -1,0 +1,128 @@
+[
+  {
+    "name": "independent-quickstart-red",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestQuickstartSection11FlagsMatchTheCLI$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 0.597,
+    "expected_assertion": null,
+    "named_green": false
+  },
+  {
+    "name": "independent-boundary-red",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestWorldBoundary(DependencyAllowlist|RecordingWriter)$",
+      "./host/boundary",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 1.384,
+    "expected_assertion": null,
+    "named_green": false
+  },
+  {
+    "name": "attribution-quickstart-base-doc-green",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestQuickstartSection11FlagsMatchTheCLI$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.641,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "attribution-local-wire-decode-boundary-green",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestWorldBoundary(DependencyAllowlist|RecordingWriter)$",
+      "./host/boundary",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.157,
+    "expected_assertion": null,
+    "named_green": true
+  },
+  {
+    "name": "M2a-own-production-revert",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeed(AuthenticatedCommits|PreflightRefusals|HelpPreparation)$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 55.944,
+    "expected_assertion": null,
+    "named_green": false
+  },
+  {
+    "name": "mutant-response-correct-assertion",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeedCommitFailures$/^commit-response$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 1,
+    "seconds": 2.809,
+    "expected_assertion": "commit refusal boundary",
+    "compiling_assertion_kill": true
+  },
+  {
+    "name": "final-restored-happy-help",
+    "command": [
+      "go",
+      "test",
+      "-run",
+      "^TestDemoSeed(AuthenticatedCommits|HelpPreparation|CommitFailures)$",
+      "./cmd/ailang-worldd",
+      "-count=1",
+      "-timeout",
+      "120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 7.658,
+    "expected_assertion": null,
+    "named_green": true
+  }
+]

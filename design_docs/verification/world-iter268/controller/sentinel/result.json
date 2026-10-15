@@ -1,0 +1,18 @@
+{
+  "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+  "command": [
+    "go",
+    "test",
+    "./cmd/ailang-worldd",
+    "-run",
+    "^TestEvaluatorR1VersionProbeInheritsCredential$",
+    "-count=1",
+    "-timeout",
+    "45s",
+    "-v"
+  ],
+  "rc": 0,
+  "wall": 5.188,
+  "instrument": "reviewer-authored safe sentinel probe reused; controller source inspection and AC10 base/candidate pair separately confirm the new inherited-env site",
+  "no_real_credential": true
+}

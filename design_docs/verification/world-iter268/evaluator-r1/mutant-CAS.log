@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+    demo_test.go:398: cas-change: refusal changed public inventory: commits1 before0
+--- FAIL: TestDemoSeedPreflightRefusals (0.93s)
+    --- FAIL: TestDemoSeedPreflightRefusals/cas-change (0.93s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.261s
+FAIL

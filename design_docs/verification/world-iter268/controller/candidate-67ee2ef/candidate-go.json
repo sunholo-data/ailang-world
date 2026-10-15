@@ -1,0 +1,18 @@
+{
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2",
+  "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+  "command": [
+    "bash",
+    "scripts/verify_go.sh"
+  ],
+  "rc": 1,
+  "wall_seconds": 366.33,
+  "bound": 900,
+  "removed_env_keys": [
+    "GOOGLE_CLOUD_PROJECT",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "OTEL_RESOURCE_ATTRIBUTES",
+    "OTLP_GOOGLE_CLOUD_PROJECT"
+  ],
+  "source_after": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c"
+}

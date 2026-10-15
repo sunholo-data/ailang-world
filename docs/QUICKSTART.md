@@ -1250,10 +1250,11 @@ export PIN=$HOME/.pinned-ailang/ailang
 export TOOLPIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang
 export DEMO_DIR=$(mktemp -d /tmp/world-demo-release.XXXXXX)
 export DEMO_WS=$DEMO_DIR/workspaces
+export DEMO_BIN=$DEMO_DIR/ailang-worldd
 mkdir -p "$DEMO_WS"
 git worktree add --detach "$DEMO_WS/demo" HEAD
 test -f "$DEMO_WS/demo/world/logepoch.ail"
-go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
+go build -o "$DEMO_BIN" ./cmd/ailang-worldd
 go build -o /tmp/world-publish ./cmd/world-publish
 python3 - <<'PY'
 import json, os
@@ -1277,16 +1278,17 @@ never pipe it or impersonate an operator):
 ```bash
 /tmp/world-publish transitions --store "$DEMO_DIR/world.db" \
   --manifest "$DEMO_DIR/transitions.json" --ailang-bin "$PIN"
-/tmp/ailang-worldd session mint --db "$DEMO_DIR/world.db" --episode demo \
+"$DEMO_BIN" session mint --db "$DEMO_DIR/world.db" --episode demo \
   --grant world.apply=world:10 --grant Workspace.Read=worktree:1 \
   --grant Ailang.CLI=worktree:2 --grant Human.Approve=worktree:1 \
   --ttl 3600 --out "$DEMO_DIR/session"
 ```
 
-Start the sole writer in another terminal, using the same paths and private key:
+Start the sole writer in another terminal, exporting the same DEMO_DIR, DEMO_WS,
+DEMO_BIN, PIN and TOOLPIN values there and using the same private key:
 
 ```bash
-/tmp/ailang-worldd serve --db "$DEMO_DIR/world.db" --ailang-bin "$PIN" \
+"$DEMO_BIN" serve --db "$DEMO_DIR/world.db" --ailang-bin "$PIN" \
   --workspace-root "$DEMO_WS" --tool-ailang-bin "$TOOLPIN" \
   --proof-key-file "$DEMO_DIR/proof.key" \
   --proof-required-identity sameRef --proof-required-identity servesEntry
@@ -1295,7 +1297,7 @@ Start the sole writer in another terminal, using the same paths and private key:
 Then, from the repository root in the prepared shell:
 
 ```bash
-/tmp/ailang-worldd demo seed --addr http://127.0.0.1:7644 \
+"$DEMO_BIN" demo seed --addr http://127.0.0.1:7644 \
   --db "$DEMO_DIR/world.db" --session "$DEMO_DIR/session" --ailang-bin "$PIN" \
   --proof-key-file "$DEMO_DIR/proof.key" --manifest "$DEMO_DIR/manifest.json"
 ```

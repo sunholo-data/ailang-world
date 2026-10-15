@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+    demo_test.go:431: health-version: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.87s)
+    --- FAIL: TestDemoSeedPreflightRefusals/health-version (0.87s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.221s
+FAIL

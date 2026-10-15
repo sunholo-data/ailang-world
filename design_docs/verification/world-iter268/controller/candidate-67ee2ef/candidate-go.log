@@ -1,0 +1,151 @@
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── tracked-binary hygiene gate
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+test_tracked_binary_gate: 15 passed, 0 failed
+   ✓ 0 binary blobs among 3664 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 62 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c0000aa048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c0000aa048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 9 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 6 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c0000aa048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c0000aa048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 9 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 6 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter268-run2/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 38670
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (64 exact top-level tests)
+   ✓ all 64 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+--- FAIL: TestQuickstartSection11FlagsMatchTheCLI (0.00s)
+    quickstart_layout_test.go:61: QUICKSTART §11 holds 2 serve lines, want 1
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	95.581s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	48.614s
+ok  	github.com/sunholo-data/ailang-world/host/agui	2.710s
+ok  	github.com/sunholo-data/ailang-world/host/archive	43.204s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.312s
+--- FAIL: TestWorldBoundaryDependencyAllowlist (0.23s)
+    allowlist_world_test.go:764: ENUMERATION group=host/store exact_count=165 baseline_net/http/httputil=0 dependencies=["internal/goarch" "unsafe" "internal/abi" "internal/unsafeheader" "internal/cpu" "internal/bytealg" "internal/byteorder" "internal/chacha8rand" "internal/coverage/rtcov" "internal/godebugs" "internal/goexperiment" "internal/goos" "internal/profilerecord" "internal/runtime/atomic" "internal/runtime/exithook" "internal/runtime/gc" "internal/runtime/sys" "internal/runtime/gc/scan" "internal/asan" "internal/msan" "internal/race" "internal/runtime/math" "internal/runtime/maps" "internal/runtime/pprof/label" "math/bits" "internal/strconv" "internal/stringslite" "internal/trace/tracev2" "runtime" "internal/reflectlite" "errors" "sync/atomic" "internal/sync" "internal/synctest" "sync" "internal/bisect" "internal/godebug" "internal/oserror" "syscall" "time" "context" "io" "iter" "unicode" "unicode/utf8" "bytes" "cmp" "math" "strconv" "reflect" "slices" "internal/fmtsort" "path" "io/fs" "internal/filepathlite" "internal/syscall/unix" "internal/poll" "internal/syscall/execenv" "internal/testlog" "os" "fmt" "database/sql/driver" "maps" "math/rand/v2" "database/sql" "embed" "encoding" "encoding/base64" "strings" "unicode/utf16" "encoding/json" "github.com/sunholo-data/ailang-world/host/canon" "hash" "crypto" "crypto/internal/fips140deps/godebug" "crypto/internal/fips140" "crypto/internal/fips140/alias" "crypto/internal/fips140deps/byteorder" "crypto/internal/fips140deps/cpu" "crypto/internal/impl" "crypto/internal/fips140/sha256" "crypto/internal/constanttime" "crypto/internal/fips140/subtle" "crypto/internal/fips140/sha3" "crypto/internal/fips140/sha512" "crypto/internal/fips140/hmac" "crypto/internal/fips140/check" "crypto/internal/fips140/aes" "crypto/internal/fips140deps/time" "crypto/internal/entropy/v1.0.0" "crypto/internal/sysrand" "crypto/internal/fips140/drbg" "crypto/internal/fips140/aes/gcm" "crypto/fips140" "crypto/internal/fips140only" "crypto/subtle" "crypto/cipher" "crypto/internal/boring/sig" "crypto/internal/boring" "crypto/sha256" "encoding/hex" "github.com/sunholo-data/ailang-world/host/hashref" "sort" "golang.org/x/sys/unix" "bufio" "crypto/internal/randutil" "crypto/internal/rand" "math/rand" "math/big" "crypto/rand" "encoding/binary" "regexp/syntax" "regexp" "github.com/dustin/go-humanize" "crypto/md5" "crypto/sha1" "vendor/golang.org/x/net/dns/dnsmessage" "internal/nettrace" "weak" "unique" "net/netip" "internal/routebsd" "internal/singleflight" "net" "github.com/google/uuid" "github.com/mattn/go-isatty" "github.com/ncruces/go-strftime" "modernc.org/libc/errno" "modernc.org/libc/fcntl" "modernc.org/libc/fts" "modernc.org/libc/grp" "io/ioutil" "modernc.org/libc/honnef.co/go/netdb" "modernc.org/libc/langinfo" "modernc.org/libc/limits" "modernc.org/libc/netdb" "modernc.org/libc/netinet/in" "modernc.org/libc/poll" "modernc.org/libc/pthread" "modernc.org/libc/pwd" "modernc.org/libc/signal" "modernc.org/libc/stdio" "modernc.org/libc/stdlib" "modernc.org/libc/sys/socket" "modernc.org/libc/sys/stat" "modernc.org/libc/sys/types" "modernc.org/libc/termios" "modernc.org/libc/time" "modernc.org/libc/unistd" "modernc.org/libc/utime" "modernc.org/libc/uuid/uuid" "modernc.org/libc/wctype" "github.com/remyoudompheng/bigfft" "modernc.org/mathutil" "modernc.org/memory" "path/filepath" "os/exec" "os/signal" "runtime/debug" "modernc.org/libc" "modernc.org/sqlite/lib" "modernc.org/sqlite/vtab" "net/url" "modernc.org/sqlite" "github.com/sunholo-data/ailang-world/host/store"]
+    allowlist_world_test.go:764: ENUMERATION group=host/replay exact_count=169 baseline_net/http/httputil=0 dependencies=["internal/goarch" "unsafe" "internal/abi" "internal/unsafeheader" "internal/cpu" "internal/bytealg" "internal/byteorder" "internal/chacha8rand" "internal/coverage/rtcov" "internal/godebugs" "internal/goexperiment" "internal/goos" "internal/profilerecord" "internal/runtime/atomic" "internal/runtime/exithook" "internal/runtime/gc" "internal/runtime/sys" "internal/runtime/gc/scan" "internal/asan" "internal/msan" "internal/race" "internal/runtime/math" "internal/runtime/maps" "internal/runtime/pprof/label" "math/bits" "internal/strconv" "internal/stringslite" "internal/trace/tracev2" "runtime" "internal/reflectlite" "errors" "sync/atomic" "internal/sync" "internal/synctest" "sync" "io" "iter" "unicode" "unicode/utf8" "bytes" "internal/bisect" "internal/godebug" "internal/oserror" "syscall" "time" "context" "cmp" "math" "strconv" "reflect" "slices" "internal/fmtsort" "path" "io/fs" "internal/filepathlite" "internal/syscall/unix" "internal/poll" "internal/syscall/execenv" "internal/testlog" "os" "fmt" "hash" "crypto" "crypto/internal/fips140deps/godebug" "strings" "crypto/internal/fips140" "crypto/internal/fips140/alias" "crypto/internal/fips140deps/byteorder" "crypto/internal/fips140deps/cpu" "crypto/internal/impl" "crypto/internal/fips140/sha256" "crypto/internal/constanttime" "crypto/internal/fips140/subtle" "crypto/internal/fips140/sha3" "crypto/internal/fips140/sha512" "crypto/internal/fips140/hmac" "crypto/internal/fips140/check" "crypto/internal/fips140/aes" "crypto/internal/fips140deps/time" "crypto/internal/entropy/v1.0.0" "crypto/internal/sysrand" "crypto/internal/fips140/drbg" "crypto/internal/fips140/aes/gcm" "crypto/fips140" "crypto/internal/fips140only" "crypto/subtle" "crypto/cipher" "crypto/internal/boring/sig" "crypto/internal/boring" "crypto/sha256" "encoding/hex" "encoding" "encoding/base64" "unicode/utf16" "encoding/json" "github.com/sunholo-data/ailang-world/host/childenv" "github.com/sunholo-data/ailang-world/host/hashref" "github.com/sunholo-data/ailang-world/host/procbound" "path/filepath" "os/exec" "sort" "github.com/sunholo-data/ailang-world/host/archive" "github.com/sunholo-data/ailang-world/host/canon" "database/sql/driver" "maps" "math/rand/v2" "database/sql" "embed" "golang.org/x/sys/unix" "bufio" "crypto/internal/randutil" "crypto/internal/rand" "math/rand" "math/big" "crypto/rand" "encoding/binary" "regexp/syntax" "regexp" "github.com/dustin/go-humanize" "crypto/md5" "crypto/sha1" "vendor/golang.org/x/net/dns/dnsmessage" "internal/nettrace" "weak" "unique" "net/netip" "internal/routebsd" "internal/singleflight" "net" "github.com/google/uuid" "github.com/mattn/go-isatty" "github.com/ncruces/go-strftime" "modernc.org/libc/errno" "modernc.org/libc/fcntl" "modernc.org/libc/fts" "modernc.org/libc/grp" "io/ioutil" "modernc.org/libc/honnef.co/go/netdb" "modernc.org/libc/langinfo" "modernc.org/libc/limits" "modernc.org/libc/netdb" "modernc.org/libc/netinet/in" "modernc.org/libc/poll" "modernc.org/libc/pthread" "modernc.org/libc/pwd" "modernc.org/libc/signal" "modernc.org/libc/stdio" "modernc.org/libc/stdlib" "modernc.org/libc/sys/socket" "modernc.org/libc/sys/stat" "modernc.org/libc/sys/types" "modernc.org/libc/termios" "modernc.org/libc/time" "modernc.org/libc/unistd" "modernc.org/libc/utime" "modernc.org/libc/uuid/uuid" "modernc.org/libc/wctype" "github.com/remyoudompheng/bigfft" "modernc.org/mathutil" "modernc.org/memory" "os/signal" "runtime/debug" "modernc.org/libc" "modernc.org/sqlite/lib" "modernc.org/sqlite/vtab" "net/url" "modernc.org/sqlite" "github.com/sunholo-data/ailang-world/host/store" "github.com/sunholo-data/ailang-world/host/replay"]
+    allowlist_world_test.go:764: ENUMERATION group=cmd/ailang-worldd exact_count=262 baseline_net/http/httputil=0 dependencies=["internal/goarch" "unsafe" "internal/abi" "internal/unsafeheader" "internal/cpu" "internal/bytealg" "internal/byteorder" "internal/chacha8rand" "internal/coverage/rtcov" "internal/godebugs" "internal/goexperiment" "internal/goos" "internal/profilerecord" "internal/runtime/atomic" "internal/runtime/exithook" "internal/runtime/gc" "internal/runtime/sys" "internal/runtime/gc/scan" "internal/asan" "internal/msan" "internal/race" "internal/runtime/math" "internal/runtime/maps" "internal/runtime/pprof/label" "math/bits" "internal/strconv" "internal/stringslite" "internal/trace/tracev2" "runtime" "internal/reflectlite" "errors" "sync/atomic" "internal/sync" "internal/synctest" "sync" "io" "iter" "unicode" "unicode/utf8" "bytes" "strings" "bufio" "internal/bisect" "internal/godebug" "internal/oserror" "syscall" "time" "context" "hash" "strconv" "crypto" "crypto/internal/fips140deps/godebug" "crypto/internal/fips140" "crypto/internal/fips140/alias" "crypto/internal/fips140deps/byteorder" "crypto/internal/fips140deps/cpu" "crypto/internal/impl" "crypto/internal/fips140/sha256" "crypto/internal/constanttime" "crypto/internal/fips140/subtle" "crypto/internal/fips140/sha3" "crypto/internal/fips140/sha512" "crypto/internal/fips140/hmac" "crypto/internal/fips140/check" "crypto/internal/fips140/aes" "crypto/internal/fips140deps/time" "crypto/internal/entropy/v1.0.0" "internal/syscall/unix" "path" "cmp" "slices" "io/fs" "internal/filepathlite" "internal/poll" "internal/syscall/execenv" "internal/testlog" "os" "crypto/internal/sysrand" "crypto/internal/fips140/drbg" "math" "crypto/internal/fips140/aes/gcm" "crypto/fips140" "crypto/internal/fips140only" "crypto/subtle" "crypto/cipher" "crypto/internal/boring/sig" "crypto/internal/boring" "crypto/sha256" "reflect" "internal/fmtsort" "fmt" "encoding/hex" "encoding" "encoding/base64" "unicode/utf16" "encoding/json" "flag" "math/rand/v2" "crypto/internal/randutil" "crypto/internal/rand" "math/rand" "math/big" "crypto/rand" "encoding/xml" "github.com/sunholo-data/ailang-world/host/childenv" "github.com/sunholo-data/ailang-world/host/hashref" "maps" "os/user" "path/filepath" "archive/tar" "sort" "compress/flate" "encoding/binary" "hash/crc32" "compress/gzip" "os/exec" "regexp/syntax" "regexp" "github.com/sunholo-data/ailang-world/host/pkgproj" "github.com/sunholo-data/ailang-world/host/procbound" "database/sql/driver" "database/sql" "embed" "github.com/sunholo-data/ailang-world/host/canon" "golang.org/x/sys/unix" "github.com/dustin/go-humanize" "crypto/md5" "crypto/sha1" "vendor/golang.org/x/net/dns/dnsmessage" "internal/nettrace" "weak" "unique" "net/netip" "internal/routebsd" "internal/singleflight" "net" "github.com/google/uuid" "github.com/mattn/go-isatty" "github.com/ncruces/go-strftime" "modernc.org/libc/errno" "modernc.org/libc/fcntl" "modernc.org/libc/fts" "modernc.org/libc/grp" "io/ioutil" "modernc.org/libc/honnef.co/go/netdb" "modernc.org/libc/langinfo" "modernc.org/libc/limits" "modernc.org/libc/netdb" "modernc.org/libc/netinet/in" "modernc.org/libc/poll" "modernc.org/libc/pthread" "modernc.org/libc/pwd" "modernc.org/libc/signal" "modernc.org/libc/stdio" "modernc.org/libc/stdlib" "modernc.org/libc/sys/socket" "modernc.org/libc/sys/stat" "modernc.org/libc/sys/types" "modernc.org/libc/termios" "modernc.org/libc/time" "modernc.org/libc/unistd" "modernc.org/libc/utime" "modernc.org/libc/uuid/uuid" "modernc.org/libc/wctype" "github.com/remyoudompheng/bigfft" "modernc.org/mathutil" "modernc.org/memory" "os/signal" "runtime/debug" "modernc.org/libc" "modernc.org/sqlite/lib" "modernc.org/sqlite/vtab" "net/url" "modernc.org/sqlite" "github.com/sunholo-data/ailang-world/host/store" "container/list" "crypto/aes" "crypto/des" "crypto/internal/fips140/nistec/fiat" "crypto/internal/fips140/nistec" "crypto/internal/fips140/ecdh" "crypto/internal/fips140/edwards25519/field" "crypto/ecdh" "crypto/elliptic" "crypto/internal/boring/bbig" "crypto/internal/fips140/bigmod" "crypto/internal/fips140/ecdsa" "crypto/internal/fips140cache" "crypto/sha3" "crypto/internal/fips140hash" "crypto/sha512" "internal/saferio" "encoding/asn1" "vendor/golang.org/x/crypto/cryptobyte/asn1" "vendor/golang.org/x/crypto/cryptobyte" "crypto/ecdsa" "crypto/internal/fips140/edwards25519" "crypto/internal/fips140/ed25519" "crypto/ed25519" "crypto/internal/fips140/hkdf" "crypto/hkdf" "crypto/hmac" "crypto/internal/fips140/mlkem" "crypto/mlkem" "vendor/golang.org/x/crypto/internal/alias" "vendor/golang.org/x/crypto/chacha20" "vendor/golang.org/x/crypto/internal/poly1305" "vendor/golang.org/x/crypto/chacha20poly1305" "crypto/hpke" "crypto/internal/fips140/tls12" "crypto/internal/fips140/tls13" "crypto/rc4" "crypto/internal/fips140/rsa" "crypto/rsa" "crypto/tls/internal/fips140tls" "crypto/dsa" "crypto/x509/internal/macos" "crypto/x509/pkix" "encoding/pem" "crypto/x509" "crypto/tls" "vendor/golang.org/x/text/transform" "log/internal" "log" "vendor/golang.org/x/text/unicode/bidi" "vendor/golang.org/x/text/secure/bidirule" "vendor/golang.org/x/text/unicode/norm" "vendor/golang.org/x/net/idna" "net/textproto" "vendor/golang.org/x/net/http/httpguts" "vendor/golang.org/x/net/http/httpproxy" "vendor/golang.org/x/net/http2/hpack" "mime" "mime/quotedprintable" "mime/multipart" "net/http/httptrace" "net/http/internal" "net/http/internal/ascii" "net/http/internal/httpcommon" "net/http" "github.com/sunholo-data/ailang-world/host/broker" "github.com/sunholo-data/ailang-world/host/authority" "github.com/sunholo-data/ailang-world/host/archive" "github.com/sunholo-data/ailang-world/host/capsule" "github.com/sunholo-data/ailang-world/host/registry" "github.com/sunholo-data/ailang-world/host/transitionreg" "github.com/sunholo-data/ailang-world/host/coordinator" "github.com/sunholo-data/ailang-world/host/agui" "github.com/sunholo-data/ailang-world/host/evidence" "github.com/sunholo-data/ailang/serveapi/protocol" "github.com/sunholo-data/ailang/serveapi/protocol/hostcall" "github.com/sunholo-data/ailang/serveapi/protocol/mcphttp" "github.com/sunholo-data/ailang-world/host/projection" "html" "text/template/parse" "text/template" "html/template" "github.com/sunholo-data/ailang-world/host/workbench" "github.com/sunholo-data/ailang-world/host/daemon" "github.com/sunholo-data/ailang-world/host/pinfetch" "github.com/sunholo-data/ailang-world/host/worktree" "github.com/sunholo-data/ailang-world/cmd/ailang-worldd"]
+    allowlist_world_test.go:773: cmd/ailang-worldd/demo_seed.go: forbidden registry/HTTP/cloud dependency "github.com/sunholo-data/ailang-world/host/registry"
+--- FAIL: TestWorldBoundaryRecordingWriter (0.30s)
+    --- FAIL: TestWorldBoundaryRecordingWriter/recording_cmd_ailang-worldd (0.06s)
+        allowlist_world_test.go:1277: OVERLAY path=cmd/ailang-worldd/main.go arm=cmd/ailang-worldd baseline_sha256=be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c mutant_sha256=7611de99d63c59d7e3b87e81778afac7b4f16033a0bab0f8c470f15d26801bed mutant=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorldBoundaryRecordingWriterrecording_cmd_ailang-worldd2033807448/001/mutant__cmd__ailang-worldd__main.go overlay_json=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorldBoundaryRecordingWriterrecording_cmd_ailang-worldd2033807448/001/overlay.json
+        allowlist_world_test.go:1277: AC1b nowrite_control equal=true
+        allowlist_world_test.go:1277: AC1b arm=cmd/ailang-worldd path=cmd/ailang-worldd/main.go probe_fired=20/20 tmpdir_dev=16777234 repo_dev=16777234
+        allowlist_world_test.go:1277: AC1b arm=cmd/ailang-worldd path=cmd/ailang-worldd/main.go sha256=be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c size=25731 mode=-rw-r--r-- inode=179012061 mtime_ns_equal=true
+        allowlist_world_test.go:1277: guard failure did not name exact path cmd/ailang-worldd/main.go: cmd/ailang-worldd/demo_seed.go: forbidden registry/HTTP/cloud dependency "github.com/sunholo-data/ailang-world/host/registry"
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/boundary	1.889s
+--- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential (0.93s)
+    registry_publish_test.go:1158: AC10(a) re-derived N = 10 production subprocess launch sites in 10 files:
+    registry_publish_test.go:1161:     cmd/ailang-worldd/demo_seed.go:77 exec.CommandContext
+    registry_publish_test.go:1161:     host/archive/archive.go:470 exec.CommandContext
+    registry_publish_test.go:1161:     host/archive/check.go:95 exec.CommandContext
+    registry_publish_test.go:1161:     host/broker/handlers.go:159 exec.CommandContext
+    registry_publish_test.go:1161:     host/capsule/capsule.go:236 exec.CommandContext
+    registry_publish_test.go:1161:     host/evidence/proof_producer.go:178 exec.CommandContext
+    registry_publish_test.go:1161:     host/pkgproj/iface.go:171 exec.CommandContext
+    registry_publish_test.go:1161:     host/pkgproj/pkgproj.go:247 exec.Command
+    registry_publish_test.go:1161:     host/replay/replay.go:336 exec.CommandContext
+    registry_publish_test.go:1161:     host/worktree/worktree.go:72 exec.CommandContext
+    registry_publish_test.go:1213: AC10(a): 10 files carry subprocess sites [cmd/ailang-worldd/demo_seed.go host/archive/archive.go host/archive/check.go host/broker/handlers.go host/capsule/capsule.go host/evidence/proof_producer.go host/pkgproj/iface.go host/pkgproj/pkgproj.go host/replay/replay.go host/worktree/worktree.go] but 9 have drivers; every enumerated site must be DRIVEN
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	179.975s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.273s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	86.985s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.157s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	68.449s
+ailang-worldd: internal error: POST /agui/: failure
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: database is closed
+ailang-worldd: internal error: GET /v1/objects/by-semantic-id/x: host-secret-detail
+ailang-worldd: internal error: GET /workbench: private commit read detail
+ailang-worldd: internal error: GET /workbench: private table detail
+ailang-worldd: internal error: GET /workbench: SECRET approval I/O
+ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+--- FAIL: TestQuickstartDecisionPacketSection (0.00s)
+    workbench_packet_test.go:530: section line "/tmp/ailang-worldd serve --db \"$DEMO_DIR/world.db\" --ailang-bin \"$PIN\" \\" is a served-daemon command or a table row
+ailang-worldd: internal error: GET /workbench: reference source relation mismatch
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	348.928s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	31.171s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	2.366s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	1.801s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	55.058s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.811s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.466s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.933s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	3.386s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.583s
+ok  	github.com/sunholo-data/ailang-world/host/replay	60.403s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	7.916s
+ok  	github.com/sunholo-data/ailang-world/host/store	14.216s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	73.548s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	190.062s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.329s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	2.873s
+FAIL

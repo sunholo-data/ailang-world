@@ -1,0 +1,8 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/archive-absent
+    demo_test.go:441: wrong refusal: want "interpreter archive manifest unavailable" got "ailang-worldd demo seed: interpreter archive identity mismatch\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.93s)
+    --- FAIL: TestDemoSeedPreflightRefusals/archive-absent (0.93s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.310s
+FAIL
