@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+    demo_test.go:433: pin-mismatch: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.06s)
+    --- FAIL: TestDemoSeedPreflightRefusals/pin-mismatch (1.06s)
+FAIL

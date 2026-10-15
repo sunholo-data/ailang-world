@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+    demo_test.go:433: health-version: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (2.13s)
+    --- FAIL: TestDemoSeedPreflightRefusals/health-version (2.13s)
+FAIL

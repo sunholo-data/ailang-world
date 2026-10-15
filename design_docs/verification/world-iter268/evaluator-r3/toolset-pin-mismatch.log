@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+--- PASS: TestDemoSeedPreflightRefusals (0.86s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (0.86s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.248s

@@ -1,0 +1,128 @@
+from pathlib import Path
+import json,re,subprocess,datetime,hashlib
+W=Path('/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r3');D=W/'design_docs/verification/world-iter268';E=D/'evaluator-r3'
+HEAD='763c60a20358f486df395043131557c1143735ba';BASE='39066a46c1ac13c994bacb162b8d4b754d5ec083'
+def gh(args):
+ p=subprocess.run(['gh']+args,cwd=W,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=30);assert p.returncode==0,p.stderr.decode();return json.loads(p.stdout)
+ci=gh(['run','view','38687777190','--repo','sunholo-data/ailang-world','--json','headSha,event,status,conclusion,jobs,url'])
+pr=gh(['pr','view','267','--repo','sunholo-data/ailang-world','--json','headRefOid,mergeable,state,isDraft,statusCheckRollup'])
+assert ci['headSha']==HEAD and ci['event']=='pull_request' and pr['headRefOid']==HEAD
+expected={'ailang-code verify gate','go host build + test gate'}
+green=ci['status']=='completed' and ci['conclusion']=='success' and len(ci['jobs'])==2 and {x['name'] for x in ci['jobs']}==expected and all(x['status']=='completed' and x['conclusion']=='success' for x in ci['jobs']) and pr['mergeable']=='MERGEABLE'
+if not green:
+ print('NOT A FIRM PASS: exact-head CI pending or failed',[(x['name'],x['status'],x['conclusion']) for x in ci['jobs']]);raise SystemExit(3)
+now=datetime.datetime.now(datetime.timezone.utc).isoformat();ci['observed_utc']=now;pr['observed_utc']=now
+(E/'ci-final.json').write_text(json.dumps(ci,indent=2));(E/'pr-final.json').write_text(json.dumps(pr,indent=2))
+mut=json.loads((E/'mutation-ledger.json').read_text());post=json.loads((E/'post-gates.json').read_text());restore=json.loads((E/'restoration.json').read_text());inventory=json.loads((E/'diff-inventory.json').read_text())
+assert len(mut)==39 and sum(x.get('assertion_kill',False) for x in mut)==36 and all(x['build']['rc']==0 and x['byte_restored'] for x in mut)
+assert restore['protected_equal'] and all(x['matches_head'] and x['matches_snapshot'] for x in restore['source'])
+assert json.loads((E/'post-terminal.json').read_text())['terminal']
+positive={'toolset-pin-mismatch','restored-demo-unset','mint-boundary','rest-and-doc-regression','boundary','nine-site-audit','vet','gofmt','implementation-diffcheck'}
+assert all(x['rc']==0 and not x['skip_names'] for x in post if x['name'] in positive)
+by_name={x['name']:x for x in post};assert positive <= by_name.keys()
+assert all(by_name[x]['rc']==0 for x in ['fixture-revert-build','fixture-equalbytes-build','M2a-own-revert-build'])
+assert all(by_name[x]['rc']==1 for x in ['fixture-revert-unset','fixture-equalbytes','M2a-own-revert'])
+assert 'required tool pin absent' in (E/'fixture-revert-unset.log').read_text()
+assert 'actual log entries5 want0' in (E/'fixture-equalbytes.log').read_text()
+assert not (E/'gofmt.log').read_text().strip()
+initial=(E/'baseline-unset.log').read_text();assert len(re.findall(r'^    --- PASS: TestDemoSeedPreflightRefusals/',initial,re.M))==37
+assert len(re.findall(r'^    --- PASS: TestDemoSeedCommitFailures/',initial,re.M))==3
+branches={
+ 'runDemo':{'exercised':['subcommand','required flags','positionals','session absent/unknown/expired','help forms','preflight/commit error propagation','explicit S1-complete/S2-S6-incomplete exit1/no manifest'],'support':'90s budget mutant survives all four top-level tests'},
+ 'demoGet':{'mutated':['transport/status read-error propagation','required resource absent'],'limits':'Per-call invocations are not individually fault injected'},
+ 'demoPreflight':{'mutated':['existing manifest','db-health lexical absolute identity','pin read/hash','archive manifest absence/Hash/Size/health-Version/release-prefix','composite world/head/log emptiness with reachable unselected World fixture','epoch payload hash/decode/nomination'],'propagation_not_independently_mutated':['health helper call','demoGrants call','headState','page','registry helper call','object read'],'unprovoked':['filepath.Abs errors','missing epoch object as distinct !ok operand','malformed archive JSON as distinct ReadManifest error cause']},
+ 'demoGrants':{'mutated':['session denial','episode mismatch','grant refusal','persisted spend subtraction','World scan count'],'diagnostic_only':'OpenReadOnly error message mutation is not a bypass proof','unprovoked':['ResolveContext query failure','EffectSpend query failure','ScanUnreadableWorlds query failure','resolver nil-success/nil-denial defensive contract'],'scope':'The four grant-table literals are source-reviewed; not each literal individually mutated'},
+ 'demoSeedDomain':{'mutated':['source-read refusal','head CAS refusal','Bearer attachment','HTTP uncertainty','non200 response','response selectedHead guard'],'limits':['preflight and each head-read error propagation not independently fault injected','malformed commit JSON response not a distinct injected arm','json.Marshal failure of fixed primitive wire structure not forced']},
+ 'supporting_hunks':{'mutated':['interpreter/epoch header identity','carrying transition reference','object interface hash/provenance','runbook DEMO_BIN wiring','own-M2a main/new-file production revert'],'surviving':['whole command budget90s→24h','StateRoot hash(observed+newline+payloadHash)→hash(payloadHash)','entryHash hash(encoded)→hash(encoded plus zero byte)'],'fixed_primitive_marshal':'No arbitrary interfaces/floats/channels or custom marshalers in these helper wire structs; error paths not forced, no general all-errors coverage claim'}
+}
+(E/'refusal-support-inventory.json').write_text(json.dumps(branches,indent=2))
+residuals=[{'id':'R2-3n-budget','severity':'nonblocking coverage gap','mutation':'budgetContext(90*time.Second) →24*time.Hour','evidence':'mutant-budget-survivor.log','result':'build0/all4TestDemoSeedPASS'}, {'id':'R2-3n-state-root','severity':'nonblocking coverage gap','mutation':'stateRoot hash input →o.Hash only','evidence':'mutant-state-root-survivor.log','result':'build0/authenticatedPASS'}, {'id':'R2-3n-entry-hash','severity':'nonblocking coverage gap','mutation':'entryHash encoded input →append(encoded,0)','evidence':'mutant-entry-hash-survivor.log','result':'build0/authenticatedPASS'}]
+scores={'tests_pass':20,'lint_clean':10,'acceptance_criteria':30,'code_quality':10,'documentation':10,'design_fidelity':10}
+report=dict(sprint_id='w-marketing-capture',iteration=268,row=150,milestone='M2a',evaluation_round=3,result='pass',score=90,threshold=70,blocking_findings=[],hard_fails=[],reviewed_commit=HEAD,base_commit=BASE,previous_subject='7ba691b732d327f6b38a16223152b876e7d197df',generated_utc=now,judge={'role':'independent fresh-context native Agent evaluator','model':'gpt-6.1-sol','independence':'same-model-fresh-context FLAG','authority':'D-WORLD-48/current Gate3; preferred Sonnet Unknown model; unavailable cross-vendor lanes; fleet ticket inbox_1792040381066_9861a560','quota_tokens':None,'tokens':'not reported','metered_calls':0},gate_source='ci',ci=ci,pr=pr,platform='darwin/arm64 Go1.26.6',pin='released AILANGv0.41.0/24ee1088776e21cd06a3781ed18e77f40be06db3',tool_environment='WORLD_TOOL_AILANG_BIN unset for ordinary-CI and mutation children; separately set to v0.52.1 for pin-mismatch arm',environment_removals=['GOOGLE_CLOUD_PROJECT','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_RESOURCE_ATTRIBUTES','OTLP_GOOGLE_CLOUD_PROJECT'],score_breakdown=scores,acceptance={'met':3,'total':3,'scope':'M2a narrow criteria only, not all17milestones','tests':['TestDemoSeedAuthenticatedCommits','TestDemoSeedPreflightRefusals','TestDemoSeedHelpPreparation'],'extra':'TestDemoSeedCommitFailures'},prior_findings={'R1-B1':'CLOSED local JSON wire shape; unchanged boundary tests pass','R1-B2':'CLOSED exact75634-byte oldQUICKSTART prefix retained; section12 DEMO_BIN; unchanged old packet-doc test passes','R1-B3':'CLOSED new launcher removed; actual9site scrub audit passes; trust existing startup manifest only','R2-B1':'CLOSED unique regular mismatched temporary bytes; no optionaltool dependency, no skip/workflow delta; fixture revert/equal-byte controls fail as intended'},mutations={'attempts':39,'compiling_assertion_kills':36,'production_doc_behavior_kills':35,'diagnostic_only_kills':1,'coverage_survivors':3,'invalid_or_timeout_or_panic_kills':0,'ledger':'evaluator-r3/mutation-ledger.json','sole_killer_claim':False},fixture_controls={'old_fixture_build':0,'old_fixture_unset':1,'old_fixture_assertion':'required tool pin absent','equal_bytes_build':0,'equal_bytes_rc':1,'equal_bytes_assertion':'refusal changed public inventory: actual log entries5 want0'},milestone_nonvacuity={'own_M2a_production_revert_build':0,'all_four_new_top_level_tests':'FAIL','earlier_mint_regression':'PASS','M1a_M1b':'untouched','evidence':'evaluator-r3/M2a-own-revert.log'},residuals=residuals,refusal_support_inventory='evaluator-r3/refusal-support-inventory.json',diff_inventory=inventory,post_gates=post,restoration=restore,reading_scope={'complete':'authoritative mission-control SKILL, Gate3 route, verification protocol, evaluator skill and rubric; CLAUDE, coding standards, DESIGN1/14; designr4 and full sprint-plan operative sections','charter':'Complete1,125,188byte charter programmatically scanned/headings+guard starts banked; operative RepoProfile/bar/guardrails/current status/row150/D48/D69/D75 read; accumulated historic queue/ledger prose not claimed fully semantically read. Controller acknowledged this bound.','json':'Complete192563byte JSON parsed; all17milestone structures banked, M2a contract read; repeated future-milestone payload prose not independently semantically certified.'},limits=['No duplicate broad local suite; exact-head PR CI is authoritative full signal; controller final-head gates separately owned','No blanket all-error-path, every predicate operand, whole-suite sole-killer, cross-platform local, or normative canonical-hash violation claim','No complete seed/why/proof/packet/evidence roster/captures/release acceptance; M2b+ intentionally pending','Full attended publish/mint/runbook not executed; tests use approved disposable credential seams only','Design quorum r1-r3 remain BLOCKED, r4 inherited narrow-refinement disposition; D75 OPEN/defaultA nonblocking; D69 authorizes release row while93attendedFINALFAILS/114/139sequenced','No .ail authored; fluency-writing requirement N/A; no protected original written or restored','No subagents, git writes, push/merge, inbox, real publish/mint or typed confirmations'],all_own_tasks_terminal=True)
+report['controller_terminal_artifacts']={kind:json.loads((E/('controller-final-candidate-'+kind+'.json')).read_text()) for kind in ['ail','go']}
+assert all(x['head']==HEAD and x['source_after']==HEAD and x['rc']==0 for x in report['controller_terminal_artifacts'].values())
+(D/'evaluator-r3.json').write_text(json.dumps(report,indent=2)+'\n')
+md=f'''# Independent round-three evaluator — World268 / row150 / M2a
+
+**PASS — 90/100, zero blocking findings or hard fails.** Reviewed exact `{HEAD}`, base `{BASE}`. This accepts M2a only. All three narrow acceptance criteria are met; the CLI honestly records five S1 commits, returns exit1 with S2–S6 incomplete, and creates no success manifest.
+
+Independent fresh-context native Agent judge `gpt-6.1-sol`, neither generator nor prior judge. **judge-independence: same-model-fresh-context FLAG**, permitted by D-WORLD-48/current Gate3 after preferred Sonnet was rejected and cross-vendor lanes unavailable (fleet ticket `inbox_1792040381066_9861a560`). Actual token usage is **not reported**. Local measurements: darwin/arm64, Go1.26.6, released AILANGv0.41.0/24ee108. No Astra or subagent used.
+
+## Exact-head gate and rubric
+
+Independently re-read [PR267](https://github.com/sunholo-data/ailang-world/pull/267): head remains `{HEAD}`, OPEN/DRAFT and MERGEABLE. [CI38687777190](https://github.com/sunholo-data/ailang-world/actions/runs/38687777190) is the real `pull_request` run on that exact head: **2/2 terminal SUCCESS**, exactly `ailang-code verify gate` and `go host build + test gate`; no empty, skipped or pending result is counted. Final reads are banked in [ci-final.json](evaluator-r3/ci-final.json) and [pr-final.json](evaluator-r3/pr-final.json), observed {now}. No duplicate broad local suite was run. Controller local gates are separately owned; they are not relabelled my measurements.
+
+| Category | Score | Evidence |
+|---|---:|---|
+| Tests pass |20/20|Exact-head CI2/2; independent focused tests below|
+| Lint clean |10/10|Affected-package vet, gofmt and implementation diffcheck green|
+| M2a acceptance |30/30|All3 named criteria; actual daemon commits and refusals|
+| Code quality |10/15|Capped-5 for new functions over50lines; no new file>800lines or TODO/HACK/FIXME|
+| Documentation |10/15|No changelog0/5; concrete preparation/generator5/5; honest incremental status5/5|
+| Design fidelity |10/10|Sole-writer REST, no Mint, approved read-only clarification|
+| Conditional compiler/performance |N/A|Neither category triggered|
+| **Total** |**90/100 PASS**|Threshold70; no hard fail|
+
+No deduction for intentionally pending M2b+ or a whole-sprint completion status that M2a does not claim.
+
+## Findings carried from earlier rounds
+
+- **R1-B1 CLOSED:** forbidden direct host/registry dependency is gone; anonymous wire decode uses the same json.Unmarshal behavior as former Decode. Unchanged dependency and recording-writer boundary tests pass. Epoch-decode mutation compiles and reaches its exact refusal assertion.
+- **R1-B2 CLOSED:** original QUICKSTART is an exact **75,634-byte prefix**. New section12 consistently exports/builds/uses DEMO_BIN for mint, serve and seed; inherited §11 and old packet-doc test pass unchanged. New runbook-wiring mutation kills its named assertion.
+- **R1-B3 CLOSED:** the seed launcher was removed. Actual driven scrub audit re-derived **9 production sites in9files** and passed. Pin preflight reads the existing daemon-startup sidecar and binds Hash/Size/Version to local hash-matched pin and health plus v0.41.0 release prefix. All five archive guards were freshly mutated. This reuses existing startup sidecar trust; it is no stronger authenticity claim.
+- **R2-B1 CLOSED:** only source delta from7ba is the temporary regular-byte fixture. Ordinary-CI **tool-unset** run passes all4 new top-level tests,37preflight cases and3commit-failure cases. Tool-set pin-mismatch also passes. Reverting exactly the fixture builds and fails with `required tool pin absent`; preserving the unique regular file but giving it matching interpreter bytes builds and fails on **actual log entries5 want0**, proving the refusal/inventory assertion reaches the hash guard. No skip or workflow relaxation.
+
+Approved read-only target is sound within its scope: health/DB identity precedes store.OpenReadOnly; bounded ResolveContext binds episode demo; persisted EffectSpend is subtracted; broker predicates enforce live required grants. `ScanUnreadableWorlds("",1).Scanned` rejects a real unselected World with no selected head/log. Source control flow closes the read-only view before public writes. All writes are session-authenticated POST/v1/commit with observed-head CAS, no Mint/new endpoint/competing writable store. Bootstrap session/registry rows remain allowed; no all-object emptiness claim.
+
+## Own behavioral and mutation evidence
+
+The real disposable daemon accepted exactly goal + two distinct candidates + unchanged world/logepoch.ail source + explicitly demo-authored commentary, with actual stored objects/carrying entries, exact object hashes, frozen headers, Bearer and CAS. Existing authority.Mint is test setup before daemon start only. Refusals assert expected reason, no new domain writes and no manifest. Real commit denial/lost response/wrong response controls assert one attempt and actual recorded inventory.
+
+Initial unset-tool focused suite passed (package38.384s); final restored repeat passed (39.155s package;39.578s wall). Separate mint, packet-REST prohibition, old packet-doc, boundary, nine-site audit, vet, formatting and code/doc diffcheck all pass without skips. Exact argv/rc/time/names are in [post-gates.json](evaluator-r3/post-gates.json).
+
+**39 fresh compiling mutations:36 assertion kills,3 coverage survivors.** Of the36,35 change production/doc behavior; one only alters the readonly-open diagnostic and is explicitly **not bypass proof**. Each had an asserted unique edit, successful affected-test compilation, exact selected test/assertion, and byte restore. No compile failure/panic/timeout/SKIP/empty selection is credited. Focused membership, not a whole-suite sole-killer claim. Ledger: [mutation-ledger.json](evaluator-r3/mutation-ledger.json).
+
+**Own-M2a non-vacuity:** removed only the two new production files and restored main.go to M2a base; kept current tests/docs and all M1a/M1b work. Build0; all3 named M2a tests and extra commit-failure test FAIL; earlier mint regression PASS. [Own revert](evaluator-r3/M2a-own-revert.log). This does not borrow earlier milestone protection as new M2a coverage.
+
+Three **nonblocking3n coverage gaps** remain, independently reproduced here:90s→24h command budget survives all4 demo tests; StateRoot hash input→payloadHash only and entryHash input→encoded plus zero byte each survive authenticated acceptance. Build0/test0/byte-restore for each. These do not establish a normative canonical-hash violation; controller queues them. No repair or scope expansion was made.
+
+## Exhaustive diff and refusal/support limits
+
+Base→candidate has **334 paths:5 implementation,2 plan metadata,327 verification/evidence**. All path names and full5-file patch are banked in [diff-inventory.json](evaluator-r3/diff-inventory.json) and [implementation.patch](evaluator-r3/implementation.patch). Own implementation enumeration: new demo.go70lines; new demo_seed.go253lines; new demo_test.go522lines; main.go's three usage/dispatch/help insertions13lines; QUICKSTART's section12 append81lines. Source/test/doc hunks were reviewed directly, not inferred from a handoff summary. Prior reports remain immutable in reviewed HEAD.
+
+Return/error enumeration is anchored to the actual5-file diff: [source-return-inventory.json](evaluator-r3/source-return-inventory.json), [refusal-support-inventory.json](evaluator-r3/refusal-support-inventory.json). Unprovoked operational paths include filepath.Abs errors, SQLite resolver/spend/scan query failures and individual head/page/object-read propagation sites. Nil-success/denial defensive pair was not injected. Fixed-primitive JSON marshal failures were not forced. Distinct !ok/JSON error causes inside some combined guards were not each separately injected. No blanket all-error-path or every-literal mutation claim.
+
+Authoritative skills/protocol/rubric, CLAUDE, coding standards, DESIGN§1/14, designr4 and sprint-plan operative sections were read. Complete1.1MB charter and192KB sprint JSON were scanned/parsed and structures banked; operative profile/bar/guardrails/status/row150/D48/D69/D75 and M2a contract were read. I do **not** claim full semantic reading of every accumulated historic queue/ledger narrative or repeated future-milestone JSON prose. Controller explicitly acknowledged this bounded reading scope. No .ail authored; fluency-writing requirement N/A.
+
+All5 allowed files restored byte-exact to external snapshots **and reviewed HEAD**. All12 protected primary paths retain SHA256/newline equality before/after and against base, observed only; none written or restored. [Restoration](evaluator-r3/restoration.json). All own commands/tasks terminal. No git writes, commit/push/merge, inbox, production publish/mint, typed answers or release artifacts.
+
+Scope remains M2a. Design quorum r1–r3 stay BLOCKED; r4 inherits iteration266's narrow-refinement disposition, no invented quorum PASS. D75 remains OPEN/defaultA/nonblocking; D69 authorizes row150 while93attendedFINALFAILS and114/139 stay sequenced. No complete seed/why/proof/packet/roster/capture/image/release acceptance is implied; attended release gates remain future work.
+
+EVALUATION_RESULT: pass
+EVALUATION_SCORE:90/100
+EVALUATION_ROUND:3
+EVALUATION_REPORT_PATH:design_docs/verification/world-iter268/evaluator-r3.json
+FEEDBACK_SUMMARY:No blocking findings; carry three named coverage gaps; M2a only.
+'''
+md=md.replace('Controller local gates are separately owned; they are not relabelled my measurements.', 'Controller local terminal artifacts were independently read and copied here: exact-head verify_ail rc0 /26.46s and verify_go rc0 /564.45s (build/plain/race, ordinary-CI tool unset). These remain controller measurements, not my own execution.')
+for before,after in {
+ 'EVALUATION_SCORE:90/100':'EVALUATION_SCORE: 90/100',
+ 'EVALUATION_ROUND:3':'EVALUATION_ROUND: 3',
+ 'EVALUATION_REPORT_PATH:design_docs/':'EVALUATION_REPORT_PATH: design_docs/',
+ 'FEEDBACK_SUMMARY:No':'FEEDBACK_SUMMARY: No',
+ 'CI2/2':'CI 2/2','All3':'All 3','all3':'all 3','all4':'all 4','All5':'All 5','all5':'all 5','All12':'All 12','all12':'all 12',
+ 'M2b+':'M2b and later milestones','No Astra':'No Astra',
+ '36 assertion kills,3':'36 assertion kills, 3','the36':'the 36','35 change':'35 change',
+ '9 production sites in9files':'9 production sites in 9 files','all five archive':'all five archive',
+ 'all4 new top-level tests,37preflight cases and3commit-failure cases':'all 4 new top-level tests, 37 preflight cases and 3 commit-failure cases',
+ '334 paths:5 implementation,2 plan metadata,327 verification/evidence':'334 paths: 5 implementation, 2 plan metadata, 327 verification/evidence',
+ 'full5-file':'full 5-file','actual5-file':'actual 5-file','70lines':'70 lines','253lines':'253 lines','522lines':'522 lines','insertions13lines':'insertions of 13 lines','append81lines':'append of 81 lines',
+ 'nonblocking3n':'nonblocking 3n','all4 demo':'all 4 demo','Build0/test0/byte-restore':'Build 0 / test 0 / byte restore',
+ 'Complete1.1MB':'Complete 1.1 MB','and192KB':'and 192 KB','iteration266':'iteration 266',
+ 'row150':'row 150','while93attendedFINALFAILS':'while row 93 attended FINAL FAILS','and114/139':'and 114/139',
+ 'above50lines':'above 50 lines','over50lines':'over 50 lines','file>800lines':'file >800 lines',
+ 'Capped-5':'Capped −5','changelog0/5':'changelog 0/5','generator5/5':'generator 5/5','status5/5':'status 5/5',
+ 'from7ba':'from 7ba','Build0;':'Build 0;','three narrow':'three narrow',
+}.items():md=md.replace(before,after)
+(D/'evaluator-r3.md').write_text(md)
+print('WROTE PASS90 exact-head2/2; all source restored and own tasks terminal')

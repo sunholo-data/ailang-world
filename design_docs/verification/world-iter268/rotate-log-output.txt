@@ -1,0 +1,6 @@
+live log   /Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-log.md
+  321063 -> 315692 bytes (~80k -> ~78k tokens), 40 of 41 entries kept
+archive    /Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-log-archive.md
+  1 entries rotated out (full bodies retained)
+INDEX      /Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-index.md
+  259 iterations, complete history — grep this before picking work

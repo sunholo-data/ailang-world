@@ -1,0 +1,51 @@
+{
+  "historical_interior_body_bytes_preserved": true,
+  "record_boundary_blank_LFs_normalized_by_CLI": true,
+  "current_entry_268_progress_label_repaired_after_regeneration": true,
+  "old_full_entries_preserved": 36,
+  "headline265_only_header_changed": true,
+  "log_entries_after": 40,
+  "archive_numbered_bodies_unchanged": true,
+  "archived_attended_note_body_unchanged": true,
+  "attended_note_header_normalized": true,
+  "rotated_full_attended_note": 1,
+  "records_before_regen_including_note": 41,
+  "unnumbered_index_notes": 1,
+  "old_index_ids": 257,
+  "new_index_ids": 258,
+  "lost_ids": [],
+  "new_ids": [
+    268
+  ],
+  "recovered_existing_index_markers": [
+    251,
+    253,
+    255
+  ],
+  "current_archive_notice_count": 1,
+  "last20_primary_harness": 0,
+  "harness_positive_control": true,
+  "source_files_byte_identical": [
+    "cmd/ailang-worldd/demo.go",
+    "cmd/ailang-worldd/demo_seed.go",
+    "cmd/ailang-worldd/demo_test.go",
+    "cmd/ailang-worldd/main.go",
+    "docs/QUICKSTART.md"
+  ],
+  "milestone_states": {
+    "completed": 3,
+    "pending": 14
+  },
+  "all_other_milestone_json_objects_unchanged": true,
+  "external_snapshot_directives_MD": 17,
+  "external_snapshot_directives_JSON": 17,
+  "ledger_bytes_unchanged": true,
+  "queue_rows": {
+    "before": 177,
+    "after": 179
+  },
+  "all_other_existing_queue_rows_unchanged": true,
+  "r3_staged_files_sha256_equal": 130,
+  "prior_FAIL_reports_unchanged": true,
+  "progress": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET — goal unmoved. Release row 150 advanced to 3/17 milestones."
+}

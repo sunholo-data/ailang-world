@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/unknown-verb
+    demo_test.go:433: unknown-verb: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.93s)
+    --- FAIL: TestDemoSeedPreflightRefusals/unknown-verb (0.93s)
+FAIL

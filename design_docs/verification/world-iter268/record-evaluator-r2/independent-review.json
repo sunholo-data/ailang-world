@@ -1,0 +1,1618 @@
+{
+  "record_head": "b20bb350cf1d60c9020b4a831be0ae26ad915246",
+  "source_merge": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "checks": [
+    {
+      "name": "exact-review-head",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "record-only-design-docs",
+      "pass": true,
+      "data": 217
+    },
+    {
+      "name": "source-reviewed-and-squash-tree-identical",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "entire-product-and-frozen-surface-identical",
+      "pass": true,
+      "data": {
+        "files": 603
+      }
+    },
+    {
+      "name": "entire-decision-ledger-exact",
+      "pass": true,
+      "data": {
+        "rows": 62
+      }
+    },
+    {
+      "name": "only-D75-open",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "three-status-stamps268267266",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "267266-status-stamps-exact",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "265-stamp-move-and-archive-prefix-exact",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "rotation-prequeue-arithmetic",
+      "pass": true,
+      "data": {
+        "base_lines": 6176,
+        "rotated_lines": 6176
+      }
+    },
+    {
+      "name": "queue-members177to179",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "176-other-queue-rows-exact",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "row150-only-current-tag",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "charter-remainder-exact",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-226",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-227",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-228",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-229",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-231",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-232",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-233",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-234",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-235",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-236",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-237",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-238",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-239",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-240",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-241",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-242",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-243",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-245",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-246",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-247",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-248",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-250",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-attended",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-252",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-254",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-256",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-257",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-258",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-259",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-260",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-261",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-262",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-263",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-264",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-265",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-266",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-live-267",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-0",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-1",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-2",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-3",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-4",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-5",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-6",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-7",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-8",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-9",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-10",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-11",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-12",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-13",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-14",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-15",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-16",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-17",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-18",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-19",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-20",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-21",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-22",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-23",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-24",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-25",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-26",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-27",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-28",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-29",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-30",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-31",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-32",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-33",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-34",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-35",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-36",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-37",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-38",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-39",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-40",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-41",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-42",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-43",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-44",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-45",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-46",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-47",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-48",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-49",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-50",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-51",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-52",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-53",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-54",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-55",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-56",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-57",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-58",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-59",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-60",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-61",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-62",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-63",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-65",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-66",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-67",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-68",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-69",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-70",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-71",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-72",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-73",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-74",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-75",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-76",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-77",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-78",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-79",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-80",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-81",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-82",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-83",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-84",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-85",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-86",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-87",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-88",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-89",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-90",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-91",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-92",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-93",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-94",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-95",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-96",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-97",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-98",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-99",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-100",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-101",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-102",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-103",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-104",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-105",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-106",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-107",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-108",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-109",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-110",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-111",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-112",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-113",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-114",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-115",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-116",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-117",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-118",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-119",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-120",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-121",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-122",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-123",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-124",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-125",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-126",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-127",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-128",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-129",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-130",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-131",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-132",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-133",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-134",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-135",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-136",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-137",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-138",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-139",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-140",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-141",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-142",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-143",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-145",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-146",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-147",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-148",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-149",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-150",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-151",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-152",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-153",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-154",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-155",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-156",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-157",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-158",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-159",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-160",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-161",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-162",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-163",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-164",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-165",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-166",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-167",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-168",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-169",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-170",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-171",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-172",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-173",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-174",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-175",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-180",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-181",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-183",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-184",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-185",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-186",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-187",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-188",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-189",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-193",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-194",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-195",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-196",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-197",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-199",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-200",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-201",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-198",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-203",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-230",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-244",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-202",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-204",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-205",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-206",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-207",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-208",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-209",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-210",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-211",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-212",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-213",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-214",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-215",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-216",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-217",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-218",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-219",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-220",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-221",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-222",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-223",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-224",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "interior-archive-225",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "exact-five-declared-LF-boundaries",
+      "pass": true,
+      "data": [
+        {
+          "scope": "live",
+          "id": 247,
+          "lf_delta": 1,
+          "interior_exact": true
+        },
+        {
+          "scope": "live",
+          "id": "attended",
+          "lf_delta": -1,
+          "interior_exact": true
+        },
+        {
+          "scope": "live",
+          "id": 257,
+          "lf_delta": -1,
+          "interior_exact": true
+        },
+        {
+          "scope": "live",
+          "id": 267,
+          "lf_delta": 1,
+          "interior_exact": true
+        },
+        {
+          "scope": "archive",
+          "id": 225,
+          "lf_delta": 1,
+          "interior_exact": true
+        }
+      ]
+    },
+    {
+      "name": "36-prior-numbered-plus-attended-to40-live-numbered",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "historic-heading-changes-bounded",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "attended-heading-normalization-exact",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "265-title-correction-supported",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "index257to258-only268-added",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "index-one-attended-record",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "three-orphan-markers-from-original-index",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "last20-primary-harness-zero-with-control",
+      "pass": true,
+      "data": [
+        248,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "name": "single-archive-notice",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "R1-repair-only-current268-body",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "N1-qualified-in-current-record",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "plan3complete14pending",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "plan-other16-milestones-identical",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "M2a-only-completion-metadata",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "completion-correct-head-and-merge",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "17plus17-external-snapshot-directives",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "product-R3-manifest-intact",
+      "pass": true,
+      "data": {
+        "files": 130,
+        "bad": []
+      }
+    },
+    {
+      "name": "record-R1-manifest-intact",
+      "pass": true,
+      "data": {
+        "files": 44,
+        "bad": []
+      }
+    },
+    {
+      "name": "prior-product-FAIL-reports-allbytes-identical",
+      "pass": true,
+      "data": 174
+    },
+    {
+      "name": "prior-verdicts-retained",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "routing-actual-R1-and-productR3",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "gate4-base-full-SHA-and-ISO",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "dashboard14lines-and-goal-unmoved",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "commit-autoclose-control",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "B1-fixed-actual-consumer-with-regression-control",
+      "pass": true,
+      "data": {
+        "consumer": "/Users/voightkampff/dev/sunholo-data/ailang/tools/mission-weekly-report.py",
+        "consumer_sha256": "1f1ec88c43943bd2148ad2d41db5164d9eebcbf6d7730698149318848d613e46",
+        "current_line": "**Progress**: World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+        "current_value": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+        "regressed_value": "World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 \u2192 138 \u2192\u2026",
+        "expected": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+        "pattern": "^\\s*-?\\s*\\*\\*Progress\\*\\*\\s*[:\u2014-]?\\s*(.+)$",
+        "candidate_matches": true,
+        "regressed_matches": false,
+        "current_heading": "268",
+        "token_usage": "unknown"
+      }
+    },
+    {
+      "name": "source-pr-exact-real-CI2of2",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "source-merge-exact-real-CI2of2",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "source-PR267-merged-correct-head-base-squash",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "latest-release-remains-none",
+      "pass": true,
+      "data": null
+    },
+    {
+      "name": "all-new-record-artifacts-tracked",
+      "pass": true,
+      "data": 208
+    }
+  ],
+  "count": 300,
+  "failures": [],
+  "boundary_normalizations": [
+    {
+      "scope": "live",
+      "id": 247,
+      "lf_delta": 1,
+      "interior_exact": true
+    },
+    {
+      "scope": "live",
+      "id": "attended",
+      "lf_delta": -1,
+      "interior_exact": true
+    },
+    {
+      "scope": "live",
+      "id": 257,
+      "lf_delta": -1,
+      "interior_exact": true
+    },
+    {
+      "scope": "live",
+      "id": 267,
+      "lf_delta": 1,
+      "interior_exact": true
+    },
+    {
+      "scope": "archive",
+      "id": 225,
+      "lf_delta": 1,
+      "interior_exact": true
+    }
+  ],
+  "utc": "2026-10-15T06:39:43.196574+00:00"
+}

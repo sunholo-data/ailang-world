@@ -1,0 +1,26 @@
+[
+  {
+    "iteration": 251,
+    "date": "2026-10-12",
+    "original_index_row": "| 251 | 2026-10-12 | ORPHAN (capacity-paused twice): row 26 design + 7 real fixtures left uncommitted in `.wt-world-iter251-row26-design`; credited in 252 |",
+    "credit_iteration": 252,
+    "marker_title": "ORPHAN \u2014 existing index marker; credited in 252 [ADMIN]",
+    "body": "Retrospective marker recovered in iteration 268 solely to preserve the existing index history during mandatory regeneration. This was not a completed scheduled iteration; no gate, judge or outcome is invented. The full credit and continuation are recorded in iteration 252.\n\nOriginal tracked index summary: ORPHAN (capacity-paused twice): row 26 design + 7 real fixtures left uncommitted in `.wt-world-iter251-row26-design`; credited in 252\n"
+  },
+  {
+    "iteration": 253,
+    "date": "2026-10-12",
+    "original_index_row": "| 253 | 2026-10-12 | ORPHAN (capacity-paused at gate-3): row 105 design `1945fb2` + quorum r1/r2-prep + uncommitted revision in `.wt-world-iter253-row105-design`; credited in 254 |",
+    "credit_iteration": 254,
+    "marker_title": "ORPHAN \u2014 existing index marker; credited in 254 [ADMIN]",
+    "body": "Retrospective marker recovered in iteration 268 solely to preserve the existing index history during mandatory regeneration. This was not a completed scheduled iteration; no gate, judge or outcome is invented. The full credit and continuation are recorded in iteration 254.\n\nOriginal tracked index summary: ORPHAN (capacity-paused at gate-3): row 105 design `1945fb2` + quorum r1/r2-prep + uncommitted revision in `.wt-world-iter253-row105-design`; credited in 254\n"
+  },
+  {
+    "iteration": 255,
+    "date": "2026-10-13",
+    "original_index_row": "| 255 | 2026-10-13 | ORPHAN (STALL-killed rc=143 at gate-3, foreground planner >40 min): row 172 design `955fbc0` + quorum r1/r2 + carve-out `b72428a` + uncommitted plan in `.wt-world-iter255-row172-design`; credited in 256 |",
+    "credit_iteration": 256,
+    "marker_title": "ORPHAN \u2014 existing index marker; credited in 256 [ADMIN]",
+    "body": "Retrospective marker recovered in iteration 268 solely to preserve the existing index history during mandatory regeneration. This was not a completed scheduled iteration; no gate, judge or outcome is invented. The full credit and continuation are recorded in iteration 256.\n\nOriginal tracked index summary: ORPHAN (STALL-killed rc=143 at gate-3, foreground planner >40 min): row 172 design `955fbc0` + quorum r1/r2 + carve-out `b72428a` + uncommitted plan in `.wt-world-iter255-row172-design`; credited in 256\n"
+  }
+]

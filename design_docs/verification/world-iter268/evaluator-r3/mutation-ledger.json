@@ -1,0 +1,1624 @@
+[
+  {
+    "name": "existing-manifest",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "!os.IsNotExist(err) {",
+    "new": "false && !os.IsNotExist(err) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^manifest$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "f058d936be137f8a98f40c541742cf25e4fad92f33204633db2668ac769f21c2",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.849,
+      "log": "build-existing-manifest.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^manifest$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 6.633,
+      "log": "mutant-existing-manifest.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/manifest"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "db-match",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if want != got {",
+    "new": "if false && (want != got) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^wrong-db$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "d54b78ef6797952327d2b3866ba3682d4f071f993a4e372bf90f984e91a09a98",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.827,
+      "log": "build-db-match.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^wrong-db$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 7.509,
+      "log": "mutant-db-match.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/wrong-db"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "pin-hash",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if pinRef.String() != h.InterpreterRef {",
+    "new": "if false && (pinRef.String() != h.InterpreterRef) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "774ccc4b1f2787be447a8e19d1ecb77ac7a64755abff394a7dd5bd0ece8c1ee1",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.875,
+      "log": "build-pin-hash.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 7.925,
+      "log": "mutant-pin-hash.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/pin-mismatch"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "archive-present",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn h, 0, fmt.Errorf(\"interpreter archive manifest unavailable\")",
+    "new": "if false && err != nil {\n\t\treturn h, 0, fmt.Errorf(\"interpreter archive manifest unavailable\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-absent$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "e99557aa790d31799bbe9c133b74964a1565cef0fb567944811acf6e85811024",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.842,
+      "log": "build-archive-present.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^archive-absent$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 8.406,
+      "log": "mutant-archive-present.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/archive-absent"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "archive-hash",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))",
+    "new": "false && manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-hash$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "5f7c108a70b5ed2c45f2cf6675a90c84384c494581416b8c1bbb0171eefe4a1d",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.839,
+      "log": "build-archive-hash.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^archive-hash$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 5.382,
+      "log": "mutant-archive-hash.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/archive-hash"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "archive-size",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))",
+    "new": "manifest.Hash != pinRef.String() || false && manifest.Size != int64(len(pin))",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-size$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "7eb6d9d2bd394efa7acd58ce9e85c59d92dea64f0c16ff6a2c7a2a8428d34c46",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.88,
+      "log": "build-archive-size.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^archive-size$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 3.635,
+      "log": "mutant-archive-size.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/archive-size"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "health-version",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "manifest.Version != h.InterpreterVersion || !strings.HasPrefix",
+    "new": "false && manifest.Version != h.InterpreterVersion || !strings.HasPrefix",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-version$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "af7a998bc7474f53c7abd0b3545a044968a4f7cfae1bb4e1f19f896262424c58",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.829,
+      "log": "build-health-version.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^health-version$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 3.026,
+      "log": "mutant-health-version.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/health-version"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "release-prefix",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "|| !strings.HasPrefix(manifest.Version, \"AILANG v0.41.0\\n\")",
+    "new": "|| false && !strings.HasPrefix(manifest.Version, \"AILANG v0.41.0\\n\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^archive-release$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "422d0992c466415c4b67705fa564b08b968a74b5fbcbd84d0953ec71b20c9a3a",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.825,
+      "log": "build-release-prefix.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^archive-release$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 3.185,
+      "log": "mutant-release-prefix.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/archive-release"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "nonempty-unselected",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if hasWorld || hasHead || ref != \"\" || len(page) != 0 {",
+    "new": "if false && (hasWorld || hasHead || ref != \"\" || len(page) != 0) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^world-only$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "9ef01ca73dc00ff448c45b4fd668e05ca7d0550b65d4e160fccbe4bc248207ca",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.858,
+      "log": "build-nonempty-unselected.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^world-only$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 3.345,
+      "log": "mutant-nonempty-unselected.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/world-only"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "registry-integrity",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if !ok || hashref.SumSHA256(obj.Payload).String() != rh.Head {",
+    "new": "if false && (!ok || hashref.SumSHA256(obj.Payload).String() != rh.Head) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "48f259461e198066bfff855a10232065fefd979004dd91f03af4156ea0b39499",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.834,
+      "log": "build-registry-integrity.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^epoch-hash$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 2.82,
+      "log": "mutant-registry-integrity.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/epoch-hash"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "registry-decode",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err := json.Unmarshal(obj.Payload, &reg); err != nil {",
+    "new": "if err := json.Unmarshal(obj.Payload, &reg); false && err != nil {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^epoch-decode$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "58c5e32f9e947ca913de9354049554e0e8ad2867c4e5637a9a101012b388c147",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.843,
+      "log": "build-registry-decode.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^epoch-decode$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 3.948,
+      "log": "mutant-registry-decode.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/epoch-decode"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "nominated-epoch",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "candidate == \"AILANG v0.41.0\"",
+    "new": "candidate != \"\"",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "c423c62fd031ccfbd8a87ab41a47aa4d2e2607397dcbcea04d369127c9ef5fc9",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.85,
+      "log": "build-nominated-epoch.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^epoch-candidate$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 3.864,
+      "log": "mutant-nominated-epoch.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/epoch-candidate"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "session-denial",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if out.Denied != nil {",
+    "new": "if false && (out.Denied != nil) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^expired-session$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "bd09fc9b5a339586fc2c6d0e37654f10c13a96bbbca9cec9bfc341cd4345cc5a",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.84,
+      "log": "build-session-denial.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^expired-session$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 2.297,
+      "log": "mutant-session-denial.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/expired-session"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "demo-episode",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "out.Success == nil || out.Success.EpisodeID != \"demo\"",
+    "new": "out.Success == nil",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "50d17524cc9386ede7c952b90131a05c0f7012d8bbb2cc658d77d1971bd54a86",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.852,
+      "log": "build-demo-episode.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^wrong-episode$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 2.221,
+      "log": "mutant-demo-episode.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/wrong-episode"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "required-grants",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if !broker.Allows(snap, req).Allowed {",
+    "new": "if false && (!broker.Allows(snap, req).Allowed) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^missing-grant$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "034e1a3ea89463b828c5b6945899cc07b76d7c933766eab63c6561cc533a253b",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.835,
+      "log": "build-required-grants.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^missing-grant$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 2.503,
+      "log": "mutant-required-grants.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/missing-grant"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "spent-budget",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "caps[i].Budget -= spend[",
+    "new": "caps[i].Budget -= 0 * spend[",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^spent-budget$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "eb3d1cc6296e8a492da237f7638c203779a8c8e1066b671982a3e88b8ddb714a",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.841,
+      "log": "build-spent-budget.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^spent-budget$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 2.659,
+      "log": "mutant-spent-budget.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/spent-budget"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "world-scan",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "worlds.Scanned > 0",
+    "new": "worlds.Scanned > 1",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^world-only$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "59578f7a1f4223b9b7c42a4e072169cb1c15010b4c85637fd22734f58045a572",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.848,
+      "log": "build-world-scan.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^world-only$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.947,
+      "log": "mutant-world-scan.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/world-only"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "CAS-head",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if actual != observed || has != (observed != \"\") {",
+    "new": "if false && (actual != observed || has != (observed != \"\")) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^cas-change$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "f15949efa43faf0a910154c71f288e51d42f24527a4b9a0b1c520a0afc90bdb6",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.852,
+      "log": "build-CAS-head.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^cas-change$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.689,
+      "log": "mutant-CAS-head.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/cas-change"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "required-get",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if !ok {",
+    "new": "if false && (!ok) {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-absent$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "83e123808f55841ed0bdd36b45deb6a9b75ed1e72535a5950bb6a495e199c350",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.792,
+      "log": "build-required-get.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^health-absent$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.296,
+      "log": "mutant-required-get.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/health-absent"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "get-error",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn err\n\t}\n\tif !ok {",
+    "new": "if false && err != nil {\n\t\treturn err\n\t}\n\tif !ok {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^health-down$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "a1dd113f763c2385df3d6f6532bf665ae6e9074676c88428ba51c9dc8a97013d",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.786,
+      "log": "build-get-error.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^health-down$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.843,
+      "log": "mutant-get-error.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/health-down"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "pin-read",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn h, 0, fmt.Errorf(\"cannot read interpreter pin\")",
+    "new": "if false && err != nil {\n\t\treturn h, 0, fmt.Errorf(\"cannot read interpreter pin\")",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^pin-absent$",
+    "expected": "wrong refusal",
+    "kind": "bypass",
+    "landed_sha256": "fb7749072d68f8099c909bc575c3ac0d2517de7b2c2d1de6ec0c52db77585006",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.865,
+      "log": "build-pin-read.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^pin-absent$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.666,
+      "log": "mutant-pin-read.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/pin-absent"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "source-read",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\treturn fmt.Errorf(\"prepare worktree",
+    "new": "if false && err != nil {\n\t\treturn fmt.Errorf(\"prepare worktree",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^source-absent$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "dbb9c1b1d0008af9412ef7bb172d474eb00a35647804dd9403292445ac040f52",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.831,
+      "log": "build-source-read.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^source-absent$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 2.279,
+      "log": "mutant-source-read.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/source-absent"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "readonly-diagnostic",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "cannot open read-only authority view",
+    "new": "incorrect authority view refusal",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^readonly-db$",
+    "expected": "wrong refusal",
+    "kind": "diagnostic-only",
+    "landed_sha256": "4fa29987bdbf3baa64762779d61f8836ecf254633fff212678f54239dfac8b3c",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.828,
+      "log": "build-readonly-diagnostic.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^readonly-db$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.282,
+      "log": "mutant-readonly-diagnostic.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/readonly-db"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "required-flag",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "if o.db == \"\" || o.pin == \"\" || o.key == \"\" || o.manifest == \"\" {",
+    "new": "if false && (o.db == \"\" || o.pin == \"\" || o.key == \"\" || o.manifest == \"\") {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^missing-key$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "3d9c0267408b64ca280c758bc8e6b0aa44984c077078bd645d84ab223c2dbad0",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.831,
+      "log": "build-required-flag.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^missing-key$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.311,
+      "log": "mutant-required-flag.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/missing-key"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "positional",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "if fs.NArg() != 0 {",
+    "new": "if false && fs.NArg() != 0 {",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^positional$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "328c7ba5dfac46d4f9157d70145a0697812b962aabb9d053ba2582573cc894fc",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.801,
+      "log": "build-positional.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^positional$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.473,
+      "log": "mutant-positional.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/positional"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "subcommand",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "len(args) == 0 || args[0] != \"seed\"",
+    "new": "len(args) == 0",
+    "pattern": "^TestDemoSeedPreflightRefusals$/^unknown-verb$",
+    "expected": "refusal changed public inventory",
+    "kind": "bypass",
+    "landed_sha256": "6bb53e6baeb8099158d9511263ff41fb138aa2f1e2b2c8972a51024e880ae36a",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.844,
+      "log": "build-subcommand.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedPreflightRefusals$/^unknown-verb$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.28,
+      "log": "mutant-subcommand.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedPreflightRefusals/unknown-verb"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "commit-http",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if status != 200 {",
+    "new": "if false && status != 200 {",
+    "pattern": "^TestDemoSeedCommitFailures$/^commit-denied$",
+    "expected": "commit refusal boundary",
+    "kind": "bypass",
+    "landed_sha256": "2be71b977467948bfba6d88f613c56d112d25287b639bfa09e7e803d6545b847",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.821,
+      "log": "build-commit-http.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedCommitFailures$/^commit-denied$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.299,
+      "log": "mutant-commit-http.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedCommitFailures",
+      "TestDemoSeedCommitFailures/commit-denied"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "commit-response",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref {",
+    "new": "if false && (json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref) {",
+    "pattern": "^TestDemoSeedCommitFailures$/^commit-response$",
+    "expected": "commit refusal boundary",
+    "kind": "bypass",
+    "landed_sha256": "6c17d7b509b81e75dd1738f95406986cfbecec29d2b12af625e2e06f52254502",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.843,
+      "log": "build-commit-response.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedCommitFailures$/^commit-response$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.273,
+      "log": "mutant-commit-response.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedCommitFailures",
+      "TestDemoSeedCommitFailures/commit-response"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "commit-uncertainty",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "if err != nil {\n\t\t\treturn fmt.Errorf(\"commit outcome uncertain",
+    "new": "if false && err != nil {\n\t\t\treturn fmt.Errorf(\"commit outcome uncertain",
+    "pattern": "^TestDemoSeedCommitFailures$/^commit-uncertain$",
+    "expected": "commit refusal boundary",
+    "kind": "bypass",
+    "landed_sha256": "adf8856d4cca93bb289aa42cccbaf2faf65e06d28c10a40a03608d42a5ced66e",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.836,
+      "log": "build-commit-uncertainty.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedCommitFailures$/^commit-uncertain$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.483,
+      "log": "mutant-commit-uncertainty.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedCommitFailures",
+      "TestDemoSeedCommitFailures/commit-uncertain"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "bearer",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "bytes.NewReader(data), \"Bearer \"+token)",
+    "new": "bytes.NewReader(data), \"\")",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "SessionAbsent",
+    "kind": "bypass",
+    "landed_sha256": "6eb6b7628cda60ceae993b33d37a4019bbca77c602c8822c349d2056a0c5ab36",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.831,
+      "log": "build-bearer.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.29,
+      "log": "mutant-bearer.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedAuthenticatedCommits"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "interpreter-header",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "Interpreter: interpreter,",
+    "new": "Interpreter: o.Hash,",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "frozen header identity mismatch",
+    "kind": "bypass",
+    "landed_sha256": "378c0dbab130bbdcdcdba05c36f3540e1c5c28432fe1db88d2a78ed974a6c69f",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.836,
+      "log": "build-interpreter-header.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.351,
+      "log": "mutant-interpreter-header.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedAuthenticatedCommits"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "epoch-header",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "SemanticsEpoch: epoch,",
+    "new": "SemanticsEpoch: epoch+1,",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "frozen header identity mismatch",
+    "kind": "bypass",
+    "landed_sha256": "5f5f5599faf2239ba89c6a836439c1335bdbade8fc822633d16bff4565f85ad4",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.827,
+      "log": "build-epoch-header.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.329,
+      "log": "mutant-epoch-header.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedAuthenticatedCommits"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "carrying-ref",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "TransitionRef: o.Hash}}",
+    "new": "TransitionRef: interpreter}}",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "no real carrying entry",
+    "kind": "bypass",
+    "landed_sha256": "d069a6417b86af91300ef73d38c74cf036e95bf9f8eb6ed84377a474ce398b40",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.827,
+      "log": "build-carrying-ref.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.343,
+      "log": "mutant-carrying-ref.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedAuthenticatedCommits"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "object-interface",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "InterfaceHash: hashref.SumSHA256([]byte(id)).String()",
+    "new": "InterfaceHash: hashref.SumSHA256([]byte(\"wrong\")).String()",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "interface/provenance mismatch",
+    "kind": "bypass",
+    "landed_sha256": "669135d149ea7a6037194a0ce22ed402039a8f49cfc4765071708d9f77db2fec",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.833,
+      "log": "build-object-interface.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.358,
+      "log": "mutant-object-interface.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedAuthenticatedCommits"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "object-provenance",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "Provenance: \"demo-authored\", Payload: payloads[i]",
+    "new": "Provenance: \"other\", Payload: payloads[i]",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "interface/provenance mismatch",
+    "kind": "bypass",
+    "landed_sha256": "93be9216c0ca8b73010b6d3f6ff147648ef1b21ae11915f873a2abec0b921439",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.818,
+      "log": "build-object-provenance.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 1.333,
+      "log": "mutant-object-provenance.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedAuthenticatedCommits"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "doc-wiring",
+    "file": "docs/QUICKSTART.md",
+    "old": "\"$DEMO_BIN\" demo seed --addr",
+    "new": "\"$OTHER_BIN\" demo seed --addr",
+    "pattern": "^TestDemoSeedHelpPreparation$",
+    "expected": "demo artifact command wiring missing",
+    "kind": "bypass",
+    "landed_sha256": "a030603b8d4b6a887ea2ccda666e7a0ed0829140d66e555cdce2a3502630b49c",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.575,
+      "log": "build-doc-wiring.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedHelpPreparation$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 1,
+      "seconds": 0.378,
+      "log": "mutant-doc-wiring.log"
+    },
+    "failing_tests": [
+      "TestDemoSeedHelpPreparation"
+    ],
+    "assertion_kill": true,
+    "survived": false,
+    "byte_restored": true
+  },
+  {
+    "name": "budget-survivor",
+    "file": "cmd/ailang-worldd/demo.go",
+    "old": "budgetContext(90 * time.Second)",
+    "new": "budgetContext(24 * time.Hour)",
+    "pattern": "^TestDemoSeed",
+    "expected": "",
+    "kind": "coverage-probe",
+    "landed_sha256": "27088e897e8eedf4f656b7820a293ee84b3339588213285f4c3dadea587017f8",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.828,
+      "log": "build-budget-survivor.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeed",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 0,
+      "seconds": 40.465,
+      "log": "mutant-budget-survivor.log"
+    },
+    "failing_tests": [],
+    "assertion_kill": false,
+    "survived": true,
+    "byte_restored": true
+  },
+  {
+    "name": "state-root-survivor",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "[]byte(observed + \"\\n\" + o.Hash)",
+    "new": "[]byte(o.Hash)",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "",
+    "kind": "coverage-probe",
+    "landed_sha256": "a413f2acc77f41f764b72f743d8af81e6744412b9c1a6e01851aa5d0fddd080c",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.834,
+      "log": "build-state-root-survivor.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 0,
+      "seconds": 1.48,
+      "log": "mutant-state-root-survivor.log"
+    },
+    "failing_tests": [],
+    "assertion_kill": false,
+    "survived": true,
+    "byte_restored": true
+  },
+  {
+    "name": "entry-hash-survivor",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "old": "hashref.SumSHA256(encoded).String()",
+    "new": "hashref.SumSHA256(append(encoded,0)).String()",
+    "pattern": "^TestDemoSeedAuthenticatedCommits$",
+    "expected": "",
+    "kind": "coverage-probe",
+    "landed_sha256": "49a5e800bb24e3594d99b4e57ded675cd24c7f7430bda94e8a0d904eab238df5",
+    "build": {
+      "argv": [
+        "go",
+        "test",
+        "-c",
+        "-o",
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "./cmd/ailang-worldd"
+      ],
+      "rc": 0,
+      "seconds": 0.815,
+      "log": "build-entry-hash-survivor.log"
+    },
+    "result": {
+      "argv": [
+        "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/mutant.test",
+        "-test.run=^TestDemoSeedAuthenticatedCommits$",
+        "-test.v",
+        "-test.count=1",
+        "-test.timeout=120s"
+      ],
+      "rc": 0,
+      "seconds": 1.494,
+      "log": "mutant-entry-hash-survivor.log"
+    },
+    "failing_tests": [],
+    "assertion_kill": false,
+    "survived": true,
+    "byte_restored": true
+  }
+]

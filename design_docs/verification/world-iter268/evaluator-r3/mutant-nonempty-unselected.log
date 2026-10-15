@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+    demo_test.go:433: world-only: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (2.29s)
+    --- FAIL: TestDemoSeedPreflightRefusals/world-only (2.29s)
+FAIL

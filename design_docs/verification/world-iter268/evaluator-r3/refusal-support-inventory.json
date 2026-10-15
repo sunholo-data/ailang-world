@@ -1,0 +1,91 @@
+{
+  "runDemo": {
+    "exercised": [
+      "subcommand",
+      "required flags",
+      "positionals",
+      "session absent/unknown/expired",
+      "help forms",
+      "preflight/commit error propagation",
+      "explicit S1-complete/S2-S6-incomplete exit1/no manifest"
+    ],
+    "support": "90s budget mutant survives all four top-level tests"
+  },
+  "demoGet": {
+    "mutated": [
+      "transport/status read-error propagation",
+      "required resource absent"
+    ],
+    "limits": "Per-call invocations are not individually fault injected"
+  },
+  "demoPreflight": {
+    "mutated": [
+      "existing manifest",
+      "db-health lexical absolute identity",
+      "pin read/hash",
+      "archive manifest absence/Hash/Size/health-Version/release-prefix",
+      "composite world/head/log emptiness with reachable unselected World fixture",
+      "epoch payload hash/decode/nomination"
+    ],
+    "propagation_not_independently_mutated": [
+      "health helper call",
+      "demoGrants call",
+      "headState",
+      "page",
+      "registry helper call",
+      "object read"
+    ],
+    "unprovoked": [
+      "filepath.Abs errors",
+      "missing epoch object as distinct !ok operand",
+      "malformed archive JSON as distinct ReadManifest error cause"
+    ]
+  },
+  "demoGrants": {
+    "mutated": [
+      "session denial",
+      "episode mismatch",
+      "grant refusal",
+      "persisted spend subtraction",
+      "World scan count"
+    ],
+    "diagnostic_only": "OpenReadOnly error message mutation is not a bypass proof",
+    "unprovoked": [
+      "ResolveContext query failure",
+      "EffectSpend query failure",
+      "ScanUnreadableWorlds query failure",
+      "resolver nil-success/nil-denial defensive contract"
+    ],
+    "scope": "The four grant-table literals are source-reviewed; not each literal individually mutated"
+  },
+  "demoSeedDomain": {
+    "mutated": [
+      "source-read refusal",
+      "head CAS refusal",
+      "Bearer attachment",
+      "HTTP uncertainty",
+      "non200 response",
+      "response selectedHead guard"
+    ],
+    "limits": [
+      "preflight and each head-read error propagation not independently fault injected",
+      "malformed commit JSON response not a distinct injected arm",
+      "json.Marshal failure of fixed primitive wire structure not forced"
+    ]
+  },
+  "supporting_hunks": {
+    "mutated": [
+      "interpreter/epoch header identity",
+      "carrying transition reference",
+      "object interface hash/provenance",
+      "runbook DEMO_BIN wiring",
+      "own-M2a main/new-file production revert"
+    ],
+    "surviving": [
+      "whole command budget90s\u219224h",
+      "StateRoot hash(observed+newline+payloadHash)\u2192hash(payloadHash)",
+      "entryHash hash(encoded)\u2192hash(encoded plus zero byte)"
+    ],
+    "fixed_primitive_marshal": "No arbitrary interfaces/floats/channels or custom marshalers in these helper wire structs; error paths not forced, no general all-errors coverage claim"
+  }
+}

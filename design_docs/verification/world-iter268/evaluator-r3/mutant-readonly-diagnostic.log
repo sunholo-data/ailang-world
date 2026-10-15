@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+    demo_test.go:443: wrong refusal: want "cannot open read-only authority" got "ailang-worldd demo seed: incorrect authority view refusal\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.91s)
+    --- FAIL: TestDemoSeedPreflightRefusals/readonly-db (0.90s)
+FAIL

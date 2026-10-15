@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+    demo_test.go:433: spent-budget: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.73s)
+    --- FAIL: TestDemoSeedPreflightRefusals/spent-budget (1.73s)
+FAIL

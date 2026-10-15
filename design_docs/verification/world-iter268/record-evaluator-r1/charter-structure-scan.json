@@ -1,0 +1,473 @@
+{
+  "bytes": 1126753,
+  "lines": 6182,
+  "sha256": "099b99f2cc2c7a5faa8d8979071ff41e932b0739a667ff16c7bcd80924d0084d",
+  "headings": [
+    {
+      "line": 1,
+      "heading": "# Ailang World Mission \u2014 a semantic operating environment whose transaction language is AILANG"
+    },
+    {
+      "line": 36,
+      "heading": "## Repo Profile (M-MISSION-PORTABILITY M2 \u2014 the per-mission values mission-control reads)"
+    },
+    {
+      "line": 877,
+      "heading": "## Human Decision Ledger (authoritative current state)"
+    },
+    {
+      "line": 886,
+      "heading": "### Evidence hygiene (World-local process, iteration160)"
+    },
+    {
+      "line": 967,
+      "heading": "## STATUS (rotation rule)"
+    },
+    {
+      "line": 969,
+      "heading": "## STATUS 2026-10-15 (iteration 268) \u2014 **ROW 150 M2a LANDED 420c07e7 (PR #267) [PRODUCT, release row]: authenticated S1 domain commits and bounded preflight, with explicit S2\u2013S6 incomplete exit and no success manifest. REQUIRED distinct fresh evaluator GPT-6.1 Sol PASS 90/100, round 3, zero blocking; preferred native Sonnet unsupported, same-model-fresh-context FLAG under amended D48.** R1 FAIL65/three blockers and R2 FAIL70/one CI-fixture blocker retained with repairs; all four requested roles actually spawned. Final exact-head AIL and full Go build/plain/race PASS with tool pin unset; real PR CI38687777190 and merge push CI38689782525 both 2/2 GREEN. All 12 protected implementation observations unchanged. Three nonblocking deadline/hash coverage survivors queued179; worktree anomaly fleet ticket178, Sonnet recurrence129, no harness repair. Clauses1/2/3/6/7 MET;4 UNMET(row93 attended FINAL FAILS);5 UNMET(114 after passing93,139 after114). No routable UNMET row; D69 permits release preparation. Goal unmoved; row150 now3/17, NEXT M2b thenM3a. D75 OPEN/defaultA unchanged; publish/mint/capture attended. Base=420c07e7c1c70eca6043a0c4e12a20f2adcaf972@2026-10-15T06:18:07Z; metered$0; all role tokens unreported. Full record: world-mission-log.md iteration268."
+    },
+    {
+      "line": 971,
+      "heading": "## STATUS 2026-10-15 (iteration 267) \u2014 **ROW 150 M1b LANDED 52ae7ff (PR #266) [PRODUCT, release row]: standalone demo-approve convention-v2 source, strict one-effect plan, descriptor and complete runnable payload. REQUIRED distinct evaluator GPT-6.1 Sol fresh context PASS 90/100, zero blocking; preferred native Sonnet rejected Unknown model, FLAG same-model-fresh-context under amended D-WORLD-48.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 attended FINAL FAILS, not loop-routable; 5 UNMET \u2014 114 after passing FINAL, 139 after 114. D-WORLD-69 authorizes row 150 while critical path is blocked. All four requested roles ran natively; model pins preserved except named judge fallback; recipe-to-native transport override FLAGGED. Candidate released v0.41.0 AIL gate and unchanged Go build/plain/race PASS; PR CI38665538475 and merge push CI38667006325 both 2/2 GREEN on exact SHAs. Executor26 compiling mutations killed; controller required two-effects at len(plan.effects)==1 got2, restore green. C11 12 protected paths byte-identical. Judge E267-S1 output-schema survivor independently reproduced; new row177, no M1b scope expansion. D-WORLD-75 OPEN/defaultA, no new ask; row150 now2/17; NEXT M2a. Base=52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b@2026-10-15T02:04:31Z; metered$0; role tokens unreported. Full record: world-mission-log.md iteration267."
+    },
+    {
+      "line": 973,
+      "heading": "## STATUS 2026-10-14 (iteration 266) \u2014 **ROW 150 UNPARKED AND STARTED: DESIGN r4 + 17-MILESTONE PLAN + M1a LANDED `28ff4db` (PR #264) [PRODUCT, release row]. Gate 0 found the fleet's `harness-resolved` reply for `ci:world:tracked-binary-rejects-release-png` (fix `2d14dbd`, read `inbox_1792001584160_d871d344`), so row 173 is resolved and D-WORLD-69's last row is routable.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 FINAL attended (the attended session recorded Phase 2 FAILS tonight in `c21f303`; not loop-routable); 5 UNMET \u2014 114 sequenced behind a passing 93 FINAL, 139 behind 114. Routing: designer `codex:gpt-6.1-sol` (rotation next after opus; keeps r1/r2's quorum seats) 150,055 tok \u2192 quorum r3 BLOCKED 3/3 (glm/kimi/sonnet; OpenAI benched) \u2192 r4 controller revision under the narrow-refinement carve-out with first-party measurements (Chrome 155 `scriptEnabled=false` writes NO PNG at rc 0; headless Chrome follows the OS appearance, so every shot pins `preferredColorScheme`; server HTML byte-stable; five real-content shots byte-identical across two passes; workbench `payload=1` not `true`); planner `codex:gpt-6.1-sol` 204,753 tok (17 milestones; PD1 fold defect resolved); executor `codex:gpt-6.1-sol` 108,656 tok (M1a); evaluator sonnet via Agent tool PASS 88/100 zero blocking. Gates outside the sandbox: `go build ./... && go test ./...` rc 0 (28 packages); `-race ./host/coordinator` rc 0; PR CI 2/2; merge CI run 38646357337 2/2. New ask D-WORLD-75 (fresh-seed hash equality residual; default A, nothing blocks). Base=28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6@2026-10-14T22:31:48Z; metered $0. Full record: world-mission-log.md iteration 266."
+    },
+    {
+      "line": 975,
+      "heading": "## CURRENT GOAL"
+    },
+    {
+      "line": 996,
+      "heading": "## The bar \u2014 what \"Ailang World 1.0\" must meet (RATIFIED by Mark 2026-07-23, attended \u2014 see STATUS + issue #1 record)"
+    },
+    {
+      "line": 1050,
+      "heading": "## Conflict Surface (RATIFIED 2026-07-23 with the bar; drafted post-iter-0 to answer quorum objection #2)"
+    },
+    {
+      "line": 1091,
+      "heading": "## Guardrails (mission-specific; the skill's Standing Rules always apply on top)"
+    },
+    {
+      "line": 1625,
+      "heading": "## Routing policy"
+    },
+    {
+      "line": 1732,
+      "heading": "## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT] [ROUTED])"
+    },
+    {
+      "line": 1737,
+      "heading": "### REGROOMED 2026-09-26 (Mark, attended) \u2014 THE 1.0 CRITICAL PATH. THIS ORDER OVERRIDES THE 2026-09-21 TABLE BELOW"
+    },
+    {
+      "line": 1782,
+      "heading": "### GROOMED 2026-09-21 (Mark, attended) \u2014 SUPERSEDED IN ORDER BY THE 2026-09-26 REGROOM ABOVE; ITS MAINTENANCE RULES STILL APPLY"
+    },
+    {
+      "line": 5879,
+      "heading": "## Premise Verification Log (quorum objection #1 \u2014 every load-bearing claim, with evidence)"
+    }
+  ],
+  "numbered_row_count": 181,
+  "numbered_row_ids": [
+    "1",
+    "2",
+    "94",
+    "95",
+    "92",
+    "93",
+    "96",
+    "97",
+    "98",
+    "99",
+    "100",
+    "101",
+    "102",
+    "103",
+    "104",
+    "105",
+    "106",
+    "107",
+    "108",
+    "109",
+    "110",
+    "111",
+    "112",
+    "113",
+    "114",
+    "115",
+    "116",
+    "117",
+    "118",
+    "119",
+    "120",
+    "121",
+    "122",
+    "123",
+    "124",
+    "125",
+    "126",
+    "127",
+    "128",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28",
+    "29",
+    "30",
+    "31",
+    "32",
+    "33",
+    "34",
+    "35",
+    "36",
+    "37",
+    "38",
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51",
+    "52",
+    "53",
+    "54",
+    "55",
+    "56",
+    "57",
+    "58",
+    "59",
+    "60",
+    "61",
+    "62",
+    "63",
+    "64",
+    "65",
+    "66",
+    "82",
+    "83",
+    "84",
+    "85",
+    "86",
+    "87",
+    "88",
+    "89",
+    "67",
+    "90",
+    "91",
+    "68",
+    "69",
+    "70",
+    "71",
+    "72",
+    "73",
+    "74",
+    "75",
+    "76",
+    "77",
+    "78",
+    "79",
+    "80",
+    "81",
+    "129",
+    "130",
+    "131",
+    "132",
+    "133",
+    "134",
+    "135",
+    "136",
+    "137",
+    "138",
+    "139",
+    "140",
+    "141",
+    "142",
+    "143",
+    "144",
+    "145",
+    "146",
+    "147",
+    "148",
+    "149",
+    "150",
+    "151",
+    "152",
+    "153",
+    "154",
+    "155",
+    "156",
+    "157",
+    "158",
+    "159",
+    "160",
+    "161",
+    "162",
+    "163",
+    "164",
+    "165",
+    "166",
+    "167",
+    "168",
+    "169",
+    "170",
+    "171",
+    "172",
+    "173",
+    "174",
+    "175",
+    "176",
+    "177",
+    "178",
+    "179"
+  ],
+  "operative_bullet_lines": [
+    [
+      38,
+      "- **Repo slug**: `sunholo-data/ailang-world` (driver: `MISSION_REPO`)"
+    ],
+    [
+      39,
+      "- **Mission doc**: `design_docs/world-mission.md` (driver: `MISSION_DOC`)"
+    ],
+    [
+      40,
+      "- **Mission name / state namespace**: `world` (driver: `MISSION_NAME`; fully namespaced"
+    ],
+    [
+      42,
+      "- **Bookkeeping issue**: `#1`, rotates weekly; live number in"
+    ],
+    [
+      44,
+      "- **THIS LOOP KEEPS *TWO* MARK-COMMENT WATERMARKS, AND ONLY ONE OF THEM IS THE ONE THE SHARED"
+    ],
+    [
+      58,
+      "- **CI workflows Gate 3b / Gate 1 poll**: `CI` (job: \"ailang-code verify gate\")"
+    ],
+    [
+      59,
+      "- **Verify profile**: `ailang-code` \u2014 the shipped `ailang` binary IS the gate:"
+    ],
+    [
+      65,
+      "- **THE PINNED v0.30.0 BINARY CANNOT RESOLVE HALF THE SHARED SKILL'S QUORUM ROSTER \u2014 AND THE"
+    ],
+    [
+      82,
+      "- **THE PINNED v0.30.0 BINARY HAS NO `ailang mission` COMMAND AT ALL, SO GATE 4's PRESCRIBED INDEX"
+    ],
+    [
+      105,
+      "- **RUN A `bash` SCRIPT UNDER `bash` \u2014 THE LOGIN SHELL HERE IS `zsh`, AND USING IT AS THE INSTRUMENT"
+    ],
+    [
+      122,
+      "- **`scripts/mission_directives.sh` DOES NOT EXIST IN THIS REPO \u2014 invoke it by ABSOLUTE PATH from"
+    ],
+    [
+      137,
+      "- **GATE 0 HAS A SECOND, NO-AUTHORITY READ FOR THE DRIVER'S OWN CRASH NOTICES (process fix,"
+    ],
+    [
+      179,
+      "- **THE ATTENDED-LEDGER PRIVACY CONTRACT HAS A REAL GATE HERE \u2014 `scripts/check_no_personal_email.sh` (process fix, row 74, landed iter-175).** The shared skill's Gate 0.6(b) names `make check-no-personal-email` as the enforcement behind \"compare, never record\"; World has no Makefile, so the gate is the script itself, run by CI's `go-verify` job as two steps (`Refuse a personal email in the loop-written surface` \u2192 `bash scripts/check_no_personal_email.sh`; `Personal-email gate self-test` \u2192 `bash scripts/test_check_no_personal_email.sh`). Scope is the loop-written surface \u2014 the six `design_docs/*mission*.md` docs and `scripts/` \u2014 so **the charter, the log, the archives, the dashboard and the index are all scanned on every push**: write a provenance VERDICT (\"attended\"/\"fleet\"), never an address, and when a record must show an address-shaped token that is not a person (an SSH remote, a Go module id), break it with ` AT ` as row 91 does. Allowed by anchored exclusion: `\u2026@users.noreply.github.com`, `noreply@\u2026`, `\u2026@example.com|org|net`, `.invalid|.test|.localhost`, `\u2026.gserviceaccount.com`, `\u2026@sentry.io` \u2014 every clause anchored to the whole token, because the fleet's copy (`sunholo-data/ailang` `f0d44915d`) matches substrings and admits `attacker-noreply AT <personal domain>` (this iteration's judge, reproduced). Exit 2 = zero in-scope files (never a \u2713 over nothing). `scripts/mission_answer.sh`'s default identity is the GitHub noreply form (the fleet's `8369877d9`), so the script no longer carries the address the gate exists to catch. Run it locally before any Gate-4 commit: `bash scripts/check_no_personal_email.sh; echo rc=$?`."
+    ],
+    [
+      180,
+      "- **INSTANCE 2 LANDED IN THE SAME ITERATION \u2014 PROPOSED TO V1 (iter-107; bar MET) \u2014 A STRESS CONTROL ONLY CERTIFIES THE AXIS YOU VARIED, AND A GREEN ONE READS AS IF IT CERTIFIED THE PROPERTY.** Iteration 107 re-ran `PE.E`'s wall-clock arm **15\u00d7 unloaded and 8\u00d7 under eight CPU spinners \u2014 23/23 green**, hold ratio 26.7\u201330.2\u00d7 against a 20\u00d7 floor, with the loaded arm moving the ratio the *safe* direction \u2014 and recorded the timing as sound. The evaluator varied a different axis, **parallelism**, and got **10/10 FAIL at `GOMAXPROCS=1` on unmutated, sha256-identical code**, with the failure text `blocked read returned after 10\u201333ms`, which is **indistinguishable from the M22/M23 mutant signature the arm exists to detect**. Reproduced first-party with a two-arm control on one tree: `GOMAXPROCS=1` **10/10 red**, default **0/10 red**. Note why more effort would not have helped: every one of the 23 runs was the *same shape*, so the sample grew while its coverage did not \u2014 this is rule 3a(i)'s known-positive discipline aimed at a **stress** control rather than a search, and rule 3b(ix)'s scope-travels-with-the-count aimed at an **axis** rather than a directory. Candidate rule if a second instance lands: before quoting a timing or load result as evidence, **name the axes you held fixed** (parallelism, CPU contention, memory pressure, page cache, disk, clock granularity) and vary at least the one the mechanism under test actually depends on \u2014 here the stimulus is a *scheduling* race, so parallelism was the load-bearing axis and CPU contention was the decorative one. The tell: you are about to write \"N/N green under load\" and every run varied the same knob. **INSTANCE 2, ninety minutes later and from CI rather than from a judge:** the Gate-4 record commit `ac17d54` \u2014 **docs-only**, `git diff --stat daf48a6 ac17d54 -- ':!design_docs'` EMPTY \u2014 turned `dev` RED in the very arm above. The runner's log: `decoy hold=2.626683936s ObjectReadTimeout=2ms ratio=1313.3x` / `blocked read exceeded test-side 20x watchdog`. The stimulus SCALES with the machine (53 ms here, **2.63 s** on the runner \u2014 49x) and the bounds did not, because they were absolute millisecond constants calibrated on this laptop; the resulting red is again **indistinguishable from the M22/M23 mutant signature**. Same tree passed on the parent, so the parent's green was luck. Three axes, three reds, and after each fix the surviving constant still encoded *my machine*: CPU contention (mine, 23/23 green), parallelism (the judge's, 10/10 red), absolute speed (CI's). **So the rule is stronger than \"vary more axes\": where a bound and its stimulus both depend on the machine, DERIVE the bound FROM the measured stimulus and stop hardcoding wall-clock at all.** Fixed at `a87c723`: `readTimeout := hold / 20` makes the doc's 20x floor true BY CONSTRUCTION on any machine, the watchdog becomes the hold itself, and a `minDecoyHold` floor keeps a too-fast decoy a loud instrument failure. M22/M23 still die. Proposed to V1 on the cross-mission channel; World cannot edit the shared skill."
+    ],
+    [
+      181,
+      "- **AN ANTI-VACUITY FLOOR IS A BRANCH TOO, AND RULE 3j's ENUMERATION STOPS AT *REFUSAL* BRANCHES \u2014 SO THE CHECKS THAT PROTECT THE INSTRUMENT ITSELF ARE SYSTEMATICALLY THE LAST THING ANYONE PINS (watch-item, iter-108; 1 recorded instance, bar is 2 \u2014 NOT yet proposed to V1).** The skill's rule 3j says: for any function whose contract is a refusal, enumerate its refusal branches and require one neutering mutation per branch. That is written about the *subject* under test. A gate also carries floors that refuse on its **own health** \u2014 zero packages discovered, an empty required set, an empty enumeration \u2014 and those are invisible to the same discipline, because a floor is not a refusal *about the input*, it is a refusal *about the measurement*. Measured here on `PE.F`: \u00a75 names **three** floors for the focused `host/evidence` leg and the isolated gate shipped arms for **two**. The `\"zero passing host/evidence packages discovered\"` message appears **once** in `scripts/verify_go.sh` and **zero** times in `evidence_manifest_gate_test.go`, and every synthetic writer emitted the package-level pass event **BY CONSTRUCTION**, so no existing arm could reach that branch and **no removal-shaped mutant on the other two floors would ever have revealed it**. Live code that no test protected, inside a milestone whose entire subject is non-vacuity, at a **96/100 zero-blocking** evaluation \u2014 the judge found it, not the drill. Closed with a sixth arm and a dedicated writer that omits the package event; non-vacuity proved by neutering the floor (`if not package_passes:` -> `if False and not package_passes:`), `go build` rc=0 before any result was read, red set = **the new arm ALONE**, the other five green. **Candidate rule if a second instance lands:** when a gate has floors that fail on the instrument rather than on the input, enumerate the FLOORS separately from the refusal branches and require one arm per floor \u2014 and note the tell, which is structural rather than behavioural: *every helper that builds the gate's input emits the field a floor checks for, so the floor's input shape cannot be produced by the test harness at all.* This mission has ADDED anti-vacuity floors in four prior iterations (measured: 4 log hits) and this is the first time one was found unpinned, so the bar is honestly **1**, and it is recorded here rather than proposed \u2014 filing below the bar is a defect this loop has already paid for once (iter-106)."
+    ],
+    [
+      182,
+      "- **QUORUM CAP: PASS `--max-cost-usd 0.30` ON EVERY `design-quorum` RUN IN THIS MISSION (process fix, iter-169 \u2014 THIRD instance).** The shared skill's absent-reviewer rule says a `proceed`/`blocked` verdict with a non-empty `absent_reviewers` is a verdict with a named hole, and prescribes re-running the absentee alone at a raised cap. Correct, and it fires *after* the money has already been wasted on an incomplete round. The default cap is **$0.10** and `gpt6-astra` costs **$0.09\u2013$0.11** on a doc of ordinary length, so it is refused **pre-flight, at zero spend**, by a margin of cents \u2014 iteration 169 round 1: *\"estimated cost $0.1130 (doc ~6181 input tok) exceeds cap $0.1000\"*, i.e. refused over **$0.0130**. **The trigger is self-selecting in the worst way**: the estimate scales with DOC LENGTH, so the reviewer drops out exactly when the doc has grown \u2014 which is immediately after a substantial revision, which is when its opinion is most load-bearing. Three instances in this mission, and in every one the restored reviewer was not merely present but *decisive*: iter-167 (the restored absent reviewer found the iteration's best defect for $0.13); iter-169 round 1 (restored for **$0.0858**, returned the round's strongest objection \u2014 the proposed shared helper was not behaviour-preserving \u2014 and was confirmed by measurement); iter-169 round 2 (astra again correct, and again the only reviewer to see that the fix was conditional rather than unconditional, controller-reproduced first-party). Note what the default cap actually buys: refusing a $0.11 reviewer to protect a **$5** iteration ceiling \u2014 0.2% of the budget \u2014 at the cost of running the gate at N\u22121. **Rule: pass `--max-cost-usd 0.30` on the FIRST round, not as a repair on the second.** The re-run rule stays as the belt; this is the braces. World-local because the cap is a per-invocation flag, not a skill constant \u2014 no shared-skill edit is needed, and none is proposed."
+    ],
+    [
+      183,
+      "- **Rig PATH (process fix, iter-18 \u2014 3 instances in ONE iteration)**: the agent tool shell's `PATH`"
+    ],
+    [
+      212,
+      "- **CRITICAL MISSION STATE LIVES IN A DIRECTORY THE OS MAY DELETE \u2014 THREE KINDS MUST SURVIVE A"
+    ],
+    [
+      222,
+      "- **A PI EVALUATOR SPAWN IS TRANSPORT-DEAD UNTIL THE SESSION-PROTOCOL GATE IS PRESENT IN THE"
+    ],
+    [
+      238,
+      "- **THE RIG'S SHELL IS `zsh`, AND THREE OF THE SKILL'S OWN INSTRUMENT IDIOMS BREAK HERE \u2014 TWO OF"
+    ],
+    [
+      265,
+      "- **`ai-check` IS CWD-SENSITIVE, AND THE WRONG CWD REPORTS A KILL ON *EVERY* MUTATION ARM (process"
+    ],
+    [
+      279,
+      "- **A DUPLICATE WEBHOOK DELIVERY MAKES `checks` EXCEED `expected`, AND GATE 3b's COMPLETENESS RULE"
+    ],
+    [
+      307,
+      "- **A QUEUE ROW KEEPS ITS OWN DEAD HEADS INLINE, SO A ROW-SCOPED GREP RETURNS THE LIVE HEAD AND"
+    ],
+    [
+      390,
+      "- **WHEN A MILESTONE'S DELIVERABLE IS A *REFUSAL SET*, THE UNIT OF MUTATION IS THE **BRANCH**, NOT"
+    ],
+    [
+      420,
+      "- **WHEN THE DELIVERABLE IS A *DETECTOR*, RULE 3j's BRANCH ENUMERATION IS ONLY HALF THE GATE \u2014"
+    ],
+    [
+      448,
+      "- **READING A CI LOG IS AN INSTRUMENT, AND A LESSON RECORDED ONLY IN A STATUS STAMP IS ON A"
+    ],
+    [
+      469,
+      "- **A WRITTEN RULE IS NOT A CONTROL: THIS CHARTER ALREADY FORBADE `git checkout` AS A MUTATION"
+    ],
+    [
+      502,
+      "- **Codex model pins are NOT covered by the driver's probe (process fix, iter-19).** The driver's"
+    ],
+    [
+      514,
+      "- **ENUMERATE the evaluator's non-blocking carry-forwards in the log entry (process fix, iter-19).**"
+    ],
+    [
+      520,
+      "- **A fresh worktree NEVER contains the sprint plan JSON (process fix, iter-20).** `.gitignore`"
+    ],
+    [
+      544,
+      "- **A MUTATION IS AN INSTRUMENT \u2014 ESTABLISH ITS VALIDITY BEFORE ITS RESULT COUNTS (process fix,"
+    ],
+    [
+      571,
+      "- **The `verify_ail.sh` module count is now 10, not 9 (process fix, iter-25).** Iteration STATUS"
+    ],
+    [
+      583,
+      "- **When CI reds on a TIMING assertion, WIDEN THE GAP \u2014 never loosen the guard (process fix,"
+    ],
+    [
+      599,
+      "- **`passed_tests` is NOT the named-test count (process fix, iter-25 \u2014 the landed correction D-B,"
+    ],
+    [
+      608,
+      "- **The weekly-rotation rule misfires on a thread created just before Monday 07:00 (process fix,"
+    ],
+    [
+      616,
+      "- **`/tmp` scratch paths in the cross-provider recipe are SHARED between missions \u2014 namespace them"
+    ],
+    [
+      627,
+      "- **A driver probe failing `rc=127` is a PATH gap \u2014 NEVER a spent quota and never an unusable model"
+    ],
+    [
+      637,
+      "- **CORRECTION (iter-23): the rc=127 cause above was MIS-ATTRIBUTED, and the defect was OURS \u2014"
+    ],
+    [
+      663,
+      "- **A LIVENESS OR EXIT-CODE CHECK IS ONLY EVIDENCE IF IT REFERS TO THE PROCESS YOU LAUNCHED"
+    ],
+    [
+      687,
+      "- **STATUS rotation is a HAND edit, never a regex script (iter-18 scar).** A \"move the 4th stamp to"
+    ],
+    [
+      692,
+      "- **AN INHERITED GATE IS A CLAIM \u2014 audit the gates you did NOT write (process fix, iter-32; THIRD"
+    ],
+    [
+      713,
+      "- **A MUTATION THAT REDS BY FAILING TO COMPILE PROVES NOTHING \u2014 and the revert must not be able to"
+    ],
+    [
+      738,
+      "- **THE JUDGE CAN REFUTE THE CONTROLLER'S OWN HEADLINE FINDING \u2014 and when it does, retract where you"
+    ],
+    [
+      758,
+      "- **A CLAIM THAT CITES A GATE IS TWO CLAIMS, AND THE SECOND ONE IS ALMOST NEVER CHECKED (process"
+    ],
+    [
+      788,
+      "- **A STALENESS SWEEP MUST RUN FROM THE DOC'S *OLDEST* DECLARED MEASUREMENT BASE \u2014 SWEEPING THE"
+    ],
+    [
+      811,
+      "- **A BLANKET INSTRUCTION IS APPLIED TO ITS EXCEPTION TOO \u2014 FAITHFULLY, BY A ROLE THAT CANNOT KNOW"
+    ],
+    [
+      823,
+      "- **RUNNING THE QUORUM: A BIGGER DOC BUYS A THINNER REVIEW (process fix, iter-36).** `ailang"
+    ],
+    [
+      834,
+      "- **Gate 4 skipped its own STATUS stamp once and nobody noticed (process fix, iter-34).**"
+    ],
+    [
+      843,
+      "- **TWO PRE-REGISTERED WATCH-ITEMS, EACH AT INSTANCE 1 (iter-58).** Gate 5 allows at most ONE skill"
+    ],
+    [
+      870,
+      "- **A ROLE'S `ok` IS A CLAIM ABOUT A WORKTREE, NOT ABOUT ITS DELIVERABLE \u2014 ASSERT THE NAMED FILE, AND ASSERT EVERY ID A REVISION CITES (process fix, iter-187; two instances in one iteration, different roles).** (1) The kimi planner returned `mission_pi_run.sh` verdict **`ok`** with `worktree_changed_files: 10` after an Ollama Cloud 429 had killed it mid-run \u2014 all ten files were its prototype, and the plan it existed to write did not exist. The runner's load-bearing assertion is a non-empty diff, which a prototype satisfies. (2) The r1 designer revision's quorum-log prose promised `AC-DENIAL-JSONRPC` and `MUT-DENIAL-401`; neither reached the AC or mutation tables (grep count 1 each, both in the prose), and r2 blocked 3/3 on exactly that gap. **Rule:** after any role run whose deliverable is a named file, `test -s <that file>` (and `jq -e .` for JSON) before reading the verdict as success; after any revision, grep every AC/MUT/F-row ID the revision's own summary cites and require a hit in the binding table, not only in the narrative. World-local (a controller step, not a skill edit); if a sibling mission hits (1), it is a PROPOSAL to V1 for `mission_pi_run.sh` to accept an `--expect <path>`."
+    ],
+    [
+      871,
+      "- **Queue tag position (read by `scripts/queue_census.sh`)** \u2014 a queue row's closure/parking tag is the FIRST token after `^<n>. `, tolerant only of a leading run of `[` and `*`. A tag after the slug is UNTAGGED and the census reports it by number rather than guessing. Closed: `LANDED`, `ROUTED`, `RULED OUT`. Open (tagged): `PARKED`, `NEXT`, `IN-SPRINT`."
+    ],
+    [
+      872,
+      "- **Queue census citation form (read by `scripts/queue_census.sh`)** \u2014 a closed-row count is published in a STATUS stamp or a mission-log `**Progress:**` line ONLY as the script's own total line, byte-for-byte: `census: N closed / M rows (tagged-open T, untagged U) [LANDED X, ROUTED Y, RULED OUT Z; PARKED P, IN-SPRINT Q, NEXT R] [queue_census.sh, charter-blob <oid>, controls a/b]`. Never carried. A line reading `charter-blob unavailable` is not publishable. No fresh reading \u2192 no number."
+    ],
+    [
+      873,
+      "- **Queue census control re-point (read by `scripts/queue_census.sh`)** \u2014 the live CI step passes `--control-closed 1 --control-open 79`; when a control row changes class the census exits 2 `CONTROL MISMATCH` and the SAME commit re-points the flag in `.github/workflows/ci.yml`. The mismatch is the control working, not a defect."
+    ]
+  ]
+}

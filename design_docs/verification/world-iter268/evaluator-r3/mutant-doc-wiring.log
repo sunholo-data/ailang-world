@@ -1,0 +1,4 @@
+=== RUN   TestDemoSeedHelpPreparation
+    demo_test.go:491: demo artifact command wiring missing "$DEMO_BIN" demo seed
+--- FAIL: TestDemoSeedHelpPreparation (0.00s)
+FAIL

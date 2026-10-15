@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+    demo_test.go:443: wrong refusal: want "interpreter pin mismatch" got "ailang-worldd demo seed: interpreter archive manifest unavailable\n"
+--- FAIL: TestDemoSeedPreflightRefusals (4.21s)
+    --- FAIL: TestDemoSeedPreflightRefusals/pin-mismatch (4.21s)
+FAIL

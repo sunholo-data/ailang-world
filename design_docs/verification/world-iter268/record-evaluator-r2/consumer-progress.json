@@ -1,0 +1,13 @@
+{
+  "consumer": "/Users/voightkampff/dev/sunholo-data/ailang/tools/mission-weekly-report.py",
+  "consumer_sha256": "1f1ec88c43943bd2148ad2d41db5164d9eebcbf6d7730698149318848d613e46",
+  "current_line": "**Progress**: World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "current_value": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "regressed_value": "World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 \u2192 138 \u2192\u2026",
+  "expected": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET \u2014 goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "pattern": "^\\s*-?\\s*\\*\\*Progress\\*\\*\\s*[:\u2014-]?\\s*(.+)$",
+  "candidate_matches": true,
+  "regressed_matches": false,
+  "current_heading": "268",
+  "token_usage": "unknown"
+}

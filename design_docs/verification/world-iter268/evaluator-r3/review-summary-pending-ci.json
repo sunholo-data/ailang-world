@@ -1,0 +1,25 @@
+{
+  "subject": "763c60a20358f486df395043131557c1143735ba",
+  "product_blockers": 0,
+  "rubric_excluding_CI_pending_tests": {
+    "lint": 10,
+    "acceptance": 30,
+    "code_quality": 10,
+    "documentation": 10,
+    "fidelity": 10
+  },
+  "candidate_score_if_exact_head_CI_2of2_succeeds": 90,
+  "firm_verdict": "pending CI, no PASS issued",
+  "all_own_commands_terminal": true,
+  "source_restored": true,
+  "three_nonblocking_residuals": [
+    "90s budget unpinned",
+    "stateRoot input derivation unpinned",
+    "entryHash input derivation unpinned"
+  ],
+  "observed_utc": "2026-10-15T05:54:14Z",
+  "role_deadline_utc": "2026-10-15T06:07:27Z",
+  "controller_final_head_ail_rc": 0,
+  "controller_final_head_go_rc": 0,
+  "controller_gate_ownership": "copied/read controller terminal artifacts; not own execution"
+}

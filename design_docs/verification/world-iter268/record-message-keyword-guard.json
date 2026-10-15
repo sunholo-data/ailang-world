@@ -1,0 +1,6 @@
+{
+  "positive_control_fired": true,
+  "commit_message_clean": true,
+  "pr_title_clean": true,
+  "pr_body_clean": true
+}

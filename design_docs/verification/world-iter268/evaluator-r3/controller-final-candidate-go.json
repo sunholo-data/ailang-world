@@ -1,0 +1,20 @@
+{
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.repair-world-iter268-r2",
+  "head": "763c60a20358f486df395043131557c1143735ba",
+  "command": [
+    "bash",
+    "scripts/verify_go.sh"
+  ],
+  "rc": 0,
+  "wall_seconds": 564.45,
+  "bound": 900,
+  "removed_env_keys": [
+    "GOOGLE_CLOUD_PROJECT",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "OTEL_RESOURCE_ATTRIBUTES",
+    "OTLP_GOOGLE_CLOUD_PROJECT",
+    "WORLD_TOOL_AILANG_BIN"
+  ],
+  "tool_pin": "unset:ordinary-CI configuration",
+  "source_after": "763c60a20358f486df395043131557c1143735ba"
+}

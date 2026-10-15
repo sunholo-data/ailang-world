@@ -1,0 +1,8 @@
+{
+  "parser_source": "/Users/voightkampff/dev/sunholo-data/ailang/tools/mission-weekly-report.py",
+  "pattern": "^\\s*-?\\s*\\*\\*Progress\\*\\*\\s*[:\u2014-]?\\s*(.+)$",
+  "reviewed_record_head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+  "current_label_matches": false,
+  "fixed_label_matches": true,
+  "fixed_value_exact": true
+}

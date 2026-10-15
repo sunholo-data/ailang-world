@@ -1,12 +1,14 @@
-# World mission dashboard — iteration267 (2026-10-15)
+# World mission dashboard — iteration268 (2026-10-15)
 
-- **This fire:** row150 M1b LANDED52ae7ff(PR266), standalone demo approval source/descriptor, strict refusals, real-pin acceptance and complete payload docs.
-- **Independent judge:** PASS90/100, zero blocking. Preferred native Sonnet Unknown model; REQUIRED distinct native Sol6.1 fresh context ran, FLAG same-model-fresh-context.
-- **Validation:** pinned0.41.0 AIL and unchanged Go build/plain/race PASS. Exact PR/mergeCI2/2GREEN.26 executor compiling mutations killed; controller required mutation reproduced.12 protected paths unchanged.
-- **Row150:**2/17done; NEXT M2a then M2b→M3a. Release captures attended publish+session mint; no release performed.
-- **Clauses:**1/2/3/6/7MET;4UNMET(attended FINAL FAILS);5UNMET(114 after passing FINAL,139 after114). Goal unmoved; D69 exception authorizes release prep.
-- **Parked on Mark:**D-WORLD-75 only, unchanged; frozen-store scope vs fresh-seed equality. Recommend/defaultA; no current code block.
-- **Follow-up:**177 output-schema assertion gap, nonblocking E267-S1, below critical/release work.
-- **Routing:**all four roles native; designer/planner/executor Sol6.1 model pins preserved, recipe→native override FLAGGED; judge fallback explicit. Controller Codex; role tokens unreported.
-- **Metered:**$0.00; last20 primary [HARNESS]0/20. Sonnet recurrence fleet ticket, no harness repair.
-- **Evidence:**design_docs/verification/world-iter267/; source mergeCI38667006325, PRCI38665538475.
+- **This fire:** row150 M2a LANDED 420c07e7 (PR267): five authenticated S1 domain commits and bounded preflight; explicit S2–S6 incomplete exit/no manifest.
+- **Latest GitHub release:** none; World1.0 remains unreleased. Proof/compiler pin released AILANG0.41.0.
+- **Independent judge:** required distinct native Sol6.1, PASS90/100 round3, zero blocking. Sonnet unsupported; same-model-fresh-context FLAG. Failed R1/R2 retained with repairs.
+- **Validation:** final AIL and full unchanged Go build/plain/race PASS with tool pin unset; actual PR/merge CI2/2GREEN.12 protected observations unchanged.
+- **Row150:**3/17 complete; NEXT M2b(real read/tool test/check), then M3a(producer adapters) in dependency order.
+- **Clauses:**1/2/3/6/7MET;4UNMET(row93 attended FINAL FAILS);5UNMET(114 after passing FINAL,139 after114). Goal unmoved; D69 permits release preparation.
+- **Parked on Mark:**D-WORLD-75 unchanged: frozen-store capture determinism(A, recommended/default) versus fresh-seed equality/logical clock first(B). Tooling can continue.
+- **Attended:** production descriptor publish, session mint and final release capture; no release performed.
+- **Follow-ups:**177 descriptor output schema;179 deadline/hash coverage, both below critical/release work.178 worktree anomaly/129 native capability recurrence stay fleet-owned.
+- **Routing/cadence:** all four roles native Agent as operator requested; Sol6.1 fallback pins explicit; 4h throttle; all role token counts unreported.
+- **Metered:**$0.00; newest20 primary [HARNESS]0/20. No shared skill, harness or routing-policy edit.
+- **Evidence:**verification/world-iter268/; source PRCI38687777190, mergeCI38689782525; full log entry268.

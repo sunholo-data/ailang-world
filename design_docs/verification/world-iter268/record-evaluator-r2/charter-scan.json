@@ -1,0 +1,218 @@
+{
+  "utc": "2026-10-15T06:37:53.348087+00:00",
+  "bytes": 1126753,
+  "lines": 6182,
+  "headings": [
+    {
+      "line": 1,
+      "text": "# Ailang World Mission \u2014 a semantic operating environment whose transaction language is AILANG"
+    },
+    {
+      "line": 36,
+      "text": "## Repo Profile (M-MISSION-PORTABILITY M2 \u2014 the per-mission values mission-control reads)"
+    },
+    {
+      "line": 877,
+      "text": "## Human Decision Ledger (authoritative current state)"
+    },
+    {
+      "line": 886,
+      "text": "### Evidence hygiene (World-local process, iteration160)"
+    },
+    {
+      "line": 967,
+      "text": "## STATUS (rotation rule)"
+    },
+    {
+      "line": 969,
+      "text": "## STATUS 2026-10-15 (iteration 268) \u2014 **ROW 150 M2a LANDED 420c07e7 (PR #267) [PRODUCT, release row]: authenticated S1 domain commits and bounded preflight, with explicit S2\u2013S6 incomplete exit and no success manifest. REQUIRED distinct fresh evaluator GPT-6.1 Sol PASS 90/100, round 3, zero blocking; preferred native Sonnet unsupported, same-model-fresh-context FLAG under amended D48.** R1 FAIL65/three blockers and R2 FAIL70/one CI-fixture blocker retained with repairs; all four requested roles actually spawned. Final exact-head AIL and full Go build/plain/race PASS with tool pin unset; real PR CI38687777190 and merge push CI38689782525 both 2/2 GREEN. All 12 protected implementation observations unchanged. Three nonblocking deadline/hash coverage survivors queued179; worktree anomaly fleet ticket178, Sonnet recurrence129, no harness repair. Clauses1/2/3/6/7 MET;4 UNMET(row93 attended FINAL FAILS);5 UNMET(114 after passing93,139 after114). No routable UNMET row; D69 permits release preparation. Goal unmoved; row150 now3/17, NEXT M2b thenM3a. D75 OPEN/defaultA unchanged; publish/mint/capture attended. Base=420c07e7c1c70eca6043a0c4e12a20f2adcaf972@2026-10-15T06:18:07Z; metered$0; all role tokens unreported. Full record: world-mission-log.md iteration268."
+    },
+    {
+      "line": 971,
+      "text": "## STATUS 2026-10-15 (iteration 267) \u2014 **ROW 150 M1b LANDED 52ae7ff (PR #266) [PRODUCT, release row]: standalone demo-approve convention-v2 source, strict one-effect plan, descriptor and complete runnable payload. REQUIRED distinct evaluator GPT-6.1 Sol fresh context PASS 90/100, zero blocking; preferred native Sonnet rejected Unknown model, FLAG same-model-fresh-context under amended D-WORLD-48.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 attended FINAL FAILS, not loop-routable; 5 UNMET \u2014 114 after passing FINAL, 139 after 114. D-WORLD-69 authorizes row 150 while critical path is blocked. All four requested roles ran natively; model pins preserved except named judge fallback; recipe-to-native transport override FLAGGED. Candidate released v0.41.0 AIL gate and unchanged Go build/plain/race PASS; PR CI38665538475 and merge push CI38667006325 both 2/2 GREEN on exact SHAs. Executor26 compiling mutations killed; controller required two-effects at len(plan.effects)==1 got2, restore green. C11 12 protected paths byte-identical. Judge E267-S1 output-schema survivor independently reproduced; new row177, no M1b scope expansion. D-WORLD-75 OPEN/defaultA, no new ask; row150 now2/17; NEXT M2a. Base=52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b@2026-10-15T02:04:31Z; metered$0; role tokens unreported. Full record: world-mission-log.md iteration267."
+    },
+    {
+      "line": 973,
+      "text": "## STATUS 2026-10-14 (iteration 266) \u2014 **ROW 150 UNPARKED AND STARTED: DESIGN r4 + 17-MILESTONE PLAN + M1a LANDED `28ff4db` (PR #264) [PRODUCT, release row]. Gate 0 found the fleet's `harness-resolved` reply for `ci:world:tracked-binary-rejects-release-png` (fix `2d14dbd`, read `inbox_1792001584160_d871d344`), so row 173 is resolved and D-WORLD-69's last row is routable.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 FINAL attended (the attended session recorded Phase 2 FAILS tonight in `c21f303`; not loop-routable); 5 UNMET \u2014 114 sequenced behind a passing 93 FINAL, 139 behind 114. Routing: designer `codex:gpt-6.1-sol` (rotation next after opus; keeps r1/r2's quorum seats) 150,055 tok \u2192 quorum r3 BLOCKED 3/3 (glm/kimi/sonnet; OpenAI benched) \u2192 r4 controller revision under the narrow-refinement carve-out with first-party measurements (Chrome 155 `scriptEnabled=false` writes NO PNG at rc 0; headless Chrome follows the OS appearance, so every shot pins `preferredColorScheme`; server HTML byte-stable; five real-content shots byte-identical across two passes; workbench `payload=1` not `true`); planner `codex:gpt-6.1-sol` 204,753 tok (17 milestones; PD1 fold defect resolved); executor `codex:gpt-6.1-sol` 108,656 tok (M1a); evaluator sonnet via Agent tool PASS 88/100 zero blocking. Gates outside the sandbox: `go build ./... && go test ./...` rc 0 (28 packages); `-race ./host/coordinator` rc 0; PR CI 2/2; merge CI run 38646357337 2/2. New ask D-WORLD-75 (fresh-seed hash equality residual; default A, nothing blocks). Base=28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6@2026-10-14T22:31:48Z; metered $0. Full record: world-mission-log.md iteration 266."
+    },
+    {
+      "line": 975,
+      "text": "## CURRENT GOAL"
+    },
+    {
+      "line": 996,
+      "text": "## The bar \u2014 what \"Ailang World 1.0\" must meet (RATIFIED by Mark 2026-07-23, attended \u2014 see STATUS + issue #1 record)"
+    },
+    {
+      "line": 1050,
+      "text": "## Conflict Surface (RATIFIED 2026-07-23 with the bar; drafted post-iter-0 to answer quorum objection #2)"
+    },
+    {
+      "line": 1091,
+      "text": "## Guardrails (mission-specific; the skill's Standing Rules always apply on top)"
+    },
+    {
+      "line": 1625,
+      "text": "## Routing policy"
+    },
+    {
+      "line": 1732,
+      "text": "## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT] [ROUTED])"
+    },
+    {
+      "line": 1737,
+      "text": "### REGROOMED 2026-09-26 (Mark, attended) \u2014 THE 1.0 CRITICAL PATH. THIS ORDER OVERRIDES THE 2026-09-21 TABLE BELOW"
+    },
+    {
+      "line": 1782,
+      "text": "### GROOMED 2026-09-21 (Mark, attended) \u2014 SUPERSEDED IN ORDER BY THE 2026-09-26 REGROOM ABOVE; ITS MAINTENANCE RULES STILL APPLY"
+    },
+    {
+      "line": 5879,
+      "text": "## Premise Verification Log (quorum objection #1 \u2014 every load-bearing claim, with evidence)"
+    }
+  ],
+  "guardrail_leads": [
+    {
+      "line": 1093,
+      "text": "- **A FIX APPLIED UNDER THE NARROW-REFINEMENT CARVE-OUT MUST ACQUIRE ITS OWN ACCEPTANCE CRITERION"
+    },
+    {
+      "line": 1117,
+      "text": "  **Rule.** Before routing a carve-out revision: for each applied `proposed_fix`, name the AC that"
+    },
+    {
+      "line": 1128,
+      "text": "- **A LOAD OR STRESS EXPERIMENT MUST PROVE ITS OWN TEARDOWN BEFORE ANY LATER MEASUREMENT ON THIS"
+    },
+    {
+      "line": 1163,
+      "text": "- **A NEGATIVE GREP CANNOT ESTABLISH A PREMISE ABOUT A CLASS OF STATEMENT \u2014 IT CAN ONLY FAIL TO"
+    },
+    {
+      "line": 1180,
+      "text": "  spellings, and the author saw only the half being hunted for. **Rule:** to establish a premise"
+    },
+    {
+      "line": 1186,
+      "text": "- **AN ACTION THAT SILENTLY DID NOT HAPPEN RETURNS THE SAME RESULT AS A GENUINE NEGATIVE \u2014 ASSERT"
+    },
+    {
+      "line": 1214,
+      "text": "- **`OD-<n>` IS A MISSION-GLOBAL NAMESPACE, AND THIS TABLE IS ITS REGISTRY** (process fix, iter-43;"
+    },
+    {
+      "line": 1261,
+      "text": "- **SIX ODs WERE ALLOCATED WITHOUT EVER ENTERING THIS TABLE, AND THE REASON IS THAT THIS"
+    },
+    {
+      "line": 1287,
+      "text": "- **THE SAME COLLISION EXISTS IN THE `CF-<letter>-<n>` CARRY-FORWARD NAMESPACE, AND IT IS WORSE THERE"
+    },
+    {
+      "line": 1312,
+      "text": "- **A RULE FOR FUTURE ALLOCATIONS IS NOT A SWEEP OF EXISTING ONES \u2014 AND THE UNSWEPT ONES ARE THE"
+    },
+    {
+      "line": 1342,
+      "text": "- **A KNOWN-POSITIVE CONTROL PROVES AN INSTRUMENT *CAN* FIRE \u2014 IT NEVER PROVES IT FIRES *ONLY WHERE"
+    },
+    {
+      "line": 1374,
+      "text": "- **Local-first is inviolable**: no cloud dependency may enter the World core. Cloud = effect"
+    },
+    {
+      "line": 1376,
+      "text": "- **A correction is not applied until it reaches EVERY artifact that restates it** (added iter-28;"
+    },
+    {
+      "line": 1392,
+      "text": "- **A PRESCRIBED FIX IS A CLAIM \u2014 measure it before adopting it, especially one this mission wrote**"
+    },
+    {
+      "line": 1408,
+      "text": "- **Allocate a carry-forward ID by reading the PREVIOUS entry's carry-forward block, not the"
+    },
+    {
+      "line": 1418,
+      "text": "- **Every acceptance check names exactly ONE owning milestone, and that milestone must hold the"
+    },
+    {
+      "line": 1432,
+      "text": "- **Report the gate list the PLAN declares binding, never a remembered subset** (added iter-28). The"
+    },
+    {
+      "line": 1442,
+      "text": "- **Baseline isolation applies to every role permitted to mutate, including the designer** (iter161). Run pristine acceptance baselines in a separate sibling worktree. A designer reproduced a temporary test mutation while the controller baseline used its tree; that reading was discarded and the full Go suite rerun on an isolated pristine tree (rc0). A later restore does not retroactively make an overlapping measurement pristine."
+    },
+    {
+      "line": 1443,
+      "text": "- **Frozen-kernel discipline from day 1**: default every improvement to an extension; kernel"
+    },
+    {
+      "line": 1445,
+      "text": "- **Never touch the shared loop machinery from this mission**: `tools/launchd/*` (shared driver +"
+    },
+    {
+      "line": 1448,
+      "text": "- **Never touch the V1 mission's state or checkout** (`~/.ailang/state/mission-v1*`, legacy"
+    },
+    {
+      "line": 1450,
+      "text": "- **Language gaps route upstream \u2014 two channels, always both**: anything AILANG can't express"
+    },
+    {
+      "line": 1462,
+      "text": "- **CODING STANDARDS are binding** (ratified attended 2026-07-24): [coding-standards.md](coding-standards.md) \u2014 Z3 contracts on the pure core (S1), effects at the boundary (S2), **slim kernel / package-first** (S3: every kernel addition answers \"why is this not a package?\"), compiler-checked docs (S4), the AILANG fluency protocol (S5), honest non-vacuous gates (S6). Evaluators score against it; changes to it are ratification-class."
+    },
+    {
+      "line": 1463,
+      "text": "- **Compiler-checked docs discipline**: every `.ail` snippet that enters `design_docs/` ships as a"
+    },
+    {
+      "line": 1466,
+      "text": "- **Kernel performance budget from day 1** (DESIGN.md \u00a713.5): the M4 overhead gate gets HARDER as"
+    },
+    {
+      "line": 1469,
+      "text": "- **Advisory quorum rounds are BOUNDED** (ratified by Mark 2026-07-23, from the 5-round"
+    },
+    {
+      "line": 1476,
+      "text": "- **A MUTATION'S RESULT IS ONLY EVIDENCE IF THE MUTATION ITSELF IS VALID** (process fix, iter-22;"
+    },
+    {
+      "line": 1495,
+      "text": "- **AN ATTENDED-AUTHORED DOC STILL OWES THE DESIGN-DOC GATES** (process fix, iter-26; **2nd"
+    },
+    {
+      "line": 1511,
+      "text": "- **THE MISSION'S OWN RECORD IS A CLAIM, NOT EVIDENCE** (process fix, iter-27; **2nd instance** \u2014"
+    },
+    {
+      "line": 1535,
+      "text": "- **A named RED mutation is evidence only if it mutates the code the gate is supposed to be"
+    },
+    {
+      "line": 1560,
+      "text": "- **A REVISION IS NOT A SMALLER CHANGE THAN AN ORIGINAL \u2014 GIVE THE FIX THE SAME ADVERSARIAL READ YOU"
+    },
+    {
+      "line": 1588,
+      "text": "- **THE COMPILER IS AN INSTRUMENT, AND EVERY GATE IN THIS REPOSITORY REPORTS THROUGH IT** (process fix,"
+    },
+    {
+      "line": 1602,
+      "text": "- **A `go.mod` `go` DIRECTIVE IS A FLOOR, SO THE CORRECTIVE TOOLCHAIN IS UNSELECTABLE WHILE OD-1"
+    },
+    {
+      "line": 1614,
+      "text": "- **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms"
+    },
+    {
+      "line": 1616,
+      "text": "- **EXECUTOR SNAPSHOTS LIVE OUTSIDE THE WORKTREE IN THIS REPO (process fix, iter-194).** Since row 23"
+    }
+  ],
+  "claim": "Entire structure scanned; operative current rules targeted; not every historic narrative semantically read."
+}

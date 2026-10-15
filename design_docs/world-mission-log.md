@@ -4,27 +4,7 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 
 ---
 
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> **Older entries are ARCHIVED.** This file holds the newest 40. The full record of every
 > iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
@@ -915,6 +895,7 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** 1.0:clauses4/5 UNMET,1/2/3/6/7 MET; goal unmoved.
 
 **Next:** attended93 M5 FINAL→114→139. D69 A authorizes26→105→172→150 when critical path unavailable;B explicitly narrows150 subject to normal design gates. Unanswered:150 PARKED immediately,151 cannot leapfrog. None READY for unattended loop; row173 separately needs measured fleet PNG-gate resolution.
+
 ## 248 — 2026-10-08 — no product pick: row150 stays parked on unchanged D-WORLD-69; all four roles via recipe transports (no Agent tool in this harness); independent cross-vendor judge ACCEPTS [ADMIN]
 
 **Kind:** bookkeeping-only block report. No product revision, quorum, plan, implementation, credentials or release.
@@ -1004,35 +985,11 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 
 **Next:** D71 YES/NO on the existing bounded fixture follow-up; default row174 parked. While it waits, next independently gated D69 exception row26, then105 then172→150; after174 efficacy/landing, new attended93 FINAL, then114→139.
 
-## Attended continuation — 2026-10-11 — D-WORLD-71 single follow-up completed; M1 implementation PASS86, M2 UNRUN [ADMIN handoff]
+## 251 — 2026-10-12 — ORPHAN — existing index marker; credited in 252 [ADMIN]
 
-**Kind:** Current attended implementation evidence and loop handoff; this record contains no product source change/landing, inference, publication or mint. All three earlier FAIL68 reviews and historical FINAL remain immutable.
+Retrospective marker recovered in iteration 268 solely to preserve the existing index history during mandatory regeneration. This was not a completed scheduled iteration; no gate, judge or outcome is invented. The full credit and continuation are recorded in iteration 252.
 
-**Pick and state audit:** Mark requested continuation after a24h fresh check. Fetched origin7f1259a: iteration250 completed05:44UTC/07:44Copenhagen, no product advanced; later08:54/12:54/16:54UTC fires PAUSED-NO-CAPACITY. D71 YES recorded948e115 through canonical attended helper and fast-forward pushed; exact CI38160800885 SUCCESS. Candidate merged updated authority/admin without rebasing old product/review history.
-
-**Design:** Native designer approved existing narrowly bounded exec-timeout fixture proposal under D71; snapshot in new bank. No production bounds/shared helpers/benchmark or shared-harness changes permitted.
-
-**Quorum:** SKIPPED, all four trigger predicates false; no quorum PASS invented.
-
-**Plan:** Required native planner derived `codex:gpt-6.1-sol declared:planner-lane-default-pin`; two milestones: test fixture/scoped proof, then unchanged full normal gates/fresh judge. Initial progress retained; final snapshots record actual acceptance only after terminal verdict.
-
-**Execution:** Executor producta43ff7f changed only existing TestExecHandlerTimeoutKillsTheGroup body/imports. Three real full-trampoline controls measure C; bounded B=C+2g/finite H with ordinary caller fit guard. Two token-owned children proved live in actual leader PGID before delegated real kill; exact stdout/stderr retained; owned cleanup/reap/callback join before seam restoration. Plaincount10 and racecount5 PASS, zero failures/skips/races. Four isolated compiled mutants RED at intended assertions and exact restores GREEN.295add/10remove/file852 size debt retained/scored. Original descriptor M1 remains eight top-level description changes only, schemas/complete workspace-exec/all28 AIL sources preserved.
-
-**Judge:** Required fresh separate-context GPT6.1Sol under amendedD48, FLAG same-model-fresh-context; exact runtime model attestation unavailable, Sonnet absent per Mark. PASS86/100, zero blockers for IMPLEMENTATION READINESS only on82ef820. Independently verified379 exact source identities/full gate-log hashes/pin hashes; own focused/race/live exact-eight checks PASS; own compiled leader-only seam and production stdout-loss RED, exact restored GREEN. No further repair/review authorized. Original performance M2 UNRUN; no runtime efficacy or row closure.
-
-**CI / normal gates:** Controller outside-sandbox exact82ef820 `verify_ail.sh` rc0/24.161s and unchanged complete `verify_go.sh` rc0/535.083s including all plain/race packages.379 start/end sources identical. Known-positive race-control warning is expected instrument proof; complete logs banked. This ADMIN-only origin-based record requires its own exact-head CI; no candidate product remote CI/merge claimed.
-
-**Gate0 / external checks:** Read-only canonical Firestore mission-world inbox and known PNG ticket peek; no send/ack. No PNG resolution in listed32 inbox messages, not proof none anywhere. Current driverbc078dc contains0ceb1db env-forward fix by ancestry; not fresh shared-driver certification. Row173 remains fleet-owned. Existing operator rulings, benchmark tasks/models/N/grader/thresholds, interpreter pins and frozen shared harness preserved.
-
-**Routing evidence:** base=948e115a9a09486699b52beab03efc4b4bc71b2e; source/candidate/admin SHA and UTC recheck in mission-handoff-manifest. Controller/designer/planner/executor/evaluator native `codex:gpt-6.1-sol` (tok:not reported each). Planner declared default pin; evaluator fresh separate context underD48 FLAG. No fabricated token cost, exact weight attestation or cross-vendor independence.
-
-**Ruled out:** Overnight green admin CI as product acceptance; successful repeats as causation proof; raw metadata byte savings as latency efficacy; preferred-judge absence as omission; historical3FAIL retcon; another repair round under this one approval; benchmark model/settings substitution; agent PTY/scripted answers to human publish/mint fence; product push/PR/merge in this record.
-
-**Retro:** The bounded approval discharged actual full-gate failures through discriminating controls and fresh review without waivers. Generic size/long-function debt costs9 rubric points, documentation5. Raw `.diff` evidence context whitespace retained byte-exact, excluded from product whitespace lint; no full evidence-lint claim. No shared skill edit or process-policy change. Log rotation not due; no invented scheduled iteration/status stamp or external digest sent by this attended handoff.
-
-**Progress:** Clauses1/2/3/6/7 MET,4/5 UNMET; no release percentage/ETA. M1 implementation accepted locally, product unmerged; originalM2 performance UNRUN. Candidate172225b and full persistent verified local bundle preserved with prerequisites5ca1115/948e115; all current proof text banked for next loop.
-
-**Next:** Human types original baseline publish/session fences via prepared attended-mint.sh; then same-current-client fresh fixed Haiku4.5/Luna smoke baseline/candidate/no-change repeat, every attempt banked. Only after efficacy/landing and new committed preregistration, new attended93 FINAL →114 three real timed unseeded questions →139 epoch upgrade.156 protected tests and D69 exception26→105→172→150/151 remain before release; PNG gate separate fleet blocker. Full executable handoff:verification/world-row174-followup-2026-10-11/CONTINUE.md.
+Original tracked index summary: ORPHAN (capacity-paused twice): row 26 design + 7 real fixtures left uncommitted in `.wt-world-iter251-row26-design`; credited in 252
 
 ## 252 — 2026-10-12 — row 26 LANDED `0390aa5`: bounded Z3 report producer (resumes orphan 251); judge sonnet PASS 86→88, zero blocking [PRODUCT]
 
@@ -1112,6 +1069,12 @@ It re-cut the design's 5 milestones into 8. Plan commit `2f3e5e6`.
 **Progress:** Clauses 1/2/3/6/7 MET; 4 and 5 UNMET. The D-WORLD-69 path advanced 26 ✔ → 105 next.
 
 **Next:** If no critical-path row is loop-routable (93 FINAL is attended), take **row 105** `w-workbench-grade-projection` on the D-WORLD-69 path. Re-check 105's own gate ("PARKED behind item 13's validated-boundary follow-on"), since row 26 now produces real envelopes.
+
+## 253 — 2026-10-12 — ORPHAN — existing index marker; credited in 254 [ADMIN]
+
+Retrospective marker recovered in iteration 268 solely to preserve the existing index history during mandatory regeneration. This was not a completed scheduled iteration; no gate, judge or outcome is invented. The full credit and continuation are recorded in iteration 254.
+
+Original tracked index summary: ORPHAN (capacity-paused at gate-3): row 105 design `1945fb2` + quorum r1/r2-prep + uncommitted revision in `.wt-world-iter253-row105-design`; credited in 254
 
 ## 254 — 2026-10-13 — row 105 LANDED `9d16a07`: workbench object page projects PROVEN from subject-bound proof envelopes through a daemon-held validator (resumes orphan 253); judge sonnet PASS 88, zero blocking [PRODUCT]
 
@@ -1236,6 +1199,12 @@ Deviations, each confirmed by the judge:
 **Progress:** clauses 1/2/3/6/7 MET; 4 and 5 UNMET. The D-WORLD-69 path has advanced 26 ✔ → 105 ✔ → 172 next.
 
 **Next:** if no critical-path row is loop-routable (93 FINAL is attended), take **row 172** `w-decision-packet-production-projection` on the D-WORLD-69 path. It needs a design doc first; the designer rotation's next entry after glm-5.3 is kimi-k3.
+
+## 255 — 2026-10-13 — ORPHAN — existing index marker; credited in 256 [ADMIN]
+
+Retrospective marker recovered in iteration 268 solely to preserve the existing index history during mandatory regeneration. This was not a completed scheduled iteration; no gate, judge or outcome is invented. The full credit and continuation are recorded in iteration 256.
+
+Original tracked index summary: ORPHAN (STALL-killed rc=143 at gate-3, foreground planner >40 min): row 172 design `955fbc0` + quorum r1/r2 + carve-out `b72428a` + uncommitted plan in `.wt-world-iter255-row172-design`; credited in 256
 
 ## 256 — 2026-10-13 — row 172 LANDED `d36b148`: coordinator mints `world/decision-packet/v1` on the effectful `Human.Approve` commit; validated object-page projection; daemon binding split to row 176 and PARKED on D-WORLD-73 (resumes orphan 255); judge sonnet PASS 86 → 92, zero blocking [PRODUCT]
 
@@ -1410,7 +1379,6 @@ Rule (d) therefore applies: no row is picked, and no hygiene or residual side wo
   - **N2:** row 173's older `:185–219` line cite is left as historical.
   - **N3:** the row-120 close sits close to the line on side work. It is disclosed, and no change was made.
 - The report is in `design_docs/verification/world-iter257/evaluator-r1.md`.
-
 
 ## 258 — 2026-10-13 — no pick: rule (d) block report; nothing on the critical path moved since iteration 257 (D-WORLD-73 open, fleet PNG ticket open and unanswered, row 93 FINAL attended) [ADMIN]
 
@@ -1693,7 +1661,7 @@ Rule (d) applies again: no row picked, no side work, and no new ask (D-WORLD-73 
 - **Non-blocking:** N1 its `ticket open` read was truncated to 10 lines, so the png line is evidenced by the controller's full-list grep. N2 it did not trace row 114's D-WORLD-70 sequencing (accepted by judges 257–263). N3 the archive blank line is cosmetic. N4 the Gate 0 scripts were not re-run by the judge.
 - The report is in `design_docs/verification/world-iter264/evaluator-r1.md`.
 
-## 265 — 2026-10-14 — no pick: rule (d) block report; ninth consecutive idle fire — nothing on the critical path moved since iteration 264 (D-WORLD-73 open, fleet PNG ticket open and unanswered, row 93 FINAL attended) [ADMIN]
+## 265 — 2026-10-14 — no-pick record, then attended D-WORLD-73=A and row176 LANDED 8511bad (PR261) [PRODUCT]
 
 **Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). No design, plan, code or product acceptance. The record is the STATUS stamp (with 262 rotated to the archive), this entry, the index row, the dashboard and a predicate evidence file. An independent judge reviews it before merge.
 
@@ -1847,3 +1815,44 @@ Rule (d) applies again: no row picked, no side work, and no new ask (D-WORLD-73 
 **Record review r1 correction:** independent judge blocked candidate0338b57 because the external snapshot correction had not reached all machine directives. Corrected all17 Markdown milestone snapshot directives, all17 sprint JSON executor directives and the common OBS_OUT instruction; no inside-tree snapshot directive remains in either live plan artifact. Only path guidance changed; 2 completed/15 pending statuses, source, protected files, ledger and product verdict unchanged. The revised record returns to the independent judge.
 
 **Record follow-through (iteration267):** REQUIRED independent native GPT-6.1 Sol record judge reviewed e0a55be977bed62ccad725b8467f22670cfd75fc in a separate isolated tree: PASS98/100, round2, zero blocking; original FAIL88/R267-B1 retained. All17 Markdown and17 JSON snapshot directives plus common OBS_OUT guidance now external, positively enumerated; product verdict/source, ledger and 2 completed/15 pending statuses unchanged. Role tokens not reported; same-model-fresh-context FLAG retained. Immutable record-evaluator-r1/r2.md/json banked in verification/world-iter267. This follow-through adds those judge-authored reports and this factual citation only; record publication CI is checked before final report. docs/sprint-retros is absent in World; no unread local retrospective material.
+
+## 268 — 2026-10-15 — row 150 M2a authenticated demo seed S1 LANDED 420c07e7 (PR #267) [PRODUCT]
+
+**Kind:** one product milestone on the D-WORLD-69 release path. Only M2a is judged; S2–S6 and M2b onward remain incomplete.
+
+**Pick and why:** M2a follows landed M1a `28ff4db` and M1b `52ae7ff`. Clauses 1/2/3/6/7 are MET. Clause 4 is UNMET: row 93's latest attended FINAL records FAILS; its next step is attended. Clause 5 is UNMET: 114 follows a passing FINAL, then 139 follows 114. No UNMET-clause row is routable, so D-WORLD-64/69 authorize release preparation. D-WORLD-75 stays OPEN, with unchanged options and default A. Production publish, mint and capture remain attended.
+
+**Gate 0:** World enabled; gh identity `sunholo-voight-kampff`; billing CLEAN. No allowlisted directives on issue 246 since `2026-10-15T02:28:08Z` (21 comments), and none on 246/202 at the later recheck. Both watermarks advanced to `2026-10-15T04:59:41Z` after initial triage and `2026-10-15T05:52:07Z` after the directive recheck. Self-notice verdict 0, controls 107:4 and watermarks 2/2; no new orphan. Canonical GCP messaging/project verified, including an invalid-store control; mission-world unread empty. Decision ledger valid: 62 rows, only D-WORLD-75 OPEN.
+
+**Gate 1:** local shared dev `57941bf` was behind origin `39066a4`; read origin and preserved local work. Gate-1 base `39066a46c1ac13c994bacb162b8d4b754d5ec083@2026-10-15T04:56:23Z`; CI 38669652126 success 2/2. The resolved authoritative SKILL and all 12 resources matched V1 origin per file; resources were read through the resolved absolute directory. All 62 registered worktrees audited: 38 clean, 21 dirty, 3 prunable. Historical tracked residue from 198 was already credited by 199; historical/attended trees were preserved. Only authored open PR 166 was parked row 114; no row-150 orphan.
+
+**Design:** the requested native designer GLM and next Kimi pins both returned Unknown model. A required fresh native GPT-6.1 Sol readiness role inspected existing r4. No new design or quorum. Design-quorum r1–r3 remain BLOCKED; r4 inherits iteration 266's ratified narrow-refinement disposition. Capability failures were flagged and ticketed.
+
+**Plan:** a required native GPT-6.1 Sol handoff retained the 17 milestones, initially 2 completed/15 pending. First-party measurement showed the bearer REST/session file cannot expose grant budgets. A measured clarification permits bounded existing read-only authority/world APIs after the health DB identity check, closing the reader before HTTP writes. Markdown and JSON implementation/directive fields were updated together. The first repair clarified pin validation through the existing startup archive manifest. No new endpoint, writable authority handle, Mint or authority semantics.
+
+**Execute:** required native GPT-6.1 Sol changed five implementation files: `demo.go`, `demo_seed.go`, `demo_test.go`, `main.go` and QUICKSTART. Five ordinary bearer/CAS REST commits store a goal, two distinct candidates, unchanged production logepoch source and explicitly demo-authored commentary. Preflight checks pin hash/size/version/health, live demo session, required grants/expiry/remaining budget, absent manifest, empty selected head/log and absence of World rows. Bootstrap authority/registry rows are allowed; generic all-object emptiness is not claimed. The incremental command exits 1 after recording S1, explicitly refuses S2–S6 completion and writes no success manifest. Tests cover 37 preflight cases and 3 commit-failure cases. Initial executor: 29 compiling mutation kills. All 12 protected hash/newline triples were unchanged at implementation boundaries. No new .ail source was authored. OS/SQLite/read-error paths not independently forced remain declared limits.
+
+**Independent evaluation:** required distinct fresh native GPT-6.1 Sol judges, flagged **same-model-fresh-context** under amended D-WORLD-48/current Gate 3. No controller-only acceptance.
+
+- R1 **FAIL 65/100, 3 blocking**: forbidden direct `host/registry` import; a literal serve command appended to QUICKSTART broke an inherited parser; a new unregistered subprocess inherited a synthetic registry credential. The controller independently reproduced base 0/candidate 1, including a synthetic-only sentinel. No actual credential value was observed or printed. Repair `7ba691b` uses a local JSON wire shape, preserves every prior QUICKSTART byte with new DEMO_BIN commands, removes the launcher, and validates startup manifest Hash/Size/Version/release. Seven repair mutations compiled and hit assertions.
+- R2 **FAIL 70/100, 1 blocking**: the new pin-mismatch fixture required a tool pin absent in ordinary CI. Independent one-variable reproduction and actual CI agreed. Fixture-only `e8f916c` uses a unique local byte file; no skip or workflow edit. All 18 focused commands, across tool-set/tool-unset configurations, passed required names. R2 recorded 34 distinct compiling assertion kills, including one diagnostic-only wrong-refusal kill; budget/hash survivors remain nonblocking coverage findings. The controller independently reproduced the StateRoot survivor (build 0/test 0/restored 0).
+- R3 **PASS 90/100, zero blocking**, on exact 763c60a after independently checking real PR CI 2/2. Fresh 39 compiling mutants: 36 assertion kills (35 production/doc, one diagnostic-only) and three known coverage survivors. Own-M2a production revert compiled and reddened all three acceptance tests; earlier Mint remained green. Five implementation files restored byte for byte; 12 protected observations unchanged..
+
+Immutable reports and raw logs are banked under `verification/world-iter268/`. Source snapshots remain external. The old Mint and REST prohibition tests are regression guards, not new M2a non-vacuity credit.
+
+**Gates:** pristine `39066a4`: AIL 0/27.47 s, full unchanged Go 0/607.18 s. Initial `67ee2ef`: AIL 0/27.31 s, Go 1/366.33 s (build passed, plain failed, race not reached); actual PR run 38685858770 failed. Repaired `7ba691b`: AIL 0/26.71 s, full Go 0/809.39 s with both pins; ordinary CI 38686818370 failed only pin-mismatch. A both-pin local PASS did not waive that defect. Final `763c60a`: AIL 0/26.46 s, full Go 0/564.45 s (build, plain and race), with the tool pin unset. The final environment omits the tool pin, matching ordinary CI; optional existing workspace S3 tests may skip, but no named M2a skip is accepted. Go resolves 1.26.6 and the proof/compiler is released v0.41.0/24ee108. Only the four proven interfering telemetry keys were removed, plus the explicitly measured tool-variable omission. No source, gate or timeout was changed around a red. The two full Go runs were sequential. Real PR CI38687777190 passed both required jobs on exact 763c60a.. Merge 420c07e7c1c70eca6043a0c4e12a20f2adcaf972 has real push CI38689782525 success2/2..
+
+**Routing evidence:** base=420c07e7c1c70eca6043a0c4e12a20f2adcaf972@2026-10-15T06:18:07Z. Controller Codex (driver `codex:gpt-6.1-sol`, tok: not reported); designer native `gpt-6.1-sol` (tok: not reported; rejected `pi:ollama/glm-5.3:cloud`, then `pi:ollama/kimi-k3:cloud`); planner native `gpt-6.1-sol` (tok: not reported; `declared:planner-lane-default-pin`); executor native `gpt-6.1-sol` (tok: not reported; `declared:provider-pin`, implementation plus two repairs); product evaluators r1/r2/r3 native `gpt-6.1-sol` (each tok: not reported). Preferred evaluator `sonnet` returned Unknown model; declared Anthropic/OpenRouter alternatives were over ration. All four roles actually ran through the operator-requested Agent tool; recipe-to-native transport override FLAGGED. No Astra. Generator and judges were distinct agents. Exact errors and per-fire dead lanes are banked; fleet occurrence `inbox_1792040381066_9861a560` uses `agent-tool:sonnet-unavailable`. This occurrence is blocking none; the aggregate ticket's older occurrences can be blocking all. Designer pointer records the actual last-used Codex lane. Metered **$0.00**; token totals were not fabricated.
+
+**Ruled out:** taking 93/114/139 while attended/sequenced; whole S1–S6 completion from five commits; a competing writer/new endpoint; generic all-object emptiness; both-pin local checks as CI certification; a subprocess audit exemption; a synthetic sentinel as evidence of an actual leaked secret; build errors/panics/timeouts/skips/empty selections as mutation kills; earlier M1 tests as M2a non-vacuity; fresh-seed hash equality; captures, publish, mint, release; controller-only acceptance. The first worktree helper returned a path but left a pending marker and no directory; no terminal creator was observed, and cause is unestablished. A fresh helper add followed by bounded wait in the same active shell returned ready. Residue was preserved, fleet ticket `inbox_1792040662419_a05590e2` filed, and no harness repair made.
+
+**Retro:** skill lane: none; no shared harness or routing-policy edit. Process lane: the measured read-only/archive plan clarifications and ordinary-CI verification arm stayed within existing rules; the source defects were repaired inside M2a. The single record-maintenance correction below makes index regeneration preserve the existing history. Backlog lane: capability recurrence stays row 129; new 178 records the fleet-owned worktree anomaly, and new 179 queues three nonblocking supporting-hunk gaps behind critical/release work. Before mandatory index regeneration, the controller measured that entry 265's old ADMIN/no-pick header contradicted its same-entry landed `8511bad` follow-through and current PRODUCT index; its header was corrected while its interior body bytes were preserved. Three index-only orphan markers (251/253/255, already credited by 252/254/256) were recovered as explicitly retrospective markers before regeneration; no old gate report was invented. The original stream has 36 numbered entries and one attended note. The CLI initially refused that note’s mixed-case heading before any write. Its header was normalized to the supported uppercase record format; its interior body bytes are unchanged. Adding three recovered markers plus 268 gives 41 records: keep40 leaves 40 numbered entries live and moves the complete attended note to the archive. The index was regenerated through an isolated registry target: 257→258 numbered IDs, all prior IDs preserved, plus the attended-note row. All old entry interior bodies survive; the CLI normalized trailing inter-record blank lines at five boundaries (247, attended note, 257, 267, archived 225), as independently measured in record review R1. Five duplicate generated archive notices were removed from the preamble before the CLI wrote one current keep-40 notice; historical interior body bytes are unchanged and no CLI implementation was edited. STATUS 265 was archived byte for byte; three stamps remain. Primary queue rows 177→179, with only the existing 150 tag changed. The 62-row ledger is unchanged. No `docs/sprint-retros/` directory. Last 20 primary [HARNESS]: **0/20**. Last three landings M2a/M1b/M1a move no UNMET clause, but none is routable, so no DRIFT. D-WORLD-75 unchanged; no new human ask.
+
+**Progress**: World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET — goal unmoved. Release row 150 advanced to 3/17 milestones.
+
+**Next:** row 150 M2b, then M3a in dependency order. Coverage follow-ups 177/179 remain below critical/release work. Row 93's next step is attended; D-WORLD-75 default A keeps tooling moving, while production publish/mint/capture remain parked for attendance.
+
+
+**Record review R1 repair:** Independent ADMIN-content review of `d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca` found blocking R268-REC-B1: the actual weekly-report parser ignored the current inside-bold Progress colon and selected stale iteration 227. Only this iteration's label now uses the required `**Progress**:` format; its value is unchanged. R1 FAIL and raw measurements remain immutable in verification/world-iter268/record-evaluator-r1. Historical labels were not rewritten. The record-preservation wording now distinguishes exact interior bytes from the CLI's measured separator blank-line normalization; STATUS/archive-prefix and evidence-hash byte equality remain separate exact checks. This repair awaits a fresh independent ADMIN-content judge; final record PR and merge CI are still mandatory.
+
+**Record follow-through (iteration 268):** REQUIRED fresh independent native GPT-6.1 Sol ADMIN-content judge reviewed `b20bb350cf1d60c9020b4a831be0ae26ad915246`: **PASS 100/100, round 2, zero blocking**. It independently closed R268-REC-B1/N1 using the unmodified weekly consumer and punctuation regression control; 300 integrity assertions and five metadata gates passed, source PR/merge CI both required jobs were terminal SUCCESS, and 4,126 pre-existing tracked files were unchanged. Original R1 FAIL76 and raw evidence remain immutable. Judge tokens not reported; same-model-fresh-context FLAG retained. Immutable reports/raw artifacts are banked at verification/world-iter268/record-evaluator-r2. This follow-through adds those judge-authored outputs and factual citation only; no product code, acceptance bar, decision ledger or milestone state changes. Final record publication still requires exact-head PR CI and merge-push CI, both 2/2 SUCCESS, before final reporting.

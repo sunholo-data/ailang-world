@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedCommitFailures
+=== RUN   TestDemoSeedCommitFailures/commit-response
+    demo_test.go:503: commit refusal boundary want "commit response mismatch": code1 out"" err"ailang-worldd demo seed: S1 domain commits recorded; S2-S6 incomplete; no success manifest written. Inspect history; do not blindly retry.\n"
+--- FAIL: TestDemoSeedCommitFailures (0.90s)
+    --- FAIL: TestDemoSeedCommitFailures/commit-response (0.90s)
+FAIL

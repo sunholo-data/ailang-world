@@ -1,0 +1,55 @@
+{
+  "ledger": {
+    "rc": 0,
+    "command": [
+      "bash",
+      "scripts/mission_decisions.sh",
+      "--check",
+      "--file",
+      "design_docs/world-mission.md"
+    ]
+  },
+  "open": {
+    "rc": 0,
+    "command": [
+      "bash",
+      "scripts/mission_decisions.sh",
+      "--open",
+      "--file",
+      "design_docs/world-mission.md"
+    ]
+  },
+  "config": {
+    "rc": 0,
+    "command": [
+      "bash",
+      "scripts/verify_go.sh",
+      "--mission-config-check"
+    ]
+  },
+  "privacy": {
+    "rc": 0,
+    "command": [
+      "bash",
+      "scripts/check_no_personal_email.sh"
+    ]
+  },
+  "prose-diff": {
+    "rc": 0,
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+      "HEAD",
+      "--",
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/planned"
+    ]
+  }
+}

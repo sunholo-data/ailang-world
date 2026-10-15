@@ -1,0 +1,42 @@
+[
+  {
+    "scope": "old-live",
+    "iteration": 247,
+    "old_body_bytes_including_separator": 6608,
+    "new_body_bytes_including_separator": 6609,
+    "trailing_LF_delta": 1,
+    "interior_exact": true
+  },
+  {
+    "scope": "old-live",
+    "iteration": "attended",
+    "old_body_bytes_including_separator": 5525,
+    "new_body_bytes_including_separator": 5524,
+    "trailing_LF_delta": -1,
+    "interior_exact": true
+  },
+  {
+    "scope": "old-live",
+    "iteration": 257,
+    "old_body_bytes_including_separator": 8757,
+    "new_body_bytes_including_separator": 8756,
+    "trailing_LF_delta": -1,
+    "interior_exact": true
+  },
+  {
+    "scope": "old-live",
+    "iteration": 267,
+    "old_body_bytes_including_separator": 7779,
+    "new_body_bytes_including_separator": 7780,
+    "trailing_LF_delta": 1,
+    "interior_exact": true
+  },
+  {
+    "scope": "old-archive",
+    "iteration": 225,
+    "old_body_bytes_including_separator": 5358,
+    "new_body_bytes_including_separator": 5359,
+    "trailing_LF_delta": 1,
+    "interior_exact": true
+  }
+]

@@ -1,0 +1,4 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+    demo_test.go:331: commit0 interface/provenance mismatch
+--- FAIL: TestDemoSeedAuthenticatedCommits (0.98s)
+FAIL

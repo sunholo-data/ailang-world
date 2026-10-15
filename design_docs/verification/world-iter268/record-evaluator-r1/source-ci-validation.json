@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-10-15T06:31:48.431346+00:00",
+  "checks": [
+    {
+      "scope": "source-merge",
+      "run_id": 38689782525,
+      "event": "push",
+      "head_sha": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+      "pass": true,
+      "required_jobs": [
+        {
+          "name": "go host build + test gate",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-10-15T06:15:45Z"
+        },
+        {
+          "name": "ailang-code verify gate",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-10-15T06:00:01Z"
+        }
+      ]
+    },
+    {
+      "scope": "source-pr",
+      "run_id": 38687777190,
+      "event": "pull_request",
+      "head_sha": "763c60a20358f486df395043131557c1143735ba",
+      "pass": true,
+      "required_jobs": [
+        {
+          "name": "ailang-code verify gate",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-10-15T05:38:03Z"
+        },
+        {
+          "name": "go host build + test gate",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-10-15T05:57:58Z"
+        }
+      ]
+    }
+  ],
+  "record_publication_ci": "NOT YET CREATED / future required; no verdict supplied"
+}

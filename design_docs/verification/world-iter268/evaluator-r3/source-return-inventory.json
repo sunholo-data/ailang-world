@@ -1,0 +1,296 @@
+[
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 34,
+    "return": "return exitUsage",
+    "previous": "fmt.Fprint(stderr, demoHelp)"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 47,
+    "return": "return code",
+    "previous": "if code, done := parseVerbFlags(fs, args[1:], demoHelp, stdout, stderr); done {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 51,
+    "return": "return exitUsage",
+    "previous": "fmt.Fprintln(stderr, \"ailang-worldd demo seed: unexpected positional argument\")"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 55,
+    "return": "return exitUsage",
+    "previous": "fmt.Fprintln(stderr, \"ailang-worldd demo seed: --db, --ailang-bin, --proof-key-file and --manifest are required\")"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 60,
+    "return": "return exitUsage",
+    "previous": "fmt.Fprintf(stderr, \"ailang-worldd demo seed: %v\\n\", err)"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 66,
+    "return": "return exitUsage",
+    "previous": "fmt.Fprintf(stderr, \"ailang-worldd demo seed: %v\\n\", err)"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo.go",
+    "line": 69,
+    "return": "return exitUsage",
+    "previous": "fmt.Fprintln(stderr, \"ailang-worldd demo seed: S1 domain commits recorded; S2-S6 incomplete; no success manifest written. Inspect history; do not blindly retry.\")"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 41,
+    "return": "return err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 44,
+    "return": "return fmt.Errorf(\"required resource absent: %s\", path)",
+    "previous": "if !ok {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 46,
+    "return": "return nil",
+    "previous": "}"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 51,
+    "return": "return h, 0, fmt.Errorf(\"manifest must be a new absent path\")",
+    "previous": "if _, err := os.Lstat(o.manifest); !os.IsNotExist(err) {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 54,
+    "return": "return h, 0, err",
+    "previous": "if err := demoGet(r, \"/v1/health\", &h); err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 58,
+    "return": "return h, 0, e",
+    "previous": "if e != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 62,
+    "return": "return h, 0, e",
+    "previous": "if e != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 65,
+    "return": "return h, 0, fmt.Errorf(\"db/health identity mismatch\")",
+    "previous": "if want != got {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 69,
+    "return": "return h, 0, fmt.Errorf(\"cannot read interpreter pin\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 73,
+    "return": "return h, 0, fmt.Errorf(\"interpreter pin mismatch\")",
+    "previous": "if pinRef.String() != h.InterpreterRef {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 78,
+    "return": "return h, 0, err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 85,
+    "return": "return h, 0, fmt.Errorf(\"interpreter archive manifest unavailable\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 88,
+    "return": "return h, 0, fmt.Errorf(\"interpreter archive identity mismatch\")",
+    "previous": "if manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin)) {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 91,
+    "return": "return h, 0, fmt.Errorf(\"interpreter version mismatch\")",
+    "previous": "if manifest.Version != h.InterpreterVersion || !strings.HasPrefix(manifest.Version, \"AILANG v0.41.0\\n\") {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 96,
+    "return": "return h, 0, err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 100,
+    "return": "return h, 0, err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 103,
+    "return": "return h, 0, fmt.Errorf(\"nonempty public world/log; inspect history before seeding\")",
+    "previous": "if hasWorld || hasHead || ref != \"\" || len(page) != 0 {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 109,
+    "return": "return h, 0, err",
+    "previous": "if err = demoGet(r, \"/v1/registry/\"+store.EpochRegistryV1, &rh); err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 113,
+    "return": "return h, 0, err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 116,
+    "return": "return h, 0, fmt.Errorf(\"epoch registry object mismatch\")",
+    "previous": "if !ok || hashref.SumSHA256(obj.Payload).String() != rh.Head {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 128,
+    "return": "return h, 0, fmt.Errorf(\"registry: decode: %w\", err)",
+    "previous": "if err := json.Unmarshal(obj.Payload, &reg); err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 133,
+    "return": "return h, ep.Epoch, nil",
+    "previous": "if candidate == \"AILANG v0.41.0\" {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 137,
+    "return": "return h, 0, fmt.Errorf(\"interpreter has no nominated epoch\")",
+    "previous": "}"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 142,
+    "return": "return false, fmt.Errorf(\"cannot open read-only authority view\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 150,
+    "return": "return false, fmt.Errorf(\"read-only session resolution failed\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 153,
+    "return": "return false, fmt.Errorf(\"%s\", out.Denied.String())",
+    "previous": "if out.Denied != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 156,
+    "return": "return false, fmt.Errorf(\"demo episode session required\")",
+    "previous": "if out.Success == nil || out.Success.EpisodeID != \"demo\" {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 161,
+    "return": "return false, fmt.Errorf(\"cannot inspect remaining grant budgets\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 170,
+    "return": "return false, fmt.Errorf(\"missing, expired or insufficient %s@%s grant\", req.Effect, req.Scope)",
+    "previous": "if !broker.Allows(snap, req).Allowed {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 175,
+    "return": "return false, fmt.Errorf(\"cannot inspect public worlds\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 177,
+    "return": "return worlds.Scanned > 0, nil",
+    "previous": "}"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 185,
+    "return": "return err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 189,
+    "return": "return fmt.Errorf(\"prepare worktree containing unchanged world/logepoch.ail; run from repository root\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 197,
+    "return": "return err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 200,
+    "return": "return fmt.Errorf(\"unexpected CAS head; stop and inspect history\")",
+    "previous": "if actual != observed || has != (observed != \"\") {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 205,
+    "return": "return err",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 209,
+    "return": "return fmt.Errorf(\"commit outcome uncertain; inspect history, never retry automatically\")",
+    "previous": "if err != nil {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 214,
+    "return": "return fmt.Errorf(\"commit refused HTTP %d %s; stop and inspect history\", status, failure.Error.Class)",
+    "previous": "_ = json.Unmarshal(body, &failure)"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 220,
+    "return": "return fmt.Errorf(\"commit response mismatch; inspect history\")",
+    "previous": "if json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref {"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 225,
+    "return": "return nil",
+    "previous": "}"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 238,
+    "return": "return out",
+    "previous": "}"
+  },
+  {
+    "path": "cmd/ailang-worldd/demo_seed.go",
+    "line": 252,
+    "return": "return demoCommit{ObservedHead: observed, Objects: []demoObject{o}, NextWorld: wireWorld{Ref: hashref.SumSHA256(worldBytes).String(), Revision: index, StateRoot: state, LogHead: entryHash}, Entry: wireEntry{Header: header, EntryHash: entryHash, TransitionRef: o.Hash}}",
+    "previous": "}{index, state, entryHash})"
+  }
+]

@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/health-down
+    demo_test.go:443: wrong refusal: want "HTTP 503" got "ailang-worldd demo seed: required resource absent: /v1/health\n"
+--- FAIL: TestDemoSeedPreflightRefusals (1.34s)
+    --- FAIL: TestDemoSeedPreflightRefusals/health-down (1.34s)
+FAIL

@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/archive-hash
+    demo_test.go:433: archive-hash: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (2.96s)
+    --- FAIL: TestDemoSeedPreflightRefusals/archive-hash (2.96s)
+FAIL

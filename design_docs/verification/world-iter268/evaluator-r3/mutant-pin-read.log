@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-absent
+    demo_test.go:443: wrong refusal: want "cannot read interpreter pin" got "ailang-worldd demo seed: interpreter pin mismatch\n"
+--- FAIL: TestDemoSeedPreflightRefusals (1.08s)
+    --- FAIL: TestDemoSeedPreflightRefusals/pin-absent (1.08s)
+FAIL

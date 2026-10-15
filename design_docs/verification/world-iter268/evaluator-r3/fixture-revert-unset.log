@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+    demo_test.go:394: required tool pin absent
+--- FAIL: TestDemoSeedPreflightRefusals (0.87s)
+    --- FAIL: TestDemoSeedPreflightRefusals/pin-mismatch (0.87s)
+FAIL
