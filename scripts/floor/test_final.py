@@ -119,6 +119,39 @@ class PairedOrder(unittest.TestCase):
             self.assertNotEqual(run.paired_order(i, 1)[0], run.paired_order(i + 1, 1)[0])
 
 
+class IterateSchedule(unittest.TestCase):
+    """The attended smoke's --paired: canaries first, then each task's arms in paired_order(i, 1)."""
+    T = ['a', 'b', 'c']
+
+    def test_unpaired_keeps_the_m4_order(self):
+        s = run.iterate_schedule(['codex'], ['shell', 'world'], self.T, set(), False)
+        self.assertEqual([(k, x, t) for k, _, x, t in s],
+                         [('canary', 'shell', None)] + [('task', 'shell', t) for t in self.T]
+                         + [('canary', 'world', None)] + [('task', 'world', t) for t in self.T])
+
+    def test_paired_interleaves_in_the_final_order(self):
+        s = run.iterate_schedule(['claude', 'codex'], ['shell', 'world'], self.T, set(), True)
+        for ag in ('claude', 'codex'):
+            mine = [(k, x, t) for k, a, x, t in s if a == ag]
+            self.assertEqual(mine[:2], [('canary', 'shell', None), ('canary', 'world', None)])
+            tasks = mine[2:]
+            self.assertEqual(len(tasks), 2 * len(self.T))
+            for i, t in enumerate(self.T):
+                pair = tasks[2 * i:2 * i + 2]
+                self.assertEqual([t, t], [p[2] for p in pair])
+                self.assertEqual(run.paired_order(i, 1), tuple(p[1] for p in pair))
+
+    def test_paired_refuses_one_arm_or_reuse(self):
+        with self.assertRaises(run.RunRefused):
+            run.iterate_schedule(['codex'], ['world'], self.T, set(), True)
+        with self.assertRaises(run.RunRefused):
+            run.iterate_schedule(['codex'], ['shell', 'world'], self.T, {'claude/shell'}, True)
+
+    def test_reused_cell_is_not_scheduled(self):
+        s = run.iterate_schedule(['codex'], ['shell', 'world'], self.T, {'codex/shell'}, False)
+        self.assertNotIn('shell', {x for _, _, x, _ in s})
+
+
 class MintBlock(unittest.TestCase):
     def test_two_n_sessions_with_explicit_grants(self):
         L = {'root': '/R'}

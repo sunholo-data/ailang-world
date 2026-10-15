@@ -1,0 +1,58 @@
+{
+  "recorded_at": "2026-10-15",
+  "operator_request": "Mark (attended): small smoke on the known deltas before any full FINAL, with Mark attending, to establish trust.",
+  "scope": "INFORMATIVE tuning-ledger iteration 14. Not a FINAL; never pooled with one. Gates nothing in §4.11; it decides whether to preregister the next FINAL.",
+  "config": "config.json in this directory: scripts/floor/floor_config.json at 8258341 with smoke.tasks = the 7 known-delta tasks, smoke.models = the FINAL models, corpus_commit = the ailang commit carrying the config_file_parser wording fix (filled in before the run; the run refuses an unpinned corpus).",
+  "rig": "~/.ailang/state/floor-smoke-2026-10-15, built by `run.py final-prepare` at 8258341 (fresh binaries and store, the FINAL's layout); runs on its run-1 sessions fl-cc-r1 / fl-cx-r1 (`--episode-run 1`), minted by Mark.",
+  "clients": "the current ones the next FINAL will pin: claude 2.1.300, codex-cli 0.162.0. No autoupdate during the run (DISABLE_AUTOUPDATER=1).",
+  "run_command": "FLOOR_AILANG_REPO=~/.ailang/state/floor-corpus-ailang DISABLE_AUTOUPDATER=1 AILANG_BIN=~/.pinned-ailang/ailang python3 scripts/floor/run.py iterate --config design_docs/verification/world-floor-smoke-2026-10-15/config.json --root ~/.ailang/state/floor-smoke-2026-10-15 --episode-run 1 --paired --iteration 14 --knob world_tools_wording+corpus --side world --change 'row93-direct wording + config_file_parser program-writes wording' --spend-cap 19",
+  "known_issues_from_the_2026_10_14_final": [
+    {
+      "issue": "codex World arm carried 2.0x input tokens (262k vs 129k per task): codex 0.162 defers MCP tools, hidden discovery round trips",
+      "effect": "+4.9 s of the +5.5 s median per-task gap; O +24.5%",
+      "fix": "wording row93-direct (pilots 12/13: 1.00x)",
+      "status": "APPLIED"
+    },
+    {
+      "issue": "config_file_parser wording reads as a workspace step; grader runs only the program in an empty dir",
+      "effect": "codex World 0/3, shell 2/3 -> Δ -2/69 FAILS",
+      "fix": "task wording: the program itself must write app_config.json",
+      "status": "APPLIED (ailang commit pinned as corpus_commit)"
+    },
+    {
+      "issue": "arm-order drift",
+      "effect": "World-second +9.2 s vs World-first +4.1 s",
+      "fix": "paired counterbalanced order (D-WORLD-74), also in this smoke (--paired)",
+      "status": "APPLIED"
+    },
+    {
+      "issue": "Claude Code autoupdate mid-run changes cli_versions",
+      "effect": "AC5.1 digest mismatch on 2026-10-14",
+      "fix": "DISABLE_AUTOUPDATER=1 and a pinned client copy first on PATH",
+      "status": "APPLIED to the run environment"
+    }
+  ],
+  "tasks": {
+    "config_file_parser": "the Δ failure",
+    "json_transform": "largest World-minus-shell gap in the FINAL (+20.0 s)",
+    "state_machine_elevator": "+13.3 s",
+    "explicit_dataflow_ssa": "+12.7 s",
+    "error_handling": "+11.0 s",
+    "effect_composition": "+11.0 s",
+    "api_call_json": "control: World was 12.9 s faster"
+  },
+  "checks_fixed_before_run": {
+    "C1_tokens": "codex: median World input tokens / median shell input tokens over the 7 tasks <= 1.2 (FINAL, 23 tasks: 262k/129k = 2.03)",
+    "C2_config_file_parser": "PASS in all 4 cells (claude/codex x shell/World)",
+    "C3_no_regression": "every other task PASS in both arms for both agents; harness faults 0; 4 canaries PASS; no attestation findings",
+    "C4_time_informative": "codex median per-task World-minus-shell model time and wall reported per task against the same task's FINAL paired median (listed under tasks; all-23 medians were +4.9 s model / +5.5 s wall); N=1 on 7 tasks is too small to gate O, so this is reported, never a pass/fail"
+  },
+  "decision_rule": "C1-C3 all hold -> propose the next FINAL with these two changes and no others; any fails -> stop, diagnose, no FINAL.",
+  "fence": "Claude spend for this smoke ~$8 at most (expected ~$3-5). The harness cap is cumulative over the tuning ledger ($5.91 spent before iteration 14) and reserves one run's $5 budget before every Claude call, so --spend-cap 19 = 5.91 + 8 + 5. Codex on the existing subscription. No model substitution; capacity re-runs recorded, never silent.",
+  "corpus": {
+    "commit": "18dc54b12556b4491262a9aeebe63e4cefde968b",
+    "source": "sunholo-data/ailang PR #1837 branch bench/config-file-parser-program-writes, read from the clone ~/.ailang/state/floor-corpus-ailang (FLOOR_AILANG_REPO)",
+    "vs_76a5aef": "23 core task ids identical; only config_file_parser sha256 changed; the agent task template is unchanged"
+  },
+  "config_digest_smoke": "01454188e63554ac97d32bea0ffab8855c012437daf620f7d311f3e9fe736807"
+}

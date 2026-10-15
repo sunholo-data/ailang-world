@@ -1,0 +1,141 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "ef72f303952f1096937133a729ed03741bffad2bb7e38ac85880287b0b754c03",
+    "claude/world": "685c4cde69c6fc92a72d42e859b39f081ded94c579ac0e03366cdf23be54f2b9",
+    "codex/shell": "5e477c562de33ade10a088ac07d5beb0c2f24a8a19ac501b74662b27f56bbe09",
+    "codex/world": "3281952c548479b5e82934ae38b4c72dbdf6efd2d9bf6abca1f2c7753262e9a5"
+  },
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 12943
+    },
+    {
+      "agent": "claude",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 9181
+    },
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 18614
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 12863
+    }
+  ],
+  "change": "row93-direct wording + config_file_parser program-writes wording",
+  "codex_tokens": 2244530,
+  "commit": "3f4525383ef5d4be741cebf106a98a94ea24411e",
+  "config_digest_smoke": "01454188e63554ac97d32bea0ffab8855c012437daf620f7d311f3e9fe736807",
+  "iteration": 14,
+  "knob": "world_tools_wording+corpus",
+  "native_write_detected": [],
+  "row153": {
+    "claude": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 7
+    },
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 7
+    }
+  },
+  "rows_reused_from": {},
+  "side": "world",
+  "spend_usd_claude": 7.0362,
+  "status": "complete",
+  "summary": {
+    "claude": {
+      "O": -0.2378,
+      "T": 7,
+      "capacity_reruns": 0,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.604,
+        "config_file_parser": -0.238,
+        "effect_composition": -0.331,
+        "error_handling": 0.293,
+        "explicit_dataflow_ssa": -0.245,
+        "json_transform": -0.145,
+        "state_machine_elevator": -0.047
+      },
+      "pass_S": 7,
+      "pass_W": 7,
+      "unclassified": 0
+    },
+    "codex": {
+      "O": -0.0925,
+      "T": 7,
+      "capacity_reruns": 0,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.481,
+        "config_file_parser": 0.028,
+        "effect_composition": -0.092,
+        "error_handling": -0.085,
+        "explicit_dataflow_ssa": -0.032,
+        "json_transform": -0.164,
+        "state_machine_elevator": -0.22
+      },
+      "pass_S": 7,
+      "pass_W": 7,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "config_file_parser",
+    "effect_composition",
+    "error_handling",
+    "explicit_dataflow_ssa",
+    "json_transform",
+    "state_machine_elevator"
+  ],
+  "transcripts": ".ailang/state/floor-smoke-2026-10-15/m4/transcripts/iter-14",
+  "wall_s": 558.8,
+  "world_writes_per_run": {
+    "claude/api_call_json": 1,
+    "claude/config_file_parser": 1,
+    "claude/effect_composition": 1,
+    "claude/error_handling": 2,
+    "claude/explicit_dataflow_ssa": 1,
+    "claude/json_transform": 1,
+    "claude/state_machine_elevator": 1,
+    "codex/api_call_json": 1,
+    "codex/config_file_parser": 1,
+    "codex/effect_composition": 1,
+    "codex/error_handling": 1,
+    "codex/explicit_dataflow_ssa": 1,
+    "codex/json_transform": 1,
+    "codex/state_machine_elevator": 1
+  }
+}

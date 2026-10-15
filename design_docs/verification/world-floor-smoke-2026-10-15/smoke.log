@@ -1,0 +1,97 @@
+canary claude/shell: PASS att=[] 12943 ms
+canary claude/world: PASS att=[] 9181 ms
+claude/world/api_call_json: PASS none 10298 ms $0.40980659999999997 att=[] prov=world r153=0
+claude/shell/api_call_json: PASS none 25996 ms $0.4794730000000001 att=[] prov=None r153=None
+claude/shell/config_file_parser: PASS none 19256 ms $0.470973 att=[] prov=None r153=None
+claude/world/config_file_parser: PASS none 14677 ms $0.42637139999999996 att=[] prov=world r153=0
+claude/world/effect_composition: PASS none 10397 ms $0.41694099999999995 att=[] prov=world r153=0
+claude/shell/effect_composition: PASS none 15534 ms $0.4512278 att=[] prov=None r153=None
+claude/shell/error_handling: PASS none 12415 ms $0.44119980000000003 att=[] prov=None r153=None
+claude/world/error_handling: PASS none 16054 ms $0.4614246 att=[] prov=world r153=0
+claude/world/explicit_dataflow_ssa: PASS none 9244 ms $0.41307259999999996 att=[] prov=world r153=0
+claude/shell/explicit_dataflow_ssa: PASS none 12237 ms $0.4383664 att=[] prov=None r153=None
+claude/shell/json_transform: PASS none 10888 ms $0.4287354 att=[] prov=None r153=None
+claude/world/json_transform: PASS none 9306 ms $0.4132956 att=[] prov=world r153=0
+claude/world/state_machine_elevator: PASS none 13789 ms $0.4337314 att=[] prov=world r153=0
+claude/shell/state_machine_elevator: PASS none 14470 ms $0.44668779999999997 att=[] prov=None r153=None
+canary codex/shell: PASS att=[] 18614 ms
+canary codex/world: PASS att=[] 12863 ms
+codex/world/api_call_json: PASS none 14178 ms $None att=[] prov=world r153=0
+codex/shell/api_call_json: PASS none 27309 ms $None att=[] prov=None r153=None
+codex/shell/config_file_parser: PASS none 25848 ms $None att=[] prov=None r153=None
+codex/world/config_file_parser: PASS none 26578 ms $None att=[] prov=world r153=0
+codex/world/effect_composition: PASS none 19796 ms $None att=[] prov=world r153=0
+codex/shell/effect_composition: PASS none 21813 ms $None att=[] prov=None r153=None
+codex/shell/error_handling: PASS none 19245 ms $None att=[] prov=None r153=None
+codex/world/error_handling: PASS none 17616 ms $None att=[] prov=world r153=0
+codex/world/explicit_dataflow_ssa: PASS none 17708 ms $None att=[] prov=world r153=0
+codex/shell/explicit_dataflow_ssa: PASS none 18298 ms $None att=[] prov=None r153=None
+codex/shell/json_transform: PASS none 25055 ms $None att=[] prov=None r153=None
+codex/world/json_transform: PASS none 20942 ms $None att=[] prov=world r153=0
+codex/world/state_machine_elevator: PASS none 21004 ms $None att=[] prov=world r153=0
+codex/shell/state_machine_elevator: PASS none 26934 ms $None att=[] prov=None r153=None
+{
+ "summary": {
+  "claude": {
+   "T": 7,
+   "pass_S": 7,
+   "pass_W": 7,
+   "delta": 0.0,
+   "O": -0.2378,
+   "o_t": {
+    "api_call_json": -0.604,
+    "config_file_parser": -0.238,
+    "effect_composition": -0.331,
+    "error_handling": 0.293,
+    "explicit_dataflow_ssa": -0.245,
+    "json_transform": -0.145,
+    "state_machine_elevator": -0.047
+   },
+   "harness_faults": {
+    "shell": 0,
+    "world": 0
+   },
+   "capacity_reruns": 0,
+   "unclassified": 0
+  },
+  "codex": {
+   "T": 7,
+   "pass_S": 7,
+   "pass_W": 7,
+   "delta": 0.0,
+   "O": -0.0925,
+   "o_t": {
+    "api_call_json": -0.481,
+    "config_file_parser": 0.028,
+    "effect_composition": -0.092,
+    "error_handling": -0.085,
+    "explicit_dataflow_ssa": -0.032,
+    "json_transform": -0.164,
+    "state_machine_elevator": -0.22
+   },
+   "harness_faults": {
+    "shell": 0,
+    "world": 0
+   },
+   "capacity_reruns": 0,
+   "unclassified": 0
+  }
+ },
+ "row153": {
+  "claude": {
+   "task_runs": 7,
+   "runs_with_callback_timeout": 0,
+   "callback_timeouts": 0,
+   "daemon_deadline_lines": 0
+  },
+  "codex": {
+   "task_runs": 7,
+   "runs_with_callback_timeout": 0,
+   "callback_timeouts": 0,
+   "daemon_deadline_lines": 0
+  }
+ },
+ "spend": 7.0362,
+ "wall_s": 558.8,
+ "status": "complete"
+}
