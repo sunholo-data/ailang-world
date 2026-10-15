@@ -1,0 +1,11 @@
+{
+  "reviewed_commit": "b20bb350cf1d60c9020b4a831be0ae26ad915246",
+  "tracked_count": 4126,
+  "tracked_changes": [],
+  "status": "?? design_docs/verification/world-iter268/record-evaluator-r2.json\n?? design_docs/verification/world-iter268/record-evaluator-r2.md\n?? design_docs/verification/world-iter268/record-evaluator-r2/\n",
+  "report_json_valid": true,
+  "score_arithmetic": true,
+  "local_report_citations_exist": true,
+  "all_commands_terminal": true,
+  "finished_at": "2026-10-15T06:42:28.654992+00:00"
+}

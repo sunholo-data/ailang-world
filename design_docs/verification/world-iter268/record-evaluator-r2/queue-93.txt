@@ -1,0 +1,21 @@
+93. **[PARKED — FINAL ran 2026-10-09 (attended): verdict FAILS — codex overhead +26.6% > +25% (claude passes both tests; codex Δ −1/69 passes); evidence `verification/world-floor-final-2026-10-09/` (PR #240). D-WORLD-70 = A: resumes as a NEW pre-registered attended FINAL after row 174 lands; the bar is unchanged] w-resident-agent-non-inferiority-floor-run** · clause-4 · **THE FLOOR GATE HAS NEVER BEEN
+    RUN AND WAS NOT A QUEUE ROW.** Clause 4 specifies it fully: TWO reference agents from
+    different providers (Claude Code agent mode and codex CLI), paired arms *shell* (native
+    tools) vs *World* (MCP transition tools only), same model, same benchmark set (standard
+    tier), **N≥3 runs per arm**; the floor holds only if BOTH show World pass-rate ≥ shell
+    pass-rate − 2pp AND median wall-clock overhead ≤ +25%. It also specifies the **stability
+    precondition** that decides whether the gate is even valid: a reference agent is
+    gate-eligible only if its SHELL arm completes N≥3 runs with zero harness-fault failures
+    (`api_error` / `resource_limit` / harness classes) and pass-rate range ≤5pp — and if both
+    agents are ineligible the gate **PAUSES for instrumentation**, which is explicitly a
+    measurement problem and NOT a value-park. **THE ITEM:** run the eligibility precondition
+    first and report it separately from the gate outcome; only then run the paired arms.
+    Ordered AFTER the clause-5 demonstration deliberately — clause 4 is the floor, not the
+    value, and a floor measured before there is value to protect measures nothing. motoko is an
+    OPTIONAL third arm, informative and never gate-blocking. · ~1.5d · gated on row 92 for
+    ordering, not for capability · **filed at grooming 2026-09-21 (attended, Mark).** Doc:
+    [`design_docs/planned/w-prove-the-1-0-bar.md`](planned/w-prove-the-1-0-bar.md) — Phase B.
+    **Read §6 before starting**: the eligibility precondition is defined in terms of
+    `error_category`, and `api_error` is the fleet's catch-all for *cause unknown* rather than
+    a model verdict — so the precondition inherits whatever that classifier gets wrong.
+

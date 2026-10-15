@@ -84,7 +84,7 @@
   "record_evaluator": {
     "configured_model": "gpt-6.1-sol",
     "actual": "gpt-6.1-sol",
-    "status": "r1 FAIL; Progress parser defect repaired; awaiting fresh r2 content review",
+    "status": "completed r2 PASS100/0blocking; r1 FAIL76 retained",
     "tokens": "not reported",
     "judge_independence": "same-model-fresh-context FLAG",
     "rounds": [
@@ -92,7 +92,15 @@
         "round": 1,
         "head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
         "verdict": "FAIL",
-        "finding": "R268-REC-B1"
+        "score": 76,
+        "blocking": 1
+      },
+      {
+        "round": 2,
+        "head": "b20bb350cf1d60c9020b4a831be0ae26ad915246",
+        "verdict": "PASS",
+        "score": 100,
+        "blocking": 0
       }
     ]
   }

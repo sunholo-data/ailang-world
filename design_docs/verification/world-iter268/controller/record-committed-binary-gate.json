@@ -1,0 +1,15 @@
+{
+  "head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+  "command": [
+    "bash",
+    "scripts/tracked_binary_gate.sh",
+    "--allow-png",
+    "website/static/img/v1/",
+    "--png-file-cap",
+    "1048576",
+    "--png-dir-cap",
+    "8388608"
+  ],
+  "rc": 0,
+  "wall_seconds": 0.2
+}

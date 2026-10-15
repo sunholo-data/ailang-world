@@ -1,0 +1,2 @@
+178. **[HARNESS] ticket:worktree:native-background-terminal-marker-missing** · **ESCALATED, fleet-owned; blocking none.** First helper add returned path/rc0 but left a pending marker and no directory; no terminal creator was observed, cause unestablished. Fresh helper add plus bounded wait in the same active shell returned ready. Preserve the original branch/status residue; no lock, worktree or driver repair authorized. Fleet message inbox_1792040662419_a05590e2; verification/world-iter268/worktree-launch.txt and worktree-ticket-verified.json. Filed iteration268.
+

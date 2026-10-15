@@ -1,0 +1,171 @@
+[
+  {
+    "name": "ledger",
+    "command": [
+      "bash",
+      "scripts/mission_decisions.sh",
+      "--check",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "seconds": 0.046,
+    "terminal": true
+  },
+  {
+    "name": "open-decisions",
+    "command": [
+      "bash",
+      "scripts/mission_decisions.sh",
+      "--open",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "seconds": 0.039,
+    "terminal": true
+  },
+  {
+    "name": "mission-config",
+    "command": [
+      "bash",
+      "scripts/verify_go.sh",
+      "--mission-config-check"
+    ],
+    "rc": 0,
+    "seconds": 0.047,
+    "terminal": true
+  },
+  {
+    "name": "privacy",
+    "command": [
+      "bash",
+      "scripts/check_no_personal_email.sh"
+    ],
+    "rc": 0,
+    "seconds": 0.675,
+    "terminal": true
+  },
+  {
+    "name": "metadata-diffcheck",
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+      "HEAD",
+      "--",
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/planned"
+    ],
+    "rc": 0,
+    "seconds": 0.044,
+    "terminal": true
+  },
+  {
+    "name": "ignore-control",
+    "command": [
+      "git",
+      "check-ignore",
+      "-v",
+      ".ailang/record-evaluator-control"
+    ],
+    "rc": 0,
+    "seconds": 0.016,
+    "terminal": true
+  },
+  {
+    "name": "ignore-report",
+    "command": [
+      "git",
+      "check-ignore",
+      "-v",
+      "design_docs/verification/world-iter268/record-evaluator-r2.json"
+    ],
+    "rc": 1,
+    "seconds": 0.017,
+    "terminal": true
+  },
+  {
+    "name": "source-pr",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/pulls/267"
+    ],
+    "rc": 0,
+    "seconds": 0.633,
+    "terminal": true
+  },
+  {
+    "name": "source-pr-run",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/actions/runs/38687777190"
+    ],
+    "rc": 0,
+    "seconds": 0.392,
+    "terminal": true
+  },
+  {
+    "name": "source-pr-jobs",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/actions/runs/38687777190/jobs?per_page=100"
+    ],
+    "rc": 0,
+    "seconds": 0.49,
+    "terminal": true
+  },
+  {
+    "name": "source-merge-run",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/actions/runs/38689782525"
+    ],
+    "rc": 0,
+    "seconds": 0.354,
+    "terminal": true
+  },
+  {
+    "name": "source-merge-jobs",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/actions/runs/38689782525/jobs?per_page=100"
+    ],
+    "rc": 0,
+    "seconds": 0.46,
+    "terminal": true
+  },
+  {
+    "name": "releases",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/releases?per_page=100"
+    ],
+    "rc": 0,
+    "seconds": 0.379,
+    "terminal": true
+  },
+  {
+    "name": "candidate-associated-prs",
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/commits/b20bb350cf1d60c9020b4a831be0ae26ad915246/pulls"
+    ],
+    "rc": 1,
+    "seconds": 0.351,
+    "terminal": true
+  }
+]
