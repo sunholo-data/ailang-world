@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 269 | 2026-10-15 | dev RED at Gate 1 → floor `PreregTasks` test selects preregistrations by kind, LANDED `8d4ee0c` (PR #270; judge PASS 93) [PRODUCT-HYGIENE] |
 | 268 | 2026-10-15 | row 150 M2a authenticated demo seed S1 LANDED 420c07e7 (PR #267) [PRODUCT] |
 | 267 | 2026-10-15 | row150 M1b standalone demo approval plan + descriptor LANDED52ae7ff(PR #266) [PRODUCT] |
 | 266 | 2026-10-14 | row 150 unparked on the fleet PNG fix: design r4 + 17-milestone plan + M1a `packages/world-demo` evidence law LANDED `28ff4db` (PR #264) [PRODUCT] |
