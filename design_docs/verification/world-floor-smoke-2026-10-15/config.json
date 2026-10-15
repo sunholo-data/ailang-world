@@ -1,0 +1,42 @@
+{
+  "schema": "row93-floor-config/1",
+  "corpus_commit": "18dc54b12556b4491262a9aeebe63e4cefde968b",
+  "tool_bin": "~/.pinned-ailang-tools/v0.52.1/ailang",
+  "deadline_s": 600,
+  "knobs": {
+    "world_tools_wording": "row93-direct",
+    "claude_isolation": true,
+    "teaching": "full",
+    "codex_mcp_approval": "approve"
+  },
+  "smoke": {
+    "N": 1,
+    "tasks": [
+      "config_file_parser",
+      "json_transform",
+      "state_machine_elevator",
+      "explicit_dataflow_ssa",
+      "error_handling",
+      "effect_composition",
+      "api_call_json"
+    ],
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {
+      "claude": "claude-opus-5-5",
+      "codex": "gpt-6.1-sol"
+    },
+    "claude_max_budget_usd": 5.0
+  },
+  "final": {
+    "N": 3,
+    "tier": "core",
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {
+      "claude": "claude-opus-5-5",
+      "codex": "gpt-6.1-sol"
+    },
+    "claude_max_budget_usd": 5.0
+  }
+}
