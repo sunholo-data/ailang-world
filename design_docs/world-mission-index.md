@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 271 | 2026-10-16 | row 150 M2b demo seed S2 read + S3 test/ai_check stages LANDED `07d1d9f` (PR #273; judge r1 FAIL 66 → r2 PASS 86) [PRODUCT] |
 | 270 | 2026-10-15 | row 114 protocol r4 (D-WORLD-52 premise correction) + Q1 sprint plan; quorum PROCEED N−1; judge PASS 88; execution holds on D-WORLD-76 [PRODUCT] |
 | 269 | 2026-10-15 | dev RED at Gate 1 → floor `PreregTasks` test selects preregistrations by kind, LANDED `8d4ee0c` (PR #270; judge PASS 93) [PRODUCT-HYGIENE] |
 | 268 | 2026-10-15 | row 150 M2a authenticated demo seed S1 LANDED 420c07e7 (PR #267) [PRODUCT] |

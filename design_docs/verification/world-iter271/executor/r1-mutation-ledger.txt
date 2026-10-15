@@ -1,0 +1,17 @@
+M2b-null mutant applied (null guard removed)
+    demo_test.go:692: null report is refused: got failing test report is refused
+--- FAIL: TestDemoSeedRejectsToolReportRefusals (4.12s)
+    --- FAIL: TestDemoSeedRejectsToolReportRefusals/null-report-unit-control (0.00s)
+    --- PASS: TestDemoSeedRejectsToolReportRefusals/real-refusal-arms (4.12s)
+reverted M2b-null
+--- PASS: TestDemoSeedRejectsToolReportRefusals (3.91s)
+    --- PASS: TestDemoSeedRejectsToolReportRefusals/null-report-unit-control (0.00s)
+    --- PASS: TestDemoSeedRejectsToolReportRefusals/real-refusal-arms (3.91s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	4.164s
+M2b-cli-op mutant applied (S3 test op -> ai_check)
+    demo_test.go:654: retained TESTED invocation argv[op] is test: got "ai_check"
+--- FAIL: TestDemoSeedReadTestCheck (4.00s)
+reverted M2b-cli-op
+--- PASS: TestDemoSeedReadTestCheck (4.24s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	4.491s
+restored-identical

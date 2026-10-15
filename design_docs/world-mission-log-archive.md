@@ -20983,3 +20983,92 @@ The "carve-out when every objection carries a fix" path worked as designed: r2's
 **Gate 3b (iteration 226):** head CI on `dde8c52` (the record's follow-through commit, doc-only) went **1/2**: `ailang-code verify gate` success, `go host build + test gate` **failure** in the `-race` leg only — `host/daemon` `TestCommitInvocationReceiptIdentity/A_landed_uncertain_then_B_on_top` got `commit B: 409 HeadConflict` (`commit_budget_test.go:323`), i.e. commit A had not landed when B was posted, under the test's 100 ms `commitBudget`. The same package was `ok` in the same job's non-race leg (91.5 s), the diff touches no Go, and `gh run rerun --failed` (run `37106245605`, attempt 2) was **green**. Recorded as inherited, not caused by this record. It is the same budget-under-`-race` class as row 126 (`TestDispatchDurableDeadline`), and plausibly row 126's "unattributed `host/daemon` `-race` failure". It is a new named instance (zero prior mentions in the charter or log). No queue row was filed this fire: under rule (d) the loop records the observation and does not open side work, and row 126 already owns the class. Job log banked at `~/.ailang/state/world-iter226-go-job.log`.
 
 **Record follow-through, round 2 (iteration 226):** after the rebase onto attended `926990d`, the same independent `sonnet` judge (resumed, separate context, read-only) judged head `dc96ff2` and returned **PASS 93/100, zero blocking**: rebase scope doc-only, D-WORLD-55 row and row 135 byte-unchanged, ledger valid at 42 rows with none OPEN, row 135 not routable (gated on 134), the acknowledgement faithful, and the Gate 3b flake note matched the banked job log. Its notes: the rebased head needs its own SHA-pinned CI before merge (done on the final head); the census now reads `NEXT 1` for row 135, which is gated on 134 by its own text. Verdict banked verbatim in `design_docs/verification/world-iter226/evaluator-r2.md`.
+
+## 227 — 2026-10-03 — no pick: rows 135 and 138 in active attended execution; 140 → 93 → 114 → 139 sequenced behind them (D-WORLD-58); D-WORLD-61 asks positions for rows 136/141 [ADMIN]
+
+**Kind:** bookkeeping-only iteration under the charter's standing rule (d) (D-WORLD-46: BLOCKED MEANS STOP, NOT SIDE WORK). No design doc, plan, code or product acceptance. Doc-only record (STATUS, one OPEN ledger ask, log, index, dashboard), independently judged before merge.
+
+**Pick and why:** NONE. The critical path is now the attended D-WORLD-58 order `135 → 138 → 140 → 93 → 114 → 139 → release`. Clause map, re-measured this fire at `origin/dev` `a266465`: 1 MET · 2 MET · 3 MET · 6 MET · 7 MET · **4 UNMET** · **5 UNMET**.
+- **Row 135** (clause 4, path head): tagged `UN-HELD … next M1–M4`, not `IN-SPRINT`, so on the queue text alone it reads routable. Measured first-party, it is being built attended right now: the main checkout's `.claude/worktrees/` holds an agent worktree on local branch `r135-build` with `d108c42` (M1: `ailang-run` plans stdin/argv/caps), `08c80aa` (M2: handler under per-cap-set policy variants) and `510a67f` (M3: `serve --run-allow-caps …`, four-task e2e), unpushed, clean tree, newest committed ~11:17Z, i.e. minutes before this fire's Gate 2 (11:22Z). Routing it would duplicate live attended work and race it to merge; the iteration-223 lesson (attended wins) applies before the fact, not only at merge.
+- **Row 138** (`NEXT alongside 135`): attended PR #188 (M1+M2, branch `attended/row138-cli-m1m2`, check-runs 2/2 success); same reason.
+- **Row 140**: gated on 135/138 (row text, D-WORLD-58).
+- **Row 93**: the R8 block is gone on dev (`EffectsUnsupported` 0 hits in `host/coordinator/coordinator.go` at `a266465`, after row 134 `f3a90ee`), and M1+M3 landed attended (`a9eb008`, #184); but D-WORLD-58 sequences it after 140, and D-WORLD-55 needs 135 before its FINAL. Not routable now.
+- **Row 114** follows 93; **139** follows 135/138.
+So no D-WORLD-58 row is routable by the loop; rule (d) → block report.
+
+**Drift signal (regroom rule (b)) → `D-WORLD-61` OPEN.** Rows 136 (`w-mcp-effects-unrecorded-is-untyped`, clause-6 +5) and 141 (`w-workspace-project-layouts`, clause-2/4) are gated on nothing, tag an unmet clause, and have no position in the D-WORLD-58 order (141 was filed six minutes after that ruling). The loop asks rather than picks: A (recommended) slot both after 140 and before 93; B after 139; C unranked. Default while unanswered: B. Row 137 (clause 2, MET) is not asked about: rule (e) puts it below the path.
+
+**New since iteration 226 (attended, acknowledged, none re-asked):** `ffb9be8` row-135 design draft; `17f4aa4` D-WORLD-56 (135 held on ailang#1557); `f3a90ee`/`fa0a458` **row 134 LANDED** (#180), IN-SPRINT released; `9fe8cba`, `5d4dd29` row 136, `a9eb008` row 93 M1+M3 (#184), `4412392` row 137, `54a9750` website (#185), `5a5347b` D-WORLD-57 (two pins; developer CLI row 138), `065c6cd` row 139, `12cbb87` row-138 design, `f4a52ec` D-WORLD-58 (dogfood now; row 140 before 1.0; path order), `ed25312` row 141, `8ca352b` D-WORLD-59 (merge #187; Declassify on `Ailang.Run`; 135 un-held), `4119d2a` website (#186), `3b2162d` first dogfood (Daneel #201 → daneel#325), `9c30711` D-WORLD-60 (tag World-made PRs), `a358959` daneel#325 merged, `a266465` row 135 M0 (#187, tool binary → v0.52.1). All on the shared bot identity; classified attended by the `record(attended)`/`docs(attended)` subjects, interactive-session trailers and attended PR branches.
+
+**Gate 0/1:** kill switch armed (`mission-world.disabled` absent); gh = fleet account; billing tripwire CLEAN (presence only). `mission_directives.sh` → 0 allowlisted directives on #159 since 2026-10-03T03:44:40Z (44 comments); watermark unchanged. `mission-world` inbox: 1 unread from `cli` ("AILANG v0.52.1 fixes every upstream ask from World row 134/135") — a release notification, already actioned attended (D-WORLD-59, #187); left unread for the attended session that consumed it. Weekly sweep and rotation not owed (Saturday; #159 created 2026-09-28). Local `dev` 1 behind `origin/dev` (main checkout not touched — it hosts live attended worktrees); state read from origin. Dev CI `success` at `a266465`. Skill drift: the resolved skill and all 12 resources byte-identical to the fleet origin (per-file `cmp`).
+
+**Designer / planner / executor:** not spawned. Gate 2 stopped under rule (d) before routing; there was no pick to route. The build roles for 135/138 belong to the attended session.
+
+**Independent evaluator (record):** REQUIRED. Spawned via the Agent tool on the resolved evaluator lane (`sonnet`, fresh separate context, read-only). Verdict in the follow-through below and banked in `design_docs/verification/world-iter227/`.
+
+**Gate 3b:** no product candidate. The doc-only record lands by PR only after the independent verdict and SHA-pinned head CI; `origin/dev` is re-fetched before merge (attended commits land minutes apart today).
+
+**Routing evidence:** base=a266465b78a72ef77d5206d43618b57ec76d8dee@2026-10-03T11:23:53Z (Gate 4 first write; == Gate 1 base a266465@11:21:57Z). Controller `claude:claude-opus-5-5` (driver routing note: codex over daily ration → planner `opus`, executor `claude:claude-sonnet-5-5`; tok: not reported). Designer/planner/executor: none (no pick). Evaluator `sonnet` via Agent tool (tok: see follow-through). Metered $0.
+
+**Record:** written in a worktree from `origin/dev`. STATUS count 3 → 3 (add 227, rotate 224 to the archive's end; archive grep for the moved stamp = 1); charter +1 line (the D-WORLD-61 ledger row), asserted in-script; ledger `--check` valid, 48 rows, one OPEN. No queue row edited. Manual index row 227 (row 118: no fleet rotate-log for World). Dashboard overwritten (namespaced path).
+
+**Ruled out:** picking 135 (live attended build on `r135-build`, M1–M3 committed); picking 138 (attended PR #188); picking 140/93/114/139 (sequenced by D-WORLD-58); picking 136 or 141 without a position (regroom rule (b): ask, do not pick); picking 137 (clause 2 is MET; rule (e)); pushing, rebasing or merging any attended branch.
+
+**Retro:** one new lesson, and it is the mirror of iteration 223's. Iteration 223 learned that an attended session can claim a row mid-fire and must be caught at the pre-merge re-fetch. This fire found the stronger, earlier signal: **a queue tag is the attended session's last WRITE, not its current activity** — row 135 reads `UN-HELD … next M1–M4` while three of those milestones already exist as unpushed attended commits. The instrument that saw it is `git worktree list` plus each worktree's `git log origin/dev..HEAD` (the main checkout's untracked `.claude/worktrees/` is where the attended harness puts its agents). Recorded here; no skill edit (World cannot edit the shared skill; instance 1 of this exact form). Fifth consecutive block report (223–227), but this one is not a stall: the attended session landed 134, 93 M1+M3 and 135 M0 since 226. Last 20 index rows: HARNESS 0/20. Drift check: no routable UNMET-clause row for the loop, so no DRIFT alarm; D-WORLD-61 is the rule-(b) ask.
+
+**Progress**: World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Goal unmoved by the loop; moved substantially by the attended session (row 134 landed, the clause-4 harness half-built, the path widened to 135 → 138 → 140).
+
+**Next:** the attended session pushes and lands 135 (M1–M3 + attended M4) and 138; then **row 140** (`Workspace.Exec`, needs a design + quorum) is the loop's next routable path row, then 93 (FINAL) → 114 → 139. Mark answers D-WORLD-61 for 136/141.
+
+**Record follow-through (iteration 227):** the independent evaluator (Agent tool, `sonnet`, fresh separate context, read-only, ~29 s, 48,732 subagent tok) judged record commit `52e72a689d35672a36af0da62355e263c0e25aa1` on `a266465` and returned **PASS 90/100, zero blocking**. It measured first-party: record-only scope (5 files); 224 moved byte-identical to the archive's end; ledger valid at 48 rows with only D-WORLD-61 OPEN; the `r135-build` worktree's M1–M3 commits present and absent from origin; PR #188 2/2 green; R8 gone at `a266465`; census and personal-email checks rc=0; no closing keywords. Banked in `design_docs/verification/world-iter227/evaluator-r1.md`.
+
+## 228 — 2026-10-03 — dev RED at Gate 1 → `host/verifygate` ETXTBSY flake fixed and LANDED (`382fd7e`, #194; judge PASS 88) [PRODUCT-HYGIENE]
+
+**Kind:** full inner loop on a Gate-1 red (designer → quorum ×2 → carve-out revision → planner → executor → independent evaluator → merge → merge-CI green).
+
+**Pick and why:** Gate 1 found `origin/dev` `c2476ff` red on `go host build + test gate` (run 37132037850 attempt 1): `TestModuleManifestEmptyEnumerationFailsLoudly` → `fork/exec …/iso/scripts/verify_ail.sh: text file busy`. The parents (`e6064b6`, `78db602`, `901b87c`, `0b18b94`) were green, the red commit is docs-only, and a rerun went green, so the red is an intermittent flake (1 red of 6 dev runs). A red dev outranks the queue, and World owns this repo. Clause map: 1/2/3/6/7 MET; 4 UNMET (135 re-landed attended `e6064b6`; 138 M1+M2 attended #188; 140 next per D-WORLD-58, needing design + quorum); 5 UNMET (114 after 93). The pick moves no unmet clause. The reason is the measured red, not groom position.
+
+**Diagnosis:** this is golang/go#22315. `e6064b6` (#192, the attended verifygate CI-budget fix) put 10 verifygate arms under `t.Parallel()`. Those arms write or rewrite a script and then execve it. Meanwhile another parallel test's fork inherits the write fd, which `O_CLOEXEC` closes only at that child's exec, so the kernel refuses our execve with ETXTBSY. darwin does not enforce this, so the rig cannot reproduce it. The designer measured that darwin allows exec while a writer is open.
+
+**Fix (option C′):** every test-side write in `host/verifygate` holds `syscall.ForkLock.RLock` from open to close. Every fork takes `ForkLock.Lock`, as `forkpipe2.go:45` and `forkpipe.go:25` in go1.26.6 show, so no fork can inherit the fd. That removes the cause, with no retry and no timing, and it also covers shims that bash execs. All 21 write sites are migrated to 4 wrappers. A go/types scan (`TestVerifygateTestWritesAreForkLocked`) bans raw `os.{WriteFile,OpenFile,Create,CreateTemp}` and aliased or dot `os` imports, with floors and 5 known-positive fixtures. A Linux-only kernel control (`TestKernelRefusesExecOfWriterOpenFile`) proves the ETXTBSY premise. A new verbose CI step shows those tests PASS rather than SKIP.
+
+**Quorum:** both rounds BLOCKED, with 3/3 present reviewers rejecting and `gpt6-1-sol` unreachable in both. Measured, not forwarded (rule 3f):
+- R1 gemini said forks take `RLock`. REFUTED: `forkpipe2.go:45` takes `ForkLock.Lock()`, and its comment says the stdlib never takes RLock.
+- R1 kimi said `:564` was not the exec site. REFUTED: it is `runGateAt`'s caller line, reported via `t.Helper`, and the exec is at `runGateAtErr:150`.
+- R1 glm's liveness and provenance gaps were fixed.
+- R2 gemini said `hasWaitingReaders` does not exist. REFUTED: it is at `forkpipe2.go:26/28/52`.
+- R2 glm's O_EXCL worry: the original already uses O_EXCL (l.42), now cited.
+- R2 kimi's go/types scan spec was applied verbatim.
+Because every remaining objection carried a concrete fix and none disputed the direction, a narrow-refinement carve-out revision followed. Quorum spend about $0.54. Artifacts are banked in `design_docs/verification/world-iter228/`.
+
+**Evidence:**
+- Executor gates: `verify_go.sh` rc 0 and `verify_ail.sh` rc 0 at M2/M3; verifygate went 148 → 150 pass + 1 skip on darwin.
+- Executor drills: AC1, AC1b, AC2, AC3, AC4a, AC4b and AC8 were all KILLED, each followed by a byte-identical revert.
+- Judge: PASS 88, zero blocking. Its own mutation table found 6 surviving mutants or gaps in the guard, recorded as row 142.
+- CI on the PR head and on the merge `382fd7e` (run 37138466945) was 2/2 success. The kernel control showed `--- PASS` on Linux both times. Verifygate's race time was 238 s on the PR head and 155 s on the merge, both under the 600 s cap.
+- AC5's throwaway-commit drill on CI was not run. It was substituted by judge mutant E4: running the kernel test where the kernel allows the exec fails with "expected ETXTBSY", so the assertion is live.
+
+**Routing evidence:**
+- Base: Gate 1 base `c2476ff`@15:22:03Z; merge on `c2476ff` (origin had not moved at the pre-merge re-fetch).
+- Controller: `claude:claude-opus-5-5`.
+- Designer: Agent `opus`. The env pin `claude:claude-opus-5-5` resolved `recipe … declared:provider-pin`, and the operator's standing request was the Agent tool, with the same weights. The rotation's next entry is `pi:ollama/glm-5.3:cloud`, but ollama is over ration. 3 runs (author plus 2 revisions); subagent tokens ~96k, ~111k and ~129k cumulative.
+- Planner: Agent `opus` (`agent-tool opus fail-closed:env-pin`; ~65k tokens).
+- Executor: Agent `sonnet`. The pin `claude:claude-sonnet-5-5` resolved as a `recipe`. The Agent spawn was ACCEPTED by the hook (~73k tokens, 36 min).
+- Evaluator: Agent `opus`. The resolver gave `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`, but openrouter is over ration, and the next lane in the chain, `claude:claude-sonnet-4-6`, is the executor's family. Generator≠judge holds (sonnet vs opus); ~79k tokens.
+- Metered spend: quorum about $0.54.
+
+**Ruled out:**
+- Retry on ETXTBSY (A): cannot reach the shims that bash execs, and leaves a residual.
+- `bash <script>` (B): drops the shebang and exec bit from what is tested.
+- A private mutex (C): would need a two-sided protocol.
+- Reverting `t.Parallel` (D): brings back the 600 s overrun that caused `78db602`.
+- Treating the rerun-green as "nothing to do": the flake is real and recurs.
+- Rows 135/138/140: 135 and 138 are attended, and 140 comes after them per D-WORLD-58.
+
+**Side observation (row-114 candidate, not routed):** the executor's first M3 `verify_go.sh` run went red once on `host/projection` `TestMCPToolsInnerBudget` (a 30 ms deadline). `-count=3` and a full re-run were green. That is a second timing flake to watch.
+
+**Retro:** a parallelism change that fixes a CI *budget* can create a *correctness* flake that the PR's own green run cannot see. #192 was green on its head, and the next docs-only commit went red. When a change adds `t.Parallel()`, ask what the tests write and then exec. Instance 1; no skill edit (World cannot edit the shared skill).
+
+**Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Dev de-flaked; goal unmoved by the loop.
+
+**Next:** row 140 (`Workspace.Exec`, design + quorum) once 135/138 are confirmed done or handed back by the attended session. Mark answers D-WORLD-61. Row 142 is hygiene below the critical path.
