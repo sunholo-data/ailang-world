@@ -389,9 +389,11 @@ func TestDemoSeedPreflightRefusals(t *testing.T) {
 				args[3] = filepath.Join(t.TempDir(), "other.db")
 			}
 			if mode == "pin-mismatch" {
-				args[7] = os.Getenv("WORLD_TOOL_AILANG_BIN")
-				if args[7] == "" {
-					t.Fatal("required tool pin absent")
+				// Hash identity must refuse before any version/manifest lookup.
+				// A local regular byte file needs no separate workspace tool.
+				args[7] = filepath.Join(t.TempDir(), "mismatched-interpreter")
+				if e := os.WriteFile(args[7], []byte("mismatched pin fixture: "+r.db), 0600); e != nil {
+					t.Fatal(e)
 				}
 			}
 			if mode == "positional" {
