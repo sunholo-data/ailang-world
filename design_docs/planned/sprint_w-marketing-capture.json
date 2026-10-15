@@ -520,7 +520,7 @@
           "packages/world-demo/README.md",
           "host/coordinator/world_demo_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M1a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M1a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "22 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -629,7 +629,7 @@
           "packages/world-demo/README.md",
           "host/coordinator/world_demo_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M1b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M1b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -773,7 +773,7 @@
           "cmd/ailang-worldd/main.go",
           "docs/QUICKSTART.md"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M2a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -900,7 +900,7 @@
           "cmd/ailang-worldd/demo_test.go",
           "docs/QUICKSTART.md"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M2b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": "TestDemoSeedReadTestCheck needs WORLD_TOOL_AILANG_BIN v0.52.1. Ordinary missing-pin run may SKIP; required milestone acceptance preflight must reject unset pin and require top-level PASS. Bad configured version is FAIL, never skip."
       },
@@ -1022,7 +1022,7 @@
           "cmd/ailang-worldd/demo_proof.go",
           "cmd/ailang-worldd/demo_proof_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M3a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M3a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -1158,7 +1158,7 @@
           "cmd/ailang-worldd/demo_seed.go",
           "cmd/ailang-worldd/demo_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M3b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M3b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "24 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -1246,7 +1246,7 @@
           "cmd/ailang-worldd/demo_seed.go",
           "cmd/ailang-worldd/demo_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M4a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M4a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": "Real approve plan needs AILANG_BIN; preceding read/test/check stages also require WORLD_TOOL_AILANG_BIN. Required gate cannot accept helper SKIP."
       },
@@ -1384,7 +1384,7 @@
           "cmd/ailang-worldd/demo_test.go",
           "cmd/ailang-worldd/why_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M4b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M4b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "26 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -1510,7 +1510,7 @@
           "host/daemon/workbench_packet.go",
           "host/coordinator/world_demo_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M5a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -1665,7 +1665,7 @@
           "host/workbench/render_test.go",
           "host/workbench/live_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M5b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "29 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -1794,7 +1794,7 @@
           "cmd/ailang-worldd/demo_test.go",
           "host/daemon/workbench_packet_evidence_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M5c/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5c/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "23 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -1971,7 +1971,7 @@
           "host/workbench/render_test.go",
           "docs/QUICKSTART.md"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M6/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M6/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -2140,7 +2140,7 @@
           "scripts/marketing_capture.py",
           "scripts/marketingcheck/supervisor_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M7a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": "All four tests are binary-free companions, always run in CI. Any future real-browser supervisor probe requires WORLD_CHROME and these exact companions; fake success proves supervisor only, never visible product content."
       },
@@ -2335,7 +2335,7 @@
           "scripts/marketingcheck/png.go",
           "scripts/marketingcheck/png_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M7b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -2523,7 +2523,7 @@
           "scripts/marketingcheck/capture_test.go",
           "scripts/marketingcheck/observation_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M7c/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": "TestMarketingChromeSixShots needs WORLD_CHROME; TestMarketingCaptureFakeChromeSixShots is its mandatory always-on fake-script companion. Acceptance list includes the real drill but unattended executor runs it only with explicitly supplied browser+measured rectangles; otherwise record DEFERRED/SKIP, never C8 product PASS. Controller owns measured geometry and PD1 correction; do not spend executor time inventing capture layout."
       },
@@ -2665,7 +2665,7 @@
           "cmd/ailang-worldd/demo_test.go",
           "scripts/marketingcheck/docs_test.go"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M8a/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": ""
       },
@@ -2788,7 +2788,7 @@
           "website/static/img/v1/captions.md",
           "docs/marketing-capture-manifest.schema.json"
         ],
-        "directive": "no git write operations; snapshot changed files into .snap/M8b/ after each milestone",
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
         "additional": "Full mandatory gates are paid once here, plus focused/race gates at affected earlier boundaries. CI runs host race checks; daemon alone is ~200s, not a 45s test. Total controller outer bound900s for full build/test,540s per race command. If this boundary exceeds30min report incomplete and split validation from doc corrections without weakening gates."
       },

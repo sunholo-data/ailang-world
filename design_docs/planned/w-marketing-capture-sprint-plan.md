@@ -109,11 +109,11 @@ Seed whole orchestration is supervised with300s bound; source-proof leg90s. Capt
 
 ## C11 observations and mutation discipline
 
-**Snapshot-path correction (iteration267):** charter snapshot guardrail supersedes every .snap/M<k>/ location below. Use $HOME/.ailang/state/world-iter<N>/snap/M<k>/ outside the checkout for source copies and OBS_OUT; never create Go snapshots inside the worktree. Location only changes; gates/protected-file policy do not.
+**Snapshot-path correction (iteration267):** charter snapshot guardrail applies to every milestone directive below, in Markdown and JSON. Use $HOME/.ailang/state/world-iter<N>/snap/M<k>/ outside the checkout for source copies and OBS_OUT; never create Go snapshots inside the worktree. Location only changes; gates/protected-file policy do not.
 
 Protected OBSERVATION uses SHA256 plus newline count on both sides, never writes protected originals. Include recursive tools/launchd subtree (12 paths measured, including testdata). At each run, capture observation before and after, compare sorted path/hash/line triples and scoped read-only diff. Preserve initial sprint observation for final comparison; any inherited difference is a finding, not permission to restore. The copied-input comparator mutation lives in TestMarketingProtectedObservationComparator; inventory mutation makes a genuine extra commit in a disposable test store.
 
-Exact per-boundary observation command (run before/after with OBS_OUT naming only a .snap file):
+Exact per-boundary observation command (run before/after with OBS_OUT naming a file under the external snapshot directory):
 
 ```sh
 python3 - <<'PY' > "$OBS_OUT"
@@ -219,7 +219,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M1a and its scratch snapshots. Repository gates: AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh. 
 
-**no git write operations; snapshot changed files into .snap/M1a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M1a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M1b — Convention-v2 approval plan, descriptor and package docs
 
@@ -273,7 +273,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M1b and its scratch snapshots. Repository gates: AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh. 
 
-**no git write operations; snapshot changed files into .snap/M1b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M1b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M2a — Demo CLI, preflight and authenticated domain commits
 
@@ -332,7 +332,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M2a and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M2a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M2b — Real read and tool test/check invocation stages
 
@@ -388,7 +388,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M2b and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). TestDemoSeedReadTestCheck needs WORLD_TOOL_AILANG_BIN v0.52.1. Ordinary missing-pin run may SKIP; required milestone acceptance preflight must reject unset pin and require top-level PASS. Bad configured version is FAIL, never skip.
 
-**no git write operations; snapshot changed files into .snap/M2b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M3a — HTTP proof adapters and real producer success
 
@@ -440,7 +440,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M3a and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M3a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M3a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M3b — Proof/key refusals and seed S4 integration
 
@@ -497,7 +497,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M3b and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M3b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M3b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M4a — Real approval transition, packet anchoring and budget delta
 
@@ -549,7 +549,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M4a and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). Real approve plan needs AILANG_BIN; preceding read/test/check stages also require WORLD_TOOL_AILANG_BIN. Required gate cannot accept helper SKIP.
 
-**no git write operations; snapshot changed files into .snap/M4a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M4a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M4b — Complete why validation and public manifest assembly
 
@@ -607,7 +607,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M4b and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M4b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M4b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M5a — Bounded anchored roster, ATTESTED and authored CLAIMED
 
@@ -665,7 +665,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M5a and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M5a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M5b — TESTED/PROVEN resolution and truthful roster rendering
 
@@ -731,7 +731,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M5b and its scratch snapshots. Repository gates: go test -race ./host/workbench -count=1 -timeout 120s. 
 
-**no git write operations; snapshot changed files into .snap/M5b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M5c — Seed roster validation and success manifest publication
 
@@ -785,7 +785,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M5c and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M5c/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5c/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M6 — Still serve flag and stable complete server HTML
 
@@ -854,7 +854,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M6 and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M6/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M6/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M7a — Bounded supervisor with mandatory fake Chrome companions
 
@@ -914,7 +914,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M7a and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). All four tests are binary-free companions, always run in CI. Any future real-browser supervisor probe requires WORLD_CHROME and these exact companions; fake success proves supervisor only, never visible product content.
 
-**no git write operations; snapshot changed files into .snap/M7a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M7b — PNG structure, decoded content and exact two-pass verifier
 
@@ -982,7 +982,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M7b and its scratch snapshots. Repository gates: go test -race ./scripts/marketingcheck -count=1 -timeout 180s. 
 
-**no git write operations; snapshot changed files into .snap/M7b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M7c — Capture orchestration, frozen inventories and Chrome drill
 
@@ -1047,7 +1047,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M7c and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). TestMarketingChromeSixShots needs WORLD_CHROME; TestMarketingCaptureFakeChromeSixShots is its mandatory always-on fake-script companion. Acceptance list includes the real drill but unattended executor runs it only with explicitly supplied browser+measured rectangles; otherwise record DEFERRED/SKIP, never C8 product PASS. Controller owns measured geometry and PD1 correction; do not spend executor time inventing capture layout.
 
-**no git write operations; snapshot changed files into .snap/M7c/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M8a — Reproduction docs, captions and release manifest schema
 
@@ -1106,7 +1106,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M8a and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). 
 
-**no git write operations; snapshot changed files into .snap/M8a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8a/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## M8b — Final repository gates and protected-path observation
 
@@ -1161,7 +1161,7 @@ New named tests/source modules are future implementation, absent at base; no bas
 
 Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M8b and its scratch snapshots. Repository gates: AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh; go build ./... && go test ./... -count=1 -timeout 600s; go test -race ./host/daemon -count=1 -timeout 480s; go test -race ./host/coordinator ./host/workbench ./host/evidence ./scripts/marketingcheck -count=1 -timeout 480s. Full mandatory gates are paid once here, plus focused/race gates at affected earlier boundaries. CI runs host race checks; daemon alone is ~200s, not a 45s test. Total controller outer bound900s for full build/test,540s per race command. If this boundary exceeds30min report incomplete and split validation from doc corrections without weakening gates.
 
-**no git write operations; snapshot changed files into .snap/M8b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
 ## Final disposition
 

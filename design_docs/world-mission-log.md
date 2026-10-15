@@ -1843,3 +1843,5 @@ Rule (d) applies again: no row picked, no side work, and no new ask (D-WORLD-73 
 **Progress:** World 1.0: clauses4/5 UNMET; 1/2/3/6/7 MET — goal unmoved. Release row150 advanced to2/17 milestones.
 
 **Next:** row150 M2a then M2b→M3a in dependency order. Row93 next step attended;177 below critical/release work. D-WORLD-75 defaultA keeps later work moving; release captures remain attended.
+
+**Record review r1 correction:** independent judge blocked candidate0338b57 because the external snapshot correction had not reached all machine directives. Corrected all17 Markdown milestone snapshot directives, all17 sprint JSON executor directives and the common OBS_OUT instruction; no inside-tree snapshot directive remains in either live plan artifact. Only path guidance changed; 2 completed/15 pending statuses, source, protected files, ledger and product verdict unchanged. The revised record returns to the independent judge.
