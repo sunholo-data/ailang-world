@@ -196,12 +196,20 @@ class PreregTasks(unittest.TestCase):
     def test_reads_the_draft_this_harness_writes(self):
         drafts = glob.glob(os.path.join(run.REPO, 'design_docs', 'verification', 'world-floor-*', 'preregistration*.json'))
         self.assertTrue(drafts)
+        selected, skipped = [], []
         for p in drafts:
             with open(p) as f:
                 pre = json.load(f)
+            if pre.get('kind') != run.PREREG_KIND:
+                # Quorum fold-in Q1: a skipped file must not look like a FINAL prereg.
+                self.assertNotIn('live_config', pre, p)
+                skipped.append(p)
+                continue
+            selected.append(p)
             tasks = report.prereg_tasks(pre)
             self.assertEqual(len(tasks), 23, p)
-            self.assertEqual(sorted(tasks), sorted(pre['live_config']['corpus']['tasks']))
+            self.assertEqual(sorted(tasks), sorted(pre['live_config']['corpus']['tasks']), p)
+        self.assertGreaterEqual(len(selected), 4, (selected, skipped))
 
     def test_refuses_an_empty_prereg(self):
         with self.assertRaises(SystemExit):
