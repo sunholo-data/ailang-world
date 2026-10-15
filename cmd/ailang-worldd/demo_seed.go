@@ -222,6 +222,11 @@ func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
 		observed = commit.NextWorld.Ref
 		prev = commit.Entry.EntryHash
 	}
+	// S2/S3 run after S1 is recorded. A refusal keeps S1 on record and never
+	// writes a manifest; the caller's S2-S6 boundary text stays truthful.
+	if _, err := demoRunToolStages(ctx, c, token, source); err != nil {
+		return fmt.Errorf("S1 domain commits recorded; S2/S3 refused: %v; S2-S6 incomplete; no success manifest written", err)
+	}
 	return nil
 }
 func demoDomainObjects(source []byte) []demoObject {
@@ -250,4 +255,219 @@ func demoMakeCommit(o demoObject, index, epoch int64, interpreter, observed, pre
 		StateRoot, LogHead string
 	}{index, state, entryHash})
 	return demoCommit{ObservedHead: observed, Objects: []demoObject{o}, NextWorld: wireWorld{Ref: hashref.SumSHA256(worldBytes).String(), Revision: index, StateRoot: state, LogHead: entryHash}, Entry: wireEntry{Header: header, EntryHash: entryHash, TransitionRef: o.Hash}}
+}
+
+// S2/S3 (M2b): read and tool test/check stages dispatched through the real
+// /a2a/ endpoint. The seed holds no tool binary and launches no subprocess;
+// every invocation is the daemon's (sole-writer) work and is retained by ID.
+const (
+	demoLogepochPath = "world/logepoch.ail"
+	demoReadTask     = "demo-read"
+	demoTestTask     = "demo-test"
+	demoCheckTask    = "demo-check"
+)
+
+// demoToolRun is one retained A2A invocation: the daemon's invocation ID,
+// the world effect record reference, and the CLI result it carried.
+type demoToolRun struct {
+	Task         string   `json:"task"`
+	Skill        string   `json:"skill"`
+	Op           string   `json:"op,omitempty"`
+	InvocationID string   `json:"invocationId"`
+	EffectRecord string   `json:"effectRecord"`
+	Content      string   `json:"content,omitempty"`
+	Argv         []string `json:"argv,omitempty"`
+	ExitCode     int      `json:"exitCode"`
+	OK           bool     `json:"ok"`
+	Stdout       string   `json:"stdout,omitempty"`
+	Stderr       string   `json:"stderr,omitempty"`
+}
+
+type demoToolStages struct {
+	Read, Test, Check demoToolRun
+}
+
+// demoTestReport is the subset of `ailang test --json` the seed
+// relies on. The validator decides; it never trusts a bare success flag alone.
+type demoTestReport struct {
+	Success      bool `json:"success"`
+	Passed       int  `json:"passed_tests"`
+	Failed       int  `json:"failed_tests"`
+	Skipped      int  `json:"skipped_tests"`
+	VacuousSkips int  `json:"vacuous_skips"`
+}
+
+// demoValidateTestReport refuses a null, failing, skipped, vacuous or
+// zero-pass report. The null check decodes into a pointer first so it stays a
+// named refusal rather than falling out of the zero-value checks below.
+func demoValidateTestReport(stdout string) (demoTestReport, error) {
+	var probe *demoTestReport
+	if err := json.Unmarshal([]byte(stdout), &probe); err != nil {
+		return demoTestReport{}, fmt.Errorf("test report is not JSON: %w", err)
+	}
+	if probe == nil {
+		return demoTestReport{}, fmt.Errorf("null report is refused")
+	}
+	var rep demoTestReport
+	if err := json.Unmarshal([]byte(stdout), &rep); err != nil {
+		return demoTestReport{}, fmt.Errorf("test report is not JSON: %w", err)
+	}
+	switch {
+	case !rep.Success || rep.Failed != 0:
+		return rep, fmt.Errorf("failing test report is refused")
+	case rep.Skipped != 0 || rep.VacuousSkips != 0:
+		return rep, fmt.Errorf("skipped or vacuous tests are refused")
+	case rep.Passed == 0:
+		return rep, fmt.Errorf("zero named passes are refused")
+	}
+	return rep, nil
+}
+
+// demoA2ASend dispatches one tasks/send over real /a2a/ and returns the
+// retained run plus the artifact data. Any non-completed task is a refusal.
+func demoA2ASend(ctx context.Context, c *client, token, task, skill string, data map[string]any) (demoToolRun, map[string]any, error) {
+	run := demoToolRun{Task: task, Skill: skill}
+	body, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 9, "method": "tasks/send", "params": map[string]any{
+		"id": task, "metadata": map[string]any{"skill_id": skill},
+		"message": map[string]any{"role": "user", "parts": []any{map[string]any{"type": "data", "data": data}}}}})
+	if err != nil {
+		return run, nil, err
+	}
+	status, raw, err := c.doAuth(ctx, "POST", "/a2a/", bytes.NewReader(body), "Bearer "+token)
+	if err != nil {
+		return run, nil, fmt.Errorf("%s dispatch outcome uncertain; inspect history, never retry automatically", task)
+	}
+	var wire struct {
+		Result *struct {
+			Status    struct{ State string } `json:"status"`
+			Artifacts []struct {
+				Parts []struct {
+					Data map[string]any `json:"data"`
+				} `json:"parts"`
+			} `json:"artifacts"`
+			Metadata map[string]any `json:"metadata"`
+		} `json:"result"`
+		Error any `json:"error"`
+	}
+	if status != 200 || json.Unmarshal(raw, &wire) != nil || wire.Error != nil || wire.Result == nil ||
+		wire.Result.Status.State != "completed" || len(wire.Result.Artifacts) != 1 || len(wire.Result.Artifacts[0].Parts) != 1 {
+		return run, nil, fmt.Errorf("%s: tasks/send refused (HTTP %d)", task, status)
+	}
+	out := wire.Result.Artifacts[0].Parts[0].Data
+	run.InvocationID, _ = wire.Result.Metadata["invocation_id"].(string)
+	run.EffectRecord = demoEffectRecord(out)
+	if run.InvocationID == "" || run.EffectRecord == "" {
+		return run, nil, fmt.Errorf("%s: invocation or effect record reference absent", task)
+	}
+	return run, out, nil
+}
+
+// demoEffectRecord returns world.effects[0].record of a tool output, or "".
+func demoEffectRecord(out map[string]any) string {
+	w, _ := out["world"].(map[string]any)
+	effects, _ := w["effects"].([]any)
+	if len(effects) != 1 {
+		return ""
+	}
+	e, _ := effects[0].(map[string]any)
+	rec, _ := e["record"].(string)
+	return rec
+}
+
+func demoFillCLI(run *demoToolRun, out map[string]any) {
+	if raw, ok := out["argv"].([]any); ok {
+		for _, a := range raw {
+			s, _ := a.(string)
+			run.Argv = append(run.Argv, s)
+		}
+	}
+	if code, ok := out["exit_code"].(float64); ok {
+		run.ExitCode = int(code)
+	}
+	run.OK, _ = out["ok"].(bool)
+	run.Stdout, _ = out["stdout"].(string)
+	run.Stderr, _ = out["stderr"].(string)
+}
+
+// demoTestStage runs the S3 test (op "test") or check (op "ai_check") through
+// the ailang-cli skill. The op is retained before any dispatch, so a refused
+// op is still on record.
+func demoTestStage(ctx context.Context, c *client, token, task, op, path string) (demoToolRun, error) {
+	run := demoToolRun{Task: task, Skill: "ailang-cli", Op: op}
+	if op != "test" && op != "ai_check" {
+		return run, fmt.Errorf("refuses unlisted op %q", op)
+	}
+	data := map[string]any{"op": op, "path": path}
+	if op == "test" {
+		data["flags"] = map[string]any{"json": ""}
+	}
+	call, out, err := demoA2ASend(ctx, c, token, task, "ailang-cli", data)
+	if err != nil {
+		return run, err
+	}
+	call.Op = op
+	demoFillCLI(&call, out)
+	if !call.OK || call.ExitCode != 0 {
+		return call, fmt.Errorf("%s: CLI refused or exited %d", task, call.ExitCode)
+	}
+	return call, nil
+}
+
+// demoRunToolStages executes S2 (read, bytes must equal the committed source)
+// and S3 (test then ai_check). It stops at the first refusal.
+func demoRunToolStages(ctx context.Context, c *client, token string, source []byte) (demoToolStages, error) {
+	var s demoToolStages
+	read, out, err := demoA2ASend(ctx, c, token, demoReadTask, "ailang-read", map[string]any{"path": demoLogepochPath})
+	if err != nil {
+		return s, err
+	}
+	read.Content, _ = out["content"].(string)
+	s.Read = read
+	if read.Content != string(source) {
+		return s, fmt.Errorf("S2 read bytes differ from committed %s", demoLogepochPath)
+	}
+	s.Test, err = demoTestStage(ctx, c, token, demoTestTask, "test", demoLogepochPath)
+	if err != nil {
+		return s, err
+	}
+	if _, err = demoValidateTestReport(s.Test.Stdout); err != nil {
+		return s, err
+	}
+	s.Check, err = demoTestStage(ctx, c, token, demoCheckTask, "ai_check", demoLogepochPath)
+	if err != nil {
+		return s, err
+	}
+	return s, demoValidateAICheck(s.Check.Stdout)
+}
+
+// demoValidateAICheck requires a non-null ai_check object whose check passed
+// and whose verifier ran with at least one verified function and no failures.
+func demoValidateAICheck(stdout string) error {
+	var probe *map[string]any
+	if err := json.Unmarshal([]byte(stdout), &probe); err != nil {
+		return fmt.Errorf("ai_check output is not JSON: %w", err)
+	}
+	if probe == nil {
+		return fmt.Errorf("null ai_check report is refused")
+	}
+	var rep struct {
+		Check struct {
+			Passed     bool `json:"passed"`
+			ErrorCount int  `json:"error_count"`
+		} `json:"check"`
+		Verify struct {
+			Available      bool `json:"available"`
+			Verified       int  `json:"verified"`
+			Counterexample int  `json:"counterexample"`
+			Errors         int  `json:"errors"`
+		} `json:"verify"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &rep); err != nil {
+		return fmt.Errorf("ai_check output is not JSON: %w", err)
+	}
+	if !rep.Check.Passed || rep.Check.ErrorCount != 0 || !rep.Verify.Available || rep.Verify.Verified == 0 ||
+		rep.Verify.Counterexample != 0 || rep.Verify.Errors != 0 {
+		return fmt.Errorf("ai_check did not succeed")
+	}
+	return nil
 }

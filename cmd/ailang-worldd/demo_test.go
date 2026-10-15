@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -518,5 +519,214 @@ func TestDemoSeedCommitFailures(t *testing.T) {
 				t.Fatal("refused commit wrote manifest")
 			}
 		})
+	}
+}
+
+// M2b (row 150): S2 read and S3 test/check through real /a2a/ on a daemon
+// serving the published se-tools package, episode "demo".
+
+// requireBinaryRelease fails (never skips) when a configured binary reports
+// the wrong release.
+func requireBinaryRelease(t *testing.T, bin, want string) {
+	t.Helper()
+	out, err := exec.CommandContext(boundedTestContext(t), bin, "--version").Output()
+	if err != nil || !strings.Contains(string(out), want) {
+		t.Fatalf("%s --version = %q (%v), want release %s", bin, out, err, want)
+	}
+}
+
+type demoSeRig struct {
+	url, db, token, ws string
+}
+
+func newDemoSeRig(t *testing.T, interp, tool string) demoSeRig {
+	t.Helper()
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, ws, corpus := filepath.Join(base, "state", "world.db"), filepath.Join(base, "ws"), filepath.Join(base, "outside", "corpus")
+	for _, d := range []string{filepath.Dir(db), filepath.Join(ws, "demo", "world"), filepath.Join(corpus, "runnable")} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	source, err := os.ReadFile(filepath.Join("..", "..", demoLogepochPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(ws, "demo", demoLogepochPath), source, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writeFileT(t, filepath.Join(corpus, "manifest.json"), `{"examples":[]}`+"\n")
+	cfg := daemon.Config{DBPath: db, BindHost: daemon.DefaultBindHost, AilangBin: interp, WorkspaceRoot: ws,
+		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: io.Discard}
+	d, err := daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New: %v", err)
+	}
+	srv := httptest.NewServer(d.Handler())
+	_, body, err := newClient(srv.URL).get("/v1/health")
+	srv.Close()
+	if cerr := d.Close(); err != nil || cerr != nil {
+		t.Fatalf("health %v close %v", err, cerr)
+	}
+	var h healthInfo
+	if json.Unmarshal([]byte(body), &h) != nil || h.InterpreterRef == "" {
+		t.Fatalf("health = %s", body)
+	}
+	st, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	interpRef := hashref.MustParse(h.InterpreterRef)
+	// A selected world is required before any tool call; a genesis commit
+	// stands in for the demo's S1 domain commits (as in cliwalk_e2e_test).
+	obj := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
+		SemanticID: "test/genesis", Provenance: "demo_test", Payload: []byte("genesis-state")}
+	entryHash := hashref.SumSHA256([]byte("genesis-entry"))
+	w := store.World{Ref: hashref.SumSHA256([]byte("genesis-world")), Revision: 0, StateRoot: obj.Hash, LogHead: entryHash}
+	if err := st.Commit(boundedTestContext(t), store.Commit{Objects: []store.Object{obj}, NextWorld: w, Entry: store.LogEntry{Header: store.LogHeader{
+		EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")), Interpreter: interpRef,
+		PrevEntryHash: hashref.SumSHA256([]byte("genesis-prev")), WrittenBy: "demo_test"}, EntryHash: entryHash, TransitionRef: obj.Hash}}); err != nil {
+		t.Fatalf("genesis: %v", err)
+	}
+	publishSeToolsCLI(t, st, db, interpRef)
+	now := time.Now().Unix()
+	var grants []broker.Capability
+	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectAilangCLI} {
+		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+	}
+	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "demo", grants, 3600, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatal(err)
+	}
+	d, err = daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New (serve): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+	t.Cleanup(func() {
+		srv.Close()
+		_ = d.Close()
+	})
+	return demoSeRig{url: srv.URL, db: db, token: tok, ws: ws}
+}
+
+// demoSpend reads the episode's per-effect spend through the read-only view.
+func demoSpend(t *testing.T, db string) map[store.EffectKey]int64 {
+	t.Helper()
+	ro, err := store.OpenReadOnly(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ro.Close()
+	spend, err := ro.EffectSpend(boundedTestContext(t), "demo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[store.EffectKey]int64{}
+	for k, v := range spend {
+		out[k] = int64(v)
+	}
+	return out
+}
+
+func TestDemoSeedReadTestCheck(t *testing.T) {
+	interp, tool := cliSeBins(t)
+	requireBinaryRelease(t, interp, "v0.41.0")
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+	r := newDemoSeRig(t, interp, tool)
+	source, err := os.ReadFile(filepath.Join("..", "..", demoLogepochPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := demoSpend(t, r.db)
+	stages, err := demoRunToolStages(boundedTestContext(t), newClient(r.url), r.token, source)
+	after := demoSpend(t, r.db)
+	if stages.Read.Content != string(source) {
+		t.Fatalf("S2 read bytes differ from the committed %s: got %d bytes %.160q (err %v)", demoLogepochPath, len(stages.Read.Content), stages.Read.Content, err)
+	}
+	if stages.Test.Op != "test" {
+		t.Fatalf("retained TESTED invocation argv[op] is test: got %q", stages.Test.Op)
+	}
+	if err != nil {
+		t.Fatalf("S3 stages: %v (test %+v)", err, stages.Test)
+	}
+	if !strings.Contains(strings.Join(stages.Test.Argv, " "), "test") || stages.Test.ExitCode != 0 {
+		t.Fatalf("test argv/exit = %v %d", stages.Test.Argv, stages.Test.ExitCode)
+	}
+	rep, err := demoValidateTestReport(stages.Test.Stdout)
+	if err != nil || rep.Passed == 0 {
+		t.Fatalf("test report: %+v %v", rep, err)
+	}
+	if stages.Check.Op != "ai_check" || stages.Check.ExitCode != 0 {
+		t.Fatalf("ai_check result = %+v", stages.Check)
+	}
+	if err := demoValidateAICheck(stages.Check.Stdout); err != nil {
+		t.Fatalf("ai_check actual success: %v", err)
+	}
+	for _, run := range []demoToolRun{stages.Read, stages.Test, stages.Check} {
+		if run.InvocationID == "" || run.EffectRecord == "" {
+			t.Fatalf("%s lacks retained invocation/effect refs: %+v", run.Task, run)
+		}
+	}
+	if d := after[store.EffectKey{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope}] - before[store.EffectKey{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope}]; d != 1 {
+		t.Fatalf("Workspace.Read budget delta = %d, want 1", d)
+	}
+	if d := after[store.EffectKey{Effect: broker.EffectAilangCLI, Scope: broker.WorkspaceScope}] - before[store.EffectKey{Effect: broker.EffectAilangCLI, Scope: broker.WorkspaceScope}]; d != 2 {
+		t.Fatalf("Ailang.CLI budget delta = %d, want 2 (test + ai_check)", d)
+	}
+}
+
+// TestDemoSeedRejectsToolReportRefusals: the null-report control runs with no
+// pin (unit control); the real arms need both pins and must refuse.
+func TestDemoSeedRejectsToolReportRefusals(t *testing.T) {
+	// Unit control: runs with no pin, so ordinary CI exercises it (PASS).
+	t.Run("null-report-unit-control", func(t *testing.T) {
+		_, err := demoValidateTestReport("null")
+		if err == nil || !strings.Contains(err.Error(), "null report is refused") {
+			t.Fatalf("null report is refused: got %v", err)
+		}
+	})
+	// Real arms need both pins; ordinary CI skips this subtest only.
+	t.Run("real-refusal-arms", testDemoRealRefusalArms)
+}
+
+func testDemoRealRefusalArms(t *testing.T) {
+	interp, tool := cliSeBins(t)
+	requireBinaryRelease(t, interp, "v0.41.0")
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+	r := newDemoSeRig(t, interp, tool)
+	bad := filepath.Join(r.ws, "demo", "bad")
+	if err := os.MkdirAll(bad, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFileT(t, filepath.Join(bad, "malformed.ail"), "module broken {\n")
+	contracts, err := os.ReadFile(filepath.Join("..", "..", "world", "contracts.ail"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFileT(t, filepath.Join(bad, "nogen.ail"), string(contracts))
+	ctx := boundedTestContext(t)
+	c := newClient(r.url)
+	if _, err := demoTestStage(ctx, c, r.token, demoTestTask, "ai_check", "bad/malformed.ail"); err == nil {
+		t.Fatal("non-test op must be refused")
+	}
+	for _, p := range []string{"bad/malformed.ail", "bad/nogen.ail"} {
+		run, err := demoTestStage(ctx, c, r.token, demoTestTask, "test", p)
+		if err == nil {
+			_, err = demoValidateTestReport(run.Stdout)
+		}
+		if err == nil {
+			t.Fatalf("%s: real refusal arm was accepted: %+v", p, run)
+		}
+	}
+	stages, err := demoRunToolStages(ctx, c, r.token, []byte("not the committed source"))
+	if err == nil || stages.Read.Content == "" {
+		t.Fatalf("read bytes mismatch must refuse after S2: %v", err)
 	}
 }
