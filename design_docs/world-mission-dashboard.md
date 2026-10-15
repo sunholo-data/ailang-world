@@ -6,7 +6,7 @@
 - **Quorum:** PROCEED at 1 of 3 external reviewers (gemini-4-argon). The ollama seats (weekly limit) and the OpenAI seat (no credits) were absent, each re-run alone and still absent.
 - **Validation:** PR CI 38753577882 2/2; merge CI 38757121367 2/2 on `8d4ee0c`. Dev is green.
 - **Row 150:** 3/17 complete; NEXT M2b, then M3a in dependency order.
-- **Clauses:** 1/2/3/6/7 MET; 4 UNMET (row 93 attended FINAL — paired run 2 was executing during this fire); 5 UNMET (114 after a passing FINAL, 139 after 114). Goal unmoved.
+- **Clauses:** 1/2/3/6/7 MET; 4 UNMET as charter-tagged, but the attended FINAL verdict **HOLDS** landed mid-fire (`91ada43`, Δ 0 both agents) and the attended session records the clause-4 call; 5 UNMET (114 after a passing FINAL, 139 after 114). Next fire: re-read row 93, then 114 if the FINAL counts as passing.
 - **Parked on Mark:** D-WORLD-75 unchanged (A = frozen-store capture determinism, recommended/default; B = fresh-seed equality first). Tooling can continue.
 - **Attended:** row 93 FINAL; production descriptor publish, session mint and final release capture. No release performed.
 - **Follow-ups:** 177 and 179 sit below critical/release work; 178 and 129 stay fleet-owned; 180 = this landing (two non-blocking notes).

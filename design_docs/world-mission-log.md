@@ -1854,4 +1854,6 @@ Immutable reports and raw logs are banked under `verification/world-iter268/`. S
 
 **Progress**: World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET — goal unmoved. Dev green restored for every subsequent PR.
 
-**Next:** row 150 M2b, then M3a. Row 93's next step is attended (FINAL paired run in flight). D-WORLD-75 default A unchanged.
+**Mid-fire (attended):** after this fix merged, the attended session landed `91ada43`: row 93 FINAL (2026-10-15) Phase 2 verdict **HOLDS**, with Δ 0 for both agents (69/69 vs 69/69), O claude −17.9% and codex −5.7%, 414/414 graded cells PASS, 0 harness faults and 18/18 canaries. It changes no charter text. Row 93's tag and the clause-4 call are the attended session's to record, so this record leaves both as charter-tagged. **Record PR CI:** run 38760030176 attempt 1 failed the go job only on `verify_go.sh: FATAL: -race leg timed out after 600s` (every finished package `ok`; diff vs `8d4ee0c` is docs-only). Attempt 2 on the byte-identical tree passed, so it was a slow-runner flake.
+
+**Next:** re-read row 93 / clause 4 first. If the attended record marks the FINAL as passing, row 114 (sequenced after a passing FINAL) is the critical-path pick. Otherwise row 150 M2b, then M3a. D-WORLD-75 default A unchanged.
