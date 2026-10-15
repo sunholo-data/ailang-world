@@ -1,5 +1,3 @@
-Attended2026-10-11 continuation: row174 M1 PASS86/full gates; M2 UNRUN. See `verification/world-row174-followup-2026-10-11/CONTINUE.md` and appended attended log entry. No scheduled iteration number consumed.
-
 # world-mission — ITERATION INDEX
 
 One line per iteration, newest first, covering the live log AND the archive.
@@ -14,25 +12,26 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 267 | 2026-10-15 | row150 M1b approval/descriptor LANDED52ae7ff(PR266); native four roles, REQUIRED fresh-context Sol evaluator PASS90 (Sonnet unsupported FLAG); full local/PR/merge CI green; supporting output-schema survivor separately queued177 [PRODUCT] |
-| 266 | 2026-10-14 | fleet PNG fix (`2d14dbd`) unparked row 150: design r4 (codex designer; quorum r3 BLOCKED → controller carve-out + Chrome 155/colour/real-capture measurements), 17-milestone plan, M1a `packages/world-demo` evidence law LANDED `28ff4db` (PR #264, judge sonnet PASS 88); D-WORLD-75 filed [PRODUCT] |
-| 265 | 2026-10-14 | rule-(d) no-pick record (`e7edffa`), then Mark's mid-fire attended D-WORLD-73 = A → row 176 LANDED `8511bad` (PR #261): daemon binds `Human.Approve`, serialized daemon-wide; codex executor, controller-corrected AC8 (world-head conflict), judge sonnet PASS 90 [PRODUCT] |
-| 264 | 2026-10-14 | NO PICK (rule (d)), 8th idle fire in a row: nothing moved since 263 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 263 | 2026-10-14 | NO PICK (rule (d)), 7th idle fire in a row: nothing moved since 262 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 262 | 2026-10-14 | NO PICK (rule (d)), 6th idle fire in a row: nothing moved since 261 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 261 | 2026-10-14 | NO PICK (rule (d)), 5th idle fire in a row: nothing moved since 260 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 260 | 2026-10-13 | NO PICK (rule (d)), 4th idle fire in a row: nothing moved since 259 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 259 | 2026-10-13 | NO PICK (rule (d)), 3rd idle fire in a row: nothing moved since 258 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open, no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 258 | 2026-10-13 | NO PICK (rule (d)): nothing moved since 257 — D-WORLD-73 OPEN (row 176), fleet PNG ticket open with no `harness-resolved` reply (row 150), row 93 FINAL attended [ADMIN] |
-| 257 | 2026-10-13 | NO PICK (rule (d)): D-WORLD-69 path's last row 150 still blocked on fleet row 173; PNG-gate ticket had left the fleet queue unresolved → re-filed `inbox_1791881840796_78032a58`; row 120 closed as already fixed by attended `c2476ff`; D-WORLD-73 OPEN [ADMIN] |
-| 256 | 2026-10-13 | row 172 LANDED `d36b148`: coordinator mints `world/decision-packet/v1` on the effectful Human.Approve commit + validated object-page projection; daemon binding split to row 176, PARKED on D-WORLD-73 (resumes orphan 255); judge sonnet PASS 86→92 [PRODUCT] |
-| 255 | 2026-10-13 | ORPHAN (STALL-killed rc=143 at gate-3, foreground planner >40 min): row 172 design `955fbc0` + quorum r1/r2 + carve-out `b72428a` + uncommitted plan in `.wt-world-iter255-row172-design`; credited in 256 |
-| 254 | 2026-10-13 | row 105 LANDED `9d16a07`: workbench object page projects PROVEN via a daemon-held validator (resumes orphan 253; r2 carve-out); judge sonnet PASS 88, zero blocking [PRODUCT] |
-| 253 | 2026-10-12 | ORPHAN (capacity-paused at gate-3): row 105 design `1945fb2` + quorum r1/r2-prep + uncommitted revision in `.wt-world-iter253-row105-design`; credited in 254 |
+| 268 | 2026-10-15 | row 150 M2a authenticated demo seed S1 LANDED 420c07e7 (PR #267) [PRODUCT] |
+| 267 | 2026-10-15 | row150 M1b standalone demo approval plan + descriptor LANDED52ae7ff(PR #266) [PRODUCT] |
+| 266 | 2026-10-14 | row 150 unparked on the fleet PNG fix: design r4 + 17-milestone plan + M1a `packages/world-demo` evidence law LANDED `28ff4db` (PR #264) [PRODUCT] |
+| 265 | 2026-10-14 | no-pick record, then attended D-WORLD-73=A and row176 LANDED 8511bad (PR261) [PRODUCT] |
+| 264 | 2026-10-14 | no pick: rule (d) block report; eighth consecutive idle fire — nothing on the critical path moved since iteration 263 (D-WORLD-73 open, fleet PNG t... |
+| 263 | 2026-10-14 | no pick: rule (d) block report; seventh consecutive idle fire — nothing on the critical path moved since iteration 262 (D-WORLD-73 open, fleet PNG ... |
+| 262 | 2026-10-14 | no pick: rule (d) block report; sixth consecutive idle fire — nothing on the critical path moved since iteration 261 (D-WORLD-73 open, fleet PNG ti... |
+| 261 | 2026-10-14 | no pick: rule (d) block report; fifth consecutive idle fire — nothing on the critical path moved since iteration 260 (D-WORLD-73 open, fleet PNG ti... |
+| 260 | 2026-10-13 | no pick: rule (d) block report; fourth consecutive idle fire — nothing on the critical path moved since iteration 259 (D-WORLD-73 open, fleet PNG t... |
+| 259 | 2026-10-13 | no pick: rule (d) block report; third consecutive idle fire — nothing on the critical path moved since iteration 258 (D-WORLD-73 open, fleet PNG ti... |
+| 258 | 2026-10-13 | no pick: rule (d) block report; nothing on the critical path moved since iteration 257 (D-WORLD-73 open, fleet PNG ticket open and unanswered, row ... |
+| 257 | 2026-10-13 | no pick: rule (d) block report; the D-WORLD-69 path's last row (150) is still blocked on fleet row 173, whose ticket had left the fleet queue unres... |
+| 256 | 2026-10-13 | row 172 LANDED `d36b148`: coordinator mints `world/decision-packet/v1` on the effectful `Human.Approve` commit; validated object-page projection; d... |
+| 255 | 2026-10-13 | ORPHAN — existing index marker; credited in 256 [ADMIN] |
+| 254 | 2026-10-13 | row 105 LANDED `9d16a07`: workbench object page projects PROVEN from subject-bound proof envelopes through a daemon-held validator (resumes orphan ... |
+| 253 | 2026-10-12 | ORPHAN — existing index marker; credited in 254 [ADMIN] |
 | 252 | 2026-10-12 | row 26 LANDED `0390aa5`: bounded Z3 report producer (resumes orphan 251); judge sonnet PASS 86→88, zero blocking [PRODUCT] |
-| 251 | 2026-10-12 | ORPHAN (capacity-paused twice): row 26 design + 7 real fixtures left uncommitted in `.wt-world-iter251-row26-design`; credited in 252 |
+| 251 | 2026-10-12 | ORPHAN — existing index marker; credited in 252 [ADMIN] |
 | 250 | 2026-10-11 | row174 PARKED: inherited third FAIL68 requires bounded follow-up approval; all four Agent roles, independent ADMIN judge; D-WORLD-71 OPEN [ADMIN] |
-| 248 | 2026-10-08 | no product pick: row150 stays parked on unchanged D-WORLD-69; all four roles via recipe transports (no Agent tool in this controller harness, ticket world#248); independent cross-vendor judge ACCEPTS [ADMIN] |
+| 248 | 2026-10-08 | no product pick: row150 stays parked on unchanged D-WORLD-69; all four roles via recipe transports (no Agent tool in this harness); independent cro... |
 | 247 | 2026-10-08 | no product pick: row150 stays parked on unchanged D-WORLD-69; four required native role preflights and independent record judge [ADMIN] |
 | 246 | 2026-10-08 | row 150 PARKED: full showcase requires separately owned prerequisites; two blocked quorums; independent discovery/PARK accepted; D-WORLD-69 OPEN [A... |
 | 245 | 2026-10-08 | row 149 LANDED: live workbench — AG-UI follower script, theme tokens, SVG graph, read-only decisions pane; resuming orphaned iteration 244; judge 9... |
@@ -271,3 +270,4 @@ confidently and wrongly is worse than none.
 | 2 | 2026-07-23 | queue HUMAN-BLOCKED on D1; no sprint (bookkeeping-only) |
 | 1 | 2026-07-23 | w-log-epoch-decision: D2/D3 settled, D1 replay-pin PARKED for Mark |
 | 0 | 2026-07-23 | charter advisory quorum; ratification PARKED for Mark |
+| — | 2026-10-11 | ATTENDED CONTINUATION — D-WORLD-71 single follow-up completed; M1 implementation PASS86, M2 UNRUN [ADMIN handoff] |

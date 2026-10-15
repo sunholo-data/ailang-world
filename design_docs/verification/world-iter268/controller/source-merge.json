@@ -1,0 +1,12 @@
+{
+  "merge": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "reviewed_head": "763c60a20358f486df395043131557c1143735ba",
+  "trees_equal": true,
+  "merge_object_type": "commit",
+  "gate3b_read": "2026-10-15T05:59:20Z",
+  "gate1_drift": "one commit:own merge",
+  "bookkeeping_issue": {
+    "state": "OPEN",
+    "url": "https://github.com/sunholo-data/ailang-world/issues/246"
+  }
+}

@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+    demo_test.go:433: manifest: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (4.08s)
+    --- FAIL: TestDemoSeedPreflightRefusals/manifest (4.07s)
+FAIL

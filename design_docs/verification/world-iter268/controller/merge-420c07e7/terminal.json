@@ -1,0 +1,591 @@
+{
+  "at": "2026-10-15T06:15:51Z",
+  "sha": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "event": "push",
+  "checks": {
+    "total_count": 2,
+    "check_runs": [
+      {
+        "id": 116272790770,
+        "name": "ailang-code verify gate",
+        "node_id": "CR_kwDOThhN288AAAAbEmX88g",
+        "head_sha": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+        "external_id": "dd36adb9-7b09-597e-9542-156be34448bb",
+        "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/116272790770",
+        "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38689782525/job/116272790770",
+        "details_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38689782525/job/116272790770",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T05:59:23Z",
+        "completed_at": "2026-10-15T06:00:01Z",
+        "output": {
+          "title": null,
+          "summary": null,
+          "text": null,
+          "annotations_count": 2,
+          "annotations_url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/116272790770/annotations"
+        },
+        "check_suite": {
+          "id": 104842379103
+        },
+        "app": {
+          "id": 15368,
+          "client_id": "Iv1.05c79e9ad1f6bdfa",
+          "slug": "github-actions",
+          "node_id": "MDM6QXBwMTUzNjg=",
+          "owner": {
+            "login": "github",
+            "id": 9919,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjk5MTk=",
+            "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/github",
+            "html_url": "https://github.com/github",
+            "followers_url": "https://api.github.com/users/github/followers",
+            "following_url": "https://api.github.com/users/github/following{/other_user}",
+            "gists_url": "https://api.github.com/users/github/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/github/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/github/subscriptions",
+            "organizations_url": "https://api.github.com/users/github/orgs",
+            "repos_url": "https://api.github.com/users/github/repos",
+            "events_url": "https://api.github.com/users/github/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/github/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "GitHub Actions",
+          "description": "Automate your workflow from idea to production",
+          "external_url": "https://help.github.com/en/actions",
+          "html_url": "https://github.com/apps/github-actions",
+          "created_at": "2018-07-30T09:30:17Z",
+          "updated_at": "2026-06-18T16:17:48Z",
+          "permissions": {
+            "actions": "write",
+            "administration": "read",
+            "artifact_metadata": "write",
+            "attestations": "write",
+            "checks": "write",
+            "code_quality": "write",
+            "contents": "write",
+            "copilot_requests": "write",
+            "deployments": "write",
+            "discussions": "write",
+            "drives": "write",
+            "issues": "write",
+            "merge_queues": "write",
+            "metadata": "read",
+            "models": "read",
+            "packages": "write",
+            "pages": "write",
+            "pull_requests": "write",
+            "repository_hooks": "write",
+            "repository_projects": "write",
+            "security_events": "write",
+            "statuses": "write",
+            "vulnerability_alerts": "read"
+          },
+          "events": [
+            "branch_protection_rule",
+            "check_run",
+            "check_suite",
+            "create",
+            "delete",
+            "deployment",
+            "deployment_status",
+            "discussion",
+            "discussion_comment",
+            "fork",
+            "gollum",
+            "issues",
+            "issue_comment",
+            "label",
+            "merge_group",
+            "milestone",
+            "page_build",
+            "public",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "push",
+            "registry_package",
+            "release",
+            "repository",
+            "repository_dispatch",
+            "status",
+            "watch",
+            "workflow_dispatch",
+            "workflow_run"
+          ]
+        },
+        "pull_requests": []
+      },
+      {
+        "id": 116272790438,
+        "name": "go host build + test gate",
+        "node_id": "CR_kwDOThhN288AAAAbEmX7pg",
+        "head_sha": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+        "external_id": "46c24ede-8b1e-5114-be35-98adea3e3a52",
+        "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/116272790438",
+        "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38689782525/job/116272790438",
+        "details_url": "https://github.com/sunholo-data/ailang-world/actions/runs/38689782525/job/116272790438",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T05:59:23Z",
+        "completed_at": "2026-10-15T06:15:45Z",
+        "output": {
+          "title": null,
+          "summary": null,
+          "text": null,
+          "annotations_count": 2,
+          "annotations_url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/116272790438/annotations"
+        },
+        "check_suite": {
+          "id": 104842379103
+        },
+        "app": {
+          "id": 15368,
+          "client_id": "Iv1.05c79e9ad1f6bdfa",
+          "slug": "github-actions",
+          "node_id": "MDM6QXBwMTUzNjg=",
+          "owner": {
+            "login": "github",
+            "id": 9919,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjk5MTk=",
+            "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/github",
+            "html_url": "https://github.com/github",
+            "followers_url": "https://api.github.com/users/github/followers",
+            "following_url": "https://api.github.com/users/github/following{/other_user}",
+            "gists_url": "https://api.github.com/users/github/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/github/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/github/subscriptions",
+            "organizations_url": "https://api.github.com/users/github/orgs",
+            "repos_url": "https://api.github.com/users/github/repos",
+            "events_url": "https://api.github.com/users/github/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/github/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "GitHub Actions",
+          "description": "Automate your workflow from idea to production",
+          "external_url": "https://help.github.com/en/actions",
+          "html_url": "https://github.com/apps/github-actions",
+          "created_at": "2018-07-30T09:30:17Z",
+          "updated_at": "2026-06-18T16:17:48Z",
+          "permissions": {
+            "actions": "write",
+            "administration": "read",
+            "artifact_metadata": "write",
+            "attestations": "write",
+            "checks": "write",
+            "code_quality": "write",
+            "contents": "write",
+            "copilot_requests": "write",
+            "deployments": "write",
+            "discussions": "write",
+            "drives": "write",
+            "issues": "write",
+            "merge_queues": "write",
+            "metadata": "read",
+            "models": "read",
+            "packages": "write",
+            "pages": "write",
+            "pull_requests": "write",
+            "repository_hooks": "write",
+            "repository_projects": "write",
+            "security_events": "write",
+            "statuses": "write",
+            "vulnerability_alerts": "read"
+          },
+          "events": [
+            "branch_protection_rule",
+            "check_run",
+            "check_suite",
+            "create",
+            "delete",
+            "deployment",
+            "deployment_status",
+            "discussion",
+            "discussion_comment",
+            "fork",
+            "gollum",
+            "issues",
+            "issue_comment",
+            "label",
+            "merge_group",
+            "milestone",
+            "page_build",
+            "public",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "push",
+            "registry_package",
+            "release",
+            "repository",
+            "repository_dispatch",
+            "status",
+            "watch",
+            "workflow_dispatch",
+            "workflow_run"
+          ]
+        },
+        "pull_requests": []
+      }
+    ]
+  },
+  "run": {
+    "conclusion": "success",
+    "databaseId": 38689782525,
+    "event": "push",
+    "headSha": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+    "jobs": [
+      {
+        "completedAt": "2026-10-15T06:15:45Z",
+        "conclusion": "success",
+        "databaseId": 116272790438,
+        "name": "go host build + test gate",
+        "startedAt": "2026-10-15T05:59:23Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-15T05:59:26Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-15T05:59:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:29Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "startedAt": "2026-10-15T05:59:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:37Z",
+            "conclusion": "success",
+            "name": "Set up Go",
+            "number": 3,
+            "startedAt": "2026-10-15T05:59:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:37Z",
+            "conclusion": "success",
+            "name": "go version",
+            "number": 4,
+            "startedAt": "2026-10-15T05:59:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:39Z",
+            "conclusion": "success",
+            "name": "Install PINNED v0.41.0 ailang (AILANG_BIN \u2014 one pin, current AILANG)",
+            "number": 5,
+            "startedAt": "2026-10-15T05:59:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:40Z",
+            "conclusion": "success",
+            "name": "Install Z3 4.16.0 (host/verifygate drives the REAL .ail gate under go test)",
+            "number": 6,
+            "startedAt": "2026-10-15T05:59:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:00:11Z",
+            "conclusion": "success",
+            "name": "Row 140 srt confinement matrix (linux bubblewrap)",
+            "number": 7,
+            "startedAt": "2026-10-15T05:59:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:01:31Z",
+            "conclusion": "success",
+            "name": "Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)",
+            "number": 8,
+            "startedAt": "2026-10-15T06:00:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:02:02Z",
+            "conclusion": "success",
+            "name": "Row 149 workbench live script tests, verbose (node required)",
+            "number": 9,
+            "startedAt": "2026-10-15T06:01:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:13:39Z",
+            "conclusion": "success",
+            "name": "go build + test gate (replay tests run against pinned AILANG_BIN)",
+            "number": 10,
+            "startedAt": "2026-10-15T06:02:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:13:44Z",
+            "conclusion": "success",
+            "name": "Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)",
+            "number": 11,
+            "startedAt": "2026-10-15T06:13:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:14:04Z",
+            "conclusion": "success",
+            "name": "Subprocess cleanup tests, verbose (row 24 linux merge gate)",
+            "number": 12,
+            "startedAt": "2026-10-15T06:13:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:14:45Z",
+            "conclusion": "success",
+            "name": "Measure compiler reproducer (platform-conditional, gated)",
+            "number": 13,
+            "startedAt": "2026-10-15T06:14:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:14:47Z",
+            "conclusion": "success",
+            "name": "worldd benchmark smoke gate",
+            "number": 14,
+            "startedAt": "2026-10-15T06:14:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:14:47Z",
+            "conclusion": "success",
+            "name": "worldd bench claim-structure gate",
+            "number": 15,
+            "startedAt": "2026-10-15T06:14:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:14:47Z",
+            "conclusion": "success",
+            "name": "worldd bench recorder refuses off-rig",
+            "number": 16,
+            "startedAt": "2026-10-15T06:14:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:18Z",
+            "conclusion": "success",
+            "name": "Gate-1 range instrument suite",
+            "number": 17,
+            "startedAt": "2026-10-15T06:14:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:19Z",
+            "conclusion": "success",
+            "name": "Queue census instrument suite",
+            "number": 18,
+            "startedAt": "2026-10-15T06:15:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:19Z",
+            "conclusion": "success",
+            "name": "Queue census (live charter, controlled)",
+            "number": 19,
+            "startedAt": "2026-10-15T06:15:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:21Z",
+            "conclusion": "success",
+            "name": "Gate-0 self-notice instrument suite",
+            "number": 20,
+            "startedAt": "2026-10-15T06:15:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:22Z",
+            "conclusion": "success",
+            "name": "Refuse a personal email in the loop-written surface",
+            "number": 21,
+            "startedAt": "2026-10-15T06:15:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:22Z",
+            "conclusion": "success",
+            "name": "Personal-email gate self-test",
+            "number": 22,
+            "startedAt": "2026-10-15T06:15:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:23Z",
+            "conclusion": "success",
+            "name": "Install PINNED v0.52.1 ailang tool binary (floor grader $TOOL)",
+            "number": 23,
+            "startedAt": "2026-10-15T06:15:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:42Z",
+            "conclusion": "success",
+            "name": "Floor harness suite (row 93 M1+M3)",
+            "number": 24,
+            "startedAt": "2026-10-15T06:15:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:42Z",
+            "conclusion": "success",
+            "name": "Post Set up Go",
+            "number": 47,
+            "startedAt": "2026-10-15T06:15:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:42Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 48,
+            "startedAt": "2026-10-15T06:15:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T06:15:42Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 49,
+            "startedAt": "2026-10-15T06:15:42Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38689782525/job/116272790438"
+      },
+      {
+        "completedAt": "2026-10-15T06:00:01Z",
+        "conclusion": "success",
+        "databaseId": 116272790770,
+        "name": "ailang-code verify gate",
+        "startedAt": "2026-10-15T05:59:23Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-15T05:59:25Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-15T05:59:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:27Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "startedAt": "2026-10-15T05:59:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:28Z",
+            "conclusion": "success",
+            "name": "Contract exemption ratchet may only decrease",
+            "number": 3,
+            "startedAt": "2026-10-15T05:59:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:38Z",
+            "conclusion": "success",
+            "name": "Set up Go",
+            "number": 4,
+            "startedAt": "2026-10-15T05:59:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:39Z",
+            "conclusion": "success",
+            "name": "Install released ailang binary",
+            "number": 5,
+            "startedAt": "2026-10-15T05:59:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:41Z",
+            "conclusion": "success",
+            "name": "Install Z3 4.16.0 (ai-check's SMT solver \u2014 the workflow-level pin)",
+            "number": 6,
+            "startedAt": "2026-10-15T05:59:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:41Z",
+            "conclusion": "success",
+            "name": "ailang version",
+            "number": 7,
+            "startedAt": "2026-10-15T05:59:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:42Z",
+            "conclusion": "success",
+            "name": "Install PINNED v0.41.0 ailang for the world-package leg only",
+            "number": 8,
+            "startedAt": "2026-10-15T05:59:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:45Z",
+            "conclusion": "success",
+            "name": "Kernel contract and PUB011 mutation controls",
+            "number": 9,
+            "startedAt": "2026-10-15T05:59:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:59Z",
+            "conclusion": "success",
+            "name": "Verify all .ail modules (ai-check = check + Z3 verify)",
+            "number": 10,
+            "startedAt": "2026-10-15T05:59:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:59Z",
+            "conclusion": "success",
+            "name": "Post Set up Go",
+            "number": 19,
+            "startedAt": "2026-10-15T05:59:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 20,
+            "startedAt": "2026-10-15T05:59:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-15T05:59:59Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 21,
+            "startedAt": "2026-10-15T05:59:59Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38689782525/job/116272790770"
+      }
+    ],
+    "status": "completed"
+  }
+}

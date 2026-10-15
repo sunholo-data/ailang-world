@@ -1,0 +1,37 @@
+{
+  "source": [
+    {
+      "path": "cmd/ailang-worldd/demo.go",
+      "sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "matches_snapshot": true,
+      "matches_head": true
+    },
+    {
+      "path": "cmd/ailang-worldd/demo_seed.go",
+      "sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361",
+      "matches_snapshot": true,
+      "matches_head": true
+    },
+    {
+      "path": "cmd/ailang-worldd/demo_test.go",
+      "sha256": "36c9d27b6307be1f0995de7067a8a9f92c683e41b770ac6bd7a50d67f35c4126",
+      "matches_snapshot": true,
+      "matches_head": true
+    },
+    {
+      "path": "cmd/ailang-worldd/main.go",
+      "sha256": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c",
+      "matches_snapshot": true,
+      "matches_head": true
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "sha256": "9e868e155cc7f0baa2173858f52cfedb37a856420944f131b94cdad8ff199fbe",
+      "matches_snapshot": true,
+      "matches_head": true
+    }
+  ],
+  "protected_equal": true,
+  "protected_count": 12,
+  "all_terminal": true
+}

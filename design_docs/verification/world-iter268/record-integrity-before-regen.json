@@ -1,0 +1,41 @@
+{
+  "base": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "base_read": "2026-10-15T06:18:07Z",
+  "status_rotation": {
+    "before_lines": 6176,
+    "after_lines": 6176,
+    "moved": 1,
+    "live_stamps": 3,
+    "archive_exact_stamp": true,
+    "archive_prefix_preserved": true,
+    "archive_positive_control": true
+  },
+  "queue_before": 177,
+  "queue_after": 179,
+  "ledger_bytes_unchanged": true,
+  "unchanged_existing_rows_except_150": true,
+  "generated_archive_notices_removed_before_regen": 5,
+  "headline265": {
+    "before": "## 265 — 2026-10-14 — no pick: rule (d) block report; ninth consecutive idle fire — nothing on the critical path moved since iteration 264 (D-WORLD-73 open, fleet PNG ticket open and unanswered, row 93 FINAL attended) [ADMIN]",
+    "after": "## 265 — 2026-10-14 — no-pick record, then attended D-WORLD-73=A and row176 LANDED 8511bad (PR261) [PRODUCT]",
+    "body_unchanged": true
+  },
+  "recovered_existing_orphan_ids": [
+    251,
+    253,
+    255
+  ],
+  "source_merge": "420c07e7c1c70eca6043a0c4e12a20f2adcaf972",
+  "source_trees_equal": true,
+  "progress": "World 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET — goal unmoved. Release row 150 advanced to 3/17 milestones.",
+  "completed_milestones": 3,
+  "pending_milestones": 14,
+  "numbered_log_entries_before": 36,
+  "numbered_log_entries_after": 40,
+  "original_unnumbered_attended_notes": 1,
+  "records_before_regen": 41,
+  "live_records_after_regen": 40,
+  "rotated_attended_notes": 1,
+  "attended_note_header_normalized": true,
+  "first_rotate_refused_before_any_write": true
+}

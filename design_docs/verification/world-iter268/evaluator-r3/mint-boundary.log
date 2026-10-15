@@ -1,0 +1,4 @@
+=== RUN   TestSessionMint_RequiresControllingTerminal
+--- PASS: TestSessionMint_RequiresControllingTerminal (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.226s

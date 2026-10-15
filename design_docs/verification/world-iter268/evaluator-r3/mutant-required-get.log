@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/health-absent
+    demo_test.go:443: wrong refusal: want "required resource absent" got "ailang-worldd demo seed: db/health identity mismatch\n"
+--- FAIL: TestDemoSeedPreflightRefusals (0.93s)
+    --- FAIL: TestDemoSeedPreflightRefusals/health-absent (0.93s)
+FAIL

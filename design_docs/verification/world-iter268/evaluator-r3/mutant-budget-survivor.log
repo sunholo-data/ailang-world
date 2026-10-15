@@ -1,0 +1,89 @@
+=== RUN   TestDemoSeedAuthenticatedCommits
+--- PASS: TestDemoSeedAuthenticatedCommits (1.11s)
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/manifest
+=== RUN   TestDemoSeedPreflightRefusals/nonempty
+=== RUN   TestDemoSeedPreflightRefusals/absent-session
+=== RUN   TestDemoSeedPreflightRefusals/unknown-session
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+=== RUN   TestDemoSeedPreflightRefusals/missing-grant
+=== RUN   TestDemoSeedPreflightRefusals/expired-grant
+=== RUN   TestDemoSeedPreflightRefusals/wrong-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-mismatch
+=== RUN   TestDemoSeedPreflightRefusals/health-interpreter
+=== RUN   TestDemoSeedPreflightRefusals/health-version
+=== RUN   TestDemoSeedPreflightRefusals/insufficient-budget
+=== RUN   TestDemoSeedPreflightRefusals/spent-budget
+=== RUN   TestDemoSeedPreflightRefusals/wrong-episode
+=== RUN   TestDemoSeedPreflightRefusals/cas-change
+=== RUN   TestDemoSeedPreflightRefusals/positional
+=== RUN   TestDemoSeedPreflightRefusals/missing-db
+=== RUN   TestDemoSeedPreflightRefusals/missing-pin
+=== RUN   TestDemoSeedPreflightRefusals/missing-key
+=== RUN   TestDemoSeedPreflightRefusals/missing-manifest
+=== RUN   TestDemoSeedPreflightRefusals/health-absent
+=== RUN   TestDemoSeedPreflightRefusals/health-malformed
+=== RUN   TestDemoSeedPreflightRefusals/health-down
+=== RUN   TestDemoSeedPreflightRefusals/missing-epoch
+=== RUN   TestDemoSeedPreflightRefusals/epoch-hash
+=== RUN   TestDemoSeedPreflightRefusals/readonly-db
+=== RUN   TestDemoSeedPreflightRefusals/pin-absent
+=== RUN   TestDemoSeedPreflightRefusals/world-only
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+=== RUN   TestDemoSeedPreflightRefusals/epoch-candidate
+=== RUN   TestDemoSeedPreflightRefusals/source-absent
+=== RUN   TestDemoSeedPreflightRefusals/unknown-verb
+=== RUN   TestDemoSeedPreflightRefusals/archive-absent
+=== RUN   TestDemoSeedPreflightRefusals/archive-hash
+=== RUN   TestDemoSeedPreflightRefusals/archive-size
+=== RUN   TestDemoSeedPreflightRefusals/archive-version
+=== RUN   TestDemoSeedPreflightRefusals/archive-release
+--- PASS: TestDemoSeedPreflightRefusals (36.20s)
+    --- PASS: TestDemoSeedPreflightRefusals/manifest (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/nonempty (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/absent-session (0.87s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-session (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-session (0.89s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-grant (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/expired-grant (0.88s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-db (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-mismatch (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-interpreter (0.90s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-version (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/insufficient-budget (0.93s)
+    --- PASS: TestDemoSeedPreflightRefusals/spent-budget (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/wrong-episode (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/cas-change (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/positional (0.87s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-db (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-pin (1.66s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-key (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-manifest (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-absent (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-malformed (2.20s)
+    --- PASS: TestDemoSeedPreflightRefusals/health-down (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/missing-epoch (1.00s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-hash (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/readonly-db (0.94s)
+    --- PASS: TestDemoSeedPreflightRefusals/pin-absent (0.89s)
+    --- PASS: TestDemoSeedPreflightRefusals/world-only (0.99s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-decode (0.98s)
+    --- PASS: TestDemoSeedPreflightRefusals/epoch-candidate (0.91s)
+    --- PASS: TestDemoSeedPreflightRefusals/source-absent (0.97s)
+    --- PASS: TestDemoSeedPreflightRefusals/unknown-verb (0.92s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-absent (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-hash (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-size (0.95s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-version (0.96s)
+    --- PASS: TestDemoSeedPreflightRefusals/archive-release (0.97s)
+=== RUN   TestDemoSeedHelpPreparation
+--- PASS: TestDemoSeedHelpPreparation (0.00s)
+=== RUN   TestDemoSeedCommitFailures
+=== RUN   TestDemoSeedCommitFailures/commit-denied
+=== RUN   TestDemoSeedCommitFailures/commit-response
+=== RUN   TestDemoSeedCommitFailures/commit-uncertain
+--- PASS: TestDemoSeedCommitFailures (2.77s)
+    --- PASS: TestDemoSeedCommitFailures/commit-denied (0.94s)
+    --- PASS: TestDemoSeedCommitFailures/commit-response (0.92s)
+    --- PASS: TestDemoSeedCommitFailures/commit-uncertain (0.92s)
+PASS

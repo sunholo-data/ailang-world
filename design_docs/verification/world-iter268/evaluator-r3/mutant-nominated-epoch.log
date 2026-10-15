@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/epoch-candidate
+    demo_test.go:433: epoch-candidate: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (2.57s)
+    --- FAIL: TestDemoSeedPreflightRefusals/epoch-candidate (2.57s)
+FAIL

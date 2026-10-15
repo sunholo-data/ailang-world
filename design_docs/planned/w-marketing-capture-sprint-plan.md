@@ -223,7 +223,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M1b — Convention-v2 approval plan, descriptor and package docs
 
-Design M1; 25 minutes; dependency: M1a; status **completed** — iteration267 merge52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b, PR #266; REQUIRED fresh-context evaluator PASS90/100, zero blocking; exact PR/merge CI2/2GREEN. Supporting output-schema gap carried as charter177; later milestones pending.
+Design M1; 25 minutes; dependency: M1a; status **completed** — iteration267 merge52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b, PR #266; REQUIRED fresh-context evaluator PASS90/100, zero blocking; exact PR/merge CI2/2GREEN. Supporting output-schema gap carried as charter177. At that iteration267 boundary, later milestones were pending; current statuses are recorded below.
 
 Exact executor files:
 
@@ -277,7 +277,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M2a — Demo CLI, preflight and authenticated domain commits
 
-Design M2; 25 minutes; dependency: M1b; status **pending**.
+Design M2; 25 minutes; dependency: M1b; status **completed** — iteration268 merge 420c07e7c1c70eca6043a0c4e12a20f2adcaf972, PR #267; REQUIRED independent fresh-context evaluator round3 PASS90/100, zero blocking; exact PR/merge CI2/2 GREEN. Three nonblocking supporting-hunk gaps carried as charter179; later milestones pending.
 
 Exact executor files:
 

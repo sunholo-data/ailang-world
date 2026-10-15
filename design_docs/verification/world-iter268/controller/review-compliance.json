@@ -1,0 +1,37 @@
+{
+  "result": "pass",
+  "score": 90,
+  "report_sha256": "0c1807771f8a739ee313f4644e7ecabf785c912ee88a75282336894163bde801",
+  "report_json_sha256": "d448abf6957681be3dd1b7f7a121454379a8a62d0ddd6431d0fb8ad6b6bcb5ad",
+  "source_restoration_independently_compared": [
+    {
+      "path": "cmd/ailang-worldd/demo.go",
+      "sha256": "35344404bd6dfffa5802a88d978691bf49297d6f906df92590f836187caa5d60",
+      "equals_reviewed_HEAD": true
+    },
+    {
+      "path": "cmd/ailang-worldd/demo_seed.go",
+      "sha256": "3877d5d7ec9e0bac83c6fb1d9e1f39eccac3fa5a190a66de7510f7bd2daeb361",
+      "equals_reviewed_HEAD": true
+    },
+    {
+      "path": "cmd/ailang-worldd/demo_test.go",
+      "sha256": "36c9d27b6307be1f0995de7067a8a9f92c683e41b770ac6bd7a50d67f35c4126",
+      "equals_reviewed_HEAD": true
+    },
+    {
+      "path": "cmd/ailang-worldd/main.go",
+      "sha256": "be070994357def6a9324a19097d762ead0255f92d4d391eb088054b1ba13be5c",
+      "equals_reviewed_HEAD": true
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "sha256": "9e868e155cc7f0baa2173858f52cfedb37a856420944f131b94cdad8ff199fbe",
+      "equals_reviewed_HEAD": true
+    }
+  ],
+  "all_own_tasks_terminal": true,
+  "result_score_round_checked": true,
+  "evaluation_round": 3,
+  "score_breakdown_sum": 90
+}

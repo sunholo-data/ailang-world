@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/epoch-decode
+    demo_test.go:443: wrong refusal: want "registry: decode" got "ailang-worldd demo seed: interpreter has no nominated epoch\n"
+--- FAIL: TestDemoSeedPreflightRefusals (2.57s)
+    --- FAIL: TestDemoSeedPreflightRefusals/epoch-decode (2.57s)
+FAIL

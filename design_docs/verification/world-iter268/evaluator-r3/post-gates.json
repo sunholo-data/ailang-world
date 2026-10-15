@@ -1,0 +1,269 @@
+[
+  {
+    "name": "toolset-pin-mismatch",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+      "-count=1",
+      "-timeout=45s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.686,
+    "log": "toolset-pin-mismatch.log",
+    "pass_names": [
+      "TestDemoSeedPreflightRefusals"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "fixture-revert-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/fixture.test",
+      "./cmd/ailang-worldd"
+    ],
+    "rc": 0,
+    "seconds": 0.821,
+    "log": "fixture-revert-build.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "fixture-revert-unset",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/fixture.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+      "-test.v",
+      "-test.timeout=45s"
+    ],
+    "rc": 1,
+    "seconds": 1.262,
+    "log": "fixture-revert-unset.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "fixture-equalbytes-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/fixture.test",
+      "./cmd/ailang-worldd"
+    ],
+    "rc": 0,
+    "seconds": 0.812,
+    "log": "fixture-equalbytes-build.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "fixture-equalbytes",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/fixture.test",
+      "-test.run=^TestDemoSeedPreflightRefusals$/^pin-mismatch$",
+      "-test.v",
+      "-test.timeout=45s"
+    ],
+    "rc": 1,
+    "seconds": 1.443,
+    "log": "fixture-equalbytes.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "M2a-own-revert-build",
+    "argv": [
+      "go",
+      "test",
+      "-c",
+      "-o",
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/own-revert.test",
+      "./cmd/ailang-worldd"
+    ],
+    "rc": 0,
+    "seconds": 0.835,
+    "log": "M2a-own-revert-build.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "M2a-own-revert",
+    "argv": [
+      "/Users/voightkampff/.ailang/state/world-iter268/evaluator-r3/own-revert.test",
+      "-test.run=^TestDemoSeed|^TestSessionMint_RequiresControllingTerminal$",
+      "-test.v",
+      "-test.timeout=120s"
+    ],
+    "rc": 1,
+    "seconds": 38.286,
+    "log": "M2a-own-revert.log",
+    "pass_names": [
+      "TestSessionMint_RequiresControllingTerminal"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "restored-demo-unset",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestDemoSeed",
+      "-count=1",
+      "-timeout=120s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 39.578,
+    "log": "restored-demo-unset.log",
+    "pass_names": [
+      "TestDemoSeedAuthenticatedCommits",
+      "TestDemoSeedPreflightRefusals",
+      "TestDemoSeedHelpPreparation",
+      "TestDemoSeedCommitFailures"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "mint-boundary",
+    "argv": [
+      "go",
+      "test",
+      "./cmd/ailang-worldd",
+      "-run",
+      "^TestSessionMint_RequiresControllingTerminal$",
+      "-count=1",
+      "-timeout=45s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 0.647,
+    "log": "mint-boundary.log",
+    "pass_names": [
+      "TestSessionMint_RequiresControllingTerminal"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "rest-and-doc-regression",
+    "argv": [
+      "go",
+      "test",
+      "./host/daemon",
+      "-run",
+      "^TestRESTCommitRefusesDecisionPacketObjects$|^TestQuickstartDecisionPacketSection$",
+      "-count=1",
+      "-timeout=45s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.42,
+    "log": "rest-and-doc-regression.log",
+    "pass_names": [
+      "TestRESTCommitRefusesDecisionPacketObjects",
+      "TestQuickstartDecisionPacketSection"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "boundary",
+    "argv": [
+      "go",
+      "test",
+      "./host/boundary",
+      "-run",
+      "^TestWorldBoundaryDependencyAllowlist$|^TestWorldBoundaryRecordingWriter$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 1.414,
+    "log": "boundary.log",
+    "pass_names": [
+      "TestWorldBoundaryDependencyAllowlist",
+      "TestWorldBoundaryRecordingWriter"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "nine-site-audit",
+    "argv": [
+      "go",
+      "test",
+      "./host/broker",
+      "-run",
+      "^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$",
+      "-count=1",
+      "-timeout=90s",
+      "-v"
+    ],
+    "rc": 0,
+    "seconds": 6.31,
+    "log": "nine-site-audit.log",
+    "pass_names": [
+      "TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential"
+    ],
+    "skip_names": []
+  },
+  {
+    "name": "vet",
+    "argv": [
+      "go",
+      "vet",
+      "./cmd/ailang-worldd"
+    ],
+    "rc": 0,
+    "seconds": 0.416,
+    "log": "vet.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "gofmt",
+    "argv": [
+      "gofmt",
+      "-l",
+      "cmd/ailang-worldd/demo.go",
+      "cmd/ailang-worldd/demo_seed.go",
+      "cmd/ailang-worldd/demo_test.go",
+      "cmd/ailang-worldd/main.go"
+    ],
+    "rc": 0,
+    "seconds": 0.008,
+    "log": "gofmt.log",
+    "pass_names": [],
+    "skip_names": []
+  },
+  {
+    "name": "implementation-diffcheck",
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "39066a46c1ac13c994bacb162b8d4b754d5ec083",
+      "HEAD",
+      "--",
+      "cmd/ailang-worldd/demo.go",
+      "cmd/ailang-worldd/demo_seed.go",
+      "cmd/ailang-worldd/demo_test.go",
+      "cmd/ailang-worldd/main.go",
+      "docs/QUICKSTART.md"
+    ],
+    "rc": 0,
+    "seconds": 0.01,
+    "log": "implementation-diffcheck.log",
+    "pass_names": [],
+    "skip_names": []
+  }
+]

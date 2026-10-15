@@ -1,0 +1,352 @@
+{
+  "conclusion": "success",
+  "event": "pull_request",
+  "headSha": "763c60a20358f486df395043131557c1143735ba",
+  "jobs": [
+    {
+      "completedAt": "2026-10-15T05:38:03Z",
+      "conclusion": "success",
+      "databaseId": 116266479736,
+      "name": "ailang-code verify gate",
+      "startedAt": "2026-10-15T05:37:27Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-15T05:37:29Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-15T05:37:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:33Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-10-15T05:37:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:33Z",
+          "conclusion": "success",
+          "name": "Contract exemption ratchet may only decrease",
+          "number": 3,
+          "startedAt": "2026-10-15T05:37:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:42Z",
+          "conclusion": "success",
+          "name": "Set up Go",
+          "number": 4,
+          "startedAt": "2026-10-15T05:37:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:44Z",
+          "conclusion": "success",
+          "name": "Install released ailang binary",
+          "number": 5,
+          "startedAt": "2026-10-15T05:37:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:45Z",
+          "conclusion": "success",
+          "name": "Install Z3 4.16.0 (ai-check's SMT solver \u2014 the workflow-level pin)",
+          "number": 6,
+          "startedAt": "2026-10-15T05:37:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:45Z",
+          "conclusion": "success",
+          "name": "ailang version",
+          "number": 7,
+          "startedAt": "2026-10-15T05:37:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:47Z",
+          "conclusion": "success",
+          "name": "Install PINNED v0.41.0 ailang for the world-package leg only",
+          "number": 8,
+          "startedAt": "2026-10-15T05:37:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:49Z",
+          "conclusion": "success",
+          "name": "Kernel contract and PUB011 mutation controls",
+          "number": 9,
+          "startedAt": "2026-10-15T05:37:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:38:00Z",
+          "conclusion": "success",
+          "name": "Verify all .ail modules (ai-check = check + Z3 verify)",
+          "number": 10,
+          "startedAt": "2026-10-15T05:37:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:38:00Z",
+          "conclusion": "success",
+          "name": "Post Set up Go",
+          "number": 19,
+          "startedAt": "2026-10-15T05:38:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:38:00Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 20,
+          "startedAt": "2026-10-15T05:38:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:38:00Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-15T05:38:00Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38687777190/job/116266479736"
+    },
+    {
+      "completedAt": "2026-10-15T05:57:58Z",
+      "conclusion": "success",
+      "databaseId": 116266479924,
+      "name": "go host build + test gate",
+      "startedAt": "2026-10-15T05:37:27Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-15T05:37:29Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-15T05:37:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:32Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-10-15T05:37:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:43Z",
+          "conclusion": "success",
+          "name": "Set up Go",
+          "number": 3,
+          "startedAt": "2026-10-15T05:37:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:43Z",
+          "conclusion": "success",
+          "name": "go version",
+          "number": 4,
+          "startedAt": "2026-10-15T05:37:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:44Z",
+          "conclusion": "success",
+          "name": "Install PINNED v0.41.0 ailang (AILANG_BIN \u2014 one pin, current AILANG)",
+          "number": 5,
+          "startedAt": "2026-10-15T05:37:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:37:46Z",
+          "conclusion": "success",
+          "name": "Install Z3 4.16.0 (host/verifygate drives the REAL .ail gate under go test)",
+          "number": 6,
+          "startedAt": "2026-10-15T05:37:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:38:33Z",
+          "conclusion": "success",
+          "name": "Row 140 srt confinement matrix (linux bubblewrap)",
+          "number": 7,
+          "startedAt": "2026-10-15T05:37:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:40:09Z",
+          "conclusion": "success",
+          "name": "Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)",
+          "number": 8,
+          "startedAt": "2026-10-15T05:38:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:40:45Z",
+          "conclusion": "success",
+          "name": "Row 149 workbench live script tests, verbose (node required)",
+          "number": 9,
+          "startedAt": "2026-10-15T05:40:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:55:38Z",
+          "conclusion": "success",
+          "name": "go build + test gate (replay tests run against pinned AILANG_BIN)",
+          "number": 10,
+          "startedAt": "2026-10-15T05:40:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:55:43Z",
+          "conclusion": "success",
+          "name": "Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)",
+          "number": 11,
+          "startedAt": "2026-10-15T05:55:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:56:05Z",
+          "conclusion": "success",
+          "name": "Subprocess cleanup tests, verbose (row 24 linux merge gate)",
+          "number": 12,
+          "startedAt": "2026-10-15T05:55:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:56:52Z",
+          "conclusion": "success",
+          "name": "Measure compiler reproducer (platform-conditional, gated)",
+          "number": 13,
+          "startedAt": "2026-10-15T05:56:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:56:56Z",
+          "conclusion": "success",
+          "name": "worldd benchmark smoke gate",
+          "number": 14,
+          "startedAt": "2026-10-15T05:56:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:56:56Z",
+          "conclusion": "success",
+          "name": "worldd bench claim-structure gate",
+          "number": 15,
+          "startedAt": "2026-10-15T05:56:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:56:56Z",
+          "conclusion": "success",
+          "name": "worldd bench recorder refuses off-rig",
+          "number": 16,
+          "startedAt": "2026-10-15T05:56:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:28Z",
+          "conclusion": "success",
+          "name": "Gate-1 range instrument suite",
+          "number": 17,
+          "startedAt": "2026-10-15T05:56:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:28Z",
+          "conclusion": "success",
+          "name": "Queue census instrument suite",
+          "number": 18,
+          "startedAt": "2026-10-15T05:57:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:28Z",
+          "conclusion": "success",
+          "name": "Queue census (live charter, controlled)",
+          "number": 19,
+          "startedAt": "2026-10-15T05:57:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:31Z",
+          "conclusion": "success",
+          "name": "Gate-0 self-notice instrument suite",
+          "number": 20,
+          "startedAt": "2026-10-15T05:57:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:31Z",
+          "conclusion": "success",
+          "name": "Refuse a personal email in the loop-written surface",
+          "number": 21,
+          "startedAt": "2026-10-15T05:57:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:31Z",
+          "conclusion": "success",
+          "name": "Personal-email gate self-test",
+          "number": 22,
+          "startedAt": "2026-10-15T05:57:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:34Z",
+          "conclusion": "success",
+          "name": "Install PINNED v0.52.1 ailang tool binary (floor grader $TOOL)",
+          "number": 23,
+          "startedAt": "2026-10-15T05:57:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:54Z",
+          "conclusion": "success",
+          "name": "Floor harness suite (row 93 M1+M3)",
+          "number": 24,
+          "startedAt": "2026-10-15T05:57:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:54Z",
+          "conclusion": "success",
+          "name": "Post Set up Go",
+          "number": 47,
+          "startedAt": "2026-10-15T05:57:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:54Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 48,
+          "startedAt": "2026-10-15T05:57:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-15T05:57:54Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 49,
+          "startedAt": "2026-10-15T05:57:54Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38687777190/job/116266479924"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/sunholo-data/ailang-world/actions/runs/38687777190",
+  "observed_utc": "2026-10-15T05:58:38.900584+00:00"
+}

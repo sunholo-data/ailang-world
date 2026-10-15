@@ -1,0 +1,7 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/source-absent
+ailang-worldd: internal error: POST /v1/commit: store: commit membership "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": constraint failed: FOREIGN KEY constraint failed (787)
+    demo_test.go:433: source-absent: refusal changed public inventory: actual log entries3 want0
+--- FAIL: TestDemoSeedPreflightRefusals (1.74s)
+    --- FAIL: TestDemoSeedPreflightRefusals/source-absent (1.74s)
+FAIL

@@ -1,0 +1,22 @@
+{
+  "command": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--keep",
+    "40"
+  ],
+  "rc": 1,
+  "refusal_before_any_write": true,
+  "before": {
+    "/Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-log.md": "d2c16867b75de31d51210787a4472bf1fcbc19c7f03ff18e136bcb70244e61ff",
+    "/Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-log-archive.md": "57bb3591706d5376dc47c7b3dca16745d57fa1509a5e2486d7933e1c3db1ab10",
+    "/Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-index.md": "2c0d513603f8c256a7ab89994ccd3086d738a0b12d4df467402f5113b60336fb"
+  },
+  "after": {
+    "/Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-log.md": "d2c16867b75de31d51210787a4472bf1fcbc19c7f03ff18e136bcb70244e61ff",
+    "/Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-log-archive.md": "57bb3591706d5376dc47c7b3dca16745d57fa1509a5e2486d7933e1c3db1ab10",
+    "/Users/voightkampff/dev/sunholo-data/.record-world-iter268/design_docs/world-mission-index.md": "2c0d513603f8c256a7ab89994ccd3086d738a0b12d4df467402f5113b60336fb"
+  }
+}

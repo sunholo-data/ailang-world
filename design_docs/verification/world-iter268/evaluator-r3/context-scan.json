@@ -1,0 +1,2885 @@
+{
+  "charter_bytes": 1125188,
+  "headings": [
+    {
+      "line": 1,
+      "text": "# Ailang World Mission \u2014 a semantic operating environment whose transaction language is AILANG"
+    },
+    {
+      "line": 36,
+      "text": "## Repo Profile (M-MISSION-PORTABILITY M2 \u2014 the per-mission values mission-control reads)"
+    },
+    {
+      "line": 877,
+      "text": "## Human Decision Ledger (authoritative current state)"
+    },
+    {
+      "line": 886,
+      "text": "### Evidence hygiene (World-local process, iteration160)"
+    },
+    {
+      "line": 967,
+      "text": "## STATUS (rotation rule)"
+    },
+    {
+      "line": 969,
+      "text": "## STATUS 2026-10-15 (iteration 267) \u2014 **ROW 150 M1b LANDED 52ae7ff (PR #266) [PRODUCT, release row]: standalone demo-approve convention-v2 source, strict one-effect plan, descriptor and complete runnable payload. REQUIRED distinct evaluator GPT-6.1 Sol fresh context PASS 90/100, zero blocking; preferred native Sonnet rejected Unknown model, FLAG same-model-fresh-context under amended D-WORLD-48.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 attended FINAL FAILS, not loop-routable; 5 UNMET \u2014 114 after passing FINAL, 139 after 114. D-WORLD-69 authorizes row 150 while critical path is blocked. All four requested roles ran natively; model pins preserved except named judge fallback; recipe-to-native transport override FLAGGED. Candidate released v0.41.0 AIL gate and unchanged Go build/plain/race PASS; PR CI38665538475 and merge push CI38667006325 both 2/2 GREEN on exact SHAs. Executor26 compiling mutations killed; controller required two-effects at len(plan.effects)==1 got2, restore green. C11 12 protected paths byte-identical. Judge E267-S1 output-schema survivor independently reproduced; new row177, no M1b scope expansion. D-WORLD-75 OPEN/defaultA, no new ask; row150 now2/17; NEXT M2a. Base=52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b@2026-10-15T02:04:31Z; metered$0; role tokens unreported. Full record: world-mission-log.md iteration267."
+    },
+    {
+      "line": 971,
+      "text": "## STATUS 2026-10-14 (iteration 266) \u2014 **ROW 150 UNPARKED AND STARTED: DESIGN r4 + 17-MILESTONE PLAN + M1a LANDED `28ff4db` (PR #264) [PRODUCT, release row]. Gate 0 found the fleet's `harness-resolved` reply for `ci:world:tracked-binary-rejects-release-png` (fix `2d14dbd`, read `inbox_1792001584160_d871d344`), so row 173 is resolved and D-WORLD-69's last row is routable.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 FINAL attended (the attended session recorded Phase 2 FAILS tonight in `c21f303`; not loop-routable); 5 UNMET \u2014 114 sequenced behind a passing 93 FINAL, 139 behind 114. Routing: designer `codex:gpt-6.1-sol` (rotation next after opus; keeps r1/r2's quorum seats) 150,055 tok \u2192 quorum r3 BLOCKED 3/3 (glm/kimi/sonnet; OpenAI benched) \u2192 r4 controller revision under the narrow-refinement carve-out with first-party measurements (Chrome 155 `scriptEnabled=false` writes NO PNG at rc 0; headless Chrome follows the OS appearance, so every shot pins `preferredColorScheme`; server HTML byte-stable; five real-content shots byte-identical across two passes; workbench `payload=1` not `true`); planner `codex:gpt-6.1-sol` 204,753 tok (17 milestones; PD1 fold defect resolved); executor `codex:gpt-6.1-sol` 108,656 tok (M1a); evaluator sonnet via Agent tool PASS 88/100 zero blocking. Gates outside the sandbox: `go build ./... && go test ./...` rc 0 (28 packages); `-race ./host/coordinator` rc 0; PR CI 2/2; merge CI run 38646357337 2/2. New ask D-WORLD-75 (fresh-seed hash equality residual; default A, nothing blocks). Base=28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6@2026-10-14T22:31:48Z; metered $0. Full record: world-mission-log.md iteration 266."
+    },
+    {
+      "line": 973,
+      "text": "## STATUS 2026-10-14 (iteration 265) \u2014 **ROW 176 LANDED `8511bad` (PR #261) \u2014 THE DAEMON NOW BINDS `Human.Approve`, SERIALIZED DAEMON-WIDE, ON MARK's MID-FIRE ATTENDED RULING D-WORLD-73 = A [PRODUCT]. The fire first recorded a rule-(d) no-pick (`e7edffa`, PR #258, judge sonnet PASS 93) against a base read at 16:56:26Z; the attended ruling `76eb538` landed at 16:58:40Z, so the merged no-pick record was stale on D-WORLD-73 within two minutes; the ruling (provenance `attended`, flip `76eb538`) unparked row 176 and the loop took it as the second pick standing rule 1 allows after a bookkeeping-only pick.** Clause map: 1/2/3/6/7 MET; 4 UNMET \u2014 row 93 FINAL attended (D-WORLD-70/72/74; the attended session preregistered the paired FINAL `fd321b6` this evening); 5 UNMET \u2014 114 after the FINAL, 139 after 114. Row 176 is a v1.0.0 release prerequisite (moves no clause). Routing: designer not spawned (design quorumed iter-255/256, D4 now ratified); planner not spawned (resolver `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; the plan's C4.2 is the ready-made follow-up step, anchors re-measured first-party at `e7edffa`); executor `codex:gpt-6.1-sol` recipe (83,482 tok, ~6 min, rc 0; AC8 red on a world-head conflict, plan defect); controller test-only AC8 correction; evaluator sonnet via Agent tool PASS 90 zero blocking (52,503 tok). Gates outside the sandbox: verify_ail.sh rc 0; `go build ./... && go test ./...` rc 0 (28 packages); `go test -race ./host/daemon` rc 0 in 205 s (base 221 s); PR CI 2/2. Exception path D-WORLD-69: 26 \u2714 \u2192 105 \u2714 \u2192 172 \u2714 \u2192 150 still BLOCKED on fleet ticket `ci:world:tracked-binary-rejects-release-png` (51 open, no `harness-resolved` reply). Ledger 61 rows (D-WORLD-74 filed and resolved attended this evening), ZERO OPEN. Base=8511badd936ef400748ad6acd3e4103cdc9775a9@2026-10-14T18:05:36Z; metered $0. Full record: world-mission-log.md iteration 265."
+    },
+    {
+      "line": 975,
+      "text": "## CURRENT GOAL"
+    },
+    {
+      "line": 996,
+      "text": "## The bar \u2014 what \"Ailang World 1.0\" must meet (RATIFIED by Mark 2026-07-23, attended \u2014 see STATUS + issue #1 record)"
+    },
+    {
+      "line": 1050,
+      "text": "## Conflict Surface (RATIFIED 2026-07-23 with the bar; drafted post-iter-0 to answer quorum objection #2)"
+    },
+    {
+      "line": 1091,
+      "text": "## Guardrails (mission-specific; the skill's Standing Rules always apply on top)"
+    },
+    {
+      "line": 1625,
+      "text": "## Routing policy"
+    },
+    {
+      "line": 1732,
+      "text": "## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT] [ROUTED])"
+    },
+    {
+      "line": 1737,
+      "text": "### REGROOMED 2026-09-26 (Mark, attended) \u2014 THE 1.0 CRITICAL PATH. THIS ORDER OVERRIDES THE 2026-09-21 TABLE BELOW"
+    },
+    {
+      "line": 1782,
+      "text": "### GROOMED 2026-09-21 (Mark, attended) \u2014 SUPERSEDED IN ORDER BY THE 2026-09-26 REGROOM ABOVE; ITS MAINTENANCE RULES STILL APPLY"
+    },
+    {
+      "line": 5879,
+      "text": "## Premise Verification Log (quorum objection #1 \u2014 every load-bearing claim, with evidence)"
+    }
+  ],
+  "guard_bullet_starts": [
+    {
+      "line": 38,
+      "text": "- **Repo slug**: `sunholo-data/ailang-world` (driver: `MISSION_REPO`)"
+    },
+    {
+      "line": 39,
+      "text": "- **Mission doc**: `design_docs/world-mission.md` (driver: `MISSION_DOC`)"
+    },
+    {
+      "line": 40,
+      "text": "- **Mission name / state namespace**: `world` (driver: `MISSION_NAME`; fully namespaced"
+    },
+    {
+      "line": 42,
+      "text": "- **Bookkeeping issue**: `#1`, rotates weekly; live number in"
+    },
+    {
+      "line": 44,
+      "text": "- **THIS LOOP KEEPS *TWO* MARK-COMMENT WATERMARKS, AND ONLY ONE OF THEM IS THE ONE THE SHARED"
+    },
+    {
+      "line": 58,
+      "text": "- **CI workflows Gate 3b / Gate 1 poll**: `CI` (job: \"ailang-code verify gate\")"
+    },
+    {
+      "line": 59,
+      "text": "- **Verify profile**: `ailang-code` \u2014 the shipped `ailang` binary IS the gate:"
+    },
+    {
+      "line": 65,
+      "text": "- **THE PINNED v0.30.0 BINARY CANNOT RESOLVE HALF THE SHARED SKILL'S QUORUM ROSTER \u2014 AND THE"
+    },
+    {
+      "line": 82,
+      "text": "- **THE PINNED v0.30.0 BINARY HAS NO `ailang mission` COMMAND AT ALL, SO GATE 4's PRESCRIBED INDEX"
+    },
+    {
+      "line": 105,
+      "text": "- **RUN A `bash` SCRIPT UNDER `bash` \u2014 THE LOGIN SHELL HERE IS `zsh`, AND USING IT AS THE INSTRUMENT"
+    },
+    {
+      "line": 122,
+      "text": "- **`scripts/mission_directives.sh` DOES NOT EXIST IN THIS REPO \u2014 invoke it by ABSOLUTE PATH from"
+    },
+    {
+      "line": 137,
+      "text": "- **GATE 0 HAS A SECOND, NO-AUTHORITY READ FOR THE DRIVER'S OWN CRASH NOTICES (process fix,"
+    },
+    {
+      "line": 179,
+      "text": "- **THE ATTENDED-LEDGER PRIVACY CONTRACT HAS A REAL GATE HERE \u2014 `scripts/check_no_personal_email.sh` (process fix, row 74, landed iter-175).** The shared skill's Gate 0.6(b) names `make check-no-personal-email` as the enforcement behind \"compare, never record\"; World has no Makefile, so the gate is the script itself, run by CI's `go-verify` job as two steps (`Refuse a personal email in the loop-written surface` \u2192 `bash scripts/check_no_personal_email.sh`; `Personal-email gate self-test` \u2192 `bash scripts/test_check_no_personal_email.sh`). Scope is the loop-written surface \u2014 the six `design_docs/*mission*.md` docs and `scripts/` \u2014 so **the charter, the log, the archives, the dashboard and the index are all scanned on every push**: write a provenance VERDICT (\"attended\"/\"fleet\"), never an address, and when a record must show an address-shaped token that is not a person (an SSH remote, a Go module id), break it with ` AT ` as row 91 does. Allowed by anchored exclusion: `\u2026@users.noreply.github.com`, `noreply@\u2026`, `\u2026@example.com|org|net`, `.invalid|.test|.localhost`, `\u2026.gserviceaccount.com`, `\u2026@sentry.io` \u2014 every clause anchored to the whole token, because the fleet's copy (`sunholo-data/ailang` `f0d44915d`) matches substrings and admits `attacker-noreply AT <personal domain>` (this iteration's judge, reproduced). Exit 2 = zero in-scope files (never a \u2713 over nothing). `scripts/mission_answer.sh`'s default identity is the GitHub noreply form (the fleet's `8369877d9`), so the script no longer carries the address the gate exists to catch. Run it locally before any Gate-4 commit: `bash scripts/check_no_personal_email.sh; echo rc=$?`."
+    },
+    {
+      "line": 180,
+      "text": "- **INSTANCE 2 LANDED IN THE SAME ITERATION \u2014 PROPOSED TO V1 (iter-107; bar MET) \u2014 A STRESS CONTROL ONLY CERTIFIES THE AXIS YOU VARIED, AND A GREEN ONE READS AS IF IT CERTIFIED THE PROPERTY.** Iteration 107 re-ran `PE.E`'s wall-clock arm **15\u00d7 unloaded and 8\u00d7 under eight CPU spinners \u2014 23/23 green**, hold ratio 26.7\u201330.2\u00d7 against a 20\u00d7 floor, with the loaded arm moving the ratio the *safe* direction \u2014 and recorded the timing as sound. The evaluator varied a different axis, **parallelism**, and got **10/10 FAIL at `GOMAXPROCS=1` on unmutated, sha256-identical code**, with the failure text `blocked read returned after 10\u201333ms`, which is **indistinguishable from the M22/M23 mutant signature the arm exists to detect**. Reproduced first-party with a two-arm control on one tree: `GOMAXPROCS=1` **10/10 red**, default **0/10 red**. Note why more effort would not have helped: every one of the 23 runs was the *same shape*, so the sample grew while its coverage did not \u2014 this is rule 3a(i)'s known-positive discipline aimed at a **stress** control rather than a search, and rule 3b(ix)'s scope-travels-with-the-count aimed at an **axis** rather than a directory. Candidate rule if a second instance lands: before quoting a timing or load result as evidence, **name the axes you held fixed** (parallelism, CPU contention, memory pressure, page cache, disk, clock granularity) and vary at least the one the mechanism under test actually depends on \u2014 here the stimulus is a *scheduling* race, so parallelism was the load-bearing axis and CPU contention was the decorative one. The tell: you are about to write \"N/N green under load\" and every run varied the same knob. **INSTANCE 2, ninety minutes later and from CI rather than from a judge:** the Gate-4 record commit `ac17d54` \u2014 **docs-only**, `git diff --stat daf48a6 ac17d54 -- ':!design_docs'` EMPTY \u2014 turned `dev` RED in the very arm above. The runner's log: `decoy hold=2.626683936s ObjectReadTimeout=2ms ratio=1313.3x` / `blocked read exceeded test-side 20x watchdog`. The stimulus SCALES with the machine (53 ms here, **2.63 s** on the runner \u2014 49x) and the bounds did not, because they were absolute millisecond constants calibrated on this laptop; the resulting red is again **indistinguishable from the M22/M23 mutant signature**. Same tree passed on the parent, so the parent's green was luck. Three axes, three reds, and after each fix the surviving constant still encoded *my machine*: CPU contention (mine, 23/23 green), parallelism (the judge's, 10/10 red), absolute speed (CI's). **So the rule is stronger than \"vary more axes\": where a bound and its stimulus both depend on the machine, DERIVE the bound FROM the measured stimulus and stop hardcoding wall-clock at all.** Fixed at `a87c723`: `readTimeout := hold / 20` makes the doc's 20x floor true BY CONSTRUCTION on any machine, the watchdog becomes the hold itself, and a `minDecoyHold` floor keeps a too-fast decoy a loud instrument failure. M22/M23 still die. Proposed to V1 on the cross-mission channel; World cannot edit the shared skill."
+    },
+    {
+      "line": 181,
+      "text": "- **AN ANTI-VACUITY FLOOR IS A BRANCH TOO, AND RULE 3j's ENUMERATION STOPS AT *REFUSAL* BRANCHES \u2014 SO THE CHECKS THAT PROTECT THE INSTRUMENT ITSELF ARE SYSTEMATICALLY THE LAST THING ANYONE PINS (watch-item, iter-108; 1 recorded instance, bar is 2 \u2014 NOT yet proposed to V1).** The skill's rule 3j says: for any function whose contract is a refusal, enumerate its refusal branches and require one neutering mutation per branch. That is written about the *subject* under test. A gate also carries floors that refuse on its **own health** \u2014 zero packages discovered, an empty required set, an empty enumeration \u2014 and those are invisible to the same discipline, because a floor is not a refusal *about the input*, it is a refusal *about the measurement*. Measured here on `PE.F`: \u00a75 names **three** floors for the focused `host/evidence` leg and the isolated gate shipped arms for **two**. The `\"zero passing host/evidence packages discovered\"` message appears **once** in `scripts/verify_go.sh` and **zero** times in `evidence_manifest_gate_test.go`, and every synthetic writer emitted the package-level pass event **BY CONSTRUCTION**, so no existing arm could reach that branch and **no removal-shaped mutant on the other two floors would ever have revealed it**. Live code that no test protected, inside a milestone whose entire subject is non-vacuity, at a **96/100 zero-blocking** evaluation \u2014 the judge found it, not the drill. Closed with a sixth arm and a dedicated writer that omits the package event; non-vacuity proved by neutering the floor (`if not package_passes:` -> `if False and not package_passes:`), `go build` rc=0 before any result was read, red set = **the new arm ALONE**, the other five green. **Candidate rule if a second instance lands:** when a gate has floors that fail on the instrument rather than on the input, enumerate the FLOORS separately from the refusal branches and require one arm per floor \u2014 and note the tell, which is structural rather than behavioural: *every helper that builds the gate's input emits the field a floor checks for, so the floor's input shape cannot be produced by the test harness at all.* This mission has ADDED anti-vacuity floors in four prior iterations (measured: 4 log hits) and this is the first time one was found unpinned, so the bar is honestly **1**, and it is recorded here rather than proposed \u2014 filing below the bar is a defect this loop has already paid for once (iter-106)."
+    },
+    {
+      "line": 182,
+      "text": "- **QUORUM CAP: PASS `--max-cost-usd 0.30` ON EVERY `design-quorum` RUN IN THIS MISSION (process fix, iter-169 \u2014 THIRD instance).** The shared skill's absent-reviewer rule says a `proceed`/`blocked` verdict with a non-empty `absent_reviewers` is a verdict with a named hole, and prescribes re-running the absentee alone at a raised cap. Correct, and it fires *after* the money has already been wasted on an incomplete round. The default cap is **$0.10** and `gpt6-astra` costs **$0.09\u2013$0.11** on a doc of ordinary length, so it is refused **pre-flight, at zero spend**, by a margin of cents \u2014 iteration 169 round 1: *\"estimated cost $0.1130 (doc ~6181 input tok) exceeds cap $0.1000\"*, i.e. refused over **$0.0130**. **The trigger is self-selecting in the worst way**: the estimate scales with DOC LENGTH, so the reviewer drops out exactly when the doc has grown \u2014 which is immediately after a substantial revision, which is when its opinion is most load-bearing. Three instances in this mission, and in every one the restored reviewer was not merely present but *decisive*: iter-167 (the restored absent reviewer found the iteration's best defect for $0.13); iter-169 round 1 (restored for **$0.0858**, returned the round's strongest objection \u2014 the proposed shared helper was not behaviour-preserving \u2014 and was confirmed by measurement); iter-169 round 2 (astra again correct, and again the only reviewer to see that the fix was conditional rather than unconditional, controller-reproduced first-party). Note what the default cap actually buys: refusing a $0.11 reviewer to protect a **$5** iteration ceiling \u2014 0.2% of the budget \u2014 at the cost of running the gate at N\u22121. **Rule: pass `--max-cost-usd 0.30` on the FIRST round, not as a repair on the second.** The re-run rule stays as the belt; this is the braces. World-local because the cap is a per-invocation flag, not a skill constant \u2014 no shared-skill edit is needed, and none is proposed."
+    },
+    {
+      "line": 183,
+      "text": "- **Rig PATH (process fix, iter-18 \u2014 3 instances in ONE iteration)**: the agent tool shell's `PATH`"
+    },
+    {
+      "line": 212,
+      "text": "- **CRITICAL MISSION STATE LIVES IN A DIRECTORY THE OS MAY DELETE \u2014 THREE KINDS MUST SURVIVE A"
+    },
+    {
+      "line": 222,
+      "text": "- **A PI EVALUATOR SPAWN IS TRANSPORT-DEAD UNTIL THE SESSION-PROTOCOL GATE IS PRESENT IN THE"
+    },
+    {
+      "line": 238,
+      "text": "- **THE RIG'S SHELL IS `zsh`, AND THREE OF THE SKILL'S OWN INSTRUMENT IDIOMS BREAK HERE \u2014 TWO OF"
+    },
+    {
+      "line": 265,
+      "text": "- **`ai-check` IS CWD-SENSITIVE, AND THE WRONG CWD REPORTS A KILL ON *EVERY* MUTATION ARM (process"
+    },
+    {
+      "line": 279,
+      "text": "- **A DUPLICATE WEBHOOK DELIVERY MAKES `checks` EXCEED `expected`, AND GATE 3b's COMPLETENESS RULE"
+    },
+    {
+      "line": 307,
+      "text": "- **A QUEUE ROW KEEPS ITS OWN DEAD HEADS INLINE, SO A ROW-SCOPED GREP RETURNS THE LIVE HEAD AND"
+    },
+    {
+      "line": 390,
+      "text": "- **WHEN A MILESTONE'S DELIVERABLE IS A *REFUSAL SET*, THE UNIT OF MUTATION IS THE **BRANCH**, NOT"
+    },
+    {
+      "line": 420,
+      "text": "- **WHEN THE DELIVERABLE IS A *DETECTOR*, RULE 3j's BRANCH ENUMERATION IS ONLY HALF THE GATE \u2014"
+    },
+    {
+      "line": 448,
+      "text": "- **READING A CI LOG IS AN INSTRUMENT, AND A LESSON RECORDED ONLY IN A STATUS STAMP IS ON A"
+    },
+    {
+      "line": 469,
+      "text": "- **A WRITTEN RULE IS NOT A CONTROL: THIS CHARTER ALREADY FORBADE `git checkout` AS A MUTATION"
+    },
+    {
+      "line": 502,
+      "text": "- **Codex model pins are NOT covered by the driver's probe (process fix, iter-19).** The driver's"
+    },
+    {
+      "line": 514,
+      "text": "- **ENUMERATE the evaluator's non-blocking carry-forwards in the log entry (process fix, iter-19).**"
+    },
+    {
+      "line": 520,
+      "text": "- **A fresh worktree NEVER contains the sprint plan JSON (process fix, iter-20).** `.gitignore`"
+    },
+    {
+      "line": 544,
+      "text": "- **A MUTATION IS AN INSTRUMENT \u2014 ESTABLISH ITS VALIDITY BEFORE ITS RESULT COUNTS (process fix,"
+    },
+    {
+      "line": 571,
+      "text": "- **The `verify_ail.sh` module count is now 10, not 9 (process fix, iter-25).** Iteration STATUS"
+    },
+    {
+      "line": 583,
+      "text": "- **When CI reds on a TIMING assertion, WIDEN THE GAP \u2014 never loosen the guard (process fix,"
+    },
+    {
+      "line": 599,
+      "text": "- **`passed_tests` is NOT the named-test count (process fix, iter-25 \u2014 the landed correction D-B,"
+    },
+    {
+      "line": 608,
+      "text": "- **The weekly-rotation rule misfires on a thread created just before Monday 07:00 (process fix,"
+    },
+    {
+      "line": 616,
+      "text": "- **`/tmp` scratch paths in the cross-provider recipe are SHARED between missions \u2014 namespace them"
+    },
+    {
+      "line": 627,
+      "text": "- **A driver probe failing `rc=127` is a PATH gap \u2014 NEVER a spent quota and never an unusable model"
+    },
+    {
+      "line": 637,
+      "text": "- **CORRECTION (iter-23): the rc=127 cause above was MIS-ATTRIBUTED, and the defect was OURS \u2014"
+    },
+    {
+      "line": 663,
+      "text": "- **A LIVENESS OR EXIT-CODE CHECK IS ONLY EVIDENCE IF IT REFERS TO THE PROCESS YOU LAUNCHED"
+    },
+    {
+      "line": 687,
+      "text": "- **STATUS rotation is a HAND edit, never a regex script (iter-18 scar).** A \"move the 4th stamp to"
+    },
+    {
+      "line": 692,
+      "text": "- **AN INHERITED GATE IS A CLAIM \u2014 audit the gates you did NOT write (process fix, iter-32; THIRD"
+    },
+    {
+      "line": 713,
+      "text": "- **A MUTATION THAT REDS BY FAILING TO COMPILE PROVES NOTHING \u2014 and the revert must not be able to"
+    },
+    {
+      "line": 738,
+      "text": "- **THE JUDGE CAN REFUTE THE CONTROLLER'S OWN HEADLINE FINDING \u2014 and when it does, retract where you"
+    },
+    {
+      "line": 758,
+      "text": "- **A CLAIM THAT CITES A GATE IS TWO CLAIMS, AND THE SECOND ONE IS ALMOST NEVER CHECKED (process"
+    },
+    {
+      "line": 788,
+      "text": "- **A STALENESS SWEEP MUST RUN FROM THE DOC'S *OLDEST* DECLARED MEASUREMENT BASE \u2014 SWEEPING THE"
+    },
+    {
+      "line": 811,
+      "text": "- **A BLANKET INSTRUCTION IS APPLIED TO ITS EXCEPTION TOO \u2014 FAITHFULLY, BY A ROLE THAT CANNOT KNOW"
+    },
+    {
+      "line": 823,
+      "text": "- **RUNNING THE QUORUM: A BIGGER DOC BUYS A THINNER REVIEW (process fix, iter-36).** `ailang"
+    },
+    {
+      "line": 834,
+      "text": "- **Gate 4 skipped its own STATUS stamp once and nobody noticed (process fix, iter-34).**"
+    },
+    {
+      "line": 843,
+      "text": "- **TWO PRE-REGISTERED WATCH-ITEMS, EACH AT INSTANCE 1 (iter-58).** Gate 5 allows at most ONE skill"
+    },
+    {
+      "line": 870,
+      "text": "- **A ROLE'S `ok` IS A CLAIM ABOUT A WORKTREE, NOT ABOUT ITS DELIVERABLE \u2014 ASSERT THE NAMED FILE, AND ASSERT EVERY ID A REVISION CITES (process fix, iter-187; two instances in one iteration, different roles).** (1) The kimi planner returned `mission_pi_run.sh` verdict **`ok`** with `worktree_changed_files: 10` after an Ollama Cloud 429 had killed it mid-run \u2014 all ten files were its prototype, and the plan it existed to write did not exist. The runner's load-bearing assertion is a non-empty diff, which a prototype satisfies. (2) The r1 designer revision's quorum-log prose promised `AC-DENIAL-JSONRPC` and `MUT-DENIAL-401`; neither reached the AC or mutation tables (grep count 1 each, both in the prose), and r2 blocked 3/3 on exactly that gap. **Rule:** after any role run whose deliverable is a named file, `test -s <that file>` (and `jq -e .` for JSON) before reading the verdict as success; after any revision, grep every AC/MUT/F-row ID the revision's own summary cites and require a hit in the binding table, not only in the narrative. World-local (a controller step, not a skill edit); if a sibling mission hits (1), it is a PROPOSAL to V1 for `mission_pi_run.sh` to accept an `--expect <path>`."
+    },
+    {
+      "line": 871,
+      "text": "- **Queue tag position (read by `scripts/queue_census.sh`)** \u2014 a queue row's closure/parking tag is the FIRST token after `^<n>. `, tolerant only of a leading run of `[` and `*`. A tag after the slug is UNTAGGED and the census reports it by number rather than guessing. Closed: `LANDED`, `ROUTED`, `RULED OUT`. Open (tagged): `PARKED`, `NEXT`, `IN-SPRINT`."
+    },
+    {
+      "line": 872,
+      "text": "- **Queue census citation form (read by `scripts/queue_census.sh`)** \u2014 a closed-row count is published in a STATUS stamp or a mission-log `**Progress:**` line ONLY as the script's own total line, byte-for-byte: `census: N closed / M rows (tagged-open T, untagged U) [LANDED X, ROUTED Y, RULED OUT Z; PARKED P, IN-SPRINT Q, NEXT R] [queue_census.sh, charter-blob <oid>, controls a/b]`. Never carried. A line reading `charter-blob unavailable` is not publishable. No fresh reading \u2192 no number."
+    },
+    {
+      "line": 873,
+      "text": "- **Queue census control re-point (read by `scripts/queue_census.sh`)** \u2014 the live CI step passes `--control-closed 1 --control-open 79`; when a control row changes class the census exits 2 `CONTROL MISMATCH` and the SAME commit re-points the flag in `.github/workflows/ci.yml`. The mismatch is the control working, not a defect."
+    },
+    {
+      "line": 1001,
+      "text": "- **Clause 1 \u2014 deterministic kernel**: an immutable, content-addressed world store with an"
+    },
+    {
+      "line": 1006,
+      "text": "- **Clause 2 \u2014 local-first daemon**: `ailang-worldd` runs on one machine over SQLite with CLI +"
+    },
+    {
+      "line": 1009,
+      "text": "- **Clause 3 \u2014 explicit authority end-to-end**: every effect goes through the broker with a"
+    },
+    {
+      "line": 1013,
+      "text": "- **Clause 4 \u2014 the M4 RESIDENT-AGENT NON-INFERIORITY FLOOR (do-no-harm kill-switch; thresholds"
+    },
+    {
+      "line": 1032,
+      "text": "- **Clause 5 \u2014 the human surface works, with PROVENANCE TEETH (the 1.0 value demonstration;"
+    },
+    {
+      "line": 1042,
+      "text": "- **Clause 6 \u2014 protocol-native boundary**: the transition registry is served over MCP"
+    },
+    {
+      "line": 1045,
+      "text": "- **Clause 7 \u2014 controlled self-modification proven once**: at least one World behavior change"
+    },
+    {
+      "line": 1054,
+      "text": "- **`ailang serve-api` (ailang repo)** \u2014 the overlap is the PROTOCOL BOUNDARY only."
+    },
+    {
+      "line": 1077,
+      "text": "- **The `ailang` binary / compiler (frozen core)** \u2014 worldd consumes the RELEASED binary"
+    },
+    {
+      "line": 1080,
+      "text": "- **Coordinator / Collaboration Hub (ailang repo)** \u2014 pattern overlap only (approval queue,"
+    },
+    {
+      "line": 1083,
+      "text": "- **The mission loop itself** \u2014 the loop that builds this repo stays OUTSIDE World's"
+    },
+    {
+      "line": 1086,
+      "text": "- **OPEN for ratification**: whether worldd lives in THIS repo as its own Go module (DESIGN.md"
+    },
+    {
+      "line": 1093,
+      "text": "- **A FIX APPLIED UNDER THE NARROW-REFINEMENT CARVE-OUT MUST ACQUIRE ITS OWN ACCEPTANCE CRITERION"
+    },
+    {
+      "line": 1128,
+      "text": "- **A LOAD OR STRESS EXPERIMENT MUST PROVE ITS OWN TEARDOWN BEFORE ANY LATER MEASUREMENT ON THIS"
+    },
+    {
+      "line": 1163,
+      "text": "- **A NEGATIVE GREP CANNOT ESTABLISH A PREMISE ABOUT A CLASS OF STATEMENT \u2014 IT CAN ONLY FAIL TO"
+    },
+    {
+      "line": 1186,
+      "text": "- **AN ACTION THAT SILENTLY DID NOT HAPPEN RETURNS THE SAME RESULT AS A GENUINE NEGATIVE \u2014 ASSERT"
+    },
+    {
+      "line": 1214,
+      "text": "- **`OD-<n>` IS A MISSION-GLOBAL NAMESPACE, AND THIS TABLE IS ITS REGISTRY** (process fix, iter-43;"
+    },
+    {
+      "line": 1261,
+      "text": "- **SIX ODs WERE ALLOCATED WITHOUT EVER ENTERING THIS TABLE, AND THE REASON IS THAT THIS"
+    },
+    {
+      "line": 1287,
+      "text": "- **THE SAME COLLISION EXISTS IN THE `CF-<letter>-<n>` CARRY-FORWARD NAMESPACE, AND IT IS WORSE THERE"
+    },
+    {
+      "line": 1312,
+      "text": "- **A RULE FOR FUTURE ALLOCATIONS IS NOT A SWEEP OF EXISTING ONES \u2014 AND THE UNSWEPT ONES ARE THE"
+    },
+    {
+      "line": 1342,
+      "text": "- **A KNOWN-POSITIVE CONTROL PROVES AN INSTRUMENT *CAN* FIRE \u2014 IT NEVER PROVES IT FIRES *ONLY WHERE"
+    },
+    {
+      "line": 1374,
+      "text": "- **Local-first is inviolable**: no cloud dependency may enter the World core. Cloud = effect"
+    },
+    {
+      "line": 1376,
+      "text": "- **A correction is not applied until it reaches EVERY artifact that restates it** (added iter-28;"
+    },
+    {
+      "line": 1392,
+      "text": "- **A PRESCRIBED FIX IS A CLAIM \u2014 measure it before adopting it, especially one this mission wrote**"
+    },
+    {
+      "line": 1408,
+      "text": "- **Allocate a carry-forward ID by reading the PREVIOUS entry's carry-forward block, not the"
+    },
+    {
+      "line": 1418,
+      "text": "- **Every acceptance check names exactly ONE owning milestone, and that milestone must hold the"
+    },
+    {
+      "line": 1432,
+      "text": "- **Report the gate list the PLAN declares binding, never a remembered subset** (added iter-28). The"
+    },
+    {
+      "line": 1442,
+      "text": "- **Baseline isolation applies to every role permitted to mutate, including the designer** (iter161). Run pristine acceptance baselines in a separate sibling worktree. A designer reproduced a temporary test mutation while the controller baseline used its tree; that reading was discarded and the full Go suite rerun on an isolated pristine tree (rc0). A later restore does not retroactively make an overlapping measurement pristine."
+    },
+    {
+      "line": 1443,
+      "text": "- **Frozen-kernel discipline from day 1**: default every improvement to an extension; kernel"
+    },
+    {
+      "line": 1445,
+      "text": "- **Never touch the shared loop machinery from this mission**: `tools/launchd/*` (shared driver +"
+    },
+    {
+      "line": 1448,
+      "text": "- **Never touch the V1 mission's state or checkout** (`~/.ailang/state/mission-v1*`, legacy"
+    },
+    {
+      "line": 1450,
+      "text": "- **Language gaps route upstream \u2014 two channels, always both**: anything AILANG can't express"
+    },
+    {
+      "line": 1462,
+      "text": "- **CODING STANDARDS are binding** (ratified attended 2026-07-24): [coding-standards.md](coding-standards.md) \u2014 Z3 contracts on the pure core (S1), effects at the boundary (S2), **slim kernel / package-first** (S3: every kernel addition answers \"why is this not a package?\"), compiler-checked docs (S4), the AILANG fluency protocol (S5), honest non-vacuous gates (S6). Evaluators score against it; changes to it are ratification-class."
+    },
+    {
+      "line": 1463,
+      "text": "- **Compiler-checked docs discipline**: every `.ail` snippet that enters `design_docs/` ships as a"
+    },
+    {
+      "line": 1466,
+      "text": "- **Kernel performance budget from day 1** (DESIGN.md \u00a713.5): the M4 overhead gate gets HARDER as"
+    },
+    {
+      "line": 1469,
+      "text": "- **Advisory quorum rounds are BOUNDED** (ratified by Mark 2026-07-23, from the 5-round"
+    },
+    {
+      "line": 1476,
+      "text": "- **A MUTATION'S RESULT IS ONLY EVIDENCE IF THE MUTATION ITSELF IS VALID** (process fix, iter-22;"
+    },
+    {
+      "line": 1495,
+      "text": "- **AN ATTENDED-AUTHORED DOC STILL OWES THE DESIGN-DOC GATES** (process fix, iter-26; **2nd"
+    },
+    {
+      "line": 1511,
+      "text": "- **THE MISSION'S OWN RECORD IS A CLAIM, NOT EVIDENCE** (process fix, iter-27; **2nd instance** \u2014"
+    },
+    {
+      "line": 1535,
+      "text": "- **A named RED mutation is evidence only if it mutates the code the gate is supposed to be"
+    },
+    {
+      "line": 1560,
+      "text": "- **A REVISION IS NOT A SMALLER CHANGE THAN AN ORIGINAL \u2014 GIVE THE FIX THE SAME ADVERSARIAL READ YOU"
+    },
+    {
+      "line": 1588,
+      "text": "- **THE COMPILER IS AN INSTRUMENT, AND EVERY GATE IN THIS REPOSITORY REPORTS THROUGH IT** (process fix,"
+    },
+    {
+      "line": 1602,
+      "text": "- **A `go.mod` `go` DIRECTIVE IS A FLOOR, SO THE CORRECTIVE TOOLCHAIN IS UNSELECTABLE WHILE OD-1"
+    },
+    {
+      "line": 1614,
+      "text": "- **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms"
+    },
+    {
+      "line": 1616,
+      "text": "- **EXECUTOR SNAPSHOTS LIVE OUTSIDE THE WORKTREE IN THIS REPO (process fix, iter-194).** Since row 23"
+    },
+    {
+      "line": 1631,
+      "text": "- **SUPERSEDED 2026-08-28 (iter-135) \u2014 SEE LEDGER ROW `D-WORLD-27`. The chain below is NO LONGER"
+    },
+    {
+      "line": 1725,
+      "text": "- **Evaluator** (`D-WORLD-48`, Mark, attended 2026-10-01; supersedes the provider-level rule that"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1a",
+      "title": "Package evidence law and non-vacuous pinned manifest",
+      "design_milestone": "M1",
+      "estimated_minutes": 22,
+      "depends_on": [],
+      "files": [
+        "packages/world-demo/evidence.ail",
+        "packages/world-demo/README.md",
+        "host/coordinator/world_demo_test.go"
+      ],
+      "status": "completed",
+      "new_tests": [
+        "TestWorldDemoEvidencePinnedManifest",
+        "TestWorldDemoLegacyGradeDrift"
+      ],
+      "tests_first": [
+        {
+          "ac": "C1",
+          "tests": "TestWorldDemoEvidencePinnedManifest",
+          "assertions": "Require check.passed=true; named Z3 results legacyGradeCode, authoredClaimGradeCode, rosterKindAllowed all verified, errors/counterexamples/skips=0. Require named inline tests for six legacy constructors, authored-claim refusal/control and all four roster kinds plus unknown; fail empty tests/results. Scalar/string predicates carry requires/ensures first; no ADT generator skip can satisfy this gate.",
+          "command": "go test -run '^TestWorldDemoEvidencePinnedManifest$' ./host/coordinator -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C1/C5",
+          "tests": "TestWorldDemoLegacyGradeDrift",
+          "assertions": "Execute package predicates and world/types.gradeOf on actual inputs under the pin (scratch runtime probe, checked before run). Compare all six legacy mappings, raw ProofReceipt=CLAIMED, authored demo claim=CLAIMED. No new world constructor, no AiReview impersonation, no mapping can produce PROVEN.",
+          "command": "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C1",
+          "test": "TestWorldDemoEvidencePinnedManifest",
+          "assertions": "Require check.passed=true; named Z3 results legacyGradeCode, authoredClaimGradeCode, rosterKindAllowed all verified, errors/counterexamples/skips=0. Require named inline tests for six legacy constructors, authored-claim refusal/control and all four roster kinds plus unknown; fail empty tests/results. Scalar/string predicates carry requires/ensures first; no ADT generator skip can satisfy this gate.",
+          "command": "go test -run '^TestWorldDemoEvidencePinnedManifest$' ./host/coordinator -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C1/C5",
+          "test": "TestWorldDemoLegacyGradeDrift",
+          "assertions": "Execute package predicates and world/types.gradeOf on actual inputs under the pin (scratch runtime probe, checked before run). Compare all six legacy mappings, raw ProofReceipt=CLAIMED, authored demo claim=CLAIMED. No new world constructor, no AiReview impersonation, no mapping can produce PROVEN.",
+          "command": "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Define demo evidence-kind predicates in the package. Pin the named function/test manifest independently in Go test code, which runs in go test ./...; verify_ail ROOTS does not sweep world-demo, so its green result alone cannot discharge C1. Load ailang prompt/MCP language reference and inspect builtins before any .ail authoring. Standalone publisher modules may import only std/*; the package is a domain source directory, matching se-tools, not an invented registry release.",
+      "acceptance": [
+        "go test -run '^TestWorldDemoEvidencePinnedManifest$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" check evidence.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" test --format json evidence.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" ai-check -timeout 5s evidence.ail)",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "commands": [
+        "go test -run '^TestWorldDemoEvidencePinnedManifest$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" check evidence.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" test --format json evidence.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" ai-check -timeout 5s evidence.ail)",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "mutations": [
+        {
+          "mutant": "M1a-law",
+          "mutation": "Change the package legacy RecordedEffect mapping from ATTESTED to CLAIMED; keep valid return type.",
+          "must_fail_test": "TestWorldDemoLegacyGradeDrift",
+          "must_fail_assertion": "RecordedEffect grade differs from executable kernel law",
+          "command": "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M1a-empty",
+          "mutation": "In the test gate parser remove the explicit empty-results rejection; its null-control uses empty results, not a missing executable.",
+          "must_fail_test": "TestWorldDemoEvidencePinnedManifest",
+          "must_fail_assertion": "null report must be refused",
+          "command": "go test -run '^TestWorldDemoEvidencePinnedManifest$' ./host/coordinator -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestWorldDemoEvidencePinnedManifest$' ./host/coordinator -count=1 -timeout 120s -v",
+          "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+          "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+          "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" check evidence.ail)",
+          "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" test --format json evidence.ail)",
+          "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" ai-check -timeout 5s evidence.ail)",
+          "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+        ],
+        "may_touch": [
+          "packages/world-demo/evidence.ail",
+          "packages/world-demo/README.md",
+          "host/coordinator/world_demo_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M1a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "22 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.77,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestProducerMintsNoPacketForMultiEffectPlan$' ./host/coordinator -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.54,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "commit": "28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6",
+        "iteration": 266,
+        "review": "PASS 88/100, zero blocking; recorded in landed commit message",
+        "baseline_recheck": "Iteration267: TestWorldDemoEvidencePinnedManifest and TestWorldDemoLegacyGradeDrift named PASS under pinned v0.41.0"
+      }
+    },
+    {
+      "id": "M1b",
+      "title": "Convention-v2 approval plan, descriptor and package docs",
+      "design_milestone": "M1",
+      "estimated_minutes": 25,
+      "depends_on": [
+        "M1a"
+      ],
+      "files": [
+        "packages/world-demo/approve.ail",
+        "packages/world-demo/transitions.json",
+        "packages/world-demo/README.md",
+        "host/coordinator/world_demo_test.go"
+      ],
+      "status": "completed",
+      "new_tests": [
+        "TestWorldDemoApprovalExactOnePlan"
+      ],
+      "tests_first": [
+        {
+          "ac": "C1",
+          "tests": "TestWorldDemoApprovalExactOnePlan",
+          "assertions": "Run real pinned approve module with convention-v2 input. Decode plan; exactly one effect e1 Human.Approve@worktree cost=1 requester=demo, finish=false/result=null; descriptor access cost=0 and declared cost=1. Unknown keys/phases and malformed roster refuse with zero effects. Require named oneApprovalEffect Z3 identity and named happy/refusal inline cases.",
+          "command": "go test -run '^TestWorldDemoApprovalExactOnePlan$' ./host/coordinator -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C1",
+          "test": "TestWorldDemoApprovalExactOnePlan",
+          "assertions": "Run real pinned approve module with convention-v2 input. Decode plan; exactly one effect e1 Human.Approve@worktree cost=1 requester=demo, finish=false/result=null; descriptor access cost=0 and declared cost=1. Unknown keys/phases and malformed roster refuse with zero effects. Require named oneApprovalEffect Z3 identity and named happy/refusal inline cases.",
+          "command": "go test -run '^TestWorldDemoApprovalExactOnePlan$' ./host/coordinator -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Publishable self-contained approval module; never import sibling evidence.ail into the capsule source (publisher stages one module). If law must be repeated, extend executable drift test to compare the two sources. Ship descriptor payload construction and plan/finish conventions with README.",
+      "acceptance": [
+        "go test -run '^TestWorldDemoApprovalExactOnePlan$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestProducerMintsNoPacketForMultiEffectPlan$' ./host/coordinator -count=1 -timeout 45s -v",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" check approve.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" test --format json approve.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" ai-check -timeout 5s approve.ail)",
+        "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "commands": [
+        "go test -run '^TestWorldDemoApprovalExactOnePlan$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestProducerMintsNoPacketForMultiEffectPlan$' ./host/coordinator -count=1 -timeout 45s -v",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" check approve.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" test --format json approve.ail)",
+        "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" ai-check -timeout 5s approve.ail)",
+        "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "mutations": [
+        {
+          "mutant": "M1b-two-effects",
+          "mutation": "Append a second valid effect e2 to the approve module plan array while retaining all types and JSON validity.",
+          "must_fail_test": "TestWorldDemoApprovalExactOnePlan",
+          "must_fail_assertion": "len(plan.effects)==1",
+          "command": "go test -run '^TestWorldDemoApprovalExactOnePlan$' ./host/coordinator -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestWorldDemoApprovalExactOnePlan$' ./host/coordinator -count=1 -timeout 120s -v",
+          "go test -run '^TestProducerMintsNoPacketForMultiEffectPlan$' ./host/coordinator -count=1 -timeout 45s -v",
+          "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" check approve.ail)",
+          "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" test --format json approve.ail)",
+          "(cd packages/world-demo && run_ail \"$HOME/.pinned-ailang/ailang\" ai-check -timeout 5s approve.ail)",
+          "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+          "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+        ],
+        "may_touch": [
+          "packages/world-demo/approve.ail",
+          "packages/world-demo/transitions.json",
+          "packages/world-demo/README.md",
+          "host/coordinator/world_demo_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M1b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.77,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestProducerMintsNoPacketForMultiEffectPlan$' ./host/coordinator -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.54,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "passes": true,
+      "completed": "2026-10-15T02:04:31.655763+00:00",
+      "completion_evidence": {
+        "commit": "52ae7ff912fa65fcbedeb6f1b7c64e592b4b894b",
+        "iteration": 267,
+        "pr": 266,
+        "reviewed_sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+        "evaluation": "PASS90/100, zero blocking; same-model-fresh-context FLAG",
+        "ci": "PR38665538475 + merge38667006325 required2/2success",
+        "notes": "C1 discharged; E267-S1 separately queued177. Future milestones not completed."
+      }
+    },
+    {
+      "id": "M2a",
+      "title": "Demo CLI, preflight and authenticated domain commits",
+      "design_milestone": "M2",
+      "estimated_minutes": 25,
+      "depends_on": [
+        "M1b"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo.go",
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go",
+        "cmd/ailang-worldd/main.go",
+        "docs/QUICKSTART.md"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoSeedAuthenticatedCommits",
+        "TestDemoSeedPreflightRefusals",
+        "TestDemoSeedHelpPreparation"
+      ],
+      "tests_first": [
+        {
+          "ac": "C2",
+          "tests": "TestDemoSeedAuthenticatedCommits",
+          "assertions": "Provision test session only through V11 testMintEnv/authority.Mint test setup before sole-writer daemon starts. Execute real demo commit stage with valid session; assert goal, two candidates, unchanged production logepoch source and explicitly demo-authored commentary have exact hashes, real carrying entries and CAS; all requests carry bearer, no Mint from seed.",
+          "command": "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C2",
+          "tests": "TestDemoSeedPreflightRefusals",
+          "assertions": "Existing manifest, nonempty public world/log, absent/expired grants, wrong db/health interpreter, pin mismatch and unexpected CAS head must refuse before commits and leave no manifest; bootstrap registry and session rows alone are allowed. Unminted CLI refuses without opening /dev/tty or printing credentials.",
+          "command": "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C2/C10",
+          "tests": "TestDemoSeedHelpPreparation",
+          "assertions": "demo seed --help accepts/documents all designed flags, reports separate pins, and QUICKSTART describes a disposable worktree with world/logepoch.ail plus attended descriptor publish then typed-y mint; no hidden git operation.",
+          "command": "go test -run '^TestDemoSeedHelpPreparation$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C2",
+          "test": "TestDemoSeedAuthenticatedCommits",
+          "assertions": "Provision test session only through V11 testMintEnv/authority.Mint test setup before sole-writer daemon starts. Execute real demo commit stage with valid session; assert goal, two candidates, unchanged production logepoch source and explicitly demo-authored commentary have exact hashes, real carrying entries and CAS; all requests carry bearer, no Mint from seed.",
+          "command": "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C2",
+          "test": "TestDemoSeedPreflightRefusals",
+          "assertions": "Existing manifest, nonempty public world/log, absent/expired grants, wrong db/health interpreter, pin mismatch and unexpected CAS head must refuse before commits and leave no manifest; bootstrap registry and session rows alone are allowed. Unminted CLI refuses without opening /dev/tty or printing credentials.",
+          "command": "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C2/C10",
+          "test": "TestDemoSeedHelpPreparation",
+          "assertions": "demo seed --help accepts/documents all designed flags, reports separate pins, and QUICKSTART describes a disposable worktree with world/logepoch.ail plus attended descriptor publish then typed-y mint; no hidden git operation.",
+          "command": "go test -run '^TestDemoSeedHelpPreparation$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Add dispatch/help and the preflight/REST stage only; intermediate CLI must explicitly refuse incomplete S2-S6, with no success manifest. No stub claims a complete seed. Use normal public commit headers and sole-writer HTTP API. Keep daemon configuration operator-owned. Iteration268: --db first matches daemon health identity; bounded existing store.OpenReadOnly + authority resolver/broker grant predicates/EffectSpend may inspect required grants, expiry and budget before domain commits. Use existing bounded ScanUnreadableWorlds(ctx, empty-afterRef, 1).Scanned to reject any stored World row, including unselected World with empty head/log; no generic all-object emptiness claim. Close read-only handle before writes; all writes remain daemon HTTP with bearer/CAS. No competing writable store, Mint or new endpoint. Add missing-world.apply arm with other grants valid and no inventory change. Named independent evaluator target; preserves existing C2. Pin hash/version validation reuses the daemon-startup archive manifest through existing read-only archive.ReadManifest, matching its Hash/Size/Version to local pin bytes and health; no new subprocess or registry environment inheritance.",
+      "acceptance": [
+        "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedHelpPreparation$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestSessionMint_RequiresControllingTerminal$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+        "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedHelpPreparation$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestSessionMint_RequiresControllingTerminal$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+        "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M2a-bearer",
+          "mutation": "Omit Authorization header from a valid production demo REST commit request.",
+          "must_fail_test": "TestDemoSeedAuthenticatedCommits",
+          "must_fail_assertion": "successful seed commit stage returns success; denial detail is SessionAbsent",
+          "command": "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M2a-nonempty",
+          "mutation": "Neuter the empty-public-world/log guard only. Use a real seeded disposable store and a fresh absent output filename; other preconditions valid.",
+          "must_fail_test": "TestDemoSeedPreflightRefusals",
+          "must_fail_assertion": "nonempty store must refuse before any public inventory change",
+          "command": "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoSeedAuthenticatedCommits$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedPreflightRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedHelpPreparation$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestSessionMint_RequiresControllingTerminal$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo.go",
+          "cmd/ailang-worldd/demo_seed.go",
+          "cmd/ailang-worldd/demo_test.go",
+          "cmd/ailang-worldd/main.go",
+          "docs/QUICKSTART.md"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "Iteration268: --db first matches daemon health identity; bounded existing store.OpenReadOnly + authority resolver/broker grant predicates/EffectSpend may inspect required grants, expiry and budget before domain commits. Use existing bounded ScanUnreadableWorlds(ctx, empty-afterRef, 1).Scanned to reject any stored World row, including unselected World with empty head/log; no generic all-object emptiness claim. Close read-only handle before writes; all writes remain daemon HTTP with bearer/CAS. No competing writable store, Mint or new endpoint. Add missing-world.apply arm with other grants valid and no inventory change. Named independent evaluator target; preserves existing C2. Pin hash/version validation reuses the daemon-startup archive manifest through existing read-only archive.ReadManifest, matching its Hash/Size/Version to local pin bytes and health; no new subprocess or registry environment inheritance."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestSessionMint_RequiresControllingTerminal$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 2.06,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestSeToolsE2EBinaryVersions$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.54,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestSeToolsA2AEndToEnd$' ./host/daemon -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 6.91,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 6.31,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M2b",
+      "title": "Real read and tool test/check invocation stages",
+      "design_milestone": "M2",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M2a"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoSeedReadTestCheck",
+        "TestDemoSeedRejectsToolReportRefusals"
+      ],
+      "tests_first": [
+        {
+          "ac": "C2",
+          "tests": "TestDemoSeedReadTestCheck",
+          "assertions": "Both real pins required. Publish existing se-tools descriptors through production publisher core in test setup; real /a2a/ dispatch for demo-read/test/check. Read bytes equal stored logepoch; test argv op=test flags json:\"\", named passes>0 and no failures/skips/vacuity; ai_check actual non-null success. Retain actual pin, argv, stdout/stderr, invocation/effect refs; budget deltas Read=1 CLI=2 and no extra calls. Prove CLI result is v0.52.1, not proof pin.",
+          "command": "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C2",
+          "tests": "TestDemoSeedRejectsToolReportRefusals",
+          "assertions": "Use actual malformed/non-test/no-generator input files in disposable episode, and explicit null-report unit control; all must refuse, never publish a successful manifest or use fake phase output as positive evidence.",
+          "command": "go test -run '^TestDemoSeedRejectsToolReportRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C2",
+          "test": "TestDemoSeedReadTestCheck",
+          "assertions": "Both real pins required. Publish existing se-tools descriptors through production publisher core in test setup; real /a2a/ dispatch for demo-read/test/check. Read bytes equal stored logepoch; test argv op=test flags json:\"\", named passes>0 and no failures/skips/vacuity; ai_check actual non-null success. Retain actual pin, argv, stdout/stderr, invocation/effect refs; budget deltas Read=1 CLI=2 and no extra calls. Prove CLI result is v0.52.1, not proof pin.",
+          "command": "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C2",
+          "test": "TestDemoSeedRejectsToolReportRefusals",
+          "assertions": "Use actual malformed/non-test/no-generator input files in disposable episode, and explicit null-report unit control; all must refuse, never publish a successful manifest or use fake phase output as positive evidence.",
+          "command": "go test -run '^TestDemoSeedRejectsToolReportRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Resume stage orchestration through S3, still refuse CLI completion until later stages exist. Reuse cliSeBins pin discovery; provision real sessions using only V11 credentials. Do not create a release seed in the planner/executor. Positive test fixtures use the unmodified repository logepoch bytes.",
+      "acceptance": [
+        "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedRejectsToolReportRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestSeToolsE2EBinaryVersions$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestSeToolsA2AEndToEnd$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedRejectsToolReportRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestSeToolsE2EBinaryVersions$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestSeToolsA2AEndToEnd$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M2b-null",
+          "mutation": "Neuter non-null tool-report guard in the report-validation helper; pass the same syntactically valid null report unit control.",
+          "must_fail_test": "TestDemoSeedRejectsToolReportRefusals",
+          "must_fail_assertion": "null report is refused",
+          "command": "go test -run '^TestDemoSeedRejectsToolReportRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M2b-cli-op",
+          "mutation": "Change only S3 test invocation op to ai_check (valid tool call).",
+          "must_fail_test": "TestDemoSeedReadTestCheck",
+          "must_fail_assertion": "retained TESTED invocation argv[op] is test",
+          "command": "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedRejectsToolReportRefusals$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestSeToolsE2EBinaryVersions$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestSeToolsA2AEndToEnd$' ./host/daemon -count=1 -timeout 120s -v",
+          "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo_seed.go",
+          "cmd/ailang-worldd/demo_test.go",
+          "docs/QUICKSTART.md"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "TestDemoSeedReadTestCheck needs WORLD_TOOL_AILANG_BIN v0.52.1. Ordinary missing-pin run may SKIP; required milestone acceptance preflight must reject unset pin and require top-level PASS. Bad configured version is FAIL, never skip."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestSessionMint_RequiresControllingTerminal$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 2.06,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestSeToolsE2EBinaryVersions$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.54,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestSeToolsA2AEndToEnd$' ./host/daemon -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 6.91,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 6.31,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M3a",
+      "title": "HTTP proof adapters and real producer success",
+      "design_milestone": "M3",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M2b"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo_proof.go",
+        "cmd/ailang-worldd/demo_proof_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoProofHTTPProducerRoundTrip",
+        "TestDemoProofSourceHashRefusal"
+      ],
+      "tests_first": [
+        {
+          "ac": "C3",
+          "tests": "TestDemoProofHTTPProducerRoundTrip",
+          "assertions": "Real v0.41.0 producer on committed production world/logepoch.ail, new private random test key. GET payload=true validates source hash and cap; writer POST commit bearer/CAS preserves supplied envelope bytes/hash/interface/semantic ID. ValidateProof then Resolve yields PROVEN only for exact subject; REST carrying entry inventory includes envelope. Assert no competing writable store. Reader/writer BusyTimeout=0, HTTP 10s < read/write12s, exec30s/max1MiB/whole90s.",
+          "command": "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C3",
+          "tests": "TestDemoProofSourceHashRefusal",
+          "assertions": "Forwarding test transport reads real stored source, flips one returned payload byte; valid HTTP response reaches producer hash guard. Assert hash-mismatch detail, zero ref and no envelope writer call.",
+          "command": "go test -run '^TestDemoProofSourceHashRefusal$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C3",
+          "test": "TestDemoProofHTTPProducerRoundTrip",
+          "assertions": "Real v0.41.0 producer on committed production world/logepoch.ail, new private random test key. GET payload=true validates source hash and cap; writer POST commit bearer/CAS preserves supplied envelope bytes/hash/interface/semantic ID. ValidateProof then Resolve yields PROVEN only for exact subject; REST carrying entry inventory includes envelope. Assert no competing writable store. Reader/writer BusyTimeout=0, HTTP 10s < read/write12s, exec30s/max1MiB/whole90s.",
+          "command": "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C3",
+          "test": "TestDemoProofSourceHashRefusal",
+          "assertions": "Forwarding test transport reads real stored source, flips one returned payload byte; valid HTTP response reaches producer hash guard. Assert hash-mismatch detail, zero ref and no envelope writer call.",
+          "command": "go test -run '^TestDemoProofSourceHashRefusal$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "First production NewProducer caller, unexported HTTP ObjectReader/ObjectWriter adapters. Pin checker from health archived interpreter and hash actual executable bytes. Preserve store.UncertainError across HTTP uncertain-outcome translation; never retry unknown commit. Tests only may wrap adapters; no new production injection seam.",
+      "acceptance": [
+        "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoProofSourceHashRefusal$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoProofSourceHashRefusal$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M3a-source",
+          "mutation": "Flip one response source byte in the forwarding real-HTTP read arm; no malformed JSON.",
+          "must_fail_test": "TestDemoProofHTTPProducerRoundTrip",
+          "must_fail_assertion": "positive producer result must mint; producer reports source bytes hash mismatch before writer",
+          "command": "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M3a-no-rest",
+          "mutation": "For the test-only forwarding writer, store supplied object through real store.PutObject in the test fixture instead of its HTTP commit; return nil. Production still has no store handle.",
+          "must_fail_test": "TestDemoProofHTTPProducerRoundTrip",
+          "must_fail_assertion": "envelope must have a REST carrying entry (object exists, commit missing)",
+          "command": "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoProofHTTPProducerRoundTrip$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoProofSourceHashRefusal$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo_proof.go",
+          "cmd/ailang-worldd/demo_proof_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M3a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 2.44,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.36,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M3b",
+      "title": "Proof/key refusals and seed S4 integration",
+      "design_milestone": "M3",
+      "estimated_minutes": 24,
+      "depends_on": [
+        "M3a"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo_proof.go",
+        "cmd/ailang-worldd/demo_proof_test.go",
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoProofWrongKeyCannotProve",
+        "TestDemoProofNoVerifiedSetRefuses",
+        "TestDemoProofUncertainCommitStops"
+      ],
+      "tests_first": [
+        {
+          "ac": "C3",
+          "tests": "TestDemoProofWrongKeyCannotProve",
+          "assertions": "After real successful HTTP mint, validator configured with independently generated different key returns UNAVAILABLE, never PROVEN. Happy arm uses same key and exact subject.",
+          "command": "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C3",
+          "tests": "TestDemoProofNoVerifiedSetRefuses",
+          "assertions": "Read a real committed standalone no-contract scratch source under the real pin, not hand-authored ai-check JSON: producer returns ErrVacuousCheck, zero envelope ref, zero writer calls; successful production logepoch control requires sameRef and servesEntry.",
+          "command": "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C3",
+          "tests": "TestDemoProofUncertainCommitStops",
+          "assertions": "Test transport forwards real commit then loses the acknowledgement; demo surfaces uncertain outcome and performs exactly one write, no retry/reseed/manifest success. Both safe error and lost-response after commit have assertions.",
+          "command": "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C3",
+          "test": "TestDemoProofWrongKeyCannotProve",
+          "assertions": "After real successful HTTP mint, validator configured with independently generated different key returns UNAVAILABLE, never PROVEN. Happy arm uses same key and exact subject.",
+          "command": "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C3",
+          "test": "TestDemoProofNoVerifiedSetRefuses",
+          "assertions": "Read a real committed standalone no-contract scratch source under the real pin, not hand-authored ai-check JSON: producer returns ErrVacuousCheck, zero envelope ref, zero writer calls; successful production logepoch control requires sameRef and servesEntry.",
+          "command": "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C3",
+          "test": "TestDemoProofUncertainCommitStops",
+          "assertions": "Test transport forwards real commit then loses the acknowledgement; demo surfaces uncertain outcome and performs exactly one write, no retry/reseed/manifest success. Both safe error and lost-response after commit have assertions.",
+          "command": "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Compose S4 with S1-S3; keep success manifest disabled until anchored approval/why/roster validation. Fresh random key t.TempDir 0600, never fixture key, stdout, manifest or tracked bytes. No edits to producer/validator/core codecs.",
+      "acceptance": [
+        "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M3b-key",
+          "mutation": "Change the validator key in the real positive arm to a different valid 32-byte private key.",
+          "must_fail_test": "TestDemoProofWrongKeyCannotProve",
+          "must_fail_assertion": "same-key positive arm must Resolve PROVEN",
+          "command": "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M3b-null-verified",
+          "mutation": "Change the positive source/subject in the disposable test store to a valid no-contract module (consistent hash); retain the real checker.",
+          "must_fail_test": "TestDemoProofNoVerifiedSetRefuses",
+          "must_fail_assertion": "positive proof-control must mint required identities; observed ErrVacuousCheck",
+          "command": "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M3b-retry",
+          "mutation": "Retry the HTTP proof writer once after the test transport uncertain outcome, retaining the same valid object.",
+          "must_fail_test": "TestDemoProofUncertainCommitStops",
+          "must_fail_assertion": "write attempt count must equal one",
+          "command": "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo_proof.go",
+          "cmd/ailang-worldd/demo_proof_test.go",
+          "cmd/ailang-worldd/demo_seed.go",
+          "cmd/ailang-worldd/demo_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M3b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "24 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 2.44,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.36,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M4a",
+      "title": "Real approval transition, packet anchoring and budget delta",
+      "design_milestone": "M4",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M3b"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoSeedApprovalPacket"
+      ],
+      "tests_first": [
+        {
+          "ac": "C4",
+          "tests": "TestDemoSeedApprovalPacket",
+          "assertions": "Run checked-in demo-approve through real pinned capsule/coordinator and daemon HumanHandler. Exactly one S5 carrying entry/one packet, pending approval, effect e1/request/proposal/input/output linked by content hash; Human.Approve remaining budget decreases by exactly1; descriptor access cost0. No decision verb, duplicate invocation or fabricated packet. Four evidence refs come from preceding real stages.",
+          "command": "go test -run '^TestDemoSeedApprovalPacket$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C4",
+          "test": "TestDemoSeedApprovalPacket",
+          "assertions": "Run checked-in demo-approve through real pinned capsule/coordinator and daemon HumanHandler. Exactly one S5 carrying entry/one packet, pending approval, effect e1/request/proposal/input/output linked by content hash; Human.Approve remaining budget decreases by exactly1; descriptor access cost0. No decision verb, duplicate invocation or fabricated packet. Four evidence refs come from preceding real stages.",
+          "command": "go test -run '^TestDemoSeedApprovalPacket$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "S5 joins preexisting producer/coordinator paths. Tests may inject existing coordinator Now solely as V11; use real approve module for positive arm, never humanPlanRunner. Do not serialize complete manifest yet.",
+      "acceptance": [
+        "go test -run '^TestDemoSeedApprovalPacket$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDaemonInvocationMintsDecisionPacket$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoSeedApprovalPacket$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDaemonInvocationMintsDecisionPacket$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M4a-extra-effect",
+          "mutation": "Return a valid two-effect Human.Approve plan from a copied test module (distinct e1/e2), preserving schema and declared capability.",
+          "must_fail_test": "TestDemoSeedApprovalPacket",
+          "must_fail_assertion": "successful single-approval stage with exactly one effect/packet (coordinator refusal must be visible in failure diagnostic)",
+          "command": "go test -run '^TestDemoSeedApprovalPacket$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoSeedApprovalPacket$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDaemonInvocationMintsDecisionPacket$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo_seed.go",
+          "cmd/ailang-worldd/demo_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M4a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "Real approve plan needs AILANG_BIN; preceding read/test/check stages also require WORLD_TOOL_AILANG_BIN. Required gate cannot accept helper SKIP."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.77,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 6.31,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.26,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestDaemonInvocationMintsDecisionPacket$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.68,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWhyTargetFormsResolveToOneEntry$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.69,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M4b",
+      "title": "Complete why validation and public manifest assembly",
+      "design_milestone": "M4",
+      "estimated_minutes": 26,
+      "depends_on": [
+        "M4a"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go",
+        "cmd/ailang-worldd/why_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoSeedWhyNamedLinks",
+        "TestDemoSeedManifestReferences"
+      ],
+      "tests_first": [
+        {
+          "ac": "C4",
+          "tests": "TestDemoSeedWhyNamedLinks",
+          "assertions": "Why for each real read/test/check/approval entry: coordinator=true, ok=true, at least one effect and exact expected world/entry/record/input/plan/effect/output link names all true; zero links must refuse. Assert coordinator before packet count in replacement control, so plain REST cannot mask the intended assertion.",
+          "command": "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C4",
+          "tests": "TestDemoSeedManifestReferences",
+          "assertions": "Assemble (do not publish success yet) schema/version, frozen head, ordered actual entries/objects, pins/source/goal/candidates, packet/request/proposal, four evidence refs, invocation/effects and why raw JSON hashes. Follow each ref/hash, reject missing/mismatched refs; no credential/key/absolute path/capture time in public bytes. Scratch assembly is not release acceptance.",
+          "command": "go test -run '^TestDemoSeedManifestReferences$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C4",
+          "test": "TestDemoSeedWhyNamedLinks",
+          "assertions": "Why for each real read/test/check/approval entry: coordinator=true, ok=true, at least one effect and exact expected world/entry/record/input/plan/effect/output link names all true; zero links must refuse. Assert coordinator before packet count in replacement control, so plain REST cannot mask the intended assertion.",
+          "command": "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C4",
+          "test": "TestDemoSeedManifestReferences",
+          "assertions": "Assemble (do not publish success yet) schema/version, frozen head, ordered actual entries/objects, pins/source/goal/candidates, packet/request/proposal, four evidence refs, invocation/effects and why raw JSON hashes. Follow each ref/hash, reject missing/mismatched refs; no credential/key/absolute path/capture time in public bytes. Scratch assembly is not release acceptance.",
+          "command": "go test -run '^TestDemoSeedManifestReferences$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Reuse actual CLI why implementation, not a substitute provenance walker. Complete manifest assembly helper; success serialization stays fail-closed until M5c roster checks. Unit omission controls derive from real reports.",
+      "acceptance": [
+        "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedManifestReferences$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWhyTargetFormsResolveToOneEntry$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+        "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedManifestReferences$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWhyTargetFormsResolveToOneEntry$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+        "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M4b-plain-rest",
+          "mutation": "Replace S5 test stimulus with a valid ordinary REST demo object commit (not forbidden packet semantic ID), then call the actual why validator on that entry.",
+          "must_fail_test": "TestDemoSeedWhyNamedLinks",
+          "must_fail_assertion": "coordinator must be true (evaluate before packet count)",
+          "command": "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M4b-link",
+          "mutation": "Remove only the effect link from a decoded real why report in the validator unit control, retaining coordinator/ok and other links.",
+          "must_fail_test": "TestDemoSeedWhyNamedLinks",
+          "must_fail_assertion": "expected effect link must exist and be true",
+          "command": "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M4b-ref",
+          "mutation": "Replace one manifest public ref with another valid absent SHA256 ref.",
+          "must_fail_test": "TestDemoSeedManifestReferences",
+          "must_fail_assertion": "every declared manifest reference resolves to matching content",
+          "command": "go test -run '^TestDemoSeedManifestReferences$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedManifestReferences$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestWhyTargetFormsResolveToOneEntry$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo_seed.go",
+          "cmd/ailang-worldd/demo_test.go",
+          "cmd/ailang-worldd/why_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M4b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "26 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestDecisionPacketCodec$' ./host/coordinator -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.77,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestCLIAgainstSeToolsDaemon$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 6.31,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestRESTCommitRefusesDecisionPacketObjects$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.26,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestDaemonInvocationMintsDecisionPacket$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.68,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWhyTargetFormsResolveToOneEntry$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.69,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M5a",
+      "title": "Bounded anchored roster, ATTESTED and authored CLAIMED",
+      "design_milestone": "M5",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M4b"
+      ],
+      "files": [
+        "host/daemon/workbench_packet_evidence.go",
+        "host/daemon/workbench_packet_evidence_test.go",
+        "host/daemon/workbench_packet.go",
+        "host/coordinator/world_demo_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestWorkbenchPacketRosterAnchoredBounds"
+      ],
+      "tests_first": [
+        {
+          "ac": "C5",
+          "tests": "TestWorkbenchPacketRosterAnchoredBounds",
+          "assertions": "Follow validated packet carrying record.input only, verify content hash/semantic ID and schema. Exactly four unique kind/ref pairs and source subject sibling; unknown caller grade/extra keys/schema never decorate a packet. 64KiB input, 1MiB result/read,4KiB claim,1MiB decoded stdout,256 named tests, shared10s deadline; boundary controls then cap+1 refusal. Decode RecordedEffect with RecordConsistent and request/result hashes for ATTESTED. Authored claim kind resolves only matching demo claim object, producer/author=demo-authored, never AiReview. Unavailable on bad kind/hash/overflow; no arbitrary semantic-ID scanning.",
+          "command": "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C5",
+          "test": "TestWorkbenchPacketRosterAnchoredBounds",
+          "assertions": "Follow validated packet carrying record.input only, verify content hash/semantic ID and schema. Exactly four unique kind/ref pairs and source subject sibling; unknown caller grade/extra keys/schema never decorate a packet. 64KiB input, 1MiB result/read,4KiB claim,1MiB decoded stdout,256 named tests, shared10s deadline; boundary controls then cap+1 refusal. Decode RecordedEffect with RecordConsistent and request/result hashes for ATTESTED. Authored claim kind resolves only matching demo claim object, producer/author=demo-authored, never AiReview. Unavailable on bad kind/hash/overflow; no arbitrary semantic-ID scanning.",
+          "command": "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Implement transport/projection validation only; host performs bounded I/O, package owns kind law. Expose no new authority API. No changes to packet v1 bytes or object-grade resolution. Add hash/kind refusals before any label. Re-run executable package law drift.",
+      "acceptance": [
+        "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M5a-record-hash",
+          "mutation": "Flip one returned record payload byte in test read wrapper after genuine store read; keep ref/meta intact.",
+          "must_fail_test": "TestWorkbenchPacketRosterAnchoredBounds",
+          "must_fail_assertion": "bad record hash yields UNAVAILABLE",
+          "command": "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M5a-claim-kind",
+          "mutation": "Point CLAIMED pair at a real object of another declared semantic kind; retain valid object hash.",
+          "must_fail_test": "TestWorkbenchPacketRosterAnchoredBounds",
+          "must_fail_assertion": "resolved kind must equal declared kind; otherwise UNAVAILABLE",
+          "command": "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M5a-limit",
+          "mutation": "Neuter decoded input-size cap guard; feed a valid 64KiB+1 input with all refs resolving.",
+          "must_fail_test": "TestWorkbenchPacketRosterAnchoredBounds",
+          "must_fail_assertion": "oversize input yields UNAVAILABLE",
+          "command": "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestWorkbenchPacketRosterAnchoredBounds$' ./host/daemon -count=1 -timeout 120s -v",
+          "go test -run '^TestWorldDemoLegacyGradeDrift$' ./host/coordinator -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "host/daemon/workbench_packet_evidence.go",
+          "host/daemon/workbench_packet_evidence_test.go",
+          "host/daemon/workbench_packet.go",
+          "host/coordinator/world_demo_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.75,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.23,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.36,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.34,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchNewViewTypesInCensus$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.32,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M5b",
+      "title": "TESTED/PROVEN resolution and truthful roster rendering",
+      "design_milestone": "M5",
+      "estimated_minutes": 29,
+      "depends_on": [
+        "M5a"
+      ],
+      "files": [
+        "host/daemon/workbench_packet_evidence.go",
+        "host/daemon/workbench_packet_evidence_test.go",
+        "host/daemon/workbench_packet.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go",
+        "host/workbench/live_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestWorkbenchPacketRosterTestedAndProven",
+        "TestRenderPacketEvidenceFourRows"
+      ],
+      "tests_first": [
+        {
+          "ac": "C5",
+          "tests": "TestWorkbenchPacketRosterTestedAndProven",
+          "assertions": "Real TESTED S3 invocation: carrying commit, exactly one Ailang.CLI effect, actual request/result hashes, argv test, strict success JSON and nonempty named pass set, zero failed/skipped/vacuous; reject arbitrary prose. PROVEN follows only existing ValidateProof\u2192Resolve with actual operator key/exact source, missing/wrong key/subject refuse. Demo claim presented as PROVEN input kind must not promote. Existing two subject-grade lines preserve prior values.",
+          "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C5",
+          "tests": "TestRenderPacketEvidenceFourRows",
+          "assertions": "Render all four grade labels, TESTED pass verdict, author/producer on every row, demo-authored caption, report/source/pin links and existing honest subject-grade lines; escape HTML. No raw grade constant confers authority. Add new view structs to existing field census; every exported field renders.",
+          "command": "go test -run '^TestRenderPacketEvidenceFourRows$' ./host/workbench -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C5",
+          "test": "TestWorkbenchPacketRosterTestedAndProven",
+          "assertions": "Real TESTED S3 invocation: carrying commit, exactly one Ailang.CLI effect, actual request/result hashes, argv test, strict success JSON and nonempty named pass set, zero failed/skipped/vacuous; reject arbitrary prose. PROVEN follows only existing ValidateProof\u2192Resolve with actual operator key/exact source, missing/wrong key/subject refuse. Demo claim presented as PROVEN input kind must not promote. Existing two subject-grade lines preserve prior values.",
+          "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C5",
+          "test": "TestRenderPacketEvidenceFourRows",
+          "assertions": "Render all four grade labels, TESTED pass verdict, author/producer on every row, demo-authored caption, report/source/pin links and existing honest subject-grade lines; escape HTML. No raw grade constant confers authority. Add new view structs to existing field census; every exported field renders.",
+          "command": "go test -run '^TestRenderPacketEvidenceFourRows$' ./host/workbench -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Finish grades and renderer; no callers supply authoritative grade. Preserve row105 authority. Extend workbenchViewTypes census with roster structures in the same run; control StillMode must render through the template branch when added next.",
+      "acceptance": [
+        "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestRenderPacketEvidenceFourRows$' ./host/workbench -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchNewViewTypesInCensus$' ./host/workbench -count=1 -timeout 45s -v",
+        "go test -race ./host/workbench -count=1 -timeout 120s"
+      ],
+      "commands": [
+        "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestRenderPacketEvidenceFourRows$' ./host/workbench -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchNewViewTypesInCensus$' ./host/workbench -count=1 -timeout 45s -v",
+        "go test -race ./host/workbench -count=1 -timeout 120s"
+      ],
+      "mutations": [
+        {
+          "mutant": "M5b-promote-claim",
+          "mutation": "Change only authored claim requested kind to PROVEN in a valid roster control.",
+          "must_fail_test": "TestWorkbenchPacketRosterTestedAndProven",
+          "must_fail_assertion": "claim cannot promote; row remains UNAVAILABLE",
+          "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M5b-test-prose",
+          "mutation": "Substitute arbitrary UTF-8 prose as stdout in a real test result via forwarding reader control; rebuild surrounding result hash so JSON validation is the reached guard.",
+          "must_fail_test": "TestWorkbenchPacketRosterTestedAndProven",
+          "must_fail_assertion": "TESTED validator rejects non-test-report text",
+          "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M5b-test-guard",
+          "mutation": "Neuter failed/skipped/vacuous test-report guard on otherwise structurally valid test JSON control.",
+          "must_fail_test": "TestWorkbenchPacketRosterTestedAndProven",
+          "must_fail_assertion": "nonpassing test report yields UNAVAILABLE",
+          "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [
+        "go test -race ./host/workbench -count=1 -timeout 120s"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
+          "go test -run '^TestRenderPacketEvidenceFourRows$' ./host/workbench -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchNewViewTypesInCensus$' ./host/workbench -count=1 -timeout 45s -v",
+          "go test -race ./host/workbench -count=1 -timeout 120s"
+        ],
+        "may_touch": [
+          "host/daemon/workbench_packet_evidence.go",
+          "host/daemon/workbench_packet_evidence_test.go",
+          "host/daemon/workbench_packet.go",
+          "host/workbench/render.go",
+          "host/workbench/render_test.go",
+          "host/workbench/live_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "29 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.75,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.23,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.36,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.34,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchNewViewTypesInCensus$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.32,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -race ./host/workbench -count=1 -timeout 120s",
+          "rc": 0,
+          "seconds": 1.99,
+          "result": "PASS",
+          "detail": "ok  \tgithub.com/sunholo-data/ailang-world/host/workbench\t1.669s"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M5c",
+      "title": "Seed roster validation and success manifest publication",
+      "design_milestone": "M5",
+      "estimated_minutes": 23,
+      "depends_on": [
+        "M5b"
+      ],
+      "files": [
+        "cmd/ailang-worldd/demo_seed.go",
+        "cmd/ailang-worldd/demo_test.go",
+        "host/daemon/workbench_packet_evidence_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestDemoSeedEndToEnd",
+        "TestDemoSeedRosterKindMismatchRefuses"
+      ],
+      "tests_first": [
+        {
+          "ac": "C2/C3/C4/C5",
+          "tests": "TestDemoSeedEndToEnd",
+          "assertions": "Real seeded temporary store from empty public state: S1-S6 all occur through REST/coordinator, real pins/source/private key, valid packet roster and all why links. Serialize success manifest once only after checks; no missing/mismatched evidence. No release credentials, fake positive phase runner or new production injection seam.",
+          "command": "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C5",
+          "tests": "TestDemoSeedRosterKindMismatchRefuses",
+          "assertions": "Genuine real object substituted for CLAIMED ref with another semantic kind: workbench shows UNAVAILABLE and production seed final validator refuses with no success manifest; positive test reaches final roster-validation helper using same real seed data.",
+          "command": "go test -run '^TestDemoSeedRosterKindMismatchRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C2/C3/C4/C5",
+          "test": "TestDemoSeedEndToEnd",
+          "assertions": "Real seeded temporary store from empty public state: S1-S6 all occur through REST/coordinator, real pins/source/private key, valid packet roster and all why links. Serialize success manifest once only after checks; no missing/mismatched evidence. No release credentials, fake positive phase runner or new production injection seam.",
+          "command": "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C5",
+          "test": "TestDemoSeedRosterKindMismatchRefuses",
+          "assertions": "Genuine real object substituted for CLAIMED ref with another semantic kind: workbench shows UNAVAILABLE and production seed final validator refuses with no success manifest; positive test reaches final roster-validation helper using same real seed data.",
+          "command": "go test -run '^TestDemoSeedRosterKindMismatchRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Enable CLI success now that the complete roster validator exists. Tests exercise real validation helper with actual stored packet/input and derived mismatches; no test-only bypass in release seed. Serialize public manifest atomically with absent-output guard; uncertain outcome never reseeds.",
+      "acceptance": [
+        "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedRosterKindMismatchRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedRosterKindMismatchRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M5c-kind-finalizer",
+          "mutation": "Neuter only final seed roster-kind refusal; leave real projection returning UNAVAILABLE.",
+          "must_fail_test": "TestDemoSeedRosterKindMismatchRefuses",
+          "must_fail_assertion": "seed must refuse kind mismatch and write no success manifest",
+          "command": "go test -run '^TestDemoSeedRosterKindMismatchRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedRosterKindMismatchRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/demo_seed.go",
+          "cmd/ailang-worldd/demo_test.go",
+          "host/daemon/workbench_packet_evidence_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M5c/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "23 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchPacketValidated$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.75,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.23,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchGradeProvenFromSubjectBoundEnvelope$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 1.36,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.34,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchNewViewTypesInCensus$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.32,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M6",
+      "title": "Still serve flag and stable complete server HTML",
+      "design_milestone": "M6",
+      "estimated_minutes": 25,
+      "depends_on": [
+        "M5c"
+      ],
+      "files": [
+        "cmd/ailang-worldd/main.go",
+        "cmd/ailang-worldd/main_test.go",
+        "host/daemon/daemon.go",
+        "host/daemon/workbench.go",
+        "host/daemon/workbench_still_test.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestWorkbenchStillAllRegions",
+        "TestServeWorkbenchStillFlag",
+        "TestWorkbenchStillDefaultLiveScript"
+      ],
+      "tests_first": [
+        {
+          "ac": "C6",
+          "tests": "TestWorkbenchStillAllRegions",
+          "assertions": "Recorder-based real route: still mode includes timeline/live list/graph/decisions/packet refs/static footer, zero script tags. Repeat GET bytes on same store with request times different by2s equal; no nonce/time rewrite. Preserve all CSP/headers/read-only semantics.",
+          "command": "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C6",
+          "tests": "TestServeWorkbenchStillFlag",
+          "assertions": "Run serve help/flag parser and renderer; explicit --workbench-still maps to Config/Page flag; default absent leaves exactly one live script. Invalid flag usage still refuses.",
+          "command": "go test -run '^TestServeWorkbenchStillFlag$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C6",
+          "tests": "TestWorkbenchStillDefaultLiveScript",
+          "assertions": "Default configuration still emits /workbench/live.js; true suppresses it. Page flag is referenced in the template branch so field census remains non-vacuous.",
+          "command": "go test -run '^TestWorkbenchStillDefaultLiveScript$' ./host/workbench -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C6",
+          "test": "TestWorkbenchStillAllRegions",
+          "assertions": "Recorder-based real route: still mode includes timeline/live list/graph/decisions/packet refs/static footer, zero script tags. Repeat GET bytes on same store with request times different by2s equal; no nonce/time rewrite. Preserve all CSP/headers/read-only semantics.",
+          "command": "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C6",
+          "test": "TestServeWorkbenchStillFlag",
+          "assertions": "Run serve help/flag parser and renderer; explicit --workbench-still maps to Config/Page flag; default absent leaves exactly one live script. Invalid flag usage still refuses.",
+          "command": "go test -run '^TestServeWorkbenchStillFlag$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C6",
+          "test": "TestWorkbenchStillDefaultLiveScript",
+          "assertions": "Default configuration still emits /workbench/live.js; true suppresses it. Page flag is referenced in the template branch so field census remains non-vacuous.",
+          "command": "go test -run '^TestWorkbenchStillDefaultLiveScript$' ./host/workbench -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "D2 suppresses one script only; no CSS compacting/layout redesign to hide PD1. If seeded repeated GET varies report element/bytes and stop product acceptance. Do not broaden flag to freeze authority. No real Chrome needed for these tests.",
+      "acceptance": [
+        "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestServeWorkbenchStillFlag$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchStillDefaultLiveScript$' ./host/workbench -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchLiveScriptTag$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestRenderQuietFooter$' ./host/workbench -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v",
+        "go test -run '^TestServeWorkbenchStillFlag$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchStillDefaultLiveScript$' ./host/workbench -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchLiveScriptTag$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestRenderQuietFooter$' ./host/workbench -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M6-script",
+          "mutation": "Replace conditional script emission with unconditional valid template script tag.",
+          "must_fail_test": "TestWorkbenchStillAllRegions",
+          "must_fail_assertion": "still page has zero script tags",
+          "command": "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M6-graph",
+          "mutation": "Remove graph section emission only in still template branch, preserving valid template syntax.",
+          "must_fail_test": "TestWorkbenchStillAllRegions",
+          "must_fail_assertion": "world graph required region must exist",
+          "command": "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M6-default",
+          "mutation": "Change serve flag default from false to true.",
+          "must_fail_test": "TestServeWorkbenchStillFlag",
+          "must_fail_assertion": "default configuration must emit live script",
+          "command": "go test -run '^TestServeWorkbenchStillFlag$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestWorkbenchStillAllRegions$' ./host/daemon -count=1 -timeout 120s -v",
+          "go test -run '^TestServeWorkbenchStillFlag$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchStillDefaultLiveScript$' ./host/workbench -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchLiveScriptTag$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestRenderQuietFooter$' ./host/workbench -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchViewFieldsAllRender$' ./host/workbench -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "cmd/ailang-worldd/main.go",
+          "cmd/ailang-worldd/main_test.go",
+          "host/daemon/daemon.go",
+          "host/daemon/workbench.go",
+          "host/daemon/workbench_still_test.go",
+          "host/workbench/render.go",
+          "host/workbench/render_test.go",
+          "docs/QUICKSTART.md"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M6/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.94,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.71,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.76,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveScriptTag$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.76,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestRenderQuietFooter$' ./host/workbench -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.67,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M7a",
+      "title": "Bounded supervisor with mandatory fake Chrome companions",
+      "design_milestone": "M7",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M6"
+      ],
+      "files": [
+        "scripts/capture_marketing.sh",
+        "scripts/marketing_capture.py",
+        "scripts/marketingcheck/supervisor_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestMarketingSupervisorFakeChromeSuccess",
+        "TestMarketingSupervisorFakeChromeNoFile",
+        "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
+        "TestMarketingSupervisorFakeDaemonCleanup"
+      ],
+      "tests_first": [
+        {
+          "ac": "C7",
+          "tests": "TestMarketingSupervisorFakeChromeSuccess",
+          "assertions": "Always-on fake Chrome shell script records complete argv, preserved HOME, stdin EOF, unique absolute profile/destination, scheme flag/viewport/scale/language. Writes fresh regular nonempty PNG and exits0; real Python supervisor accepts. Existing stale PNG cannot satisfy a new destination.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C7",
+          "tests": "TestMarketingSupervisorFakeChromeNoFile",
+          "assertions": "Always-on fake Chrome exits0 but writes no file; supervisor returns typed MissingPNG. Controls also reject nonzero exit even with PNG, empty/nonregular file. Test does not need browser/socket.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeNoFile$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C7",
+          "tests": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
+          "assertions": "Always-on fake Chrome starts child/grandchild, writes a PNG then hangs. Short test deadline via subprocess CLI timeout parameter (unit control only); Timeout verdict despite PNG, SIGKILL process group and reap\u22645s; checked PIDs child+grandchild dead. Production deadline30s and entire pass\u2264300s.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C7",
+          "tests": "TestMarketingSupervisorFakeDaemonCleanup",
+          "assertions": "Always-on fake daemon ignores TERM then valid KILL/reap;\u22645s each production wait. Inject cleanup failure unit control must override earlier shot success. Shell normal/signal traps exercised, no unsupervised orphan.",
+          "command": "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C7",
+          "test": "TestMarketingSupervisorFakeChromeSuccess",
+          "assertions": "Always-on fake Chrome shell script records complete argv, preserved HOME, stdin EOF, unique absolute profile/destination, scheme flag/viewport/scale/language. Writes fresh regular nonempty PNG and exits0; real Python supervisor accepts. Existing stale PNG cannot satisfy a new destination.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C7",
+          "test": "TestMarketingSupervisorFakeChromeNoFile",
+          "assertions": "Always-on fake Chrome exits0 but writes no file; supervisor returns typed MissingPNG. Controls also reject nonzero exit even with PNG, empty/nonregular file. Test does not need browser/socket.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeNoFile$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C7",
+          "test": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
+          "assertions": "Always-on fake Chrome starts child/grandchild, writes a PNG then hangs. Short test deadline via subprocess CLI timeout parameter (unit control only); Timeout verdict despite PNG, SIGKILL process group and reap\u22645s; checked PIDs child+grandchild dead. Production deadline30s and entire pass\u2264300s.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C7",
+          "test": "TestMarketingSupervisorFakeDaemonCleanup",
+          "assertions": "Always-on fake daemon ignores TERM then valid KILL/reap;\u22645s each production wait. Inject cleanup failure unit control must override earlier shot success. Shell normal/signal traps exercised, no unsupervised orphan.",
+          "command": "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        }
+      ],
+      "implementation": "Python stdlib supervises only; Go tests drive real Python code with fake scripts. No image decoder, installation or Go dependency. Keep HOME intact, DEVNULL stdin and bounded group cleanup. Shell --help documents full config; capture must not mint/commit/approve.",
+      "acceptance": [
+        "go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeChromeNoFile$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "bash -n scripts/capture_marketing.sh"
+      ],
+      "commands": [
+        "go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeChromeNoFile$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "bash -n scripts/capture_marketing.sh"
+      ],
+      "mutations": [
+        {
+          "mutant": "M7a-no-file",
+          "mutation": "Neuter regular-nonempty-new-file guard after rc=0 in Python supervisor.",
+          "must_fail_test": "TestMarketingSupervisorFakeChromeNoFile",
+          "must_fail_assertion": "rc0 with no file must be MissingPNG",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeNoFile$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7a-child-only",
+          "mutation": "Replace group kill with child-only kill; test cleanup always kills/checks its own retained grandchild to avoid leak.",
+          "must_fail_test": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
+          "must_fail_assertion": "grandchild must be dead after bounded cleanup",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7a-timeout-success",
+          "mutation": "On timeout with existing PNG return success after normal kill/reap.",
+          "must_fail_test": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
+          "must_fail_assertion": "timeout must fail even when PNG exists",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingSupervisorFakeChromeNoFile$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "bash -n scripts/capture_marketing.sh"
+        ],
+        "may_touch": [
+          "scripts/capture_marketing.sh",
+          "scripts/marketing_capture.py",
+          "scripts/marketingcheck/supervisor_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "All four tests are binary-free companions, always run in CI. Any future real-browser supervisor probe requires WORLD_CHROME and these exact companions; fake success proves supervisor only, never visible product content."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.94,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.71,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.76,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveChromeDrill$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.66,
+          "result": "SKIP (not acceptance)"
+        },
+        {
+          "command": "./scripts/tracked_binary_gate.sh",
+          "rc": 0,
+          "seconds": 0.39,
+          "result": "PASS",
+          "detail": "\u2713 0 binary blobs among 3523 tracked files"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M7b",
+      "title": "PNG structure, decoded content and exact two-pass verifier",
+      "design_milestone": "M7",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M7a"
+      ],
+      "files": [
+        "scripts/marketingcheck/main.go",
+        "scripts/marketingcheck/png.go",
+        "scripts/marketingcheck/png_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestMarketingPNGStructure",
+        "TestMarketingPNGContent",
+        "TestMarketingTwoPassInventory"
+      ],
+      "tests_first": [
+        {
+          "ac": "C8/C9",
+          "tests": "TestMarketingPNGStructure",
+          "assertions": "Go stdlib image/png+crc32: six exact names/path rule/signature, first13-byte IHDR, valid CRCs, allowed chunks, one terminal IEND/no tail, reject text/exif, per-file1,048,576 and directory-total8,388,608 (counts ALL PNGs). Cap/CRC/unknown-chunk fixtures remain valid far enough to reach specific guard.",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C8",
+          "tests": "TestMarketingPNGContent",
+          "assertions": "Exact viewport dimensions, >32 RGB colors, chromatic fraction\u22651%, variance in each measured content rectangle incl packet validation+four rows, per-shot light/dark background luminance. Reject uniform PNG and separately mostly-gray colorful test. Rectangles in bounds; decoded content gate cannot accept tiny arbitrary crop as visible text proof.",
+          "command": "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C8/C9",
+          "tests": "TestMarketingTwoPassInventory",
+          "assertions": "Exactly six names each pass, SHA256 raw PNG bytes equal, hashes match manifest; no recompress/metadata strip/pixel similarity. Missing shot and altered valid PNG (different ancillary allowed sRGB/chunk encoding with rebuilt CRC or one actual pixel, then valid encode) refuse specifically equality. Equal-copy control passes.",
+          "command": "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C8/C9",
+          "test": "TestMarketingPNGStructure",
+          "assertions": "Go stdlib image/png+crc32: six exact names/path rule/signature, first13-byte IHDR, valid CRCs, allowed chunks, one terminal IEND/no tail, reject text/exif, per-file1,048,576 and directory-total8,388,608 (counts ALL PNGs). Cap/CRC/unknown-chunk fixtures remain valid far enough to reach specific guard.",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C8",
+          "test": "TestMarketingPNGContent",
+          "assertions": "Exact viewport dimensions, >32 RGB colors, chromatic fraction\u22651%, variance in each measured content rectangle incl packet validation+four rows, per-shot light/dark background luminance. Reject uniform PNG and separately mostly-gray colorful test. Rectangles in bounds; decoded content gate cannot accept tiny arbitrary crop as visible text proof.",
+          "command": "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C8/C9",
+          "test": "TestMarketingTwoPassInventory",
+          "assertions": "Exactly six names each pass, SHA256 raw PNG bytes equal, hashes match manifest; no recompress/metadata strip/pixel similarity. Missing shot and altered valid PNG (different ancillary allowed sRGB/chunk encoding with rebuilt CRC or one actual pixel, then valid encode) refuse specifically equality. Equal-copy control passes.",
+          "command": "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        }
+      ],
+      "implementation": "Separate structural parser/limit functions from image decoder and six-set gate for non-masked mutation controls. Per-file cap makes six-shot aggregate8MiB unreachable (six\u22646MiB); test directory-total function independently with other PNGs. These are validity controls not candidate release assets. CRC fixture direct parser test required because image/png also rejects CRC. Verifier CLI check --pass-a --pass-b --manifest --rectangles; no image mutation.",
+      "acceptance": [
+        "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 180s"
+      ],
+      "commands": [
+        "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 180s"
+      ],
+      "mutations": [
+        {
+          "mutant": "M7b-uniform",
+          "mutation": "Neuter color/variance guard; valid exact-dimension uniform decoded PNG fixture reaches gate.",
+          "must_fail_test": "TestMarketingPNGContent",
+          "must_fail_assertion": "uniform PNG must be rejected",
+          "command": "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-missing",
+          "mutation": "Neuter exact six-name set guard; five valid matching pairs and manifest control.",
+          "must_fail_test": "TestMarketingTwoPassInventory",
+          "must_fail_assertion": "missing shot must be rejected",
+          "command": "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-altered",
+          "mutation": "Neuter SHA256 pair equality check; use two valid nonuniform dimension-correct files with different bytes.",
+          "must_fail_test": "TestMarketingTwoPassInventory",
+          "must_fail_assertion": "altered raw byte must be rejected",
+          "command": "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-forbidden",
+          "mutation": "Allow tEXt chunk explicitly; valid CRC/control PNG containing tEXt.",
+          "must_fail_test": "TestMarketingPNGStructure",
+          "must_fail_assertion": "forbidden tEXt must be rejected",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-crc",
+          "mutation": "Neuter CRC comparison; call chunk structure validator directly before image/png so decoder redundancy cannot mask guard.",
+          "must_fail_test": "TestMarketingPNGStructure",
+          "must_fail_assertion": "bad CRC typed structure refusal",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-tail",
+          "mutation": "Neuter trailing bytes guard after terminal IEND.",
+          "must_fail_test": "TestMarketingPNGStructure",
+          "must_fail_assertion": "one trailing byte must be rejected",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-cap",
+          "mutation": "Raise per-file cap by1 on cap+1 valid chunk stream; CRCs/dimensions/content remain valid.",
+          "must_fail_test": "TestMarketingPNGStructure",
+          "must_fail_assertion": "cap+1 must be rejected",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7b-total",
+          "mutation": "Neuter directory-total cap; use at least9 otherwise-allowed PNGs to reach standalone fleet-limit function before six-shot exact-set check.",
+          "must_fail_test": "TestMarketingPNGStructure",
+          "must_fail_assertion": "all-PNG aggregate >8MiB must be rejected",
+          "command": "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 180s"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -race ./scripts/marketingcheck -count=1 -timeout 180s"
+        ],
+        "may_touch": [
+          "scripts/marketingcheck/main.go",
+          "scripts/marketingcheck/png.go",
+          "scripts/marketingcheck/png_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.94,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.71,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.76,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveChromeDrill$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.66,
+          "result": "SKIP (not acceptance)"
+        },
+        {
+          "command": "./scripts/tracked_binary_gate.sh",
+          "rc": 0,
+          "seconds": 0.39,
+          "result": "PASS",
+          "detail": "\u2713 0 binary blobs among 3523 tracked files"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M7c",
+      "title": "Capture orchestration, frozen inventories and Chrome drill",
+      "design_milestone": "M7",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M7b"
+      ],
+      "files": [
+        "scripts/capture_marketing.sh",
+        "scripts/marketing_capture.py",
+        "scripts/marketingcheck/main.go",
+        "scripts/marketingcheck/capture_test.go",
+        "scripts/marketingcheck/observation_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestMarketingCaptureFakeChromeSixShots",
+        "TestMarketingCaptureInventoryMutation",
+        "TestMarketingProtectedObservationComparator",
+        "TestMarketingChromeSixShots"
+      ],
+      "tests_first": [
+        {
+          "ac": "C7/C8/C9",
+          "tests": "TestMarketingCaptureFakeChromeSixShots",
+          "assertions": "Always-on binary-free companion exercises full shell/Python/Go chain with fake Chrome plus fixture daemon responses (refusal/unit control, not release data). Both six-name passes, exact argv routes/viewport/scheme, HTML required refs/no scripts, bounded startup/cleanup and manifest matching; no commit/mint/decision/background call.",
+          "command": "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C8/C11",
+          "tests": "TestMarketingCaptureInventoryMutation",
+          "assertions": "Read actual head/entries/objects before/after test-store capture. Inject genuine extra normal commit into disposable test store; frozen inventory equality refuses. Baseline no-write pass equal; registries/session diagnostics excluded from public inventory only if explicitly enumerated.",
+          "command": "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C11",
+          "tests": "TestMarketingProtectedObservationComparator",
+          "assertions": "Observe protected files by SHA256 AND newline count before/after. Mutate only a t.TempDir copied input, prove digest comparator reds even for same line count and line comparator reds independently using controlled observations. Never write/restore protected source.",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C7/C8/C9",
+          "tests": "TestMarketingChromeSixShots",
+          "assertions": "WORLD_CHROME explicit gate; require executable Chrome155 version, both pins, measured rectangle config WORLD_MARKETING_RECTS. Real demo seed only test-minted through V11, frozen store, all six real shots in two passes, raw GET required text plus decoded pixels and exact hashes. Skip only if WORLD_CHROME unset in ordinary suite; set-but-invalid or missing rect config fails. This is test-store drill, not attended release acceptance. PD1 unresolved visibility must red and be reported, never guessed rectangles.",
+          "command": "go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C7/C8/C9",
+          "test": "TestMarketingCaptureFakeChromeSixShots",
+          "assertions": "Always-on binary-free companion exercises full shell/Python/Go chain with fake Chrome plus fixture daemon responses (refusal/unit control, not release data). Both six-name passes, exact argv routes/viewport/scheme, HTML required refs/no scripts, bounded startup/cleanup and manifest matching; no commit/mint/decision/background call.",
+          "command": "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C8/C11",
+          "test": "TestMarketingCaptureInventoryMutation",
+          "assertions": "Read actual head/entries/objects before/after test-store capture. Inject genuine extra normal commit into disposable test store; frozen inventory equality refuses. Baseline no-write pass equal; registries/session diagnostics excluded from public inventory only if explicitly enumerated.",
+          "command": "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "C11",
+          "test": "TestMarketingProtectedObservationComparator",
+          "assertions": "Observe protected files by SHA256 AND newline count before/after. Mutate only a t.TempDir copied input, prove digest comparator reds even for same line count and line comparator reds independently using controlled observations. Never write/restore protected source.",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C7/C8/C9",
+          "test": "TestMarketingChromeSixShots",
+          "assertions": "WORLD_CHROME explicit gate; require executable Chrome155 version, both pins, measured rectangle config WORLD_MARKETING_RECTS. Real demo seed only test-minted through V11, frozen store, all six real shots in two passes, raw GET required text plus decoded pixels and exact hashes. Skip only if WORLD_CHROME unset in ordinary suite; set-but-invalid or missing rect config fails. This is test-store drill, not attended release acceptance. PD1 unresolved visibility must red and be reported, never guessed rectangles.",
+          "command": "go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v"
+        }
+      ],
+      "implementation": "Full capture flags include --db --manifest --proof-key-file --ailang-bin --workspace-root --tool-ailang-bin --chrome --out --verify-twice --rectangles.\u226410s HTTP/\u226430s startup, two\u2264300s passes, progress between shots. Scratch output only. If raw equality fails outside scheme/script causes report varying element+both hashes as M7 residual; criterion remains unmet, never pixel-similarity success.",
+      "acceptance": [
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v",
+        "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v",
+        "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M7c-inventory",
+          "mutation": "Neuter frozen public inventory equality guard; real extra-commit control runs.",
+          "must_fail_test": "TestMarketingCaptureInventoryMutation",
+          "must_fail_assertion": "extra commit invalidates capture",
+          "command": "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7c-observation",
+          "mutation": "Neuter SHA256 equality half of observation comparator; same-newline-count copied input differs.",
+          "must_fail_test": "TestMarketingProtectedObservationComparator",
+          "must_fail_assertion": "same-line-count changed copy must red",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7c-scheme",
+          "mutation": "Drop preferredColorScheme flag from dark shot argv while fake Chrome records args and fake pixels enforce expected scheme.",
+          "must_fail_test": "TestMarketingCaptureFakeChromeSixShots",
+          "must_fail_assertion": "every shot explicitly pins correct scheme",
+          "command": "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M7c-line-observation",
+          "mutation": "Neuter only newline-count equality half of copied observation comparator; supply digest-equal control observations with distinct line-count fields (test instrumentation, no source writes).",
+          "must_fail_test": "TestMarketingProtectedObservationComparator",
+          "must_fail_assertion": "line-count mismatch must refuse independently",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Compiling comparator guard edit; copied observation record reaches final equality assertion."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v",
+          "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "scripts/capture_marketing.sh",
+          "scripts/marketing_capture.py",
+          "scripts/marketingcheck/main.go",
+          "scripts/marketingcheck/capture_test.go",
+          "scripts/marketingcheck/observation_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "TestMarketingChromeSixShots needs WORLD_CHROME; TestMarketingCaptureFakeChromeSixShots is its mandatory always-on fake-script companion. Acceptance list includes the real drill but unattended executor runs it only with explicitly supplied browser+measured rectangles; otherwise record DEFERRED/SKIP, never C8 product PASS. Controller owns measured geometry and PD1 correction; do not spend executor time inventing capture layout."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.94,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.71,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.76,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestWorkbenchLiveChromeDrill$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.66,
+          "result": "SKIP (not acceptance)"
+        },
+        {
+          "command": "./scripts/tracked_binary_gate.sh",
+          "rc": 0,
+          "seconds": 0.39,
+          "result": "PASS",
+          "detail": "\u2713 0 binary blobs among 3523 tracked files"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M8a",
+      "title": "Reproduction docs, captions and release manifest schema",
+      "design_milestone": "M8",
+      "estimated_minutes": 25,
+      "depends_on": [
+        "M7c"
+      ],
+      "files": [
+        "docs/QUICKSTART.md",
+        "README.md",
+        "website/docs/getting-started/marketing-capture.md",
+        "website/static/img/v1/captions.md",
+        "docs/marketing-capture-manifest.schema.json",
+        "cmd/ailang-worldd/demo_test.go",
+        "scripts/marketingcheck/docs_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestMarketingDocsLinks",
+        "TestMarketingRunbookMatchesHelp"
+      ],
+      "tests_first": [
+        {
+          "ac": "C10",
+          "tests": "TestMarketingDocsLinks",
+          "assertions": "Resolve existing reproduction-doc links and exact six image targets against a disposable simulated promoted directory before release; runtime release mode requires actual six files and hashes, never fixture placeholders. README light/packet links and website /img/v1 names/alt captions match inventory. Disclose static capture, demo-authored claim, evidence limits and separate pins.",
+          "command": "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        },
+        {
+          "ac": "C10",
+          "tests": "TestMarketingRunbookMatchesHelp",
+          "assertions": "Parse documented flags/payload preparation then execute CLI/script help and test credential recipe through existing V11 setup; all seed/capture/proof/still/tool flags match. No unattended typed-y confirmation or production publisher confirmation. Unminted seed command refuses.",
+          "command": "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C10",
+          "test": "TestMarketingDocsLinks",
+          "assertions": "Resolve existing reproduction-doc links and exact six image targets against a disposable simulated promoted directory before release; runtime release mode requires actual six files and hashes, never fixture placeholders. README light/packet links and website /img/v1 names/alt captions match inventory. Disclose static capture, demo-authored claim, evidence limits and separate pins.",
+          "command": "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C10",
+          "test": "TestMarketingRunbookMatchesHelp",
+          "assertions": "Parse documented flags/payload preparation then execute CLI/script help and test credential recipe through existing V11 setup; all seed/capture/proof/still/tool flags match. No unattended typed-y confirmation or production publisher confirmation. Unminted seed command refuses.",
+          "command": "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v"
+        }
+      ],
+      "implementation": "Ship concrete reproduction sequence and all payload construction. Captions truthful before release; release sibling capture-manifest.json is generated from attended actual bytes only, not checked-in dummy hashes. Manifest schema/example distinguished from public capture record. Docs link test fixture mode discharges wiring only; actual asset resolution deferred until promotion.",
+      "acceptance": [
+        "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestQuickstartDecisionPacketSection$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestServeWorkspaceFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+        "go test -run '^TestServeProofFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v"
+      ],
+      "commands": [
+        "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestQuickstartDecisionPacketSection$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestServeWorkspaceFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+        "go test -run '^TestServeProofFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v"
+      ],
+      "mutations": [
+        {
+          "mutant": "M8a-filename",
+          "mutation": "Change one doc image filename to a valid different nonexistent name in copied doc input.",
+          "must_fail_test": "TestMarketingDocsLinks",
+          "must_fail_assertion": "documented image target must match promoted inventory",
+          "command": "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        },
+        {
+          "mutant": "M8a-flag",
+          "mutation": "Change documented --workbench-still to unknown --workbench-static in copied recipe; invoke actual parser.",
+          "must_fail_test": "TestMarketingRunbookMatchesHelp",
+          "must_fail_assertion": "documented serve argv must parse and select still mode",
+          "command": "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "reachability": "Mutation changes valid data or an existing guard on compiling code. Test reaches the named assertion; compile failure, panic, harness timeout, missing binary and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "go test -run '^TestQuickstartDecisionPacketSection$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestServeWorkspaceFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "go test -run '^TestServeProofFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v"
+        ],
+        "may_touch": [
+          "docs/QUICKSTART.md",
+          "README.md",
+          "website/docs/getting-started/marketing-capture.md",
+          "website/static/img/v1/captions.md",
+          "docs/marketing-capture-manifest.schema.json",
+          "cmd/ailang-worldd/demo_test.go",
+          "scripts/marketingcheck/docs_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": ""
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestQuickstartDecisionPacketSection$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.68,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestServeWorkspaceFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.69,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestServeProofFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.69,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    },
+    {
+      "id": "M8b",
+      "title": "Final repository gates and protected-path observation",
+      "design_milestone": "M8",
+      "estimated_minutes": 25,
+      "depends_on": [
+        "M8a"
+      ],
+      "files": [
+        "docs/QUICKSTART.md",
+        "README.md",
+        "website/docs/getting-started/marketing-capture.md",
+        "website/static/img/v1/captions.md",
+        "docs/marketing-capture-manifest.schema.json"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestMarketingProtectedObservationComparator"
+      ],
+      "tests_first": [
+        {
+          "ac": "C11",
+          "tests": "TestMarketingProtectedObservationComparator",
+          "assertions": "Re-drill copied-input comparator; final actual protected inventory equals initial sprint observation in both digest and newline count. Scoped read-only diff must be empty for all protected paths.",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C11",
+          "test": "TestMarketingProtectedObservationComparator",
+          "assertions": "Re-drill copied-input comparator; final actual protected inventory equals initial sprint observation in both digest and newline count. Scoped read-only diff must be empty for all protected paths.",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        }
+      ],
+      "implementation": "Final validation run, no new product scope. Re-run the narrow cross-boundary tests and mandatory repo gates. Use observation snapshots, never restore protected files. Report every gate rc/wall time and all unresolved product criteria. Attended capture/promotion is outside milestones.",
+      "acceptance": [
+        "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+        "go build ./... && go test ./... -count=1 -timeout 600s",
+        "go test -race ./host/daemon -count=1 -timeout 480s",
+        "go test -race ./host/coordinator ./host/workbench ./host/evidence ./scripts/marketingcheck -count=1 -timeout 480s"
+      ],
+      "commands": [
+        "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+        "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+        "go build ./... && go test ./... -count=1 -timeout 600s",
+        "go test -race ./host/daemon -count=1 -timeout 480s",
+        "go test -race ./host/coordinator ./host/workbench ./host/evidence ./scripts/marketingcheck -count=1 -timeout 480s"
+      ],
+      "mutations": [
+        {
+          "mutant": "M8b-C11-redrill",
+          "mutation": "Neuter only newline-count equality half of copied observation comparator; supply digest-equal control observations with distinct line-count fields (test instrumentation, no source writes).",
+          "must_fail_test": "TestMarketingProtectedObservationComparator",
+          "must_fail_assertion": "line-count mismatch must refuse independently",
+          "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "Compiling comparator guard edit; copied observation record reaches final equality assertion."
+        }
+      ],
+      "repo_gates": [
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+        "go build ./... && go test ./... -count=1 -timeout 600s",
+        "go test -race ./host/daemon -count=1 -timeout 480s",
+        "go test -race ./host/coordinator ./host/workbench ./host/evidence ./scripts/marketingcheck -count=1 -timeout 480s"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+          "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
+          "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+          "go build ./... && go test ./... -count=1 -timeout 600s",
+          "go test -race ./host/daemon -count=1 -timeout 480s",
+          "go test -race ./host/coordinator ./host/workbench ./host/evidence ./scripts/marketingcheck -count=1 -timeout 480s"
+        ],
+        "may_touch": [
+          "docs/QUICKSTART.md",
+          "README.md",
+          "website/docs/getting-started/marketing-capture.md",
+          "website/static/img/v1/captions.md",
+          "docs/marketing-capture-manifest.schema.json"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "Full mandatory gates are paid once here, plus focused/race gates at affected earlier boundaries. CI runs host race checks; daemon alone is ~200s, not a 45s test. Total controller outer bound900s for full build/test,540s per race command. If this boundary exceeds30min report incomplete and split validation from doc corrections without weakening gates."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -run '^TestQuickstartDecisionPacketSection$' ./host/daemon -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.68,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestServeWorkspaceFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.69,
+          "result": "PASS"
+        },
+        {
+          "command": "go test -run '^TestServeProofFlags$' ./cmd/ailang-worldd -count=1 -timeout 45s -v",
+          "rc": 0,
+          "seconds": 0.69,
+          "result": "PASS"
+        }
+      ],
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+    }
+  ],
+  "scope": "Exactly two planner artifacts. Executor implements design M1-M8 in ordered bounded splits; no release publish/mint confirmation, no PNG promotion in a milestone.",
+  "must_not_change": [
+    "world/**",
+    "go.mod",
+    "go.sum",
+    "tools/launchd/**",
+    "design_docs/world-mission.md",
+    "host/evidence/** (read/reuse only)",
+    "packet v1 wire format; existing proof authentication/session authority contracts",
+    "scripts/verify_ail.sh",
+    "scripts/tracked_binary_gate.sh",
+    ".github/workflows/ci.yml"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "commands": [
+    {
+      "name": "ledger",
+      "command": [
+        "bash",
+        "scripts/mission_decisions.sh",
+        "--check",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0
+    },
+    {
+      "name": "open-decisions",
+      "command": [
+        "bash",
+        "scripts/mission_decisions.sh",
+        "--open",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0
+    },
+    {
+      "name": "mission-config",
+      "command": [
+        "bash",
+        "scripts/verify_go.sh",
+        "--mission-config-check"
+      ],
+      "rc": 0
+    },
+    {
+      "name": "privacy",
+      "command": [
+        "bash",
+        "scripts/check_no_personal_email.sh"
+      ],
+      "rc": 0
+    },
+    {
+      "name": "metadata-diffcheck",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "design_docs/world-mission.md",
+        "design_docs/world-mission-log.md",
+        "design_docs/world-mission-log-archive.md",
+        "design_docs/world-mission-index.md",
+        "design_docs/world-mission-status-archive.md",
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/planned"
+      ],
+      "rc": 0
+    }
+  ],
+  "ignore_positive_control_rc": 0,
+  "new_report_ignored_rc": 1,
+  "shared_main_status_unchanged": true,
+  "rotation_paths_under_record_worktree": true
+}

@@ -1,0 +1,45 @@
+exec((__import__('pathlib').Path.home()/'.ailang/state/world-iter268/evaluator-r3/review.py').read_text().split('M=[]')[0])
+assert json.loads((E/'mutation-terminal.json').read_text())['restored']
+assert all((W/f).read_bytes()==b for f,b in ORIG.items())
+results=[]
+def check(name,argv,timeout=150,env=ENV,cwd=W):
+ x,log=run(name,argv,cwd=cwd,timeout=timeout,env=env);x['pass_names']=re.findall(r'^--- PASS: (\S+)',log,re.M);x['skip_names']=re.findall(r'^\s*--- SKIP: (\S+)',log,re.M);results.append(dict(name=name,**x));(E/'post-gates.json').write_text(json.dumps(results,indent=2));print(name,x['rc'],x['seconds'],flush=True);return x,log
+envset=dict(ENV,WORLD_TOOL_AILANG_BIN='/Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang')
+check('toolset-pin-mismatch',['go','test','./cmd/ailang-worldd','-run','^TestDemoSeedPreflightRefusals$/^pin-mismatch$','-count=1','-timeout=45s','-v'],env=envset)
+# Fixture independence: reverting precisely the R2 fix must fail with only the tool variable unset.
+try:
+ previous=subprocess.check_output(['git','show','7ba691b732d327f6b38a16223152b876e7d197df:cmd/ailang-worldd/demo_test.go'],cwd=W,timeout=20)
+ f=FILES[2];(W/f).write_bytes(previous)
+ check('fixture-revert-build',['go','test','-c','-o',str(B/'fixture.test'),'./cmd/ailang-worldd'],timeout=90)
+ check('fixture-revert-unset',[str(B/'fixture.test'),'-test.run=^TestDemoSeedPreflightRefusals$/^pin-mismatch$','-test.v','-test.timeout=45s'],cwd=W/'cmd/ailang-worldd')
+finally:(W/f).write_bytes(ORIG[f]);assert (W/f).read_bytes()==ORIG[f]
+# Neuter the distinct-byte setup while retaining a unique regular file and all assertions.
+try:
+ f=FILES[2];s=ORIG[f].decode();old='[]byte("mismatched pin fixture: "+r.db)';assert s.count(old)==1
+ s=s.replace(old,'func() []byte { b, e := os.ReadFile(r.pin); if e != nil { t.Fatal(e) }; return b }()');(W/f).write_text(s)
+ check('fixture-equalbytes-build',['go','test','-c','-o',str(B/'fixture.test'),'./cmd/ailang-worldd'],timeout=90)
+ check('fixture-equalbytes',[str(B/'fixture.test'),'-test.run=^TestDemoSeedPreflightRefusals$/^pin-mismatch$','-test.v','-test.timeout=45s'],cwd=W/'cmd/ailang-worldd')
+finally:(W/f).write_bytes(ORIG[f]);assert (W/f).read_bytes()==ORIG[f]
+# Revert only M2a production: M1a and M1b files remain intact.
+try:
+ for f in FILES[:2]:(W/f).unlink()
+ (W/FILES[3]).write_bytes(subprocess.check_output(['git','show','39066a46c1ac13c994bacb162b8d4b754d5ec083:'+FILES[3]],cwd=W,timeout=20))
+ check('M2a-own-revert-build',['go','test','-c','-o',str(B/'own-revert.test'),'./cmd/ailang-worldd'],timeout=90)
+ check('M2a-own-revert',[str(B/'own-revert.test'),'-test.run=^TestDemoSeed|^TestSessionMint_RequiresControllingTerminal$','-test.v','-test.timeout=120s'],cwd=W/'cmd/ailang-worldd')
+finally:
+ for f in FILES:(W/f).write_bytes(ORIG[f])
+ assert all((W/f).read_bytes()==b for f,b in ORIG.items())
+check('restored-demo-unset',['go','test','./cmd/ailang-worldd','-run','^TestDemoSeed','-count=1','-timeout=120s','-v'])
+check('mint-boundary',['go','test','./cmd/ailang-worldd','-run','^TestSessionMint_RequiresControllingTerminal$','-count=1','-timeout=45s','-v'])
+check('rest-and-doc-regression',['go','test','./host/daemon','-run','^TestRESTCommitRefusesDecisionPacketObjects$|^TestQuickstartDecisionPacketSection$','-count=1','-timeout=45s','-v'])
+check('boundary',['go','test','./host/boundary','-run','^TestWorldBoundaryDependencyAllowlist$|^TestWorldBoundaryRecordingWriter$','-count=1','-timeout=90s','-v'])
+check('nine-site-audit',['go','test','./host/broker','-run','^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$','-count=1','-timeout=90s','-v'])
+check('vet',['go','vet','./cmd/ailang-worldd'],timeout=90)
+check('gofmt',['gofmt','-l']+FILES[:4],timeout=15)
+check('implementation-diffcheck',['git','diff','--check','39066a46c1ac13c994bacb162b8d4b754d5ec083','HEAD','--']+FILES,timeout=15)
+before=json.loads((E/'protected-before.json').read_text())
+after=[dict(path=x['path'],sha256=hashlib.sha256((W/x['path']).read_bytes()).hexdigest(),newlines=(W/x['path']).read_bytes().count(b'\n')) for x in before]
+(E/'protected-after.json').write_text(json.dumps(after,indent=2));assert before==after
+source=[dict(path=f,sha256=hashlib.sha256((W/f).read_bytes()).hexdigest(),matches_snapshot=(W/f).read_bytes()==ORIG[f],matches_head=(W/f).read_bytes()==subprocess.check_output(['git','show','HEAD:'+f],cwd=W,timeout=20)) for f in FILES]
+(E/'restoration.json').write_text(json.dumps(dict(source=source,protected_equal=before==after,protected_count=len(before),all_terminal=True),indent=2))
+(E/'post-terminal.json').write_text(json.dumps({'terminal':True,'restored':all(x['matches_snapshot'] and x['matches_head'] for x in source),'commands':len(results)}))

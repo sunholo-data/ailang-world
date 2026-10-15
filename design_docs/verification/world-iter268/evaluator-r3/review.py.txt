@@ -1,0 +1,84 @@
+from pathlib import Path
+import os, subprocess, json, hashlib, time, re
+W=Path('/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r3')
+E=W/'design_docs/verification/world-iter268/evaluator-r3'
+B=Path.home()/'.ailang/state/world-iter268/evaluator-r3'
+FILES=['cmd/ailang-worldd/demo.go','cmd/ailang-worldd/demo_seed.go','cmd/ailang-worldd/demo_test.go','cmd/ailang-worldd/main.go','docs/QUICKSTART.md']
+ORIG={f:(B/'snap'/f).read_bytes() for f in FILES}
+ENV=dict(os.environ,PATH='/opt/homebrew/bin:'+os.environ['PATH'],AILANG_BIN='/Users/voightkampff/.pinned-ailang/ailang')
+for k in ['GOOGLE_CLOUD_PROJECT','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_RESOURCE_ATTRIBUTES','OTLP_GOOGLE_CLOUD_PROJECT','WORLD_TOOL_AILANG_BIN']: ENV.pop(k,None)
+def run(name,argv,cwd=W,timeout=150,env=ENV):
+ t=time.monotonic()
+ try:
+  p=subprocess.run(argv,cwd=cwd,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=timeout)
+  rc=p.returncode;data=p.stdout
+ except subprocess.TimeoutExpired as e: rc=124;data=(e.stdout or b'')+b'\nOUTER TIMEOUT\n'
+ (E/(name+'.log')).write_bytes(data)
+ return dict(argv=argv,rc=rc,seconds=round(time.monotonic()-t,3),log=name+'.log'),data.decode(errors='replace')
+M=[]
+def add(name,old,new,arm='',expected='refusal changed public inventory',file=FILES[1],test='TestDemoSeedPreflightRefusals',kind='bypass'):
+ M.append(dict(name=name,file=file,old=old,new=new,pattern='^'+test+'$'+('/^'+arm+'$' if arm else ''),expected=expected,kind=kind))
+def guard(name,c,arm,expected='refusal changed public inventory'):
+ add(name,'if '+c+' {','if false && ('+c+') {',arm,expected)
+add('existing-manifest','!os.IsNotExist(err) {','false && !os.IsNotExist(err) {','manifest')
+guard('db-match','want != got','wrong-db','wrong refusal')
+guard('pin-hash','pinRef.String() != h.InterpreterRef','pin-mismatch','wrong refusal')
+add('archive-present','if err != nil {\n\t\treturn h, 0, fmt.Errorf("interpreter archive manifest unavailable")','if false && err != nil {\n\t\treturn h, 0, fmt.Errorf("interpreter archive manifest unavailable")','archive-absent','wrong refusal')
+add('archive-hash','manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))','false && manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))','archive-hash')
+add('archive-size','manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin))','manifest.Hash != pinRef.String() || false && manifest.Size != int64(len(pin))','archive-size')
+add('health-version','manifest.Version != h.InterpreterVersion || !strings.HasPrefix','false && manifest.Version != h.InterpreterVersion || !strings.HasPrefix','health-version')
+add('release-prefix','|| !strings.HasPrefix(manifest.Version, "AILANG v0.41.0\\n")','|| false && !strings.HasPrefix(manifest.Version, "AILANG v0.41.0\\n")','archive-release')
+guard('nonempty-unselected','hasWorld || hasHead || ref != "" || len(page) != 0','world-only')
+guard('registry-integrity','!ok || hashref.SumSHA256(obj.Payload).String() != rh.Head','epoch-hash','wrong refusal')
+add('registry-decode','if err := json.Unmarshal(obj.Payload, &reg); err != nil {','if err := json.Unmarshal(obj.Payload, &reg); false && err != nil {','epoch-decode','wrong refusal')
+add('nominated-epoch','candidate == "AILANG v0.41.0"','candidate != ""','epoch-candidate')
+guard('session-denial','out.Denied != nil','expired-session','wrong refusal')
+add('demo-episode','out.Success == nil || out.Success.EpisodeID != "demo"','out.Success == nil','wrong-episode')
+guard('required-grants','!broker.Allows(snap, req).Allowed','missing-grant')
+add('spent-budget','caps[i].Budget -= spend[','caps[i].Budget -= 0 * spend[','spent-budget')
+add('world-scan','worlds.Scanned > 0','worlds.Scanned > 1','world-only')
+guard('CAS-head','actual != observed || has != (observed != "")','cas-change')
+guard('required-get','!ok','health-absent','wrong refusal')
+add('get-error','if err != nil {\n\t\treturn err\n\t}\n\tif !ok {','if false && err != nil {\n\t\treturn err\n\t}\n\tif !ok {','health-down','wrong refusal')
+add('pin-read','if err != nil {\n\t\treturn h, 0, fmt.Errorf("cannot read interpreter pin")','if false && err != nil {\n\t\treturn h, 0, fmt.Errorf("cannot read interpreter pin")','pin-absent','wrong refusal')
+add('source-read','if err != nil {\n\t\treturn fmt.Errorf("prepare worktree','if false && err != nil {\n\t\treturn fmt.Errorf("prepare worktree','source-absent')
+add('readonly-diagnostic','cannot open read-only authority view','incorrect authority view refusal','readonly-db','wrong refusal',kind='diagnostic-only')
+add('required-flag','if o.db == "" || o.pin == "" || o.key == "" || o.manifest == "" {','if false && (o.db == "" || o.pin == "" || o.key == "" || o.manifest == "") {','missing-key',file=FILES[0])
+add('positional','if fs.NArg() != 0 {','if false && fs.NArg() != 0 {','positional',file=FILES[0])
+add('subcommand','len(args) == 0 || args[0] != "seed"','len(args) == 0','unknown-verb',file=FILES[0])
+for name,old,new,arm,expected in [
+ ('commit-http','if status != 200 {','if false && status != 200 {','commit-denied','commit refusal boundary'),
+ ('commit-response','if json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref {','if false && (json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref) {','commit-response','commit refusal boundary'),
+ ('commit-uncertainty','if err != nil {\n\t\t\treturn fmt.Errorf("commit outcome uncertain','if false && err != nil {\n\t\t\treturn fmt.Errorf("commit outcome uncertain','commit-uncertain','commit refusal boundary')]:
+ add(name,old,new,arm,expected,test='TestDemoSeedCommitFailures')
+for name,old,new,expected in [
+ ('bearer','bytes.NewReader(data), "Bearer "+token)','bytes.NewReader(data), "")','SessionAbsent'),
+ ('interpreter-header','Interpreter: interpreter,','Interpreter: o.Hash,','frozen header identity mismatch'),
+ ('epoch-header','SemanticsEpoch: epoch,','SemanticsEpoch: epoch+1,','frozen header identity mismatch'),
+ ('carrying-ref','TransitionRef: o.Hash}}','TransitionRef: interpreter}}','no real carrying entry'),
+ ('object-interface','InterfaceHash: hashref.SumSHA256([]byte(id)).String()','InterfaceHash: hashref.SumSHA256([]byte("wrong")).String()','interface/provenance mismatch'),
+ ('object-provenance','Provenance: "demo-authored", Payload: payloads[i]','Provenance: "other", Payload: payloads[i]','interface/provenance mismatch')]:
+ add(name,old,new,expected=expected,test='TestDemoSeedAuthenticatedCommits')
+add('doc-wiring','"$DEMO_BIN" demo seed --addr','"$OTHER_BIN" demo seed --addr',expected='demo artifact command wiring missing',file=FILES[4],test='TestDemoSeedHelpPreparation')
+add('budget-survivor','budgetContext(90 * time.Second)','budgetContext(24 * time.Hour)',expected='',file=FILES[0],test='TestDemoSeed',kind='coverage-probe');M[-1]['pattern']='^TestDemoSeed'
+add('state-root-survivor','[]byte(observed + "\\n" + o.Hash)','[]byte(o.Hash)',expected='',test='TestDemoSeedAuthenticatedCommits',kind='coverage-probe')
+add('entry-hash-survivor','hashref.SumSHA256(encoded).String()','hashref.SumSHA256(append(encoded,0)).String()',expected='',test='TestDemoSeedAuthenticatedCommits',kind='coverage-probe')
+ledger=[]
+try:
+ for x in M:
+  f=x['file'];old=ORIG[f].decode();assert old.count(x['old'])==1,(x['name'],'replacement count',old.count(x['old']))
+  changed=old.replace(x['old'],x['new'],1).encode();(W/f).write_bytes(changed);assert (W/f).read_bytes()==changed
+  x['landed_sha256']=hashlib.sha256(changed).hexdigest()
+  build,log=run('build-'+x['name'],['go','test','-c','-o',str(B/'mutant.test'),'./cmd/ailang-worldd'],timeout=90);x['build']=build
+  if build['rc']==0:
+   result,log=run('mutant-'+x['name'],[str(B/'mutant.test'),'-test.run='+x['pattern'],'-test.v','-test.count=1','-test.timeout=120s'],cwd=W/'cmd/ailang-worldd');x['result']=result
+   x['failing_tests']=re.findall(r'^\s*--- FAIL: (\S+)',log,re.M)
+   x['assertion_kill']=result['rc']!=0 and x['expected']!='' and x['expected'] in log and bool(x['failing_tests']) and not any(s in log for s in ['panic:','SKIP','no tests to run','OUTER TIMEOUT'])
+   x['survived']=result['rc']==0 and '--- PASS: TestDemoSeed' in log
+  (W/f).write_bytes(ORIG[f]);assert (W/f).read_bytes()==ORIG[f];x['byte_restored']=True
+  ledger.append(x);(E/'mutation-ledger.json').write_text(json.dumps(ledger,indent=2));print(x['name'],x['build']['rc'],x.get('result',{}).get('rc'),x.get('assertion_kill'),flush=True)
+finally:
+ for f,b in ORIG.items():
+  if (W/f).read_bytes()!=b:(W/f).write_bytes(b)
+ assert all((W/f).read_bytes()==b for f,b in ORIG.items())
+ (E/'mutation-terminal.json').write_text(json.dumps({'terminal':True,'completed':len(ledger),'planned':len(M),'restored':True}))

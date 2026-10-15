@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/missing-key
+    demo_test.go:433: missing-key: refusal changed public inventory: actual log entries5 want0
+--- FAIL: TestDemoSeedPreflightRefusals (0.94s)
+    --- FAIL: TestDemoSeedPreflightRefusals/missing-key (0.94s)
+FAIL

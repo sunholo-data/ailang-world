@@ -1,0 +1,6 @@
+=== RUN   TestDemoSeedPreflightRefusals
+=== RUN   TestDemoSeedPreflightRefusals/expired-session
+    demo_test.go:443: wrong refusal: want "SessionExpired" got "ailang-worldd demo seed: demo episode session required\n"
+--- FAIL: TestDemoSeedPreflightRefusals (1.64s)
+    --- FAIL: TestDemoSeedPreflightRefusals/expired-session (1.64s)
+FAIL

@@ -1,0 +1,27 @@
+{
+  "prior_quickstart_bytes": 75634,
+  "prior_quickstart_exact_prefix": true,
+  "source_delta_r2": "round2-fixture-delta.patch",
+  "production_hunks": [
+    {
+      "path": "cmd/ailang-worldd/demo.go",
+      "hunks": "entire new70-line dispatcher/help/options/explicit incomplete boundary"
+    },
+    {
+      "path": "cmd/ailang-worldd/demo_seed.go",
+      "hunks": "entire new253-line preflight/readonly authority/archive/REST domain objects/hash headers"
+    },
+    {
+      "path": "cmd/ailang-worldd/main.go",
+      "hunks": "three insertions:2usage lines,3dispatch lines,8help special-case lines"
+    },
+    {
+      "path": "cmd/ailang-worldd/demo_test.go",
+      "hunks": "entire new522-line rig,37preflight cases,3commit failure cases,authenticated/header/payload/inventory checks,help/runbook checks"
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "hunks": "81line append after original1232lines; section12 DEMO_BIN build/preparation/attended mint/serve/partial seed"
+    }
+  ]
+}

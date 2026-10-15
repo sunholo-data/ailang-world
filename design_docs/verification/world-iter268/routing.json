@@ -17,7 +17,11 @@
     ],
     "actual": "gpt-6.1-sol",
     "status": "completed readiness only; approved existing design reused",
-    "tokens": "not reported"
+    "tokens": "not reported",
+    "skipped_rotation_entry": {
+      "model": "claude:claude-opus-5-5",
+      "reason": "Anthropic unavailable/over ration"
+    }
   },
   "planner": {
     "resolver": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
@@ -41,7 +45,7 @@
     ],
     "fallback": "gpt-6.1-sol fresh independent context, D-WORLD-48 / Gate3 lines243-256",
     "actual": "gpt-6.1-sol",
-    "status": "r1 FAIL65/3blocking; r2 FAIL70/1blocking; r3 awaiting candidate freeze",
+    "status": "completed r3 PASS90/0blocking; r1 FAIL65/3 and r2 FAIL70/1 retained",
     "tokens": "not reported",
     "rounds": [
       {
@@ -57,6 +61,13 @@
         "verdict": "FAIL",
         "score": 70,
         "blocking": 1
+      },
+      {
+        "round": 3,
+        "head": "763c60a20358f486df395043131557c1143735ba",
+        "verdict": "PASS",
+        "score": 90,
+        "blocking": 0
       }
     ]
   },
@@ -69,5 +80,12 @@
   "metered_usd": 0,
   "ticket_id": "inbox_1792040381066_9861a560",
   "worktree_ticket_id": "inbox_1792040662419_a05590e2",
-  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805"
+  "lane_dead_ledger": "evaluator sonnet; designer pi:ollama/glm-5.3:cloud; designer pi:ollama/kimi-k3:cloud recorded for fire world-1792040098-43805",
+  "record_evaluator": {
+    "configured_model": "gpt-6.1-sol",
+    "actual": null,
+    "status": "awaiting independent record review",
+    "tokens": "not reported",
+    "judge_independence": "same-model-fresh-context FLAG"
+  }
 }
