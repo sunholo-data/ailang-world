@@ -1,0 +1,64 @@
+{
+  "abort": null,
+  "arms": [
+    "shell",
+    "world"
+  ],
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 17920
+    },
+    {
+      "agent": "claude",
+      "arm": "world",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 8710
+    },
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 18249
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 16733
+    }
+  ],
+  "capacity_reruns": 0,
+  "commit": "9b6f6a896aa58ff60700723721555e776c086108",
+  "episodes": {
+    "claude": "fl-cc-r2",
+    "codex": "fl-cx-r2"
+  },
+  "harness_faults": {
+    "claude/shell": 0,
+    "claude/world": 0,
+    "codex/shell": 0,
+    "codex/world": 0
+  },
+  "label": "final-paired-r2",
+  "passes": {
+    "claude/shell": 23,
+    "claude/world": 23,
+    "codex/shell": 23,
+    "codex/world": 23
+  },
+  "phase": "paired",
+  "prereg": "preregistration.json",
+  "run": 2,
+  "spend_usd_claude": 4.1044,
+  "status": "complete",
+  "tasks": 23,
+  "transcripts": ".ailang/state/floor-final-2026-10-15/transcripts/final-paired-r2",
+  "wall_s": 1744.1
+}

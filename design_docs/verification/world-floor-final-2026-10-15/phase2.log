@@ -1,0 +1,484 @@
+=== paired r1 15:56:37 claude=2.1.300 (Claude Code)
+canary claude/shell: PASS att=[] 15865 ms
+canary claude/world: PASS att=[] 12179 ms
+final-paired-r1 claude/world/api_call_json: PASS none 10142 ms $0.408764 att=[] prov=world
+final-paired-r1 claude/shell/api_call_json: PASS none 25411 ms $0.16597540000000002 att=[] prov=None
+final-paired-r1 claude/shell/ast_patch_roundtrip: PASS none 16067 ms $0.1100274 att=[] prov=None
+final-paired-r1 claude/world/ast_patch_roundtrip: PASS none 17245 ms $0.4869167999999999 att=[] prov=world
+final-paired-r1 claude/world/cli_args: PASS none 11317 ms $0.42669559999999995 att=[] prov=world
+final-paired-r1 claude/shell/cli_args: PASS none 13277 ms $0.0871812 att=[] prov=None
+final-paired-r1 claude/shell/config_file_parser: PASS none 25107 ms $0.12060359999999999 att=[] prov=None
+final-paired-r1 claude/world/config_file_parser: PASS none 11881 ms $0.4234902 att=[] prov=world
+final-paired-r1 claude/world/contract_bst_validate: PASS none 14863 ms $0.4282228 att=[] prov=world
+final-paired-r1 claude/shell/contract_bst_validate: PASS none 17389 ms $0.09933439999999999 att=[] prov=None
+final-paired-r1 claude/shell/contract_leap_year: PASS none 21651 ms $0.0986356 att=[] prov=None
+final-paired-r1 claude/world/contract_leap_year: PASS none 11837 ms $0.420734 att=[] prov=world
+final-paired-r1 claude/world/contract_roman_numeral: PASS none 17604 ms $0.4557894 att=[] prov=world
+final-paired-r1 claude/shell/contract_roman_numeral: PASS none 16732 ms $0.10751200000000001 att=[] prov=None
+final-paired-r1 claude/shell/csv_to_json_converter: PASS none 16708 ms $0.11366620000000001 att=[] prov=None
+final-paired-r1 claude/world/csv_to_json_converter: PASS none 14001 ms $0.4402444 att=[] prov=world
+final-paired-r1 claude/world/effect_composition: PASS none 12150 ms $0.420603 att=[] prov=world
+final-paired-r1 claude/shell/effect_composition: PASS none 27546 ms $0.0984034 att=[] prov=None
+final-paired-r1 claude/shell/effect_tracking_io_fs: PASS none 20527 ms $0.10893879999999999 att=[] prov=None
+final-paired-r1 claude/world/effect_tracking_io_fs: PASS none 8990 ms $0.411296 att=[] prov=world
+final-paired-r1 claude/world/error_handling: PASS none 13804 ms $0.41556059999999995 att=[] prov=world
+final-paired-r1 claude/shell/error_handling: PASS none 12303 ms $0.094459 att=[] prov=None
+final-paired-r1 claude/shell/explicit_dataflow_ssa: PASS none 14024 ms $0.0808066 att=[] prov=None
+final-paired-r1 claude/world/explicit_dataflow_ssa: PASS none 10183 ms $0.4143882 att=[] prov=world
+final-paired-r1 claude/world/float_eq: PASS none 14259 ms $0.41053459999999997 att=[] prov=world
+final-paired-r1 claude/shell/float_eq: PASS none 9716 ms $0.070987 att=[] prov=None
+final-paired-r1 claude/shell/higher_order_functions: PASS none 10987 ms $0.0781876 att=[] prov=None
+final-paired-r1 claude/world/higher_order_functions: PASS none 11033 ms $0.41083539999999996 att=[] prov=world
+final-paired-r1 claude/world/intent_annotated_solver: PASS none 8340 ms $0.40889440000000005 att=[] prov=world
+final-paired-r1 claude/shell/intent_annotated_solver: PASS none 13491 ms $0.080686 att=[] prov=None
+final-paired-r1 claude/shell/json_transform: PASS none 12409 ms $0.09277439999999999 att=[] prov=None
+final-paired-r1 claude/world/json_transform: PASS none 9193 ms $0.4137728 att=[] prov=world
+final-paired-r1 claude/world/list_comprehension: PASS none 8669 ms $0.4129322 att=[] prov=world
+final-paired-r1 claude/shell/list_comprehension: PASS none 16635 ms $0.09195860000000002 att=[] prov=None
+final-paired-r1 claude/shell/merge_sort: PASS none 12766 ms $0.0920368 att=[] prov=None
+final-paired-r1 claude/world/merge_sort: PASS none 11050 ms $0.42368740000000005 att=[] prov=world
+final-paired-r1 claude/world/pipeline: PASS none 8362 ms $0.4068556 att=[] prov=world
+final-paired-r1 claude/shell/pipeline: PASS none 10986 ms $0.08690880000000001 att=[] prov=None
+final-paired-r1 claude/shell/prompt_injection: PASS none 20249 ms $0.0969508 att=[] prov=None
+final-paired-r1 claude/world/prompt_injection: PASS none 16355 ms $0.4347794 att=[] prov=world
+final-paired-r1 claude/world/state_machine_elevator: PASS none 13283 ms $0.4334166 att=[] prov=world
+final-paired-r1 claude/shell/state_machine_elevator: PASS none 12773 ms $0.09037980000000001 att=[] prov=None
+final-paired-r1 claude/shell/state_machine_vending: PASS none 15593 ms $0.0992836 att=[] prov=None
+final-paired-r1 claude/world/state_machine_vending: PASS none 13675 ms $0.4361382 att=[] prov=world
+final-paired-r1 claude/world/tree_transformation_pipeline: PASS none 12753 ms $0.42662039999999996 att=[] prov=world
+final-paired-r1 claude/shell/tree_transformation_pipeline: PASS none 14778 ms $0.1032498 att=[] prov=None
+canary codex/shell: PASS att=[] 16997 ms
+canary codex/world: PASS att=[] 15882 ms
+final-paired-r1 codex/world/api_call_json: PASS none 14914 ms $None att=[] prov=world
+final-paired-r1 codex/shell/api_call_json: PASS none 43238 ms $None att=[] prov=None
+final-paired-r1 codex/shell/ast_patch_roundtrip: PASS none 16293 ms $None att=[] prov=None
+final-paired-r1 codex/world/ast_patch_roundtrip: PASS none 18644 ms $None att=[] prov=world
+final-paired-r1 codex/world/cli_args: PASS none 17600 ms $None att=[] prov=world
+final-paired-r1 codex/shell/cli_args: PASS none 20577 ms $None att=[] prov=None
+final-paired-r1 codex/shell/config_file_parser: PASS none 34723 ms $None att=[] prov=None
+final-paired-r1 codex/world/config_file_parser: PASS none 30775 ms $None att=[] prov=world
+final-paired-r1 codex/world/contract_bst_validate: PASS none 25638 ms $None att=[] prov=world
+final-paired-r1 codex/shell/contract_bst_validate: PASS none 27377 ms $None att=[] prov=None
+final-paired-r1 codex/shell/contract_leap_year: PASS none 23127 ms $None att=[] prov=None
+final-paired-r1 codex/world/contract_leap_year: PASS none 20091 ms $None att=[] prov=world
+final-paired-r1 codex/world/contract_roman_numeral: PASS none 30963 ms $None att=[] prov=world
+final-paired-r1 codex/shell/contract_roman_numeral: PASS none 32418 ms $None att=[] prov=None
+final-paired-r1 codex/shell/csv_to_json_converter: PASS none 25046 ms $None att=[] prov=None
+final-paired-r1 codex/world/csv_to_json_converter: PASS none 22259 ms $None att=[] prov=world
+final-paired-r1 codex/world/effect_composition: PASS none 20334 ms $None att=[] prov=world
+final-paired-r1 codex/shell/effect_composition: PASS none 18865 ms $None att=[] prov=None
+final-paired-r1 codex/shell/effect_tracking_io_fs: PASS none 15982 ms $None att=[] prov=None
+final-paired-r1 codex/world/effect_tracking_io_fs: PASS none 17007 ms $None att=[] prov=world
+final-paired-r1 codex/world/error_handling: PASS none 18959 ms $None att=[] prov=world
+final-paired-r1 codex/shell/error_handling: PASS none 18472 ms $None att=[] prov=None
+final-paired-r1 codex/shell/explicit_dataflow_ssa: PASS none 15372 ms $None att=[] prov=None
+final-paired-r1 codex/world/explicit_dataflow_ssa: PASS none 16608 ms $None att=[] prov=world
+final-paired-r1 codex/world/float_eq: PASS none 15520 ms $None att=[] prov=world
+final-paired-r1 codex/shell/float_eq: PASS none 14284 ms $None att=[] prov=None
+final-paired-r1 codex/shell/higher_order_functions: PASS none 15881 ms $None att=[] prov=None
+final-paired-r1 codex/world/higher_order_functions: PASS none 16371 ms $None att=[] prov=world
+final-paired-r1 codex/world/intent_annotated_solver: PASS none 15770 ms $None att=[] prov=world
+final-paired-r1 codex/shell/intent_annotated_solver: PASS none 19911 ms $None att=[] prov=None
+final-paired-r1 codex/shell/json_transform: PASS none 23039 ms $None att=[] prov=None
+final-paired-r1 codex/world/json_transform: PASS none 22322 ms $None att=[] prov=world
+final-paired-r1 codex/world/list_comprehension: PASS none 13989 ms $None att=[] prov=world
+final-paired-r1 codex/shell/list_comprehension: PASS none 21790 ms $None att=[] prov=None
+final-paired-r1 codex/shell/merge_sort: PASS none 18261 ms $None att=[] prov=None
+final-paired-r1 codex/world/merge_sort: PASS none 18869 ms $None att=[] prov=world
+final-paired-r1 codex/world/pipeline: PASS none 17141 ms $None att=[] prov=world
+final-paired-r1 codex/shell/pipeline: PASS none 18536 ms $None att=[] prov=None
+final-paired-r1 codex/shell/prompt_injection: PASS none 21713 ms $None att=[] prov=None
+final-paired-r1 codex/world/prompt_injection: PASS none 18291 ms $None att=[] prov=world
+final-paired-r1 codex/world/state_machine_elevator: PASS none 24543 ms $None att=[] prov=world
+final-paired-r1 codex/shell/state_machine_elevator: PASS none 28218 ms $None att=[] prov=None
+final-paired-r1 codex/shell/state_machine_vending: PASS none 27774 ms $None att=[] prov=None
+final-paired-r1 codex/world/state_machine_vending: PASS none 26842 ms $None att=[] prov=world
+final-paired-r1 codex/world/tree_transformation_pipeline: PASS none 25937 ms $None att=[] prov=world
+final-paired-r1 codex/shell/tree_transformation_pipeline: PASS none 28931 ms $None att=[] prov=None
+{
+ "abort": null,
+ "arms": [
+  "shell",
+  "world"
+ ],
+ "canary": [
+  {
+   "agent": "claude",
+   "arm": "shell",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 15865
+  },
+  {
+   "agent": "claude",
+   "arm": "world",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 12179
+  },
+  {
+   "agent": "codex",
+   "arm": "shell",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 16997
+  },
+  {
+   "agent": "codex",
+   "arm": "world",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 15882
+  }
+ ],
+ "capacity_reruns": 0,
+ "commit": "9b6f6a896aa58ff60700723721555e776c086108",
+ "episodes": {
+  "claude": "fl-cc-r1",
+  "codex": "fl-cx-r1"
+ },
+ "harness_faults": {
+  "claude/shell": 0,
+  "claude/world": 0,
+  "codex/shell": 0,
+  "codex/world": 0
+ },
+ "label": "final-paired-r1",
+ "passes": {
+  "claude/shell": 23,
+  "claude/world": 23,
+  "codex/shell": 23,
+  "codex/world": 23
+ },
+ "phase": "paired",
+ "prereg": "preregistration.json",
+ "run": 1,
+ "spend_usd_claude": 12.5895,
+ "status": "complete",
+ "tasks": 23,
+ "transcripts": ".ailang/state/floor-final-2026-10-15/transcripts/final-paired-r1",
+ "wall_s": 1738.6
+}
+=== paired r2 16:25:38 claude=2.1.300 (Claude Code)
+canary claude/shell: PASS att=[] 17920 ms
+canary claude/world: PASS att=[] 8710 ms
+final-paired-r2 claude/shell/api_call_json: PASS none 25250 ms $0.1623724 att=[] prov=None
+final-paired-r2 claude/world/api_call_json: PASS none 9695 ms $0.0615378 att=[] prov=world
+final-paired-r2 claude/world/ast_patch_roundtrip: PASS none 24236 ms $0.1335088 att=[] prov=world
+final-paired-r2 claude/shell/ast_patch_roundtrip: PASS none 19681 ms $0.1085144 att=[] prov=None
+final-paired-r2 claude/shell/cli_args: PASS none 13983 ms $0.09008740000000001 att=[] prov=None
+final-paired-r2 claude/world/cli_args: PASS none 11659 ms $0.07846260000000001 att=[] prov=world
+final-paired-r2 claude/world/config_file_parser: PASS none 18358 ms $0.07701880000000001 att=[] prov=world
+final-paired-r2 claude/shell/config_file_parser: PASS none 19742 ms $0.0990734 att=[] prov=None
+final-paired-r2 claude/shell/contract_bst_validate: PASS none 18877 ms $0.1115074 att=[] prov=None
+final-paired-r2 claude/world/contract_bst_validate: PASS none 16073 ms $0.08284639999999999 att=[] prov=world
+final-paired-r2 claude/world/contract_leap_year: PASS none 11253 ms $0.07234180000000001 att=[] prov=world
+final-paired-r2 claude/shell/contract_leap_year: PASS none 13540 ms $0.085842 att=[] prov=None
+final-paired-r2 claude/shell/contract_roman_numeral: PASS none 17726 ms $0.0979558 att=[] prov=None
+final-paired-r2 claude/world/contract_roman_numeral: PASS none 16415 ms $0.083734 att=[] prov=world
+final-paired-r2 claude/world/csv_to_json_converter: PASS none 14877 ms $0.0908526 att=[] prov=world
+final-paired-r2 claude/shell/csv_to_json_converter: PASS none 20587 ms $0.1175046 att=[] prov=None
+final-paired-r2 claude/shell/effect_composition: PASS none 13635 ms $0.0956624 att=[] prov=None
+final-paired-r2 claude/world/effect_composition: PASS none 12404 ms $0.0673424 att=[] prov=world
+final-paired-r2 claude/world/effect_tracking_io_fs: PASS none 12662 ms $0.0607814 att=[] prov=world
+final-paired-r2 claude/shell/effect_tracking_io_fs: PASS none 21962 ms $0.12024740000000002 att=[] prov=None
+final-paired-r2 claude/shell/error_handling: PASS none 15243 ms $0.0916246 att=[] prov=None
+final-paired-r2 claude/world/error_handling: PASS none 11332 ms $0.066156 att=[] prov=world
+final-paired-r2 claude/world/explicit_dataflow_ssa: PASS none 13292 ms $0.0635754 att=[] prov=world
+final-paired-r2 claude/shell/explicit_dataflow_ssa: PASS none 12313 ms $0.08095659999999999 att=[] prov=None
+final-paired-r2 claude/shell/float_eq: PASS none 9597 ms $0.07325980000000001 att=[] prov=None
+final-paired-r2 claude/world/float_eq: PASS none 7980 ms $0.0544786 att=[] prov=world
+final-paired-r2 claude/world/higher_order_functions: PASS none 10182 ms $0.0624566 att=[] prov=world
+final-paired-r2 claude/shell/higher_order_functions: PASS none 12107 ms $0.0788592 att=[] prov=None
+final-paired-r2 claude/shell/intent_annotated_solver: PASS none 12525 ms $0.0793728 att=[] prov=None
+final-paired-r2 claude/world/intent_annotated_solver: PASS none 10279 ms $0.0607918 att=[] prov=world
+final-paired-r2 claude/world/json_transform: PASS none 16780 ms $0.06483420000000001 att=[] prov=world
+final-paired-r2 claude/shell/json_transform: PASS none 11729 ms $0.0811756 att=[] prov=None
+final-paired-r2 claude/shell/list_comprehension: PASS none 13564 ms $0.0809874 att=[] prov=None
+final-paired-r2 claude/world/list_comprehension: PASS none 10910 ms $0.0650778 att=[] prov=world
+final-paired-r2 claude/world/merge_sort: PASS none 10205 ms $0.0642574 att=[] prov=world
+final-paired-r2 claude/shell/merge_sort: PASS none 15484 ms $0.0913196 att=[] prov=None
+final-paired-r2 claude/shell/pipeline: PASS none 16441 ms $0.0878042 att=[] prov=None
+final-paired-r2 claude/world/pipeline: PASS none 9609 ms $0.0603376 att=[] prov=world
+final-paired-r2 claude/world/prompt_injection: PASS none 14232 ms $0.06646540000000001 att=[] prov=world
+final-paired-r2 claude/shell/prompt_injection: PASS none 19784 ms $0.1266054 att=[] prov=None
+final-paired-r2 claude/shell/state_machine_elevator: PASS none 14845 ms $0.095445 att=[] prov=None
+final-paired-r2 claude/world/state_machine_elevator: PASS none 12114 ms $0.075045 att=[] prov=world
+final-paired-r2 claude/world/state_machine_vending: PASS none 19943 ms $0.0808162 att=[] prov=world
+final-paired-r2 claude/shell/state_machine_vending: PASS none 15839 ms $0.0995472 att=[] prov=None
+final-paired-r2 claude/shell/tree_transformation_pipeline: PASS none 15297 ms $0.09535980000000001 att=[] prov=None
+final-paired-r2 claude/world/tree_transformation_pipeline: PASS none 11557 ms $0.07458300000000001 att=[] prov=world
+canary codex/shell: PASS att=[] 18249 ms
+canary codex/world: PASS att=[] 16733 ms
+final-paired-r2 codex/shell/api_call_json: PASS none 29857 ms $None att=[] prov=None
+final-paired-r2 codex/world/api_call_json: PASS none 11531 ms $None att=[] prov=world
+final-paired-r2 codex/world/ast_patch_roundtrip: PASS none 21586 ms $None att=[] prov=world
+final-paired-r2 codex/shell/ast_patch_roundtrip: PASS none 19489 ms $None att=[] prov=None
+final-paired-r2 codex/shell/cli_args: PASS none 16887 ms $None att=[] prov=None
+final-paired-r2 codex/world/cli_args: PASS none 26071 ms $None att=[] prov=world
+final-paired-r2 codex/world/config_file_parser: PASS none 25762 ms $None att=[] prov=world
+final-paired-r2 codex/shell/config_file_parser: PASS none 28549 ms $None att=[] prov=None
+final-paired-r2 codex/shell/contract_bst_validate: PASS none 35809 ms $None att=[] prov=None
+final-paired-r2 codex/world/contract_bst_validate: PASS none 27043 ms $None att=[] prov=world
+final-paired-r2 codex/world/contract_leap_year: PASS none 19362 ms $None att=[] prov=world
+final-paired-r2 codex/shell/contract_leap_year: PASS none 21586 ms $None att=[] prov=None
+final-paired-r2 codex/shell/contract_roman_numeral: PASS none 36948 ms $None att=[] prov=None
+final-paired-r2 codex/world/contract_roman_numeral: PASS none 28048 ms $None att=[] prov=world
+final-paired-r2 codex/world/csv_to_json_converter: PASS none 24398 ms $None att=[] prov=world
+final-paired-r2 codex/shell/csv_to_json_converter: PASS none 25778 ms $None att=[] prov=None
+final-paired-r2 codex/shell/effect_composition: PASS none 21897 ms $None att=[] prov=None
+final-paired-r2 codex/world/effect_composition: PASS none 17572 ms $None att=[] prov=world
+final-paired-r2 codex/world/effect_tracking_io_fs: PASS none 16345 ms $None att=[] prov=world
+final-paired-r2 codex/shell/effect_tracking_io_fs: PASS none 17329 ms $None att=[] prov=None
+final-paired-r2 codex/shell/error_handling: PASS none 20792 ms $None att=[] prov=None
+final-paired-r2 codex/world/error_handling: PASS none 18673 ms $None att=[] prov=world
+final-paired-r2 codex/world/explicit_dataflow_ssa: PASS none 17003 ms $None att=[] prov=world
+final-paired-r2 codex/shell/explicit_dataflow_ssa: PASS none 18963 ms $None att=[] prov=None
+final-paired-r2 codex/shell/float_eq: PASS none 12646 ms $None att=[] prov=None
+final-paired-r2 codex/world/float_eq: PASS none 15326 ms $None att=[] prov=world
+final-paired-r2 codex/world/higher_order_functions: PASS none 16648 ms $None att=[] prov=world
+final-paired-r2 codex/shell/higher_order_functions: PASS none 16662 ms $None att=[] prov=None
+final-paired-r2 codex/shell/intent_annotated_solver: PASS none 15335 ms $None att=[] prov=None
+final-paired-r2 codex/world/intent_annotated_solver: PASS none 15716 ms $None att=[] prov=world
+final-paired-r2 codex/world/json_transform: PASS none 18823 ms $None att=[] prov=world
+final-paired-r2 codex/shell/json_transform: PASS none 26287 ms $None att=[] prov=None
+final-paired-r2 codex/shell/list_comprehension: PASS none 19041 ms $None att=[] prov=None
+final-paired-r2 codex/world/list_comprehension: PASS none 22263 ms $None att=[] prov=world
+final-paired-r2 codex/world/merge_sort: PASS none 17911 ms $None att=[] prov=world
+final-paired-r2 codex/shell/merge_sort: PASS none 19352 ms $None att=[] prov=None
+final-paired-r2 codex/shell/pipeline: PASS none 16379 ms $None att=[] prov=None
+final-paired-r2 codex/world/pipeline: PASS none 15888 ms $None att=[] prov=world
+final-paired-r2 codex/world/prompt_injection: PASS none 15760 ms $None att=[] prov=world
+final-paired-r2 codex/shell/prompt_injection: PASS none 23459 ms $None att=[] prov=None
+final-paired-r2 codex/shell/state_machine_elevator: PASS none 25013 ms $None att=[] prov=None
+final-paired-r2 codex/world/state_machine_elevator: PASS none 25023 ms $None att=[] prov=world
+final-paired-r2 codex/world/state_machine_vending: PASS none 31033 ms $None att=[] prov=world
+final-paired-r2 codex/shell/state_machine_vending: PASS none 26821 ms $None att=[] prov=None
+final-paired-r2 codex/shell/tree_transformation_pipeline: PASS none 23634 ms $None att=[] prov=None
+final-paired-r2 codex/world/tree_transformation_pipeline: PASS none 20708 ms $None att=[] prov=world
+{
+ "abort": null,
+ "arms": [
+  "shell",
+  "world"
+ ],
+ "canary": [
+  {
+   "agent": "claude",
+   "arm": "shell",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 17920
+  },
+  {
+   "agent": "claude",
+   "arm": "world",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 8710
+  },
+  {
+   "agent": "codex",
+   "arm": "shell",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 18249
+  },
+  {
+   "agent": "codex",
+   "arm": "world",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 16733
+  }
+ ],
+ "capacity_reruns": 0,
+ "commit": "9b6f6a896aa58ff60700723721555e776c086108",
+ "episodes": {
+  "claude": "fl-cc-r2",
+  "codex": "fl-cx-r2"
+ },
+ "harness_faults": {
+  "claude/shell": 0,
+  "claude/world": 0,
+  "codex/shell": 0,
+  "codex/world": 0
+ },
+ "label": "final-paired-r2",
+ "passes": {
+  "claude/shell": 23,
+  "claude/world": 23,
+  "codex/shell": 23,
+  "codex/world": 23
+ },
+ "phase": "paired",
+ "prereg": "preregistration.json",
+ "run": 2,
+ "spend_usd_claude": 4.1044,
+ "status": "complete",
+ "tasks": 23,
+ "transcripts": ".ailang/state/floor-final-2026-10-15/transcripts/final-paired-r2",
+ "wall_s": 1744.1
+}
+=== paired r3 16:54:44 claude=2.1.300 (Claude Code)
+canary claude/shell: PASS att=[] 11863 ms
+canary claude/world: PASS att=[] 11381 ms
+final-paired-r3 claude/world/api_call_json: PASS none 11353 ms $0.061869400000000005 att=[] prov=world
+final-paired-r3 claude/shell/api_call_json: PASS none 24957 ms $0.1226874 att=[] prov=None
+final-paired-r3 claude/shell/ast_patch_roundtrip: PASS none 16020 ms $0.1068152 att=[] prov=None
+final-paired-r3 claude/world/ast_patch_roundtrip: PASS none 17491 ms $0.1361582 att=[] prov=world
+final-paired-r3 claude/world/cli_args: PASS none 12068 ms $0.07896840000000001 att=[] prov=world
+final-paired-r3 claude/shell/cli_args: PASS none 17171 ms $0.09471879999999999 att=[] prov=None
+final-paired-r3 claude/shell/config_file_parser: PASS none 19996 ms $0.11965479999999999 att=[] prov=None
+final-paired-r3 claude/world/config_file_parser: PASS none 12638 ms $0.07500699999999999 att=[] prov=world
+final-paired-r3 claude/world/contract_bst_validate: PASS none 23256 ms $0.0824616 att=[] prov=world
+final-paired-r3 claude/shell/contract_bst_validate: PASS none 16019 ms $0.09637000000000001 att=[] prov=None
+final-paired-r3 claude/shell/contract_leap_year: PASS none 15528 ms $0.10218279999999999 att=[] prov=None
+final-paired-r3 claude/world/contract_leap_year: PASS none 11725 ms $0.0827436 att=[] prov=world
+final-paired-r3 claude/world/contract_roman_numeral: PASS none 18327 ms $0.0807428 att=[] prov=world
+final-paired-r3 claude/shell/contract_roman_numeral: PASS none 19851 ms $0.1034194 att=[] prov=None
+final-paired-r3 claude/shell/csv_to_json_converter: PASS none 18262 ms $0.1217218 att=[] prov=None
+final-paired-r3 claude/world/csv_to_json_converter: PASS none 16607 ms $0.0889598 att=[] prov=world
+final-paired-r3 claude/world/effect_composition: PASS none 12708 ms $0.0732998 att=[] prov=world
+final-paired-r3 claude/shell/effect_composition: PASS none 17711 ms $0.118506 att=[] prov=None
+final-paired-r3 claude/shell/effect_tracking_io_fs: PASS none 16591 ms $0.12146340000000003 att=[] prov=None
+final-paired-r3 claude/world/effect_tracking_io_fs: PASS none 9655 ms $0.0642538 att=[] prov=world
+final-paired-r3 claude/world/error_handling: PASS none 8821 ms $0.0643606 att=[] prov=world
+final-paired-r3 claude/shell/error_handling: PASS none 12878 ms $0.09345060000000001 att=[] prov=None
+final-paired-r3 claude/shell/explicit_dataflow_ssa: PASS none 13973 ms $0.0806686 att=[] prov=None
+final-paired-r3 claude/world/explicit_dataflow_ssa: PASS none 10017 ms $0.0644322 att=[] prov=world
+final-paired-r3 claude/world/float_eq: PASS none 7479 ms $0.0564344 att=[] prov=world
+final-paired-r3 claude/shell/float_eq: PASS none 10480 ms $0.0719772 att=[] prov=None
+final-paired-r3 claude/shell/higher_order_functions: PASS none 10591 ms $0.07914399999999999 att=[] prov=None
+final-paired-r3 claude/world/higher_order_functions: PASS none 9893 ms $0.0639294 att=[] prov=world
+final-paired-r3 claude/world/intent_annotated_solver: PASS none 20587 ms $0.072404 att=[] prov=world
+final-paired-r3 claude/shell/intent_annotated_solver: PASS none 12491 ms $0.09172860000000001 att=[] prov=None
+final-paired-r3 claude/shell/json_transform: PASS none 12869 ms $0.0925802 att=[] prov=None
+final-paired-r3 claude/world/json_transform: PASS none 10753 ms $0.06524920000000001 att=[] prov=world
+final-paired-r3 claude/world/list_comprehension: PASS none 10009 ms $0.0664144 att=[] prov=world
+final-paired-r3 claude/shell/list_comprehension: PASS none 11641 ms $0.0921888 att=[] prov=None
+final-paired-r3 claude/shell/merge_sort: PASS none 15023 ms $0.09219359999999999 att=[] prov=None
+final-paired-r3 claude/world/merge_sort: PASS none 13015 ms $0.0805206 att=[] prov=world
+final-paired-r3 claude/world/pipeline: PASS none 9027 ms $0.0612142 att=[] prov=world
+final-paired-r3 claude/shell/pipeline: PASS none 14204 ms $0.0862642 att=[] prov=None
+final-paired-r3 claude/shell/prompt_injection: PASS none 18716 ms $0.1288652 att=[] prov=None
+final-paired-r3 claude/world/prompt_injection: PASS none 16194 ms $0.0834366 att=[] prov=world
+final-paired-r3 claude/world/state_machine_elevator: PASS none 13281 ms $0.07963819999999999 att=[] prov=world
+final-paired-r3 claude/shell/state_machine_elevator: PASS none 27959 ms $0.0922762 att=[] prov=None
+final-paired-r3 claude/shell/state_machine_vending: PASS none 17888 ms $0.09703880000000001 att=[] prov=None
+final-paired-r3 claude/world/state_machine_vending: PASS none 14484 ms $0.083357 att=[] prov=world
+final-paired-r3 claude/world/tree_transformation_pipeline: PASS none 13172 ms $0.07811119999999999 att=[] prov=world
+final-paired-r3 claude/shell/tree_transformation_pipeline: PASS none 15020 ms $0.10257680000000001 att=[] prov=None
+canary codex/shell: PASS att=[] 19744 ms
+canary codex/world: PASS att=[] 13503 ms
+final-paired-r3 codex/world/api_call_json: PASS none 17459 ms $None att=[] prov=world
+final-paired-r3 codex/shell/api_call_json: PASS none 28548 ms $None att=[] prov=None
+final-paired-r3 codex/shell/ast_patch_roundtrip: PASS none 16378 ms $None att=[] prov=None
+final-paired-r3 codex/world/ast_patch_roundtrip: PASS none 17834 ms $None att=[] prov=world
+final-paired-r3 codex/world/cli_args: PASS none 17607 ms $None att=[] prov=world
+final-paired-r3 codex/shell/cli_args: PASS none 20885 ms $None att=[] prov=None
+final-paired-r3 codex/shell/config_file_parser: PASS none 36119 ms $None att=[] prov=None
+final-paired-r3 codex/world/config_file_parser: PASS none 31371 ms $None att=[] prov=world
+final-paired-r3 codex/world/contract_bst_validate: PASS none 24490 ms $None att=[] prov=world
+final-paired-r3 codex/shell/contract_bst_validate: PASS none 26710 ms $None att=[] prov=None
+final-paired-r3 codex/shell/contract_leap_year: PASS none 33152 ms $None att=[] prov=None
+final-paired-r3 codex/world/contract_leap_year: PASS none 19501 ms $None att=[] prov=world
+final-paired-r3 codex/world/contract_roman_numeral: PASS none 30777 ms $None att=[] prov=world
+final-paired-r3 codex/shell/contract_roman_numeral: PASS none 31219 ms $None att=[] prov=None
+final-paired-r3 codex/shell/csv_to_json_converter: PASS none 21658 ms $None att=[] prov=None
+final-paired-r3 codex/world/csv_to_json_converter: PASS none 21314 ms $None att=[] prov=world
+final-paired-r3 codex/world/effect_composition: PASS none 18003 ms $None att=[] prov=world
+final-paired-r3 codex/shell/effect_composition: PASS none 21382 ms $None att=[] prov=None
+final-paired-r3 codex/shell/effect_tracking_io_fs: PASS none 17799 ms $None att=[] prov=None
+final-paired-r3 codex/world/effect_tracking_io_fs: PASS none 15037 ms $None att=[] prov=world
+final-paired-r3 codex/world/error_handling: PASS none 16889 ms $None att=[] prov=world
+final-paired-r3 codex/shell/error_handling: PASS none 17114 ms $None att=[] prov=None
+final-paired-r3 codex/shell/explicit_dataflow_ssa: PASS none 15228 ms $None att=[] prov=None
+final-paired-r3 codex/world/explicit_dataflow_ssa: PASS none 17488 ms $None att=[] prov=world
+final-paired-r3 codex/world/float_eq: PASS none 13815 ms $None att=[] prov=world
+final-paired-r3 codex/shell/float_eq: PASS none 10725 ms $None att=[] prov=None
+final-paired-r3 codex/shell/higher_order_functions: PASS none 16532 ms $None att=[] prov=None
+final-paired-r3 codex/world/higher_order_functions: PASS none 17385 ms $None att=[] prov=world
+final-paired-r3 codex/world/intent_annotated_solver: PASS none 17368 ms $None att=[] prov=world
+final-paired-r3 codex/shell/intent_annotated_solver: PASS none 19856 ms $None att=[] prov=None
+final-paired-r3 codex/shell/json_transform: PASS none 23318 ms $None att=[] prov=None
+final-paired-r3 codex/world/json_transform: PASS none 19416 ms $None att=[] prov=world
+final-paired-r3 codex/world/list_comprehension: PASS none 18750 ms $None att=[] prov=world
+final-paired-r3 codex/shell/list_comprehension: PASS none 18245 ms $None att=[] prov=None
+final-paired-r3 codex/shell/merge_sort: PASS none 20143 ms $None att=[] prov=None
+final-paired-r3 codex/world/merge_sort: PASS none 21656 ms $None att=[] prov=world
+final-paired-r3 codex/world/pipeline: PASS none 15799 ms $None att=[] prov=world
+final-paired-r3 codex/shell/pipeline: PASS none 13601 ms $None att=[] prov=None
+final-paired-r3 codex/shell/prompt_injection: PASS none 20254 ms $None att=[] prov=None
+final-paired-r3 codex/world/prompt_injection: PASS none 16476 ms $None att=[] prov=world
+final-paired-r3 codex/world/state_machine_elevator: PASS none 20910 ms $None att=[] prov=world
+final-paired-r3 codex/shell/state_machine_elevator: PASS none 26213 ms $None att=[] prov=None
+final-paired-r3 codex/shell/state_machine_vending: PASS none 27119 ms $None att=[] prov=None
+final-paired-r3 codex/world/state_machine_vending: PASS none 27185 ms $None att=[] prov=world
+final-paired-r3 codex/world/tree_transformation_pipeline: PASS none 26744 ms $None att=[] prov=world
+final-paired-r3 codex/shell/tree_transformation_pipeline: PASS none 27252 ms $None att=[] prov=None
+{
+ "abort": null,
+ "arms": [
+  "shell",
+  "world"
+ ],
+ "canary": [
+  {
+   "agent": "claude",
+   "arm": "shell",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 11863
+  },
+  {
+   "agent": "claude",
+   "arm": "world",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 11381
+  },
+  {
+   "agent": "codex",
+   "arm": "shell",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 19744
+  },
+  {
+   "agent": "codex",
+   "arm": "world",
+   "class": "PASS",
+   "task": "fizzbuzz",
+   "wall_ms": 13503
+  }
+ ],
+ "capacity_reruns": 0,
+ "commit": "9b6f6a896aa58ff60700723721555e776c086108",
+ "episodes": {
+  "claude": "fl-cc-r3",
+  "codex": "fl-cx-r3"
+ },
+ "harness_faults": {
+  "claude/shell": 0,
+  "claude/world": 0,
+  "codex/shell": 0,
+  "codex/world": 0
+ },
+ "label": "final-paired-r3",
+ "passes": {
+  "claude/shell": 23,
+  "claude/world": 23,
+  "codex/shell": 23,
+  "codex/world": 23
+ },
+ "phase": "paired",
+ "prereg": "preregistration.json",
+ "run": 3,
+ "spend_usd_claude": 4.2073,
+ "status": "complete",
+ "tasks": 23,
+ "transcripts": ".ailang/state/floor-final-2026-10-15/transcripts/final-paired-r3",
+ "wall_s": 1727.9
+}
+=== phase 2 done 17:23:34
