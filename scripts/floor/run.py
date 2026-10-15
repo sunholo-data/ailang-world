@@ -763,6 +763,29 @@ def spent_so_far(ledger: str = LEDGER) -> float:
     return round(sum(float(r.get('spend_usd_claude') or 0) for r in read_ledger(ledger)), 4)
 
 
+def iterate_schedule(agents, arms_run, tasks, reused, paired: bool) -> list:
+    """The ordered (kind, agent, arm, task) steps of one iteration; kind is 'canary' or 'task'.
+
+    Unpaired (the M4 default): per agent, each arm's canary then all its tasks. Paired (2026-10-15
+    attended smoke): per agent, every canary first, then each task's two arms back to back in the
+    FINAL's counterbalanced ``paired_order(i, 1)``, so a smoke's O sees the same order control as
+    the FINAL (D-WORLD-74). A reused cell is never scheduled."""
+    if paired and (sorted(arms_run) != sorted(arms.ARMS) or reused):
+        raise RunRefused('--paired needs both arms and no reused cells')
+    steps = []
+    for ag in agents:
+        live = [x for x in arms_run if f'{ag}/{x}' not in reused]
+        if not paired:
+            for x in live:
+                steps.append(('canary', ag, x, None))
+                steps += [('task', ag, x, t) for t in tasks]
+            continue
+        steps += [('canary', ag, x, None) for x in live]
+        for i, t in enumerate(tasks):
+            steps += [('task', ag, x, t) for x in paired_order(i, 1)]
+    return steps
+
+
 def cmd_iterate(a) -> int:
     import canary
     import tokens as tokens_mod
@@ -802,29 +825,32 @@ def cmd_iterate(a) -> int:
                 os.makedirs(os.path.dirname(d), exist_ok=True)
                 shutil.copyfile(s, d)
                 reused[key] = origin
+    # --episode-run K: run on a final-prepare rig's run-K episodes (fl-cc-rK / fl-cx-rK), so an
+    # attended smoke uses the same freshly built product and store layout as the FINAL.
+    eps = final_episodes(a.episode_run) if a.episode_run else EPISODES
     toks, client, daemon = {}, None, None
     if 'world' in arms_run:
         import world
-        sess = {ag: os.path.join(L['private'], f'{EPISODES[ag]}.session') for ag in agents}
+        sess = {ag: os.path.join(L['private'], f'{eps[ag]}.session') for ag in agents}
         toks = {ag: read_token(p) for ag, p in sess.items()}
         daemon = canary.start_daemon(L, a.addr)
         client = world.Client(a.addr)
     spent_before = spent_so_far(LEDGER) + a.prior_spend
     ctx = Ctx(cfg, mode, probes, L, it_dir, tdir, client=client, tokens=toks, spend_cap=a.spend_cap,
-              spent_before=spent_before)
+              spent_before=spent_before, episodes=eps)
     t0 = time.time()
     status, abort = 'complete', None
     canaries = []
     try:
         if client is not None:
             canary.commit_genesis_if_needed(L, client, toks[agents[0]])
-        for ag in agents:
-            for x in arms_run:
-                if f'{ag}/{x}' in reused:
-                    print(f'{ag}/{x}: rows reused from {reused[f"{ag}/{x}"]} (arm digest unchanged)', flush=True)
-                    continue
-                if time.time() - t0 > a.max_wall_s:
-                    raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
+        for key in reused:
+            print(f'{key}: rows reused from {reused[key]} (arm digest unchanged)', flush=True)
+        for step in iterate_schedule(agents, arms_run, tasks, set(reused), a.paired):
+            if time.time() - t0 > a.max_wall_s:
+                raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
+            kind, ag, x, t = step
+            if kind == 'canary':
                 c = run_with_retries(lambda k: run_cell(
                     ctx, ag, x, can, run_k=1, rows_path=os.path.join(it_dir, 'canary.jsonl'), label='canary',
                     attempt=k))[-1]
@@ -838,19 +864,17 @@ def cmd_iterate(a) -> int:
                     # approval) and the phase ran on regardless: a failed canary now stops the phase.
                     raise RunRefused(f'canary {ag}/{x} did not pass ({c["class"]} {c["error_category"]}); '
                                      'investigate before spending the phase (or --canary-fail-ok)')
-                for t in tasks:
-                    if time.time() - t0 > a.max_wall_s:
-                        raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
-                    tries = run_with_retries(lambda k: run_cell(
-                        ctx, ag, x, t, run_k=1, rows_path=os.path.join(it_dir, 'runs', ag, x, 'r1.jsonl'),
-                        label=f'iter{a.iteration}', attempt=k))
-                    for prev in tries[:-1]:
-                        print(f'{ag}/{x}/{t.id}: attempt {prev["attempt"]} capacity fault, re-run (§4.6)', flush=True)
-                    r = tries[-1]
-                    print(f'{ag}/{x}/{t.id}: {r["class"]} {r["error_category"]} {r["wall_ms"]} ms '
-                          f'${r["cost_usd"]} att={r["attestation"]} '
-                          f'prov={(r.get("provenance") or {}).get("solution_provenance")} '
-                          f'r153={(r.get("row153") or {}).get("transcript_callback_timeouts")}', flush=True)
+                continue
+            tries = run_with_retries(lambda k: run_cell(
+                ctx, ag, x, t, run_k=1, rows_path=os.path.join(it_dir, 'runs', ag, x, 'r1.jsonl'),
+                label=f'iter{a.iteration}', attempt=k))
+            for prev in tries[:-1]:
+                print(f'{ag}/{x}/{t.id}: attempt {prev["attempt"]} capacity fault, re-run (§4.6)', flush=True)
+            r = tries[-1]
+            print(f'{ag}/{x}/{t.id}: {r["class"]} {r["error_category"]} {r["wall_ms"]} ms '
+                  f'${r["cost_usd"]} att={r["attestation"]} '
+                  f'prov={(r.get("provenance") or {}).get("solution_provenance")} '
+                  f'r153={(r.get("row153") or {}).get("transcript_callback_timeouts")}', flush=True)
     except (QuotaAbort, RunRefused) as e:
         status, abort = 'aborted', str(e)
         print(f'ABORT: {e}', flush=True)
@@ -890,8 +914,8 @@ def cmd_iterate(a) -> int:
         json.dump(it, f, indent=2, sort_keys=True)
         f.write('\n')
     tg = tokens_mod.scan_dir(it_dir, tokens_mod.load_tokens(
-        [os.path.join(L['private'], f'{EPISODES[ag]}.session') for ag in arms.AGENTS
-         if os.path.exists(os.path.join(L['private'], f'{EPISODES[ag]}.session'))]))
+        [os.path.join(L['private'], f'{eps[ag]}.session') for ag in arms.AGENTS
+         if os.path.exists(os.path.join(L['private'], f'{eps[ag]}.session'))]))
     if tg:
         print(f'AC2.7 FAIL: token findings in {it_dir}: {tg}', flush=True)
         return 3
@@ -1157,6 +1181,8 @@ def main(argv=None) -> int:
     p.add_argument('--max-wall-s', type=float, default=3 * 3600)
     p.add_argument('--allow-dirty-harness', action='store_true')
     p.add_argument('--canary-fail-ok', action='store_true')
+    p.add_argument('--paired', action='store_true', help='interleave the arms per task (paired_order)')
+    p.add_argument('--episode-run', type=int, default=None, help="use a final-prepare rig's run-K sessions")
     p.set_defaults(fn=cmd_iterate)
     p = sub.add_parser('digest')
     p.add_argument('--mode', default='smoke', choices=MODES)
