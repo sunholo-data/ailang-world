@@ -1,0 +1,22 @@
+[
+  {
+    "path": "packages/world-demo/approve.ail",
+    "sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "bytes": 6225
+  },
+  {
+    "path": "packages/world-demo/transitions.json",
+    "sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+    "bytes": 2149
+  },
+  {
+    "path": "packages/world-demo/README.md",
+    "sha256": "adabe92cc3d48574162432c2ae81cefb9ba5fa4e0f1a7fbda37ece076c156eba",
+    "bytes": 7596
+  },
+  {
+    "path": "host/coordinator/world_demo_test.go",
+    "sha256": "ed5a05f6b613f7802d37dc814cd0650b5b91f171288e97f16e18dfc1f44e6fac",
+    "bytes": 20505
+  }
+]

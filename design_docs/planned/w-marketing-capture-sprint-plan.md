@@ -165,7 +165,7 @@ Each mutant is a temporary compiling guard/data edit and must reach its specifie
 
 ## M1a — Package evidence law and non-vacuous pinned manifest
 
-Design M1; 22 minutes; dependency: base; status **pending**.
+Design M1; 22 minutes; dependency: base; status **completed** — landed iteration 266 in `28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6` (PASS 88/100, zero blocking; commit evidence). Iteration 267 independently reran both named evidence/legacy-drift tests under v0.41.0: PASS. All other milestone statuses remain pending.
 
 Exact executor files:
 

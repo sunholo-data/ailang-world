@@ -1,0 +1,250 @@
+[
+  {
+    "name": "M1b-kind-law",
+    "path": "packages/world-demo/approve.ail",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "44266652ac74532fbfa1a8c1fdd9fb431505f2c450b8a2a89074cfd0e9b9720a",
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.059,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-kind-law-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.103,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-kind-law-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoLegacyGradeDrift$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.925,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-kind-law-kill.log"
+    },
+    "red_set": [
+      "TestWorldDemoLegacyGradeDrift"
+    ],
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoLegacyGradeDrift$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 0.814,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-kind-law-pristine.log"
+    }
+  },
+  {
+    "name": "M1b-scalar-decision",
+    "path": "packages/world-demo/approve.ail",
+    "before_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "mutant_sha256": "523c58c3abf5e5235e648d74767c3e6f9c77b38f8727494b409f501754ffa59d",
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.061,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-scalar-decision-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.101,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-scalar-decision-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.767,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-scalar-decision-kill.log"
+    },
+    "red_set": [
+      "TestWorldDemoApprovalExactOnePlan"
+    ],
+    "restored_sha256": "51d7798f6326629381ec6be44916425ee019448e65727f1525dce6a303946ad2",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.171,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-scalar-decision-pristine.log"
+    }
+  },
+  {
+    "name": "M1b-descriptor-cost",
+    "path": "packages/world-demo/transitions.json",
+    "before_sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+    "mutant_sha256": "ac563c263c0ba0181ac0a8f1cf45de66881f9cf8877207139d1a3ef169bf31f5",
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.03,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-cost-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.105,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-cost-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.76,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-cost-kill.log"
+    },
+    "red_set": [
+      "TestWorldDemoApprovalExactOnePlan"
+    ],
+    "restored_sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.437,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-cost-pristine.log"
+    }
+  },
+  {
+    "name": "M1b-descriptor-schema",
+    "path": "packages/world-demo/transitions.json",
+    "before_sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+    "mutant_sha256": "3d889b9bec989fde781b525529229f6ccdfba22a5d9d4647bb0d2c3585f60514",
+    "check": {
+      "cmd": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "check",
+        "approve.ail"
+      ],
+      "rc": 0,
+      "seconds": 0.032,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-schema-check.log"
+    },
+    "build": {
+      "cmd": [
+        "go",
+        "build",
+        "./host/coordinator"
+      ],
+      "rc": 0,
+      "seconds": 0.107,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-schema-build.log"
+    },
+    "kill": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 1,
+      "seconds": 0.781,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-schema-kill.log"
+    },
+    "red_set": [
+      "TestWorldDemoApprovalExactOnePlan"
+    ],
+    "restored_sha256": "e17577b2d7d66972e4397f2db650800a6bbdbb1e36f00e710b344ecf52848eb6",
+    "pristine": {
+      "cmd": [
+        "go",
+        "test",
+        "-run",
+        "^TestWorldDemoApprovalExactOnePlan$",
+        "./host/coordinator",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 7.451,
+      "log": "/Users/voightkampff/.ailang/state/world-iter267/snap/M1b/M1b-descriptor-schema-pristine.log"
+    }
+  }
+]

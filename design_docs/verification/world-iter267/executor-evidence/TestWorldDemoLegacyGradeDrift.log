@@ -1,0 +1,13 @@
+=== RUN   TestWorldDemoLegacyGradeDrift
+    world_demo_test.go:300: CompilerOutput: package=2 executable kernel=2
+    world_demo_test.go:300: TestReport: package=3 executable kernel=3
+    world_demo_test.go:300: TestReport: package=3 executable kernel=3
+    world_demo_test.go:300: HumanApproval: package=2 executable kernel=2
+    world_demo_test.go:300: AiReview: package=1 executable kernel=1
+    world_demo_test.go:300: RecordedEffect: package=2 executable kernel=2
+    world_demo_test.go:300: ProofReceipt: package=1 executable kernel=1
+    world_demo_test.go:321: authored-claim=CLAIMED; AiReview impersonation refused; raw ProofReceipt=CLAIMED; no mapping produces PROVEN
+    world_demo_test.go:322: standalone approval and evidence roster-kind laws agree on all eight independently pinned inputs
+--- PASS: TestWorldDemoLegacyGradeDrift (0.27s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	0.482s

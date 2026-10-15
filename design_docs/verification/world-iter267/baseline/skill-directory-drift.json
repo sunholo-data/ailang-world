@@ -1,0 +1,71 @@
+{
+  "source": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+  "cwd_copy_exists": false,
+  "files": [
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/SKILL.md",
+      "match": true,
+      "sha256": "e62fa847149c4a5e15df0661e9f0444e9553f99abc825ba64c84e82733d001bb"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/ci-health.md",
+      "match": true,
+      "sha256": "808beca1d0ddf6933da9bfa4889866d4dbc97b69f57b1e06a5c7eecdf57cf949"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "match": true,
+      "sha256": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-0-preflight.md",
+      "match": true,
+      "sha256": "3b9cf684e1f34ab8e341809c445d3347707d9aedd2207a1ca79af6dac051e47f"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-1-observe.md",
+      "match": true,
+      "sha256": "5ac4406391adea983c7264007d998c2109458e85a1ff449256a7757353ec084a"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-2-pick.md",
+      "match": true,
+      "sha256": "55ddf00a947607d3058ae1d5eab23ac5ea75f9b2681a10c88a03ef6d36eadb35"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "match": true,
+      "sha256": "acbecb8dc5a57174a53ad6793130d2d82ee30d4f99b293eead1dd84ea5344295"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3b-ci-green.md",
+      "match": true,
+      "sha256": "6356c824e75e3f33fe322574790ef7d3aef6dfb3b3866f65fec29d72a8041bbc"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-4-record.md",
+      "match": true,
+      "sha256": "e441499041789958abfb29fb965ae208812711141a05ddc2496662728ec4b050"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-5-retro.md",
+      "match": true,
+      "sha256": "590b4bc22e5b05c0a4e1d2da1d946e3e8ac48d30390aa680e4e69fcf6c9e14d3"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/ref-drift.md",
+      "match": true,
+      "sha256": "efc6679c9f8ae9d2fe259b1961ab367b4dcd59b29d77ecf405b521d18adb244b"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/role-spawn-routing.md",
+      "match": true,
+      "sha256": "7b613d244fb3ff0a2be96725e1832d0cd0cde5d27503dbd9a78e4712b758d6f0"
+    },
+    {
+      "file": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/verification-protocol.md",
+      "match": true,
+      "sha256": "94f2abc0443f91d56834418b4fee99c4ef8cb6ada50b1abd27059955b8238556"
+    }
+  ]
+}

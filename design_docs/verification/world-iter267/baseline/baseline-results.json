@@ -1,0 +1,48 @@
+[
+  {
+    "name": "base-focused",
+    "cmd": [
+      "go",
+      "test",
+      "-run",
+      "^TestProducerMintsNoPacketForMultiEffectPlan$",
+      "./host/coordinator",
+      "-count=1",
+      "-timeout",
+      "45s",
+      "-v"
+    ],
+    "rc": 0,
+    "elapsed_s": 0.71,
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "sha": "57941bf7410c7462d755cd3a94748eaf76d66288",
+    "platform": "darwin/arm64",
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/base-focused.log"
+  },
+  {
+    "name": "base-ail",
+    "cmd": [
+      "bash",
+      "scripts/verify_ail.sh"
+    ],
+    "rc": 0,
+    "elapsed_s": 25.62,
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "sha": "57941bf7410c7462d755cd3a94748eaf76d66288",
+    "platform": "darwin/arm64",
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/base-ail.log"
+  },
+  {
+    "name": "base-go",
+    "cmd": [
+      "bash",
+      "scripts/verify_go.sh"
+    ],
+    "rc": 1,
+    "elapsed_s": 250.66,
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter267",
+    "sha": "57941bf7410c7462d755cd3a94748eaf76d66288",
+    "platform": "darwin/arm64",
+    "log": "/Users/voightkampff/.ailang/state/world-iter267/base-go.log"
+  }
+]

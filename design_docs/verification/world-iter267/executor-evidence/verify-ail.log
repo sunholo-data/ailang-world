@@ -1,0 +1,58 @@
+── legs 1-2 AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0)
+── Leg 1: ai-check required-check manifest
+   ✓ swept .ail module set equals the LEG1_MODULES allowlist (23 modules)
+   ai-check design_docs/sketches/decisionpacket.ail
+   ai-check design_docs/sketches/effectbroker.ail
+   ai-check design_docs/sketches/effectplan.ail
+   ai-check design_docs/sketches/execargs.ail
+   ai-check design_docs/sketches/logepoch.ail
+   ai-check design_docs/sketches/storejournal.ail
+   ai-check design_docs/sketches/transitions.ail
+   ai-check design_docs/sketches/worlddapi.ail
+   ai-check design_docs/sketches/worldkernel.ail
+   ai-check design_docs/sketches/worldtypes.ail
+   ai-check world/contracts.ail
+   ai-check world/logepoch.ail
+   ai-check world/transitions.ail
+   ai-check world/types.ail
+   ai-check packages/se-tools/se_tools/builtins_search.ail
+   ai-check packages/se-tools/se_tools/check.ail
+   ai-check packages/se-tools/se_tools/cli.ail
+   ai-check packages/se-tools/se_tools/edit.ail
+   ai-check packages/se-tools/se_tools/examples_search.ail
+   ai-check packages/se-tools/se_tools/exec.ail
+   ai-check packages/se-tools/se_tools/read.ail
+   ai-check packages/se-tools/se_tools/run.ail
+   ai-check packages/se-tools/se_tools/write.ail
+   ✓ 16/16 required world/ identities verified across 23 module(s)
+── Leg 2c: execargs sketch named inline tests
+   ✓ all 138 execargs sketch named tests pass
+── Leg 2: named inline tests
+   ✓ all 40 required named tests pass (failed_tests=0)
+── Leg 2b: se-tools named inline tests (per module)
+   ✓ all 444 se-tools named tests pass across 9 modules
+── Leg 3: world package nine-step gate
+── World package step 1/9: required paths
+   ✓ package, manifest, smoke, and 4 allowlisted modules exist
+── World package step 2/9: exact .ail allowlist
+   ✓ find observed exactly 5 expected .ail files; no unexpected .ail file exists
+── World package step 3/9: projection SHA-256 equality
+   ✓ 4/4 projection hashes equal their canonical sources
+── World package step 4/9: frozen manifest
+   ✓ exact package fields, 4 exports, and empty effects
+── World package step 5/9: package check and tests
+   ✓ package check passed and tests reported 43 activity line(s)
+   ✓ exactly 9 skips, all no-generator, all named (upstream M4 / cross-file derive gap)
+── World package step 6/9: bounded smoke execution
+   ✓ plan → verify → commit smoke completed within 30s
+── World package step 7/9: dry-run identity and full pkgproj hashes
+   ✓ dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees
+── World package step 8/9: exact tar entry allowlist
+   cache control fired on 41 non-.ail file(s); observed zero cached .ail files
+   ✓ tar contains exactly 7 allowlisted entries
+── World package step 9/9: canonical ready-packet golden
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 444 se-tools named tests pass

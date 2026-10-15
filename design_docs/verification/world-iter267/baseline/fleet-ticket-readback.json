@@ -1,0 +1,15 @@
+{
+  "id": "inbox_1792025993522_f0ff3084",
+  "message_id": "inbox_1792025993522_f0ff3084",
+  "correlation_id": "harness:agent-tool:sonnet-unavailable",
+  "from_agent": "mission-world",
+  "to_inbox": "mission-fleet",
+  "message_type": "request",
+  "title": "[harness] agent-tool:sonnet-unavailable · world#267",
+  "payload": "{\"mission\":\"world\",\"iteration\":267,\"signature\":\"agent-tool:sonnet-unavailable\",\"slot_verdict\":\"world-1792025700-76268 in-flight; terminal verdict not yet available\",\"blocking\":\"none\",\"evidence\":\"World iteration267: resolver evaluator = agent-tool sonnet declared:alias-pin. Native collaboration.spawn_agent(model=sonnet,fork_turns=none) failed: Unknown model `sonnet` for spawn_agent. Available models: gpt-6.1-sol, gpt-6-astra, gpt-6-sol, gpt-6-luna, gpt-5.6-sol. MISSION_OVER_RATION=anthropic openrouter, MISSION_ANTHROPIC_AVAILABLE=0. Declared evaluator fallback openrouter minimax, claude sonnet, opus unavailable by capacity/capability. Amended D-WORLD-48 explicitly permits native GPT6.1Sol fresh independent-context judge. No harness repair, no controller-only verdict. Native Agent operator request honored; same-model-fresh-context flag required.\\n\",\"workaround\":\"none\"}",
+  "category": "harness-friction",
+  "simhash": 809470411745122682,
+  "status": "read",
+  "created_at": "2026-10-15T00:59:53.522777Z",
+  "read_at": "2026-10-15T01:05:03.579095Z"
+}

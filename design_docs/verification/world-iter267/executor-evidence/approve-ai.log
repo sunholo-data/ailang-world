@@ -1,0 +1,27 @@
+{
+  "file": "approve.ail",
+  "check": {
+    "passed": true,
+    "error_count": 0,
+    "errors": []
+  },
+  "verify": {
+    "available": true,
+    "verified": 2,
+    "counterexample": 0,
+    "skipped": 0,
+    "errors": 0,
+    "results": [
+      {
+        "function": "rosterKindAllowed",
+        "status": "verified",
+        "duration": 5614166
+      },
+      {
+        "function": "oneApprovalEffect",
+        "status": "verified",
+        "duration": 5346042
+      }
+    ]
+  }
+}

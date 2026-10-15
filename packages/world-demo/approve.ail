@@ -1,0 +1,127 @@
+module approve
+
+-- Standalone convention-v2 capsule; only std imports. Evidence objects remain
+-- invocation input, never authority inferred from their kind/ref strings.
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asArray, Json)
+import std/option (Option, Some, None)
+import std/result (Result, Ok, Err)
+import std/list (length)
+
+-- Scalar decision law. The plan branch requests one approval; refusals none.
+export func oneApprovalEffect(admitted: bool) -> int ! {}
+requires { true }
+ensures { result == (if admitted then 1 else 0), result >= 0, result <= 1 }
+tests [(true, 1), (false, 0)]
+{ if admitted then 1 else 0 }
+
+-- Repeated because publication stages ONE source. Executable drift pins this
+-- copy to evidence.ail; allowing a kind never validates or grades its object.
+export func rosterKindAllowed(kind: string) -> bool ! {}
+requires { true }
+ensures { result == (kind == "test-invocation" || kind == "recorded-effect"
+  || kind == "authored-claim" || kind == "proof-envelope") }
+tests [
+  ("test-invocation", true), ("recorded-effect", true),
+  ("authored-claim", true), ("proof-envelope", true),
+  ("unknown", false), ("AiReview", false), ("PROVEN", false), ("ProofReceipt", false)
+]
+{ kind == "test-invocation" || kind == "recorded-effect"
+  || kind == "authored-claim" || kind == "proof-envelope" }
+
+func stringField(doc: Json, key: string) -> string ! {} =
+  match get(doc, key) { None => "", Some(v) => match asString(v) { None => "", Some(s) => s } }
+
+func member(key: string, keys: [string]) -> bool ! {} =
+  match keys { [] => false, k :: rest => k == key || member(key, rest) }
+
+-- Reject unknown and duplicate object keys ; missing fields are checked at their own validation branch.
+func keysMatch(es: [{key: string, value: Json}], remaining: [string]) -> bool ! {} =
+  match es {
+    [] => true,
+    e :: rest => member(e.key, remaining) && keysMatch(rest, removeKey(e.key, remaining))
+  }
+func removeKey(key: string, keys: [string]) -> [string] ! {} =
+  match keys { [] => [], k :: rest => if k == key then rest else k :: removeKey(key, rest) }
+func exactObject(doc: Json, keys: [string]) -> bool ! {} =
+  match asObject(doc) { None => false, Some(es) => keysMatch(es, keys) }
+
+-- Validation uses terminal reasons: each refusal branch is independently
+-- removable in the mutation drill, without another guard masking its verdict.
+func validateRosterEntries(xs: [Json], kinds: [string], refs: [string]) -> Option[string] ! {} =
+  match xs {
+    [] => if length(kinds) == 4 then None else Some("roster count"),
+    x :: rest => {
+      let kind = stringField(x, "kind");
+      let ref = stringField(x, "ref");
+      if not exactObject(x, ["kind", "ref"]) then Some("roster entry schema")
+      else if not rosterKindAllowed(kind) then Some("roster kind")
+      else if ref == "" then Some("roster ref")
+      else if member(kind, kinds) then Some("duplicate kind")
+      else if member(ref, refs) then Some("duplicate ref")
+      else validateRosterEntries(rest, kind :: kinds, ref :: refs)
+    }
+  }
+func validateRoster(args: Json) -> Option[string] ! {} =
+  match get(args, "roster") {
+    None => Some("missing roster"),
+    Some(v) => match asArray(v) {
+      None => Some("roster array"),
+      Some(xs) => validateRosterEntries(xs, [], [])
+    }
+  }
+func validateCandidates(args: Json) -> Option[string] ! {} =
+  match get(args, "candidates") {
+    None => Some("missing candidates"),
+    Some(v) => match asArray(v) {
+      None => Some("candidates array"),
+      Some(xs) => match xs {
+        a :: b :: [] => match asString(a) {
+          None => Some("candidate a string"),
+          Some(sa) => match asString(b) {
+            None => Some("candidate b string"),
+            Some(sb) => if sa == "" || sb == "" || sa == sb then Some("distinct nonempty candidates")
+              else validateRoster(args)
+          }
+        },
+        _ => Some("candidate count")
+      }
+    }
+  }
+func validateArgs(args: Json) -> Option[string] ! {} =
+  if not exactObject(args, ["goal", "candidates", "roster"]) then Some("args schema")
+  else if stringField(args, "goal") == "" then Some("goal string")
+  else validateCandidates(args)
+func validateInput(doc: Json) -> Option[string] ! {} =
+  if not exactObject(doc, ["phase", "args"]) then Some("input schema")
+  else if stringField(doc, "phase") != "plan" then Some("plan phase required")
+  else match get(doc, "args") {
+    None => Some("missing args"),
+    Some(args) => validateArgs(args)
+  }
+
+func refusal() -> string ! {} =
+  encode(jo([kv("plan", js("world/effect-plan/v1")), kv("effects", ja([])),
+    kv("finish", jb(false)), kv("result", jo([kv("ok", jb(false)), kv("refused", js("invalid demo approval input"))]))]))
+func approvalPlan() -> string ! {} =
+  encode(jo([kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([jo([kv("id", js("e1")), kv("effect", js("Human.Approve")),
+      kv("scope", js("worktree")), kv("cost", jint(1)),
+      kv("payload", jo([kv("requester", js("demo"))]))])])),
+    kv("finish", jb(false)), kv("result", jn(()))]))
+
+-- Pure JSON entry: runner prints returned string. No IO is needed in source;
+-- Human.Approve is plan DATA executed by the existing host, not an AILANG row.
+export func main(input: string) -> string ! {}
+tests [
+  ("{\"phase\":\"plan\",\"args\":{\"goal\":\"demo goal\",\"candidates\":[\"candidate-a\",\"candidate-b\"],\"roster\":[{\"kind\":\"test-invocation\",\"ref\":\"test-ref\"},{\"kind\":\"recorded-effect\",\"ref\":\"effect-ref\"},{\"kind\":\"authored-claim\",\"ref\":\"claim-ref\"},{\"kind\":\"proof-envelope\",\"ref\":\"proof-ref\"}]}}", "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Human.Approve\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"requester\":\"demo\"}}],\"finish\":false,\"result\":null}"),
+  ("{}", "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"invalid demo approval input\"}}")
+]
+{
+  match decode(input) {
+    Err(_) => refusal(),
+    Ok(doc) => {
+      let admitted = match validateInput(doc) { Some(_) => false, None => true };
+      if oneApprovalEffect(admitted) == 1 then approvalPlan() else refusal()
+    }
+  }
+}

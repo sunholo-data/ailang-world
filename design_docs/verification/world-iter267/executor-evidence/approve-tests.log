@@ -1,0 +1,156 @@
+→ Running tests in approve.ail
+{
+  "failed_tests": 0,
+  "module_path": "All Tests",
+  "passed_tests": 18,
+  "properties": [
+    {
+      "discarded_inputs": 0,
+      "duration": "19.986667ms",
+      "generated_inputs": 100,
+      "location": "approve.ail:12:12",
+      "name": "oneApprovalEffect_property_1",
+      "seed": "-2533700325629978583",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "29.865041ms",
+      "generated_inputs": 100,
+      "location": "approve.ail:13:11",
+      "name": "oneApprovalEffect_property_2",
+      "seed": "4117857381773216540",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "28.753208ms",
+      "generated_inputs": 100,
+      "location": "approve.ail:13:50",
+      "name": "oneApprovalEffect_property_3",
+      "seed": "6145280918557529183",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "31.06ms",
+      "generated_inputs": 100,
+      "location": "approve.ail:13:63",
+      "name": "oneApprovalEffect_property_4",
+      "seed": "2959979783228129620",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "21.544459ms",
+      "generated_inputs": 100,
+      "location": "approve.ail:20:12",
+      "name": "rosterKindAllowed_property_1",
+      "seed": "-677341124709899106",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "31.622709ms",
+      "generated_inputs": 100,
+      "location": "approve.ail:21:11",
+      "name": "rosterKindAllowed_property_2",
+      "seed": "2242899833994236945",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    }
+  ],
+  "seed": "0",
+  "seed_derivation": "ailang-property-seed-v1",
+  "seed_mode": "derived",
+  "skipped_tests": 0,
+  "success": true,
+  "tests": [
+    {
+      "duration": "24.566458ms",
+      "location": "approve.ail:14:8",
+      "name": "oneApprovalEffect_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "23.140959ms",
+      "location": "approve.ail:14:19",
+      "name": "oneApprovalEffect_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "22.7345ms",
+      "location": "approve.ail:24:3",
+      "name": "rosterKindAllowed_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "22.455959ms",
+      "location": "approve.ail:24:30",
+      "name": "rosterKindAllowed_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "21.821667ms",
+      "location": "approve.ail:25:3",
+      "name": "rosterKindAllowed_test_3",
+      "status": "pass"
+    },
+    {
+      "duration": "22.419083ms",
+      "location": "approve.ail:25:29",
+      "name": "rosterKindAllowed_test_4",
+      "status": "pass"
+    },
+    {
+      "duration": "22.291459ms",
+      "location": "approve.ail:26:3",
+      "name": "rosterKindAllowed_test_5",
+      "status": "pass"
+    },
+    {
+      "duration": "22.930834ms",
+      "location": "approve.ail:26:23",
+      "name": "rosterKindAllowed_test_6",
+      "status": "pass"
+    },
+    {
+      "duration": "21.665959ms",
+      "location": "approve.ail:26:44",
+      "name": "rosterKindAllowed_test_7",
+      "status": "pass"
+    },
+    {
+      "duration": "22.480417ms",
+      "location": "approve.ail:26:63",
+      "name": "rosterKindAllowed_test_8",
+      "status": "pass"
+    },
+    {
+      "duration": "22.796375ms",
+      "location": "approve.ail:116:3",
+      "name": "main_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "23.962458ms",
+      "location": "approve.ail:117:3",
+      "name": "main_test_2",
+      "status": "pass"
+    }
+  ],
+  "total_duration": "436.098212ms",
+  "total_tests": 18,
+  "vacuous_skips": 0
+}
