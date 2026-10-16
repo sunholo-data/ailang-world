@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 274 | 2026-10-16 | row 150 M4a seed S5 real approval transition + one pending packet + exact budget delta LANDED `7ed1152` (PR #283; judge r1 PASS 91) [PRODUCT] |
 | 273 | 2026-10-16 | row 150 M3b seed S4 proof stage + proof/key refusals LANDED `c08729b` (PR #277; judge r1 PASS 88 → r2 PASS 93) [PRODUCT] |
 | 272 | 2026-10-16 | row 150 M3a HTTP proof adapters + real producer success LANDED `1ad2743` (PR #275; judge r1 PASS 82 → r2 PASS 90) [PRODUCT] |
 | 271 | 2026-10-16 | row 150 M2b demo seed S2 read + S3 test/ai_check stages LANDED `07d1d9f` (PR #273; judge r1 FAIL 66 → r2 PASS 86) [PRODUCT] |

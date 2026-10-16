@@ -1207,7 +1207,7 @@
         "cmd/ailang-worldd/demo_seed.go",
         "cmd/ailang-worldd/demo_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestDemoSeedApprovalPacket"
       ],
