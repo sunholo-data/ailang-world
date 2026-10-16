@@ -1,6 +1,6 @@
 # w-exec-protected-test-paths — protected test paths for `workspace-exec`: refused to World's write tools, denied in the sandbox, and proven intact in every exec result
 
-**Status**: PLANNED. Designer draft 2026-10-17 (mission iteration 277, designer role; Agent `opus`). Queue row 156. Quorum: not yet run (§12).
+**Status**: PLANNED. Designer draft 2026-10-17 (mission iteration 277, designer role; Agent `opus`). Queue row 156. **r2** (2026-10-17): quorum round 1 BLOCKED on one objection (index flags and a moved HEAD); revised with V13 (§12).
 - **Direction:** D-WORLD-81 = A (attended 2026-10-16): order 156 → 150 → 151 → v1.0.0 tag. Row filed attended 2026-10-06 as row 140's verification gap 1.
 - **Extends:** row 140 `design_docs/planned/w-workspace-exec-toolchain-effect.md` (§4.3 profile, §4.4 rendered settings, §4.5 handler and record, §4.7 replay) and row 184 `design_docs/planned/w-toolchain-worktree-delta.md` (the `worktree_delta` result field, git-status basis).
 - **Base:** ailang-world `dev` `b7bae72`.
@@ -113,6 +113,7 @@
 | V10 | `q5_walk_main.go.txt` built in scratch: read-only `WalkDir` of the real checkouts (skipping `.git`, optionally `node_modules`), fold-match the patterns, sha256 every match; controls: no pattern → 0 matches, `*` → every file | ailang (`*_test.go`, `*.golden`, `tests/**`, `examples/tests/**`): 221 201 entries visited, 12 651 matched; **4 817 ms cold**, 896–945 ms warm. TwilightGame: 18.5 ms warm (737 ms with `node_modules`). sunholo-platform: 206–214 ms warm, but `test_*.py` matched **2 924** files: 2 002 `test_*.py` sit inside `.venv` site-packages and 334 outside, equal to the 334 tracked (`q5b_venv_matches.out.txt`). Controls: `[]` → 0 matches; `*` → 207 279 matches |
 | V11 | `q7_lstree_cost.out.txt`: `git ls-tree -r -z --full-tree HEAD` on ailang (read-only); `git rev-parse HEAD`; `q2a`: `git ls-files -s` with the protected pathspecs | ls-tree: 28 699 entries in **132–134 ms**; rev-parse 24 ms; `ls-files -s` with pathspecs: 2 283 entries in 37 ms |
 | V12 | `q0_anchors.out.txt`: `worktree_delta.go`, `why.go`, `exec_probe.go`, `pins/manifest_test.go` | Row 184 snapshots with `--ignored=no` (`worktree_delta.go:357`); the after-snapshot runs under `WithoutCancel` with a 60 s bound (`:135,142`). `why` decodes a result field lazily, and an old record yields nil (`why.go:585`). Probe arms 1–7 (`exec_probe.go:44-50`). Tool pin `v0.52.1` (`manifest_test.go:31`) |
+| V13 | **[r2]** `q8_git_index_flags.sh`: scratch sibling repo + `git worktree add --detach` episode; World's srt rendering (`allowWrite=[worktree, cache]`, `denyWrite` incl. `<wt>/.git`, `<wt>/.git/hooks`, `<wt>/.git/config`; `denyRead` left EMPTY, i.e. more permissive than World's fence); `git update-index --skip-worktree`, `--assume-unchanged`, `git commit -am x`, unsandboxed (control) and under srt 0.0.78. Then, with each flag set unsandboxed and the test file modified: `status --ignored=matching`, `diff-index --cached HEAD`, `diff-files`, `ls-files -v`, all on the protected pathspec. Cost on a scratch clone of ailang | The episode's `.git` is a **pointer file** (`gitdir: …/src/.git/worktrees/ep1`). **Control:** `S` set, `h` set, HEAD **MOVED**. **Under srt:** all three fail with `fatal: Unable to create '…/src/.git/worktrees/ep1/index.lock': Operation not permitted`; the host flag stays `H` and HEAD is unchanged. The index and HEAD live outside `allowWrite`. **Detection with a flag set:** `status`, `diff-index --cached` and `diff-files` all print **nothing** for the modified file; only `ls-files -v` shows it (`h pkg/a_test.go`, `S pkg/a_test.go`). Cost (3 warm runs, V9's four protected pathspecs): `status --porcelain=v2 --branch --ignored=matching` **96–104 ms**; `ls-files -v` **36–42 ms**; `diff-index --cached` + `diff-files` 28–34 + 48–62 ms |
 
 ## 4. Design
 
@@ -200,7 +201,7 @@
 
 ### 4.5 Proven intact in the record
 
-**The integrity check.** It is one bounded git invocation, launched through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
+**The integrity check.** It is two bounded git invocations per phase (`status` below, and `ls-files -v` [r2]), each launched through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
 
 ```
 git status --porcelain=v2 -z --branch --untracked-files=all --ignored=matching --no-renames \
@@ -211,11 +212,13 @@ git status --porcelain=v2 -z --branch --untracked-files=all --ignored=matching -
   - modified or deleted (`1`/`2` lines);
   - untracked (`?`);
   - ignored (`!`), which catches a new test hidden by `.gitignore` (V9).
-- **intact** = HEAD equals the episode's base commit, and the entry list is empty.
+- **[r2] A second bounded invocation reads the index flags:** `git ls-files -v -z -- <pathspecs>`. A protected entry tagged with a lower-case letter (assume-unchanged) or `S` (skip-worktree) is reported with `status: "index-flag"`. With either flag set, `git status`, `diff-index --cached` and `diff-files` all report **nothing** for a modified file (V13). So the reviewer's `diff-index`/`diff-files` alternative would not close the hole, and `ls-files -v` is chosen by measurement. It costs 36–42 ms on ailang (V13).
+- **[r2] Why the flags and HEAD should never move (prevention, measured).** Episodes are `git worktree add` checkouts, so the worktree's `.git` is a pointer file. The index and HEAD live in the source repo's `.git/worktrees/<name>/`, outside srt's `allowWrite`. Under World's rendering, `update-index --skip-worktree`, `--assume-unchanged` and `commit` all fail on `index.lock` with `Operation not permitted`, and HEAD stays put (V13). World's write tools cannot reach that directory either: it is outside the AILANG `fs_sandbox`, and any `.git` component is read-only to policy-tool (V6). The flag check is defence in depth against a route not yet found.
+- **[r2] intact** requires **both** `branch.oid == base` **and** zero entries from the `status` and `ls-files -v` checks. When `branch.oid != base`, `changes` gets `{"path": "HEAD", "status": "head-moved", "phase": …}` and intact is unconditionally `false`. The path entries are still listed, against the current HEAD, but they cannot say which protected paths differ from `base`. The `head-moved` entry says exactly that.
 - It runs **before** the command (after stack re-verification) and **after** it (before row 184's `finish`). Each run has its own 500 ms bound, `protectedCheckTimeout`.
   - The child's budget becomes `min(timeout_ms, until(deadline) − protectedCheckTimeout)`. The after-check therefore always fits the handler's cap. With today's 9 000 ms cap and 10 s handler deadline, a command keeps its full 9 s unless earlier phases used more than 500 ms.
   - A check that times out or fails records `error`, with `intact_before`/`intact_after` `null`. It never fails the call and is never silent (row 184's rule).
-- Measured cost on the largest project: ~176 ms per check, warm (V9). Two checks add ≈ 0.35 s per call there, and less on the smaller projects. The handler-construction step below warms the cache.
+- Measured cost on the largest project: ~176 ms per `status` (V9; 96–104 ms with V13's pathspec set) plus ~40 ms for `ls-files -v` (V13). Both run inside one 500 ms `protectedCheckTimeout` per phase. Two phases add ≈ 0.3–0.45 s per call there, and less on the smaller projects. The handler-construction step below warms the cache.
 
 **Baseline at handler construction** (`NewExecHandler`, once per episode × project):
 - `base` = `git rev-parse HEAD` of the worktree (24 ms, V11).
@@ -240,7 +243,7 @@ git status --porcelain=v2 -z --branch --untracked-files=all --ignored=matching -
 - `enforced`:
   - `"glob"` (darwin): both forms denied in the sandbox;
   - `"dirs-only"` (linux): base-name forms detected only.
-- `changes` holds at most 32 entries, then `truncated`/`total`. `status` is one of `modified`, `deleted`, `untracked`, `ignored` or `head-moved`.
+- `changes` holds at most 32 entries, then `truncated`/`total`. `status` is one of `modified`, `deleted`, `untracked`, `ignored`, `index-flag` [r2] or `head-moved` (path `"HEAD"`).
 - Paths are cut the way row 184 cuts them (`worktreeDeltaMaxPathJSON`), so the worst case stays far under the 1 MiB output cap. A test measures it (row 184's `TestWorktreeDeltaWorstCaseFitsTheOutputCap` pattern).
 - `intact_before: false` means the protected tree was already changed when the call started. This makes the state **sticky** with no extra bookkeeping: once a protected file differs from the base commit, every later call says so until the file is restored.
 
@@ -286,7 +289,8 @@ The canonical text form (the digest input) is pinned by a named Go golden test. 
 | P4 | `**/*.test.ts` means one directory level to World's write tools; the grammar must be restricted | V7 | **FALSE as written:** the row's example glob does not protect what it names |
 | P5 | Linux srt skips non-`/**` globs in `denyWrite`; render-time expansion protects existing files but cannot deny creation | V5 LITERAL, V8 | **INCOMPLETE:** "expand at render time" leaves creation open (6/6 arms written), and per-file expansion risks bubblewrap's mount limit; detection is required |
 | P6 | AILANG's deny check is lexical; a symlink alias bypasses it | V6, V7 | **FALSE as implied:** adding patterns to the write tools alone does not refuse every write |
-| P7 | A pathspec-limited `git status --ignored=matching` detects every measured tamper, ignored creations included, in ~176 ms on 28 699 files | V9 | (new) |
+| P7 | A pathspec-limited `git status --ignored=matching` detects every measured content tamper, ignored creations included, in ~176 ms on 28 699 files. **[r2]** It is blind to a file under assume-unchanged/skip-worktree, as are `diff-index`/`diff-files`; `ls-files -v` sees the flag | V9, V13 | (new) |
+| P12 | **[r2]** Sandboxed code cannot set index flags or move HEAD: the linked worktree's index and HEAD are outside `allowWrite` | V13 | (new) |
 | P8 | A worktree walk-and-hash is too slow per call (0.9–4.8 s) | V10 | (new) |
 | P9 | "Linux srt has no globs (V33)" | V8 | **PARTLY STALE:** on 0.0.78 Linux expands `denyRead`/`allowRead` globs; only `denyWrite`/`allowWrite` are literal-only |
 | P10 | `PYTHONPYCACHEPREFIX` and `npm_config_cache` are already in World's child env | V1 | confirmed |
@@ -351,6 +355,9 @@ Every milestone's tests **pass with `WORLD_TOOL_AILANG_BIN` unset**. A test that
   - `TestExecProtectedDetectsCreation`: a command that creates `zz_test.go` gives `intact_after: false`, `untracked`, and the next call `intact_before: false`;
   - `TestExecProtectedDetectsIgnoredCreation` (`.gitignore` arm);
   - `TestExecProtectedNotGit`: `error` set, intact null;
+  - **[r2]** `TestExecProtectedIndexFlag`: the test sets `--assume-unchanged` and, separately, `--skip-worktree` on a protected file host-side, then modifies it. The next call gives `intact_before: false` with `status: "index-flag"`. This is the **negative control for the flag guard**: it dies under MUT-NO-INDEX-FLAG-CHECK, because `status` alone reports nothing (V13);
+  - **[r2]** `TestExecProtectedHeadMoved`: a host-side commit moves HEAD. The result is intact `false` with `{"path":"HEAD","status":"head-moved"}`, even though the entry list is empty;
+  - **[r2]** `TestExecSrtIndexWriteRefused` (real srt; skips without it): `git update-index --skip-worktree` and `git commit` under the rendered settings fail, and the host index flag and HEAD are unchanged (V13 as a regression arm);
   - `TestExecProtectedCheckTimeout`: a fake git sleeping past 500 ms gives `error`, the call still succeeds, and stays inside the handler deadline;
   - `TestExecNoProtectedIsByteIdentical`;
   - the worst-case-size test.
@@ -383,7 +390,8 @@ Every milestone's tests **pass with `WORLD_TOOL_AILANG_BIN` unset**. A test that
 | MUT-NO-NLINK: the hard-link refusal removed | `TestWorkspaceWriteProtectedPrecheck/hardlink` |
 | MUT-ALWAYS-INTACT: the check reports intact without running git | `TestExecProtectedDetectsCreation` |
 | MUT-IGNORED-NO: the check uses `--ignored=no` | `TestExecProtectedDetectsIgnoredCreation` |
-| MUT-HEAD-UNCHECKED: `branch.oid` ignored | `TestExecProtectedHeadMoved` |
+| MUT-HEAD-UNCHECKED: `branch.oid` ignored (intact from entries alone) | `TestExecProtectedHeadMoved` |
+| MUT-NO-INDEX-FLAG-CHECK: the `ls-files -v` check removed | `TestExecProtectedIndexFlag` |
 | MUT-NO-RESERVE: the child gets the full remaining budget | `TestExecProtectedCheckTimeout` (the after-check must fit the deadline) |
 | MUT-CHECK-FAILS-CALL: a check error fails the call | `TestExecProtectedNotGit` (the call must succeed with `error`) |
 | MUT-FIELD-ALWAYS: `protected` emitted with no patterns | `TestExecNoProtectedIsByteIdentical` |
@@ -445,4 +453,14 @@ Every milestone's tests **pass with `WORLD_TOOL_AILANG_BIN` unset**. A test that
 
 ## 12. Quorum log
 
-*(empty — the controller fills it)*
+- **Round 1 (2026-10-17): BLOCKED.**
+  - **Present:** `gemini-4-argon`. **Absent (unreachable):** `gpt6-1-sol`, `oc-glm-5-3`, `oc-kimi-k3`.
+  - **Objection:** §4.5's `git status` runs against the current HEAD and honours `assume-unchanged`/`skip-worktree`, so it does not prove the worktree equals `base`. If HEAD moves, `changes` cannot name the paths that differ from `base`.
+  - **Proposed fix:** `diff-index --cached <base>` + `diff-files`, or intact = `branch.oid == base` AND zero entries, with `.git` index writes shown to be denied, and a `head-moved` entry.
+  - **Measured (V13):** the premise is real. With either flag set, `status` misses a modified test file, **and so do `diff-index` and `diff-files`**. Under World's srt rendering, sandboxed `update-index` and `commit` are refused (`index.lock: Operation not permitted`) and HEAD does not move. The control (unsandboxed) sets both flags and moves HEAD.
+  - **Changed (r2):**
+    - §4.5 adopts the reviewer's intact rule and `head-moved` entry verbatim in substance;
+    - it adds a `git ls-files -v` flag check (`index-flag`, 36–42 ms), chosen over `diff-index`/`diff-files` because those are blind to the flags too;
+    - V13, P7 and P12 are amended;
+    - M6 gains `TestExecProtectedIndexFlag` (negative control), `TestExecProtectedHeadMoved` and `TestExecSrtIndexWriteRefused`;
+    - §7 gains MUT-NO-INDEX-FLAG-CHECK.

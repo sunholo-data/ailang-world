@@ -1,0 +1,30 @@
+# (a) index flags / HEAD under srt 0.0.78 (3c3092bd26b3), World's allowWrite=[worktree,cache], denyWrite incl <wt>/.git; denyRead EMPTY (more permissive than World's fence)
+worktree .git is a POINTER FILE: gitdir: /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1
+[plain] skip-worktree     rc-tail: <no output>                                                            host: ls-files -v=S HEAD unchanged
+worktree .git is a POINTER FILE: gitdir: /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1
+[plain] assume-unchanged  rc-tail: <no output>                                                            host: ls-files -v=h HEAD unchanged
+worktree .git is a POINTER FILE: gitdir: /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1
+[plain] commit            rc-tail: <no output>                                                            host: ls-files -v=H HEAD MOVED
+worktree .git is a POINTER FILE: gitdir: /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1
+[srt  ] skip-worktree     rc-tail: fatal: Unable to create '/Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1/index.lock': Operation not permitted host: ls-files -v=H HEAD unchanged
+worktree .git is a POINTER FILE: gitdir: /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1
+[srt  ] assume-unchanged  rc-tail: fatal: Unable to create '/Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1/index.lock': Operation not permitted host: ls-files -v=H HEAD unchanged
+worktree .git is a POINTER FILE: gitdir: /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1
+[srt  ] commit            rc-tail: fatal: Unable to create '/Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156-r2/src/.git/worktrees/ep1/index.lock': Operation not permitted host: ls-files -v=H HEAD unchanged
+
+# (b) detection: set assume-unchanged / skip-worktree UNSANDBOXED (an attacker who got there), then modify the file
+-- --assume-unchanged + modified pkg/a_test.go
+   status --ignored=matching : []
+   diff-index --cached base  : []
+   diff-files                : []
+   ls-files -v               : [h pkg/a_test.go ]
+-- --skip-worktree + modified pkg/a_test.go
+   status --ignored=matching : []
+   diff-index --cached base  : []
+   diff-files                : []
+   ls-files -v               : [S pkg/a_test.go ]
+
+# (c) cost on a scratch clone of ailang (28 699 tracked), protected pathspecs as V9 (warm, 3 runs)
+status v2 --ignored=matching:    97 ms | ls-files -v:    36 ms | diff-index --cached base + diff-files:    28 ms +    52 ms
+status v2 --ignored=matching:    96 ms | ls-files -v:    37 ms | diff-index --cached base + diff-files:    32 ms +    48 ms
+status v2 --ignored=matching:   104 ms | ls-files -v:    42 ms | diff-index --cached base + diff-files:    34 ms +    62 ms
