@@ -1,0 +1,6 @@
+Q8 verdicts (§6 closed set)
+- B: VERIFIED. Answer +107.9 s; envelope 116.8 s; 16 calls, $0.37.
+- W: PASS — VERIFIED, envelope 39.0 s (bar <= 300 s); answer +29.8 s; 13 calls, 0 non-allowlisted calls succeeded, 0 denials. The verifier noted omissions (it does not say line 143 swallows a close error) and judged the core placement and mechanism sufficient.
+- Audit clean: K5 sha256 unchanged; served head unchanged; question bytes identical; pins verify.
+- Controller exposure: partly (listed resilient_llm.py's def/except lines while choosing E2 sources; recorded before reveal).
+- Q8 IS a qualifying success (§8). With Q4 and Q6: 3 of >=3.

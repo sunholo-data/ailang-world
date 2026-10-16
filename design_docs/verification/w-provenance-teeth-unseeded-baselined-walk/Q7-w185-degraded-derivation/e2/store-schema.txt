@@ -1,0 +1,41 @@
+# store schema of the archival K5 copy (sqlite .schema session_credentials)
+CREATE TABLE session_credentials (
+    credential_id TEXT PRIMARY KEY,
+    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
+    grants_json  TEXT NOT NULL,
+    expires_at   INTEGER NOT NULL,
+    created_at   INTEGER NOT NULL
+);
+
+# host/store/store.go at the episode's base commit a08ca14: the store's schema version and its version errors
+    40	//
+    41	//go:embed schema.sql
+    42	var schemaSQL string
+    43	
+    44	const currentSchemaVersion = 4
+    45	
+    46	// ErrApprovalAlreadyConsumed reports that an approval reference has already
+    47	// been bound to a durable effect intent. Approval claims are single-use and
+    48	// have no update, delete, or refund path.
+    49	var ErrApprovalAlreadyConsumed = errors.New("store: approval already consumed")
+    50	
+    51	type LegacySchemaVersionError struct {
+    52		Path           string
+    53		Found, Current int
+    54	}
+    55	
+    56	func (e *LegacySchemaVersionError) Error() string {
+    57		return fmt.Sprintf("store: schema version legacy: %q has user_version %d with application schema; binary requires %d; refusing to modify", e.Path, e.Found, e.Current)
+    58	}
+    59	
+    60	type FutureSchemaVersionError struct {
+    61		Path           string
+    62		Found, Current int
+    63	}
+    64	
+    65	func (e *FutureSchemaVersionError) Error() string {
+    66		return fmt.Sprintf("store: schema version future: %q has user_version %d; binary supports %d; use a compatible binary", e.Path, e.Found, e.Current)
+    67	}
+    68	
+    69	type InvalidSchemaVersionError struct {
+    70		Path           string

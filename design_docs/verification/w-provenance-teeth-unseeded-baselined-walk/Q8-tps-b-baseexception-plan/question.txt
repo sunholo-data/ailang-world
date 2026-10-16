@@ -1,0 +1,1 @@
+In trial episode tps-b (platform-source, ADK 2 upgrade Phase 0), why does the episode's sub-doc say that ResilientLlm's retry loop catches Exception and that the broad BaseException handler the original plan refers to is in first-token-timeout cleanup — when the plan's table cites ResilientLlm's except BaseException (adk/resilient_llm.py:143) as what re-raises cancellations?

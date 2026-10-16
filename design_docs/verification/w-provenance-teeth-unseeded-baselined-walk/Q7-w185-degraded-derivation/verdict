@@ -1,0 +1,6 @@
+Q7 verdicts (§6 closed set)
+- B: VERIFIED. Answer +83.9 s; envelope 92.6 s; 24 calls, $1.06. Named the schema-bump reason (no session_credentials column; v4 store with no migration), from the agent's code comment and transcript.
+- W: UNVERIFIED (envelope 94.7 s; 47 calls, 0 non-allowlisted calls succeeded, 1 denial — a refused `why 211 --json`). It said the records do not state the reason and offered a plausible one ("cannot go stale") that E2 does not support.
+- Cause (finding F-9): the reason exists in the store only as a code comment inside an ailang-edit's new_text; the walk fetched 11 input payloads but not that one. The agent's own narration (its transcript and final summary, which the baseline read) is not recorded in World at all.
+- Audit clean: K5 sha256 unchanged; served head unchanged; question bytes identical; pins verify.
+- Q7 is NOT a qualifying success.

@@ -1,0 +1,4 @@
+Rubric (fixed before either answer exists; identical for both verifiers). Judge ONLY against E2 (start with e2/README.txt).
+VERIFIED: the answer explains that the code itself differs from the plan's description: line 143's `except BaseException` is inside the first-token-deadline stream wrapper, swallowing an error while closing a dead stream during timeout cleanup, not a retry/re-raise handler; and ResilientLlm's retry loop (generate_content_async) catches `Exception`, so BaseException-class cancellations are not caught there — the sub-doc corrected the plan from what the code says. E2 must support it with nothing contradicting it.
+UNVERIFIED: says the plan is right, or gives no grounding in the code, or misplaces the handlers, or is otherwise wrong, partial or only plausible.
+Output a short justification citing E2 files, then a final line exactly `VERDICT: VERIFIED` or `VERDICT: UNVERIFIED`.

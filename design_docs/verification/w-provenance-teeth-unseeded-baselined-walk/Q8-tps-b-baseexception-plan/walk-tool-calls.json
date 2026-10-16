@@ -1,0 +1,15 @@
+[
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode tps-b",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log range --from 85 --limit 70",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why head --scan 200",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object find BaseException --limit 10",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode tps-b --scan 200 --since 85",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 154 --json",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 153",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 152",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 151",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 150",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 149",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 148",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:201486623dcad6d8d7db0c94eeb5a1e543c43e92bd2edbdf65f884f2a2bf8c49 --payload"
+]

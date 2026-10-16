@@ -1,0 +1,40 @@
+diff --git a/cmd/ailang-worldd/session_new.go b/cmd/ailang-worldd/session_new.go
+index 2d70884..06bacf6 100644
+--- a/cmd/ailang-worldd/session_new.go
++++ b/cmd/ailang-worldd/session_new.go
+@@ -17,6 +17,15 @@ package main
+ //  6. authority.Mint through the existing core;
+ //  7. on a mint failure, remove the worktree THIS run created.
+ //
++// Row 185 (w-episode-requires-git): an existing <workspace-root>/<episode>
++// that is not a git worktree is refused, the refusal naming --allow-non-git.
++// With that flag it is adopted as a DEGRADED episode: no own branch, no
++// branch diff or provenance trailer, no reset to a base, and worktree deltas
++// on the bounded-walk basis instead of git-status. Degraded is the fact
++// worktree.IsLinked reads, so `session list` and /v1/health derive it from
++// the worktree itself rather than from a column a schema bump would add.
++// It binds only here, at mint; git episodes are unchanged.
++//
+ // The se-tools preset is the union of packages/se-tools/transitions.json's
+ // declaredEffects (effect, scope); TestSessionNewPresetEqualsDeclaredEffects
+ // re-derives it from the manifest (MUT-PRESET-DRIFT).
+@@ -44,6 +53,7 @@ import (
+ const sessionNewHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+            [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
+            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
++           [--allow-non-git]
+ 
+ ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
+ and a session credential bound to it, after a y/N typed at /dev/tty (any
+@@ -59,6 +69,12 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
+                        (git worktree add --detach); not needed when
+                        <workspace-root>/<episode> is already a worktree
+   --branch <name>      add the worktree on a new branch instead of detached
++  --allow-non-git      adopt an existing <workspace-root>/<episode> that is
++                       not a git worktree (refused without it). The episode
++                       is DEGRADED: no branch diff, provenance trailer or
++                       reset to a base, and its worktree deltas use the
++                       bounded walk (basis walk / walk-capped), not
++                       git-status. session list and /v1/health show it.
+   --preset se-tools    one grant per effect the se-tools transitions declare:
+                        Workspace.Read, Workspace.Write, Ailang.Check, Ailang.Run,

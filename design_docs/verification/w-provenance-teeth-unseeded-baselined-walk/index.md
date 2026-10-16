@@ -12,6 +12,8 @@ Protocol: `design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md` r4
 | Q4 | In trial episode tps-b, why did the ADK 2.12 grader exit rc=2 with collection errors while the sub-doc says every 2.12 failure of the new tests is runtime, not collection? | K5 (trial store, sha256 9d72ad32…) | **attempted 2026-10-16 — B VERIFIED (67.0 s), W PASS (54.6 s)** (`Q4-tps-b-212-collection/`) |
 | Q5 | In trial episode w185, why did the change modify pre-existing test code rather than only add tests — which changed, and was any assertion weakened? | K5 | **attempted 2026-10-16 — B VERIFIED (239.9 s), W UNVERIFIED (198.9 s)** (`Q5-w185-existing-tests/`) |
 | Q6 | Why does tps-b's generated PR body give its World entries as 89–154 while its trailer gives 96–154 — what are 89–95? | K5 | **attempted 2026-10-16 — B VERIFIED (87.5 s), W PASS (25.3 s)** (`Q6-tps-b-entry-range/`) |
+| Q7 | In trial episode w185, why does the change derive an episode's degraded status from its directory each read instead of recording it on the session as row 185 says? | K5 | **attempted 2026-10-16 — B VERIFIED (92.6 s), W UNVERIFIED (94.7 s)** (`Q7-w185-degraded-derivation/`) |
+| Q8 | In trial episode tps-b, why does the sub-doc say ResilientLlm's retry loop catches Exception and the BaseException handler the plan cites is in first-token-timeout cleanup? | K5 | **attempted 2026-10-16 — B VERIFIED (116.8 s), W PASS (39.0 s)** (`Q8-tps-b-baseexception-plan/`) |
 | C1/C2/C3 | iter-206/207/210 CI and suite incidents | none | rejected NOT-RUN(NO-CORPUS); C1 also contaminated |
 
 ## Q1 accounting
@@ -66,4 +68,20 @@ Integrity, every question: K5 archival sha256 unchanged; served head `sha256:abe
 
 **F-8 (baseline).** The read/list-only baseline verified on all three K5 questions, as on Q3. The walk was faster on every K5 question (by 12 s, 41 s and 62 s), and on Q6 — a question about World's own entry numbers — 3.5× faster; but the baseline is not failing, so the comparison shows speed, not answers only World can give.
 
-Row 114 stays open: **2 of ≥3 qualifying successes (Q4, Q6).**
+## K5 second harvest (Q7, Q8, 2026-10-16)
+
+Harvested after Q4–Q6 were revealed, from the same two PRs; sealed before any arm (`pins` per Q dir; exposure appended to the K5 `exposure-log`). Same B root (re-scanned for the new diagnosis phrases: control 3 hits, root 0), same W allowlist and deny list. One change, pinned: W's client is the F-7 build (`9eaf83d`, PR #292), so `why` shows an elided input's short fields such as `path`.
+
+| | Q7 B | Q7 W | Q8 B | Q8 W |
+|---|---|---|---|---|
+| answer time | 83.9 s | 86.0 s | 107.9 s | 29.8 s |
+| envelope | 92.6 s | 94.7 s | 116.8 s | **39.0 s** |
+| verifier | VERIFIED | UNVERIFIED | VERIFIED | VERIFIED |
+| tool calls | 24 | 47 | 16 | 13 |
+| spend | $1.06 | ~$0.36 (sub) | $0.37 | ~$0.13 (sub) |
+
+**F-9 (World does not record the agent's own reasoning).** Q7's answer — the agent avoided a store schema bump — is in the store only as a code comment inside an `ailang-edit`'s `new_text`; the walk fetched 11 input payloads, not that one, and answered "the records do not state the reason". The baseline read it from the agent's transcript and final summary, which World never records. Candidate row: commit the agent's final summary (the trial runner already captures it) as an object linked to the episode's outcome, so a walk can find the stated rationale.
+
+## Tally
+
+Row 114: **3 of ≥3 qualifying successes — Q4 (54.6 s), Q6 (25.3 s), Q8 (39.0 s)**, each with a same-question live baseline that ALSO verified (67.0 s, 87.5 s, 116.8 s). Attempts that did not qualify: Q1, Q3 (INVALID seeding), Q5, Q7 — all preserved. Clause 5's closure is Mark's ruling (D-WORLD-80).

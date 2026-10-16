@@ -1,0 +1,143 @@
+# backend/adk/resilient_llm.py at the episode's base commit e5b0461e (unchanged by the episode), with line numbers
+   125	    return value if value > 0 else None
+   126	
+   127	
+   128	async def _stream_with_first_token_deadline(stream: Any, deadline_s: float, model: str):
+   129	    """Yield from ``stream``; if its FIRST item takes longer than ``deadline_s``,
+   130	    close it and raise ``SilentStallError``. Once anything has arrived the
+   131	    stream runs to completion however long the rest takes — a slow tail is
+   132	    not a stall."""
+   133	    iterator = stream.__aiter__()
+   134	    try:
+   135	        first = await asyncio.wait_for(iterator.__anext__(), timeout=deadline_s)
+   136	    except StopAsyncIteration:
+   137	        return
+   138	    except TimeoutError:
+   139	        aclose = getattr(iterator, "aclose", None)
+   140	        if aclose is not None:
+   141	            try:
+   142	                await aclose()
+   143	            except BaseException as exc:  # a dead stream may object to closing; irrelevant now
+   144	                logger.debug("first-token: aclose after timeout raised %r (ignored)", exc)
+   145	        raise SilentStallError(deadline_s, model) from None
+   146	    yield first
+   147	    async for item in iterator:
+   148	        yield item
+   149	
+   150	
+   300	    ``chain[0]`` is the primary; an empty-fallback (length-1) chain behaves
+   301	    exactly like the bare model plus classification-on-error. ``event_sink``
+   302	    is a ``(name: str, value: dict) -> None`` callable; ``None`` wires to
+   303	    the current request's LatencyTracker.
+   304	    """
+   305	
+   306	    chain: list[Any]
+   307	    event_sink: Any = None
+   308	    max_retries_per_model: int = 2
+   309	
+   310	    def __init__(self, chain: list[Any], event_sink: Any = None, max_retries_per_model: int = 2, **kwargs: Any) -> None:
+   311	        if not chain:
+   312	            raise ValueError("ResilientLlm requires a non-empty chain")
+   313	        super().__init__(
+   314	            model=getattr(chain[0], "model", "resilient"),
+   315	            chain=chain,
+   316	            event_sink=event_sink,
+   317	            max_retries_per_model=max_retries_per_model,
+   318	            **kwargs,
+   319	        )
+   320	
+   336	    async def generate_content_async(self, llm_request: Any, stream: bool = False):
+   337	        # Gemini's FunctionDeclaration proto rejects `additional_properties`,
+   338	        # which ADK emits for any `dict[str, Any]` tool param. Vertex ignores
+   339	        # it; Express Mode 400s the whole request. Sanitize HERE because this
+   340	        # is the single seam every agent model call passes through — a fix in
+   341	        # one tool's signature would leave the trap armed for the next author.
+   342	        # See adk/schema_conformance.py.
+   343	        sanitize_function_declarations(llm_request)
+   344	
+   345	        last_class: ErrorClass | None = None
+   346	        last_model = self.model
+   347	        last_exc: Exception | None = None
+   348	
+   349	        for idx, member in enumerate(self.chain):
+   350	            provider = _provider_of(member)
+   351	            has_next = idx + 1 < len(self.chain)
+   352	
+   353	            # Cooldown bench: skip a known-bad provider — but never skip the
+   354	            # last option (a benched provider still beats no answer at all).
+   355	            if has_next and _is_benched(provider):
+   356	                next_model = getattr(self.chain[idx + 1], "model", "unknown")
+   357	                logger.info("skipping benched provider %s (%s) -> %s", provider, member.model, next_model)
+   358	                self._emit(
+   359	                    MODEL_FALLBACK_EVENT,
+   360	                    {
+   361	                        "from_model": getattr(member, "model", "unknown"),
+   362	                        "to_model": next_model,
+   363	                        "code": "MODEL_UNAVAILABLE",
+   364	                        "provider": provider,
+   365	                        "reason": "provider_cooldown",
+   366	                    },
+   367	                )
+   368	                _count("model_fallback_total", provider, "MODEL_UNAVAILABLE")
+   369	                continue
+   370	
+   371	            attempt = 0
+   372	            while True:
+   373	                visible = False
+   374	                try:
+   375	                    # Make the tool history valid for whatever provider this
+   376	                    # member is (v6.13.0). No-op for a native fully-id'd history
+   377	                    # or a no-tool turn; on a cross-provider hop it backfills the
+   378	                    # id-less Gemini functionCall/Response ids so the next
+   379	                    # Anthropic/OpenAI call doesn't die on 'tool_call_id'.
+   380	                    try:
+   381	                        if sanitize_cross_provider_tool_history(llm_request):
+   382	                            logger.info(
+   383	                                "cross-provider fallback: sanitized tool-history ids for %s",
+   384	                                getattr(member, "model", "unknown"),
+   385	                            )
+   386	                    except Exception as exc:  # never break the turn on sanitation
+   387	                        logger.warning("cross-provider tool-history sanitize failed (suppressed): %s", exc)
+   388	                    # Each member expects llm_request.model to name ITS OWN model.
+   389	                    # ADK stamps llm_request.model ONCE with the chain's primary
+   390	                    # (e.g. claude-opus-4-8); a fallback member left with that id
+   391	                    # is mis-called — a Gemini fallback handed "claude-opus-4-8"
+   392	                    # 404s on Vertex's anthropic Model-Garden publisher path
+   393	                    # (ROOT CAUSE of the 2026-07-16 fallback failures: every
+   394	                    # fallback target 404'd because the id was never rewritten).
+   395	                    member_model = getattr(member, "model", None)
+   396	                    if member_model:
+   397	                        try:
+   398	                            llm_request.model = member_model
+   399	                        except Exception:  # best effort — never break the turn on this
+   400	                            pass
+   401	                    _maybe_inject_fault(provider)
+   402	                    upstream = member.generate_content_async(llm_request, stream)
+   403	                    deadline = first_token_deadline() if stream else None
+   404	                    if deadline is not None:
+   405	                        upstream = _stream_with_first_token_deadline(upstream, deadline, member_model or "unknown")
+   406	                    async for response in upstream:
+   407	                        if not visible and _has_visible_output(response):
+   408	                            visible = True
+   409	                        yield response
+   410	                    _record_success(provider)
+   411	                    return
+   412	                except Exception as exc:
+   413	                    error_class = classify(exc)
+   414	                    last_class, last_model, last_exc = error_class, getattr(member, "model", "unknown"), exc
+   415	
+   416	                    if visible:
+   417	                        # Answer content already reached the user — a retry or
+   418	                        # fallback would duplicate it. Fail typed instead.
+   419	                        _record_failure(provider)
+   420	                        _count("model_error_total", provider, error_class.code)
+   421	                        raise ModelTurnError(error_class, last_model) from exc
+   422	
+   423	                    if error_class.transient and attempt < self.max_retries_per_model:
+   424	                        attempt += 1
+   425	                        delay = error_class.retry_after if error_class.retry_after else _backoff_delay(attempt)
+   426	                        self._emit(
+   427	                            MODEL_RETRY_EVENT,
+   428	                            {
+   429	                                "model": last_model,
+   430	                                "attempt": attempt,

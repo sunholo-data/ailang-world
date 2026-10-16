@@ -1,0 +1,14 @@
+# Exposure log — cohort K5 (Q4, Q5, Q6), sealed before any root, E2 or arm exists
+- Cohort K5 declared before reveal: trial store ~/.ailang/state/trial-2026-10-16/store/world.db, archival copy sha256 9d72ad32a825d420ef5ece7382cafa706184b81f52906ec2f8880f68e6af0ea7; row 183 trial episodes tps-b (codex) and w185 (Claude Code), run concurrently 2026-10-16 on one daemon.
+- Harvest (E1 REAL): all three arose while the controller prepared the two draft PRs (platform-source#71, ailang-world#291):
+  - Q4: the 2.12 grader's rc=2 vs the sub-doc's "not collection failures" — the controller had to decide whether to call the sub-doc wrong in the PR.
+  - Q5: reviewing #291 the controller read only the NON-test diff; whether existing tests were weakened is the reviewer's next question.
+  - Q6: the generated PR body's range (89–154) disagreed with the trailer (96–154).
+- Controller exposure (Claude Opus 5.5, attended session, Mark attending). It is neither B nor W nor V.
+  - Q4: SEEN and partly DIAGNOSED. Before the episode it ran the 2.12 suite on the base (15 collection errors) and after it ran each new file alone on 2.12 (each "1 failed"); it wrote that the rc=2 is pre-existing in the #71 PR body (excluded from B's root, scanned for).
+  - Q5: NOT diagnosed. It read the non-test diff of w185 (session_new.go, worktree.go, daemon.go, workspace.go, session.go, doctor.go) but none of the test diffs.
+  - Q6: PARTLY. It knows the two episodes ran concurrently and wrote "the log range interleaves both" in both PR bodies (excluded, scanned for); it has not looked at what entries 89–95 are.
+- Second harvest (Q7, Q8), sealed after Q4–Q6 were revealed and before any Q7/Q8 root, E2 or arm. Both arose while preparing the same PRs:
+  - Q7: the controller flagged this deviation to Mark on #291 and read the agent's code comment giving the reason ("rather than from a column a schema bump would add"); PARTLY DIAGNOSED.
+  - Q8: arose reading the tps-b sub-doc ("two plan corrections" noted in the #71 PR body). While choosing E2 sources the controller listed resilient_llm.py's def/except lines (line 143 `except BaseException` in _stream_with_first_token_deadline; `except Exception` at 412 in generate_content_async); PARTLY DIAGNOSED.
+  - W for Q7/Q8 uses a client built with the F-7 fix (why prints short input fields first), branch fix/why-input-key-fields; recorded in pins.
