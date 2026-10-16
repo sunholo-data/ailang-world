@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -358,6 +359,48 @@ class Episode(Base):
         self.assertLess(g['wall_ms'], 15000)
         p = [c for c in self.worldd.calls if c['verb'] == 'outcome'][0]['payload']
         self.assertEqual((p['outcome']['class'], p['outcome']['errorCategory']), ('FAIL', 'grader_failed'))
+
+    def test_grader_timeout_kills_the_whole_group(self):
+        pidfile = os.path.join(self.tmp.name, 'grandchild.pid')
+        g = trial.run_grader({'name': 'bg', 'cwd': '.', 'timeout_s': 0.5,
+                              'argv': ['/bin/sh', '-c', f'sleep 60 & echo $! > {pidfile}; wait']},
+                             self.tmp.name)
+        self.assertTrue(g['timed_out'])
+        with open(pidfile) as f:
+            pid = int(f.read().strip())
+        deadline = time.monotonic() + 5
+        alive = True
+        while alive and time.monotonic() < deadline:
+            try:
+                os.kill(pid, 0)
+                time.sleep(0.1)
+            except ProcessLookupError:
+                alive = False
+        self.assertFalse(alive, 'grandchild survived the grader timeout')
+
+    def test_unreadable_tool_does_not_raise(self):
+        tool = os.path.join(self.tmp.name, 'noread.sh')
+        with open(tool, 'w') as f:
+            f.write('#!/bin/sh\nexit 0\n')
+        os.chmod(tool, 0o111)
+        try:
+            g = trial.run_grader({'name': 'nr', 'cwd': '.', 'timeout_s': 5, 'argv': [tool]}, self.tmp.name)
+        finally:
+            os.chmod(tool, 0o755)
+        self.assertEqual(g['tool_sha256'], '')
+
+    def test_grader_output_is_capped(self):
+        old = trial.GRADER_KEEP_BYTES
+        trial.GRADER_KEEP_BYTES = 1000
+        try:
+            g = trial.run_grader({'name': 'big', 'cwd': '.', 'timeout_s': 10,
+                                  'argv': [sys.executable, '-c', 'import sys; sys.stdout.write("x" * 50000)']},
+                                 self.tmp.name)
+        finally:
+            trial.GRADER_KEEP_BYTES = old
+        self.assertEqual(len(g['_stdout']), 1000)
+        self.assertEqual(g['stdout_bytes'], 50000)
+        self.assertTrue(g['passed'])
 
     def test_missing_grader_tool_is_recorded_fail(self):
         row = self.run_ep('claude', graders=[{'name': 'nope', 'argv': ['./bin/does-not-exist', '--check']}])

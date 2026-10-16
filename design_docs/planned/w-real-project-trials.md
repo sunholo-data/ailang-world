@@ -54,7 +54,7 @@ trial/<issue>` at mint; per worktree `uv sync --frozen` (platform-source `backen
 scripts; warm each profile command once unsandboxed (F4); run the seven-arm probe via `serve`. Every digest
 (profile, venv lockfiles, binaries) goes into the trial's `pins`.
 
-**D4 — the agent run.** A small trial runner (`scripts/trial/run.py`, new; reuses
+**D4 — the agent run.** A small trial runner (`scripts/trial/trial.py`, new; reuses
 `scripts/floor/run_task.run_agent` for spawning and streaming, with a trial argv that adds
 `mcp__world__workspace-exec`). Prompt = the issue or sub-doc text verbatim + a short channel note (World tools
 only; exec commands available; finish by summarising the change). Deadline 45 min per episode. Transcripts
@@ -107,7 +107,7 @@ any reveal.
 
 ## §6 Order of work
 
-1. Row 182 LANDED (`e879e1e`). 2. Ratify this doc. 3. Build `scripts/trial/run.py` (spawn + outcome grader +
+1. Row 182 LANDED (`e879e1e`). 2. Ratify this doc. 3. Build `scripts/trial/trial.py` (spawn + outcome grader +
 draft PR helper) with tests. 4. Prep the rig and profiles; measure the 9 s fit. 5. Mark mints T-PY episode A.
 6. Run, record, open drafts, harvest; then episode B. 7. T-AIL (#67, #20) after row 139 lands.
 

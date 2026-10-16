@@ -38,6 +38,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -254,41 +255,71 @@ def sha256_file(path: str | None) -> str:
     return h.hexdigest()
 
 
+GRADER_KEEP_BYTES = 4 << 20  # evidence keeps at most this much of each stream; the rest is counted
+
+
+def _kill_group(p) -> None:
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(p.pid, sig)
+        except ProcessLookupError:
+            return
+        try:
+            p.wait(timeout=run_task.KILL_GRACE_S)
+            return
+        except subprocess.TimeoutExpired:
+            continue
+    if p.poll() is None:
+        p.kill()
+        p.wait()
+
+
+def _read_capped(f) -> tuple[bytes, int]:
+    f.flush()
+    size = os.fstat(f.fileno()).st_size
+    f.seek(0)
+    return f.read(GRADER_KEEP_BYTES), size
+
+
 def run_grader(g: dict, worktree: str, env: dict | None = None) -> dict:
-    """One grader argv, unsandboxed, in ``<worktree>/<cwd>``, own process group, wall-capped."""
+    """One grader argv, unsandboxed, in ``<worktree>/<cwd>``, own process group, wall-capped.
+
+    Output goes to temporary files, never memory, and the evidence keeps the first
+    GRADER_KEEP_BYTES of each stream (the full sizes are recorded). Never raises."""
     env = child_env() if env is None else env
     cwd = os.path.normpath(os.path.join(worktree, g['cwd']))
     tool = resolve_tool(g['argv'][0], cwd, env)
+    try:
+        tool_sha = sha256_file(tool) if tool else ''
+    except OSError:
+        tool_sha = ''
     out = {'name': g['name'], 'argv': g['argv'], 'cwd': g['cwd'], 'timeout_s': g['timeout_s'],
-           'tool_path': tool, 'tool_sha256': sha256_file(tool), 'rc': None, 'timed_out': False,
+           'tool_path': tool, 'tool_sha256': tool_sha, 'rc': None, 'timed_out': False,
            'spawn_error': None}
     t0 = time.monotonic()
     stdout = stderr = b''
-    try:
-        p = subprocess.Popen(g['argv'], cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, start_new_session=True)
-    except OSError as err:
-        out['spawn_error'] = str(err)
-        stderr = str(err).encode()
-    else:
+    with tempfile.TemporaryFile() as fo, tempfile.TemporaryFile() as fe:
         try:
-            stdout, stderr = p.communicate(timeout=g['timeout_s'])
-        except subprocess.TimeoutExpired:
-            out['timed_out'] = True
-            for sig in (signal.SIGTERM, signal.SIGKILL):
+            p = subprocess.Popen(g['argv'], cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=fo,
+                                 stderr=fe, start_new_session=True)
+        except OSError as err:
+            out['spawn_error'] = str(err)
+            stderr = str(err).encode()
+        else:
+            try:
+                p.wait(timeout=g['timeout_s'])
+            except subprocess.TimeoutExpired:
+                out['timed_out'] = True
+                _kill_group(p)
+            else:
+                # The grader is done; reap anything it left in its group.
                 try:
-                    os.killpg(p.pid, sig)
-                except ProcessLookupError:
-                    break
-                try:
-                    stdout, stderr = p.communicate(timeout=run_task.KILL_GRACE_S)
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
-            if p.poll() is None:
-                p.kill()
-                p.wait()
-        out['rc'] = p.returncode if not out['timed_out'] else None
+                    os.killpg(p.pid, signal.SIGKILL)
+                except (ProcessLookupError, PermissionError):
+                    pass
+            out['rc'] = p.returncode if not out['timed_out'] else None
+            stdout, out['stdout_bytes'] = _read_capped(fo)
+            stderr, out['stderr_bytes'] = _read_capped(fe)
     out['wall_ms'] = int(round((time.monotonic() - t0) * 1000))
     out['passed'] = out['rc'] == 0
     out['stdout_head'] = _head_bytes(stdout)
