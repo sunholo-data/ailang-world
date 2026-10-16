@@ -5,6 +5,7 @@ package broker
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -12,8 +13,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 	"testing"
+	"time"
+	"unicode/utf8"
 )
 
 func shaHex(s string) string {
@@ -369,15 +374,239 @@ func driveWorktreeSnapshot(t *testing.T, probe string) {
 func TestWorktreeSnapshotGitEnvIsMinimal(t *testing.T) {
 	dump := filepath.Join(t.TempDir(), "env")
 	driveWorktreeSnapshot(t, writeProbeScript(t, dump))
-	got := strings.Join(readEnvDump(t, dump), "\n")
-	for _, want := range gitEnv() {
-		if !strings.Contains(got, want) {
-			t.Fatalf("git child env lacks %s:\n%s", want, got)
+	var got []string
+	for _, kv := range readEnvDump(t, dump) {
+		switch name, _, _ := strings.Cut(kv, "="); name {
+		case "PWD", "OLDPWD", "SHLVL", "_": // added by the probe's /bin/sh
+		default:
+			got = append(got, kv)
 		}
 	}
-	if strings.Contains(got, "decoy.git") {
-		t.Fatalf("the daemon's GIT_DIR reached the git child:\n%s", got)
+	sort.Strings(got)
+	// The exact set, written out here (not gitEnv() compared with itself).
+	want := []string{"GIT_CONFIG_GLOBAL=/dev/null", "GIT_CONFIG_NOSYSTEM=1", "GIT_OPTIONAL_LOCKS=0",
+		"GIT_TERMINAL_PROMPT=0", "LC_ALL=C", "PATH=/usr/bin:/bin"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("git child env = %q, want exactly %q (no GIT_DIR decoy, no credential)", got, want)
 	}
+}
+
+// The git argv carries the fsmonitor override, and a hostile core.fsmonitor
+// hook in the repository's own config is not run by the snapshot (control:
+// a plain `git status` in the same repository runs it).
+func TestWorktreeSnapshotDoesNotRunAnFsmonitorHook(t *testing.T) {
+	root := gitRepo(t)
+	marker := filepath.Join(canonicalTempDir(t), "fsmonitor-ran")
+	hook := filepath.Join(canonicalTempDir(t), "hook.sh")
+	if err := os.WriteFile(hook, []byte("#!/bin/sh\n: > "+shellQuote(marker)+"\nexit 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	fixtureGit(t, root, "config", "core.fsmonitor", hook)
+	fixtureGit(t, root, "status", "--porcelain")
+	if _, err := os.Stat(marker); err != nil {
+		t.Fatalf("control: plain git status did not run the fsmonitor hook (%v); the arm below would prove nothing", err)
+	}
+	if err := os.Remove(marker); err != nil {
+		t.Fatal(err)
+	}
+	d := deltaAround(t, root, func() { mustWrite(t, filepath.Join(root, "new.txt"), "n") })
+	if _, err := os.Stat(marker); err == nil {
+		t.Fatal("the snapshot ran the repository's fsmonitor hook")
+	}
+	if d == nil || d.Error != "" || d.Total != 1 {
+		t.Fatalf("delta = %+v", d)
+	}
+}
+
+// r2 hardening: a configured filter.<x>.clean would be run by `git status`
+// on a path .gitattributes selects (the judge's probe). The snapshot refuses
+// instead: the command never runs, and the refusal is recorded.
+func TestWorktreeSnapshotRefusesAConfiguredFilter(t *testing.T) {
+	root := gitRepo(t)
+	marker := filepath.Join(canonicalTempDir(t), "filter-ran")
+	fixtureGit(t, root, "config", "filter.evil.clean", "sh -c ': > "+marker+"; cat'")
+	mustWrite(t, filepath.Join(root, ".gitattributes"), "* filter=evil\n")
+	mustWrite(t, filepath.Join(root, "a.txt"), "dirty for the control\n")
+	fixtureGit(t, root, "status", "--porcelain")
+	if _, err := os.Stat(marker); err != nil {
+		t.Fatalf("control: plain git status did not run the clean filter (%v); the arm below would prove nothing", err)
+	}
+	if err := os.Remove(marker); err != nil {
+		t.Fatal(err)
+	}
+	mustWrite(t, filepath.Join(root, "a.txt"), "dirty again, so status must clean it\n")
+	d := deltaAround(t, root, func() { mustWrite(t, filepath.Join(root, "b.txt"), "changed") })
+	if _, err := os.Stat(marker); err == nil {
+		t.Fatal("the snapshot ran the configured clean filter")
+	}
+	if d == nil || len(d.Changes) != 0 || !strings.Contains(d.Error, WorktreeFilterRefused) ||
+		!strings.Contains(d.Error, "filter.evil.clean") {
+		t.Fatalf("delta = %+v, want the recorded filter refusal", d)
+	}
+	// Through a handler: recorded on the result, the call still succeeds.
+	h, _, l := newFakeToolHandler(t, "admitted")
+	fixtureGit(t, l.root, "init", "-q", ".")
+	fixtureGit(t, l.root, "config", "filter.evil.process", "sh -c ': > "+marker+"'")
+	out, err := h.Execute(boundedTestContext(t), EffectRequest{Effect: EffectAilangRun, Scope: WorkspaceScope, Cost: 1},
+		[]byte(`{"path":"m.ail"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d := decodeDelta(t, out); d == nil || !strings.Contains(d.Error, "filter.evil.process") {
+		t.Fatalf("result %s does not record the filter refusal", out)
+	}
+}
+
+// Boundaries: exactly 256 changes is not truncated; exactly the walk cap is
+// still a walk.
+func TestWorktreeDeltaBoundaries(t *testing.T) {
+	root := canonicalTempDir(t)
+	d := deltaAround(t, root, func() {
+		for i := 0; i < WorktreeDeltaMaxChanges; i++ {
+			mustWrite(t, filepath.Join(root, fmt.Sprintf("f%03d", i)), "x")
+		}
+	})
+	if d == nil || len(d.Changes) != 256 || d.Truncated || d.Total != 256 {
+		t.Fatalf("256 changes: %d listed truncated=%v total=%d", len(d.Changes), d.Truncated, d.Total)
+	}
+	old := worktreeWalkCap
+	worktreeWalkCap = 257
+	t.Cleanup(func() { worktreeWalkCap = old })
+	d = deltaAround(t, root, func() { mustWrite(t, filepath.Join(root, "f256"), "x") }) // 256 -> 257 = the cap
+	if d == nil || d.Basis != WorktreeBasisWalk || d.Total != 1 {
+		t.Fatalf("exactly the cap: %+v, want a walk", d)
+	}
+	d = deltaAround(t, root, func() { mustWrite(t, filepath.Join(root, "f257"), "x") }) // 258 > the cap
+	if d == nil || d.Basis != WorktreeBasisWalkCapped {
+		t.Fatalf("one over the cap: %+v, want walk-capped", d)
+	}
+}
+
+// The after snapshot's own failure is recorded as such.
+func TestWorktreeDeltaAfterSnapshotErrorIsRecorded(t *testing.T) {
+	root := gitRepo(t)
+	gitDir := filepath.Join(canonicalTempDir(t), "moved.git")
+	d := deltaAround(t, root, func() {
+		if err := os.Rename(filepath.Join(root, ".git"), gitDir); err != nil {
+			t.Fatal(err)
+		}
+		mustWrite(t, filepath.Join(root, ".git"), "gitdir: /nonexistent/x\n")
+	})
+	if d == nil || !strings.HasPrefix(d.Error, "worktree snapshot after the call failed: ") || len(d.Changes) != 0 {
+		t.Fatalf("delta = %+v, want the after-snapshot error", d)
+	}
+}
+
+func TestWorktreeDeltaErrorIsBoundedToExactly512(t *testing.T) {
+	msg := boundedDeltaError("after", errors.New(strings.Repeat("x", 2000)))
+	if len(msg) != worktreeDeltaMaxError || worktreeDeltaMaxError != 512 || !strings.HasSuffix(msg, "...") {
+		t.Fatalf("bounded error is %d bytes (suffix %q), want exactly 512 ending ...", len(msg), msg[len(msg)-3:])
+	}
+	if short := boundedDeltaError("before", errors.New("boom")); short != "worktree snapshot before the call failed: boom" {
+		t.Fatalf("short error = %q", short)
+	}
+}
+
+// The after snapshot is detached from the call's cancellation: a call whose
+// context is cancelled by the time the child exits still records its delta.
+func TestWorktreeDeltaAfterSnapshotIgnoresCancellation(t *testing.T) {
+	root := gitRepo(t)
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
+	p := beginWorktreeDelta(ctx, root)
+	mustWrite(t, filepath.Join(root, "new.txt"), "n")
+	cancel()
+	d := p.finish(ctx)
+	if d == nil || d.Error != "" || d.Total != 1 {
+		t.Fatalf("delta after cancellation = %+v, want the change recorded", d)
+	}
+}
+
+// The walk never descends a nested .git directory.
+func TestWorktreeWalkSkipsNestedGitDirs(t *testing.T) {
+	root := canonicalTempDir(t)
+	mustMkdir(t, filepath.Join(root, "vendor", "dep", ".git"))
+	mustWrite(t, filepath.Join(root, "vendor", "dep", ".git", "HEAD"), "ref: a\n")
+	d := deltaAround(t, root, func() {
+		mustWrite(t, filepath.Join(root, "vendor", "dep", ".git", "HEAD"), "ref: b\n")
+		mustWrite(t, filepath.Join(root, "vendor", "dep", ".git", "index"), "i")
+		mustWrite(t, filepath.Join(root, "vendor", "dep", "x.go"), "x")
+	})
+	if d == nil || d.Basis != WorktreeBasisWalk || d.Total != 1 || d.Changes[0].Path != "vendor/dep/x.go" {
+		t.Fatalf("delta = %+v, want only vendor/dep/x.go", d)
+	}
+}
+
+// A policy-tool response that itself carries worktree_delta is refused: the
+// key is the handler's, never the tool's.
+func TestPolicyToolResponseCannotForgeWorktreeDelta(t *testing.T) {
+	h, _, _ := newFakeToolHandler(t, "ptreserved")
+	_, err := h.Execute(boundedTestContext(t), EffectRequest{Effect: EffectAilangCheck, Scope: WorkspaceScope, Cost: 1},
+		[]byte(`{"op":"ai_check","path":"m.ail"}`))
+	if err == nil || !strings.Contains(err.Error(), `reserved key "worktree_delta"`) {
+		t.Fatalf("a forged worktree_delta was accepted: %v", err)
+	}
+}
+
+// r2 option 4: a file over the hash cap is listed with its size and
+// hashed:false (no sha256), and a same-size rewrite is still seen (mtime).
+func TestWorktreeDeltaHashCap(t *testing.T) {
+	old := worktreeHashMaxBytes
+	worktreeHashMaxBytes = 8
+	t.Cleanup(func() { worktreeHashMaxBytes = old })
+	root := canonicalTempDir(t)
+	big := filepath.Join(root, "big.bin")
+	d := deltaAround(t, root, func() {
+		mustWrite(t, big, "0123456789")
+		mustWrite(t, filepath.Join(root, "small"), "01234567") // exactly the cap: hashed
+	})
+	c, s := changeSet(d)["big.bin"], changeSet(d)["small"]
+	if c.Hashed == nil || *c.Hashed || c.SHA256 != "" || c.Size == nil || *c.Size != 10 {
+		t.Fatalf("big = %+v, want size 10, hashed:false, no sha256", c)
+	}
+	if s.Hashed != nil || s.SHA256 != shaHex("01234567") {
+		t.Fatalf("small = %+v, want hashed", s)
+	}
+	b, _ := json.Marshal(c)
+	if !strings.Contains(string(b), `"hashed":false`) {
+		t.Fatalf("wire %s lacks hashed:false", b)
+	}
+	d = deltaAround(t, root, func() {
+		mustWrite(t, big, "9876543210")
+		future := time.Now().Add(time.Hour)
+		if err := os.Chtimes(big, future, future); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if d == nil || changeSet(d)["big.bin"].Op != "modified" {
+		t.Fatalf("same-size rewrite of an unhashed file: %+v", d)
+	}
+}
+
+// r2 option 4: each path is bounded once JSON-encoded, so even 256 hostile
+// paths (long, all escape-expanding control bytes) stay far under the 1 MiB
+// coordinator output cap.
+func TestWorktreeDeltaWorstCaseFitsTheOutputCap(t *testing.T) {
+	before := worktreeSnapshot{basis: WorktreeBasisWalk, entries: map[string]pathState{}}
+	after := worktreeSnapshot{basis: WorktreeBasisWalk, entries: map[string]pathState{}}
+	for i := 0; i < 300; i++ {
+		p := fmt.Sprintf("%03d/", i) + strings.Repeat("\x01é", 4000)
+		after.entries[p] = pathState{exists: true, size: 1 << 40, sha: strings.Repeat("f", 64), kind: "unreadable"}
+	}
+	d := worktreeDeltaOf(before, after)
+	b, _ := json.Marshal(d)
+	if len(d.Changes) != 256 || len(b) > 512<<10 {
+		t.Fatalf("worst case: %d changes, %d bytes, want 256 within 512 KiB", len(d.Changes), len(b))
+	}
+	for _, c := range d.Changes {
+		pb, _ := json.Marshal(c.Path)
+		if !c.PathTruncated || len(pb) > worktreeDeltaMaxPathJSON || !utf8.ValidString(c.Path) {
+			t.Fatalf("path %d JSON bytes, truncated=%v, valid=%v", len(pb), c.PathTruncated, utf8.ValidString(c.Path))
+		}
+	}
+	if p, cut := boundPathJSON("ok/path.txt"); cut || p != "ok/path.txt" {
+		t.Fatalf("a short path was cut: %q", p)
+	}
+	t.Logf("worst-case delta: %d bytes", len(b))
 }
 
 // ---------------------------------------------------------------------------

@@ -150,6 +150,7 @@ if [ "$1" = "policy-tool" ]; then
   printf '%s' "$req" > "$d/stdin"
   echo x >> "$d/dispatches"
   if [ "$mode" = ptwrites ]; then echo n >> "$d/ptn"; printf 'pt\n' > "pt-$(wc -l < "$d/ptn" | tr -d ' ').txt"; fi
+  if [ "$mode" = ptreserved ]; then echo '{"ok":true,"worktree_delta":{"basis":"forged"}}'; exit 0; fi
   echo '{"ok":true}'
   exit 0
 fi

@@ -22,6 +22,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -55,7 +56,16 @@ const (
 var (
 	worktreeWalkCap = 20000
 	worktreeGitCap  = 20000
+	// worktreeHashMaxBytes (r2): a regular file larger than this is not
+	// hashed; it is stated by size and mtime and listed with hashed:false.
+	worktreeHashMaxBytes int64 = 64 << 20
 )
+
+// worktreeDeltaMaxPathJSON (r2) bounds each listed path's JSON-encoded bytes,
+// so the worst-case delta (256 changes) stays far under the 1 MiB coordinator
+// output cap: a longer path is cut on a rune boundary and marked
+// path_truncated. TestWorktreeDeltaWorstCaseFitsTheOutputCap measures it.
+const worktreeDeltaMaxPathJSON = 1024
 
 // worktreeGit resolves the git binary the snapshot runs. Tests (and the AC10
 // census) replace it.
@@ -73,6 +83,10 @@ type WorktreeChange struct {
 	Size   *int64 `json:"size,omitempty"`
 	SHA256 string `json:"sha256,omitempty"`
 	Kind   string `json:"kind,omitempty"`
+	// Hashed is false (and SHA256 absent) for a file over the hash cap.
+	Hashed *bool `json:"hashed,omitempty"`
+	// PathTruncated marks a Path cut to worktreeDeltaMaxPathJSON.
+	PathTruncated bool `json:"path_truncated,omitempty"`
 }
 
 // WorktreeDelta is the `worktree_delta` result field.
@@ -93,6 +107,10 @@ type pathState struct {
 	kind   string // "" regular file, "symlink", "dir", "unreadable", "outside"
 	size   int64
 	sha    string
+	// unhashed: a regular file over worktreeHashMaxBytes, compared by size
+	// and mtime instead of content.
+	unhashed bool
+	mtime    int64
 }
 
 type worktreeSnapshot struct {
@@ -159,10 +177,15 @@ func worktreeDeltaOf(before, after worktreeSnapshot) *WorktreeDelta {
 	}
 	var changes []WorktreeChange
 	add := func(path, op string, st pathState) {
-		c := WorktreeChange{Path: path, Op: op, Kind: st.kind}
+		c := WorktreeChange{Op: op, Kind: st.kind}
+		c.Path, c.PathTruncated = boundPathJSON(path)
 		if op != "deleted" {
 			size := st.size
 			c.Size, c.SHA256 = &size, st.sha
+			if st.unhashed {
+				no := false
+				c.Hashed = &no
+			}
 		}
 		changes = append(changes, c)
 	}
@@ -212,6 +235,23 @@ func worktreeDeltaOf(before, after worktreeSnapshot) *WorktreeDelta {
 	return d
 }
 
+// boundPathJSON cuts path, on a rune boundary, to at most
+// worktreeDeltaMaxPathJSON bytes once JSON-encoded.
+func boundPathJSON(path string) (string, bool) {
+	if b, _ := json.Marshal(path); len(b) <= worktreeDeltaMaxPathJSON {
+		return path, false
+	}
+	n := 2 // the quotes
+	for i, r := range path {
+		b, _ := json.Marshal(string(r))
+		if n+len(b)-2 > worktreeDeltaMaxPathJSON {
+			return path[:i], true
+		}
+		n += len(b) - 2
+	}
+	return path, false
+}
+
 // snapshotWorktree snapshots root: the git basis when root is the top of a
 // git worktree (it has its own .git file or directory), else the walk. also
 // names paths (root-relative, slash-separated) to state even when git no
@@ -247,6 +287,42 @@ func runWorktreeGit(ctx context.Context, git, root string, args ...string) ([]by
 	return out, nil
 }
 
+// WorktreeFilterRefused prefixes the error of a snapshot refused because the
+// repository configures a git filter.
+const WorktreeFilterRefused = "filter configured; snapshot refused"
+
+// configuredGitFilters lists the filter.* keys the repository's effective
+// config defines (system and global config are off in gitEnv; includes are
+// followed by git itself). `git config` runs no configured command.
+func configuredGitFilters(ctx context.Context, git, root string) ([]string, error) {
+	out, err := runWorktreeGit(ctx, git, root, "config", "--null", "--get-regexp", `^filter\.`)
+	if err != nil {
+		// rc 1 with no output: no key matches.
+		if code, exited := handlerExitStatus(err); exited && code == 1 && len(out) == 0 {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var keys []string
+	seen := map[string]bool{}
+	for _, rec := range strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00") {
+		key, _, _ := strings.Cut(rec, "\n")
+		if key != "" && !seen[key] {
+			seen[key] = true
+			keys = append(keys, key)
+		}
+	}
+	if len(keys) == 0 {
+		// Output that names no key is not "no filter": refuse rather than guess.
+		return nil, fmt.Errorf("git config --get-regexp printed %d bytes naming no key", len(out))
+	}
+	sort.Strings(keys)
+	if len(keys) > 8 {
+		keys = append(keys[:8], fmt.Sprintf("+%d more", len(keys)-8))
+	}
+	return keys, nil
+}
+
 func gitSnapshot(ctx context.Context, root string, also []string) worktreeSnapshot {
 	s := worktreeSnapshot{basis: WorktreeBasisGit, entries: map[string]pathState{}, codes: map[string]string{}}
 	git, err := worktreeGit()
@@ -263,8 +339,22 @@ func gitSnapshot(ctx context.Context, root string, also []string) worktreeSnapsh
 		s.err = fmt.Errorf("git toplevel %q is not the worktree root %q", strings.TrimSpace(string(top)), root)
 		return s
 	}
+	// r2 hardening: `git status` runs a configured filter.<x>.clean (or
+	// .process) command on any path .gitattributes selects. Host-side code
+	// never runs a config-defined command, so with any filter configured the
+	// snapshot is refused (recorded, never silent) and status never runs.
+	if filters, err := configuredGitFilters(ctx, git, root); err != nil {
+		s.err = err
+		return s
+	} else if len(filters) > 0 {
+		s.err = fmt.Errorf("%s: %s (git status would run a configured command)",
+			WorktreeFilterRefused, strings.Join(filters, ", "))
+		return s
+	}
+	// --ignore-submodules=all: status would recurse into each submodule and
+	// apply that repository's own config; submodule changes are not recorded.
 	out, err := runWorktreeGit(ctx, git, root, "status", "--porcelain=v1", "-z", "--untracked-files=all",
-		"--ignored=no", "--no-renames")
+		"--ignored=no", "--no-renames", "--ignore-submodules=all")
 	if err != nil {
 		s.err = err
 		return s
@@ -388,13 +478,21 @@ func statePath(root, rel string) pathState {
 	case !info.Mode().IsRegular():
 		return pathState{exists: true, kind: "unreadable"}
 	}
+	if info.Size() > worktreeHashMaxBytes {
+		return pathState{exists: true, size: info.Size(), unhashed: true, mtime: info.ModTime().UnixNano()}
+	}
 	f, err := os.OpenFile(full, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
 	if err != nil {
 		return pathState{exists: true, kind: "unreadable"}
 	}
 	defer func() { _ = f.Close() }()
 	h := sha256.New()
-	n, err := io.Copy(h, f)
+	// Bounded even if the file grew since the Lstat: past the cap it is
+	// stated as unhashed.
+	n, err := io.Copy(h, io.LimitReader(f, worktreeHashMaxBytes+1))
+	if err == nil && n > worktreeHashMaxBytes {
+		return pathState{exists: true, size: n, unhashed: true, mtime: info.ModTime().UnixNano()}
+	}
 	if err != nil {
 		return pathState{exists: true, kind: "unreadable"}
 	}
