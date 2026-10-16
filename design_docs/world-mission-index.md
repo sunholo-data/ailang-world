@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 276 | 2026-10-16 | row 150 M5a bounded anchored evidence roster (ATTESTED + demo-authored CLAIMED) LANDED `bcd2d7c` (PR #295; judge r1 PASS 90) [PRODUCT] |
 | 275 | 2026-10-16 | row 150 M4b seed S6 why validation + one anchored packet + public manifest assembly (fail-closed) LANDED `acb3f54` (PR #289; judge r1 FAIL 66 → r2 PASS 86 → r3 PASS 86) [PRODUCT] |
 | 274 | 2026-10-16 | row 150 M4a seed S5 real approval transition + one pending packet + exact budget delta LANDED `7ed1152` (PR #283; judge r1 PASS 91) [PRODUCT] |
 | 273 | 2026-10-16 | row 150 M3b seed S4 proof stage + proof/key refusals LANDED `c08729b` (PR #277; judge r1 PASS 88 → r2 PASS 93) [PRODUCT] |
