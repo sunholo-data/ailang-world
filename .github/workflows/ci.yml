@@ -390,6 +390,10 @@ jobs:
           FLOOR_REQUIRE_TOOL: '1'
         run: python3 -m unittest discover -s scripts/floor -p 'test_*.py' -v
 
+      - name: Trial runner suite (row 183)
+        timeout-minutes: 3
+        run: python3 -m unittest discover -s scripts/trial -p 'test_*.py' -v
+
   # Row 181 (attended 2026-10-16): the -race leg needs ~1,000 s wall on the 2-core runner
   # (measured: broker 343 s, verifygate 308 s, daemon 307 s under -race), over its old 600 s cap
   # inside the go-verify job, so it runs here in parallel with a measured, still-loud bound.
