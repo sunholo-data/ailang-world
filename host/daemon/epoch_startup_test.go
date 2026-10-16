@@ -41,7 +41,7 @@ func TestStartupOnExistingStoreRequiresANominatedRelease(t *testing.T) {
 	if !errors.As(err, &nn) {
 		t.Fatalf("the refusal is not a typed *registry.NotNominatedError: %T", se.Err)
 	}
-	want := "world-publish epoch nominate --store " + dbPath + " --release v0.98.1 --candidate --gate-verdict <verdict.json>"
+	want := "world-publish epoch nominate --store " + dbPath + " --release v0.98.1 --candidate --gate-verdict <verdict.json> --binary " + second
 	if !strings.Contains(err.Error(), want) {
 		t.Fatalf("refusal = %q, want it to carry the exact command %q", err.Error(), want)
 	}

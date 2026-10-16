@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/pins"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/transitionreg"
@@ -20,17 +23,19 @@ import (
 const (
 	fenceRelease  = "release"
 	fenceVerdict  = "verdict"
+	fenceBinary   = "binary"
 	fenceRegistry = "registry"
 )
 
 // compiledManifestName is how a refusal names the compiled-in manifest.
 const compiledManifestName = "pins/ailang-releases.json (compiled in)"
 
-// hostPlatform is the platform whose manifest digest a verdict must match:
-// the verdict is about the binary THIS host would serve.
+// hostPlatform is the platform whose manifest digest a verdict and --binary
+// must match: the nomination is about the binary THIS host would serve.
 var hostPlatform = runtime.GOOS + "/" + runtime.GOARCH
 
-// epochNominateBudget bounds the verb's store reads and its one CAS write.
+// epochNominateBudget bounds the verb's store reads, its version probe and
+// its one CAS write, each separately.
 const epochNominateBudget = 10 * time.Second
 
 // runEpochNominate is `world-publish epoch nominate` (row 139 D2,
@@ -41,7 +46,17 @@ const epochNominateBudget = 10 * time.Second
 // It refuses unless --gate-verdict is a world/ailang-release-verdict/v1
 // verdict that names the same release, was produced on this platform,
 // carries the manifest's binary and tarball digests for it, passed every
-// check, and (for --candidate) reproduced every replay golden byte-identically.
+// check, and (for --candidate) reproduced every replay golden
+// byte-identically; and unless --binary is a file whose sha256 is the
+// manifest's (and the verdict's) binary digest and whose `--version` line is
+// the release's.
+//
+// THE TRUST ANCHOR is the compiled-in manifest (pins.Current), which a human
+// reviewed when its row merged. There is deliberately no flag naming another
+// manifest (row 139 M2 judge r1): a headless caller able to choose the
+// manifest could write a row and a matching verdict for any release. The
+// verdict is self-attested; --binary is what ties the nomination to real
+// bytes the reviewed manifest names.
 //
 // THE AUTHORITY SPLIT (D-WORLD-78 = a, ratified 2026-10-16): --candidate is
 // headless-permitted, so the loop can nominate a same-semantics release whose
@@ -49,6 +64,14 @@ const epochNominateBudget = 10 * time.Second
 // as `transitions` (automation tripwire, controlling terminal, a typed phrase
 // naming this write) and so is a human's act.
 func runEpochNominate(opts options, in io.Reader, out, errw io.Writer, env environment) int {
+	return runEpochNominateWith(opts, pins.Current(), compiledManifestName, in, out, errw, env)
+}
+
+// runEpochNominateWith is runEpochNominate against a given manifest. In
+// production only runEpochNominate calls it, with the compiled-in manifest;
+// tests call it directly with a test-only manifest. No argv reaches the
+// manifest argument.
+func runEpochNominateWith(opts options, manifest pins.Manifest, manifestName string, in io.Reader, out, errw io.Writer, env environment) int {
 	if serr := refuseLiveOnReadOnlyVerb("epoch nominate", opts.live); serr != nil {
 		return report(errw, serr)
 	}
@@ -63,19 +86,17 @@ func runEpochNominate(opts options, in io.Reader, out, errw io.Writer, env envir
 		return report(errw, &stopError{Fence: fenceRelease, Reason: "absent",
 			Detail: "--release names the AILANG release to nominate (vX.Y.Z, a row of the release manifest)"})
 	}
-
-	manifest, manifestName, err := loadReleaseManifest(opts.releaseManifest)
-	if err != nil {
-		fmt.Fprintln(errw, "world-publish epoch nominate: "+err.Error())
-		return exitError
-	}
 	rel, ok := manifest.Lookup(opts.release)
 	if !ok {
 		return report(errw, &stopError{Fence: fenceRelease, Reason: "unknown",
 			Detail: fmt.Sprintf("%s is not in the release manifest %s (releases: %v); a release is nominated only after its manifest row lands",
 				opts.release, manifestName, manifest.Names())})
 	}
-	if serr := requireAdmittedVerdict(opts.gateVerdict, manifest, manifestName, opts.release, mode); serr != nil {
+	verdict, serr := requireAdmittedVerdict(opts.gateVerdict, manifest, manifestName, opts.release, mode)
+	if serr != nil {
+		return report(errw, serr)
+	}
+	if serr := requireReleaseBinary(opts.binary, rel, verdict, manifestName); serr != nil {
 		return report(errw, serr)
 	}
 
@@ -144,8 +165,8 @@ func runEpochNominate(opts options, in io.Reader, out, errw io.Writer, env envir
 }
 
 // epochNominateContext is the verb's one context root: a fresh budget for
-// the pre-gate reads and another for the write, so a human slow to type the
-// --new-epoch phrase never spends the write's budget.
+// the version probe, the pre-gate reads and the write, so a human slow to
+// type the --new-epoch phrase never spends the write's budget.
 func epochNominateContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), epochNominateBudget)
 }
@@ -173,32 +194,15 @@ func newEpochPhrase(epoch int64, release, storePath string) string {
 	return fmt.Sprintf("open epoch %d for %s in %s", epoch, release, storePath)
 }
 
-// loadReleaseManifest returns the compiled-in manifest, or the one at path
-// validated by the same pins.Parse.
-func loadReleaseManifest(path string) (pins.Manifest, string, error) {
-	if strings.TrimSpace(path) == "" {
-		return pins.Current(), compiledManifestName, nil
-	}
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return pins.Manifest{}, "", fmt.Errorf("read release manifest: %w", err)
-	}
-	m, err := pins.Parse(b)
-	if err != nil {
-		return pins.Manifest{}, "", fmt.Errorf("release manifest %s: %w", path, err)
-	}
-	return m, path, nil
-}
-
 // requireAdmittedVerdict reads --gate-verdict and runs the nomination gate.
-func requireAdmittedVerdict(path string, m pins.Manifest, manifestName, release string, mode transitionreg.EpochMode) *stopError {
+func requireAdmittedVerdict(path string, m pins.Manifest, manifestName, release string, mode transitionreg.EpochMode) (pins.Verdict, *stopError) {
 	if strings.TrimSpace(path) == "" {
-		return &stopError{Fence: fenceVerdict, Reason: "absent",
+		return pins.Verdict{}, &stopError{Fence: fenceVerdict, Reason: "absent",
 			Detail: "--gate-verdict names the release's compatibility-gate verdict (" + pins.VerdictSchema + "); no release is nominated without one"}
 	}
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return &stopError{Fence: fenceVerdict, Reason: "unreadable", Detail: err.Error()}
+		return pins.Verdict{}, &stopError{Fence: fenceVerdict, Reason: "unreadable", Detail: err.Error()}
 	}
 	v, err := pins.ParseVerdict(b)
 	if err == nil {
@@ -207,9 +211,63 @@ func requireAdmittedVerdict(path string, m pins.Manifest, manifestName, release 
 	if err != nil {
 		var ve *pins.VerdictError
 		if errors.As(err, &ve) {
-			return &stopError{Fence: fenceVerdict, Reason: ve.Reason, Detail: path + ": " + ve.Detail}
+			return pins.Verdict{}, &stopError{Fence: fenceVerdict, Reason: ve.Reason, Detail: path + ": " + ve.Detail}
 		}
-		return &stopError{Fence: fenceVerdict, Reason: pins.VerdictMalformed, Detail: path + ": " + err.Error()}
+		return pins.Verdict{}, &stopError{Fence: fenceVerdict, Reason: pins.VerdictMalformed, Detail: path + ": " + err.Error()}
+	}
+	return v, nil
+}
+
+// requireReleaseBinary hashes --binary and probes its version. The sha256
+// must equal the manifest's binary digest for this platform AND the
+// verdict's binary_sha256, and the first non-blank `--version` line must be
+// the release's version line. A forged verdict alone therefore cannot
+// nominate: the release's real bytes must match the reviewed manifest.
+func requireReleaseBinary(path string, rel pins.Release, v pins.Verdict, manifestName string) *stopError {
+	if strings.TrimSpace(path) == "" {
+		return &stopError{Fence: fenceBinary, Reason: "absent",
+			Detail: "--binary names the release's ailang binary; it is hashed against the release manifest and probed for its version"}
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return &stopError{Fence: fenceBinary, Reason: "unreadable", Detail: err.Error()}
+	}
+	h := sha256.New()
+	_, err = io.Copy(h, f)
+	_ = f.Close()
+	if err != nil {
+		return &stopError{Fence: fenceBinary, Reason: "unreadable", Detail: path + ": " + err.Error()}
+	}
+	got := hex.EncodeToString(h.Sum(nil))
+	asset, ok := rel.Assets[hostPlatform]
+	if !ok || got != asset.BinarySHA256 || got != v.BinarySHA256 {
+		return &stopError{Fence: fenceBinary, Reason: "digest-mismatch",
+			Detail: fmt.Sprintf("%s has sha256 %s; the release manifest %s records %q for %s on %s, the verdict %s",
+				path, got, manifestName, asset.BinarySHA256, rel.Release, hostPlatform, v.BinarySHA256)}
+	}
+	line, err := probeVersionLine(path)
+	if err != nil {
+		return &stopError{Fence: fenceBinary, Reason: "version-probe-failed", Detail: err.Error()}
+	}
+	if line != rel.Version {
+		return &stopError{Fence: fenceBinary, Reason: "version-mismatch",
+			Detail: fmt.Sprintf("%s --version prints %q, want %q", path, line, rel.Version)}
 	}
 	return nil
+}
+
+// probeVersionLine runs `<path> --version` through the archive's bounded,
+// scrubbed version probe (World's one --version exec site; this command owns
+// no subprocess site) and returns its first non-blank line, trimmed.
+func probeVersionLine(path string) (string, error) {
+	stdout, err := archive.ProbeVersion(path)
+	if err != nil {
+		return "", err
+	}
+	for _, l := range strings.Split(stdout, "\n") {
+		if t := strings.TrimSpace(l); t != "" {
+			return t, nil
+		}
+	}
+	return "", fmt.Errorf("%s --version printed no version line", path)
 }

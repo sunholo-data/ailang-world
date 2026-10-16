@@ -71,6 +71,16 @@ var forbiddenImportPrefixes = []string{
 	"cloud.google.com/",
 	"github.com/Azure/",
 	"github.com/aws/",
+	// host/registry is the LOCAL epoch registry (world/epoch-registry/v1, a
+	// store object plus a named head; no network, no package registry). It
+	// stays forbidden as a DIRECT import of these groups' own files, so each
+	// one reaches it only through a reviewed, narrower surface:
+	// cmd/world-publish (`epoch nominate`, row 139 M2) uses the
+	// host/transitionreg re-exports in transitionreg/epoch_nominate.go BY
+	// DESIGN — transitionreg is already the publisher's only view of the
+	// epoch registry (EpochsForInterpreter), and keeping the prefix here means
+	// any new direct reach into host/registry from a protected group is still
+	// a red that someone must review rather than a silent widening.
 	"github.com/sunholo-data/ailang-world/host/registry",
 	"net/http/httptest",
 	"net/http/httputil",

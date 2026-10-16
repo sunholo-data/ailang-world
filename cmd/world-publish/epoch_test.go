@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -16,27 +18,43 @@ import (
 // Row 139 M2, AC2: `world-publish epoch nominate`. The candidate release is a
 // TEST-ONLY manifest row (the real pins/ailang-releases.json is not changed
 // by this milestone): the compiled-in manifest plus one observed release
-// carrying invented, well-formed digests.
+// whose binary digest is the sha256 of a shell fake. The test manifest
+// reaches the verb ONLY through runEpochNominateWith (no flag names a
+// manifest); arms that go through run() use the compiled-in manifest.
 const (
 	testBaseLine      = "AILANG v0.98.0"
 	testCandidate     = "v0.98.1"
 	testCandidateLine = "AILANG v0.98.1"
+	// testManifestKey is a PSEUDO-flag of the test driver, never passed to
+	// argv: it names the test manifest handed to runEpochNominateWith.
+	testManifestKey = "\x00test-manifest"
 )
 
-var (
-	testBinaryDigest  = strings.Repeat("ab", 32)
-	testTarballDigest = strings.Repeat("cd", 32)
-)
+var testTarballDigest = strings.Repeat("cd", 32)
 
-// writeTestManifest writes the compiled-in manifest plus the test candidate
-// row and returns its path. pins.Parse validates it exactly like the real one.
-func writeTestManifest(t *testing.T) string {
-	t.Helper()
-	return writeTestManifestFor(t, testCandidate, testCandidateLine, testBinaryDigest, testTarballDigest)
+// fakeScript is a shell fake whose --version prints line.
+func fakeScript(line string) string {
+	return "#!/bin/sh\nif [ \"$1\" = --version ]; then echo '" + line + "'; exit 0; fi\nexit 0\n"
 }
 
-// writeTestManifestFor is writeTestManifest for any release row; a release
-// the compiled-in manifest already lists is not added twice.
+func sha256Hex(b []byte) string {
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:])
+}
+
+// writeScript writes an executable script and returns its path and sha256.
+func writeScript(t *testing.T, body string) (string, string) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "ailang")
+	if err := os.WriteFile(path, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path, sha256Hex([]byte(body))
+}
+
+// writeTestManifestFor writes the compiled-in manifest plus one release row
+// (unless the compiled-in manifest already lists it) and returns its path.
+// pins.Parse validates it exactly like the real one.
 func writeTestManifestFor(t *testing.T, release, line, binaryDigest, tarballDigest string) string {
 	t.Helper()
 	m := pins.Current()
@@ -67,11 +85,11 @@ func writeTestManifestFor(t *testing.T, release, line, binaryDigest, tarballDige
 	return path
 }
 
-// testVerdict returns a passing verdict for the test candidate on this host.
-func testVerdict() map[string]any {
+// verdictFor returns a passing verdict for release with binaryDigest.
+func verdictFor(release, binaryDigest string) map[string]any {
 	return map[string]any{
-		"schema": pins.VerdictSchema, "release": testCandidate, "platform": hostPlatform,
-		"binary_sha256": testBinaryDigest, "tarball_sha256": testTarballDigest,
+		"schema": pins.VerdictSchema, "release": release, "platform": hostPlatform,
+		"binary_sha256": binaryDigest, "tarball_sha256": testTarballDigest,
 		"golden_identical": true,
 		"checks": []any{
 			map[string]any{"name": "verify_ail", "pass": true},
@@ -81,9 +99,16 @@ func testVerdict() map[string]any {
 	}
 }
 
+// testBinaryDigest is the sha256 of the test candidate's fake binary.
+var testBinaryDigest = sha256Hex([]byte(fakeScript(testCandidateLine)))
+
 func writeVerdict(t *testing.T, mutate func(map[string]any)) string {
 	t.Helper()
-	v := testVerdict()
+	return writeVerdictMap(t, verdictFor(testCandidate, testBinaryDigest), mutate)
+}
+
+func writeVerdictMap(t *testing.T, v map[string]any, mutate func(map[string]any)) string {
+	t.Helper()
 	if mutate != nil {
 		mutate(v)
 	}
@@ -104,14 +129,20 @@ func noTTYProbe(t *testing.T) ttyProbe {
 }
 
 // nominateFixture is a store bootstrapped on testBaseLine plus the flags of a
-// passing candidate nomination of the test candidate.
+// passing candidate nomination of the test candidate (fake binary, test
+// manifest naming its digest, verdict echoing it).
 func nominateFixture(t *testing.T) map[string]string {
 	t.Helper()
 	storePath := filepath.Join(t.TempDir(), "world.db")
 	bootstrapEpochRegistry(t, storePath, testBaseLine)
+	bin, digest := writeScript(t, fakeScript(testCandidateLine))
+	if digest != testBinaryDigest {
+		t.Fatal("instrument: fake binary digest drifted")
+	}
 	return map[string]string{
-		"store": storePath, "release": testCandidate,
-		"gate-verdict": writeVerdict(t, nil), "release-manifest": writeTestManifest(t),
+		"store": storePath, "release": testCandidate, "binary": bin,
+		"gate-verdict":  writeVerdict(t, nil),
+		testManifestKey: writeTestManifestFor(t, testCandidate, testCandidateLine, testBinaryDigest, testTarballDigest),
 	}
 }
 
@@ -125,11 +156,34 @@ func (inv invocation) epochArgs(t *testing.T) []string {
 	return append([]string{"epoch", "nominate"}, args[1:]...)
 }
 
+// driveNominate runs the verb. With testManifestKey set it parses the other
+// flags with the production FlagSet and calls runEpochNominateWith with that
+// manifest (the test seam); without it, it goes through run(), i.e. argv
+// and the compiled-in manifest.
 func driveNominate(t *testing.T, inv invocation, stdin string, getenv func(string) string, probe ttyProbe) armResult {
 	t.Helper()
 	var out, errw strings.Builder
-	code := run(inv.epochArgs(t), strings.NewReader(stdin), &out, &errw,
-		environment{getenv: getenv, probe: func() ttyProbe { return probe }})
+	env := environment{getenv: getenv, probe: func() ttyProbe { return probe }}
+	manifestPath, seam := inv.flags[testManifestKey]
+	if !seam {
+		code := run(inv.epochArgs(t), strings.NewReader(stdin), &out, &errw, env)
+		return armResult{code: code, stdout: out.String(), stderr: errw.String()}
+	}
+	argv := inv.with(func(i *invocation) { delete(i.flags, testManifestKey) }).epochArgs(t)
+	var opts options
+	fs := newFlagSet(&opts)
+	if err := fs.Parse(argv[2:]); err != nil {
+		t.Fatalf("instrument: test argv does not parse: %v", err)
+	}
+	raw, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := pins.Parse(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	code := runEpochNominateWith(opts, m, manifestPath, strings.NewReader(stdin), &out, &errw, env)
 	return armResult{code: code, stdout: out.String(), stderr: errw.String()}
 }
 
@@ -227,8 +281,7 @@ func TestEpochNominateRefusals(t *testing.T) {
 		{"no verdict", func(t *testing.T, f map[string]string) []string {
 			delete(f, "gate-verdict")
 			return []string{"candidate"}
-		},
-			"STOP fence=verdict reason=absent"},
+		}, "STOP fence=verdict reason=absent"},
 		{"unreadable verdict", func(t *testing.T, f map[string]string) []string {
 			f["gate-verdict"] = filepath.Join(t.TempDir(), "absent.json")
 			return []string{"candidate"}
@@ -241,7 +294,7 @@ func TestEpochNominateRefusals(t *testing.T) {
 			f["gate-verdict"] = writeVerdict(t, func(v map[string]any) { v["release"] = "v0.98.2" })
 			return []string{"candidate"}
 		}, "STOP fence=verdict reason=release-mismatch"},
-		{"binary digest mismatch", func(t *testing.T, f map[string]string) []string {
+		{"verdict digest mismatch", func(t *testing.T, f map[string]string) []string {
 			f["gate-verdict"] = writeVerdict(t, func(v map[string]any) { v["binary_sha256"] = strings.Repeat("ef", 32) })
 			return []string{"candidate"}
 		}, "STOP fence=verdict reason=digest-mismatch"},
@@ -261,10 +314,35 @@ func TestEpochNominateRefusals(t *testing.T) {
 			f["gate-verdict"] = writeVerdict(t, func(v map[string]any) { v["release"] = "v0.98.9" })
 			return []string{"candidate"}
 		}, "STOP fence=release reason=unknown"},
-		{"release in the compiled-in manifest has no candidate row", func(t *testing.T, f map[string]string) []string {
-			delete(f, "release-manifest")
+		{"argv uses the compiled-in manifest, which has no row for the test release", func(t *testing.T, f map[string]string) []string {
+			delete(f, testManifestKey)
 			return []string{"candidate"}
 		}, "not in the release manifest pins/ailang-releases.json (compiled in)"},
+		{"no binary", func(t *testing.T, f map[string]string) []string { delete(f, "binary"); return []string{"candidate"} },
+			"STOP fence=binary reason=absent"},
+		{"unreadable binary", func(t *testing.T, f map[string]string) []string {
+			f["binary"] = filepath.Join(t.TempDir(), "no-such-ailang")
+			return []string{"candidate"}
+		}, "STOP fence=binary reason=unreadable"},
+		{"binary whose bytes differ from the manifest", func(t *testing.T, f map[string]string) []string {
+			f["binary"], _ = writeScript(t, fakeScript(testCandidateLine)+"# one more byte\n")
+			return []string{"candidate"}
+		}, "STOP fence=binary reason=digest-mismatch"},
+		{"binary whose version line is another release", func(t *testing.T, f map[string]string) []string {
+			// Manifest and verdict name THIS binary's digest; only its version differs.
+			bin, digest := writeScript(t, fakeScript("AILANG v0.98.2"))
+			f["binary"] = bin
+			f[testManifestKey] = writeTestManifestFor(t, testCandidate, testCandidateLine, digest, testTarballDigest)
+			f["gate-verdict"] = writeVerdictMap(t, verdictFor(testCandidate, digest), nil)
+			return []string{"candidate"}
+		}, "STOP fence=binary reason=version-mismatch"},
+		{"binary whose version probe fails", func(t *testing.T, f map[string]string) []string {
+			bin, digest := writeScript(t, "#!/bin/sh\nexit 7\n")
+			f["binary"] = bin
+			f[testManifestKey] = writeTestManifestFor(t, testCandidate, testCandidateLine, digest, testTarballDigest)
+			f["gate-verdict"] = writeVerdictMap(t, verdictFor(testCandidate, digest), nil)
+			return []string{"candidate"}
+		}, "STOP fence=binary reason=version-probe-failed"},
 		{"no release flag", func(t *testing.T, f map[string]string) []string { delete(f, "release"); return []string{"candidate"} },
 			"STOP fence=release reason=absent"},
 		{"no mode", func(t *testing.T, f map[string]string) []string { return nil }, "STOP fence=mode reason=none"},
@@ -299,8 +377,102 @@ func TestEpochNominateRefusals(t *testing.T) {
 	f := nominateFixture(t)
 	f["release"] = "v0.98.9"
 	res := driveNominate(t, nominateInv(f, "candidate"), "", noEnv, noTTYProbe(t))
-	if !strings.Contains(res.stderr, f["release-manifest"]) {
-		t.Fatalf("unknown release refusal %q does not name the manifest %s", res.stderr, f["release-manifest"])
+	if !strings.Contains(res.stderr, f[testManifestKey]) {
+		t.Fatalf("unknown release refusal %q does not name the manifest %s", res.stderr, f[testManifestKey])
+	}
+}
+
+// Judge r1 B1: no flag can name another manifest. --release-manifest (and any
+// other spelling) is an unknown flag: usage, nothing written.
+func TestEpochNominateHasNoManifestFlag(t *testing.T) {
+	f := nominateFixture(t)
+	for _, name := range []string{"release-manifest", "manifest-file", "pins"} {
+		inv := nominateInv(map[string]string{"store": f["store"], "release": testCandidate, "binary": f["binary"],
+			"gate-verdict": f["gate-verdict"], name: f[testManifestKey]}, "candidate")
+		res := driveNominate(t, inv, "", noEnv, noTTYProbe(t))
+		if res.code != exitUsage || !strings.Contains(res.stderr, "flag provided but not defined: -"+name) {
+			t.Fatalf("--%s = (%d, %q), want usage: flag not defined", name, res.code, res.stderr)
+		}
+	}
+	// --manifest exists (it is the transitions descriptor manifest) but is NOT
+	// read by epoch nominate: naming the test manifest there changes nothing,
+	// the compiled-in manifest still refuses the test release.
+	inv := nominateInv(map[string]string{"store": f["store"], "release": testCandidate, "binary": f["binary"],
+		"gate-verdict": f["gate-verdict"], "manifest": f[testManifestKey]}, "candidate")
+	res := driveNominate(t, inv, "", noEnv, noTTYProbe(t))
+	if res.code != exitStop || !strings.Contains(res.stderr, "pins/ailang-releases.json (compiled in)") {
+		t.Fatalf("--manifest = (%d, %q), want the compiled-in manifest's unknown-release STOP", res.code, res.stderr)
+	}
+	for _, name := range flagNames {
+		if strings.Contains(name, "release-manifest") {
+			t.Fatalf("frozen flag surface names %q", name)
+		}
+	}
+	if reg := storeRegistry(t, f["store"]); len(reg.Epochs[0].Candidates) != 1 {
+		t.Fatalf("a refused nomination wrote: %+v", reg.Epochs)
+	}
+}
+
+// Through argv (the COMPILED-IN manifest), against a release the compiled
+// manifest really lists — the interpreter release, served by AILANG_BIN:
+//   - a verdict whose digests differ from the compiled manifest is refused;
+//   - a FORGED verdict echoing the compiled digests, with a binary that is
+//     not the release's bytes, is refused at --binary;
+//   - CONTROL: the real pinned binary with that verdict nominates.
+func TestEpochNominateAgainstTheCompiledManifest(t *testing.T) {
+	pin := os.Getenv("AILANG_BIN")
+	if pin == "" {
+		t.Fatal("AILANG_BIN unset: the compiled-manifest control needs the pinned released interpreter; never skip")
+	}
+	rel := pins.ReleaseFor(pins.RoleInterpreter)
+	asset, ok := rel.Assets[hostPlatform]
+	if !ok {
+		t.Fatalf("the compiled manifest has no %s asset for %s", hostPlatform, rel.Release)
+	}
+	compiled := verdictFor(rel.Release, asset.BinarySHA256)
+	compiled["tarball_sha256"] = asset.TarballSHA256
+	fresh := func() string {
+		storePath := filepath.Join(t.TempDir(), "world.db")
+		bootstrapEpochRegistry(t, storePath, testBaseLine)
+		return storePath
+	}
+	forged, _ := writeScript(t, fakeScript(rel.Version))
+
+	for _, c := range []struct {
+		name, binary string
+		mutate       func(map[string]any)
+		want         string
+	}{
+		{"verdict digests differ from the compiled manifest", pin,
+			func(v map[string]any) { v["binary_sha256"] = strings.Repeat("ef", 32) }, "STOP fence=verdict reason=digest-mismatch"},
+		{"tarball digest differs from the compiled manifest", pin,
+			func(v map[string]any) { v["tarball_sha256"] = strings.Repeat("ef", 32) }, "STOP fence=verdict reason=digest-mismatch"},
+		{"forged verdict, binary not the release's bytes", forged, nil, "STOP fence=binary reason=digest-mismatch"},
+	} {
+		storePath := fresh()
+		v := map[string]any{}
+		for k, x := range compiled {
+			v[k] = x
+		}
+		inv := nominateInv(map[string]string{"store": storePath, "release": rel.Release, "binary": c.binary,
+			"gate-verdict": writeVerdictMap(t, v, c.mutate)}, "candidate")
+		res := driveNominate(t, inv, "", noEnv, noTTYProbe(t))
+		if res.code != exitStop || !strings.Contains(res.stderr, c.want) {
+			t.Fatalf("%s = (%d, %q), want %q", c.name, res.code, res.stderr, c.want)
+		}
+		if reg := storeRegistry(t, storePath); len(reg.Epochs[0].Candidates) != 1 {
+			t.Fatalf("%s wrote: %+v", c.name, reg.Epochs)
+		}
+	}
+	storePath := fresh()
+	inv := nominateInv(map[string]string{"store": storePath, "release": rel.Release, "binary": pin,
+		"gate-verdict": writeVerdictMap(t, compiled, nil)}, "candidate")
+	res := driveNominate(t, inv, "", noEnv, noTTYProbe(t))
+	if res.code != exitOK {
+		t.Fatalf("control: real pin through argv = (%d, %q), want exit 0", res.code, res.stderr)
+	}
+	if reg := storeRegistry(t, storePath); fmt.Sprint(reg.Epochs[0].Candidates) != fmt.Sprint([]string{testBaseLine, rel.Version}) {
+		t.Fatalf("control registry = %+v", reg.Epochs)
 	}
 }
 

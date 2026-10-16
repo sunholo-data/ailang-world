@@ -301,13 +301,13 @@ func TestBootstrapOnExistingHeadAdmitsNominatedReleases(t *testing.T) {
 }
 
 func TestNominateCommand(t *testing.T) {
-	got, ok := NominateCommand("/w/world.db", "AILANG v0.99.1")
-	want := "world-publish epoch nominate --store /w/world.db --release v0.99.1 --candidate --gate-verdict <verdict.json>"
+	got, ok := NominateCommand("/w/world.db", "AILANG v0.99.1", "/bin/ailang")
+	want := "world-publish epoch nominate --store /w/world.db --release v0.99.1 --candidate --gate-verdict <verdict.json> --binary /bin/ailang"
 	if !ok || got != want {
 		t.Fatalf("NominateCommand = %q %v, want %q", got, ok, want)
 	}
 	for _, line := range []string{"unpinned", "AILANG v0.99.1-3-gabc-dirty", "v0.99.1", ""} {
-		if _, ok := NominateCommand("/w", line); ok {
+		if _, ok := NominateCommand("/w", line, "/bin/ailang"); ok {
 			t.Errorf("NominateCommand accepted %q", line)
 		}
 	}

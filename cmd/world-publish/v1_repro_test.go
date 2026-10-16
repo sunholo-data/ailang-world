@@ -74,17 +74,20 @@ func TestV1ReproductionRestartOnANominatedCandidate(t *testing.T) {
 	// 2. V1 as measured: the candidate is refused at registry-bootstrap, now
 	//    with the exact command to run.
 	err = serve(candidate)
-	cmd, _ := registry.NominateCommand(db, line)
+	cmd, _ := registry.NominateCommand(db, line, candidate)
 	if err == nil || !strings.Contains(err.Error(), "registry-bootstrap") || !strings.Contains(err.Error(), cmd) {
 		t.Fatalf("un-nominated restart = %v, want a registry-bootstrap refusal carrying %q", err, cmd)
 	}
 	t.Logf("V1 refusal: %v", err)
 
-	// 3. The loop's nomination: headless, verdict + test-manifest row.
+	// 3. The loop's nomination: headless, verdict + --binary, against a
+	//    test-manifest row reached only through the runEpochNominateWith seam
+	//    (production argv uses the compiled-in manifest, which has no row for
+	//    the candidate yet).
 	tarball := strings.Repeat("cd", 32)
 	flags := map[string]string{
-		"store": db, "release": release,
-		"release-manifest": writeTestManifestFor(t, release, line, binaryDigest, tarball),
+		"store": db, "release": release, "binary": candidate,
+		testManifestKey: writeTestManifestFor(t, release, line, binaryDigest, tarball),
 		"gate-verdict": writeVerdict(t, func(v map[string]any) {
 			v["release"], v["binary_sha256"], v["tarball_sha256"] = release, binaryDigest, tarball
 		}),

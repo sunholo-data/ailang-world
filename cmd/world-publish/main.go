@@ -109,11 +109,11 @@ type options struct {
 	live           bool
 	probe          bool
 	// epoch nominate (row 139 D2)
-	release         string
-	gateVerdict     string
-	releaseManifest string
-	candidate       bool
-	newEpoch        bool
+	release     string
+	gateVerdict string
+	binary      string
+	candidate   bool
+	newEpoch    bool
 }
 
 // flagNames is the FROZEN flag surface, stated once and INDEPENDENTLY of the
@@ -128,6 +128,7 @@ type options struct {
 var flagNames = []string{
 	"ailang-bin",
 	"approval-ref",
+	"binary",
 	"candidate",
 	"credential-file",
 	"decided-by",
@@ -146,7 +147,6 @@ var flagNames = []string{
 	"publisher",
 	"registry-origin",
 	"release",
-	"release-manifest",
 	"requester",
 	"store",
 }
@@ -180,7 +180,9 @@ func newFlagSet(opts *options) *flag.FlagSet {
 	fs.StringVar(&opts.ailangBin, "ailang-bin", "", "transitions: interpreter binary to archive now, as the daemon does at startup")
 	fs.StringVar(&opts.release, "release", "", "epoch nominate: the AILANG release to nominate (vX.Y.Z)")
 	fs.StringVar(&opts.gateVerdict, "gate-verdict", "", "epoch nominate: the release's compatibility-gate verdict ("+pins.VerdictSchema+")")
-	fs.StringVar(&opts.releaseManifest, "release-manifest", "", "epoch nominate: release manifest file (default: the compiled-in pins/ailang-releases.json)")
+	// NO manifest flag: the compiled-in pins/ailang-releases.json is the only
+	// trust anchor a nomination may use (row 139 M2 judge r1).
+	fs.StringVar(&opts.binary, "binary", "", "epoch nominate: the release's ailang binary, hashed against the compiled-in release manifest")
 	fs.BoolVar(&opts.candidate, "candidate", false, "epoch nominate: add the release to the CURRENT epoch (goldens byte-identical; headless-permitted)")
 	fs.BoolVar(&opts.newEpoch, "new-epoch", false, "epoch nominate: open epoch N+1 for the release (ATTENDED: typed phrase on /dev/tty)")
 	return fs
@@ -195,7 +197,7 @@ const usageText = `world-publish — the attended entrypoint for an IRREVERSIBLE
   world-publish reconcile  --store S [--registry-origin O] [--probe]
   world-publish transitions --store S --manifest M (--ailang-bin B | --interpreter-ref R)  [local registry write]
   world-publish epoch nominate --store S --release vX.Y.Z (--candidate | --new-epoch) --gate-verdict V
-                           [--release-manifest F]  [local epoch-registry write; --new-epoch is ATTENDED]
+                           --binary B  [local epoch-registry write; --new-epoch is ATTENDED]
 
 Exit codes: 0 done · 1 failed · 2 usage · 3 STOP (a fence refused; nothing happened)
 `

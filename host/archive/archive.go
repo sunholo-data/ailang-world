@@ -450,6 +450,15 @@ func (a *Archive) writeManifest(ref hashref.HashRef, m Manifest) error {
 	return nil
 }
 
+// ProbeVersion is probeVersion for a binary that is not (yet) archived: the
+// same bounded, scrubbed `--version` launch (the same exec site, so the AC10
+// driver of probeVersion covers it), under the package's probeTimeout.
+// Row 139 M2: `world-publish epoch nominate --binary` checks a release's
+// version line through it rather than owning a subprocess site of its own.
+func ProbeVersion(execPath string) (string, error) {
+	return (&Archive{probeTimeout: probeTimeout}).probeVersion(execPath)
+}
+
 // probeVersion runs "<execPath> --version" under a.probeTimeout and returns its
 // STDOUT verbatim (trailing whitespace preserved as emitted by the
 // interpreter). stderr is captured separately and never joins the returned

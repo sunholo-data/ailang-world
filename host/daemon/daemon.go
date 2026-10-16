@@ -817,7 +817,7 @@ func (d *Daemon) bootstrapRegistry(ctx context.Context, release string) error {
 		if errors.As(err, &notNominated) {
 			detail = fmt.Sprintf("the store's %s (head %s: %s) nominates the served interpreter release %q in no epoch",
 				registry.SemanticID, notNominated.Head, notNominated.Registry.Summary(), release)
-			if cmd, ok := registry.NominateCommand(d.cfg.DBPath, release); ok {
+			if cmd, ok := registry.NominateCommand(d.cfg.DBPath, release, d.cfg.AilangBin); ok {
 				detail += "; nominate it after its compatibility gate passes (stop this daemon first): " + cmd
 			} else {
 				detail += "; serve it with --ailang-bin naming a nominated release (" + notNominated.Registry.Summary() + ")"

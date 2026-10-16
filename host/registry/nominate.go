@@ -66,17 +66,19 @@ func (e *NotNominatedError) Error() string {
 
 // NominateCommand is the exact operator command that would let a store at
 // storePath start on the interpreter whose first `--version` line is
-// servedRelease ("AILANG vX.Y.Z"): a CANDIDATE nomination (D-WORLD-78 = a,
-// the loop may run it) backed by the release's compatibility-gate verdict.
-// A served release that is not a manifest-shaped release ("unpinned", a dev
-// build) has no nomination: ok is false.
-func NominateCommand(storePath, servedRelease string) (string, bool) {
+// servedRelease ("AILANG vX.Y.Z") and whose binary is binPath: a CANDIDATE
+// nomination (D-WORLD-78 = a, the loop may run it) backed by the release's
+// compatibility-gate verdict and the binary itself (hashed against the
+// compiled-in release manifest). A served release that is not a
+// manifest-shaped release ("unpinned", a dev build) has no nomination: ok is
+// false.
+func NominateCommand(storePath, servedRelease, binPath string) (string, bool) {
 	rel, ok := pins.ReleaseOfVersionLine(servedRelease)
 	if !ok {
 		return "", false
 	}
-	return fmt.Sprintf("world-publish epoch nominate --store %s --release %s --candidate --gate-verdict <verdict.json>",
-		storePath, rel), true
+	return fmt.Sprintf("world-publish epoch nominate --store %s --release %s --candidate --gate-verdict <verdict.json> --binary %s",
+		storePath, rel, binPath), true
 }
 
 // AlreadyNominatedError refuses a nomination of a release some epoch already
