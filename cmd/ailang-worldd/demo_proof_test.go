@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -154,9 +156,6 @@ func freshProofKey(t *testing.T) [32]byte {
 	t.Helper()
 	var k [32]byte
 	if _, err := rand.Read(k[:]); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(t.TempDir(), "proof.key"), k[:], 0o600); err != nil {
 		t.Fatal(err)
 	}
 	return k
@@ -802,9 +801,7 @@ func TestDemoProofUncertainCommitStops(t *testing.T) {
 			if store.IsUncertain(err) != (mode != "safe-refusal") {
 				t.Fatalf("uncertain outcome must survive demo error wrapping: %v", err)
 			}
-			if strings.Contains(err.Error(), string(key[:])) {
-				t.Fatal("error disclosed key bytes")
-			}
+			assertDemoProofKeyPrivate(t, map[string]string{"returned-error": err.Error()}, key[:])
 			after, _ := proofHeadEntry(t, ctx, c)
 			_, payload, readErr := (demoProofReader{c: c}).ReadObject(ctx, rt.object.Hash, evidence.MaxBytes)
 			if readErr != nil {
@@ -906,6 +903,50 @@ func TestDemoProofKeyIORefusals(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), "proof key: "+arm+":") || got != [32]byte{} {
 				t.Fatalf("key %s error must refuse without bytes: err=%v zero=%v", arm, err, got == [32]byte{})
 			}
+		})
+	}
+}
+
+// assertDemoProofKeyPrivate checks each surface separately, including encodings
+// of both the operator key and malformed key-file contents.
+func assertDemoProofKeyPrivate(t *testing.T, surfaces map[string]string, keys ...[]byte) {
+	t.Helper()
+	for _, key := range keys {
+		if len(key) == 0 {
+			continue
+		}
+		forms := map[string]string{
+			"raw":            string(key),
+			"hex-lower":      hex.EncodeToString(key),
+			"hex-upper":      strings.ToUpper(hex.EncodeToString(key)),
+			"base64-std":     base64.StdEncoding.EncodeToString(key),
+			"base64-raw-url": base64.RawURLEncoding.EncodeToString(key),
+		}
+		for surface, text := range surfaces {
+			for encoding, secret := range forms {
+				if strings.Contains(text, secret) {
+					t.Fatalf("seed-key-disclosure: %s contains %s key", surface, encoding)
+				}
+			}
+		}
+	}
+}
+
+func TestDemoProofKeyDisclosure(t *testing.T) {
+	key := freshProofKey(t)
+	for _, size := range []int{31, 33} {
+		t.Run(fmt.Sprint(size), func(t *testing.T) {
+			raw := append(append([]byte(nil), key[:]...), key[0])[:size]
+			path := filepath.Join(t.TempDir(), "operator.key")
+			if err := os.WriteFile(path, raw, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			// Invalid lengths must stop before a reader/writer can use this nil client.
+			_, err := demoSeedProof(context.Background(), nil, "", daemon.HealthResponse{}, path, hashref.HashRef{})
+			if err == nil {
+				t.Fatal("seed-key-disclosure: malformed key must return an error")
+			}
+			assertDemoProofKeyPrivate(t, map[string]string{"returned-error": err.Error()}, key[:], raw)
 		})
 	}
 }

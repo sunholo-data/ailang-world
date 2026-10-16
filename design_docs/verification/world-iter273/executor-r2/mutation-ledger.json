@@ -1,0 +1,217 @@
+{
+  "iteration": 273,
+  "round": "r2",
+  "base_head": "72bd59a",
+  "mutations": [
+    {
+      "id": "required-identities-call-drop-servesEntry",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "before": "h, key, source, demoSeedRequiredIdentities)",
+      "after": "h, key, source, []string{\"sameRef\"})",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedProofStage$/^success$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "named_assertion": "seed-required-identities:",
+      "original_sha256": "903962ca5fbb4794c1468870c8933f0e08b332cae7b6ca353eddce7c95d2c128",
+      "red_rc": 1,
+      "red_log": "required-identities-call-drop-servesEntry-red.log",
+      "failure_lines": [
+        "    demo_test.go:966: seed-required-identities: S4 must require exactly [sameRef servesEntry]; configured=[sameRef servesEntry] actual=[sameRef]"
+      ],
+      "killed_at_named_assertion": true,
+      "restored_byte_identical": true,
+      "green_rc": 0,
+      "green_log": "required-identities-call-drop-servesEntry-green.log",
+      "green_top_level_pass_lines": [
+        "--- PASS: TestDemoSeedProofStage (4.27s)"
+      ],
+      "green_no_skip": true,
+      "elapsed_seconds": 10.21,
+      "confirmed": true
+    },
+    {
+      "id": "required-identities-config-drop-servesEntry",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "before": "var demoSeedRequiredIdentities = []string{\"sameRef\", \"servesEntry\"}",
+      "after": "var demoSeedRequiredIdentities = []string{\"sameRef\"}",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedRequiredIdentities$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "named_assertion": "seed-required-identities:",
+      "original_sha256": "903962ca5fbb4794c1468870c8933f0e08b332cae7b6ca353eddce7c95d2c128",
+      "red_rc": 1,
+      "red_log": "required-identities-config-drop-servesEntry-red.log",
+      "failure_lines": [
+        "    demo_test.go:1086: seed-required-identities: seed configuration must equal [sameRef servesEntry]; got [sameRef]"
+      ],
+      "killed_at_named_assertion": true,
+      "restored_byte_identical": true,
+      "green_rc": 0,
+      "green_log": "required-identities-config-drop-servesEntry-green.log",
+      "green_top_level_pass_lines": [
+        "--- PASS: TestDemoSeedRequiredIdentities (0.00s)"
+      ],
+      "green_no_skip": true,
+      "elapsed_seconds": 1.7,
+      "confirmed": true
+    },
+    {
+      "id": "seed-client-without-timeouts",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "before": "c := demoProofClient(o.addr)",
+      "after": "c := newClient(o.addr)",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedProofStage$/^success$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "named_assertion": "seed-s4-http-bounds:",
+      "original_sha256": "903962ca5fbb4794c1468870c8933f0e08b332cae7b6ca353eddce7c95d2c128",
+      "red_rc": 1,
+      "red_log": "seed-client-without-timeouts-red.log",
+      "failure_lines": [
+        "    demo_test.go:977: seed-s4-http-bounds: both adapters need 10s context/client bounds; got 30s/0s"
+      ],
+      "killed_at_named_assertion": true,
+      "restored_byte_identical": true,
+      "green_rc": 0,
+      "green_log": "seed-client-without-timeouts-green.log",
+      "green_top_level_pass_lines": [
+        "--- PASS: TestDemoSeedProofStage (4.32s)"
+      ],
+      "green_no_skip": true,
+      "elapsed_seconds": 10.32,
+      "confirmed": true
+    },
+    {
+      "id": "seed-client-without-http-client-timeout",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "before": "c := demoProofClient(o.addr)",
+      "after": "c := newClient(o.addr)\n\tc.timeout = demoProofHTTPTimeout",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedProofStage$/^success$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "named_assertion": "seed-s4-http-bounds:",
+      "original_sha256": "903962ca5fbb4794c1468870c8933f0e08b332cae7b6ca353eddce7c95d2c128",
+      "red_rc": 1,
+      "red_log": "seed-client-without-http-client-timeout-red.log",
+      "failure_lines": [
+        "    demo_test.go:977: seed-s4-http-bounds: both adapters need 10s context/client bounds; got 10s/0s"
+      ],
+      "killed_at_named_assertion": true,
+      "restored_byte_identical": true,
+      "green_rc": 0,
+      "green_log": "seed-client-without-http-client-timeout-green.log",
+      "green_top_level_pass_lines": [
+        "--- PASS: TestDemoSeedProofStage (4.31s)"
+      ],
+      "green_no_skip": true,
+      "elapsed_seconds": 10.32,
+      "confirmed": true
+    },
+    {
+      "id": "seed-client-without-request-context-timeout",
+      "file": "cmd/ailang-worldd/demo_seed.go",
+      "before": "c := demoProofClient(o.addr)",
+      "after": "c := newClient(o.addr)\n\tc.http.Timeout = demoProofHTTPTimeout",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemoSeedProofStage$/^success$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "named_assertion": "seed-s4-http-bounds:",
+      "original_sha256": "903962ca5fbb4794c1468870c8933f0e08b332cae7b6ca353eddce7c95d2c128",
+      "red_rc": 1,
+      "red_log": "seed-client-without-request-context-timeout-red.log",
+      "failure_lines": [
+        "    demo_test.go:977: seed-s4-http-bounds: both adapters need 10s context/client bounds; got 30s/10s"
+      ],
+      "killed_at_named_assertion": true,
+      "restored_byte_identical": true,
+      "green_rc": 0,
+      "green_log": "seed-client-without-request-context-timeout-green.log",
+      "green_top_level_pass_lines": [
+        "--- PASS: TestDemoSeedProofStage (4.30s)"
+      ],
+      "green_no_skip": true,
+      "elapsed_seconds": 10.3,
+      "confirmed": true
+    },
+    {
+      "id": "key-hex-leaked-in-error",
+      "file": "cmd/ailang-worldd/demo_proof.go",
+      "before": "fmt.Errorf(\"proof key: holds %d bytes; expected exactly 32\", len(raw))",
+      "after": "fmt.Errorf(\"proof key: holds %d bytes; expected exactly 32; key=%x\", len(raw), raw)",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "^TestDemo(ProofKeyDisclosure|SeedProofStage)$/^(31|short)$",
+        "./cmd/ailang-worldd",
+        "-count=1",
+        "-timeout",
+        "120s",
+        "-v"
+      ],
+      "named_assertion": "seed-key-disclosure:",
+      "original_sha256": "9c0b1f8f474cda2e2db2534c427aad94a95db0c98fc05140a43dd80f11ed4f6b",
+      "red_rc": 1,
+      "red_log": "key-hex-leaked-in-error-red.log",
+      "failure_lines": [
+        "    demo_proof_test.go:949: seed-key-disclosure: returned-error contains hex-lower key",
+        "    demo_test.go:1011: seed-key-disclosure: stderr contains hex-lower key"
+      ],
+      "killed_at_named_assertion": true,
+      "restored_byte_identical": true,
+      "green_rc": 0,
+      "green_log": "key-hex-leaked-in-error-green.log",
+      "green_top_level_pass_lines": [
+        "--- PASS: TestDemoProofKeyDisclosure (0.00s)",
+        "--- PASS: TestDemoSeedProofStage (4.12s)"
+      ],
+      "green_no_skip": true,
+      "elapsed_seconds": 9.96,
+      "confirmed": true
+    }
+  ],
+  "hygiene": {
+    "change": "Removed unused freshProofKey TempDir/proof.key write; retained operator.key writes read by demoSeedProof and proof.key writes read by Stat/loader.",
+    "validation": "Inspection plus final TestDemo gate; no hygiene mutant was specified."
+  }
+}

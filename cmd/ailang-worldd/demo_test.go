@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -859,9 +861,13 @@ func TestDemoSeedToolGuardControls(t *testing.T) {
 // real S1 commits, published se-tools S2/S3, and the production S4 adapters.
 func TestDemoSeedProofStage(t *testing.T) {
 	interp := requireProofPin(t)
-	tool := os.Getenv("WORLD_TOOL_AILANG_BIN")
+	tool := os.Getenv(toolBinEnvVar)
 	if tool == "" {
-		t.Fatal("WORLD_TOOL_AILANG_BIN required; S4 integration cannot skip")
+		// Same environment gate as every published-se-tools test (cliSeBins):
+		// CI does not provision the v0.52.1 tool pin, so this skips there and
+		// the pin-free S4 controls (TestDemoProof*, TestDemoSeedRequiredIdentities)
+		// carry CI coverage. A configured wrong version still fails below.
+		t.Skipf("S4 seed integration composes published se-tools S2/S3 and needs %s (%s); unset, skipping", toolBinEnvVar, daemon.ToolBinaryRelease)
 	}
 	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
 	for _, arm := range []string{"success", "missing", "directory", "short", "long", "safe-refusal", "lost-response-after-commit"} {
@@ -952,14 +958,68 @@ func TestDemoSeedProofStage(t *testing.T) {
 			defer proxy.Close()
 			options := &demoTestRig{addr: proxy.URL}
 			args := []string{"demo", "seed", "--db", r.db, "--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest}
+			// Observe the actual seed call, then delegate unchanged to the real producer.
+			produce := demoSeedProve
+			defer func() { demoSeedProve = produce }()
+			proofCalls, readerRequests, writerRequests := 0, 0, 0
+			demoSeedProve = func(ctx context.Context, reader evidence.ObjectReader, writer evidence.ObjectWriter, h daemon.HealthResponse, key [32]byte, source hashref.HashRef, required []string) (hashref.HashRef, error) {
+				proofCalls++
+				t.Run("required-identities", func(t *testing.T) {
+					want := []string{"sameRef", "servesEntry"}
+					if !slices.Equal(demoSeedRequiredIdentities, want) || !slices.Equal(required, want) {
+						t.Fatalf("seed-required-identities: S4 must require exactly [sameRef servesEntry]; configured=%v actual=%v", demoSeedRequiredIdentities, required)
+					}
+				})
+				r, rok := reader.(demoProofReader)
+				w, wok := writer.(demoProofWriter)
+				t.Run("http-bounds", func(t *testing.T) {
+					if !rok || !wok || r.c == nil || w.c == nil {
+						t.Fatal("seed-s4-http-bounds: seed must construct real REST adapters")
+					}
+					for _, c := range []*client{r.c, w.c} {
+						if c.timeout != demoProofHTTPTimeout || c.http.Timeout != demoProofHTTPTimeout {
+							t.Fatalf("seed-s4-http-bounds: both adapters need 10s context/client bounds; got %s/%s", c.timeout, c.http.Timeout)
+						}
+					}
+				})
+				// Check the contexts at the transport too, for both source reads and
+				// the envelope write. Preserve the seed's original forwarding transport.
+				clients := []*client{r.c}
+				if w.c != r.c {
+					clients = append(clients, w.c)
+				}
+				for _, c := range clients {
+					transport := c.http.Transport
+					if transport == nil {
+						transport = http.DefaultTransport
+					}
+					c.http.Transport = scriptRT(func(req *http.Request) (*http.Response, error) {
+						deadline, ok := req.Context().Deadline()
+						if !ok || time.Until(deadline) > demoProofHTTPTimeout || time.Until(deadline) < demoProofHTTPTimeout-time.Second {
+							t.Error("seed-s4-request-context: actual REST request must carry the 10s deadline")
+						}
+						if req.Method == http.MethodGet && strings.HasPrefix(req.URL.Path, "/v1/objects/") {
+							readerRequests++
+						}
+						if req.Method == http.MethodPost && req.URL.Path == "/v1/commit" {
+							writerRequests++
+						}
+						return transport.RoundTrip(req)
+					})
+				}
+				return produce(ctx, reader, writer, h, key, source, required)
+			}
 			code, out, errOut := demoRun(t, options, args)
 			proxyMu.Lock()
 			defer proxyMu.Unlock()
+			assertDemoProofKeyPrivate(t, map[string]string{
+				"stdout": out, "stderr": errOut, "manifest-path": manifest,
+			}, key[:], raw)
+			if contents, err := os.ReadFile(manifest); err == nil {
+				assertDemoProofKeyPrivate(t, map[string]string{"manifest-contents": string(contents)}, key[:], raw)
+			}
 			if code != exitUsage || out != "" {
 				t.Fatalf("seed must refuse completion without stdout: code=%d stdout=%q stderr=%q", code, out, errOut)
-			}
-			if strings.Contains(out+errOut, string(key[:])) || (len(raw) > 0 && strings.Contains(out+errOut, string(raw))) {
-				t.Fatal("seed disclosed key bytes")
 			}
 			if _, err := os.Stat(manifest); !os.IsNotExist(err) {
 				t.Fatal("seed through S4 must never create a success manifest")
@@ -983,9 +1043,25 @@ func TestDemoSeedProofStage(t *testing.T) {
 				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S4 recorded; S5-S6 incomplete; no success manifest written") {
 					t.Fatalf("seed must record exactly one S4 envelope and refuse S5/S6 completion: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
 				}
+				if proofCalls != 1 || readerRequests == 0 || writerRequests != 1 {
+					t.Fatalf("seed-s4-observed: need one real producer call with bounded reads and write; calls=%d reads=%d writes=%d", proofCalls, readerRequests, writerRequests)
+				}
 				source := demoProofSource(t)
 				h := proofHealth(t, ctx, c)
+				// This validator requires both identities, as --proof-required-identity does.
 				requireDemoProven(t, ctx, proofValidator(t, c, h, key), envelopes[0], hashref.SumSHA256(source))
+				_, payload, err := (demoProofReader{c: c}).ReadObject(ctx, envelopes[0], evidence.MaxBytes)
+				if err != nil {
+					t.Fatal(err)
+				}
+				envelope, err := evidence.DecodeAuthenticatedEnvelope(payload)
+				if err != nil {
+					t.Fatal(err)
+				}
+				report, err := evidence.DecodeProofReportV1(envelope.Report)
+				if err != nil || !slices.Contains(report.Verified, "sameRef") || !slices.Contains(report.Verified, "servesEntry") {
+					t.Fatalf("seed-verified-identities: envelope must verify both sameRef and servesEntry; got %v err=%v", report.Verified, err)
+				}
 			} else if arm == "safe-refusal" || arm == "lost-response-after-commit" {
 				wantEnvelopes := 0
 				if arm == "lost-response-after-commit" {
@@ -1006,5 +1082,11 @@ func TestDemoSeedProofStage(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestDemoSeedRequiredIdentities(t *testing.T) {
+	if !slices.Equal(demoSeedRequiredIdentities, []string{"sameRef", "servesEntry"}) {
+		t.Fatalf("seed-required-identities: seed configuration must equal [sameRef servesEntry]; got %v", demoSeedRequiredIdentities)
 	}
 }

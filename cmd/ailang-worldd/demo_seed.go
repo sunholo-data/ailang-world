@@ -231,12 +231,18 @@ func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
 	return err
 }
 
+// demoSeedProve forwards to the real producer. The seed integration control
+// observes the constructed adapters here because HTTP cannot expose client settings.
+var demoSeedProve = demoProve
+
+var demoSeedRequiredIdentities = []string{"sameRef", "servesEntry"}
+
 func demoSeedProof(ctx context.Context, c *client, token string, h daemon.HealthResponse, keyPath string, source hashref.HashRef) (hashref.HashRef, error) {
 	key, err := demoLoadProofKey(keyPath)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("S1-S3 recorded; S4 key refused: %w; no success manifest written", err)
 	}
-	ref, err := demoProve(ctx, demoProofReader{c: c}, demoProofWriter{c: c, token: token, interpreter: h.InterpreterRef}, h, key, source, []string{"sameRef", "servesEntry"})
+	ref, err := demoSeedProve(ctx, demoProofReader{c: c}, demoProofWriter{c: c, token: token, interpreter: h.InterpreterRef}, h, key, source, demoSeedRequiredIdentities)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("S1-S3 recorded; S4 refused: %w; stop and inspect history; never retry or reseed; no success manifest written", err)
 	}
