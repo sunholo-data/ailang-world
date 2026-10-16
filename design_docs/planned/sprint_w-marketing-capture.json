@@ -835,7 +835,7 @@
         "cmd/ailang-worldd/demo_test.go",
         "docs/QUICKSTART.md"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestDemoSeedReadTestCheck",
         "TestDemoSeedRejectsToolReportRefusals"

@@ -336,7 +336,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M2b — Real read and tool test/check invocation stages
 
-Design M2; 28 minutes; dependency: M2a; status **pending**.
+Design M2; 28 minutes; dependency: M2a; status **completed** (iteration 271, `07d1d9f`).
 
 Exact executor files:
 
