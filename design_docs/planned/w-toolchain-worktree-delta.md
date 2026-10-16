@@ -1,6 +1,6 @@
 # w-toolchain-worktree-delta — record the worktree changes a toolchain call makes (row 184, clause 5) — r1
 
-**Status:** r1 draft, attended 2026-10-16 (Mark attending: "yes fix them up first", after row 114 Q3 finding
+**Status:** r1 — **RATIFIED by Mark Edmondson, attended 2026-10-16; D-184-1 = git-status basis** (Mark attending: "yes fix them up first", after row 114 Q3 finding
 F-4). Ratification is Mark's.
 
 ## §1 Problem (measured)
