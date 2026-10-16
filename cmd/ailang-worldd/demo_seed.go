@@ -12,14 +12,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-
-	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"strings"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -664,6 +663,7 @@ type demoManifestRef struct {
 	Index int64  `json:"index,omitempty"`
 }
 type demoManifestWhy struct {
+	Role   string `json:"role"`
 	Entry  int64  `json:"entry"`
 	SHA256 string `json:"sha256"`
 }
@@ -706,7 +706,7 @@ func demoAssembleManifest(r worldReader, objects []demoObject, runs []demoToolRu
 	for _, pair := range []struct{ role, ref string }{{"packet", packet}, {"request", request}, {"proposal", proposal}} {
 		add(pair.role, "object", pair.ref, 0)
 	}
-	for _, run := range runs {
+	for i, run := range runs {
 		ch, raw, err := demoWhy(r, run.EntryIndex)
 		if err != nil {
 			return m, err
@@ -714,7 +714,7 @@ func demoAssembleManifest(r worldReader, objects []demoObject, runs []demoToolRu
 		if err := demoValidateWhy(ch); err != nil {
 			return m, err
 		}
-		m.Why = append(m.Why, demoManifestWhy{run.EntryIndex, sum(raw)})
+		m.Why = append(m.Why, demoManifestWhy{[]string{"read", "test", "check", "approval"}[i], run.EntryIndex, sum(raw)})
 		e, _, err := r.entry(run.EntryIndex)
 		if err != nil {
 			return m, err
@@ -723,16 +723,16 @@ func demoAssembleManifest(r worldReader, objects []demoObject, runs []demoToolRu
 		if err != nil {
 			return m, err
 		}
-		add("invocation", "object", e.TransitionRef, 0)
-		add("transition", "object", rec.TransitionFn, 0)
-		add("interpreter", "pin", rec.Interpreter, 0)
+		add("invocation", "object", e.TransitionRef, run.EntryIndex)
+		add("transition", "object", rec.TransitionFn, run.EntryIndex)
+		add("interpreter", "pin", rec.Interpreter, run.EntryIndex)
 		for _, link := range ch.Links {
 			if link.Name != "entry" {
 				kind := "object"
 				if link.Name == "world" {
 					kind = "world"
 				}
-				add(link.Name, kind, link.Ref, 0)
+				add(link.Name, kind, link.Ref, run.EntryIndex)
 			}
 		}
 		for _, ref := range rec.Effects {
@@ -744,9 +744,9 @@ func demoAssembleManifest(r worldReader, objects []demoObject, runs []demoToolRu
 			if err != nil {
 				return m, err
 			}
-			add("effect-request", "object", fx.RequestRef.String(), 0)
+			add("effect-request", "object", fx.RequestRef.String(), run.EntryIndex)
 			if !fx.ResultRef.IsZero() {
-				add("effect-result", "object", fx.ResultRef.String(), 0)
+				add("effect-result", "object", fx.ResultRef.String(), run.EntryIndex)
 			}
 		}
 	}
@@ -815,6 +815,111 @@ func demoValidateManifest(r worldReader, m demoPublicManifest, token string) err
 		}
 		if sum(raw) != w.SHA256 { // M4b why-hash
 			return fmt.Errorf("entry %d: why raw JSON hash mismatch", w.Entry)
+		}
+	}
+	if err := demoManifestCompleteness(r, m); err != nil { // M4b manifest-completeness
+		return err
+	}
+	return nil
+}
+
+// Required singleton roles and per-run references are checked independently of
+// assembly. Matching the actual invocation/effects prevents one run's refs from
+// standing in for another's, even when their content hashes happen to coincide.
+func demoManifestCompleteness(r worldReader, m demoPublicManifest) error {
+	counts := map[string]int{}
+	for _, ref := range m.References {
+		counts[ref.Role]++
+	}
+	for _, role := range strings.Fields("frozen-head goal candidate-a candidate-b source claim test-invocation recorded-effect authored-claim proof-envelope packet request proposal") {
+		if counts[role] != 1 {
+			return fmt.Errorf("manifest completeness: role %s requires exactly 1 reference, got %d", role, counts[role])
+		}
+	}
+	seen := map[int64]bool{}
+	expected := map[demoManifestRef]int{}
+	for _, role := range []string{"read", "test", "check", "approval"} {
+		var matches []demoManifestWhy
+		for _, w := range m.Why {
+			if w.Role == role {
+				matches = append(matches, w)
+			}
+		}
+		if len(matches) != 1 {
+			return fmt.Errorf("manifest completeness: role why-%s requires exactly 1 hash, got %d", role, len(matches))
+		}
+		w := matches[0]
+		if seen[w.Entry] {
+			return fmt.Errorf("manifest completeness: role why-%s duplicates entry %d", role, w.Entry)
+		}
+		seen[w.Entry] = true
+		ch, _, err := demoWhy(r, w.Entry)
+		if err != nil {
+			return err
+		}
+		e, _, err := r.entry(w.Entry)
+		if err != nil {
+			return err
+		}
+		rec, _, err := r.record(e)
+		if err != nil {
+			return err
+		}
+		if rec == nil {
+			return fmt.Errorf("manifest completeness: role invocation at entry %d absent", w.Entry)
+		}
+		add := func(role, kind, ref string) { expected[demoManifestRef{role, kind, ref, w.Entry}]++ }
+		add("invocation", "object", e.TransitionRef)
+		add("transition", "object", rec.TransitionFn)
+		add("interpreter", "pin", rec.Interpreter)
+		for _, link := range ch.Links {
+			if link.Name == "entry" {
+				continue
+			}
+			kind := "object"
+			if link.Name == "world" {
+				kind = "world"
+			}
+			add(link.Name, kind, link.Ref)
+		}
+		for _, ref := range rec.Effects {
+			obj, _, err := r.object(ref)
+			if err != nil {
+				return err
+			}
+			fx, err := broker.DecodeRecord(obj.Payload)
+			if err != nil {
+				return err
+			}
+			add("effect-request", "object", fx.RequestRef.String())
+			if !fx.ResultRef.IsZero() {
+				add("effect-result", "object", fx.ResultRef.String())
+			}
+		}
+	}
+	if len(m.Why) != 4 {
+		return fmt.Errorf("manifest completeness: role why requires exactly 4 hashes, got %d", len(m.Why))
+	}
+	actual := map[demoManifestRef]int{}
+	for _, ref := range m.References {
+		switch ref.Role {
+		case "invocation", "transition", "interpreter", "world", "record", "input", "plan", "effect", "output", "effect-request", "effect-result":
+			actual[ref]++
+		}
+	}
+	// Iterate in manifest/why order for stable, role-specific diagnostics.
+	for _, w := range m.Why {
+		for _, role := range strings.Fields("invocation transition interpreter world record input plan effect output effect-request effect-result") {
+			for ref, n := range expected {
+				if ref.Index == w.Entry && ref.Role == role && actual[ref] != n {
+					return fmt.Errorf("manifest completeness: role %s for %s entry %d requires %d reference(s), got %d", role, w.Role, w.Entry, n, actual[ref])
+				}
+			}
+		}
+	}
+	for ref, n := range actual {
+		if expected[ref] != n {
+			return fmt.Errorf("manifest completeness: extra role %s at entry %d", ref.Role, ref.Index)
 		}
 	}
 	return nil
