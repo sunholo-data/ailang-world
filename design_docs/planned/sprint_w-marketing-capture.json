@@ -1453,7 +1453,7 @@
         "host/daemon/workbench_packet.go",
         "host/coordinator/world_demo_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestWorkbenchPacketRosterAnchoredBounds"
       ],

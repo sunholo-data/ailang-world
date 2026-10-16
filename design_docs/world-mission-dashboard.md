@@ -1,12 +1,14 @@
-# World mission dashboard — iteration 275 (2026-10-16)
+# World mission dashboard — iteration 276 (2026-10-16)
 
-- **This fire:** row 150 **M4b** LANDED `acb3f54` (PR #289). Demo seed stage S6 runs the real CLI why chain for the read, test, check and approval entries, and refuses unless coordinator, ok and every named link hold. It requires exactly one packet anchored to S5's entry, then assembles the public manifest in memory, checks every role and ref over REST, and scrubs secrets, paths and timestamps. The seed still refuses success and writes no manifest.
-- **Independent judge:** sonnet r1 **FAIL 66**: the manifest's contents were never asserted, and the controller reproduced it. After a codex fix round, r2 **PASS 86**, zero blocking, with all five r1 survivors killed with the tool pin unset.
-- **CI:** one red, and it was real. A table of about 120 test controls shared one 30 s deadline, which ran out under `-race` on the 2-core runner but never on the Mac. The controller fixed it with per-subtest deadlines, and a 10 s drill confirms it (49 failures before, 0 after). Judge r3 reviewed the fix: **PASS 86**. Rebased over attended row 184 (`why.go` changed) and re-tested: 32/32.
-- **Latest GitHub release:** none; World 1.0 is unreleased. The proof/compiler pin is the released AILANG 0.41.0; the tool pin is 0.52.1.
-- **Clauses:** **6 of 7 MET.** Clause 5 is UNMET. Row 139 (routine AILANG upgrades) is attended (M1 and M2 landed, M3 next). Row 183 (real-project trials) is IN-SPRINT ATTENDED. Row 114 waits on 183. Row 184 landed attended this afternoon, which opens row 185.
-- **Row 150:** 8 of 17 milestones done (M1a, M1b, M2a, M2b, M3a, M3b, M4a, M4b). Next is M5a: bounded anchored roster, ATTESTED and authored CLAIMED.
-- **Parked on Mark:**
-  - **D-WORLD-79:** looks moot. Row 181's fix landed attended (`38e7859`, race leg in its own job), and this PR's race job was green on 3 of 4 heads. Close it if you agree.
-  - **D-WORLD-75:** unchanged (default A).
-- **Next:** row 185 (`w-episode-requires-git`) if no attended session holds it, since it was ordered "NEXT after 184"; otherwise row 150 M5a.
+- **This fire:** row 150 **M5a** LANDED `bcd2d7c` (PR #295). The validated decision packet now carries an internal evidence roster, read only from its carrying invocation record's input. The roster is exactly four kind/ref pairs in a strict shape, its reads are bounded under one shared 10 s deadline, and every refusal happens before any label. ATTESTED needs a consistent stored broker record. CLAIMED resolves only the demo-authored claim, never AiReview. TESTED, PROVEN and rendering are M5b.
+- **Independent judge:** sonnet r1 **PASS 90**, zero blocking. All three plan mutants were killed, plus about 40 of the judge's own. The controller reproduced one kill with the tool pin unset.
+- **CI:** PR 3/3 green on `a9c0771`. The merge's code tree is identical to that head.
+- **Mid-fire attended landings:** row 114 LANDED, so **clause 5 is MET and all 7 clauses are MET** (D-WORLD-80 = A). **`v1.0.0-rc.1`** is tagged as a GitHub pre-release (D-WORLD-81 = A). D-WORLD-75 = A, D-WORLD-79 is closed moot, row 185 landed (PR #291), and rows 186–189 were filed.
+- **Latest GitHub release:** `v1.0.0-rc.1` (pre-release, 2026-10-16). The proof/compiler pin is the released AILANG 0.41.0; the tool pin is 0.52.1.
+- **Clauses:** **7 of 7 MET.** What remains before `v1.0.0` is D-WORLD-81's order: row 156, then finish row 150, then row 151.
+- **Row 150:** 9 of 17 milestones done (M1a–M5a). Next on the row is M5b: TESTED/PROVEN resolution and rendering, which must also settle the plan's "source subject sibling" phrase.
+- **Parked on Mark:** none. The decision ledger has 68 rows and zero OPEN.
+- **Next:** row 156 (`w-exec-protected-test-paths`), design first. It is NEXT per D-WORLD-81.
+- **Routing/cadence:** executor codex gpt-6.1-sol (recipe), judge Agent sonnet. No designer or planner was needed. 4h throttle.
+- **Metered:** $0. No shared skill, harness or routing-policy edit.
+- **Evidence:** log entry 276; `design_docs/verification/world-iter276/`; gate logs in `~/.ailang/state/world-iter276/`.
