@@ -45,11 +45,7 @@ come from real operation: real work, done through World, captured, where somethi
 - platform-source: `adk-contract-file` = `.venv/bin/python -m pytest -q -p no:cacheprovider -m adk_contract`
   + positional `testfile` (`.py`) + flags `-k` (regex), `-x` (bool); `adk212-contract-file` = the same under
   `.venv-adk212/bin/python`; `ruff-file` = `.venv/bin/ruff check` + `relpath`.
-- ailang-parse: AILANG through exec, because the daemon pin cannot build it (F7): `ail-check` =
-  `<ailang v0.54.11 by sha256> check` + `relpath`; `ail-test-file` = `<same> test` + `relpath`; `quick-check` =
-  `bash benchmarks/quick_check.sh` only if it fits 9 s (measured at prep; otherwise omitted). The agent edits
-  with the generic `ailang-read/-write/-edit` tools. This is the first real case of World hosting a project on a
-  newer AILANG than its own pin — a finding for row 139 (interpreter epoch upgrade), not worked around in the kernel.
+- ailang-parse: **after row 139 lands** (Mark, attended 2026-10-16: "world needs to be able to cope with ailangs versioning - we release very often"; sequencing "widen 139, do it next"). The episode then uses World's own `ailang-check`/`ailang-run` on an interpreter matching the project's declared range (`ailang = ">=0.50.0"`), not an exec-pinned side binary. Only `quick-check` (`bash benchmarks/quick_check.sh`) is profiled, if it fits 9 s.
 
 **D3 — prep (operator, outside the sandbox, before any mint).** Fresh rig `~/.ailang/state/trial-<date>`:
 fetch both repos at `origin/dev`; create the episode worktrees through `session new --repo … --branch
@@ -105,15 +101,15 @@ any reveal.
 | 9 s exec cap too short for ADK test files (imports) | measure at prep; split per test with `-k`; if one file cannot fit, record it and narrow the profile — never raise the cap in this trial |
 | Agent edits the tests that judge it (row 156) | the grader runs outside; the PR diff shows test edits; harvested as a question if it matters |
 | No real surprise happens | then no question is taken; the trial still yields captured stores and PRs; more issues follow from the backlog |
-| AILANG version mismatch (F7) hides failures | the exec profile pins v0.54.11 by sha256; the daemon pin stays v0.41.0 and is recorded |
+| AILANG version mismatch (F7) | T-AIL waits for row 139 (routine per-release upgrade + project version ranges) |
 | Outward-facing PRs | drafts only; Mark merges |
 | Platform-source secrets | worktree only; `$HOME` fenced (F3); no deployed-env commands profiled |
 
 ## §6 Order of work
 
-1. Merge row 182 (PR #280). 2. Ratify this doc. 3. Build `scripts/trial/run.py` (spawn + outcome grader +
-draft PR helper) with tests. 4. Prep the rig and profiles; measure the 9 s fit. 5. Mark mints the first two
-sessions (T-PY episode A, T-AIL #67). 6. Run, record, open drafts, harvest. 7. Repeat with episodes B and #20.
+1. Row 182 LANDED (`e879e1e`). 2. Ratify this doc. 3. Build `scripts/trial/run.py` (spawn + outcome grader +
+draft PR helper) with tests. 4. Prep the rig and profiles; measure the 9 s fit. 5. Mark mints T-PY episode A.
+6. Run, record, open drafts, harvest; then episode B. 7. T-AIL (#67, #20) after row 139 lands.
 
 ## §7 Unknown
 
