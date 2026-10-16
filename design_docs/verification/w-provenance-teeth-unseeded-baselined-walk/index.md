@@ -8,6 +8,7 @@ Protocol: `design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md` r4
 |---|---|---|---|
 | Q1 | Why did codex's World arm fail `config_file_parser` 0/3 in the 2026-10-14 FINAL, while its shell arm passed 2/3? | K1 | **attempted 2026-10-16 — B UNVERIFIED, W UNVERIFIED** (`Q1-config-file-parser/`) |
 | Q2 | Why was codex's World overhead +26.6% in the 2026-10-09 FINAL? | K3 | candidate (pre-diagnosis commit not yet measured) |
+| Q3 | In trial episode tps-a (platform-source, row 183), why does the worktree hold 47 untracked files — incl. zz_ls.ail, zz_slice.ail and .ailang/ — when the task asked for 4 test files + 1 doc edit? | K4 (trial store, sha256 fddd2e59…) | **attempted 2026-10-16 — B VERIFIED (88.7 s), W INVALID(seeding) (UNVERIFIED on its answer; 66.8 s)** (`Q3-tps-a-untracked/`) |
 | C1/C2/C3 | iter-206/207/210 CI and suite incidents | none | rejected NOT-RUN(NO-CORPUS); C1 also contaminated |
 
 ## Q1 accounting
@@ -35,5 +36,13 @@ Deviations from the plan, all recorded in `pins` before reveal:
 **F-2 (controller defect in E2).** The plan's E2 (b) covers the codex World solutions only; the rubric, written by this controller, asks for the causal claim for both arms. V_B therefore confirmed B's World-arm explanation (re-execution: "not found" in a clean dir, the expected line with the run's `app_config.json`) but marked the shell half unsupported. E2 was not changed after reveal, so both verifiers judged against the same bundle. A later attempt needs E2 to cover every arm the question names (here also the codex shell solutions).
 
 **F-3 (baseline strength).** With read and list only (no grep), the baseline answered in 99 s with a World-arm mechanism its verifier confirmed. The design's expectation that a no-grep baseline is slow (§12) did not hold for this question: the raw transcripts in B's root carry the same writes the store does.
+
+## Q3 findings (2026-10-16)
+
+**F-4 (World capture gap: tool side effects).** `ailang-run`/`ailang-check` wrote 41 files of AILANG compile cache into the episode worktree (`.ailang/cache/compile/`), but the store records only the tool INPUTS and outputs, not those filesystem writes; explicit `Workspace.Write` effects are recorded, the toolchain's own writes are not. The walk therefore could not say where `.ailang/` came from, while the baseline read the files and their mtimes directly. Candidate row: record a worktree change summary (paths + hashes created/modified) per tool invocation, or per episode at its end.
+
+**F-5 (W channel confinement hole).** Claude Code 2.1.300 persisted an oversized World output to `~/.claude/projects/<cwd>/…/tool-results/<id>.txt` and, in `--permission-mode dontAsk` with a verb allowlist, still auto-allowed a read-only `grep … | head` on that file chained with an allowed verb. The M1 controls did not cover this case. Fix before the next attempt: add explicit denies (`--disallowedTools` for `Bash(grep:*)`, `Bash(head:*)`, `Bash(cat:*)`, `Read`) and a control that tries exactly this; or keep outputs small enough not to be persisted.
+
+**F-6 (baseline).** With read/list only and the raw transcript in its root, the baseline answered the full cause in 66.6 s, verified in 88.7 s — again fast where the evidence is in the logs.
 
 Row 114 stays open: 0 of ≥3 qualifying successes.

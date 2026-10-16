@@ -1,0 +1,16 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792159376.417
+
+## sealed answer
+ANSWER: The agent had no shell, so it read the installed ADK package source by writing and running throwaway AILANG helper programs in the worktree root (`zz_slice.ail` for line slices, and by the same pattern `zz_ls.ail`). Nothing cleaned them up, so they stayed as untracked files beside the four test files and the doc edit. The record doesn't show how `.ailang/` was created or what the other untracked files are.
+
+## verifier output
+**Justification:** The answer is only partly right. It leaves most of the untracked files unexplained, so it is UNVERIFIED under the rubric.
+
+- **`zz_slice.ail` (correct):** `transcript-tool-calls.json` shows the agent writing `zz_slice.ail` with `ailang-write`. It then ran the file many times with `ailang-run` to read slices of source files, including the installed ADK package under `.venv`. This matches the answer.
+- **`zz_ls.ail` (wrong):** The answer says it follows "the same pattern" as `zz_slice.ail`, as a line-slicing helper. The transcript shows it is a directory lister that calls `listDir` and was run on `backend`, `.` and the `.venv` library paths. The answer gets its purpose wrong.
+- **`.ailang/` (not explained):** The answer says the record doesn't show how it was created. `git-status.txt` and `untracked-files.txt` show it is the AILANG compile cache under `.ailang/cache/compile/`. It holds the `std__*` modules, `zz_ls`, `zz_slice` and `manifest.json`. That makes up 41 of the 47 untracked files.
+- **Cause of the cache (shown in E2 but missed by the answer):** The cache files have timestamps from 12:05–12:09, which match the `ailang-run` invocations. The answer doesn't name this cause.
+- **Remaining files:** The four test files in `git-status.txt` are the four requested tests, and the one modified file is the doc edit. This leaves `.ailang/` as the main unexplained group.
+
+VERDICT: UNVERIFIED

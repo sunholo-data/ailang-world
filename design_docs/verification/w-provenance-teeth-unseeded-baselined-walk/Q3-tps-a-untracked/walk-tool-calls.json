@@ -1,0 +1,17 @@
+[
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode tps-a",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log range --from 1 --limit 80",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why head",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log get 81",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:553efac26438a40ef060c69fd2e002a5ac868183d0d1fd647b77bfb7433ef8d6 --payload",
+ "grep -o '\"transitionRef\":\"[^\"]*\"' ~/.claude/projects/-Users-voightkampff--ailang-state-row114-Q3-w-scratch-cwd/024f5eac-5531-4e5c-8c58-d864377d7fbd/tool-results/baj9a1dy1.txt | head -3; env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 10",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode tps-a --scan 100 | head -150",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object find world/invocation-record/v2 --limit 100 | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nprint(json.dumps(d)[:3000])\"",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object find world/invocation-record/v2 --limit 100",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 79",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 40",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 3",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 12",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 14",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 20"
+]
