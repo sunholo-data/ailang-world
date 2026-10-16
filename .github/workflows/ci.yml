@@ -262,7 +262,10 @@ jobs:
 
       - name: go build + test gate (replay tests run against pinned AILANG_BIN)
         # Expiry is RED; route an overrun to 4e/OD-4, never silently raise this ceiling.
+        # Row 181: the -race leg runs in the go-race-verify job below, in parallel.
         timeout-minutes: 25
+        env:
+          VERIFY_GO_LEGS: plain
         run: ./scripts/verify_go.sh
 
       # w-verifygate-etxtbsy (design_docs/planned/w-verifygate-etxtbsy.md): verify_go.sh has no -v
@@ -386,3 +389,90 @@ jobs:
         env:
           FLOOR_REQUIRE_TOOL: '1'
         run: python3 -m unittest discover -s scripts/floor -p 'test_*.py' -v
+
+  # Row 181 (attended 2026-10-16): the -race leg needs ~1,000 s wall on the 2-core runner
+  # (measured: broker 343 s, verifygate 308 s, daemon 307 s under -race), over its old 600 s cap
+  # inside the go-verify job, so it runs here in parallel with a measured, still-loud bound.
+  go-race-verify:
+    name: go race gate (go test -race, own job)
+    runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.26.6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.6'
+
+      - name: go version
+        run: |
+          go version
+          go env GOVERSION
+
+      - name: Install PINNED v0.41.0 ailang (AILANG_BIN — one pin, current AILANG)
+        run: |
+          set -euo pipefail
+          # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+          # replay tests drive the released ailang as a subprocess and byte-compare its
+          # output against goldens (testdata/recorded_result.bytes, recorded_world_hash.txt)
+          # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+          # MEASURED 2026-09-22: it is not. All 10 replay tests reproduce the goldens
+          # byte-exactly under v0.41.0, with a discriminating control (binary unset -> 13
+          # SKIPs, so the arms really do drive the subprocess). The goldens are stable
+          # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+          # world eleven releases of drift against the language it exists to exercise.
+          #
+          # Pin the TAG, not `latest`: a silent bump is how a goldens mismatch or a
+          # world-package hash break arrives without a red step naming it. Moving this pin
+          # is a deliberate edit, and host/replay re-verifies the goldens on the new tag.
+          # Without AILANG_BIN, host/replay's pinnedBinary and verifygate's requirePinned
+          # t.Skip() and CI is false-green — hence the loud assert below.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+          curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          # the published checksum names the release asset, not our local filename
+          echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf pinned.tar.gz -C "$HOME/.local/bin" ailang
+          chmod +x "$HOME/.local/bin/ailang"
+          # Assert the pinned version loudly so a tag drift is a red step here,
+          # not a silent goldens mismatch downstream.
+          # Same no-pipe form as the world-package install above. This site has
+          # never gone red, but only by ACCIDENT OF SIZE: `--version` is 167 bytes,
+          # which fits the 64 KiB pipe buffer, so `echo` never blocks and never
+          # takes SIGPIPE. That is a property of the output length, not of the
+          # shape — the shape is the same race, one verbose release away.
+          ver="$("$HOME/.local/bin/ailang" --version)"
+          echo "$ver"
+          case "$ver" in
+            *'AILANG v0.41.0'*) ;;
+            *) echo "✗ AILANG_BIN is not v0.41.0" >&2; exit 1 ;;
+          esac
+          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+
+      - name: Install Z3 ${{ env.Z3_VER }} (host/verifygate drives the REAL .ail gate under go test)
+        run: |
+          set -euo pipefail
+          # 9/OD-11, RATIFIED: "Yes you can install z3 on cicd".
+          # host/verifygate's shim arms run scripts/verify_ail.sh end to end. Without a solver
+          # `ai-check` reports verify.available=false and every contract vanishes from
+          # verify.results[] (V20/V27), so the gate reds at leg 1 and the accept-arms could only
+          # assert markers emitted BEFORE Z3 matters — they were green in a lane where the gate
+          # they drive was red. Same version and sha as job 1, from the workflow-level pin above.
+          Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
+          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+          echo "${Z3_SHA}  z3.zip" | sha256sum -c -
+          unzip -q z3.zip
+          sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3
+          z3 --version
+
+
+      - name: go -race gate (replay tests run against pinned AILANG_BIN)
+        # The leg bound (VERIFY_GO_RACE_TIMEOUT_S) is loud on overrun; this ceiling sits above it.
+        timeout-minutes: 35
+        env:
+          VERIFY_GO_LEGS: race
+          VERIFY_GO_RACE_TIMEOUT_S: "1500"
+        run: ./scripts/verify_go.sh

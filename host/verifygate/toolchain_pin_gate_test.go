@@ -155,8 +155,9 @@ func TestGoToolchainPinsAgreeAndMatchJobList(t *testing.T) {
 	// test reds: wantJobs says the job exists on purpose, wantGoPinnedJobs says whether
 	// it is a Go job. A non-Go job added to wantJobs alone is still asserted to carry
 	// ZERO Go pins, so "classified out" is a claim the gate checks rather than a hole.
-	wantJobs := []string{"ailang-verify", "go-verify"}
-	wantGoPinnedJobs := []string{"ailang-verify", "go-verify"}
+	// Row 181: go-race-verify runs the -race leg in its own job, Go-pinned like go-verify.
+	wantJobs := []string{"ailang-verify", "go-race-verify", "go-verify"}
+	wantGoPinnedJobs := []string{"ailang-verify", "go-race-verify", "go-verify"}
 	if !slices.Equal(jobs, wantJobs) {
 		t.Errorf("ci.yml: enumerated jobs=%v, want %v; GOTOOLCHAIN pins=%d go-version pins=%d",
 			jobs, wantJobs, len(keyedValues(lines, "GOTOOLCHAIN")), len(keyedValues(lines, "go-version")))

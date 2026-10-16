@@ -209,6 +209,22 @@ if [ "$ver_tok" != 'v0.41.0' ]; then
 fi
 echo "── AILANG_BIN=$AILANG_BIN ($ver)"
 
+# Row 181 (attended 2026-10-16, Mark: "split race into its own CI job"): the -race leg needs ~1,000 s
+# wall on the 2-core runner (measured run 38884339127: broker 343 s, verifygate 308 s, daemon 307 s
+# under -race, ~2,050 s of package time at -p 2), so CI runs it as its own parallel job.
+# VERIFY_GO_LEGS: all (default, local) | plain (everything except the -race leg) | race (the
+# shared preconditions, the race-detector control and the -race leg only).
+VERIFY_GO_LEGS="${VERIFY_GO_LEGS:-all}"
+case "$VERIFY_GO_LEGS" in
+  all|plain|race) ;;
+  *) echo "verify_go.sh: FATAL: VERIFY_GO_LEGS must be all, plain or race (got: $VERIFY_GO_LEGS)" >&2; exit 2 ;;
+esac
+VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-1500}"
+case "$VERIFY_GO_RACE_TIMEOUT_S" in
+  ''|*[!0-9]*) echo "verify_go.sh: FATAL: VERIFY_GO_RACE_TIMEOUT_S must be a positive integer" >&2; exit 2 ;;
+esac
+echo "── legs: $VERIFY_GO_LEGS (race bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"
+
 echo "── tracked-binary hygiene gate"
 # SM.A once committed a 15.7 MB Mach-O that every reviewer and both CI jobs passed, because
 # nothing looked. The gate (scripts/tracked_binary_gate.sh, whole-blob NUL detector — git's
@@ -295,6 +311,7 @@ echo "── go build ./..."
 go version
 go build ./...
 
+if [ "$VERIFY_GO_LEGS" != race ]; then
 echo "── focused host/evidence named-manifest gate (64 exact top-level tests)"
 evidence_json="$(mktemp "${TMPDIR:-/tmp}/verify-go-evidence.XXXXXX")"
 trap 'rm -f "$evidence_json"' EXIT
@@ -313,6 +330,7 @@ trap - EXIT
 echo "── go test ./... -count=1"
 go version
 go test ./... -count=1
+fi
 
 # Measured at 78 s wall on darwin/arm64 at 7550ee9 under load ~4.5;
 # host/broker was the 76.9 s critical path. The doc's ~179 s was not reproduced.
@@ -321,18 +339,21 @@ go test ./... -count=1
 # the tail. Fixed by removing redundant gate reruns inside verifygate (one shared, digest-checked
 # pristine control; one shared run per shim version line), not by raising this budget or
 # dropping the package from -race. Local GOMAXPROCS=2 race leg: 465 s before, 312 s after.
-echo "── go test ./... -count=1 -race -timeout 8m"
+if [ "$VERIFY_GO_LEGS" != plain ]; then
+echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"
 go version
-python3 - <<'PY'
+VERIFY_GO_RACE_TIMEOUT_S="$VERIFY_GO_RACE_TIMEOUT_S" python3 - <<'PY'
 import os, signal, subprocess, sys
+bound = int(os.environ["VERIFY_GO_RACE_TIMEOUT_S"])
 cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]
 p = subprocess.Popen(cmd, start_new_session=True)
 try:
-    sys.exit(p.wait(timeout=600))
+    sys.exit(p.wait(timeout=bound))
 except subprocess.TimeoutExpired:
     os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-    print("verify_go.sh: FATAL: -race leg timed out after 600s", file=sys.stderr)
+    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)
     sys.exit(124)
 PY
+fi
 
-echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"
+echo "✓ go gate PASSED ($VERIFY_GO_LEGS): build clean; legs run pass with pinned AILANG_BIN ($ver)"
