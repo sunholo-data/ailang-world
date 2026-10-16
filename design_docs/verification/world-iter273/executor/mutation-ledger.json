@@ -1,0 +1,294 @@
+[
+  {
+    "mutant": "key-open",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if err != nil {\n\t\treturn [32]byte{}, fmt.Errorf(\"proof key: open: -> if false {\n\t\treturn [32]byte{}, fmt.Errorf(\"proof key: open:",
+    "command": "go test -run ^TestDemoSeedProofStage$/^missing$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key missing refusal must precede every S4 write",
+    "assertions": [
+      "demo_test.go:1000: key missing refusal must precede every S4 write: writes=0 envelopes=0 err=\"ailang-worldd demo seed: S1-S3 recorded; S4 key refused: proof key: stat: invalid argument; no success manifest written\\n\" want=\"proof key: open:\""
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoSeedProofStage (4.19s)"
+    ],
+    "wall_seconds": 10.48
+  },
+  {
+    "mutant": "key-stat",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if err != nil {\n\t\treturn key, fmt.Errorf(\"proof key: stat: -> if false {\n\t\treturn key, fmt.Errorf(\"proof key: stat:",
+    "command": "go test -run ^TestDemoProofKeyIORefusals$/^stat$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key stat error must refuse without bytes",
+    "assertions": [
+      "demo_proof_test.go:907: key stat error must refuse without bytes: err=<nil> zero=false"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofKeyIORefusals (0.00s)"
+    ],
+    "wall_seconds": 1.74
+  },
+  {
+    "mutant": "key-regular",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if !info.Mode().IsRegular() { -> _ = info\n if false {",
+    "command": "go test -run ^TestDemoSeedProofStage$/^directory$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key directory refusal must precede every S4 write",
+    "assertions": [
+      "demo_test.go:1000: key directory refusal must precede every S4 write: writes=0 envelopes=0 err=\"ailang-worldd demo seed: S1-S3 recorded; S4 key refused: proof key: read: read /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestDemoSeedProofStagedirectory2578374642/003: is a directory; no success manifest written\\n\" want=\"not a regular file\""
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoSeedProofStage (4.28s)"
+    ],
+    "wall_seconds": 10.37
+  },
+  {
+    "mutant": "key-read",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if err != nil {\n\t\treturn key, fmt.Errorf(\"proof key: read: -> if false {\n\t\treturn key, fmt.Errorf(\"proof key: read:",
+    "command": "go test -run ^TestDemoProofKeyIORefusals$/^read$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key read error must refuse without bytes",
+    "assertions": [
+      "demo_proof_test.go:907: key read error must refuse without bytes: err=<nil> zero=false"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofKeyIORefusals (0.00s)"
+    ],
+    "wall_seconds": 1.84
+  },
+  {
+    "mutant": "key-long",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if len(raw) > len(key) { -> if false {",
+    "command": "go test -run ^TestDemoSeedProofStage$/^long$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key long refusal must precede every S4 write",
+    "assertions": [
+      "demo_test.go:1000: key long refusal must precede every S4 write: writes=1 envelopes=1 err=\"ailang-worldd demo seed: S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action\\n\" want=\"holds more than 32 bytes\""
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoSeedProofStage (4.42s)"
+    ],
+    "wall_seconds": 11.54
+  },
+  {
+    "mutant": "key-short",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if len(raw) < len(key) { -> if false {",
+    "command": "go test -run ^TestDemoSeedProofStage$/^short$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key short refusal must precede every S4 write",
+    "assertions": [
+      "demo_test.go:1000: key short refusal must precede every S4 write: writes=1 envelopes=1 err=\"ailang-worldd demo seed: S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action\\n\" want=\"holds 31 bytes\""
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoSeedProofStage (4.28s)"
+    ],
+    "wall_seconds": 10.61
+  },
+  {
+    "mutant": "seed-key-refusal",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "edit": "if err != nil {\n\t\treturn hashref.HashRef{}, fmt.Errorf(\"S1-S3 recorded; S4 key refused: -> if false {\n\t\treturn hashref.HashRef{}, fmt.Errorf(\"S1-S3 recorded; S4 key refused:",
+    "command": "go test -run ^TestDemoSeedProofStage$/^missing$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key missing refusal must precede every S4 write",
+    "assertions": [
+      "demo_test.go:1000: key missing refusal must precede every S4 write: writes=1 envelopes=1 err=\"ailang-worldd demo seed: S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action\\n\" want=\"proof key: open:\""
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoSeedProofStage (4.29s)"
+    ],
+    "wall_seconds": 10.53
+  },
+  {
+    "mutant": "seed-proof-refusal",
+    "file": "cmd/ailang-worldd/demo_seed.go",
+    "edit": "if err != nil {\n\t\treturn hashref.HashRef{}, fmt.Errorf(\"S1-S3 recorded; S4 refused: -> if false {\n\t\treturn hashref.HashRef{}, fmt.Errorf(\"S1-S3 recorded; S4 refused:",
+    "command": "go test -run ^TestDemoProofUncertainCommitStops$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "S4 refusal must stop without success or reseed",
+    "assertions": [
+      "demo_proof_test.go:800: S4 refusal must stop without success or reseed: ref= err=S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action",
+      "demo_proof_test.go:800: S4 refusal must stop without success or reseed: ref= err=S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action",
+      "demo_proof_test.go:800: S4 refusal must stop without success or reseed: ref= err=S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofUncertainCommitStops (3.27s)"
+    ],
+    "wall_seconds": 8.36
+  },
+  {
+    "mutant": "checker-readfile",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "if err != nil {\n\t\treturn evidence.CheckerConfig{}, fmt.Errorf(\"proof checker: read archived interpreter: -> if false {\n\t\t\treturn evidence.CheckerConfig{}, fmt.Errorf(\"proof checker: read archived interpreter:",
+    "command": "go test -run ^TestDemoProofAdapterGuards$/^checker-readfile$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "checker-readfile must name the archived interpreter read failure",
+    "assertions": [
+      "demo_proof_test.go:583: checker-readfile must name the archived interpreter read failure: proof checker: archived pin bytes hash to sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; health pins sha256:c7cd479e66a549cb24e986a7e40a3d8dc5a5f0eb9ac55edad754a23dc405e6d5"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofAdapterGuards (0.00s)"
+    ],
+    "wall_seconds": 1.72
+  },
+  {
+    "mutant": "M3b-key",
+    "file": "cmd/ailang-worldd/demo_proof_test.go",
+    "edit": "same := proofValidator(t, c, h, key) // M3b-key: -> same := proofValidator(t, c, h, different) // M3b-key:",
+    "command": "go test -run ^TestDemoProofWrongKeyCannotProve$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "same-key positive arm must Resolve PROVEN",
+    "assertions": [
+      "demo_proof_test.go:706: same-key positive arm must Resolve PROVEN for the exact subject: valid=false proven=false grade=0"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofWrongKeyCannotProve (1.20s)"
+    ],
+    "wall_seconds": 4.12
+  },
+  {
+    "mutant": "M3b-null-verified",
+    "file": "cmd/ailang-worldd/demo_proof_test.go",
+    "edit": "source := demoProofSource(t) // M3b-null-verified: -> source := plain // M3b-null-verified:",
+    "command": "go test -run ^TestDemoProofNoVerifiedSetRefuses$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "positive proof-control must mint required identities",
+    "assertions": [
+      "demo_proof_test.go:732: positive proof-control must mint required identities sameRef and servesEntry: ref= calls=0 err=evidence: ai-check run verified nothing: 0 results records from non-empty output"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofNoVerifiedSetRefuses (1.28s)"
+    ],
+    "wall_seconds": 4.22
+  },
+  {
+    "mutant": "M3b-retry",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "// The request may already have reached the daemon: the outcome is unknown. -> _, _, _ = w.c.doAuth(ctx, http.MethodPost, \"/v1/commit\", bytes.NewReader(data), \"Bearer \"+w.token)\n\t\t// The request may already have reached the daemon: the outcome is unknown.",
+    "command": "go test -run ^TestDemoProofUncertainCommitStops$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "write attempt count must equal one",
+    "assertions": [
+      "demo_proof_test.go:797: write attempt count must equal one: got 2",
+      "demo_proof_test.go:797: write attempt count must equal one: got 2"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofUncertainCommitStops (3.19s)"
+    ],
+    "wall_seconds": 8.17
+  },
+  {
+    "mutant": "http-context-bound",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "c.timeout = demoProofHTTPTimeout -> c.timeout = 0",
+    "command": "go test -run ^TestDemoProofBounds$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "production client/adapters must carry the 10s HTTP bound",
+    "assertions": [
+      "demo_proof_test.go:837: production client/adapters must carry the 10s HTTP bound below the 12s object bound"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofBounds (0.99s)"
+    ],
+    "wall_seconds": 2.7
+  },
+  {
+    "mutant": "http-client-bound",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "c.http.Timeout = demoProofHTTPTimeout -> c.http.Timeout = 0",
+    "command": "go test -run ^TestDemoProofBounds$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "production client/adapters must carry the 10s HTTP bound",
+    "assertions": [
+      "demo_proof_test.go:837: production client/adapters must carry the 10s HTTP bound below the 12s object bound"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofBounds (0.99s)"
+    ],
+    "wall_seconds": 2.72
+  },
+  {
+    "mutant": "whole-bound",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "return context.WithTimeout(ctx, demoProofWholeBound) -> return context.WithCancel(ctx)",
+    "command": "go test -run ^TestDemoProofBounds$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "whole proof context must carry the 90s deadline",
+    "assertions": [
+      "demo_proof_test.go:842: whole proof context must carry the 90s deadline"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofBounds (1.00s)"
+    ],
+    "wall_seconds": 2.83
+  },
+  {
+    "mutant": "cancel-propagation",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "ctx, cancel := demoProofContext(ctx) -> ctx, cancel := demoProofContext(context.Background())",
+    "command": "go test -run ^TestDemoProofBounds$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "cancelled producer did not stop",
+    "assertions": [
+      "demo_proof_test.go:872: cancelled producer did not stop"
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoProofBounds (1.00s)"
+    ],
+    "wall_seconds": 4.83
+  },
+  {
+    "mutant": "key-read-cap",
+    "file": "cmd/ailang-worldd/demo_proof.go",
+    "edit": "io.LimitReader(f, 33) -> io.LimitReader(f, 32)",
+    "command": "go test -run ^TestDemoSeedProofStage$/^long$ ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 1,
+    "expected": "key long refusal must precede every S4 write",
+    "assertions": [
+      "demo_test.go:1000: key long refusal must precede every S4 write: writes=1 envelopes=1 err=\"ailang-worldd demo seed: S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action\\n\" want=\"holds more than 32 bytes\""
+    ],
+    "killed": true,
+    "restored_rc": 0,
+    "restored_pass": [
+      "--- PASS: TestDemoSeedProofStage (4.22s)"
+    ],
+    "wall_seconds": 10.31
+  }
+]

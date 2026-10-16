@@ -3,13 +3,14 @@ package main
 // M3a (row 150): the first production caller of evidence.NewProducer. The
 // adapters below speak only to the running daemon's REST API: GET
 // /v1/objects/{ref}?payload=true to read and POST /v1/commit to write. They
-// hold no store handle, and the seed does not call them until M3b.
+// hold no store handle; S4 uses them after the recorded tool stages.
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -33,6 +34,58 @@ const (
 	demoProofWholeBound  = 90 * time.Second
 	demoProofVersion     = "AILANG v0.41.0"
 )
+
+// demoProofClient is the production REST client used by seed and both proof
+// adapters. doRequest derives a per-request deadline from timeout.
+func demoProofClient(addr string) *client {
+	c := newClient(addr)
+	c.timeout = demoProofHTTPTimeout
+	c.http.Timeout = demoProofHTTPTimeout
+	return c
+}
+
+// demoLoadProofKey mirrors daemon.loadProofKey: stat the open file, require a
+// regular file, read at most 33 bytes, and never include key bytes in errors.
+func demoLoadProofKey(path string) ([32]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return [32]byte{}, fmt.Errorf("proof key: open: %w", err)
+	}
+	defer f.Close()
+	return demoReadProofKey(f)
+}
+
+// The narrow file interface also lets error controls exercise stat/read errors
+// without races or a second path lookup. Production always passes the open file.
+func demoReadProofKey(f interface {
+	io.Reader
+	Stat() (os.FileInfo, error)
+}) ([32]byte, error) {
+	var key [32]byte
+	info, err := f.Stat()
+	if err != nil {
+		return key, fmt.Errorf("proof key: stat: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		return key, fmt.Errorf("proof key: not a regular file")
+	}
+	raw, err := io.ReadAll(io.LimitReader(f, 33))
+	if err != nil {
+		return key, fmt.Errorf("proof key: read: %w", err)
+	}
+	if len(raw) > len(key) {
+		return key, fmt.Errorf("proof key: holds more than 32 bytes; expected exactly 32")
+	}
+	if len(raw) < len(key) {
+		return key, fmt.Errorf("proof key: holds %d bytes; expected exactly 32", len(raw))
+	}
+	copy(key[:], raw)
+	return key, nil
+}
+
+func demoProofContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, demoProofWholeBound)
+}
 
 // demoProofBounds is the producer configuration every proof runs under. The
 // adapters have no store lock-retry window, so BusyTimeout is zero.
@@ -188,7 +241,7 @@ func (w demoProofWriter) PutObject(ctx context.Context, o store.Object) error {
 // production producer and returns the envelope ref. The reader and writer are
 // the caller's; the production wiring passes demoProofReader and demoProofWriter.
 func demoProve(ctx context.Context, reader evidence.ObjectReader, writer evidence.ObjectWriter, h daemon.HealthResponse, key [32]byte, srcRef hashref.HashRef, required []string) (hashref.HashRef, error) {
-	ctx, cancel := context.WithTimeout(ctx, demoProofWholeBound)
+	ctx, cancel := demoProofContext(ctx)
 	defer cancel()
 	checker, err := demoProofChecker(h)
 	if err != nil {
