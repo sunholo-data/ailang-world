@@ -148,7 +148,7 @@
 | AILANG `fs_deny_write` (World's write tools, `ailang-run` FS) | `D'/**`, where `D'` is `D` re-based to the AILANG sandbox root (below) | `G` verbatim | V6, V7 |
 | srt `denyWrite`, darwin | `<worktree>/D` (literal dir) | `<worktree>/**/G` | V5 GLOB |
 | srt `denyWrite`, linux | `<worktree>/D` (literal dir; srt binds it read-only) | **not rendered** (D-156-3 = A): srt would skip it silently (V8) | V8 (README) |
-| git pathspec (the integrity check, §4.5) | `:(glob,icase)D/**` | `:(glob,icase)**/G` | V9 |
+| git pathspec (the integrity check, §4.5) | `:(top,glob,icase)D` and `:(top,glob,icase)D/**` **[r3, quorum fix verbatim]** | `:(top,glob,icase)**/G` | V9 |
 
 - **Re-basing for AILANG.**
   - The episode's AILANG sandbox is `<worktree>/<module root>` (row 141, `workspace_layout.go:85`), and `fs_deny_write` is relative to it.
@@ -201,7 +201,7 @@
 
 ### 4.5 Proven intact in the record
 
-**The integrity check.** It is two bounded git invocations per phase (`status` below, and `ls-files -v` [r2]), each launched through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
+**The integrity check.** It is two bounded git invocations per phase (`status` below, and `ls-files -v` [r2]), both run with `cmd.Dir = h.worktree` and root-anchored `:(top,…)` pathspecs [r3], each launched through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
 
 ```
 git status --porcelain=v2 -z --branch --untracked-files=all --ignored=matching --no-renames \
@@ -464,3 +464,8 @@ Every milestone's tests **pass with `WORLD_TOOL_AILANG_BIN` unset**. A test that
     - V13, P7 and P12 are amended;
     - M6 gains `TestExecProtectedIndexFlag` (negative control), `TestExecProtectedHeadMoved` and `TestExecSrtIndexWriteRefused`;
     - §7 gains MUT-NO-INDEX-FLAG-CHECK.
+
+- **Round 2 (2026-10-17): BLOCKED** (same seats: `gemini-4-argon` present; `gpt6-1-sol`, `oc-glm-5-3`, `oc-kimi-k3` absent, unreachable). The round-1 objection was not repeated.
+  - **Objection:** pathspecs are CWD-relative unless anchored, and `D/**` does not match `D` itself when the directory is replaced by a file or symlink.
+  - **Proposed fix (verbatim):** "In §4.2, change the git pathspec rendering for directory form `D/**` to emit two pathspecs: `:(top,glob,icase)D` and `:(top,glob,icase)D/**` (and `:(top,glob,icase)**/G` for base-name form `G`), and specify in §4.5 that both git invocations (`status` and `ls-files -v`) run with `cmd.Dir = h.worktree`."
+  - **Disposition (r3, controller, narrow-refinement carve-out):** the fix is concrete, reviewer-authored and does not dispute the direction, so it is applied verbatim to §4.2's table and §4.5's first sentence, with no third quorum round. The executor's `TestProtectedGitPathspecEquivalence` (M1) must include a "directory replaced by a symlink/file" row and a run from a subdirectory CWD, each killing a mutant that drops `top` or the bare `D` pathspec.
