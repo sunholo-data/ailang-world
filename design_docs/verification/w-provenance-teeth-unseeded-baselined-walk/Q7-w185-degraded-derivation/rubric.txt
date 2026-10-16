@@ -1,0 +1,4 @@
+Rubric (fixed before either answer exists; identical for both verifiers). Judge ONLY against E2 (start with e2/README.txt).
+VERIFIED: the answer states that the change derives degraded from whether the episode directory is a git worktree (worktree.IsLinked / the worktree itself) so that it needs no new field or column in the stored session record — recording it on the session would require a store schema change (a new column / version bump) — and E2 supports it with nothing contradicting it.
+UNVERIFIED: gives no reason, or a reason E2 does not support (e.g. performance, a missing API), or only restates what the change does; or is otherwise wrong or only plausible.
+Output a short justification citing E2 files, then a final line exactly `VERDICT: VERIFIED` or `VERDICT: UNVERIFIED`.

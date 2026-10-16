@@ -1,0 +1,4 @@
+walk transcript: ~/.ailang/state/row114/K5/Q7/w/transcript.jsonl
+fd05f5c71e6267f1f1715d50e5dbdb8869f486051faf80d917187cefeb8dd205
+claude 2.1.300 sonnet; client = F-7 build 9eaf83d (sha256 5feb4660b93ff6ceec2880a927df2a177304cd57759638cbeeb90359632ecb0b); 47 tool calls (48 turns); permission_denials 1; non-allowlisted calls that succeeded: 0; cost estimate $0.355 (subscription)
+served head after: sha256:abe8303cacb741d4d76038f86e44ce0691702bf980902d77354aa62aa4b387f4

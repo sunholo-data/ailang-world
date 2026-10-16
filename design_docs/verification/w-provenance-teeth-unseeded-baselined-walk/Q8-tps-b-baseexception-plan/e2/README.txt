@@ -1,0 +1,3 @@
+Ground truth (E2) for one question about trial episode tps-b (platform-source, 2026-10-16), produced by the controller from git after the episode; neither answering arm produced or saw it.
+- plan-row.txt: the regression-gate plan's table row for test_resilient_llm_interrupt_passthrough at the base commit, citing adk/resilient_llm.py:143.
+- resilient_llm-excerpt.txt: backend/adk/resilient_llm.py at the base commit (the episode did not change it), with line numbers: lines 125-150 (the first-token-deadline stream wrapper), 300-320 (the ResilientLlm class header) and 336-430 (generate_content_async, the retry loop).

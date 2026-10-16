@@ -1,0 +1,16 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792180351.682
+
+## sealed answer
+ANSWER: Because when the episode implemented `test_resilient_llm_interrupt_passthrough` it inspected `backend/adk/resilient_llm.py` and found the plan's table row misattributed the mechanism: the only broad `except BaseException` at the cited line (`adk/resilient_llm.py:143`) is not in the retry path at all — it's in `_stream_with_first_token_deadline`'s first-token-timeout cleanup, where it wraps `await aclose()` on a dead, timed-out stream and deliberately swallows/logs close-time errors ("a dead stream may object to closing; irrelevant now") before raising `SilentStallError`. ResilientLlm's actual retry/fallback loop in `generate_content_async` catches only `except Exception`, so ADK-2-style control-flow interrupts that inherit directly from `BaseException` (like `asyncio.CancelledError` and the test's `_NodeInterruptedLike(BaseException)` stand-in) are never caught there and propagate to the caller untouched — that structural narrowness, not a broad handler that re-raises, is the passthrough behavior the contract pins. The sub-doc records this so readers (and the Phase 03 work, which says "Narrow `except BaseException` (line 143)") know which handler the plan's citation refers to, and so the 2.12 failure ("DID NOT RAISE CancelledError" with Runner logging "Root node skill was cancelled by an external cancellation") is read as a Runner-level cancellation-semantics change rather than the wrapper swallowing the signal.
+
+## verifier output
+The answer matches E2 on both points.
+
+- **Line 143:** `resilient_llm-excerpt.txt` shows `except BaseException` at line 143, inside `_stream_with_first_token_deadline`. It wraps `await aclose()` after a `TimeoutError`, logs the error at debug level and ignores it, then raises `SilentStallError`. The answer describes this correctly, including the "dead stream" comment.
+- **Retry loop:** `generate_content_async` catches `except Exception` at line 412, so `BaseException`-class cancellations are not caught there. The answer says the same.
+- **The plan's claim:** `plan-row.txt` cites line 143 as `ResilientLlm`'s handler that re-raises cancellation. The answer says the plan misattributed it, which fits E2.
+
+The answer also mentions the `test_resilient_llm_interrupt_passthrough` test, the `_NodeInterruptedLike` stand-in, Phase 03 and the 2.12 failure. E2 doesn't cover those, but nothing in E2 contradicts them and the rubric's core points are all supported.
+
+VERDICT: VERIFIED

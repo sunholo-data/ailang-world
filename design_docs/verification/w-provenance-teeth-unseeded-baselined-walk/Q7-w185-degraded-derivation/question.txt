@@ -1,0 +1,1 @@
+In trial episode w185 (ailang-world, queue row 185), why does the change derive an episode's degraded status from its directory each time it is read, instead of recording it on the session as the row text says ("recorded on the session")?

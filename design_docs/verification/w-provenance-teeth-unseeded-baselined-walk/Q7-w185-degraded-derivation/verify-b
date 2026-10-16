@@ -1,0 +1,15 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792180134.901
+
+## sealed answer
+ANSWER: Because recording "degraded" on the session (a new `session_credentials` column) would force the store schema from v4 to v5, and the store has no migration path — it refuses to open any store at an older `user_version`, so every existing operator store would stop opening; the tests also pin v5 as a frozen future version (`frozenFutureSchemaVersion = 5`, `TestFutureVersionIsRejected`) and schema changes go through ratification. Instead, `session list` and `/v1/health` re-derive degraded status from the episode directory itself on each read using the one shared `worktree.IsLinked` check (the same `.git`-file test the `session new` refusal uses), which needs no stored column and cannot drift from the mint-time rule; the agent reported this as a departure from the ruling and said a row-level record requires its own queue row that includes a migration.
+
+## verifier output
+The answer matches E2 on the core claim. The answer says degraded status is derived from the worktree through `worktree.IsLinked`, with no new column, because recording it on the session would force a schema bump.
+
+- `session_new-comment.diff` has the added comment: "Degraded is the fact worktree.IsLinked reads, so `session list` and /v1/health derive it from the worktree itself rather than from a column a schema bump would add."
+- `store-schema.txt` shows `session_credentials` has no degraded column. It also shows `currentSchemaVersion = 4`, and the store refuses a store at another `user_version`. That supports the version-bump and no-migration points.
+
+Some of the answer's details are not in E2. These are the `frozenFutureSchemaVersion = 5` pin, `TestFutureVersionIsRejected`, the ratification process, and the agent's remark about a separate queue row. They are extra, and nothing in E2 contradicts them.
+
+VERDICT: VERIFIED

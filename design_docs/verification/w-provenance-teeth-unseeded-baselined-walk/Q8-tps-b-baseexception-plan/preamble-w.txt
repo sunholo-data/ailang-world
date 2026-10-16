@@ -1,0 +1,11 @@
+You are answering one question about real software-engineering episodes run on 2026-10-16: two AI agents worked at the same time through AILANG World — episode tps-b on the platform-source repository (ADK 2 upgrade, Phase 0) and episode w185 on the ailang-world repository (queue row 185) — and World recorded them.
+The episodes' World store is served read-only. Your only tool is Bash, and only commands of these exact forms are permitted (anything else is refused):
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 head
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance [--since <entry>] [--episode <ep>] [--scan N]
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why <index|head|sha256:<ref>> [--scan N] [--json]
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get <ref> [--payload]
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object find <semanticId> [--after <ref>] [--limit N]
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log get <index>
+  env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log range --from N [--limit M]
+Do not chain commands. Answer only from what these commands return.
+End with one line beginning `ANSWER:` that states your answer.

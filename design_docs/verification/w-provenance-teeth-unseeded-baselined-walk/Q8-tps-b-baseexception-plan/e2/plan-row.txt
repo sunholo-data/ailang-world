@@ -1,0 +1,2 @@
+# the plan's table row, docs/design/template/template-adk-2-regression-gate.md at base e5b0461e
+33:| `test_resilient_llm_interrupt_passthrough` | `ResilientLlm`'s `except BaseException` (`adk/resilient_llm.py:143`) re-raises cancellation / `NodeInterruptedError`-class exceptions. | ADK 2.0 migration-guide warning |

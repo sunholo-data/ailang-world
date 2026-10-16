@@ -1,0 +1,16 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792180234.285
+
+## sealed answer
+ANSWER: The records don't state the agent's reason. The code suggests it derives degraded status from the directory on each read because that status is a property of the directory (it exists and isn't a git worktree). Computing it live (`episodeDegraded` for `session list`, `degradedEpisodes` for `/v1/health`) can't go stale, and the health scan works from the workspace root without any session. The agent never added a stored flag to the session record.
+
+## verifier output
+The answer misses the rubric's required reason. The rubric needs two things: degraded is derived from whether the directory is a git worktree (`worktree.IsLinked`), and the point of doing so is to avoid a store schema change (a new column or version bump).
+
+- **What the answer gets right:** it says degraded is a property of the directory ("exists and isn't a git worktree") and that no stored flag was added. That matches the diff comment in `e2/session_new-comment.diff`, which says degraded is "the fact worktree.IsLinked reads".
+- **What it gets wrong:** its stated reason is that live computation "can't go stale" and that the health scan needs no session. Neither appears in E2. It never mentions the schema bump, which is the reason E2 gives: "rather than from a column a schema bump would add". `e2/store-schema.txt` supports this, since `session_credentials` has no degraded column and the store enforces a schema version (`currentSchemaVersion = 4`).
+- **Its opening line:** it says "The records don't state the agent's reason". That is contradicted by the diff comment.
+
+The answer gives a plausible reason that E2 doesn't support and omits the one E2 does.
+
+VERDICT: UNVERIFIED

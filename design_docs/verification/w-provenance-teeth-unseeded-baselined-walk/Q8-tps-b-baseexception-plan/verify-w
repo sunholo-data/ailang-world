@@ -1,0 +1,16 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792180392.352
+
+## sealed answer
+ANSWER: The agent inspected the code and found the plan's citation was wrong. ResilientLlm's retry loop catches only `Exception`, so it is not the `except BaseException` at `adk/resilient_llm.py:143` that the plan's table credits with re-raising cancellations. The broad `BaseException` handler the plan refers to is in the first-token-timeout cleanup path, and the sub-doc's episode section records that correction.
+
+## verifier output
+The answer is correct but thin. The rubric asks for line 143's role, and the answer doesn't give it.
+
+- **What the answer gets right:** It says the retry loop catches only `Exception`. It places the broad `BaseException` handler in the first-token-timeout cleanup. It says the sub-doc corrected the plan. All of this matches `e2/resilient_llm-excerpt.txt`. Line 412 is `except Exception` in `generate_content_async`. Line 143 is `except BaseException` inside `_stream_with_first_token_deadline`, after `aclose()` during timeout handling.
+- **What the answer omits:** It doesn't say that line 143 swallows an error while closing a dead stream. It doesn't say that line 143 is not a re-raise handler. It doesn't say that `BaseException`-class cancellations therefore aren't caught in the retry loop. The rubric lists these points as part of a verified answer.
+- **Why that still passes:** The answer does say the handler is not what re-raises cancellations. It places the handler correctly, and nothing in the ground truth contradicts it.
+
+The answer also describes what "the agent inspected" and not the code itself. But its claims are grounded in the code and match it.
+
+VERDICT: VERIFIED
