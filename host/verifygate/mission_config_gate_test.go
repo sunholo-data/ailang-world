@@ -326,8 +326,8 @@ func TestActiveWiringHasNoDriverConsumers(t *testing.T) {
 		t.Fatal("instrument failure: ci.yml jobs anchor absent")
 	}
 	jobs := regexp.MustCompile(`(?m)^  [a-z0-9-]+:$`).FindAllString(ci[jobsStart:], -1)
-	if len(jobs) != 2 {
-		t.Errorf(".github/workflows/ci.yml: enumerated %d jobs, want 2: %v", len(jobs), jobs)
+	if len(jobs) != 3 { // row 181: go-race-verify joined ailang-verify and go-verify
+		t.Errorf(".github/workflows/ci.yml: enumerated %d jobs, want 3: %v", len(jobs), jobs)
 	}
 	for i, line := range strings.Split(ci, "\n") {
 		if !strings.HasPrefix(strings.TrimSpace(line), "#") && strings.Contains(line, "tools/launchd/") {
@@ -433,11 +433,11 @@ var baseVerifyGoProductFixture = strings.Join([]string{
 	`check_evidence_manifest "$evidence_json" 37`,
 	`echo "── go test ./... -count=1"`,
 	`go test ./... -count=1`,
-	`echo "── go test ./... -count=1 -race -timeout 8m"`,
+	`echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`,
 	`cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`,
-	`    print("verify_go.sh: FATAL: -race leg timed out after 600s", file=sys.stderr)`,
+	`    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)`,
 	`    sys.exit(124)`,
-	`echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`,
+	`echo "✓ go gate PASSED ($VERIFY_GO_LEGS): build clean; legs run pass with pinned AILANG_BIN ($ver)"`,
 }, "\n")
 
 func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bool) {
@@ -476,7 +476,7 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 			`bash scripts/tracked_binary_gate.sh --allow-png 'website/static/img/v1/' \`,
 		}
 	}
-	passedAnchor := `echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`
+	passedAnchor := `echo "✓ go gate PASSED ($VERIFY_GO_LEGS): build clean; legs run pass with pinned AILANG_BIN ($ver)"`
 	needles := []string{
 		`if [ -z "${AILANG_BIN:-}" ]; then`,
 		verTokAnchor,
@@ -497,9 +497,9 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 		evidenceCall,
 		`echo "── go test ./... -count=1"`,
 		`go test ./... -count=1`,
-		`echo "── go test ./... -count=1 -race -timeout 8m"`,
+		`echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`,
 		`cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`,
-		`    print("verify_go.sh: FATAL: -race leg timed out after 600s", file=sys.stderr)`,
+		`    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)`,
 		`    sys.exit(124)`,
 		passedAnchor,
 	}
