@@ -87,7 +87,7 @@ func demoPreflight(ctx context.Context, o demoOptions, token string, r worldRead
 	if manifest.Hash != pinRef.String() || manifest.Size != int64(len(pin)) {
 		return h, 0, fmt.Errorf("interpreter archive identity mismatch")
 	}
-	if manifest.Version != h.InterpreterVersion || !strings.HasPrefix(manifest.Version, "AILANG v0.41.0\n") {
+	if manifest.Version != h.InterpreterVersion || !strings.HasPrefix(manifest.Version, demoProofVersion+"\n") {
 		return h, 0, fmt.Errorf("interpreter version mismatch")
 	}
 
@@ -129,7 +129,7 @@ func demoPreflight(ctx context.Context, o demoOptions, token string, r worldRead
 	}
 	for _, ep := range reg.Epochs {
 		for _, candidate := range ep.Candidates {
-			if candidate == "AILANG v0.41.0" {
+			if candidate == demoProofVersion {
 				return h, ep.Epoch, nil
 			}
 		}

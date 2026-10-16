@@ -21,6 +21,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/pins"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -32,8 +33,11 @@ const (
 	demoProofExecBound   = 30 * time.Second
 	demoProofMaxOutput   = 1 << 20
 	demoProofWholeBound  = 90 * time.Second
-	demoProofVersion     = "AILANG v0.41.0"
 )
+
+// demoProofVersion is the first --version line the proof checker's archived
+// interpreter must report: the release manifest's `proof` role.
+var demoProofVersion = pins.VersionLine(pins.RoleProof)
 
 // demoProofClient is the production REST client used by seed and both proof
 // adapters. doRequest derives a per-request deadline from timeout.

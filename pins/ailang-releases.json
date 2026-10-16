@@ -1,0 +1,65 @@
+{
+  "schema": "world/ailang-releases/v1",
+  "note": "Single source of truth for the AILANG releases World uses (row 139 D1, design_docs/planned/w-interpreter-epoch-upgrade-path.md). host/pins embeds a byte-identical copy (go:embed cannot reach the repo root); TestEmbeddedManifestMatchesCanonical fails on drift. Every digest was copied from a measured site that already existed in the repo, never invented: the four per-platform rows from cmd/ailang-worldd/pins.go (row 138 M3, 2026-10-03), whose v0.41.0 binary digests are the same values scripts/verify_world_package.sh pins. Releases holding only the observed role carry no assets: no digest for them is recorded anywhere in the repo.",
+  "platforms": ["darwin/arm64", "linux/amd64"],
+  "releases": [
+    {
+      "release": "v0.41.0",
+      "version": "AILANG v0.41.0",
+      "commit": "24ee108",
+      "roles": [
+        {"role": "interpreter", "since": "2026-10-03", "evidence": "serve --ailang-bin pin (D-WORLD-57); installed by ailang-worldd setup (row 138 M3)"},
+        {"role": "proof", "since": "2026-10-16", "evidence": "demo proof checker pin (row 150 M3a, cmd/ailang-worldd/demo_proof.go)"},
+        {"role": "frozen-compiler", "since": "2026-09-21", "evidence": "world/core ready packet re-projected on v0.41.0; contentHash/interfaceHash byte-identical to v0.30.0 (cmd/world-publish/fences.go)"},
+        {"role": "gate-primary", "since": "2026-09-22", "evidence": "replay goldens re-verified byte-exact on v0.41.0; CI AILANG_BIN and WORLD_PKG_AILANG_BIN (ci.yml, scripts/verify_go.sh, scripts/verify_world_package.sh)"},
+        {"role": "observed", "since": "2026-09-21", "evidence": "scripts/testdata/ailang_release_observed.txt (local pin from 2026-09-21)"}
+      ],
+      "assets": {
+        "darwin/arm64": {
+          "asset": "darwin.arm64.ailang.tar.gz",
+          "tarball_sha256": "b08f3cdea137222ea8df71c53d1a1353ef7c942fd2a307de5d7a17b8fb598e0b",
+          "binary_sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f"
+        },
+        "linux/amd64": {
+          "asset": "linux.x64.ailang.tar.gz",
+          "tarball_sha256": "fa0045dee577942f91f045b2e52d324d34db6087d31802bdabeb4b30a26faa56",
+          "binary_sha256": "8e7a275da6f26c38127352518ce7cdf855375dadff49547216ed90790ed25fb5"
+        }
+      }
+    },
+    {
+      "release": "v0.52.1",
+      "version": "AILANG v0.52.1",
+      "commit": "c68ded4",
+      "roles": [
+        {"role": "tool", "since": "2026-10-03", "evidence": "confinement matrix re-proved on v0.52.1 (row 134 design section 13, V69-V80; row 135 M0, host/daemon/workspace.go)"}
+      ],
+      "assets": {
+        "darwin/arm64": {
+          "asset": "darwin.arm64.ailang.tar.gz",
+          "tarball_sha256": "576236fe152e8f6ee614529d2d12d7212b16743b0443e9774fa5f89c8fa7579e",
+          "binary_sha256": "0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5"
+        },
+        "linux/amd64": {
+          "asset": "linux.x64.ailang.tar.gz",
+          "tarball_sha256": "c682c30f629ca2305f5b09c49ee2b9d43bf73beb68b095b51e19fc31a46f883f",
+          "binary_sha256": "97dcd4a51bd4197ef22be05fa0bff7b24591b1c7a2a6a2250413abfbc3070f30"
+        }
+      }
+    },
+    {
+      "release": "v0.33.0",
+      "version": "AILANG v0.33.0",
+      "roles": [
+        {"role": "observed", "since": "2026-08-10", "evidence": "upstream releases/latest as measured on CI PATH 2026-08-04; listed in scripts/testdata/ailang_release_observed.txt by 9789b87"}
+      ]
+    },
+    {
+      "release": "v0.30.0",
+      "version": "AILANG v0.30.0",
+      "roles": [
+        {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
+      ]
+    }
+  ]
+}

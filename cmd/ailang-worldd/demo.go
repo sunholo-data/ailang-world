@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/pins"
 )
 
-const demoHelp = `usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE
+var demoHelp = `usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE
     --ailang-bin PIN --proof-key-file KEY --manifest FILE [--addr URL]
 
 Prepare a disposable demo worktree and publish descriptors, then mint the demo
@@ -15,8 +17,8 @@ session at a controlling terminal (QUICKSTART section 12). Seed never mints,
 publishes, creates a worktree or opens another writable database.
 --db identifies the daemon's store and permits read-only grant inspection.
 --session is a private session file (default WORLD_SESSION).
---ailang-bin is the capsule/proof pin (v0.41.0); serve's separate
---tool-ailang-bin must be v0.52.1 for the workspace tools.
+--ailang-bin is the capsule/proof pin (` + pins.ReleaseFor(pins.RoleProof).Release + `); serve's separate
+--tool-ailang-bin must be ` + toolRelease() + ` for the workspace tools.
 --proof-key-file is the private operator key required by later proof stages.
 --manifest is a new output path; existing files are refused.
 --addr is the daemon URL, also accepted as the global client flag.
@@ -39,7 +41,7 @@ func runDemo(addr string, args []string, stdout, stderr io.Writer) int {
 	var o demoOptions
 	fs.StringVar(&o.db, "db", "", "daemon database identity")
 	fs.StringVar(&o.session, "session", "", "private session file")
-	fs.StringVar(&o.pin, "ailang-bin", "", "capsule/proof pin v0.41.0")
+	fs.StringVar(&o.pin, "ailang-bin", "", "capsule/proof pin "+pins.ReleaseFor(pins.RoleProof).Release)
 	fs.StringVar(&o.key, "proof-key-file", "", "private proof key for later stages")
 	fs.StringVar(&o.manifest, "manifest", "", "new success manifest path")
 	fs.StringVar(&o.addr, "addr", addr, "daemon URL")

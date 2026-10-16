@@ -34,6 +34,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/pins"
 )
 
 // ToolBinaryRelease is the only tool-binary release the confinement matrix
@@ -41,7 +42,9 @@ import (
 // v0.51.0; re-proved on v0.52.1 by the row-134 design §13, V69–V80, in row 135
 // M0). A different release changes those facts, so startup refuses it (R-SE-8:
 // never widen; stay on the last binary that passed AC4.1).
-const ToolBinaryRelease = "AILANG v0.52.1"
+// Since row 139 M1 it is the release manifest's `tool` role
+// (pins/ailang-releases.json); a var only because it is derived.
+var ToolBinaryRelease = pins.VersionLine(pins.RoleTool)
 
 // workspaceHandlerBudget bounds one episode handler's construction: the
 // policy write plus the one `policy-tool` summary subprocess (~0.1 s, M4a).

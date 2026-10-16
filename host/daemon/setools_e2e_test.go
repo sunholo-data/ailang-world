@@ -43,7 +43,7 @@ import (
 const seToolsManifest = "../../packages/se-tools/transitions.json"
 
 // The two measured releases this e2e runs on.
-const (
+var (
 	seInterpreterRelease = "AILANG v0.41.0"
 	seToolRelease        = ToolBinaryRelease
 )

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/pins"
 	"github.com/sunholo-data/ailang-world/host/pkgproj"
 )
 
@@ -88,7 +89,10 @@ const frozenPackageVersion = "0.1.1"
 // contentHash and interfaceHash are byte-identical across the two compilers
 // (sha256:0c8c6061… and sha256:d16cc882…, 53 signatures). Only compilerVersion
 // and the tarball changed, and the tarball changed because it gained a file.
-const frozenCompilerVersion = "AILANG v0.41.0"
+//
+// Since row 139 M1 the value is the release manifest's `frozen-compiler` role
+// (pins/ailang-releases.json), still stated independently of the golden.
+var frozenCompilerVersion = pins.VersionLine(pins.RoleFrozenCompiler)
 
 // frozenInterfaceHashV2 is the registry-recorded interface identity (v2) of the
 // immutable world/core@0.1.0. The 0.1.1 candidate changes no exported signature,

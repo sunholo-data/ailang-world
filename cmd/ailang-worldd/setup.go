@@ -21,7 +21,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/pinfetch"
 )
 
-const setupHelp = `usage: ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>]
+var setupHelp = `usage: ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>]
            [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 
 Installs the two pinned AILANG binaries World runs, verified byte for byte:
