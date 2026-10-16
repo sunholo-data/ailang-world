@@ -1,0 +1,13 @@
+{
+ "t_issue_b": 1792137655.392,
+ "t_answer_b": 1792137754.347,
+ "t_verified_b": 1792137784.323,
+ "t_issue_w": 1792137802.946,
+ "t_answer_w": 1792137943.087,
+ "t_verified_w": 1792137950.833,
+ "world_wall_s": 147.887,
+ "baseline_wall_s": 128.931,
+ "b_answer_s": 98.955,
+ "w_answer_s": 140.141,
+ "clock": "controller perl Time::HiRes, line-stamped stdout of both arms; W first stream event +0.388 s after issue (<=5 s check)"
+}

@@ -1,0 +1,29 @@
+verifier: fresh claude -p sonnet (Claude Code 2.1.300 pinned copy), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792137784.323
+cost_usd 0.0625023
+verdict_transcript ~/.ailang/state/row114/Q1/vb/verdict.jsonl
+
+## sealed answer
+ANSWER: Codex's World arm failed `config_file_parser` in all three paired FINAL runs because each solution only *read* `app_config.json` — a fixture file codex staged into its World worktree with the `ailang-write` tool — instead of creating it. The grader (`scripts/floor/grade.py`) copies only `benchmark/solution.ail` into a fresh temp workspace (the task spec seeds no `input_files`), so at grade time `app_config.json` didn't exist and the program printed its missing-file error rather than the expected `Loaded MyApp v1.0.0 on port 8080 with 3 features` → logic_error (exit 0, wrong stdout). Codex's own `ailang-run` verification passed every time because the run executes with the episode worktree as its FS sandbox, where the staged file exists. Its shell arm passed 2/3 purely by solution shape: in runs r1/r2 `main` itself wrote `app_config.json` via `writeFile` before parsing (self-contained, survives the fresh grading workspace), while in r3 the shell agent staged the file out-of-band too (native file-change) and failed logic_error exactly like the World arm.
+
+## verifier output
+The answer's World-arm mechanism checks out against E2, but its account of the shell arm has no support there, so I'm marking it UNVERIFIED.
+
+**World arm (confirmed):**
+- `grader-clean-dir-rule.txt` shows the grader builds a fresh workspace. It writes only `benchmark/solution.ail`, plus whatever the spec's `input_files` lists.
+- `grader-rows.json` shows all three codex World runs failed with `logic_error`. The grader stdout was a "not found" message each time, for example `open app_config.json: no such file or directory` in r3.
+- `rerun.json` re-executes each run's final solution:
+  - `solution_calls_writeFile` is false for all three.
+  - In the clean directory, the output is the "not found" message.
+  - In a directory that also holds that run's `app_config.json`, the output is `Loaded MyApp v1.0.0 on port 8080 with 3 features`.
+- The `app_config.json` files come from the World store's `Workspace.Write` effects. That matches the claim that codex staged the fixture in its worktree.
+
+**Shell arm (not supported):**
+- E2 contains no shell-arm solution sources or re-executions. `rerun/` covers only the codex World runs.
+- The answer says shell r1 and r2 passed because `main` wrote `app_config.json` itself with `writeFile`. E2 cannot confirm that.
+- The answer also says shell r3 staged the file out-of-band through a native file-change. E2 cannot confirm that either.
+- The only shell evidence is the grader rows: r1 and r2 passed, and r3 failed with "Configuration file not found". That fits the answer's story but doesn't establish the mechanism.
+
+The shell half of "failed 0/3 while shell passed 2/3" is therefore specific, unsupported detail.
+
+VERDICT: UNVERIFIED

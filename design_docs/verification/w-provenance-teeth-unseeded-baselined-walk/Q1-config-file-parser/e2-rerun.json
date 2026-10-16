@@ -1,0 +1,140 @@
+[
+ {
+  "run": "r1",
+  "mode": "clean",
+  "solution_request": "sha256:0240f83d915a92577889ca8d0e0477ccd607367b867d1a7437b31c6a31390292",
+  "solution_written_at": 1792003490,
+  "app_config_request": "sha256:a6d8b60d866c71b25ef311d1d1450af28d4f405fbd167090be597bf088defc32",
+  "app_config_written_at": 1792003489,
+  "solution_sha256": "8e28357448837973d41ca942b22b13aacb52951933385560f8542fdf07678ef7",
+  "solution_calls_writeFile": false,
+  "argv": [
+   "run",
+   "--entry",
+   "main",
+   "--quiet",
+   "--relax-modules",
+   "--caps",
+   "IO,FS",
+   "benchmark/solution.ail"
+  ],
+  "rc": 0,
+  "stdout": "Configuration file not found\n",
+  "stderr": ""
+ },
+ {
+  "run": "r1",
+  "mode": "with_app_config",
+  "solution_request": "sha256:0240f83d915a92577889ca8d0e0477ccd607367b867d1a7437b31c6a31390292",
+  "solution_written_at": 1792003490,
+  "app_config_request": "sha256:a6d8b60d866c71b25ef311d1d1450af28d4f405fbd167090be597bf088defc32",
+  "app_config_written_at": 1792003489,
+  "solution_sha256": "8e28357448837973d41ca942b22b13aacb52951933385560f8542fdf07678ef7",
+  "solution_calls_writeFile": false,
+  "argv": [
+   "run",
+   "--entry",
+   "main",
+   "--quiet",
+   "--relax-modules",
+   "--caps",
+   "IO,FS",
+   "benchmark/solution.ail"
+  ],
+  "rc": 0,
+  "stdout": "Loaded MyApp v1.0.0 on port 8080 with 3 features\n",
+  "stderr": ""
+ },
+ {
+  "run": "r2",
+  "mode": "clean",
+  "solution_request": "sha256:38b4cf4bd1295d28655a3f0dd0a6c790ee79e3658bcad56f270f7f762b1e28b5",
+  "solution_written_at": 1792005713,
+  "app_config_request": "sha256:c58b0fc1e29454a24c91a6cce661e6fe1d827248d256e5d0747298d611c7ee4d",
+  "app_config_written_at": 1792005713,
+  "solution_sha256": "fb721c882703793d006616dbb71b2f483f1b0ebffd7bf20f8224bd1a7ee1ee8e",
+  "solution_calls_writeFile": false,
+  "argv": [
+   "run",
+   "--entry",
+   "main",
+   "--quiet",
+   "--relax-modules",
+   "--caps",
+   "IO,FS",
+   "benchmark/solution.ail"
+  ],
+  "rc": 0,
+  "stdout": "configuration file not found\n",
+  "stderr": ""
+ },
+ {
+  "run": "r2",
+  "mode": "with_app_config",
+  "solution_request": "sha256:38b4cf4bd1295d28655a3f0dd0a6c790ee79e3658bcad56f270f7f762b1e28b5",
+  "solution_written_at": 1792005713,
+  "app_config_request": "sha256:c58b0fc1e29454a24c91a6cce661e6fe1d827248d256e5d0747298d611c7ee4d",
+  "app_config_written_at": 1792005713,
+  "solution_sha256": "fb721c882703793d006616dbb71b2f483f1b0ebffd7bf20f8224bd1a7ee1ee8e",
+  "solution_calls_writeFile": false,
+  "argv": [
+   "run",
+   "--entry",
+   "main",
+   "--quiet",
+   "--relax-modules",
+   "--caps",
+   "IO,FS",
+   "benchmark/solution.ail"
+  ],
+  "rc": 0,
+  "stdout": "Loaded MyApp v1.0.0 on port 8080 with 3 features\n",
+  "stderr": ""
+ },
+ {
+  "run": "r3",
+  "mode": "clean",
+  "solution_request": "sha256:5cbd6a167a8a56f4bb0aacd599d97eaeb2e2f52c258eba10b97110bf000608ee",
+  "solution_written_at": 1792007861,
+  "app_config_request": "sha256:a25e1ee51e1104ceb338c8eae0333eb3549f045ff38036f572302657eb03a8aa",
+  "app_config_written_at": 1792007861,
+  "solution_sha256": "8b17e702c9e3174b7637fb466936c8e47b68818e36a87f067f8b1600fbb2954f",
+  "solution_calls_writeFile": false,
+  "argv": [
+   "run",
+   "--entry",
+   "main",
+   "--quiet",
+   "--relax-modules",
+   "--caps",
+   "IO,FS",
+   "benchmark/solution.ail"
+  ],
+  "rc": 0,
+  "stdout": "cannot read file: open app_config.json: no such file or directory\n",
+  "stderr": ""
+ },
+ {
+  "run": "r3",
+  "mode": "with_app_config",
+  "solution_request": "sha256:5cbd6a167a8a56f4bb0aacd599d97eaeb2e2f52c258eba10b97110bf000608ee",
+  "solution_written_at": 1792007861,
+  "app_config_request": "sha256:a25e1ee51e1104ceb338c8eae0333eb3549f045ff38036f572302657eb03a8aa",
+  "app_config_written_at": 1792007861,
+  "solution_sha256": "8b17e702c9e3174b7637fb466936c8e47b68818e36a87f067f8b1600fbb2954f",
+  "solution_calls_writeFile": false,
+  "argv": [
+   "run",
+   "--entry",
+   "main",
+   "--quiet",
+   "--relax-modules",
+   "--caps",
+   "IO,FS",
+   "benchmark/solution.ail"
+  ],
+  "rc": 0,
+  "stdout": "Loaded MyApp v1.0.0 on port 8080 with 3 features\n",
+  "stderr": ""
+ }
+]
