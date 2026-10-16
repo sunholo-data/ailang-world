@@ -157,7 +157,8 @@ func (f *execFixture) call(t *testing.T, command string, args ...string) ([]byte
 	return f.h.Execute(boundedTestContext(t), EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, Cost: 1}, data)
 }
 
-// result decodes a run's output strictly into the §4.5 shape.
+// result decodes a run's output strictly into the §4.5 shape; the row-184
+// optional worktree_delta is a field of execResult, so it decodes too.
 func execDecode(t *testing.T, out []byte) execResult {
 	t.Helper()
 	dec := json.NewDecoder(bytes.NewReader(out))
@@ -208,6 +209,9 @@ func TestExecHandlerResultShape(t *testing.T) {
 	if err := json.Unmarshal(out, &m); err != nil {
 		t.Fatal(err)
 	}
+	// Row 184 D4: "worktree_delta" is the one optional key, present only when
+	// the command changed the worktree (TestExecHandlerWorktreeDelta); this
+	// call changes nothing, so the key set is exactly the pre-row-184 one.
 	want := []string{"argv", "duration_ms", "exit_code", "limit", "profile", "sandbox", "stderr", "stderr_bytes",
 		"stderr_sha256", "stderr_truncated", "stdout", "stdout_bytes", "stdout_sha256", "stdout_truncated", "timed_out"}
 	if got := keysOf(m); !reflect.DeepEqual(got, want) {

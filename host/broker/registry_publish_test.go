@@ -1187,8 +1187,10 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// M4a: policy-tool via the constructor's summary read, and run).
 		// Row 140 M2: Workspace.Exec has TWO environments, the host node that
 		// runs srt and the child the trampoline builds; both are driven.
+		// Row 184: the worktree snapshot's git child (worktree_delta.go) also
+		// launches through runBounded.
 		"host/broker/handlers.go": {driveBrokerDryRunPublish, driveAilangToolPolicyTool, driveAilangToolRun,
-			driveExecHostNode, driveExecChild},
+			driveExecHostNode, driveExecChild, driveWorktreeSnapshot},
 		"host/archive/archive.go": {driveArchiveVersionProbe},
 		"host/capsule/capsule.go": {driveCapsuleRun},
 		"host/pkgproj/pkgproj.go": {drivePkgprojCrossCheck},

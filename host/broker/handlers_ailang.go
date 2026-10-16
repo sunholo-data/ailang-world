@@ -452,6 +452,13 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	if err != nil {
 		return nil, fmt.Errorf("broker: re-encode policy-tool request: %w", err)
 	}
+	// Row 184 D1: the toolchain ops (Ailang.Check, Ailang.CLI) record the
+	// worktree changes they made; Workspace.Read/Write are explicit file
+	// effects already, and Ailang.Discover reads no worktree.
+	var probe *worktreeProbe
+	if req.Effect == EffectAilangCheck || req.Effect == EffectAilangCLI {
+		probe = beginWorktreeDelta(ctx, h.root)
+	}
 	stdout, err := h.policyTool(ctx, body)
 	if err != nil {
 		return nil, err
@@ -464,9 +471,14 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	if raw, present := resp["ok"]; !present || json.Unmarshal(raw, &ok) != nil {
 		return nil, fmt.Errorf("broker: policy-tool response has no boolean ok: %q", stdout)
 	}
-	for _, reserved := range []string{"tool", "policy_digest", "package_cache", "world"} {
+	for _, reserved := range []string{"tool", "policy_digest", "package_cache", "worktree_delta", "world"} {
 		if _, clash := resp[reserved]; clash {
 			return nil, fmt.Errorf("broker: policy-tool response carries the reserved key %q", reserved)
+		}
+	}
+	if probe != nil {
+		if d := probe.finish(ctx); d != nil {
+			resp["worktree_delta"], _ = json.Marshal(d)
 		}
 	}
 	return h.stamp(resp)
@@ -587,6 +599,7 @@ func (h *AilangToolHandler) executeRun(ctx context.Context, effect string, paylo
 		stdin = []byte(*req.stdin)
 	}
 	stderr := newBoundedSink(h.bounds.maxOutputBytes)
+	probe := beginWorktreeDelta(ctx, h.root) // row 184 D1, outside the child's timeout
 	stdout, err := runBounded(ctx, h.bounds, handlerCommand{
 		path: h.bin, args: runArgv(variant.path, req), dir: h.root, env: h.childEnv(), stdin: stdin, stderr: stderr,
 	})
@@ -606,6 +619,7 @@ func (h *AilangToolHandler) executeRun(ctx context.Context, effect string, paylo
 	info := variant.info
 	result.Policy = &info
 	result.PackageCache = h.packageCacheDigest
+	result.WorktreeDelta = probe.finish(ctx)
 	return json.Marshal(result)
 }
 
@@ -623,6 +637,9 @@ type runResult struct {
 	// PackageCache (row 141) is the read-only registry snapshot's startup
 	// digest, as stamp adds it to the policy-tool results; omitted without one.
 	PackageCache string `json:"package_cache,omitempty"`
+	// WorktreeDelta (row 184) is what the run changed in the worktree;
+	// omitted when nothing changed, so an unchanged run is byte-identical.
+	WorktreeDelta *WorktreeDelta `json:"worktree_delta,omitempty"`
 }
 
 const (

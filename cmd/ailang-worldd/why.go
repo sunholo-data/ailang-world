@@ -264,7 +264,9 @@ every link (✓ or ✗):
   input    your arguments, decoded and elided
   plan     the effects planned, or the refusal result
   effect   per effect record: allowed/failed/denial, budget before→after,
-           request and result sizes
+           request and result sizes; a toolchain call that changed the
+           worktree adds "worktree: N created, M modified, K deleted" and
+           its first paths (--json: the whole worktree_delta)
   output   the committed output; it must equal world.stateRoot
 
 Targets:
@@ -568,6 +570,62 @@ type whyLink struct {
 	OK     bool   `json:"ok"`
 	Ref    string `json:"ref,omitempty"`
 	Detail string `json:"detail"`
+	// Worktree (row 184 D3) is an effect result's worktree_delta: the files
+	// the toolchain call created, modified or deleted in the worktree.
+	Worktree *broker.WorktreeDelta `json:"worktree,omitempty"`
+}
+
+// whyWorktreePaths is how many changed paths the text form prints.
+const whyWorktreePaths = 5
+
+// resultWorktreeDelta decodes an effect result's worktree_delta, or nil when
+// the result has none (or is not a JSON object).
+func resultWorktreeDelta(payload []byte) *broker.WorktreeDelta {
+	var res struct {
+		Delta *broker.WorktreeDelta `json:"worktree_delta"`
+	}
+	if json.Unmarshal(payload, &res) != nil {
+		return nil
+	}
+	return res.Delta
+}
+
+// worktreeLine renders a delta as `worktree: N created, M modified, K
+// deleted` plus the first paths (D3), or the snapshot's error or cap.
+func worktreeLine(d *broker.WorktreeDelta) string {
+	switch {
+	case d.Error != "":
+		return "worktree: not recorded — " + d.Error
+	case d.Basis == broker.WorktreeBasisWalkCapped:
+		return fmt.Sprintf("worktree: not recorded — the non-git worktree has more than %d files (basis %s)", d.CappedAt, d.Basis)
+	}
+	// Counts are of the listed changes; a truncated delta says so.
+	var created, modified, deleted int
+	paths := make([]string, 0, whyWorktreePaths)
+	for _, c := range d.Changes {
+		switch c.Op {
+		case "created":
+			created++
+		case "modified":
+			modified++
+		case "deleted":
+			deleted++
+		}
+		if len(paths) < whyWorktreePaths {
+			paths = append(paths, c.Op[:1]+" "+c.Path)
+		}
+	}
+	line := fmt.Sprintf("worktree: %d created, %d modified, %d deleted (basis %s)", created, modified, deleted, d.Basis)
+	if d.Truncated {
+		line += fmt.Sprintf(" — first %d of %d changes listed", len(d.Changes), d.Total)
+	}
+	if len(paths) > 0 {
+		line += ": " + strings.Join(paths, ", ")
+		if more := d.Total - len(paths); more > 0 {
+			line += fmt.Sprintf(" (+%d more)", more)
+		}
+	}
+	return line
 }
 
 type whyChain struct {
@@ -748,14 +806,19 @@ func (r worldReader) buildChain(e wireEntry, result []byte) (whyChain, error) {
 			req, reqOK, _ := r.checkedObject(d.RequestRef.String(), broker.EffectRequestV1)
 			okAll = okAll && reqOK
 			resText := "no result"
+			var delta *broker.WorktreeDelta
 			if !d.ResultRef.IsZero() {
 				res, resOK, _ := r.checkedObject(d.ResultRef.String(), broker.EffectResultV1)
 				okAll = okAll && resOK
 				resText = fmt.Sprintf("result %d B", len(res.Payload))
+				if resOK {
+					delta = resultWorktreeDelta(res.Payload)
+				}
 			}
 			ch.add("effect", okAll, ref, "%s %s %s@%s cost %d budget %d→%d request %d B %s%s", id, verdict, d.Effect, d.Scope, d.Cost,
 				d.BudgetBefore, d.BudgetAfter, len(req.Payload), resText,
 				failNote(okAll, "the record is inconsistent or its request/result does not resolve to its hash"))
+			ch.Links[len(ch.Links)-1].Worktree = delta
 		}
 	}
 
@@ -813,6 +876,9 @@ func printChain(w io.Writer, ch whyChain) {
 			ref = l.Ref + "  "
 		}
 		fmt.Fprintf(w, "  %s %-7s %s%s\n", mark, l.Name, ref, l.Detail)
+		if l.Worktree != nil {
+			fmt.Fprintf(w, "            %s\n", worktreeLine(l.Worktree))
+		}
 	}
 	if bad == 0 {
 		fmt.Fprintf(w, "all %d link(s) verified\n", len(ch.Links))
