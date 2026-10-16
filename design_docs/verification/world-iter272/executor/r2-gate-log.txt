@@ -1,0 +1,11 @@
+test rc=0
+race rc=0
+vet rc=0
+gofmt rc=0 (output bytes:        0)
+--- test PASS lines:
+--- PASS: TestDemoProofHTTPProducerRoundTrip (1.10s)
+--- PASS: TestDemoProofSourceHashRefusal (0.96s)
+--- PASS: TestDemoProofAdapterGuards (0.00s)
+28
+--- race:
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	3.999s
