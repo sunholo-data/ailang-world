@@ -1,0 +1,3 @@
+walk transcript: ~/.ailang/state/row114/Q3/w/transcript.jsonl
+795d738a7d7328b4be65eebfac1199267e51755f1aa0d9969e5efa1ff57f890d  w/transcript.jsonl
+claude 2.1.300 sonnet; 15 tool calls (16 turns); permission_denials 1 (a piped object find); ONE NON-ALLOWLISTED CALL SUCCEEDED (see verdict)

@@ -1,0 +1,4 @@
+walk transcript: ~/.ailang/state/row114/K5/Q5/w/transcript.jsonl
+29ce5293df3c0511df6cebed659f26b24f3da30921b477ecd0bc70d59ee7cf39
+claude 2.1.300 sonnet; 114 tool calls (115 turns); permission_denials 0; non-allowlisted calls that succeeded: 0; cost estimate $0.888 (subscription)
+served head after: sha256:abe8303cacb741d4d76038f86e44ce0691702bf980902d77354aa62aa4b387f4

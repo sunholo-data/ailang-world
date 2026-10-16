@@ -1,0 +1,4 @@
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	50.160s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	0.476s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	175.493s
+rc=0

@@ -1,0 +1,72 @@
+# scripts/trial/trial.py at ailang-world dev (the runner that wrote both episode records and generated the PR body)
+## lines 186,216
+   186	    """The trial's agent half: pre-flight, log_from, spawn (run_task.spawn), log_to, parse."""
+   187	    agent, ep = e['agent'], e['id']
+   188	    run_task.check_private_dir(private_dir, e['worktree'], void_dir)
+   189	    if os.listdir(void_dir):
+   190	        raise TrialError(f'void dir {void_dir} is not empty before the run')
+   191	    row = {'error_category': None, 'cause_evidence': None, 'log_from': None, 'log_to': None}
+   192	    try:
+   193	        row['preflight'] = trial_preflight(client, token)
+   194	        row['log_from'] = client.head_index() + 1
+   195	    except (world.HarnessSetup, world.WorldReadError, OSError) as err:
+   196	        row.update(error_category='harness_setup', cause_evidence=str(err))
+   197	        return row
+   198	    mcp_path = None
+   199	    try:
+   200	        if agent == 'claude':
+   201	            mcp_path = run_task.write_private_mcp_config(private_dir, ep, token, addr)
+   202	        argv = build_trial_argv(agent, model=e['model'], prompt_text=prompt_text, cwd=void_dir,
+   203	                                mcp_config_path=mcp_path, addr=addr, max_budget_usd=max_budget_usd)
+   204	        row['argv'] = arms.redact_argv(argv, prompt_text, (token,))
+   205	        env = run_task.agent_env(agent, 'world', private_dir=private_dir, tool_bin=None, token=token)
+   206	        row.update(run_task.spawn(argv, cwd=void_dir, env=env, transcript_path=transcript_path,
+   207	                                  deadline_s=e['deadline_s']))
+   208	    finally:
+   209	        if mcp_path and os.path.exists(mcp_path):
+   210	            os.unlink(mcp_path)
+   211	    row['mcp_config_deleted'] = mcp_path is None or not os.path.exists(mcp_path)
+   212	    if row.get('finish_reason') == 'timeout':
+   213	        row['error_category'] = 'timeout'
+   214	    try:
+   215	        row['log_to'] = client.head_index()
+   216	    except (world.WorldReadError, OSError) as err:
+## lines 395,410
+   395	
+   396	
+   397	def provenance_trailer(rig: str, addr: str, ep: str, log_from: int, log_to: int, runner=subprocess.run) -> dict:
+   398	    """The D-WORLD-60 trailer exactly as ``ailang-worldd provenance`` prints it. Never raises."""
+   399	    if log_from is None or log_to is None or log_to < log_from:
+   400	        return {'error': 'no World entries in the episode range'}
+   401	    scan = min(max(500, log_to - log_from + 1), 5000)
+   402	    argv = worldd_argv(rig, addr, 'provenance', '--since', str(log_from), '--episode', ep, '--scan', str(scan))
+   403	    try:
+   404	        p = runner(argv, capture_output=True, env=child_env(), timeout=WORLDD_TIMEOUT_S)
+   405	    except (OSError, subprocess.SubprocessError) as err:
+   406	        return {'error': f'spawn: {err}'}
+   407	    m = TRAILER_RE.search(p.stdout.decode(errors='replace'))
+   408	    if p.returncode != 0 or not m:
+   409	        return {'error': f'rc={p.returncode}: {p.stderr.decode(errors="replace").strip()[:300]}'}
+   410	    return {'trailer': m.group(0)}
+## lines 520,540
+   520	    lines += ['## Operator grading (unsandboxed, after the agent stopped)', '']
+   521	    for g in row.get('graders') or []:
+   522	        rec = g.get('outcome_record') or {}
+   523	        ref = f'outcome `{rec["ref"]}` (entry {rec["entry"]})' if rec.get('ref') else f'outcome NOT recorded: {rec.get("error")}'
+   524	        verdict = 'PASS' if g.get('passed') else ('TIMEOUT' if g.get('timed_out') else f'FAIL rc={g.get("rc")}')
+   525	        lines.append(f'- `{shlex.join(g["argv"])}` (cwd `{g["cwd"]}`): **{verdict}**; {ref}')
+   526	    lr = row.get('log_range') or {}
+   527	    tsha = (row.get('transcript') or {}).get('sha256')
+   528	    lines += ['', f'World entries {lr.get("from")}-{lr.get("to")}; walk any of them with `ailang-worldd why <entry>`.']
+   529	    if tsha:
+   530	        lines.append(f'Agent transcript kept on the trial rig, sha256:{tsha}.')
+   531	    if evidence_link:
+   532	        lines.append(f'Evidence: {evidence_link}')
+   533	    lines += ['', trailer]
+   534	    body = '\n'.join(lines) + '\n'
+   535	    if BARE_HEX64_RE.search(body) or 'bearer ' in body.lower():
+   536	        raise TrialError('pr-body: refusing to print a token-shaped value')
+   537	    return body
+   538	
+   539	
+   540	# ---------------------------------------------------------------- CLI

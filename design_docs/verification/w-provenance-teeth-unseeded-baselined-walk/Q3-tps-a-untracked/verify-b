@@ -1,0 +1,27 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792159292.738
+
+## sealed answer
+ANSWER: The 47 untracked files are the 4 new adk_contract test files (the actual deliverables), plus 2 AILANG helper scripts (`zz_ls.ail`, `zz_slice.ail`) the agent had to write in the worktree root because it had no shell — `ailang-read` output was capped, so it used these tiny programs via `ailang-run` as `ls`/`sed`/`grep` substitutes to page through large files like `backend/adk/agent.py` (a first attempt at `.scratch/slice.ail` was refused, so they landed in the root) — plus 41 files of AILANG compiler cache (`.ailang/cache/compile/`: `manifest.json` + 8 module dirs × 5 files for the std modules and both helpers) that `ailang-run`/`ailang-check` wrote automatically because the episode's FS sandbox root is the worktree itself. Nothing could be cleaned up because the tool layer exposes no file-delete tool (workspace-exec was restricted to two predefined pytest commands), which the agent noted in its final summary, asking that the two helpers be removed.
+
+## verifier output
+The answer's account of the untracked files matches E2. A few supporting details are not shown there, but none of them is contradicted.
+
+**What E2 supports**
+- `untracked-files.txt` lists 47 paths:
+  - 4 test files under `backend/tests/unit/`: `test_before_tool_callback_contextvars.py`, `test_error_event_finality.py`, `test_hallucinated_tool_name.py` and `test_transfer_declaration_shape.py`.
+  - `zz_ls.ail` and `zz_slice.ail` in the worktree root.
+  - 41 files under `.ailang/cache/compile/`: one `manifest.json` plus 8 module directories with 5 files each. The modules are `std__fs`, `std__io`, `std__list`, `std__option`, `std__result`, `std__string`, `zz_ls` and `zz_slice`. This matches the answer's count of 1 + 8×5.
+- `transcript-tool-calls.json` shows the agent writing `zz_slice.ail` and `zz_ls.ail` with `ailang-write`. It then runs them dozens of times through `ailang-run`. The runs page through large files and list directories. Examples are `backend/adk/agent.py`, `.venv` site-packages and `backend/tests/unit`.
+- The same file shows only `ailang-read`, `ailang-write`, `ailang-edit`, `ailang-run`, `ailang-cli` and the two `workspace-exec` pytest wrappers (`adk-contract-file` and `adk212-contract-file`). There is no delete or shell tool.
+- The cache directory's mtimes (12:05:48 to 12:06:11) line up with the first `ailang-run` calls.
+- The agent did try `.scratch/slice.ail` first. It then wrote `zz_slice.ail` in the root with the same content.
+
+**What E2 does not show**
+- That the `.scratch` write was refused. The transcript shows a write to `.scratch/slice.ail` followed by a root rewrite, and no `.scratch` path is untracked, which is consistent with a refusal.
+- That `ailang-read` output was capped.
+- That the agent's final summary asked for the two helpers to be removed.
+
+These are minor and fit the evidence. The cause of all 47 files (4 deliverables, 2 helper scripts, 41 cache files) and the reason for the helpers are directly supported.
+
+VERDICT: VERIFIED

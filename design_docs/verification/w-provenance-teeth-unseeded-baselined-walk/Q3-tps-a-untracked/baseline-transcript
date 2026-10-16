@@ -1,0 +1,3 @@
+baseline transcript: ~/.ailang/state/row114/Q3/b/transcript.jsonl
+474d046cc2a5bc43bacd57624e0685a144530795a613ec7c8e2579f2b2207d81  b/transcript.jsonl
+pi openrouter/z-ai/glm-5.3; 25 tool calls; $0.87

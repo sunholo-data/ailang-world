@@ -1,0 +1,1 @@
+In trial episode tps-b (platform-source, ADK 2 upgrade Phase 0, contract tests 5–8), why did the operator's ADK 2.12 grader exit rc=2 with collection errors, while the episode's sub-doc states that every ADK 2.12 failure of the new tests is a runtime behaviour difference and not a collection failure?

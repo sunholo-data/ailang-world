@@ -1,0 +1,6 @@
+Q6 verdicts (§6 closed set)
+- B: VERIFIED. Answer +70.9 s; envelope 87.5 s; 12 calls, $0.33.
+- W: PASS — VERIFIED, envelope 25.3 s (bar <= 300 s); answer +14.7 s; 7 calls, 0 non-allowlisted calls succeeded, 0 denials. The verifier noted the reason (unfiltered range vs episode-filtered trailer) is given implicitly and judged it sufficient.
+- Audit clean (as Q4).
+- Controller exposure: partly (knew the episodes were concurrent; had not looked at entries 89-95).
+- Q6 IS a qualifying success (§8).

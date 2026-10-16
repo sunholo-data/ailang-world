@@ -1,0 +1,16 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792175723.425
+
+## sealed answer
+ANSWER: The grader exited rc=2 because it ran pytest over the entire `tests/unit` directory under the ADK 2.12 venv, so pytest imported all test modules during collection; fifteen pre-existing test modules import `adk.agent` → `adk/a2ui.py` → the third-party `a2ui` package, which is broken in `.venv-adk212` (`NameError: name 'models' is not defined` in `a2ui/adk/send_a2ui_to_client_toolset.py`), producing 15 collection errors before any test ran. The sub-doc's statement is about the four new contract tests, which the agent ran per-file (`adk212-contract-file tests/unit/<file>.py`) — those files import only ADK and `adk.resilient_llm` (never `a2ui`), so they collected fine and failed only at runtime (templating, metadata, SessionNotFoundError, cancellation). Both statements are true: the collection errors come from other, pre-existing tests hitting an a2ui/ADK-2.12 venv incompatibility, not from the new tests.
+
+## verifier output
+The answer is supported by E2.
+
+- **Grader run:** `grader-212-episode.stdout` shows the grader ran `-m adk_contract tests/unit` on the whole directory. It hit 15 collection errors, all `NameError: name 'models' is not defined` in the third-party `a2ui/adk/send_a2ui_to_client_toolset.py`. Several of these come through `adk.agent` → `adk/a2ui.py`, and some test files import `a2ui` directly. The answer's mechanism matches, including the claim that it is the `a2ui` package that is broken in the 2.12 venv. Its "fifteen pre-existing test modules import `adk.agent` → `adk/a2ui.py`" is slightly loose, since some import `a2ui` directly, and that does not change the conclusion.
+- **New tests:** `collect-errors-episode.txt` lists 15 errors, and none names the four new files. `new-files-212-individually.txt` shows each new file run alone: it collects and fails 1 test with rc=1. The failures are runtime ones: templating, usage-metadata replacement, `SessionNotFoundError`, and `CancelledError` not raised. This matches the answer's list.
+- **Not checked:** I did not open the files that show the errors are byte-identical at the base commit, and I did not verify the answer's `adk212-contract-file` per-file invocation detail. The rubric does not require either.
+
+The answer covers both sides and nothing in E2 contradicts it.
+
+VERDICT: VERIFIED

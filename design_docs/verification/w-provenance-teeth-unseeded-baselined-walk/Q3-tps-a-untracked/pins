@@ -1,0 +1,12 @@
+Q3 pins (sealed before reveal, 2026-10-16)
+cohort K4: trial store ~/.ailang/state/trial-2026-10-16/store/world.db, archival copy sha256 fddd2e598226564c769b0118c1e059e875b0ea32981ed85be9aa211239ae15e7, 82 entries, head sha256:a9e91e5fbe0be446c7cadb77a57c46a2e79980bb806c206c489dbbf2b149c927 (declared now, before reveal; row 183 trial episode tps-a, entries 3-79 + outcomes 80-81)
+ac9cbdb8362ad3a633f5c947f75b2dd4000e1dcbc75c9e4591e01be75317565c  ~/.ailang/state/row114/Q3/question.txt
+82a65fec051a384d1246c2fa6104c50519eca732a1e1a46680731a357bc71850  ~/.ailang/state/row114/Q3/b/preamble.txt
+b866dfd21836cea08597a40a5d450e5fa1a07b36d5a2893196422aa6eb4b42b0  ~/.ailang/state/row114/Q3/w/preamble.txt
+d202cd410c6efc5605220e161ef18a6a5082d200b0f329537c645d4858929ebd  ~/.ailang/state/row114/Q3/b/prompt.txt
+95745a4ee4cf3b489f5e42c54a96001145c31621562d9f26fcc72afd2d1d080a  ~/.ailang/state/row114/Q3/w/prompt.txt
+8cbe42c8fb12c3fafea3d6fd8b526be965190763388263498bbfec220ac91c26  ~/.ailang/state/row114/Q3/b-manifest.txt
+B: pi openrouter/z-ai/glm-5.3, ailang v0.54.11 policy-tool (D-WORLD-76 run ruling of 2026-10-16), root = episode worktree (no .git, no venvs) + trial evidence + runner/daemon logs, 1988 files
+W: Claude Code 2.1.300 sonnet (pinned clibin copy), allowlisted World client verbs on a served copy of K4, port 47332
+V: fresh claude -p sonnet, --tools Read, cwd = question + sealed answer + rubric + E2
+max_attempt_wall_s 3600

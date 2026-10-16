@@ -1,0 +1,40 @@
+K5 pins (sealed before reveal, 2026-10-16)
+cohort K5: archival copy of the trial store, sha256 9d72ad32a825d420ef5ece7382cafa706184b81f52906ec2f8880f68e6af0ea7, head sha256:abe8303cacb741d4d76038f86e44ce0691702bf980902d77354aa62aa4b387f; episodes tps-b + w185 (concurrent) + operator warm-ups 82-88 + outcomes
+01eb5bc2583d4db8b013170ea197afddf1bd6ff621ac0af9e25efa22d49a7262  Q4/question.txt
+69742961d2611c703ecb8d8506815b0abe99e8b025dd6b3238de069e44a37d63  Q5/question.txt
+d19d70b7260bc67f4d3e73e51759c8f0ea0ad3b5a665f4e52334f1d2250398fc  Q6/question.txt
+b216c5034a55e02776fce0d8cb73a995bd5a37bceebf5e85153d18220bfe3c80  Q4/rubric.txt
+a350b11c8de9d1faff2b120390ae09c4c0a2356bd7d764256b1dfa4c870db8d9  Q5/rubric.txt
+1f99346bf400d4033ea913536df9f1e1bd6847ba17904237e5f3f58296723acd  Q6/rubric.txt
+d99572d26b5fe38d1ffadde0196fc93f51713bdb55f04da24814b7c1ef1605da  preamble-b.txt
+d233df22b4fe7608400f83027ff7e387f5fc8fdd589428d7ac824c1b4be66599  preamble-w.txt
+aa921a43e94ebf88711aec02fc68f7ef46ad0a2cec5f2b90916543f2c00f33b7  Q4/b/prompt.txt
+7db6f6198ef32963cf9eec058b7b6e9e1a28b419ca7736a54211837ece1ebedd  Q5/b/prompt.txt
+acbfe237fb4fcd8d287921f2c9f8ce322144c0dab3878a8672250911d7e69b3a  Q6/b/prompt.txt
+7152c249c19514cefa6e4016065f702027cc99378e08af74182807027086a628  Q4/w/prompt.txt
+98ae530be2d177ed0d75de3e64448fdf8161b0f1e7c2efe1da17fa6e530acd35  Q5/w/prompt.txt
+8cf324d66bc5826172d02a3e0f7d05c5af14b1ac834d3d8ff6e98719141c981d  Q6/w/prompt.txt
+e630cf24996daf11f7494e3739a71e0fb55fc45298785daf4a3f8f6815827fe2  b-manifest.txt
+c61689486c31e8961306228c9b8d6d1fd46986aeacc41d9502a7428b6b4a4525  w-allowlist.txt
+5101a4f3e13ff29c121cba68aeee644425d352ad2fe2af891775547e9e7f7ba7  phrases.txt
+87dab517df7e7bc85303e0d6d7ecb20c714215572694ff067487296ea7d7fc31  exposure-log
+9979e8091c2e30594c8f3f6bba51b45e6ba500646f777c373534ec9a7c1dc565  Q4/e2/base-212-suite.stdout
+29e5e29cf837f1850796b51e21da5777e50d297d19f5d3971f1f745c1cbdaecd  Q4/e2/collect-errors-base.txt
+29e5e29cf837f1850796b51e21da5777e50d297d19f5d3971f1f745c1cbdaecd  Q4/e2/collect-errors-episode.txt
+e3e7abbb456893f7994265fa92f33dfe73244974c45d4df28c310b83e666b98f  Q4/e2/grader-212-episode.stdout
+0ddd307feb6f5b149124800868446eee468d220286f59638ed40b3f196ec7188  Q4/e2/new-files-212-individually.txt
+99d26b463756cadf67962918ae2eddc50810953b745ccb67b88d50e9ecf276a2  Q4/e2/README.txt
+dcfbeff918241e1ebdb6e72391f23a5f9757031d08a568931311928981175cbc  Q5/e2/all-changed-files.txt
+787cb4640a86983619698c94b01b4e7ac7c69b7d220c9fe7c7d155a7261685e6  Q5/e2/base-tests-referencing-changed-behaviour.txt
+f1c0fd02928f0cc91d111cdad811e944c659a47fb81b3eed7a91e6558cdbb177  Q5/e2/go-test-final.txt
+f282661eba1554d6308f93de124c616f9fb31a71c7c152bda8549618b6aa4af2  Q5/e2/modified-test-files.diff
+6247441f0b09074cf31b5199825539376c86128898ef1b01bc33ef18f621835c  Q5/e2/README.txt
+7e2b1e11c3724efa140308af99d91c165c832bc3bafa37d4e86e6257b47aab71  Q5/e2/test-func-counts.txt
+92e809b9700962693daa63602bc03d71e4cfea08f7499f5194a6c4a84eb3766d  Q6/e2/episode-records.json
+5b5b35647ea5db6f40fb8b40afadb3a1e677fb83c6ae4e89badb60ced69e7314  Q6/e2/README.txt
+8f7d580b6890a9ce15cb4cf56f1012b4f95e3475eba73cda4e5f2942bb987d0c  Q6/e2/store-entries-82-100.json
+b11a68fff2df2a67f60037caa2534a28c0648462df8b4c4223a59990c1bba296  Q6/e2/trial-py-excerpt.txt
+B: pi openrouter/z-ai/glm-5.3, ailang v0.54.11 policy-tool, root = both final worktrees + both base commits (no .git, no venvs) + raw logs, 11950 files; scan 0 episode-relevant hits (52 generic-phrase hits, all identical in base/, reviewed)
+W: Claude Code 2.1.300 sonnet (pinned clibin copy), allowlisted World client verbs + A1 --disallowedTools deny list (46), fresh served copy of K5 per question, port 47332
+V: fresh claude -p sonnet 2.1.300, --tools Read, cwd = question + sealed answer + rubric + E2
+max_attempt_wall_s 3600

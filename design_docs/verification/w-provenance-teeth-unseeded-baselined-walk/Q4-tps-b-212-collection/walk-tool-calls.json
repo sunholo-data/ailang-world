@@ -1,0 +1,19 @@
+[
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode tps-b",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log range --from 85 --limit 70",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why head --scan 200",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --since 85 --episode tps-b --scan 200",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 154 --scan 200",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 150 --scan 200",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:7d472bc30cff2e289b9fad5847fb9495bb350011e9670dead0cc4a70ee63df0a --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:ea45c6a8a8f712efb93b1ab7450e09ae0aadef24e5280192f1f8a9ad1a95729c --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:7f9d8531fa4b991d2a407dabe4736a4748001407bdfa89fce5c2afcc25b0c621 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object find world/task-outcome/v1",
+ "cd /tmp; for h in 09f044e1dff57e460523fc62011b5bd75e9fad00e17f6dee7a8d03366cff1e57 553efac26438a40ef060c69fd2e002a5ac868183d0d1fd647b77bfb7433ef8d6 70ed5d24568f0be10735526841356f549b6f69707c9c53f39f53adbf6cb0b78d c1d70727c5ee71f8c199fa081dccad1bff5101bcd4db143db281e2a4fdbc22f3 d7a11c52c1b911121e1f3a710b21bf11b2135152316a585a4b9dc75772fa1c48 e3bf4f2d2d1ef9dd502cd85036f3f1ea8c216e634ea59142eb24fc990a1fa1fb; do echo; done; echo",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:09f044e1dff57e460523fc62011b5bd75e9fad00e17f6dee7a8d03366cff1e57 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:553efac26438a40ef060c69fd2e002a5ac868183d0d1fd647b77bfb7433ef8d6 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:70ed5d24568f0be10735526841356f549b6f69707c9c53f39f53adbf6cb0b78d --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:c1d70727c5ee71f8c199fa081dccad1bff5101bcd4db143db281e2a4fdbc22f3 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:d7a11c52c1b911121e1f3a710b21bf11b2135152316a585a4b9dc75772fa1c48 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 object get sha256:e3bf4f2d2d1ef9dd502cd85036f3f1ea8c216e634ea59142eb24fc990a1fa1fb --payload"
+]

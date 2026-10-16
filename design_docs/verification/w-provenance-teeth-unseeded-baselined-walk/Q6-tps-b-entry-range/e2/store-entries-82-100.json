@@ -1,0 +1,135 @@
+[
+ {
+  "entry": 82,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"./cmd/ailang-worldd\"],\"command\":\"go-vet\"}"
+ },
+ {
+  "entry": 83,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"-run\",\"TestSessionNew\",\"./cmd/ailang-worldd\"],\"command\":\"go-test\"}"
+ },
+ {
+  "entry": 84,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"cmd/ailang-worldd/session_new.go\"],\"command\":\"gofmt-l\"}"
+ },
+ {
+  "entry": 85,
+  "writtenBy": "coordinator:mcp",
+  "episode": "tps-b",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"tests/unit/test_handoff_loop_termination.py\"],\"command\":\"adk-contract-file\"}"
+ },
+ {
+  "entry": 86,
+  "writtenBy": "coordinator:mcp",
+  "episode": "tps-b",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"tests/unit/test_handoff_loop_termination.py\"],\"command\":\"adk212-contract-file\"}"
+ },
+ {
+  "entry": 87,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"-run\",\"TestSessionNew\",\"./cmd/ailang-worldd\"],\"command\":\"go-test\"}"
+ },
+ {
+  "entry": 88,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "workspace-exec",
+  "input": "{\"args\":[\"-run\",\"TestSessionNew\",\"./cmd/ailang-worldd\"],\"command\":\"go-test\"}"
+ },
+ {
+  "entry": 89,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"CLAUDE.md\"}"
+ },
+ {
+  "entry": 90,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"cmd/ailang-worldd/session_new.go\"}"
+ },
+ {
+  "entry": 91,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"design_docs/coding-standards.md\"}"
+ },
+ {
+  "entry": 92,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-cli",
+  "input": "{\"op\":\"tree\",\"path\":\"cmd/ailang-worldd\"}"
+ },
+ {
+  "entry": 93,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-cli",
+  "input": "{\"op\":\"tree\",\"path\":\"host\"}"
+ },
+ {
+  "entry": 94,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"cmd/ailang-worldd/session_new_test.go\"}"
+ },
+ {
+  "entry": 95,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"cmd/ailang-worldd/session.go\"}"
+ },
+ {
+  "entry": 96,
+  "writtenBy": "coordinator:mcp",
+  "episode": "tps-b",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"docs/design/template/template-adk-2-upgrade.md\"}"
+ },
+ {
+  "entry": 97,
+  "writtenBy": "coordinator:mcp",
+  "episode": "tps-b",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"backend/tests/unit/test_handoff_loop_termination.py\"}"
+ },
+ {
+  "entry": 98,
+  "writtenBy": "coordinator:mcp",
+  "episode": "tps-b",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"AGENTS.md\"}"
+ },
+ {
+  "entry": 99,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"cmd/ailang-worldd/workspace.go\"}"
+ },
+ {
+  "entry": 100,
+  "writtenBy": "coordinator:mcp",
+  "episode": "w185",
+  "skill": "ailang-read",
+  "input": "{\"path\":\"cmd/ailang-worldd/setup.go\"}"
+ }
+]

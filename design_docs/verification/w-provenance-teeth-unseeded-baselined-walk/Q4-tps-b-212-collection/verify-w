@@ -1,0 +1,16 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792175779.629
+
+## sealed answer
+ANSWER: The operator's grader ran the whole `tests/unit` directory under the ADK 2.12 venv, not just the four new files. Collecting the existing `tests/unit/test_a2ui_surface_schema.py` failed because its import of `a2ui.adk.send_a2ui_to_client_toolset` raised an error inside the installed a2ui package under ADK 2.12. That collection error gave rc=2. The sub-doc only covers the four new test files, which collect fine under 2.12 and fail at runtime.
+
+## verifier output
+The answer matches E2 on both sides the rubric asks for.
+
+- **Grader side:** `grader-212-episode.stdout` shows the grader ran all of `tests/unit` on the 2.12 venv. Pytest was interrupted by collection errors in existing modules. The first is `tests/unit/test_a2ui_surface_schema.py`, which fails at its import of `a2ui.adk.send_a2ui_to_client_toolset`. The cause is `NameError: name 'models' is not defined`, raised inside the installed a2ui package. This is the cause the answer gives.
+- **No new test files in the errors:** `collect-errors-episode.txt` lists 15 collection errors and none names a new test file. `README.txt` says the base-commit run has an identical list.
+- **Sub-doc side:** `new-files-212-individually.txt`, per `README.txt`, shows each of the four new files collecting and then failing one test at runtime (rc=1). This matches the answer's claim that the sub-doc covers only the four new files, which collect fine and fail at runtime.
+
+The answer names only one erroring file, while E2 shows 15. Most of those 15 fail through `adk/agent.py` and `adk/a2ui.py` importing the same broken a2ui module. The answer doesn't say the one file is the only one, and it doesn't contradict E2, so this is an omission.
+
+VERDICT: VERIFIED

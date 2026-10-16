@@ -1,0 +1,4 @@
+Rubric (fixed before either answer exists; identical for both verifiers). Judge ONLY against E2 (start with e2/README.txt).
+VERIFIED: the answer names what created the untracked files beyond the four test files (all of them, including zz_ls.ail, zz_slice.ail and the .ailang/ directory contents) and why, and E2 directly supports it with nothing contradicting it.
+UNVERIFIED: wrong, unsupported, only plausible, or partial (e.g. explains only some of the files, or names a cause E2 does not show).
+Output a short justification citing E2 files, then a final line exactly `VERDICT: VERIFIED` or `VERDICT: UNVERIFIED`.

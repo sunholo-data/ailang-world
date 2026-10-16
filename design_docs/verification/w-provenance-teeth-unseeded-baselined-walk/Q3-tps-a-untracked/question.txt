@@ -1,0 +1,1 @@
+In trial episode tps-a (platform-source, ADK 2 Phase 0, tests 1–4), why does the episode worktree hold 47 untracked files — including zz_ls.ail, zz_slice.ail and a .ailang/ directory — when the task asked for four new test files and one doc edit?

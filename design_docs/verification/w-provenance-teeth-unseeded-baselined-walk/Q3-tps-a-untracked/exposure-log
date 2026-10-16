@@ -1,0 +1,5 @@
+# Exposure log — Q3
+- Harvest (E1 REAL): arose in operation — after row 183 trial episode tps-a the controller found 47 untracked files where the task asked for 4 test files + 1 doc edit, and must know why before opening the draft PR (which files belong in it). Event ref: episode tps-a, entries 3-79, worktree state sha256 61b5e6a2….
+- Controller: the attended session (Claude Opus 5.5, Mark attending). It has NOT diagnosed the question; while building E2 it saw the file inventory (41 under .ailang/cache/compile/, 4 test files, zz_ls.ail, zz_slice.ail) and the tool-call counts (36 ailang-run, 7 ailang-write, …), and stopped there. It wrote the preambles (channel only, no mechanism).
+- B root scan: no diagnosis text exists to scan for (none written); manifest committed (b-manifest sha256 in pins).
+- W environment: scratch cwd holds only worldd-client; no repo, docs or memory; canary control passed.
