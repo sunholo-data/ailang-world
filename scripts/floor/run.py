@@ -157,6 +157,8 @@ def load_config(path: str = CONFIG) -> dict:
         raise RunRefused('knobs.claude_isolation must be a bool')
     if k.get('codex_mcp_approval', 'default') not in arms.CODEX_MCP_APPROVAL_MODES:
         raise RunRefused(f'knobs.codex_mcp_approval must be one of {arms.CODEX_MCP_APPROVAL_MODES}')
+    if not isinstance(k.get('outcome_capture', False), bool):
+        raise RunRefused('knobs.outcome_capture must be a bool')
     for m in MODES:
         sec = cfg.get(m) or {}
         if set((sec.get('models') or {})) != set(arms.AGENTS):
@@ -533,7 +535,8 @@ def summarize(rows: list, tasks: list) -> dict:
                       'O': round(float(stats.median(o_t.values())), 4) if o_t else None,
                       'o_t': {k: round(v, 3) for k, v in sorted(o_t.items())},
                       'harness_faults': faults, 'capacity_reruns': retried,
-                      'unclassified': sum(1 for r in final if r['class'] == 'UNCLASSIFIED')}
+                      'unclassified': sum(1 for r in final if r['class'] == 'UNCLASSIFIED'),
+                      'outcome_record_errors': outcome_record_errors(a)}
     return out
 
 
@@ -740,6 +743,7 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
     if arm == 'world':
         row['row153'] = row153_hits(transcript, daemon_log)
     row['class'] = classify_row(row)
+    maybe_record_outcome(ctx, agent, ep, row, spec, graded, drv)
     if agent == 'claude' and row['cost_usd']:
         ctx.spend_this += float(row['cost_usd'])
     os.makedirs(os.path.dirname(rows_path), exist_ok=True)
@@ -749,6 +753,85 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
     if q:
         raise QuotaAbort(f'{agent}/{arm}/{task.id}: {q[0]}: {q[1]}')
     return row
+
+
+# Row 182 (w-episode-outcome-capture): one world/task-outcome/v1 per graded cell, committed
+# next to the episode's effects so a provenance walk can reach the outcome, the grading rule and
+# the task's entry range. Outside every timed window (the row's wall_ms is already taken).
+OUTCOME_RULE = ('only benchmark/solution.ail is copied into an empty temporary directory, plus the '
+                "task's declared input_files; then run")
+OUTCOME_TIMEOUT_S = 30
+
+
+def outcome_payload(ep: str, row: dict, spec: dict, graded: dict | None, drv: dict, tool: str) -> dict:
+    """The D1 payload for one graded row (pure; the verb canonicalizes and validates it again)."""
+    w = drv.get('world') or {}
+    entries = None
+    if row['arm'] == 'world':
+        if w.get('log_from') is None or w.get('log_to') is None:
+            raise ValueError('world row without a log range')
+        entries = {'from': int(w['log_from']), 'to': int(w['log_to'])}
+    argv = grade.build_argv(tool, spec)[1:]
+    return {
+        'agent': row['agent'], 'arm': row['arm'], 'episodeId': ep, 'run': int(row['run']), 'label': row['label'],
+        'task': row['task'], 'entries': entries,
+        'outcome': {'class': row['class'], 'errorCategory': row['error_category'] or '',
+                    'compileOk': row['compile_ok'], 'runtimeOk': row['runtime_ok'], 'stdoutOk': row['stdout_ok'],
+                    'stdoutHead': _head_bytes(row['grade_stdout_head']), 'stderrHead': _head_bytes(row['grade_stderr_head']),
+                    'solutionSha256': row['solution_sha256'] or '', 'solutionState': row['solution_state'] or ''},
+        'grading': {'rule': OUTCOME_RULE, 'argv': argv, 'inputFiles': sorted((spec.get('input_files') or {}).keys()),
+                    'expectedStdout': spec.get('expected_stdout') or '', 'graderVersion': grade.GRADER_VERSION,
+                    'toolSha256': (graded or {}).get('tool_sha256') or ''},
+    }
+
+
+def record_outcome(L: dict, addr: str, ep: str, row: dict, spec: dict, graded: dict | None, drv: dict, tool: str,
+                   runner=subprocess.run) -> dict:
+    """Commit the row's outcome with the rig's ailang-worldd under the episode's session.
+
+    Returns {'ref', 'entry'} or {'error'}; it never raises, and the row's class is never touched:
+    a failed record is a harness defect the phase record counts (outcome_record_errors)."""
+    try:
+        payload = outcome_payload(ep, row, spec, graded, drv, tool)
+    except (ValueError, KeyError, TypeError) as e:
+        return {'error': f'payload: {e}'}
+    env = {kk: v for kk, v in os.environ.items() if kk not in ('AILANG_REGISTRY_API_KEY', 'WORLD_SESSION')}
+    argv = [os.path.join(L['bin'], 'ailang-worldd'), '--addr', f'http://{addr}',
+            'outcome', 'record', '--file', '-', '--session', os.path.join(L['private'], f'{ep}.session')]
+    try:
+        p = runner(argv, input=json.dumps(payload).encode(), capture_output=True, env=env, timeout=OUTCOME_TIMEOUT_S)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return {'error': f'spawn: {e}'}
+    out = p.stdout.decode(errors='replace')
+    m = re.search(r'object (sha256:[0-9a-f]{64}) entry (\d+)', out)
+    if p.returncode != 0 or not m:
+        return {'error': f'rc={p.returncode}: {p.stderr.decode(errors="replace").strip()[:300]}'}
+    return {'ref': m.group(1), 'entry': int(m.group(2))}
+
+
+def maybe_record_outcome(ctx, agent: str, ep: str, row: dict, spec: dict, graded: dict | None, drv: dict,
+                         recorder=None) -> None:
+    """The run_cell hook (after classify_row): record when the knob is on and the run has a World
+    client and this agent's episode token (paired phase, iterate with World arms). Never raises
+    and never touches row['class']; a failure lands in row['outcome_record']['error']."""
+    if not (ctx.cfg['knobs'].get('outcome_capture') and ctx.client is not None and ctx.tokens.get(agent)):
+        return
+    recorder = recorder or record_outcome
+    try:
+        row['outcome_record'] = recorder(ctx.L, ctx.client.addr, ep, row, spec, graded, drv, tool_bin(ctx.cfg))
+    except Exception as e:  # noqa: BLE001 — a record must never take a graded cell down
+        row['outcome_record'] = {'error': f'recorder: {e}'}
+
+
+def _head_bytes(s: str, limit: int = 400) -> str:
+    """At most ``limit`` UTF-8 bytes, cut on a character boundary (the verb bounds bytes, the row
+    head is ``limit`` characters; surrogate escapes become U+FFFD first, as Go would decode them)."""
+    b = (s or '').encode('utf-8', errors='surrogateescape').decode('utf-8', errors='replace').encode('utf-8')
+    return b[:limit].decode('utf-8', errors='ignore')
+
+
+def outcome_record_errors(rows: list) -> int:
+    return sum(1 for r in rows if (r.get('outcome_record') or {}).get('error'))
 
 
 def read_token(path: str) -> str:
@@ -1146,6 +1229,7 @@ def cmd_final(a) -> int:
            'status': status, 'abort': abort, 'commit': head_commit(), 'prereg': os.path.basename(a.prereg),
            'canary': canaries, 'tasks': len(tasks), 'passes': passes, 'harness_faults': faults,
            'capacity_reruns': sum(1 for r in rows if r.get('attempt', 1) > 1),
+           'outcome_record_errors': outcome_record_errors(rows),
            'spend_usd_claude': round(ctx.spend_this, 4), 'wall_s': round(time.time() - t0, 1),
            'transcripts': os.path.relpath(tdir, os.path.expanduser('~'))}
     os.makedirs(os.path.join(ev, 'phases'), exist_ok=True)

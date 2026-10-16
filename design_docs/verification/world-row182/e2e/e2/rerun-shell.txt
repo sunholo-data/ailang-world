@@ -1,0 +1,4 @@
+clean: cannot read file: open app_config.json: no such file or directory
+clean: rc=0
+with_app_config: Loaded MyApp v1.0.0 on port 8080 with 3 features
+with_app_config: rc=0

@@ -1,0 +1,10 @@
+[
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 head",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 provenance --scan 200",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 log range --from 0 --limit 20",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 why head --json",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 object find config_file_parser",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 object get sha256:bb54a6fea8e7d9632efc834ffedbe529993790285c23ec8c06dcecbb0c820819 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 object get sha256:3a05019b67e890450fa6decdf7ed7a21d76b114796bd21ccfe08ae2ab749ac91 --payload",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47315 object get sha256:e5276100df6aacc9ca43e048f06d09f74ad5de4a006362e9b2c612460f67fd11 --payload"
+]

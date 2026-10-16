@@ -183,58 +183,73 @@ type demoProofWriter struct {
 func (demoProofWriter) BusyTimeout() time.Duration { return 0 }
 
 func (w demoProofWriter) PutObject(ctx context.Context, o store.Object) error {
-	head, has, err := headState(ctx, w.c)
+	obj := demoObject{Hash: o.Hash.String(), InterfaceHash: o.InterfaceHash.String(), SemanticID: o.SemanticID, Provenance: o.Provenance, Payload: o.Payload}
+	_, err := commitOneObject(ctx, w.c, w.token, obj, "demo", w.interpreter, "proof")
+	return err
+}
+
+// commitOneObject appends obj as the next log entry over POST /v1/commit,
+// linked to the selected head's entry and written by writtenBy. When
+// interpreter is non-empty the head entry must carry it (the proof's pin);
+// otherwise the new entry repeats the head entry's interpreter. It returns the
+// committed entry index. A transport error, 503 CommitUncertain, or a 200 that
+// names another head is a *store.UncertainError (never retried); any other
+// non-200 is a plain error. Shared by the row-150 proof writer and row 182's
+// `outcome record`; op names the caller in errors.
+func commitOneObject(ctx context.Context, c *client, token string, obj demoObject, writtenBy, interpreter, op string) (int64, error) {
+	head, has, err := headState(ctx, c)
 	if err != nil {
-		return fmt.Errorf("proof writer: read head: %w", err)
+		return 0, fmt.Errorf("%s writer: read head: %w", op, err)
 	}
 	if !has {
-		return fmt.Errorf("proof writer: no selected head to commit onto")
+		return 0, fmt.Errorf("%s writer: no selected head to commit onto", op)
 	}
-	r := worldReader{ctx: ctx, c: w.c}
+	r := worldReader{ctx: ctx, c: c}
 	world, found, err := r.world(head)
 	if err != nil {
-		return fmt.Errorf("proof writer: read world %s: %w", head, err)
+		return 0, fmt.Errorf("%s writer: read world %s: %w", op, head, err)
 	}
 	if !found {
-		return fmt.Errorf("proof writer: selected head %s has no world row", head)
+		return 0, fmt.Errorf("%s writer: selected head %s has no world row", op, head)
 	}
 	last, found, err := r.entry(world.Revision)
 	if err != nil {
-		return fmt.Errorf("proof writer: read head entry: %w", err)
+		return 0, fmt.Errorf("%s writer: read head entry: %w", op, err)
 	}
 	if !found {
-		return fmt.Errorf("proof writer: head entry %d is absent", world.Revision)
+		return 0, fmt.Errorf("%s writer: head entry %d is absent", op, world.Revision)
 	}
-	if last.Header.Interpreter != w.interpreter {
-		return fmt.Errorf("proof writer: head entry interpreter %s is not the pinned %s", last.Header.Interpreter, w.interpreter)
+	if interpreter == "" {
+		interpreter = last.Header.Interpreter
+	} else if last.Header.Interpreter != interpreter {
+		return 0, fmt.Errorf("%s writer: head entry interpreter %s is not the pinned %s", op, last.Header.Interpreter, interpreter)
 	}
-	obj := demoObject{Hash: o.Hash.String(), InterfaceHash: o.InterfaceHash.String(), SemanticID: o.SemanticID, Provenance: o.Provenance, Payload: o.Payload}
-	commit := demoMakeCommit(obj, world.Revision+1, last.Header.SemanticsEpoch, w.interpreter, head, world.LogHead)
+	commit := makeOneObjectCommit(obj, world.Revision+1, last.Header.SemanticsEpoch, interpreter, head, world.LogHead, writtenBy)
 	data, err := json.Marshal(commit)
 	if err != nil {
-		return fmt.Errorf("proof writer: encode commit: %w", err)
+		return 0, fmt.Errorf("%s writer: encode commit: %w", op, err)
 	}
-	status, body, err := w.c.doAuth(ctx, http.MethodPost, "/v1/commit", bytes.NewReader(data), "Bearer "+w.token)
+	status, body, err := c.doAuth(ctx, http.MethodPost, "/v1/commit", bytes.NewReader(data), "Bearer "+token)
 	if err != nil {
 		// The request may already have reached the daemon: the outcome is unknown.
-		return &store.UncertainError{Op: "proof commit", Cause: err}
+		return 0, &store.UncertainError{Op: op + " commit", Cause: err}
 	}
 	var failure daemon.APIError
 	_ = json.Unmarshal(body, &failure)
 	if status == http.StatusServiceUnavailable && failure.Error.Class == "CommitUncertain" {
-		return &store.UncertainError{Op: "proof commit", Cause: fmt.Errorf("HTTP 503 CommitUncertain")}
+		return 0, &store.UncertainError{Op: op + " commit", Cause: fmt.Errorf("HTTP 503 CommitUncertain")}
 	}
 	if status != http.StatusOK {
-		return fmt.Errorf("proof writer: commit refused HTTP %d %s; not retried", status, failure.Error.Class)
+		return 0, fmt.Errorf("%s writer: commit refused HTTP %d %s; not retried", op, status, failure.Error.Class)
 	}
 	var result struct {
 		SelectedHead string `json:"selectedHead"`
 	}
 	if json.Unmarshal(body, &result) != nil || result.SelectedHead != commit.NextWorld.Ref {
 		// A 200 that does not name the committed head may still have landed.
-		return &store.UncertainError{Op: "proof commit", Cause: fmt.Errorf("commit answered %q, not the committed %s", result.SelectedHead, commit.NextWorld.Ref)}
+		return 0, &store.UncertainError{Op: op + " commit", Cause: fmt.Errorf("commit answered %q, not the committed %s", result.SelectedHead, commit.NextWorld.Ref)}
 	}
-	return nil
+	return commit.Entry.Header.EntryIndex, nil
 }
 
 // demoProve mints the proof of the committed source srcRef through the

@@ -1,0 +1,18 @@
+[
+ {
+  "mode": "clean",
+  "rc": 0,
+  "stdout": "Configuration file not found\n",
+  "stderr": "",
+  "solution_sha256": "f61918bc504d8e91b3fb51a2d4846e0cd1f32f51632ae66f166dad029bc6c00c",
+  "calls_writeFile": false
+ },
+ {
+  "mode": "with_app_config",
+  "rc": 0,
+  "stdout": "Loaded MyApp v1.0.0 on port 8080 with 3 features\n",
+  "stderr": "",
+  "solution_sha256": "f61918bc504d8e91b3fb51a2d4846e0cd1f32f51632ae66f166dad029bc6c00c",
+  "calls_writeFile": false
+ }
+]

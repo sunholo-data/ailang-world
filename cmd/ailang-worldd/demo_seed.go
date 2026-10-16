@@ -262,7 +262,14 @@ func demoDomainObjects(source []byte) []demoObject {
 	return out
 }
 func demoMakeCommit(o demoObject, index, epoch int64, interpreter, observed, prev string) demoCommit {
-	header := wireHeader{EntryIndex: index, SemanticsEpoch: epoch, TransitionFn: o.Hash, Interpreter: interpreter, PrevEntryHash: prev, WrittenBy: "demo"}
+	return makeOneObjectCommit(o, index, epoch, interpreter, observed, prev, "demo")
+}
+
+// makeOneObjectCommit builds the commit that appends one object as the next
+// log entry (its transitionRef), written by writtenBy. Shared by the demo seed
+// and proof (writtenBy "demo") and `outcome record` (row 182, "harness:floor").
+func makeOneObjectCommit(o demoObject, index, epoch int64, interpreter, observed, prev, writtenBy string) demoCommit {
+	header := wireHeader{EntryIndex: index, SemanticsEpoch: epoch, TransitionFn: o.Hash, Interpreter: interpreter, PrevEntryHash: prev, WrittenBy: writtenBy}
 	encoded, _ := json.Marshal(struct {
 		Header        wireHeader `json:"header"`
 		TransitionRef string     `json:"transitionRef"`
