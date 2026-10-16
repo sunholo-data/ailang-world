@@ -114,6 +114,13 @@ func (r *walkRig) invoke(episode, skill, task, content string) synthInv {
 // invokeAs is invoke for an invocation that arrived on surface: its id is
 // <surface>:<episode>:<task> and it is written by coordinator:<surface>.
 func (r *walkRig) invokeAs(surface coordinator.Surface, episode, skill, task, content string) synthInv {
+	r.t.Helper()
+	return r.invokeResult(surface, episode, skill, task, content, nil)
+}
+
+// invokeResult is invokeAs with the effect result's bytes given (nil = the
+// Workspace.Read {"content": …} result).
+func (r *walkRig) invokeResult(surface coordinator.Surface, episode, skill, task, content string, result []byte) synthInv {
 	t := r.t
 	t.Helper()
 	by := "coordinator:" + string(surface)
@@ -121,7 +128,10 @@ func (r *walkRig) invokeAs(surface coordinator.Surface, episode, skill, task, co
 	plan := synthObject(coordinator.EffectPlanV1, by,
 		[]byte(`{"effects":[{"cost":1,"effect":"Workspace.Read","id":"e1","payload":{"op":"read","path":"data.txt"},"scope":"worktree"}],"finish":true,"plan":"world/effect-plan/v1","result":null}`))
 	reqObj := synthObject(broker.EffectRequestV1, "host/broker", []byte(`{"op":"read","path":"data.txt","task":"`+task+`"}`))
-	resObj := synthObject(broker.EffectResultV1, "host/broker", mustJSONT(t, map[string]string{"content": content}))
+	if result == nil {
+		result = mustJSONT(t, map[string]string{"content": content})
+	}
+	resObj := synthObject(broker.EffectResultV1, "host/broker", result)
 	rec := broker.EffectRecord{Effect: "Workspace.Read", Scope: "worktree", Cost: 1, BudgetBefore: 20, BudgetAfter: 19, Allowed: true,
 		RequestRef: hashref.MustParse(reqObj.Hash), ResultRef: hashref.MustParse(resObj.Hash)}
 	recObj := synthObject(broker.EffectRecordV1, "host/broker", broker.EncodeRecord(rec))
@@ -350,6 +360,60 @@ func TestWhyScanBound(t *testing.T) {
 	}
 	if code, _, _ := whyRun(t, r.url, "", "x", "--scan", "5001"); code != exitUsage {
 		t.Fatalf("--scan 5001 accepted")
+	}
+}
+
+// TestWhyShowsTheWorktreeDelta is row 184 AC5: an effect whose result carries
+// a worktree_delta prints `worktree: N created, M modified, K deleted` and the
+// first 5 paths; --json carries the whole list; an effect without one prints
+// no worktree line; a recorded snapshot error is shown, not dropped.
+func TestWhyShowsTheWorktreeDelta(t *testing.T) {
+	r := newWalkRig(t)
+	plain := r.invoke("ep1", "ailang-read", "task-1", "one\n")
+	size := int64(3)
+	var changes []broker.WorktreeChange
+	for i := 0; i < 6; i++ {
+		changes = append(changes, broker.WorktreeChange{Path: fmt.Sprintf(".ailang/cache/f%d", i), Op: "created", Size: &size,
+			SHA256: strings.Repeat("ab", 32)})
+	}
+	changes = append(changes, broker.WorktreeChange{Path: "a.txt", Op: "modified", Size: &size, SHA256: strings.Repeat("cd", 32)},
+		broker.WorktreeChange{Path: "b.txt", Op: "deleted"})
+	delta := broker.WorktreeDelta{Changes: changes, Total: len(changes), Basis: broker.WorktreeBasisGit}
+	res := mustJSONT(t, map[string]any{"admitted": true, "worktree_delta": delta})
+	withDelta := r.invokeResult(coordinator.SurfaceA2A, "ep1", "ailang-run", "task-2", "two\n", res)
+	failed := r.invokeResult(coordinator.SurfaceA2A, "ep1", "ailang-run", "task-3", "three\n",
+		mustJSONT(t, map[string]any{"worktree_delta": broker.WorktreeDelta{Basis: broker.WorktreeBasisGit, Error: "worktree snapshot before the call failed: boom"}}))
+
+	code, stdout, stderr := whyRun(t, r.url, "", withDelta.id)
+	assertChainOK(t, "with delta", code, stdout, stderr, 2)
+	want := "worktree: 6 created, 1 modified, 1 deleted (basis git-status): c .ailang/cache/f0, c .ailang/cache/f1, " +
+		"c .ailang/cache/f2, c .ailang/cache/f3, c .ailang/cache/f4 (+3 more)"
+	if !strings.Contains(stdout, want) {
+		t.Fatalf("why did not print the worktree line %q:\n%s", want, stdout)
+	}
+	code, stdout, _ = whyRun(t, r.url, "", withDelta.id, "--json")
+	var ch whyChain
+	if code != exitOK || json.Unmarshal([]byte(stdout), &ch) != nil {
+		t.Fatalf("--json exit %d: %s", code, stdout)
+	}
+	var got *broker.WorktreeDelta
+	for _, l := range ch.Links {
+		if l.Name == "effect" {
+			got = l.Worktree
+		}
+	}
+	if got == nil || len(got.Changes) != 8 || got.Changes[7].Path != "b.txt" || got.Total != 8 {
+		t.Fatalf("--json effect worktree = %+v", got)
+	}
+	code, stdout, stderr = whyRun(t, r.url, "", plain.id)
+	assertChainOK(t, "no delta", code, stdout, stderr, 1)
+	if strings.Contains(stdout, "worktree:") {
+		t.Fatalf("an effect without a delta printed a worktree line:\n%s", stdout)
+	}
+	code, stdout, stderr = whyRun(t, r.url, "", failed.id)
+	assertChainOK(t, "snapshot error", code, stdout, stderr, 3)
+	if !strings.Contains(stdout, "worktree: not recorded — worktree snapshot before the call failed: boom") {
+		t.Fatalf("the snapshot error is not shown:\n%s", stdout)
 	}
 }
 

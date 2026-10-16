@@ -233,7 +233,7 @@ jobs:
           [ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }
           tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"
           tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"
-          tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual"
+          tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual TestExecSrtWorktreeDelta"
           log="$RUNNER_TEMP/exec-srt-verbose.log"
           rc=0
           go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v \

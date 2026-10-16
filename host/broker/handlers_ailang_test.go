@@ -149,12 +149,15 @@ if [ "$1" = "policy-tool" ]; then
   esac
   printf '%s' "$req" > "$d/stdin"
   echo x >> "$d/dispatches"
+  if [ "$mode" = ptwrites ]; then echo n >> "$d/ptn"; printf 'pt\n' > "pt-$(wc -l < "$d/ptn" | tr -d ' ').txt"; fi
+  if [ "$mode" = ptreserved ]; then echo '{"ok":true,"worktree_delta":{"basis":"forged"}}'; exit 0; fi
   echo '{"ok":true}'
   exit 0
 fi
 echo x >> "$d/dispatches"
 cat > "$d/runstdin"
 case "$mode" in
+  writes) printf 'made by run\n' > made.txt; echo out; echo 'policy: {"ok":true,"decision":{"ok":true,"function":"main"}}' >&2; exit 0 ;;
   admitted) echo out; echo 'policy: {"ok":true,"decision":{"ok":true,"function":"main"}}' >&2; exit 0 ;;
   nodecision) echo 'some output'; echo 'no decision here' >&2; exit 0 ;;
 esac

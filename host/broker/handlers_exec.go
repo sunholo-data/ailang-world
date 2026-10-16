@@ -186,6 +186,9 @@ type execResult struct {
 	Argv            []string          `json:"argv"`
 	Profile         execResultProfile `json:"profile"`
 	Sandbox         execResultSandbox `json:"sandbox"`
+	// WorktreeDelta (row 184) is what the command changed in the episode
+	// worktree; omitted when nothing changed (byte-identical results).
+	WorktreeDelta *WorktreeDelta `json:"worktree_delta,omitempty"`
 }
 
 type execResultProfile struct {
@@ -252,6 +255,8 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	}
 	launch := h.launch(append(append([]string{cmd.Argv0}, cmd.Argv[1:]...), emitted...), true)
 	capture := newCaptureHeadTail(execHeadBytes, execTailBytes, h.maxOutput)
+	// Row 184 D1: the worktree before the command, outside its budget.
+	probe := beginWorktreeDelta(ctx, h.worktree)
 	start := time.Now()
 	h.spawns.Add(1)
 	_, runErr := runBounded(ctx, handlerBounds{execTimeout: budget, maxOutputBytes: h.maxOutput}, handlerCommand{
@@ -283,6 +288,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	out, errOut := capture.stdout.snapshot(), capture.stderr.snapshot()
 	res.Stdout, res.StdoutBytes, res.StdoutTruncated, res.StdoutSHA256 = out.Text, out.Bytes, out.Truncated, out.SHA256
 	res.Stderr, res.StderrBytes, res.StderrTruncated, res.StderrSHA256 = errOut.Text, errOut.Bytes, errOut.Truncated, errOut.SHA256
+	res.WorktreeDelta = probe.finish(ctx)
 	return json.Marshal(res)
 }
 
