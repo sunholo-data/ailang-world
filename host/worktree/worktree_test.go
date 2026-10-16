@@ -113,6 +113,31 @@ func TestAddIgnoresAmbientGitAndRegistryEnvironment(t *testing.T) {
 	}
 }
 
+// Row 185: IsLinked accepts the worktree Add makes and nothing else — not a
+// plain directory, not a full clone's .git DIRECTORY, not a .git file that
+// is not a gitdir pointer, not an absent path.
+func TestIsLinked(t *testing.T) {
+	git := gitBin(t)
+	repo := newRepo(t, git)
+	linked := filepath.Join(t.TempDir(), "ep1")
+	if err := Add(testCtx(t), git, repo, linked, ""); err != nil {
+		t.Fatal(err)
+	}
+	plain := t.TempDir()
+	bogus := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bogus, ".git"), []byte("not a pointer\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for dir, want := range map[string]bool{
+		linked: true, plain: false, repo: false, bogus: false,
+		filepath.Join(plain, "absent"): false,
+	} {
+		if got := IsLinked(dir); got != want {
+			t.Errorf("IsLinked(%s) = %v, want %v", dir, got, want)
+		}
+	}
+}
+
 func TestAddFailureIsReported(t *testing.T) {
 	git := gitBin(t)
 	err := Add(testCtx(t), git, filepath.Join(t.TempDir(), "not-a-repo"), filepath.Join(t.TempDir(), "x"), "")

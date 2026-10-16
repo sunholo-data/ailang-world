@@ -77,8 +77,8 @@ func runSession(args []string, stdout, stderr io.Writer) int {
 
 const sessionHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>] [--repo <dir>]
                  [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
-                 [--ttl 3600] [--out <file>] [--branch <name>]
-       ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+                 [--ttl 3600] [--out <file>] [--branch <name>] [--allow-non-git]
+       ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
        ailang-worldd session revoke [--db <path>] <credential_id> | --episode <ep>
        ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                  [--ttl 3600] [--out <file>]

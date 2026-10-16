@@ -582,6 +582,11 @@ type HealthResponse struct {
 	// artifact's recorded identity, nor of the epoch-registry candidate
 	// releaseFromVersion derives from this same string.
 	InterpreterVersion string `json:"interpreter_version"`
+	// DegradedEpisodes (row 185) names, in lexical order, each episode
+	// directory under --workspace-root that is not a git worktree: one
+	// `session new --allow-non-git` adopted. Absent when there is none, or
+	// when serve has no --workspace-root, so the body is otherwise unchanged.
+	DegradedEpisodes []string `json:"degraded_episodes,omitempty"`
 }
 
 // resolveErrorLog turns Config.ErrorLog's optional nil into the concrete
@@ -972,6 +977,7 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		DBPath:             d.cfg.DBPath,
 		InterpreterRef:     d.interpreterRef,
 		InterpreterVersion: d.interpreterVersion,
+		DegradedEpisodes:   d.workspace.degradedEpisodes(),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(body); err != nil {
