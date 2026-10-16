@@ -35,9 +35,16 @@ the head, same object mechanism as bootstrap), in one of two shapes:
   passed for R, including every replay golden reproducing **byte-identically** under R (same semantics).
 - **new epoch** — append epoch N+1 with `Candidates:[R]`, when the goldens differ (semantics moved). Old
   entries keep their epoch and their own interpreter (V5).
-Verb: `world-publish epoch nominate --store <db> --release-manifest pins/ailang-releases.json --release R
-(--candidate | --new-epoch) --gate-verdict <file>`. It refuses without a passing verdict for R whose binary
-digest matches the manifest. Who may run it is **decision D-139-1** (§4).
+Verb: `world-publish epoch nominate --store <db> --release R (--candidate | --new-epoch) --gate-verdict <file>
+--binary <ailang>`. It refuses without a passing verdict for R whose binary digest matches the manifest, and
+unless `--binary`'s sha256 equals that digest and its `--version` line is R's. Who may run it is **decision
+D-139-1** (§4).
+*Amended at M2 (judge r1, 2026-10-16):* there is **no `--release-manifest` flag**. The trust anchor is the
+compiled-in `pins/ailang-releases.json`, reviewed when its row merged; a flag naming another manifest would let
+a headless `--candidate` caller write a row plus a matching verdict for any release and nominate it with no
+human, defeating D-WORLD-78's digest condition. `--binary` is required because the verdict is self-attested:
+the release's real bytes must match the reviewed digest. Tests reach a test-only manifest through an unexported
+seam (`runEpochNominateWith`) that argv cannot reach.
 
 **D3 — startup accepts any nominated release.** `registry.bootstrap` keeps its fresh-store path (epoch 1).
 On an existing head, startup loads the head and requires the served interpreter's release to be a candidate

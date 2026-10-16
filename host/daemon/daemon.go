@@ -810,6 +810,19 @@ func (d *Daemon) bootstrapRegistry(ctx context.Context, release string) error {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return d.abortBudget(StageRegistry, detail, ctx.Err())
 		}
+		// Row 139 D3: an existing registry that nominates the served release in
+		// no epoch is refused (fail-closed) with the exact command that would
+		// admit it, never rewritten.
+		var notNominated *registry.NotNominatedError
+		if errors.As(err, &notNominated) {
+			detail = fmt.Sprintf("the store's %s (head %s: %s) nominates the served interpreter release %q in no epoch",
+				registry.SemanticID, notNominated.Head, notNominated.Registry.Summary(), release)
+			if cmd, ok := registry.NominateCommand(d.cfg.DBPath, release, d.cfg.AilangBin); ok {
+				detail += "; nominate it after its compatibility gate passes (stop this daemon first): " + cmd
+			} else {
+				detail += "; serve it with --ailang-bin naming a nominated release (" + notNominated.Registry.Summary() + ")"
+			}
+		}
 		return d.abort(StageRegistry, detail, err)
 	}
 	return nil

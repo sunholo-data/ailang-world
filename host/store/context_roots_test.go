@@ -31,6 +31,7 @@ var contextRootPins = map[string]int{
 	"cmd/world-publish/main.go|runReconcile|Background":                      1,
 	"cmd/world-publish/reconcile_probe.go|reconcileReadOnlyProbe|Background": 1,
 	"cmd/world-publish/transitions.go|runTransitions|Background":             1,
+	"cmd/world-publish/epoch.go|epochNominateContext|Background":             1, // row 139 M2: epoch nominate's read and write budgets (10 s each)
 	"host/archive/archive.go|probeVersion|Background":                        1,
 	// Row 134 §4.3: post-effect writes are detached from the caller's
 	// cancellation and each feeds context.WithTimeout directly (4 s / 2 s
