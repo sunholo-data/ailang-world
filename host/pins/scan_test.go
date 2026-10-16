@@ -149,7 +149,7 @@ type site struct {
 var allowedSites = map[string][]site{
 	".github/workflows/ci.yml": {
 		{role: RoleFrozenCompiler, n: 4, why: "the WORLD_PKG_AILANG_BIN install (world-package leg): step name, download URL, version assert and its error"},
-		{role: RoleGatePrimary, n: 4, why: "the AILANG_BIN install: step name, download URL, version assert and its error"},
+		{role: RoleGatePrimary, n: 8, why: "the AILANG_BIN installs in go-verify and go-race-verify (row 181): per job step name, download URL, version assert and its error"},
 		{role: RoleTool, n: 8, why: "the floor grader's tool-binary install: step name, URL, install paths, version assert and its error"},
 	},
 	"scripts/verify_world_package.sh": {

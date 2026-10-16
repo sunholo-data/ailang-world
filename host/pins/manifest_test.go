@@ -159,9 +159,11 @@ func TestCIInstallsMatchManifest(t *testing.T) {
 			t.Errorf("ci.yml:%d fetches %q for %s, manifest linux/amd64 asset is %q", i+2, next, mm[1], r.Assets["linux/amd64"].Asset)
 		}
 	}
-	want := []string{ReleaseFor(RoleFrozenCompiler).Release, ReleaseFor(RoleGatePrimary).Release, ReleaseFor(RoleTool).Release}
+	// Job order: ailang-verify (frozen compiler), go-verify (gate primary, then the floor tool),
+	// go-race-verify (gate primary again; row 181 moved the -race leg into its own job).
+	want := []string{ReleaseFor(RoleFrozenCompiler).Release, ReleaseFor(RoleGatePrimary).Release, ReleaseFor(RoleTool).Release, ReleaseFor(RoleGatePrimary).Release}
 	if strings.Join(installed, " ") != strings.Join(want, " ") {
-		t.Errorf("ci.yml installs %v (in order), manifest frozen-compiler/gate-primary/tool are %v", installed, want)
+		t.Errorf("ci.yml installs %v (in order), manifest frozen-compiler/gate-primary/tool/gate-primary(race job) are %v", installed, want)
 	}
 }
 
