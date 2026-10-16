@@ -18,6 +18,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -541,6 +542,10 @@ type demoSeRig struct {
 }
 
 func newDemoSeRig(t *testing.T, interp, tool string) demoSeRig {
+	return newDemoSeRigForSeed(t, interp, tool, false)
+}
+
+func newDemoSeRigForSeed(t *testing.T, interp, tool string, empty bool) demoSeRig {
 	t.Helper()
 	base, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
@@ -587,14 +592,19 @@ func newDemoSeRig(t *testing.T, interp, tool string) demoSeRig {
 		SemanticID: "test/genesis", Provenance: "demo_test", Payload: []byte("genesis-state")}
 	entryHash := hashref.SumSHA256([]byte("genesis-entry"))
 	w := store.World{Ref: hashref.SumSHA256([]byte("genesis-world")), Revision: 0, StateRoot: obj.Hash, LogHead: entryHash}
-	if err := st.Commit(boundedTestContext(t), store.Commit{Objects: []store.Object{obj}, NextWorld: w, Entry: store.LogEntry{Header: store.LogHeader{
-		EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")), Interpreter: interpRef,
-		PrevEntryHash: hashref.SumSHA256([]byte("genesis-prev")), WrittenBy: "demo_test"}, EntryHash: entryHash, TransitionRef: obj.Hash}}); err != nil {
-		t.Fatalf("genesis: %v", err)
+	if !empty {
+		if err := st.Commit(boundedTestContext(t), store.Commit{Objects: []store.Object{obj}, NextWorld: w, Entry: store.LogEntry{Header: store.LogHeader{
+			EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")), Interpreter: interpRef,
+			PrevEntryHash: hashref.SumSHA256([]byte("genesis-prev")), WrittenBy: "demo_test"}, EntryHash: entryHash, TransitionRef: obj.Hash}}); err != nil {
+			t.Fatalf("genesis: %v", err)
+		}
 	}
 	publishSeToolsCLI(t, st, db, interpRef)
 	now := time.Now().Unix()
-	var grants []broker.Capability
+	grants := []broker.Capability{
+		{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 100},
+		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: 20},
+	}
 	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectAilangCLI} {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
 	}
@@ -843,4 +853,158 @@ func TestDemoSeedToolGuardControls(t *testing.T) {
 			t.Fatalf("unlisted op: err=%v dispatches=%d", err, *calls)
 		}
 	})
+}
+
+// TestDemoSeedProofStage executes the command from an empty public world, with
+// real S1 commits, published se-tools S2/S3, and the production S4 adapters.
+func TestDemoSeedProofStage(t *testing.T) {
+	interp := requireProofPin(t)
+	tool := os.Getenv("WORLD_TOOL_AILANG_BIN")
+	if tool == "" {
+		t.Fatal("WORLD_TOOL_AILANG_BIN required; S4 integration cannot skip")
+	}
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+	for _, arm := range []string{"success", "missing", "directory", "short", "long", "safe-refusal", "lost-response-after-commit"} {
+		t.Run(arm, func(t *testing.T) {
+			r := newDemoSeRigForSeed(t, interp, tool, true)
+			ctx := boundedTestContext(t)
+			c := demoProofClient(r.url)
+			key := freshProofKey(t)
+			private := t.TempDir()
+			keyPath := filepath.Join(private, "proof.key")
+			raw := append([]byte(nil), key[:]...)
+			switch arm {
+			case "directory":
+				keyPath = private
+			case "short":
+				raw = raw[:31]
+			case "long":
+				raw = append(raw, raw[0])
+			}
+			if arm != "missing" && arm != "directory" {
+				if err := os.WriteFile(keyPath, raw, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			session, manifest := filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
+			if err := os.WriteFile(session, []byte(r.token), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			// Count only S4 envelope commits, observing the history immediately before
+			// S4. The proxy forwards all real daemon responses byte-for-byte.
+			writes := 0
+			var proxyMu sync.Mutex
+			var before wireWorld
+			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				proxyMu.Lock()
+				defer proxyMu.Unlock()
+				body, err := io.ReadAll(req.Body)
+				if err != nil {
+					t.Error(err)
+					http.Error(w, "read", 500)
+					return
+				}
+				var commit demoCommit
+				if req.URL.Path == "/v1/commit" && json.Unmarshal(body, &commit) == nil && len(commit.Objects) == 1 && commit.Objects[0].SemanticID == evidence.ProofSemanticID {
+					writes++
+					if arm == "safe-refusal" {
+						w.WriteHeader(http.StatusForbidden)
+						_, _ = io.WriteString(w, `{"error":{"class":"Denied"}}`)
+						return
+					}
+				}
+				if req.URL.Path == "/a2a/" {
+					before, _ = proofHeadEntry(t, ctx, c)
+				}
+				forward, err := http.NewRequestWithContext(req.Context(), req.Method, r.url+req.URL.RequestURI(), bytes.NewReader(body))
+				if err != nil {
+					t.Error(err)
+					http.Error(w, "build", 500)
+					return
+				}
+				forward.Header = req.Header.Clone()
+				resp, err := http.DefaultClient.Do(forward)
+				if err != nil {
+					t.Error(err)
+					http.Error(w, "forward", 500)
+					return
+				}
+				defer resp.Body.Close()
+				if writes > 0 && req.URL.Path == "/v1/commit" && arm == "lost-response-after-commit" {
+					_, _ = io.Copy(io.Discard, resp.Body)
+					if resp.StatusCode != http.StatusOK {
+						t.Errorf("lost ack requires successful real commit: HTTP %d", resp.StatusCode)
+					}
+					conn, _, err := w.(http.Hijacker).Hijack()
+					if err != nil {
+						t.Error(err)
+						return
+					}
+					_ = conn.Close()
+					return
+				}
+				for name, vals := range resp.Header {
+					w.Header()[name] = vals
+				}
+				w.WriteHeader(resp.StatusCode)
+				_, _ = io.Copy(w, resp.Body)
+			}))
+			defer proxy.Close()
+			options := &demoTestRig{addr: proxy.URL}
+			args := []string{"demo", "seed", "--db", r.db, "--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest}
+			code, out, errOut := demoRun(t, options, args)
+			proxyMu.Lock()
+			defer proxyMu.Unlock()
+			if code != exitUsage || out != "" {
+				t.Fatalf("seed must refuse completion without stdout: code=%d stdout=%q stderr=%q", code, out, errOut)
+			}
+			if strings.Contains(out+errOut, string(key[:])) || (len(raw) > 0 && strings.Contains(out+errOut, string(raw))) {
+				t.Fatal("seed disclosed key bytes")
+			}
+			if _, err := os.Stat(manifest); !os.IsNotExist(err) {
+				t.Fatal("seed through S4 must never create a success manifest")
+			}
+			entries, err := (worldReader{ctx: ctx, c: c}).page(0, 500)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var envelopes []hashref.HashRef
+			for _, entry := range entries {
+				ref := hashref.MustParse(entry.TransitionRef)
+				meta, _, err := (demoProofReader{c: c}).ReadObject(ctx, ref, 8<<20)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if meta.SemanticID == evidence.ProofSemanticID {
+					envelopes = append(envelopes, ref)
+				}
+			}
+			if arm == "success" {
+				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S4 recorded; S5-S6 incomplete; no success manifest written") {
+					t.Fatalf("seed must record exactly one S4 envelope and refuse S5/S6 completion: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
+				}
+				source := demoProofSource(t)
+				h := proofHealth(t, ctx, c)
+				requireDemoProven(t, ctx, proofValidator(t, c, h, key), envelopes[0], hashref.SumSHA256(source))
+			} else if arm == "safe-refusal" || arm == "lost-response-after-commit" {
+				wantEnvelopes := 0
+				if arm == "lost-response-after-commit" {
+					wantEnvelopes = 1
+				}
+				if writes != 1 || len(envelopes) != wantEnvelopes || !strings.Contains(errOut, "S4 refused:") || !strings.Contains(errOut, "inspect history") || !strings.Contains(errOut, "no success manifest written") {
+					t.Fatalf("seed uncertain/refused S4 must stop with one write and no retry/reseed/manifest: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
+				}
+			} else {
+				want := map[string]string{"missing": "proof key: open:", "directory": "not a regular file", "short": "holds 31 bytes", "long": "holds more than 32 bytes"}[arm]
+				if !strings.Contains(errOut, want) || writes != 0 || len(envelopes) != 0 {
+					t.Fatalf("key %s refusal must precede every S4 write: writes=%d envelopes=%d err=%q want=%q", arm, writes, len(envelopes), errOut, want)
+				}
+				after, _ := proofHeadEntry(t, ctx, c)
+				// The last A2A call itself commits S3; it must be the final history entry.
+				if after.Revision != before.Revision+1 {
+					t.Fatalf("key refusal changed history after S3: before=%d after=%d", before.Revision, after.Revision)
+				}
+			}
+		})
+	}
 }

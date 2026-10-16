@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -153,6 +154,9 @@ func freshProofKey(t *testing.T) [32]byte {
 	t.Helper()
 	var k [32]byte
 	if _, err := rand.Read(k[:]); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(t.TempDir(), "proof.key"), k[:], 0o600); err != nil {
 		t.Fatal(err)
 	}
 	return k
@@ -559,6 +563,26 @@ func TestDemoProofAdapterGuards(t *testing.T) {
 			t.Fatalf("an absent archived interpreter must be refused: err=%v", err)
 		}
 	})
+	t.Run("checker-readfile", func(t *testing.T) {
+		db := filepath.Join(t.TempDir(), "world.db")
+		ref := hashref.SumSHA256(pinBytes)
+		dir := filepath.Join(db+".artifacts", "interpreters", ref.Algo(), ref.Digest())
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		path := filepath.Join(dir, "ailang")
+		if err := os.WriteFile(path, pinBytes, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(path, 0); err != nil {
+			t.Fatal(err)
+		}
+		defer os.Chmod(path, 0o600)
+		_, err := demoProofChecker(daemon.HealthResponse{DBPath: db, InterpreterVersion: demoProofVersion, InterpreterRef: ref.String()})
+		if err == nil || !strings.Contains(err.Error(), "proof checker: read archived interpreter:") {
+			t.Fatalf("checker-readfile must name the archived interpreter read failure: %v", err)
+		}
+	})
 	t.Run("checker-archive-bytes-refused", func(t *testing.T) {
 		db := filepath.Join(t.TempDir(), "world.db")
 		want := hashref.SumSHA256(pinBytes)
@@ -603,4 +627,285 @@ func proofHealth(t *testing.T, ctx context.Context, c *client) daemon.HealthResp
 		t.Fatal(err)
 	}
 	return h
+}
+
+// A standalone no-contract module is intentional here: the negative control
+// must exercise a real empty verified set, rather than a synthetic JSON report.
+func demoNoContractSource(t *testing.T, pin string) []byte {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "plain.ail")
+	source := []byte("module plain\nexport func identity(x: int) -> int { x }\n")
+	if err := os.WriteFile(path, source, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(boundedTestContext(t), 10*time.Second)
+	defer cancel()
+	if out, err := exec.CommandContext(ctx, pin, "check", path).CombinedOutput(); err != nil {
+		t.Fatalf("standalone no-contract control must check under the real pin: %v %s", err, out)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+
+func proofValidator(t *testing.T, c *client, h daemon.HealthResponse, key [32]byte) *evidence.Validator {
+	t.Helper()
+	checker, err := demoProofChecker(h)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, err := evidence.NewValidator(key, demoProofReader{c: c}, evidence.CompilerConfig{
+		Compiler: checker.Compiler, CompilerVersion: checker.CompilerVersion, ObjectReadTimeout: demoProofObjectBound,
+	}, demoProofRequired)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return v
+}
+
+func requireDemoProven(t *testing.T, ctx context.Context, v *evidence.Validator, ref, subject hashref.HashRef) {
+	t.Helper()
+	sealed, valid := v.ValidateProof(ctx, ref, subject).Validated()
+	grade, proven := v.Resolve(sealed).Proven()
+	if !valid || !proven || grade != evidence.ResolvedGradeProven {
+		t.Fatalf("same-key positive arm must Resolve PROVEN for the exact subject: valid=%v proven=%v grade=%v", valid, proven, grade)
+	}
+}
+
+func TestDemoProofWrongKeyCannotProve(t *testing.T) {
+	pin := requireProofPin(t)
+	rig := newDemoProofRig(t, pin)
+	ctx := boundedTestContext(t)
+	c := rig.client(forwardRT{})
+	h := proofHealth(t, ctx, c)
+	subject := putProofSource(t, ctx, c, rig.token, h.InterpreterRef, demoProofSource(t))
+	key, different := freshProofKey(t), freshProofKey(t)
+	if key == different {
+		t.Fatal("independent random keys unexpectedly equal")
+	}
+	rec := &recordingWriter{inner: demoProofWriter{c: c, token: rig.token, interpreter: h.InterpreterRef}}
+	ref, err := demoProve(ctx, demoProofReader{c: c}, rec, h, key, subject, demoProofRequired)
+	if err != nil || ref.IsZero() || rec.calls != 1 {
+		t.Fatalf("real HTTP mint must succeed once: ref=%s calls=%d err=%v", ref, rec.calls, err)
+	}
+	_, payload, err := (demoProofReader{c: c}).ReadObject(ctx, ref, evidence.MaxBytes)
+	if err != nil || !bytes.Equal(payload, rec.last.Payload) {
+		t.Fatalf("mint must be committed over REST: %v", err)
+	}
+	wrong := proofValidator(t, c, h, different)
+	result := wrong.ValidateProof(ctx, ref, subject)
+	reason, unsupported := result.Unsupported()
+	sealed, valid := result.Validated()
+	_, proven := wrong.Resolve(sealed).Proven()
+	if !unsupported || reason != evidence.UnsupportedUnauthenticatedReport || valid || proven {
+		t.Fatalf("wrong key must remain UNAVAILABLE, never PROVEN: reason=%s valid=%v proven=%v", reason, valid, proven)
+	}
+	same := proofValidator(t, c, h, key) // M3b-key: replace key with different here.
+	requireDemoProven(t, ctx, same, ref, subject)
+}
+
+func TestDemoProofNoVerifiedSetRefuses(t *testing.T) {
+	pin := requireProofPin(t)
+	rig := newDemoProofRig(t, pin)
+	ctx := boundedTestContext(t)
+	c := rig.client(forwardRT{})
+	h := proofHealth(t, ctx, c)
+	plain := demoNoContractSource(t, pin)
+	bad := putProofSource(t, ctx, c, rig.token, h.InterpreterRef, plain)
+	before, _ := proofHeadEntry(t, ctx, c)
+	rec := &recordingWriter{inner: demoProofWriter{c: c, token: rig.token, interpreter: h.InterpreterRef}}
+	key := freshProofKey(t)
+	ref, err := demoProve(ctx, demoProofReader{c: c}, rec, h, key, bad, demoProofRequired)
+	if !errors.Is(err, evidence.ErrVacuousCheck) || !ref.IsZero() || rec.calls != 0 {
+		t.Fatalf("no verified set must refuse with ErrVacuousCheck, zero ref and zero writes: ref=%s calls=%d err=%v", ref, rec.calls, err)
+	}
+	after, _ := proofHeadEntry(t, ctx, c)
+	if after != before {
+		t.Fatal("vacuous proof changed committed REST history")
+	}
+	source := demoProofSource(t) // M3b-null-verified: replace with plain (consistent hash).
+	good := putProofSource(t, ctx, c, rig.token, h.InterpreterRef, source)
+	ref, err = demoProve(ctx, demoProofReader{c: c}, rec, h, key, good, demoProofRequired)
+	if err != nil || ref.IsZero() || rec.calls != 1 {
+		t.Fatalf("positive proof-control must mint required identities sameRef and servesEntry: ref=%s calls=%d err=%v", ref, rec.calls, err)
+	}
+	requireDemoProven(t, ctx, proofValidator(t, c, h, key), ref, good)
+}
+
+// uncertainProofRT counts actual POST attempts. The lost-response arm waits for
+// the real commit to succeed before discarding the acknowledgement.
+type uncertainProofRT struct {
+	mode   string
+	calls  int
+	object store.Object
+}
+
+func (rt *uncertainProofRT) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Method != http.MethodPost || req.URL.Path != "/v1/commit" {
+		return http.DefaultTransport.RoundTrip(req)
+	}
+	rt.calls++
+	raw, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+	req.Body = io.NopCloser(bytes.NewReader(raw))
+	var commit demoCommit
+	if err := json.Unmarshal(raw, &commit); err != nil {
+		return nil, err
+	}
+	o := commit.Objects[0]
+	rt.object = store.Object{Hash: hashref.MustParse(o.Hash), Payload: o.Payload}
+	if rt.mode == "safe-refusal" {
+		return jsonReply(http.StatusForbidden, `{"error":{"class":"Denied"}}`), nil
+	}
+	if rt.mode == "uncertain-before-send" {
+		return nil, errors.New("test transport lost before send")
+	}
+	resp, err := http.DefaultTransport.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(io.Discard, resp.Body)
+	_ = resp.Body.Close()
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("real commit did not succeed: HTTP %d %v", resp.StatusCode, err)
+	}
+	return nil, errors.New("test transport lost acknowledgement after real commit")
+}
+
+func TestDemoProofUncertainCommitStops(t *testing.T) {
+	pin := requireProofPin(t)
+	for _, mode := range []string{"safe-refusal", "uncertain-before-send", "lost-response-after-commit"} {
+		t.Run(mode, func(t *testing.T) {
+			rig := newDemoProofRig(t, pin)
+			ctx := boundedTestContext(t)
+			c := rig.client(forwardRT{})
+			h := proofHealth(t, ctx, c)
+			subject := putProofSource(t, ctx, c, rig.token, h.InterpreterRef, demoProofSource(t))
+			key := freshProofKey(t)
+			keyPath := filepath.Join(t.TempDir(), "operator.key")
+			if err := os.WriteFile(keyPath, key[:], 0o600); err != nil {
+				t.Fatal(err)
+			}
+			before, _ := proofHeadEntry(t, ctx, c)
+			rt := &uncertainProofRT{mode: mode}
+			ref, err := demoSeedProof(ctx, rig.client(rt), rig.token, h, keyPath, subject)
+			if rt.calls != 1 {
+				t.Fatalf("write attempt count must equal one: got %d", rt.calls)
+			}
+			if err == nil || !ref.IsZero() || !strings.Contains(err.Error(), "S4 refused:") || !strings.Contains(err.Error(), "inspect history") || !strings.Contains(err.Error(), "no success manifest written") {
+				t.Fatalf("S4 refusal must stop without success or reseed: ref=%s err=%v", ref, err)
+			}
+			if store.IsUncertain(err) != (mode != "safe-refusal") {
+				t.Fatalf("uncertain outcome must survive demo error wrapping: %v", err)
+			}
+			if strings.Contains(err.Error(), string(key[:])) {
+				t.Fatal("error disclosed key bytes")
+			}
+			after, _ := proofHeadEntry(t, ctx, c)
+			_, payload, readErr := (demoProofReader{c: c}).ReadObject(ctx, rt.object.Hash, evidence.MaxBytes)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if mode == "lost-response-after-commit" {
+				if after.Revision != before.Revision+1 || after.LogHead == before.LogHead || !bytes.Equal(payload, rt.object.Payload) {
+					t.Fatal("lost acknowledgement must leave exactly one real committed envelope readable over REST")
+				}
+			} else if after != before || payload != nil {
+				t.Fatal("uncommitted refusal changed REST history or stored an envelope")
+			}
+		})
+	}
+}
+
+type blockingProofReader struct{ seen chan context.Context }
+
+func (*blockingProofReader) BusyTimeout() time.Duration { return 0 }
+func (r *blockingProofReader) ReadObject(ctx context.Context, _ hashref.HashRef, _ int64) (store.ObjectMeta, []byte, error) {
+	r.seen <- ctx
+	<-ctx.Done()
+	return store.ObjectMeta{}, nil, ctx.Err()
+}
+
+func TestDemoProofBounds(t *testing.T) {
+	c := demoProofClient("http://proof.invalid")
+	reader, writer := demoProofReader{c: c}, demoProofWriter{c: c}
+	if reader.c.timeout != demoProofHTTPTimeout || writer.c.http.Timeout != demoProofHTTPTimeout || demoProofHTTPTimeout >= demoProofObjectBound {
+		t.Fatal("production client/adapters must carry the 10s HTTP bound below the 12s object bound")
+	}
+	whole, cancelWhole := demoProofContext(context.Background())
+	defer cancelWhole()
+	if deadline, ok := whole.Deadline(); !ok || time.Until(deadline) > demoProofWholeBound || time.Until(deadline) < demoProofWholeBound-time.Second {
+		t.Fatal("whole proof context must carry the 90s deadline")
+	}
+	pin := requireProofPin(t)
+	rig := newDemoProofRig(t, pin)
+	h := proofHealth(t, boundedTestContext(t), rig.client(forwardRT{}))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	readerBlock := &blockingProofReader{seen: make(chan context.Context, 1)}
+	rec := &recordingWriter{inner: demoProofWriter{}}
+	done := make(chan error, 1)
+	key := freshProofKey(t)
+	go func() {
+		_, err := demoProve(ctx, readerBlock, rec, h, key, hashref.SumSHA256([]byte("source")), demoProofRequired)
+		done <- err
+	}()
+	select {
+	case passed := <-readerBlock.seen:
+		if d, ok := passed.Deadline(); !ok || time.Until(d) > demoProofWholeBound {
+			t.Fatal("demoProve reader context must have a deadline no later than the whole bound")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("producer never reached blocking reader")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) || rec.calls != 0 {
+			t.Fatalf("cancelling demoProve must stop producer with context error before write: calls=%d err=%v", rec.calls, err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("cancelled producer did not stop")
+	}
+}
+
+// keyReadFault returns usable metadata/data alongside an error so removing the
+// corresponding guard reaches its named assertion, rather than panicking.
+type keyReadFault struct {
+	info             os.FileInfo
+	statErr, readErr error
+	data             []byte
+}
+
+func (f keyReadFault) Stat() (os.FileInfo, error) { return f.info, f.statErr }
+func (f keyReadFault) Read(p []byte) (int, error) { return copy(p, f.data), f.readErr }
+
+func TestDemoProofKeyIORefusals(t *testing.T) {
+	key := freshProofKey(t)
+	path := filepath.Join(t.TempDir(), "proof.key")
+	if err := os.WriteFile(path, key[:], 0o600); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, arm := range []string{"stat", "read"} {
+		t.Run(arm, func(t *testing.T) {
+			f := keyReadFault{info: info, data: key[:], readErr: io.EOF}
+			if arm == "stat" {
+				f.statErr = errors.New("stat control")
+			} else {
+				f.readErr = errors.New("read control")
+			}
+			got, err := demoReadProofKey(f)
+			if err == nil || !strings.Contains(err.Error(), "proof key: "+arm+":") || got != [32]byte{} {
+				t.Fatalf("key %s error must refuse without bytes: err=%v zero=%v", arm, err, got == [32]byte{})
+			}
+		})
+	}
 }

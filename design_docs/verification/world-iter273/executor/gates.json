@@ -1,0 +1,97 @@
+[
+  {
+    "name": "vet",
+    "command": "go vet ./cmd/ailang-worldd",
+    "rc": 0,
+    "wall_seconds": 0.4,
+    "pass_lines": [],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  },
+  {
+    "name": "gofmt",
+    "command": "gofmt -l cmd/ailang-worldd",
+    "rc": 0,
+    "wall_seconds": 0.01,
+    "pass_lines": [],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  },
+  {
+    "name": "wrong-key",
+    "command": "go test -run '^TestDemoProofWrongKeyCannotProve$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 0,
+    "wall_seconds": 1.81,
+    "pass_lines": [
+      "--- PASS: TestDemoProofWrongKeyCannotProve (1.17s)"
+    ],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  },
+  {
+    "name": "no-verified",
+    "command": "go test -run '^TestDemoProofNoVerifiedSetRefuses$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 0,
+    "wall_seconds": 1.88,
+    "pass_lines": [
+      "--- PASS: TestDemoProofNoVerifiedSetRefuses (1.24s)"
+    ],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  },
+  {
+    "name": "uncertain",
+    "command": "go test -run '^TestDemoProofUncertainCommitStops$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
+    "rc": 0,
+    "wall_seconds": 3.83,
+    "pass_lines": [
+      "--- PASS: TestDemoProofUncertainCommitStops (3.19s)"
+    ],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  },
+  {
+    "name": "demo",
+    "command": "go test -run '^TestDemo' ./cmd/ailang-worldd -count=1 -timeout 400s -v",
+    "rc": 0,
+    "wall_seconds": 84.54,
+    "pass_lines": [
+      "--- PASS: TestDemoProofHTTPProducerRoundTrip (1.11s)",
+      "--- PASS: TestDemoProofSourceHashRefusal (0.97s)",
+      "--- PASS: TestDemoProofAdapterGuards (0.00s)",
+      "--- PASS: TestDemoProofWrongKeyCannotProve (1.17s)",
+      "--- PASS: TestDemoProofNoVerifiedSetRefuses (1.26s)",
+      "--- PASS: TestDemoProofUncertainCommitStops (3.16s)",
+      "--- PASS: TestDemoProofBounds (0.97s)",
+      "--- PASS: TestDemoProofKeyIORefusals (0.00s)",
+      "--- PASS: TestDemoSeedAuthenticatedCommits (1.08s)",
+      "--- PASS: TestDemoSeedPreflightRefusals (33.25s)",
+      "--- PASS: TestDemoSeedHelpPreparation (0.00s)",
+      "--- PASS: TestDemoSeedCommitFailures (2.72s)",
+      "--- PASS: TestDemoSeedReadTestCheck (4.18s)",
+      "--- PASS: TestDemoSeedRejectsToolReportRefusals (3.90s)",
+      "--- PASS: TestDemoSeedToolGuardControls (0.00s)",
+      "--- PASS: TestDemoSeedProofStage (30.13s)"
+    ],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  },
+  {
+    "name": "producer",
+    "command": "go test -run '^TestProducerEndToEndMintsEnvelopeValidatorAccepts$' ./host/evidence -count=1 -timeout 120s -v",
+    "rc": 0,
+    "wall_seconds": 1.13,
+    "pass_lines": [
+      "--- PASS: TestProducerEndToEndMintsEnvelopeValidatorAccepts (0.56s)"
+    ],
+    "skips": [],
+    "denials": [],
+    "output": ""
+  }
+]

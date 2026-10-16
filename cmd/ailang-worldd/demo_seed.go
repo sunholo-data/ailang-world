@@ -177,8 +177,7 @@ func demoGrants(ctx context.Context, db, token string) (bool, error) {
 	return worlds.Scanned > 0, nil
 }
 func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
-	c := newClient(o.addr)
-	c.timeout = 10 * time.Second
+	c := demoProofClient(o.addr)
 	r := worldReader{ctx: ctx, c: c}
 	h, epoch, err := demoPreflight(ctx, o, token, r)
 	if err != nil {
@@ -227,7 +226,21 @@ func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
 	if _, err := demoRunToolStages(ctx, c, token, source); err != nil {
 		return fmt.Errorf("S1 domain commits recorded; S2/S3 refused: %v; S2-S6 incomplete; no success manifest written", err)
 	}
-	return nil
+	// S4 proves the exact source object committed by S1, after S2/S3 succeed.
+	_, err = demoSeedProof(ctx, c, token, h, o.key, hashref.SumSHA256(source))
+	return err
+}
+
+func demoSeedProof(ctx context.Context, c *client, token string, h daemon.HealthResponse, keyPath string, source hashref.HashRef) (hashref.HashRef, error) {
+	key, err := demoLoadProofKey(keyPath)
+	if err != nil {
+		return hashref.HashRef{}, fmt.Errorf("S1-S3 recorded; S4 key refused: %w; no success manifest written", err)
+	}
+	ref, err := demoProve(ctx, demoProofReader{c: c}, demoProofWriter{c: c, token: token, interpreter: h.InterpreterRef}, h, key, source, []string{"sameRef", "servesEntry"})
+	if err != nil {
+		return hashref.HashRef{}, fmt.Errorf("S1-S3 recorded; S4 refused: %w; stop and inspect history; never retry or reseed; no success manifest written", err)
+	}
+	return ref, fmt.Errorf("S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action")
 }
 func demoDomainObjects(source []byte) []demoObject {
 	goal := []byte(`{"goal":"Review two candidate approaches using real recorded evidence","author":"demo"}`)
