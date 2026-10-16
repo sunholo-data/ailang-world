@@ -1,0 +1,20 @@
+[
+ {
+  "arm": "shell",
+  "task": "config_file_parser",
+  "class": "FAIL",
+  "error_category": "logic_error",
+  "grade_stdout_head": "cannot read file: open app_config.json: no such file or directory\n",
+  "grade_stderr_head": "",
+  "solution_sha256": "2d906ad1b229cf61d09a6d49221184c567e7d82219d91bb71da2cf48d8c1e260"
+ },
+ {
+  "arm": "world",
+  "task": "config_file_parser",
+  "class": "FAIL",
+  "error_category": "logic_error",
+  "grade_stdout_head": "Configuration file not found\n",
+  "grade_stderr_head": "",
+  "solution_sha256": "f61918bc504d8e91b3fb51a2d4846e0cd1f32f51632ae66f166dad029bc6c00c"
+ }
+]

@@ -1,0 +1,21 @@
+    result = {'compile_ok': False, 'runtime_ok': False, 'stdout_ok': False, 'stdout': '',
+              'stderr': '', 'solution_state': solution_state(solution, placeholder),
+              'timed_out': False, 'exit_code': None, 'argv': None,
+              'tool_bin': tool, 'tool_sha256': sha256_file(tool), 'grader': GRADER_VERSION,
+              'solution_sha256': hashlib.sha256(solution).hexdigest() if solution is not None else None}
+    if result['solution_state'] != 'present':
+        result['stderr'] = f'solution {result["solution_state"]}'
+        return result
+    ws = tempfile.mkdtemp(prefix='floor-grade-', dir=tmp_root)
+    try:
+        if os.path.exists(os.path.join(ws, 'std')):
+            raise GradeSetupError('grading workspace holds a std/ (V37)')
+        os.makedirs(os.path.join(ws, 'benchmark'))
+        with open(os.path.join(ws, 'benchmark', 'solution.ail'), 'wb') as f:
+            f.write(solution)
+        for name, content in (spec.get('input_files') or {}).items():
+            fp = os.path.join(ws, name)
+            if not os.path.realpath(fp).startswith(os.path.realpath(ws) + os.sep):
+                raise GradeSetupError(f'input file escapes the workspace: {name}')
+            os.makedirs(os.path.dirname(fp), exist_ok=True)
+            with open(fp, 'wb') as f:

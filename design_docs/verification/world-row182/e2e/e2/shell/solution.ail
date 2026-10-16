@@ -1,0 +1,39 @@
+module benchmark/solution
+import std/fs (readFileResult)
+import std/json (Json, decode, getString, getNumber, getStringArrayStrict)
+import std/list (length, filter)
+import std/string (chars)
+import std/math (floatToInt, intToFloat)
+import std/result (Result, Ok, Err)
+import std/option (Some, None)
+
+type Config = {app_name: string, version: string, port: int, features: [string]}
+
+func validateConfig(json: Json) -> Result[Config, string] =
+  match (getString(json, "app_name"), getString(json, "version"), getNumber(json, "port"), getStringArrayStrict(json, "features")) {
+    (Some(name), Some(version), Some(port), Some(features)) => {
+      let dots = length(filter(\c. c == ".", chars(version)));
+      if port < 1024.0 || port > 65535.0 then Err("Port must be between 1024 and 65535")
+      else if intToFloat(floatToInt(port)) != port then Err("Port must be an integer")
+      else if dots != 2 then Err("Version must contain exactly two dots")
+      else if length(features) == 0 then Err("Features must not be empty")
+      else Ok({app_name: name, version: version, port: floatToInt(port), features: features})
+    },
+    _ => Err("Missing or invalid configuration fields")
+  }
+
+func loadConfig(path: string) -> Result[Config, string] ! {FS} =
+  match readFileResult(path) {
+    Err(message) => Err(message),
+    Ok(content) => match decode(content) {
+      Err(message) => Err(message),
+      Ok(json) => validateConfig(json)
+    }
+  }
+
+export func main() -> () ! {IO, FS} =
+  match loadConfig("app_config.json") {
+    Ok(config) => println("Loaded ${config.app_name} v${config.version} on port ${config.port} with ${length(config.features)} features"),
+    Err(message) => println(message)
+  }
+

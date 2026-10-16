@@ -1,0 +1,4 @@
+Rubric (fixed before the answer exists). Judge ONLY against e2/ (start with e2/README.txt).
+VERIFIED: the answer's causal claim for BOTH arms (why codex's World arm and its shell arm failed config_file_parser) is confirmed by E2 and nothing in E2 contradicts it.
+UNVERIFIED: wrong, unsupported, only plausible, or partial (one arm only, or a symptom without the cause E2 shows).
+End with a final line exactly `VERDICT: VERIFIED` or `VERDICT: UNVERIFIED`.

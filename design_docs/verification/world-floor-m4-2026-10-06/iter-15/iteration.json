@@ -1,0 +1,73 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "4a9d460c285369715c1c28d7477fc3f1eb4212623df106e23ab74a1c41fdc803",
+    "claude/world": "f428b4ef1742f8d232317e75cd58ad7a6e68d0e53efa8c70c31fb4f5b356fefb",
+    "codex/shell": "bac153e02e67484aaf61af55d3bb19b90f92f646516fcd0948ea2d00d81918a7",
+    "codex/world": "c31e84c4856a1b8ecda2e9b14d8ce03d82515a2015769837c1d77c20c973e34b"
+  },
+  "canary": [
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 18030
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 13548
+    }
+  ],
+  "change": "row 182 AC7 end-to-end: outcome capture on a real daemon (codex only, config_file_parser at 76a5aef)",
+  "codex_tokens": 520131,
+  "commit": "6f5f4fcf4a4f20c56f6aabb45ca8fddeb96f69c7",
+  "config_digest_smoke": "1a2f47b8b7e1cd1b4520be980065158e82f854e880e6c70e0074a46638326834",
+  "iteration": 15,
+  "knob": "outcome_capture",
+  "native_write_detected": [],
+  "row153": {
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 1
+    }
+  },
+  "rows_reused_from": {},
+  "side": "harness",
+  "spend_usd_claude": 0.0,
+  "status": "complete",
+  "summary": {
+    "codex": {
+      "O": -0.0851,
+      "T": 1,
+      "capacity_reruns": 0,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "config_file_parser": -0.085
+      },
+      "outcome_record_errors": 0,
+      "pass_S": 0,
+      "pass_W": 0,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "config_file_parser"
+  ],
+  "transcripts": ".ailang/state/row182-e2e/m4/transcripts/iter-15",
+  "wall_s": 91.1,
+  "world_writes_per_run": {
+    "codex/config_file_parser": 2
+  }
+}
