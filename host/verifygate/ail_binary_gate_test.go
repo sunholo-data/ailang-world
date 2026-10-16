@@ -736,8 +736,10 @@ func TestZ3PinDeclaredOnceAndInstalledInBothJobs(t *testing.T) {
 			installs++
 		}
 	}
-	if installs != 2 {
-		t.Errorf("ci.yml: %d job(s) install the pinned solver to /usr/local/bin/z3, want 2 — BOTH jobs "+
+	// Three since row 181 (2026-10-16): the -race leg moved to its own go-race-verify job, which
+	// drives host/verifygate's real .ail gate under -race and so needs the solver too.
+	if installs != 3 {
+		t.Errorf("ci.yml: %d job(s) install the pinned solver to /usr/local/bin/z3, want 3 — ALL jobs "+
 			"must install it. Job 1 runs ai-check directly; job 2 runs it THROUGH host/verifygate's "+
 			"shim arms, whose `verify gate PASSED` assertion is unreachable without a solver.", installs)
 	}
