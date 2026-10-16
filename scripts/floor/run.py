@@ -743,8 +743,7 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
     if arm == 'world':
         row['row153'] = row153_hits(transcript, daemon_log)
     row['class'] = classify_row(row)
-    if k.get('outcome_capture') and ctx.client is not None and ctx.tokens.get(agent):
-        row['outcome_record'] = record_outcome(L, ctx.client.addr, ep, row, spec, graded, drv, tool_bin(cfg))
+    maybe_record_outcome(ctx, agent, ep, row, spec, graded, drv)
     if agent == 'claude' and row['cost_usd']:
         ctx.spend_this += float(row['cost_usd'])
     os.makedirs(os.path.dirname(rows_path), exist_ok=True)
@@ -778,7 +777,7 @@ def outcome_payload(ep: str, row: dict, spec: dict, graded: dict | None, drv: di
         'task': row['task'], 'entries': entries,
         'outcome': {'class': row['class'], 'errorCategory': row['error_category'] or '',
                     'compileOk': row['compile_ok'], 'runtimeOk': row['runtime_ok'], 'stdoutOk': row['stdout_ok'],
-                    'stdoutHead': row['grade_stdout_head'], 'stderrHead': row['grade_stderr_head'],
+                    'stdoutHead': _head_bytes(row['grade_stdout_head']), 'stderrHead': _head_bytes(row['grade_stderr_head']),
                     'solutionSha256': row['solution_sha256'] or '', 'solutionState': row['solution_state'] or ''},
         'grading': {'rule': OUTCOME_RULE, 'argv': argv, 'inputFiles': sorted((spec.get('input_files') or {}).keys()),
                     'expectedStdout': spec.get('expected_stdout') or '', 'graderVersion': grade.GRADER_VERSION,
@@ -808,6 +807,27 @@ def record_outcome(L: dict, addr: str, ep: str, row: dict, spec: dict, graded: d
     if p.returncode != 0 or not m:
         return {'error': f'rc={p.returncode}: {p.stderr.decode(errors="replace").strip()[:300]}'}
     return {'ref': m.group(1), 'entry': int(m.group(2))}
+
+
+def maybe_record_outcome(ctx, agent: str, ep: str, row: dict, spec: dict, graded: dict | None, drv: dict,
+                         recorder=None) -> None:
+    """The run_cell hook (after classify_row): record when the knob is on and the run has a World
+    client and this agent's episode token (paired phase, iterate with World arms). Never raises
+    and never touches row['class']; a failure lands in row['outcome_record']['error']."""
+    if not (ctx.cfg['knobs'].get('outcome_capture') and ctx.client is not None and ctx.tokens.get(agent)):
+        return
+    recorder = recorder or record_outcome
+    try:
+        row['outcome_record'] = recorder(ctx.L, ctx.client.addr, ep, row, spec, graded, drv, tool_bin(ctx.cfg))
+    except Exception as e:  # noqa: BLE001 — a record must never take a graded cell down
+        row['outcome_record'] = {'error': f'recorder: {e}'}
+
+
+def _head_bytes(s: str, limit: int = 400) -> str:
+    """At most ``limit`` UTF-8 bytes, cut on a character boundary (the verb bounds bytes, the row
+    head is ``limit`` characters; surrogate escapes become U+FFFD first, as Go would decode them)."""
+    b = (s or '').encode('utf-8', errors='surrogateescape').decode('utf-8', errors='replace').encode('utf-8')
+    return b[:limit].decode('utf-8', errors='ignore')
 
 
 def outcome_record_errors(rows: list) -> int:

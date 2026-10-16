@@ -43,7 +43,7 @@ existing 400-byte heads. `expectedStdout` is the task spec's, so a walk can comp
 
 **D2 — the verb.** `ailang-worldd [--addr] outcome record --file <outcome.json|-> [--session <file|token>]`.
 It strict-decodes the payload (unknown fields refused, required fields present, sizes bounded,
-`arm` ∈ {shell, world}, `entries` null for shell and `from ≤ to` for world), canonicalizes it,
+`arm` ∈ {shell, world}, `entries` null for shell and `from ≥ 1`, `to ≥ from − 1` for world — `to = from − 1` is a World task that committed no entry; heads bounded in UTF-8 bytes, which the harness cuts on a character boundary), canonicalizes it,
 and commits it as ONE object through the existing one-object writer, refactored out of
 `demo_proof.go` into a shared helper with `writtenBy` as a parameter (`harness:floor` here,
 `demo` unchanged for row 150). It prints the object ref and the committed entry index. Exit codes:

@@ -86,8 +86,17 @@ func TestOutcomeParseRefusals(t *testing.T) {
 	if _, _, err := parseTaskOutcome(append(mustJSON(t, validOutcome()), []byte(" {}")...)); err == nil {
 		t.Error("trailing JSON value accepted")
 	}
-	if _, _, err := parseTaskOutcome(bytes.Repeat([]byte(" "), maxTaskOutcomeBytes+1)); err == nil {
-		t.Error("oversized payload accepted")
+	// Oversize but otherwise valid (32 argv items of 1 KiB): only the 16 KiB cap refuses it.
+	big := validOutcome()
+	var argv []any
+	for i := 0; i < maxOutcomeArgv; i++ {
+		argv = append(argv, strings.Repeat("x", maxOutcomeFieldBytes))
+	}
+	big["grading"].(map[string]any)["argv"] = argv
+	if raw := mustJSON(t, big); len(raw) <= maxTaskOutcomeBytes {
+		t.Fatalf("control: the oversize payload is only %d bytes", len(raw))
+	} else if _, _, err := parseTaskOutcome(raw); err == nil || !strings.Contains(err.Error(), "exceeds") {
+		t.Errorf("oversized valid payload: err=%v, want the size refusal", err)
 	}
 }
 

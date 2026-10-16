@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -89,7 +90,10 @@ class Record(unittest.TestCase):
         def ok_rc_no_ref(argv, **kw):
             return subprocess.CompletedProcess(argv, 0, b'something else', b'')
 
-        for runner in (bad, boom, ok_rc_no_ref):
+        def ref_but_nonzero(argv, **kw):
+            return subprocess.CompletedProcess(argv, 3, f'object sha256:{"c" * 64} entry 5'.encode(), b'uncertain')
+
+        for runner in (bad, boom, ok_rc_no_ref, ref_but_nonzero):
             got = run.record_outcome(self.L, 'x', 'fl-cx-r2', row(), SPEC, GRADED, DRV_WORLD, '/a', runner=runner)
             self.assertIn('error', got)
         self.assertIn('401', run.record_outcome(self.L, 'x', 'fl-cx-r2', row(), SPEC, GRADED, DRV_WORLD, '/a', runner=bad)['error'])
@@ -99,6 +103,79 @@ class Record(unittest.TestCase):
     def test_error_count(self):
         rows = [{'outcome_record': {'error': 'x'}}, {'outcome_record': {'ref': 'r', 'entry': 1}}, {}]
         self.assertEqual(run.outcome_record_errors(rows), 1)
+
+
+class Hook(unittest.TestCase):
+    """maybe_record_outcome: the run_cell hook (AC5; MU-3, MU-5)."""
+
+    def ctx(self, knob=True, client=True, token=True):
+        return types.SimpleNamespace(cfg={'knobs': {'outcome_capture': knob}, 'tool_bin': '/abs/ailang'},
+                                     L={'bin': '/rig/bin', 'private': '/rig/private'},
+                                     client=types.SimpleNamespace(addr='127.0.0.1:7644') if client else None,
+                                     tokens={'codex': 'tok'} if token else {})
+
+    def test_records_both_arms_after_classify(self):
+        seen = []
+
+        def rec(L, addr, ep, r, spec, graded, drv, tool):
+            seen.append((r['arm'], r.get('class')))
+            return {'ref': 'sha256:' + 'c' * 64, 'entry': 9}
+
+        for arm in ('shell', 'world'):
+            r = row(arm, 'FAIL')
+            run.maybe_record_outcome(self.ctx(), 'codex', 'fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, recorder=rec)
+            self.assertEqual(r['outcome_record'], {'ref': 'sha256:' + 'c' * 64, 'entry': 9})
+        self.assertEqual(seen, [('shell', 'FAIL'), ('world', 'FAIL')])  # class is set before the record (MU-5)
+
+    def test_off_or_no_client_or_no_token_records_nothing(self):
+        def rec(*a):
+            raise AssertionError('recorder must not be called')
+
+        for c in (self.ctx(knob=False), self.ctx(client=False), self.ctx(token=False)):
+            r = row()
+            run.maybe_record_outcome(c, 'codex', 'fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, recorder=rec)
+            self.assertNotIn('outcome_record', r)
+        c = self.ctx()
+        del c.cfg['knobs']['outcome_capture']  # absent knob = off
+        r = row()
+        run.maybe_record_outcome(c, 'codex', 'fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, recorder=rec)
+        self.assertNotIn('outcome_record', r)
+
+    def test_failure_never_changes_class_and_is_counted(self):
+        def err(*a):
+            return {'error': 'rc=2: refused'}
+
+        def boom(*a):
+            raise RuntimeError('unexpected')
+
+        rows = []
+        for rec in (err, boom):
+            r = row('world', 'PASS')
+            run.maybe_record_outcome(self.ctx(), 'codex', 'fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, recorder=rec)
+            self.assertEqual(r['class'], 'PASS')  # MU-3
+            self.assertIn('error', r['outcome_record'])
+            rows.append(r)
+        self.assertEqual(run.outcome_record_errors(rows), 2)
+
+    def test_run_cell_calls_the_hook_after_classify(self):
+        import inspect
+        src = inspect.getsource(run.run_cell)
+        self.assertLess(src.index("row['class'] = classify_row(row)"), src.index('maybe_record_outcome('))
+
+
+class HeadBytes(unittest.TestCase):
+    def test_multibyte_head_fits_the_byte_bound(self):
+        r = row()
+        r['grade_stdout_head'] = 'é' * 400  # 800 UTF-8 bytes, 400 characters
+        p = run.outcome_payload('fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, '/a')
+        self.assertLessEqual(len(p['outcome']['stdoutHead'].encode()), 400)
+        self.assertEqual(p['outcome']['stdoutHead'], 'é' * 200)
+
+    def test_surrogate_escape_is_bounded(self):
+        r = row()
+        r['grade_stdout_head'] = b'\xff\xfe'.decode('utf-8', errors='surrogateescape') * 200
+        p = run.outcome_payload('fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, '/a')
+        self.assertLessEqual(len(p['outcome']['stdoutHead'].encode()), 400)
 
 
 class KnobValidation(unittest.TestCase):
@@ -142,6 +219,12 @@ class AgainstTheRealValidator(unittest.TestCase):
             p = self.record(run.outcome_payload('fl-cx-r2', r, SPEC, GRADED, drv, '/abs/ailang'))
             self.assertNotEqual(p.returncode, 1, p.stderr.decode())
             self.assertNotIn(b'refused:', p.stderr)
+
+    def test_multibyte_head_passes_the_real_validator(self):
+        r = row()
+        r['grade_stdout_head'] = 'é' * 400
+        p = self.record(run.outcome_payload('fl-cx-r2', r, SPEC, GRADED, DRV_WORLD, '/abs/ailang'))
+        self.assertNotEqual(p.returncode, 1, p.stderr.decode())
 
     def test_broken_payload_is_refused_before_send(self):
         bad = run.outcome_payload('fl-cx-r2', row(), SPEC, GRADED, DRV_WORLD, '/abs/ailang')
