@@ -32,6 +32,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/pinfetch"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
 const doctorHelp = `usage: ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
@@ -405,17 +406,8 @@ func listSuffix(names []string) string {
 }
 
 // isGitWorktree reports whether dir has the `.git` FILE a linked worktree
-// carries ("gitdir: …").
-func isGitWorktree(dir string) bool {
-	f, err := os.Open(filepath.Join(dir, ".git"))
-	if err != nil {
-		return false
-	}
-	defer func() { _ = f.Close() }()
-	head := make([]byte, 8)
-	n, _ := io.ReadFull(f, head)
-	return string(head[:n]) == "gitdir: "
-}
+// carries ("gitdir: …"); host/worktree.IsLinked, shared with the daemon.
+func isGitWorktree(dir string) bool { return worktree.IsLinked(dir) }
 
 func doctorOnline(r *doctorReport, roles []pinRole) {
 	ctx, cancel := budgetContext(time.Minute)

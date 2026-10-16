@@ -17,6 +17,15 @@ package main
 //  6. authority.Mint through the existing core;
 //  7. on a mint failure, remove the worktree THIS run created.
 //
+// Row 185 (w-episode-requires-git): an existing <workspace-root>/<episode>
+// that is not a git worktree is refused, the refusal naming --allow-non-git.
+// With that flag it is adopted as a DEGRADED episode: no own branch, no
+// branch diff or provenance trailer, no reset to a base, and worktree deltas
+// on the bounded-walk basis instead of git-status. Degraded is the fact
+// worktree.IsLinked reads, so `session list` and /v1/health derive it from
+// the worktree itself rather than from a column a schema bump would add.
+// It binds only here, at mint; git episodes are unchanged.
+//
 // The se-tools preset is the union of packages/se-tools/transitions.json's
 // declaredEffects (effect, scope); TestSessionNewPresetEqualsDeclaredEffects
 // re-derives it from the manifest (MUT-PRESET-DRIFT).
@@ -44,6 +53,7 @@ import (
 const sessionNewHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
            [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
+           [--allow-non-git]
 
 ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
 and a session credential bound to it, after a y/N typed at /dev/tty (any
@@ -59,6 +69,12 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
                        (git worktree add --detach); not needed when
                        <workspace-root>/<episode> is already a worktree
   --branch <name>      add the worktree on a new branch instead of detached
+  --allow-non-git      adopt an existing <workspace-root>/<episode> that is
+                       not a git worktree (refused without it). The episode
+                       is DEGRADED: no branch diff, provenance trailer or
+                       reset to a base, and its worktree deltas use the
+                       bounded walk (basis walk / walk-capped), not
+                       git-status. session list and /v1/health show it.
   --preset se-tools    one grant per effect the se-tools transitions declare:
                        Workspace.Read, Workspace.Write, Ailang.Check, Ailang.Run,
                        Ailang.RunEnv, Ailang.RunNet, Ailang.Discover, Ailang.CLI,
@@ -76,12 +92,16 @@ The credential_id (the hash 'session revoke' takes) goes to stderr; the token
 never does. If the mint fails, the worktree this run created is removed.
 `
 
-const sessionListHelp = `usage: ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+const sessionListHelp = `usage: ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
 
 Lists the session credentials in a store (at most 500): credential_id (the
 hash, never the token), episode, live or expired, expiry and grants. Reads
 through a read-only handle, so it works while the daemon is running. A --db
 that does not exist is refused, never created.
+
+An episode whose <workspace-root>/<episode> exists but is not a git worktree
+(adopted with session new --allow-non-git) is marked DEGRADED ("degraded":
+true with --json). --workspace-root defaults to ~/.ailang/world-ws.
 `
 
 // sePresetGrants is the se-tools preset: the union of the (effect, scope)
@@ -117,6 +137,7 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	wsRoot := fs.String("workspace-root", def.workspaceRoot, "workspace root")
 	repo := fs.String("repo", "", "git repository the worktree is added from")
 	branch := fs.String("branch", "", "add the worktree on this new branch")
+	allowNonGit := fs.Bool("allow-non-git", false, "adopt an existing non-git episode directory, marked degraded")
 	preset := fs.String("preset", "", "grant preset (se-tools)")
 	var grantSpecs multiFlag
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable")
@@ -168,10 +189,19 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 		return fail("the workspace root %s contains the store directory %s; serve refuses this layout", root, storeDir)
 	}
 	dir := filepath.Join(root, episode)
-	reuse := false
+	reuse, degraded := false, false
 	if info, err := os.Lstat(dir); err == nil {
-		if !info.IsDir() || !isGitWorktree(dir) {
-			return fail("%s exists and is not a git worktree; remove it or pick another episode", dir)
+		switch {
+		case !info.IsDir():
+			return fail("%s exists and is not a directory (a symlink is refused too); remove it or pick another episode", dir)
+		case isGitWorktree(dir):
+		case !*allowNonGit:
+			return fail("%s exists and is not a git worktree: an episode without git has no own branch, "+
+				"no branch diff or provenance trailer, no reset to a base and no git-status worktree deltas. "+
+				"fix: remove it or pick another episode (session new --repo makes the worktree), "+
+				"or pass --allow-non-git to adopt it as a DEGRADED episode", dir)
+		default:
+			degraded = true
 		}
 		reuse = true
 	} else if !errors.Is(err, os.ErrNotExist) {
@@ -213,7 +243,11 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 		grants[i].ExpiresAt = now + *ttl
 	}
 	action := "Create worktree " + dir + " from " + *repo
-	if reuse {
+	switch {
+	case degraded:
+		action = "Use the existing NON-GIT directory " + dir + " as a DEGRADED episode (no branch diff, " +
+			"provenance trailer or reset to a base; walk-basis worktree deltas)"
+	case reuse:
 		action = "Use the existing worktree " + dir
 	}
 	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s], expiry +%ds? [y/N] ",
@@ -281,6 +315,10 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	}
 	fmt.Fprintf(stderr, "ailang-worldd session new: credential_id=%s (episode %s, worktree %s, %d grant(s), expires %d)\n",
 		credentialID, episode, dir, len(grants), row.ExpiresAt)
+	if degraded {
+		fmt.Fprintf(stderr, "ailang-worldd session new: episode %s is DEGRADED: %s is not a git worktree (--allow-non-git); "+
+			"session list and /v1/health show it\n", episode, dir)
+	}
 	return exitOK
 }
 
@@ -350,6 +388,21 @@ type sessionListing struct {
 	CreatedAt    int64               `json:"createdAt"`
 	ExpiresAt    int64               `json:"expiresAt"`
 	Grants       []broker.Capability `json:"grants"`
+	// Degraded: the episode's directory exists and is not a git worktree
+	// (row 185, session new --allow-non-git).
+	Degraded bool `json:"degraded"`
+}
+
+// episodeDegraded reports whether <root>/<episode> exists as a real
+// directory that is not a git worktree. An absent directory is not degraded:
+// there is nothing to judge.
+func episodeDegraded(root, episode string) bool {
+	if root == "" || !workspaceEpisodePattern.MatchString(episode) {
+		return false
+	}
+	dir := filepath.Join(root, episode)
+	info, err := os.Lstat(dir)
+	return err == nil && info.IsDir() && !isGitWorktree(dir)
 }
 
 func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int {
@@ -358,6 +411,7 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
 	db := fs.String("db", def.db, "existing world store")
+	wsRoot := fs.String("workspace-root", def.workspaceRoot, "workspace root (marks degraded episodes)")
 	episode := fs.String("episode", "", "only this episode")
 	asJSON := fs.Bool("json", false, "print JSON")
 	positional, err := parseInterleaved(fs, args)
@@ -390,6 +444,10 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		fmt.Fprintf(stderr, "ailang-worldd session list: %v\n", err)
 		return exitFatal
 	}
+	root, err := filepath.Abs(*wsRoot)
+	if err != nil {
+		root = ""
+	}
 	now := env.now()
 	listing := make([]sessionListing, 0, len(rows))
 	for _, r := range rows {
@@ -397,7 +455,8 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		_ = json.Unmarshal([]byte(r.GrantsJSON), &grants)
 		sort.SliceStable(grants, func(i, j int) bool { return grants[i].Effect < grants[j].Effect })
 		listing = append(listing, sessionListing{CredentialID: r.CredentialID, Episode: r.EpisodeID,
-			Live: now < r.ExpiresAt, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, Grants: grants})
+			Live: now < r.ExpiresAt, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, Grants: grants,
+			Degraded: episodeDegraded(root, r.EpisodeID)})
 	}
 	if *asJSON {
 		enc := json.NewEncoder(stdout)
@@ -410,8 +469,12 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		if !l.Live {
 			state = "expired"
 		}
-		fmt.Fprintf(stdout, "%s  %-12s %-7s expires %s  %s\n", l.CredentialID, l.Episode, state,
-			time.Unix(l.ExpiresAt, 0).UTC().Format(time.RFC3339), grantList(l.Grants))
+		mark := ""
+		if l.Degraded {
+			mark = "  DEGRADED (not a git worktree)"
+		}
+		fmt.Fprintf(stdout, "%s  %-12s %-7s expires %s  %s%s\n", l.CredentialID, l.Episode, state,
+			time.Unix(l.ExpiresAt, 0).UTC().Format(time.RFC3339), grantList(l.Grants), mark)
 	}
 	fmt.Fprintf(stdout, "%d session credential(s)\n", len(listing))
 	return exitOK

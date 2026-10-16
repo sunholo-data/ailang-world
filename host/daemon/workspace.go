@@ -35,6 +35,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/pins"
+	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
 // ToolBinaryRelease is the only tool-binary release the confinement matrix
@@ -425,6 +426,31 @@ func (w *workspaceTools) episodeRoot(episodeID string) (string, bool) {
 		return "", false
 	}
 	return resolved, true
+}
+
+// degradedEpisodes lists the episode directories under the workspace root
+// that are not git worktrees (row 185): real directories in the episode
+// grammar failing worktree.IsLinked, in ReadDir's lexical order. A symlink
+// or a name outside the grammar is no episode (episodeRoot refuses it), so
+// it is not listed. nil without --workspace-root.
+func (w *workspaceTools) degradedEpisodes() []string {
+	if w == nil || w.root == "" {
+		return nil
+	}
+	ents, err := os.ReadDir(w.root)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range ents {
+		if !e.IsDir() || !episodeIDPattern.MatchString(e.Name()) {
+			continue
+		}
+		if !worktree.IsLinked(filepath.Join(w.root, e.Name())) {
+			out = append(out, e.Name())
+		}
+	}
+	return out
 }
 
 // episodeHandler returns the episode's AILANG handler (sandbox is the module

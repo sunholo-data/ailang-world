@@ -332,6 +332,129 @@ func TestSessionListBesideALiveWriter(t *testing.T) {
 	}
 }
 
+// Row 185: an existing episode directory that is not a git worktree is
+// refused, and the refusal names --allow-non-git; nothing is minted and no
+// terminal is opened. Kills MUT-ADOPT-NON-GIT (dropping the isGitWorktree
+// arm) and MUT-REFUSAL-NO-FLAG (a refusal that does not name the flag).
+func TestSessionNewRefusesANonGitEpisodeNamingTheFlag(t *testing.T) {
+	f := newEpisodeFixture(t)
+	dir := filepath.Join(f.ws, "ep1")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	opened := false
+	env := sessionEnv{openTerminal: func() (io.ReadWriteCloser, error) { opened = true; return nil, os.ErrNotExist }, now: func() int64 { return 0 }}
+	var stdout, stderr bytes.Buffer
+	code := runSessionNew([]string{"ep1", "--db", f.db, "--workspace-root", f.ws, "--preset", "se-tools"}, &stdout, &stderr, env)
+	if code != exitUsage || !strings.Contains(stderr.String(), "is not a git worktree") || !strings.Contains(stderr.String(), "--allow-non-git") {
+		t.Fatalf("rc %d stderr %q, want a refusal naming --allow-non-git", code, stderr.String())
+	}
+	if opened {
+		t.Fatal("the refusal ran after the terminal fence")
+	}
+	if rows := f.rows(t); len(rows) != 0 {
+		t.Fatalf("%d session row(s) minted for a refused episode", len(rows))
+	}
+}
+
+// Row 185: with --allow-non-git the directory is adopted (no git worktree is
+// made), the prompt and stderr say DEGRADED, and session list marks it —
+// in text and as "degraded": true in --json — while a git episode in the same
+// store stays unmarked. Kills MUT-DEGRADED-SILENT (no marker on adoption).
+func TestSessionNewAllowNonGitMintsADegradedEpisode(t *testing.T) {
+	f := newEpisodeFixture(t)
+	dir := filepath.Join(f.ws, "plain")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().Unix()
+	term := &promptTerm{in: strings.NewReader("y\n")}
+	env := sessionEnv{openTerminal: func() (io.ReadWriteCloser, error) { return term, nil }, now: func() int64 { return now }}
+	var stdout, stderr bytes.Buffer
+	code := runSessionNew([]string{"plain", "--db", f.db, "--workspace-root", f.ws, "--grant", "Workspace.Read=worktree:3", "--allow-non-git"},
+		&stdout, &stderr, env)
+	if code != exitOK {
+		t.Fatalf("--allow-non-git: rc %d\n%s", code, stderr.String())
+	}
+	if !strings.Contains(term.out.String(), "NON-GIT") || !strings.Contains(term.out.String(), "DEGRADED") {
+		t.Fatalf("the prompt does not say the episode is degraded: %q", term.out.String())
+	}
+	if !strings.Contains(stderr.String(), "episode plain is DEGRADED") {
+		t.Fatalf("stderr lacks the degraded notice: %s", stderr.String())
+	}
+	if isGitWorktree(dir) || f.worktrees(t) != 1 {
+		t.Fatal("--allow-non-git turned the directory into a git worktree")
+	}
+	if rows := f.rows(t); len(rows) != 1 || rows[0].EpisodeID != "plain" {
+		t.Fatalf("rows = %+v", rows)
+	}
+
+	// A git episode beside it.
+	stdout.Reset()
+	stderr.Reset()
+	if code := runSessionNew(f.args("ep1", "--grant", "Workspace.Read=worktree:3"), &stdout, &stderr, testMintEnv("y\n", now)); code != exitOK {
+		t.Fatalf("git episode: rc %d %s", code, stderr.String())
+	}
+	if strings.Contains(stderr.String(), "DEGRADED") {
+		t.Fatalf("a git episode was reported degraded: %s", stderr.String())
+	}
+
+	var out, errw bytes.Buffer
+	if code := runSessionList([]string{"--db", f.db, "--workspace-root", f.ws}, &out, &errw, testMintEnv("", now)); code != exitOK {
+		t.Fatalf("list: rc %d %s", code, errw.String())
+	}
+	for _, line := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+		switch {
+		case strings.Contains(line, " plain "):
+			if !strings.Contains(line, "DEGRADED (not a git worktree)") {
+				t.Errorf("the degraded episode is unmarked: %q", line)
+			}
+		case strings.Contains(line, " ep1 "):
+			if strings.Contains(line, "DEGRADED") {
+				t.Errorf("the git episode is marked degraded: %q", line)
+			}
+		}
+	}
+	out.Reset()
+	if code := runSessionList([]string{"--db", f.db, "--workspace-root", f.ws, "--json"}, &out, &errw, testMintEnv("", now)); code != exitOK {
+		t.Fatal(errw.String())
+	}
+	var listing []sessionListing
+	if err := json.Unmarshal(out.Bytes(), &listing); err != nil || len(listing) != 2 {
+		t.Fatalf("json listing %s %v", out.String(), err)
+	}
+	for _, l := range listing {
+		if l.Degraded != (l.Episode == "plain") {
+			t.Errorf("episode %s degraded=%v", l.Episode, l.Degraded)
+		}
+	}
+}
+
+// Row 185: the flag changes nothing for a git episode — a new worktree is
+// still created from --repo and nothing is marked degraded.
+func TestSessionNewAllowNonGitLeavesGitEpisodesUnchanged(t *testing.T) {
+	f := newEpisodeFixture(t)
+	var stdout, stderr bytes.Buffer
+	code := runSessionNew(f.args("ep1", "--grant", "Workspace.Read=worktree:1", "--allow-non-git"), &stdout, &stderr, testMintEnv("y\n", 1000))
+	if code != exitOK || !isGitWorktree(filepath.Join(f.ws, "ep1")) || f.worktrees(t) != 2 {
+		t.Fatalf("rc %d worktrees %d\n%s", code, f.worktrees(t), stderr.String())
+	}
+	if strings.Contains(stderr.String(), "DEGRADED") || episodeDegraded(f.ws, "ep1") {
+		t.Fatalf("a git episode is degraded: %s", stderr.String())
+	}
+}
+
+// promptTerm is fakeTerm that keeps the prompt: reads come from in, writes
+// land in out.
+type promptTerm struct {
+	in  io.Reader
+	out bytes.Buffer
+}
+
+func (t *promptTerm) Read(p []byte) (int, error)  { return t.in.Read(p) }
+func (t *promptTerm) Write(p []byte) (int, error) { return t.out.Write(p) }
+func (t *promptTerm) Close() error                { return nil }
+
 func TestSessionRevokeByEpisode(t *testing.T) {
 	f := newEpisodeFixture(t)
 	for i := 0; i < 2; i++ {

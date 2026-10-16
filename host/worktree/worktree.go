@@ -18,8 +18,10 @@ package worktree
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -59,6 +61,21 @@ func Add(ctx context.Context, git, repo, dir, branch string) error {
 		args = append(args, "--detach", dir)
 	}
 	return runGit(ctx, git, args)
+}
+
+// IsLinked reports whether dir has the `.git` FILE a linked worktree carries
+// ("gitdir: …"). It is the one test of "an episode is a git worktree": a
+// directory failing it is refused by `session new` unless --allow-non-git,
+// and is then reported degraded (row 185) by `session list` and /v1/health.
+func IsLinked(dir string) bool {
+	f, err := os.Open(filepath.Join(dir, ".git"))
+	if err != nil {
+		return false
+	}
+	defer func() { _ = f.Close() }()
+	head := make([]byte, 8)
+	n, _ := io.ReadFull(f, head)
+	return string(head[:n]) == "gitdir: "
 }
 
 // Remove runs `git -C repo worktree remove --force dir`.
