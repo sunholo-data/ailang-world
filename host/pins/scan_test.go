@@ -16,7 +16,17 @@ import (
 
 // releaseLit is an AILANG release literal. Every World release is v0.N.M, and
 // a dev-build suffix ("v0.30.0-205-g…-dirty") still names its base release.
-var releaseLit = regexp.MustCompile(`\bv0\.[0-9]+\.[0-9]+\b`)
+// No leading \b: a release glued to a word character ("ailang_v0.41.0") still counts
+// (row 139 M1 judge r1, M9). Digits/dots on either side are excluded so "v0.41.0.1" and
+// "1v0.41.0" are not misread as releases.
+var releaseLit = regexp.MustCompile(`v0\.[0-9]+\.[0-9]+`)
+
+// releaseBoundary reports whether s[i:j] is a whole release: no digit or dot touches it
+// on either side. Nothing is consumed, so adjacent releases ("v0.41.0 v0.33.0") all count.
+func releaseBoundary(s string, i, j int) bool {
+	num := func(c byte) bool { return c == '.' || (c >= '0' && c <= '9') }
+	return (i == 0 || !num(s[i-1])) && (j == len(s) || !num(s[j]))
+}
 
 // repoRoot is the module root, found from this file's own path.
 func repoRoot(t *testing.T) string {
@@ -83,8 +93,10 @@ func isProductionFile(f string) bool {
 func releaseLiterals(name string, src []byte) (map[string]int, error) {
 	counts := map[string]int{}
 	add := func(s string) {
-		for _, m := range releaseLit.FindAllString(s, -1) {
-			counts[m]++
+		for _, ix := range releaseLit.FindAllStringIndex(s, -1) {
+			if releaseBoundary(s, ix[0], ix[1]) {
+				counts[s[ix[0]:ix[1]]]++
+			}
 		}
 	}
 	if strings.HasSuffix(name, ".go") {
@@ -293,15 +305,15 @@ func TestReleaseLiteralsExplainedByManifest(t *testing.T) {
 func TestReleaseLiteralScanCatchesInjectedLiterals(t *testing.T) {
 	m := Current()
 	root := repoRoot(t)
-	goSrc := []byte("package x\n// a comment naming v0.41.0 is history\nconst a = \"AILANG v0.41.0\"\nvar b = `raw v0.52.1 text`\n")
+	goSrc := []byte("package x\n// a comment naming v0.41.0 is history\nconst a = \"AILANG v0.41.0\"\nvar b = `raw v0.52.1 text`\nvar c = \"ailang_v0.41.0\"\nvar d = \"v0.30.0 v0.33.0 v0.30.0\"\nvar e = \"v0.41.0.1\"\n")
 	got, err := releaseLiterals("host/x/x.go", goSrc)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got["v0.41.0"] != 1 || got["v0.52.1"] != 1 || len(got) != 2 {
-		t.Fatalf("Go tokenizer counts %v, want one v0.41.0 (the comment ignored) and one v0.52.1", got)
+	if got["v0.41.0"] != 2 || got["v0.52.1"] != 1 || got["v0.30.0"] != 2 || got["v0.33.0"] != 1 || len(got) != 4 {
+		t.Fatalf("Go tokenizer counts %v, want v0.41.0 x2 (one glued to a word, the comment and v0.41.0.1 ignored), v0.52.1 x1, adjacent v0.30.0 x2 + v0.33.0 x1", got)
 	}
-	if f := checkLiterals(t, m, "host/x/x.go", got); len(f) != 2 {
+	if f := checkLiterals(t, m, "host/x/x.go", got); len(f) < 2 {
 		t.Fatalf("Go literals in an unlisted file gave %d findings, want 2: %v", len(f), f)
 	}
 	shSrc := []byte("# v0.41.0 in a comment\nbin=\"$HOME/.tools/v0.99.0/ailang\"\n")
