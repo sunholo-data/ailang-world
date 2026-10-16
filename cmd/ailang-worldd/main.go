@@ -91,6 +91,7 @@ Usage:
   ailang-worldd [--addr <url>] registry get <name>
   ailang-worldd [--addr <url>] log tail [--from N] [--follow] [--interval 1s] [--raw]
   ailang-worldd [--addr <url>] commit --file <commit.json> [--session <file|token>]
+  ailang-worldd [--addr <url>] outcome record --file <outcome.json|-> [--session <file|token>]
   ailang-worldd [--addr <url>] tools list [--session <file|token>] [--json]
   ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
                     [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
@@ -116,7 +117,7 @@ Usage:
 
   '<verb> --help' and 'help <verb>' print a verb's help (exit 0).
 
-Session credential (tools, call, commit): --session <file> (a file holding
+Session credential (tools, call, commit, outcome): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
 else $WORLD_SESSION. The token is never printed.
 
@@ -214,9 +215,11 @@ serve flags:
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
             3 integrity refusal (why: a broken link; call --strict: ok:false;
               setup: a digest mismatch, nothing installed).
+            outcome record: 1 refused before sending, 2 commit refused,
+              3 commit outcome uncertain (reconcile, never resend blindly).
 `
 
-// cliStdin is what `call --json -` and `why -` read.
+// cliStdin is what `call --json -`, `why -` and `outcome record --file -` read.
 var cliStdin io.Reader = os.Stdin
 
 func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
@@ -312,6 +315,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	case "commit":
 		return runCommit(*addr, rest[1:], stdout, stderr)
+
+	// Row 182: an operator harness records one graded task's outcome.
+	case "outcome":
+		return runOutcome(*addr, rest[1:], cliStdin, stdout, stderr)
 
 	// Row 138 M1/M2 and D-WORLD-60: the MCP client, the provenance walk,
 	// the log tail and the PR trailer.
