@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -248,3 +249,15 @@ func ReleaseFor(role string) Release {
 
 // VersionLine is ReleaseFor(role).Version, e.g. "AILANG v0.41.0".
 func VersionLine(role string) string { return ReleaseFor(role).Version }
+
+// ReleaseOfVersionLine maps an interpreter's first `--version` line (the
+// epoch-registry candidate string, "AILANG vX.Y.Z") to its release name
+// ("vX.Y.Z"). ok is false for any other shape, e.g. a dev build or the
+// daemon's "unpinned" sentinel.
+func ReleaseOfVersionLine(line string) (string, bool) {
+	rel, found := strings.CutPrefix(line, "AILANG ")
+	if !found || !releaseRe.MatchString(rel) {
+		return "", false
+	}
+	return rel, true
+}

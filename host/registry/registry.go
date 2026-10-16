@@ -80,9 +80,16 @@ func Decode(payload []byte) (Registry, error) {
 	return r, nil
 }
 
+// Provenance strings of the two revision-producing operations. The provenance
+// is not part of the content address (the hash covers the payload only).
+const (
+	provenanceBootstrap = "epoch-registry-bootstrap"
+	provenanceNominate  = "epoch-registry-nominate"
+)
+
 // object builds the immutable store.Object for a registry revision, computing
 // its content address over the canonical bytes.
-func object(r Registry) (store.Object, error) {
+func object(r Registry, provenance string) (store.Object, error) {
 	payload, err := r.Encode()
 	if err != nil {
 		return store.Object{}, err
@@ -93,7 +100,7 @@ func object(r Registry) (store.Object, error) {
 		// semantic ID's hash as a stable, self-describing interface tag.
 		InterfaceHash: hashref.SumSHA256([]byte(SemanticID)),
 		SemanticID:    SemanticID,
-		Provenance:    "epoch-registry-bootstrap",
+		Provenance:    provenance,
 		Payload:       payload,
 	}, nil
 }
@@ -101,9 +108,12 @@ func object(r Registry) (store.Object, error) {
 // Bootstrap creates epoch 1 of the registry with releaseString as its first
 // nominated candidate and names the revision through the store's registry head.
 //
-// It is IDEMPOTENT: if a registry head already exists, Bootstrap loads the named
-// object and verifies it is the identical epoch-1 revision (returning it), rather
-// than creating a divergent epoch 1. Because the revision is content-addressed,
+// On a FRESH store it writes epoch 1 (byte-identical to every earlier
+// version of this function). On an EXISTING head (row 139 D3) it never
+// writes: it loads the head and returns it when releaseString is a candidate
+// of some epoch (the idempotent restart, or a restart on a release that
+// Nominate added) and refuses with *NotNominatedError otherwise, rather than
+// creating a divergent epoch 1. Because the revision is content-addressed,
 // re-running with the same releaseString yields the same object and head, and
 // PutObject/SetRegistryHead are themselves idempotent.
 //
@@ -129,35 +139,30 @@ func bootstrap(ctx context.Context, s bootstrapStore, releaseString string) (Reg
 			{Epoch: firstEpoch, Candidates: []string{releaseString}},
 		},
 	}
-	obj, err := object(want)
+	obj, err := object(want, provenanceBootstrap)
 	if err != nil {
 		return Registry{}, hashref.HashRef{}, err
 	}
 
-	// Idempotence: if a head already exists, it must resolve to the identical
-	// epoch-1 revision. A head naming different bytes is a real divergence and is
-	// surfaced as an error rather than silently overwritten.
+	// An existing head (row 139 D3): the store's registry may have GROWN past
+	// epoch 1 through Nominate, so the head is not required to be the
+	// bootstrap revision. It is loaded and the served release must be a
+	// candidate of SOME epoch; a release no epoch nominates is refused with a
+	// typed *NotNominatedError (fail-closed, never rewritten). A head naming
+	// exactly the bootstrap revision for this release is the idempotent case
+	// and passes the same membership test.
 	if head, ok, err := s.GetRegistryHead(ctx, SemanticID); err != nil {
 		return Registry{}, hashref.HashRef{}, err
 	} else if ok {
-		if head.String() != obj.Hash.String() {
-			return Registry{}, hashref.HashRef{}, fmt.Errorf(
-				"registry: existing head %q diverges from bootstrap revision %q",
-				head.String(), obj.Hash.String())
-		}
-		existing, found, err := s.GetObject(ctx, head)
+		existing, err := load(ctx, s, head)
 		if err != nil {
 			return Registry{}, hashref.HashRef{}, err
 		}
-		if !found {
-			return Registry{}, hashref.HashRef{}, fmt.Errorf(
-				"registry: head %q names an absent object", head.String())
+		if len(existing.EpochsNominating(releaseString)) == 0 {
+			return Registry{}, hashref.HashRef{}, &NotNominatedError{
+				Release: releaseString, Head: head, Registry: existing}
 		}
-		decoded, err := Decode(existing.Payload)
-		if err != nil {
-			return Registry{}, hashref.HashRef{}, err
-		}
-		return decoded, head, nil
+		return existing, head, nil
 	}
 
 	// Fresh bootstrap: store the immutable revision object, then name it. Both

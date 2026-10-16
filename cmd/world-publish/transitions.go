@@ -235,7 +235,7 @@ func buildChanges(ctx context.Context, db *store.Store, arch *archive.Archive,
 	}
 	if len(epochs) == 0 {
 		return nil, "", fmt.Errorf(
-			"interpreter release %q is nominated by NO epoch in world/epoch-registry/v1; the daemon bootstraps epoch 1 from the interpreter it serves — run the daemon with this binary once, or publish against a served store",
+			"interpreter release %q is nominated by NO epoch in world/epoch-registry/v1; on a fresh store the daemon bootstraps epoch 1 from the interpreter it serves — run the daemon with this binary once; on an existing store nominate the release first (world-publish epoch nominate --release vX.Y.Z --candidate | --new-epoch)",
 			release)
 	}
 	var epochNote string

@@ -36,6 +36,10 @@
 //	reconcile  report indeterminate publish receipts, and (with --probe) resolve
 //	           them with read-only GETs. READ-ONLY, headless-permitted.
 //
+// Two LOCAL registry writes sit beside them (no network, no credential):
+// `transitions` (ATTENDED, row 107) and `epoch nominate` (row 139 D2:
+// --candidate headless-permitted per D-WORLD-78, --new-epoch ATTENDED).
+//
 // Minting and spending are TWO invocations on purpose (Decision D4). One
 // command that minted-then-spent would collapse two human acts into one
 // keystroke and make the single-use property invisible at the operator's
@@ -58,6 +62,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/pins"
 	"github.com/sunholo-data/ailang-world/host/pkgproj"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -103,6 +108,12 @@ type options struct {
 	dryRun         bool
 	live           bool
 	probe          bool
+	// epoch nominate (row 139 D2)
+	release         string
+	gateVerdict     string
+	releaseManifest string
+	candidate       bool
+	newEpoch        bool
 }
 
 // flagNames is the FROZEN flag surface, stated once and INDEPENDENTLY of the
@@ -117,20 +128,25 @@ type options struct {
 var flagNames = []string{
 	"ailang-bin",
 	"approval-ref",
+	"candidate",
 	"credential-file",
 	"decided-by",
 	"dry-run",
 	"episode",
 	"expires",
+	"gate-verdict",
 	"golden",
 	"interpreter-ref",
 	"live",
 	"manifest",
+	"new-epoch",
 	"now",
 	"package-dir",
 	"probe",
 	"publisher",
 	"registry-origin",
+	"release",
+	"release-manifest",
 	"requester",
 	"store",
 }
@@ -162,6 +178,11 @@ func newFlagSet(opts *options) *flag.FlagSet {
 	fs.StringVar(&opts.manifest, "manifest", "", "transitions: descriptor manifest file (JSON array)")
 	fs.StringVar(&opts.interpreterRef, "interpreter-ref", "", "transitions: archived interpreter HashRef pinned into every descriptor")
 	fs.StringVar(&opts.ailangBin, "ailang-bin", "", "transitions: interpreter binary to archive now, as the daemon does at startup")
+	fs.StringVar(&opts.release, "release", "", "epoch nominate: the AILANG release to nominate (vX.Y.Z)")
+	fs.StringVar(&opts.gateVerdict, "gate-verdict", "", "epoch nominate: the release's compatibility-gate verdict ("+pins.VerdictSchema+")")
+	fs.StringVar(&opts.releaseManifest, "release-manifest", "", "epoch nominate: release manifest file (default: the compiled-in pins/ailang-releases.json)")
+	fs.BoolVar(&opts.candidate, "candidate", false, "epoch nominate: add the release to the CURRENT epoch (goldens byte-identical; headless-permitted)")
+	fs.BoolVar(&opts.newEpoch, "new-epoch", false, "epoch nominate: open epoch N+1 for the release (ATTENDED: typed phrase on /dev/tty)")
 	return fs
 }
 
@@ -173,6 +194,8 @@ const usageText = `world-publish — the attended entrypoint for an IRREVERSIBLE
                            --credential-file C --approval-ref R --now N --expires E (--live | --dry-run)
   world-publish reconcile  --store S [--registry-origin O] [--probe]
   world-publish transitions --store S --manifest M (--ailang-bin B | --interpreter-ref R)  [local registry write]
+  world-publish epoch nominate --store S --release vX.Y.Z (--candidate | --new-epoch) --gate-verdict V
+                           [--release-manifest F]  [local epoch-registry write; --new-epoch is ATTENDED]
 
 Exit codes: 0 done · 1 failed · 2 usage · 3 STOP (a fence refused; nothing happened)
 `
@@ -183,6 +206,14 @@ func run(args []string, in io.Reader, out, errw io.Writer, env environment) int 
 		return exitUsage
 	}
 	verb := args[0]
+	if verb == "epoch" {
+		// Two-word verb: `epoch nominate` is the only sub-verb.
+		if len(args) < 2 || args[1] != "nominate" {
+			fmt.Fprintf(errw, "world-publish: epoch needs the sub-verb nominate\n\n%s", usageText)
+			return exitUsage
+		}
+		verb, args = "epoch nominate", args[1:]
+	}
 	var opts options
 	fs := newFlagSet(&opts)
 	fs.SetOutput(errw)
@@ -204,6 +235,8 @@ func run(args []string, in io.Reader, out, errw io.Writer, env environment) int 
 		return runReconcile(opts, out, errw)
 	case "transitions":
 		return runTransitions(opts, in, out, errw, env)
+	case "epoch nominate":
+		return runEpochNominate(opts, in, out, errw, env)
 	default:
 		fmt.Fprintf(errw, "world-publish: unknown verb %q\n\n%s", verb, usageText)
 		return exitUsage
