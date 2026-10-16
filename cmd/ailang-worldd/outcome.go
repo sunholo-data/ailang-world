@@ -210,7 +210,7 @@ func runOutcomeWith(addr string, args []string, stdin io.Reader, stdout, stderr 
 		return exitUsage
 	}
 	obj := taskOutcomeObject(canonical)
-	ctx, cancel := context.WithTimeout(context.Background(), demoProofObjectBound)
+	ctx, cancel := budgetContext(demoProofObjectBound)
 	defer cancel()
 	entry, err := commit(ctx, demoProofClient(addr), token, obj, taskOutcomeWrittenBy, "", "outcome")
 	if err != nil {
