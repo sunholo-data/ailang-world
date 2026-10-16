@@ -1,0 +1,114 @@
+binary /Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang: AILANG v0.52.1
+
+=== fs_deny_write WITHOUT protected patterns (control)
+control write pkg/a.go                     rc=0 {
+  "ok": true
+}  host-changes=['pkg/a.go:CHANGED']
+write existing pkg/a_test.go               rc=0 {
+  "ok": true
+}  host-changes=['pkg/a_test.go:CHANGED']
+edit existing pkg/a_test.go                rc=0 {
+  "ok": true
+}  host-changes=['pkg/a_test.go:CHANGED']
+write NEW pkg/b_test.go                    rc=0 {
+  "ok": true
+}  host-changes=['pkg/b_test.go:NEW']
+write NEW tests/new.py                     rc=0 {
+  "ok": true
+}  host-changes=['tests/new.py:NEW']
+write NEW cli/sub/conftest.py              rc=0 {
+  "ok": false,
+  "refused": "write cli/sub/conftest.py: openat cli/sub/conftest.py: no such file or directory"
+}  host-changes=none
+write src/deep/x.test.ts                   rc=0 {
+  "ok": true
+}  host-changes=['src/deep/x.test.ts:CHANGED']
+dotdot pkg/../tests/new2.py                rc=0 {
+  "ok": true
+}  host-changes=['tests/new2.py:NEW']
+abs path <wt>/tests/new3.py                rc=0 {
+  "ok": true
+}  host-changes=['tests/new3.py:NEW']
+case TESTS/new4.py                         rc=0 {
+  "ok": true
+}  host-changes=['tests/new4.py:NEW']
+case pkg/A_TEST.GO                         rc=0 {
+  "ok": true
+}  host-changes=['pkg/a_test.go:CHANGED']
+symlink dir lnk/new5.py (lnk->tests)       rc=0 {
+  "ok": true
+}  host-changes=['tests/new5.py:NEW']
+symlink dir lnk/test_x.py (existing)       rc=0 {
+  "ok": true
+}  host-changes=['tests/test_x.py:CHANGED']
+symlink file alias.txt -> pkg/a_test.go    rc=0 {
+  "ok": true
+}  host-changes=['pkg/a_test.go:CHANGED']
+
+=== fs_deny_write WITH ["tests/**", "*_test.go", "*.test.ts", "conftest.py", "**/*.test.ts"]
+control write pkg/a.go                     rc=0 {
+  "ok": true
+}  host-changes=['pkg/a.go:CHANGED']
+write existing pkg/a_test.go               rc=0 {
+  "ok": false,
+  "refused": "write pkg/a_test.go: matches fs_deny_write \"*_test.go\" — read-only under this policy"
+}  host-changes=none
+edit existing pkg/a_test.go                rc=0 {
+  "ok": false,
+  "refused": "edit pkg/a_test.go: matches fs_deny_write \"*_test.go\" — read-only under this policy"
+}  host-changes=none
+write NEW pkg/b_test.go                    rc=0 {
+  "ok": false,
+  "refused": "write pkg/b_test.go: matches fs_deny_write \"*_test.go\" — read-only under this policy"
+}  host-changes=none
+write NEW tests/new.py                     rc=0 {
+  "ok": false,
+  "refused": "write tests/new.py: matches fs_deny_write \"tests/**\" — read-only under this policy"
+}  host-changes=none
+write NEW cli/sub/conftest.py              rc=0 {
+  "ok": false,
+  "refused": "write cli/sub/conftest.py: matches fs_deny_write \"conftest.py\" — read-only under this policy"
+}  host-changes=none
+write src/deep/x.test.ts                   rc=0 {
+  "ok": false,
+  "refused": "write src/deep/x.test.ts: matches fs_deny_write \"*.test.ts\" — read-only under this policy"
+}  host-changes=none
+dotdot pkg/../tests/new2.py                rc=0 {
+  "ok": false,
+  "refused": "write pkg/../tests/new2.py: matches fs_deny_write \"tests/**\" — read-only under this policy"
+}  host-changes=none
+abs path <wt>/tests/new3.py                rc=0 {
+  "ok": false,
+  "refused": "write /Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156/q4/wt/tests/new3.py: matches fs_deny_write \"tests/**\" — read  host-changes=none
+case TESTS/new4.py                         rc=0 {
+  "ok": false,
+  "refused": "write TESTS/new4.py: matches fs_deny_write \"tests/**\" — read-only under this policy"
+}  host-changes=none
+case pkg/A_TEST.GO                         rc=0 {
+  "ok": false,
+  "refused": "write pkg/A_TEST.GO: matches fs_deny_write \"*_test.go\" — read-only under this policy"
+}  host-changes=none
+symlink dir lnk/new5.py (lnk->tests)       rc=0 {
+  "ok": true
+}  host-changes=['tests/new5.py:NEW']
+symlink dir lnk/test_x.py (existing)       rc=0 {
+  "ok": true
+}  host-changes=['tests/test_x.py:CHANGED']
+symlink file alias.txt -> pkg/a_test.go    rc=0 {
+  "ok": true
+}  host-changes=['pkg/a_test.go:CHANGED']
+
+=== fs_deny_write ONLY ["**/*.test.ts", "tests/**"] (pattern-form semantics)
+depth0 a.test.ts                           rc=0 {
+  "ok": true
+}  host-changes=['a.test.ts:NEW']
+depth1 src/foo.test.ts                     rc=0 {
+  "ok": false,
+  "refused": "write src/foo.test.ts: matches fs_deny_write \"**/*.test.ts\" — read-only under this policy"
+}  host-changes=none
+depth2 src/deep/x.test.ts                  rc=0 {
+  "ok": true
+}  host-changes=['src/deep/x.test.ts:CHANGED']
+nested dir pattern: cli/tests/x.py vs tests/** rc=0 {
+  "ok": true
+}  host-changes=['cli/tests/x.py:NEW']

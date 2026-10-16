@@ -1,0 +1,448 @@
+# w-exec-protected-test-paths — protected test paths for `workspace-exec`: refused to World's write tools, denied in the sandbox, and proven intact in every exec result
+
+**Status**: PLANNED. Designer draft 2026-10-17 (mission iteration 277, designer role; Agent `opus`). Queue row 156. Quorum: not yet run (§12).
+- **Direction:** D-WORLD-81 = A (attended 2026-10-16): order 156 → 150 → 151 → v1.0.0 tag. Row filed attended 2026-10-06 as row 140's verification gap 1.
+- **Extends:** row 140 `design_docs/planned/w-workspace-exec-toolchain-effect.md` (§4.3 profile, §4.4 rendered settings, §4.5 handler and record, §4.7 replay) and row 184 `design_docs/planned/w-toolchain-worktree-delta.md` (the `worktree_delta` result field, git-status basis).
+- **Base:** ailang-world `dev` `b7bae72`.
+- **Rig:** macOS 26.6.2 arm64 (Apple M4 Max), node v26.0.0, srt **0.0.78** (`cli.js` sha256 `3c3092bd…d96e`, the row-140 pin), tool binary AILANG **v0.52.1** (`~/.pinned-ailang-tools/v0.52.1/ailang`, the `RoleTool` pin). **Linux is not measured** (no bubblewrap on the rig). Every Linux statement below is sourced from the pinned srt's README and labelled so. M0 measures Linux on CI before any production code lands, as row 140 M0 did.
+
+**Clauses**: 5 (an honest, checkable record of what an agent's run proves) plus 3 (the protection is part of the brokered effect's record).
+
+**Estimate**: ≈ 1.5 executor days (M0–M7), each milestone ≤ ~30 min of executor work and ≤ ~250 LOC.
+
+**Probe conditions**:
+- Every V-row was run first-party on 2026-10-17. Scripts and raw outputs are in `design_docs/verification/world-row156-design-2026-10-17/` (`q*.sh` / `q*.py` / `*.go.txt` and the matching `*.out.txt`).
+- The three real checkouts were only **read** (`git ls-files`, `git grep`, `git ls-tree`, a read-only file walk). Every test run and every write ran in a throwaway sibling copy under `/Users/voightkampff/dev/sunholo-data/.scratch-iter277-row156/` (APFS `cp -c` or `git clone --shared`), deleted afterwards.
+- This doc claims no `.ail` text (§4.8 says why none is needed).
+
+## 1. Why (measured)
+
+- **P1 — An agent can rewrite the tests that judge it.**
+  - `workspace-exec` renders `allowWrite = [worktree, episode exec cache]`. `denyWrite` holds only World's deny names and srt's default write paths (V1).
+  - World's `ailang-write`/`ailang-edit` refuse only `.git` and the fixed deny names (`.github`, `.pi`, `.claude`, `.ailang`, `.gitmodules`, `.gitattributes`) (V1).
+  - With no protection, every write arm succeeded: modify, create, delete and rename a test file, both through srt and through policy-tool (V5 rendering NONE, V7 control block).
+  - So "tests passed through World" proves only that *some* tests passed.
+- **P2 — The three M4 projects keep their tests in two different shapes (V2).**
+  - **TwilightGame (TS):** all 246 test files are under the root `tests/`. 244 are `*.test.ts`.
+  - **sunholo-platform (Python + TS):** `backend/tests/` (317 files), `cli/tests/` (39), `services/browser/tests/` (2). Plus 184 `*.test.ts(x)` in `__tests__/` folders under `frontend/`. Four `conftest.py` files.
+  - **ailang (Go):** 1 924 `*_test.go` files sit **next to the code they test**. There are also 208 `*.golden` files, 337 files under `testdata/` folders, and 103 files under the root `tests/`.
+  - So directory patterns alone cannot protect Go. A profile needs **basename patterns** (`*_test.go`, `*.golden`) that match at any depth.
+- **P3 — Targeted test runs write nothing under these paths (V3, V4).**
+  - Each project ran one targeted command in a throwaway copy with World's child environment. Results:
+    - `vitest run <file>`: 3 tests passed. Nothing was written outside `node_modules` (1 file there).
+    - `pytest -p no:cacheprovider <file>` (the M4 profile's form): 5 passed, 6 skipped, nothing written.
+    - `go test ./internal/lexer/`: `ok`, nothing written.
+  - Without `-p no:cacheprovider`, pytest writes `.pytest_cache/` at its rootdir (`cli/`), not under `cli/tests/`.
+  - **Snapshots:** 0 test files in either TS project use a snapshot assertion. The control `expect(` matches 245 and 182 files.
+  - **Go goldens:** the ailang repo rewrites goldens only behind 4 opt-in `-update-*` flags. A profile's flag allowlist does not list them, so the agent cannot pass them (row 140 §4.3).
+  - World already sends `__pycache__` to the exec cache (`PYTHONPYCACHEPREFIX`, V1).
+  - So protecting test paths breaks none of the measured runs.
+- **P4 — The two matchers World must drive do not read globs the same way. The row's example `**/*.test.ts` is a trap.**
+  - **World's write tools use AILANG's `fileguard.MatchDenyWrite` (V6).** A pattern ending `/**` is a root-relative directory prefix. Any other pattern is `path.Match`ed against the whole path and against the base name.
+    - So `**/*.test.ts` protects exactly one directory level. `a.test.ts` and `src/deep/x.test.ts` were both **written** under it (V7).
+    - `tests/**` does not protect `cli/tests/x.py` (V7).
+    - `*.test.ts` (a base-name glob) protects every depth (V7).
+  - **srt on macOS (Seatbelt) reads `**` as any number of directories.** `<wt>/**/*_test.go` refused a new root-level `c_test.go` as well as `pkg/b_test.go` (V5).
+  - **srt on Linux (bubblewrap) takes literal `denyWrite` paths only.** A trailing `/**` is dropped (the directory is denied). **Any other glob is skipped** (V8, srt README line 438, not measured here).
+  - So World must define its own small pattern grammar, which means the same thing in every matcher. It must refuse the forms that do not.
+- **P5 — Expanding globs at render time does not stop creation (V5, rendering LITERAL).**
+  - The row proposed expanding globs at render time, because Linux has no globs. So the existing matches were rendered as literal paths. It was measured on macOS, where both forms can be compared.
+  - Existing files were protected (modify, delete, rename-away and hard link were all refused).
+  - But **six creation arms were written**:
+    - a new `pkg/b_test.go`;
+    - a root `c_test.go`;
+    - `cli/sub/conftest.py`;
+    - `src/bar.test.ts`;
+    - `mv pkg/a.go pkg/z_test.go`;
+    - `pkg/B_TEST.GO`.
+  - A new `zz_test.go` with a `TestMain` that never calls `m.Run()` is enough to make `go test` print `ok`. On Linux this cannot be prevented by the sandbox. It can only be **detected**. That is why this design records a per-call integrity check (§4.5) and does not rely on the sandbox alone.
+- **P6 — World's write tools can be steered around a protected pattern by a symlink (V7).**
+  - policy-tool checks the **lexical** path (`h.root.Rel(p)`) and then opens it through `os.Root`, which follows a symlink that stays inside the root (V6).
+  - With `tests/**` and `*_test.go` protected, `lnk/new5.py` (`lnk → tests`) and `alias.txt` (`→ pkg/a_test.go`) were **written**.
+  - An agent can make such a link with any profiled command that runs project code, since the sandbox does not deny creating `lnk`. A repository can also check one in.
+  - AILANG's FS effect (`ailang-run` with `FS`) uses the same lexical check (V6).
+- **P7 — `git status`, limited to the protected pathspecs, proves "protected files equal the base commit" at ~176 ms on the largest project (V9).**
+  - The command is `git status --ignored=matching` with the protected pathspecs. On a 28 699-file clone of the ailang repo, it caught every arm:
+    - a modified test (` M`);
+    - a deleted test (` D`);
+    - a new test (`??`);
+    - a new test hidden by an edit to `.gitignore` (`!!`);
+    - a new test in an `info/exclude`d directory (`!! zzign/`).
+  - It listed nothing for a clean tree, or for a change to `go.mod`.
+  - Row 184's existing full status (`--ignored=no`) takes 360 ms. It **missed** both ignored creations.
+  - By contrast, walking and hashing the worktree costs 0.9–4.8 s on the same repo (V10). That is far too slow per call.
+
+## 2. Goals and non-goals
+
+**Goals.**
+- **A profile may declare `protected` patterns** (§4.1): an optional list in the exec profile, in a grammar that means the same thing to all four matchers (AILANG's `fileguard`, Seatbelt, bubblewrap and git pathspecs) or is refused at load.
+- **Refused to World's write tools for that episode.** The episode policy's `fs_deny_write` gains the patterns, re-based to the AILANG sandbox root. The same applies to `ailang-write`, `ailang-edit`, `ailang-cli` writes and `ailang-run`'s FS effect. World also refuses a write whose path resolves through a symlink, or to a hard link, into a protected path (§4.3, on D-156-4).
+- **Denied to the sandbox.**
+  - **macOS:** prevented, creation included: directory patterns as literal `denyWrite` dirs, basename patterns as `<worktree>/**/<glob>`.
+  - **Linux:** directory patterns are prevented. Basename patterns are **detected only** (D-156-3), and the result says so.
+- **Every exec result of a protected episode carries a `protected` block** (§4.5):
+  - the pattern-set digest;
+  - the base commit and the digest of its protected entries;
+  - whether the protected paths equalled the base commit **before** and **after** the command;
+  - the first changed paths when they did not.
+- **A reader can tell a protected run apart without trusting the agent:**
+  - `ailang-worldd why` prints a `protected:` line;
+  - a result with no `protected` key ran with no protected set;
+  - a result with `intact_after: true` ran against test bytes identical to the base commit.
+
+**Non-goals (with owners).**
+- **Test semantics, not only test bytes.** Project code still runs inside the tests. It can `os.Exit(0)` in an `init()`, or read an environment variable and skip. Protecting config files (`vitest.config.ts`, `pyproject.toml`, `package.json`) is the operator's choice in the pattern list. This row protects bytes and records their integrity; it does not prove the run executed every test (R-156-5).
+- **A default protected set:** D-156-2 (default: none; the operator writes the list).
+- **Failing a call or an episode because protection was breached:** D-156-1 (default: report, never judge).
+- **Dependency digests** are row 157. **Resource limits** are row 158.
+- **Fixing AILANG's lexical `fileguard` check** (P6): filed upstream (§10). World backstops it with the per-call integrity check.
+
+## 3. Verification Log (2026-10-17; outputs in `design_docs/verification/world-row156-design-2026-10-17/`)
+
+| V | Command | Observed (short) |
+|---|---|---|
+| V1 | `q0_anchors.out.txt`: `grep -n` over `host/broker/exec_settings.go`, `exec_profile.go`, `handlers_exec.go`, `handlers_ailang*.go` at `b7bae72` | `renderExecSettings` (`:91`) appends `execDenyNames()` under the worktree (`:99`) and srt's defaults (`:101`); `AllowWrite: [Worktree, Cache]` (`:113`). `ExecProfileVersion = "world/exec-profile/v1"` (`:28`); `execWorldEnv` includes `PYTHONPYCACHEPREFIX` and `npm_config_cache` (`:53`); the profile key allowlist is `strictObject("profile", …)` (`:128`), with no `protected` key. `episodeDenyDirs = [.github .pi .claude .ailang]` (`handlers_ailang.go:57`); `renderPolicy` writes `fs_deny_write` (`handlers_ailang_run.go:196`); `RenderEpisodePolicy(sandbox)` per episode (`workspace.go:522`); the exec handler is built per episode (`workspace.go:382`) |
+| V2 | `q1_layout.sh` (`git ls-files` per glob on the three checkouts; control = all tracked files) | ailang (`37d6641b3`, 28 699 files): `*_test.go` 1 924, `testdata/` 337, `*.golden` 208, root `tests/` 103, `examples/tests/` 65, `*.test.ts` 30. TwilightGame (`57655894`, 3 141): root `tests/` 246, `*.test.ts(x)` 244, no `__tests__`/snapshots. sunholo-platform (`fe80714f`, 1 682): `test_*.py` 334, `backend/tests/` 317, `cli/tests/` 39, `__tests__/` 191, `*.test.ts(x)` 184, `conftest.py` 4. Profiles' roots (`world-row140-m4/*.json`): ailang `.`, twilightgame `.`, sunholo-cli `cli` |
+| V3 | `q2b_dynamic.sh`: one targeted command per project in a throwaway APFS clone (`cp -c` / `git clone --shared`), World's env (`CI=1`, `HOME`/`TMPDIR` in a scratch cache, `PYTHONPYCACHEPREFIX`, `npm_config_cache`), `find -newer marker` | vitest `tests/<first>.test.ts`: `3 passed`, **0** paths written outside `node_modules` (1 inside). pytest `-p no:cacheprovider tests/test_cli_bq.py`: `5 passed, 6 skipped`, **0** paths. Default cacheprovider: `.pytest_cache/v/cache/nodeids` (at `cli/`, not under `tests/`). `go test -count=1 ./internal/lexer/`: `ok`, **0** paths |
+| V4 | `q2a_static.out.txt`: `git grep` for golden-update flags and snapshot asserts (control `expect(`) | ailang: 4 `flag.Bool("update-…")` sites (opt-in; e.g. `-update-tailcall-goldens`). Snapshot asserts: TwilightGame 0 files (control 245), sunholo frontend 0 (control 182). sunholo `cli/pyproject.toml`: `testpaths = ["tests"]`, `addopts = "-v --tb=short"` |
+| V5 | `q3_srt_denywrite.py`: srt 0.0.78 on macOS, 16 arms × 3 renderings (NONE / GLOB `<wt>/tests`, `<wt>/**/*_test.go`, `<wt>/**/conftest.py`, `<wt>/**/*.test.ts` / LITERAL = existing matches), each arm in a fresh tree, host bytes read unsandboxed | **NONE** (control): all 16 arms written (15 protected + the control). **GLOB**: control `pkg/a.go` written; **every** protected arm refused with `Operation not permitted`, host unchanged. That includes new `pkg/b_test.go`, root `c_test.go` (`**/` matches zero dirs), `cli/sub/conftest.py`, `src/bar.test.ts`, `rm`, `mv` onto a test name, `mv` away, `mv tests tests2`, a symlink `lnk→tests` write, a hard link, `PKG/A_TEST.GO` and a new `pkg/B_TEST.GO` (case-insensitive). One gap: `mv pkg pkg2` **succeeded** (the test file moved with its dir, bytes unchanged; the write after it was refused). **LITERAL**: existing files and the `tests` dir refused (modify, rm, mv away, dir renames, symlink, hard link, case); **all six creation arms written** (`b_test.go`, `c_test.go`, `cli/sub/conftest.py`, `src/bar.test.ts`, `mv a.go z_test.go`, `B_TEST.GO`) |
+| V6 | `q0_anchors.out.txt`: `git -C ailang show v0.52.1:` `internal/fileguard/protect.go`, `internal/policytool/fs_ops.go`, `internal/effects/fs_root.go`, `fs_dir.go` | `MatchDenyWrite` (`protect.go:79`): `/**` suffix → folded prefix (`:87`); else `path.Match` on the whole key (`:93`) and the base name (`:96`). policy-tool `protected()` takes `h.root.Rel(p)`, the lexical path (`fs_ops.go:63-70`), then `h.root.OpenFile` (`:93`). The FS effect's `fsCheckMutation` uses `fsRelToRoot`, also lexical (`fs_root.go:145,164`). Rename checks both operands (`fs_dir.go:135,138`) |
+| V7 | `q4_policytool_denywrite.py`: the pinned `v0.52.1 policy-tool --policy P` with `fs_deny_write` = `[.github/**]` (control) and then `+ [tests/**, *_test.go, *.test.ts, conftest.py, **/*.test.ts]`; then `[**/*.test.ts, tests/**]` alone | Control: 13 of 14 writes `ok:true`; the 14th (`cli/sub/conftest.py`, parent dir absent) failed `openat`. **With the patterns:** write/edit existing test, new `pkg/b_test.go`, new `tests/new.py`, `cli/sub/conftest.py`, `src/deep/x.test.ts`, `pkg/../tests/new2.py`, an absolute path, `TESTS/new4.py` and `pkg/A_TEST.GO` were all **refused** (`matches fs_deny_write "…"`). **Written through a symlink alias:** `lnk/new5.py` (`lnk→tests`) → `tests/new5.py` NEW; `lnk/test_x.py` → CHANGED; `alias.txt` (`→ pkg/a_test.go`) → CHANGED. **`**/*.test.ts` alone:** `a.test.ts` (depth 0) written, `src/foo.test.ts` (depth 1) refused, `src/deep/x.test.ts` (depth 2) written; `tests/**` does not cover `cli/tests/x.py` (written) |
+| V8 | `q0_anchors.out.txt`: installed srt 0.0.78 `README.md`; `command -v bwrap` | **Source, not a measurement:** Linux `denyWrite` takes literal paths; a trailing `/**` is dropped; any other glob is skipped (`:438`). An absent `denyWrite` path gets a temporary mount stub (`:745`). bubblewrap parses at most 9 000 args (≈ 3 000 mounts) (`:753`). Ancestors of a protected path are pinned: `mv`/`rmdir` → `EBUSY` (`:784`). macOS globs "cover existing and new files alike" (`:782`). `bwrap: absent`, Darwin arm64: **Linux unmeasured** |
+| V9 | `q6_git_protected.sh`: `git clone --shared` of ailang (28 699 tracked) in scratch; `GIT_OPTIONAL_LOCKS=0 git -c core.fsmonitor=false status --porcelain=v1 -z --untracked-files=all` with `--ignored=no` (row 184) vs `--ignored=matching -- ':(glob,icase)**/*_test.go' ':(glob,icase)**/*.golden' ':(glob,icase)tests/**' ':(glob,icase)examples/tests/**' ':(glob,icase)**/.gitignore'`; six mutation arms + two controls | Cost (3 runs): full status **359–362 ms**; protected pathspecs **174–176 ms**. Clean tree: both empty. Modify / delete / create untracked test: both list it. **`.gitignore += zz*` then new `zz_ign_test.go`**: full lists only ` M .gitignore`; protected lists `!! cmd/ailang/zz_ign_test.go`. **Test in an `info/exclude`d dir**: full lists **nothing**; protected lists `!! zzign/`. Control `go.mod` change: full ` M go.mod`, protected **empty** |
+| V10 | `q5_walk_main.go.txt` built in scratch: read-only `WalkDir` of the real checkouts (skipping `.git`, optionally `node_modules`), fold-match the patterns, sha256 every match; controls: no pattern → 0 matches, `*` → every file | ailang (`*_test.go`, `*.golden`, `tests/**`, `examples/tests/**`): 221 201 entries visited, 12 651 matched; **4 817 ms cold**, 896–945 ms warm. TwilightGame: 18.5 ms warm (737 ms with `node_modules`). sunholo-platform: 206–214 ms warm, but `test_*.py` matched **2 924** files: 2 002 `test_*.py` sit inside `.venv` site-packages and 334 outside, equal to the 334 tracked (`q5b_venv_matches.out.txt`). Controls: `[]` → 0 matches; `*` → 207 279 matches |
+| V11 | `q7_lstree_cost.out.txt`: `git ls-tree -r -z --full-tree HEAD` on ailang (read-only); `git rev-parse HEAD`; `q2a`: `git ls-files -s` with the protected pathspecs | ls-tree: 28 699 entries in **132–134 ms**; rev-parse 24 ms; `ls-files -s` with pathspecs: 2 283 entries in 37 ms |
+| V12 | `q0_anchors.out.txt`: `worktree_delta.go`, `why.go`, `exec_probe.go`, `pins/manifest_test.go` | Row 184 snapshots with `--ignored=no` (`worktree_delta.go:357`); the after-snapshot runs under `WithoutCancel` with a 60 s bound (`:135,142`). `why` decodes a result field lazily, and an old record yields nil (`why.go:585`). Probe arms 1–7 (`exec_probe.go:44-50`). Tool pin `v0.52.1` (`manifest_test.go:31`) |
+
+## 4. Design
+
+### 4.1 The profile key `protected` and its grammar
+
+```json
+"protected": ["tests/**", "*.test.ts", "*.test.tsx", "vitest.config.ts"]
+```
+
+- Optional. Absent or `[]` means no protected set. Behaviour and result bytes are then identical to today (AC6.4).
+- At most 64 entries. Each is 1–256 bytes, NFC, with no NUL, control character or `\`.
+- **Every pattern is one of exactly two forms.** Both mean the same in all four matchers (§4.2):
+  1. **Directory form `D/**`.** `D` is a clean relative path, worktree-relative: no leading `/`, no `.`/`..` segment, no glob metacharacter. It protects `D` and everything beneath it.
+  2. **Base-name form `G`.** It has no `/`. `G` is a `path.Match` pattern using only `*`, `?` and `[…]`. It must compile (`path.Match(G, "")` is not `ErrBadPattern`) and must not contain `**`. It protects every file whose base name matches, at any depth.
+- **Refused at load, naming the pattern and the fix:**
+  - `**/x` or any other `**` not at the end: "use the base-name form `x`; World's write tools read `**/` as exactly one directory" (V7);
+  - a pattern with `/` that is not `D/**`, e.g. `src/*.ts`: no form means the same in `fileguard` and Seatbelt;
+  - a pattern that covers everything: `*`, `**`, or a `D/**` where `D` is `.`;
+  - `{`, `}`, `\`, a leading `!`;
+  - a `D` that names, or lies inside, `.git` or one of World's deny names (already read-only).
+- **Folding.** Patterns and paths are compared case-folded and NFC-normalized, exactly like `fileguard.foldKey` (V6). APFS folds (V5 case arms). On a case-sensitive Linux volume, folding over-denies an exotic spelling, which is `fileguard`'s own fail-closed rule.
+- **Canonical form and digest.**
+  - Each pattern is NFC-normalized. Duplicates are dropped by fold key. The list is sorted by fold key bytes.
+  - `protected.digest = "sha256:" + hex(sha256("world/exec-protected/v1\n" + join(canonical, "\n") + "\n"))`.
+  - The profile's own `digest` (row 140) changes too, because it digests the file bytes. This digest is separate, so two profiles with the same protected set can be compared.
+- **`ExecProfileVersion` stays `world/exec-profile/v1`.** The key is optional and additive. An older World refuses a profile that carries it (unknown key, fail closed). That is the safe direction.
+
+### 4.2 One grammar, four renderings (pure functions, `host/broker/exec_protected.go`)
+
+| Consumer | Directory form `D/**` | Base-name form `G` | Evidence |
+|---|---|---|---|
+| AILANG `fs_deny_write` (World's write tools, `ailang-run` FS) | `D'/**`, where `D'` is `D` re-based to the AILANG sandbox root (below) | `G` verbatim | V6, V7 |
+| srt `denyWrite`, darwin | `<worktree>/D` (literal dir) | `<worktree>/**/G` | V5 GLOB |
+| srt `denyWrite`, linux | `<worktree>/D` (literal dir; srt binds it read-only) | **not rendered** (D-156-3 = A): srt would skip it silently (V8) | V8 (README) |
+| git pathspec (the integrity check, §4.5) | `:(glob,icase)D/**` | `:(glob,icase)**/G` | V9 |
+
+- **Re-basing for AILANG.**
+  - The episode's AILANG sandbox is `<worktree>/<module root>` (row 141, `workspace_layout.go:85`), and `fs_deny_write` is relative to it.
+  - With module root `.`, nothing changes.
+  - With module root `M`:
+    - `D/**` with `D` under `M` becomes `D-without-M/**`;
+    - `D/**` with `D` equal to `M`, or an ancestor of `M`, protects the whole sandbox, so it renders as `*` (fileguard matches `*` against every base name);
+    - `D/**` outside `M` is dropped, because AILANG cannot write outside its sandbox anyway;
+    - `G` is unchanged.
+- **Equivalence is tested, not assumed:**
+  - `fileguard` ↔ World's mirror: a fixture table banked from V7's measured rows, plus a pinned-binary arm that skips without `WORLD_TOOL_AILANG_BIN`.
+  - World's mirror ↔ git pathspecs: real `git status` on a temp repo. git is on CI.
+  - World's mirror ↔ Seatbelt: real srt, skips without it.
+  - Each test drives the same path × pattern matrix.
+
+### 4.3 Refused to World's write tools
+
+1. **Policy.** `RenderEpisodePolicy(root)` becomes `RenderEpisodePolicy(root, protected)`. `renderPolicy` appends the re-based patterns after `episodeDenyWrite` in **every** variant: base, Declassify, Net and Env.
+   - So `ailang-write`, `ailang-edit`, the `cli` ops' known writes (policy-tool's `protected()`, V6) and `ailang-run`'s `FS.writeFile`/`renameFile` (`fsCheckMutation`, V6) all refuse a protected path. The refusal is AILANG's own, already worded "matches fs_deny_write …".
+   - `workspace.go` passes the episode profile's protected set (`profileFor(episodeID)`). An episode with no profile, or no `protected`, renders exactly today's policy bytes (AC4.3).
+2. **World's own pre-check (on D-156-4 = A).**
+   - Before forwarding a `Workspace.Write` (`write`/`edit`) request to policy-tool, `AilangToolHandler` resolves the request `path` against the sandbox root, using the existing `resolveExistingPrefix` (`handlers_ailang.go:203`).
+   - It then matches the worktree-relative **lexical** path and the **resolved** path against the protected set. A hit on either is a typed refusal: `path %q resolves to protected %q (pattern %q)`.
+   - A regular file whose `Lstat` shows `Nlink > 1` is also refused while the episode has a protected set. A hard link can alias a protected inode, and no path check can see that.
+   - This closes P6's three measured aliases for the write tools.
+   - It cannot reach inside an `ailang-run` program, which picks its paths at run time. That route stays lexical upstream: it is filed (§10) and detected by §4.5.
+   - **Why this is not a "local workaround" of a language gap (CLAUDE.md):** World does not patch, fork or wrap AILANG's matcher. It applies **its own** operator policy to **its own** tool before calling AILANG, as `cliWriteFlags` already does for `fmt --write` (V67 of row 134). The upstream ticket is filed either way. D-156-4 asks Mark to confirm.
+
+### 4.4 Denied to the sandbox
+
+- `execSettingsSpec` gains `Protected []string`, the canonical patterns. `renderExecSettings` appends §4.2's srt column for `spec.GOOS` **after** World's deny names and srt's defaults. The order of the existing entries is unchanged (V50 of row 140 pins `.git/hooks` and `.git/config` first).
+- **What is enforced, per OS:**
+
+| Attempt | darwin (measured, V5) | linux (README, V8; M0 measures) | Integrity check (§4.5) |
+|---|---|---|---|
+| modify / truncate an existing protected file | refused | dir form: refused (ro bind); base-name form: **allowed** | `M` → `intact_after: false` |
+| create a new file matching a pattern | refused, any depth, case variants too | dir form: refused; base-name form: **allowed** | `??` / `!!` → false |
+| delete / rename away | refused | dir form: refused; base-name: **allowed** | `D` → false |
+| rename a parent dir of a base-name match (`mv pkg pkg2`) | **allowed** (V5) | allowed | `D` (old path) → false |
+| write through a symlink or hard link | refused (V5) | dir form: refused (unmeasured) | content change → false |
+
+- **Linux mounts.** Only directory-form patterns are rendered, at most 64, so the profile stays far below bubblewrap's ~3 000-mount limit (V8). Rendering all of ailang's 2 283 protected entries as literals would approach that limit.
+- **Settings digest.** The rendered bytes change, so `settings_digest` changes. That is correct: the record already names the exact settings that ran.
+- **Startup probe arm 8 `arm8-protected-write`.** It runs only when the profile declares `protected`.
+  - World plants, unsandboxed, one file in the probe's scratch episode for the first directory-form pattern, and one for the first base-name pattern.
+  - The sandboxed client must print `WORLD-PROBE-REFUSED <errno>` when modifying the planted file, and the host bytes must be unchanged.
+  - On darwin it also creates a new file matching the base-name pattern: refused, absent on the host.
+  - On linux the base-name leg is **expected to succeed**. The arm records that, and passes only if the integrity check then reports `intact: false` for it. So the detect-only path is proven at startup, not assumed.
+  - Control: the same writes unsandboxed succeed. A pass-through shim fails the arm (the row-140 AC3.1 pattern).
+
+### 4.5 Proven intact in the record
+
+**The integrity check.** It is one bounded git invocation, launched through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
+
+```
+git status --porcelain=v2 -z --branch --untracked-files=all --ignored=matching --no-renames \
+  --ignore-submodules=all -- <the §4.2 git pathspecs>
+```
+
+- `# branch.oid` gives HEAD. Every other entry is a protected path that differs from HEAD:
+  - modified or deleted (`1`/`2` lines);
+  - untracked (`?`);
+  - ignored (`!`), which catches a new test hidden by `.gitignore` (V9).
+- **intact** = HEAD equals the episode's base commit, and the entry list is empty.
+- It runs **before** the command (after stack re-verification) and **after** it (before row 184's `finish`). Each run has its own 500 ms bound, `protectedCheckTimeout`.
+  - The child's budget becomes `min(timeout_ms, until(deadline) − protectedCheckTimeout)`. The after-check therefore always fits the handler's cap. With today's 9 000 ms cap and 10 s handler deadline, a command keeps its full 9 s unless earlier phases used more than 500 ms.
+  - A check that times out or fails records `error`, with `intact_before`/`intact_after` `null`. It never fails the call and is never silent (row 184's rule).
+- Measured cost on the largest project: ~176 ms per check, warm (V9). Two checks add ≈ 0.35 s per call there, and less on the smaller projects. The handler-construction step below warms the cache.
+
+**Baseline at handler construction** (`NewExecHandler`, once per episode × project):
+- `base` = `git rev-parse HEAD` of the worktree (24 ms, V11).
+- `base_digest` is built from `git ls-tree -r -z --full-tree <base>` (≈ 133 ms on 28 699 entries, V11), filtered by **World's own matcher**: `sha256` over each matching entry's `<mode> <oid>\t<path>\n`, in ls-tree order. `base_files` is the number of entries.
+- So the reader gets a content identity of the protected tree **as of the base commit**. Anyone holding the repo can recompute it, and git computes no glob in it.
+- Not a git worktree, or git missing: `base` is empty and every result carries `protected.error = "worktree is not a git checkout"`, with intact `null`. Every World episode today is a git worktree (row 184 D2).
+
+**The result field** (added to `execResult`, `omitempty`; absent when the profile declares no protected set):
+
+```json
+"protected": {
+  "digest": "sha256:…", "patterns": ["*.test.ts", "tests/**"],
+  "enforced": "glob",
+  "base": "37d6641b308a3e8ffb4d5a2023ba4faa89a5254a", "base_digest": "sha256:…", "base_files": 247,
+  "intact_before": true, "intact_after": false,
+  "changes": [{"path": "tests/zz_new.test.ts", "status": "untracked", "phase": "after"}],
+  "truncated": false, "total": 1,
+  "error": ""
+}
+```
+
+- `enforced`:
+  - `"glob"` (darwin): both forms denied in the sandbox;
+  - `"dirs-only"` (linux): base-name forms detected only.
+- `changes` holds at most 32 entries, then `truncated`/`total`. `status` is one of `modified`, `deleted`, `untracked`, `ignored` or `head-moved`.
+- Paths are cut the way row 184 cuts them (`worktreeDeltaMaxPathJSON`), so the worst case stays far under the 1 MiB output cap. A test measures it (row 184's `TestWorktreeDeltaWorstCaseFitsTheOutputCap` pattern).
+- `intact_before: false` means the protected tree was already changed when the call started. This makes the state **sticky** with no extra bookkeeping: once a protected file differs from the base commit, every later call says so until the file is restored.
+
+**Backward compatibility and replay.**
+- Results are stored verbatim (`world/effect-result/v1`; row 184 V2), and replay returns them without re-executing (row 140 §4.7). An old record has no `protected` key and decodes and replays as before.
+- No record schema, `InterfaceHash` or kernel type changes.
+- `execDecode` (a test helper using `DisallowUnknownFields`) learns the field, as it learned `worktree_delta`.
+
+**`why`.**
+- `resultProtected(payload)` decodes the field lazily, nil for old records (the `resultWorktreeDelta` pattern, V12). The text form prints `protected: intact (247 files @ 37d6641, digest sha256:…, enforced glob)`, or `protected: CHANGED after the call — tests/zz_new.test.ts (untracked) …`, or `protected: not checked — <error>`. `--json` carries the whole block.
+- An exec result with no `protected` key prints `protected: none declared`, so an unprotected run is visible as such.
+
+### 4.6 Where each guard sits (summary)
+
+| Route to a protected path | Prevention | Detection |
+|---|---|---|
+| `ailang-write` / `ailang-edit`, lexical path | AILANG `fs_deny_write` (§4.3.1) | §4.5 |
+| the same through a symlink or hard link | World pre-check (§4.3.2, on D-156-4) | §4.5 |
+| `ailang-cli` op that writes | AILANG `protected()` (§4.3.1) | §4.5 |
+| `ailang-run` FS effect | AILANG `fsCheckMutation`; lexical only (upstream ticket) | §4.5 |
+| `workspace-exec`, darwin | Seatbelt `denyWrite` (§4.4) | §4.5 |
+| `workspace-exec`, linux | dir form only (§4.4) | §4.5 |
+
+### 4.7 Why not a package (S3), and why not the kernel
+
+- No `world/` change and no new effect, tool or grant.
+- The pattern grammar is operator configuration, parsed at the host boundary. The enforcement lives in three external engines (AILANG `fileguard`, Seatbelt, bubblewrap) and git, and only the host can drive them (S2).
+- The `se-tools` package is untouched: the `workspace-exec` plan is unchanged.
+
+### 4.8 Why no `.ail` in this row (S1/S5)
+
+The law this row must honour is **AILANG's own `fileguard` matcher**, which is Go upstream. A World `.ail` re-statement would be a third copy with no Z3-checkable invariant beyond the grammar predicate.
+
+The canonical text form (the digest input) is pinned by a named Go golden test. Each matcher equivalence is bound by a test that drives the real engine where it exists (§4.2), so the truth source is measured, not restated. The evaluator may challenge this. The alternative is a `design_docs/sketches/protected.ail` holding a contracted `protectedPatternOk` and named tests for the digest's text form, about +40 LOC in M1.
+
+## 5. Premises
+
+| P | Premise | Evidence | vs the charter row |
+|---|---|---|---|
+| P1 | The exec sandbox and World's write tools leave test files writable today | V1, V5 NONE, V7 control | as stated |
+| P2 | Go tests sit beside the code (1 924 files), so basename patterns are required; TS/Python tests sit in `tests/` dirs | V2 | (new; the row asked to measure it) |
+| P3 | Targeted test runs write nothing under the protected paths; snapshots are unused; Go goldens update only behind opt-in flags | V3, V4 | answers "measure first" |
+| P4 | `**/*.test.ts` means one directory level to World's write tools; the grammar must be restricted | V7 | **FALSE as written:** the row's example glob does not protect what it names |
+| P5 | Linux srt skips non-`/**` globs in `denyWrite`; render-time expansion protects existing files but cannot deny creation | V5 LITERAL, V8 | **INCOMPLETE:** "expand at render time" leaves creation open (6/6 arms written), and per-file expansion risks bubblewrap's mount limit; detection is required |
+| P6 | AILANG's deny check is lexical; a symlink alias bypasses it | V6, V7 | **FALSE as implied:** adding patterns to the write tools alone does not refuse every write |
+| P7 | A pathspec-limited `git status --ignored=matching` detects every measured tamper, ignored creations included, in ~176 ms on 28 699 files | V9 | (new) |
+| P8 | A worktree walk-and-hash is too slow per call (0.9–4.8 s) | V10 | (new) |
+| P9 | "Linux srt has no globs (V33)" | V8 | **PARTLY STALE:** on 0.0.78 Linux expands `denyRead`/`allowRead` globs; only `denyWrite`/`allowWrite` are literal-only |
+| P10 | `PYTHONPYCACHEPREFIX` and `npm_config_cache` are already in World's child env | V1 | confirmed |
+| P11 | A new optional result field is replay- and record-compatible | V12, row 184 V2/V4 | confirmed |
+
+## 6. Milestones
+
+Every milestone's tests **pass with `WORLD_TOOL_AILANG_BIN` unset**. A test that needs real srt, the pinned tool binary or bubblewrap **skips cleanly** when it is absent, and has a pin-free companion that drives the same logic. Gates are `go vet ./...`, `go test -race ./...` and `./scripts/verify_ail.sh`, with `AILANG_BIN` at the gate pin.
+
+**M0 — Linux measurement first (CI only; no production code).**
+- AC0.1: extend the row-140 M0 matrix step (`world-row140-m0/m0_matrix.py`, run in `ci.yml`'s go job on `ubuntu-latest`) with V5's 16 arms under the dir-only and literal renderings.
+- AC0.2: record the observed tokens as V-rows in this doc. If Linux differs from §4.4's table, amend §4.4 and P5 before M3.
+- Negative control: the NONE rendering must show every arm written. Otherwise the matrix is vacuous and the step fails.
+
+**M1 — the pure core (`host/broker/exec_protected.go`, ≤ 200 LOC + tests).**
+- `ParseProtectedPatterns` (the grammar), `canonicalProtected`, `protectedDigest`, `matchProtected` (fold like fileguard), `rebaseForSandbox`, `renderSrtProtected(goos)` and `gitPathspecs`.
+- Tests:
+  - `TestProtectedGrammar`: every §4.1 refusal by name;
+  - `TestProtectedDigestGolden`: fixed bytes;
+  - `TestProtectedMatchFixture`: V7's measured rows, with outcomes copied from `q4_policytool_denywrite.out.txt`;
+  - `TestProtectedRebase`;
+  - `TestProtectedGitPathspecEquivalence`: real `git` on a temp repo, the same matrix.
+- **Negative controls:**
+  - `TestProtectedGrammarRefusesDoubleStarPrefix` dies if `**/` is accepted;
+  - the fold row `PKG/A_TEST.GO` dies if folding is dropped.
+
+**M2 — the profile key (≤ 80 LOC + tests).**
+- `strictObject` gains `protected`. `ExecProfile.Protected` holds the canonical list. Load refusals name `protected[i]`.
+- `TestExecStartupRefusalTable` gains the grammar rows.
+- Negative control: `TestExecProfileProtectedUnknownFormRefused` (`src/*.ts`) dies if the load check is removed.
+
+**M3 — sandbox rendering (≤ 120 LOC + tests).**
+- `execSettingsSpec.Protected`, rendered per GOOS.
+- Tests:
+  - goldens for darwin and linux renderings;
+  - `TestExecSettingsNoProtectedIsByteIdentical`;
+  - `TestExecSrtProtectedWrites` (real srt, skips without it): V5's GLOB arms through the handler, host bytes unchanged.
+- Negative control: `TestExecSrtProtectedWrites/modify` dies if the append is deleted. The pin-free companion `TestExecSettingsProtectedRendered` dies too.
+
+**M4 — probe arm 8 (≤ 150 LOC + tests).**
+- `arm8-protected-write` as in §4.4, including the linux detect leg.
+- Tests:
+  - `TestExecProbeArm8` (real srt, skips);
+  - pin-free: the pass-through shim fails arm 8 (`TestExecProbeArm8FailsUnsandboxed`), which is the negative control;
+  - a profile without `protected` runs arms 1–7 only (`TestExecProbeArm8Absent`).
+
+**M5 — World's write tools (≤ 180 LOC + tests).**
+- `RenderEpisodePolicy(root, protected)` in all four variants, wired in `workspace.go`. The §4.3.2 pre-check is behind D-156-4 (if D-156-4 = B, M5 is the policy half only).
+- Tests:
+  - policy goldens with and without a protected set (`TestEpisodePolicyNoProtectedIsByteIdentical`);
+  - `TestEpisodePolicyProtectedRebased` (module root `sub`);
+  - pin-free `TestWorkspaceWriteProtectedPrecheck`: a symlink `lnk→tests`, `alias.txt→pkg/a_test.go`, a hard link and a lexical hit, each refused before any subprocess, with a spawn counter of 0;
+  - pinned `TestWorkspaceWriteProtectedPolicyTool`, which skips without `WORLD_TOOL_AILANG_BIN` and replays V7's arms.
+- **Negative controls:**
+  - deleting the pre-check kills the symlink row;
+  - deleting the policy append kills the pinned test and the golden.
+
+**M6 — the record (≤ 220 LOC + tests).**
+- The baseline at `NewExecHandler`, the before/after checks, the `protected` field, the budget reserve and `protectedCheckTimeout`.
+- Tests:
+  - `TestExecProtectedIntact`: a profile command that touches nothing gives `intact_before` and `intact_after` both true, with `base`, `base_digest` and `base_files` asserted against an independent `git ls-tree`;
+  - `TestExecProtectedDetectsCreation`: a command that creates `zz_test.go` gives `intact_after: false`, `untracked`, and the next call `intact_before: false`;
+  - `TestExecProtectedDetectsIgnoredCreation` (`.gitignore` arm);
+  - `TestExecProtectedNotGit`: `error` set, intact null;
+  - `TestExecProtectedCheckTimeout`: a fake git sleeping past 500 ms gives `error`, the call still succeeds, and stays inside the handler deadline;
+  - `TestExecNoProtectedIsByteIdentical`;
+  - the worst-case-size test.
+- These tests run the command through a shim srt that runs it unsandboxed, so they need neither srt nor the tool binary.
+- **Negative control:** `MUT-ALWAYS-INTACT` (the check returns true) kills `TestExecProtectedDetectsCreation`.
+
+**M7 — `why` and docs (≤ 150 LOC + docs).**
+- `resultProtected` and the `protected:` line (three states plus `none declared`), with `TestWhyProtectedLine` and an old-record row.
+- QUICKSTART §10 gains the `protected` key, the grammar table, the per-OS enforcement table, and worked patterns for the three projects (V2):
+  - ailang: `*_test.go`, `*.golden`, `tests/**`;
+  - TwilightGame: `tests/**`, `*.test.ts`, `vitest.config.ts`;
+  - sunholo-cli: `cli/tests/**`, `conftest.py`, `pyproject.toml`. The last is a base-name pattern, so it protects every `pyproject.toml` in the worktree; the grammar has no single-file form.
+- `TestQuickstartSection10ProfilesLoad` loads them.
+- Negative control: `TestWhyProtectedLine/none-declared` dies if the absent case prints nothing.
+
+## 7. Load-bearing mutations
+
+| Mutant | Killer |
+|---|---|
+| MUT-DOUBLESTAR-ACCEPTED: the grammar admits `**/x` | `TestProtectedGrammarRefusesDoubleStarPrefix` |
+| MUT-NO-FOLD: `matchProtected` compares bytes | `TestProtectedMatchFixture` row `pkg/A_TEST.GO` |
+| MUT-PATHSPEC-NO-ICASE: git pathspecs without `icase` | `TestProtectedGitPathspecEquivalence` case row |
+| MUT-NO-SRT-PROTECTED: `renderExecSettings` ignores `Protected` | `TestExecSettingsProtectedRendered` + `TestExecSrtProtectedWrites/modify` |
+| MUT-LINUX-GLOB: linux renders `<wt>/**/G` (silently skipped by srt) | linux golden; M0 arm shows it does nothing |
+| MUT-PROTECTED-BEFORE-GITHOOKS: protected entries inserted before `.git/hooks` | `TestExecSettingsGoldenDarwin/Linux` order (row-140 V50) |
+| MUT-NO-POLICY-APPEND: `fs_deny_write` without the patterns | `TestEpisodePolicyProtectedGolden`; pinned `TestWorkspaceWriteProtectedPolicyTool` |
+| MUT-VARIANT-MISSED: the Env/Net variant policy omits the patterns | `TestEpisodePolicyProtectedAllVariants` |
+| MUT-NO-REBASE: patterns not re-based to module root `sub` | `TestEpisodePolicyProtectedRebased` |
+| MUT-PRECHECK-LEXICAL-ONLY: the pre-check skips resolution | `TestWorkspaceWriteProtectedPrecheck/symlink-dir` |
+| MUT-NO-NLINK: the hard-link refusal removed | `TestWorkspaceWriteProtectedPrecheck/hardlink` |
+| MUT-ALWAYS-INTACT: the check reports intact without running git | `TestExecProtectedDetectsCreation` |
+| MUT-IGNORED-NO: the check uses `--ignored=no` | `TestExecProtectedDetectsIgnoredCreation` |
+| MUT-HEAD-UNCHECKED: `branch.oid` ignored | `TestExecProtectedHeadMoved` |
+| MUT-NO-RESERVE: the child gets the full remaining budget | `TestExecProtectedCheckTimeout` (the after-check must fit the deadline) |
+| MUT-CHECK-FAILS-CALL: a check error fails the call | `TestExecProtectedNotGit` (the call must succeed with `error`) |
+| MUT-FIELD-ALWAYS: `protected` emitted with no patterns | `TestExecNoProtectedIsByteIdentical` |
+| MUT-ARM8-RC-ONLY: arm 8 accepts any non-zero rc | `TestExecProbeArm8FailsUnsandboxed` (missing-client variant) |
+
+## 8. Decisions for Mark (each with a recommended default and a default-while-unanswered)
+
+- **D-156-1 — A protected path changed: what happens to the call?**
+  - **A (recommended): report, never judge.** The call returns the command's result with `intact_after: false`, and `why` shows it. This matches row 140's "rc 0 is reported, never judged" and row 184's "a snapshot never fails the call".
+  - B: the call fails (handler error, recorded `failed`). The test output is lost, and an honest agent whose test happened to write a snapshot is punished.
+  - C: A, and every later `workspace-exec` call in the episode is refused.
+  - *Default while unanswered: A.*
+- **D-156-2 — A profile declares no `protected`.**
+  - **A (recommended): no protected set.** The result carries no `protected` key and `why` prints `none declared`. No authority changes.
+  - B: a built-in default per detected toolchain (`*_test.go`, `tests/**`, …). It would guess, and a wrong guess silently refuses legitimate writes.
+  - *Default while unanswered: A.*
+- **D-156-3 — Base-name patterns on Linux.**
+  - **A (recommended): detected only.** Not rendered for srt; `enforced: "dirs-only"`; arm 8 proves detection at startup.
+  - B: render the existing matches as literal paths up to a cap (e.g. 512). This protects modify/delete of existing files, but not creation (V5 LITERAL). It adds mounts (V8), and ailang alone has 2 283 entries.
+  - C: refuse base-name patterns on Linux (Go projects then cannot be protected there).
+  - *Default while unanswered: A.*
+- **D-156-4 — World's own pre-check on its write tools (symlink / hard-link aliases, §4.3.2).**
+  - **A (recommended): yes.** World applies its own operator policy to its own tool before calling AILANG (precedent `cliWriteFlags`), and the upstream ticket is filed too.
+  - B: no pre-check. Rely on the upstream fix plus §4.5 detection. This respects the strictest reading of "no local workarounds" in CLAUDE.md.
+  - *Default while unanswered: B.* M5 lands the policy half, and the pre-check waits for A.
+
+## 9. Risks and residuals
+
+- **R-156-1 (Linux creation, D-156-3 = A).** On Linux an agent's project code can create a base-name-matching file, e.g. a `zz_test.go` with a `TestMain` that skips `m.Run()`. It is **detected** (`intact_after: false`), not prevented. `enforced: "dirs-only"` states this in every result.
+- **R-156-2 (directory rename on darwin, V5).** `mv pkg pkg2` moves a base-name-protected file with its directory. The bytes are unchanged, but the package no longer sits where its tests expect. The check reports the old path `deleted`.
+- **R-156-3 (`ailang-run` aliases).** An AILANG program with `FS` can write through a symlink into a protected path (V6). It is detected by §4.5 at the next exec call. That call may never happen: an episode can end with no exec after the write. Upstream ticket (§10). An episode-end check is a possible add-on.
+- **R-156-4 (TOCTOU).** A concurrent exec could create a symlink between World's pre-check and policy-tool's open. The window is milliseconds, and §4.5 detects the result.
+- **R-156-5 (semantics, not bytes).** Protected test bytes do not stop project code from changing what the tests do at run time (row 140 R-140-3). Config files (`vitest.config.ts`, `pyproject.toml`, `package.json`, `go.mod`) steer which tests run. QUICKSTART's worked patterns include them where the grammar allows it. A directory's config file is protected only by its base name (e.g. `pyproject.toml` at any depth).
+- **R-156-6 (gitignored check scope).** `--ignored=matching` reports a protected-matching file in an ignored location (V9). A protected file inside a nested repository or submodule is out of scope (`--ignore-submodules=all`).
+- **R-156-7 (Unicode and case across matchers).** `icase` in git pathspecs folds ASCII case. `fileguard` folds full Unicode orbits plus NFC. A non-ASCII protected name could differ between prevention and detection. The equivalence test covers ASCII and `ſ`/`K`. The grammar may restrict patterns to ASCII if the M1 test finds a divergence; the executor records it.
+- **R-156-8 (cost).** About 0.35 s per call on the largest project (V9 × 2). It is bounded at 500 ms per check. A cold first call can exceed it (row 140 F4) and then records `error`, not a false `intact`.
+
+## 10. Conflict surface
+
+- **Files:**
+  - `host/broker/exec_protected.go` (new), `exec_profile.go`, `exec_settings.go`, `handlers_exec.go`, `exec_probe.go`;
+  - `handlers_ailang.go` and `handlers_ailang_run.go` (the `RenderEpisodePolicy` signature);
+  - `host/daemon/workspace.go`, `cmd/ailang-worldd/why.go`, `docs/QUICKSTART.md` §10;
+  - `.github/workflows/ci.yml` and `design_docs/verification/world-row140-m0/m0_matrix.py` (M0).
+- **Rows:**
+  - row 157 (dependency digest) also adds an exec result field. It is a disjoint key, so both can land in either order.
+  - row 150 M5b / 151 (workbench) and row 184 (landed) share `handlers_exec.go`/`why.go` hunks.
+  - re-fetch before merge.
+- **Upstream (to file at landing):** `sunholo-data/ailang` issue: "`fileguard.Protection.Check` matches the lexical path; `policytool` write and the FS effect follow in-root symlinks, so `fs_deny_write` is bypassable through a symlink or hard link (measured v0.52.1)". Evidence: `q4_policytool_denywrite.out.txt`. Then an `ailang messages send mission-control` note.
+
+## 11. Non-goals (restated)
+
+- Docker or containers.
+- A default protected set (D-156-2).
+- Failing the episode on a breach (D-156-1).
+- Dependency digests (row 157).
+- Memory/CPU limits (row 158).
+- Proving that every test ran (R-156-5).
+
+## 12. Quorum log
+
+*(empty — the controller fills it)*

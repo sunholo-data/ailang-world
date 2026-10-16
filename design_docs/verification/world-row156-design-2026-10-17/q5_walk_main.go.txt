@@ -1,0 +1,83 @@
+// Q5 instrument: walk a worktree, select files by the row-156 pattern grammar
+// (DIR/** = root-relative dir prefix; a pattern with no '/' = basename glob),
+// case-folded like fileguard, sha256 each match, digest the sorted manifest.
+// Read-only. Usage: walk <root> <skipNodeModules:0|1> <pattern>...
+package main
+
+import (
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
+)
+
+func match(pats []string, rel string) bool {
+	k := strings.ToLower(rel)
+	base := path.Base(k)
+	for _, p := range pats {
+		p = strings.ToLower(p)
+		if d, ok := strings.CutSuffix(p, "/**"); ok {
+			if k == d || strings.HasPrefix(k, d+"/") {
+				return true
+			}
+			continue
+		}
+		if m, _ := path.Match(p, base); m {
+			return true
+		}
+	}
+	return false
+}
+
+func main() {
+	root, skipNM, pats := os.Args[1], os.Args[2] == "1", os.Args[3:]
+	t0 := time.Now()
+	var rels []string
+	visited := 0
+	filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		visited++
+		if d.IsDir() && (d.Name() == ".git" || (skipNM && d.Name() == "node_modules")) {
+			return filepath.SkipDir
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, _ := filepath.Rel(root, p)
+		rel = filepath.ToSlash(rel)
+		if match(pats, rel) {
+			rels = append(rels, rel)
+		}
+		return nil
+	})
+	tWalk := time.Since(t0)
+	sort.Strings(rels)
+	t1 := time.Now()
+	h := sha256.New()
+	var bytes int64
+	dirs := map[string]bool{}
+	for _, r := range rels {
+		dirs[path.Dir(r)] = true
+		f, err := os.Open(filepath.Join(root, r))
+		if err != nil {
+			continue
+		}
+		fh := sha256.New()
+		n, _ := io.Copy(fh, f)
+		f.Close()
+		bytes += n
+		fmt.Fprintf(h, "%s\x00%x\n", r, fh.Sum(nil))
+	}
+	tHash := time.Since(t1)
+	fmt.Printf("root=%s skip_node_modules=%v patterns=%q\n  entries_visited=%d matched_files=%d distinct_dirs=%d bytes=%d walk_ms=%.1f hash_ms=%.1f total_ms=%.1f digest=sha256:%x\n",
+		filepath.Base(root), skipNM, pats, visited, len(rels), len(dirs), bytes,
+		float64(tWalk.Microseconds())/1000, float64(tHash.Microseconds())/1000, float64(time.Since(t0).Microseconds())/1000, h.Sum(nil)[:6])
+}

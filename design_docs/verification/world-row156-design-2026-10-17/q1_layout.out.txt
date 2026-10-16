@@ -1,0 +1,80 @@
+== /Users/voightkampff/dev/sunholo-data/ailang HEAD 37d6641b3 branch dev
+ailang                 ALL tracked files (control)               28699
+ailang                 *_test.go (basename)                       1924
+ailang                 *.go non-test                              3934
+ailang                 testdata/ component                         337
+ailang                 *.golden                                    208
+ailang                 *.test.ts|tsx                                30
+ailang                 *.spec.ts|tsx                                 0
+ailang                 __tests__/ component                          0
+ailang                 __snapshots__/ component                      0
+ailang                 *.snap                                        0
+ailang                 test_*.py (basename)                          2
+ailang                 *_test.py (basename)                          0
+ailang                 conftest.py                                   0
+ailang                 tests/ component (any depth)                176
+ailang                 tests/ at root                              103
+ailang                 test/ component                               2
+ailang                 e2e/ component                                0
+-- top-level dirs holding tests/ (first 15):
+ 103 tests/
+  65 examples/tests/
+   1 tools/claude-mods/unowned-dirty/tests/
+   1 tools/claude-mods/sprint-status/tests/
+   1 tools/claude-mods/prepush-gate/tests/
+   1 tools/claude-mods/ailang-lens/tests/
+   1 tools/claude-mods/ailang-inbox-band/tests/
+   1 tools/claude-mods/ailang-check-on-edit/tests/
+   1 tools/claude-mods/ailang-brand/tests/
+   1 internal/testutil/gatelint/testdata/fixtures/tests/
+-- test config files:
+ui/vitest.config.ts
+== /Users/voightkampff/dev/markedmondson1234/TwilightGame HEAD 57655894 branch main
+TwilightGame           ALL tracked files (control)                3141
+TwilightGame           *_test.go (basename)                          0
+TwilightGame           *.go non-test                                 0
+TwilightGame           testdata/ component                           0
+TwilightGame           *.golden                                      0
+TwilightGame           *.test.ts|tsx                               244
+TwilightGame           *.spec.ts|tsx                                 0
+TwilightGame           __tests__/ component                          0
+TwilightGame           __snapshots__/ component                      0
+TwilightGame           *.snap                                        0
+TwilightGame           test_*.py (basename)                          0
+TwilightGame           *_test.py (basename)                          0
+TwilightGame           conftest.py                                   0
+TwilightGame           tests/ component (any depth)                246
+TwilightGame           tests/ at root                              246
+TwilightGame           test/ component                               0
+TwilightGame           e2e/ component                                0
+-- top-level dirs holding tests/ (first 15):
+ 246 tests/
+-- test config files:
+vitest.config.ts
+== /Users/voightkampff/dev/sunholo-data/sunholo-platform HEAD fe80714f branch dev
+sunholo-platform       ALL tracked files (control)                1682
+sunholo-platform       *_test.go (basename)                          0
+sunholo-platform       *.go non-test                                 0
+sunholo-platform       testdata/ component                           0
+sunholo-platform       *.golden                                      0
+sunholo-platform       *.test.ts|tsx                               184
+sunholo-platform       *.spec.ts|tsx                                 0
+sunholo-platform       __tests__/ component                        191
+sunholo-platform       __snapshots__/ component                      0
+sunholo-platform       *.snap                                        0
+sunholo-platform       test_*.py (basename)                        334
+sunholo-platform       *_test.py (basename)                          0
+sunholo-platform       conftest.py                                   4
+sunholo-platform       tests/ component (any depth)                358
+sunholo-platform       tests/ at root                                0
+sunholo-platform       test/ component                               1
+sunholo-platform       e2e/ component                                0
+-- top-level dirs holding tests/ (first 15):
+ 317 backend/tests/
+  39 cli/tests/
+   2 services/browser/tests/
+-- test config files:
+backend/pyproject.toml
+cli/pyproject.toml
+frontend/vitest.config.ts
+services/browser/pyproject.toml

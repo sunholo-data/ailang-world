@@ -1,0 +1,33 @@
+# Q5 walk+digest cost, real checkouts READ-ONLY, 2026-10-16T23:33:21Z, Apple M4 Max
+# control: an empty pattern list must match 0 files; a '*' pattern must match every visited file
+root=ailang skip_node_modules=true patterns=["*_test.go" "*.golden" "tests/**" "examples/tests/**"]
+  entries_visited=221201 matched_files=12651 distinct_dirs=1281 bytes=77290992 walk_ms=2240.6 hash_ms=2575.8 total_ms=4816.5 digest=sha256:79300cbdf363
+root=ailang skip_node_modules=true patterns=["*_test.go" "*.golden" "tests/**" "examples/tests/**"]
+  entries_visited=221201 matched_files=12651 distinct_dirs=1281 bytes=77290992 walk_ms=690.0 hash_ms=254.3 total_ms=944.5 digest=sha256:79300cbdf363
+root=ailang skip_node_modules=true patterns=["*_test.go" "*.golden" "tests/**" "examples/tests/**"]
+  entries_visited=221201 matched_files=12651 distinct_dirs=1281 bytes=77290992 walk_ms=643.0 hash_ms=252.8 total_ms=896.0 digest=sha256:79300cbdf363
+root=ailang skip_node_modules=true patterns=[]
+  entries_visited=221201 matched_files=0 distinct_dirs=0 bytes=0 walk_ms=451.0 hash_ms=0.0 total_ms=451.0 digest=sha256:e3b0c44298fc
+root=ailang skip_node_modules=true patterns=["*"]
+  entries_visited=221201 matched_files=207279 distinct_dirs=12773 bytes=2924104380 walk_ms=433.3 hash_ms=29855.6 total_ms=30300.4 digest=sha256:f89e4a03f6bc
+root=TwilightGame skip_node_modules=true patterns=["tests/**" "*.test.ts" "*.test.tsx" "vitest.config.ts"]
+  entries_visited=5741 matched_files=247 distinct_dirs=3 bytes=1195981 walk_ms=65.5 hash_ms=48.0 total_ms=113.5 digest=sha256:bb7ea74502ed
+root=TwilightGame skip_node_modules=true patterns=["tests/**" "*.test.ts" "*.test.tsx" "vitest.config.ts"]
+  entries_visited=5741 matched_files=247 distinct_dirs=3 bytes=1195981 walk_ms=14.6 hash_ms=3.9 total_ms=18.5 digest=sha256:bb7ea74502ed
+root=TwilightGame skip_node_modules=true patterns=["tests/**" "*.test.ts" "*.test.tsx" "vitest.config.ts"]
+  entries_visited=5741 matched_files=247 distinct_dirs=3 bytes=1195981 walk_ms=14.6 hash_ms=3.9 total_ms=18.5 digest=sha256:bb7ea74502ed
+root=TwilightGame skip_node_modules=false patterns=["tests/**" "*.test.ts" "*.test.tsx" "vitest.config.ts"]
+  entries_visited=60388 matched_files=412 distinct_dirs=16 bytes=2162505 walk_ms=704.9 hash_ms=32.3 total_ms=737.2 digest=sha256:c305f7492435
+root=sunholo-platform skip_node_modules=true patterns=["backend/tests/**" "cli/tests/**" "conftest.py" "test_*.py" "*.test.ts" "*.test.tsx" "__tests__/**"]
+  entries_visited=39656 matched_files=2924 distinct_dirs=303 bytes=48151616 walk_ms=548.8 hash_ms=615.8 total_ms=1164.6 digest=sha256:32cfcc414da9
+root=sunholo-platform skip_node_modules=true patterns=["backend/tests/**" "cli/tests/**" "conftest.py" "test_*.py" "*.test.ts" "*.test.tsx" "__tests__/**"]
+  entries_visited=39656 matched_files=2924 distinct_dirs=303 bytes=48151616 walk_ms=140.4 hash_ms=74.0 total_ms=214.4 digest=sha256:32cfcc414da9
+root=sunholo-platform skip_node_modules=true patterns=["backend/tests/**" "cli/tests/**" "conftest.py" "test_*.py" "*.test.ts" "*.test.tsx" "__tests__/**"]
+  entries_visited=39656 matched_files=2924 distinct_dirs=303 bytes=48151616 walk_ms=139.4 hash_ms=66.4 total_ms=205.8 digest=sha256:32cfcc414da9
+root=sunholo-platform skip_node_modules=false patterns=["backend/tests/**" "cli/tests/**" "conftest.py" "test_*.py" "*.test.ts" "*.test.tsx"]
+  entries_visited=108767 matched_files=3801 distinct_dirs=340 bytes=53627564 walk_ms=1075.0 hash_ms=254.6 total_ms=1329.7 digest=sha256:52f0a89f7dd3
+# node_modules / .venv present?
+/Users/voightkampff/dev/markedmondson1234/TwilightGame/node_modules
+/Users/voightkampff/dev/sunholo-data/ailang/ui/node_modules
+/Users/voightkampff/dev/sunholo-data/sunholo-platform/cli/.venv
+/Users/voightkampff/dev/sunholo-data/sunholo-platform/frontend/node_modules

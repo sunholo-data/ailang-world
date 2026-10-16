@@ -1,0 +1,4 @@
+# Q5b: where sunholo-platform's 2 924 walk matches come from (read-only find; node_modules pruned as in q5)
+test_*.py under any .venv: 2002
+test_*.py outside .venv: 334
+tracked test_*.py (control, q1): 334

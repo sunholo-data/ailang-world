@@ -1,0 +1,76 @@
+# Q0 code anchors at b7bae72 (worktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter277-row156)
+## exec_settings.go: denyWrite + allowWrite construction
+69:func execDenyNames() []string {
+91:func renderExecSettings(spec execSettingsSpec) ([]byte, error) {
+99:		denyWrite = append(denyWrite, filepath.Join(spec.Worktree, n))
+101:	denyWrite = append(denyWrite, srtDefaultWritePaths(spec.OperatorHome, spec.GOOS)...)
+113:			AllowWrite: []string{spec.Worktree, spec.Cache},
+## exec_profile.go: version, world env, strictObject key list
+28:const ExecProfileVersion = "world/exec-profile/v1"
+53:var execWorldEnv = []string{"HOME", "TMPDIR", "PATH", "LANG", "LC_ALL", "PYTHONPYCACHEPREFIX", "npm_config_cache", "CI", "NO_COLOR"}
+128:	top, err := strictObject("profile", data, "profile", "project", "root", "path", "env", "read_roots", "caches",
+## handlers_exec.go: result struct, budget, worktree delta
+173:type execResult struct {
+191:	WorktreeDelta *WorktreeDelta `json:"worktree_delta,omitempty"`
+249:	budget := time.Duration(h.profile.TimeoutMS) * time.Millisecond
+251:		budget = min(budget, time.Until(dl))
+259:	probe := beginWorktreeDelta(ctx, h.worktree)
+291:	res.WorktreeDelta = probe.finish(ctx)
+## handlers_ailang*.go: deny list, policy render, fs_deny_write line, resolveExistingPrefix, reserved result keys
+host/broker/handlers_ailang_run.go:178:func renderPolicy(root string, spec runPolicySpec) ([]byte, error) {
+host/broker/handlers_ailang_run.go:196:	b.WriteString("fs_deny_write = " + tomlStrings(deny) + "\n")
+host/broker/handlers_ailang.go:57:	episodeDenyDirs  = []string{".github", ".pi", ".claude", ".ailang"}
+host/broker/handlers_ailang.go:165:func RenderEpisodePolicy(root string) ([]byte, error) {
+host/broker/handlers_ailang.go:203:func resolveExistingPrefix(path string) string {
+host/broker/handlers_ailang.go:474:	for _, reserved := range []string{"tool", "policy_digest", "package_cache", "worktree_delta", "world"} {
+## workspace.go: policy rendered per episode for the AILANG sandbox root; exec handler built per episode
+host/daemon/workspace_layout.go:85:func (w *workspaceTools) sandboxRoot(episodeID, epRoot string) (string, error) {
+host/daemon/workspace.go:364:	reg[broker.EffectWorkspaceExec] = w.execHandler(episodeID, epRoot)
+host/daemon/workspace.go:382:func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
+host/daemon/workspace.go:522:	policy, err := broker.RenderEpisodePolicy(sandbox)
+## worktree_delta.go: git basis, ignored=no, after budget
+9:// -z --untracked-files=all --ignored=no` lists plus a sha256 of each listed
+135:const worktreeAfterBudget = 2 * worktreeGitTimeout
+142:	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), worktreeAfterBudget)
+357:		"--ignored=no", "--no-renames", "--ignore-submodules=all")
+## why.go: result fields decoded lazily (nil for old records)
+585:func resultWorktreeDelta(payload []byte) *broker.WorktreeDelta {
+## exec_probe.go arms
+44:	ExecProbeArmWriteInside  = "arm1-write-inside"
+45:	ExecProbeArmWriteOutside = "arm2-write-outside"
+46:	ExecProbeArmReadFence    = "arm3-read-fence"
+47:	ExecProbeArmDefaultWrite = "arm4-srt-default-write"
+48:	ExecProbeArmExitStatus   = "arm5-exit-status"
+49:	ExecProbeArmNetwork      = "arm6-network"
+50:	ExecProbeArmToolchain    = "arm7-toolchain"
+## tool pin
+31:		RoleFrozenCompiler: "v0.41.0", RoleGatePrimary: "v0.41.0", RoleTool: "v0.52.1"} {
+## AILANG v0.52.1 fileguard.MatchDenyWrite (the ONE matcher of write/edit/FS effect)
+79:func MatchDenyWrite(patterns []string, rel string) string {
+87:		if dir, ok := strings.CutSuffix(pat, "/**"); ok {
+93:		if m, _ := path.Match(pat, key); m {
+96:		if m, _ := path.Match(pat, base); m {
+105:func cleanRel(rel string) string {
+## AILANG v0.52.1 policytool: protected() checks the LEXICAL rel; write opens through os.Root
+63:func (h *Host) protected(op, p string) string {
+64:	rel, err := h.root.Rel(p)
+70:	v := fileguard.Protection{GitDir: true, DenyWrite: h.res.DenyWrite}.Check(rel)
+93:	f, err := h.root.OpenFile(req.Path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+## AILANG v0.52.1 FS effect: fsCheckMutation on lexical rel; rename checks both operands
+145:func (ctx *EffContext) fsCheckMutation(path string) error {
+164:func fsRelToRoot(root, path string) string {
+135:	if err := ctx.fsCheckMutation(oldPath); err != nil {
+138:	if err := ctx.fsCheckMutation(newPath); err != nil {
+181:	if err := ctx.fsCheckMutation(oldPath); err != nil {
+184:	if err := ctx.fsCheckMutation(newPath); err != nil {
+## srt 0.0.78 README (installed, cli.js sha256 3c3092bd26b39240…)
+417:**Path Syntax (macOS):**
+434:**Path Syntax (Linux):**
+438:- `allowWrite` / `denyWrite` take literal paths. A trailing `/**` is dropped (`src/**` means `src`); any other glob pattern there is skipped.
+745:**Write denies on paths that do not exist yet (Linux):** bubblewrap can only deny a path by mounting over it, so for a `denyWrite` path that is absent under a writable directory it first creates a mount point there: 
+753:- bubblewrap parses at most 9000 arguments (about 3000 mounts). A profile past that, or a command too long for one argument by itself, fails at wrap time with an error.
+782:**Note (Linux):** A mandatory deny path that does not exist yet is blocked as well. bubblewrap covers it with a read-only `/dev/null`, or mounts an empty read-only directory at the first missing intermediate componen
+784:**Pinned directories (Linux):** Every existing ancestor of a protected path (a write-denied path, a read-denied file or directory, a masked credential file) up to the allowed write root covering it is made a mountpoi
+## no rg/bwrap on the rig (Linux unmeasurable here)
+bwrap: absent
+Darwin arm64
