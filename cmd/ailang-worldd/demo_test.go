@@ -1983,12 +1983,12 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 				t.Run(fmt.Sprintf("missing-%s-%d", ref.Role, ref.Index), func(t *testing.T) {
 					bad := m
 					bad.References = slices.DeleteFunc(slices.Clone(m.References), func(r demoManifestRef) bool { return r.Role == ref.Role && r.Index == ref.Index })
-					demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "manifest completeness: role "+ref.Role)
+					demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "manifest completeness: role "+ref.Role)
 				})
 				t.Run(fmt.Sprintf("extra-%s-%d", ref.Role, ref.Index), func(t *testing.T) {
 					bad := m
 					bad.References = append(slices.Clone(m.References), ref)
-					demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "manifest completeness: role "+ref.Role)
+					demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "manifest completeness: role "+ref.Role)
 				})
 			}
 			for _, w := range m.Why {
@@ -2001,7 +2001,7 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 						} else {
 							bad.Why = slices.DeleteFunc(bad.Why, func(v demoManifestWhy) bool { return v.Role == w.Role })
 						}
-						demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "manifest completeness: role why-"+w.Role)
+						demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "manifest completeness: role why-"+w.Role)
 					})
 				}
 			}
@@ -2010,11 +2010,11 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 			bad := m
 			bad.References = append([]demoManifestRef(nil), m.References...)
 			bad.References[0].Ref = sum([]byte("valid absent manifest reference"))
-			demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "every declared manifest reference resolves to matching content")
+			demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "every declared manifest reference resolves to matching content")
 		})
 		t.Run("mismatched-content", func(t *testing.T) {
 			// Corrupt the read response only; compare immutable daemon bytes again after.
-			before := demoRESTObject(t, r, inv.input, coordinator.InputV1)
+			before := demoRESTObject(t, demoM4bFreshReader(t, r), inv.input, coordinator.InputV1)
 			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				if strings.HasPrefix(req.URL.Path, "/v1/objects/"+inv.input) {
 					bad := before
@@ -2032,9 +2032,9 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 				_, _ = io.Copy(w, resp.Body)
 			}))
 			defer proxy.Close()
-			badReader := worldReader{ctx: r.ctx, c: newClient(proxy.URL)}
+			badReader := worldReader{ctx: boundedTestContext(t), c: newClient(proxy.URL)}
 			demoM4bRefusal(t, demoValidateManifest(badReader, m, fixture.token), "every declared manifest reference resolves to matching content")
-			after := demoRESTObject(t, r, inv.input, coordinator.InputV1)
+			after := demoRESTObject(t, demoM4bFreshReader(t, r), inv.input, coordinator.InputV1)
 			if !bytes.Equal(before.Payload, after.Payload) {
 				t.Fatal("mismatch control changed committed bytes")
 			}
@@ -2044,7 +2044,7 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 				bad := m
 				bad.References = slices.Clone(m.References)
 				bad.References[0] = demoManifestRef{Role: "input", Kind: kind, Ref: sum([]byte("absent " + kind)), Index: 999}
-				demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "every declared manifest reference resolves to matching content")
+				demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "every declared manifest reference resolves to matching content")
 			})
 		}
 		for _, field := range []string{"schema", "version", "proof", "tool"} {
@@ -2060,26 +2060,26 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 				case "tool":
 					bad.ToolVersion = "other"
 				}
-				demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "public manifest schema/version/pins must match")
+				demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "public manifest schema/version/pins must match")
 			})
 		}
 		t.Run("role", func(t *testing.T) {
 			bad := m
 			bad.References = append([]demoManifestRef(nil), m.References...)
 			bad.References[0].Role = "arbitrary"
-			demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "public manifest role must be a declared reference name")
+			demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "public manifest role must be a declared reference name")
 		})
 		t.Run("why-hash", func(t *testing.T) {
 			bad := m
 			bad.Why = slices.Clone(m.Why)
 			bad.Why[0].SHA256 = sum([]byte("wrong why"))
-			demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "why raw JSON hash mismatch")
+			demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "why raw JSON hash mismatch")
 		})
 		for name, value := range map[string]string{"session-token": fixture.token, "absolute-path": "/opt/private/capture", "timestamp": "2026-10-16T12:34:56Z", "key-material": "private-key: hidden"} {
 			t.Run(name, func(t *testing.T) {
 				bad := m
 				bad.Schema = value
-				demoM4bRefusal(t, demoValidateManifest(r, bad, fixture.token), "public bytes contain")
+				demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), "public bytes contain")
 			})
 		}
 	})
@@ -2214,4 +2214,14 @@ func TestDemoSeedPacketObjectControls(t *testing.T) {
 			demoM4bRefusal(t, err, want)
 		})
 	}
+}
+
+// demoM4bFreshReader gives each table-driven control its own bounded
+// deadline. Every validation re-reads the whole manifest over REST, so the
+// parent's single 30 s budget, shared across ~120 subtests, expires under
+// -race on a 2-core runner (PR #289 run, iteration 275).
+func demoM4bFreshReader(t *testing.T, r worldReader) worldReader {
+	t.Helper()
+	r.ctx = boundedTestContext(t)
+	return r
 }
