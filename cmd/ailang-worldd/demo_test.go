@@ -821,7 +821,7 @@ func TestDemoSeedToolGuardControls(t *testing.T) {
 	// A fake /a2a/ that counts requests and answers with the given task.
 
 	goodData := map[string]any{"content": "x", "world": map[string]any{"effects": []any{map[string]any{"record": "sha256:" + strings.Repeat("a", 64)}}}}
-	goodMeta := map[string]any{"invocation_id": "a2a:demo:t"}
+	goodMeta := map[string]any{"invocation_id": "a2a:demo:t", "entry_index": 0}
 	ctx := boundedTestContext(t)
 	t.Run("a2a-positive", func(t *testing.T) {
 		c, _ := demoFakeA2A(t, "completed", goodMeta, goodData)
@@ -837,7 +837,7 @@ func TestDemoSeedToolGuardControls(t *testing.T) {
 		}
 	})
 	t.Run("a2a-missing-invocation", func(t *testing.T) {
-		c, _ := demoFakeA2A(t, "completed", map[string]any{}, goodData)
+		c, _ := demoFakeA2A(t, "completed", map[string]any{"entry_index": 0}, goodData)
 		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
 		if err == nil || !strings.Contains(err.Error(), "invocation or effect record reference absent") {
 			t.Fatalf("missing invocation id accepted: %v", err)
@@ -1043,7 +1043,7 @@ func TestDemoSeedProofStage(t *testing.T) {
 				}
 			}
 			if arm == "success" {
-				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S5 recorded; S6 incomplete; no success manifest written") {
+				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S6 checked; roster checks M5c pending; no success manifest written") {
 					t.Fatalf("seed must record exactly one S4 envelope and refuse S6 completion: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
 				}
 				if proofCalls != 1 || readerRequests == 0 || writerRequests != 1 {
@@ -1539,7 +1539,7 @@ func TestDemoSeedApprovalPacket(t *testing.T) {
 					t.Fatalf("seed must invoke demo-approval exactly once: calls=%d", calls)
 				}
 			})
-			if !strings.Contains(stderr, "S1-S5 recorded; S6 incomplete; no success manifest written") {
+			if !strings.Contains(stderr, "S1-S6 checked; roster checks M5c pending; no success manifest written") {
 				t.Fatalf("successful S5 must still refuse S6 completion: %s", stderr)
 			}
 		})
@@ -1558,4 +1558,412 @@ func demoFakeA2A(t *testing.T, state string, meta, data map[string]any) (*client
 	}))
 	t.Cleanup(srv.Close)
 	return newClient(srv.URL), &calls
+}
+
+// All omission controls start with JSON emitted by the real CLI against a
+// temporary daemon, so the validator cannot grow its own provenance dialect.
+func demoM4bWhyFixture(t *testing.T) (*walkRig, whyChain, []byte) {
+	t.Helper()
+	t.Setenv("TMPDIR", t.TempDir())
+	rig := newWalkRig(t)
+	rig.invoke("demo", "ailang-read", "m4b", "actual stored result")
+	code, out, stderr := whyRun(t, rig.url, "", "1", "--json")
+	if code != exitOK {
+		t.Fatalf("real why fixture: %d %s", code, stderr)
+	}
+	var ch whyChain
+	if err := json.Unmarshal([]byte(out), &ch); err != nil {
+		t.Fatal(err)
+	}
+	if err := demoValidateWhy(ch); err != nil {
+		t.Fatalf("real why chain accepted: %v", err)
+	}
+	return rig, ch, []byte(out)
+}
+
+func demoM4bRefusal(t *testing.T, err error, assertion string) {
+	t.Helper()
+	if err == nil || !strings.Contains(err.Error(), assertion) {
+		t.Fatalf("%s: %v", assertion, err)
+	}
+}
+
+func TestDemoSeedWhyNamedLinks(t *testing.T) {
+	t.Run("controls", func(t *testing.T) {
+		rig, ch, _ := demoM4bWhyFixture(t)
+
+		t.Run("accepted-report", func(t *testing.T) {
+			accepted := ch // M4b-link stimulus: a decoded real report
+			if err := demoValidateWhy(accepted); err != nil {
+				t.Fatal(err)
+			}
+		})
+		t.Run("approval-stimulus", func(t *testing.T) {
+			rig.invoke("demo", "demo-approve", "approval-stimulus", "stored approval stimulus") // M4b-plain-rest stimulus
+			r := worldReader{ctx: boundedTestContext(t), c: newClient(rig.url)}
+			chain, _, err := demoWhy(r, rig.next-1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := demoValidateWhy(chain); err != nil {
+				t.Fatal(err)
+			}
+		})
+		for _, name := range []string{"coordinator", "ok", "zero-links", "effect-absent", "world-absent", "entry-absent", "record-absent", "input-absent", "plan-absent", "output-absent", "effect-false"} {
+			t.Run(name, func(t *testing.T) {
+				bad := ch
+				bad.Links = append([]whyLink(nil), ch.Links...)
+				want := ""
+				switch name {
+				case "coordinator":
+					bad.Coordinator = false
+					bad.OK = false
+					bad.Links = nil
+					want = "coordinator must be true"
+				case "ok":
+					bad.OK = false
+					want = "ok must be true"
+				case "zero-links":
+					bad.Links = nil
+					want = "zero links refused"
+				default:
+					link := strings.Split(name, "-")[0]
+					if strings.HasSuffix(name, "-absent") {
+						bad.Links = slices.DeleteFunc(bad.Links, func(l whyLink) bool { return l.Name == link })
+					} else {
+						for i := range bad.Links {
+							if bad.Links[i].Name == link {
+								bad.Links[i].OK = false
+							}
+						}
+					}
+					want = "expected " + link + " link must exist and be true"
+				}
+				demoM4bRefusal(t, demoValidateWhy(bad), want)
+			})
+		}
+		t.Run("plain-rest", func(t *testing.T) {
+			// A valid ordinary object replaces the approval stimulus. Read it back,
+			// and confirm the preceding coordinator entry survived unchanged.
+			r := worldReader{ctx: boundedTestContext(t), c: newClient(rig.url)}
+			before, _, err := r.entry(1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			commit := makeCLICommit(rig.tip, rig.next, "ordinary demo object")
+			rig.post(commit)
+			actual, _, err := r.entry(rig.next)
+			if err != nil || actual.EntryHash != commit.Entry.EntryHash {
+				t.Fatalf("ordinary REST commit readback mismatch: %v", err)
+			}
+			after, _, err := r.entry(1)
+			if err != nil || after != before {
+				t.Fatal("ordinary REST commit changed preceding entry")
+			}
+			ordinary, _, err := demoWhy(r, rig.next)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// This calls the actual validator before any packet count.
+			demoM4bRefusal(t, demoValidateWhy(ordinary), "coordinator must be true")
+			_, err = demoSeedS6(r, "", nil, demoToolStages{Read: demoToolRun{EntryIndex: 1}, Test: demoToolRun{EntryIndex: 1}, Check: demoToolRun{EntryIndex: 1}}, demoToolRun{EntryIndex: rig.next}, nil)
+			demoM4bRefusal(t, err, "coordinator must be true")
+		})
+	})
+	t.Run("real-stack", func(t *testing.T) {
+		r, m := demoM4bRealSeed(t)
+		if len(m.Why) != 4 {
+			t.Fatal("read/test/check/approval must each have a why chain")
+		}
+		for _, w := range m.Why {
+			ch, raw, err := demoWhy(r, w.Entry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := demoValidateWhy(ch); err != nil {
+				t.Fatalf("real named links accepted: %v", err)
+			}
+			if sum(raw) != w.SHA256 {
+				t.Fatal("raw why JSON hash retained")
+			}
+			for _, name := range linkNames {
+				found := false
+				for _, l := range ch.Links {
+					if l.Name == name && l.OK {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatalf("expected %s link must exist and be true", name)
+				}
+			}
+		}
+	})
+}
+
+// Executes the same S1-S5 composition as TestDemoSeedApprovalPacket, including
+// the production proof producer and HumanHandler; then independently reassembles.
+func demoM4bRealSeed(t *testing.T) (worldReader, demoPublicManifest) {
+	t.Helper()
+	t.Setenv("TMPDIR", t.TempDir())
+	interp := requireProofPin(t)
+	_, tool := cliSeBins(t)
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+	rig := newDemoApprovalRig(t, interp, tool, true, false, 20)
+	private := t.TempDir()
+	key := freshProofKey(t)
+	keyPath, session, manifest := filepath.Join(private, "proof.key"), filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
+	if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(session, []byte(rig.token), 0600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, stderr := demoRun(t, &demoTestRig{addr: rig.url}, []string{"demo", "seed", "--db", rig.db, "--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest})
+	// Keep the plain-REST mutant at the coordinator assertion before any
+	// generic completion or packet-count assertion can mask it.
+	if strings.Contains(stderr, "coordinator must be true") {
+		t.Fatalf("coordinator must be true for every real seed entry: %s", stderr)
+	}
+	if code != exitUsage || out != "" || !strings.Contains(stderr, "S1-S6 checked; roster checks M5c pending; no success manifest written") {
+		t.Fatalf("S1-S6 checked fail-closed boundary: code=%d out=%q err=%s", code, out, stderr)
+	}
+	if _, err := os.Stat(manifest); !os.IsNotExist(err) {
+		t.Fatal("S6 never writes success manifest")
+	}
+	r := worldReader{ctx: boundedTestContext(t), c: newClient(rig.url)}
+	entries, err := r.page(0, 500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stages demoToolStages
+	var approval demoToolRun
+	var roster []demoEvidenceRef
+	for _, e := range entries {
+		rec, _, err := r.record(e)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rec == nil {
+			continue
+		}
+		run := demoToolRun{EntryIndex: e.Header.EntryIndex, InvocationID: rec.InvocationID}
+		switch rec.SkillID {
+		case "ailang-read":
+			stages.Read = run
+		case "ailang-cli":
+			if strings.HasSuffix(rec.InvocationID, ":"+demoTestTask) {
+				stages.Test = run
+			} else {
+				stages.Check = run
+			}
+		case "demo-approve":
+			approval = run
+			obj := demoRESTObject(t, r, rec.Input, coordinator.InputV1)
+			var in struct{ Roster []demoEvidenceRef }
+			if err := json.Unmarshal(obj.Payload, &in); err != nil {
+				t.Fatal(err)
+			}
+			roster = in.Roster
+		}
+	}
+	m, err := demoSeedS6(r, rig.token, demoDomainObjects(demoProofSource(t)), stages, approval, roster)
+	if err != nil {
+		t.Fatalf("real S6 assembly: %v", err)
+	}
+	return r, m
+}
+
+func TestDemoSeedManifestReferences(t *testing.T) {
+	t.Run("controls", func(t *testing.T) {
+		rig, ch, raw := demoM4bWhyFixture(t)
+		r := worldReader{ctx: boundedTestContext(t), c: newClient(rig.url)}
+		inv := rig.invs[1]
+		m := demoPublicManifest{Schema: "world/demo/public-manifest/v1", Version: 1, ProofVersion: demoProofVersion, ToolVersion: daemon.ToolBinaryRelease,
+			References: []demoManifestRef{{Role: "input", Kind: "object", Ref: inv.input}}, Why: []demoManifestWhy{{Entry: ch.Entry, SHA256: sum(raw)}}}
+		if err := demoValidateManifest(r, m, rig.token); err != nil {
+			t.Fatalf("every declared manifest reference resolves to matching content: %v", err)
+		}
+		t.Run("absent-ref", func(t *testing.T) {
+			bad := m
+			bad.References = append([]demoManifestRef(nil), m.References...)
+			bad.References[0].Ref = sum([]byte("valid absent manifest reference"))
+			demoM4bRefusal(t, demoValidateManifest(r, bad, rig.token), "every declared manifest reference resolves to matching content")
+		})
+		t.Run("mismatched-content", func(t *testing.T) {
+			// Corrupt the read response only; compare immutable daemon bytes again after.
+			before := demoRESTObject(t, r, inv.input, coordinator.InputV1)
+			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				if strings.HasPrefix(req.URL.Path, "/v1/objects/"+inv.input) {
+					bad := before
+					bad.Payload = []byte("mismatched bytes")
+					_ = json.NewEncoder(w).Encode(bad)
+					return
+				}
+				resp, err := http.Get(rig.url + req.URL.RequestURI())
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				defer resp.Body.Close()
+				w.WriteHeader(resp.StatusCode)
+				_, _ = io.Copy(w, resp.Body)
+			}))
+			defer proxy.Close()
+			badReader := worldReader{ctx: r.ctx, c: newClient(proxy.URL)}
+			demoM4bRefusal(t, demoValidateManifest(badReader, m, rig.token), "every declared manifest reference resolves to matching content")
+			after := demoRESTObject(t, r, inv.input, coordinator.InputV1)
+			if !bytes.Equal(before.Payload, after.Payload) {
+				t.Fatal("mismatch control changed committed bytes")
+			}
+		})
+		for _, kind := range []string{"object", "world", "entry", "pin", "unknown"} {
+			t.Run("absent-"+kind, func(t *testing.T) {
+				bad := m
+				bad.References = []demoManifestRef{{Role: "input", Kind: kind, Ref: sum([]byte("absent " + kind)), Index: 999}}
+				demoM4bRefusal(t, demoValidateManifest(r, bad, rig.token), "every declared manifest reference resolves to matching content")
+			})
+		}
+		for _, field := range []string{"schema", "version", "proof", "tool"} {
+			t.Run("schema-"+field, func(t *testing.T) {
+				bad := m
+				switch field {
+				case "schema":
+					bad.Schema = "other"
+				case "version":
+					bad.Version = 2
+				case "proof":
+					bad.ProofVersion = "other"
+				case "tool":
+					bad.ToolVersion = "other"
+				}
+				demoM4bRefusal(t, demoValidateManifest(r, bad, rig.token), "public manifest schema/version/pins must match")
+			})
+		}
+		t.Run("role", func(t *testing.T) {
+			bad := m
+			bad.References = append([]demoManifestRef(nil), m.References...)
+			bad.References[0].Role = "arbitrary"
+			demoM4bRefusal(t, demoValidateManifest(r, bad, rig.token), "public manifest role must be a declared reference name")
+		})
+		t.Run("why-hash", func(t *testing.T) {
+			bad := m
+			bad.Why = []demoManifestWhy{{Entry: 1, SHA256: sum([]byte("wrong why"))}}
+			demoM4bRefusal(t, demoValidateManifest(r, bad, rig.token), "why raw JSON hash mismatch")
+		})
+		for name, value := range map[string]string{"session-token": rig.token, "absolute-path": "/opt/private/capture", "timestamp": "2026-10-16T12:34:56Z", "key-material": "private-key: hidden"} {
+			t.Run(name, func(t *testing.T) {
+				bad := m
+				bad.Schema = value
+				demoM4bRefusal(t, demoValidateManifest(r, bad, rig.token), "public bytes contain")
+			})
+		}
+	})
+	t.Run("real-stack", func(t *testing.T) {
+		r, m := demoM4bRealSeed(t)
+		if err := demoValidateManifest(r, m, ""); err != nil {
+			t.Fatalf("every declared manifest reference resolves to matching content: %v", err)
+		}
+		for _, badValue := range []string{sum([]byte("absent real manifest ref"))} {
+			bad := m
+			bad.References = append([]demoManifestRef(nil), m.References...)
+			bad.References[0].Ref = badValue
+			demoM4bRefusal(t, demoValidateManifest(r, bad, ""), "every declared manifest reference resolves to matching content")
+		}
+	})
+}
+
+func TestDemoSeedM4bBoundaryControls(t *testing.T) {
+	t.Run("s1-decode", func(t *testing.T) {
+		for i := 0; i < 3; i++ {
+			t.Run(fmt.Sprint(i), func(t *testing.T) {
+				objects := demoDomainObjects(nil)
+				objects[i].Payload = []byte("{invalid")
+				srv := httptest.NewServer(http.NotFoundHandler())
+				defer srv.Close()
+				err := demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "", objects, demoToolStages{}, hashref.HashRef{})
+				demoM4bRefusal(t, err, fmt.Sprintf("S1 payload %d decode refused", i))
+			})
+		}
+	})
+	t.Run("test-index", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, _ = io.WriteString(w, `{"header":{},"transitionRef":"present"}`)
+		}))
+		defer srv.Close()
+		demoM4bRefusal(t, demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "", demoDomainObjects(nil), demoToolStages{}, hashref.HashRef{}), "test entry entryIndex must be present and match")
+	})
+	t.Run("metadata-index", func(t *testing.T) {
+		c, _ := demoFakeA2A(t, "completed", map[string]any{"invocation_id": "actual-id"}, map[string]any{"world": map[string]any{"effects": []any{map[string]any{"record": "present"}}}})
+		_, _, err := demoA2ASend(boundedTestContext(t), c, "token", "task", "skill", nil)
+		demoM4bRefusal(t, err, "entry_index must be present and integral")
+	})
+	t.Run("s6-fail-closed", func(t *testing.T) {
+		demoM4bRefusal(t, demoS6Incomplete(), "S1-S6 checked; roster checks M5c pending; no success manifest written")
+	})
+}
+
+func TestDemoSeedPacketControls(t *testing.T) {
+	t.Run("packet-count", func(t *testing.T) {
+		rig, _, _ := demoM4bWhyFixture(t)
+		r := worldReader{ctx: boundedTestContext(t), c: newClient(rig.url)}
+		run := demoToolRun{EntryIndex: 1}
+		_, err := demoSeedS6(r, "", nil, demoToolStages{Read: run, Test: run, Check: run}, run, nil)
+		demoM4bRefusal(t, err, "entry 1: exactly one decision packet required")
+	})
+	for _, name := range []string{"carrying-entry", "proposal"} {
+		t.Run(name, func(t *testing.T) {
+			carried, proposal := true, "plan"
+			if name == "carrying-entry" {
+				carried = false
+			} else {
+				proposal = "other"
+			}
+			demoM4bRefusal(t, demoValidatePacketAnchor(7, carried, proposal, "plan"), "entry 7: packet carrying entry/proposal mismatch")
+		})
+	}
+	if err := demoValidatePacketAnchor(7, true, "plan", "plan"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDemoSeedPacketObjectControls(t *testing.T) {
+	for _, name := range []string{"packet-object", "packet-decode"} {
+		t.Run(name, func(t *testing.T) {
+			rig, _, _ := demoM4bWhyFixture(t)
+			packet := wireObject{SemanticID: coordinator.DecisionPacketV1, Payload: []byte("invalid canonical packet")}
+			packet.Hash = sum(packet.Payload)
+			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				switch req.URL.Path {
+				case "/v1/objects/by-semantic-id/" + coordinator.DecisionPacketV1:
+					_ = json.NewEncoder(w).Encode(map[string]any{"items": []wireObject{packet}})
+					return
+				case "/v1/objects/" + packet.Hash:
+					if name == "packet-object" {
+						http.NotFound(w, req)
+					} else {
+						_ = json.NewEncoder(w).Encode(packet)
+					}
+					return
+				}
+				resp, err := http.Get(rig.url + req.URL.RequestURI())
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				defer resp.Body.Close()
+				w.WriteHeader(resp.StatusCode)
+				_, _ = io.Copy(w, resp.Body)
+			}))
+			defer proxy.Close()
+			r := worldReader{ctx: boundedTestContext(t), c: newClient(proxy.URL)}
+			run := demoToolRun{EntryIndex: 1}
+			_, err := demoSeedS6(r, "", nil, demoToolStages{Read: run, Test: run, Check: run}, run, nil)
+			want := "packet: does not resolve"
+			if name == "packet-decode" {
+				want = "not a canonical world/decision-packet/v1 encoding"
+			}
+			demoM4bRefusal(t, err, want)
+		})
+	}
 }
