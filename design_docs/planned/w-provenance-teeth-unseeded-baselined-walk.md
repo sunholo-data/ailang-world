@@ -91,7 +91,7 @@ Clause 5 (`:1032`): on ≥3 REAL "why did X happen" questions, a provenance walk
 
 **PR — confinement controls, before reveal, in the exact role environment.**
 - **B** (D3a; V5): pi with `ailang pi tool-profile` flags for the question-kind read set (`--no-builtin-tools --tools ailang_read` [+ `ailang_check`]), `AILANG_AGENT_POLICY` = a restricted policy with `fs_sandbox` = B's export root, on the AILANG release pinned at run time (V5 ran a dev build). Controls: read of a root file ok; directory listing ok; `..`, absolute-path and symlink escapes refused; a request for any tool outside the set refused by pi. Writes into the disposable export are harmless and not used.
-- **W** (D3b; V6): fresh `claude -p` (pinned client version), cwd = an empty scratch dir holding only a copy of the rig's `bin/ailang-worldd` named `worldd-client` (the name the allowlist prefix uses), `--tools Bash`, `--allowedTools` = `Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:<port> <verb> *)` for verbs `head`, `why`, `object get`, `object find`, `log get`, `log range`, `provenance` only; `--permission-mode dontAsk --setting-sources "" --strict-mcp-config --output-format stream-json`. Controls: `head` succeeds; `commit`, `call`, `cat <db>`, `ls <repo>`, a `&&`-chained command and a `curl -X POST` each appear in `permission_denials`. No session token is placed anywhere W can read.
+- **W** (D3b; V6): fresh `claude -p` (pinned client version), cwd = an empty scratch dir holding only a copy of the rig's `bin/ailang-worldd` named `worldd-client` (the name the allowlist prefix uses), `--tools Bash`, `--allowedTools` = `Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:<port> <verb> *)` for verbs `head`, `why`, `object get`, `object find`, `log get`, `log range`, `provenance` only; `--disallowedTools` = the read-only command deny list (`verification/world-row114-f5/w-denylist.txt`; F-5: Claude Code auto-allows read-only commands such as `grep`/`head`/`cat` on its own persisted tool output despite the allowlist, measured 2026-10-16), `--permission-mode dontAsk --setting-sources "" --strict-mcp-config --output-format stream-json`. Controls (plus the F-5 persisted-output control): `head` succeeds; `commit`, `call`, `cat <db>`, `ls <repo>`, a `&&`-chained command and a `curl -X POST` each appear in `permission_denials`. No session token is placed anywhere W can read.
 - Any failed or missing control ⇒ `NOT-RUN(ISOLATION)` before reveal, preserved.
 
 **P2 Freeze.** Before either arm: repo HEAD; question sha256; cohort archival sha256; served-copy `head` ref and `log range` count (the invariants); B root manifest (paths + sha256) and its token scan; spawn commands; `max_attempt_wall_s` = 3600. The served copy is prepared and started BEFORE reveal: `env -u AILANG_REGISTRY_API_KEY <rig>/bin/ailang-worldd serve --db <copy> --bind 127.0.0.1:<port> --ailang-bin ~/.pinned-ailang/ailang` (V8), never on an original.
@@ -182,6 +182,15 @@ A1 +1 (pins and transcripts make verdicts re-derivable) · A2 +1 (frozen archiva
 ## §14 References
 
 Row 114 `:1933`; clause 5 `:1032`; D-WORLD-52 `:938`; D-WORLD-58 `:944`; row 134 `:6105`; row-92 artifact `verification/w-1-0-value-demonstration.md` (Harvest log `:9`, F-5 `:181`); r3 quorum `verification/world-iter222/`; SE-domain lane measurements `planned/w-software-engineering-domain.md` V33–V36, V52, V54; FINAL records `verification/world-floor-final-2026-10-{09,14,15}/`.
+
+## §15a Attended amendment A1 (2026-10-16) — F-5 confinement fix
+
+Mark (attended 2026-10-16, after Q3: "yes fix them up first"). D3b's W spawn gains `--disallowedTools` = the
+read-only command deny list (`verification/world-row114-f5/w-denylist.txt`), and the PR controls gain the
+persisted-output control (`verification/world-row114-f5/`). Measured: without the denies, `grep`/`head`/`wc`/
+`cat` on Claude Code's own persisted tool output and `echo` ran despite the verb allowlist (Q3's W was
+INVALID(seeding) on exactly this); with them, all 11 escape attempts are denied and the allowlisted verbs
+still run. This only TIGHTENS D3b; D2/D4/D5 are unchanged.
 
 ## §16 Verification Log — r4 (2026-10-15, iteration 270)
 
