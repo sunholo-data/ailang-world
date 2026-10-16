@@ -1,6 +1,6 @@
 # w-interpreter-epoch-upgrade-path (queue row 139, widened) — r1
 
-**Status:** r1 draft, attended 2026-10-16 (Mark attending). Row widened by Mark: "world needs to be able to cope
+**Status:** r1 — **RATIFIED by Mark Edmondson, attended 2026-10-16 (D-WORLD-78 = a: the loop nominates same-semantics candidates; new epochs human-typed)**. Row widened by Mark: "world needs to be able to cope
 with ailangs versioning - we release very often"; sequencing "widen 139, do it next". Ratification is Mark's.
 
 ## §1 Problem (measured 2026-10-16)
