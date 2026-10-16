@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -228,6 +229,13 @@ func requireReleaseBinary(path string, rel pins.Release, v pins.Verdict, manifes
 		return &stopError{Fence: fenceBinary, Reason: "absent",
 			Detail: "--binary names the release's ailang binary; it is hashed against the release manifest and probed for its version"}
 	}
+	// Resolve once, so the hash and the version probe name the same file: a bare name would
+	// otherwise be opened relative to the cwd but executed via PATH (row 139 M2 judge r2).
+	abs, aerr := filepath.Abs(path)
+	if aerr != nil {
+		return &stopError{Fence: fenceBinary, Reason: "unreadable", Detail: aerr.Error()}
+	}
+	path = abs
 	f, err := os.Open(path)
 	if err != nil {
 		return &stopError{Fence: fenceBinary, Reason: "unreadable", Detail: err.Error()}
