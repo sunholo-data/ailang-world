@@ -67,7 +67,7 @@ const (
 	exitFatal = 2
 )
 
-const usage = `ailang-worldd — AILANG World local daemon (loopback only)
+var usage = `ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]

@@ -1,0 +1,25 @@
+Publishing world/core@0.1.1...
+→ quality world/core@0.1.1 (-)
+  compile:   ✓ 5 files
+  contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
+  interface: ✓ v2 b25fe03155db… (53 signatures)
+  effects:   max []  rank_max -  ceiling_declared true
+  release:   kind feature  changelog_section true
+  docs:      AGENT.md false  ai_summary true
+  style:     19 exported funcs, 19 pure (100%)
+  tests:     [attested] 0 files, 0 passed, 0 failed — no *_test.ail files; inline test blocks are not yet discovered in package mode (m-package-test-discovery)
+  smoke:     [attested] present true passed true
+
+  ⚠ PUB011 3 exported function(s) carry no contract
+  · PUB020 no AGENT.md — agents get no usage guidance for this package
+  · PUB012 no tests discovered (*_test.ail or inline test blocks)
+
+✓ no gates
+
+  Tarball: 10610 bytes (sha256:07d6180986739249b...)
+  Content hash: sha256:473517079249f3959...
+  Interface hash: sha256:d16cc88270ff4c4ea...
+  Exports: [world/types world/contracts world/transitions world/logepoch]
+  Effects: []
+
+⚠ Dry run complete. Tarball ready but not uploaded.

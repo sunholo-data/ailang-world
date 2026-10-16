@@ -213,15 +213,15 @@ python3 - "$tmp_dry" <<'PY' || exit 1
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
 checks = [
- (r"^Publishing world/core@0\.1\.1\.\.\.$", "package identity"),
- (r"^  Exports: \[world/types world/contracts world/transitions world/logepoch\]$", "exact export set"),
- (r"^  Effects: \[\]$", "empty effects"),
+ (r"^[ \t]*Publishing world/core@0\.1\.1\.\.\.$", "package identity"),
+ (r"^[ \t]*Exports: \[world/types world/contracts world/transitions world/logepoch\]$", "exact export set"),
+ (r"^[ \t]*Effects: \[\]$", "empty effects"),
 ]
 for pattern, name in checks:
     if not re.search(pattern, s, re.M):
         sys.stderr.write("✗ dry-run missing %s\n" % name); sys.exit(1)
 for label in ("Tarball", "Content hash", "Interface hash"):
-    if not re.search(r"^  %s:" % re.escape(label), s, re.M):
+    if not re.search(r"^[ \t]*%s:" % re.escape(label), s, re.M):
         sys.stderr.write("✗ dry-run missing %s observable\n" % label); sys.exit(1)
 PY
 cat > "$tmp_helper" <<'GO'

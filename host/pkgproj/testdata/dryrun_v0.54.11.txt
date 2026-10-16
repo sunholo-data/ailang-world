@@ -1,0 +1,28 @@
+Publishing world/core@0.1.1...
+→ quality world/core@0.1.1 (-)
+  compile:   ✓ 5 files
+  contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
+  interface: ✓ v2 b25fe03155db… (53 signatures)
+  effects:   max []  rank_max -  ceiling_declared true
+  release:   kind feature  changelog_section true
+  docs:      AGENT.md false  ai_summary true
+  style:     19 exported funcs, 19 pure (100%)
+  tests:     [attested] 0 files, 0 passed, 0 failed — no *_test.ail files; inline test blocks are not yet discovered in package mode (m-package-test-discovery)
+  smoke:     [attested] present true passed true
+
+  ⚠ PUB011 3 exported function(s) carry no contract
+  · PUB008 [metadata] license_url is missing — registry consumers cannot inspect the package license
+  · PUB020 no AGENT.md — agents get no usage guidance for this package
+  · PUB012 no tests discovered (*_test.ail or inline test blocks)
+
+✓ no gates
+
+  Tarball: 10610 bytes
+  Tarball hash: sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3
+  Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780
+  Interface hash: sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083
+  Interface hash (v2): sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8
+  Exports: [world/types world/contracts world/transitions world/logepoch]
+  Effects: []
+
+⚠ Dry run complete. Tarball ready but not uploaded.

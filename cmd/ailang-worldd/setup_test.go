@@ -18,7 +18,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/pinfetch"
+	"github.com/sunholo-data/ailang-world/host/pins"
 )
 
 // fakeRelease is an in-memory pinfetch.Source: no network at all.
@@ -252,28 +254,26 @@ func TestPinTableCoversBothReleases(t *testing.T) {
 		t.Fatalf("supported platforms %v (D-CLI-2)", supportedPlatforms)
 	}
 
-	root := filepath.Join("..", "..")
-	read := func(rel string) string {
-		b, err := os.ReadFile(filepath.Join(root, rel))
-		if err != nil {
-			t.Fatal(err)
+	// Row 139 M1: the table is the release manifest, row for row. The
+	// cross-checks this test used to make by text search (fences.go, ci.yml,
+	// verify_world_package.sh) now live in host/pins'
+	// TestReleaseLiteralsExplainedByManifest, which covers EVERY V7 site against
+	// the same manifest — so the two cannot disagree about which file pins what.
+	m := pins.Current()
+	if got, want := interpreterRelease, pins.ReleaseFor(pins.RoleInterpreter).Release; got != want {
+		t.Fatalf("interpreterRelease %s, manifest interpreter role %s", got, want)
+	}
+	if got, want := daemon.ToolBinaryRelease, pins.VersionLine(pins.RoleTool); got != want {
+		t.Fatalf("daemon.ToolBinaryRelease %q, manifest tool role %q", got, want)
+	}
+	for _, p := range pinTable {
+		r, ok := m.Lookup(p.Release)
+		if !ok {
+			t.Fatalf("pin row %s is not a manifest release", p.Release)
 		}
-		return string(b)
-	}
-	if !strings.Contains(read("cmd/world-publish/fences.go"), `const frozenCompilerVersion = "AILANG `+interpreterRelease+`"`) {
-		t.Errorf("interpreterRelease %s is not world-publish's frozenCompilerVersion", interpreterRelease)
-	}
-	ci := read(".github/workflows/ci.yml")
-	for _, rel := range []string{interpreterRelease, toolRelease()} {
-		if !strings.Contains(ci, "releases/download/"+rel+`"`) {
-			t.Errorf("ci.yml installs no %s release", rel)
-		}
-	}
-	pkg := read("scripts/verify_world_package.sh")
-	for plat, uname := range map[string]string{"darwin/arm64": "Darwin/arm64", "linux/amd64": "Linux/x86_64"} {
-		p, _ := lookupPin(interpreterRelease, plat)
-		if !strings.Contains(pkg, uname+") printf '%s' '"+p.BinarySHA256+"'") {
-			t.Errorf("verify_world_package.sh does not pin %s's interpreter binary %s", uname, p.BinarySHA256)
+		a := r.Assets[p.Platform]
+		if a.Asset != p.Asset || a.TarballSHA256 != p.TarballSHA256 || a.BinarySHA256 != p.BinarySHA256 {
+			t.Errorf("pin row %s %s = %+v, manifest %+v", p.Release, p.Platform, p, a)
 		}
 	}
 }

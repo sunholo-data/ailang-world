@@ -193,7 +193,19 @@ type Hashes struct {
 }
 type CrossCheckResult struct{ Local, CLI Hashes }
 
-var dryRunLine = regexp.MustCompile(`(?m)^  (Tarball|Content hash|Interface hash): (?:([0-9]+) bytes \()?((?:sha256:)[0-9a-f]{17})\.\.\.?\)?$`)
+// dryRunLine matches the `publish --dry-run` identity lines of every qualified
+// release shape (row 139 D6), with any leading whitespace:
+//
+//	v0.41.0:  "  Tarball: 9785 bytes (sha256:<17 hex>...)"
+//	          "  Content hash: sha256:<17 hex>..."      (Interface hash alike)
+//	v0.54.11: "  Tarball: 10610 bytes"
+//	          "  Tarball hash: sha256:<64 hex>"
+//	          "  Content hash: sha256:<64 hex>"         (Interface hash alike)
+//
+// "Interface hash (v2):" is NOT matched (the label must be followed by ": ").
+// Groups: 1 label, 2 byte size, 3 inline tarball prefix, 4 abbreviated hash,
+// 5 full hash. Fixtures: testdata/dryrun_v0.41.0.txt, dryrun_v0.54.11.txt.
+var dryRunLine = regexp.MustCompile(`(?m)^[ \t]*(Tarball|Tarball hash|Content hash|Interface hash): (?:([0-9]+) bytes(?: \((sha256:[0-9a-f]{17})\.\.\.?\))?|(sha256:[0-9a-f]{17})\.\.\.?|(sha256:[0-9a-f]{64}))[ \t]*$`)
 
 // Compare requires each CLI prefix to match its corresponding full local hash.
 func Compare(local, cli Hashes) error {
@@ -273,28 +285,54 @@ func parseDryRun(out []byte) (Hashes, error) {
 	var got Hashes
 	seen := map[string]bool{}
 	for _, m := range dryRunLine.FindAllSubmatch(out, -1) {
-		label, size, hash := string(m[1]), string(m[2]), string(m[3])
+		label, size, inline := string(m[1]), string(m[2]), string(m[3])
+		hash := string(m[4]) + string(m[5]) // at most one alternative matched
 		if seen[label] {
 			return Hashes{}, fmt.Errorf("duplicate dry-run %s line", label)
 		}
 		seen[label] = true
 		switch label {
 		case "Tarball":
+			if size == "" {
+				return Hashes{}, fmt.Errorf("dry-run Tarball line carries no byte size")
+			}
 			n, err := strconv.Atoi(size)
 			if err != nil {
 				return Hashes{}, err
 			}
-			got.TarballBytes, got.Tarball = n, hash
-		case "Content hash":
-			got.Content = hash
-		case "Interface hash":
-			got.Interface = hash
+			got.TarballBytes = n
+			if inline != "" {
+				if got.Tarball != "" {
+					return Hashes{}, fmt.Errorf("duplicate dry-run Tarball hash")
+				}
+				got.Tarball = inline
+			}
+		case "Tarball hash":
+			if hash == "" {
+				return Hashes{}, fmt.Errorf("dry-run Tarball hash line carries no hash")
+			}
+			if got.Tarball != "" {
+				return Hashes{}, fmt.Errorf("duplicate dry-run Tarball hash")
+			}
+			got.Tarball = hash
+		case "Content hash", "Interface hash":
+			if hash == "" {
+				return Hashes{}, fmt.Errorf("dry-run %s line carries no hash", label)
+			}
+			if label == "Content hash" {
+				got.Content = hash
+			} else {
+				got.Interface = hash
+			}
 		}
 	}
 	for _, label := range []string{"Tarball", "Content hash", "Interface hash"} {
 		if !seen[label] {
 			return Hashes{}, fmt.Errorf("missing dry-run %s line in output: %s", label, out)
 		}
+	}
+	if got.Tarball == "" {
+		return Hashes{}, fmt.Errorf("missing dry-run Tarball hash in output: %s", out)
 	}
 	return got, nil
 }
