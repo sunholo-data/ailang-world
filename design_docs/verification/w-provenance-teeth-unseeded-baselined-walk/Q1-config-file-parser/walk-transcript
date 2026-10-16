@@ -1,0 +1,4 @@
+walk transcript: ~/.ailang/state/row114/Q1/w/transcript.jsonl
+57dd388c469c7fd14f820059018276ed786ce43f0a21fac64ce0b2e1b8423139  w/transcript.jsonl
+claude 2.1.300 sonnet; 55 tool calls, all allowlisted prefix; permission_denials 0; verbs why 34, object 16, provenance 3, head 1, log 1; cost $0.52
+tool-call log: tool-calls.json (this dir)

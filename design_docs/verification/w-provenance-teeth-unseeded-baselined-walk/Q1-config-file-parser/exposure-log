@@ -1,0 +1,6 @@
+# Exposure log — Q1
+- Harvest (AC1): Q1 taken (K1, real: arose from the 2026-10-14 FINAL). C1/C2/C3 rejected NOT-RUN(NO-CORPUS) (iter-206/207/210 incidents predate row 134; no World store recorded them; C1 also contaminated by the charter row text). Q2 (2026-10-09 codex overhead, K3) remains a candidate.
+- Controller: the attended session (Claude Opus 5.5, Mark attending). It has seen the Q1 diagnosis; it is not B, W or V. It wrote the preambles (channel only, no mechanism) and E2, kept outside B's root and W's cwd.
+- B root scan (AC3): phrases.txt over 4866 files -> 0 hits; .git/*.db count 0; positive control on c21f303 README -> 2 hits. Manual review: config_file_parser appears only in raw pre-diagnosis 2026-10-09 rows.
+- Prompts/preambles scanned with the same phrases: 0 hits.
+- W environment: scratch cwd holds only worldd-client; no repo, docs or memory; canary control passed.

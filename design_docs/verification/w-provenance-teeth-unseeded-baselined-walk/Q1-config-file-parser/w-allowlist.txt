@@ -1,0 +1,8 @@
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 head)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 provenance)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 provenance *)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 why *)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 object get *)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 object find *)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 log get *)
+Bash(env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47314 log range *)

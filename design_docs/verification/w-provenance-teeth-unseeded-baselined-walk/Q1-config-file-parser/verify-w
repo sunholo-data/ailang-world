@@ -1,0 +1,12 @@
+verifier: fresh claude -p sonnet (Claude Code 2.1.300 pinned copy), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792137950.833
+cost_usd 0.0260273
+verdict_transcript ~/.ailang/state/row114/Q1/vw/verdict.jsonl
+
+## sealed answer
+ANSWER: I couldn't determine the cause from the World store. In fl-cx-r1 and fl-cx-r3, codex's `config_file_parser` solution ran successfully (exit 0, no policy denial) and printed `Loaded MyApp v1.0.0 on port 8080 with 3 features`. The store has no grader verdicts, and I did not find the fl-cx-r2 attempt, so the 0/3 outcome is not explained by anything recorded there.
+
+## verifier output
+The answer doesn't state a cause. It says the cause could not be determined, and it reports only that two runs executed successfully. The grader runs the solution in a clean directory, without the run's app_config.json. That points to a likely mechanism: the solutions depend on a file the grader never supplies. The answer doesn't identify this, and the grader rows and rerun evidence in E2 don't support it either. The answer therefore gives no causal claim that E2 could confirm. It also says nothing about why the shell arm passed 2 of 3.
+
+VERDICT: UNVERIFIED

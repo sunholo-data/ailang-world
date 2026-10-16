@@ -1,0 +1,5 @@
+Q1 verdicts (§6 closed set)
+- B (baseline, pi openrouter/z-ai/glm-5.3, read/list only, no grep): UNVERIFIED. Answered in 99.0 s; V_B confirmed the World-arm half against E2 but could not confirm the shell-arm half because E2 holds no shell-arm evidence (controller defect, see index.md F-2).
+- W (walk, claude sonnet via World client verbs on a served copy): UNVERIFIED. Answer: "could not determine the cause from the World store"; envelope 147.9 s (<= 300 s, but no verified answer).
+- Integrity audit: archival sha256 pre == post; served head and 495 entries unchanged; 0 non-allowlisted W calls, 0 denials; question sha256 identical; initial-context scans 0 hits; clocks agree.
+- Q1 is NOT a qualifying success. Row 114: 0 of >=3. Every attempt preserved.
