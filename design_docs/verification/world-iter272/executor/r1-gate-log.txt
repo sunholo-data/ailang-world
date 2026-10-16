@@ -1,0 +1,34 @@
+== rt rc=0
+--- PASS: TestDemoProofHTTPProducerRoundTrip (1.11s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.475s
+== refusal rc=0
+--- PASS: TestDemoProofSourceHashRefusal (0.98s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.238s
+== evidence rc=0
+--- PASS: TestProducerEndToEndMintsEnvelopeValidatorAccepts (0.51s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/evidence	0.716s
+== daemon rc=0
+--- PASS: TestWorkbenchGradeProvenFromSubjectBoundEnvelope (0.24s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.505s
+== demoseed rc=0
+--- PASS: TestDemoSeedAuthenticatedCommits (1.07s)
+--- PASS: TestDemoSeedPreflightRefusals (32.72s)
+--- PASS: TestDemoSeedHelpPreparation (0.00s)
+--- PASS: TestDemoSeedCommitFailures (2.73s)
+--- PASS: TestDemoSeedReadTestCheck (4.15s)
+--- PASS: TestDemoSeedRejectsToolReportRefusals (3.85s)
+--- PASS: TestDemoSeedToolGuardControls (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	44.782s
+== vet rc=0
+== gofmt-list rc=0
+== race rc=0
+--- PASS: TestDemoProofHTTPProducerRoundTrip (1.34s)
+--- PASS: TestDemoProofSourceHashRefusal (1.14s)
+--- PASS: TestDemoProofAdapterGuards (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	4.093s

@@ -392,7 +392,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M3a — HTTP proof adapters and real producer success
 
-Design M3; 28 minutes; dependency: M2b; status **pending**.
+Design M3; 28 minutes; dependency: M2b; status **completed** (iteration 272, `1ad2743`).
 
 Exact executor files:
 

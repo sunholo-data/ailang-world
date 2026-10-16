@@ -961,7 +961,7 @@
         "cmd/ailang-worldd/demo_proof.go",
         "cmd/ailang-worldd/demo_proof_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestDemoProofHTTPProducerRoundTrip",
         "TestDemoProofSourceHashRefusal"
