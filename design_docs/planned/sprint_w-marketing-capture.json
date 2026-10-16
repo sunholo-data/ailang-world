@@ -1314,7 +1314,7 @@
         "cmd/ailang-worldd/demo_test.go",
         "cmd/ailang-worldd/why_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestDemoSeedWhyNamedLinks",
         "TestDemoSeedManifestReferences"

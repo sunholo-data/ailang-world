@@ -1,16 +1,12 @@
-# World mission dashboard — iteration 274 (2026-10-16)
+# World mission dashboard — iteration 275 (2026-10-16)
 
-- **This fire:** row 150 **M4a** LANDED `7ed1152` (PR #283). Demo seed stage S5 sends one A2A `demo-approval` call to the checked-in `demo-approve` transition. Its roster is made of real refs from S1–S4. The existing coordinator/HumanHandler path mints exactly one pending decision packet, the Human.Approve budget drops by exactly 1, and the descriptor access cost is 0. The seed still refuses completion and writes no manifest.
-- **Independent judge:** sonnet r1 **PASS 91**, zero blocking, 11/11 of its own mutants killed. The executor's ledger had 13 guard mutants, each red at a named assertion.
-- **CI cost:** the PR go gate needed **5 attempts**. Every red was row 181's 600 s `-race` cap (84 PASS / 0 FAIL). The diff is ruled out: locally `host/verifygate` under race takes 252 s on base and 265 s on head.
+- **This fire:** row 150 **M4b** LANDED `acb3f54` (PR #289). Demo seed stage S6 runs the real CLI why chain for the read, test, check and approval entries, and refuses unless coordinator, ok and every named link hold. It requires exactly one packet anchored to S5's entry, then assembles the public manifest in memory, checks every role and ref over REST, and scrubs secrets, paths and timestamps. The seed still refuses success and writes no manifest.
+- **Independent judge:** sonnet r1 **FAIL 66**: the manifest's contents were never asserted, and the controller reproduced it. After a codex fix round, r2 **PASS 86**, zero blocking, with all five r1 survivors killed with the tool pin unset.
+- **CI:** one red, and it was real. A table of about 120 test controls shared one 30 s deadline, which ran out under `-race` on the 2-core runner but never on the Mac. The controller fixed it with per-subtest deadlines, and a 10 s drill confirms it (49 failures before, 0 after). Judge r3 reviewed the fix: **PASS 86**. Rebased over attended row 184 (`why.go` changed) and re-tested: 32/32.
 - **Latest GitHub release:** none; World 1.0 is unreleased. The proof/compiler pin is the released AILANG 0.41.0; the tool pin is 0.52.1.
-- **Clauses:** **6 of 7 MET.** Clause 5 is UNMET. Row 139 (routine AILANG upgrades) is an attended build (PR #282). Row 183 (real-project trials) is IN-SPRINT ATTENDED (PR #281). Row 114 waits on 183's stores.
-- **Row 150:** 7 of 17 milestones done (M1a, M1b, M2a, M2b, M3a, M3b, M4a). Next is M4b: complete why validation and public manifest assembly.
+- **Clauses:** **6 of 7 MET.** Clause 5 is UNMET. Row 139 (routine AILANG upgrades) is attended (M1 and M2 landed, M3 next). Row 183 (real-project trials) is IN-SPRINT ATTENDED. Row 114 waits on 183. Row 184 landed attended this afternoon, which opens row 185.
+- **Row 150:** 8 of 17 milestones done (M1a, M1b, M2a, M2b, M3a, M3b, M4a, M4b). Next is M5a: bounded anchored roster, ATTESTED and authored CLAIMED.
 - **Parked on Mark:**
-  - **D-WORLD-79 (new):** promote row 181 (the race-leg cap flake) ahead of the remaining release milestones? A = yes (recommended); default B = keep the order.
+  - **D-WORLD-79:** looks moot. Row 181's fix landed attended (`38e7859`, race leg in its own job), and this PR's race job was green on 3 of 4 heads. Close it if you agree.
   - **D-WORLD-75:** unchanged (default A).
-- **Next:** re-read the 139 and 183 tags; take 181 if D-WORLD-79 = A; otherwise row 150 M4b.
-- **Attended:** rows 139 and 183; production descriptor publish, session mint and release capture.
-- **Routing/cadence:** executor codex gpt-6.1-sol (recipe), judge Agent sonnet. No designer or planner was needed. 4h throttle.
-- **Metered:** $0. No shared skill, harness or routing-policy edit.
-- **Evidence:** log entry 274; `design_docs/verification/world-iter274/`; CI logs and timings in `~/.ailang/state/world-iter274/ctl/`.
+- **Next:** row 185 (`w-episode-requires-git`) if no attended session holds it, since it was ordered "NEXT after 184"; otherwise row 150 M5a.
