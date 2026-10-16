@@ -1,0 +1,6 @@
+in-program
+inside the program
+must write the file itself
+itself must write
+as a workspace file
+ailang#1837

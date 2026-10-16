@@ -1,0 +1,5 @@
+Rubric (fixed before either answer exists; identical for both verifiers).
+You receive a question, one sealed answer, and the E2 bundle (README.txt explains the files). Judge ONLY against E2.
+VERIFIED: the answer's causal claim (why codex's World arm failed all three runs while its shell arm passed two) is confirmed by E2: the grader rows and the re-execution evidence directly support the stated mechanism, and nothing in E2 contradicts it.
+UNVERIFIED: the claim is wrong, unsupported by E2, only plausible, or only partial (e.g. it describes a symptom without the cause E2 shows, or explains one arm but not the other).
+Output: a short justification citing the E2 files, then a final line exactly `VERDICT: VERIFIED` or `VERDICT: UNVERIFIED`.

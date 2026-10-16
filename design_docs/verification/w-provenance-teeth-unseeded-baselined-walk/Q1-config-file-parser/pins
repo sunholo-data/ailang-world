@@ -1,0 +1,42 @@
+AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026
+2.1.301 (Claude Code)
+0.85.1
+bf1d4db5a3d5c94920f03a5b8bc96220d24516c5652a6326383bfb6a7e5d6d27  /Users/voightkampff/.ailang/state/world-iter270/f1014.db
+bf1d4db5a3d5c94920f03a5b8bc96220d24516c5652a6326383bfb6a7e5d6d27  /Users/voightkampff/.ailang/state/floor-final-2026-10-14/store/world.db
+eae3bec4a93cf15595b74ebe4eb89f7b3710fad52cd9abb6143361f0832ca53a  /Users/voightkampff/.ailang/state/floor-final-2026-10-14/bin/ailang-worldd
+--- B binary (attended ruling 2026-10-16, Mark: v0.54.11 for B; v0.41.0 and v0.52.1 policy-tool refuse directory listing) ---
+AILANG v0.54.11
+Commit: 35a49b8
+18a8cc71cb6751b0b9da2e9f6136c55d86d100a79d2f8b7e51b809c0515ed3ff  /Users/voightkampff/.ailang/state/row114/rel-v0.54.11/x/ailang
+f47893e67a9ac99df6b01bdc85ab70fb7facae900ee278f2832d1db1b91e51d4  /Users/voightkampff/.ailang/state/row114/rel-v0.54.11/darwin.arm64.ailang.tar.gz
+--- W/V client: pinned Claude Code copy (ambient auto-updated to 2.1.301) ---
+2.1.300 (Claude Code)
+475517caa611e3318a2f298fa071287ec98955538df78c58f709ecc01e5ae2d3  /Users/voightkampff/.ailang/state/floor-final-2026-10-15/clibin/claude
+--- B model: zai/glm-5.3 dead (429 code 1113 'Insufficient balance', 3/3 attempts, 2026-10-16 07:35Z, transcript bctl/transcript-zai-dead.jsonl); fallback per plan §1 pinned BEFORE reveal: openrouter/z-ai/glm-5.3 ---
+--- repo HEAD (worktree) ---
+166da6fc21efc8b8bd92c84bf0f5133c65fa5fd9
+--- question / preambles / prompts ---
+61d44f2454192c1e1b6ff96bdef926b20d0dd80e38b7d9e16143bcae4a021a82  ~/.ailang/state/row114/Q1/question.txt
+41f073876801e4a81caa7a458e162cdd442483803270037753d45f96ee208346  ~/.ailang/state/row114/Q1/b/preamble.txt
+db84a3c70531601dac8a73e3b29ebbd7da4e8f9e55a50b4df6e6e65b586bb91a  ~/.ailang/state/row114/Q1/w/preamble.txt
+7943c9dcbbe845566f4a953135b2d07ddd5c6e45033e487ac43ad83197ecfc02  ~/.ailang/state/row114/Q1/b/prompt.txt
+ddc8b85f48aa8cfe7b7bdee43830cffd0de2bb0ea5aee3d03da5d59e529b6857  ~/.ailang/state/row114/Q1/w/prompt.txt
+--- served copy invariants (before reveal) ---
+head sha256:1710ddd7a1905cc5d7d28786b454f356e508087f2590fbbb65289aded2250af4
+log_entries 495
+bf1d4db5a3d5c94920f03a5b8bc96220d24516c5652a6326383bfb6a7e5d6d27  ~/.ailang/state/row114/Q1/w/served.db
+eae3bec4a93cf15595b74ebe4eb89f7b3710fad52cd9abb6143361f0832ca53a  ~/.ailang/state/row114/Q1/w/scratch/cwd/worldd-client
+--- B root ---
+git archive fd321b6 (minus .claude, world-floor-*/README.md, summary.md) + rig phase1.log, phase2.log, transcripts/, ws/, fixture/ (no .git, no .claude); files 4866; manifest sha256 9cdbacf3d615e0a2c7798d67d70575c59f6a357d4c55c05d39625de0a3d4a17e
+B policy: allowed_caps IO,FS; fs_sandbox = B root; restricted; outside the root
+--- spawn commands ---
+B: cd $S/b/root && env PATH=$S/pinbin:$PATH AILANG_AGENT_POLICY=$S/b/b.toml pi -p --mode json --no-session --no-context-files --no-skills --no-prompt-templates -na --no-extensions -e ~/.ailang/state/row114/Q1/piext/ailang-exec.ts -e ~/.ailang/state/row114/Q1/piext/ailang-lsp-lite.ts --no-builtin-tools --tools ailang_read,ailang_check --provider openrouter --model z-ai/glm-5.3 @$S/b/prompt.txt < /dev/null
+W: cd $S/w/scratch/cwd && env -u AILANG_REGISTRY_API_KEY -u WORLD_SESSION DISABLE_AUTOUPDATER=1 <clibin 2.1.300>/claude -p --model sonnet --tools Bash --allowedTools <w-allowlist.txt> --permission-mode dontAsk --setting-sources '' --strict-mcp-config --no-session-persistence --max-budget-usd 2 --output-format stream-json --verbose "$(cat $S/w/prompt.txt)" < /dev/null
+V: cd $S/v{b,w} && <clibin 2.1.300>/claude -p --model sonnet --tools Read --setting-sources '' --strict-mcp-config --no-session-persistence --max-budget-usd 1 --output-format stream-json --verbose "$(cat prompt.txt)" < /dev/null
+max_attempt_wall_s 3600
