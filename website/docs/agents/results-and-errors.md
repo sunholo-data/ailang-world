@@ -133,7 +133,26 @@ That is the `decision` for a program declaring `! {IO, Net}`, with exit code 2. 
 
 **(d) Supervisor limit.** The AILANG supervisor stopped the program, for example at the 8-second timeout. `exit_code` is `3`, `stdout` holds whatever was printed, and `limit` is the parsed `policy-result:` line, carrying `reason` (such as `timeout`) and `stage`. A program can print its own `policy-result:` line, so treat `limit` as a hint about your run, not as an authenticated fact.
 
-The program's inner file operations are governed by the AILANG policy (sandbox root, deny list, `FS` budget of 1000 operations, 8 s timeout). They are not brokered or recorded one by one: World records the run as one `Ailang.Run` effect with its envelope.
+The program's inner file operations are governed by the AILANG policy (sandbox root, deny list, `FS` budget of 1000 operations, 8 s timeout). They are not brokered or recorded one by one: World records the run as one `Ailang.Run` effect with its envelope, plus a summary of what changed (next section).
+
+## `worktree_delta`: what a toolchain call changed
+
+The results of `ailang-run`, `ailang-check`, `ailang-cli` and `workspace-exec` carry a `worktree_delta` when the call created, modified or deleted files in your worktree (row 184). The broker snapshots the worktree before and after the subprocess:
+
+```json
+"worktree_delta": {"changes": [{"path": "out.txt", "op": "created", "size": 12, "sha256": "…"},
+                               {"path": ".ailang/cache/compile/manifest.json", "op": "modified", "size": 25770, "sha256": "…"}],
+                   "truncated": false, "total": 2, "basis": "git-status"}
+```
+
+| Field | Meaning |
+|---|---|
+| `changes[]` | Up to 256 changed paths: `op` is `created`, `modified` or `deleted`; `size` and `sha256` describe the file after the call (absent when deleted) |
+| `truncated`, `total` | `truncated` is `true` when more than 256 paths changed; `total` is the full count |
+| `basis` | `git-status` in a git worktree (gitignored paths are not listed); `walk` in a non-git (degraded) episode; `walk-capped` when that walk passed its file cap and lists nothing |
+| `error` | Present when a snapshot failed; the call itself still succeeded |
+
+A call that changes nothing has no `worktree_delta`. `ailang-worldd why <entry>` prints it as `worktree: N created, M modified, K deleted` with the first paths.
 
 ## When the call itself fails
 

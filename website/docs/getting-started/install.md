@@ -6,8 +6,9 @@ description: Build ailang-worldd and world-publish from source with Go, and inst
 
 # Install
 
-World has no packaged release. You build it from source and point it at two pinned AILANG
-binaries.
+The current release is the `v1.0.0-rc.1` GitHub pre-release (the 1.0 release candidate). It
+ships no prebuilt World binaries: you build it from source, at that tag or on `dev`, and point
+it at two pinned AILANG binaries.
 
 ## Requirements
 
@@ -28,8 +29,8 @@ go build -o /tmp/world-publish ./cmd/world-publish
 
 | Binary | What it is |
 |---|---|
-| `ailang-worldd` | The daemon (`serve`), its bounded client verbs, and `session mint`/`revoke` |
-| `world-publish` | The attended operator entrypoint: transition-registry publish and the `world/core` package publish |
+| `ailang-worldd` | The daemon (`serve`), its bounded client verbs (including `outcome record`), `setup` and `doctor`, and `session new`/`list`/`revoke`/`mint` |
+| `world-publish` | The attended operator entrypoint: transition-registry publish, epoch nomination and the `world/core` package publish |
 
 `world-publish` is a separate program on purpose: nothing CI or the daemon runs is one flag
 away from an irreversible write.
@@ -57,9 +58,31 @@ World uses two AILANG releases for two different jobs. Both are checked by versi
   `--tool-ailang-bin`: a different binary changes the measured facts, and World never widens to
   an unmeasured one (residual R-SE-8).
 
-Install them at the paths the runbooks use. Release assets are named
-`<os>.<arch>.ailang.tar.gz`, each with a `.sha256` file (CI uses `linux.x64`; the tool binary
-was measured with `darwin.arm64`). For example, on Apple silicon:
+Both releases, with their per-platform tarball and binary digests, are rows of the release
+manifest `pins/ailang-releases.json`, which is compiled into the CLIs.
+
+### With `setup` (recommended)
+
+`ailang-worldd setup` installs both pins at the paths the runbooks use, verified byte for byte:
+the release's `.sha256`, the computed tarball hash and the compiled-in digest must all agree, and
+the extracted `ailang` must hash to the compiled-in binary digest. A file that already hashes to
+the pin is left alone. setup never runs a downloaded byte. It then creates the store directory
+and the workspace root, and prints the attended steps that follow.
+
+```bash
+go run ./cmd/ailang-worldd setup
+go run ./cmd/ailang-worldd doctor
+```
+
+`doctor` checks the machine without changing anything: both pins, the TTY fences, the port, the
+store and the workspace root. Platforms: darwin/arm64 and linux/amd64. `setup --from-dir <dir>`
+installs offline from downloaded assets, verified the same way; exit 3 means a digest mismatch,
+with nothing installed. `ailang-worldd setup --help` lists every flag.
+
+### By hand
+
+Release assets are named `<os>.<arch>.ailang.tar.gz`, each with a `.sha256` file (CI uses
+`linux.x64`; the tool binary was measured with `darwin.arm64`). For example, on Apple silicon:
 
 ```bash
 mkdir -p ~/.pinned-ailang ~/.pinned-ailang-tools/v0.52.1
@@ -108,7 +131,8 @@ Unset the registry credential in the shell that runs `ailang-worldd`:
 unset AILANG_REGISTRY_API_KEY
 ```
 
-With it set, every `ailang-worldd` command, client verbs included, refuses to start (exit 2).
+With it set, every `ailang-worldd` command, client verbs included, refuses to start (exit 2);
+only `--help` still answers.
 The registry is immutable, so an ambient key would hand unrecallable publish authority to every
 process World starts. Keep the key in a mode-`0600` file outside the working tree instead.
 

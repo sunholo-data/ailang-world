@@ -27,14 +27,18 @@ Each use case below is marked:
 rewrite `.git/config`, plant a CI workflow, or drop hooks into an editor config that run
 the next time a human opens the repo. You manage that risk with prompts and hope.
 
-**What World does.** The agent gets a **worktree, not a machine**. It works through eight AILANG
-tools over MCP: read, write, edit, check, run, builtins-search, examples-search and the AILANG
-CLI. Every call is a transition:
+**What World does.** The agent gets a **worktree, not a machine**. It works through nine tools
+over MCP: read, write, edit, check, run, builtins-search, examples-search, the AILANG CLI, and
+`workspace-exec`, which runs only the commands an operator's exec profile lists (`go test`,
+`npm test`, `pytest`, …). Every call is a transition:
 
 - The **plan is pure**: arguments are checked, and unknown keys and path tricks are refused.
 - The **one effect goes through the broker**: capability, scope and budget are checked.
-- The **effect is confined** by AILANG's policy layer: no shell, no network, `.git` read-only,
-  and case-folded deny lists, so `.CLAUDE/settings.json` is refused just like `.claude/…`.
+- The **effect is confined**. The other eight tools run under AILANG's policy layer: no shell,
+  no network, `.git` read-only, and case-folded deny lists, so `.CLAUDE/settings.json` is
+  refused just like `.claude/…`. `workspace-exec` takes no shell line: it runs a profiled
+  command under the srt sandbox, with writes confined to the worktree and its caches and no
+  network.
 - The call **commits one log entry**, with the plan and the effect record attached.
 
 **Any MCP client works.** In the first live session, pi and Claude Code each read, edited,
@@ -48,7 +52,7 @@ one authority model for all of them instead of one prompt per agent.
 
 ---
 
-## 2. "Why did this happen?" — provenance instead of archaeology <span className="world-status world-status--met">Works today</span> · <span className="world-status world-status--unmet">Roadmap</span> (timed proof)
+## 2. "Why did this happen?" — provenance instead of archaeology <span className="world-status world-status--met">Works today</span>
 
 **The problem.** When something goes wrong, someone reconstructs reality from logs, `git log`
 and memory. That person is often an agent that has to re-derive context it has already lost.
@@ -60,9 +64,11 @@ requested, what was allowed or denied, what came back) and the commit that lande
 held the grant, and the goal it served. Effect results are recorded at the broker, so "what was
 actually sent" is a fact you can query, not a conclusion you have to reason your way to.
 
-**Status.** The records and the walk exist today. What the 1.0 release still has to prove (clause 5)
-is that the walk answers ≥3 **real** "why" questions in ≤5 minutes each, timed against the old
-grep-and-logs method run by an agent confined to read-only access.
+**Status.** Proven for 1.0 (clause 5). Walks answered three **unseeded, real** "why" questions,
+each verified against sealed ground truth, in 54.6 s, 25.3 s and 39.0 s. The old grep-and-logs
+method, run by an agent confined to read-only access, was timed on the same questions and also
+verified, in 67.0 s, 87.5 s and 116.8 s. `ailang-worldd outcome record` now lets a harness
+record how a graded task turned out, so a walk can reach the outcome and its grading rule too.
 
 → [Provenance and replay](concepts/provenance-and-replay.md) · [Provenance walks](guides/provenance-walks.md) · [Roadmap](roadmap/index.md)
 
@@ -96,14 +102,14 @@ touch which repo, which one may spend money, which one may ask a human.
 `Workspace.Read` on one worktree and nothing else; a cloud executor can hold `Workspace.Write`
 plus `Ailang.Run` with a budget of 50 calls. Grants carry scope, expiry and budget. Spend persists
 across calls and restarts. Denials are recorded, and a session only sees the tools it holds grants
-for. Six grants cover today's eight tools. Git, GitHub, deploy and model-call effects follow the
-same pattern; they are designed but not yet served over MCP.
+for. The `se-tools` preset is nine grants for today's nine tools. Git, GitHub, deploy and
+model-call effects follow the same pattern; they are designed but not yet served over MCP.
 
 → [Effects, capabilities and budgets](concepts/effects-capabilities-budgets.md) · [Sessions and episodes](concepts/sessions-and-episodes.md)
 
 ---
 
-## 5. Honest agent evaluation <span className="world-status world-status--unmet">Roadmap</span> (harness in progress)
+## 5. Honest agent evaluation <span className="world-status world-status--met">Works today</span>
 
 **The problem.** Agent benchmarks rarely control what the agent could actually touch. A "tools-only"
 arm that quietly keeps a shell, or a grader that runs a different binary than the agent tested
@@ -112,8 +118,10 @@ against, makes the numbers mean less than they claim.
 **What World does.** The 1.0 non-inferiority floor (clause 4) runs Claude Code and codex on
 AILANG's core benchmarks in two arms: native shell, and World's tools only. The World arm is
 **enforced, not trusted**. Every graded solution must match the content of the World log entry
-that wrote it. The grader port agrees with **1,351 of 1,357** banked results, eligibility is sealed
-before any World statistic is computed, and the final run is pre-registered.
+that wrote it. The grader port agrees with **1,351 of 1,357** banked results, and eligibility is
+sealed before any World statistic is computed. The pre-registered final run of 2026-10-15 holds:
+both agents passed 69/69 in each arm (no pass-rate difference), with median overheads of −17.9%
+(Claude Code) and −5.7% (codex), and all 414 graded cells passed.
 
 **Who it's for.** Teams who want to compare agents, models or toolsets with confinement as a
 measured condition rather than an assumption.
@@ -189,7 +197,7 @@ The same kernel can manage worlds other than repositories:
 - **Not a workflow engine.** Temporal or LangGraph give you durable state and retries. World adds
   verification *before* execution, constructive replay, and authority as types. Those are
   properties of the language joined to the substrate, and they are hard to bolt on afterwards.
-- **Not 1.0 yet.** Five of seven release clauses are met. The two that remain measure World
-  against the status quo: agents must do no worse inside World than with a shell, and provenance
-  must beat log archaeology on real questions. See the [roadmap](roadmap/index.md).
+- **Not `v1.0.0` yet.** All seven release clauses are met, including the two that measure
+  World against the status quo, and `v1.0.0-rc.1` is the release candidate. Three release rows
+  remain before `v1.0.0`. See the [roadmap](roadmap/index.md).
 - **Not cloud-first.** One machine, SQLite, no cloud dependencies in the core.

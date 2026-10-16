@@ -117,7 +117,7 @@ const config = {
           {to: '/docs/getting-started', label: 'Get started', position: 'left'},
           {to: '/docs/agents', label: 'For AI agents', position: 'left'},
           {to: '/docs/use-cases', label: 'Use cases', position: 'left'},
-          {to: '/docs/roadmap', label: 'Roadmap', position: 'left'},
+          {to: '/docs/roadmap', label: '1.0 status', position: 'left'},
           {href: AILANG_URL, label: 'AILANG', position: 'right'},
           {href: GITHUB_URL, label: 'GitHub', position: 'right'},
         ],
@@ -147,7 +147,7 @@ const config = {
             items: [
               {label: 'Agents guide', to: '/docs/agents'},
               {label: 'Guides', to: '/docs/guides'},
-              {label: 'Roadmap to 1.0', to: '/docs/roadmap'},
+              {label: 'The 1.0 bar and release', to: '/docs/roadmap'},
             ],
           },
           {

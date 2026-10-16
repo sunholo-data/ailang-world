@@ -1,10 +1,10 @@
 ---
-title: Roadmap to 1.0
+title: The 1.0 bar and release
 sidebar_position: 1
-description: The seven clauses AILANG World 1.0 must meet, and the current state of each.
+description: The seven clauses AILANG World 1.0 had to meet, the evidence for each, and the remaining release steps.
 ---
 
-# Roadmap to 1.0
+# The 1.0 bar and release
 
 World 1.0 is defined by a **bar** of seven clauses, ratified by the project owner on
 2026-07-23. Each clause is a checkable end state, not a work item. The authoritative text
@@ -12,16 +12,18 @@ lives in the
 [mission charter](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/world-mission.md)
 ("The bar"). This page summarizes it and says where each clause stands.
 
-**Current state: 5 of 7 clauses met.** The two that remain are the ones that measure World
-against the status quo. No release date is promised.
+**Current state: all 7 clauses met; `v1.0.0-rc.1` is the current release candidate.** Clause 4
+was closed by D-WORLD-77 and clause 5 by D-WORLD-80. Under the release plan (D-WORLD-81),
+`v1.0.0` follows once three more queue rows land: 156 (protected test paths), 150 (marketing
+capture) and 151 (agent-generated projections). See [Release plan](#release-plan).
 
 | # | Clause | State |
 |---|---|---|
 | 1 | Deterministic kernel | <span className="world-status world-status--met">Met</span> |
 | 2 | Local-first daemon | <span className="world-status world-status--met">Met</span> |
 | 3 | Explicit authority end to end | <span className="world-status world-status--met">Met</span> |
-| 4 | Resident-agent non-inferiority floor | <span className="world-status world-status--unmet">Not yet met</span> |
-| 5 | The human surface works, with provenance teeth | <span className="world-status world-status--unmet">Not yet met</span> |
+| 4 | Resident-agent non-inferiority floor | <span className="world-status world-status--met">Met</span> |
+| 5 | The human surface works, with provenance teeth | <span className="world-status world-status--met">Met</span> |
 | 6 | Protocol-native boundary | <span className="world-status world-status--met">Met</span> |
 | 7 | Controlled self-modification, proven once | <span className="world-status world-status--met">Met</span> |
 
@@ -47,7 +49,7 @@ Every effect goes through the broker with a capability and budget check. Effect 
 recorded as replay input. Capsules run with a physical isolation floor beneath the semantic
 checks. No ambient-authority path exists from an agent to the outside world.
 
-### 4. Resident-agent non-inferiority floor <span className="world-status world-status--unmet">Not yet met</span>
+### 4. Resident-agent non-inferiority floor <span className="world-status world-status--met">Met</span>
 
 This is a do-no-harm kill switch, not the value proof. Two reference agents from different
 providers, **Claude Code and codex CLI**, each run the same benchmark set in two arms: *shell*
@@ -58,17 +60,21 @@ runs per arm. The floor holds only if **both** agents show a World pass rate no 
 either way. If the floor fails on eligible agents after honest tuning, World parks, and says
 so.
 
-**Where it stands.** Tracked as queue row 93. Its prerequisite, row 134 (the
-software-engineering tools agents use in the World arm), landed on 2026-10-03, and the
-floor's grader port, classification and statistics landed the same day (row 93 M1 and M3,
-no agent run yet). Row 135 widened the `ailang-run` tool (stdin, argv and per-task
-capabilities) so all 23 core tasks can run through World; it landed on 2026-10-03 on the
-v0.52.1 tool binary (#192), with an attended four-task smoke still to run. The ratified order
-to release is now the rest of the
-developer CLI (row 138), a toolchain effect for non-AILANG projects (row 140), the floor run
-(row 93), provenance teeth (row 114) and an interpreter epoch-upgrade path (row 139).
+**Where it stands.** Met (queue row 93, D-WORLD-77). The pre-registered FINAL run of
+2026-10-15 holds:
 
-### 5. The human surface works, with provenance teeth <span className="world-status world-status--unmet">Not yet met</span>
+| Agent | Pass-rate difference (World − shell) | Median overhead |
+|---|---|---|
+| Claude Code | 0 (69/69 vs 69/69) | −17.9% |
+| codex | 0 (69/69 vs 69/69) | −5.7% |
+
+All 414 graded cells passed (both agents, 23 core tasks, three runs, the shell eligibility
+phase and both arms of the paired phase). The rows it depended on all landed first: the coding
+tools (row 134), the wider `ailang-run` (row 135), the developer CLI (row 138) and
+`workspace-exec` (row 140). Evidence:
+[`design_docs/verification/world-floor-final-2026-10-15/`](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/verification/world-floor-final-2026-10-15/README.md).
+
+### 5. The human surface works, with provenance teeth <span className="world-status world-status--met">Met</span>
 
 This is the 1.0 value demonstration. One real goal is expressed, becomes proposals, reaches
 an approval inbox with evidence bundles, and commits. And, measurably: on **at least three
@@ -76,10 +82,12 @@ real "why did this happen" questions**, arising from actual operation rather tha
 the test, a provenance walk yields the verified answer in **five minutes or less** each,
 where the pre-World method was a grep and log archaeology session.
 
-**Where it stands.** Tracked as queue row 114. The walks so far proved retrieval of answers
-that had been recorded in advance, and the pre-World baselines were not timed. The clause
-needs unseeded questions from real operation, with the pre-World method timed alongside. Its
-corpus is the operation World records now that row 134 has landed.
+**Where it stands.** Met (queue row 114, D-WORLD-80). Three unseeded questions harvested from
+real operation were answered by World walks verified against sealed ground truth: Q4 in
+54.6 s, Q6 in 25.3 s and Q8 in 39.0 s. A live pre-World baseline was timed on each and also
+verified, more slowly (67.0 s, 87.5 s and 116.8 s). Attempts that did not qualify are kept in
+the record. Evidence:
+[`design_docs/verification/w-provenance-teeth-unseeded-baselined-walk/`](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/verification/w-provenance-teeth-unseeded-baselined-walk/index.md).
 
 ### 6. Protocol-native boundary <span className="world-status world-status--met">Met</span>
 
@@ -92,6 +100,19 @@ At least one World behavior change ships as an extension package through World's
 propose, verify and commit pipeline, with the self-modification boundaries enforced: the
 mission-loop machinery, the AILANG compiler and the live daemon are outside self-modification
 scope.
+
+## Release plan
+
+`v1.0.0-rc.1` is the current GitHub pre-release. Under D-WORLD-81, `v1.0.0` follows after
+these rows:
+
+- **Row 156, protected test paths** (next). Today an agent can edit the tests that
+  `workspace-exec` runs to judge its work; this row protects those paths.
+- **Row 150, marketing capture.**
+- **Row 151, agent-generated projections.**
+
+Row 139, the interpreter epoch-upgrade path, is in progress: its release manifest
+(`pins/ailang-releases.json`) and `world-publish epoch nominate` have landed.
 
 ## Beyond 1.0
 

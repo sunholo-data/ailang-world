@@ -32,7 +32,7 @@ started, the agent guide and the CLI/HTTP reference — and
 
 ## Try it
 
-Serve World's eight AILANG coding tools to an agent, one step at a time (needs the two pinned
+Serve World's nine coding tools to an agent, one step at a time (needs the two pinned
 AILANG binaries — `go run ./cmd/ailang-worldd setup` installs both, verified, and `doctor`
 checks the machine; the two attended steps, publish and mint, need a human at a terminal):
 
@@ -45,7 +45,8 @@ $B/bin/ailang-worldd call ailang-read --session $B/session --arg path=hello.ail 
 ```
 
 `call` is a built-in MCP client; `why` walks a result back through its log entry, plan and
-effect records, checking every link. `log tail` and `provenance` complete the developer CLI.
+effect records, checking every link. `log tail`, `provenance`, `outcome record` and the
+`setup`, `doctor` and `session new`/`list`/`revoke` helpers complete the developer CLI.
 The full runbook, with every flag explained, is [docs/QUICKSTART.md](docs/QUICKSTART.md) §9;
 the [coding-tools guide](https://www.sunholo.com/ailang-world/docs/getting-started/coding-tools)
 connects pi and Claude Code.
@@ -77,7 +78,7 @@ that bet, operationalized:
 - **Authority as types** — capabilities checked where transitions are defined, not bolted onto a gateway.
 - **Local-first** — one daemon, SQLite, zero cloud in the core. Cloud and multi-device sync are effect-handler extensions, never architecture.
 - **Protocol-native** — MCP, A2A, and open agent-UI protocols at the boundary; no invented wire formats.
-- **Falsifiable** — see [the value gate](#the-value-gate) below. We name the condition under which this project parks itself.
+- **Falsifiable** — see [the floor, and the value](#the-floor-and-the-value) below. We name the condition under which this project parks itself.
 
 ## The documents
 
@@ -114,9 +115,11 @@ executed. Mission-loop machinery is shared infrastructure from the
 
 ## Status — honest, not promotional
 
-**Phase: built and running, pre-1.0.** As of 2026-10-03, five of the seven clauses of the
-[ratified 1.0 bar](design_docs/world-mission.md) are met. The two that remain are the two that
-measure World against the status quo, and neither has passed yet.
+**Phase: the 1.0 release candidate (`v1.0.0-rc.1`).** As of 2026-10-16, all seven clauses of
+the [ratified 1.0 bar](design_docs/world-mission.md) are met, including the two that measure
+World against the status quo (clause 4 by D-WORLD-77, clause 5 by D-WORLD-80). `v1.0.0-rc.1` is
+the current GitHub pre-release; per D-WORLD-81, `v1.0.0` follows once rows 156 (protected test
+paths), 150 (marketing capture) and 151 (agent-generated projections) land.
 
 **Built and working** (on `dev`, CI-gated):
 
@@ -130,18 +133,29 @@ measure World against the status quo, and neither has passed yet.
 - **Controlled self-modification, proven once** — World's own package, `world/core`, went
   through World's propose → verify → commit pipeline and was published to the AILANG package
   registry by an attended human step (`world/core@0.1.1`, 2026-10-02). Clause 7.
-- **Eight AILANG coding tools for agents** (queue row 134, landed 2026-10-03, PR #180):
-  `ailang-read`, `-write`, `-edit`, `-check`, `-run`, `builtins-search`, `examples-search` and
-  `ailang-cli`, served over MCP and A2A. Each call runs its plan as a pure World transition, runs
-  exactly one brokered, budgeted effect confined to the episode's worktree by AILANG's policy
-  layer, and commits one log entry. pi and Claude Code both did real work through them with
-  their built-in tools disabled.
-- **A developer CLI, part 1** (row 138, PR #188): `ailang-worldd tools list`, `call`, `why`,
-  `log tail` and `provenance`, replacing hand-written curl with bearer headers and SSE parsing.
+- **Nine coding tools for agents** (queue row 134, landed 2026-10-03, PR #180; row 140 added
+  the ninth): `ailang-read`, `-write`, `-edit`, `-check`, `-run`, `builtins-search`,
+  `examples-search`, `ailang-cli` and `workspace-exec`, served over MCP and A2A. Each call runs
+  its plan as a pure World transition, runs exactly one brokered, budgeted effect confined to the
+  episode's worktree, and commits one log entry. `workspace-exec` runs only commands from an
+  operator exec profile (`go test`, `npm test`, `pytest`, …), sandboxed by srt, and runs nothing
+  unless the daemon starts with `--exec-profile`. Toolchain results carry a `worktree_delta`
+  (files created, modified, deleted) that `why` prints. pi and Claude Code both did real work
+  through them with their built-in tools disabled, and Claude Code and codex ran the floor's
+  World arm through them.
+- **A developer CLI** (row 138): `ailang-worldd tools list`, `call`, `why`, `log tail` and
+  `provenance`, replacing hand-written curl with bearer headers and SSE parsing; `setup` (fetch
+  and hash-verify both pins) and `doctor`; `session new`/`list`/`revoke` (`session new
+  --allow-non-git` adopts a non-git directory as a degraded episode); `outcome record` (row 182:
+  a graded task's outcome as a `world/task-outcome/v1` object a provenance walk can reach); and
+  `demo seed`.
 - **Two pinned AILANG binaries**: the `.ail` interpreter that runs every transition plan is
-  pinned at **v0.41.0** (its hash is in every log entry, so it moves only by a deliberate epoch
-  change); the tool binary the coding tools run is pinned at **v0.52.1** and refused at any other
-  release (D-WORLD-57).
+  pinned at **v0.41.0** (epoch 1; its hash is in every log entry, so it moves only by a
+  deliberate epoch change); the tool binary the coding tools run is pinned at **v0.52.1** and
+  refused at any other release (D-WORLD-57). Both are rows of the release manifest
+  [`pins/ailang-releases.json`](pins/ailang-releases.json), compiled into the binaries;
+  `world-publish epoch nominate` names a new release in a store's epoch registry, as a candidate
+  of the current epoch (headless) or as a new epoch (attended).
 - **A docs site** at [sunholo.com/ailang-world](https://www.sunholo.com/ailang-world/).
 
 **The 1.0 bar** ([charter, "The bar"](design_docs/world-mission.md)):
@@ -151,19 +165,22 @@ measure World against the status quo, and neither has passed yet.
 | 1 | Deterministic kernel | ✅ met |
 | 2 | Local-first daemon | ✅ met |
 | 3 | Explicit authority end to end | ✅ met |
-| 4 | Resident-agent non-inferiority floor | ⬜ not yet — queue row 93; the grader port and statistics landed (#184), the paired runs have not started |
-| 5 | Human surface with provenance teeth | ⬜ not yet — queue row 114; needs ≥3 *unseeded* "why" questions from real operation, timed against the pre-World method |
+| 4 | Resident-agent non-inferiority floor | ✅ met — the 2026-10-15 FINAL holds: Claude Code Δ 0 (69/69 vs 69/69), overhead −17.9%; codex Δ 0 (69/69), overhead −5.7%; 414/414 graded cells passed ([evidence](design_docs/verification/world-floor-final-2026-10-15/README.md)) |
+| 5 | Human surface with provenance teeth | ✅ met — three *unseeded* real questions answered by walks verified against sealed ground truth: Q4 54.6 s, Q6 25.3 s, Q8 39.0 s (the live baseline also verified, in 67.0 s, 87.5 s and 116.8 s) ([evidence](design_docs/verification/w-provenance-teeth-unseeded-baselined-walk/index.md)) |
 | 6 | Protocol-native boundary | ✅ met |
 | 7 | Controlled self-modification, proven once | ✅ met |
 
-**In progress**, in the ratified order (D-WORLD-58: 135 → 138 → 140 → 93 → 114 → 139 → release):
+**Landed** from the ratified order (D-WORLD-58: 135 → 138 → 140 → 93 → 114 → 139 → release):
+rows 135 (`ailang-run` stdin, argv and per-call capabilities), 138 (the developer CLI), 140
+(`workspace-exec`), 93 (the floor) and 114 (the provenance walks).
 
-- **Row 135** — `ailang-run` gains stdin, argv and per-call capabilities, so all 23 core
-  benchmark tasks run through World. Landed in #192 (2026-10-03); the attended four-task smoke (M4) is next.
-- **Row 138** — the rest of the developer CLI: `setup` (fetch and hash-verify both pins),
-  `doctor`, and session helpers.
-- **Row 140** — an operator-allowlisted toolchain effect (`go test`, `npm test`, `pytest`, …), so
-  World can build and test non-AILANG projects. Today only read, write and edit are generic.
+**In progress**, toward `v1.0.0` (D-WORLD-81):
+
+- **Row 139** — the interpreter epoch upgrade path. M1/M2 landed: the release manifest
+  `pins/ailang-releases.json` and `world-publish epoch nominate`.
+- **Row 156** (next) — protected test paths, so an agent cannot edit the tests that judge it
+  through `workspace-exec`.
+- **Rows 150 and 151** — marketing capture and agent-generated projections.
 
 **Work made through World.** The first real change made by an agent working only through World's
 tools is [sunholo-data/daneel#325](https://github.com/sunholo-data/daneel/pull/325) (merged
@@ -234,17 +251,28 @@ The same binary is the bounded-timeout client:
 ./ailang-worldd registry get world/epoch-registry/v1
 ./ailang-worldd log tail --follow
 ./ailang-worldd commit --file commit.json --session <file>
-./ailang-worldd session mint --db ./world.db --episode <ep> --grant EFFECT=SCOPE:BUDGET   # attended, TTY-fenced
+./ailang-worldd outcome record --file outcome.json --session <file>
 ./ailang-worldd tools list --session <file>
 ./ailang-worldd call <tool> --session <file> --arg k=v
 ./ailang-worldd why <index|head|sha256:<ref>|a2a:<id>|mcp:<id>|rest:<id>|->
 ./ailang-worldd provenance --episode <ep>
+./ailang-worldd doctor
 ```
 
-`POST /v1/commit` and every tool call need a session credential, minted by the
-attended, TTY-fenced `session mint`; reads are unauthenticated and loopback-only.
-`ailang-worldd <verb> --help` documents `tools`, `call`, `why`, `log tail` and
-`provenance`.
+`setup` installs the two pinned AILANG binaries, and the `session` verbs act on the store
+file directly (the daemon must be stopped for all but `list`):
+
+```sh
+./ailang-worldd setup
+./ailang-worldd session new <ep> --db ./world.db --repo . --preset se-tools   # attended, TTY-fenced
+./ailang-worldd session mint --db ./world.db --episode <ep> --grant EFFECT=SCOPE:BUDGET   # attended, TTY-fenced
+./ailang-worldd session list --db ./world.db
+./ailang-worldd session revoke --db ./world.db <credential_id>
+```
+
+`POST /v1/commit`, `outcome record` and every tool call need a session credential, minted by
+the attended, TTY-fenced `session new` or `session mint`; reads are unauthenticated and
+loopback-only. `ailang-worldd <verb> --help` (or `help <verb>`) prints any verb's help.
 
 Use global `--addr http://127.0.0.1:<port>` before a client verb when the daemon
 uses another loopback port. `--addr` is not valid with `serve`; use `--bind`.
@@ -272,8 +300,11 @@ v0.52.1 tool binary runs under a rendered policy that roots every path at the
 episode worktree, keeps `.git` and the deny list read-only, and gives no shell
 (measured facts: the site's
 [tool confinement](https://www.sunholo.com/ailang-world/docs/security/tool-confinement)
-page). This is a process-safety floor, not full isolation: there is no
-container, VM, or memory or CPU limit.
+page). The one command-running tool, `workspace-exec`, runs only the commands an
+operator's exec profile lists (`serve --exec-profile`), never a shell line, under
+the srt sandbox: writes confined to the worktree and the episode's caches, no
+network, and a startup probe each profile must pass. This is a process-safety
+floor, not full isolation: there is no container, VM, or memory or CPU limit.
 
 ## Relationship to AILANG
 

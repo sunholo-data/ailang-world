@@ -1,12 +1,16 @@
 ---
 title: Tool confinement
 sidebar_position: 2
-description: The measured confinement facts for the eight coding tools — worktree root, path refusals, .git protection, the case-folded deny list, environment, cache, flag injection and the run outcome shapes — with the design's V-row evidence.
+description: The measured confinement facts for the nine coding tools — worktree root, path refusals, .git protection, the case-folded deny list, environment, cache, flag injection, the run outcome shapes and the workspace-exec sandbox — with the design's V-row evidence.
 ---
 
 # Tool confinement
 
-Every fact on this page was measured first-party on the AILANG **v0.51.0** tool binary and
+World serves nine coding tools. Eight run the AILANG tool binary under AILANG's policy layer;
+the ninth, `workspace-exec`, runs operator-profiled commands under the srt sandbox and is
+covered in [its own section](#workspace-exec-operator-profiled-commands-under-srt).
+
+Every AILANG-tool fact on this page was measured first-party on the AILANG **v0.51.0** tool binary and
 re-proved on **v0.52.1**, the only release the daemon now accepts for `--tool-ailang-bin`
 (Verification Log §13, V69–V80) and is cited by its Verification
 Log row (`V…`) in `design_docs/planned/w-software-engineering-domain.md`. Most are also
@@ -77,7 +81,7 @@ The rendered policy makes these read-only to the agent:
 
 | Fact | Evidence |
 |---|---|
-| There is no shell tool. Each effect name has a fixed op allowlist: `Workspace.Read` → `read`; `Workspace.Write` → `write`, `edit`; `Ailang.Check` → `ai_check`; `Ailang.Discover` → `builtins_list`, `examples_search`; `Ailang.CLI` → the policy summary's `cli` list; `Ailang.Run` → the run path only. | §4.3, V40 |
+| There is no shell tool. Each effect name has a fixed op allowlist: `Workspace.Read` → `read`; `Workspace.Write` → `write`, `edit`; `Ailang.Check` → `ai_check`; `Ailang.Discover` → `builtins_list`, `examples_search`; `Ailang.CLI` → the policy summary's `cli` list; `Ailang.Run` → the run path only. `Workspace.Exec` runs only an operator-profiled command, never a shell line (below). | §4.3, V40 |
 | `ailang-cli`'s allowlist is the policy summary's 20 `cli` ops: `agent_prompt`, `ai_check`, `axioms`, `builtins_list`, `builtins_show`, `check`, `devtools_prompt`, `docs_search`, `examples_list`, `examples_search`, `examples_show`, `examples_tags`, `fmt`, `iface`, `pkg_docs`, `policy_check`, `prompt`, `test`, `tree`, `version`. Not read, write, edit or run. | V40 |
 | Per-op flag admission is `policy-tool`'s own: for example `fmt --check --write`, `test --allow-skips --json --no-color --package`, `check --json --quiet --strict-syntax`, `docs_search --json --limit`, `builtins_list --json`; most ops admit none. | V56, V67 |
 | `policy-tool` silently ignores unknown top-level request keys, so each transition refuses any argument key outside its schema (L-ARGS). | V56 |
@@ -97,7 +101,7 @@ The rendered policy makes these read-only to the agent:
 |---|---|
 | `fmt --write` rewrote deny-listed files (`.claude/x.ail`, `.ailang/x.ail`) through `policy-tool`, because the formatter does not consult `fs_deny_write`. Only the exact key `write` maps to `--write`, and its value is ignored (`"false"` writes). `FLAGS`/`Flags` alias `flags`, and duplicate `flags` objects merge. | V67 |
 | **Fix, in both layers:** the `ailang-cli` plan refuses `fmt` with a `write` key in any `flags` entry (a Z3-verified predicate, zero-effect refusal), and the handler refuses the same plus any case-folded alias of `op` or `flags`, forwarding only its own re-encoding. `fmt` returns the formatted text; save it with `ailang-write`. | V67, R-SE-13 |
-| Remaining upstream gap: `test` writes a transient `_namedtest_body_<random>.ail` into the tested file's directory, including a deny-listed one, then removes it. | V67, R-SE-13 |
+| On v0.51.0, `test` wrote a transient `_namedtest_body_<random>.ail` into the tested file's directory, including a deny-listed one, then removed it. On v0.52.1 it no longer does, and `policy-tool` itself refuses `fmt --write` on a deny-listed path; World keeps its own refusal. | V67, V75, R-SE-13 |
 
 ## `ailang-run` outcome shapes
 
@@ -151,8 +155,30 @@ passes three gates:
 | `Env` and `Net` together are refused in one run; public-network `Net` is not offered. | §2, R-135-4 |
 | Startup refuses an unknown capability name, `Net` without `--run-net-allow`, a `--run-net-allow` entry that is a bare host, a name, or a non-loopback address, and any variant the policy layer refuses at load. | §4.3, V35 |
 
+## `workspace-exec`: operator-profiled commands under srt
+
+`workspace-exec` (row 140, effect `Workspace.Exec`) lets an agent build and test a non-AILANG
+project without a shell. The operator decides what can run; the agent picks from that list.
+
+| Fact | Source |
+|---|---|
+| Commands come only from an operator exec profile (`world/exec-profile/v1`, `serve --exec-profile`, one per project). The agent passes `command`, the id of one profile command, and optional `args`; never a program or a shell line, and no shell sees an argument. | `serve --help`, the `workspace-exec` descriptor |
+| The profile fixes the program, its leading arguments, the working directory, the environment, the read roots and the timeout. `args` (at most 16, each 1 to 512 bytes, no NUL) must match the command's grammar: only its listed flags, and positionals of its declared class. | the `workspace-exec` descriptor |
+| The command runs under the srt sandbox (`@anthropic-ai/sandbox-runtime` 0.0.78, `--exec-sandbox`): writes stay inside the worktree and the episode's exec cache; the operator's home directory, World's state and other episodes are unreadable; there is no network. | `serve --help`, the descriptor |
+| The sandbox tree is archived at startup and re-verified before every call; its `dist/cli.js` must hash to the pin. The profile, srt, node and every cache seed must lie outside the workspace root and the state directory. | `serve --help` |
+| Each profile must pass a seven-arm startup probe (`arm1-write-inside` … `arm7-toolchain`), or `serve` refuses to start. | `serve --help`, QUICKSTART §10 |
+| Without `--exec-profile`, `Workspace.Exec` is still bound with the workspace tools, but every call is refused `no exec profile configured`. | `serve --help` |
+| A command whose stdout or stderr passes `--exec-max-output-bytes` (default 64 MiB) is killed. The result reports `exit_code` without judging it, plus the profile command and the sandbox it ran in (runtime, version, CLI hash, settings digest, read fence, network). | `serve --help`, the descriptor |
+| The result carries a `worktree_delta` when the command changed files in the worktree. | row 184 |
+
+Known gap: a profiled test command runs whatever test files are in the worktree, and the agent
+can edit those files. Protected test paths are queue row 156, a blocker for `v1.0.0` (see
+[Residuals](residuals.md)).
+
 ## Not covered by the broker
 
-The **inner** file operations of a program run by `ailang-run` are confined and budgeted by the
-policy (`[budgets] FS = 1000`, `timeout_ms`), but they are not brokered, journaled or replayable
-individually. That is an owner-ratified trade-off (D-SE-3 = A), recorded as residual R-SE-11.
+The **inner** file operations of a program run by `ailang-run`, and of a `workspace-exec`
+command, are confined (by the policy, and by srt) but not brokered, journaled or replayable
+individually. For `ailang-run` that is an owner-ratified trade-off (D-SE-3 = A), recorded as
+residual R-SE-11. Since row 184, each such call's result records a summary of what it changed in
+the worktree (`worktree_delta`).

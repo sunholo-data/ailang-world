@@ -43,7 +43,7 @@ ready-packet, and a new attended run.
 
 ## `se-tools`
 
-`packages/se-tools/` holds the eight software-engineering transitions and their checked-in
+`packages/se-tools/` holds the nine software-engineering transitions and their checked-in
 publish manifest, `packages/se-tools/transitions.json`. Each module is self-contained
 (`module se_tools/read` and so on, importing only `std/*`), exports
 `main(input: string) -> string`, and carries a contracted path predicate plus named inline
