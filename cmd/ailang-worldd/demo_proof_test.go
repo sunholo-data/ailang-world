@@ -193,6 +193,7 @@ func TestDemoProofHTTPProducerRoundTrip(t *testing.T) {
 	srcRef := putProofSource(t, ctx, c, rig.token, h.InterpreterRef, source)
 	key := freshProofKey(t)
 	rec := &recordingWriter{inner: demoProofWriter{c: c, token: rig.token, interpreter: h.InterpreterRef}}
+	prevWorld, prevEntry := proofHeadEntry(t, ctx, c)
 
 	ref, err := demoProve(ctx, demoProofReader{c: c}, rec, h, key, srcRef, demoProofRequired)
 	if err != nil || ref.IsZero() || rec.calls != 1 {
@@ -237,14 +238,25 @@ func TestDemoProofHTTPProducerRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	carried := false
-	for _, e := range page {
+	var carrying *wireEntry
+	for i := range page {
+		e := page[i]
 		if e.TransitionRef == ref.String() && e.Header.Interpreter == h.InterpreterRef {
-			carried = true
+			carrying = &e
 		}
 	}
-	if !carried {
+	if carrying == nil {
 		t.Fatalf("no REST log entry carries envelope %s: the object exists without a commit", ref)
+	}
+	// The committed entry must extend the head the proof was minted onto.
+	if carrying.Header.PrevEntryHash != prevWorld.LogHead {
+		t.Fatalf("the carrying entry's prevEntryHash %s is not the observed head's log head %s", carrying.Header.PrevEntryHash, prevWorld.LogHead)
+	}
+	if carrying.Header.SemanticsEpoch != prevEntry.Header.SemanticsEpoch {
+		t.Fatalf("the carrying entry's semanticsEpoch %d is not the head entry's epoch %d", carrying.Header.SemanticsEpoch, prevEntry.Header.SemanticsEpoch)
+	}
+	if carrying.Header.EntryIndex != prevWorld.Revision+1 {
+		t.Fatalf("the carrying entry index %d is not the observed revision %d plus one", carrying.Header.EntryIndex, prevWorld.Revision)
 	}
 }
 
@@ -325,9 +337,26 @@ func TestDemoProofAdapterGuards(t *testing.T) {
 		c := scriptClient(scriptRT(func(*http.Request) (*http.Response, error) {
 			return jsonReply(http.StatusOK, fmt.Sprintf(`{"hash":%q,"interfaceHash":%q}`, ref.String(), iface)), nil
 		}))
-		_, _, err := demoProofReader{c: c}.ReadObject(ctx, ref, 16)
+		var err error
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatalf("a response without payload must be refused with %q; the reader panicked instead: %v", "carries no payload", r)
+				}
+			}()
+			_, _, err = demoProofReader{c: c}.ReadObject(ctx, ref, 16)
+		}()
 		if err == nil || !strings.Contains(err.Error(), "carries no payload") {
 			t.Fatalf("a response without payload must be refused: err=%v", err)
+		}
+	})
+	t.Run("reader-malformed-body-refused", func(t *testing.T) {
+		c := scriptClient(scriptRT(func(*http.Request) (*http.Response, error) {
+			return jsonReply(http.StatusOK, "not json at all"), nil
+		}))
+		_, payload, err := demoProofReader{c: c}.ReadObject(ctx, ref, 16)
+		if err == nil || !strings.Contains(err.Error(), "malformed body") || payload != nil {
+			t.Fatalf("a 200 whose body is not JSON must be refused as malformed: payload=%v err=%v", payload, err)
 		}
 	})
 	t.Run("reader-wrong-hash-refused", func(t *testing.T) {
@@ -358,12 +387,22 @@ func TestDemoProofAdapterGuards(t *testing.T) {
 			t.Fatalf("a malformed interface hash must be refused: payload=%v err=%v", payload, err)
 		}
 	})
+	t.Run("busy-reader-zero", func(t *testing.T) {
+		if d := (demoProofReader{}).BusyTimeout(); d != 0 {
+			t.Fatalf("the REST reader has no lock-retry window: BusyTimeout=%s, want 0", d)
+		}
+	})
+	t.Run("busy-writer-zero", func(t *testing.T) {
+		if d := (demoProofWriter{}).BusyTimeout(); d != 0 {
+			t.Fatalf("the REST writer has no lock-retry window: BusyTimeout=%s, want 0", d)
+		}
+	})
 	t.Run("reader-valid-object-positive", func(t *testing.T) {
 		c := scriptClient(scriptRT(func(*http.Request) (*http.Response, error) {
 			return objectReply(t, ref.String(), iface, []byte("x")), nil
 		}))
 		meta, payload, err := demoProofReader{c: c}.ReadObject(ctx, ref, 16)
-		if err != nil || string(payload) != "x" || meta.InterfaceHash != evidence.InterfaceHashV1 {
+		if err != nil || string(payload) != "x" || meta.InterfaceHash != evidence.InterfaceHashV1 || meta.Provenance != "p" || meta.SemanticID != "x" {
 			t.Fatalf("a well-formed object must read: meta=%+v payload=%q err=%v", meta, payload, err)
 		}
 	})
@@ -465,6 +504,15 @@ func TestDemoProofAdapterGuards(t *testing.T) {
 			t.Fatalf("a CommitUncertain answer must translate to store.UncertainError without retry: posts=%d err=%v", posts, err)
 		}
 	})
+	t.Run("writer-503-other-class-refused", func(t *testing.T) {
+		posts := 0
+		err := demoProofWriter{c: writerScript(t, "", pinned, func(demoCommit) (*http.Response, error) {
+			return jsonReply(http.StatusServiceUnavailable, `{"error":{"class":"Timeout"}}`), nil
+		}, &posts), interpreter: pinned}.PutObject(ctx, envelope)
+		if err == nil || store.IsUncertain(err) || !strings.Contains(err.Error(), "HTTP 503") || posts != 1 {
+			t.Fatalf("a 503 of another class must be a plain refusal, not uncertain, and not retried: posts=%d err=%v", posts, err)
+		}
+	})
 	t.Run("writer-409-refused-not-uncertain", func(t *testing.T) {
 		posts := 0
 		err := demoProofWriter{c: writerScript(t, "", pinned, func(demoCommit) (*http.Response, error) {
@@ -526,6 +574,25 @@ func TestDemoProofAdapterGuards(t *testing.T) {
 			t.Fatalf("archived bytes that miss the health ref must be refused: err=%v", err)
 		}
 	})
+}
+
+// proofHeadEntry reads the selected head, its world row and its head entry over REST.
+func proofHeadEntry(t *testing.T, ctx context.Context, c *client) (wireWorld, wireEntry) {
+	t.Helper()
+	ref, has, err := headState(ctx, c)
+	if err != nil || !has {
+		t.Fatalf("read head: has=%v err=%v", has, err)
+	}
+	r := worldReader{ctx: ctx, c: c}
+	world, found, err := r.world(ref)
+	if err != nil || !found {
+		t.Fatalf("read head world %s: found=%v err=%v", ref, found, err)
+	}
+	entry, found, err := r.entry(world.Revision)
+	if err != nil || !found {
+		t.Fatalf("read head entry %d: found=%v err=%v", world.Revision, found, err)
+	}
+	return world, entry
 }
 
 // proofHealth reads the daemon's health through the REST client.
