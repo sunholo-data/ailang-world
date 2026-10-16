@@ -1,6 +1,6 @@
 # w-real-project-trials — real projects through World, for clause 5's real questions — r1
 
-**Status:** r1 draft, attended 2026-10-16 (Mark attending). Mark chose the two projects:
+**Status:** r1 — **RATIFIED by Mark Edmondson, attended 2026-10-16 ("yep gret - please continue")**. Mark chose the two projects:
 **`sunholo-data/ailang-parse`** (AILANG) and **`sunholo-data/platform-source`** (Python, the ADK 2 upgrade
 planned in its PR #69). Ratification is Mark's, attended.
 **Authority:** D-WORLD-58 (2026-10-03): "dogfood now on real work … feeding row 114's corpus of real 'why'
