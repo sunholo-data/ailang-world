@@ -223,12 +223,16 @@ func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
 	}
 	// S2/S3 run after S1 is recorded. A refusal keeps S1 on record and never
 	// writes a manifest; the caller's S2-S6 boundary text stays truthful.
-	if _, err := demoRunToolStages(ctx, c, token, source); err != nil {
+	stages, err := demoRunToolStages(ctx, c, token, source)
+	if err != nil {
 		return fmt.Errorf("S1 domain commits recorded; S2/S3 refused: %v; S2-S6 incomplete; no success manifest written", err)
 	}
 	// S4 proves the exact source object committed by S1, after S2/S3 succeed.
-	_, err = demoSeedProof(ctx, c, token, h, o.key, hashref.SumSHA256(source))
-	return err
+	envelope, err := demoSeedProof(ctx, c, token, h, o.key, hashref.SumSHA256(source))
+	if err != nil {
+		return err
+	}
+	return demoSeedApproval(ctx, c, token, objects, stages, envelope)
 }
 
 // demoSeedProve forwards to the real producer. The seed integration control
@@ -246,7 +250,7 @@ func demoSeedProof(ctx context.Context, c *client, token string, h daemon.Health
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("S1-S3 recorded; S4 refused: %w; stop and inspect history; never retry or reseed; no success manifest written", err)
 	}
-	return ref, fmt.Errorf("S1-S4 recorded; S5-S6 incomplete; no success manifest written; inspect history before any further action")
+	return ref, nil
 }
 func demoDomainObjects(source []byte) []demoObject {
 	goal := []byte(`{"goal":"Review two candidate approaches using real recorded evidence","author":"demo"}`)
@@ -300,6 +304,7 @@ type demoToolRun struct {
 	Skill        string   `json:"skill"`
 	Op           string   `json:"op,omitempty"`
 	InvocationID string   `json:"invocationId"`
+	EntryIndex   int64    `json:"entryIndex"`
 	EffectRecord string   `json:"effectRecord"`
 	Content      string   `json:"content,omitempty"`
 	Argv         []string `json:"argv,omitempty"`
@@ -385,6 +390,8 @@ func demoA2ASend(ctx context.Context, c *client, token, task, skill string, data
 	}
 	out := wire.Result.Artifacts[0].Parts[0].Data
 	run.InvocationID, _ = wire.Result.Metadata["invocation_id"].(string)
+	index, _ := wire.Result.Metadata["entry_index"].(float64)
+	run.EntryIndex = int64(index)
 	run.EffectRecord = demoEffectRecord(out)
 	if run.InvocationID == "" || run.EffectRecord == "" {
 		return run, nil, fmt.Errorf("%s: invocation or effect record reference absent", task)
@@ -514,4 +521,64 @@ func demoValidateAICheck(stdout string) error {
 		return fmt.Errorf("ai_check verify counterexample or errors is refused")
 	}
 	return nil
+}
+
+// S5 passes descriptions and references from the completed stages to the
+// published convention-v2 approval transition. Authority and packet production
+// remain in the coordinator/broker; the seed neither decides nor retries.
+type demoEvidenceRef struct {
+	Kind string `json:"kind"`
+	Ref  string `json:"ref"`
+}
+
+func demoApprovalRoster(test, effect, claim string, envelope hashref.HashRef) []demoEvidenceRef {
+	return []demoEvidenceRef{
+		{Kind: "test-invocation", Ref: test},
+		{Kind: "recorded-effect", Ref: effect},
+		{Kind: "authored-claim", Ref: claim},
+		{Kind: "proof-envelope", Ref: envelope.String()},
+	}
+}
+
+func demoApprovalInput(goal string, candidates []string, roster []demoEvidenceRef) (map[string]any, error) {
+	if len(roster) != 4 {
+		return nil, fmt.Errorf("S5 roster must have exactly four entries")
+	}
+	for i, kind := range []string{"test-invocation", "recorded-effect", "authored-claim", "proof-envelope"} {
+		if roster[i].Kind != kind {
+			return nil, fmt.Errorf("S5 roster kind at %d must be %s", i, kind)
+		}
+	}
+	return map[string]any{"goal": goal, "candidates": candidates, "roster": roster}, nil
+}
+
+func demoSeedApproval(ctx context.Context, c *client, token string, objects []demoObject, stages demoToolStages, envelope hashref.HashRef) error {
+	// These are the seed's own fixed S1 payloads, already committed unchanged.
+	var goal struct{ Goal string }
+	var a, b struct{ Description string }
+	_ = json.Unmarshal(objects[0].Payload, &goal)
+	_ = json.Unmarshal(objects[1].Payload, &a)
+	_ = json.Unmarshal(objects[2].Payload, &b)
+	var test wireEntry
+	if err := demoGet(worldReader{ctx: ctx, c: c}, fmt.Sprintf("/v1/log/%d", stages.Test.EntryIndex), &test); err != nil {
+		return fmt.Errorf("S1-S4 recorded; S5 test invocation unavailable: %w; no success manifest written", err)
+	}
+	roster := demoApprovalRoster(test.TransitionRef, stages.Read.EffectRecord, objects[4].Hash, envelope)
+	return demoRequestApproval(ctx, c, token, goal.Goal, []string{a.Description, b.Description}, roster)
+}
+
+func demoRequestApproval(ctx context.Context, c *client, token, goal string, candidates []string, roster []demoEvidenceRef) error {
+	input, err := demoApprovalInput(goal, candidates, roster)
+	if err != nil {
+		return err
+	}
+	_, _, err = demoA2ASend(ctx, c, token, "demo-approval", "demo-approve", input)
+	if err != nil {
+		return fmt.Errorf("S1-S4 recorded; S5 refused: %w; S6 incomplete; no success manifest written; inspect history before any further action", err)
+	}
+	return demoApprovalIncomplete()
+}
+
+func demoApprovalIncomplete() error {
+	return fmt.Errorf("S1-S5 recorded; S6 incomplete; no success manifest written; inspect history before any further action")
 }

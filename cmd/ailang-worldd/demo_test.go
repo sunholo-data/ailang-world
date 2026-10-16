@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -19,10 +20,13 @@ import (
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/canon"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/transitionreg"
 )
 
 type demoTestRig struct {
@@ -541,6 +545,7 @@ func requireBinaryRelease(t *testing.T, bin, want string) {
 
 type demoSeRig struct {
 	url, db, token, ws string
+	log                *bytes.Buffer
 }
 
 func newDemoSeRig(t *testing.T, interp, tool string) demoSeRig {
@@ -548,7 +553,14 @@ func newDemoSeRig(t *testing.T, interp, tool string) demoSeRig {
 }
 
 func newDemoSeRigForSeed(t *testing.T, interp, tool string, empty bool) demoSeRig {
+	return newDemoApprovalRig(t, interp, tool, empty, false, 20)
+}
+
+func newDemoApprovalRig(t *testing.T, interp, tool string, empty, extra bool, budget int64) demoSeRig {
 	t.Helper()
+	// Production capsule/source-check scratch roots follow os.TempDir().
+	// Keep those writes inside this test as well as the explicit fixture files.
+	t.Setenv("TMPDIR", t.TempDir())
 	base, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -567,8 +579,9 @@ func newDemoSeRigForSeed(t *testing.T, interp, tool string, empty bool) demoSeRi
 		t.Fatal(err)
 	}
 	writeFileT(t, filepath.Join(corpus, "manifest.json"), `{"examples":[]}`+"\n")
+	log := new(bytes.Buffer)
 	cfg := daemon.Config{DBPath: db, BindHost: daemon.DefaultBindHost, AilangBin: interp, WorkspaceRoot: ws,
-		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: io.Discard}
+		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: log}
 	d, err := daemon.New(boundedTestContext(t), cfg)
 	if err != nil {
 		t.Fatalf("daemon.New: %v", err)
@@ -602,10 +615,11 @@ func newDemoSeRigForSeed(t *testing.T, interp, tool string, empty bool) demoSeRi
 		}
 	}
 	publishSeToolsCLI(t, st, db, interpRef)
+	publishDemoApproval(t, st, db, interpRef, extra)
 	now := time.Now().Unix()
 	grants := []broker.Capability{
 		{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 100},
-		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: 20},
+		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: budget},
 	}
 	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectAilangCLI} {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
@@ -626,7 +640,7 @@ func newDemoSeRigForSeed(t *testing.T, interp, tool string, empty bool) demoSeRi
 		srv.Close()
 		_ = d.Close()
 	})
-	return demoSeRig{url: srv.URL, db: db, token: tok, ws: ws}
+	return demoSeRig{url: srv.URL, db: db, token: tok, ws: ws, log: log}
 }
 
 // demoSpend reads the episode's per-effect spend through the read-only view.
@@ -805,51 +819,39 @@ func TestDemoSeedToolGuardControls(t *testing.T) {
 	})
 
 	// A fake /a2a/ that counts requests and answers with the given task.
-	fakeA2A := func(t *testing.T, state string, meta, data map[string]any) (*client, *int) {
-		t.Helper()
-		var calls int
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			calls++
-			body := map[string]any{"jsonrpc": "2.0", "id": 9, "result": map[string]any{
-				"status": map[string]any{"state": state}, "metadata": meta,
-				"artifacts": []any{map[string]any{"parts": []any{map[string]any{"type": "data", "data": data}}}}}}
-			_ = json.NewEncoder(w).Encode(body)
-		}))
-		t.Cleanup(srv.Close)
-		return newClient(srv.URL), &calls
-	}
+
 	goodData := map[string]any{"content": "x", "world": map[string]any{"effects": []any{map[string]any{"record": "sha256:" + strings.Repeat("a", 64)}}}}
 	goodMeta := map[string]any{"invocation_id": "a2a:demo:t"}
 	ctx := boundedTestContext(t)
 	t.Run("a2a-positive", func(t *testing.T) {
-		c, _ := fakeA2A(t, "completed", goodMeta, goodData)
+		c, _ := demoFakeA2A(t, "completed", goodMeta, goodData)
 		if _, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{}); err != nil {
 			t.Fatalf("complete task refused: %v", err)
 		}
 	})
 	t.Run("a2a-non-completed", func(t *testing.T) {
-		c, _ := fakeA2A(t, "working", goodMeta, goodData)
+		c, _ := demoFakeA2A(t, "working", goodMeta, goodData)
 		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
 		if err == nil || !strings.Contains(err.Error(), "tasks/send refused") {
 			t.Fatalf("non-completed state accepted: %v", err)
 		}
 	})
 	t.Run("a2a-missing-invocation", func(t *testing.T) {
-		c, _ := fakeA2A(t, "completed", map[string]any{}, goodData)
+		c, _ := demoFakeA2A(t, "completed", map[string]any{}, goodData)
 		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
 		if err == nil || !strings.Contains(err.Error(), "invocation or effect record reference absent") {
 			t.Fatalf("missing invocation id accepted: %v", err)
 		}
 	})
 	t.Run("a2a-missing-effect-record", func(t *testing.T) {
-		c, _ := fakeA2A(t, "completed", goodMeta, map[string]any{"content": "x"})
+		c, _ := demoFakeA2A(t, "completed", goodMeta, map[string]any{"content": "x"})
 		_, _, err := demoA2ASend(ctx, c, "tok", "t", "ailang-read", map[string]any{})
 		if err == nil || !strings.Contains(err.Error(), "invocation or effect record reference absent") {
 			t.Fatalf("missing effect record accepted: %v", err)
 		}
 	})
 	t.Run("op-allowlist-before-dispatch", func(t *testing.T) {
-		c, calls := fakeA2A(t, "completed", goodMeta, goodData)
+		c, calls := demoFakeA2A(t, "completed", goodMeta, goodData)
 		_, err := demoTestStage(ctx, c, "tok", demoTestTask, "shell", demoLogepochPath)
 		if err == nil || !strings.Contains(err.Error(), "refuses unlisted op") || *calls != 0 {
 			t.Fatalf("unlisted op: err=%v dispatches=%d", err, *calls)
@@ -900,7 +902,7 @@ func TestDemoSeedProofStage(t *testing.T) {
 			// S4. The proxy forwards all real daemon responses byte-for-byte.
 			writes := 0
 			var proxyMu sync.Mutex
-			var before wireWorld
+			var before, beforeS4 wireWorld
 			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				proxyMu.Lock()
 				defer proxyMu.Unlock()
@@ -913,6 +915,7 @@ func TestDemoSeedProofStage(t *testing.T) {
 				var commit demoCommit
 				if req.URL.Path == "/v1/commit" && json.Unmarshal(body, &commit) == nil && len(commit.Objects) == 1 && commit.Objects[0].SemanticID == evidence.ProofSemanticID {
 					writes++
+					beforeS4, _ = proofHeadEntry(t, ctx, c)
 					if arm == "safe-refusal" {
 						w.WriteHeader(http.StatusForbidden)
 						_, _ = io.WriteString(w, `{"error":{"class":"Denied"}}`)
@@ -1040,8 +1043,8 @@ func TestDemoSeedProofStage(t *testing.T) {
 				}
 			}
 			if arm == "success" {
-				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S4 recorded; S5-S6 incomplete; no success manifest written") {
-					t.Fatalf("seed must record exactly one S4 envelope and refuse S5/S6 completion: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
+				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S5 recorded; S6 incomplete; no success manifest written") {
+					t.Fatalf("seed must record exactly one S4 envelope and refuse S6 completion: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
 				}
 				if proofCalls != 1 || readerRequests == 0 || writerRequests != 1 {
 					t.Fatalf("seed-s4-observed: need one real producer call with bounded reads and write; calls=%d reads=%d writes=%d", proofCalls, readerRequests, writerRequests)
@@ -1067,7 +1070,12 @@ func TestDemoSeedProofStage(t *testing.T) {
 				if arm == "lost-response-after-commit" {
 					wantEnvelopes = 1
 				}
-				if writes != 1 || len(envelopes) != wantEnvelopes || !strings.Contains(errOut, "S4 refused:") || !strings.Contains(errOut, "inspect history") || !strings.Contains(errOut, "no success manifest written") {
+				after, _ := proofHeadEntry(t, ctx, c)
+				unchanged := after == beforeS4
+				if arm == "lost-response-after-commit" {
+					unchanged = after.Revision == beforeS4.Revision+1
+				}
+				if !unchanged || writes != 1 || len(envelopes) != wantEnvelopes || !strings.Contains(errOut, "S4 refused:") || !strings.Contains(errOut, "inspect history") || !strings.Contains(errOut, "no success manifest written") {
 					t.Fatalf("seed uncertain/refused S4 must stop with one write and no retry/reseed/manifest: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
 				}
 			} else {
@@ -1089,4 +1097,465 @@ func TestDemoSeedRequiredIdentities(t *testing.T) {
 	if !slices.Equal(demoSeedRequiredIdentities, []string{"sameRef", "servesEntry"}) {
 		t.Fatalf("seed-required-identities: seed configuration must equal [sameRef servesEntry]; got %v", demoSeedRequiredIdentities)
 	}
+}
+
+// Publish the checked-in descriptor through the same production publisher as
+// se-tools. Only the negative control changes source, in a private temp module.
+func publishDemoApproval(t *testing.T, st *store.Store, db string, interp hashref.HashRef, extra bool) {
+	t.Helper()
+	raw, err := os.ReadFile("../../packages/world-demo/transitions.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var entries []struct {
+		ID, Title, Description, TransitionFnFile string
+		InputSchema, OutputSchema                json.RawMessage
+		Access                                   transitionreg.EffectRequirement
+		DeclaredEffects                          []transitionreg.EffectRequirement
+	}
+	if err := json.Unmarshal(raw, &entries); err != nil || len(entries) != 1 {
+		t.Fatalf("demo descriptor: %v (%d entries)", err, len(entries))
+	}
+	e := entries[0]
+	if e.Access.Cost != 0 || len(e.DeclaredEffects) != 1 || e.DeclaredEffects[0].Cost != 1 {
+		t.Fatalf("descriptor access cost must be 0, declared approval cost 1: %+v", e)
+	}
+	src, err := os.ReadFile(filepath.Join("../..", e.TransitionFnFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if extra {
+		one := `jo([kv("id", js("e1")), kv("effect", js("Human.Approve")),
+      kv("scope", js("worktree")), kv("cost", jint(1)),
+      kv("payload", jo([kv("requester", js("demo"))]))])`
+		two := one + ", " + strings.Replace(one, `js("e1")`, `js("e2")`, 1)
+		if strings.Count(string(src), one) != 1 {
+			t.Fatal("extra-effect control must replace exactly one plan effect")
+		}
+		src = []byte(strings.Replace(string(src), one, two, 1))
+		path := filepath.Join(t.TempDir(), "approve.ail")
+		if err := os.WriteFile(path, src, 0600); err != nil {
+			t.Fatal(err)
+		}
+		cmd := exec.CommandContext(boundedTestContext(t), os.Getenv("AILANG_BIN"), "check", "approve.ail")
+		cmd.Dir = filepath.Dir(path)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("valid two-effect test module must typecheck: %v %s", err, out)
+		}
+	}
+	src, err = canon.Source(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	obj := store.Object{Hash: hashref.SumSHA256(src), InterfaceHash: hashref.SumSHA256([]byte("world/transition-source/v1")),
+		SemanticID: "world/transition-source/v1", Provenance: "demo_test", Payload: src}
+	ctx := boundedTestContext(t)
+	if err := st.PutObject(ctx, obj); err != nil {
+		t.Fatal(err)
+	}
+	in, err := transitionreg.CanonicalSchema(e.InputSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := transitionreg.CanonicalSchema(e.OutputSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pub := transitionreg.NewPublisher(st, archive.New(db))
+	epochs, _, err := pub.EpochsForInterpreter(ctx, interp)
+	if err != nil || len(epochs) != 1 {
+		t.Fatalf("demo epochs = %v %v", epochs, err)
+	}
+	desc := transitionreg.Descriptor{ID: e.ID, TransitionFn: obj.Hash, Interpreter: interp, SemanticsEpoch: epochs[0],
+		InputSchema: in, OutputSchema: out, Access: e.Access, DeclaredEffects: e.DeclaredEffects, Title: e.Title, Description: e.Description}
+	if _, err := pub.PublishSet(ctx, []transitionreg.Change{{ID: e.ID, Descriptor: &desc}}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDemoSeedApprovalControls(t *testing.T) {
+	proof := hashref.SumSHA256([]byte("preceding S4 envelope"))
+	roster := demoApprovalRoster("test-record", "read-effect", "authored-object", proof)
+	t.Run("roster-from-stage-refs", func(t *testing.T) {
+		want := []demoEvidenceRef{{"test-invocation", "test-record"}, {"recorded-effect", "read-effect"},
+			{"authored-claim", "authored-object"}, {"proof-envelope", proof.String()}}
+		if !slices.Equal(roster, want) {
+			t.Fatalf("roster must preserve preceding stage refs, including S4 envelope: got %+v", roster)
+		}
+	})
+	t.Run("wrong-roster-length", func(t *testing.T) {
+		bad := append(append([]demoEvidenceRef(nil), roster...), roster[0])
+		_, err := demoApprovalInput("goal", []string{"a", "b"}, bad)
+		if err == nil || !strings.Contains(err.Error(), "exactly four") {
+			t.Fatalf("wrong roster length must refuse: %v", err)
+		}
+	})
+	t.Run("wrong-roster-kind", func(t *testing.T) {
+		bad := append([]demoEvidenceRef(nil), roster...)
+		bad[0].Kind = "PROVEN"
+		_, err := demoApprovalInput("goal", []string{"a", "b"}, bad)
+		if err == nil || !strings.Contains(err.Error(), "roster kind") {
+			t.Fatalf("wrong roster kind must refuse: %v", err)
+		}
+	})
+	t.Run("invalid-roster-before-dispatch", func(t *testing.T) {
+		c, calls := demoFakeA2A(t, "working", nil, nil)
+		err := demoRequestApproval(boundedTestContext(t), c, "token", "goal", []string{"a", "b"}, nil)
+		if *calls != 0 || err == nil || !strings.Contains(err.Error(), "exactly four") {
+			t.Fatalf("invalid roster must refuse before dispatch: calls=%d err=%v", *calls, err)
+		}
+	})
+	t.Run("missing-test-entry-before-dispatch", func(t *testing.T) {
+		calls := 0
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost {
+				calls++
+			}
+			http.NotFound(w, r)
+		}))
+		defer srv.Close()
+		err := demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "token", demoDomainObjects(nil), demoToolStages{}, proof)
+		if calls != 0 || err == nil || !strings.Contains(err.Error(), "test invocation unavailable") {
+			t.Fatalf("missing S3 entry must refuse before dispatch: calls=%d err=%v", calls, err)
+		}
+	})
+	t.Run("approval-refusal-stops", func(t *testing.T) {
+		c, calls := demoFakeA2A(t, "working", nil, nil)
+		err := demoRequestApproval(boundedTestContext(t), c, "token", "goal", []string{"a", "b"}, roster)
+		if *calls != 1 || err == nil || !strings.Contains(err.Error(), "S5 refused:") {
+			t.Fatalf("S5 refusal must stop without retry: calls=%d err=%v", *calls, err)
+		}
+	})
+	t.Run("s6-incomplete-refusal", func(t *testing.T) {
+		err := demoApprovalIncomplete()
+		if err == nil || !strings.Contains(err.Error(), "S1-S5 recorded; S6 incomplete; no success manifest written") {
+			t.Fatalf("S6 incomplete must refuse success: %v", err)
+		}
+	})
+}
+
+func demoRESTObjects(t *testing.T, r worldReader, semantic string) []wireObject {
+	t.Helper()
+	var page struct{ Items []wireObject }
+	if err := demoGet(r, "/v1/objects/by-semantic-id/"+semantic+"?limit=500", &page); err != nil {
+		t.Fatal(err)
+	}
+	for i, obj := range page.Items {
+		page.Items[i] = demoRESTObject(t, r, obj.Hash, semantic)
+	}
+	return page.Items
+}
+
+func demoRESTObject(t *testing.T, r worldReader, ref, semantic string) wireObject {
+	t.Helper()
+	o, ok, reason := r.checkedObject(ref, semantic)
+	if !ok || o.Hash != ref {
+		t.Fatalf("REST content hash/semantic mismatch %s: %s", ref, reason)
+	}
+	return o
+}
+
+// The fixture mints one grant with this initial budget. Read all immutable
+// accounting records over the daemon REST read path on BOTH sides of S5;
+// subtract spend independently, then cross-check the broker's before/after.
+// No live database handle or A2A return value supplies these observations.
+func demoRESTApprovalBudget(t *testing.T, r worldReader, initial int64) int64 {
+	t.Helper()
+	remaining := initial
+	for _, obj := range demoRESTObjects(t, r, broker.EffectRecordV1) {
+		rec, err := broker.DecodeRecord(obj.Payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rec.Effect == broker.EffectHumanApprove && rec.Allowed {
+			remaining -= rec.Cost
+		}
+	}
+	return remaining
+}
+
+// Pure assertion predicate has independent negative controls: widening the
+// exact delta to >= must fail even if the real daemon still spends exactly 1.
+func demoApprovalBudgetDelta(before, after int64) bool { return before-after == 1 }
+
+func TestDemoSeedApprovalBudgetControl(t *testing.T) {
+	for _, d := range []int64{0, 2, -1} {
+		if demoApprovalBudgetDelta(20, 20-d) {
+			t.Fatalf("budget delta must equal exactly 1; accepted delta %d", d)
+		}
+	}
+	if !demoApprovalBudgetDelta(20, 19) {
+		t.Fatal("budget delta 1 must pass")
+	}
+}
+
+func TestDemoSeedApprovalPacket(t *testing.T) {
+	interp := requireProofPin(t)
+	_, tool := cliSeBins(t) // unset tool pin skips; a configured wrong release fails.
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+	for _, arm := range []string{"single-approval", "no-human-budget", "extra-effect-refused"} {
+		t.Run(arm, func(t *testing.T) {
+			budget := int64(20)
+			if arm == "no-human-budget" {
+				budget = 0
+			}
+			rig := newDemoApprovalRig(t, interp, tool, true, arm == "extra-effect-refused", budget)
+			ctx := boundedTestContext(t)
+			r := worldReader{ctx: ctx, c: newClient(rig.url)}
+			private := t.TempDir()
+			key := freshProofKey(t)
+			keyPath, session, manifest := filepath.Join(private, "proof.key"), filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
+			if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(session, []byte(rig.token), 0600); err != nil {
+				t.Fatal(err)
+			}
+			before := demoRESTApprovalBudget(t, r, budget)
+			beforeHead, beforeHasHead, err := headState(ctx, r.c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			calls, decisions := 0, 0
+			var preS5 wireWorld
+			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				body, err := io.ReadAll(req.Body)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				if req.Method == http.MethodPost && strings.Contains(string(body), `"demo-approval"`) {
+					calls++
+					if calls == 1 {
+						preS5, _ = proofHeadEntry(t, ctx, r.c)
+						before = demoRESTApprovalBudget(t, r, budget)
+					}
+				}
+				if req.Method != http.MethodGet && req.URL.Path != "/a2a/" && req.URL.Path != "/v1/commit" {
+					decisions++
+				}
+				forward, err := http.NewRequestWithContext(req.Context(), req.Method, rig.url+req.URL.RequestURI(), bytes.NewReader(body))
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				forward.Header = req.Header.Clone()
+				resp, err := http.DefaultClient.Do(forward)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				defer resp.Body.Close()
+				for k, v := range resp.Header {
+					w.Header()[k] = v
+				}
+				w.WriteHeader(resp.StatusCode)
+				_, _ = io.Copy(w, resp.Body)
+			}))
+			defer proxy.Close()
+			code, out, stderr := demoRun(t, &demoTestRig{addr: proxy.URL}, []string{"demo", "seed", "--db", rig.db,
+				"--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest})
+			if code != exitUsage || out != "" {
+				t.Fatalf("seed must refuse completion: code=%d out=%q err=%q", code, out, stderr)
+			}
+			if _, err := os.Stat(manifest); !os.IsNotExist(err) {
+				t.Fatal("S6 incomplete: no success manifest may be written")
+			}
+			packets := demoRESTObjects(t, r, coordinator.DecisionPacketV1)
+			entries, err := r.page(0, 500)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var approvalEntries []wireEntry
+			var approvalRecords []*invRecord
+			stageRecords := map[string]*invRecord{}
+			stageRefs := map[string]string{}
+			for _, entry := range entries {
+				rec, obj, err := r.record(entry)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if rec != nil {
+					demoRESTObject(t, r, entry.TransitionRef, obj.SemanticID)
+					stageRecords[rec.InvocationID] = rec
+					stageRefs[rec.InvocationID] = entry.TransitionRef
+					if rec.SkillID == "demo-approve" {
+						approvalEntries = append(approvalEntries, entry)
+						approvalRecords = append(approvalRecords, rec)
+					}
+				}
+			}
+			if arm == "no-human-budget" {
+				afterHead, afterHasHead, err := headState(ctx, r.c)
+				if len(packets) != 0 || calls != 0 || !strings.Contains(stderr, "Human.Approve@worktree grant") ||
+					err != nil || afterHead != beforeHead || afterHasHead != beforeHasHead || len(entries) != 0 {
+					t.Fatalf("missing Human.Approve budget must refuse before any packet or dispatch and preserve REST history: packets=%d calls=%d entries=%d head=%s before=%s read=%v err=%s", len(packets), calls, len(entries), afterHead, beforeHead, err, stderr)
+				}
+				return
+			}
+			if arm == "extra-effect-refused" {
+				after, _ := proofHeadEntry(t, ctx, r.c)
+				if calls != 1 || len(packets) != 0 || len(approvalEntries) != 0 || after != preS5 ||
+					demoRESTApprovalBudget(t, r, budget) != before || !strings.Contains(rig.log.String(), "effect plan violates L1") {
+					t.Fatalf("valid two-effect module must be refused without packet/spend/commit: packets=%d entries=%d calls=%d err=%s coordinator=%s", len(packets), len(approvalEntries), calls, stderr, rig.log.String())
+				}
+				t.Logf("coordinator refusal: %s", strings.TrimSpace(rig.log.String()))
+				return
+			}
+			// This is deliberately first: the extra-effect mutant must red here,
+			// with the real coordinator refusal included in the diagnostic.
+			if len(approvalEntries) != 1 || len(packets) != 1 || len(approvalRecords[0].Effects) != 1 {
+				t.Fatalf("exactly one S5 carrying entry/effect/packet required: entries=%d packets=%d; seed=%s coordinator=%s", len(approvalEntries), len(packets), stderr, rig.log.String())
+			}
+			rec := approvalRecords[0]
+			var registryHead struct{ Head string }
+			if err := demoGet(r, "/v1/registry/"+transitionreg.SemanticIDV1, &registryHead); err != nil {
+				t.Fatal(err)
+			}
+			registryObj := demoRESTObject(t, r, registryHead.Head, transitionreg.SemanticIDV1)
+			revision, err := transitionreg.DecodeRevision(registryObj.Payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			foundDescriptor := false
+			for _, descriptor := range revision.Entries {
+				if descriptor.ID == "demo-approve" {
+					foundDescriptor = true
+					if descriptor.Access.Cost != 0 || descriptor.TransitionFn.String() != rec.TransitionFn || descriptor.Interpreter.String() != rec.Interpreter {
+						t.Fatalf("published descriptor must have cost 0 and bind S5 source/interpreter: %+v", descriptor)
+					}
+				}
+			}
+			if !foundDescriptor {
+				t.Fatal("published registry lacks demo-approve descriptor")
+			}
+			demoRESTObject(t, r, rec.TransitionFn, "world/transition-source/v1")
+			packet, err := coordinator.DecodeDecisionPacket(packets[0].Payload)
+			if err != nil || packet.ProposalHash.String() != rec.Plan || approvalEntries[0].Header.EntryIndex != preS5.Revision+1 {
+				t.Fatalf("packet proposal must be S5 carrying entry's plan: %v %+v", err, packet)
+			}
+			plan := demoRESTObject(t, r, rec.Plan, coordinator.EffectPlanV1)
+			var planDoc struct {
+				Effects []struct {
+					ID, Effect, Scope string
+					Cost              int64
+					Payload           json.RawMessage
+				}
+				Finish bool
+				Result any
+			}
+			if err := json.Unmarshal(plan.Payload, &planDoc); err != nil || len(planDoc.Effects) != 1 || planDoc.Finish || planDoc.Result != nil {
+				t.Fatalf("real single-effect plan required: %s %v", plan.Payload, err)
+			}
+			e := planDoc.Effects[0]
+			if e.ID != "e1" || e.Effect != broker.EffectHumanApprove || e.Scope != "worktree" || e.Cost != 1 || string(e.Payload) != `{"requester":"demo"}` {
+				t.Fatalf("e1 Human.Approve plan mismatch: %s", plan.Payload)
+			}
+			effect := demoRESTObject(t, r, rec.Effects[0], broker.EffectRecordV1)
+			accounting, err := broker.DecodeRecord(effect.Payload)
+			if err != nil || !broker.RecordConsistent(accounting) || !accounting.Allowed || accounting.Failed {
+				t.Fatalf("successful real broker record required: %+v %v", accounting, err)
+			}
+			effectRequest := demoRESTObject(t, r, accounting.RequestRef.String(), broker.EffectRequestV1)
+			request := demoRESTObject(t, r, packet.RequestRef.String(), broker.ApprovalRequestV1)
+			approval, err := broker.DecodeApprovalRequest(request.Payload)
+			if err != nil || approval.Requester != "demo" || approval.Effect != e.Effect || approval.Scope != e.Scope || approval.Cost != e.Cost {
+				t.Fatalf("packet approval request mismatch: %+v %v", approval, err)
+			}
+			wantRequest := append([]byte(fmt.Sprintf("%d:%s%d:%s%d:%d:", len(e.Effect), e.Effect, len(e.Scope), e.Scope, e.Cost, approval.Now)), e.Payload...)
+			if !bytes.Equal(effectRequest.Payload, wantRequest) || approval.Now != packet.CreatedAt || accounting.Effect != e.Effect || accounting.Scope != e.Scope || accounting.Cost != e.Cost {
+				t.Fatalf("effect request bytes must bind the plan payload, requirements and packet time: got %q want %q", effectRequest.Payload, wantRequest)
+			}
+			result := demoRESTObject(t, r, accounting.ResultRef.String(), broker.EffectResultV1)
+			pending, err := broker.ParsePendingApproval(result.Payload)
+			if err != nil || pending != packet.RequestRef {
+				t.Fatalf("effect result must link pending request: %s %v", result.Payload, err)
+			}
+			output := demoRESTObject(t, r, rec.Output, coordinator.OutputV1)
+			var outputDoc struct {
+				Status, RequestRef string
+				World              struct {
+					Plan    string
+					Effects []struct{ ID, Status, Record string }
+				}
+			}
+			if err := json.Unmarshal(output.Payload, &outputDoc); err != nil || outputDoc.Status != "pending" || outputDoc.RequestRef != pending.String() || outputDoc.World.Plan != rec.Plan ||
+				len(outputDoc.World.Effects) != 1 || outputDoc.World.Effects[0].ID != "e1" || outputDoc.World.Effects[0].Status != "ok" || outputDoc.World.Effects[0].Record != effect.Hash {
+				t.Fatalf("committed output/e1/request/plan hash links mismatch: %s %v", output.Payload, err)
+			}
+			input := demoRESTObject(t, r, rec.Input, coordinator.InputV1)
+			var inputDoc struct {
+				Goal       string
+				Candidates []string
+				Roster     []demoEvidenceRef
+			}
+			if err := json.Unmarshal(input.Payload, &inputDoc); err != nil {
+				t.Fatal(err)
+			}
+			testID := coordinator.InvocationID(coordinator.SurfaceA2A, "demo", demoTestTask)
+			readID := coordinator.InvocationID(coordinator.SurfaceA2A, "demo", demoReadTask)
+			envelopes := demoRESTObjects(t, r, evidence.ProofSemanticID)
+			claims := demoRESTObjects(t, r, "world/demo/authored-claim/v1")
+			if len(envelopes) != 1 || len(claims) != 1 || stageRecords[readID] == nil || stageRecords[testID] == nil {
+				t.Fatal("preceding real S1-S4 refs must exist")
+			}
+			wantRoster := []demoEvidenceRef{{"test-invocation", stageRefs[testID]}, {"recorded-effect", stageRecords[readID].Effects[0]},
+				{"authored-claim", claims[0].Hash}, {"proof-envelope", envelopes[0].Hash}}
+			if !slices.Equal(inputDoc.Roster, wantRoster) {
+				t.Fatalf("four roster refs must equal preceding real stages: got %+v want %+v", inputDoc.Roster, wantRoster)
+			}
+			goals := demoRESTObjects(t, r, "world/demo/goal/v1")
+			proposals := demoRESTObjects(t, r, "world/demo/proposal/v1")
+			var committedGoal struct{ Goal string }
+			_ = json.Unmarshal(goals[0].Payload, &committedGoal)
+			var descriptions []string
+			for _, obj := range proposals {
+				var p struct{ Description string }
+				_ = json.Unmarshal(obj.Payload, &p)
+				descriptions = append(descriptions, p.Description)
+			}
+			slices.Sort(descriptions)
+			gotDescriptions := append([]string(nil), inputDoc.Candidates...)
+			slices.Sort(gotDescriptions)
+			if inputDoc.Goal != committedGoal.Goal || !slices.Equal(gotDescriptions, descriptions) {
+				t.Fatalf("S5 must use S1 committed descriptions: %+v", inputDoc)
+			}
+			after := demoRESTApprovalBudget(t, r, budget)
+			if !demoApprovalBudgetDelta(before, after) || accounting.BudgetBefore != before || accounting.BudgetAfter != after {
+				t.Fatalf("Human.Approve remaining budget must decrease EXACTLY 1: before=%d after=%d broker=%+v", before, after, accounting)
+			}
+			t.Run("no-decision-verb-packet-stays-pending", func(t *testing.T) {
+				status, page, err := r.c.do(ctx, http.MethodGet, "/workbench?object="+packets[0].Hash, nil)
+				wantCarrier := fmt.Sprintf("decision packet validated: committed with its invocation record at entry #%d;", approvalEntries[0].Header.EntryIndex)
+				if err != nil || status != http.StatusOK || !strings.Contains(string(page), wantCarrier) || !strings.Contains(string(page), "approvals chain: pending") {
+					t.Fatalf("daemon packet validator must confirm S5 carrying entry and live pending approvals-chain anchor: status=%d err=%v page=%s", status, err, page)
+				}
+				if decisions != 0 || len(demoRESTObjects(t, r, broker.ApprovalDecisionV1)) != 0 || outputDoc.Status != "pending" {
+					t.Fatalf("no decision verb may run; packet must stay pending: calls=%d", decisions)
+				}
+			})
+			t.Run("seed-invokes-s5-once", func(t *testing.T) {
+				if calls != 1 {
+					t.Fatalf("seed must invoke demo-approval exactly once: calls=%d", calls)
+				}
+			})
+			if !strings.Contains(stderr, "S1-S5 recorded; S6 incomplete; no success manifest written") {
+				t.Fatalf("successful S5 must still refuse S6 completion: %s", stderr)
+			}
+		})
+	}
+}
+
+func demoFakeA2A(t *testing.T, state string, meta, data map[string]any) (*client, *int) {
+	t.Helper()
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		calls++
+		body := map[string]any{"jsonrpc": "2.0", "id": 9, "result": map[string]any{
+			"status": map[string]any{"state": state}, "metadata": meta,
+			"artifacts": []any{map[string]any{"parts": []any{map[string]any{"type": "data", "data": data}}}}}}
+		_ = json.NewEncoder(w).Encode(body)
+	}))
+	t.Cleanup(srv.Close)
+	return newClient(srv.URL), &calls
 }
