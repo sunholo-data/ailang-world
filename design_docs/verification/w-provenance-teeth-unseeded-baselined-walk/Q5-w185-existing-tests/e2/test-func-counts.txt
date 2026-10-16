@@ -1,0 +1,2 @@
+cmd/ailang-worldd/session_new_test.go base_tests=10 final_tests=13
+host/worktree/worktree_test.go base_tests=4 final_tests=5

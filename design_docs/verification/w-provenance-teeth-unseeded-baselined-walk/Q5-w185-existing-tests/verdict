@@ -1,0 +1,6 @@
+Q5 verdicts (§6 closed set)
+- B: VERIFIED. Answer +230.6 s; envelope 239.9 s; 35 calls, $1.59. It also found, from the agent transcript, temporary TestZZExplore/TestZZDump probes added and removed during the episode.
+- W: UNVERIFIED (envelope 198.9 s; 114 calls, 0 non-allowlisted calls succeeded, 0 denials). It correctly said no existing assertion was weakened, and found the same temporary probes, but stated that session_new_test.go was the only pre-existing test file edited; E2 shows host/worktree/worktree_test.go was edited too (TestIsLinked appended).
+- Cause of the miss (finding F-7): the edit IS recorded (entry 198, skill ailang-edit) and W ran `why 198`, but `why` truncates the input preview and canonical JSON puts `new_text` before `path`, so the edited file's path is not shown; W never fetched that input's payload.
+- Audit clean (as Q4).
+- Q5 is NOT a qualifying success.

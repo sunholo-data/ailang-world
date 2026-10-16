@@ -9,6 +9,9 @@ Protocol: `design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md` r4
 | Q1 | Why did codex's World arm fail `config_file_parser` 0/3 in the 2026-10-14 FINAL, while its shell arm passed 2/3? | K1 | **attempted 2026-10-16 — B UNVERIFIED, W UNVERIFIED** (`Q1-config-file-parser/`) |
 | Q2 | Why was codex's World overhead +26.6% in the 2026-10-09 FINAL? | K3 | candidate (pre-diagnosis commit not yet measured) |
 | Q3 | In trial episode tps-a (platform-source, row 183), why does the worktree hold 47 untracked files — incl. zz_ls.ail, zz_slice.ail and .ailang/ — when the task asked for 4 test files + 1 doc edit? | K4 (trial store, sha256 fddd2e59…) | **attempted 2026-10-16 — B VERIFIED (88.7 s), W INVALID(seeding) (UNVERIFIED on its answer; 66.8 s)** (`Q3-tps-a-untracked/`) |
+| Q4 | In trial episode tps-b, why did the ADK 2.12 grader exit rc=2 with collection errors while the sub-doc says every 2.12 failure of the new tests is runtime, not collection? | K5 (trial store, sha256 9d72ad32…) | **attempted 2026-10-16 — B VERIFIED (67.0 s), W PASS (54.6 s)** (`Q4-tps-b-212-collection/`) |
+| Q5 | In trial episode w185, why did the change modify pre-existing test code rather than only add tests — which changed, and was any assertion weakened? | K5 | **attempted 2026-10-16 — B VERIFIED (239.9 s), W UNVERIFIED (198.9 s)** (`Q5-w185-existing-tests/`) |
+| Q6 | Why does tps-b's generated PR body give its World entries as 89–154 while its trailer gives 96–154 — what are 89–95? | K5 | **attempted 2026-10-16 — B VERIFIED (87.5 s), W PASS (25.3 s)** (`Q6-tps-b-entry-range/`) |
 | C1/C2/C3 | iter-206/207/210 CI and suite incidents | none | rejected NOT-RUN(NO-CORPUS); C1 also contaminated |
 
 ## Q1 accounting
@@ -45,4 +48,22 @@ Deviations from the plan, all recorded in `pins` before reveal:
 
 **F-6 (baseline).** With read/list only and the raw transcript in its root, the baseline answered the full cause in 66.6 s, verified in 88.7 s — again fast where the evidence is in the logs.
 
-Row 114 stays open: 0 of ≥3 qualifying successes.
+## K5 (Q4–Q6, 2026-10-16)
+
+Cohort K5 = the trial store after row 183 episodes tps-b (codex, platform-source) and w185 (Claude Code, ailang-world — row 185 built inside World), which ran concurrently on one daemon. Questions harvested while preparing their draft PRs (platform-source#71, ailang-world#291); questions, E2 bundles, rubrics, preambles and pins sealed before any arm ran (`pins`, `exposure-log` in each Q dir). B's root: both final worktrees + both base commits (no `.git`, no venvs) + raw logs, 11950 files; diagnosis-phrase scan with a positive control (the PR bodies: 3 + 3 hits) found 52 generic hits, none mentioning either episode, all identical in `base/` (reviewed). W: the A1 deny list on every run; the pre-reveal control denied 8/8 forbidden commands including F-5's case.
+
+| | Q4 B | Q4 W | Q5 B | Q5 W | Q6 B | Q6 W |
+|---|---|---|---|---|---|---|
+| answer time | 53.9 s | 40.1 s | 230.6 s | 186.7 s | 70.9 s | 14.7 s |
+| envelope (issue → verified) | 67.0 s | **54.6 s** | 239.9 s | 198.9 s | 87.5 s | **25.3 s** |
+| verifier | VERIFIED | VERIFIED | VERIFIED | UNVERIFIED | VERIFIED | VERIFIED |
+| tool calls | 20 | 17 | 35 | 114 | 12 | 7 |
+| spend | $0.34 | ~$0.21 (sub) | $1.59 | ~$0.89 (sub) | $0.33 | ~$0.06 (sub) |
+
+Integrity, every question: K5 archival sha256 unchanged; served head `sha256:abe8303c…` unchanged; question bytes identical in both prompts; pins verify; 0 non-allowlisted W calls succeeded.
+
+**F-7 (`why` hides which file an edit touched).** Q5's walk ran `why 198` on the `ailang-edit` of `host/worktree/worktree_test.go`, but `why` prints a truncated input preview and canonical JSON orders `new_text` before `path`, so the path never appears; the walk then said only one pre-existing test file was edited. The record is complete; the display drops its key field. Candidate fix (small): `why` prints `path` (and other short identifying fields) ahead of the truncated preview for workspace and AILANG tools.
+
+**F-8 (baseline).** The read/list-only baseline verified on all three K5 questions, as on Q3. The walk was faster on every K5 question (by 12 s, 41 s and 62 s), and on Q6 — a question about World's own entry numbers — 3.5× faster; but the baseline is not failing, so the comparison shows speed, not answers only World can give.
+
+Row 114 stays open: **2 of ≥3 qualifying successes (Q4, Q6).**

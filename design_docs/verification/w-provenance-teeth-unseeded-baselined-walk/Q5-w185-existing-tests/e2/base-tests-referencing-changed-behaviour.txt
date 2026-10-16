@@ -1,0 +1,3 @@
+a08ca14:cmd/ailang-worldd/session_new_test.go:106:	if !isGitWorktree(filepath.Join(f.ws, "ep1")) || f.worktrees(t) != 2 {
+a08ca14:cmd/ailang-worldd/session_pty_test.go:129:	if !isGitWorktree(filepath.Join(f.ws, "ep1")) || len(f.rows(t)) != 1 {
+a08ca14:cmd/ailang-worldd/session_pty_test.go:130:		t.Fatalf("not provisioned: worktree %v, rows %d", isGitWorktree(filepath.Join(f.ws, "ep1")), len(f.rows(t)))

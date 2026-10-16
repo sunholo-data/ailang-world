@@ -1,0 +1,9 @@
+[
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode tps-b",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 log range --from 86 --limit 12",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 89",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 95",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 96",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 provenance --episode w185",
+ "env -u AILANG_REGISTRY_API_KEY ./worldd-client --addr http://127.0.0.1:47332 why 92"
+]

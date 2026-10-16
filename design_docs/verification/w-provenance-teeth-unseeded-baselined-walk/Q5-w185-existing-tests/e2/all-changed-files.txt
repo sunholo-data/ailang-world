@@ -1,0 +1,10 @@
+M	cmd/ailang-worldd/doctor.go
+M	cmd/ailang-worldd/main.go
+M	cmd/ailang-worldd/session.go
+M	cmd/ailang-worldd/session_new.go
+M	cmd/ailang-worldd/session_new_test.go
+M	host/daemon/daemon.go
+A	host/daemon/health_degraded_test.go
+M	host/daemon/workspace.go
+M	host/worktree/worktree.go
+M	host/worktree/worktree_test.go

@@ -1,0 +1,6 @@
+Q4 verdicts (§6 closed set)
+- B (baseline, pi openrouter/z-ai/glm-5.3, read/list only, no grep; root = both final worktrees + both base commits + raw logs): VERIFIED. Answer +53.9 s; envelope 67.0 s (no threshold); 20 calls, $0.34.
+- W (walk, claude sonnet via World client verbs + A1 deny list, served copy of K5): PASS — VERIFIED, envelope 54.6 s (bar <= 300 s); answer +40.1 s; 17 calls, 0 non-allowlisted calls succeeded, 1 denial.
+- Audit clean: K5 archival sha256 pre == post (9d72ad32…) after every question; served head unchanged (sha256:abe8303c…); question bytes identical in both prompts; pins verify; pre-reveal controls passed for both arms.
+- Controller exposure: Q4 was partly diagnosed by the controller before harvest (exposure-log); the controller is neither B, W nor V, and its diagnosis text (PR body) is outside B's root and scanned for.
+- Q4 IS a qualifying success (§8).

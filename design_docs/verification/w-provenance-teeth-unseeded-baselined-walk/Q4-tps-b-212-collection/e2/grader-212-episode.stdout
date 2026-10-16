@@ -1,0 +1,247 @@
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/unit/test_a2ui_surface_schema.py ____________
+tests/unit/test_a2ui_surface_schema.py:24: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+__________ ERROR collecting tests/unit/test_action_triggered_gate.py ___________
+tests/unit/test_action_triggered_gate.py:17: in <module>
+    from protocols import a2ui_surface_action_run_routes as rt
+protocols/a2ui_surface_action_run_routes.py:59: in <module>
+    from adk.agent import (
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+__________ ERROR collecting tests/unit/test_composed_before_model.py ___________
+tests/unit/test_composed_before_model.py:15: in <module>
+    from adk import agent as agent_module
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+_______________ ERROR collecting tests/unit/test_create_agent.py _______________
+tests/unit/test_create_agent.py:16: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+_________ ERROR collecting tests/unit/test_handoff_loop_termination.py _________
+tests/unit/test_handoff_loop_termination.py:36: in <module>
+    from adk.agent import make_handoff_policy_callback
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+______________ ERROR collecting tests/unit/test_handoff_policy.py ______________
+tests/unit/test_handoff_policy.py:17: in <module>
+    from adk.agent import (
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+______________ ERROR collecting tests/unit/test_job_discovery.py _______________
+tests/unit/test_job_discovery.py:22: in <module>
+    from adk.agent import _safe_agent_name, accessible_delegate_rules, create_agent
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+_______________ ERROR collecting tests/unit/test_model_router.py _______________
+tests/unit/test_model_router.py:16: in <module>
+    from adk.agent import resolve_model
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+_________ ERROR collecting tests/unit/test_planner_tier_resolution.py __________
+tests/unit/test_planner_tier_resolution.py:11: in <module>
+    from adk.agent import _planner_for
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+___________ ERROR collecting tests/unit/test_resolve_model_chain.py ____________
+tests/unit/test_resolve_model_chain.py:21: in <module>
+    from adk.agent import RegionalGemini, ResidencyViolationError, resolve_model_chain
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+________ ERROR collecting tests/unit/test_skill_config_a2ui_surface.py _________
+tests/unit/test_skill_config_a2ui_surface.py:25: in <module>
+    from adk.a2ui import A2uiToolConfig
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+_________ ERROR collecting tests/unit/test_skill_delegation_access.py __________
+tests/unit/test_skill_delegation_access.py:27: in <module>
+    from adk.agent import _safe_agent_name, create_agent, create_agent_with_thinking
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+__________ ERROR collecting tests/unit/test_skill_delegation_modes.py __________
+tests/unit/test_skill_delegation_modes.py:21: in <module>
+    from adk.agent import create_agent
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+___________ ERROR collecting tests/unit/test_skill_thinking_depth.py ___________
+tests/unit/test_skill_thinking_depth.py:20: in <module>
+    from adk.agent import _planner_at, _planner_for
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+_____________ ERROR collecting tests/unit/test_thinking_router.py ______________
+tests/unit/test_thinking_router.py:21: in <module>
+    from adk.agent import (
+adk/agent.py:79: in <module>
+    from adk.a2ui import A2uiToolConfig, make_a2ui_toolset
+adk/a2ui.py:62: in <module>
+    from a2ui.adk.send_a2ui_to_client_toolset import SendA2uiToClientToolset
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:132: in <module>
+    class SendA2uiToClientToolset(base_toolset.BaseToolset):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:198: in SendA2uiToClientToolset
+    class _SendA2uiJsonToClientTool(base_tool.BaseTool):
+.venv-adk212/lib/python3.12/site-packages/a2ui/adk/send_a2ui_to_client_toolset.py:281: in _SendA2uiJsonToClientTool
+    llm_request: models.LlmRequest,
+                 ^^^^^^
+E   NameError: name 'models' is not defined
+=============================== warnings summary ===============================
+adk/session.py:81
+  /Users/voightkampff/.ailang/state/trial-2026-10-16/ws/tps-b/backend/adk/session.py:81: UserWarning: [EXPERIMENTAL] EventsCompactionConfig: This feature is experimental and may change or be removed in future versions without notice. It may introduce breaking changes at any time.
+    "gemini-": EventsCompactionConfig(
+
+.venv-adk212/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:71
+  /Users/voightkampff/.ailang/state/trial-2026-10-16/ws/tps-b/backend/.venv-adk212/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:71: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
+    check_feature_enabled()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/unit/test_a2ui_surface_schema.py - NameError: name 'models' is no...
+ERROR tests/unit/test_action_triggered_gate.py - NameError: name 'models' is ...
+ERROR tests/unit/test_composed_before_model.py - NameError: name 'models' is ...
+ERROR tests/unit/test_create_agent.py - NameError: name 'models' is not defined
+ERROR tests/unit/test_handoff_loop_termination.py - NameError: name 'models' ...
+ERROR tests/unit/test_handoff_policy.py - NameError: name 'models' is not def...
+ERROR tests/unit/test_job_discovery.py - NameError: name 'models' is not defined
+ERROR tests/unit/test_model_router.py - NameError: name 'models' is not defined
+ERROR tests/unit/test_planner_tier_resolution.py - NameError: name 'models' i...
+ERROR tests/unit/test_resolve_model_chain.py - NameError: name 'models' is no...
+ERROR tests/unit/test_skill_config_a2ui_surface.py - NameError: name 'models'...
+ERROR tests/unit/test_skill_delegation_access.py - NameError: name 'models' i...
+ERROR tests/unit/test_skill_delegation_modes.py - NameError: name 'models' is...
+ERROR tests/unit/test_skill_thinking_depth.py - NameError: name 'models' is n...
+ERROR tests/unit/test_thinking_router.py - NameError: name 'models' is not de...
+!!!!!!!!!!!!!!!!!!! Interrupted: 15 errors during collection !!!!!!!!!!!!!!!!!!!
+1746 deselected, 2 warnings, 15 errors in 2.90s

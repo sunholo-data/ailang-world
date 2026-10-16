@@ -1,0 +1,108 @@
+===== tests/unit/test_instruction_template_literals.py
+                seen.append(llm_request.config.system_instruction)
+                yield LlmResponse(content=types.Content(role="model", parts=[types.Part.from_text(text="ok")]))
+    
+        # Use a string instruction: callable providers bypass ADK state templating.
+        agent = LlmAgent(name="skill", model=Capture(model="stub"), instruction=r"{var} | ${var} | \{var}")
+        events = await _turn(agent)
+        assert any(e.is_final_response() for e in events)
+>       assert seen == [r"VALUE | $VALUE | \VALUE" + '\n\nYou are an agent. Your internal name is "skill".']
+E       assert ['VALUE | ${v... is "skill".'] == ['VALUE | $VA... is "skill".']
+E         
+E         At index 0 diff: 'VALUE | ${var} | \\{var}\n\nYou are an agent. Your internal name is "skill".' != 'VALUE | $VALUE | \\VALUE\n\nYou are an agent. Your internal name is "skill".'
+E         Use -v to get more diff
+
+tests/unit/test_instruction_template_literals.py:42: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  google_adk.google.adk.telemetry._metrics:_metrics.py:576 Skipping missing token usage metadata for agent skill and model stub
+=============================== warnings summary ===============================
+tests/unit/test_instruction_template_literals.py::test_instruction_template_literals
+  /Users/voightkampff/.ailang/state/trial-2026-10-16/ws/tps-b/backend/.venv-adk212/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:71: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
+    check_feature_enabled()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_instruction_template_literals.py::test_instruction_template_literals
+1 failed, 1 warning in 0.78s
+rc=1
+===== tests/unit/test_after_model_replacement_metadata.py
+    
+        events = await _turn(LlmAgent(name="skill", model=Stream(model="stub"), after_model_callback=replace))
+        assert seen == [(usage, True, False), (usage, False, True)]
+        responses = [e for e in events if e.author == "skill" and e.content]
+        assert len(responses) == 2
+        assert [e.content.parts[0].text for e in responses] == ["replacement", "replacement"]
+        # Snapshot today's replacement semantics, including any metadata loss.
+>       assert [(e.usage_metadata, e.partial, e.turn_complete) for e in responses] == [
+            (None, None, None), (None, None, None),
+        ]
+E       assert [(GenerateCon... False, True)] == [(None, None,..., None, None)]
+E         
+E         At index 0 diff: (GenerateContentResponseUsageMetadata(\n  candidates_token_count=7,\n  prompt_token_count=11,\n  total_token_count=18\n), True, False) != (None, None, None)
+E         Use -v to get more diff
+
+tests/unit/test_after_model_replacement_metadata.py:55: AssertionError
+=============================== warnings summary ===============================
+tests/unit/test_after_model_replacement_metadata.py::test_after_model_replacement_metadata
+  /Users/voightkampff/.ailang/state/trial-2026-10-16/ws/tps-b/backend/.venv-adk212/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:71: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
+    check_feature_enabled()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_after_model_replacement_metadata.py::test_after_model_replacement_metadata
+1 failed, 1 warning in 0.76s
+rc=1
+===== tests/unit/test_inmemory_append_unknown_session.py
+), ground...l_ids=None, branch=None, isolation_scope=None, id='b850248d-fea1-4330-9ea3-a1ea9d75e36d', timestamp=1792175187.0846841)
+
+    @override
+    async def append_event(self, session: Session, event: Event) -> Event:
+      if event.partial:
+        return event
+    
+      app_name = session.app_name
+      user_id = session.user_id
+      session_id = session.id
+    
+      if session_id not in self.sessions.get(app_name, {}).get(user_id, {}):
+>       raise SessionNotFoundError(f'Session {session_id} not found.')
+E       google.adk.errors.session_not_found_error.SessionNotFoundError: Session missing not found.
+
+.venv-adk212/lib/python3.12/site-packages/google/adk/sessions/in_memory_session_service.py:342: SessionNotFoundError
+=============================== warnings summary ===============================
+tests/unit/test_inmemory_append_unknown_session.py::test_inmemory_append_unknown_session
+  /Users/voightkampff/.ailang/state/trial-2026-10-16/ws/tps-b/backend/.venv-adk212/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:71: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
+    check_feature_enabled()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_inmemory_append_unknown_session.py::test_inmemory_append_unknown_session
+1 failed, 1 warning in 0.71s
+rc=1
+===== tests/unit/test_resilient_llm_interrupt_passthrough.py
+                            calls.append("fallback")
+                            yield LlmResponse(content=types.Content(
+                                role="model", parts=[types.Part.from_text(text="unexpected fallback")],
+                            ))
+    
+                    model = ResilientLlm(
+                        [Interrupt(model="stub-primary"), Fallback(model="stub-fallback")],
+                        event_sink=lambda *args: notices.append(args),
+                    )
+>                   with pytest.raises(type(signal)) as caught:
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   Failed: DID NOT RAISE <class 'asyncio.exceptions.CancelledError'>
+
+tests/unit/test_resilient_llm_interrupt_passthrough.py:67: Failed
+------------------------------ Captured log call -------------------------------
+WARNING  google_adk.google.adk.runners:runners.py:895 Root node skill was cancelled by an external cancellation.
+=============================== warnings summary ===============================
+tests/unit/test_resilient_llm_interrupt_passthrough.py::test_resilient_llm_interrupt_passthrough
+  /Users/voightkampff/.ailang/state/trial-2026-10-16/ws/tps-b/backend/.venv-adk212/lib/python3.12/site-packages/google/adk/features/_feature_decorator.py:71: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
+    check_feature_enabled()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_resilient_llm_interrupt_passthrough.py::test_resilient_llm_interrupt_passthrough
+1 failed, 1 warning in 0.75s
+rc=1

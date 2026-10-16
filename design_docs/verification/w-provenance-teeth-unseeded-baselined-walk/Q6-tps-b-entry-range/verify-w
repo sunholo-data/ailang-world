@@ -1,0 +1,15 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792176335.282
+
+## sealed answer
+ANSWER: Entries 89–95 belong to the concurrent episode w185 (reads of CLAUDE.md and session.go, a tree of cmd/ailang-worldd). They are interleaved in the shared log just before tps-b's first entry at 96, so the PR body's 89–154 range includes them but the trailer's 96–154 does not.
+
+## verifier output
+The answer matches E2 on both points the rubric requires.
+
+- **Who owns 89–95:** `store-entries-82-100.json` attributes entries 89–95 to episode w185. The answer's examples match: entry 89 reads CLAUDE.md, entry 95 reads `cmd/ailang-worldd/session.go`, and entry 92 is a tree of `cmd/ailang-worldd`. Entry 96 is tps-b's first entry.
+- **Why the PR body includes them:** In `trial-py-excerpt.txt`, the runner sets `log_from = head_index() + 1` before spawning the agent and `log_to = head_index()` after it exits. The PR body prints that range unfiltered ("World entries from-to"). The trailer comes from `provenance --since <from> --episode <ep>`, which filters to the episode's own entries. `episode-records.json` shows both episodes started at 18:08:19 with `log_range.from` = 89, and the tps-b trailer reads `entries=96-154`.
+
+The answer says the entries are "interleaved in the shared log just before tps-b's first entry at 96". It never says the unfiltered store range versus the episode-filtered trailer is the cause. It does imply it: the PR body's range includes them and the trailer's doesn't. It also omits that both episodes started at the same head. Neither omission contradicts E2. The rubric asks for the reason the range includes them, and the answer gives it only implicitly. I judge that sufficient.
+
+VERDICT: VERIFIED

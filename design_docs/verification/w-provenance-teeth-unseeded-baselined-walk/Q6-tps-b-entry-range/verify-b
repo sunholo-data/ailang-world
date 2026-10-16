@@ -1,0 +1,15 @@
+verifier: fresh claude -p sonnet (2.1.300 pinned), --tools Read, cwd = question + sealed answer + rubric + E2 only
+result_ts 1792176308.621
+
+## sealed answer
+ANSWER: Entries 89–95 are not tps-b's at all — they are the first seven entries of the other, concurrently running episode, w185 (the ailang-world episode), written to the same shared world.db; the draft-PR body's "89–154" is the raw positional log window (store head at episode start → head at end), which necessarily includes the interleaved commits of the co-running episode, whereas the World-Provenance trailer lists only entries attributed to tps-b itself, and since w185 won the race to commit the opening entries 89–95 of the shared window (both episodes started at 18:08:19; w185's own trailer runs 89–210), tps-b's first attributed entry is 96.
+
+## verifier output
+The answer matches E2 on both points the rubric requires.
+
+- **Who owns 89–95:** `store-entries-82-100.json` attributes entries 89–95 to episode w185. They are `ailang-read` and `ailang-cli` calls (CLAUDE.md, `session_new.go`, the tree listings and so on). tps-b's first entry is 96, which agrees with its trailer `entries=96-154` in `episode-records.json`.
+- **Why the PR body includes them:** `episode-records.json` shows both episodes started at 18:08:19 with `log_range.from = 89`, so the PR body's 89–154 is the unfiltered range from the store head at launch to the head at exit. The trailer is filtered to tps-b's own entries. w185's own trailer runs 89–210, which is consistent with the answer.
+
+The answer's detail that w185 "won the race" to the opening entries fits the entry data. Nothing in E2 contradicts it.
+
+VERDICT: VERIFIED
