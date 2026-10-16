@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -261,7 +262,8 @@ every link (✓ or ✗):
            pin name); the entry hash is recomputed
   record   invocation id, episode, skill (its hash and its fields agree with
            the entry)
-  input    your arguments, decoded and elided
+  input    your arguments, decoded and elided; when elided, the short
+           top-level fields (path, command, op, …) are printed first
   plan     the effects planned, or the refusal result
   effect   per effect record: allowed/failed/denial, budget before→after,
            request and result sizes; a toolchain call that changed the
@@ -746,7 +748,7 @@ func (r worldReader) buildChain(e wireEntry, result []byte) (whyChain, error) {
 
 	// input.
 	in, inOK, inWhy := r.checkedObject(rec.Input, coordinator.InputV1)
-	ch.add("input", inOK, rec.Input, "%s%s", elide(string(in.Payload)), failNote(inOK, inWhy))
+	ch.add("input", inOK, rec.Input, "%s%s", whyInputLine(in.Payload), failNote(inOK, inWhy))
 
 	// plan and effects (v2 only).
 	var planned []struct {
@@ -885,4 +887,50 @@ func printChain(w io.Writer, ch whyChain) {
 	} else {
 		fmt.Fprintf(w, "%d of %d link(s) BROKEN — integrity refusal (exit 3)\n", bad, len(ch.Links))
 	}
+}
+
+// whyKeyFieldMax bounds one key field's encoded value; whyKeyFieldCount the
+// number of key fields shown.
+const (
+	whyKeyFieldMax   = 120
+	whyKeyFieldCount = 6
+)
+
+// whyInputLine renders an invocation input for `why`. A payload that fits in
+// elideAt is printed whole, unchanged. A longer one is elided — and because
+// canonical JSON orders keys, the field that names WHAT a call touched can
+// sit past the cut (ailang-edit's `path` follows `new_text`; row 114 F-7, a
+// walk missed an edited file this way). So the short top-level fields of an
+// object input — each scalar or small array whose encoding is at most
+// whyKeyFieldMax bytes, in key order, at most whyKeyFieldCount — are printed
+// first, then the elided payload.
+func whyInputLine(payload []byte) string {
+	one := strings.ReplaceAll(string(payload), "\n", `\n`)
+	if len(one) <= elideAt {
+		return one
+	}
+	var obj map[string]json.RawMessage
+	if json.Unmarshal(payload, &obj) != nil || len(obj) == 0 {
+		return elide(string(payload))
+	}
+	keys := make([]string, 0, len(obj))
+	for k := range obj {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var fields []string
+	for _, k := range keys {
+		v := obj[k]
+		if len(v) == 0 || len(v) > whyKeyFieldMax || v[0] == '{' {
+			continue
+		}
+		fields = append(fields, k+"="+strings.ReplaceAll(string(v), "\n", `\n`))
+		if len(fields) == whyKeyFieldCount {
+			break
+		}
+	}
+	if len(fields) == 0 {
+		return elide(string(payload))
+	}
+	return strings.Join(fields, " ") + " · " + elide(string(payload))
 }
