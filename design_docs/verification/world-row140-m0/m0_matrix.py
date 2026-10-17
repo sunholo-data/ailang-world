@@ -15,6 +15,122 @@ exit 0 iff every GATING arm passes; INFO arms are recorded, never gating.
 """
 import argparse, hashlib, json, os, platform, shutil, signal, socket, subprocess, sys, tempfile, threading, time
 
+
+def protectedScratchRoot(scratch_root, allowed_root=None):
+    """Resolve and validate before any fixture creation; reject symlink escapes too."""
+    allowed = os.path.realpath(allowed_root if allowed_root is not None else
+                               os.environ.get("GITHUB_WORKSPACE", os.getcwd()))
+    root = os.path.realpath(scratch_root)
+    if root == allowed or os.path.commonpath([root, allowed]) != allowed:
+        raise ValueError(f"scratch root {root!r} must be inside allowed root {allowed!r}")
+    return root
+
+
+def validateProtectedRows(rows, census):
+    """Return None on success, otherwise a named rejection reason.
+
+    Each row has arm, rendering, outcome (WROTE/REFUSED), client_token, rc, and
+    host_before/host_after maps of host-observed path -> SHA-256 (None = absent).
+    Snapshots must be collected independently of client output. rc is diagnostic.
+    census is the independent expected collection of (arm, rendering) pairs.
+    """
+    expected = set(census)
+    if not expected:
+        return "empty-census"
+    if not rows or len(rows) != len(expected) or {(r.get("arm"), r.get("rendering")) for r in rows} != expected:
+        return "census-mismatch"
+    for row in rows:
+        outcome = row.get("outcome")
+        if outcome not in ("WROTE", "REFUSED"):
+            return "invalid-outcome"
+        tokens = {"WORLD-PROBE-WROTE"} if outcome == "WROTE" else {
+            "WORLD-PROBE-REFUSED " + code for code in ("EPERM", "EACCES", "EROFS", "ENOENT")}
+        if row.get("client_token") not in tokens:
+            return "missing-client"
+        before, after = row.get("host_before"), row.get("host_after")
+        if not isinstance(before, dict) or not before or not isinstance(after, dict) or before.keys() != after.keys():
+            return "invalid-host-snapshot"
+        for digest in list(before.values()) + list(after.values()):
+            if digest is not None and (not isinstance(digest, str) or len(digest) != 64 or
+                                       any(c not in "0123456789abcdef" for c in digest)):
+                return "invalid-host-snapshot"
+        if outcome == "REFUSED" and before != after:
+            return "host-changed"
+    return None
+
+
+def runProtectedMatrix(args):
+    # M0b creates fixtures ONLY after this check, with every synthetic directory
+    # beneath root; it must feed independently collected rows to validateProtectedRows.
+    root = protectedScratchRoot(args.scratch_root)
+    topology = {"root": root, "home": os.path.join(root, "home"),
+                "state": os.path.join(root, "state"),
+                "cache": os.path.join(root, "state", "exec-cache")}
+    print(f"M0b: arms not yet implemented (scratch root {topology['root']})", file=sys.stderr)
+    return 2
+
+
+def ProtectedMatrixSelfTest():
+    census = {("modify", "DIRS_ONLY"), ("control", "NONE")}
+    digest = hashlib.sha256(b"original host bytes").hexdigest()
+    refused = {"arm": "modify", "rendering": "DIRS_ONLY", "outcome": "REFUSED",
+               "client_token": "WORLD-PROBE-REFUSED EPERM", "rc": 1,
+               "host_before": {"tests/test.py": digest}, "host_after": {"tests/test.py": digest}}
+    wrote = {"arm": "control", "rendering": "NONE", "outcome": "WROTE",
+             "client_token": "WORLD-PROBE-WROTE", "rc": 0,
+             "host_before": {"ordinary.txt": None}, "host_after": {"ordinary.txt": digest}}
+    cases = []
+
+    def check(name, ok):
+        cases.append(bool(ok))
+        print(f"[{'PASS' if ok else 'FAIL'}] {name}", flush=True)
+
+    check("ok", validateProtectedRows([refused, wrote], census) is None)
+    check("empty", validateProtectedRows([], census) == "census-mismatch" and
+          validateProtectedRows([], set()) == "empty-census" and
+          validateProtectedRows([refused], census) == "census-mismatch" and
+          validateProtectedRows([refused, refused], census) == "census-mismatch")
+    check("missing-client", validateProtectedRows([dict(refused, client_token=None), wrote], census) == "missing-client")
+    changed = dict(refused, host_after={"tests/test.py": hashlib.sha256(b"forged refusal").hexdigest()})
+    check("host-changed", validateProtectedRows([changed, wrote], census) == "host-changed")
+    # The candidate is outside a synthetic allowed root but still under cwd,
+    # so even a broken containment guard cannot cause off-worktree writes.
+    with tempfile.TemporaryDirectory(prefix=".protected-self-test-", dir=os.getcwd()) as tmp:
+        allowed = os.path.join(tmp, "allowed")
+        candidate = os.path.join(tmp, "allowed-sibling", "must-not-exist")
+        before = os.listdir(tmp)
+        rejected = False
+        try:
+            protectedScratchRoot(candidate, allowed)
+        except ValueError:
+            rejected = True
+        check("outside-root", rejected and not os.path.exists(candidate) and os.listdir(tmp) == before)
+    print(f"self-test: {len(cases)} cases, {sum(cases)} passed", flush=True)
+    return 0 if all(cases) else 1
+
+
+# Dispatch BEFORE legacy required arguments and all HOME/decoy/archive setup.
+mode_parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+mode_group = mode_parser.add_mutually_exclusive_group()
+mode_group.add_argument("--protected-self-test", action="store_true")
+mode_group.add_argument("--protected-only", action="store_true")
+mode, _ = mode_parser.parse_known_args()
+if mode.protected_self_test or mode.protected_only:
+    protected_parser = argparse.ArgumentParser(parents=[mode_parser], allow_abbrev=False)
+    if mode.protected_only:
+        protected_parser.add_argument("--scratch-root", required=True)
+        protected_parser.add_argument("--srt-node-modules", required=True)
+        protected_parser.add_argument("--node", required=True)
+        protected_parser.add_argument("--json", required=True)
+        protected_parser.add_argument("--seccomp-read", choices=["none", "allowread"], default="none")
+    protected_args = protected_parser.parse_args()
+    if mode.protected_self_test:
+        sys.exit(ProtectedMatrixSelfTest())
+    try:
+        sys.exit(runProtectedMatrix(protected_args))
+    except ValueError as exc:
+        protected_parser.error(str(exc))
+
 ap = argparse.ArgumentParser()
 ap.add_argument("--srt-node-modules", required=True, help="a node_modules dir holding @anthropic-ai/sandbox-runtime and its deps")
 ap.add_argument("--node", required=True, help="absolute path of the node binary World would verify")

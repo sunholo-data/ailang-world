@@ -1,0 +1,17 @@
+== TwilightGame: vitest run <one file>
+      Tests  3 passed (3)
+   Start at  01:36:22
+   Duration  304ms (transform 22ms, setup 72ms, collect 11ms, tests 2ms, environment 0ms, prepare 38ms)
+
+-- paths written under the clone:
+  (+ node_modules entries newer: 1)
+== sunholo-platform/cli: pytest -p no:cacheprovider <one file>, then WITHOUT -p no:cacheprovider
+
+========================= 5 passed, 6 skipped in 0.18s =========================
+-- paths written (with no:cacheprovider):
+========================= 5 passed, 6 skipped in 0.02s =========================
+-- paths written (default cacheprovider):
+.pytest_cache/v/cache/nodeids
+== ailang: go test -count=1 ./internal/lexer/ (GOFLAGS=-mod=readonly GOPROXY=off, shared modcache read-only by convention)
+ok  	github.com/sunholo-data/ailang/internal/lexer	0.252s
+-- paths written under the clone:

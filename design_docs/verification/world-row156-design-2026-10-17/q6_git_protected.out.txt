@@ -1,0 +1,16 @@
+clone+checkout: 2.75 s; HEAD 37d6641b3; tracked 28699
+== cost (3 runs each; first warms)
+row-184 full status (ignored=no):      rc=0    359 ms lines=0
+protected pathspecs, ignored=matching:  rc=0    176 ms lines=0
+row-184 full status (ignored=no):      rc=0    362 ms lines=0
+protected pathspecs, ignored=matching:  rc=0    174 ms lines=0
+row-184 full status (ignored=no):      rc=0    360 ms lines=0
+protected pathspecs, ignored=matching:  rc=0    176 ms lines=0
+== detection arms (test file used: cmd/ailang/agents_md_exclude_test.go)
+control: clean tree                                        full:  | protected: 
+modify tracked cmd/ailang/agents_md_exclude_test.go        full:  M cmd/ailang/agents_md_exclude_test.go  | protected:  M cmd/ailang/agents_md_exclude_test.go 
+delete tracked cmd/ailang/agents_md_exclude_test.go        full:  D cmd/ailang/agents_md_exclude_test.go  | protected:  D cmd/ailang/agents_md_exclude_test.go 
+create untracked cmd/ailang/zz_new_test.go                 full: ?? cmd/ailang/zz_new_test.go  | protected: ?? cmd/ailang/zz_new_test.go 
+edit .gitignore (zz*) + create cmd/ailang/zz_ign_test.go   full:  M .gitignore  | protected:  M .gitignore !! cmd/ailang/zz_ign_test.go 
+create a_test.go in an info/exclude-ignored dir            full:  | protected: !! zzign/ 
+control: modify non-protected go.mod                       full:  M go.mod  | protected: 

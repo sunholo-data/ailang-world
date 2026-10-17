@@ -1,0 +1,55 @@
+srt cli.js sha256 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e  node /opt/homebrew/bin/node  platform darwin
+
+=== rendering NONE
+[NONE] control: write pkg/a.go (non-protected)          rc=0 host: pkg/a.go=CHANGED:package pkg|X  stderr: 
+[NONE] modify existing pkg/a_test.go                    rc=0 host: pkg/a_test.go=CHANGED:package pkg|// ORIG|PWN  stderr: 
+[NONE] create NEW pkg/b_test.go                         rc=0 host: pkg/b_test.go=CHANGED:PWN  stderr: 
+[NONE] create NEW root c_test.go (** = zero dirs)       rc=0 host: c_test.go=CHANGED:PWN  stderr: 
+[NONE] create NEW tests/new.py (dir deny)               rc=0 host: tests/new.py=CHANGED:PWN  stderr: 
+[NONE] create NEW cli/sub/conftest.py                   rc=0 host: cli/sub/conftest.py=CHANGED:PWN  stderr: 
+[NONE] create NEW src/bar.test.ts                       rc=0 host: src/bar.test.ts=CHANGED:PWN  stderr: 
+[NONE] rm existing pkg/a_test.go                        rc=0 host: pkg/a_test.go=ABSENT  stderr: 
+[NONE] mv pkg/a.go onto NEW pkg/z_test.go               rc=0 host: pkg/z_test.go=CHANGED:package pkg  stderr: 
+[NONE] mv pkg/a_test.go away (rename source)            rc=0 host: pkg/a_test.go=ABSENT pkg/moved.txt=CHANGED:package pkg|// ORIG  stderr: 
+[NONE] rename dir tests -> tests2, write inside         rc=0 host: tests/test_x.py=ABSENT tests2/test_x.py=CHANGED:PWN  stderr: 
+[NONE] rename dir pkg -> pkg2, write pkg2/a_test.go     rc=0 host: pkg/a_test.go=ABSENT pkg2/a_test.go=CHANGED:package pkg|// ORIG|PWN  stderr: 
+[NONE] symlink lnk->tests, write lnk/x.py               rc=0 host: tests/x.py=CHANGED:PWN  stderr: 
+[NONE] hardlink hl->pkg/a_test.go, write hl             rc=0 host: pkg/a_test.go=CHANGED:package pkg|// ORIG|PWN hl=CHANGED:package pkg|// ORIG|PWN  stderr: 
+[NONE] case: append PKG/A_TEST.GO                       rc=0 host: pkg/a_test.go=CHANGED:package pkg|// ORIG|PWN  stderr: 
+[NONE] case: create NEW pkg/B_TEST.GO                   rc=0 host: pkg/B_TEST.GO=CHANGED:PWN  stderr: 
+
+=== rendering GLOB
+[GLOB] control: write pkg/a.go (non-protected)          rc=0 host: pkg/a.go=CHANGED:package pkg|X  stderr: 
+[GLOB] modify existing pkg/a_test.go                    rc=1 host: pkg/a_test.go=ORIG  stderr: /bin/sh: pkg/a_test.go: Operation not permitted
+[GLOB] create NEW pkg/b_test.go                         rc=1 host: pkg/b_test.go=ABSENT  stderr: /bin/sh: pkg/b_test.go: Operation not permitted
+[GLOB] create NEW root c_test.go (** = zero dirs)       rc=1 host: c_test.go=ABSENT  stderr: /bin/sh: c_test.go: Operation not permitted
+[GLOB] create NEW tests/new.py (dir deny)               rc=1 host: tests/new.py=ABSENT  stderr: /bin/sh: tests/new.py: Operation not permitted
+[GLOB] create NEW cli/sub/conftest.py                   rc=1 host: cli/sub/conftest.py=ABSENT  stderr: /bin/sh: cli/sub/conftest.py: Operation not permitted
+[GLOB] create NEW src/bar.test.ts                       rc=1 host: src/bar.test.ts=ABSENT  stderr: /bin/sh: src/bar.test.ts: Operation not permitted
+[GLOB] rm existing pkg/a_test.go                        rc=1 host: pkg/a_test.go=ORIG  stderr: rm: pkg/a_test.go: Operation not permitted
+[GLOB] mv pkg/a.go onto NEW pkg/z_test.go               rc=1 host: pkg/z_test.go=ABSENT  stderr: mv: rename pkg/a.go to pkg/z_test.go: Operation not permitted
+[GLOB] mv pkg/a_test.go away (rename source)            rc=1 host: pkg/a_test.go=ORIG pkg/moved.txt=ABSENT  stderr: mv: rename pkg/a_test.go to pkg/moved.txt: Operation not permitted
+[GLOB] rename dir tests -> tests2, write inside         rc=1 host: tests/test_x.py=ORIG tests2/test_x.py=ABSENT  stderr: mv: rename tests to tests2: Operation not permitted
+[GLOB] rename dir pkg -> pkg2, write pkg2/a_test.go     rc=1 host: pkg/a_test.go=ABSENT pkg2/a_test.go=CHANGED:package pkg|// ORIG  stderr: /bin/sh: pkg2/a_test.go: Operation not permitted
+[GLOB] symlink lnk->tests, write lnk/x.py               rc=1 host: tests/x.py=ABSENT  stderr: /bin/sh: lnk/x.py: Operation not permitted
+[GLOB] hardlink hl->pkg/a_test.go, write hl             rc=1 host: pkg/a_test.go=ORIG hl=ABSENT  stderr: ln: hl: Operation not permitted
+[GLOB] case: append PKG/A_TEST.GO                       rc=1 host: pkg/a_test.go=ORIG  stderr: /bin/sh: PKG/A_TEST.GO: Operation not permitted
+[GLOB] case: create NEW pkg/B_TEST.GO                   rc=1 host: pkg/B_TEST.GO=ABSENT  stderr: /bin/sh: pkg/B_TEST.GO: Operation not permitted
+
+=== rendering LITERAL
+[LITERAL] control: write pkg/a.go (non-protected)          rc=0 host: pkg/a.go=CHANGED:package pkg|X  stderr: 
+[LITERAL] modify existing pkg/a_test.go                    rc=1 host: pkg/a_test.go=ORIG  stderr: /bin/sh: pkg/a_test.go: Operation not permitted
+[LITERAL] create NEW pkg/b_test.go                         rc=0 host: pkg/b_test.go=CHANGED:PWN  stderr: 
+[LITERAL] create NEW root c_test.go (** = zero dirs)       rc=0 host: c_test.go=CHANGED:PWN  stderr: 
+[LITERAL] create NEW tests/new.py (dir deny)               rc=1 host: tests/new.py=ABSENT  stderr: /bin/sh: tests/new.py: Operation not permitted
+[LITERAL] create NEW cli/sub/conftest.py                   rc=0 host: cli/sub/conftest.py=CHANGED:PWN  stderr: 
+[LITERAL] create NEW src/bar.test.ts                       rc=0 host: src/bar.test.ts=CHANGED:PWN  stderr: 
+[LITERAL] rm existing pkg/a_test.go                        rc=1 host: pkg/a_test.go=ORIG  stderr: rm: pkg/a_test.go: Operation not permitted
+[LITERAL] mv pkg/a.go onto NEW pkg/z_test.go               rc=0 host: pkg/z_test.go=CHANGED:package pkg  stderr: 
+[LITERAL] mv pkg/a_test.go away (rename source)            rc=1 host: pkg/a_test.go=ORIG pkg/moved.txt=ABSENT  stderr: mv: rename pkg/a_test.go to pkg/moved.txt: Operation not permitted
+[LITERAL] rename dir tests -> tests2, write inside         rc=1 host: tests/test_x.py=ORIG tests2/test_x.py=ABSENT  stderr: mv: rename tests to tests2: Operation not permitted
+[LITERAL] rename dir pkg -> pkg2, write pkg2/a_test.go     rc=1 host: pkg/a_test.go=ORIG pkg2/a_test.go=ABSENT  stderr: mv: rename pkg to pkg2: Operation not permitted
+[LITERAL] symlink lnk->tests, write lnk/x.py               rc=1 host: tests/x.py=ABSENT  stderr: /bin/sh: lnk/x.py: Operation not permitted
+[LITERAL] hardlink hl->pkg/a_test.go, write hl             rc=1 host: pkg/a_test.go=ORIG hl=ABSENT  stderr: ln: hl: Operation not permitted
+[LITERAL] case: append PKG/A_TEST.GO                       rc=1 host: pkg/a_test.go=ORIG  stderr: /bin/sh: PKG/A_TEST.GO: Operation not permitted
+[LITERAL] case: create NEW pkg/B_TEST.GO                   rc=0 host: pkg/B_TEST.GO=CHANGED:PWN  stderr: 

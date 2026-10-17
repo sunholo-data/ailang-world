@@ -1,0 +1,6 @@
+# Q7: cost of reading the base commit's protected entries (read-only, real checkout)
+ls-tree -r HEAD (all entries, World filters):    28699 entries, 134 ms
+ls-tree -r HEAD (all entries, World filters):    28699 entries, 134 ms
+ls-tree -r HEAD (all entries, World filters):    28699 entries, 132 ms
+37d6641b308a3e8ffb4d5a2023ba4faa89a5254a
+rev-parse: 24 ms

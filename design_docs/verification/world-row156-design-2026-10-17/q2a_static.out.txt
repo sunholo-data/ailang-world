@@ -1,0 +1,25 @@
+# Q2a static: do test runs WRITE under protected paths? (git grep, read-only; HEADs as in q1)
+-- ailang: Go golden-update flags (writes testdata/*.golden only when the flag is passed)
+flag.Bool("update…) sites:        4
+cmd/ailang/cli_reference_test.go:14:var updateCLIReference = flag.Bool("update-cli-reference", false, "rewrite docs/docs/reference/cli.md from the dispatch table")
+cmd/ailang/tail_call_trace_test.go:14:var updateTailGoldens = flag.Bool("update-tailcall-goldens", false, "rewrite testdata/tailcall/*.trace.golden from the current binary")
+internal/apiserver/mcp_file_test.go:19:var updateMCPGolden = flag.Bool("update-mcp-golden", false, "rewrite testdata/mcp_file_tools_list.golden.json")
+internal/apiserver/mcp_ui_test.go:22:var updateUIGolden = flag.Bool("update-ui-golden", false, "rewrite testdata/mcp_ui.golden.json")
+test files calling WriteFile (any target):      386
+test files using t.TempDir (control: writes outside the worktree):      563
+-- TwilightGame + sunholo-platform frontend: snapshot assertions
+TwilightGame files with snapshot asserts:        0
+TwilightGame files with expect( (control):      245
+sunholo-platform frontend files with snapshot asserts:        0
+sunholo-platform frontend files with expect( (control):      182
+-- vitest config: coverage / outputFile
+14:    coverage: {
+-- pytest config (sunholo cli): cache_dir / addopts
+39:[tool.pytest.ini_options]
+40-testpaths = ["tests"]
+41-addopts = "-v --tb=short"
+-- M4 py profile disables the cache provider:
+no:cacheprovider
+-- git ls-files -s cost for the protected pathspecs (index read only, GIT_OPTIONAL_LOCKS=0)
+ailang ls-files -s:     2283 entries, 37 ms
+ailang ls-files -s:     2283 entries, 37 ms
