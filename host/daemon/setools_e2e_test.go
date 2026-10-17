@@ -983,38 +983,44 @@ func TestSeToolsModuleRootResolvesBareImports(t *testing.T) {
 // the upstream HOME layout (internal/pkg/registry.go): the same project
 // cannot resolve its registry import without --workspace-package-cache and
 // passes check, test and run with it, the snapshot byte-identical after.
+//
+// The lock carries acme/util's real content hash (ailangContentHash, pinned to
+// the binary by TestAilangContentHashMatchesTheToolBinary). v0.52.1 never
+// checked a registry dependency's hash, so the placeholder passed; v0.54.15
+// verifies it and refuses the placeholder with "dependency acme/util content
+// changed (locked: sha256:0000…)" (row 139 D7). Without the cache, v0.52.1
+// said "cache not found"; v0.54.15 fails earlier, hashing the dependency it
+// cannot find: "failed to hash registry dependency acme/util at …".
 func TestSeToolsPackageCacheResolvesRegistryImports(t *testing.T) {
 	bin := realToolBin(t)
 	setup := func(t *testing.T, withCache bool) (*Daemon, wsFixture) {
 		f := newWSFixture(t)
 		tools := filepath.Join(f.root, "ep1", "tools")
 		mkdirs(t, tools)
+		// The snapshot is built in both arms (its hash goes in the lock);
+		// only the cache arm hands it to the daemon.
+		snap := f.pkgcacheDir()
+		util := ailangContentHash(t, writeAcmeUtil(t, snap))
 		writeFile(t, filepath.Join(tools, "b.ail"), "module b\n\nexport func b() -> string {\n  \"b\"\n}\n")
 		writeFile(t, filepath.Join(tools, "a.ail"), "module a\n\nimport b (b)\nimport pkg/acme/util/greet (greet)\n\n"+
 			"export func a() -> string {\n  \"${b()}${greet()}\"\n}\n")
 		writeFile(t, filepath.Join(tools, "ailang.toml"), "[package]\nname = \"local/proj\"\nversion = \"0.1.0\"\nedition = \"1\"\n")
-		writeLock(t, filepath.Join(tools, "ailang.lock"), lockEntry{"acme/util", "0.1.0", "registry"})
+		writeLockHashed(t, filepath.Join(tools, "ailang.lock"), map[string]string{"acme/util": util}, lockEntry{"acme/util", "0.1.0", "registry"})
 		writeFile(t, filepath.Join(tools, "t.ail"), "module t\n\nimport pkg/acme/util/greet (greet)\n\n"+
 			"export func hi() -> string tests [((), \"hi\")] {\n  greet()\n}\n")
 		writeFile(t, filepath.Join(tools, "r.ail"), "module r\n\nimport std/io (println)\nimport pkg/acme/util/greet (greet)\n\n"+
 			"export func main() -> () ! {IO} {\n  println(greet())\n}\n")
+		lockdown(t, snap)
 		cfg := Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: bin, WorkspaceModuleRoot: "tools"}
 		if withCache {
-			snap := f.pkgcacheDir()
-			mkdirs(t, filepath.Join(snap, "acme", "util", "0.1.0"))
-			writeFile(t, filepath.Join(snap, "acme", "util", "0.1.0", "ailang.toml"),
-				"[package]\nname = \"acme/util\"\nversion = \"0.1.0\"\nedition = \"1\"\n\n[exports]\nmodules = [\"acme/util/greet\"]\n")
-			writeFile(t, filepath.Join(snap, "acme", "util", "0.1.0", "greet.ail"),
-				"module acme/util/greet\n\nexport func greet() -> string {\n  \"hi\"\n}\n")
-			lockdown(t, snap)
 			cfg.WorkspacePackageCache = snap
 		}
 		return mustWSDaemon(t, cfg), f
 	}
 	d, _ := setup(t, false)
 	resp := wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"a.ail"}`)
-	if _, passed, errs := aiCheckOf(t, resp); passed || !strings.Contains(fmt.Sprint(errs), "cache not found") {
-		t.Fatalf("without the cache: passed=%v errors=%v, want a `cache not found` failure", passed, errs)
+	if _, passed, errs := aiCheckOf(t, resp); passed || !strings.Contains(fmt.Sprint(errs), "failed to hash registry dependency acme/util") {
+		t.Fatalf("without the cache: passed=%v errors=%v, want a `failed to hash registry dependency acme/util` failure", passed, errs)
 	}
 	d, f := setup(t, true)
 	before := ownDigest(t, f.pkgcacheDir())

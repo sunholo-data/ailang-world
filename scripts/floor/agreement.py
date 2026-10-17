@@ -13,7 +13,7 @@ with the banked verdict. A row is eligible only when:
     ``stdout_ok`` is not a grade of ``code``.
 
 Banked rows were graded by whatever ailang binary (and the ailang repo's SOURCE stdlib, V37)
-was current when they were banked; this grader uses the pinned v0.52.1 tool binary and its
+was current when they were banked; this grader uses the pinned v0.54.15 tool binary and its
 built-in stdlib. Every disagreement is therefore re-run under each available older binary
 (``--alt-bin``) and given a TYPED cause, most specific first:
   * ``banked_stdlib_skew_v37`` — the banked grade failed inside ``std/`` after a "stdlib version
@@ -48,10 +48,12 @@ import corpus as corpus_mod  # noqa: E402
 import grade as grade_mod  # noqa: E402
 
 GRADED_CATEGORIES = {'none', 'compile_error', 'runtime_error', 'logic_error'}
-# The pinned $TOOL (v0.52.1 darwin/arm64, ~/.pinned-ailang-tools/v0.52.1/ailang) — row 135 M0,
-# superseding v0.51.0 (e55ff71c…, D-WORLD-55 M0). AC1.2 re-run on it: PASS, 1350/1357 (0.9948),
-# zero unexplained (design_docs/verification/world-row135-m0-2026-10-03/).
-PINNED_TOOL_SHA256 = '0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5'
+# The pinned $TOOL (darwin/arm64, ~/.pinned-ailang-tools/<release>/ailang): v0.54.15 since row 139
+# D7 (d821dad0…, the manifest's tool binary_sha256). AC1.2 has NOT yet been re-run on v0.54.15;
+# re-run it before the next floor run relies on this grader. History: v0.52.1 (0dd70a1d…, row 135
+# M0; AC1.2 PASS, 1350/1357 (0.9948), zero unexplained, design_docs/verification/
+# world-row135-m0-2026-10-03/), which superseded v0.51.0 (e55ff71c…, D-WORLD-55 M0).
+PINNED_TOOL_SHA256 = 'd821dad0d6e906604182a8b5bb29d60e57c872395ba11ad9e8a7f34e440ac043'
 
 
 def attribute(rec: dict, banked: dict, regraded: dict) -> str:

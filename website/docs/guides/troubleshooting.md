@@ -45,9 +45,10 @@ leave the old one untouched.
 Use `--bind` with `serve`. `--addr` (with a scheme, for example `http://127.0.0.1:7645`) goes
 before a client verb: `ailang-worldd --addr http://127.0.0.1:7645 health`.
 
-### `tool binary is "…"; only "AILANG v0.52.1" is measured for the workspace tools`
+### `tool binary is "…"; only "AILANG v0.54.15" is measured for the workspace tools`
 
-`--tool-ailang-bin` must be exactly AILANG v0.52.1. See [Install](../getting-started/install.md).
+`--tool-ailang-bin` must be exactly AILANG v0.54.15 (v0.52.1 was the tool before row 139 and is
+refused now). See [Install](../getting-started/install.md).
 
 ### `the workspace root is refused` / `… is inside --workspace-root`
 

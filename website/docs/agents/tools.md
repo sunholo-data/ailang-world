@@ -378,7 +378,8 @@ Run an allowlisted ailang operation as a typed policy-tool request. ops: agent_p
 
 `additionalProperties` is `false`: any other key is refused.
 
-Admitted ops and their flags (v0.52.1 tool binary). Pass flags as `{"name": "value"}`; boolean flags take `""`.
+Admitted ops and their flags (World's audited set, first audited on the v0.52.1 tool binary;
+the operator's compatibility gate re-ran the audit on v0.54.15 with no change). Pass flags as `{"name": "value"}`; boolean flags take `""`.
 
 | `op` | Fields | Admitted flags |
 |---|---|---|

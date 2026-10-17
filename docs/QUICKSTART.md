@@ -392,9 +392,10 @@ over `/mcp/` and `/a2a/`. This section configures no exec profile, so `workspace
 every call `{"ok":false,"refused":"no exec profile configured: …"}` and runs nothing; §10 turns it
 on.
 Every tool call runs its plan in the pinned interpreter, runs exactly one brokered effect with the
-v0.52.1 tool binary inside the episode's worktree, and commits one log entry. (The M6 smoke ran
+v0.54.15 tool binary inside the episode's worktree, and commits one log entry. (The M6 smoke ran
 on v0.51.0; row 135 M0 moved the tool pin to v0.52.1 after re-proving the confinement matrix,
-`design_docs/planned/w-software-engineering-domain.md` §13.) Its flags are bound
+`design_docs/planned/w-software-engineering-domain.md` §13, and row 139 D7 moved it to v0.54.15,
+the release carrying World's upstream fixes ailang#1872–#1875.) Its flags are bound
 to `serve --help` and to the `session new` parser by `TestQuickstartSection9FlagsMatchTheCLI`.
 The `-d` payloads below are run against a test daemon by
 `TestSeToolsQuickstartPayloadsVerbatim`.
@@ -430,7 +431,7 @@ The three end-to-end breaks measured in M5b (2026-10-02) are fixed:
   the binary.
 
 Pick two binaries. `PIN` is the `.ail` interpreter pin (AILANG v0.41.0) and runs every plan.
-`TOOL` is the tool binary, which must be exactly AILANG v0.52.1; startup refuses any other
+`TOOL` is the tool binary, which must be exactly AILANG v0.54.15; startup refuses any other
 release. `ailang-worldd setup` installs both at the paths below, each verified against the
 digests compiled into the CLI, and `ailang-worldd doctor` checks them (and the TTY fences, the
 port, the store and the workspace) without changing anything. Build both CLIs from the repo
@@ -438,7 +439,7 @@ root:
 
 ```bash
 export PIN=$HOME/.pinned-ailang/ailang
-export TOOL=$HOME/.pinned-ailang-tools/v0.52.1/ailang
+export TOOL=$HOME/.pinned-ailang-tools/v0.54.15/ailang
 $PIN --version && $TOOL --version
 go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
 go build -o /tmp/world-publish ./cmd/world-publish
@@ -530,8 +531,8 @@ required. With only one of them, the daemon logs `workspace tools disabled` and 
 tool call before any effect runs. This is rule R8, and over `/a2a/` its message is
 `transition declares an effect this daemon has no handler for`.
 
-`examples-search` needs an AILANG examples corpus that the operator names. v0.52.1 does embed a
-corpus, but World does not fall back to it, and the tool runs with `HOME` set to a per-episode cache. `$TOOL examples download` fills
+`examples-search` needs an AILANG examples corpus that the operator names. The tool binary may
+embed a corpus (v0.52.1 did), but World does not fall back to it, and the tool runs with `HOME` set to a per-episode cache. `$TOOL examples download` fills
 `~/.ailang/examples`, and serve uses that directory by default when it exists. `--examples-dir`
 names a different corpus, which reaches the tool as `AILANG_EXAMPLES`. It must lie **outside**
 the workspace root, or startup refuses. Without a corpus, `examples-search` answers
@@ -963,8 +964,10 @@ export WS=/tmp/se-ws SNAP=$HOME/.ailang-world-pkgs
   --repo /tmp/se-proj --preset se-tools --ttl 14400 --out /tmp/se-dev1-session
 ```
 
-**The lock is an operator step.** v0.52.1 needs an `ailang.lock` in the module root before it
-resolves a registry import. The agent cannot create one: `lock` is not an admitted `ailang-cli`
+**The lock is an operator step.** The tool binary needs an `ailang.lock` in the module root before
+it resolves a registry import, and since v0.54.15 it checks each registry dependency against the
+lock's `content_hash` (a hand-written or stale lock is refused with `dependency … content
+changed`; `$TOOL lock` writes the real hashes). The agent cannot create one: `lock` is not an admitted `ailang-cli`
 op. A project that gitignores its lock has none in a fresh worktree. The lock is also the input
 to the snapshot below, so run it first, as the operator, with the project's own `ailang.toml`:
 
@@ -1275,11 +1278,11 @@ Later read/test/check, proof and pending-approval stages are separate milestones
 Run from the repository root. Create a disposable worktree explicitly; the seed
 never runs a hidden git operation. Keep the store, session, key and manifest outside
 the worktree. The capsule/proof interpreter is v0.41.0; workspace tools use the
-separate v0.52.1 tool pin. These pins are not interchangeable.
+separate v0.54.15 tool pin. These pins are not interchangeable.
 
 ```bash
 export PIN=$HOME/.pinned-ailang/ailang
-export TOOLPIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang
+export TOOLPIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang
 export DEMO_DIR=$(mktemp -d /tmp/world-demo-release.XXXXXX)
 export DEMO_WS=$DEMO_DIR/workspaces
 export DEMO_BIN=$DEMO_DIR/ailang-worldd

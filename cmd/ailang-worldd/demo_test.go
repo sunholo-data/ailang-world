@@ -25,6 +25,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/pins"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/transitionreg"
 )
@@ -471,7 +472,8 @@ func TestDemoSeedHelpPreparation(t *testing.T) {
 	if code := run([]string{"demo", "seed", "--help"}, &out, &errOut); code != exitOK {
 		t.Fatalf("demo help=%d %s", code, errOut.String())
 	}
-	for _, s := range []string{"--db", "--session", "--ailang-bin", "--proof-key-file", "--addr", "--manifest", "v0.41.0", "v0.52.1", "S2-S6"} {
+	// The proof pin and the tool release are the manifest's (pins/ailang-releases.json).
+	for _, s := range []string{"--db", "--session", "--ailang-bin", "--proof-key-file", "--addr", "--manifest", pins.ReleaseFor(pins.RoleProof).Release, toolRelease(), "S2-S6"} {
 		if !strings.Contains(out.String(), s) {
 			t.Errorf("help missing %s", s)
 		}
@@ -702,14 +704,15 @@ func TestDemoSeedReadTestCheck(t *testing.T) {
 		}
 	}
 	// Retained pin: the daemon archived the tool binary and refused anything but
-	// v0.52.1 at startup; the test records that archived release for this run.
+	// the manifest's tool release at startup; the test records that archived
+	// release for this run.
 	toolBytes, err := os.ReadFile(tool)
 	if err != nil {
 		t.Fatal(err)
 	}
 	toolRef := hashref.SumSHA256(toolBytes)
-	if m, err := archive.New(r.db).ReadManifest(toolRef); err != nil || !strings.Contains(m.Version, "v0.52.1") {
-		t.Fatalf("retained tool pin %s is not v0.52.1: %v %q", toolRef, err, m.Version)
+	if m, err := archive.New(r.db).ReadManifest(toolRef); err != nil || !strings.Contains(m.Version, toolRelease()) {
+		t.Fatalf("retained tool pin %s is not %s: %v %q", toolRef, toolRelease(), err, m.Version)
 	}
 	if d := after[store.EffectKey{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope}] - before[store.EffectKey{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope}]; d != 1 {
 		t.Fatalf("Workspace.Read budget delta = %d, want 1", d)
@@ -866,7 +869,7 @@ func TestDemoSeedProofStage(t *testing.T) {
 	tool := os.Getenv(toolBinEnvVar)
 	if tool == "" {
 		// Same environment gate as every published-se-tools test (cliSeBins):
-		// CI does not provision the v0.52.1 tool pin, so this skips there and
+		// CI does not provision the tool pin, so this skips there and
 		// the pin-free S4 controls (TestDemoProof*, TestDemoSeedRequiredIdentities)
 		// carry CI coverage. A configured wrong version still fails below.
 		t.Skipf("S4 seed integration composes published se-tools S2/S3 and needs %s (%s); unset, skipping", toolBinEnvVar, daemon.ToolBinaryRelease)

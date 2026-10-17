@@ -50,7 +50,7 @@ agent ── Authorization: Bearer ──▶ session resolver ── (episode, g
 | A transition asks only for what it declared | Plan laws, and each request must equal a `declaredEffects` triple | coordinator, then the bound invoker again |
 | Each effect is authorized and paid for | Effect name, exact scope, liveness, `cost ≤ budget`; denials recorded without debit | broker (decision law Z3-verified in a sketch, transcribed to Go under a drift test) |
 | Budget cannot be reset by reconnecting | Spend summed per episode from durable intents | coordinator |
-| Tool effects stay inside the worktree | AILANG's policy layer (`policy-tool`, `run --policy`) under a rendered restricted policy | the v0.52.1 tool binary |
+| Tool effects stay inside the worktree | AILANG's policy layer (`policy-tool`, `run --policy`) under a rendered restricted policy | the v0.54.15 tool binary |
 | Commands run only as the operator allowed | `workspace-exec` runs only commands from an operator exec profile, with arguments matched against each command's grammar; no shell line | exec handler, profile loaded at `serve` startup |
 | Commands stay inside the worktree, offline | srt sandbox: writes confined to the worktree and the episode's caches, home, World state and other episodes unreadable, no network; the pinned sandbox is re-verified before every call and each profile must pass a seven-arm startup probe | `@anthropic-ai/sandbox-runtime` 0.0.78 (`--exec-sandbox`) |
 | Agents cannot edit their own policy, cache or corpus | Startup refuses state or corpus inside the workspace root; policy and cache live under `<db-dir>` | daemon startup |

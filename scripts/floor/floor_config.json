@@ -1,7 +1,7 @@
 {
   "schema": "row93-floor-config/1",
   "corpus_commit": "77c9e979974f7ea7195b0baf48e329d525f333b5",
-  "tool_bin": "~/.pinned-ailang-tools/v0.52.1/ailang",
+  "tool_bin": "~/.pinned-ailang-tools/v0.54.15/ailang",
   "deadline_s": 600,
   "knobs": {
     "world_tools_wording": "row93-direct",

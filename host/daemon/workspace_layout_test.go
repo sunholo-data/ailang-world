@@ -325,8 +325,22 @@ func buildPackageCache(t *testing.T, dir string, pkgs ...string) {
 
 type lockEntry struct{ Name, Version, Source string }
 
-// writeLock writes an ailang.lock marshalled from a Go struct.
+// placeholderContentHash is what writeLock records: World's own lock-coverage
+// check never reads content_hash, and v0.52.1 never checked it for registry
+// dependencies. v0.54.15 does (row 139 D7), so a lock the real tool binary
+// resolves must carry the real hash: writeLockHashed with ailangContentHash.
+var placeholderContentHash = "sha256:" + strings.Repeat("0", 64)
+
+// writeLock writes an ailang.lock marshalled from a Go struct, every entry
+// with placeholderContentHash.
 func writeLock(t *testing.T, path string, entries ...lockEntry) {
+	t.Helper()
+	writeLockHashed(t, path, nil, entries...)
+}
+
+// writeLockHashed is writeLock with content_hash taken from hashes (by
+// package name), placeholderContentHash for a name it lacks.
+func writeLockHashed(t *testing.T, path string, hashes map[string]string, entries ...lockEntry) {
 	t.Helper()
 	type pkg struct {
 		Name        string `json:"name"`
@@ -340,13 +354,101 @@ func writeLock(t *testing.T, path string, entries ...lockEntry) {
 		Packages      []pkg  `json:"packages"`
 	}{Schema: "ailang.lock/v1", SchemaVersion: "1.0.0", Packages: []pkg{}}
 	for _, e := range entries {
-		doc.Packages = append(doc.Packages, pkg{e.Name, e.Version, e.Source, "sha256:" + strings.Repeat("0", 64)})
+		hash, ok := hashes[e.Name]
+		if !ok {
+			hash = placeholderContentHash
+		}
+		doc.Packages = append(doc.Packages, pkg{e.Name, e.Version, e.Source, hash})
 	}
 	data, err := json.Marshal(doc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	writeFile(t, path, string(data))
+}
+
+// ailangContentHash is AILANG's lock content hash of the package in dir, a
+// port of internal/pkg.ContentHash (hasher.go, read at ailang v0.47.2, the
+// version go.mod pins): sha256 over every .ail file under dir, sorted by
+// relative path, each written as "file:<rel>\n" then its bytes. The port is
+// pinned to the tool binary's own answer by
+// TestAilangContentHashMatchesTheToolBinary.
+func ailangContentHash(t *testing.T, dir string) string {
+	t.Helper()
+	var files []string
+	if err := filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.HasSuffix(p, ".ail") {
+			rel, err := filepath.Rel(dir, p)
+			if err != nil {
+				return err
+			}
+			files = append(files, rel)
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(files)
+	h := sha256.New()
+	for _, rel := range files {
+		fmt.Fprintf(h, "file:%s\n", rel)
+		b, err := os.ReadFile(filepath.Join(dir, rel))
+		if err != nil {
+			t.Fatal(err)
+		}
+		h.Write(b)
+	}
+	return "sha256:" + hex.EncodeToString(h.Sum(nil))
+}
+
+// acmeUtilGreet is the one-module registry package the real-binary arms
+// resolve (TestSeToolsPackageCacheResolvesRegistryImports).
+const (
+	acmeUtilManifest = "[package]\nname = \"acme/util\"\nversion = \"0.1.0\"\nedition = \"1\"\n\n[exports]\nmodules = [\"acme/util/greet\"]\n"
+	acmeUtilGreet    = "module acme/util/greet\n\nexport func greet() -> string {\n  \"hi\"\n}\n"
+)
+
+// writeAcmeUtil writes acme/util@0.1.0 under snap (unlocked; the caller
+// decides on lockdown).
+func writeAcmeUtil(t *testing.T, snap string) string {
+	t.Helper()
+	dir := filepath.Join(snap, "acme", "util", "0.1.0")
+	mkdirs(t, dir)
+	writeFile(t, filepath.Join(dir, "ailang.toml"), acmeUtilManifest)
+	writeFile(t, filepath.Join(dir, "greet.ail"), acmeUtilGreet)
+	return dir
+}
+
+// TestAilangContentHashMatchesTheToolBinary pins the port. The expected
+// value is v0.54.15's own: with a placeholder lock, `ai-check` on the
+// fixture reported "dependency acme/util content changed (locked:
+// sha256:0000…, current: sha256:9e2a607d…3e38d6)" (row 139 D7, 2026-10-17),
+// and a lock carrying that value then checked clean. Renaming the file or
+// changing a byte moves the hash; a non-.ail file does not.
+func TestAilangContentHashMatchesTheToolBinary(t *testing.T) {
+	const measured = "sha256:9e2a607d891826fbc743fe39c9a9376c60f46ba44ea4edf43ec23e55043e38d6"
+	dir := writeAcmeUtil(t, canonicalTemp(t))
+	if got := ailangContentHash(t, dir); got != measured {
+		t.Fatalf("ailangContentHash(acme/util) = %s, the tool binary measured %s", got, measured)
+	}
+	writeFile(t, filepath.Join(dir, "NOTES.md"), "not hashed\n")
+	if got := ailangContentHash(t, dir); got != measured {
+		t.Fatalf("a non-.ail file moved the hash to %s", got)
+	}
+	writeFile(t, filepath.Join(dir, "greet.ail"), acmeUtilGreet+" ")
+	if got := ailangContentHash(t, dir); got == measured {
+		t.Fatal("a changed byte did not move the hash")
+	}
+	writeFile(t, filepath.Join(dir, "greet.ail"), acmeUtilGreet)
+	if err := os.Rename(filepath.Join(dir, "greet.ail"), filepath.Join(dir, "greet2.ail")); err != nil {
+		t.Fatal(err)
+	}
+	if got := ailangContentHash(t, dir); got == measured {
+		t.Fatal("a renamed file did not move the hash")
+	}
 }
 
 // withUID sets the geteuid seam for the test (serial: it is a package var).

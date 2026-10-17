@@ -84,7 +84,7 @@ serve flags:
                        policies or its tool cache — startup refuses otherwise
   --tool-ailang-bin <path>
                        AILANG binary the workspace tools run (must be
-                       AILANG v0.52.1); archived and hash-verified like
+                       AILANG v0.54.15); archived and hash-verified like
                        --ailang-bin. The Workspace.*/Ailang.* tools are served
                        only when both this and --workspace-root are set.
                        Workspace.Exec (workspace-exec) is bound with them; it
@@ -469,7 +469,7 @@ ailang-worldd setup
 
 ```text
 ✓ interpreter AILANG v0.41.0 installed /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
-✓ tool        AILANG v0.52.1 installed /Users/you/.pinned-ailang-tools/v0.52.1/ailang (sha256 0dd70a1d0036…)
+✓ tool        AILANG v0.54.15 installed /Users/you/.pinned-ailang-tools/v0.54.15/ailang (sha256 d821dad0d6e9…)
 ✓ store directory /Users/you/.ailang/world
 ✓ workspace root  /Users/you/.ailang/world-ws
 
@@ -485,8 +485,11 @@ digests come from the release manifest `pins/ailang-releases.json`, embedded thr
 |---|---|---|---|
 | v0.41.0 (interpreter) | darwin/arm64 | `b08f3cde…598e0b` | `1a67b014…5b9f` |
 | v0.41.0 (interpreter) | linux/amd64 | `fa0045de…faa56` | `8e7a275d…25fb5` |
-| v0.52.1 (tool) | darwin/arm64 | `576236fe…a7579e` | `0dd70a1d…a8f5` |
-| v0.52.1 (tool) | linux/amd64 | `c682c30f…46f883f` | `97dcd4a5…070f30` |
+| v0.54.15 (tool) | darwin/arm64 | `710945da…281382` | `d821dad0…ac043` |
+| v0.54.15 (tool) | linux/amd64 | `87731698…c4945` | `db0f9dac…ddd63c` |
+
+v0.52.1, the tool before row 139, stays in the manifest as a `retired` row with its digests;
+`setup` and `doctor` install and check only the current pins.
 
 A tarball whose own `.sha256` agrees with it but not with the compiled-in pin is refused with
 exit 3: `tarball digest mismatch: release .sha256 …, computed …, compiled-in pin …`, and nothing
@@ -530,7 +533,7 @@ ailang-worldd doctor --online
 ! tty        no controlling terminal (open /dev/tty: device not configured): world-publish and session new/mint will refuse here
              fix: run the attended steps yourself from a terminal window (an IDE terminal pane works); an agent cannot run them
 ✓ pins       interpreter AILANG v0.41.0 at /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
-✓ pins       tool AILANG v0.52.1 at /Users/you/.pinned-ailang-tools/v0.52.1/ailang (sha256 0dd70a1d0036…)
+✓ pins       tool AILANG v0.54.15 at /Users/you/.pinned-ailang-tools/v0.54.15/ailang (sha256 d821dad0d6e9…)
 ! daemon     nothing answers at http://127.0.0.1:7644
              fix: ailang-worldd serve --db … (when you need it running)
 ! store      /Users/you/.ailang/world/world.db does not exist yet (doctor never creates it)
@@ -539,7 +542,7 @@ ailang-worldd doctor --online
              fix: pass serve --examples-dir <dir>
 ✓ workspace  /Users/you/.ailang/world-ws: 0 episode worktree(s)
 ✓ online     interpreter AILANG v0.41.0: release .sha256 reachable and matches the pin
-✓ online     tool AILANG v0.52.1: release .sha256 reachable and matches the pin
+✓ online     tool AILANG v0.54.15: release .sha256 reachable and matches the pin
 no check failed
 ```
 
@@ -712,7 +715,7 @@ publishes, creates a worktree or opens another writable database.
 --db identifies the daemon's store and permits read-only grant inspection.
 --session is a private session file (default WORLD_SESSION).
 --ailang-bin is the capsule/proof pin (v0.41.0); serve's separate
---tool-ailang-bin must be v0.52.1 for the workspace tools.
+--tool-ailang-bin must be v0.54.15 for the workspace tools.
 --proof-key-file is the private operator key required by later proof stages.
 --manifest is a new output path; existing files are refused.
 --addr is the daemon URL, also accepted as the global client flag.

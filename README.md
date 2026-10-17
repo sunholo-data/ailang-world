@@ -151,8 +151,9 @@ paths), 150 (marketing capture) and 151 (agent-generated projections) land.
   `demo seed`.
 - **Two pinned AILANG binaries**: the `.ail` interpreter that runs every transition plan is
   pinned at **v0.41.0** (epoch 1; its hash is in every log entry, so it moves only by a
-  deliberate epoch change); the tool binary the coding tools run is pinned at **v0.52.1** and
-  refused at any other release (D-WORLD-57). Both are rows of the release manifest
+  deliberate epoch change); the tool binary the coding tools run is pinned at **v0.54.15** and
+  refused at any other release (D-WORLD-57; v0.52.1 before row 139 moved it, kept in the
+  manifest as a `retired` row). Both are rows of the release manifest
   [`pins/ailang-releases.json`](pins/ailang-releases.json), compiled into the binaries;
   `world-publish epoch nominate` names a new release in a store's epoch registry, as a candidate
   of the current epoch (headless) or as a new epoch (attended).
@@ -296,7 +297,7 @@ live handler.
 Subprocess effects use the capsule floor: a pinned executable, empty
 capabilities, an FS jail, a scrubbed environment, a wall-clock timeout, and an
 output cap. The coding tools add AILANG's own policy layer on top: the archived
-v0.52.1 tool binary runs under a rendered policy that roots every path at the
+v0.54.15 tool binary runs under a rendered policy that roots every path at the
 episode worktree, keeps `.git` and the deny list read-only, and gives no shell
 (measured facts: the site's
 [tool confinement](https://www.sunholo.com/ailang-world/docs/security/tool-confinement)

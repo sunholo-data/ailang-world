@@ -1,6 +1,6 @@
 {
   "schema": "world/ailang-releases/v1",
-  "note": "Single source of truth for the AILANG releases World uses (row 139 D1, design_docs/planned/w-interpreter-epoch-upgrade-path.md). host/pins embeds a byte-identical copy (go:embed cannot reach the repo root); TestEmbeddedManifestMatchesCanonical fails on drift. Every digest was copied from a measured site that already existed in the repo, never invented: the four per-platform rows from cmd/ailang-worldd/pins.go (row 138 M3, 2026-10-03), whose v0.41.0 binary digests are the same values scripts/verify_world_package.sh pins. Releases holding only the observed role carry no assets: no digest for them is recorded anywhere in the repo.",
+  "note": "Single source of truth for the AILANG releases World uses (row 139 D1, design_docs/planned/w-interpreter-epoch-upgrade-path.md). host/pins embeds a byte-identical copy (go:embed cannot reach the repo root); TestEmbeddedManifestMatchesCanonical fails on drift. Every digest was copied from a measured site that already existed in the repo, never invented: the four per-platform rows from cmd/ailang-worldd/pins.go (row 138 M3, 2026-10-03), whose v0.41.0 binary digests are the same values scripts/verify_world_package.sh pins. Releases holding only the observed role carry no assets: no digest for them is recorded anywhere in the repo. Roles interpreter, proof, frozen-compiler, gate-primary and tool are exclusive (exactly one release each); observed and retired may be held by many. retired is history: a release that held a binary role and was superseded keeps its row, its since/evidence and its assets (stores still archive and replay it), may not also hold an exclusive role, and still explains its literals to the release-literal scan. The v0.54.15 row's digests were measured by the operator from the published GitHub release and checked against its .sha256 files (row 139 D7, tool half, 2026-10-17).",
   "platforms": ["darwin/arm64", "linux/amd64"],
   "releases": [
     {
@@ -28,11 +28,31 @@
       }
     },
     {
+      "release": "v0.54.15",
+      "version": "AILANG v0.54.15",
+      "commit": "0384450",
+      "roles": [
+        {"role": "tool", "since": "2026-10-17", "evidence": "row 139 D7 tool half: carries World's upstream fixes ailang#1872 (read ranges), #1873 (fs_deny_write follows in-root symlinks, refuses multi-link files), #1874 (** is doublestar), #1875 (delete op), verified by the operator on the published binary; D4 compatibility gate (go test -p 1 ./host/broker ./host/daemon ./host/projection ./cmd/ailang-worldd ./host/pins with WORLD_TOOL_AILANG_BIN on v0.54.15) found no World regression; digests checked against the release's .sha256 files"}
+      ],
+      "assets": {
+        "darwin/arm64": {
+          "asset": "darwin.arm64.ailang.tar.gz",
+          "tarball_sha256": "710945da1baee47fea61bb2eeb9f2018a90c491fa2c6591d5f8dd7ce4e281382",
+          "binary_sha256": "d821dad0d6e906604182a8b5bb29d60e57c872395ba11ad9e8a7f34e440ac043"
+        },
+        "linux/amd64": {
+          "asset": "linux.x64.ailang.tar.gz",
+          "tarball_sha256": "877316981bdbf108dacacafc733720333e718a912e0d215564baa37c4cac4945",
+          "binary_sha256": "db0f9dac038fbc99212c2d3effc30d1e8a98496c6a481384c1c21a8091ddd63c"
+        }
+      }
+    },
+    {
       "release": "v0.52.1",
       "version": "AILANG v0.52.1",
       "commit": "c68ded4",
       "roles": [
-        {"role": "tool", "since": "2026-10-03", "evidence": "confinement matrix re-proved on v0.52.1 (row 134 design section 13, V69-V80; row 135 M0, host/daemon/workspace.go)"}
+        {"role": "retired", "since": "2026-10-17", "evidence": "the tool binary from 2026-10-03 (confinement matrix re-proved on v0.52.1: row 134 design section 13, V69-V80; row 135 M0) until row 139 D7 moved the tool role to v0.54.15; kept for history (D7): stores archive it and replay resolves it by digest"}
       ],
       "assets": {
         "darwin/arm64": {
