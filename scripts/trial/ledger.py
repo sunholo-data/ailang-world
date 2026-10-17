@@ -25,7 +25,10 @@ import sys
 
 # World tool name suffix -> ledger column. Anything else is counted under "other".
 KINDS = {'ailang-read': 'read', 'ailang-write': 'write', 'ailang-edit': 'edit', 'ailang-run': 'run',
-         'ailang-check': 'check', 'ailang-cli': 'cli', 'workspace-exec': 'exec'}
+         'ailang-check': 'check', 'ailang-cli': 'cli', 'workspace-exec': 'exec',
+         # the paired shell arm's native tools (Claude Code)
+         'Read': 'read', 'Grep': 'read', 'Glob': 'read', 'LS': 'read', 'Write': 'write', 'Edit': 'edit',
+         'MultiEdit': 'edit', 'NotebookEdit': 'edit', 'Bash': 'exec'}
 
 
 def _tool_kind(name: str) -> str:
@@ -74,7 +77,7 @@ def transcript_usage(path: str | None) -> dict:
             if e.get('type') in ('result', 'turn.completed') and isinstance(e.get('usage'), dict):
                 last = e
     if last is None:
-        return {}
+        return _summed_claude_usage(path)
     u = last['usage']
     return {
         'input': int(u.get('input_tokens') or 0),
@@ -83,6 +86,30 @@ def transcript_usage(path: str | None) -> dict:
         'output': int(u.get('output_tokens') or 0),
         'cost_usd_estimate': last.get('total_cost_usd'),
     }
+
+
+def _summed_claude_usage(path: str) -> dict:
+    """A Claude Code transcript killed before its ``result`` event: sum the per-message usage of
+    its assistant events (each message id counted once). Marked ``partial``."""
+    seen, tot = set(), {'input': 0, 'cache_read': 0, 'cache_write': 0, 'output': 0}
+    with open(path, encoding='utf-8', errors='replace') as f:
+        for line in f:
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            m = e.get('message') if e.get('type') == 'assistant' else None
+            if not isinstance(m, dict) or not isinstance(m.get('usage'), dict) or m.get('id') in seen:
+                continue
+            seen.add(m.get('id'))
+            u = m['usage']
+            tot['input'] += int(u.get('input_tokens') or 0)
+            tot['cache_read'] += int(u.get('cache_read_input_tokens') or 0)
+            tot['cache_write'] += int(u.get('cache_creation_input_tokens') or 0)
+            tot['output'] += int(u.get('output_tokens') or 0)
+    if not seen:
+        return {}
+    return dict(tot, cost_usd_estimate=None, partial=True)
 
 
 def _minutes(started: str | None, finished: str | None, wall_ms) -> float | None:
@@ -105,6 +132,9 @@ def episode_row(path: str, prs: dict) -> dict:
         'date': (d.get('started_at') or '')[:10],
         'project': d.get('project'),
         'agent': f"{d.get('agent')} {d.get('model')}",
+        'arm': d.get('arm') or 'world',
+        'pair_of': d.get('pair_of'),
+        'finish': (run.get('error_category') or run.get('finish_reason') or ''),
         'task': d.get('task'),
         'agent_rc': run.get('rc'),
         'wall_min': _minutes(d.get('started_at'), d.get('finished_at'), run.get('wall_ms')),
@@ -125,16 +155,20 @@ def _k(n) -> str:
 
 
 def markdown(rows: list) -> str:
-    head = ('| episode | date | project | agent | task | wall (min) | World calls (read/edit+write/run/exec/other) '
+    head = ('| episode | arm | date | project | agent | task | wall (min) | calls (read/edit+write/run/exec/other) '
             '| tokens in+cache / out | graders | outcomes | PR |')
-    lines = [head, '|' + '---|' * 11]
+    lines = [head, '|' + '---|' * 12]
     for r in rows:
         t, u = r['tools'], r['tokens']
         calls = sum(t.values())
         split = f"{t.get('read', 0)}/{t.get('edit', 0) + t.get('write', 0)}/{t.get('run', 0)}/{t.get('exec', 0)}/" \
                 f"{t.get('check', 0) + t.get('cli', 0) + t.get('other', 0)}"
         tok = f"{_k(u.get('input', 0) + u.get('cache_read', 0) + u.get('cache_write', 0))} / {_k(u.get('output'))}" if u else ''
-        lines.append(f"| {r['episode']} | {r['date']} | {r['project']} | {r['agent']} | {r['task']} | {r['wall_min']} "
+        if u.get('partial'):
+            tok += ' (partial)'
+        arm = r['arm'] + (f" (pair of {r['pair_of']})" if r.get('pair_of') else '')
+        wall = f"{r['wall_min']}" + (' **timeout**' if r.get('finish') == 'timeout' else '')
+        lines.append(f"| {r['episode']} | {arm} | {r['date']} | {r['project']} | {r['agent']} | {r['task']} | {wall} "
                      f"| {calls} ({split}) | {tok} | {r['graders_passed']}/{r['graders_total']} "
                      f"| {r['outcomes_recorded']} | {r['pr']} |")
     return '\n'.join(lines) + '\n'

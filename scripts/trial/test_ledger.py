@@ -72,6 +72,32 @@ class LedgerTest(unittest.TestCase):
         body = [l for l in buf.getvalue().splitlines() if l.startswith('| ') and not l.startswith('| episode')]
         self.assertEqual([l.split('|')[1].strip() for l in body], ['c1', 'x1'])
 
+    def test_killed_shell_arm_sums_partial_usage_and_maps_native_tools(self):
+        ev = os.path.join(self.root, 'evidence')
+        t = os.path.join(ev, 'proj', 'transcripts', 's1.jsonl')
+        _write(t, [{'type': 'assistant', 'message': {'id': 'm1', 'usage': {'input_tokens': 5, 'cache_read_input_tokens': 100, 'output_tokens': 7}}},
+                   {'type': 'assistant', 'message': {'id': 'm1', 'usage': {'input_tokens': 5, 'cache_read_input_tokens': 100, 'output_tokens': 7}}},
+                   {'type': 'assistant', 'message': {'id': 'm2', 'usage': {'input_tokens': 1, 'output_tokens': 3}}}])
+        _write(os.path.join(ev, 'proj', 'episodes', 's1.json'), {
+            'episode': 's1', 'arm': 'shell', 'pair_of': 'c1', 'project': 'proj', 'agent': 'claude', 'model': 'm', 'task': 't',
+            'started_at': '2026-10-17T10:00:00+00:00', 'finished_at': '2026-10-17T11:00:00+00:00',
+            'agent_run': {'rc': 143, 'error_category': 'timeout', 'wall_ms': 3600000,
+                          'tool_items': {'Bash': 4, 'Edit': 2, 'Read': 3, 'Grep': 1}},
+            'transcript': {'path': t}, 'graders': [{'passed': True}]})
+        r = self.rows()['s1']
+        self.assertEqual(r['tools'], {'exec': 4, 'edit': 2, 'read': 4})
+        self.assertEqual(r['tokens'], {'input': 6, 'cache_read': 100, 'cache_write': 0, 'output': 10,
+                                       'cost_usd_estimate': None, 'partial': True})  # m1 counted once
+        self.assertEqual((r['arm'], r['pair_of'], r['finish']), ('shell', 'c1', 'timeout'))
+        import contextlib, io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ledger.main(['--root', self.root])
+        line = next(l for l in buf.getvalue().splitlines() if l.startswith('| s1 '))
+        self.assertIn('shell (pair of c1)', line)
+        self.assertIn('60.0 **timeout**', line)
+        self.assertIn('(partial)', line)
+
     def test_missing_transcript_leaves_tokens_blank(self):
         self.assertEqual(ledger.transcript_usage(os.path.join(self.root, 'nope.jsonl')), {})
 
