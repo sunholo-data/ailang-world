@@ -213,6 +213,8 @@ jobs:
           python3 design_docs/verification/world-row140-m0/m0_matrix.py --protected-only \
             --srt-node-modules "$RUNNER_TEMP/srt/node_modules" --node "$(command -v node)" --seccomp-read allowread \
             --scratch-root "$GITHUB_WORKSPACE/.row156-ci/matrix" --json "$GITHUB_WORKSPACE/.row156-ci/protected-linux.json"
+          # The fixture trees hold .go files that the repo-wide Go scans below would parse.
+          [ ! -e "$GITHUB_WORKSPACE/.row156-ci/matrix" ] || { echo "::error::row156 matrix fixtures left in the workspace"; exit 1; }
           python3 design_docs/verification/world-row140-m0/m0_matrix.py \
             --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
             --node "$(command -v node)" --seccomp-read allowread

@@ -169,6 +169,9 @@ def runProtectedMatrix(args):
             before = snapshot(wt, targets)
             rc, stdout, stderr = run([node, cli, "--settings", settings_path, "--", node, "-e", script], wt)
             after = snapshot(wt, targets)
+            # Remove the row's fixture tree at once: it holds .go files, and repo-wide Go scans
+            # later in the CI job must never see them (the JSON keeps the evidence).
+            shutil.rmtree(rowroot)
             tokens = [line for line in stdout.splitlines() if line.startswith(("WORLD-PROBE-WROTE", "WORLD-PROBE-REFUSED"))]
             token = tokens[0] if len(tokens) == 1 else None
             outcome = "WROTE" if before != after and token == "WORLD-PROBE-WROTE" else "PARTIAL"
@@ -182,6 +185,10 @@ def runProtectedMatrix(args):
             if gate is not None:
                 gates[rendering + "/" + arm] = gate
             print(f"[{'INFO' if gate is None else 'GATE PASS' if gate else 'GATE FAIL'}] {rendering}/{arm} outcome={outcome} token={token} host={'changed' if before != after else 'unchanged'}", flush=True)
+    leftover = sorted(os.listdir(root))
+    gates["fixtures-removed"] = not leftover
+    if not leftover:
+        os.rmdir(root)
     rejection = validateProtectedRows(rows, census)
     gates["validator"] = rejection is None
     result = {"meta": meta, "rows": rows, "census_size": len(census), "gating": gates, "validation_error": rejection}
