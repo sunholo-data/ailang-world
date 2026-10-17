@@ -24,12 +24,11 @@ import (
 )
 
 func TestProtectedMatrixModeContract(t *testing.T) {
+	// python3 is a CI prerequisite (plan "Environment and honest gates"): a
+	// silent skip here made the contract vacuous, so absence is a failure.
 	python, err := exec.LookPath("python3")
-	if errors.Is(err, exec.ErrNotFound) {
-		t.Skip("python3 absent from PATH")
-	}
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("python3 is required for the protected self-test: %v", err)
 	}
 	_, source, _, ok := runtime.Caller(0)
 	if !ok {
@@ -45,7 +44,8 @@ func TestProtectedMatrixModeContract(t *testing.T) {
 		t.Fatalf("protected self-test failed: %v\n%s", err, out)
 	}
 	names := []string{"ok", "empty", "missing-client", "outside-root", "none-not-written", "host-changed",
-		"wrote-unchanged", "invalid-outcome", "bad-digest", "root-equals-allowed", "symlink-escape", "bad-token"}
+		"wrote-unchanged", "invalid-outcome", "bad-digest", "root-equals-allowed", "symlink-escape", "bad-token",
+		"invalid-rc", "snapshot-keys", "partial-token", "wrote-refused-token"}
 	census := regexp.MustCompile(`(?m)^self-test: ([0-9]+) cases, ([0-9]+) passed$`).FindAllStringSubmatch(string(out), -1)
 	if len(census) != 1 || census[0][1] != strconv.Itoa(len(names)) || census[0][2] != strconv.Itoa(len(names)) {
 		t.Fatalf("missing or incorrect self-test census:\n%s", out)
