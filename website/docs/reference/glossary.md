@@ -123,7 +123,7 @@ empty scratch root.
 
 **STOP.** `world-publish`'s refusal: `STOP fence=<name>`, exit 3, nothing happened.
 
-**TOOL.** The AILANG release the coding tools run: v0.52.1.
+**TOOL.** The AILANG release the coding tools run: v0.54.15.
 
 **Transition.** A pure, pinned AILANG program and the only way World's state changes.
 

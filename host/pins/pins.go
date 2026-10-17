@@ -30,7 +30,15 @@ import (
 const Schema = "world/ailang-releases/v1"
 
 // Roles. The exclusive roles are each held by exactly one release; observed
-// (the releases verify_ail.sh legs 1-2 expect to resolve) may be held by many.
+// (the releases verify_ail.sh legs 1-2 expect to resolve) and retired may be
+// held by many.
+//
+// retired is history (row 139 D7: superseded binaries "stay archived and in the
+// manifest for history"). A release that held a binary role keeps its row,
+// since/evidence and assets when the role moves on: stores still archive it by
+// digest and replay resolves it, and its literals stay explained to the
+// release-literal scan. It is a binary role (assets required) and never shares
+// a release with an exclusive role: a release is either current or history.
 const (
 	RoleInterpreter    = "interpreter"     // serve --ailang-bin; setup/doctor
 	RoleProof          = "proof"           // demo proof checker / seed
@@ -38,6 +46,7 @@ const (
 	RoleGatePrimary    = "gate-primary"    // AILANG_BIN of the verify gates and CI
 	RoleTool           = "tool"            // serve --tool-ailang-bin
 	RoleObserved       = "observed"        // scripts/testdata/ailang_release_observed.txt
+	RoleRetired        = "retired"         // a superseded binary, kept for history
 )
 
 // exclusiveRoles lists the roles exactly one release must hold.
@@ -95,14 +104,15 @@ var (
 	hex64     = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	dateRe    = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}$`)
 	knownRole = map[string]bool{RoleInterpreter: true, RoleProof: true, RoleFrozenCompiler: true,
-		RoleGatePrimary: true, RoleTool: true, RoleObserved: true}
+		RoleGatePrimary: true, RoleTool: true, RoleObserved: true, RoleRetired: true}
 	// assetName is D-CLI-2's per-platform upstream asset spelling.
 	assetName = map[string]string{"darwin/arm64": "darwin.arm64.ailang.tar.gz", "linux/amd64": "linux.x64.ailang.tar.gz"}
 )
 
 // Parse decodes and validates a manifest. It refuses unknown fields, a wrong
 // schema, a malformed release or digest, an exclusive role held by zero or
-// several releases, and a binary-carrying release missing a platform.
+// several releases, a retired release that also holds an exclusive role, and
+// a binary-carrying release missing a platform.
 func Parse(b []byte) (Manifest, error) {
 	var m Manifest
 	dec := json.NewDecoder(bytes.NewReader(b))
@@ -148,6 +158,13 @@ func Parse(b []byte) (Manifest, error) {
 			holders[role.Role]++
 			if role.Role != RoleObserved {
 				binaryRole = true
+			}
+		}
+		if roleSeen[RoleRetired] {
+			for _, role := range exclusiveRoles {
+				if roleSeen[role] {
+					return Manifest{}, fmt.Errorf("pins: %s is retired but still holds exclusive role %s", r.Release, role)
+				}
 			}
 		}
 		if binaryRole && len(r.Assets) != len(m.Platforms) {

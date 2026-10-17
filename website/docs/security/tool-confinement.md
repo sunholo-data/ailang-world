@@ -10,9 +10,10 @@ World serves nine coding tools. Eight run the AILANG tool binary under AILANG's 
 the ninth, `workspace-exec`, runs operator-profiled commands under the srt sandbox and is
 covered in [its own section](#workspace-exec-operator-profiled-commands-under-srt).
 
-Every AILANG-tool fact on this page was measured first-party on the AILANG **v0.51.0** tool binary and
-re-proved on **v0.52.1**, the only release the daemon now accepts for `--tool-ailang-bin`
-(Verification Log §13, V69–V80) and is cited by its Verification
+Every AILANG-tool fact on this page was measured first-party on the AILANG **v0.51.0** tool binary,
+re-proved on **v0.52.1** (Verification Log §13, V69–V80), and carried to **v0.54.15**, the only
+release the daemon now accepts for `--tool-ailang-bin`, by row 139's compatibility gate (the
+real-binary matrix tests run on it with no World regression). Each fact is cited by its Verification
 Log row (`V…`) in `design_docs/planned/w-software-engineering-domain.md`. Most are also
 regression tests that run against the real binary (the AC4.1 matrix).
 

@@ -150,7 +150,7 @@ var allowedSites = map[string][]site{
 	".github/workflows/ci.yml": {
 		{role: RoleFrozenCompiler, n: 4, why: "the WORLD_PKG_AILANG_BIN install (world-package leg): step name, download URL, version assert and its error"},
 		{role: RoleGatePrimary, n: 8, why: "the AILANG_BIN installs in go-verify and go-race-verify (row 181): per job step name, download URL, version assert and its error"},
-		{role: RoleTool, n: 8, why: "the floor grader's tool-binary install: step name, URL, install paths, version assert and its error"},
+		{role: RoleTool, n: 5, why: "the floor grader's tool-binary install: step name, URL, install dir, version assert and its error"},
 	},
 	"scripts/verify_world_package.sh": {
 		{role: RoleFrozenCompiler, n: 2, why: "step 9 compiler version assert and its error message"},
@@ -326,7 +326,7 @@ func TestReleaseLiteralScanCatchesInjectedLiterals(t *testing.T) {
 	for name, inject := range map[string]string{
 		"cmd/ailang-worldd/demo_proof.go": "\nconst reintroduced = \"AILANG v0.41.0\"\n",
 		"scripts/verify_world_package.sh": "\necho 'AILANG v0.41.0'\n",
-		".github/workflows/ci.yml":        "\n          echo v0.52.1\n",
+		".github/workflows/ci.yml":        "\n          echo v0.52.1\n", // the retired tool, re-introduced
 	} {
 		src, err := os.ReadFile(filepath.Join(root, name))
 		if err != nil {
@@ -341,7 +341,30 @@ func TestReleaseLiteralScanCatchesInjectedLiterals(t *testing.T) {
 			t.Errorf("injected literal in %s was not caught", name)
 		}
 	}
-	// A manifest that moves the tool role reds the sites still naming v0.52.1.
+	// A retired release still explains its literals (row 139 D7): a site
+	// pinned to v0.52.1 by name is clean against today's manifest, and the same
+	// literal reds as "not in the manifest" once the retired row is dropped.
+	retiredSrc := []byte("bin=\"$HOME/.pinned-ailang-tools/v0.52.1/ailang\"\n")
+	got, _ = releaseLiterals("scripts/x.sh", retiredSrc)
+	if r, ok := m.Lookup("v0.52.1"); !ok || !r.Has(RoleRetired) {
+		t.Fatalf("control precondition: v0.52.1 is not a retired row of the manifest")
+	}
+	if want := expectedCounts(t, m, []site{{release: "v0.52.1", n: 1, why: "control"}}); got["v0.52.1"] != 1 || want["v0.52.1"] != 1 || len(got) != 1 {
+		t.Errorf("a retired release's literal at a site naming it: got %v, explained %v", got, want)
+	}
+	dropped := m
+	dropped.Releases = nil
+	for _, r := range m.Releases {
+		if !r.Has(RoleRetired) {
+			dropped.Releases = append(dropped.Releases, r)
+		}
+	}
+	if f := checkLiterals(t, dropped, "scripts/x.sh", got); len(f) == 0 || !strings.Contains(f[0], "not in pins/ailang-releases.json") {
+		t.Errorf("dropping the retired row left a v0.52.1 literal explained: %v", f)
+	}
+
+	// A manifest that moves the tool role reds the sites still naming the
+	// current tool release.
 	moved := m
 	moved.Releases = append([]Release(nil), m.Releases...)
 	for i := range moved.Releases {

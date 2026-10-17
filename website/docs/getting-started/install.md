@@ -42,7 +42,7 @@ World uses two AILANG releases for two different jobs. Both are checked by versi
 | Name in the docs | Release | Used for | Passed as |
 |---|---|---|---|
 | `PIN` | **AILANG v0.41.0** (commit `24ee108`) | The interpreter that runs every transition (plan and finish phases), type-checks transition sources at publish time, and builds/verifies `world/core` | `serve --ailang-bin`, `world-publish transitions --ailang-bin` |
-| `TOOL` | **AILANG v0.52.1** (commit `c68ded4`) | The binary the coding tools run inside the episode worktree (`policy-tool` and `run --policy`) | `serve --tool-ailang-bin` |
+| `TOOL` | **AILANG v0.54.15** (commit `0384450`) | The binary the coding tools run inside the episode worktree (`policy-tool` and `run --policy`) | `serve --tool-ailang-bin` |
 
 **Why two pins.**
 
@@ -53,13 +53,15 @@ World uses two AILANG releases for two different jobs. Both are checked by versi
 - `TOOL` is a separate, archived, hash-verified binary chosen for its **confinement
   behaviour**. The tool confinement (sandbox, `.git` protection including the macOS `.GIT`
   case-fold fix that landed in v0.50.1, `--chdir`, `--args-json`) and the four `run`
-  outcome shapes were measured on v0.51.0 and re-proved on exactly v0.52.1 (the pin since
-  row 135 M0). The daemon refuses any other release for
+  outcome shapes were measured on v0.51.0, re-proved on v0.52.1 (the pin from row 135 M0) and
+  carried to exactly v0.54.15 (the pin since row 139, the release with World's upstream fixes
+  ailang#1872–#1875). The daemon refuses any other release for
   `--tool-ailang-bin`: a different binary changes the measured facts, and World never widens to
   an unmeasured one (residual R-SE-8).
 
 Both releases, with their per-platform tarball and binary digests, are rows of the release
-manifest `pins/ailang-releases.json`, which is compiled into the CLIs.
+manifest `pins/ailang-releases.json`, which is compiled into the CLIs. A superseded binary
+(v0.52.1, the previous `TOOL`) stays there as a `retired` row, for history and replay.
 
 ### With `setup` (recommended)
 
@@ -85,7 +87,7 @@ Release assets are named `<os>.<arch>.ailang.tar.gz`, each with a `.sha256` file
 `linux.x64`; the tool binary was measured with `darwin.arm64`). For example, on Apple silicon:
 
 ```bash
-mkdir -p ~/.pinned-ailang ~/.pinned-ailang-tools/v0.52.1
+mkdir -p ~/.pinned-ailang ~/.pinned-ailang-tools/v0.54.15
 cd "$(mktemp -d)"
 
 base=https://github.com/sunholo-data/ailang/releases/download/v0.41.0
@@ -94,18 +96,18 @@ curl -fsSL -o pin.tar.gz.sha256 "$base/darwin.arm64.ailang.tar.gz.sha256"
 echo "$(cut -d' ' -f1 pin.tar.gz.sha256)  pin.tar.gz" | shasum -a 256 -c -
 tar -xzf pin.tar.gz -C ~/.pinned-ailang ailang
 
-base=https://github.com/sunholo-data/ailang/releases/download/v0.52.1
+base=https://github.com/sunholo-data/ailang/releases/download/v0.54.15
 curl -fsSL -o tool.tar.gz "$base/darwin.arm64.ailang.tar.gz"
 curl -fsSL -o tool.tar.gz.sha256 "$base/darwin.arm64.ailang.tar.gz.sha256"
 echo "$(cut -d' ' -f1 tool.tar.gz.sha256)  tool.tar.gz" | shasum -a 256 -c -
-tar -xzf tool.tar.gz -C ~/.pinned-ailang-tools/v0.52.1 ailang
+tar -xzf tool.tar.gz -C ~/.pinned-ailang-tools/v0.54.15 ailang
 
 export PIN=$HOME/.pinned-ailang/ailang
-export TOOL=$HOME/.pinned-ailang-tools/v0.52.1/ailang
+export TOOL=$HOME/.pinned-ailang-tools/v0.54.15/ailang
 $PIN --version && $TOOL --version
 ```
 
-The first line of each `--version` must read `AILANG v0.41.0` and `AILANG v0.52.1`.
+The first line of each `--version` must read `AILANG v0.41.0` and `AILANG v0.54.15`.
 
 :::warning Keep the pins out of `/tmp`
 macOS clears `/tmp` on reboot. Older runbooks used `/tmp/ailang-v0300/ailang` (v0.30.0, the
@@ -119,8 +121,8 @@ Run World against released, tagged binaries only — never a `-dirty` build and 
 
 ## Optional: an examples corpus
 
-The `examples-search` tool needs an AILANG examples corpus that the operator names. v0.52.1
-embeds a corpus, but World does not fall back to it. `$TOOL examples download` fills `~/.ailang/examples`, which `serve` uses by default
+The `examples-search` tool needs an AILANG examples corpus that the operator names. The tool
+binary may embed a corpus (v0.52.1 did), but World does not fall back to it. `$TOOL examples download` fills `~/.ailang/examples`, which `serve` uses by default
 when it exists. See [Coding tools](coding-tools.md).
 
 ## Before you run anything
