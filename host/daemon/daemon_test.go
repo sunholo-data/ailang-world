@@ -785,6 +785,8 @@ var allowedDepModules = []string{
 	"github.com/ncruces/go-strftime",                   // indirect: sqlite
 	"github.com/remyoudompheng/bigfft",                 // indirect: sqlite
 	"github.com/sunholo-data/ailang/serveapi/protocol", // P6.D/row108: released v0.47.2 protocol + hostcall/mcphttp subpackages; never the module root
+	"golang.org/x/text/unicode/norm",                   // row 156 M1a: protected-pattern NFC fold (host/broker/exec_protected.go); local Unicode tables only
+	"golang.org/x/text/transform",                      // indirect: x/text/unicode/norm
 }
 
 // daemonCorePatterns are the two package trees the allowlist governs.

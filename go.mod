@@ -4,6 +4,7 @@ go 1.26.6
 
 require (
 	github.com/sunholo-data/ailang v0.47.2
+	golang.org/x/text v0.42.0
 	modernc.org/sqlite v1.54.0
 )
 

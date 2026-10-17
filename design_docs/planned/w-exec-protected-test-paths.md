@@ -138,7 +138,7 @@
   - a `D` that names, or lies inside, `.git` or one of World's deny names (already read-only).
 - **Folding.** Patterns and paths are compared case-folded and NFC-normalized, exactly like `fileguard.foldKey` (V6). APFS folds (V5 case arms). On a case-sensitive Linux volume, folding over-denies an exotic spelling, which is `fileguard`'s own fail-closed rule.
 - **Canonical form and digest.**
-  - Each pattern is NFC-normalized. Duplicates are dropped by fold key. The list is sorted by fold key bytes.
+  - Each pattern is NFC-normalized. Duplicates are dropped by fold key, keeping the byte-smallest NFC spelling (so the digest does not depend on input order: `TESTS/**` and `tests/**` give one entry, `TESTS/**`). The list is sorted by fold key bytes. Entries with leading or trailing whitespace are refused (fileguard trims patterns, so a padded entry would mean different things to the two matchers; M1a judge N1). A `D` with a `.git` segment at any depth is refused, as fileguard's `UnderGitDir` already denies it (M1a judge N5).
   - `protected.digest = "sha256:" + hex(sha256("world/exec-protected/v1\n" + join(canonical, "\n") + "\n"))`.
   - The profile's own `digest` (row 140) changes too, because it digests the file bytes. This digest is separate, so two profiles with the same protected set can be compared.
 - **`ExecProfileVersion` stays `world/exec-profile/v1`.** The key is optional and additive. An older World refuses a profile that carries it (unknown key, fail closed). That is the safe direction.

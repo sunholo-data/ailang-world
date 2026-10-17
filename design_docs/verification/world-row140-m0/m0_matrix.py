@@ -232,6 +232,16 @@ def ProtectedMatrixSelfTest():
                             for d in ("g" * 64, "a" * 63, "symlink:" + "a" * 63)))
     check("bad-token", all(validateProtectedRows([dict(refused, client_token=t), wrote], census) == "missing-client"
                            for t in ("WORLD-PROBE-REFUSED eperm", "WORLD-PROBE-REFUSED")))
+    check("invalid-rc", all(validateProtectedRows([dict(refused, rc=r), wrote], census) == "invalid-rc"
+                            for r in ("bogus", None)) and
+          validateProtectedRows([dict(refused, rc="timeout"), wrote], census) is None)
+    check("snapshot-keys", validateProtectedRows([dict(refused, host_after={"other.txt": digest}), wrote], census)
+          == "invalid-host-snapshot" and
+          validateProtectedRows([dict(refused, host_before={}, host_after={}), wrote], census) == "invalid-host-snapshot")
+    check("partial-token", validateProtectedRows([dict(partial, client_token="garbage"), wrote], census) == "missing-client")
+    check("wrote-refused-token", validateProtectedRows([dict(wrote, client_token="WORLD-PROBE-REFUSED EPERM"), refused],
+                                                       census) == "missing-client" and
+          validateProtectedRows([dict(refused, client_token="WORLD-PROBE-WROTE"), wrote], census) == "missing-client")
     # The candidate is outside a synthetic allowed root but still under cwd,
     # so even a broken containment guard cannot cause off-worktree writes.
     with tempfile.TemporaryDirectory(prefix=".protected-self-test-", dir=os.getcwd()) as tmp:
