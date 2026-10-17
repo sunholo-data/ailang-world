@@ -15,6 +15,8 @@ exit 0 iff every GATING arm passes; INFO arms are recorded, never gating.
 """
 import argparse, hashlib, json, os, platform, shutil, signal, socket, subprocess, sys, tempfile, threading, time
 
+import re
+
 
 def protectedScratchRoot(scratch_root, allowed_root=None):
     """Resolve and validate before any fixture creation; reject symlink escapes too."""
@@ -29,7 +31,7 @@ def protectedScratchRoot(scratch_root, allowed_root=None):
 def validateProtectedRows(rows, census):
     """Return None on success, otherwise a named rejection reason.
 
-    Each row has arm, rendering, outcome (WROTE/REFUSED), client_token, rc, and
+    Each row has arm, rendering, outcome (WROTE/REFUSED/PARTIAL), client_token, rc, and
     host_before/host_after maps of host-observed path -> SHA-256 (None = absent).
     Snapshots must be collected independently of client output. rc is diagnostic.
     census is the independent expected collection of (arm, rendering) pairs.
@@ -41,33 +43,159 @@ def validateProtectedRows(rows, census):
         return "census-mismatch"
     for row in rows:
         outcome = row.get("outcome")
-        if outcome not in ("WROTE", "REFUSED"):
+        if outcome not in ("WROTE", "REFUSED", "PARTIAL"):
             return "invalid-outcome"
-        tokens = {"WORLD-PROBE-WROTE"} if outcome == "WROTE" else {
-            "WORLD-PROBE-REFUSED " + code for code in ("EPERM", "EACCES", "EROFS", "ENOENT")}
-        if row.get("client_token") not in tokens:
+        token = row.get("client_token")
+        valid = token == "WORLD-PROBE-WROTE" or (isinstance(token, str) and
+                re.fullmatch(r"WORLD-PROBE-REFUSED E[A-Z0-9]+", token) is not None)
+        if (not valid and (outcome != "PARTIAL" or token is not None)) or (
+                outcome == "WROTE" and token != "WORLD-PROBE-WROTE") or (
+                outcome == "REFUSED" and token == "WORLD-PROBE-WROTE"):
             return "missing-client"
+        if not isinstance(row.get("rc"), int) and row.get("rc") != "timeout":
+            return "invalid-rc"
         before, after = row.get("host_before"), row.get("host_after")
         if not isinstance(before, dict) or not before or not isinstance(after, dict) or before.keys() != after.keys():
             return "invalid-host-snapshot"
         for digest in list(before.values()) + list(after.values()):
-            if digest is not None and (not isinstance(digest, str) or len(digest) != 64 or
-                                       any(c not in "0123456789abcdef" for c in digest)):
+            if digest is not None and (not isinstance(digest, str) or
+                    re.fullmatch(r"(?:symlink:)?[0-9a-f]{64}", digest) is None):
                 return "invalid-host-snapshot"
         if outcome == "REFUSED" and before != after:
             return "host-changed"
+        if outcome == "WROTE" and before == after:
+            return "wrote-unchanged"
+    return None
+
+
+# V5 order; targets include aliases and both sides of every move.
+PROTECTED_ARMS = [
+    ("control", ["appendFileSync('pkg/a.go','X')"], ["pkg/a.go"]),
+    ("modify", ["appendFileSync('pkg/a_test.go','PWN')"], ["pkg/a_test.go"]),
+    ("new-nested", ["writeFileSync('pkg/b_test.go','PWN')"], ["pkg/b_test.go"]),
+    ("new-root", ["writeFileSync('c_test.go','PWN')"], ["c_test.go"]),
+    ("dir-modify", ["writeFileSync('tests/new.py','PWN')"], ["tests/new.py"]),
+    ("conftest", ["mkdirSync('cli/sub',{recursive:true})", "writeFileSync('cli/sub/conftest.py','PWN')"], ["cli/sub/conftest.py"]),
+    ("ts", ["writeFileSync('src/bar.test.ts','PWN')"], ["src/bar.test.ts"]),
+    ("delete", ["unlinkSync('pkg/a_test.go')"], ["pkg/a_test.go"]),
+    ("rename-onto", ["renameSync('pkg/a.go','pkg/z_test.go')"], ["pkg/a.go", "pkg/z_test.go"]),
+    ("rename-away", ["renameSync('pkg/a_test.go','pkg/moved.txt')"], ["pkg/a_test.go", "pkg/moved.txt"]),
+    ("protected-dir-rename", ["renameSync('tests','tests2')", "writeFileSync('tests2/test_x.py','PWN')"], ["tests/test_x.py", "tests2/test_x.py"]),
+    ("parent-dir-rename", ["renameSync('pkg','pkg2')", "appendFileSync('pkg2/a_test.go','PWN')"], ["pkg/a_test.go", "pkg2/a_test.go"]),
+    ("symlink", ["symlinkSync('tests','lnk')", "writeFileSync('lnk/x.py','PWN')"], ["tests/x.py", "lnk"]),
+    ("hardlink", ["linkSync('pkg/a_test.go','hl')", "appendFileSync('hl','PWN')"], ["pkg/a_test.go", "hl"]),
+    ("case-existing", ["appendFileSync('PKG/A_TEST.GO','PWN')"], ["PKG/A_TEST.GO"]),
+    ("case-new", ["writeFileSync('pkg/B_TEST.GO','PWN')"], ["pkg/B_TEST.GO"]),
+]
+PROTECTED_RENDERINGS = ("NONE", "DIRS_ONLY", "LITERAL")
+
+
+def protectedRowGate(row):
+    if row["rendering"] == "NONE":
+        return row["outcome"] == "WROTE"
+    if row["arm"] == "dir-modify" or (row["rendering"] == "LITERAL" and row["arm"] == "modify"):
+        return row["outcome"] == "REFUSED" and row["host_before"] == row["host_after"]
     return None
 
 
 def runProtectedMatrix(args):
-    # M0b creates fixtures ONLY after this check, with every synthetic directory
-    # beneath root; it must feed independently collected rows to validateProtectedRows.
-    root = protectedScratchRoot(args.scratch_root)
-    topology = {"root": root, "home": os.path.join(root, "home"),
-                "state": os.path.join(root, "state"),
-                "cache": os.path.join(root, "state", "exec-cache")}
-    print(f"M0b: arms not yet implemented (scratch root {topology['root']})", file=sys.stderr)
-    return 2
+    root = protectedScratchRoot(args.scratch_root)  # Before any mkdir, including metadata cwd.
+    os.makedirs(root, exist_ok=True)
+    node = os.path.realpath(args.node)
+    package = os.path.join(os.path.realpath(args.srt_node_modules), "@anthropic-ai", "sandbox-runtime")
+    cli = os.path.join(package, "dist", "cli.js")
+    host_env = {"PATH": "/usr/bin:/bin"}
+
+    def run(cmd, cwd=root):
+        try:
+            r = subprocess.run(cmd, cwd=cwd, env=host_env, stdin=subprocess.DEVNULL,
+                               capture_output=True, text=True, timeout=30)
+            return r.returncode, r.stdout, r.stderr
+        except subprocess.TimeoutExpired as exc:
+            return "timeout", (exc.stdout or b"").decode(), (exc.stderr or b"").decode()
+
+    def snapshot(wt, targets):
+        result = {}
+        for rel in targets:
+            path = os.path.join(wt, rel)
+            if os.path.islink(path):
+                result[rel] = "symlink:" + hashlib.sha256(os.fsencode(os.readlink(path))).hexdigest()
+            elif os.path.exists(path):
+                with open(path, "rb") as f:
+                    result[rel] = hashlib.sha256(f.read()).hexdigest()
+            else:
+                result[rel] = None
+        return result
+
+    with open(os.path.join(package, "package.json")) as f:
+        version = json.load(f)["version"]
+    with open(cli, "rb") as f:
+        cli_hash = hashlib.sha256(f.read()).hexdigest()
+    meta = {"platform": platform.platform(), "srt_version": version, "cli_sha256": cli_hash,
+            "node_version": run([node, "--version"])[1].strip(),
+            "bwrap_version": run(["bwrap", "--version"])[1].strip() if sys.platform == "linux" else "n/a"}
+    arch = {"x86_64": "x64", "aarch64": "arm64"}.get(platform.machine(), platform.machine())
+    seccomp = os.path.join(package, "vendor", "seccomp", arch)
+    reads = [seccomp] if sys.platform == "linux" and args.seccomp_read == "allowread" and os.path.isdir(seccomp) else []
+    files = ("pkg/a.go", "pkg/a_test.go", "a_test.go", "tests/test_x.py", "cli/conftest.py",
+             "src/foo.test.ts", "PKG/A_TEST.GO")
+    census = {(arm, rendering) for arm, _, _ in PROTECTED_ARMS for rendering in PROTECTED_RENDERINGS}
+    rows, gates = [], {}
+    for rendering in PROTECTED_RENDERINGS:
+        for arm, steps, targets in PROTECTED_ARMS:
+            rowroot = tempfile.mkdtemp(prefix=rendering + "-" + arm + "-", dir=root)
+            wt = os.path.join(rowroot, "wt")
+            for rel in files:
+                path = os.path.join(wt, rel)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "w") as f:
+                    f.write("// ORIG\n")
+            for rel in ("cli/sub", ".home", ".tmp"):
+                os.makedirs(os.path.join(wt, rel), exist_ok=True)
+            literals = sorted(os.path.join(wt, rel) for rel in files if
+                              re.fullmatch(r".*_test\.go|conftest\.py|.*\.test\.ts", os.path.basename(rel), re.I))
+            deny = [] if rendering == "NONE" else [os.path.join(wt, "tests")]
+            if rendering == "LITERAL":
+                deny += literals
+            settings = {"filesystem": {"allowWrite": [wt], "denyWrite": deny, "denyRead": [], "allowRead": reads},
+                        "network": {"allowedDomains": [], "deniedDomains": [], "allowLocalBinding": False,
+                                    "allowAllUnixSockets": False}, "enableWeakerNetworkIsolation": False, "allowAppleEvents": False}
+            settings_path = os.path.join(rowroot, "settings.json")
+            with open(settings_path, "w", opener=lambda p, flags: os.open(p, flags, 0o600)) as f:
+                json.dump(settings, f)
+            script = "process.env.HOME=process.cwd()+'/.home';process.env.TMPDIR=process.cwd()+'/.tmp';const fs=require('fs');try{"
+            script += "".join("fs." + step + ";console.log('WORLD-PROBE-STEP " + str(i + 1) + "');" for i, step in enumerate(steps))
+            script += "console.log('WORLD-PROBE-WROTE')}catch(e){console.log('WORLD-PROBE-REFUSED '+e.code);process.exitCode=1}"
+            before = snapshot(wt, targets)
+            rc, stdout, stderr = run([node, cli, "--settings", settings_path, "--", node, "-e", script], wt)
+            after = snapshot(wt, targets)
+            # Remove the row's fixture tree at once: it holds .go files, and repo-wide Go scans
+            # later in the CI job must never see them (the JSON keeps the evidence).
+            shutil.rmtree(rowroot)
+            tokens = [line for line in stdout.splitlines() if line.startswith(("WORLD-PROBE-WROTE", "WORLD-PROBE-REFUSED"))]
+            token = tokens[0] if len(tokens) == 1 else None
+            outcome = "WROTE" if before != after and token == "WORLD-PROBE-WROTE" else "PARTIAL"
+            if before == after and token and re.fullmatch(r"WORLD-PROBE-REFUSED E[A-Z0-9]+", token):
+                outcome = "REFUSED"
+            row = {"arm": arm, "rendering": rendering, "outcome": outcome, "client_token": token, "rc": rc, "worktree": wt,
+                   "host_before": before, "host_after": after, "deny_write": deny, "literals": literals if rendering == "LITERAL" else [],
+                   "steps_passed": re.findall(r"^WORLD-PROBE-STEP [0-9]+$", stdout, re.M), "stdout": stdout, "stderr": stderr}
+            rows.append(row)
+            gate = protectedRowGate(row)
+            if gate is not None:
+                gates[rendering + "/" + arm] = gate
+            print(f"[{'INFO' if gate is None else 'GATE PASS' if gate else 'GATE FAIL'}] {rendering}/{arm} outcome={outcome} token={token} host={'changed' if before != after else 'unchanged'}", flush=True)
+    leftover = sorted(os.listdir(root))
+    gates["fixtures-removed"] = not leftover
+    if not leftover:
+        os.rmdir(root)
+    rejection = validateProtectedRows(rows, census)
+    gates["validator"] = rejection is None
+    result = {"meta": meta, "rows": rows, "census_size": len(census), "gating": gates, "validation_error": rejection}
+    with open(args.json, "w") as f:
+        json.dump(result, f, indent=2)
+    print("PROTECTED-JSON " + json.dumps(result, separators=(",", ":")), flush=True)
+    return 0 if all(gates.values()) else 1
 
 
 def ProtectedMatrixSelfTest():
@@ -85,7 +213,10 @@ def ProtectedMatrixSelfTest():
         cases.append(bool(ok))
         print(f"[{'PASS' if ok else 'FAIL'}] {name}", flush=True)
 
-    check("ok", validateProtectedRows([refused, wrote], census) is None)
+    partial = dict(refused, outcome="PARTIAL", host_after={"tests/test.py": None})
+    linked = dict(refused, host_before={"link": "symlink:" + digest}, host_after={"link": "symlink:" + digest})
+    check("ok", all(validateProtectedRows([r, wrote], census) is None for r in (
+        refused, partial, dict(partial, client_token=None, rc="timeout"), linked)))
     check("empty", validateProtectedRows([], census) == "census-mismatch" and
           validateProtectedRows([], set()) == "empty-census" and
           validateProtectedRows([refused], census) == "census-mismatch" and
@@ -93,11 +224,31 @@ def ProtectedMatrixSelfTest():
     check("missing-client", validateProtectedRows([dict(refused, client_token=None), wrote], census) == "missing-client")
     changed = dict(refused, host_after={"tests/test.py": hashlib.sha256(b"forged refusal").hexdigest()})
     check("host-changed", validateProtectedRows([changed, wrote], census) == "host-changed")
+    none_refused = dict(wrote, outcome="REFUSED", client_token="WORLD-PROBE-REFUSED EBUSY", host_before=wrote["host_after"])
+    check("none-not-written", validateProtectedRows([refused, none_refused], census) is None and protectedRowGate(none_refused) is False)
+    check("wrote-unchanged", validateProtectedRows([refused, dict(wrote, host_before=wrote["host_after"])], census) == "wrote-unchanged")
+    check("invalid-outcome", validateProtectedRows([dict(refused, outcome="BOGUS"), wrote], census) == "invalid-outcome")
+    check("bad-digest", all(validateProtectedRows([dict(refused, host_before={"tests/test.py": d}), wrote], census) == "invalid-host-snapshot"
+                            for d in ("g" * 64, "a" * 63, "symlink:" + "a" * 63)))
+    check("bad-token", all(validateProtectedRows([dict(refused, client_token=t), wrote], census) == "missing-client"
+                           for t in ("WORLD-PROBE-REFUSED eperm", "WORLD-PROBE-REFUSED")))
     # The candidate is outside a synthetic allowed root but still under cwd,
     # so even a broken containment guard cannot cause off-worktree writes.
     with tempfile.TemporaryDirectory(prefix=".protected-self-test-", dir=os.getcwd()) as tmp:
         allowed = os.path.join(tmp, "allowed")
         candidate = os.path.join(tmp, "allowed-sibling", "must-not-exist")
+        os.mkdir(allowed)
+        outside = os.path.join(tmp, "outside")
+        os.mkdir(outside)
+        link = os.path.join(allowed, "link")
+        os.symlink(outside, link)
+        for name, path in (("root-equals-allowed", allowed), ("symlink-escape", link)):
+            rejected = False
+            try:
+                protectedScratchRoot(path, allowed)
+            except ValueError:
+                rejected = True
+            check(name, rejected)
         before = os.listdir(tmp)
         rejected = False
         try:
@@ -115,9 +266,9 @@ mode_group = mode_parser.add_mutually_exclusive_group()
 mode_group.add_argument("--protected-self-test", action="store_true")
 mode_group.add_argument("--protected-only", action="store_true")
 mode, _ = mode_parser.parse_known_args()
-if mode.protected_self_test or mode.protected_only:
+if mode.protected_self_test or mode.protected_only or "--help" in sys.argv or "-h" in sys.argv:
     protected_parser = argparse.ArgumentParser(parents=[mode_parser], allow_abbrev=False)
-    if mode.protected_only:
+    if mode.protected_only or "--help" in sys.argv or "-h" in sys.argv:
         protected_parser.add_argument("--scratch-root", required=True)
         protected_parser.add_argument("--srt-node-modules", required=True)
         protected_parser.add_argument("--node", required=True)

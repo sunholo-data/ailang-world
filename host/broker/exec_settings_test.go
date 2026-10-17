@@ -6,16 +6,57 @@ package broker
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
+
+func TestProtectedMatrixModeContract(t *testing.T) {
+	python, err := exec.LookPath("python3")
+	if errors.Is(err, exec.ErrNotFound) {
+		t.Skip("python3 absent from PATH")
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, source, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot locate test source")
+	}
+	script := filepath.Join(filepath.Dir(source), "../..", "design_docs/verification/world-row140-m0/m0_matrix.py")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, python, script, "--protected-self-test")
+	cmd.Dir = t.TempDir()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("protected self-test failed: %v\n%s", err, out)
+	}
+	names := []string{"ok", "empty", "missing-client", "outside-root", "none-not-written", "host-changed",
+		"wrote-unchanged", "invalid-outcome", "bad-digest", "root-equals-allowed", "symlink-escape", "bad-token"}
+	census := regexp.MustCompile(`(?m)^self-test: ([0-9]+) cases, ([0-9]+) passed$`).FindAllStringSubmatch(string(out), -1)
+	if len(census) != 1 || census[0][1] != strconv.Itoa(len(names)) || census[0][2] != strconv.Itoa(len(names)) {
+		t.Fatalf("missing or incorrect self-test census:\n%s", out)
+	}
+	for _, name := range names {
+		if !regexp.MustCompile(`(?m)^\[PASS\] ` + regexp.QuoteMeta(name) + `$`).Match(out) {
+			t.Errorf("missing passing case %s:\n%s", name, out)
+		}
+	}
+	t.Logf("%s", out)
+}
 
 var updateExecGolden = flag.Bool("update-exec-settings-golden", false, "rewrite testdata/exec_settings_*.golden.json")
 

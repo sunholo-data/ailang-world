@@ -1,0 +1,1309 @@
+{
+  "meta": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "srt_version": "0.0.78",
+    "cli_sha256": "3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e",
+    "node_version": "v26.0.0",
+    "bwrap_version": "n/a"
+  },
+  "rows": [
+    {
+      "arm": "control",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-control-kbsxj140/wt",
+      "host_before": {
+        "pkg/a.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a.go": "6ad4306d04e79d51822b90046463f914991730a422e08ad55b4c8d0671379079"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "modify",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-modify-8j3ptats/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a_test.go": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "new-nested",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-new-nested-lf5qbww3/wt",
+      "host_before": {
+        "pkg/b_test.go": null
+      },
+      "host_after": {
+        "pkg/b_test.go": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "new-root",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-new-root-6w__l79v/wt",
+      "host_before": {
+        "c_test.go": null
+      },
+      "host_after": {
+        "c_test.go": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "dir-modify",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-dir-modify-z_zmd6s0/wt",
+      "host_before": {
+        "tests/new.py": null
+      },
+      "host_after": {
+        "tests/new.py": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "conftest",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-conftest-xlv_hsv2/wt",
+      "host_before": {
+        "cli/sub/conftest.py": null
+      },
+      "host_after": {
+        "cli/sub/conftest.py": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "ts",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-ts-azbvssx4/wt",
+      "host_before": {
+        "src/bar.test.ts": null
+      },
+      "host_after": {
+        "src/bar.test.ts": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "delete",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-delete-mneo5f1s/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a_test.go": null
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "rename-onto",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-rename-onto-0nlp7c94/wt",
+      "host_before": {
+        "pkg/a.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/z_test.go": null
+      },
+      "host_after": {
+        "pkg/a.go": null,
+        "pkg/z_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "rename-away",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-rename-away-crntvvhk/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/moved.txt": null
+      },
+      "host_after": {
+        "pkg/a_test.go": null,
+        "pkg/moved.txt": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "protected-dir-rename",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-protected-dir-rename-c4g033e8/wt",
+      "host_before": {
+        "tests/test_x.py": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "tests2/test_x.py": null
+      },
+      "host_after": {
+        "tests/test_x.py": null,
+        "tests2/test_x.py": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "parent-dir-rename",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-parent-dir-rename-gvbrsyyy/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg2/a_test.go": null
+      },
+      "host_after": {
+        "pkg/a_test.go": null,
+        "pkg2/a_test.go": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "symlink",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-symlink-6j0h_mpb/wt",
+      "host_before": {
+        "tests/x.py": null,
+        "lnk": null
+      },
+      "host_after": {
+        "tests/x.py": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990",
+        "lnk": "symlink:59830ebc3a4184110566bf1a290d08473dfdcbd492ce498b14cd1a5e2fa2e441"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "hardlink",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-hardlink-4upwe_h5/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "hl": null
+      },
+      "host_after": {
+        "pkg/a_test.go": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7",
+        "hl": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "case-existing",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-case-existing-d9ppwq01/wt",
+      "host_before": {
+        "PKG/A_TEST.GO": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "PKG/A_TEST.GO": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "case-new",
+      "rendering": "NONE",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/NONE-case-new-5189lfu6/wt",
+      "host_before": {
+        "pkg/B_TEST.GO": null
+      },
+      "host_after": {
+        "pkg/B_TEST.GO": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "control",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-control-600ksrrr/wt",
+      "host_before": {
+        "pkg/a.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a.go": "6ad4306d04e79d51822b90046463f914991730a422e08ad55b4c8d0671379079"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-control-600ksrrr/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "modify",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-modify-y987w7hv/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a_test.go": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-modify-y987w7hv/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "new-nested",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-new-nested-d1lgv89l/wt",
+      "host_before": {
+        "pkg/b_test.go": null
+      },
+      "host_after": {
+        "pkg/b_test.go": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-new-nested-d1lgv89l/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "new-root",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-new-root-nczqpg5v/wt",
+      "host_before": {
+        "c_test.go": null
+      },
+      "host_after": {
+        "c_test.go": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-new-root-nczqpg5v/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "dir-modify",
+      "rendering": "DIRS_ONLY",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-dir-modify-8f4lfwtq/wt",
+      "host_before": {
+        "tests/new.py": null
+      },
+      "host_after": {
+        "tests/new.py": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-dir-modify-8f4lfwtq/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "conftest",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-conftest-56yqcjoo/wt",
+      "host_before": {
+        "cli/sub/conftest.py": null
+      },
+      "host_after": {
+        "cli/sub/conftest.py": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-conftest-56yqcjoo/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "ts",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-ts-4oq2sxf4/wt",
+      "host_before": {
+        "src/bar.test.ts": null
+      },
+      "host_after": {
+        "src/bar.test.ts": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-ts-4oq2sxf4/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "delete",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-delete-tdyfap1z/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a_test.go": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-delete-tdyfap1z/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "rename-onto",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-rename-onto-sf7j6b2w/wt",
+      "host_before": {
+        "pkg/a.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/z_test.go": null
+      },
+      "host_after": {
+        "pkg/a.go": null,
+        "pkg/z_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-rename-onto-sf7j6b2w/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "rename-away",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-rename-away-6j7vr1o4/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/moved.txt": null
+      },
+      "host_after": {
+        "pkg/a_test.go": null,
+        "pkg/moved.txt": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-rename-away-6j7vr1o4/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "protected-dir-rename",
+      "rendering": "DIRS_ONLY",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-protected-dir-rename-sde9ai57/wt",
+      "host_before": {
+        "tests/test_x.py": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "tests2/test_x.py": null
+      },
+      "host_after": {
+        "tests/test_x.py": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "tests2/test_x.py": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-protected-dir-rename-sde9ai57/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "parent-dir-rename",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-parent-dir-rename-lat7pnbi/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg2/a_test.go": null
+      },
+      "host_after": {
+        "pkg/a_test.go": null,
+        "pkg2/a_test.go": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-parent-dir-rename-lat7pnbi/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "symlink",
+      "rendering": "DIRS_ONLY",
+      "outcome": "PARTIAL",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-symlink-65723oh4/wt",
+      "host_before": {
+        "tests/x.py": null,
+        "lnk": null
+      },
+      "host_after": {
+        "tests/x.py": null,
+        "lnk": "symlink:59830ebc3a4184110566bf1a290d08473dfdcbd492ce498b14cd1a5e2fa2e441"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-symlink-65723oh4/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "hardlink",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-hardlink-8mtjg6jb/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "hl": null
+      },
+      "host_after": {
+        "pkg/a_test.go": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7",
+        "hl": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-hardlink-8mtjg6jb/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "case-existing",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-case-existing-z0ilk7ro/wt",
+      "host_before": {
+        "PKG/A_TEST.GO": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "PKG/A_TEST.GO": "6e1075ad63e6c50174c799e1c6bcc027bb567cba19d412e920d277fc2fd7b5b7"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-case-existing-z0ilk7ro/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "case-new",
+      "rendering": "DIRS_ONLY",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-case-new-3v7d6f0w/wt",
+      "host_before": {
+        "pkg/B_TEST.GO": null
+      },
+      "host_after": {
+        "pkg/B_TEST.GO": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/DIRS_ONLY-case-new-3v7d6f0w/wt/tests"
+      ],
+      "literals": [],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "control",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt",
+      "host_before": {
+        "pkg/a.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a.go": "6ad4306d04e79d51822b90046463f914991730a422e08ad55b4c8d0671379079"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-control-s241nip8/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "modify",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-modify-g_gly780/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "new-nested",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt",
+      "host_before": {
+        "pkg/b_test.go": null
+      },
+      "host_after": {
+        "pkg/b_test.go": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-nested-9pwmbr8g/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "new-root",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt",
+      "host_before": {
+        "c_test.go": null
+      },
+      "host_after": {
+        "c_test.go": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-new-root-msdo6qbx/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "dir-modify",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt",
+      "host_before": {
+        "tests/new.py": null
+      },
+      "host_after": {
+        "tests/new.py": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-dir-modify-t_ykl392/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "conftest",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt",
+      "host_before": {
+        "cli/sub/conftest.py": null
+      },
+      "host_after": {
+        "cli/sub/conftest.py": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-conftest-axws9o2z/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1",
+        "WORLD-PROBE-STEP 2"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-STEP 2\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "ts",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt",
+      "host_before": {
+        "src/bar.test.ts": null
+      },
+      "host_after": {
+        "src/bar.test.ts": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-ts-0gokjis1/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "delete",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-delete-1crtn1yw/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "rename-onto",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt",
+      "host_before": {
+        "pkg/a.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/z_test.go": null
+      },
+      "host_after": {
+        "pkg/a.go": null,
+        "pkg/z_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-onto-wvj74vm9/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    },
+    {
+      "arm": "rename-away",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/moved.txt": null
+      },
+      "host_after": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg/moved.txt": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-rename-away-z1m2wo08/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "protected-dir-rename",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt",
+      "host_before": {
+        "tests/test_x.py": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "tests2/test_x.py": null
+      },
+      "host_after": {
+        "tests/test_x.py": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "tests2/test_x.py": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-protected-dir-rename-ocdnohmb/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "parent-dir-rename",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg2/a_test.go": null
+      },
+      "host_after": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "pkg2/a_test.go": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-parent-dir-rename-nscxoc6h/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "symlink",
+      "rendering": "LITERAL",
+      "outcome": "PARTIAL",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt",
+      "host_before": {
+        "tests/x.py": null,
+        "lnk": null
+      },
+      "host_after": {
+        "tests/x.py": null,
+        "lnk": "symlink:59830ebc3a4184110566bf1a290d08473dfdcbd492ce498b14cd1a5e2fa2e441"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-symlink-8wtvxz4r/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "hardlink",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt",
+      "host_before": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "hl": null
+      },
+      "host_after": {
+        "pkg/a_test.go": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4",
+        "hl": null
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-hardlink-giikjv5h/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "case-existing",
+      "rendering": "LITERAL",
+      "outcome": "REFUSED",
+      "client_token": "WORLD-PROBE-REFUSED EPERM",
+      "rc": 1,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt",
+      "host_before": {
+        "PKG/A_TEST.GO": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "host_after": {
+        "PKG/A_TEST.GO": "b74279ee679a41395741c1ac47ab46dc7682aed446a78ec5ec3b0563b81195a4"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-existing-gm74nxzo/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [],
+      "stdout": "WORLD-PROBE-REFUSED EPERM\n",
+      "stderr": ""
+    },
+    {
+      "arm": "case-new",
+      "rendering": "LITERAL",
+      "outcome": "WROTE",
+      "client_token": "WORLD-PROBE-WROTE",
+      "rc": 0,
+      "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt",
+      "host_before": {
+        "pkg/B_TEST.GO": null
+      },
+      "host_after": {
+        "pkg/B_TEST.GO": "6a2a781c47a940d740f7f0e9872c9683088baa559e69a8da81fcad9ad650b990"
+      },
+      "deny_write": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/tests",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/src/foo.test.ts"
+      ],
+      "literals": [
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/PKG/A_TEST.GO",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/cli/conftest.py",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/pkg/a_test.go",
+        "/Users/voightkampff/dev/sunholo-data/.wt-world-iter278-row156-m0b/.row156-local/matrix/LITERAL-case-new-z4f5el48/wt/src/foo.test.ts"
+      ],
+      "steps_passed": [
+        "WORLD-PROBE-STEP 1"
+      ],
+      "stdout": "WORLD-PROBE-STEP 1\nWORLD-PROBE-WROTE\n",
+      "stderr": ""
+    }
+  ],
+  "census_size": 48,
+  "gating": {
+    "NONE/control": true,
+    "NONE/modify": true,
+    "NONE/new-nested": true,
+    "NONE/new-root": true,
+    "NONE/dir-modify": true,
+    "NONE/conftest": true,
+    "NONE/ts": true,
+    "NONE/delete": true,
+    "NONE/rename-onto": true,
+    "NONE/rename-away": true,
+    "NONE/protected-dir-rename": true,
+    "NONE/parent-dir-rename": true,
+    "NONE/symlink": true,
+    "NONE/hardlink": true,
+    "NONE/case-existing": true,
+    "NONE/case-new": true,
+    "DIRS_ONLY/dir-modify": true,
+    "LITERAL/modify": true,
+    "LITERAL/dir-modify": true,
+    "fixtures-removed": true,
+    "validator": true
+  },
+  "validation_error": null
+}
