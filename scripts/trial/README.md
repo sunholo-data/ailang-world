@@ -52,6 +52,16 @@ paths/outcome ref or error, `outcome_record_errors`, trailer), `transcripts/<ep>
 `graders/<ep>.<name>.{stdout,stderr}`. A failed record never raises; it is counted. Exit: 0 done,
 1 done with record errors (AC2 wants 0), 2 refused or pre-flight failed (nothing graded).
 
+## 2b. The paired shell arm (row 187 evidence loop)
+
+An episode with `"arm": "shell"` (and `"pair_of": "<world episode id>"`) runs the SAME task text with
+the same agent in a plain git worktree of the same base commit. It uses the floor's shell argv
+(`arms.build_argv(agent, 'shell')`): native tools, a sandboxed shell, no web tools, Codex
+`-s workspace-write`. It needs no World session, mint or daemon, and records no outcome or trailer; the
+same graders run after it. Write a paired task's text channel-neutral (no World- or shell-only
+instructions): only the channel note differs per arm. Prepare the shell worktree yourself
+(`git worktree add -b <branch> <dir> <base>`) with the same venvs.
+
 ## 3. Open the draft PR (operator — D6)
 
     python3 scripts/trial/trial.py pr-body --episode-row <evidence>/episodes/tps-a.json \

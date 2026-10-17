@@ -68,6 +68,15 @@ CHANNEL_NOTE = (
     '`workspace-exec` runs the operator\'s profiled commands by id: {commands}. Each call is sandboxed '
     '(no network, short timeout). When you are done, finish by summarising the change you made.\n')
 
+# The paired shell arm's note (row 187 evidence loop): the same task text, the agent's native tools.
+SHELL_CHANNEL_NOTE = (
+    '---\n'
+    'Channel note (trial operator): work in this repository worktree with your normal coding tools '
+    '(your shell is sandboxed: no network). You cannot commit; the operator commits the worktree '
+    'after the episode. When you are done, finish by summarising the change you made.\n')
+
+ARMS = ('world', 'shell')
+
 
 class TrialError(Exception):
     """A refusal before anything runs (bad spec, bad rig layout, unreadable session)."""
@@ -132,14 +141,23 @@ def episode_spec(spec: dict, ep: str) -> dict:
                     'timeout_s': float(g.get('timeout_s') or DEFAULT_GRADER_TIMEOUT_S)})
     e['graders'] = out
     e['exec_commands'] = list(e.get('exec_commands') or spec.get('exec_commands') or [])
+    e['arm'] = e.get('arm') or 'world'
+    if e['arm'] not in ARMS:
+        raise TrialError(f'episode {ep}: arm must be one of {ARMS}')
+    if e.get('pair_of') is not None and not re.fullmatch(r'[A-Za-z0-9._-]{1,64}', str(e['pair_of'])):
+        raise TrialError(f'episode {ep}: pair_of {e["pair_of"]!r} is not a plain episode id')
     e['label'] = f'trial-{spec["project"]}-{ep}'
     return e
 
 
-def build_prompt(task_text: str, exec_commands: list) -> str:
-    """D4: the task text VERBATIM, then the fixed channel note."""
-    cmds = ', '.join(f'`{c}`' for c in exec_commands) if exec_commands else '(none profiled)'
+def build_prompt(task_text: str, exec_commands: list, arm: str = 'world') -> str:
+    """D4: the task text VERBATIM, then the fixed channel note for the arm. A paired run gives both
+    arms the same task text, so it should be written channel-neutral (no World- or shell-only
+    instructions); only the note differs."""
     sep = '' if task_text.endswith('\n') else '\n'
+    if arm == 'shell':
+        return task_text + sep + '\n' + SHELL_CHANNEL_NOTE
+    cmds = ', '.join(f'`{c}`' for c in exec_commands) if exec_commands else '(none profiled)'
     return task_text + sep + '\n' + CHANNEL_NOTE.format(commands=cmds)
 
 
@@ -216,6 +234,26 @@ def run_trial_agent(e: dict, *, prompt_text: str, private_dir: str, void_dir: st
     except (world.WorldReadError, OSError) as err:
         row['log_to_error'] = str(err)
     row['void_listing'] = sorted(os.listdir(void_dir))
+    with open(transcript_path, encoding='utf-8', errors='replace') as f:
+        row['transcript'] = run_task.parse_transcript(agent, f.read())
+    return row
+
+
+def run_shell_agent(e: dict, *, prompt_text: str, private_dir: str, transcript_path: str,
+                    max_budget_usd: float | None = None) -> dict:
+    """The paired shell arm: the floor's shell argv (``arms.build_argv(agent, 'shell')``: native tools,
+    sandboxed shell, no web tools) with the worktree as cwd. No World session, daemon or log range."""
+    agent = e['agent']
+    run_task.check_private_dir(private_dir, e['worktree'], '')
+    row = {'error_category': None, 'cause_evidence': None, 'log_from': None, 'log_to': None}
+    argv = arms.build_argv(agent, 'shell', model=e['model'], prompt_text=prompt_text, cwd=e['worktree'],
+                           mcp_config_path=None, max_budget_usd=max_budget_usd)
+    row['argv'] = arms.redact_argv(argv, prompt_text, ())
+    env = run_task.agent_env(agent, 'shell', private_dir=private_dir, tool_bin=None, token=None)
+    row.update(run_task.spawn(argv, cwd=e['worktree'], env=env, transcript_path=transcript_path,
+                              deadline_s=e['deadline_s']))
+    if row.get('finish_reason') == 'timeout':
+        row['error_category'] = 'timeout'
     with open(transcript_path, encoding='utf-8', errors='replace') as f:
         row['transcript'] = run_task.parse_transcript(agent, f.read())
     return row
@@ -438,23 +476,29 @@ def run_episode(spec: dict, ep: str, *, rig: str, addr: str, evidence: str, clie
     private = os.path.join(rig, 'private')
     void_dir = e.get('void_dir') or os.path.join(rig, 'void', ep)
     os.makedirs(void_dir, exist_ok=True)
-    token = read_token(os.path.join(private, f'{ep}.session'))
+    shell = e['arm'] == 'shell'
+    token = None if shell else read_token(os.path.join(private, f'{ep}.session'))
     for d in ('episodes', 'transcripts', 'graders'):
         os.makedirs(os.path.join(evidence, d), exist_ok=True)
     with open(e['task_text_file'], encoding='utf-8') as f:
         task_text = f.read()
-    prompt_text = build_prompt(task_text, e['exec_commands'])
+    prompt_text = build_prompt(task_text, e['exec_commands'], e['arm'])
     transcript = os.path.join(evidence, 'transcripts', f'{ep}.jsonl')
-    client = client or world.Client(addr)
+    client = None if shell else (client or world.Client(addr))
     row = {'schema': 'trial-episode/1', 'project': spec['project'], 'episode': ep, 'agent': e['agent'],
+           'arm': e['arm'], 'pair_of': e.get('pair_of'),
            'model': e['model'], 'task': e['task'], 'label': e['label'], 'worktree': e['worktree'],
            'started_at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
            'prompt_sha256': hashlib.sha256(prompt_text.encode()).hexdigest(),
            'task_text_sha256': hashlib.sha256(task_text.encode()).hexdigest(),
            'exec_commands': e['exec_commands'], 'deadline_s': e['deadline_s']}
-    drv = run_trial_agent(e, prompt_text=prompt_text, private_dir=private, void_dir=void_dir, token=token,
-                          transcript_path=transcript, client=client, addr=addr,
-                          max_budget_usd=e.get('max_budget_usd'))
+    if shell:
+        drv = run_shell_agent(e, prompt_text=prompt_text, private_dir=private, transcript_path=transcript,
+                              max_budget_usd=e.get('max_budget_usd'))
+    else:
+        drv = run_trial_agent(e, prompt_text=prompt_text, private_dir=private, void_dir=void_dir, token=token,
+                              transcript_path=transcript, client=client, addr=addr,
+                              max_budget_usd=e.get('max_budget_usd'))
     tr = drv.pop('transcript', None) or {}
     row['agent_run'] = {k: drv.get(k) for k in ('rc', 'wall_ms', 'finish_reason', 'error_category',
                                                  'cause_evidence', 'argv', 'preflight', 'mcp_config_deleted',
@@ -477,6 +521,9 @@ def run_episode(spec: dict, ep: str, *, rig: str, addr: str, evidence: str, clie
             with open(f'{base}.{stream}', 'wb') as f:
                 f.write(gr.pop('_' + stream))
             gr[f'{stream}_path'] = f'{base}.{stream}'
+        if shell:  # no World session: nothing to record into; the grader row stands alone
+            row['graders'].append(gr)
+            continue
         try:
             payload = outcome_payload(e, drv.get('log_from'), drv.get('log_to'), gr, sol)
         except (ValueError, KeyError, TypeError) as err:
@@ -488,7 +535,8 @@ def run_episode(spec: dict, ep: str, *, rig: str, addr: str, evidence: str, clie
                 gr['outcome_record'] = {'error': f'recorder: {err}'}
         row['graders'].append(gr)
     row['outcome_record_errors'] = outcome_record_errors(row)
-    row['provenance'] = provenance_trailer(rig, addr, ep, drv.get('log_from'), drv.get('log_to'), runner=runner)
+    row['provenance'] = (None if shell else
+                         provenance_trailer(rig, addr, ep, drv.get('log_from'), drv.get('log_to'), runner=runner))
     return _write_row(evidence, ep, row)
 
 
