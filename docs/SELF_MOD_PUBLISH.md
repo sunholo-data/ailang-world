@@ -41,10 +41,10 @@ Nine steps, each asserted to perform non-zero work. It ends by writing the **rea
 comparing it byte-for-byte against `scripts/world_package_ready_packet.golden.json`. Green means
 the artifact's identity is exactly what was reviewed.
 
-This gate needs the **pinned v0.41.0** compiler, which is *not* the binary every other leg uses — the
-replay goldens are still v0.30.0-scoped and that pin deliberately did NOT move. Point
-it with `WORLD_PKG_AILANG_BIN`; there is deliberately **no silent fallback**, so a wrong binary fails
-loudly rather than skipping.
+This gate needs the **pinned v0.41.0** compiler. CI's Go legs use the same release (`AILANG_BIN`):
+the replay goldens were re-verified byte-exact on v0.41.0 on 2026-09-22, and the old v0.30.0 replay
+pin is gone. Point this gate at it with `WORLD_PKG_AILANG_BIN`; there is deliberately **no silent
+fallback**, so a wrong binary fails loudly rather than skipping.
 
 ### 3. Run the full repo gate
 

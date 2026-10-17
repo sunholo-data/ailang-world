@@ -14,8 +14,17 @@ World's 1.0 bar asks that, for at least three real questions arising from operat
 yields the verified answer in five minutes or less. The first demonstration (2026-09-24) answered
 four real mission incidents in 10–20 s each. Its honest caveat: those incidents had been
 diagnosed before they were committed, so the walks measured **retrieval** of a recorded
-diagnosis, not a fresh one, and the pre-World baselines were unmeasured. A follow-up protocol
-with unseeded questions and live-timed baselines (queue row 114) is not yet run.
+diagnosis, not a fresh one, and the pre-World baselines were unmeasured.
+
+The follow-up protocol (queue row 114, 2026-10-16) closed that gap, and clause 5 is met
+(D-WORLD-80). Questions were harvested unseeded from real operation, and each was answered both
+by a World walk and by a live pre-World baseline (an agent with read-only access to the repo and
+raw logs), each checked by a verifier against sealed ground truth. Three walks qualified: Q4 in
+54.6 s, Q6 in 25.3 s and Q8 in 39.0 s. The baseline also verified on those questions, more
+slowly (67.0 s, 87.5 s and 116.8 s). Four other attempts did not qualify and are kept in the
+record, with the capture gaps they found; two of those findings have since landed as
+`worktree_delta` and `outcome record` (below). Evidence:
+[`design_docs/verification/w-provenance-teeth-unseeded-baselined-walk/`](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/verification/w-provenance-teeth-unseeded-baselined-walk/index.md).
 
 ## The read API you walk with
 
@@ -117,6 +126,30 @@ payload sha256:<source-hash>        # each piece of evidence
 Before the `by-semantic-id` route existed (finding F-1 of that demonstration), a walk had to scan
 `log range --from 0` and fetch each entry's `transitionRef` metadata until the semantic ID
 matched. That still works, and is the fallback when you do not know the name.
+
+### Task outcomes
+
+A harness that grades agent tasks records each outcome with `ailang-worldd outcome record`, as
+a `world/task-outcome/v1` object committed under the episode's session. Its payload names the
+agent, the arm, the task, the run, the episode's entry range (`entries: {from, to}`), the
+grading rule and grader version, and the result (`outcome.class`, compile, runtime and stdout
+checks, heads of stdout and stderr). A walk that asks "why did this task fail" finds it the same
+way:
+
+```bash
+ailang-worldd object find world/task-outcome/v1
+payload sha256:<outcome-hash>       # the task, the grading rule, the result, the entry range
+```
+
+## What a toolchain call changed
+
+`ailang-run`, `ailang-check`, `ailang-cli` and `workspace-exec` results carry a
+`worktree_delta` listing the files the call created, modified or deleted (see
+[Results and errors](../agents/results-and-errors.md#worktree_delta-what-a-toolchain-call-changed)).
+`ailang-worldd why <entry>` prints it as a `worktree: N created, M modified, K deleted` line.
+When an input is long, `why` prints its short top-level fields (`path`, `command`, `op`, …)
+before the elided preview, so the file an `ailang-edit` touched is visible without fetching the
+input payload.
 
 ## Verify outside World
 

@@ -16,15 +16,16 @@ Every message below is quoted from the code or from a measured run.
 ailang-worldd: broker: AILANG_REGISTRY_API_KEY is set in the process environment: move it to a mode-0600 file outside the working tree and unset it (see design_docs/planned/w-self-mod-vertical.md Decision 4)
 ```
 
-Every `ailang-worldd` command refuses (exit 2), client verbs included. Run
-`unset AILANG_REGISTRY_API_KEY` in that shell. `world-publish` reads the key only from
-`--credential-file`.
+Every `ailang-worldd` command refuses (exit 2), client verbs included; only a `--help` request
+still answers. Run `unset AILANG_REGISTRY_API_KEY` in that shell. `world-publish` reads the key
+only from `--credential-file`.
 
 ### `another process already holds writer authority for this database`
 
-Another process has the store open for writing: usually your running daemon. `session mint`,
-`session revoke` and `world-publish transitions` all need the daemon **stopped** first. The
-lock file is `<db>.writer.lock`; do not delete it by hand while a process holds it.
+Another process has the store open for writing: usually your running daemon. `session new`,
+`session mint`, `session revoke`, `world-publish transitions` and `world-publish epoch nominate`
+all need the daemon **stopped** first (`session list` does not). The lock file is
+`<db>.writer.lock`; do not delete it by hand while a process holds it.
 
 ### `resolve parent of "…": no such file or directory` / `STOP fence=store reason=unopenable`
 
@@ -96,10 +97,22 @@ interpreter. Start `serve --ailang-bin $PIN` once against the store, stop it, th
 The transition source failed `check` under the pinned interpreter. A common cause is importing
 `world/*`: publishable modules must be self-contained and import only `std/*`.
 
-### `session revoke: usage: session revoke [--db <path>] <credential_id-hash> (flags before the id)`
+### `session revoke: refusing: no session credential … nothing was revoked`
 
-Flags after the ID are not parsed. Put `--db` before the credential ID:
-`session revoke --db /path/world.db <credential_id>`.
+```text
+ailang-worldd session revoke: refusing: no session credential <id> in <db> (already revoked, or minted in another store); nothing was revoked
+```
+
+The ID is not in this store (exit 1). Check `--db` and list what the store holds with
+`session list --db /path/world.db`. Flags and the ID may come in either order;
+`session revoke --db /path/world.db --episode <ep>` revokes every credential of one episode.
+
+### `… exists and is not a git worktree: … pass --allow-non-git to adopt it as a DEGRADED episode`
+
+`session new` found `<workspace-root>/<episode>` already present but not a git worktree. Remove
+it or pick another episode name (`session new --repo <repo>` makes the worktree), or pass
+`--allow-non-git` to adopt it as a degraded episode: no branch diff, provenance trailer or reset
+to a base, and walk-basis worktree deltas.
 
 ## Committing
 

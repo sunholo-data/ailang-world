@@ -17,8 +17,15 @@ An **episode** is the unit of work an agent session belongs to. It names:
 
 For the coding tools the episode ID must match `^[a-z0-9][a-z0-9-]{0,63}$`, and
 `<workspace-root>/<episode>` must be a real directory (not a symlink) that the operator created
-beforehand, normally with `git worktree add`. Anything else gives the episode an empty handler
-registry, so every effectful call is refused before anything runs.
+beforehand, normally a git worktree made by `session new` (below) or `git worktree add`.
+Anything else gives the episode an empty handler registry, so every effectful call is refused
+before anything runs.
+
+An episode directory that is not a git worktree can still be adopted, with
+`session new --allow-non-git`, as a **degraded** episode: it has no own branch, no branch diff
+or provenance trailer and no reset to a base, and its `worktree_delta` records use a bounded
+file walk instead of `git status`. `session list` marks it `DEGRADED`, and `/v1/health` lists it
+under `degraded_episodes`.
 
 ## Session credentials
 
@@ -34,10 +41,32 @@ No other header is read. The token is a session credential, never an API key.
 The store keeps only a hash of the token (the `credential_id`). The raw token is printed or
 written exactly once, at mint time.
 
+### Provisioning an episode: `session new`
+
+`session new` is the usual path (QUICKSTART §9). In one attended act it provisions the episode's
+worktree (from `--repo`, detached or on `--branch`, unless it already exists) and mints a
+session for it. It speaks directly to the store file, so the daemon must be **stopped** (the
+store has one writer process at a time):
+
+```bash
+ailang-worldd session new ep1 --db /path/world.db --workspace-root /path/ws --repo /path/repo \
+  --preset se-tools --ttl 14400 --out /path/session
+```
+
+- `--preset se-tools` gives one grant per effect the coding tools declare: nine grants, each
+  scope `worktree` with `--budget` calls (default 50). `--grant EFFECT=SCOPE:BUDGET` adds a grant
+  or overrides a preset one.
+- The y/N prompt names the worktree and every grant. If the mint fails, the worktree this run
+  created is removed.
+- `--allow-non-git` adopts an existing non-git directory as a degraded episode (see above).
+
+`session list --db /path/world.db` shows the credentials in a store (the `credential_id`, never
+the token), live or expired, with their grants; it reads beside a running daemon.
+
 ### Minting
 
-Minting is an attended act. It speaks directly to the store file, so the daemon must be
-**stopped** (the store has one writer process at a time):
+`session mint` mints a session with explicit grants for an episode whose directory already
+exists. It is attended too, and also needs the daemon **stopped**:
 
 ```bash
 ailang-worldd session mint --db /path/world.db --episode ep1 \
@@ -53,21 +82,23 @@ ailang-worldd session mint --db /path/world.db --episode ep1 \
   without it the token is printed to stdout once.
 - The `credential_id` is printed to stderr for later revocation.
 
-`session mint` opens `/dev/tty` and asks a `y/N` confirmation there. Without a controlling
-terminal it refuses. See [Attended steps](../guides/attended-steps.md).
+`session new` and `session mint` open `/dev/tty` and ask a `y/N` confirmation there. Without a
+controlling terminal they refuse. See [Attended steps](../guides/attended-steps.md).
 
 ### Revoking
 
 ```bash
 ailang-worldd session revoke --db /path/world.db <credential_id>
+ailang-worldd session revoke --db /path/world.db --episode ep1
 ```
 
 Revocation deletes the mapping row, so the next request with that token is `SessionUnknown`.
-It needs no terminal. Like mint, it opens the store for writing, so stop the daemon first.
+`--episode` revokes every credential of that episode. It needs no terminal. Like mint, it opens
+the store for writing, so stop the daemon first.
 
-Put `--db` **before** the `credential_id`: flags after the ID are not parsed, and that order
-fails with the usage message. Revoking an ID that does not exist still prints
-`revoked session credential …` and exits 0.
+Flags and the `credential_id` may come in either order. An ID (or episode) with no credential
+in the store is refused with exit 1 (`refusing: no session credential … nothing was revoked`),
+and so is a `--db` that does not exist; it is never created.
 
 ## What a session gates
 

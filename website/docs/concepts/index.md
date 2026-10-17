@@ -16,7 +16,7 @@ records what happened.
 > Unix made everything a file. AILANG World makes everything a typed state transition.
 
 This section explains the model. Each page states what is built today and what is still design
-intent, because World is pre-1.0 and the two are not the same thing.
+intent, because the two are not the same thing, even in a release candidate.
 
 ## The pieces you can run today
 
@@ -27,7 +27,7 @@ intent, because World is pre-1.0 and the two are not the same thing.
 | Effect broker | The in-process authority boundary: capability, scope, budget, recorded outcome | [Effects, capabilities and budgets](effects-capabilities-budgets.md) |
 | Sessions | A bearer credential bound to one episode and a set of grants, minted at a terminal | [Sessions and episodes](sessions-and-episodes.md) |
 | Transition registry | Published, pinned transitions, served per session over MCP and A2A | [Transitions manifest](../reference/transitions-manifest.md) |
-| `se-tools` | Eight AILANG coding tools (read, write, edit, check, run, two searches, CLI) | [Coding tools](../getting-started/coding-tools.md) |
+| `se-tools` | Nine coding tools (read, write, edit, check, run, two searches, CLI, and `workspace-exec` for operator-profiled commands) | [Coding tools](../getting-started/coding-tools.md) |
 | `world-publish` | The attended operator entrypoint for registry writes and the `world/core` package publish | [Attended steps](../guides/attended-steps.md) |
 
 ## The model in one paragraph per idea
@@ -58,15 +58,17 @@ publishing transitions, publishing a package — are fenced to a human at a real
 ## What World is not
 
 - It is not a replacement for Linux or macOS. It runs on top of them.
-- It is not a container runtime. The tool handlers use AILANG's own policy layer for
-  confinement; there is no Docker and no network isolation in the core
+- It is not a container runtime. The AILANG tool handlers use AILANG's own policy layer for
+  confinement, and `workspace-exec` runs operator-profiled commands under the srt sandbox
+  (no network, writes confined to the worktree); there is no Docker or VM in the core
   (see [Security model](../security/model.md)).
 - It is not multi-node. One daemon, one SQLite file, one writer process.
 
 ## Status
 
-World is pre-1.0 and built by an autonomous mission loop with human ratification gates. The
-1.0 bar has seven checkable clauses (deterministic kernel, local-first daemon, explicit
-authority end-to-end, a resident-agent non-inferiority floor, provenance teeth, a
-protocol-native boundary, and one controlled self-modification). Several are met, several are
-in progress. Known gaps are listed in [Residuals](../security/residuals.md).
+World is the 1.0 release candidate (`v1.0.0-rc.1`), built by an autonomous mission loop with
+human ratification gates. The 1.0 bar has seven checkable clauses (deterministic kernel,
+local-first daemon, explicit authority end-to-end, a resident-agent non-inferiority floor,
+provenance teeth, a protocol-native boundary, and one controlled self-modification). All seven
+are met; the [roadmap](../roadmap/index.md) lists the release rows before `v1.0.0`. Known gaps
+are listed in [Residuals](../security/residuals.md).

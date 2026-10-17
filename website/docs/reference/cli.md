@@ -7,7 +7,8 @@ description: Every ailang-worldd and world-publish command and flag, taken from 
 # CLI reference
 
 Two programs, both built from this repository. Help text below is the binaries' own output,
-captured from a build of `dev` on 2026-10-06.
+brought up to date with the help strings in `cmd/ailang-worldd` and `cmd/world-publish` on
+2026-10-16 (`v1.0.0-rc.1`). Sample outputs show placeholder paths.
 
 ## `ailang-worldd`
 
@@ -25,6 +26,7 @@ Usage:
                       [--exec-profile <file> ... --exec-sandbox <dir>]
                       [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
                       [--exec-max-output-bytes N]
+                      [--proof-key-file <file> --proof-required-identity NAME ...]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -35,6 +37,7 @@ Usage:
   ailang-worldd [--addr <url>] registry get <name>
   ailang-worldd [--addr <url>] log tail [--from N] [--follow] [--interval 1s] [--raw]
   ailang-worldd [--addr <url>] commit --file <commit.json> [--session <file|token>]
+  ailang-worldd [--addr <url>] outcome record --file <outcome.json|-> [--session <file|token>]
   ailang-worldd [--addr <url>] tools list [--session <file|token>] [--json]
   ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
                     [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
@@ -50,15 +53,18 @@ Usage:
   ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
-  ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+                    [--allow-non-git]
+  ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
   ailang-worldd session revoke --db <path> <credential_id-hash> | --episode <ep>
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
+  ailang-worldd [--addr <url>] demo seed --db PATH --session FILE --ailang-bin PIN
+                    --proof-key-file KEY --manifest FILE [--addr URL]
   ailang-worldd help [<verb>]
 
   '<verb> --help' and 'help <verb>' print a verb's help (exit 0).
 
-Session credential (tools, call, commit): --session <file> (a file holding
+Session credential (tools, call, commit, outcome): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
 else $WORLD_SESSION. The token is never printed.
 
@@ -142,10 +148,22 @@ serve flags:
   --exec-max-output-bytes N
                        kill a workspace-exec command whose stdout or stderr
                        passes N bytes (default 67108864, 64 MiB)
+  --proof-key-file <file>
+                       a file holding exactly 32 bytes: the MAC key the
+                       workbench grade validator authenticates stored proof
+                       envelopes under. Needs --ailang-bin and at least one
+                       --proof-required-identity; read once at startup and
+                       never logged. Unset, every object page reads "no
+                       canonical host projection" and reads no evidence
+  --proof-required-identity NAME
+                       an identity every validated proof must verify
+                       (repeatable; needs --proof-key-file)
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
             3 integrity refusal (why: a broken link; call --strict: ok:false;
               setup: a digest mismatch, nothing installed).
+            outcome record: 1 refused before sending, 2 commit refused,
+              3 commit outcome uncertain (reconcile, never resend blindly).
 ```
 
 `ailang-worldd help` prints the same text. Every verb prints its help with `<verb> --help` or
@@ -156,7 +174,9 @@ lines of the usage above.
 directly, not on a running daemon.
 
 Every invocation refuses to start (exit 2) if `AILANG_REGISTRY_API_KEY` is set in its
-environment.
+environment, except a help request (`--help`, `-h` or `help <verb>`), which is answered from the
+arguments alone. The refusal's last line is the `env -u AILANG_REGISTRY_API_KEY …` command to
+run instead.
 
 ### `serve`
 
@@ -180,6 +200,7 @@ response body on success. On an HTTP error they print
 | `log range --from N [--limit M]` | `GET /v1/log?from=N&limit=M` |
 | `registry get <name>` | `GET /v1/registry/{name}` |
 | `commit --file <commit.json> [--session <file\|token>]` | `POST /v1/commit` |
+| `outcome record --file <outcome.json\|-> [--session <file\|token>]` | `POST /v1/commit` of one `world/task-outcome/v1` object (see [below](#outcome-record)) |
 
 Flags come **after** the positional argument for `object get`, `object find`, and `log range`.
 
@@ -197,15 +218,39 @@ The session is resolved like `call`'s (see [Session credential](#session-credent
 `Authorization: Bearer <token>`. With neither `--session` nor `WORLD_SESSION` the daemon answers
 `401 SessionAbsent`.
 
+#### `outcome record`
+
+```text
+usage: ailang-worldd [--addr <url>] outcome record --file <outcome.json|-> [--session <file|token>]
+```
+
+Row 182. An operator harness records how one graded task turned out, and how it was judged, as
+one `world/task-outcome/v1` object committed next to the episode's effects (written by
+`harness:floor`), so a provenance walk can reach the outcome, the grading rule and the task's
+entry range. It adds no route and no authority: the object is committed under the episode's own
+session credential. `--file -` reads stdin.
+
+The payload (at most 16 KiB) is strict JSON with exactly these keys: `agent`, `arm` (`shell` or
+`world`), `entries` (`{from, to}` for a `world` row, `null` for a `shell` row), `episodeId`,
+`grading` (`argv`, `expectedStdout`, `graderVersion`, `inputFiles`, `rule`, `toolSha256`),
+`label`, `outcome` (`class`, `compileOk`, `errorCategory`, `runtimeOk`, `solutionSha256`,
+`solutionState`, `stderrHead`, `stdoutHead`, `stdoutOk`), `run` (≥ 1) and `task`. Unknown keys
+are refused. On success it prints
+`recorded world/task-outcome/v1 <agent>/<arm>/<task> run <n>: object <ref> entry <N>`.
+
+Exit codes: 0 recorded; 1 refused before sending (usage, an unreadable file or an invalid
+payload); 2 the daemon refused the commit; 3 the commit outcome is uncertain: reconcile with
+`object get <ref>` before any resend.
+
 ### Session credential
 
-`tools`, `call` and `commit` resolve the session the same way:
+`tools`, `call`, `commit` and `outcome record` resolve the session the same way:
 
 1. `--session <value>`, else the `WORLD_SESSION` environment variable, else an error.
 2. A 64-hex value is the token itself. Given on the command line it works but warns, because
    other local processes can read a process's arguments.
 3. Any other value is a file (at most 256 bytes) holding the token, which is how
-   `session mint --out <file>` writes it. A file readable by group or other gets a warning
+   `session new --out <file>` and `session mint --out <file>` write it. A file readable by group or other gets a warning
    (`chmod 600` it).
 
 The token is only ever sent as the `Authorization: Bearer` header; no command prints it.
@@ -232,7 +277,7 @@ ailang-check       Type-check and Z3-verify an AILANG file inside this episode's
 ailang-read        Read a file inside this episode's worktree (policy-tool `read`). The path is relative to the worktre…
                    required: path
 …
-8 tool(s)
+9 tool(s)
 ```
 
 The list follows the session's grants: a session granted only `Workspace.Read` lists only
@@ -289,12 +334,36 @@ world:
 ```text
 usage: ailang-worldd [--addr <url>] why <target> [--scan N] [--json]
        ailang-worldd [--addr <url>] why --result <file> [--scan N] [--json]
+
+Walks one committed invocation back to its whole provenance chain, checking
+every link (✓ or ✗):
+
+  world    the world ref, recomputed from the entry and the output, and
+           confirmed by GET /v1/worlds/<ref>
+  entry    index, writtenBy, prev, transitionFn and the interpreter (with its
+           pin name); the entry hash is recomputed
+  record   invocation id, episode, skill (its hash and its fields agree with
+           the entry)
+  input    your arguments, decoded and elided; when elided, the short
+           top-level fields (path, command, op, …) are printed first
+  plan     the effects planned, or the refusal result
+  effect   per effect record: allowed/failed/denial, budget before→after,
+           request and result sizes; a toolchain call that changed the
+           worktree adds "worktree: N created, M modified, K deleted" and
+           its first paths (--json: the whole worktree_delta)
+  output   the committed output; it must equal world.stateRoot
 ```
 
-Walks one committed invocation back to its whole provenance chain and checks every link:
-the world ref (recomputed and confirmed by `GET /v1/worlds/<ref>`), the log entry (its hash
-recomputed), the invocation record, the input, the plan, each effect record (with its request
-and result), and the output, which must equal the world's `stateRoot`.
+(The help goes on with the targets and the scan bound, as the table and paragraph below say.)
+
+Two lines help a walk read a call without fetching payloads. When the input is long, its short
+top-level fields come first, for example
+`old_text="}\n" path="host/worktree/worktree_test.go" · {"new_text":…`, so the file an
+`ailang-edit` touched is visible (PR #292). When an `ailang-run`, `ailang-check`, `ailang-cli` or
+`workspace-exec` result carries a `worktree_delta` (row 184), the effect gets a line such as
+`worktree: 6 created, 1 modified, 1 deleted (basis git-status): c .ailang/cache/f0, …`; a
+truncated delta says `first N of M changes listed`, and a failed snapshot prints
+`worktree: not recorded — <reason>`.
 
 | Target | Resolves by |
 |---|---|
@@ -409,7 +478,8 @@ next (the attended steps; docs/QUICKSTART.md §9 has the full walk):
 ```
 
 A second run prints `present` for both pins and makes no network request. The compiled-in
-digests (`cmd/ailang-worldd/pins.go`) are:
+digests come from the release manifest `pins/ailang-releases.json`, embedded through
+`host/pins` (`cmd/ailang-worldd/pins.go` derives the pin table from it since row 139 M1):
 
 | Release | Platform | Tarball sha256 | Binary sha256 |
 |---|---|---|---|
@@ -484,6 +554,7 @@ exit 2 and names the variable — that refusal is the finding.
 usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
            [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
+           [--allow-non-git]
 
 ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
 and a session credential bound to it, after a y/N typed at /dev/tty (any
@@ -499,10 +570,16 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
                        (git worktree add --detach); not needed when
                        <workspace-root>/<episode> is already a worktree
   --branch <name>      add the worktree on a new branch instead of detached
+  --allow-non-git      adopt an existing <workspace-root>/<episode> that is
+                       not a git worktree (refused without it). The episode
+                       is DEGRADED: no branch diff, provenance trailer or
+                       reset to a base, and its worktree deltas use the
+                       bounded walk (basis walk / walk-capped), not
+                       git-status. session list and /v1/health show it.
   --preset se-tools    one grant per effect the se-tools transitions declare:
                        Workspace.Read, Workspace.Write, Ailang.Check, Ailang.Run,
                        Ailang.RunEnv, Ailang.RunNet, Ailang.Discover, Ailang.CLI,
-                       each scope worktree with --budget calls
+                       Workspace.Exec, each scope worktree with --budget calls
   --grant EFFECT=SCOPE:BUDGET
                        an explicit grant (repeatable); it overrides a preset
                        grant with the same effect and scope
@@ -523,16 +600,23 @@ ailang-worldd session new ep1 --repo ~/src/my-project --preset se-tools --out ~/
 On the terminal it asks:
 
 ```text
-Create worktree /Users/you/.ailang/world-ws/ep1 from /Users/you/src/my-project and mint a session for episode ep1 with 8 grant(s) [Workspace.Read=worktree:50 Workspace.Write=worktree:50 Ailang.Check=worktree:50 Ailang.Run=worktree:50 Ailang.RunEnv=worktree:50 Ailang.RunNet=worktree:50 Ailang.Discover=worktree:50 Ailang.CLI=worktree:50], expiry +3600s? [y/N]
+Create worktree <workspace-root>/ep1 from <repo> and mint a session for episode ep1 with 9 grant(s) [Workspace.Read=worktree:50 Workspace.Write=worktree:50 Ailang.Check=worktree:50 Ailang.Run=worktree:50 Ailang.RunEnv=worktree:50 Ailang.RunNet=worktree:50 Ailang.Discover=worktree:50 Ailang.CLI=worktree:50 Workspace.Exec=worktree:50], expiry +3600s? [y/N]
 ```
 
 and, after `y`:
 
 ```text
-session for episode ep1: 8 grant(s), expires epoch 1791060000, token written to /Users/you/.ailang/world/ep1.session
-ailang-worldd session new: worktree /Users/you/.ailang/world-ws/ep1 created
-ailang-worldd session new: credential_id=<64-hex> (episode ep1, worktree /Users/you/.ailang/world-ws/ep1, 8 grant(s), expires 1791060000)
+session for episode ep1: 9 grant(s), expires epoch 1791060000, token written to <session-file>
+ailang-worldd session new: worktree <workspace-root>/ep1 created
+ailang-worldd session new: credential_id=<64-hex> (episode ep1, worktree <workspace-root>/ep1, 9 grant(s), expires 1791060000)
 ```
+
+With `--allow-non-git` and an existing non-git directory, the prompt instead begins
+`Use the existing NON-GIT directory <workspace-root>/<ep> as a DEGRADED episode (no branch diff,
+provenance trailer or reset to a base; walk-basis worktree deltas)`, and success adds
+`ailang-worldd session new: episode <ep> is DEGRADED: <dir> is not a git worktree
+(--allow-non-git); session list and /v1/health show it` on stderr. Without the flag, such a
+directory is refused (exit 1) with a message naming `--allow-non-git`.
 
 Without a controlling terminal it refuses before touching anything:
 `refusing: no controlling terminal (open /dev/tty: device not configured); provisioning a session
@@ -545,21 +629,26 @@ stops at `stop the daemon first` with nothing created.
 ### `session list`
 
 ```text
-usage: ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+usage: ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
 
 Lists the session credentials in a store (at most 500): credential_id (the
 hash, never the token), episode, live or expired, expiry and grants. Reads
 through a read-only handle, so it works while the daemon is running. A --db
 that does not exist is refused, never created.
+
+An episode whose <workspace-root>/<episode> exists but is not a git worktree
+(adopted with session new --allow-non-git) is marked DEGRADED ("degraded":
+true with --json). --workspace-root defaults to ~/.ailang/world-ws.
 ```
 
 ```text
 3f9c…e21a  ep1          live    expires 2026-10-03T21:40:00Z  Ailang.CLI=worktree:50 Ailang.Check=worktree:50 …
-1 session credential(s)
+7b10…04cd  plain        live    expires 2026-10-03T21:40:00Z  Workspace.Read=worktree:3  DEGRADED (not a git worktree)
+2 session credential(s)
 ```
 
 `--json` prints the same rows as JSON (`credentialId`, `episode`, `live`, `createdAt`,
-`expiresAt`, `grants`).
+`expiresAt`, `grants`, `degraded`).
 
 ### `session revoke`
 
@@ -611,6 +700,32 @@ is set to the session's (`now + ttl`). With `--out` it prints
 it always prints `credential_id=<hash>` to stderr. See
 [Sessions and episodes](../concepts/sessions-and-episodes.md).
 
+### `demo seed`
+
+```text
+usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE
+     --ailang-bin PIN --proof-key-file KEY --manifest FILE [--addr URL]
+
+Prepare a disposable demo worktree and publish descriptors, then mint the demo
+session at a controlling terminal (QUICKSTART section 12). Seed never mints,
+publishes, creates a worktree or opens another writable database.
+--db identifies the daemon's store and permits read-only grant inspection.
+--session is a private session file (default WORLD_SESSION).
+--ailang-bin is the capsule/proof pin (v0.41.0); serve's separate
+--tool-ailang-bin must be v0.52.1 for the workspace tools.
+--proof-key-file is the private operator key required by later proof stages.
+--manifest is a new output path; existing files are refused.
+--addr is the daemon URL, also accepted as the global client flag.
+
+This incremental build implements preflight and S1 domain commits only.
+S2-S6 incomplete: the command refuses completion and writes no success manifest.
+Do not retry a partial seed; inspect its recorded history first.
+```
+
+Release-demo tooling (queue row 150), still incremental. `--db`, `--ailang-bin`,
+`--proof-key-file` and `--manifest` are required. The preparation steps are
+`docs/QUICKSTART.md` section 12, "Prepare the release demo seed".
+
 ## `world-publish`
 
 ```text
@@ -622,6 +737,8 @@ world-publish — the attended entrypoint for an IRREVERSIBLE public write
                            --credential-file C --approval-ref R --now N --expires E (--live | --dry-run)
   world-publish reconcile  --store S [--registry-origin O] [--probe]
   world-publish transitions --store S --manifest M (--ailang-bin B | --interpreter-ref R)  [local registry write]
+  world-publish epoch nominate --store S --release vX.Y.Z (--candidate | --new-epoch) --gate-verdict V
+                           --binary B  [local epoch-registry write; --new-epoch is ATTENDED]
 
 Exit codes: 0 done · 1 failed · 2 usage · 3 STOP (a fence refused; nothing happened)
 ```
@@ -638,6 +755,7 @@ This usage is printed when the program is run with no verb or an unknown one
 | `publish` | **Attended**; irreversible with `--live` | Spends the approval, exactly once. Exactly one of `--live` or `--dry-run`. `--dry-run` runs every fence and sends nothing. |
 | `reconcile` | Read-only, headless-permitted | Lists publish intents with no outcome; `--probe` issues read-only metadata GETs to resolve them. `--live` is refused. |
 | `transitions` | **Attended**; local registry write | Publishes a descriptor manifest into the store's transition registry. `--live` is refused. See [Transitions manifest](transitions-manifest.md). |
+| `epoch nominate` | `--candidate` headless-permitted; `--new-epoch` **attended**; local epoch-registry write | Appends one immutable `world/epoch-registry/v1` revision naming `--release`, either as a candidate of the current epoch (`--candidate`: replay goldens byte-identical) or as a new epoch (`--new-epoch`: semantics moved; typed phrase `open epoch <N> for <release> in <store>`). Exactly one of the two. It refuses unless the release is a row of the compiled-in manifest `pins/ailang-releases.json` (there is deliberately no flag naming another manifest), `--gate-verdict` is a passing `world/ailang-release-verdict/v1` verdict for that release on this platform, and `--binary` hashes to the manifest's and the verdict's binary digest and prints the release's `--version` line. The store must already hold an epoch registry (start the daemon on it once), and the daemon must be stopped. `--live` is refused. |
 
 ### Flags
 
@@ -649,6 +767,10 @@ verb prints this list (and exits 2):
     	transitions: interpreter binary to archive now, as the daemon does at startup
   -approval-ref world-publish approve
     	the ApprovalDecisionV1 hashref minted by world-publish approve
+  -binary string
+    	epoch nominate: the release's ailang binary, hashed against the compiled-in release manifest
+  -candidate
+    	epoch nominate: add the release to the CURRENT epoch (goldens byte-identical; headless-permitted)
   -credential-file string
     	file outside the working tree holding the registry API key
   -decided-by string
@@ -659,6 +781,8 @@ verb prints this list (and exits 2):
     	durable episode ID (default "attended-publish")
   -expires int
     	logical time the approval expires at
+  -gate-verdict string
+    	epoch nominate: the release's compatibility-gate verdict (world/ailang-release-verdict/v1)
   -golden string
     	the committed ready-packet golden (default "scripts/world_package_ready_packet.golden.json")
   -interpreter-ref string
@@ -667,6 +791,8 @@ verb prints this list (and exits 2):
     	PERFORM THE IRREVERSIBLE PUBLIC WRITE
   -manifest string
     	transitions: descriptor manifest file (JSON array)
+  -new-epoch
+    	epoch nominate: open epoch N+1 for the release (ATTENDED: typed phrase on /dev/tty)
   -now int
     	logical time of this act
   -package-dir string
@@ -677,6 +803,8 @@ verb prints this list (and exits 2):
     	path to the pinned released ailang binary
   -registry-origin string
     	the read-only public bucket origin
+  -release string
+    	epoch nominate: the AILANG release to nominate (vX.Y.Z)
   -requester string
     	who is requesting the approval
   -store string
@@ -689,7 +817,10 @@ constant. A test compares the flag set to a frozen list, so adding a flag fails 
 ### STOP lines
 
 A refusal prints `STOP fence=<name>[ reason=<reason>]` and exits 3. Fence names: `mode`, `ci`,
-`tty`, `confirmation`, `store`, `approval`, `credential`, `packet`, `handler`. See
+`tty`, `confirmation`, `store`, `approval`, `credential`, `packet`, `handler`, and for
+`epoch nominate` also `release` (absent or not in the manifest), `verdict` (absent, unreadable,
+malformed or not admitted), `binary` (absent, unreadable, digest or version mismatch) and
+`registry` (no epoch registry yet, or the release already nominated). See
 [Attended steps](../guides/attended-steps.md#how-the-fences-work).
 
 Build `world-publish` to a binary for attended use rather than using `go run`: `go run` exits 1

@@ -13,12 +13,24 @@ from the binary, that is a defect.*
 > time. Once a daemon is serving, `ailang-worldd tools list`, `call`, `why`, `log tail` and
 > `provenance` replace hand-written curl (`ailang-worldd <verb> --help` for each).
 
+> **Section numbers.** §7–§11 are the `###` subsections of the transition and tool runbook
+> (§9 the coding tools, §10 non-AILANG projects, §11 module roots and registry packages);
+> "Watch the world live", "Open the live workbench" and "Prepare the release demo seed" are
+> the top-level `##` sections numbered 10–12 after them. A bare "§10" or "section 11" in these
+> docs and in `serve --help` means the subsection. The heading texts are bound by tests, so
+> they keep their numbers.
+
 ## 0. Attended steps (the only commands a person must run)
 
 An agent or a script can run everything else in this guide. These two steps each read a line
 **you type** at your terminal, and they refuse to run when there is no terminal (an agent
 harness, cron, CI). Run them yourself from the repo root, with the daemon stopped. The values
 are the ones §9 uses.
+
+One more command is attended, but this guide never needs it: `world-publish epoch nominate
+--new-epoch`, which opens a new semantics epoch for a new AILANG release (you type a phrase
+naming the epoch, the release and the store). Its `--candidate` form is headless. See
+`world-publish` with no arguments for its usage.
 
 **Publish the transitions** (once, and again whenever the manifest changes):
 
@@ -636,6 +648,26 @@ finds the entry that committed it and walks the chain (exit 3 on any broken link
 shows the latest entries with episode, skill and effect statuses. `provenance` prints the
 `World-Provenance: store=… episode=ep1 entries=<from>-<to>` trailer for a PR or commit made
 through World (D-WORLD-60; label such PRs `ailang-world`).
+
+When `why` elides a long input, it prints the short top-level fields (`path`, `command`, `op`, …)
+first, so you can see which file an `ailang-edit` touched. A toolchain call (`ailang-run`,
+`ailang-check`, `ailang-cli`, `workspace-exec`) that changed the worktree carries a
+`worktree_delta` in its result: the files it created, modified or deleted (path, size, sha256;
+at most 256, then `truncated` with a `total`), on the `git-status` basis in a git worktree.
+`why` prints it as `worktree: N created, M modified, K deleted (basis git-status)` and the
+first paths; `--json` holds the whole list. A call that changes nothing has no `worktree_delta`.
+
+An operator harness that grades tasks can record each outcome next to the episode's effects with
+`ailang-worldd outcome record --file <outcome.json|-> --session /tmp/se-session`: one
+`world/task-outcome/v1` object (the task, the arm, the entry range, the grading rule and the
+result), committed under the episode's session, so a provenance walk reaches how a task was
+judged. Exit 1 means refused before sending, 2 the commit was refused, and 3 the outcome is
+uncertain (reconcile with `object get` before any resend).
+
+`session new` refuses an existing `<workspace-root>/<episode>` that is not a git worktree. With
+`--allow-non-git` it adopts the directory as a **degraded** episode: no branch diff, provenance
+trailer or reset to a base, and worktree deltas on the bounded-walk basis (`walk`, or
+`walk-capped` with nothing listed past 20,000 files). `session list` and `/v1/health` show it.
 
 ### 10. Build and test non-AILANG projects
 

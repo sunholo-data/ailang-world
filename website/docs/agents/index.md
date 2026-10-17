@@ -8,12 +8,12 @@ description: What AILANG World gives an AI agent, what it withholds, and how to 
 
 This section is written for you: a coding agent (pi, Claude Code, codex or any MCP or A2A client) that an operator has pointed at an AILANG World daemon. Read this page first. If you can fetch only one file, fetch [`/AGENTS.md`](pathname:///AGENTS.md); it holds the same rules in one plain-text page.
 
-AILANG World is pre-1.0. The tool surface below is live and was exercised end to end by pi and Claude Code on 2026-10-03, but the comparison against a resident agent with native tools has not been run yet. Treat it as working software with known residuals, not a finished product.
+AILANG World is the 1.0 release candidate (`v1.0.0-rc.1`). The tool surface below is live. pi and Claude Code first exercised it end to end on 2026-10-03, and in the pre-registered non-inferiority run of 2026-10-15, Claude Code and codex each passed 69/69 tasks through World's tools, the same as with their native tools, with no added wall-clock overhead. Treat it as working software with known residuals (see [Residual risks](../security/residuals.md)).
 
 ## What World gives you
 
 - **A confined worktree.** The operator creates one git worktree per episode. Your session is bound to that episode, and every path you pass is relative to its root.
-- **Eight AILANG tools**, over MCP at `/mcp/` and over A2A at `/a2a/`:
+- **Nine tools**, over MCP at `/mcp/` and over A2A at `/a2a/`:
 
   | Tool | What it does |
   |---|---|
@@ -21,17 +21,18 @@ AILANG World is pre-1.0. The tool surface below is live and was exercised end to
   | `ailang-write` | Create or overwrite a file in the worktree |
   | `ailang-edit` | Replace one exact, unique occurrence of text in a file |
   | `ailang-check` | Type-check and Z3-verify an `.ail` file; structured diagnostics |
-  | `ailang-run` | Run an AILANG program under the operator's policy (IO and FS only, 8 s) |
+  | `ailang-run` | Run an AILANG program under the operator's policy (IO and FS by default; Env, Net or Declassify only if the operator enables them; 8 s) |
   | `builtins-search` | Search the real builtin inventory of the tool binary |
   | `examples-search` | Search the AILANG examples corpus the daemon serves |
   | `ailang-cli` | The rest of the `ailang` CLI as typed, allowlisted operations |
+  | `workspace-exec` | Run one command from the operator's exec profile (for example `go test`), by id, sandboxed; refused unless the operator configured a profile |
 
 - **A record of every call.** Each tool call commits one entry to World's append-only log. The entry links your arguments, the effect plan, the brokered effect record and the result, all content-addressed (`sha256:…`). You can read these back to explain what you did; see [Provenance](./provenance.md).
 
 ## What World does not give you
 
-- **No shell.** There is no command execution tool. Programs run only through `ailang-run`, under the operator's policy.
-- **No network.** The rendered policy allows the `IO` and `FS` capabilities only. A program that declares `Net` is refused before it executes.
+- **No shell.** You cannot run a shell line. AILANG programs run only through `ailang-run`, under the operator's policy. Other commands run only through `workspace-exec`, and only those the operator's exec profile lists: you pass a command id and arguments that must match its grammar, never a program or a shell line. The command runs under the srt sandbox, with writes confined to your worktree and the episode's caches. Without an exec profile, every `workspace-exec` call is refused `no exec profile configured`.
+- **No network by default.** The rendered policy allows the `IO` and `FS` capabilities only, unless the operator enables more (`serve --run-allow-caps`). A `Net` run is possible only when the operator allows it, and then reaches only the loopback `IP:PORT` pairs the operator lists (`--run-net-allow`); every other host and redirect is refused. `workspace-exec` commands have no network.
 - **No writes outside your worktree.** Absolute paths, `..` segments and symlinks that lead out are refused. `.git/` is read-only. The operator's deny list (`.github/`, `.pi/`, `.claude/`, `.ailang/`, `.gitmodules`, `.gitattributes`, in every case variant) is read-only.
 - **No git commits, no new worktrees.** Committing and provisioning are operator actions.
 - **Only the tools you were granted.** `tools/list` returns exactly the tools whose effect your session holds a grant for. A tool you cannot see cannot be called.

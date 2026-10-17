@@ -17,6 +17,12 @@ ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                     [--examples-dir <dir>]
                     [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
                     [--workspace-package-cache <dir>]
+                    [--run-allow-caps Env,Net,Declassify]
+                    [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
+                    [--exec-profile <file> ... --exec-sandbox <dir>]
+                    [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
+                    [--exec-max-output-bytes N]
+                    [--proof-key-file <file> --proof-required-identity NAME ...]
 ```
 
 | Flag | Default | Meaning |
@@ -29,7 +35,17 @@ ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
 | `--examples-dir` | `~/.ailang/examples` if it exists | The AILANG examples corpus `examples-search` reads, passed to the tool as `AILANG_EXAMPLES`. Must be outside `--workspace-root`. |
 | `--workspace-module-root` | none (`.`, the worktree) | The AILANG sandbox and module root of every episode is `<workspace-root>/<episode>/REL`, so bare imports among a project's modules resolve. `REL` is clean and relative and must already be a real directory, or that episode's tools are refused. Independent of an exec profile's `root`. Needs `--workspace-root`. |
 | `--workspace-episode-module-root` | none | `EP=REL`, repeatable: one episode's module root, overriding `--workspace-module-root`. |
-| `--workspace-package-cache` | none | A read-only snapshot of registry packages (`<ns>/<name>/<ver>/ailang.toml`), linked as every episode's package cache so `pkg/` imports resolve. Must be outside `--workspace-root` and the state directory and hold no symlink and nothing writable (`chmod -R a-w`); refused when the daemon runs as uid 0. Restart `serve` after rebuilding it. See QUICKSTART section 11. |
+| `--workspace-package-cache` | none | A read-only snapshot of registry packages (`<ns>/<name>/<ver>/ailang.toml`), linked as every episode's package cache so `pkg/` imports resolve. Must be outside `--workspace-root` and the state directory and hold no symlink and nothing writable (`chmod -R a-w`); refused when the daemon runs as uid 0. Restart `serve` after rebuilding it. See QUICKSTART §11, "Projects with a module root and registry packages". |
+| `--run-allow-caps` | none | `Env,Net,Declassify`: extra capabilities an `ailang-run` may request beyond IO and FS. An Env run is the effect `Ailang.RunEnv` and a Net run `Ailang.RunNet`; each needs its own session grant. |
+| `--run-net-allow` | none | A loopback `IP:PORT` a Net run may reach (repeatable; required with Net). Every other host, port and redirect hop is refused; a bare host, a name or a non-loopback address is refused at startup. |
+| `--run-net-allow-http` | off | Allow plain http to the `--run-net-allow` pairs. |
+| `--exec-profile` | none | An operator exec profile (`world/exec-profile/v1` JSON; repeatable, one per project): the commands `workspace-exec` may run, sandboxed by srt. Needs the workspace tools and `--exec-sandbox`. Read once at startup; it, srt, node and every cache seed must lie outside `--workspace-root` and the state directory. Each profile must pass the seven-arm startup probe or `serve` refuses. Without it, `workspace-exec` is still bound but refuses every call `no exec profile configured`. See QUICKSTART §10, "Build and test non-AILANG projects". |
+| `--exec-episode-project` | none | `EP=PROJECT`, repeatable: run episode `EP`'s `workspace-exec` under the profile whose project is `PROJECT` (optional with one profile, which every episode then uses). |
+| `--exec-sandbox` | none | The `node_modules` holding `@anthropic-ai/sandbox-runtime` 0.0.78 (its `dist/cli.js` must hash to the pin). World archives the whole tree and re-verifies it before every call. Required with `--exec-profile`. |
+| `--exec-node` | `node` on `PATH` | The node (20.11 or later) that runs srt and the probe client, resolved once. |
+| `--exec-max-output-bytes` | 67108864 (64 MiB) | Kill a `workspace-exec` command whose stdout or stderr passes N bytes. |
+| `--proof-key-file` | none | A file holding exactly 32 bytes: the MAC key the workbench grade validator authenticates stored proof envelopes under. Needs `--ailang-bin` and at least one `--proof-required-identity`; read once at startup and never logged. Unset, every object page reads "no canonical host projection". |
+| `--proof-required-identity` | none | An identity every validated proof must verify (repeatable; needs `--proof-key-file`). |
 
 The coding tools are served only when **both** `--workspace-root` and `--tool-ailang-bin` are
 set. With one but not the other, startup logs:
@@ -78,8 +94,9 @@ ailang-worldd: daemon startup failed at store-open: another process already hold
 ```
 
 This covers every writer, not only a second daemon. **Stop the daemon before** running
-`session mint`, `session revoke`, `world-publish transitions` or any other `world-publish`
-verb that opens the same store. Read-only store users may coexist.
+`session new`, `session mint`, `session revoke`, `world-publish transitions`,
+`world-publish epoch nominate` or any other `world-publish` verb that opens the same store.
+Read-only store users (`session list`, for one) may coexist.
 
 The operator sequence is therefore always: serve, stop, do the attended step, serve again.
 
@@ -117,7 +134,8 @@ another shell.
 | Commit store work | 3 s, then `503 Timeout` or `503 CommitUncertain` |
 | Credential lookup | 3 s |
 | One transition invocation (MCP or A2A) | 20 s |
-| Plan phase / finish phase | 2 s each |
+| Plan phase | 4 s |
+| Finish phase | 2 s |
 | Tool handler | at most 10 s; the rendered policy's own `timeout_ms` is 8 s |
 | Post-effect writes and commit | 4 s, detached from the caller's deadline |
 | HTTP read / write timeout | 30 s / 30 s |
@@ -134,7 +152,9 @@ ailang-worldd health
 ```
 
 returns `status`, `daemon_version`, `db_path`, `interpreter_ref` and `interpreter_version`
-(`interpreter_ref` is empty when `serve` ran without `--ailang-bin`).
+(`interpreter_ref` is empty when `serve` ran without `--ailang-bin`). With `--workspace-root`,
+it also lists `degraded_episodes`: episode directories that are not git worktrees (adopted with
+`session new --allow-non-git`); the key is absent when there are none.
 
 ## The workbench
 

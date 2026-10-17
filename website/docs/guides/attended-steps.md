@@ -12,22 +12,27 @@ structurally unable to complete them. That is the design, not a defect to route 
 
 | Operation | Command | Fence | Why it is attended |
 |---|---|---|---|
+| Provision an episode | `ailang-worldd session new` | Opens `/dev/tty`, `y/N` confirmation (naming the worktree and every grant) read from it, before any side effect | Provisioning a session credential is one human act; otherwise whoever runs the script gets authority |
 | Mint a session | `ailang-worldd session mint` | Opens `/dev/tty`, `y/N` confirmation read from it | Minting a credential is one human act; otherwise whoever runs the script gets authority |
 | Publish transitions | `world-publish transitions` | CI tripwire, controlling terminal, typed phrase | The registry write path is the operator's hands, never an agent's |
+| Open a new semantics epoch | `world-publish epoch nominate --new-epoch` | CI tripwire, controlling terminal, typed phrase naming the epoch, release and store | A release whose semantics moved changes how history replays; that is a human's decision |
 | Mint a package-publish approval | `world-publish approve` | CI tripwire, controlling terminal, typed phrase | An approval for an irreversible act must not be self-minted by a loop |
 | Publish `world/core` | `world-publish publish --live` | All of the above, plus a one-shot approval, golden packet and credential file | The public registry is immutable |
 
-Not attended: `session revoke`, `world-publish packet`, `world-publish reconcile` and every
-`ailang-worldd` client verb.
+Not attended: `session list`, `session revoke`, `world-publish packet`,
+`world-publish reconcile`, `world-publish epoch nominate --candidate` (headless-permitted, per
+D-WORLD-78: it adds a release whose replay goldens are byte-identical to the current epoch) and
+every `ailang-worldd` client verb.
 
 ## How the fences work
 
-### `session mint`
+### `session new` and `session mint`
 
-Mint opens `/dev/tty` read-write, writes the prompt there and reads the answer from there. If
-`/dev/tty` cannot be opened it refuses:
+Both open `/dev/tty` read-write, write the prompt there and read the answer from there. If
+`/dev/tty` cannot be opened they refuse, `session new` before it creates a worktree or a row:
 
 ```text
+ailang-worldd session new: refusing: no controlling terminal (open /dev/tty: device not configured); provisioning a session credential requires one human act at a terminal. fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step
 ailang-worldd session mint: refusing: no controlling terminal (open /dev/tty: device not configured); minting a session credential requires one human act at a terminal. fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step
 ```
 
@@ -36,8 +41,8 @@ Anything but `y` or `yes` aborts (`aborted (not confirmed)`).
 ### `world-publish`
 
 Every refusal prints `STOP fence=<name> reason=<reason>` on stderr and exits **3**: nothing
-happened and nothing will. The attended verbs (`approve`, `publish`, `transitions`) check, in
-order:
+happened and nothing will. The attended verbs (`approve`, `publish`, `transitions`,
+`epoch nominate --new-epoch`) check, in order:
 
 1. **`ci`** — refuses when `CI` or `GITHUB_ACTIONS` is set. This is a declared tripwire, not the
    fence: `env -u CI` defeats it.
@@ -71,12 +76,17 @@ Type exactly, to proceed with an IRREVERSIBLE public write:
 supersede it. Its phrase names the descriptor count and the store; for the se-tools manifest:
 
 ```text
-Type exactly, to write a LOCAL transition-registry revision (8 descriptor(s) from packages/se-tools/transitions.json):
-  publish 8 transitions to /tmp/se-world/world.db
+Type exactly, to write a LOCAL transition-registry revision (9 descriptor(s) from packages/se-tools/transitions.json):
+  publish 9 transitions to /tmp/se-world/world.db
 >
 ```
 
-The `tty` and `ci` fences in front of it are the same as for the package publish. Type the
+`epoch nominate --new-epoch` asks for `open epoch <N> for <release> in <store>`: the epoch it
+opens, the `--release` and the `--store`. Before the fence it has
+already checked the release against the compiled-in manifest `pins/ailang-releases.json`, the
+`--gate-verdict` and the `--binary` digest, so a refused nomination never asks you to type.
+
+The `tty` and `ci` fences in front of them are the same as for the package publish. Type the
 phrase exactly as printed.
 
 ## Running attended steps from an IDE pane or agent harness
@@ -98,12 +108,12 @@ true headless process: an agent harness, cron, CI), there is no way through, by 
 
 ## The order of operations
 
-Both mint and publish need single-writer authority over the store, so the daemon must be
-stopped. A typical attended session for the coding tools:
+Both `session new` (or mint) and publish need single-writer authority over the store, so the
+daemon must be stopped. A typical attended session for the coding tools:
 
 1. `serve` once with `--ailang-bin` to bootstrap the epoch registry, then stop it.
 2. **Publish** the transitions (attended).
-3. **Mint** the session (attended).
+3. **Provision** the episode and its session with `session new` (attended).
 4. `serve` with the tools enabled.
 5. Commit genesis with `--session`, then hand the session to agents.
 

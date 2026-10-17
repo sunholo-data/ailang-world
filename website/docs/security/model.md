@@ -44,13 +44,15 @@ agent ── Authorization: Bearer ──▶ session resolver ── (episode, g
 | No ambient publish credential | Refuse to start if `AILANG_REGISTRY_API_KEY` is set; tool children get a minimal environment | `ailang-worldd` entry, tool handler |
 | One writer per store | Non-waiting OS lock on `<db>.writer.lock` | store `Open` |
 | Who is calling | Bearer session credential, stored hashed, with expiry | session middleware and projection |
-| Minting authority needs a human | `/dev/tty` and a confirmation | `session mint` |
+| Minting authority needs a human | `/dev/tty` and a confirmation | `session new`, `session mint` |
 | What a session can see and call | Registry descriptors filtered by `access` against live grants, fresh per request | MCP `tools/list`, A2A card and admission |
 | Transitions cannot do I/O themselves | Transitions run in the capsule with `--caps ""`, a pinned and re-hashed interpreter, an FS jail, a scrubbed environment, a timeout and an output cap | capsule |
 | A transition asks only for what it declared | Plan laws, and each request must equal a `declaredEffects` triple | coordinator, then the bound invoker again |
 | Each effect is authorized and paid for | Effect name, exact scope, liveness, `cost ≤ budget`; denials recorded without debit | broker (decision law Z3-verified in a sketch, transcribed to Go under a drift test) |
 | Budget cannot be reset by reconnecting | Spend summed per episode from durable intents | coordinator |
 | Tool effects stay inside the worktree | AILANG's policy layer (`policy-tool`, `run --policy`) under a rendered restricted policy | the v0.52.1 tool binary |
+| Commands run only as the operator allowed | `workspace-exec` runs only commands from an operator exec profile, with arguments matched against each command's grammar; no shell line | exec handler, profile loaded at `serve` startup |
+| Commands stay inside the worktree, offline | srt sandbox: writes confined to the worktree and the episode's caches, home, World state and other episodes unreadable, no network; the pinned sandbox is re-verified before every call and each profile must pass a seven-arm startup probe | `@anthropic-ai/sandbox-runtime` 0.0.78 (`--exec-sandbox`) |
 | Agents cannot edit their own policy, cache or corpus | Startup refuses state or corpus inside the workspace root; policy and cache live under `<db-dir>` | daemon startup |
 | Every outcome is evidence | Effect records, intents and outcomes; one log entry per call | broker, journal, store |
 | Irreversible and registry writes need a human | Controlling-terminal fence, typed phrase, one-shot approval | `world-publish` |
@@ -74,14 +76,21 @@ worktree, `timeout_ms = 8000`, an `fs_deny_write` list, `entry = "main"`, and
 This is a deliberate trade, ratified by the owner: World inherits the AILANG lane's hardening
 rather than reimplementing it, and it records the gaps that hardening still has as residuals.
 
+`workspace-exec`, the one tool that runs non-AILANG commands, uses a different layer: the srt
+sandbox, under an operator exec profile. See
+[Tool confinement](tool-confinement.md#workspace-exec-operator-profiled-commands-under-srt).
+
 ## What is not provided
 
 Stated plainly:
 
-- **No network isolation, no memory or CPU limits, no containers.** The capsule and the tool
-  handlers are a process-safety floor (pinned executable, FS jail, scrubbed environment,
-  timeout, output cap), not full isolation. Docker is explicitly out of scope for the coding
-  tools. Container or microVM isolation is future milestone work.
+- **No memory or CPU limits, no containers or VMs.** The capsule and the tool handlers are a
+  process-safety floor (pinned executable, FS jail, scrubbed environment, timeout, output cap),
+  not full isolation. Network is closed by policy, not by an isolation layer, except for
+  `workspace-exec`, whose srt sandbox has no network. Docker is explicitly out of scope for the
+  coding tools. Container or microVM isolation is future milestone work.
+- **An agent can edit the tests a profiled command runs.** `workspace-exec` runs the operator's
+  test command against whatever is in the worktree. Protected test paths are queue row 156.
 - **Reads are unauthenticated.** Every `GET /v1/*` route and `/workbench` is open to anything
   that can reach the loopback port.
 - **The inner effects of `ailang-run` are not brokered individually.** One run is one

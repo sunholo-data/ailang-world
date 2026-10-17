@@ -49,15 +49,18 @@ anything happened. A provenance walk over the log answers that question.
   cloud dependency in the core. The REST listener is loopback-only.
 - **Protocol native.** Transitions are served as tools over **MCP** and published as skills
   on an **A2A** agent card. World adds no new wire protocol.
-- **Agents as residents.** A software-engineering domain serves eight AILANG coding tools
-  (read, write, edit, check, run, builtins search, examples search, CLI) over MCP and A2A.
-  Every tool's effect goes through the broker and commits one log entry.
+- **Agents as residents.** A software-engineering domain serves nine coding tools (read,
+  write, edit, check, run, builtins search, examples search, CLI, and `workspace-exec`, which
+  runs operator-profiled commands such as `go test` in a sandbox) over MCP and A2A. Every
+  tool's effect goes through the broker and commits one log entry.
 
 ## Where it stands
 
-World is **pre-1.0**. Five of the seven clauses in its 1.0 bar are met; the two that remain
-are the ones that measure value against the status quo. See the [roadmap](./roadmap/index.md)
-for the honest state of each clause.
+World is **the 1.0 release candidate** (`v1.0.0-rc.1`). All seven clauses of its 1.0 bar are
+met, including the two that measure World against the status quo: the non-inferiority floor
+held for Claude Code and codex, and provenance walks answered three unseeded real questions.
+`v1.0.0` follows three remaining release rows. See the [roadmap](./roadmap/index.md) for the
+state of each clause.
 
 ## Where to go next
 

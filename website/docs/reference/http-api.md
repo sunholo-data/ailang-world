@@ -23,12 +23,14 @@ gets `405 Method Not Allowed` from the router.
 | `POST` | `/v1/commit` | **session** | Commit a world transition (the only REST mutation) |
 | `GET` | `/v1/receipts/{id}` | none | Receipt of a `rest:` commit |
 | `GET` | `/workbench` | none | Read-only HTML operator renderer |
+| `GET` | `/workbench/live.js` | none | The workbench's embedded same-origin live client script |
 | `GET` | `/.well-known/agent.json` | **session** | Session-scoped A2A agent card |
 | `POST` | `/a2a/` | **session** | A2A JSON-RPC (`tasks/send`) |
 | `POST` | `/mcp/` | **session** | MCP Streamable HTTP (`initialize`, `ping`, `tools/list`, `tools/call`) |
+| `POST` | `/agui/` | none | Read-only AG-UI 1.0 SSE run of the world's live state, bounded to 18 s; resume with standard state or `Last-Event-ID` (QUICKSTART, "Watch the world live") |
 
 The ten `/v1` routes are the frozen v1 machine table, pinned against a checked sketch by a test.
-`/workbench`, the agent card, `/a2a/` and `/mcp/` are additive.
+`/workbench`, `/workbench/live.js`, the agent card, `/a2a/`, `/mcp/` and `/agui/` are additive.
 
 **Auth** means `Authorization: Bearer <64-hex-credential>` holding a live session (see
 [Sessions and episodes](../concepts/sessions-and-episodes.md)). The `GET /v1/*` routes are not
@@ -70,6 +72,11 @@ field.
 ```
 
 `interpreter_ref` and `interpreter_version` are empty when `serve` ran without `--ailang-bin`.
+
+When `serve` has `--workspace-root` and some episode directory under it is not a git worktree
+(adopted with `session new --allow-non-git`), the body adds `degraded_episodes`, a list of those
+episode IDs (row 185). The key is absent otherwise, so the body of a daemon with no degraded
+episode is unchanged.
 
 ## `GET /v1/head`
 

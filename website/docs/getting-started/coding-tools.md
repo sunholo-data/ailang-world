@@ -1,13 +1,14 @@
 ---
 title: Coding tools over MCP
 sidebar_position: 3
-description: Publish the eight se-tools transitions, mint a session, serve them with a worktree, and call them from curl, pi or Claude Code.
+description: Publish the nine se-tools transitions, mint a session, serve them with a worktree, and call them from curl, pi or Claude Code.
 ---
 
 # Coding tools over MCP
 
-The `packages/se-tools` package holds eight transitions that give an agent a complete AILANG
-coding loop inside one git worktree, with every tool effect going through World's broker:
+The `packages/se-tools` package holds nine transitions that give an agent a complete AILANG
+coding loop inside one git worktree, plus operator-profiled commands for other toolchains, with
+every tool effect going through World's broker:
 
 | Tool (ID = MCP name) | Arguments | Effect (scope `worktree`, cost 1) |
 |---|---|---|
@@ -19,13 +20,19 @@ coding loop inside one git worktree, with every tool effect going through World'
 | `builtins-search` | optional `query`, `module` | `Ailang.Discover` |
 | `examples-search` | `query` | `Ailang.Discover` |
 | `ailang-cli` | `op`, optional `path`, `module`, `query`, `package`, `flags` | `Ailang.CLI` |
+| `workspace-exec` | `command`, optional `args` | `Workspace.Exec` |
 
 Unknown argument keys are refused, never ignored. Every call, including a refused one, commits
 one World log entry.
 
+`workspace-exec` runs one command from an operator exec profile (`serve --exec-profile`),
+sandboxed by srt. This page configures no profile, so it answers every call
+`{"ok":false,"refused":"no exec profile configured: …"}`; `docs/QUICKSTART.md` §10 turns it on.
+
 This page follows `docs/QUICKSTART.md` §9, which was run verbatim in the attended smoke on
 2026-10-03: pi and Claude Code each read, edited, checked and ran `hello.ail` through World's
-MCP tools only. Where this page and the runbook disagree, the runbook wins.
+MCP tools only. The runbook has since moved to `session new` and nine tools, and this page
+with it. Where this page and the runbook disagree, the runbook wins.
 
 :::tip One command per step
 `tools/attended/se_smoke.sh` wraps this whole runbook as subcommands — `prepare`, `publish`,
@@ -41,11 +48,12 @@ Four facts measured on the first attended run:
 
 - **Unset `AILANG_REGISTRY_API_KEY`** in the shell that starts the daemon, or it refuses to
   start.
-- The two attended steps, publish and mint, need a controlling terminal. Both read their
-  confirmation from `/dev/tty` themselves, so an IDE terminal pane works with the plain command
-  (since 2026-10-06; before that the publish needed `< /dev/tty`). An agent harness has no
-  controlling terminal, so there `world-publish` stops with
-  `STOP fence=tty reason=no-controlling-terminal`.
+- The two attended steps, publish and `session new`, need a controlling terminal. Both read
+  their confirmation from `/dev/tty` themselves, so an IDE terminal pane works with the plain
+  command (since 2026-10-06; before that the publish needed `< /dev/tty`). An agent harness has
+  no controlling terminal, so there `world-publish` stops with
+  `STOP fence=tty reason=no-controlling-terminal` and `session new` with
+  `refusing: no controlling terminal`.
 - `POST /v1/commit` is session-gated, so the genesis commit comes **after** mint, against the
   running daemon, with `--session`.
 - `/mcp/` answers as SSE: the JSON-RPC response is on the `data:` line of an `event: message`.
@@ -61,7 +69,8 @@ go build -o /tmp/world-publish ./cmd/world-publish
 ```
 
 `PIN` (v0.41.0) runs every plan. `TOOL` must be exactly v0.52.1; startup refuses any other
-release. See [Install](install.md) for why there are two.
+release. `ailang-worldd setup` installs both at these paths, verified, and `ailang-worldd doctor`
+checks them. See [Install](install.md) for why there are two.
 
 ## 2. Provision the worktree
 
@@ -134,24 +143,30 @@ repo-relative. The daemon must be stopped: publishing needs single-writer author
   --manifest packages/se-tools/transitions.json --ailang-bin $PIN
 ```
 
-It asks you to type a confirmation phrase at the terminal (see
+It asks you to type a confirmation phrase at the terminal, `publish 9 transitions to
+/tmp/se-world/world.db` (see
 [Attended steps](../guides/attended-steps.md#the-confirmation-phrase)), then prints
 `published transition registry revision 1 (head sha256:…)`. Running it again prints
 `UNCHANGED`: an identical republish writes nothing.
 
 ## 6. Mint a session (attended)
 
-Six grants, one per effect name. A grant is `EFFECT=SCOPE:BUDGET`, with scope `worktree` and a
-budget counted in calls. `ailang-write` and `ailang-edit` share `Workspace.Write`, and the two
-searches share `Ailang.Discover`:
+`session new --preset se-tools` mints nine grants, one per effect name the se-tools transitions
+declare: `Workspace.Read`, `Workspace.Write` (shared by `ailang-write` and `ailang-edit`),
+`Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv` and `Ailang.RunNet` (an `ailang-run` whose `caps`
+hold `Env` or `Net`), `Ailang.Discover` (shared by the two searches), `Ailang.CLI` and
+`Workspace.Exec`. Each is `EFFECT=SCOPE:BUDGET` with scope `worktree` and a budget of 50 calls.
+It reuses the worktree made above (without it, `--repo /tmp/se-proj` makes one), asks y/N at
+the terminal (type `y`), and writes the token once to `--out`:
 
 ```bash
-/tmp/ailang-worldd session mint --db /tmp/se-world/world.db --episode ep1 \
-  --grant Workspace.Read=worktree:50 --grant Workspace.Write=worktree:50 \
-  --grant Ailang.Check=worktree:50 --grant Ailang.Run=worktree:50 \
-  --grant Ailang.Discover=worktree:50 --grant Ailang.CLI=worktree:50 \
-  --ttl 14400 --out /tmp/se-session
+/tmp/ailang-worldd session new ep1 --db /tmp/se-world/world.db --workspace-root /tmp/se-ws \
+  --preset se-tools --ttl 14400 --out /tmp/se-session
 ```
+
+It prints `session for episode ep1: 9 grant(s), expires epoch …, token written to
+/tmp/se-session`. To keep runs at IO and FS, use explicit `--grant EFFECT=SCOPE:BUDGET` flags in
+place of `--preset` and leave out `Ailang.RunEnv` and `Ailang.RunNet`.
 
 A session sees only the tools whose effect it holds a grant for. Budgets persist per episode,
 across restarts and across new sessions for the same episode.
@@ -166,9 +181,16 @@ Both `--workspace-root` and `--tool-ailang-bin` are required. With only one, the
 different one. It must lie outside the workspace root. Without a corpus, `examples-search`
 answers `{"ok":false,"refused":"no examples corpus configured: …"}`.
 
+`ailang-run` capabilities beyond IO and FS are off unless you enable them: `--run-allow-caps`
+names the ones a run may request, `--run-net-allow` each loopback `IP:PORT` a Net run may reach,
+and `--run-net-allow-http` allows plain http to them (see
+[Tool confinement](../security/tool-confinement.md#ailang-run-capabilities)). The runbook's
+serve line enables all three, for a Net mock on port 7655:
+
 ```bash
 /tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN \
-  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL --examples-dir $HOME/.ailang/examples &
+  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL --examples-dir $HOME/.ailang/examples \
+  --run-allow-caps Env,Net,Declassify --run-net-allow 127.0.0.1:7655 --run-net-allow-http &
 ```
 
 Commit the genesis world through the running daemon, with the session:
@@ -188,7 +210,7 @@ curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"hello.ail"}}}' http://127.0.0.1:7644/mcp/
 ```
 
-The list holds exactly the eight names. The call answers as SSE. This is the `ailang-read`
+The list holds exactly the nine names. The call answers as SSE. This is the `ailang-read`
 result from the attended run (`structuredContent`, abbreviated):
 
 ```text
@@ -222,7 +244,7 @@ export WORLD_SESSION=$(cat /tmp/se-session)
 pi --mcp-config /tmp/se-pi-mcp.json
 ```
 
-Run `/mcp tools` in that session and confirm the eight `world_*` names. This first session also
+Run `/mcp tools` in that session and confirm the nine `world_*` names. This first session also
 writes the adapter's cache (`~/.pi/agent/mcp-cache.json`); direct tools register from it. Then
 run with every built-in tool disabled:
 
@@ -260,12 +282,17 @@ genesis plus nine tool calls.
 ```
 
 Tool-call entries have `writtenBy: "coordinator:mcp"` (an A2A call writes `coordinator:a2a`). To trace a call back from its result, see
-[Provenance walks](../guides/provenance-walks.md).
+[Provenance walks](../guides/provenance-walks.md). The developer CLI does the walk for you:
+
+```bash
+/tmp/ailang-worldd call ailang-read --session /tmp/se-session --arg path=hello.ail --json-out | /tmp/ailang-worldd why -
+```
 
 ## What the tools can and cannot do
 
-The tools are confined by AILANG's own policy layer, not by new Go code: paths stay inside the
-worktree, `.git` and a deny list of control directories are read-only, there is no shell, and
-`ailang-run` has an 8 s supervisor timeout. The full list of measured facts is in
+The AILANG tools are confined by AILANG's own policy layer, not by new Go code: paths stay
+inside the worktree, `.git` and a deny list of control directories are read-only, there is no
+shell, and `ailang-run` has an 8 s supervisor timeout. `workspace-exec` takes no shell line: it
+runs a profiled command under the srt sandbox, with no network. The full list of measured facts is in
 [Tool confinement](../security/tool-confinement.md), and the known gaps are in
 [Residuals](../security/residuals.md).

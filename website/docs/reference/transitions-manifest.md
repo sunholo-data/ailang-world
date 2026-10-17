@@ -46,7 +46,13 @@ For each entry, in order:
    `world/epoch-registry/v1`. The daemon bootstraps epoch 1 for the release it serves, so start
    `serve --ailang-bin <same binary>` once against the store before publishing. Omitted
    `semanticsEpoch` is derived when exactly one epoch nominates the release, and refused as
-   ambiguous otherwise. It is never defaulted.
+   ambiguous otherwise. It is never defaulted. To serve a later AILANG release,
+   `world-publish epoch nominate` first appends an epoch-registry revision naming it: with
+   `--candidate` the release joins the current epoch (its replay goldens are byte-identical;
+   headless-permitted), and with `--new-epoch` it opens epoch N+1 (semantics moved; attended).
+   The release must be a row of the compiled-in release manifest `pins/ailang-releases.json`,
+   with a passing compatibility-gate verdict (`--gate-verdict`) and its real binary
+   (`--binary`). See the [CLI reference](cli.md#verbs).
 2. **Source.** `transitionFnFile` is canonicalised and **checked** under the pinned interpreter
    (a bounded `check` in an empty scratch root) **before** it is stored as a
    `world/transition-source/v1` object. A source that does not load is never stored. Because the
@@ -140,7 +146,7 @@ Note the pattern: `access` at cost 0 and one declared effect at cost 1, so one g
 name both admits the tool and pays for each call. `transitionFnFile` paths are relative to the
 **repo root**, so run the publish from there.
 
-All eight `se-tools` entries:
+All nine `se-tools` entries:
 
 | `id` | Source | `access.effect` | Required args | Optional args |
 |---|---|---|---|---|
@@ -148,10 +154,14 @@ All eight `se-tools` entries:
 | `ailang-write` | `se_tools/write.ail` | `Workspace.Write` | `path`, `content` | |
 | `ailang-edit` | `se_tools/edit.ail` | `Workspace.Write` | `path`, `old_text`, `new_text` | |
 | `ailang-check` | `se_tools/check.ail` | `Ailang.Check` | `path` | |
-| `ailang-run` | `se_tools/run.ail` | `Ailang.Run` | `path` | `args_json` |
+| `ailang-run` | `se_tools/run.ail` | `Ailang.Run` | `path` | `args_json`, `stdin`, `argv`, `caps` |
 | `builtins-search` | `se_tools/builtins_search.ail` | `Ailang.Discover` | | `query`, `module` |
 | `examples-search` | `se_tools/examples_search.ail` | `Ailang.Discover` | `query` | |
 | `ailang-cli` | `se_tools/cli.ail` | `Ailang.CLI` | `op` | `path`, `module`, `query`, `package`, `flags` |
+| `workspace-exec` | `se_tools/exec.ail` | `Workspace.Exec` | `command` | `args` |
+
+`ailang-run` also declares `Ailang.RunEnv` and `Ailang.RunNet` (a run whose `caps` hold `Env` or
+`Net`), so it has three `declaredEffects`; every other entry has one.
 
 Every input schema sets `"additionalProperties": false`, and every tool's plan also refuses
 unknown keys itself, because the underlying `policy-tool` silently ignores them.
