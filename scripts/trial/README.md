@@ -64,3 +64,12 @@ episode branch and opens a **draft** PR with label `ailang-world`; Mark reviews 
 
 Tests: `cd scripts/trial && python3 -m unittest -v` (builds `./cmd/ailang-worldd` to check payloads
 against the real validator; needs `go`).
+
+## 4. Ledger (row 187)
+
+    python3 scripts/trial/ledger.py --root ~/.ailang/state/trial-2026-10-16 [--prs prs.json] [--json]
+
+One Markdown row per episode: wall time, World calls by kind, tokens (from the transcript), graders,
+outcome records, and the PR. Reads only. The committed table is
+`design_docs/verification/world-dogfood/episodes.md`. Tests: `python3 -m unittest -v test_ledger`.
+
