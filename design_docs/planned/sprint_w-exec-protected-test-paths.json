@@ -207,7 +207,7 @@
         "design_docs/verification/world-row140-m0/m0_matrix.py",
         ".github/workflows/ci.yml"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "ProtectedMatrixSelfTest"
       ],
