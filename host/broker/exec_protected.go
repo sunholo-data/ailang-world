@@ -5,7 +5,8 @@ package broker
 // validates the grammar and returns the canonical list; canonicalProtected,
 // protectedDigest, foldProtectedKey and matchProtected are the canonical form,
 // its digest and the matcher. No I/O and no profile wiring here: the renderings
-// for AILANG, srt and git are M1b and later.
+// for AILANG, srt and git (rebaseForSandbox, renderSrtProtected, gitPathspecs) are
+// M1b; the git pathspec equivalence proof is M1c.
 
 import (
 	"crypto/sha256"
@@ -247,4 +248,91 @@ func matchProtected(canonical []string, rel string) bool {
 		}
 	}
 	return false
+}
+
+// rebaseForSandbox renders the canonical set as AILANG's fs_deny_write, relative
+// to the sandbox at moduleRoot (design §4.2 "Re-basing for AILANG"). Segments
+// compare under foldProtectedKey. A D/** strictly under the root loses the root
+// segments; D equal to the root, or an ancestor of it, protects the whole
+// sandbox and renders as '*'; D outside the root is dropped. A base-name G is
+// unchanged. Order is kept and exact duplicates are dropped. The result never
+// aliases the input and is nil when nothing is left.
+func rebaseForSandbox(canonical []string, moduleRoot string) []string {
+	var mSeg []string
+	if m := path.Clean(moduleRoot); m != "." {
+		mSeg = strings.Split(m, "/")
+	}
+	var out []string
+	seen := make(map[string]bool, len(canonical))
+	for _, p := range canonical {
+		r, keep := rebaseProtected(p, mSeg)
+		if keep && !seen[r] {
+			seen[r] = true
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// rebaseProtected re-bases one canonical entry onto the root segments mSeg.
+func rebaseProtected(p string, mSeg []string) (string, bool) {
+	if !strings.HasSuffix(p, "/**") {
+		return p, true
+	}
+	dSeg := strings.Split(strings.TrimSuffix(p, "/**"), "/")
+	n := len(mSeg)
+	if len(dSeg) <= n {
+		if foldSegmentsEqual(dSeg, mSeg[:len(dSeg)]) {
+			return "*", true
+		}
+		return "", false
+	}
+	if !foldSegmentsEqual(mSeg, dSeg[:n]) {
+		return "", false
+	}
+	return strings.Join(dSeg[n:], "/") + "/**", true
+}
+
+// foldSegmentsEqual compares two equal-length segment lists by fold key.
+func foldSegmentsEqual(a, b []string) bool {
+	for i := range a {
+		if foldProtectedKey(a[i]) != foldProtectedKey(b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// renderSrtProtected renders the canonical set as srt denyWrite entries for the
+// worktree (design §4.2). Darwin gets the literal directory and '<wt>/**/G' for
+// base names. Every other goos gets directory literals only, because srt skips
+// globs on Linux (D-156-3 = A, V8). Order is canonical and the result is fresh.
+func renderSrtProtected(canonical []string, worktree, goos string) []string {
+	var out []string
+	for _, p := range canonical {
+		if strings.HasSuffix(p, "/**") {
+			out = append(out, filepath.Join(worktree, strings.TrimSuffix(p, "/**")))
+			continue
+		}
+		if goos == "darwin" {
+			out = append(out, worktree+"/**/"+p)
+		}
+	}
+	return out
+}
+
+// gitPathspecs renders the canonical set as root-anchored git pathspecs (design
+// §4.2, r3). D/** becomes the bare D and D/**; a base-name G becomes **/G. Every
+// entry carries top, glob and icase. Order is canonical and the result is fresh.
+func gitPathspecs(canonical []string) []string {
+	var out []string
+	for _, p := range canonical {
+		if strings.HasSuffix(p, "/**") {
+			d := strings.TrimSuffix(p, "/**")
+			out = append(out, ":(top,glob,icase)"+d, ":(top,glob,icase)"+d+"/**")
+			continue
+		}
+		out = append(out, ":(top,glob,icase)**/"+p)
+	}
+	return out
 }

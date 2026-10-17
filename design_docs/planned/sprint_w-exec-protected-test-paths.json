@@ -451,7 +451,7 @@
         "go.mod",
         "go.sum"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedGrammar",
         "TestProtectedGrammarRefusesDoubleStarPrefix",
@@ -701,7 +701,7 @@
         "host/broker/exec_protected.go",
         "host/broker/exec_protected_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedRebase",
         "TestProtectedRenderers",
