@@ -32,7 +32,8 @@ facts = {'argv': argv, 'cwd': os.getcwd(), 'token_env': os.environ.get('WORLD_SE
          'registry_key': 'AILANG_REGISTRY_API_KEY' in os.environ}
 if '--mcp-config' in argv:
     p = argv[argv.index('--mcp-config') + 1]
-    facts['mcp_mode'] = oct(os.stat(p).st_mode & 0o777)
+    # the World arm passes a 0600 file; the shell arm passes inline JSON (no servers)
+    facts['mcp_mode'] = oct(os.stat(p).st_mode & 0o777) if os.path.exists(p) else 'inline:' + p
 json.dump(facts, open(os.path.join(spec['marker_dir'], 'agent.facts'), 'w'))
 open(os.path.join(spec['marker_dir'], 'agent.ran'), 'w').write('1')
 for ev in spec['events']:
@@ -168,12 +169,13 @@ class Base(unittest.TestCase):
             json.dump({'marker_dir': self.markers, 'events': events, 'rc': rc}, f)
         os.environ['FAKE_SPEC'] = p
 
-    def trial_spec(self, agent='claude', graders=None):
+    def trial_spec(self, agent='claude', graders=None, **extra):
         g = graders or [{'name': 'pass', 'argv': [sys.executable, self.grader, self.marker, 'pass'], 'cwd': 'backend'},
                         {'name': 'fail', 'argv': [sys.executable, self.grader, self.marker, 'fail']}]
         spec = {'project': 'platform-source', 'repo': '.', 'exec_commands': ['adk-contract-file', 'ruff-file'],
                 'episodes': [{'id': 'tps-a', 'agent': agent, 'model': 'm-test', 'task': 'adk2-phase0-1-4',
-                              'task_text_file': 'task.md', 'worktree': 'repo-wt', 'deadline_s': 30, 'graders': g}]}
+                              'task_text_file': 'task.md', 'worktree': 'repo-wt', 'deadline_s': 30, 'graders': g,
+                              **extra}]}
         p = os.path.join(self.tmp.name, 'trial.json')
         with open(p, 'w') as f:
             json.dump(spec, f)
@@ -283,6 +285,52 @@ class Episode(Base):
         self.assertNotIn('--mcp-config', f['argv'])
         self.assertEqual(row['agent_summary'], 'Added tests 5-8.')
         self.assertEqual(len([c for c in self.worldd.calls if c['verb'] == 'outcome']), 2)
+
+    def run_shell(self, agent='claude'):
+        if os.path.exists(self.marker):
+            os.unlink(self.marker)
+        self.agent_spec(CLAUDE_EVENTS if agent == 'claude' else CODEX_EVENTS)
+        os.unlink(os.path.join(self.private, 'tps-a.session')) if os.path.exists(os.path.join(self.private, 'tps-a.session')) else None
+        self.client, self.worldd = FakeClient(self.marker), FakeWorldd()
+        self.evidence = os.path.join(self.rig, 'evidence', 'platform-source')
+        spec = self.trial_spec(agent, arm='shell', pair_of='tps-w')
+        return trial.run_episode(spec, 'tps-a', rig=self.rig, addr='127.0.0.1:7644', evidence=self.evidence,
+                                 client=self.client, runner=self.worldd)
+
+    def test_shell_arm_runs_in_the_worktree_with_no_world_contact(self):
+        row = self.run_shell('claude')
+        f = self.facts()
+        self.assertEqual(f['cwd'], os.path.realpath(self.wt))
+        self.assertEqual(f['mcp_mode'], 'inline:{"mcpServers":{}}')  # the floor's no-MCP shell argv
+        self.assertEqual(f['argv'], arms.build_argv('claude', 'shell', model='m-test', prompt_text=f['argv'][f['argv'].index('-p') + 1],
+                                                    cwd=self.wt, mcp_config_path=None, max_budget_usd=None)[1:])
+        self.assertIsNone(f['token_env'])
+        self.assertFalse(f['registry_key'])
+        self.assertEqual(self.client.calls, [])   # no daemon contact at all
+        self.assertEqual(self.worldd.calls, [])   # no outcome record, no provenance
+        self.assertEqual((row['arm'], row['pair_of']), ('shell', 'tps-w'))
+        self.assertIsNone(row['provenance'])
+        self.assertEqual(row['log_range'], {'from': None, 'to': None})
+        self.assertEqual([g['name'] for g in row['graders']], ['pass', 'fail'])
+        self.assertTrue(all('outcome_record' not in g for g in row['graders']))
+        self.assertEqual(row['outcome_record_errors'], 0)
+        prompt = f['argv'][f['argv'].index('-p') + 1]
+        self.assertTrue(prompt.startswith('# Issue 67'))
+        self.assertIn('normal coding tools', prompt)
+        self.assertNotIn('workspace-exec', prompt)
+
+    def test_codex_shell_arm_is_workspace_write_without_token(self):
+        self.run_shell('codex')
+        f = self.facts()
+        self.assertIsNone(f['token_env'])
+        self.assertEqual(f['argv'][f['argv'].index('-s') + 1], 'workspace-write')
+
+    def test_world_arm_is_the_default_and_bad_arms_refuse(self):
+        self.assertEqual(trial.episode_spec(self.trial_spec(), 'tps-a')['arm'], 'world')
+        with self.assertRaises(trial.TrialError):
+            trial.episode_spec(self.trial_spec(arm='docker'), 'tps-a')
+        with self.assertRaises(trial.TrialError):
+            trial.episode_spec(self.trial_spec(pair_of='../x'), 'tps-a')
 
     def test_no_token_anywhere_in_evidence(self):
         self.run_ep('claude')
