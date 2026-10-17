@@ -25,6 +25,10 @@ var allowedDepModules = []string{
 	"github.com/mattn/go-isatty",
 	"github.com/ncruces/go-strftime",
 	"github.com/remyoudompheng/bigfft",
+	// row 156 M1a: the protected-pattern fold (exec_protected.go) is fileguard's
+	// NFC fold; two package paths, never the module root. Local Unicode tables only.
+	"golang.org/x/text/unicode/norm",
+	"golang.org/x/text/transform",
 }
 
 var brokerCorePatterns = []string{"./host/broker/...", "./host/capsule/..."}
