@@ -61,7 +61,7 @@ func TestProtectedGrammar(t *testing.T) {
 		}
 	})
 	t.Run("characters", func(t *testing.T) {
-		for _, bad := range []string{"a\x00.go", "a\x01.go", `a\b.go`, "\xff.go", "x.go ", " x.go", "tests/**\t"} {
+		for _, bad := range []string{"a\x00.go", "a\x01.go", `a\b.go`, "\xff.go", "x.go ", " x.go", "tests/**\t", "\u00a0x.go", "x.go\u3000", "x.go\u2003"} {
 			wantProtectedRefusal(t, []string{"ok.go", bad}, 1, protTagCharacters)
 		}
 	})
@@ -128,7 +128,7 @@ func TestProtectedGrammarRefusesDoubleStarPrefix(t *testing.T) {
 
 func TestProtectedDigestGolden(t *testing.T) {
 	// Hand-derived canonical list: fold keys are TESTS/**, *.TEST.TS, *_TEST.GO
-	// (TESTS/** duplicates tests/**, *_test.go repeats); first spellings kept;
+	// (TESTS/** duplicates tests/**, *_test.go repeats); the byte-smallest spelling per fold key is kept;
 	// sorted by fold-key bytes ('*' 0x2A < 'T' 0x54, '.' 0x2E < '_' 0x5F).
 	// The fold key TESTS/** has spellings "tests/**" and "TESTS/**"; the
 	// byte-smallest, "TESTS/**" ('T' 0x54 < 't' 0x74), is kept.
