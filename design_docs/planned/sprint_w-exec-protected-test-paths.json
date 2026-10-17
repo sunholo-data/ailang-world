@@ -314,7 +314,7 @@
         "design_docs/planned/w-exec-protected-test-paths.md",
         "host/broker/exec_settings_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedMatrixModeContract",
         "ProtectedMatrixLinux"
