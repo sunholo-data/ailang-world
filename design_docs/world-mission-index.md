@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 279 | 2026-10-17 | row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) + M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 94) [PRODUCT] |
 | 278 | 2026-10-17 | row 156 M0b Linux protected-write matrix (48 rows) measured on CI, banked as V14/V15 (PR #299; judge r1 PASS 85) [PRODUCT] |
 | 277 | 2026-10-17 | row 156 `w-exec-protected-test-paths` designed (V1–V13), planned (19 milestones), M0a matrix oracle built (PR #298; judge r1 PASS 82) [PRODUCT] |
 | 276 | 2026-10-16 | row 150 M5a bounded anchored evidence roster (ATTESTED + demo-authored CLAIMED) LANDED `bcd2d7c` (PR #295; judge r1 PASS 90) [PRODUCT] |
