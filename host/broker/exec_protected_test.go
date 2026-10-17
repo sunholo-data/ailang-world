@@ -4,10 +4,17 @@ package broker
 // (exec_protected.go). Pure functions: no profile, no filesystem, no sockets.
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 // wantProtectedRefusal asserts that in is refused and that the error names the
@@ -170,25 +177,31 @@ func TestProtectedDigestGolden(t *testing.T) {
 	}
 }
 
+// protectedFixtureRow is one V7 fixture (q4_policytool_denywrite.out.txt): a
+// pattern set, a path and the expected match. The unit test and the pinned
+// real-binary test share the table.
+type protectedFixtureRow struct {
+	name     string
+	patterns []string
+	path     string
+	want     bool
+}
+
+var protectedFixtureRows = []protectedFixtureRow{
+	{"pkg-A_TEST.GO", []string{"*_test.go"}, "pkg/A_TEST.GO", true},
+	{"root", []string{"*_test.go"}, "c_test.go", true},
+	{"deep", []string{"*_test.go"}, "a/b/c/d_test.go", true},
+	{"dir-root", []string{"tests/**"}, "tests", true},
+	{"dir-deep", []string{"tests/**"}, "tests/a/b.py", true},
+	{"long-s", []string{"tests/**"}, "teſts/x.py", true},
+	{"kelvin", []string{"*k_test.go"}, "pkg/K_test.go", true},
+	{"non-hit-sibling", []string{"tests/**"}, "tests2/x.py", false},
+	{"non-hit-nested-dir", []string{"tests/**"}, "cli/tests/x.py", false},
+	{"non-hit-base", []string{"*_test.go"}, "pkg/a.go", false},
+}
+
 func TestProtectedMatchFixture(t *testing.T) {
-	cases := []struct {
-		name     string
-		patterns []string
-		path     string
-		want     bool
-	}{
-		{"pkg-A_TEST.GO", []string{"*_test.go"}, "pkg/A_TEST.GO", true},
-		{"root", []string{"*_test.go"}, "c_test.go", true},
-		{"deep", []string{"*_test.go"}, "a/b/c/d_test.go", true},
-		{"dir-root", []string{"tests/**"}, "tests", true},
-		{"dir-deep", []string{"tests/**"}, "tests/a/b.py", true},
-		{"long-s", []string{"tests/**"}, "teſts/x.py", true},
-		{"kelvin", []string{"*k_test.go"}, "pkg/K_test.go", true},
-		{"non-hit-sibling", []string{"tests/**"}, "tests2/x.py", false},
-		{"non-hit-nested-dir", []string{"tests/**"}, "cli/tests/x.py", false},
-		{"non-hit-base", []string{"*_test.go"}, "pkg/a.go", false},
-	}
-	for _, tc := range cases {
+	for _, tc := range protectedFixtureRows {
 		t.Run(tc.name, func(t *testing.T) {
 			canon, err := ParseProtectedPatterns(tc.patterns)
 			if err != nil {
@@ -226,6 +239,276 @@ func TestProtectedMatchFixture(t *testing.T) {
 		}
 		if !matchProtected(canonD, nfc) {
 			t.Errorf("NFD pattern did not match NFC path %q", nfc)
+		}
+	})
+}
+
+func TestProtectedRebase(t *testing.T) {
+	t.Run("root-dot", func(t *testing.T) {
+		in := []string{"tests/**", "*.test.ts"}
+		for _, m := range []string{".", ""} {
+			if got := rebaseForSandbox(in, m); !reflect.DeepEqual(got, in) {
+				t.Errorf("module %q: got %q; want %q", m, got, in)
+			}
+		}
+	})
+	cases := []struct {
+		name   string
+		canon  []string
+		module string
+		want   []string
+	}{
+		{"under-sub", []string{"sub/tests/**"}, "sub", []string{"tests/**"}},
+		{"ancestor", []string{"sub/**"}, "sub/pkg", []string{"*"}},
+		{"equal", []string{"sub/**"}, "sub", []string{"*"}},
+		{"disjoint", []string{"other/**"}, "sub", nil},
+		{"sibling-prefix", []string{"subway/**"}, "sub", nil},
+		{"case", []string{"sub/tests/**"}, "Sub", []string{"tests/**"}},
+		{"basename", []string{"*.test.ts"}, "sub", []string{"*.test.ts"}},
+		{"dedupe-star", []string{"sub/**", "sub/pkg/**"}, "sub/pkg", []string{"*"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := rebaseForSandbox(tc.canon, tc.module); !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("rebaseForSandbox(%q, %q) = %q; want %q", tc.canon, tc.module, got, tc.want)
+			}
+		})
+	}
+	t.Run("fresh-slice", func(t *testing.T) {
+		in := []string{"*.test.ts", "tests/**"}
+		got := rebaseForSandbox(in, ".")
+		if !reflect.DeepEqual(got, in) {
+			t.Fatalf("got %q; want %q", got, in)
+		}
+		got[0], got[1] = "MUT", "MUT"
+		if in[0] != "*.test.ts" || in[1] != "tests/**" {
+			t.Fatalf("mutating the result changed the input: %q", in)
+		}
+	})
+	t.Run("nil-empty", func(t *testing.T) {
+		if got := rebaseForSandbox(nil, "sub"); got != nil {
+			t.Errorf("nil input = %q; want nil", got)
+		}
+		if got := rebaseForSandbox([]string{}, "."); got != nil {
+			t.Errorf("empty input = %q; want nil", got)
+		}
+		if got := rebaseForSandbox([]string{"other/**"}, "sub"); got != nil {
+			t.Errorf("all-dropped input = %q; want nil", got)
+		}
+	})
+}
+
+func TestProtectedRenderers(t *testing.T) {
+	canon, err := ParseProtectedPatterns([]string{"tests/**", "*.test.ts", "src/gen/**", "conftest.py"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Run("ailang", func(t *testing.T) {
+		want := []string{"*.test.ts", "conftest.py", "src/gen/**", "tests/**"}
+		if got := rebaseForSandbox(canon, "."); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %q; want %q", got, want)
+		}
+	})
+	t.Run("darwin", func(t *testing.T) {
+		want := []string{"/w/ep1/**/*.test.ts", "/w/ep1/**/conftest.py", "/w/ep1/src/gen", "/w/ep1/tests"}
+		if got := renderSrtProtected(canon, "/w/ep1", "darwin"); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %q; want %q", got, want)
+		}
+	})
+	t.Run("linux", func(t *testing.T) {
+		want := []string{"/w/ep1/src/gen", "/w/ep1/tests"}
+		got := renderSrtProtected(canon, "/w/ep1", "linux")
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %q; want %q", got, want)
+		}
+		for _, e := range got {
+			if strings.Contains(e, "**") || strings.HasSuffix(e, ".test.ts") || strings.HasSuffix(e, "conftest.py") {
+				t.Errorf("linux rendered a glob or base name: %q", e)
+			}
+		}
+	})
+	t.Run("git", func(t *testing.T) {
+		want := []string{
+			":(top,glob,icase)**/*.test.ts",
+			":(top,glob,icase)**/conftest.py",
+			":(top,glob,icase)src/gen",
+			":(top,glob,icase)src/gen/**",
+			":(top,glob,icase)tests",
+			":(top,glob,icase)tests/**",
+		}
+		got := gitPathspecs(canon)
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %q; want %q", got, want)
+		}
+		for _, e := range got {
+			if !strings.HasPrefix(e, ":(top,glob,icase)") {
+				t.Errorf("pathspec %q lacks top/glob/icase magic", e)
+			}
+		}
+	})
+	t.Run("nil-empty", func(t *testing.T) {
+		if rebaseForSandbox(nil, ".") != nil || renderSrtProtected(nil, "/w", "darwin") != nil ||
+			renderSrtProtected([]string{}, "/w", "linux") != nil || gitPathspecs(nil) != nil {
+			t.Error("empty input rendered a non-nil result")
+		}
+	})
+}
+
+// policyToolReply is the part of the policy-tool reply the pinned test reads.
+type policyToolReply struct {
+	Ok      bool   `json:"ok"`
+	Refused string `json:"refused"`
+}
+
+// policyWriteOnce runs one write op through the real policy-tool with the given
+// fs_deny_write, from cwd sandbox, under the V7 environment (design §4.3).
+func policyWriteOnce(ctx context.Context, bin, home, root, sandbox string, deny []string, rel string) (policyToolReply, error) {
+	var r policyToolReply
+	if deny == nil {
+		deny = []string{}
+	}
+	denyJSON, err := json.Marshal(deny)
+	if err != nil {
+		return r, err
+	}
+	sandboxJSON, err := json.Marshal(sandbox)
+	if err != nil {
+		return r, err
+	}
+	policy := fmt.Sprintf("security_mode = \"restricted\"\nallowed_caps = [\"FS\", \"IO\"]\nfs_sandbox = %s\ntimeout_ms = 8000\nfs_deny_write = %s\nentry = \"main\"\n\n[budgets]\nFS = 0\n", sandboxJSON, denyJSON)
+	policyPath := filepath.Join(root, "policy.toml")
+	if err := os.WriteFile(policyPath, []byte(policy), 0o600); err != nil {
+		return r, err
+	}
+	req, err := json.Marshal(map[string]string{"op": "write", "path": rel, "content": "X\n"})
+	if err != nil {
+		return r, err
+	}
+	cmd := exec.CommandContext(ctx, bin, "policy-tool", "--policy", policyPath)
+	cmd.Dir = sandbox
+	cmd.Env = []string{"HOME=" + home, "PATH=/usr/bin:/bin", "LANG=C", "LC_ALL=C"}
+	cmd.Stdin = strings.NewReader(string(req))
+	out, err := cmd.Output()
+	if err != nil {
+		return r, fmt.Errorf("policy-tool: %w (stdout %q)", err, out)
+	}
+	if err := json.Unmarshal(out, &r); err != nil {
+		return r, fmt.Errorf("policy-tool reply %q: %w", out, err)
+	}
+	return r, nil
+}
+
+// protectedWriteRefused classifies a reply: true only for a refusal by
+// fs_deny_write. Any other refusal is an error, never a protected hit.
+func protectedWriteRefused(r policyToolReply) (bool, error) {
+	if r.Ok {
+		return false, nil
+	}
+	if strings.Contains(r.Refused, "matches fs_deny_write") {
+		return true, nil
+	}
+	return false, fmt.Errorf("refused for another reason: %q", r.Refused)
+}
+
+// pinnedSandbox returns a fresh symlink-resolved temp root and the sandbox
+// <root>/<module>, with every parent of rel created so that a missing parent
+// cannot pass for a protection hit.
+func pinnedSandbox(t *testing.T, module, rel string) (string, string) {
+	t.Helper()
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	sandbox := filepath.Join(root, module)
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(sandbox, rel)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return root, sandbox
+}
+
+func TestProtectedMatchFixturePinned(t *testing.T) {
+	bin := toolBinary(t)
+	for _, row := range protectedFixtureRows {
+		t.Run(row.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			canon, err := ParseProtectedPatterns(row.patterns)
+			if err != nil {
+				t.Fatal(err)
+			}
+			root, sandbox := pinnedSandbox(t, "", row.path)
+			r, err := policyWriteOnce(ctx, bin, t.TempDir(), root, sandbox, rebaseForSandbox(canon, "."), row.path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			refused, err := protectedWriteRefused(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if want := matchProtected(canon, row.path); refused != want {
+				t.Fatalf("policy-tool refused=%v for %q under %q; matchProtected=%v", refused, row.path, row.patterns, want)
+			}
+		})
+	}
+	for _, row := range protectedFixtureRows {
+		t.Run("empty-deny-"+row.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			root, sandbox := pinnedSandbox(t, "", row.path)
+			r, err := policyWriteOnce(ctx, bin, t.TempDir(), root, sandbox, nil, row.path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !r.Ok {
+				t.Fatalf("empty deny list refused %q: %q", row.path, r.Refused)
+			}
+		})
+	}
+	t.Run("module-root-dir", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		canon, err := ParseProtectedPatterns([]string{"sub/tests/**"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		deny := rebaseForSandbox(canon, "sub")
+		if !reflect.DeepEqual(deny, []string{"tests/**"}) {
+			t.Fatalf("rebased = %q; want [tests/**]", deny)
+		}
+		root, sandbox := pinnedSandbox(t, "sub", "tests/x.py")
+		r, err := policyWriteOnce(ctx, bin, t.TempDir(), root, sandbox, deny, "tests/x.py")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if refused, err := protectedWriteRefused(r); err != nil || !refused {
+			t.Fatalf("tests/x.py: refused=%v err=%v reply=%+v; want refused by fs_deny_write", refused, err, r)
+		}
+		r, err = policyWriteOnce(ctx, bin, t.TempDir(), root, sandbox, deny, "x.py")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !r.Ok {
+			t.Fatalf("x.py: reply %+v; want ok (outside the protected dir)", r)
+		}
+	})
+	t.Run("module-root-star", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		canon, err := ParseProtectedPatterns([]string{"sub/**"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		deny := rebaseForSandbox(canon, "sub")
+		if !reflect.DeepEqual(deny, []string{"*"}) {
+			t.Fatalf("rebased = %q; want [*]", deny)
+		}
+		root, sandbox := pinnedSandbox(t, "sub", "deep/y.py")
+		r, err := policyWriteOnce(ctx, bin, t.TempDir(), root, sandbox, deny, "deep/y.py")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if refused, err := protectedWriteRefused(r); err != nil || !refused {
+			t.Fatalf("deep/y.py: refused=%v err=%v reply=%+v; want refused by fs_deny_write", refused, err, r)
 		}
 	})
 }
