@@ -1,13 +1,12 @@
-# World mission dashboard — iteration 279 (2026-10-17)
+# World mission dashboard — iteration 280 (2026-10-17)
 
-- **This fire:** row 156 M1a (PR #300, merged attended as `ee773d1`). The protected-path grammar core, pure Go with no wiring yet: parse and refuse per design §4.1, canonical form, digest, and a matcher that folds exactly like AILANG's fileguard (NFC plus Unicode case orbits, so `ſ` and the Kelvin sign fold too).
-- **Judge findings fixed:** padded entries are now refused (fileguard trims them); the digest no longer depends on input order (one spelling per fold key, the byte-smallest); a `.git` segment is refused at any depth. Design §4.1 says so.
-- **Carry-over closed:** the M0b judge's four untested validator guards now have self-test cases, and the contract test fails rather than skips without python3.
-- **Judge:** independent sonnet r1 **PASS 88** → r2 **PASS 94**, zero blocking.
+- **This fire:** row 156 M1b (PR #307). The protected set now renders for all four consumers, as pure Go with no wiring yet: AILANG `fs_deny_write` re-based to the module-root sandbox, srt `denyWrite` for darwin (dirs plus `**/G`) and linux (dirs only), and root-anchored git pathspecs (`top,glob,icase`, bare `D` and `D/**`).
+- **Measured against the real engine:** a pinned test runs AILANG v0.52.1's policy-tool over the V7 fixture table, empty-deny controls and two module-root rows (23 PASS); it skips without the pin.
+- **Judge:** independent sonnet r1 **PASS 80** → r2 **PASS 84**, zero blocking. Its two surviving rebase mutants are now killed by three test rows. The diff is ~393 lines against the plan's 250 cap (recorded).
 - **Latest GitHub release:** `v1.0.0-rc.1` (pre-release, 2026-10-16). Proof/compiler pin AILANG 0.41.0; tool pin 0.52.1.
-- **Clauses:** **7 of 7 MET.** Before `v1.0.0` (D-WORLD-81): finish row 156 (3/19), then row 150 (9/17), then row 151.
-- **Parked on Mark:** none open. **D-WORLD-82** resolved attended 2026-10-17 (A, A, A, A): D-156-4 = A adds M5c/M5d after M5b. **D-WORLD-83** resolved A (evidence rows 190–196, after the v1.0.0 tag).
-- **Next:** row 156 M1b (render the four consumers, rebase module roots).
+- **Clauses:** **7 of 7 MET.** Before `v1.0.0` (D-WORLD-81): finish row 156 (4/19), then row 150 (9/17), then row 151.
+- **Parked on Mark:** none open (ledger 70 rows, zero OPEN).
+- **Next:** row 156 M1c (real-git pathspec equivalence, incl. the r3 rows).
 - **Routing/cadence:** executor Agent haiku (pin `claude:claude-haiku-5-5`; codex over daily ration), judge Agent sonnet; no designer/planner (ready-made milestone). 4h throttle.
 - **Metered:** $0. No shared skill, harness or routing-policy edit.
-- **Evidence:** log entry 279; role directives in `~/.ailang/state/world-iter279/`.
+- **Evidence:** log entry 280; judge reports in `~/.ailang/state/world-iter280/`.
