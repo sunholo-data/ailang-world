@@ -207,6 +207,7 @@ jobs:
           GOT=$(sha256sum "$RUNNER_TEMP/srt/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js" | cut -d' ' -f1)
           echo "srt $V cli.js sha256 $GOT (pinned $WANT)"
           [ "$GOT" = "$WANT" ] || { echo "::error::srt cli.js digest drifted from pin.json"; exit 1; }
+          python3 design_docs/verification/world-row140-m0/m0_matrix.py --protected-self-test
           python3 design_docs/verification/world-row140-m0/m0_matrix.py \
             --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
             --node "$(command -v node)" --seccomp-read allowread
