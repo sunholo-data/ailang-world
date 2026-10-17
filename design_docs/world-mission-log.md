@@ -1194,4 +1194,6 @@ The planner found problems the doc had not covered:
 
 **Progress**: World 1.0: **7 of 7 clauses MET**; `v1.0.0-rc.1` pre-released. Goal unmoved by this iteration. Row 156: 3 of 19 milestones built.
 
-**Next:** row 156 **M1b** (render the four consumers and rebase module roots). D-WORLD-82 open with defaults A, A, A, B.
+**Next:** row 156 **M1b** (render the four consumers and rebase module roots).
+
+**Mid-fire attended activity (Gate 3b):** Mark merged PR #300 himself (`ee773d1`, 08:14Z, tree identical to the green head `b7666b0`) together with #301–#303, and resolved **D-WORLD-82 = A, A, A, A** in-session (`167f5f9`; `mission_ledger_provenance.sh` verdict `attended`). D-156-4 = A changes the plan: M5c/M5d (World's own symlink/hard-link pre-check, precedent `cliWriteFlags`) must be split and planned after M5b. D-WORLD-83 = A (attended) filed evidence rows 190–196 for after the v1.0.0 tag. A correction commit updated this entry, the 279 stamp, row 156 and the dashboard, which had been written while D-WORLD-82 was still OPEN.
