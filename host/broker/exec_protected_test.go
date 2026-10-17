@@ -61,7 +61,7 @@ func TestProtectedGrammar(t *testing.T) {
 		}
 	})
 	t.Run("characters", func(t *testing.T) {
-		for _, bad := range []string{"a\x00.go", "a\x01.go", `a\b.go`, "\xff.go"} {
+		for _, bad := range []string{"a\x00.go", "a\x01.go", `a\b.go`, "\xff.go", "x.go ", " x.go", "tests/**\t"} {
 			wantProtectedRefusal(t, []string{"ok.go", bad}, 1, protTagCharacters)
 		}
 	})
@@ -73,6 +73,11 @@ func TestProtectedGrammar(t *testing.T) {
 	t.Run("slash-glob", func(t *testing.T) {
 		for _, bad := range []string{"src/*.ts", "tests/", "tests/*"} {
 			wantProtectedRefusal(t, []string{"ok.go", bad}, 1, protTagSlash)
+		}
+	})
+	t.Run("dir-glob", func(t *testing.T) {
+		for _, bad := range []string{"te*/**", "a?/**", "[ab]/**"} {
+			wantProtectedRefusal(t, []string{"ok.go", bad}, 1, protTagGlob)
 		}
 	})
 	t.Run("bracket", func(t *testing.T) {
@@ -89,13 +94,20 @@ func TestProtectedGrammar(t *testing.T) {
 		}
 	})
 	t.Run("already-denied", func(t *testing.T) {
-		for _, bad := range []string{".git/**", ".GIT/**", ".github/workflows/**", ".claude/**", ".gitmodules/**"} {
+		for _, bad := range []string{".git/**", ".GIT/**", ".github/workflows/**", ".claude/**", ".gitmodules/**", "sub/.git/**", "x/.GIT/y/**"} {
 			wantProtectedRefusal(t, []string{"ok.go", bad}, 1, protTagDenied)
 		}
 	})
 }
 
 func TestProtectedGrammarRefusesDoubleStarPrefix(t *testing.T) {
+	// Slash-free '**' has no directory to suffix; its own fix text is asserted.
+	for _, bad := range []string{"**x.go", "a**b.go"} {
+		wantProtectedRefusal(t, []string{"ok.go", bad}, 1, protTagDoubleStar)
+		if _, err := ParseProtectedPatterns([]string{bad}); err == nil || !strings.Contains(err.Error(), "use '*' in place of '**'") {
+			t.Errorf("%q: error %v lacks its fix text", bad, err)
+		}
+	}
 	for _, tc := range []struct{ in, suggest string }{
 		{"**/x.test.ts", "x.test.ts"},
 		{"src/**/x.go", "x.go"},
@@ -118,10 +130,12 @@ func TestProtectedDigestGolden(t *testing.T) {
 	// Hand-derived canonical list: fold keys are TESTS/**, *.TEST.TS, *_TEST.GO
 	// (TESTS/** duplicates tests/**, *_test.go repeats); first spellings kept;
 	// sorted by fold-key bytes ('*' 0x2A < 'T' 0x54, '.' 0x2E < '_' 0x5F).
+	// The fold key TESTS/** has spellings "tests/**" and "TESTS/**"; the
+	// byte-smallest, "TESTS/**" ('T' 0x54 < 't' 0x74), is kept.
 	// Digest, computed outside Go:
-	//   printf 'world/exec-protected/v1\n*.test.ts\n*_test.go\ntests/**\n' | shasum -a 256
-	const want = "sha256:5dbd94a35188b1f33425ffe4419cf49837013467c0ce0d43488685b1c683ba04"
-	wantCanon := []string{"*.test.ts", "*_test.go", "tests/**"}
+	//   printf 'world/exec-protected/v1\n*.test.ts\n*_test.go\nTESTS/**\n' | shasum -a 256
+	const want = "sha256:bbe9239ed936ef97f569a718024b72ca42d652ba2025a2006514badb18784965"
+	wantCanon := []string{"*.test.ts", "*_test.go", "TESTS/**"}
 	in := []string{"tests/**", "*_test.go", "TESTS/**", "*.test.ts", "*_test.go"}
 	got, err := ParseProtectedPatterns(in)
 	if err != nil {
@@ -140,6 +154,16 @@ func TestProtectedDigestGolden(t *testing.T) {
 	}
 	if d := protectedDigest(got2); d != want {
 		t.Fatalf("shuffled digest = %s; want %s (order-independent)", d, want)
+	}
+	// Spelling order must not matter: both orders give the same list and digest.
+	for _, pair := range [][]string{{"tests/**", "TESTS/**"}, {"TESTS/**", "tests/**"}} {
+		c, err := ParseProtectedPatterns(pair)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(c, []string{"TESTS/**"}) || protectedDigest(c) != protectedDigest([]string{"TESTS/**"}) {
+			t.Fatalf("%q canonical = %q; want [TESTS/**] with a shared digest", pair, c)
+		}
 	}
 	if d := protectedDigest(nil); d != "" {
 		t.Fatalf("empty digest = %q; want \"\" (none declared)", d)
@@ -175,6 +199,17 @@ func TestProtectedMatchFixture(t *testing.T) {
 			}
 		})
 	}
+	t.Run("clean-path", func(t *testing.T) {
+		canon, err := ParseProtectedPatterns([]string{"tests/**"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, p := range []string{"./tests/x.py", "a/../tests/x.py"} {
+			if !matchProtected(canon, p) {
+				t.Errorf("tests/** did not match %q", p)
+			}
+		}
+	})
 	t.Run("nfc", func(t *testing.T) {
 		nfc := "café_test.go"
 		nfd := "café_test.go"

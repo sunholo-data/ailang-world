@@ -73,6 +73,12 @@ func parseProtectedEntry(i int, in string) (string, error) {
 	if !utf8.ValidString(in) {
 		return "", protRefusal(i, in, protTagCharacters, "not valid UTF-8")
 	}
+	if first, _ := utf8.DecodeRuneInString(in); unicode.IsSpace(first) {
+		return "", protRefusal(i, in, protTagCharacters, "leading whitespace; fileguard trims patterns, so refuse rather than disagree")
+	}
+	if last, _ := utf8.DecodeLastRuneInString(in); unicode.IsSpace(last) {
+		return "", protRefusal(i, in, protTagCharacters, "trailing whitespace; fileguard trims patterns, so refuse rather than disagree")
+	}
 	for _, r := range in {
 		if r == 0 || unicode.IsControl(r) {
 			return "", protRefusal(i, in, protTagCharacters, "contains a control character")
@@ -147,6 +153,12 @@ func checkProtectedDir(i int, p, d string) error {
 // protectedDenied reports whether dir equals, or lies under, one of World's
 // existing deny names (execDenyNames), compared by fold key.
 func protectedDenied(dir string) bool {
+	// fileguard's UnderGitDir denies a .git segment at any depth.
+	for _, seg := range strings.Split(dir, "/") {
+		if foldProtectedKey(seg) == foldProtectedKey(".git") {
+			return true
+		}
+	}
 	k := foldProtectedKey(dir)
 	for _, n := range execDenyNames() {
 		nk := foldProtectedKey(n)
@@ -162,18 +174,22 @@ func protRefusal(i int, p, tag, format string, args ...any) error {
 	return fmt.Errorf("protected[%d] %q: %s [%s]", i, p, fmt.Sprintf(format, args...), tag)
 }
 
-// canonicalProtected NFC-normalizes each pattern, drops duplicates by fold key
-// (keeping the first spelling seen) and sorts by fold-key bytes.
+// canonicalProtected NFC-normalizes each pattern, collapses spellings that share
+// a fold key to the byte-smallest NFC spelling (so the result does not depend on
+// input order: "TESTS/**" beats "tests/**") and sorts by fold-key bytes.
 func canonicalProtected(patterns []string) []string {
-	seen := make(map[string]bool, len(patterns))
+	idx := make(map[string]int, len(patterns))
 	out := make([]string, 0, len(patterns))
 	for _, p := range patterns {
 		p = norm.NFC.String(p)
 		k := foldProtectedKey(p)
-		if seen[k] {
+		if i, ok := idx[k]; ok {
+			if p < out[i] {
+				out[i] = p
+			}
 			continue
 		}
-		seen[k] = true
+		idx[k] = len(out)
 		out = append(out, p)
 	}
 	sort.Slice(out, func(i, j int) bool {
