@@ -415,6 +415,11 @@ type Daemon struct {
 	// request reads, and no /v1 route reaches them.
 	reads readStore
 
+	// intents is the episode report's journal seam (row 198): New wires it to
+	// the same *store.Store. It is apart from reads so readStore stays the
+	// getter set the read-deadline wrappers override.
+	intents intentReader
+
 	// humanMu serializes Human.Approve across episodes (row 172 D4): the
 	// broker's approvals-head append reads then sets without compare-and-set.
 	humanMu sync.Mutex
@@ -746,7 +751,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
+		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
@@ -1001,9 +1006,10 @@ func releaseFromVersion(version string) string {
 // GET /workbench/live.js serves the embedded same-origin live client; see
 // docs/QUICKSTART.md, "Open the live workbench" for the read-only panes.
 //
-// The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
-// GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).
-// The tenth registration, GET /workbench, is the unversioned read-only operator renderer: it is
+// The eleven /v1 patterns below are the complete frozen v1 machine table (ten GET, one POST;
+// GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40; GET /v1/episodes/{episode}/report
+// by row 198, mirrored in the sketch's routes()).
+// The next registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
 // ten. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
@@ -1019,6 +1025,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	mux.HandleFunc("GET /v1/receipts/{id}", d.handleReceipt)
+	mux.HandleFunc("GET /v1/episodes/{episode}/report", d.handleEpisodeReport)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
@@ -1034,9 +1041,12 @@ func (d *Daemon) Handler() http.Handler {
 
 // isProtected reports whether a request must carry a valid session credential
 // (w-session-authority D6). This sprint it is ONLY POST /v1/commit — the
-// daemon's sole mutation. The eight GET routes pass through unauthenticated as
-// declared residual R1 (full /v1/* read enforcement is a follow-up queue row; a
-// config flip here later is a rewrite-free change).
+// daemon's sole mutation. The /v1 GET routes pass through unauthenticated as
+// declared residual R1 (full /v1/* read enforcement is a follow-up queue row,
+// row 199; a config flip here later is a rewrite-free change). Row 198's
+// episode report is one of them: no episode-scoped read protection exists to
+// put it behind, so it is exactly as open as its siblings, and row 199's list
+// names it.
 func (d *Daemon) isProtected(r *http.Request) bool {
 	return r.Method == http.MethodPost && r.URL.Path == "/v1/commit"
 }

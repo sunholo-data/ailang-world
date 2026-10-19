@@ -98,6 +98,60 @@ class LedgerTest(unittest.TestCase):
         self.assertIn('60.0 **timeout**', line)
         self.assertIn('(partial)', line)
 
+    def _report(self, rel, episode, tools, plan=0, handler=0):
+        _write(os.path.join(self.root, 'evidence', *rel), {
+            'episode': episode, 'entries': [1, 9], 'total_calls': sum(tools.values()), 'calls_by_tool': tools,
+            'plan_refusals': {'count': plan, 'by_tool': {}, 'first': []},
+            'handler_refusals': {'count': handler, 'by_tool': {}, 'first': []}})
+
+    def test_world_row_counts_calls_and_refusals_from_the_banked_report(self):
+        # World's record disagrees with the transcript's 7 calls: the report wins for a World arm.
+        self._report(('proj', 'reports', 'c1.json'), 'c1', {'ailang-read': 5, 'ailang-cli': 1, 'workspace-exec': 2}, plan=1, handler=2)
+        r = self.rows()['c1']
+        self.assertEqual(r['tools'], {'read': 5, 'cli': 1, 'exec': 2})
+        self.assertEqual((r['calls_source'], r['refusals']), ('world-report', {'plan': 1, 'handler': 2}))
+        self.assertEqual(r['tokens']['output'], 40)  # tokens still from the transcript
+        import contextlib, io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ledger.main(['--root', self.root])
+        line = next(l for l in buf.getvalue().splitlines() if l.startswith('| c1 '))
+        self.assertIn('| 8 (5/0/0/2/1; refused 1 plan + 2 handler) |', line)
+
+    def test_codex_world_row_needs_no_special_case_with_a_report(self):
+        # x1's runner tool_items are Codex item TYPES; with a report they are not consulted at all.
+        self._report(('reports', 'x1.json'), 'x1', {'ailang-edit': 3})
+        r = self.rows()['x1']
+        self.assertEqual((r['tools'], r['calls_source']), ({'edit': 3}, 'world-report'))
+
+    def test_without_a_report_the_transcript_is_the_fallback(self):
+        rows = self.rows()
+        self.assertEqual((rows['c1']['calls_source'], rows['c1']['refusals']), ('transcript', None))
+        self.assertEqual(rows['x1']['tools'], {'read': 1, 'exec': 1})  # the Codex fallback still applies
+
+    def test_a_report_for_another_episode_or_a_shell_arm_is_ignored(self):
+        self._report(('proj', 'reports', 'c1.json'), 'someone-else', {'ailang-read': 99})
+        self.assertEqual(self.rows()['c1']['calls_source'], 'transcript')
+        ev = os.path.join(self.root, 'evidence')
+        t = os.path.join(ev, 'proj', 'transcripts', 's2.jsonl')
+        _write(t, [{'type': 'result', 'usage': {'output_tokens': 1}}])
+        _write(os.path.join(ev, 'proj', 'episodes', 's2.json'), {
+            'episode': 's2', 'arm': 'shell', 'project': 'proj', 'agent': 'claude', 'model': 'm', 'task': 't',
+            'started_at': '2026-10-18T10:00:00+00:00', 'agent_run': {'tool_items': {'Bash': 2}},
+            'transcript': {'path': t}, 'graders': []})
+        self._report(('proj', 'reports', 's2.json'), 's2', {'ailang-read': 99})
+        r = self.rows()['s2']
+        self.assertEqual((r['tools'], r['calls_source']), ({'exec': 2}, 'transcript'))
+
+    def test_recorded_report_path_is_preferred(self):
+        self._report(('elsewhere', 'c1-report.json'), 'c1', {'ailang-write': 4})
+        p = os.path.join(self.root, 'evidence', 'proj', 'episodes', 'c1.json')
+        with open(p, encoding='utf-8') as f:
+            d = json.load(f)
+        d['report'] = {'path': os.path.join(self.root, 'evidence', 'elsewhere', 'c1-report.json')}
+        _write(p, d)
+        self.assertEqual(self.rows()['c1']['tools'], {'write': 4})
+
     def test_missing_transcript_leaves_tokens_blank(self):
         self.assertEqual(ledger.transcript_usage(os.path.join(self.root, 'nope.jsonl')), {})
 

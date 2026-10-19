@@ -29,7 +29,17 @@ type client struct {
 }
 
 func newClient(base string) *client {
-	return &client{base: strings.TrimSuffix(base, "/"), timeout: daemon.DefaultClientTimeout, http: &http.Client{}}
+	return &client{base: strings.TrimSuffix(clientBaseURL(base), "/"), timeout: daemon.DefaultClientTimeout, http: &http.Client{}}
+}
+
+// clientBaseURL is a client verb's --addr as a base URL (friction #16): a
+// bare host:port — what serve --bind and episode start --addr take — gets
+// http://; a value that names a scheme is used as given.
+func clientBaseURL(addr string) string {
+	if addr == "" || strings.Contains(addr, "://") {
+		return addr
+	}
+	return "http://" + addr
 }
 
 // do is the one transport path for every CLI call. Its caller supplies a

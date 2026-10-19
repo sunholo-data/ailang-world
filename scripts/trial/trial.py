@@ -8,7 +8,9 @@ One real-project episode through World, then its outcomes (design §3 D4–D6):
                AILANG tools, F6), records ``log_to = head`` after it exits, runs every grader argv
                UNSANDBOXED in the episode worktree (D5) and commits one ``world/task-outcome/v1``
                per grader with the rig's ``ailang-worldd outcome record`` under the episode's own
-               session. One row JSON per episode lands in ``<evidence>/episodes/<ep>.json``.
+               session. One row JSON per episode lands in ``<evidence>/episodes/<ep>.json``; for a
+               World arm, the same step banks ``ailang-worldd episode report <ep> --json`` (row 198)
+               in ``<evidence>/reports/<ep>.json``, which ``ledger.py`` counts calls from.
   ``pr-body``  prints a DRAFT-PR body for one episode row: the ``ailang-world`` label note, the
                D-WORLD-60 ``World-Provenance:`` trailer (as ``ailang-worldd provenance`` printed it
                during ``run``) and the outcome refs. It never pushes and never calls ``gh``: the
@@ -448,6 +450,30 @@ def provenance_trailer(rig: str, addr: str, ep: str, log_from: int, log_to: int,
     return {'trailer': m.group(0)}
 
 
+def bank_report(rig: str, addr: str, ep: str, evidence: str, runner=subprocess.run) -> dict:
+    """Row 198: write ``ailang-worldd episode report <ep> --json`` to ``<evidence>/reports/<ep>.json``,
+    World's own count of the episode's calls and refusals (``ledger.py`` reads it). Returns
+    {'path','sha256','total_calls'} or {'error'}; never raises, and writes nothing on failure."""
+    argv = worldd_argv(rig, addr, 'episode', 'report', ep, '--json')
+    try:
+        p = runner(argv, capture_output=True, env=child_env(), timeout=WORLDD_TIMEOUT_S)
+    except (OSError, subprocess.SubprocessError) as err:
+        return {'error': f'spawn: {err}'}
+    if p.returncode != 0:
+        return {'error': f'rc={p.returncode}: {p.stderr.decode(errors="replace").strip()[:300]}'}
+    try:
+        rep = json.loads(p.stdout.decode('utf-8'))
+    except ValueError as err:
+        return {'error': f'report is not JSON: {err}'}
+    if not isinstance(rep, dict) or rep.get('episode') != ep or not isinstance(rep.get('calls_by_tool'), dict):
+        return {'error': 'report does not describe this episode'}
+    os.makedirs(os.path.join(evidence, 'reports'), exist_ok=True)
+    path = os.path.join(evidence, 'reports', f'{ep}.json')
+    with open(path, 'wb') as f:
+        f.write(p.stdout)
+    return {'path': path, 'sha256': sha256_file(path), 'total_calls': rep.get('total_calls')}
+
+
 def outcome_record_errors(row: dict) -> int:
     return sum(1 for g in row.get('graders') or [] if (g.get('outcome_record') or {}).get('error'))
 
@@ -537,6 +563,7 @@ def run_episode(spec: dict, ep: str, *, rig: str, addr: str, evidence: str, clie
     row['outcome_record_errors'] = outcome_record_errors(row)
     row['provenance'] = (None if shell else
                          provenance_trailer(rig, addr, ep, drv.get('log_from'), drv.get('log_to'), runner=runner))
+    row['report'] = None if shell else bank_report(rig, addr, ep, evidence, runner=runner)
     return _write_row(evidence, ep, row)
 
 
@@ -611,7 +638,7 @@ def main(argv=None) -> int:
                               'log_range': row['log_range'],
                               'graders': {g['name']: g['passed'] for g in row['graders']},
                               'outcome_record_errors': row['outcome_record_errors'],
-                              'provenance': row.get('provenance')}, indent=2))
+                              'provenance': row.get('provenance'), 'report': row.get('report')}, indent=2))
             if row['agent_run'].get('error_category') == 'harness_setup':
                 return 2
             return 1 if row['outcome_record_errors'] else 0

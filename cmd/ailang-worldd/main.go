@@ -34,6 +34,7 @@
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
 //	ailang-worldd episode start <episode> --repo <dir> [--profile <project>] ...
+//	ailang-worldd [--addr http://127.0.0.1:7644] episode report <episode> [--json] [--follow]
 //	ailang-worldd session new|list|revoke|mint ...
 //	ailang-worldd help [<verb>]
 //
@@ -110,6 +111,7 @@ Usage:
                     [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
                     [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
+  ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
   ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
@@ -129,7 +131,8 @@ the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
 else $WORLD_SESSION. The token is never printed.
 
 Global client flag:
-  --addr <url>   base URL of the daemon (default ` + daemon.DefaultAddr + `).
+  --addr <url>   base URL of the daemon (default ` + daemon.DefaultAddr + `);
+                 a bare host:port means http://host:port.
                  Applies to client verbs only; it is NOT a 'serve' flag.
 
 serve flags:
@@ -286,6 +289,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 	if err := globals.Parse(args); err != nil {
 		return exitUsage
 	}
+	// Friction #16: a bare host:port (what serve --bind prints and episode
+	// start --addr takes) is accepted by every client verb.
+	*addr = clientBaseURL(*addr)
 
 	// Was --addr given explicitly? `serve` must reject it rather than accept a
 	// flag that has no meaning for it — that is what makes "--addr is a client
@@ -385,13 +391,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runSession(rest[1:], stdout, stderr)
 
 	// Row 189 M3: one attended act starts an episode on a serving daemon.
+	// Row 198: `episode report` is a client verb like why, so it takes the
+	// global --addr; `episode start` keeps its own --addr only.
 	case "episode":
-		if addrGiven {
-			fmt.Fprintln(stderr, "ailang-worldd: the global --addr is not valid for 'episode'; "+
+		if addrGiven && !(len(rest) > 1 && rest[1] == "report") {
+			fmt.Fprintln(stderr, "ailang-worldd: the global --addr is not valid for 'episode start'; "+
 				"pass episode start --addr host:port (the daemon whose health it checks)")
 			return exitUsage
 		}
-		return runEpisode(rest[1:], stdout, stderr)
+		return runEpisode(*addr, rest[1:], stdout, stderr)
 
 	case "help":
 		fmt.Fprint(stdout, usage)
