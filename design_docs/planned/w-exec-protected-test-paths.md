@@ -215,7 +215,7 @@
 
 ### 4.5 Proven intact in the record
 
-**The integrity check [r4].** It is three bounded git invocations per phase, then one pure filter. All three run with `cmd.Dir = h.worktree` and the root-anchored candidate pathspecs of §4.2 [r3, r4], each through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
+**The integrity check [r4].** A no-filter preflight config query runs before the THREE candidate data invocations, inside the same provisional 2500 ms phase bound [r4.x]. It refuses configured filters and query errors; no host filter execution is allowed. The three bounded data invocations are followed by one pure filter. All three run with `cmd.Dir = h.worktree` and the root-anchored candidate pathspecs of §4.2 [r3, r4], each through `runBounded` with row 184's minimal git environment (`gitEnv()`, `GIT_OPTIONAL_LOCKS=0`, `core.fsmonitor=false`, no filters, V12):
 
 ```
 git status --porcelain=v2 -z --branch --untracked-files=all --ignored=no --no-renames \
