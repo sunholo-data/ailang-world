@@ -5,8 +5,8 @@ package broker
 // validates the grammar and returns the canonical list; canonicalProtected,
 // protectedDigest, foldProtectedKey and matchProtected are the canonical form,
 // its digest and the matcher. No I/O and no profile wiring here: the renderings
-// for AILANG, srt and git (rebaseForSandbox, renderSrtProtected, gitPathspecs) are
-// M1b; the git pathspec equivalence proof is M1c.
+// for AILANG, srt and git (rebaseForSandbox, renderSrtProtected, gitCandidatePathspecs) are
+// M1b; candidate parsing is M1c, with real-Git equivalence in M1d.
 
 import (
 	"crypto/sha256"
@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"unicode"
@@ -321,18 +322,135 @@ func renderSrtProtected(canonical []string, worktree, goos string) []string {
 	return out
 }
 
-// gitPathspecs renders the canonical set as root-anchored git pathspecs (design
-// §4.2, r3). D/** becomes the bare D and D/**; a base-name G becomes **/G. Every
-// entry carries top, glob and icase. Order is canonical and the result is fresh.
-func gitPathspecs(canonical []string) []string {
+// protectedWidenRunes is closed by TestProtectedFoldToASCIIClosed: these ASCII
+// literals have non-ASCII equivalents under NFC + SimpleFold (design §4.2).
+const protectedWidenRunes = "sSkK;`"
+const protectedCheckMaxOutput = 8 << 20
+const protectedIgnoredCommand = "ls-files -z -o -i --exclude-standard --"
+
+// gitCandidatePathspecs over-selects; matchProtected is the authority. Preserve
+// top/glob/icase and the bare-directory arm for file and symlink replacements.
+func gitCandidatePathspecs(canonical []string) []string {
 	var out []string
 	for _, p := range canonical {
-		if strings.HasSuffix(p, "/**") {
-			d := strings.TrimSuffix(p, "/**")
-			out = append(out, ":(top,glob,icase)"+d, ":(top,glob,icase)"+d+"/**")
-			continue
+		directory := strings.HasSuffix(p, "/**")
+		if directory {
+			p = strings.TrimSuffix(p, "/**")
 		}
-		out = append(out, ":(top,glob,icase)**/"+p)
+		w := protectedStars.ReplaceAllString(protectedWiden.ReplaceAllString(p, "*"), "*")
+		if directory {
+			out = append(out, ":(top,glob,icase)"+w, ":(top,glob,icase)"+w+"/**")
+		} else {
+			out = append(out, ":(top,glob,icase)**/"+w)
+		}
 	}
 	return out
+}
+
+// protectedChange retains raw spellings and distinct statuses (M6 reuses it).
+type protectedChange struct {
+	Path   string `json:"path"`
+	Status string `json:"status"`
+}
+
+const protectedXYSub = `[.MADRCUT]{2} (N\.\.\.|S[.C][.M][.U]) `
+const protectedMode = `[0-7]{6} `
+const protectedHash = `([0-9a-f]{40}|[0-9a-f]{64})`
+
+var protectedWiden = regexp.MustCompile(`\[[^]]*\]|[` + protectedWidenRunes + `?]|[^\x00-\x7f]`)
+var protectedStars = regexp.MustCompile(`\*+`)
+var protectedRecordFields = map[byte]*regexp.Regexp{
+	'1': regexp.MustCompile(`^` + protectedXYSub + strings.Repeat(protectedMode, 3) + protectedHash + ` ` + protectedHash + `$`),
+	'2': regexp.MustCompile(`^` + protectedXYSub + strings.Repeat(protectedMode, 3) + protectedHash + ` ` + protectedHash + ` [RC]([0-9]|[1-9][0-9]|100)$`),
+	'u': regexp.MustCompile(`^` + protectedXYSub + strings.Repeat(protectedMode, 4) + protectedHash + ` ` + protectedHash + ` ` + protectedHash + `$`),
+}
+var protectedBranch = regexp.MustCompile(`^# branch\.(oid (` + protectedHash + `|\(initial\))|head [\s\S]+|upstream [\s\S]+|ab \+[0-9]+ -[0-9]+)$`)
+
+// parseProtectedCandidates validates all streams; only ignored entries consult the snapshot.
+func parseProtectedCandidates(canonical []string, statusOut, ignoredOut, flagsOut []byte, ignoredBaseline map[string]struct{}) (head string, changes []protectedChange, err error) {
+	fail := func() (string, []protectedChange, error) {
+		return "", nil, fmt.Errorf("malformed protected Git candidates")
+	}
+	streams := make([][]string, 3)
+	for i, b := range [][]byte{statusOut, ignoredOut, flagsOut} {
+		if len(b) > protectedCheckMaxOutput {
+			return fail()
+		}
+		if len(b) == 0 {
+			continue
+		}
+		if b[len(b)-1] != 0 {
+			return fail()
+		}
+		streams[i] = strings.Split(string(b[:len(b)-1]), "\x00")
+		for _, record := range streams[i] {
+			if record == "" {
+				return fail()
+			}
+		}
+	}
+	seen := map[protectedChange]bool{}
+	add := func(p, status string) {
+		c := protectedChange{p, status}
+		if matchProtected(canonical, p) && !seen[c] {
+			changes = append(changes, c)
+			seen[c] = true
+		}
+	}
+	for i := 0; i < len(streams[0]); i++ {
+		r := streams[0][i]
+		if len(r) < 3 || r[1] != ' ' {
+			return fail()
+		}
+		switch r[0] {
+		case '#':
+			if !protectedBranch.MatchString(r) {
+				return fail()
+			}
+			if strings.HasPrefix(r, "# branch.oid ") {
+				if head != "" {
+					return fail()
+				}
+				head = strings.TrimPrefix(r, "# branch.oid ")
+			}
+		case '?':
+			add(r[2:], "untracked")
+		case '1', '2', 'u':
+			n := map[byte]int{'1': 9, '2': 10, 'u': 11}[r[0]]
+			f := strings.SplitN(r, " ", n)
+			if len(f) != n || f[n-1] == "" || !protectedRecordFields[r[0]].MatchString(strings.Join(f[1:n-1], " ")) {
+				return fail()
+			}
+			if r[0] == '2' {
+				if i+1 >= len(streams[0]) {
+					return fail()
+				}
+				i++
+				if f[8][0] == 'R' {
+					add(streams[0][i], "deleted")
+				}
+			}
+			status := "modified"
+			if strings.Contains(f[1], "D") {
+				status = "deleted"
+			}
+			add(f[n-1], status)
+		default:
+			return fail()
+		}
+	}
+	for _, p := range streams[1] {
+		if _, standing := ignoredBaseline[foldProtectedKey(p)]; !standing {
+			add(p, "ignored")
+		}
+	}
+	for _, r := range streams[2] {
+		if len(r) < 3 || r[1] != ' ' || !strings.ContainsRune("HSMRCK?hsmrck", rune(r[0])) {
+			return fail()
+		}
+		if r[0] == 'S' || (r[0] >= 'a' && r[0] <= 'z') {
+			add(r[2:], "index-flag")
+		}
+	}
+	return head, changes, nil
 }

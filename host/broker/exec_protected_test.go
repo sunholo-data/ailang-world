@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 )
 
 // wantProtectedRefusal asserts that in is refused and that the error names the
@@ -332,14 +333,14 @@ func TestProtectedRenderers(t *testing.T) {
 	})
 	t.Run("git", func(t *testing.T) {
 		want := []string{
-			":(top,glob,icase)**/*.test.ts",
-			":(top,glob,icase)**/conftest.py",
-			":(top,glob,icase)src/gen",
-			":(top,glob,icase)src/gen/**",
-			":(top,glob,icase)tests",
-			":(top,glob,icase)tests/**",
+			":(top,glob,icase)**/*.te*t.t*",
+			":(top,glob,icase)**/confte*t.py",
+			":(top,glob,icase)*rc/gen",
+			":(top,glob,icase)*rc/gen/**",
+			":(top,glob,icase)te*t*",
+			":(top,glob,icase)te*t*/**",
 		}
-		got := gitPathspecs(canon)
+		got := gitCandidatePathspecs(canon)
 		if !reflect.DeepEqual(got, want) {
 			t.Fatalf("got %q; want %q", got, want)
 		}
@@ -351,7 +352,7 @@ func TestProtectedRenderers(t *testing.T) {
 	})
 	t.Run("nil-empty", func(t *testing.T) {
 		if rebaseForSandbox(nil, ".") != nil || renderSrtProtected(nil, "/w", "darwin") != nil ||
-			renderSrtProtected([]string{}, "/w", "linux") != nil || gitPathspecs(nil) != nil {
+			renderSrtProtected([]string{}, "/w", "linux") != nil || gitCandidatePathspecs(nil) != nil {
 			t.Error("empty input rendered a non-nil result")
 		}
 	})
@@ -514,4 +515,95 @@ func TestProtectedMatchFixturePinned(t *testing.T) {
 			t.Fatalf("deep/y.py: refused=%v err=%v reply=%+v; want refused by fs_deny_write", refused, err, r)
 		}
 	})
+}
+
+func TestProtectedFoldToASCIIClosed(t *testing.T) {
+	t.Run("closed-set", func(t *testing.T) {
+		var got []rune
+		for r := rune(128); r <= 0x10ffff; r++ {
+			if r >= 0xd800 && r <= 0xdfff {
+				continue
+			}
+			for _, k := range foldProtectedKey(string(r)) {
+				if k < 128 {
+					got = append(got, r)
+					if !strings.ContainsRune(protectedWidenRunes, unicode.ToUpper(k)) || !strings.ContainsRune(protectedWidenRunes, unicode.ToLower(k)) {
+						t.Fatalf("missing widening for %U -> %U", r, k)
+					}
+				}
+			}
+		}
+		if !reflect.DeepEqual(got, []rune{0x17f, 0x37e, 0x1fef, 0x212a}) {
+			t.Fatalf("ASCII fold set: %U", got)
+		}
+	})
+	t.Run("no-multi-rune", func(t *testing.T) {
+		for _, s := range []string{"ß", "ﬀ", "ﬁ"} {
+			if foldProtectedKey(s) != s {
+				t.Fatalf("key(%s) changed", s)
+			}
+		}
+	})
+}
+func TestProtectedCandidatePathspecsGolden(t *testing.T) {
+	for _, tc := range [][3]string{
+		{"directory", "tests/**", ":(top,glob,icase)te*t*|:(top,glob,icase)te*t*/**"}, {"kelvin", "*k_test.go", ":(top,glob,icase)**/*_te*t.go"},
+		{"non-ascii", "é_test.go", ":(top,glob,icase)**/*_te*t.go"}, {"qmark", "?_test.go", ":(top,glob,icase)**/*_te*t.go"},
+		{"class", "[ab]_x.go", ":(top,glob,icase)**/*_x.go"}, {"collapse-stars", "sKé/abc/**", ":(top,glob,icase)*/abc|:(top,glob,icase)*/abc/**"},
+	} {
+		t.Run(tc[0], func(t *testing.T) {
+			if got := strings.Join(gitCandidatePathspecs([]string{tc[1]}), "|"); got != tc[2] {
+				t.Fatalf("got %q want %q", got, tc[2])
+			}
+		})
+	}
+}
+func protectedStatusRecord(xy, p string) string {
+	return "1 " + xy + " N... 100644 100644 100644 " + strings.Repeat("a", 40) + " " + strings.Repeat("b", 40) + " " + p + "\x00"
+}
+func TestProtectedCandidateParseFailsClosed(t *testing.T) {
+	for _, tc := range []struct{ name, status, ignored, flags string }{
+		{"over-cap-status", strings.Repeat("x", protectedCheckMaxOutput+1), "", ""},
+		{"over-cap-ignored", "", strings.Repeat("x", protectedCheckMaxOutput+1), ""},
+		{"over-cap-flags", "", "", strings.Repeat("x", protectedCheckMaxOutput+1)},
+		{"missing-nul", "? false.txt", "", ""}, {"unknown-status", "! false/\x00", "", ""},
+		{"bad-flag", "", "", "Z false.txt\x00"}, {"bad-fields", "1 .M bad false.txt\x00", "", ""},
+		{"bad-modes", strings.Replace(protectedStatusRecord(".M", "false.txt"), "100644", "notmod", 1), "", ""}, {"bad-hash", strings.Replace(protectedStatusRecord(".M", "false.txt"), strings.Repeat("a", 40), "no", 1), "", ""}, {"missing-rename-source", "2" + protectedStatusRecord("R.", "tests/new")[1:len(protectedStatusRecord("R.", "tests/new"))-1] + "\x00", "", ""}, {"ignored-missing-nul", "", "false.txt", ""}, {"flags-missing-nul", "", "", "H false.txt"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, _, err := parseProtectedCandidates([]string{"tests/**"}, []byte(tc.status), []byte(tc.ignored), []byte(tc.flags), nil); err == nil {
+				t.Fatal("malformed/oversized input accepted")
+			}
+		})
+	}
+	t.Run("valid-three-streams", func(t *testing.T) {
+		h := strings.Repeat("a", 40)
+		status := "# branch.oid " + h + "\x00# branch.head main\x00" + protectedStatusRecord(".T", "tests/a \n.py") + protectedStatusRecord(".D", "tests/d") + "? tests/u\x00? tests2/no\x00" + protectedStatusRecord(".M", "tests/Case") + protectedStatusRecord(".M", "tests/case") + protectedStatusRecord(".M", "tests/case")
+		rename := strings.Replace(protectedStatusRecord("R.", "tests/new"), "1 ", "2 ", 1)
+		status += strings.TrimSuffix(rename, "tests/new\x00") + "R100 tests/new\x00tests/old\x00"
+		head, got, err := parseProtectedCandidates([]string{"tests/**"}, []byte(status), []byte("tests/i\x00"), []byte("h tests/f\x00S tests/s\x00H tests/a \n.py\x00"), nil)
+		want := []protectedChange{{"tests/a \n.py", "modified"}, {"tests/d", "deleted"}, {"tests/u", "untracked"}, {"tests/Case", "modified"}, {"tests/case", "modified"}, {"tests/old", "deleted"}, {"tests/new", "modified"}, {"tests/i", "ignored"}, {"tests/f", "index-flag"}, {"tests/s", "index-flag"}}
+		if err != nil || head != h || !reflect.DeepEqual(got, want) {
+			t.Fatalf("head=%q changes=%+v err=%v", head, got, err)
+		}
+	})
+}
+func TestProtectedIgnoredBaseline(t *testing.T) {
+	for _, tc := range []struct {
+		name, baseline, status, ignored string
+		want                            []protectedChange
+	}{
+		{"standing", "tests/a", "", "tests/a\x00", nil},
+		{"new", "tests/a", "", "tests/b\x00", []protectedChange{{"tests/b", "ignored"}}},
+		{"case-variant", "tests/a", "", "TESTS/A\x00", nil},
+		{"nfc-variant", "tests/é", "", "tests/é\x00", nil},
+		{"tracked-not-exempt", "tests/a", protectedStatusRecord(".M", "tests/a"), "", []protectedChange{{"tests/a", "modified"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, got, err := parseProtectedCandidates([]string{"tests/**"}, []byte(tc.status), []byte(tc.ignored), nil, map[string]struct{}{foldProtectedKey(tc.baseline): {}})
+			if err != nil || !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("got %+v err=%v want %+v", got, err, tc.want)
+			}
+		})
+	}
 }
