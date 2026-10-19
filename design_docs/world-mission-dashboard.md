@@ -1,15 +1,15 @@
-# World mission dashboard — iteration 281 (2026-10-19)
+# World mission dashboard — iteration 282 (2026-10-19)
 
-- **This fire:** row 156 M1c premise REFUTED; evidence PR #309, merge `228645a`. No product implementation; M1c incomplete.
-- **Finding:** Git icase misses long-s/Kelvin paths accepted by the NFC/SimpleFold mirror. Both patterns are ASCII, so restricting pattern bytes cannot repair it.
-- **Evidence:** four isolated Git repos, exact unfiltered controls, ASCII selected controls, NUL-safe raw outputs; controller rerun and independent index-only/porcelain-v2 reproduction.
-- **Judge:** independent fresh-context Sol 6.1 PASS 83/100 for evidence only (D-WORLD-48, FLAGGED). MiniMax attempt stopped for containment deviation; Sonnet/Opus weekly quota HTTP429. No MiniMax verdict accepted.
-- **Verification:** PR #309 and its exact merge CI green, 3/3. Local focused protected tests 46 PASS and vet clean on darwin/arm64; broad local broker tests remain PF6-unmeasured.
-- **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15 (attended row139 update already on base).
-- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row156 (4/19), row150 (9/17), then row151.
-- **Next:** bounded row156 detection design revision preserving Unicode semantics, quorum and replan; then resume M1c. No semantic weakening or new human ask.
-- **Parked on Mark:** none (ledger 70 rows, zero OPEN).
-- **Routing/cadence:** all four roles spawned through Agent tool; designer/planner/executor Sol 6.1, evaluator dispatcher plus separate fresh Sol judge after configured lane failures; 4h throttle.
-- **Cost:** metered $0.14741610 (failed MiniMax attempt + probe); subscription quota tokens unavailable from native Agent tool.
-- **Retro:** harness share 0/20; last three landings (281 evidence, 280/279 product) moved no UNMET clause, with all clauses already MET (no drift alarm). No shared skill/driver/routing-policy edit.
-- **Record:** world-mission-log.md entry 281; design_docs/verification/world-iter281/.
+- **This fire:** row 156 detection redesigned ([r4] → [r4.1] → [r4.2]) and M1c + M1d built, PR #312. Git is now a candidate generator with a widened pathspec; World's NFC+SimpleFold mirror decides.
+- **Key measurement:** exactly 4 non-ASCII runes fold onto ASCII (U+017F, U+037E, U+1FEF, U+212A; exhaustive scan, controller-rerun). The iteration-281 long-s/Kelvin misses now report.
+- **Quorum:** r1 BLOCKED (2 rejects) → r4.1; r2 BLOCKED on one surface (500 ms phase budget vs V23) → r4.2 carve-out: 2 500 ms phase, 3 200 ms construction, M6 gated on V24. Doc round count 5.
+- **Judge:** Agent sonnet (cross-vendor), r1 FAIL 68 (vacuous over-cap rows, reproduced) → test-only fix → r2 PASS 88, zero blocking.
+- **Verification:** vet/gofmt clean; focused `TestProtected*` + `-race` ok outside the sandbox (76 real-Git subtests, 0 skips); PR CI 3/3 required before merge.
+- **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
+- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (6/21), row 150 (9/17), then row 151.
+- **Next:** row 156 M2a (profile key), M2b; M6-pre (V24 real-worktree timing) before M6a.
+- **Parked on Mark:** none (ledger zero OPEN).
+- **Routing/cadence:** designer Agent opus (resolver pin), planner + executor codex gpt-6.1-sol, evaluator Agent sonnet; all four roles spawned.
+- **Cost:** metered $0.47 (quorum, two rounds); codex 275k tok; Agent subagents ≈527k tok.
+- **Retro:** harness share 0/20; no drift alarm (all clauses MET). The executor's self-reported cap mutant was wrong; the judge's own mutants caught it.
+- **Record:** world-mission-log.md entry 282; design_docs/verification/world-iter282/.

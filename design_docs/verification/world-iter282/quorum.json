@@ -1,0 +1,96 @@
+{
+ "doc": "design_docs/planned/w-exec-protected-test-paths.md",
+ "author": "claude:claude-opus-5-5",
+ "round1": {
+  "artifact": "w-exec-protected-test-paths-2026-10-19T07-36-12Z.json",
+  "verdict": "blocked",
+  "absent": [
+   {
+    "model": "gpt6-1-sol",
+    "reason": "unreachable"
+   },
+   {
+    "model": "oc-kimi-k3",
+    "reason": "unreachable"
+   }
+  ],
+  "reviewers": [
+   {
+    "model": "gpt6-1-sol",
+    "present": false,
+    "cost_usd": 0,
+    "verdict": null,
+    "strongest_objection": null,
+    "proposed_fix": null
+   },
+   {
+    "model": "gemini-4-argon",
+    "present": true,
+    "cost_usd": 0.057766,
+    "verdict": "reject",
+    "strongest_objection": "The r4 candidate pathspec widening proof (§4.2) omits NFC composition of ASCII characters with combining marks and multi-character case folds. Because the mirror (`fileguard.foldKey`) applies NFC normalization before case-folding, an NFD sequence on disk starting with an unwidened ASCII letter followed by a combining mark (e.g., `e` + U+0301 -> NFC `é`, or `a` + U+030A -> NFC `å`) or a single rune that folds to multiple ASCII characters (e.g., U+00DF `ß` -> `SS`, U+FB00 `ﬀ` -> `FF`) will be normalized/folded by the mirror to match a pattern, whereas Git's `:(glob,icase)` matches raw path bytes without NFC normalization. Specifically, for directory pattern `tests/**` (widened to `te*t*` and `te*t*/**`), a directory named `t` + `e` + U+0301 + `sts` (`téts` in NFD) is matched by the git pathspec `te*t*/**` ONLY because `*` happens to follow `e`; for a directory pattern like `spec/**` (widened to `*pec` and `*pec/**`) or `data/**` (widened to `data` and `data/**`), an NFD path `d` + U+0307 + `ata/x.py` won't match the pattern in the mirror, EXCEPT in the reverse case or with multi-character folds: a pattern `gross/**` widens to `gro*` (since `s` is widened), but a pattern `strass/**` or `buff/**` (widened to `buff` and `buff/**`) IS matched in the mirror by `buﬀ/x.py` (U+FB00 `ﬀ` folds to `FF`), while Git's `:(top,glob,icase)buff/**` will NOT match `buﬀ/x.py`! V17's scan checked `strings.ContainsAny(folded, ascii)` or single-rune equality, missing multi-rune ASCII folds (`ß` -> `SS`, `ﬀ` -> `FF`, `ﬁ` -> `FI`, `ﬂ` -> `FL`, `ﬃ` -> `FFI`, `ﬄ` -> `FFL`, `ﬅ` -> `ST`, `ﬆ` -> `ST`) unless `foldProtectedKey` uses `unicode.SimpleFold` (rune-by-rune). If `foldProtectedKey` uses `SimpleFold`, then V22's NFD risk applies in reverse: if the mirror NFC-normalizes the path before matching, how does a pattern with `*` behave when an unwidened ASCII character in the pattern is matched against a decomposition, or vice versa?",
+    "proposed_fix": "1. In V17 and AC1c.1 (`TestProtectedFoldToASCIIClosed`), clarify the exact implementation of `foldProtectedKey`: if it uses `unicode.SimpleFold` per rune after `norm.NFC`, state that explicitly so multi-rune ligatures (`ß`, `ﬀ`, `ﬁ`, `ﬂ`) cannot fold to ASCII; if it uses `cases.Fold()`, add `f F i I l L t T` to `protectedWidenRunes` to cover ligature decompositions.\n2. In §4.5, make the timeout unambiguous: state 'Each phase (before and after) runs all three git invocations under a single shared 500 ms context (`protectedCheckTimeout`), reserving 500 ms from the child budget for the after-phase.'"
+   },
+   {
+    "model": "oc-glm-5-3",
+    "present": true,
+    "cost_usd": 0.0777246,
+    "verdict": "reject",
+    "strongest_objection": "§4.5's r4 ignored-file leg defines intact as 'zero entries after the filter', and its ignored input is `git ls-files -o -i` filtered only by `matchProtected` — which reports every untracked-ignored file matching a base-name pattern, including pre-existing dependency content that no agent wrote. The doc's own measurements prove the resulting standing false-positive: V10 counted 2 002 `test_*.py` inside `.venv` site-packages of sunholo-platform (a project the row itself treats as first-class), and V21's pathspec'd `ls-files -o -i` returned the 2 `*_test.go` planted inside an ignored `node_modules/`. Because the baseline (`ls-tree` of the base commit, §4.5) covers only tracked entries, ambient ignored matches can never be in it, so any protected episode on such a checkout (or that installs dependencies mid-episode, which is exactly what running tests requires) reports `intact_before: false`, `intact_after: false`, `truncated: true`, total ≈ 2 002 on every honest call — permanently inverting the row's stated deliverable ('a result with intact_after: true ran against test bytes identical to the base commit') and making real tampering indistinguishable from noise. V9's two ignored-creation arms show the leg was designed to catch agent-created files hidden by .gitignore/info-exclude; nothing in §4.5, R-156-6, or M1c/M6 distinguishes those from ambient content, and V20/V21 exhibit the flaw without the doc connecting them to V10's count.",
+    "proposed_fix": "Amend §4.5 (folded into the not-yet-reviewed r4 revision): at handler construction, run the same pathspec'd `git ls-files -z -o -i --exclude-standard -- <candidates>` once (measured 44–64 ms, V21), store its fold-keyed path set as `base_ignored_digest` + `base_ignored_files` in the `protected` block alongside `base_digest`, and define the ignored leg to report only entries whose fold key is absent from that baseline snapshot. Then ambient dependency content (venv site-packages, node_modules) is exempt, while V9's agent-created ignored files (`.gitignore` edit, info/exclude dir) still trip because they postdate the snapshot. Add a V23 on the real checkouts measuring the standing `test_*.py`@.venv and node_modules counts pre- and post-fix, an M1c row asserting the baseline set-difference in `parseProtectedCandidates` (with a new mutant MUT-NO-IGNORED-BASELINE killed by it), and an M6 test `TestExecProtectedAmbientIgnoredIntact` (pristine venv ⇒ intact true; a new site-packages test file ⇒ intact false). Also add one sentence to R-156-6 acknowledging that ignored legs are judged relative to the episode-start ignored snapshot, not the base commit alone."
+   },
+   {
+    "model": "oc-kimi-k3",
+    "present": false,
+    "cost_usd": 0,
+    "verdict": null,
+    "strongest_objection": null,
+    "proposed_fix": null
+   }
+  ]
+ },
+ "round2": {
+  "artifact": "w-exec-protected-test-paths-2026-10-19T07-43-02Z.json",
+  "verdict": "blocked",
+  "absent": [
+   {
+    "model": "gpt6-1-sol",
+    "reason": "unreachable"
+   }
+  ],
+  "reviewers": [
+   {
+    "model": "gpt6-1-sol",
+    "present": false,
+    "cost_usd": 0,
+    "verdict": null,
+    "strongest_objection": null,
+    "proposed_fix": null
+   },
+   {
+    "model": "gemini-4-argon",
+    "present": true,
+    "cost_usd": 0.057856000000000005,
+    "verdict": "reject",
+    "strongest_objection": "V23 proves that the r4.1 detection design breaches its own 500 ms shared phase budget (`protectedCheckTimeout`) on two of the three target repositories during normal (warm) operation, and on all three when cold. Specifically, V23 measures the `git ls-files -o -i` leg alone at 406–504 ms warm on `ailang` (2,114 ms cold) and 346 ms warm on `sunholo-platform` (1,680 ms cold). When combined with the `git status` (~100 ms) and `git ls-files -v` (~19 ms) legs under the single shared 500 ms context specified in §4.5, the integrity check will deterministically time out and record `error` (`intact: null`) on real dependency-installed checkouts, failing the core goal of proving protected paths intact in every exec result.",
+    "proposed_fix": "In §4.5 and M6, raise `protectedCheckTimeout` from `500 ms` to `2500 ms` (reserving `min(timeout_ms, until(deadline) - 2500ms)` for the child only when `until(deadline)` is tight, or running the after-check under `context.WithoutCancel` with a bounded `2500 ms` timeout just as row 184's `worktree_delta` after-snapshot does in V12). Update R-156-6 and R-156-8 to reflect the 2500 ms bound so cold and warm runs on `ailang` and `sunholo-platform` succeed without recording `error`."
+   },
+   {
+    "model": "oc-glm-5-3",
+    "present": true,
+    "cost_usd": 0.0748984,
+    "verdict": "reject",
+    "strongest_objection": "The shared 500 ms phase bound (protectedCheckTimeout, §4.5 [r4.1]) is falsified by the doc's own V23: on the real dependency-installed checkouts the ignored leg alone costs 346-504 ms warm (ailang 406-504 ms; cold up to 2114 ms), before adding status (100-113 ms) and ls-files -v (18-19 ms). Even ailang's warm-minimum sum, 406+100+18 = 524 ms, exceeds 500 ms, so by the doc's own fail-closed rule every exec call on a dependency-installed ailang worktree records protected.error with intact null — the title deliverable ('proven intact in every exec result') is inert on the largest of the three M4 projects as measured. R-156.6 then leaves whether to raise the timeout 'open for the r4.1 review', but r4.1 IS this revision: it moved the ignored leg into the shared phase and declined to change the bound its own new V-row refutes. A load-bearing parameter contradicted by the doc's own verification log, with the resolution deferred to the review currently underway and no proposed number, cannot be approved as written.",
+    "proposed_fix": "Amend r4.1 before re-review: (1) add V24: git worktree add of sunholo-platform and ailang with .venv/node_modules installed, measuring all three §4.5 legs plus the construction-time snapshot together, warm and cold, with the real matchProtected filter (not the ASCII stand-in). (2) Split the budget: status + ls-files -v keep a shared phase bound (measured ~120-132 ms warm, keep 500 ms); the ignored ls-files -o -i leg and the construction snapshot each get a named bound sized from V24 max with margin (e.g. measured max × 1.5, covering the 2114 ms cold case), and the child-budget reserve formula becomes min(timeout_ms, until(deadline) − protectedCheckTimeout − protectedIgnoredTimeout). (3) State the construction-time bound explicitly in §4.5's baseline paragraph. (4) Replace R-156-6's 'left open for the r4.1 review' with the chosen numbers, and gate M6's TestExecProtectedCheckTimeout on V24. (Alternative, if one shared phase must be kept: render :(top,glob,icase)(exclude) pathspecs for the top-level excluded directories present in the construction snapshot so the per-call ignored leg stops enumerating .venv/node_modules — but then state the narrowed scope, that new ignored protected files created inside those directories become undetectable, in R-156-6.) Until V24 exists and the bound is set from it, the 500 ms claim in §4.5 is contradicted by V23 and must not proceed."
+   },
+   {
+    "model": "oc-kimi-k3",
+    "present": true,
+    "cost_usd": 0.201921,
+    "verdict": "reject",
+    "strongest_objection": "§4.5's 500 ms shared per-phase budget (protectedCheckTimeout) is already blown by the doc's own measurements on the target repos. V23: the ignored leg alone costs 406–504 ms warm (2,114 ms cold) on ailang and 346 ms warm (1,680 ms cold) on sunholo-platform; §4.5 adds status ≈100–113 ms and ls-files -v ≈18–19 ms, giving ≈525–640 ms warm on ailang — a steady-state timeout, so every call records protected.error with intact null. R-156-6 concedes this and defers it ('left open for the r4.1 review; this revision does not change it'), and V23 notes the status/ls-files -v legs and agent arms were never measured on real checkouts. On Linux, where base-name patterns are prevent-nothing/detect-only (D-156-3=A, V14's 6/6 creation arms written), the detection layer is the ONLY protection, and it is designed to permanently report 'not checked' on the largest Go target — the title's 'proven intact in every exec result' is void exactly where the row was motivated (1,924 *_test.go files), the record becomes load-dependent and nondeterministic (error vs intact for identical commands), and D-156-1=A means this perpetual error never escalates. The doc also self-declares r4.1 'not yet re-reviewed; M1c and M6 wait for that review and a replan' — it cannot proceed as written.",
+    "proposed_fix": "Amend §4.5 [r4.1] and M6 before any quorum re-review: (1) Size protectedCheckTimeout from V23's real-checkout worst case instead of punting — either set the shared phase budget to ≈2,500 ms (warm phase ≈525–640 ms, cold ignored leg 2,114 ms on ailang) and recompute the child reserve's min() interaction with the 9 s cap and 10 s handler deadline, or drop the before-phase entirely (the previous call's after-phase plus the handler-construction baseline already carry the sticky contract; only call 1 needs the construction-time check), halving the recurring cost — and state which is adopted. (2) Gate M6 on a new V-row: all three git invocations per phase on a dependency-installed ailang episode worktree (closing the gap V23 explicitly left: status/ls-files -v legs and agent-created arms unmeasured there), requiring p95 phase time below the budget with intact ≠ null; if it does not fit, amend §4.4's Linux table and D-156-3 before M3, per the doc's own AC0.2 precedent. (3) Close the snapshot hole: either add a verification-log row proving all dependency installation precedes NewExecHandler in M4 episodes, or add a profile-declared, grammar-checked dependency-dir exemption applied only to the ignored leg's set-difference, with an M6 test asserting that a mid-episode .venv/.../test_new.py leaves intact_after true while a .gitignore-hidden zz_test.go still yields intact_after:false, plus a mutation (MUT-EXEMPT-OVERBROAD) that must kill it."
+   }
+  ]
+ }
+}

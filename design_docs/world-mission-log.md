@@ -1272,3 +1272,49 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row156 remains **4/19 milestones built**; only its failed M1c premise and reproducible evidence moved. Release remains `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row156 bounded designer revision preserving NFC/SimpleFold semantics; quorum and replan detection, then resume M1c. Retain top/bare-D, ignored/untracked coverage, index flags/HEAD and deadlines. DECISIONS FOR MARK: none; ledger OPEN zero. Row150 and row151 retain their attended order after156.
+
+## 282 — 2026-10-19 — row 156 detection redesigned [r4 → r4.2] and M1c + M1d built: Git candidates, mirror authority (PR #312; judge r1 FAIL 68 → r2 PASS 88) [PRODUCT]
+
+**Kind:** design revision + replan + two milestones of one row (156). No release, no semantic weakening.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 281's **Next** was a bounded designer revision preserving Unicode semantics, quorum, replan, then M1c. Fresh origin `6eaa997` = local dev; the main checkout sits on an attended branch (`docs/row198-episode-report`, PR #311) and was left untouched — all work ran in `.wt-world-iter282`. Iteration 281's worktrees are landed residue, not orphans.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #246: 0 allowlisted directives since `2026-10-18T23:25:31Z` (48 comments). Self-notice scan: the one crash notice (`#issuecomment-6136485418`, 2026-10-13) is the orphan already credited by iteration 256 (log grep 1); no new orphan. `mission-world` inbox: 0 unread. Weekly sweep (first fire after Monday 07:00 CEST): 0 orphans of 1 enumerated, list-length control agrees, negative control fired (`design_docs/verification/world-iter282/weekly-sweep.md`).
+
+**Gates 1–2:** origin/dev `6eaa997` CI 3/3 success. Running skill (resolved symlink) and pin copy match origin on SKILL.md + all 13 resources. Index grep: rows 277–281 are this row's history. No open loop PR or iteration-282 worktree before this fire.
+
+**Design (designer Agent opus, resolver `recipe claude:claude-opus-5-5 declared:provider-pin`):** [r4] Git becomes a candidate generator and World's mirror the authority. V17: an exhaustive scan finds exactly 4 non-ASCII scalar values whose NFC+SimpleFold key holds ASCII (U+017F→S, U+037E→;, U+1FEF→`, U+212A→K); controller reran it and checked the scan's fold is byte-for-byte `foldProtectedRune`. V18 Git wildmatch on multi-byte runes (`*` crosses them, `?` is one byte, classes miss), V19 widened pathspecs catch every counterexample with r3's top/bare-D intact, V20 a new r3 defect (`status --ignored=matching` reports every excluded directory, e.g. `! nm/`), V21 cost on a 28 713-file clone, V22 NFD index paths. **Quorum r1** (artifact `…T07-36-12Z`): BLOCKED, gemini-4-argon + oc-glm-5-3 reject, gpt6-1-sol + oc-kimi-k3 unreachable. Controller measured both premises (rule 3f): gemini's multi-rune/ligature fold premise is FALSE for World's mirror (key("ß")="ß", key("ﬀ")="ﬀ"); GLM's ambient-ignored premise is REAL (V10's 2 002 `test_*.py` in `.venv`). One protocol revision [r4.1]: fold stated as NFC-not-NFKC, one shared phase context, an episode-start ignored snapshot (V23 on the real checkouts: 3 259 / 165 / 1 240 standing entries → 0), Unicode-version skew residual. **Quorum r2** (`…T07-43-02Z`): BLOCKED, 3 present (kimi as reserve), all three objections on ONE surface — V23 shows the ignored leg alone at 406–504 ms warm / 2 114 ms cold on ailang against the 500 ms phase bound. Every objection carried a concrete reviewer fix and none disputed the direction, so the controller applied them under the narrow-refinement carve-out as [r4.2]: gemini/kimi's 2 500 ms phase bound with the recomputed child budget, GLM's "max × 1.5" construction bound (3 200 ms from V23), and all three reviewers' demand for a V24 real-worktree measurement gating M6. Doc-level round count: **5** (r1–r3 in iteration 277, two here).
+
+**Plan (planner codex gpt-6.1-sol, `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`, probe rc0, 130,570 tok):** M1c split into M1c (pure renderer + parser) and M1d (real-Git equivalence) to keep the ≤250-LOC milestone cap; M6-pre/V24 added before M6a; M4b/M6a–c rewritten for three invocations and the snapshot. JSON valid; 21 milestones.
+
+**Execute (executor codex gpt-6.1-sol, `recipe codex:gpt-6.1-sol declared:provider-pin`, probe rc0, 144,910 tok, ≈10 min):** M1c `gitCandidatePathspecs` (replaces `gitPathspecs`), `protectedWidenRunes`, `parseProtectedCandidates` (+140 prod / +110 test); M1d `host/broker/exec_protected_git_test.go` (+196): one disposable repo per spelling, root and subdirectory CWD, fatal without git under `CI`. Executor's 18 mutation trials all killed. Controller re-ran outside the sandbox: gofmt clean, `go vet ./...` rc0, `-run '^TestProtected'` ok (76 Git subtests PASS, 0 SKIP), `-race` ok; rebuilt one commit per milestone from snapshots (`f99ac37`, `e4810dc`; sha256-verified against the final tree, each boundary tested); own mutant (drop `sS` from the widen set) killed by `long-s` in both CWDs while `kelvin` stays green.
+
+**Independent evaluation (Agent sonnet, `agent-tool sonnet declared:alias-pin`, own worktree `.eval-world-iter282`; generator codex/opus ≠ judge sonnet):** r1 **FAIL 68** — BLOCKING: the three over-cap parser rows lacked a trailing NUL, so they died on the NUL check and the cap check could be deleted (controller reproduced: all three PASS with the cap removed); NB stale §4.5 cost sentence; NB one-character widened patterns render `**/*`; NB missing `# branch.oid` parses as head ""; NB the bounds are the controller's application of GLM's split-budget fix. Its independent superset derivation found no hole; 16/18 own mutants killed. Controller test-only fix `ba544c0` (well-formed NUL-terminated oversize streams; cap-removed and cap-at-2× mutants now killed) + doc fixes (cost sentence, R-156-9). r2 **PASS 88**, zero blocking (re-ran three cap mutants, all killed). Reports banked in `design_docs/verification/world-iter282/`.
+
+**Gate 3b:** PR #312 (`sprint/world-iter282-row156-detection`), record committed on the same branch so one CI cycle covers code and record; merge CI verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=6eaa997f0bfc126c55765aa15337515b6342e633@2026-10-19T07:27:05Z (Gate 1). Controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent opus (2 runs: 101,194 + 120,922 subagent tok; rotation pointer read `codex:gpt-6.1-sol`, resolver returned the driver's `claude:claude-opus-5-5` and was followed verbatim) · planner codex `gpt-6.1-sol` (130,570 tok) · executor codex `gpt-6.1-sol` (144,910 tok) · evaluator Agent sonnet (98,887 + 106,355 subagent tok). judge-independence: cross-vendor. Quorum metered **$0.47016600** (r1 $0.1355, r2 $0.3347; author vendor benched). All four required roles ran; no role silently omitted.
+
+**Ruled out:**
+- Narrowing the guarantee (refuse non-ASCII paths, accept a residual, flip fixture rows): a human policy choice, and unnecessary once V17 showed a finite widen set.
+- Dropping the pathspec entirely: complete and in budget on a clean clone, but output scales with the tree (2.3 MB `ls-files -v`, 30 002 ignored entries) and would hit the cap on large ignored trees (V21).
+- Keeping r3's `status --ignored=matching`: reports every excluded directory as a change (V20).
+- Gemini r1's ligature/multi-rune-fold premise: measured false for World's per-rune SimpleFold after NFC.
+- Content-hashing the ignored snapshot: 534 ms sha256 on sunholo-platform's 3 259 files (V23) does not fit the phase.
+- Parking quorum r2 for Mark: every objection had a reviewer fix on one surface and none disputed direction — the carve-out case, not a judgment call.
+- Banking the executor's MUT-CAP-SILENT "killed": the judge's counter-reading reproduced; the executor's mutant evidently did not reach the cap branch.
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: the executor's self-reported mutation table was wrong for one guard, and only the cross-vendor judge caught it — keep demanding the judge's OWN mutants, not a replay of the executor's list. Backlog lane: none new; V24 is now an explicit plan milestone (M6-pre). Harness share over the latest 20 including 282: **0/20**. Last three landings (282 product, 281 evidence, 280 product) moved no UNMET clause; all clauses are MET and no routable UNMET row exists, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **6/21 milestones built** (M1c split, M6-pre added); release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M2a (the `protected` profile key), then M2b. DECISIONS FOR MARK: none; ledger OPEN zero.
