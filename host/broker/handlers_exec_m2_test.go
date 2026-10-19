@@ -890,7 +890,15 @@ func TestExecProtectedSettingsThroughHandler(t *testing.T) {
 				want = append(want, filepath.Join(f.worktree, name))
 			}
 			want = append(want, srtDefaultWritePaths(f.home, hostGOOS())...)
-			want = append(want, renderSrtProtected(f.profile.Protected, f.worktree, hostGOOS())...)
+			// The suffix is spelled out, not derived from f.profile.Protected, so a
+			// profile that lost its protected set cannot pass the protected arm.
+			// Canonical order sorts "*_test.go" before "tests/**".
+			if protected {
+				if hostGOOS() == "darwin" {
+					want = append(want, f.worktree+"/**/*_test.go")
+				}
+				want = append(want, filepath.Join(f.worktree, "tests"))
+			}
 			if !reflect.DeepEqual(settings.Filesystem.DenyWrite, want) {
 				t.Fatalf("handler protected denyWrite suffix missing or unexpected: got %q, want %q", settings.Filesystem.DenyWrite, want)
 			}
