@@ -206,3 +206,92 @@ func TestEmitExecArgsForms(t *testing.T) {
 		}
 	}
 }
+
+// Row 156 M2a: protected is additive; the profile still names its input bytes.
+func TestExecProfileProtected(t *testing.T) {
+	bin := fakeToolDir(t, "go")
+	for _, name := range []string{"absent", "empty"} {
+		t.Run(name, func(t *testing.T) {
+			data := profileJSON(t, bin, func(m map[string]any) {
+				if name == "empty" {
+					m["protected"] = []string{}
+				}
+			})
+			p, err := ParseExecProfile(data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(p.Protected) != 0 || p.ProtectedDigest != "" {
+				t.Fatalf("no protected set: got %q, digest %q", p.Protected, p.ProtectedDigest)
+			}
+			sum := sha256.Sum256(data)
+			if p.Digest != "sha256:"+hex.EncodeToString(sum[:]) {
+				t.Fatalf("Digest = %q, want hash of input bytes", p.Digest)
+			}
+		})
+	}
+	t.Run("list", func(t *testing.T) {
+		raw := []string{"z_test.go", "tests/**", "*.test.ts", "TESTS/**", "e\u0301_test.go", "é_test.go"}
+		want, err := ParseProtectedPatterns(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		canonical := []string{"*.test.ts", "TESTS/**", "z_test.go", "é_test.go"}
+		if !reflect.DeepEqual(want, canonical) {
+			t.Fatalf("fixture canonicalization = %q, want %q", want, canonical)
+		}
+		p, err := ParseExecProfile(profileJSON(t, bin, func(m map[string]any) { m["protected"] = raw }))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(p.Protected, want) || p.ProtectedDigest != protectedDigest(want) {
+			t.Fatalf("canonical protected = %q, digest %q; want %q, %q", p.Protected, p.ProtectedDigest, want, protectedDigest(want))
+		}
+	})
+	t.Run("wrong-type", func(t *testing.T) {
+		for _, tc := range []struct {
+			name, field string
+			value       any
+		}{
+			{"string", "protected", "tests/**"},
+			{"null", "protected", nil},
+			{"object", "protected", map[string]any{}},
+			{"number", "protected", 42},
+			{"non-string-element", "protected[1]", []any{"tests/**", 42}},
+			{"null-element", "protected[1]", []any{"tests/**", nil}},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				_, err := ParseExecProfile(profileJSON(t, bin, func(m map[string]any) { m["protected"] = tc.value }))
+				var perr *ExecProfileError
+				if !errors.As(err, &perr) || perr.Field != tc.field {
+					t.Fatalf("wrong field type refused: err = %v, want an *ExecProfileError naming %s", err, tc.field)
+				}
+			})
+		}
+	})
+	t.Run("compatibility", func(t *testing.T) {
+		// Literal v1 and noncanonical whitespace make this independent of the
+		// production version constant and of JSON re-marshalling.
+		data := []byte(" \n" + strings.ReplaceAll(string(profileJSON(t, bin, nil)), ExecProfileVersion, "world/exec-profile/v1") + "\n\t")
+		if ExecProfileVersion != "world/exec-profile/v1" {
+			t.Fatalf("v1 compatibility: version = %q", ExecProfileVersion)
+		}
+		p, err := ParseExecProfile(data)
+		if err != nil {
+			t.Fatalf("v1 compatibility: %v", err)
+		}
+		sum := sha256.Sum256(data)
+		if want := "sha256:" + hex.EncodeToString(sum[:]); p.Digest != want {
+			t.Fatalf("raw-byte digest compatibility: got %q, want %q", p.Digest, want)
+		}
+	})
+}
+
+func TestExecProfileProtectedUnknownFormRefused(t *testing.T) {
+	bin := fakeToolDir(t, "go")
+	_, err := ParseExecProfile(profileJSON(t, bin, func(m map[string]any) { m["protected"] = []string{"src/*.ts"} }))
+	var perr *ExecProfileError
+	if !errors.As(err, &perr) || !strings.Contains(err.Error(), "protected[0]") || !strings.Contains(err.Error(), "src/*.ts") {
+		t.Fatalf("protected[0] names refused src/*.ts: err = %v", err)
+	}
+}

@@ -1,15 +1,14 @@
-# World mission dashboard — iteration 282 (2026-10-19)
+# World mission dashboard — iteration 283 (2026-10-19)
 
-- **This fire:** row 156 detection redesigned ([r4] → [r4.1] → [r4.2]) and M1c + M1d built, PR #312. Git is now a candidate generator with a widened pathspec; World's NFC+SimpleFold mirror decides.
-- **Key measurement:** exactly 4 non-ASCII runes fold onto ASCII (U+017F, U+037E, U+1FEF, U+212A; exhaustive scan, controller-rerun). The iteration-281 long-s/Kelvin misses now report.
-- **Quorum:** r1 BLOCKED (2 rejects) → r4.1; r2 BLOCKED on one surface (500 ms phase budget vs V23) → r4.2 carve-out: 2 500 ms phase, 3 200 ms construction, M6 gated on V24. Doc round count 5.
-- **Judge:** Agent sonnet (cross-vendor), r1 FAIL 68 (vacuous over-cap rows, reproduced) → test-only fix → r2 PASS 88, zero blocking.
-- **Verification:** vet/gofmt clean; focused `TestProtected*` + `-race` ok outside the sandbox (76 real-Git subtests, 0 skips); PR CI 3/3 required before merge.
+- **This fire:** row 156 M2a + M2b built, PR #314. A profile may declare `protected`; it loads as a canonical list plus a set digest, and a bad pattern refuses daemon startup before any sandbox, probe or tool subprocess.
+- **Compatibility:** absent / `[]` keep `world/exec-profile/v1` and the raw-byte profile digest; `null`, non-arrays and non-string elements are refused naming `protected` / `protected[i]`. No consumer reads the field yet.
+- **Judge:** Agent sonnet (cross-vendor), own worktree: r1 PASS 90, zero blocking; NB1 (a field-name check that the temp path satisfied) reproduced and fixed doc-only → r2 PASS 92.
+- **Verification:** outside the sandbox with the pinned `AILANG_BIN`: vet, focused tests, the 51-row refusal table, broker + daemon `-race` all rc 0; commits rebuilt from snapshots, sha256-identical; PR CI 3/3 required before merge.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
-- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (6/21), row 150 (9/17), then row 151.
-- **Next:** row 156 M2a (profile key), M2b; M6-pre (V24 real-worktree timing) before M6a.
+- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (8/21), row 150 (9/17), then row 151.
+- **Next:** row 156 M3a (protected sandbox settings), M3b; M6-pre (V24 real-worktree timing) before M6a.
 - **Parked on Mark:** none (ledger zero OPEN).
-- **Routing/cadence:** designer Agent opus (resolver pin), planner + executor codex gpt-6.1-sol, evaluator Agent sonnet; all four roles spawned.
-- **Cost:** metered $0.47 (quorum, two rounds); codex 275k tok; Agent subagents ≈527k tok.
-- **Retro:** harness share 0/20; no drift alarm (all clauses MET). The executor's self-reported cap mutant was wrong; the judge's own mutants caught it.
-- **Record:** world-mission-log.md entry 282; design_docs/verification/world-iter282/.
+- **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet; designer and planner not needed (doc current, plan ready).
+- **Cost:** metered $0.00; codex 151k tok; Agent subagents ≈136k tok.
+- **Retro:** harness share 0/20; no drift alarm (all clauses MET). Read a baseline red's first FAIL line before calling the base red (it was a missing `AILANG_BIN`).
+- **Record:** world-mission-log.md entry 283; design_docs/verification/world-iter283/.
