@@ -1413,3 +1413,50 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **10/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M4a (refuse configured git filters before any integrity status), then M4b. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 285 — 2026-10-19 — row 156 M4a + M4b built: git-filter preflight and the bounded protected integrity checker (PR #322; judge r1 FAIL 78 → r2 PASS 93) [PRODUCT]
+
+**Kind:** two milestones of one row (156). No release, no semantic weakening, no design or plan change beyond the planned §4.5 annotation.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 284's **Next** was row 156 M4a, then M4b (design M4). Attended rows 189 M1–M3 merged before this fire (#320, #321); row 189 stays "NEXT after 156", so 156 keeps the slot. All work ran in `.wt-world-iter285-row156-m4`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (5 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 1 unread, the fleet's `harness-resolved` reply for `skill:design-scaffold-hardcodes-owning-repo` (ghost, fixed by ailang#1542 `b51353bcd`) → row 130 annotated HARNESS-RESOLVED, reply acknowledged. Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** origin/dev `fd7b325` (attended #321 merge), CI success 3/3 on it. Running skill (resolved symlink) and pin copy match origin on SKILL.md and all resources (per-file loop, after a fresh fetch of the skill repo). Ledger valid, 72 rows, zero OPEN. No open PRs; no orphan traces for 285. Doc unchanged since iteration 282's quorum rounds → no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M4a/M4b ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; probe from `/tmp` rc 1 (`Not inside a trusted directory` — instrument failure, as memory warns), re-probe from the worktree rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `fd7b325`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; broker `-race` rc 0 (144 s).
+
+**Execute (codex gpt-6.1-sol, 131,261 tok, rc 0):**
+- **M4a** `exec_protected_check.go` (NEW) `protectedGitPreflight`: reuses `configuredGitFilters`; a configured `filter.*` key (local or via `include.path`) or a query error refuses before any status call. `TestProtectedGitFilterPreflight` (configured-clean, configured-process, configured-process-include, no-filter, query-error) drives a spawn-logging fake git and a marker the filter would create. Design §4.5 annotated: the preflight is a config query inside the same provisional 2 500 ms phase bound.
+- **M4b** `checkProtected`: preflight, then `status --porcelain=v2 -z --branch …`, `ls-files -z -o -i --exclude-standard`, `ls-files -v -z`, each over `gitCandidatePathspecs`, all under one `protectedCheckTimeout` context, `cmd.Dir`=root, `gitEnv`, `core.fsmonitor=false`, 8 MiB stdout/stderr caps; streams go to M1c's `parseProtectedCandidates`; intact needs HEAD == base and no filtered change, `head-moved` reported, any failure leaves intact nil. `TestProtectedChecker` (8 real-Git rows), `TestProtectedCheckerRootAndBound` (7 fake-Git rows). No caller or result field (M6).
+- Executor mutation table 8/8 killed in-sandbox. It flagged two gaps in the reused row-184 helper (96 MiB stdout cap on the config query; `configuredGitFilters`' rc-1-with-output check unreachable) and did not edit the read-only file.
+
+**Controller verification (outside the sandbox):** M4a rebuilt from its snapshot and gated alone; both M4a mutants killed by the controller (the marker WAS created under the first). M4b as delivered: `RootAndBound/cwd` and `/argv` red — the fake git logs `$PWD`=`/private/var/…` while the test expected `t.TempDir()`'s `/var/…` (macOS symlink); the executor's worktree-local TMPDIR hid it. Fixed test-only (`EvalSymlinks`, matching the canonical root `snapshotWorktree` passes). Four controller M4b mutants killed. Snapshots `shasum -c` OK. Full `go vet ./...` rc 0, broker `-race` rc 0. Evidence: `design_docs/verification/world-iter285/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter285`; generator codex ≠ judge sonnet):** r1 **FAIL 78** (36/15/9/10/8), one blocker: a `checkProtected` that ran the preflight but ignored its result passed every test — the preflight rows call the helper directly and every checker fake answers `config` rc 1. The controller reproduced the survivor. NB2 (load flake): the controller's own `go test ./...` at `167ec9a` had already failed 5 RootAndBound rows on phase timeouts. Fix `d4ff957` (test-only plus `const` → `var`): `TestProtectedChecker/filter-refused` drives the checker over a real `filter.probe.clean` repo (refusal diagnostic, intact nil, marker absent, zero status spawns); every row except `shared-phase-bound` lifts the bound to 30 s via `protectedRelaxBound` (`t.Cleanup` restores it). Survivor now killed; per-call-context mutant still killed; 6 concurrent `-race` copies green. r2 (resumed) **PASS 93**, zero blocking; its two new mutants on the relax helper killed; 8-way stress ×2 green. Its NB1 (the cleanup-restore kill depends on subtest order) and NB2 (unlocked package var) are carried on row 156.
+
+**Gate 3b:** PR #322 (`sprint/world-iter285-row156-m4`), record on the same branch so one CI cycle covers code and record. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3@2026-10-19T19:26:16Z (Gate 1). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (131,261 tok) · evaluator Agent sonnet (78,166 + 91,203 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Reading the codex probe's rc 1 as a dead lane: it ran from `/tmp` (untrusted, non-git CWD); the same probe from the worktree is rc 0.
+- Attributing the `d4ff957` full-run reds (`TestCLIRealSubprocessEpisode`, `TestWorkspaceExecEpisodeSelectsItsProfile`, `TestProducerExecTimeoutKillsTheWholeProcessGroup`) to this PR: they are in packages the PR does not touch, ran under the judge's 8-way stress, and each passes in isolation at the same head; broker + daemon `-race` is green there.
+- Fixing `configuredGitFilters` in this PR: row-184 code the plan marks read-only for M4; real `git config --get-regexp` prints nothing on rc 1, so the dead branch is not exploitable today. Carried on row 156.
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: an executor's in-sandbox green with a worktree-local TMPDIR cannot see macOS's `/var` → `/private/var` symlink — every fake-binary test that compares a logged `$PWD` must canonicalise its temp root; the controller's out-of-sandbox re-run is what caught it. And a test that pins a production deadline (2 500 ms) over several fork-heavy spawns flakes under `go test ./...` load; lift the bound for rows that are not about it. Backlog lane: none new (residuals carried on row 156). Harness share over the latest 20 including 285: **0/20**. Last three landings (285, 284, 283) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **12/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M4c (wire startup probe arm 8 for prevention and Linux detection), then M5a. DECISIONS FOR MARK: none; ledger OPEN zero.

@@ -1,15 +1,14 @@
-# World mission dashboard — iteration 284 (2026-10-19)
+# World mission dashboard — iteration 285 (2026-10-19)
 
-- **This fire:** row 156 M3a + M3b built, PR #319. A declared `protected` set now reaches the sandbox: srt `denyWrite` gains the directory literal (both OSes) and `<wt>/**/G` (darwin only), appended after World's deny names and srt's defaults.
-- **Compatibility:** absent / `[]` render the old settings bytes and digest; both existing goldens unchanged.
-- **Real srt:** `TestExecSrtProtectedWrites`, 18 rows through the handler — darwin 18/18 locally; linux via CI bubblewrap. Deleting the append turns `/modify` red (`WORLD-PROBE-WROTE`, host hash changed).
-- **Judge:** Agent sonnet (cross-vendor), own worktree: r1 PASS 91, zero blocking; NB1 (handler arm derived its expectation from the profile) measured and fixed test-only → r2 PASS 93.
-- **Verification:** outside the sandbox, pinned `AILANG_BIN`: vet, focused tests, broker + daemon `-race` rc 0; commits rebuilt from snapshots, sha256-identical; PR CI 3/3 required before merge.
+- **This fire:** row 156 M4a + M4b built, PR #322. `protectedGitPreflight` refuses a configured (or included) git filter, or a failed query, before any status call; `checkProtected` runs that preflight plus three Git data legs under one 2 500 ms phase and reports intact / changed / unknown.
+- **Scope:** no caller and no result field yet (M6 wires it); report-only by design (D-156-1 = A).
+- **Judge:** Agent sonnet (cross-vendor), own worktree: r1 FAIL 78 — a checker ignoring the preflight's result survived every test, plus a load flake; both reproduced and fixed test-only (`d4ff957`) → r2 PASS 93, zero blocking.
+- **Verification:** outside the sandbox, pinned `AILANG_BIN`: vet, focused tests, broker + daemon `-race` rc 0; a macOS `/var` symlink defect the executor's sandbox hid was fixed; 6-way concurrent `-race` stress green. PR CI 3/3 required before merge.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
-- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (10/21), row 150 (9/17), then row 151.
-- **Next:** row 156 M4a (refuse configured git filters), M4b; M6-pre (V24 real-worktree timing) before M6a.
-- **Parked on Mark:** none (ledger zero OPEN). D-WORLD-84/85 resolved attended; rows 145/189/198/199 filed attended.
+- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (12/21), row 150 (9/17), then row 151.
+- **Next:** row 156 M4c (startup probe arm 8), then M5a; M6-pre (V24 real-worktree timing) before M6a.
+- **Parked on Mark:** none (ledger zero OPEN). Row 130 [HARNESS] resolved by the fleet (ghost, ailang#1542).
 - **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet; designer and planner not needed (doc current, plan ready).
-- **Cost:** metered $0.00; codex 114k tok; Agent subagents ≈113k tok.
-- **Retro:** harness share 0/20; no drift alarm (all clauses MET). zsh does not split `$FILES` — use arrays in multi-file commands.
-- **Record:** world-mission-log.md entry 284; design_docs/verification/world-iter284/.
+- **Cost:** metered $0.00; codex 131k tok; Agent subagents ≈169k tok.
+- **Retro:** harness share 0/20; no drift alarm (all clauses MET). Fake-binary tests that log `$PWD` must canonicalise the temp root (macOS `/private/var`).
+- **Record:** world-mission-log.md entry 285; design_docs/verification/world-iter285/.
