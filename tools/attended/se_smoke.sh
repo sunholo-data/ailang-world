@@ -148,7 +148,8 @@ cmd_publish() {
 }
 
 cmd_mint() {
-  daemon_running && die "stop the daemon first: $0 stop"
+  # A serving daemon may keep running (row 189): session new writes the
+  # credentials store beside $DB under its own lock, never the world lock.
   # session new reuses the worktree prepare made and mints the eight
   # se-tools grants (--preset se-tools = the manifest's declaredEffects,
   # budget 50 each); --out is written once at 0600 and must not exist.

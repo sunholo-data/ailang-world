@@ -261,8 +261,9 @@ The same binary is the bounded-timeout client:
 ./ailang-worldd doctor
 ```
 
-`setup` installs the two pinned AILANG binaries, and the `session` verbs act on the store
-file directly (the daemon must be stopped for all but `list`):
+`setup` installs the two pinned AILANG binaries, and the `session` verbs act on the
+credentials store beside the world store (`credentials.db` next to `--db`, its own file with
+its own lock) directly, so they all work while the daemon serves:
 
 ```sh
 ./ailang-worldd setup

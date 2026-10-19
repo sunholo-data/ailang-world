@@ -5,12 +5,13 @@ import (
 	"testing"
 )
 
-// TestListSessionsReadsBesideALiveWriter pins row 138 M5's session list read:
-// ordered by created_at, filtered by episode, and served by a read-only
-// handle while a writer holds the lock (AC5.6).
+// TestListSessionsReadsBesideALiveWriter pins row 138 M5's session list read,
+// now on the credentials store (row 189): ordered by created_at, filtered by
+// episode, and served by a read-only handle while a writer holds the
+// credentials lock (AC5.6).
 func TestListSessionsReadsBesideALiveWriter(t *testing.T) {
-	db := filepath.Join(t.TempDir(), "world.db")
-	w, err := Open(db)
+	db := filepath.Join(t.TempDir(), CredentialsFileName)
+	w, err := OpenCredentials(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +25,7 @@ func TestListSessionsReadsBesideALiveWriter(t *testing.T) {
 			t.Fatalf("mint %d: %v", i, err)
 		}
 	}
-	ro, err := OpenReadOnly(db)
+	ro, err := OpenCredentialsReadOnly(db)
 	if err != nil {
 		t.Fatalf("read-only open beside a live writer: %v", err)
 	}

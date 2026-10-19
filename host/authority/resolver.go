@@ -1,6 +1,7 @@
 // Package authority owns the inbound Authorization: Bearer credential boundary
 // (w-session-authority D5). It mints, revokes and resolves session credentials
-// locally-first over the store's persisted session_credentials table.
+// locally-first over the session_credentials table of the credentials store
+// (row 189: a file of its own, not the world store — store/credentials.go).
 //
 // # Timing safety — equality is the indexed lookup, NOT a Go-level compare
 //
@@ -79,9 +80,9 @@ type ResolveOutcome struct {
 	Denied  *DenialKind
 }
 
-// CredentialStore is the minimal store seam ResolveContext needs. *store.Store
-// satisfies it. It exists so the bounded-lookup test can inject a counting
-// observer over exactly the one resolve query.
+// CredentialStore is the minimal store seam ResolveContext needs.
+// *store.Credentials and ReadOnlyAt satisfy it. It exists so the bounded-lookup
+// test can inject a counting observer over exactly the one resolve query.
 type CredentialStore interface {
 	ResolveSession(ctx context.Context, credentialID string) (store.SessionRow, bool, error)
 }

@@ -22,7 +22,10 @@ import (
 //
 // Errors/outcome messaging must never include the raw token — only the
 // credential_id hash may leave this function in an error path.
-func Mint(ctx context.Context, st *store.Store, episodeID string, grants []broker.Capability, ttl, now int64, out io.Writer) (rawToken, credentialID string, row store.SessionRow, err error) {
+//
+// st is the credentials store (row 189), opened writable by the attended
+// `session` verbs only, after their terminal fence and y/N.
+func Mint(ctx context.Context, st *store.Credentials, episodeID string, grants []broker.Capability, ttl, now int64, out io.Writer) (rawToken, credentialID string, row store.SessionRow, err error) {
 	if episodeID == "" {
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: empty episode id")
 	}

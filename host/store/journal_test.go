@@ -840,13 +840,8 @@ var canonicalTableDDL = map[string]string{
     request_ref  TEXT NOT NULL,
     invocation_id TEXT NOT NULL UNIQUE
 )`,
-	"session_credentials": `CREATE TABLE session_credentials (
-    credential_id TEXT PRIMARY KEY,
-    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
-    grants_json  TEXT NOT NULL,
-    expires_at   INTEGER NOT NULL,
-    created_at   INTEGER NOT NULL
-)`,
+	// session_credentials left the world store at schema 5 (row 189); its
+	// DDL is pinned for the credentials store in credentials_test.go.
 	"commit_objects": `CREATE TABLE commit_objects (
     object_ref  TEXT    NOT NULL REFERENCES objects(hash_ref),
     entry_index INTEGER NOT NULL REFERENCES log_entries(entry_index),

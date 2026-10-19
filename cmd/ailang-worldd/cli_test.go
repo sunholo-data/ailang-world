@@ -24,7 +24,6 @@ import (
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/hashref"
-	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 type cliCommit struct {
@@ -269,24 +268,17 @@ func TestCLIRealSubprocessEpisode(t *testing.T) {
 	}
 }
 
-// testCLISession mints a session credential into a store before a daemon serves
-// it, returning the raw 64-hex token. It is the test-side twin of `session mint`,
-// used because the real-subprocess daemon holds the writer lock while it runs
-// (minting live against the same DB would hit WriterAlreadyActive). The token is
+// testCLISession mints a session credential into the credentials store beside
+// dbPath, returning the raw 64-hex token. It is the test-side twin of `session
+// mint`; since row 189 it works whether or not the daemon is serving (the
+// daemon holds the WORLD writer lock, never the credentials one). The token is
 // then passed to `commit --session`.
 func testCLISession(t *testing.T, dbPath string) string {
 	t.Helper()
-	st, err := store.Open(dbPath)
-	if err != nil {
-		t.Fatalf("open store for session mint: %v", err)
-	}
-	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "cli-episode",
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsFor(t, dbPath), "cli-episode",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint cli session: %v", err)
-	}
-	if err := st.Close(); err != nil {
-		t.Fatalf("close store after mint: %v", err)
 	}
 	return tok
 }

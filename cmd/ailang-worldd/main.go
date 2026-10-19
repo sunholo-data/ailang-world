@@ -70,7 +70,7 @@ const (
 var usage = `ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
-  ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
+  ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
@@ -104,13 +104,13 @@ Usage:
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
                     [--examples-dir <dir>] [--online]
-  ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+  ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
                     [--allow-non-git]
-  ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
-  ailang-worldd session revoke --db <path> <credential_id-hash> | --episode <ep>
-  ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
+  ailang-worldd session list [--db <path>] [--credentials-db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
+  ailang-worldd session revoke --db <path> [--credentials-db <path>] <credential_id-hash> | --episode <ep>
+  ailang-worldd session mint --db <path> [--credentials-db <path>] --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
   ailang-worldd [--addr <url>] demo seed --db PATH --session FILE --ailang-bin PIN
                     --proof-key-file KEY --manifest FILE [--addr URL]
@@ -128,6 +128,13 @@ Global client flag:
 
 serve flags:
   --db <path>          world store database (required)
+  --credentials-db <path>
+                       session credentials store (default credentials.db
+                       beside --db). serve reads it read-only per request and
+                       never holds its lock, so session new/mint/revoke work
+                       while it runs; a schema-4 --db has its credentials
+                       moved there once at startup. It must not lie under
+                       --workspace-root
   --bind host:port     loopback listen address (default ` + daemon.DefaultBind + `);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
@@ -351,7 +358,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		// not a session flag — reject it exactly as serve rejects --addr.
 		if addrGiven {
 			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'session'; "+
-				"session mint/revoke act on --db directly, not on a running daemon")
+				"session mint/revoke act on the credentials store beside --db directly, not on a running daemon")
 			return exitUsage
 		}
 		return runSession(rest[1:], stdout, stderr)
@@ -375,6 +382,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	fs.Usage = func() { fmt.Fprint(stderr, usage) }
 	dbPath := fs.String("db", "", "world store database (required)")
+	credsDB := fs.String("credentials-db", "", "session credentials store, read per request, never locked (default: credentials.db beside --db)")
 	bind := fs.String("bind", daemon.DefaultBind, "loopback listen address host:port")
 	ailangBin := fs.String("ailang-bin", "", "interpreter to archive and pin at startup")
 	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
@@ -465,7 +473,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	ctx, stop := serveSignalContext()
 	defer stop()
 
-	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin,
+	cfg := daemon.Config{DBPath: *dbPath, CredentialsPath: *credsDB, BindHost: host, BindPort: port, AilangBin: *ailangBin,
 		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin,
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,

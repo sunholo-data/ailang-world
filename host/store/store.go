@@ -41,7 +41,9 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
-const currentSchemaVersion = 4
+// currentSchemaVersion 5 is schema 4 without session_credentials, which moved
+// to the credentials store (row 189, credentials.go / credentials_migrate.go).
+const currentSchemaVersion = 5
 
 // ErrApprovalAlreadyConsumed reports that an approval reference has already
 // been bound to a durable effect intent. Approval claims are single-use and
@@ -427,7 +429,15 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 	if version < 0 {
 		return &InvalidSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
 	}
-	if version == currentSchemaVersion {
+	if version == preSplitSchemaVersion {
+		// Schema 4 differs from 5 only by session_credentials. A reader sees
+		// the same world tables; a writer must wait for MigrateCredentials,
+		// which alone knows where the credentials go.
+		if applySchema {
+			return &PreSplitStoreError{Path: display}
+		}
+	}
+	if version == currentSchemaVersion || version == preSplitSchemaVersion {
 		// Only fresh initialization may create commit_objects; check it before
 		// schemaSQL's CREATE IF NOT EXISTS could bring it back empty.
 		var membershipTables int
@@ -1280,144 +1290,5 @@ func bindCommitIntentTx(ctx context.Context, tx *sql.Tx, c Commit) (JournalInten
 	return intent, resolved, nil
 }
 
-// SessionRow is the persisted credential->(episode, grants, expiry) mapping row for
-// session_credentials (w-session-authority D2). GrantsJSON is an OPAQUE JSON
-// encoding of the []broker.Capability the authority package marshalled; the store
-// deliberately does not interpret it (store must not import broker — broker imports
-// store), so the field is typed as a plain string and round-trips unchanged.
-type SessionRow struct {
-	CredentialID string
-	EpisodeID    string
-	GrantsJSON   string
-	ExpiresAt    int64
-	CreatedAt    int64
-}
-
-// MintSession inserts one session_credentials row. credential_id is the stored
-// sha256(token_hex) — never the raw token (D3). The INSERT is a plain write: a
-// collision on the PK (two mints hashing to the same id) errors loudly rather than
-// being silently absorbed.
-func (s *Store) MintSession(ctx context.Context, row SessionRow) (err error) {
-	if err := s.checkQuarantine(); err != nil {
-		return err
-	}
-	if err := requireDeadline(ctx); err != nil {
-		return err
-	}
-	defer func() { err = notCommitted(ctx, "mint session", err) }()
-	if row.CredentialID == "" || row.EpisodeID == "" {
-		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
-	}
-	tx, err := s.beginDurable(ctx, "mint session")
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback() }()
-	_, err = tx.ExecContext(ctx,
-		`INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
-		 VALUES (?, ?, ?, ?, ?);`,
-		row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt,
-	)
-	if err != nil {
-		return fmt.Errorf("store: mint session: %w", err)
-	}
-	return s.finishDurable(ctx, "mint session", tx)
-}
-
-// ResolveSession performs the single indexed point lookup by credential_id (the
-// TEXT PRIMARY KEY) that the authority resolver relies on (D3/D5 bounded
-// lookup). It returns ok=false when no row exists (unknown/revoked). No scan, no
-// LIKE, no fallback table.
-func (s *Store) ResolveSession(ctx context.Context, credentialID string) (SessionRow, bool, error) {
-	if err := s.checkQuarantine(); err != nil {
-		return SessionRow{}, false, err
-	}
-	if err := requireDeadline(ctx); err != nil {
-		return SessionRow{}, false, err
-	}
-	var row SessionRow
-	err := s.db.QueryRowContext(ctx,
-		`SELECT credential_id, episode_id, grants_json, expires_at, created_at
-		   FROM session_credentials WHERE credential_id = ?;`,
-		credentialID,
-	).Scan(&row.CredentialID, &row.EpisodeID, &row.GrantsJSON, &row.ExpiresAt, &row.CreatedAt)
-	switch {
-	case errors.Is(err, sql.ErrNoRows):
-		return SessionRow{}, false, nil
-	case err != nil:
-		return SessionRow{}, false, fmt.Errorf("store: resolve session: %w", err)
-	}
-	return row, true, nil
-}
-
-// RevokeSession deletes the mapping row for a credential_id in a transaction
-// (D4 delete-revokes: a deleted row makes the next resolve of that credential an
-// UNKNOWN credential). Deleting a credential_id that is not present is a no-op,
-// not an error. The store is single-connection (SetMaxOpenConns(1)), so this
-// transaction never races a concurrent resolve on the same process.
-func (s *Store) RevokeSession(ctx context.Context, credentialID string) error {
-	if err := s.checkQuarantine(); err != nil {
-		return err
-	}
-	if err := requireDeadline(ctx); err != nil {
-		return err
-	}
-	tx, err := s.db.Begin()
-	if err != nil {
-		return fmt.Errorf("store: revoke session: begin: %w", err)
-	}
-	defer func() { _ = tx.Rollback() }()
-	if _, err := tx.ExecContext(ctx, `DELETE FROM session_credentials WHERE credential_id = ?;`, credentialID); err != nil {
-		return fmt.Errorf("store: revoke session: %w", err)
-	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("store: revoke session: commit: %w", err)
-	}
-	return nil
-}
-
-// MaxListSessions caps one ListSessions page (row 138 M5, `session list`).
-const MaxListSessions = 500
-
-// ListSessions returns up to limit session_credentials rows (at most
-// MaxListSessions), ordered by created_at then credential_id; a non-empty
-// episodeID restricts it to that episode. Rows carry the credential_id HASH
-// only — the raw token is never stored (D3). It is a plain read, so it works
-// on an OpenReadOnly handle beside a live writer (row 138 §3.7, AC5.6).
-func (s *Store) ListSessions(ctx context.Context, episodeID string, limit int) ([]SessionRow, error) {
-	if err := s.checkQuarantine(); err != nil {
-		return nil, err
-	}
-	if err := requireDeadline(ctx); err != nil {
-		return nil, err
-	}
-	if limit <= 0 || limit > MaxListSessions {
-		limit = MaxListSessions
-	}
-	q := `SELECT credential_id, episode_id, grants_json, expires_at, created_at
-	        FROM session_credentials`
-	args := []any{}
-	if episodeID != "" {
-		q += ` WHERE episode_id = ?`
-		args = append(args, episodeID)
-	}
-	q += ` ORDER BY created_at, credential_id LIMIT ?;`
-	args = append(args, limit)
-	rows, err := s.db.QueryContext(ctx, q, args...)
-	if err != nil {
-		return nil, fmt.Errorf("store: list sessions: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	var out []SessionRow
-	for rows.Next() {
-		var r SessionRow
-		if err := rows.Scan(&r.CredentialID, &r.EpisodeID, &r.GrantsJSON, &r.ExpiresAt, &r.CreatedAt); err != nil {
-			return nil, fmt.Errorf("store: list sessions: scan: %w", err)
-		}
-		out = append(out, r)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("store: list sessions: %w", err)
-	}
-	return out, nil
-}
+// Session credentials are not world-store state: SessionRow and the
+// mint/resolve/revoke/list methods live on *Credentials (credentials.go).

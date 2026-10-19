@@ -55,18 +55,7 @@ func (f episodeFixture) args(ep string, extra ...string) []string {
 
 func (f episodeFixture) rows(t *testing.T) []store.SessionRow {
 	t.Helper()
-	ro, err := store.OpenReadOnly(f.db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = ro.Close() }()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	rows, err := ro.ListSessions(ctx, "", 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return rows
+	return credRows(t, f.db)
 }
 
 func (f episodeFixture) worktrees(t *testing.T) int {
@@ -171,7 +160,7 @@ func TestSessionNewMintFailureRollsBackTheWorktree(t *testing.T) {
 	f := newEpisodeFixture(t)
 	old := sessionMint
 	defer func() { sessionMint = old }()
-	sessionMint = func(context.Context, *store.Store, string, []broker.Capability, int64, int64, io.Writer) (string, string, store.SessionRow, error) {
+	sessionMint = func(context.Context, *store.Credentials, string, []broker.Capability, int64, int64, io.Writer) (string, string, store.SessionRow, error) {
 		return "", "", store.SessionRow{}, errors.New("injected mint failure")
 	}
 	var stdout, stderr bytes.Buffer
@@ -182,17 +171,40 @@ func TestSessionNewMintFailureRollsBackTheWorktree(t *testing.T) {
 	f.assertNothingProvisioned(t, "ep1")
 }
 
-// A held writer lock (a running daemon) refuses before the worktree exists.
-func TestSessionNewWithTheDaemonRunningProvisionsNothing(t *testing.T) {
+// Row 189 (D-WORLD-85 C): with the WORLD writer lock held — what a serving
+// daemon holds — session new provisions the worktree and the session, and
+// never tells the operator to stop the daemon. Mutant: point the session verbs
+// back at the world store's lock and this goes red with WriterAlreadyActive.
+func TestSessionNewWithTheDaemonRunningProvisions(t *testing.T) {
 	f := newEpisodeFixture(t)
 	w, err := store.Open(f.db)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() { _ = w.Close() }()
 	var stdout, stderr bytes.Buffer
 	code := runSessionNew(f.args("ep1", "--preset", "se-tools"), &stdout, &stderr, testMintEnv("y\n", 1000))
-	_ = w.Close()
-	if code != exitFatal || !strings.Contains(stderr.String(), "stop the daemon first") {
+	if code != exitOK || strings.Contains(stderr.String(), "stop the daemon") {
+		t.Fatalf("session new beside a live world writer: rc %d stderr %q", code, stderr.String())
+	}
+	if !isGitWorktree(filepath.Join(f.ws, "ep1")) || len(f.rows(t)) != 1 {
+		t.Fatalf("worktree %v rows %d", isGitWorktree(filepath.Join(f.ws, "ep1")), len(f.rows(t)))
+	}
+	// The world writer lock still protects everything else.
+	if s, err := store.Open(f.db); err == nil {
+		_ = s.Close()
+		t.Fatal("a second world writer opened beside the first")
+	}
+}
+
+// A held CREDENTIALS writer lock (another session verb mid-write) refuses
+// before the worktree exists: the lock is real, it just is not the daemon's.
+func TestSessionNewWithACredentialsWriterRunningProvisionsNothing(t *testing.T) {
+	f := newEpisodeFixture(t)
+	_ = credsFor(t, f.db)
+	var stdout, stderr bytes.Buffer
+	code := runSessionNew(f.args("ep1", "--preset", "se-tools"), &stdout, &stderr, testMintEnv("y\n", 1000))
+	if code != exitFatal || !strings.Contains(stderr.String(), "another session new/mint/revoke") {
 		t.Fatalf("rc %d stderr %q", code, stderr.String())
 	}
 	f.assertNothingProvisioned(t, "ep1")

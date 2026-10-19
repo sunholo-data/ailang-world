@@ -40,13 +40,13 @@ func requestRecorder(t *testing.T, d *Daemon, method, target string, body io.Rea
 	return rec
 }
 
-// authHeader mints a session credential into d's store and returns the
-// Authorization header value for it. POST /v1/commit is session-gated
+// authHeader mints a session credential into d's credentials store and returns
+// the Authorization header value for it. POST /v1/commit is session-gated
 // (w-session-authority D6/D7), so every commit test needs one to reach the
 // handler past the middleware.
 func authHeader(t testing.TB, d *Daemon) string {
 	t.Helper()
-	tok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-test",
+	tok, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "ep-test",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint test session: %v", err)

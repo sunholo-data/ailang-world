@@ -245,7 +245,7 @@ func (r *seRig) mint(episode string, effects ...string) string {
 	for _, e := range effects {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
 	}
-	tok, _, _, err := authority.Mint(boundedTestContext(r.t), r.d.store, episode, grants, 3600, now, nil)
+	tok, _, _, err := authority.Mint(boundedTestContext(r.t), testCreds(r.t, r.d), episode, grants, 3600, now, nil)
 	if err != nil {
 		r.t.Fatalf("mint: %v", err)
 	}

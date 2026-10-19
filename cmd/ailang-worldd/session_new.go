@@ -11,7 +11,9 @@ package main
 //  2. the unchanged mint fence, env.openTerminal(), BEFORE any side effect
 //     (MUT-FENCE-BYPASS: no TTY -> no worktree and no row);
 //  3. a y/N on that terminal naming the worktree and every grant;
-//  4. store.Open, failing fast with "stop the daemon first";
+//  4. the CREDENTIALS store's writer lock (row 189: its own file, so a
+//     serving daemon does not block it), failing fast if another session
+//     verb holds it;
 //  5. host/worktree.Add (detached, or -b <branch>), unless the episode's
 //     worktree already exists;
 //  6. authority.Mint through the existing core;
@@ -50,7 +52,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
-const sessionNewHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+const sessionNewHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
            [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
            [--allow-non-git]
@@ -62,7 +64,12 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
 
   <episode>            ^[a-z0-9][a-z0-9-]{0,63}$ (the daemon's grammar)
   --db <path>          an EXISTING world store (default ~/.ailang/world/world.db);
-                       never created. The daemon must be stopped.
+                       never created. A serving daemon may keep running.
+  --credentials-db <path>
+                       the session credentials store the session is minted
+                       into (default credentials.db beside --db, so
+                       ~/.ailang/world/credentials.db); it has its own writer
+                       lock, which no daemon holds
   --workspace-root <dir>
                        default ~/.ailang/world-ws; must not contain the store
   --repo <dir>         the git repository the worktree is added from
@@ -93,12 +100,14 @@ The credential_id (the hash 'session revoke' takes) goes to stderr; the token
 never does. If the mint fails, the worktree this run created is removed.
 `
 
-const sessionListHelp = `usage: ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
+const sessionListHelp = `usage: ailang-worldd session list [--db <path>] [--credentials-db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
 
-Lists the session credentials in a store (at most 500): credential_id (the
-hash, never the token), episode, live or expired, expiry and grants. Reads
-through a read-only handle, so it works while the daemon is running. A --db
-that does not exist is refused, never created.
+Lists the session credentials (at most 500): credential_id (the hash, never
+the token), episode, live or expired, expiry and grants. It reads the
+credentials store (--credentials-db, default credentials.db beside --db)
+through a read-only handle, so it works while the daemon is running; for a
+world store from before the split (schema 4) it reads the credentials still
+inside it, also read-only. A --db that does not exist is refused, never created.
 
 An episode whose <workspace-root>/<episode> exists but is not a git worktree
 (adopted with session new --allow-non-git) is marked DEGRADED ("degraded":
@@ -136,6 +145,7 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
 	db := fs.String("db", def.db, "existing world store")
+	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	wsRoot := fs.String("workspace-root", def.workspaceRoot, "workspace root")
 	repo := fs.String("repo", "", "git repository the worktree is added from")
 	branch := fs.String("branch", "", "add the worktree on this new branch")
@@ -175,6 +185,10 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	if err := requireExistingStore(*db); err != nil {
 		return fail("%v", err)
 	}
+	credPath, err := credentialsFor(*db, *credsDB)
+	if err != nil {
+		return fail("%v", err)
+	}
 	grants, err := sessionNewGrants(*preset, grantSpecs, *budget)
 	if err != nil {
 		return fail("%v", err)
@@ -189,6 +203,14 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	storeDir, _ := filepath.Abs(filepath.Dir(*db))
 	if within(root, storeDir) {
 		return fail("the workspace root %s contains the store directory %s; serve refuses this layout", root, storeDir)
+	}
+	// An agent that can write the credentials store can mint without a human.
+	// credPath is symlink-free, so compare it with the root's canonical form too.
+	canonicalRoot, _ := filepath.EvalSymlinks(root)
+	for _, r := range []string{root, canonicalRoot} {
+		if r != "" && within(r, filepath.Dir(credPath)) {
+			return fail("the workspace root %s contains the credentials store %s; serve refuses this layout", root, credPath)
+		}
 	}
 	dir := filepath.Join(root, episode)
 	reuse, degraded := false, false
@@ -259,16 +281,15 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 		return exitUsage
 	}
 
-	// 4. The writer lock, before the worktree exists.
-	st, err := openStoreForSession(*db)
+	// 4. The credentials writer lock, before the worktree exists.
+	ctx, cancel := context.WithTimeout(context.Background(), sessionNewBudget)
+	defer cancel()
+	st, err := openCredentialsForSession(ctx, *db, credPath)
 	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session new: cannot open world store %q: %v\n", *db, err)
+		fmt.Fprintf(stderr, "ailang-worldd session new: cannot open the credentials store %q: %v\n", credPath, err)
 		return exitFatal
 	}
 	defer func() { _ = st.Close() }()
-
-	ctx, cancel := context.WithTimeout(context.Background(), sessionNewBudget)
-	defer cancel()
 
 	// 5. The worktree.
 	created := false
@@ -407,12 +428,39 @@ func episodeDegraded(root, episode string) bool {
 	return err == nil && info.IsDir() && !isGitWorktree(dir)
 }
 
+// listSessionRows reads the credentials, read-only and lock-free on every
+// path: from the credentials store, or — for a world store from before the
+// split (schema 4, e.g. beside a daemon of an older build) — from the table
+// still inside it. A current world store whose credentials store does not
+// exist yet simply has none.
+func listSessionRows(ctx context.Context, db, credPath, episode string, stderr io.Writer) ([]store.SessionRow, error) {
+	version, err := store.WorldSchemaVersion(db)
+	if err != nil {
+		return nil, err
+	}
+	if version == store.PreSplitSchemaVersion {
+		fmt.Fprintf(stderr, "ailang-worldd session list: %s is a pre-split store (schema 4): listing the credentials still inside it; "+
+			"the first serve of this build moves them to %s\n", db, credPath)
+		return store.LegacySessions(ctx, db, episode, store.MaxListSessions)
+	}
+	if _, err := os.Stat(credPath); errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	ro, err := store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read %s: %w", credPath, err)
+	}
+	defer func() { _ = ro.Close() }()
+	return ro.ListSessions(ctx, episode, store.MaxListSessions)
+}
+
 func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	def := defaultWorldPaths()
 	fs := flag.NewFlagSet("ailang-worldd session list", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
 	db := fs.String("db", def.db, "existing world store")
+	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	wsRoot := fs.String("workspace-root", def.workspaceRoot, "workspace root (marks degraded episodes)")
 	episode := fs.String("episode", "", "only this episode")
 	asJSON := fs.Bool("json", false, "print JSON")
@@ -433,15 +481,14 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		fmt.Fprintf(stderr, "ailang-worldd session list: %v\n", err)
 		return exitUsage
 	}
-	ro, err := store.OpenReadOnly(*db)
+	credPath, err := credentialsFor(*db, *credsDB)
 	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session list: cannot read %s: %v\n", *db, err)
-		return exitFatal
+		fmt.Fprintf(stderr, "ailang-worldd session list: %v\n", err)
+		return exitUsage
 	}
-	defer func() { _ = ro.Close() }()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	rows, err := ro.ListSessions(ctx, *episode, store.MaxListSessions)
+	rows, err := listSessionRows(ctx, *db, credPath, *episode, stderr)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session list: %v\n", err)
 		return exitFatal

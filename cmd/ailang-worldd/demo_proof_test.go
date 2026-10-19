@@ -79,7 +79,7 @@ func newDemoProofRig(t *testing.T, pin string) demoProofRig {
 	}
 	now := time.Now().Unix()
 	grants := []broker.Capability{{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 1000}}
-	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "demo", grants, 3600, now, nil)
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsFor(t, db), "demo", grants, 3600, now, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

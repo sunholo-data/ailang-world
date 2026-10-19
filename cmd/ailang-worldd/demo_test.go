@@ -66,7 +66,7 @@ func newDemoTestRig(t *testing.T, mode string) *demoTestRig {
 	if mode == "expired-session" {
 		mintTime = now - 7200
 	}
-	token, _, _, err := authority.Mint(boundedTestContext(t), st, func() string {
+	token, _, _, err := authority.Mint(boundedTestContext(t), credsFor(t, r.db), func() string {
 		if mode == "wrong-episode" {
 			return "other"
 		}
@@ -626,7 +626,7 @@ func newDemoApprovalRig(t *testing.T, interp, tool string, empty, extra bool, bu
 	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectAilangCLI} {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
 	}
-	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "demo", grants, 3600, now, nil)
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsFor(t, db), "demo", grants, 3600, now, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

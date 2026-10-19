@@ -455,7 +455,7 @@ func TestAGUIReadPostureMatchesLog(t *testing.T) {
 		t.Fatal("read posture differs")
 	}
 	live := authHeader(t, d)
-	expired, _, _, err := authority.Mint(boundedTestContext(t), d.store, "expired", grantForAuth(), 1, time.Now().Unix()-10, nil)
+	expired, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "expired", grantForAuth(), 1, time.Now().Unix()-10, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

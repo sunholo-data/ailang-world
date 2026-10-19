@@ -24,8 +24,11 @@ from the binary, that is a defect.*
 
 An agent or a script can run everything else in this guide. These two steps each read a line
 **you type** at your terminal, and they refuse to run when there is no terminal (an agent
-harness, cron, CI). Run them yourself from the repo root, with the daemon stopped. The values
-are the ones §9 uses.
+harness, cron, CI). Run them yourself from the repo root. The values are the ones §9 uses.
+Publishing writes the world store, so the daemon must be stopped for it. Minting does **not**
+need that (row 189): it writes the session credentials store, a separate file beside the
+world store with its own lock, so it works while the daemon serves, and the daemon accepts the
+new token from its next request.
 
 One more command is attended, but this guide never needs it: `world-publish epoch nominate
 --new-epoch`, which opens a new semantics epoch for a new AILANG release (you type a phrase
@@ -58,7 +61,10 @@ changed prints `transition registry UNCHANGED at revision N`.
 
 - `ep1`: the episode. Its worktree is `<workspace-root>/ep1`, and the name must match
   `^[a-z0-9][a-z0-9-]{0,63}$`.
-- `--db`: the same store as the publish step.
+- `--db`: the same store as the publish step. The credential itself goes to the credentials
+  store beside it, `/tmp/se-world/credentials.db` (`--credentials-db` names another file; give
+  `serve` the same one). Its first use with this build moves any credentials an older build
+  kept inside `world.db` there, once.
 - `--out`: where the token is written, once, at mode 0600. The file must not exist yet.
 
 At `[y/N]`, type `y`. On success it prints `session for episode ep1: 9 grant(s), expires epoch …,
@@ -141,8 +147,9 @@ Returns the daemon version, DB path, and the pinned `interpreter_ref` + version.
 
 `POST /v1/commit` is **session-gated**: without a session it answers
 `HTTP 401 SessionAbsent: a session credential is required`. A session is minted by an attended,
-local operator verb that needs single-writer authority, so the order is: write the commit, stop
-the daemon, mint, serve again, commit with `--session`.
+local operator verb. It writes the credentials store beside the world store
+(`/tmp/credentials.db` here), not the world store the daemon holds, so the daemon keeps
+serving: write the commit, mint, commit with `--session`.
 
 A commit is JSON: `observedHead` (empty for genesis) + content-addressed `objects` (payload
 base64; `hash` MUST be `sha256:<hex>` of the payload bytes — the store verifies) + `nextWorld`
@@ -169,19 +176,20 @@ open("/tmp/genesis.json","w").write(json.dumps(c, indent=2))
 EOF
 ```
 
-Stop the daemon, mint a session, and start the daemon again. **Mint is TTY-fenced**: it asks a
-one-line y/N on the controlling terminal (it opens `/dev/tty` itself, so an IDE terminal pane
-works as is) and, without one, refuses with `session mint: refusing: no controlling terminal`.
-See [§0](#0-attended-steps-the-only-commands-a-person-must-run). The `world.apply` grant is the
+Mint a session while the daemon serves. **Mint is TTY-fenced**: it asks a one-line y/N on the
+controlling terminal (it opens `/dev/tty` itself, so an IDE terminal pane works as is) and,
+without one, refuses with `session mint: refusing: no controlling terminal`. See
+[§0](#0-attended-steps-the-only-commands-a-person-must-run). The `world.apply` grant is the
 one §6's published skill needs, so §6 reuses this session:
 
 ```bash
-kill %1
 /tmp/ailang-worldd session mint --db /tmp/world-demo.db --episode quickstart \
   --grant world.apply=world:10 --ttl 14400 --out /tmp/qs-session
-/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin $PIN &
 /tmp/ailang-worldd commit --file /tmp/genesis.json --session /tmp/qs-session
 ```
+
+The daemon reads the credentials store read-only for each request, so the commit right after
+the mint is accepted with no restart, and a `session revoke` takes effect on the next request.
 
 Returns `{"selectedHead": "sha256:…"}` — the world now exists. `--session` takes the file (mode
 0600) or the token itself; `$WORLD_SESSION` is the fallback.
@@ -526,7 +534,9 @@ to `--out` (mode 0600; the file must not exist yet). It is the second step of
 To keep runs at IO/FS (and Declassify), mint with explicit grants instead and leave out
 `Ailang.RunEnv` and `Ailang.RunNet`: `--grant EFFECT=SCOPE:BUDGET`, repeatable, in place of
 `--preset`. `session list --db /tmp/se-world/world.db` shows the credential (its hash, never the
-token), and `session revoke --db /tmp/se-world/world.db <credential_id>` revokes it.
+token), and `session revoke --db /tmp/se-world/world.db <credential_id>` revokes it. Both work
+while the daemon serves: they read and write `/tmp/se-world/credentials.db`, never the world
+store's writer lock, and a later episode is minted the same way without stopping this daemon.
 
 Serve with the workspace tools enabled. Both `--workspace-root` and `--tool-ailang-bin` are
 required. With only one of them, the daemon logs `workspace tools disabled` and refuses every
@@ -1163,20 +1173,16 @@ REHEARSAL_PID=$!
 ```
 
 Wait for `listening` in `$REHEARSAL/daemon.log`. This first start creates the
-store and pins the interpreter. Stop it before minting (single-writer authority):
+store and pins the interpreter. Mint while it serves (the credential goes to
+`$REHEARSAL/credentials.db`, which the daemon reads per request):
 
 ```bash
-kill "$REHEARSAL_PID"
-wait "$REHEARSAL_PID"
 "$REHEARSAL/ailang-worldd" session mint --db "$REHEARSAL/world.db" \
   --episode workbench-rehearsal --grant world.apply=world:10 --ttl 3600 \
   --out "$REHEARSAL/session"
-"$REHEARSAL/ailang-worldd" serve --db "$REHEARSAL/world.db" --ailang-bin "$PIN" \
-  >"$REHEARSAL/daemon.log" 2>&1 &
-REHEARSAL_PID=$!
 ```
 
-Wait for `listening` in `$REHEARSAL/daemon.log`, then construct genesis entry 0
+Then construct genesis entry 0
 and the second commit, entry 1. Object hashes cover the exact base64 payload bytes;
 `observedHead` and `prevEntryHash` in the second commit reference the first.
 

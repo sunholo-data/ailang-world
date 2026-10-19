@@ -98,19 +98,10 @@ CREATE TABLE IF NOT EXISTS approval_claims (
     invocation_id TEXT NOT NULL UNIQUE
 );
 
--- SESSION credentials -> (episode, grants, expiry) — w-session-authority D2.
--- This table is the inbound Authorization: Bearer credential boundary minted
--- and resolved locally-first. credential_id stores ONLY sha256(token_hex) of
--- the once-printed raw token (D3); the raw token is never persisted. The PK
--- is the unique index a point lookup needs; there is NO secondary index and NO
--- revoked column (D4 revokes by DELETE, making a revoked credential "unknown").
-CREATE TABLE IF NOT EXISTS session_credentials (
-    credential_id TEXT PRIMARY KEY,
-    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
-    grants_json  TEXT NOT NULL,
-    expires_at   INTEGER NOT NULL,
-    created_at   INTEGER NOT NULL
-);
+-- Session credentials are NOT in this store (schema v5, row 189 / D-WORLD-85
+-- C): they live in their own credentials store (credentials_schema.sql) with
+-- its own writer lock, so a mint at the terminal never needs this store's
+-- writer lock. MigrateCredentials moves a v4 store's rows out once.
 
 -- Commit membership (schema v4): one row per distinct object in a commit's
 -- Objects set, written only by Store.Commit inside that commit's transaction.

@@ -18,7 +18,7 @@ import (
 // answers from the real store, so a ctx-ignoring mutant resolves the valid
 // token and is RED on status and elapsed time, not a hang.
 type heldCredentials struct {
-	real *store.Store
+	real authority.CredentialStore
 	err  error // non-nil: fail at once with this error instead of holding
 }
 
@@ -44,7 +44,7 @@ func TestCredentialLookupExpiryIsNotADenial(t *testing.T) {
 		d := newHandlerDaemon(t)
 		genesis := seedGenesisEmbedded(t, d, "cred")
 		auth := authHeader(t, d) // a real, valid session
-		d.resolver = authority.New(heldCredentials{real: d.store})
+		d.resolver = authority.New(heldCredentials{real: authority.ReadOnlyAt(d.credentialsPath)})
 		d.credentialBudget = 100 * time.Millisecond
 		start := time.Now()
 		rec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(testCommit(genesis, 1, "cred"))))

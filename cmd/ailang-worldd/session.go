@@ -75,20 +75,51 @@ func runSession(args []string, stdout, stderr io.Writer) int {
 	}
 }
 
-const sessionHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>] [--repo <dir>]
-                 [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
+const sessionHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
+                 [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
                  [--ttl 3600] [--out <file>] [--branch <name>] [--allow-non-git]
-       ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
-       ailang-worldd session revoke [--db <path>] <credential_id> | --episode <ep>
-       ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
+       ailang-worldd session list [--db <path>] [--credentials-db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
+       ailang-worldd session revoke [--db <path>] [--credentials-db <path>] <credential_id> | --episode <ep>
+       ailang-worldd session mint --db <path> [--credentials-db <path>] --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                  [--ttl 3600] [--out <file>]
 
-Session credentials act on the store file (--db) directly, never on a running
-daemon. new and mint are ATTENDED (they open /dev/tty and ask y/N there) and,
-like revoke, need the daemon stopped (single writer). list reads beside a
-live daemon. A --db that does not exist is refused, never created.
+Session credentials live in their own credentials store (--credentials-db,
+default credentials.db beside --db), never behind a daemon endpoint. new and
+mint are ATTENDED (they open /dev/tty and ask y/N there). new, mint and revoke
+take the credentials store's own writer lock, not the world store's, so they
+work while the daemon serves; the daemon reads the credentials store per
+request, so a mint or a revoke counts from the next request. list reads it
+read-only. A --db that does not exist is refused, never created.
 '<verb> --help' prints each one's help.
 `
+
+// credentialsDBUsage is the --credentials-db flag text every session verb shares.
+const credentialsDBUsage = "session credentials store (default: credentials.db beside --db)"
+
+// credentialsFor is the credentials store a session verb acts on: the
+// --credentials-db value, or credentials.db beside the world store (row 189).
+// It only resolves a path; nothing is opened or created.
+func credentialsFor(db, flagValue string) (string, error) {
+	path := flagValue
+	if path == "" {
+		var err error
+		if path, err = store.DefaultCredentialsPath(db); err != nil {
+			return "", err
+		}
+	}
+	path, err := store.CanonicalPath(path)
+	if err != nil {
+		return "", fmt.Errorf("--credentials-db: %w", err)
+	}
+	same, err := store.SameDatabase(db, path)
+	if err != nil {
+		return "", err
+	}
+	if same {
+		return "", fmt.Errorf("--credentials-db %s is the world store itself; session credentials need their own file", path)
+	}
+	return path, nil
+}
 
 // requireExistingStore refuses a --db that is not an existing regular file:
 // the session verbs never create a store (row 137 item 6, row 138 §3.7,
@@ -107,13 +138,20 @@ func requireExistingStore(db string) error {
 	return nil
 }
 
-// openStoreForSession opens the store for writing, naming the usual cause of
-// a held lock.
-func openStoreForSession(db string) (*store.Store, error) {
-	st, err := store.Open(db)
+// openCredentialsForSession opens the credentials store for writing. It takes
+// the CREDENTIALS store's writer lock, which no daemon ever holds, so it works
+// while one serves. The single exception is a schema-4 world store whose
+// credentials have not moved yet: they move first (store.MigrateCredentials),
+// once, which needs the world store's lock and says so if a daemon of an
+// older build holds it.
+func openCredentialsForSession(ctx context.Context, db, creds string) (*store.Credentials, error) {
+	if _, err := store.MigrateCredentials(ctx, db, creds); err != nil {
+		return nil, err
+	}
+	st, err := store.OpenCredentials(creds)
 	if err != nil {
 		if store.IsWriterAlreadyActive(err) {
-			return nil, fmt.Errorf("%w — stop the daemon first (session mint, new and revoke need the writer lock)", err)
+			return nil, fmt.Errorf("%w — another session new/mint/revoke is writing this credentials store; let it finish and run this again", err)
 		}
 		return nil, err
 	}
@@ -168,6 +206,7 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	// would invent a store serve does not define; a credential mint must never
 	// silently target a surprise store.
 	dbPath := fs.String("db", "", "world store database (required)")
+	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, sessionHelp)
@@ -204,6 +243,11 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		fmt.Fprintf(stderr, "ailang-worldd session mint: %v\n", err)
 		return exitUsage
 	}
+	credPath, err := credentialsFor(*dbPath, *credsDB)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd session mint: %v\n", err)
+		return exitUsage
+	}
 
 	// TTY FENCE (D1): mint is one human act. A process with no controlling
 	// terminal (a pasted/redirected drive) collapses "one human act" into
@@ -232,9 +276,13 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		return exitUsage
 	}
 
-	st, err := openStoreForSession(*dbPath)
+	// The 3 s budget starts after the y/N: it bounds the one-time move (if
+	// any), the credentials writer lock and the mint, never the human.
+	mintCtx, cancelMint := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelMint()
+	st, err := openCredentialsForSession(mintCtx, *dbPath, credPath)
 	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session mint: cannot open world store %q: %v\n", *dbPath, err)
+		fmt.Fprintf(stderr, "ailang-worldd session mint: cannot open the credentials store %q: %v\n", credPath, err)
 		return exitFatal
 	}
 	defer func() { _ = st.Close() }()
@@ -245,8 +293,6 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	if *outPath == "" {
 		out = stdout
 	}
-	mintCtx, cancelMint := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancelMint()
 	rawToken, credentialID, row, err := authority.Mint(mintCtx, st, *episode, grants, *ttl, now, out)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session mint: %v\n", err)
@@ -282,8 +328,10 @@ unknown credential. <credential_id> is the 64-hex hash session mint/new print
 to stderr (and session list shows) — never the token itself. --episode
 revokes every credential of that episode. Flags and the id may come in either
 order. An id (or episode) with no credential in the store is refused (exit 1),
-and so is a --db that does not exist (it is never created). The daemon must be
-stopped: revoke needs the writer lock.
+and so is a --db that does not exist (it is never created). It writes the
+credentials store (--credentials-db, default credentials.db beside --db)
+under that store's own lock, so it works while the daemon serves, and the
+daemon refuses the revoked token from its next request.
 `
 
 // runSessionRevoke implements `session revoke <credential_id-hash>` (D4): it
@@ -301,6 +349,7 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
 	dbPath := fs.String("db", "", "world store database (required)")
+	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	episode := fs.String("episode", "", "revoke every credential of this episode")
 	rest, err := parseInterleaved(fs, args)
 	if err != nil {
@@ -331,16 +380,21 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
 		return exitUsage
 	}
-
-	st, err := openStoreForSession(*dbPath)
+	credPath, err := credentialsFor(*dbPath, *credsDB)
 	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session revoke: cannot open world store %q: %v\n", *dbPath, err)
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+		return exitUsage
+	}
+
+	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelRevoke()
+	st, err := openCredentialsForSession(revokeCtx, *dbPath, credPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: cannot open the credentials store %q: %v\n", credPath, err)
 		return exitFatal
 	}
 	defer func() { _ = st.Close() }()
 
-	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancelRevoke()
 	ids := []string{credID}
 	if *episode != "" {
 		rows, err := st.ListSessions(revokeCtx, *episode, store.MaxListSessions)
@@ -349,7 +403,7 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 			return exitFatal
 		}
 		if len(rows) == 0 {
-			fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: episode %s has no session credential in %s\n", *episode, *dbPath)
+			fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: episode %s has no session credential in %s\n", *episode, credPath)
 			return exitUsage
 		}
 		ids = ids[:0]
@@ -361,7 +415,7 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 		return exitFatal
 	} else if !ok {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: no session credential %s in %s "+
-			"(already revoked, or minted in another store); nothing was revoked\n", credID, *dbPath)
+			"(already revoked, or minted in another store); nothing was revoked\n", credID, credPath)
 		return exitUsage
 	}
 	for _, id := range ids {

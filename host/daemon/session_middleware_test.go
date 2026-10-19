@@ -112,7 +112,7 @@ func TestSessionMiddleware_ExpiredAndRevokedIsDistinct(t *testing.T) {
 	// Expired: mint with a backdated `now` so expires_at is already past the
 	// middleware's wall clock (equivalent to "--ttl 1 then advance now").
 	backdated := time.Now().Unix() - 10
-	expTok, expID, _, err := authority.Mint(ctx, d.store, "ep-expired", grantForAuth(), 1, backdated, nil)
+	expTok, expID, _, err := authority.Mint(ctx, testCreds(t, d), "ep-expired", grantForAuth(), 1, backdated, nil)
 	if err != nil {
 		t.Fatalf("mint expired session: %v", err)
 	}
@@ -132,17 +132,17 @@ func TestSessionMiddleware_ExpiredAndRevokedIsDistinct(t *testing.T) {
 
 	// Revoked (AC-M2-5): mint a live session that resolves, revoke its row, then
 	// the same token -> 401 SessionUnknown (delete-from-mapping = unknown, D4).
-	liveTok, liveID, _, err := authority.Mint(ctx, d.store, "ep-live", grantForAuth(), 3600, time.Now().Unix(), nil)
+	liveTok, liveID, _, err := authority.Mint(ctx, testCreds(t, d), "ep-live", grantForAuth(), 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint live session: %v", err)
 	}
 	if rec := postCommitAuth(t, d, "Bearer "+liveTok); rec.Code == http.StatusUnauthorized {
 		t.Fatalf("live session was denied before revoke: body=%s", rec.Body)
 	}
-	if err := authority.Revoke(ctx, d.store, liveID); err != nil {
+	if err := authority.Revoke(ctx, testCreds(t, d), liveID); err != nil {
 		t.Fatalf("revoke live session: %v", err)
 	}
-	if err := authority.Revoke(ctx, d.store, expID); err != nil {
+	if err := authority.Revoke(ctx, testCreds(t, d), expID); err != nil {
 		t.Fatalf("revoke expired session's row: %v", err)
 	}
 	recRev := postCommitAuth(t, d, "Bearer "+liveTok)
@@ -158,7 +158,7 @@ func TestSessionMiddleware_ExpiredAndRevokedIsDistinct(t *testing.T) {
 // is rejected, not even as a fallback).
 func TestSessionMiddleware_NoAlternateHeaderFallback(t *testing.T) {
 	d := newHandlerDaemon(t)
-	liveTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-alt", grantForAuth(), 3600, time.Now().Unix(), nil)
+	liveTok, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "ep-alt", grantForAuth(), 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}
@@ -180,7 +180,7 @@ func TestSessionMiddleware_NoAlternateHeaderFallback(t *testing.T) {
 // routes pass through unauthenticated (residual R1).
 func TestSessionMiddleware_SuccessReachesHandler(t *testing.T) {
 	d := newHandlerDaemon(t)
-	liveTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-success", grantForAuth(), 3600, time.Now().Unix(), nil)
+	liveTok, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "ep-success", grantForAuth(), 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}

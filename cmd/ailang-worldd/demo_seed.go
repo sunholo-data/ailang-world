@@ -148,7 +148,13 @@ func demoGrants(ctx context.Context, db, token string) (bool, error) {
 	authCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	now := time.Now().Unix()
-	out, err := authority.New(ro).ResolveContext(authCtx, "Bearer "+token, now)
+	// The credential lives in the credentials store beside the world store
+	// (row 189), read-only as the daemon reads it; spend stays in the world.
+	credPath, err := store.DefaultCredentialsPath(db)
+	if err != nil {
+		return false, fmt.Errorf("cannot locate the credentials store")
+	}
+	out, err := authority.New(authority.ReadOnlyAt(credPath)).ResolveContext(authCtx, "Bearer "+token, now)
 	if err != nil {
 		return false, fmt.Errorf("read-only session resolution failed")
 	}

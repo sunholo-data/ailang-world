@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -42,7 +43,37 @@ func openStore(t *testing.T) *store.Store {
 		t.Fatalf("open in-memory store: %v", err)
 	}
 	t.Cleanup(func() { _ = st.Close() })
+	c := credsOf(st)
+	t.Cleanup(func() { forgetCreds(st); _ = c.Close() })
 	return st
+}
+
+// credsByStore pairs each in-memory world store with its own in-memory
+// credentials store: since row 189 credentials are not world-store state.
+var (
+	credsMu      sync.Mutex
+	credsByStore = map[*store.Store]*store.Credentials{}
+)
+
+// credsOf is st's paired credentials store, created on first use.
+func credsOf(st *store.Store) *store.Credentials {
+	credsMu.Lock()
+	defer credsMu.Unlock()
+	if c, ok := credsByStore[st]; ok {
+		return c
+	}
+	c, err := store.OpenCredentials(":memory:")
+	if err != nil {
+		panic(fmt.Sprintf("open in-memory credentials store: %v", err))
+	}
+	credsByStore[st] = c
+	return c
+}
+
+func forgetCreds(st *store.Store) {
+	credsMu.Lock()
+	defer credsMu.Unlock()
+	delete(credsByStore, st)
 }
 
 // liveGrant returns a capability that is live for the whole test window.
@@ -52,7 +83,7 @@ func liveGrant(effect string) broker.Capability {
 
 func mintToken(t *testing.T, st *store.Store, episode string, grants []broker.Capability) string {
 	t.Helper()
-	tok, _, _, err := authority.Mint(boundedTestContext(t), st, episode, grants, 3600, time.Now().Unix(), io.Discard)
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsOf(st), episode, grants, 3600, time.Now().Unix(), io.Discard)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}
@@ -61,7 +92,7 @@ func mintToken(t *testing.T, st *store.Store, episode string, grants []broker.Ca
 
 func mintExpiredToken(t *testing.T, st *store.Store) string {
 	t.Helper()
-	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "ep-expired",
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsOf(st), "ep-expired",
 		[]broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10}},
 		60, time.Now().Unix()-3600, io.Discard)
 	if err != nil {
@@ -210,7 +241,7 @@ func (blockingResolver) ResolveContext(ctx context.Context, _ string, _ int64) (
 // reference writers, a small finite bound (Decision 6).
 func testConfig(st *store.Store) Config {
 	return Config{
-		Resolver:       authority.New(st),
+		Resolver:       authority.New(credsOf(st)),
 		Reader:         transitionreg.NewReader(st),
 		Heads:          st,
 		Deny:           refDeny,
