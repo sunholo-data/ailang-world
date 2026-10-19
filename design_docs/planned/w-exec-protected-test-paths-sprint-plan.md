@@ -307,6 +307,8 @@ No `.ail` change; no AIL verification command. New fixture writes are worktree-l
 
 Design M1; **240 LOC total / 30 min**, own PR, depends on M1b. Status **planned**.
 
+**Iteration 281 — blocked on design revision; incomplete.** V16 and `../verification/world-iter281/README.md` bank a real counterexample to Unicode equivalence. The existing mirror matches long-s/Kelvin paths that Git `icase` misses, even with ASCII patterns. Do not drop these rows, mark M1c complete, or narrow the guarantee. Next: bounded designer revision preserving Unicode semantics, quorum, then replan the affected detection milestones. No human decision is required for that preservation/decomposition step. No replacement algorithm has been approved.
+
 **Files touched and base functions:**
 
 - `host/broker/exec_protected_test.go NEW at base; add TestProtectedGitPathspecEquivalence; reuse git fixture pattern at host/broker/worktree_delta_test.go:83 TestWorktreeDeltaGitBasis (read only reuse)`

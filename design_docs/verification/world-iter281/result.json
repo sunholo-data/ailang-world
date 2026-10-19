@@ -1,0 +1,1130 @@
+{
+  "measurement_valid": true,
+  "equivalence": false,
+  "M1c": "incomplete",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "utc": "2026-10-19T03:32:50.149102+00:00",
+  "pathspec_origin": "source literal used; manually checked against current gitPathspecs, host/broker/exec_protected.go:327-337; no source parser",
+  "timeout_seconds_git": 10,
+  "timeout_seconds_go_test": 120,
+  "rows": [
+    {
+      "name": "ascii-directory",
+      "path": "tests/x.py",
+      "path_utf8_base64": "dGVzdHMveC5weQ==",
+      "pattern": "tests/**",
+      "pathspecs": [
+        ":(top,glob,icase)tests",
+        ":(top,glob,icase)tests/**"
+      ],
+      "mirror_expected": true,
+      "setup": [
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "init",
+            "-q"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "core.ignorecase",
+            "false"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.name",
+            "Evidence"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.email",
+            "evidence@example.invalid"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "add",
+            "--",
+            "tests/x.py"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-qm",
+            "fixture"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        }
+      ],
+      "unfiltered_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "tests/x.py\u0000",
+          "base64": "dGVzdHMveC5weQA=",
+          "nul_fields_base64": [
+            "dGVzdHMveC5weQ=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "unfiltered_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": " M tests/x.py\u0000",
+          "base64": "IE0gdGVzdHMveC5weQA=",
+          "nul_fields_base64": [
+            "IE0gdGVzdHMveC5weQ=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z",
+          "--",
+          ":(top,glob,icase)tests",
+          ":(top,glob,icase)tests/**"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "tests/x.py\u0000",
+          "base64": "dGVzdHMveC5weQA=",
+          "nul_fields_base64": [
+            "dGVzdHMveC5weQ=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching",
+          "--",
+          ":(top,glob,icase)tests",
+          ":(top,glob,icase)tests/**"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-directory",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": " M tests/x.py\u0000",
+          "base64": "IE0gdGVzdHMveC5weQA=",
+          "nul_fields_base64": [
+            "IE0gdGVzdHMveC5weQ=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "git_selected": true,
+      "equivalence": true
+    },
+    {
+      "name": "long-s",
+      "path": "te\u017fts/x.py",
+      "path_utf8_base64": "dGXFv3RzL3gucHk=",
+      "pattern": "tests/**",
+      "pathspecs": [
+        ":(top,glob,icase)tests",
+        ":(top,glob,icase)tests/**"
+      ],
+      "mirror_expected": true,
+      "setup": [
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "init",
+            "-q"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "core.ignorecase",
+            "false"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.name",
+            "Evidence"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.email",
+            "evidence@example.invalid"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "add",
+            "--",
+            "te\u017fts/x.py"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-qm",
+            "fixture"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        }
+      ],
+      "unfiltered_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "te\u017fts/x.py\u0000",
+          "base64": "dGXFv3RzL3gucHkA",
+          "nul_fields_base64": [
+            "dGXFv3RzL3gucHk="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "unfiltered_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": " M te\u017fts/x.py\u0000",
+          "base64": "IE0gdGXFv3RzL3gucHkA",
+          "nul_fields_base64": [
+            "IE0gdGXFv3RzL3gucHk="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z",
+          "--",
+          ":(top,glob,icase)tests",
+          ":(top,glob,icase)tests/**"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching",
+          "--",
+          ":(top,glob,icase)tests",
+          ":(top,glob,icase)tests/**"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/long-s",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "git_selected": false,
+      "equivalence": false
+    },
+    {
+      "name": "ascii-k",
+      "path": "pkg/k_test.go",
+      "path_utf8_base64": "cGtnL2tfdGVzdC5nbw==",
+      "pattern": "*k_test.go",
+      "pathspecs": [
+        ":(top,glob,icase)**/*k_test.go"
+      ],
+      "mirror_expected": true,
+      "setup": [
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "init",
+            "-q"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "core.ignorecase",
+            "false"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.name",
+            "Evidence"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.email",
+            "evidence@example.invalid"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "add",
+            "--",
+            "pkg/k_test.go"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-qm",
+            "fixture"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        }
+      ],
+      "unfiltered_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "pkg/k_test.go\u0000",
+          "base64": "cGtnL2tfdGVzdC5nbwA=",
+          "nul_fields_base64": [
+            "cGtnL2tfdGVzdC5nbw=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "unfiltered_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": " M pkg/k_test.go\u0000",
+          "base64": "IE0gcGtnL2tfdGVzdC5nbwA=",
+          "nul_fields_base64": [
+            "IE0gcGtnL2tfdGVzdC5nbw=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z",
+          "--",
+          ":(top,glob,icase)**/*k_test.go"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "pkg/k_test.go\u0000",
+          "base64": "cGtnL2tfdGVzdC5nbwA=",
+          "nul_fields_base64": [
+            "cGtnL2tfdGVzdC5nbw=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching",
+          "--",
+          ":(top,glob,icase)**/*k_test.go"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/ascii-k",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": " M pkg/k_test.go\u0000",
+          "base64": "IE0gcGtnL2tfdGVzdC5nbwA=",
+          "nul_fields_base64": [
+            "IE0gcGtnL2tfdGVzdC5nbw=="
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "git_selected": true,
+      "equivalence": true
+    },
+    {
+      "name": "kelvin",
+      "path": "pkg/\u212a_test.go",
+      "path_utf8_base64": "cGtnL+KEql90ZXN0Lmdv",
+      "pattern": "*k_test.go",
+      "pathspecs": [
+        ":(top,glob,icase)**/*k_test.go"
+      ],
+      "mirror_expected": true,
+      "setup": [
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "init",
+            "-q"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "core.ignorecase",
+            "false"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.name",
+            "Evidence"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "config",
+            "user.email",
+            "evidence@example.invalid"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "add",
+            "--",
+            "pkg/\u212a_test.go"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        },
+        {
+          "argv": [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-qm",
+            "fixture"
+          ],
+          "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+          "rc": 0,
+          "timeout_seconds": 10,
+          "stdout": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          },
+          "stderr": {
+            "utf8": "",
+            "base64": "",
+            "nul_fields_base64": []
+          }
+        }
+      ],
+      "unfiltered_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "pkg/\u212a_test.go\u0000",
+          "base64": "cGtnL+KEql90ZXN0LmdvAA==",
+          "nul_fields_base64": [
+            "cGtnL+KEql90ZXN0Lmdv"
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "unfiltered_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": " M pkg/\u212a_test.go\u0000",
+          "base64": "IE0gcGtnL+KEql90ZXN0LmdvAA==",
+          "nul_fields_base64": [
+            "IE0gcGtnL+KEql90ZXN0Lmdv"
+          ]
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_ls_files": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "-z",
+          "--",
+          ":(top,glob,icase)**/*k_test.go"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "selected_status": {
+        "argv": [
+          "git",
+          "-c",
+          "core.fsmonitor=false",
+          "status",
+          "--porcelain=v1",
+          "-z",
+          "--untracked-files=all",
+          "--ignored=matching",
+          "--",
+          ":(top,glob,icase)**/*k_test.go"
+        ],
+        "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/kelvin",
+        "rc": 0,
+        "timeout_seconds": 10,
+        "stdout": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        },
+        "stderr": {
+          "utf8": "",
+          "base64": "",
+          "nul_fields_base64": []
+        }
+      },
+      "git_selected": false,
+      "equivalence": false
+    }
+  ],
+  "git_version": {
+    "argv": [
+      "git",
+      "--version"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c",
+    "rc": 0,
+    "timeout_seconds": 10,
+    "stdout": {
+      "utf8": "git version 2.54.0\n",
+      "base64": "Z2l0IHZlcnNpb24gMi41NC4wCg==",
+      "nul_fields_base64": [
+        "Z2l0IHZlcnNpb24gMi41NC4wCg=="
+      ]
+    },
+    "stderr": {
+      "utf8": "",
+      "base64": "",
+      "nul_fields_base64": []
+    }
+  },
+  "base": {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c",
+    "rc": 0,
+    "timeout_seconds": 10,
+    "stdout": {
+      "utf8": "a0c73053f10092fd511ad22fcf6b95d6a3f896aa\n",
+      "base64": "YTBjNzMwNTNmMTAwOTJmZDUxMWFkMjJmY2Y2Yjk1ZDZhM2Y4OTZhYQo=",
+      "nul_fields_base64": [
+        "YTBjNzMwNTNmMTAwOTJmZDUxMWFkMjJmY2Y2Yjk1ZDZhM2Y4OTZhYQo="
+      ]
+    },
+    "stderr": {
+      "utf8": "",
+      "base64": "",
+      "nul_fields_base64": []
+    }
+  },
+  "environment": {
+    "HOME": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt/home",
+    "TMPDIR": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt",
+    "GOTMPDIR": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c/.iter281-evidence-yq0srvmt",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "GOCACHE": "/Users/voightkampff/Library/Caches/go-build",
+    "GOMODCACHE": "/Users/voightkampff/go/pkg/mod",
+    "GOPROXY": "off"
+  },
+  "mirror_test": {
+    "argv": [
+      "/opt/homebrew/bin/go",
+      "test",
+      "-count=1",
+      "./host/broker/...",
+      "-run",
+      "^TestProtectedMatchFixture$/(long-s|kelvin)$",
+      "-timeout",
+      "110s",
+      "-v"
+    ],
+    "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter281-row156-m1c",
+    "rc": 0,
+    "timeout_seconds": 120,
+    "stdout": {
+      "utf8": "=== RUN   TestProtectedMatchFixture\n=== RUN   TestProtectedMatchFixture/long-s\n=== RUN   TestProtectedMatchFixture/kelvin\n--- PASS: TestProtectedMatchFixture (0.00s)\n    --- PASS: TestProtectedMatchFixture/long-s (0.00s)\n    --- PASS: TestProtectedMatchFixture/kelvin (0.00s)\nPASS\nok  \tgithub.com/sunholo-data/ailang-world/host/broker\t0.222s\n",
+      "base64": "PT09IFJVTiAgIFRlc3RQcm90ZWN0ZWRNYXRjaEZpeHR1cmUKPT09IFJVTiAgIFRlc3RQcm90ZWN0ZWRNYXRjaEZpeHR1cmUvbG9uZy1zCj09PSBSVU4gICBUZXN0UHJvdGVjdGVkTWF0Y2hGaXh0dXJlL2tlbHZpbgotLS0gUEFTUzogVGVzdFByb3RlY3RlZE1hdGNoRml4dHVyZSAoMC4wMHMpCiAgICAtLS0gUEFTUzogVGVzdFByb3RlY3RlZE1hdGNoRml4dHVyZS9sb25nLXMgKDAuMDBzKQogICAgLS0tIFBBU1M6IFRlc3RQcm90ZWN0ZWRNYXRjaEZpeHR1cmUva2VsdmluICgwLjAwcykKUEFTUwpvayAgCWdpdGh1Yi5jb20vc3VuaG9sby1kYXRhL2FpbGFuZy13b3JsZC9ob3N0L2Jyb2tlcgkwLjIyMnMK",
+      "nul_fields_base64": [
+        "PT09IFJVTiAgIFRlc3RQcm90ZWN0ZWRNYXRjaEZpeHR1cmUKPT09IFJVTiAgIFRlc3RQcm90ZWN0ZWRNYXRjaEZpeHR1cmUvbG9uZy1zCj09PSBSVU4gICBUZXN0UHJvdGVjdGVkTWF0Y2hGaXh0dXJlL2tlbHZpbgotLS0gUEFTUzogVGVzdFByb3RlY3RlZE1hdGNoRml4dHVyZSAoMC4wMHMpCiAgICAtLS0gUEFTUzogVGVzdFByb3RlY3RlZE1hdGNoRml4dHVyZS9sb25nLXMgKDAuMDBzKQogICAgLS0tIFBBU1M6IFRlc3RQcm90ZWN0ZWRNYXRjaEZpeHR1cmUva2VsdmluICgwLjAwcykKUEFTUwpvayAgCWdpdGh1Yi5jb20vc3VuaG9sby1kYXRhL2FpbGFuZy13b3JsZC9ob3N0L2Jyb2tlcgkwLjIyMnMK"
+      ]
+    },
+    "stderr": {
+      "utf8": "",
+      "base64": "",
+      "nul_fields_base64": []
+    }
+  }
+}
