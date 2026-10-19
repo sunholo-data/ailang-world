@@ -53,7 +53,7 @@ ailang-worldd session new ep1 --db /path/world.db --workspace-root /path/ws --re
   --preset se-tools --ttl 14400 --out /path/session
 ```
 
-- `--preset se-tools` gives one grant per effect the coding tools declare: nine grants, each
+- `--preset se-tools` gives one grant per effect the coding tools declare: ten grants, each
   scope `worktree` with `--budget` calls (default 50). `--grant EFFECT=SCOPE:BUDGET` adds a grant
   or overrides a preset one.
 - The y/N prompt names the worktree and every grant. If the mint fails, the worktree this run

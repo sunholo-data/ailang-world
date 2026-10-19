@@ -68,22 +68,23 @@ A2A:
 - the result is in `artifacts[0].parts[0].data`
 - the task id is an idempotency key: resending a committed task id returns the committed result without running again
 
-## 3. The eight tools
+## 3. The AILANG tools
 
 Every tool: one effect at scope `worktree`, cost 1 call; unknown argument keys are refused; paths are relative, non-empty, with no `..` segment and no leading `-`.
 
 | Tool | Arguments (`?` = optional) | Effect (grant) | Returns (plus `world`) |
 |---|---|---|---|
-| `ailang-read` | `path` | Workspace.Read | `ok`, `content` |
+| `ailang-read` | `path`, `offset?` (1-based first line), `limit?` (line count, at most 2000) | Workspace.Read | `ok`, `content`; a ranged read adds `total_lines`, `offset`, `limit` |
 | `ailang-write` | `path`, `content` (full file) | Workspace.Write | `ok` |
 | `ailang-edit` | `path`, `old_text` (must occur exactly once), `new_text` | Workspace.Write | `ok` |
+| `ailang-delete` | `path` (one file; never a directory) | Workspace.Delete | `ok` |
 | `ailang-check` | `path` | Ailang.Check | `ok`, `passed`, `error_count`, `errors[{code, message, file}]` |
 | `ailang-run` | `path`, `args_json?` (a string holding JSON) | Ailang.Run | `admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr` |
 | `builtins-search` | `query?`, `module?` | Ailang.Discover | `count`, `matches[{name, module, effect}]` (max 10 with a query) |
 | `examples-search` | `query` | Ailang.Discover | `ok`, `argv`, `exit_code`, `stdout`, `stderr` |
 | `ailang-cli` | `op`, `path?`, `module?`, `query?`, `package?`, `flags?` (object of strings) | Ailang.CLI | `ok`, `argv`, `exit_code`, `stdout`, `stderr` |
 
-Handler-backed results (read, write, edit, examples-search, ailang-cli) also carry `tool` (tool binary ref) and `policy_digest`.
+Handler-backed results (read, write, edit, delete, examples-search, ailang-cli) also carry `tool` (tool binary ref) and `policy_digest`. An `ailang-run` or `ailang-cli` call that changed the worktree also carries `worktree_delta`.
 
 `ailang-cli` ops: agent_prompt, ai_check, axioms, builtins_list, builtins_show, check, devtools_prompt, docs_search, examples_list, examples_search, examples_show, examples_tags, fmt, iface, pkg_docs, policy_check, prompt, test, tree, version.
 - fields: check/ai_check/fmt/tree/policy_check take `path`; iface/pkg_docs take `module` (e.g. "std/io"); docs_search/examples_search take `query`; examples_show/builtins_show take `module` holding a name; test takes `path?`, `package?`

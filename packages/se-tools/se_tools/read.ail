@@ -1,8 +1,12 @@
 module se_tools/read
 
 -- ailang-read (queue row 134, design_docs/planned/w-software-engineering-domain.md
--- §4.2): read one file of the episode worktree. Args {path}. Effect
--- Workspace.Read; payload = the policy-tool `read` request {op, path}.
+-- §4.2): read one file of the episode worktree. Args {path, offset?, limit?}.
+-- Effect Workspace.Read; payload = the policy-tool `read` request
+-- {op, path, offset?, limit?}. Row 190: offset (1-based first line) and limit
+-- (line count) go through only when given; v0.54.15's policy-tool then
+-- answers with total_lines, offset and limit too, and caps limit at 2000
+-- itself (ailang#1872), so the plan leaves the cap upstream.
 -- No finish phase: the handler's output is the call's result.
 --
 -- Calling convention v2 (§4.1): the coordinator passes ONE string,
@@ -20,7 +24,7 @@ module se_tools/read
 -- every se_tools module; host/coordinator's se-tools test holds the copies
 -- byte-identical. argKeyAllowed is each tool's own schema.
 
-import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, Json)
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, Json, JNumber)
 import std/string (length as strLength, startsWith, endsWith, contains)
 import std/option (Option, Some, None)
 import std/result (Result, Ok, Err)
@@ -70,17 +74,38 @@ tests [
 
 -- L-ARGS (§4.1, §4.2): the argument keys this tool admits. policy-tool ignores
 -- unknown request keys (V56), so strictness lives here: any other key is a
--- typed refusal plan, never silently dropped.
+-- typed refusal plan, never silently dropped. (v0.54.15 refuses unknown keys
+-- itself; the plan still refuses first, so the refusal names the tool.)
 export func argKeyAllowed(k: string) -> bool ! {}
-ensures { result == (k == "path") }
+ensures { result == (k == "path" || k == "offset" || k == "limit") }
 tests [
   ("path", true),
+  ("offset", true),
+  ("limit", true),
   ("Path", false),
+  ("Offset", false),
   ("content", false),
   ("", false)
 ]
 {
-  k == "path"
+  k == "path" || k == "offset" || k == "limit"
+}
+
+-- Row 190: a range value the plan admits. offset is 1-based and limit counts
+-- lines, so both must be at least 1 (v0.54.15 refuses 0 and below for both,
+-- measured). No upper bound: policy-tool clamps limit to 2000 silently and
+-- answers an offset past the end with no content.
+export func lineArgOk(n: int) -> bool ! {}
+ensures { result == (n >= 1) }
+tests [
+  (1, true),
+  (2000, true),
+  (2001, true),
+  (0, false),
+  (-1, false)
+]
+{
+  n >= 1
 }
 
 -- Calling convention v2 (§4.1): the input object's keys. `results` exists only
@@ -159,14 +184,42 @@ func stringField(doc: Json, k: string) -> string =
     None => ""
   }
 
+-- An optional range argument (row 190): absent, or a JSON integer that
+-- lineArgOk admits. A JSON number decodes as a float, so an integer is one
+-- that survives the round trip through int (1.5 does not; 2.0 is sent as 2).
+func optionalLine(args: Json, k: string) -> Result[Option[int], string] =
+  match get(args, k) {
+    None => Ok(None),
+    Some(JNumber(x)) => {
+      let n = floatToInt(x);
+      if intToFloat(n) != x then Err("argument \"${k}\" must be an integer")
+      else if lineArgOk(n) then Ok(Some(n))
+      else Err("argument \"${k}\" must be an integer >= 1 (got ${show(n)})")
+    },
+    Some(_) => Err("argument \"${k}\" must be an integer")
+  }
+
+func optionalField(k: string, v: Option[int], rest: [{key: string, value: Json}]) -> [{key: string, value: Json}] =
+  match v {
+    Some(n) => kv(k, jint(n)) :: rest,
+    None => rest
+  }
+
 -- ── The tool ─────────────────────────────────────────────────────────────
 
 func planTool(args: Json) -> string =
   match requiredString(args, "path") {
     Err(why) => refusal(why),
-    Ok(path) => if pathOk(path)
-      then effectPlan("Workspace.Read", jo([kv("op", js("read")), kv("path", js(path))]), false)
-      else refusal(pathRefusal(path))
+    Ok(path) => if not pathOk(path) then refusal(pathRefusal(path))
+      else match optionalLine(args, "offset") {
+        Err(why) => refusal(why),
+        Ok(offset) => match optionalLine(args, "limit") {
+          Err(why) => refusal(why),
+          Ok(limit) => effectPlan("Workspace.Read",
+            jo(kv("op", js("read")) :: kv("path", js(path)) ::
+              optionalField("offset", offset, optionalField("limit", limit, []))), false)
+        }
+      }
   }
 
 func planPhase(doc: Json) -> string =
@@ -175,7 +228,7 @@ func planPhase(doc: Json) -> string =
     Some(args) => match asObject(args) {
       None => refusal("arguments must be a JSON object"),
       Some(es) => match firstUnknownArg(es) {
-        Some(k) => refusal("unknown argument \"${k}\"; ailang-read admits only: path"),
+        Some(k) => refusal("unknown argument \"${k}\"; ailang-read admits only: path, offset, limit"),
         None => planTool(args)
       }
     }
@@ -196,13 +249,28 @@ func dispatch(doc: Json) -> string =
   }
 
 -- The transition entry (calling convention v2). Its named tests pin the exact
--- plan bytes for an admitted call and each L-ARGS / path refusal.
+-- plan bytes for an admitted call, ranged calls (row 190) and each L-ARGS /
+-- range / path refusal.
 export func main(input: string) -> string
 tests [
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\"}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Read\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"read\",\"path\":\"src/main.ail\"}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"limit\":5}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"limit\\\"; ailang-read admits only: path\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"docs/big.md\",\"offset\":201,\"limit\":100}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Read\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"read\",\"path\":\"docs/big.md\",\"offset\":201,\"limit\":100}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"limit\":50,\"path\":\"docs/big.md\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Read\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"read\",\"path\":\"docs/big.md\",\"limit\":50}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"docs/big.md\",\"offset\":2.0}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Read\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"read\",\"path\":\"docs/big.md\",\"offset\":2}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"lines\":5}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"lines\\\"; ailang-read admits only: path, offset, limit\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"offset\":1.5}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"offset\\\" must be an integer\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"limit\":\"5\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"limit\\\" must be an integer\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"offset\":-1}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"offset\\\" must be an integer >= 1 (got -1)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"limit\":0}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"limit\\\" must be an integer >= 1 (got 0)\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\"},\"world\":{}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"input key \\\"world\\\" is not part of calling convention v2\"}}"),
   ("{\"phase\":\"plan\",\"args\":[]}",

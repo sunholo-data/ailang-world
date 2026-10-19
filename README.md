@@ -32,7 +32,7 @@ started, the agent guide and the CLI/HTTP reference — and
 
 ## Try it
 
-Serve World's nine coding tools to an agent, one step at a time (needs the two pinned
+Serve World's ten coding tools to an agent, one step at a time (needs the two pinned
 AILANG binaries — `go run ./cmd/ailang-worldd setup` installs both, verified, and `doctor`
 checks the machine; the two attended steps, publish and mint, need a human at a terminal):
 
@@ -133,9 +133,10 @@ paths), 150 (marketing capture) and 151 (agent-generated projections) land.
 - **Controlled self-modification, proven once** — World's own package, `world/core`, went
   through World's propose → verify → commit pipeline and was published to the AILANG package
   registry by an attended human step (`world/core@0.1.1`, 2026-10-02). Clause 7.
-- **Nine coding tools for agents** (queue row 134, landed 2026-10-03, PR #180; row 140 added
-  the ninth): `ailang-read`, `-write`, `-edit`, `-check`, `-run`, `builtins-search`,
-  `examples-search`, `ailang-cli` and `workspace-exec`, served over MCP and A2A. Each call runs
+- **Ten coding tools for agents** (queue row 134, landed 2026-10-03, PR #180; row 140 added
+  the ninth, row 191a the tenth): `ailang-read` (whole or a line range), `-write`, `-edit`,
+  `-delete`, `-check`, `-run`, `builtins-search`, `examples-search`, `ailang-cli` and
+  `workspace-exec`, served over MCP and A2A. Each call runs
   its plan as a pure World transition, runs exactly one brokered, budgeted effect confined to the
   episode's worktree, and commits one log entry. `workspace-exec` runs only commands from an
   operator exec profile (`go test`, `npm test`, `pytest`, …), sandboxed by srt, and runs nothing

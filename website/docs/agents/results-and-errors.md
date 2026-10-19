@@ -45,7 +45,7 @@ If your arguments are wrong, the plan refuses and no effect runs. The result is 
 
 ```json
 {"ok": false,
- "refused": "unknown argument \"limit\"; ailang-read admits only: path",
+ "refused": "unknown argument \"lines\"; ailang-read admits only: path, offset, limit",
  "world": {"effects": [], "plan": "sha256:…"}}
 ```
 

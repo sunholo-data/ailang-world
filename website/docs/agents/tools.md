@@ -1,12 +1,12 @@
 ---
 title: Tool reference
 sidebar_position: 3
-description: The nine AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.
+description: The 10 AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.
 ---
 
 # Tool reference
 
-AILANG World serves 9 tools. Each one is a pure AILANG transition that plans exactly one brokered effect, runs it inside your episode's worktree, and commits one World log entry. The MCP tool name and the A2A skill id are both the tool id below.
+AILANG World serves 10 tools. Each one is a pure AILANG transition that plans exactly one brokered effect, runs it inside your episode's worktree, and commits one World log entry. The MCP tool name and the A2A skill id are both the tool id below.
 
 Rules that apply to every tool:
 
@@ -17,9 +17,10 @@ Rules that apply to every tool:
 
 | Tool | Effect (grant needed) | Arguments | Finish phase |
 |---|---|---|---|
-| [`ailang-read`](#ailang-read) | `Workspace.Read` (scope `worktree`) | `path` | no |
+| [`ailang-read`](#ailang-read) | `Workspace.Read` (scope `worktree`) | `path`, `offset?`, `limit?` | no |
 | [`ailang-write`](#ailang-write) | `Workspace.Write` (scope `worktree`) | `path`, `content` | no |
 | [`ailang-edit`](#ailang-edit) | `Workspace.Write` (scope `worktree`) | `path`, `old_text`, `new_text` | no |
+| [`ailang-delete`](#ailang-delete) | `Workspace.Delete` (scope `worktree`) | `path` | no |
 | [`ailang-check`](#ailang-check) | `Ailang.Check` (scope `worktree`) | `path` | yes |
 | [`ailang-run`](#ailang-run) | `Ailang.Run` (scope `worktree`) | `path`, `args_json?`, `stdin?`, `argv?`, `caps?` | no |
 | [`builtins-search`](#builtins-search) | `Ailang.Discover` (scope `worktree`) | `query?`, `module?` | yes |
@@ -27,7 +28,7 @@ Rules that apply to every tool:
 | [`ailang-cli`](#ailang-cli) | `Ailang.CLI` (scope `worktree`) | `op`, `path?`, `module?`, `query?`, `package?`, `flags?` | no |
 | [`workspace-exec`](#workspace-exec) | `Workspace.Exec` (scope `worktree`) | `command`, `args?` | no |
 
-Seven grants cover the nine tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, the two searches share `Ailang.Discover`, and `workspace-exec` has its own `Workspace.Exec`. Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. `tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.
+8 grants cover the 10 tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, the two searches share `Ailang.Discover`, and `ailang-delete` and `workspace-exec` have their own `Workspace.Delete` and `Workspace.Exec` (deleting is a different authority from writing). Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. `tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.
 
 ## ailang-read
 
@@ -36,7 +37,7 @@ Seven grants cover the nine tools: `ailang-write` and `ailang-edit` share `Works
 Description served in `tools/list`:
 
 ```text
-Read a file inside this episode's worktree (policy-tool `read`). The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Returns {ok, content} or {ok:false, refused}. Costs one Workspace.Read call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Read an episode-worktree file. Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Returns content or refusal plus World plan/effect refs; costs one Workspace.Read and commits one entry.
 ```
 
 ### Arguments
@@ -44,14 +45,16 @@ Read a file inside this episode's worktree (policy-tool `read`). The path is rel
 | Name | Type | Required | Description |
 |---|---|---|---|
 | `path` | string | yes | File path, relative to the worktree root |
+| `offset` | integer | no | First line, 1-based |
+| `limit` | integer | no | Line count, at most 2000 |
 
 `additionalProperties` is `false`: any other key is refused.
 
 ### Result
 
-`ok`, `content`, `tool` (the tool binary ref), `policy_digest`, `world`.
+`ok`, `content`, `tool` (the tool binary ref), `policy_digest`, `world`. A ranged read (`offset` and/or `limit`) also returns `total_lines` (the file's line count), `offset` and `limit` (the lines returned). The tool binary clamps `limit` to 2000 (and to the end of the file), and an `offset` past the end returns no `content`.
 
-Output schema properties: `content`, `ok`, `refused`, `world` (required: `world`).
+Output schema properties: `content`, `total_lines`, `offset`, `limit`, `ok`, `refused`, `world` (required: `world`).
 
 ### Refusals you will see
 
@@ -61,6 +64,9 @@ From the plan (zero effects, `world.effects` is `[]`, still committed):
 path "<p>" refused: it must be relative and non-empty, with no ".." segment and no leading "-"
 missing required argument "path"
 argument "path" must be a string
+argument "offset" must be an integer
+argument "limit" must be an integer >= 1 (got 0)
+unknown argument "lines"; ailang-read admits only: path, offset, limit
 ```
 
 From the handler or AILANG's policy layer (the effect ran with status `ok`; the output says `ok: false`):
@@ -73,7 +79,7 @@ read nope.ail: openat nope.ail: no such file or directory
 ### Example call
 
 ```json
-{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"hello.ail"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"docs/big.md","offset":201,"limit":100}}}
 ```
 
 ## ailang-write
@@ -83,7 +89,7 @@ read nope.ail: openat nope.ail: no such file or directory
 Description served in `tools/list`:
 
 ```text
-Create or overwrite a file inside this episode's worktree (policy-tool `write`). The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Returns {ok} or {ok:false, refused}. Costs one Workspace.Write call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Create/overwrite an episode-worktree file with complete content. Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Returns ok or refusal plus World plan/effect refs; costs one Workspace.Write and commits one entry.
 ```
 
 ### Arguments
@@ -131,7 +137,7 @@ write .ailang/x.ail: matches fs_deny_write ".ailang/**" — read-only under this
 Description served in `tools/list`:
 
 ```text
-Replace old_text with new_text in a file inside this episode's worktree (policy-tool `edit`); old_text must occur exactly once (include enough context). The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Returns {ok} or {ok:false, refused}. Costs one Workspace.Write call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Replace old_text with new_text in an episode-worktree file; old_text must occur exactly once (include enough context). Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Returns ok or refusal plus World plan/effect refs; costs one Workspace.Write and commits one entry.
 ```
 
 ### Arguments
@@ -173,6 +179,55 @@ edit hello.ail: old_text not found — the file may have changed; read it again
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-edit","arguments":{"path":"hello.ail","old_text":"println(\"hello from ailang-run\")","new_text":"println(\"hello from pi\")"}}}
 ```
 
+## ailang-delete
+
+**Delete (sandboxed).** Effect `Workspace.Delete`, scope `worktree`, cost 1 per call. Handler: policy-tool `delete`. Module: `packages/se-tools/se_tools/delete.ail`.
+
+Description served in `tools/list`:
+
+```text
+Delete one episode-worktree file; a directory refuses, and a symlink is removed itself, never its target. Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Returns ok or refusal plus World plan/effect refs; costs one Workspace.Delete and commits one entry.
+```
+
+### Arguments
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | yes | File path, relative to the worktree root |
+
+`additionalProperties` is `false`: any other key is refused.
+
+### Result
+
+`ok`, `tool`, `policy_digest`, `world`. A symlink is removed itself, never its target.
+
+Output schema properties: `ok`, `refused`, `world` (required: `world`).
+
+### Refusals you will see
+
+From the plan (zero effects, `world.effects` is `[]`, still committed):
+
+```text
+path "<p>" refused: it must be relative and non-empty, with no ".." segment and no leading "-"
+missing required argument "path"
+unknown argument "recursive"; ailang-delete admits only: path
+```
+
+From the handler or AILANG's policy layer (the effect ran with status `ok`; the output says `ok: false`):
+
+```text
+delete .github/ci.yml: matches fs_deny_write ".github/**" — read-only under this policy
+delete .git: .git/ is read-only to the lane's tools
+delete tmp: is a directory — delete removes one file at a time
+delete nope.txt: statat nope.txt: no such file or directory
+```
+
+### Example call
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-delete","arguments":{"path":"tmp/helper_test.go"}}}
+```
+
 ## ailang-check
 
 **AILANG Check.** Effect `Ailang.Check`, scope `worktree`, cost 1 per call. Handler: policy-tool `ai_check`. Module: `packages/se-tools/se_tools/check.ail`.
@@ -180,7 +235,7 @@ edit hello.ail: old_text not found — the file may have changed; read it again
 Description served in `tools/list`:
 
 ```text
-Type-check and Z3-verify an AILANG file inside this episode's worktree (policy-tool `ai_check`) and return STRUCTURED diagnostics: {ok:true, passed, error_count, errors:[{code, message, file}]} (line and column stay inside message), or {ok:false, status, refused}. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one Ailang.Check call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Type-check and Z3-verify an episode-worktree AILANG file. Returns structured {ok, passed, error_count, errors:[{code,message,file}]} (line/column in message), or {ok:false,status,refused}. Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Costs one Ailang.Check; commits one entry with World plan/effect refs.
 ```
 
 ### Arguments
@@ -193,7 +248,7 @@ Type-check and Z3-verify an AILANG file inside this episode's worktree (policy-t
 
 ### Result
 
-`ok`, `passed`, `error_count`, `errors`, `world` (the finish output; no `tool` or `policy_digest`).
+`ok`, `passed`, `error_count`, `errors`, `world` (the finish output; no `tool`, `policy_digest` or `worktree_delta`). When the check changed the worktree, the `worktree_delta` is in the effect's own output: resolve the effect record.
 
 The finish phase parses `ai_check`'s JSON report into `ok: true`, `passed`, `error_count` and `errors` (each `code`, `message`, `file`; line and column stay inside `message`). `ok: true` means the check ran; `passed` is the verdict. When no report is produced the result is `ok: false` with `status` and `refused` (for example `the Ailang.Check effect ended denied`).
 
@@ -221,7 +276,7 @@ unknown argument "limit"; ailang-check admits only: path
 Description served in `tools/list`:
 
 ```text
-Execute an AILANG program inside this episode's worktree under the operator's policy: `ailang run --policy <policy> [--args-json J] -- <path> [-- <argv...>]`, from the worktree root, with `stdin` piped in. `caps` is the run's EXACT capability set, like the grader's `--caps` (default IO and FS): distinct names from Declassify, Env, FS, IO, Net, never Env with Net; each beyond IO and FS must also be enabled by the operator (`serve --run-allow-caps`), or the call is refused. An Env run is the effect Ailang.RunEnv and a Net run Ailang.RunNet, each needing its own session grant; any other run, Declassify included, is Ailang.Run. Net reaches only the loopback host:port pairs the operator named (`serve --run-net-allow`); every other host, port and redirect is refused. `argv` (at most 32 strings, each at most 1024 bytes, no NUL) always follows an inner `--`, so it never reaches the run's flag parser; `stdin` is text of at most 65536 bytes (absent = empty). The program's declared effect row must be a subset of the rendered policy's allowed_caps; an unrequested FS is admitted at budget 0, so it fails at first use; the run is bounded by the policy's timeout (8 s). Returns {admitted, exit_code, decision, limit, stdout, stderr, policy}; policy is {digest, security_mode, caps, net_allow} of the variant that ran. Denied programs never execute; read `decision.missing_from_policy` and narrow the program's effects or widen `caps`. A refused inner effect can still exit 0, so read stdout and stderr, not only exit_code. The program's inner effects are governed by the AILANG policy layer, not brokered one by one. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one call of its effect from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Run an episode-worktree AILANG program under policy (8 s timeout). caps is exact, default IO/FS; never Env with Net. Extra caps require operator enablement; Env/Net also require Ailang.RunEnv/Ailang.RunNet grants, otherwise Ailang.Run. Net reaches only operator-allowed loopback host:port pairs; other targets/redirects refuse. args_json supplies entrypoint JSON; stdin is text (absent=empty); argv follows inner `--` (schema limits). Declared effects must fit policy; unrequested FS has budget 0 and fails at use. Denied programs never execute: inspect decision.missing_from_policy, narrow effects or request authorized caps. An inner refusal may exit 0: inspect stdout/stderr. Inner effects use policy, not individual broker calls. Use a non-empty relative path without `..` segments or leading `-`; policy confines symlinks/protected paths. Unknown keys refuse. Returns admission, exit/limit, stdout/stderr, policy and World plan/effect refs; costs one call of its effect and commits one entry.
 ```
 
 ### Arguments
@@ -238,7 +293,7 @@ Execute an AILANG program inside this episode's worktree under the operator's po
 
 ### Result
 
-`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `policy`, `world`. `policy` is `{digest, security_mode, caps, net_allow}` of the policy the run executed under. See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.
+`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `policy`, `worktree_delta` (only when the run changed the worktree), `world`. `policy` is `{digest, security_mode, caps, net_allow}` of the policy the run executed under. See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.
 
 Which effect a call spends follows `caps`: with `Env` it is `Ailang.RunEnv`, with `Net` it is `Ailang.RunNet`, otherwise `Ailang.Run` (a `Declassify` run included). Each needs its own grant, and each capability beyond `IO` and `FS` must also be enabled by the operator (`serve --run-allow-caps`), or the handler refuses the call before anything runs (the effect is recorded `failed`). A Net run reaches only the loopback `host:port` pairs the operator named with `--run-net-allow`. See [Tool confinement](../security/tool-confinement.md#ailang-run-capabilities).
 
@@ -275,7 +330,7 @@ unknown argument "env"; ailang-run admits only: path, args_json, stdin, argv, ca
 Description served in `tools/list`:
 
 ```text
-Search the REAL builtin inventory compiled into the tool binary (policy-tool `builtins_list`, text form). Pass query (case-insensitive substring over name/module/effect; at most 10 matches) and/or module (e.g. 'std/fs'); omit both for the full list. Use this instead of guessing builtin names. Returns {count, matches}, each match {name, module, effect}. Degraded: no signature or description is returned or searched (policy-tool caps a CLI op's stdout at 64 KiB and the JSON inventory exceeds it); use ailang-cli `builtins_show` or examples-search for usage. A truncated or unparseable inventory is refused, never an empty result. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Search the tool binary's real builtin inventory; query is a case-insensitive name/module/effect substring (max 10 matches), module filters; omit both for all. Returns {count,matches:[{name,module,effect}]}; degraded: no signatures/descriptions returned or searched. Use ailang-cli builtins_show or examples-search for usage. Truncated/invalid inventory refuses, never empty success. Unknown keys refuse. Costs one Ailang.Discover; commits one entry with World plan/effect refs.
 ```
 
 ### Arguments
@@ -317,7 +372,7 @@ argument "query" must be a string
 Description served in `tools/list`:
 
 ```text
-Search the AILANG examples corpus this daemon serves (policy-tool `examples_search`; the operator's --examples-dir) for `query`, then read a hit with ailang-cli op examples_show. The op admits no flags, so there is no limit argument. Use this before writing a construct you are unsure of. Returns {ok, argv, exit_code, stdout, stderr}, or {ok:false, refused} when no corpus is configured. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Search the configured examples corpus for query; read hits with ailang-cli examples_show. No flags or limit argument. Use before guessing syntax. Returns CLI stdout/stderr or refusal if no corpus is configured. Unknown keys refuse. Costs one Ailang.Discover; commits one entry with World plan/effect refs.
 ```
 
 ### Arguments
@@ -362,7 +417,7 @@ no examples corpus configured: start ailang-worldd serve with --examples-dir DIR
 Description served in `tools/list`:
 
 ```text
-Run an allowlisted ailang operation as a typed policy-tool request. ops: agent_prompt, ai_check, axioms, builtins_list, builtins_show, check, devtools_prompt, docs_search, examples_list, examples_search, examples_show, examples_tags, fmt, iface, pkg_docs, policy_check, prompt, test, tree, version. Field by op: check/ai_check/fmt/tree/policy_check: {path}; iface/pkg_docs: {module}; docs_search/examples_search: {query}; examples_show/builtins_show: {module: <name>}; test: {path?, package?}; flags: {"json": "", "limit": "5"} only where the op admits them (boolean flags take ""). fmt's write flag is refused: ailang-cli never writes (fmt returns the formatted text; save it with ailang-write). NOT read/write/edit (their own tools) and NOT run (ailang-run). Paths and package directories follow the worktree path rule. Unknown argument keys are refused, never ignored. Returns {ok, argv, exit_code, stdout, stderr} or {ok:false, refused}. Costs one Ailang.CLI call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Run an allowlisted AILANG op: agent_prompt, ai_check, axioms, builtins_list, builtins_show, check, devtools_prompt, docs_search, examples_list, examples_search, examples_show, examples_tags, fmt, iface, pkg_docs, policy_check, prompt, test, tree, version. Arguments: path for check/ai_check/fmt/tree/policy_check; module for iface/pkg_docs/examples_show/builtins_show; query for searches; optional path/package for test. Op-admitted flags only; booleans take an empty string. Never writes: fmt write refuses; save formatted stdout with ailang-write. Paths/packages obey worktree confinement. Unknown keys refuse. Returns CLI argv/exit/stdout/stderr or refusal plus World plan/effect refs; costs one Ailang.CLI and commits one entry.
 ```
 
 ### Arguments
@@ -406,7 +461,7 @@ the operator's compatibility gate re-ran the audit on v0.54.15 with no change). 
 
 ### Result
 
-`ok`, `argv`, `exit_code`, `stdout`, `stderr`, `tool`, `policy_digest`, `world`.
+`ok`, `argv`, `exit_code`, `stdout`, `stderr`, `tool`, `policy_digest`, `worktree_delta` (only when the op changed the worktree), `world`.
 
 Output schema properties: `argv`, `exit_code`, `stdout`, `stderr`, `ok`, `refused`, `world` (required: `world`).
 
@@ -455,7 +510,7 @@ Run one command of the operator's exec profile (e.g. `test`, `vet`, `typecheck`)
 
 ### Result
 
-`exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `world`. `exit_code` is the command's own status (a signal death is 128 + n), reported, never judged; each stream keeps its first 8 KiB and last 56 KiB with its total size and sha256.
+`exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `worktree_delta` (only when the command changed the worktree), `world`. `exit_code` is the command's own status (a signal death is 128 + n), reported, never judged; each stream keeps its first 8 KiB and last 56 KiB with its total size and sha256.
 
 The operator writes the profile: the program, its fixed leading arguments, the flags and positional class `args` must match, the environment, the read roots and the timeout (at most 9 s). The command runs under `srt` with writes confined to the worktree and the episode's exec cache, your home directory, World's state and every other episode unreadable, and no network. See the operator guide, `docs/QUICKSTART.md` §10.
 

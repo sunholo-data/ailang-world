@@ -10,6 +10,16 @@
         "path": {
           "type": "string",
           "description": "File path, relative to the worktree root"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "First line, 1-based"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line count, at most 2000"
         }
       },
       "required": [
@@ -22,6 +32,15 @@
       "properties": {
         "content": {
           "type": "string"
+        },
+        "total_lines": {
+          "type": "integer"
+        },
+        "offset": {
+          "type": "integer"
+        },
+        "limit": {
+          "type": "integer"
         },
         "ok": {
           "type": "boolean"
@@ -162,6 +181,56 @@
     "declaredEffects": [
       {
         "effect": "Workspace.Write",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "ailang-delete",
+    "title": "Delete (sandboxed)",
+    "description": "Delete one episode-worktree file; a directory refuses, and a symlink is removed itself, never its target. Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Returns ok or refusal plus World plan/effect refs; costs one Workspace.Delete and commits one entry.",
+    "transitionFnFile": "packages/se-tools/se_tools/delete.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path, relative to the worktree root"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Delete",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Delete",
         "scope": "worktree",
         "cost": 1
       }

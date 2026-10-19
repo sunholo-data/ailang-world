@@ -28,6 +28,7 @@ MANIFEST = os.path.join(HERE, '..', '..', 'packages', 'se-tools', 'transitions.j
 EIGHT = ('ailang-read', 'ailang-write', 'ailang-edit', 'ailang-check', 'ailang-run',
          'builtins-search', 'examples-search', 'ailang-cli')
 EXEC_TOOL, EXEC_EFFECT = 'workspace-exec', 'Workspace.Exec'
+DELETE_TOOL, DELETE_EFFECT = 'ailang-delete', 'Workspace.Delete'
 
 
 def served():
@@ -62,10 +63,13 @@ class WorldArmToolSet(unittest.TestCase):
         self.assertEqual(arms.world_grant_args(),
                          [x for e in declared for x in ('--grant', f'{e}=worktree:5000')])
 
-    def test_the_only_served_tool_left_out_is_workspace_exec(self):
+    def test_the_served_tools_left_out_are_workspace_exec_and_delete(self):
+        # The floor's World arm is the pre-registered eight; workspace-exec
+        # (row 140) and ailang-delete (row 191a) are served but outside it.
         man = served()
-        self.assertEqual(set(man) - set(EIGHT), {EXEC_TOOL})  # non-vacuous: it IS served
+        self.assertEqual(set(man) - set(EIGHT), {EXEC_TOOL, DELETE_TOOL})  # non-vacuous: both ARE served
         self.assertEqual(man[EXEC_TOOL], (EXEC_EFFECT,))
+        self.assertEqual(man[DELETE_TOOL], (DELETE_EFFECT,))
 
     def test_world_prompt_never_mentions_exec(self):
         block = prompt.world_tools_block()

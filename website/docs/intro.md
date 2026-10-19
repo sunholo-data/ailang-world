@@ -49,8 +49,8 @@ anything happened. A provenance walk over the log answers that question.
   cloud dependency in the core. The REST listener is loopback-only.
 - **Protocol native.** Transitions are served as tools over **MCP** and published as skills
   on an **A2A** agent card. World adds no new wire protocol.
-- **Agents as residents.** A software-engineering domain serves nine coding tools (read,
-  write, edit, check, run, builtins search, examples search, CLI, and `workspace-exec`, which
+- **Agents as residents.** A software-engineering domain serves ten coding tools (read,
+  write, edit, delete, check, run, builtins search, examples search, CLI, and `workspace-exec`, which
   runs operator-profiled commands such as `go test` in a sandbox) over MCP and A2A. Every
   tool's effect goes through the broker and commits one log entry.
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -17,6 +18,59 @@ import (
 const descriptorBaselineSHA = "240840ca9a0f8f4c60ac159dd78fce26a6c681200e8a10c64fe0e08c0a228868"
 
 var descriptorFloorIDs = []string{"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search"}
+
+// descriptorAddedIDs are the tools added after the baseline: row 191a's
+// ailang-delete. Each is checked field by field in TestSeToolsDescriptorCompaction.
+var descriptorAddedIDs = []string{"ailang-delete"}
+
+// applyPostBaselineRows patches the immutable baseline with the reviewed
+// non-description changes made after it, each written out here independently
+// of the manifest, so any other drift still reds the equivalence check.
+func applyPostBaselineRows(t *testing.T, base []map[string]any) {
+	t.Helper()
+	patch := func(e map[string]any, schema, prop, raw string) {
+		var v any
+		if err := json.Unmarshal([]byte(raw), &v); err != nil {
+			t.Fatal(err)
+		}
+		e[schema].(map[string]any)["properties"].(map[string]any)[prop] = v
+	}
+	for _, e := range base {
+		switch e["id"] {
+		case "ailang-read": // row 190: ranged reads
+			patch(e, "inputSchema", "offset", `{"type":"integer","minimum":1,"description":"First line, 1-based"}`)
+			patch(e, "inputSchema", "limit", `{"type":"integer","minimum":1,"description":"Line count, at most 2000"}`)
+			for _, p := range []string{"total_lines", "offset", "limit"} {
+				patch(e, "outputSchema", p, `{"type":"integer"}`)
+			}
+		}
+	}
+}
+
+// checkAddedDescriptor is row 191a's descriptor: ailang-delete takes exactly
+// the baseline read's {path} schema, answers the baseline write's {ok,
+// refused, world}, and declares only its own Workspace.Delete triple.
+func checkAddedDescriptor(t *testing.T, e map[string]any, byID map[string]map[string]any) {
+	t.Helper()
+	want := map[string]any{
+		"id": "ailang-delete", "title": "Delete (sandboxed)", "transitionFnFile": "packages/se-tools/se_tools/delete.ail",
+		"inputSchema": byID["ailang-read"]["inputSchema"], "outputSchema": byID["ailang-write"]["outputSchema"],
+		"access":          map[string]any{"effect": "Workspace.Delete", "scope": "worktree", "cost": float64(0)},
+		"declaredEffects": []any{map[string]any{"effect": "Workspace.Delete", "scope": "worktree", "cost": float64(1)}},
+	}
+	if desc, ok := e["description"].(string); !ok || !strings.Contains(desc, "Workspace.Delete") {
+		t.Errorf("ailang-delete description %q does not name its effect", e["description"])
+	}
+	got := map[string]any{}
+	for k, v := range e {
+		if k != "description" {
+			got[k] = v
+		}
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("ailang-delete descriptor %v, want %v", got, want)
+	}
+}
 
 func descriptorEntries(t *testing.T, path string) []map[string]any {
 	t.Helper()
@@ -31,22 +85,29 @@ func descriptorEntries(t *testing.T, path string) []map[string]any {
 	return entries
 }
 
-func descriptorCensus(t *testing.T, entries []map[string]any) {
+// descriptorCensus holds a manifest to the eight floor tools, workspace-exec
+// and exactly the added tools given.
+func descriptorCensus(t *testing.T, entries []map[string]any, added []string) {
 	t.Helper()
 	ids, floor := []string{}, []string{}
+	extra := map[string]bool{"workspace-exec": true}
+	for _, id := range added {
+		extra[id] = true
+	}
 	for _, e := range entries {
 		id, ok := e["id"].(string)
 		if !ok {
 			t.Fatal("manifest census: id must be a string")
 		}
 		ids = append(ids, id)
-		if id != "workspace-exec" {
+		if !extra[id] {
 			floor = append(floor, id)
 		}
 	}
 	sort.Strings(ids)
 	sort.Strings(floor)
-	want := append(append([]string{}, descriptorFloorIDs...), "workspace-exec")
+	want := append(append(append([]string{}, descriptorFloorIDs...), "workspace-exec"), added...)
+	sort.Strings(want)
 	if !reflect.DeepEqual(ids, want) || !reflect.DeepEqual(floor, descriptorFloorIDs) {
 		t.Fatalf("manifest/floor census: got %v / %v, want %v / %v", ids, floor, want, descriptorFloorIDs)
 	}
@@ -85,22 +146,44 @@ func TestSeToolsDescriptorCompaction(t *testing.T) {
 	}
 	base := descriptorEntries(t, "testdata/se-tools-descriptor-baseline.json")
 	candidate := descriptorEntries(t, filepath.Join(seToolsRepoRoot(t), seToolsManifest))
-	descriptorCensus(t, base)
-	descriptorCensus(t, candidate)
+	descriptorCensus(t, base, nil)
+	descriptorCensus(t, candidate, descriptorAddedIDs)
 	if size, prose := descriptorBytes(t, base); size != 13947 || prose != 7430 {
 		t.Fatalf("parent descriptor bytes = %d/%d, want 13947/7430", size, prose)
 	}
-	if size, prose := descriptorBytes(t, candidate); size > 10500 || prose > 3800 {
-		t.Errorf("candidate byte budget: %d/%d exceeds 10500/3800", size, prose)
-	} else {
-		t.Logf("canonical eight-tool bytes=%d; description UTF-8 bytes=%d", size, prose)
+	// The compaction budget binds the eight floor tools, as it did at the
+	// baseline; a tool added since is measured, not budgeted against them.
+	// Row 190 moved the size bound 10500 -> 10600 for ailang-read's range
+	// schema (offset/limit in, total_lines/offset/limit out), which takes the
+	// eight tools past 10500: new arguments need schema bytes. The prose bound is unchanged, so the
+	// range is described by the schema, not the description.
+	floor := []map[string]any{}
+	for _, e := range candidate {
+		if !slices.Contains(descriptorAddedIDs, e["id"].(string)) {
+			floor = append(floor, e)
+		}
 	}
+	if size, prose := descriptorBytes(t, floor); size > 10600 || prose > 3800 {
+		t.Errorf("candidate byte budget: %d/%d exceeds 10600/3800", size, prose)
+	} else {
+		all, allProse := descriptorBytes(t, candidate)
+		t.Logf("canonical eight-tool bytes=%d; description UTF-8 bytes=%d (with added tools %d/%d)", size, prose, all, allProse)
+	}
+	pristine := map[string]map[string]any{}
+	for _, e := range descriptorEntries(t, "testdata/se-tools-descriptor-baseline.json") {
+		pristine[e["id"].(string)] = e
+	}
+	applyPostBaselineRows(t, base)
 	byID := map[string]map[string]any{}
 	for _, e := range base {
 		byID[e["id"].(string)] = e
 	}
 	for _, e := range candidate {
 		id := e["id"].(string)
+		if slices.Contains(descriptorAddedIDs, id) {
+			checkAddedDescriptor(t, e, pristine)
+			continue
+		}
 		old := byID[id]
 		if id != "workspace-exec" {
 			if e["description"] == old["description"] {
@@ -117,8 +200,11 @@ func TestSeToolsDescriptorCompaction(t *testing.T) {
 
 func TestSeToolsDescriptorSourceEquality(t *testing.T) {
 	// Raw byte hashes independently banked from the same reviewed parent; no git or external binary required in CI.
+	// Moved since, each by its own row: read.ail by row 190 (ranged reads);
+	// delete.ail is row 191a's new module.
 	hashes := map[string]string{
-		"packages/se-tools/se_tools/read.ail":            "076bd38e834b90d34bcacc3f64f5a863e2dbec04e0aa20d58bb630e874474672",
+		"packages/se-tools/se_tools/read.ail":            "00213aecddeb49c62d4aec429682cf114b58d53aadd057229ef1662e751b75cf",
+		"packages/se-tools/se_tools/delete.ail":          "084d90f35b3184af04d77893309d8453b2360dc1eb070947cb5b4d1fda47c834",
 		"packages/se-tools/se_tools/write.ail":           "2d90757c61274f6f172551f179b254178f3ccfcedd21ee7955ab2e47d364deda",
 		"packages/se-tools/se_tools/edit.ail":            "2d12856ab07f987c1d26c82b9320503e830817f27b625e7a80320b22ae32f286",
 		"packages/se-tools/se_tools/check.ail":           "440b6491de07656df8161bb69b09af82e74306fd52b2152744921720c2cbd03b",
