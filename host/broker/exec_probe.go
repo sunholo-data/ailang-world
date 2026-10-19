@@ -2,7 +2,8 @@ package broker
 
 // Row 140 M3 (design_docs/planned/w-workspace-exec-toolchain-effect.md §4.6
 // "Startup probe (fail closed)"): before `serve` enables Workspace.Exec, each
-// profile runs seven arms against ITS OWN rendered settings, with a scratch
+// profile runs seven legacy arms (plus protected-write when declared) against
+// ITS OWN rendered settings, with a scratch
 // episode in place of a worktree. Any failed arm refuses startup by name.
 // The reference implementation is M0's matrix
 // (design_docs/verification/world-row140-m0/m0_matrix.py), measured on darwin
@@ -30,16 +31,20 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 )
 
-// The seven arms (§4.6), in order. A refusal names them.
+// The legacy seven arms (§4.6), then the optional protected-write arm.
 const (
 	ExecProbeArmWriteInside  = "arm1-write-inside"
 	ExecProbeArmWriteOutside = "arm2-write-outside"
@@ -49,6 +54,8 @@ const (
 	ExecProbeArmNetwork      = "arm6-network"
 	ExecProbeArmToolchain    = "arm7-toolchain"
 )
+
+const ExecProbeArmProtectedWrite = "arm8-protected-write"
 
 // execProbeScript is the fixed probe client World's node runs (`node -e
 // <it> -- op arg …`): one token line per op. write/read try the path;
@@ -109,6 +116,7 @@ type ExecProbeArmFailure struct {
 type ExecProbeError struct {
 	Project string
 	Failed  []ExecProbeArmFailure
+	total   int
 }
 
 func (e *ExecProbeError) Error() string {
@@ -116,7 +124,11 @@ func (e *ExecProbeError) Error() string {
 	for _, f := range e.Failed {
 		parts = append(parts, f.Arm+": "+f.Why)
 	}
-	return fmt.Sprintf("exec startup probe failed for profile %q (%d of 7 arms): %s", e.Project, len(e.Failed), strings.Join(parts, "; "))
+	total := e.total
+	if total == 0 {
+		total = 7
+	}
+	return fmt.Sprintf("exec startup probe failed for profile %q (%d of %d arms): %s", e.Project, len(e.Failed), total, strings.Join(parts, "; "))
 }
 
 // FailedArms returns the failed arms' names, in arm order.
@@ -212,7 +224,7 @@ func (env *execProbeEnv) cleanup(h ExecHostPaths) {
 func execRefusalCodes(goos string) []string {
 	codes := []string{"EPERM", "EACCES", "EROFS"}
 	if goos == "linux" {
-		codes = append(codes, "ENOENT")
+		codes = append(codes, "ENOENT", "EBUSY", "EXDEV")
 	}
 	return codes
 }
@@ -344,15 +356,15 @@ func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEn
 	}
 	pp := &execProber{h: h, cwd: cwd, client: client}
 	pp.probe(ctx, env, worktree, sibling, id)
+	pp.probeProtected(ctx, hostGOOS())
 	if len(pp.failed) > 0 {
-		order := []string{ExecProbeArmWriteInside, ExecProbeArmWriteOutside, ExecProbeArmReadFence, ExecProbeArmDefaultWrite,
-			ExecProbeArmExitStatus, ExecProbeArmNetwork, ExecProbeArmToolchain}
+		order := execProbeOrder(p)
 		slices.SortStableFunc(pp.failed, func(a, b ExecProbeArmFailure) int {
 			return slices.Index(order, a.Arm) - slices.Index(order, b.Arm)
 		})
 		// One entry per arm: the first failure of each.
 		pp.failed = slices.CompactFunc(pp.failed, func(a, b ExecProbeArmFailure) bool { return a.Arm == b.Arm })
-		return &ExecProbeError{Project: p.Project, Failed: pp.failed}
+		return &ExecProbeError{Project: p.Project, Failed: pp.failed, total: len(order)}
 	}
 	return nil
 }
@@ -575,4 +587,145 @@ func pollLoopback(port int) func() bool {
 		<-finished
 		return reached.Load()
 	}
+}
+
+// execProbeOrder preserves the legacy seven arms for profiles with no protection.
+func execProbeOrder(p *ExecProfile) []string {
+	arms := []string{ExecProbeArmWriteInside, ExecProbeArmWriteOutside, ExecProbeArmReadFence, ExecProbeArmDefaultWrite,
+		ExecProbeArmExitStatus, ExecProbeArmNetwork, ExecProbeArmToolchain}
+	if len(p.Protected) > 0 {
+		arms = append(arms, ExecProbeArmProtectedWrite)
+	}
+	return arms
+}
+
+// execProbeProtectedSample constructs a witness using the grammar's own matcher.
+func execProbeProtectedSample(pattern string) (string, error) {
+	if _, err := parseProtectedEntry(0, pattern); err != nil {
+		return "", err
+	}
+	if strings.HasSuffix(pattern, "/**") {
+		return strings.TrimSuffix(pattern, "/**") + "/world-probe", nil
+	}
+	name := regexp.MustCompile(`\[[^]]*\]|[?*]`).ReplaceAllStringFunc(pattern, func(glob string) string {
+		if glob == "*" || glob == "?" {
+			return "x"
+		}
+		for c := rune(32); c <= utf8.MaxRune; c++ {
+			if c == '/' {
+				continue
+			}
+			if ok, _ := path.Match(foldProtectedKey(glob), foldProtectedKey(string(c))); ok {
+				return string(c)
+			}
+		}
+		return ""
+	})
+	if name == "." || name == ".." || !matchProtected([]string{pattern}, name) {
+		return "", fmt.Errorf("unsupported probe specimen for %q", pattern)
+	}
+	return name, nil
+}
+
+// probeProtected owns only scratch worktree data. goos makes the Linux oracle
+// testable on Darwin without changing the host's sandbox rendering.
+func (pp *execProber) probeProtected(ctx context.Context, goos string) {
+	if !slices.Contains(execProbeOrder(pp.h.profile), ExecProbeArmProtectedWrite) {
+		return
+	}
+	if err := pp.protectedProbe(ctx, goos); err != nil {
+		pp.fail(ExecProbeArmProtectedWrite, "%v", err)
+	}
+}
+
+func (pp *execProber) protectedProbe(ctx context.Context, goos string) error {
+	root := pp.h.worktree
+	git, err := exec.LookPath("git")
+	if err != nil {
+		return err
+	}
+	var targets []string
+	var basename string
+	seen := map[bool]bool{}
+	for _, pattern := range pp.h.profile.Protected {
+		directory := strings.HasSuffix(pattern, "/**")
+		if seen[directory] {
+			continue
+		}
+		seen[directory] = true
+		sample, err := execProbeProtectedSample(pattern)
+		if err != nil {
+			return err
+		}
+		if !directory {
+			// Keep basename witnesses outside every protected directory.
+			for i := 0; ; i++ {
+				parent := fmt.Sprintf("world-probe-base-%d", i)
+				dirs := []string{}
+				for _, p := range pp.h.profile.Protected {
+					if strings.HasSuffix(p, "/**") {
+						dirs = append(dirs, p)
+					}
+				}
+				if !matchProtected(dirs, parent) {
+					sample = parent + "/" + sample
+					break
+				}
+			}
+			basename = filepath.Join(root, sample)
+		}
+		target := filepath.Join(root, sample)
+		if err := os.MkdirAll(filepath.Dir(target), 0700); err != nil {
+			return err
+		}
+		// Prove both creation and modification unsandboxed, then restore baseline.
+		for _, text := range []string{"control", "BASE"} {
+			if err := os.WriteFile(target, []byte(text), 0600); err != nil {
+				return err
+			}
+		}
+		targets = append(targets, target)
+	}
+	// No source-repository Git writes: this is the dedicated scratch episode.
+	for _, args := range [][]string{{"init", "-q", "--template="}, {"add", "-A"},
+		{"-c", "user.name=World probe", "-c", "user.email=probe@world.invalid", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgSign=false", "commit", "-qm", "probe base", "--allow-empty"}} {
+		if _, err := runWorktreeGit(ctx, git, root, args...); err != nil {
+			return err
+		}
+	}
+	base, err := runWorktreeGit(ctx, git, root, "rev-parse", "HEAD")
+	if err != nil {
+		return err
+	}
+	for _, target := range targets {
+		r := pp.run(ctx, []string{pp.client, "-e", execProbeScript, "--", "write", target}, true, execProbeRunBudget)
+		if goos == "linux" && target == basename {
+			if r.token(0) != "WORLD-PROBE-WROTE" {
+				return fmt.Errorf("linux basename: missing success token (%s)", r.describe())
+			}
+			checked := checkProtected(ctx, git, root, strings.TrimSpace(string(base)), pp.h.profile.Protected, nil)
+			if checked.err != nil || checked.intact == nil || *checked.intact {
+				return fmt.Errorf("linux detection must report intact=false: intact=%v error=%v", checked.intact, checked.err)
+			}
+		} else {
+			got, ok := fileText(target)
+			if !execFileRefusal(r.token(0)) || !ok || got != "BASE" {
+				return fmt.Errorf("protected modification: token %q host unchanged=%t (%s)", r.token(0), ok && got == "BASE", r.describe())
+			}
+		}
+	}
+	if goos == "darwin" && basename != "" {
+		target := filepath.Join(filepath.Dir(basename), "new", filepath.Base(basename))
+		if err := os.MkdirAll(filepath.Dir(target), 0700); err != nil {
+			return err
+		}
+		if err := controlWrite(target); err != nil {
+			return err
+		}
+		r := pp.run(ctx, []string{pp.client, "-e", execProbeScript, "--", "write", target}, true, execProbeRunBudget)
+		if !execFileRefusal(r.token(0)) || !absent(target) {
+			return fmt.Errorf("protected creation: token %q host absent=%t (%s)", r.token(0), absent(target), r.describe())
+		}
+	}
+	return nil
 }
