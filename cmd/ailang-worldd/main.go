@@ -393,6 +393,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return runEpisode(rest[1:], stdout, stderr)
 
+	case "profile": // row 189 M4: profile_init.go
+		return runProfile(rest[1:], stdout, stderr)
+
 	case "help":
 		fmt.Fprint(stdout, usage)
 		return exitOK
