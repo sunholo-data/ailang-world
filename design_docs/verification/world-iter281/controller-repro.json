@@ -1,0 +1,50 @@
+[
+  {
+    "label": "ascii-dir",
+    "path": "tests/x.py",
+    "spec": ":(top,glob,icase)tests/**",
+    "unfiltered": [
+      "tests/x.py"
+    ],
+    "selected": [
+      "tests/x.py"
+    ],
+    "status_selected": " M tests/x.py\u0000",
+    "status_unfiltered": " M tests/x.py\u0000"
+  },
+  {
+    "label": "long-s",
+    "path": "teſts/x.py",
+    "spec": ":(top,glob,icase)tests/**",
+    "unfiltered": [
+      "teſts/x.py"
+    ],
+    "selected": [],
+    "status_selected": "",
+    "status_unfiltered": " M teſts/x.py\u0000"
+  },
+  {
+    "label": "ascii-k",
+    "path": "pkg/k_test.go",
+    "spec": ":(top,glob,icase)**/*k_test.go",
+    "unfiltered": [
+      "pkg/k_test.go"
+    ],
+    "selected": [
+      "pkg/k_test.go"
+    ],
+    "status_selected": " M pkg/k_test.go\u0000",
+    "status_unfiltered": " M pkg/k_test.go\u0000"
+  },
+  {
+    "label": "kelvin",
+    "path": "pkg/K_test.go",
+    "spec": ":(top,glob,icase)**/*k_test.go",
+    "unfiltered": [
+      "pkg/K_test.go"
+    ],
+    "selected": [],
+    "status_selected": "",
+    "status_unfiltered": " M pkg/K_test.go\u0000"
+  }
+]
