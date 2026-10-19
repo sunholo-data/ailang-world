@@ -185,6 +185,7 @@ LEG1_MODULES=(
   packages/se-tools/se_tools/builtins_search.ail
   packages/se-tools/se_tools/check.ail
   packages/se-tools/se_tools/cli.ail
+  packages/se-tools/se_tools/delete.ail
   packages/se-tools/se_tools/edit.ail
   packages/se-tools/se_tools/examples_search.ail
   packages/se-tools/se_tools/exec.ail
@@ -350,8 +351,11 @@ REQUIRED_VERIFIED = {
     # carries the contracted path predicate, its own L-ARGS key law and the convention-v2
     # input-key law. Outside world/, so excluded from the total below: gated by name
     # without moving the S8 floor.
-    "packages/se-tools/se_tools/read.ail":            SE_CORE,
+    # Row 190: ailang-read's range-value law.
+    "packages/se-tools/se_tools/read.ail":            SE_CORE | {"lineArgOk"},
     "packages/se-tools/se_tools/write.ail":           SE_CORE,
+    # Row 191a: ailang-delete, the Workspace.Delete tool.
+    "packages/se-tools/se_tools/delete.ail":          SE_CORE,
     "packages/se-tools/se_tools/edit.ail":            SE_CORE,
     "packages/se-tools/se_tools/check.ail":           SE_CORE,
     "packages/se-tools/se_tools/run.ail":             SE_CORE | {"capAllowed", "runEffect", "stdinBytesOk",
@@ -535,14 +539,14 @@ print("   ✓ all %d required named tests pass (failed_tests=0)" % EXACT_TOTAL_T
 PY
 
 # ── Leg 2b — se-tools named inline tests (queue row 134 M5), one bounded run PER MODULE ──
-# The 9 modules repeat their shared core (self-contained sources: publication refuses a local
+# The 10 modules repeat their shared core (self-contained sources: publication refuses a local
 # import), so their BARE test names collide by design (pathOk_test_1 in every module, V22) —
 # directory mode would merge them. Each module therefore runs alone, from its source root, and
 # its exact name set is asserted: every `f_test_1..n` for the hardcoded per-function counts,
 # status pass, failed_tests==0, and len(tests[]) equal to the sum (no extra, none missing).
 # `main_test_*` pins each tool's exact plan / refusal / finish bytes.
 echo "── Leg 2b: se-tools named inline tests (per module)"
-SE_TEST_MODULES=(builtins_search check cli edit examples_search exec read run write)
+SE_TEST_MODULES=(builtins_search check cli delete edit examples_search exec read run write)
 se_tests_total=0
 for se_mod in "${SE_TEST_MODULES[@]}"; do
   ( cd packages/se-tools && run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json "se_tools/$se_mod.ail" )
@@ -561,11 +565,12 @@ SE_TESTS = {  # per module: function -> number of named inline tests
                             isHeader=5, isTruncated=2, main=18),
     "check":           dict(SE_CORE_TESTS, argKeyAllowed=3, main=11),
     "cli":             dict(SE_CORE_TESTS, argKeyAllowed=6, cliOpAllowed=9, writeFlag=5, main=18),
+    "delete":          dict(SE_CORE_TESTS, argKeyAllowed=5, main=12),
     "edit":            dict(SE_CORE_TESTS, argKeyAllowed=5, main=8),
     "examples_search": dict(SE_CORE_TESTS, argKeyAllowed=3, main=6),
     "exec":            dict(SE_CORE_TESTS, argKeyAllowed=6, commandIdByteOk=13, commandIdOk=8, argOk=5,
                             argsOk=4, main=23),
-    "read":            dict(SE_CORE_TESTS, argKeyAllowed=4, main=10),
+    "read":            dict(SE_CORE_TESTS, argKeyAllowed=7, lineArgOk=5, main=17),
     "run":             dict(SE_CORE_TESTS, argKeyAllowed=8, capAllowed=8, runEffect=3, stdinBytesOk=3,
                             argvCountOk=3, argBytesOk=3, main=30),
     "write":           dict(SE_CORE_TESTS, argKeyAllowed=4, main=8),
@@ -599,7 +604,7 @@ PY
   ) || exit 1
   se_tests_total=$((se_tests_total + se_n))
 done
-EXACT_SE_TESTS=444
+EXACT_SE_TESTS=496
 if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
   echo "✗ se-tools test leg: expected exactly $EXACT_SE_TESTS named tests across ${#SE_TEST_MODULES[@]} modules, got $se_tests_total" >&2
   exit 1

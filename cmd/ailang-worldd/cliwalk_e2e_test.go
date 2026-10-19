@@ -106,7 +106,8 @@ func newCLISeRig(t *testing.T, genesis bool) cliSeRig {
 	now := time.Now().Unix()
 	var grants []broker.Capability
 	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
-		broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI, broker.EffectWorkspaceExec} {
+		broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI, broker.EffectWorkspaceExec,
+		broker.EffectWorkspaceDelete} {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
 	}
 	tok, _, _, err := authority.Mint(ctx, st, "ep1", grants, 3600, now, nil)
@@ -180,7 +181,7 @@ func publishSeToolsCLI(t *testing.T, st *store.Store, db string, interp hashref.
 			InputSchema: in, OutputSchema: out, Access: e.Access, DeclaredEffects: e.DeclaredEffects, Title: e.Title, Description: e.Description}
 		changes = append(changes, transitionreg.Change{ID: e.ID, Descriptor: &desc})
 	}
-	if _, err := pub.PublishSet(ctx, changes); err != nil || len(changes) != 9 {
+	if _, err := pub.PublishSet(ctx, changes); err != nil || len(changes) != 10 {
 		t.Fatalf("PublishSet: %v (%d changes)", err, len(changes))
 	}
 }
@@ -194,10 +195,10 @@ func TestCLIAgainstSeToolsDaemon(t *testing.T) {
 	t.Logf("$ ailang-worldd tools list --session <file>")
 	code, stdout, stderr := runCLI(t, r.url, "tools", "list", "--session", r.session)
 	t.Logf("%s", stdout)
-	if code != exitOK || !strings.HasSuffix(stdout, "9 tool(s)\n") {
+	if code != exitOK || !strings.HasSuffix(stdout, "10 tool(s)\n") {
 		t.Fatalf("AC1.3 tools list: exit %d %q %q", code, stdout, stderr)
 	}
-	for _, name := range []string{"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search", "workspace-exec"} {
+	for _, name := range []string{"ailang-check", "ailang-cli", "ailang-delete", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search", "workspace-exec"} {
 		if !strings.Contains(stdout, name+" ") {
 			t.Fatalf("tools list lacks %s", name)
 		}
@@ -240,10 +241,10 @@ func TestCLIAgainstSeToolsDaemon(t *testing.T) {
 
 	// A plan refusal (L-ARGS) commits with no effects: 6 links, all ✓; exit
 	// 0 by default, 3 under --strict (D-CLI-3).
-	if code, _, _ := runCLI(t, r.url, "call", "ailang-read", "--session", r.session, "--arg", "path=data.txt", "--arg-json", "limit=5"); code != exitOK {
+	if code, _, _ := runCLI(t, r.url, "call", "ailang-read", "--session", r.session, "--arg", "path=data.txt", "--arg-json", "lines=5"); code != exitOK {
 		t.Fatalf("committed refusal exit %d", code)
 	}
-	if code, _, _ := runCLI(t, r.url, "call", "ailang-read", "--session", r.session, "--arg", "path=data.txt", "--arg-json", "limit=5", "--strict"); code != exitIntegrity {
+	if code, _, _ := runCLI(t, r.url, "call", "ailang-read", "--session", r.session, "--arg", "path=data.txt", "--arg-json", "lines=5", "--strict"); code != exitIntegrity {
 		t.Fatalf("--strict committed refusal exit %d", code)
 	}
 	code, stdout, _ = whyRun(t, r.url, "", "head")

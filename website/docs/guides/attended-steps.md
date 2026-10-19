@@ -76,8 +76,8 @@ Type exactly, to proceed with an IRREVERSIBLE public write:
 supersede it. Its phrase names the descriptor count and the store; for the se-tools manifest:
 
 ```text
-Type exactly, to write a LOCAL transition-registry revision (9 descriptor(s) from packages/se-tools/transitions.json):
-  publish 9 transitions to /tmp/se-world/world.db
+Type exactly, to write a LOCAL transition-registry revision (10 descriptor(s) from packages/se-tools/transitions.json):
+  publish 10 transitions to /tmp/se-world/world.db
 >
 ```
 

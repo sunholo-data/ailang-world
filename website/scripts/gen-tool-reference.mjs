@@ -43,9 +43,19 @@ const NOTES = {
   "ailang-read": {
     handlerOp: "policy-tool `read`",
     finish: false,
-    example: { path: "hello.ail" },
-    result: "`ok`, `content`, `tool` (the tool binary ref), `policy_digest`, `world`.",
-    refusals: [PATH_RULE, 'missing required argument "path"', 'argument "path" must be a string'],
+    example: { path: "docs/big.md", offset: 201, limit: 100 },
+    result:
+      "`ok`, `content`, `tool` (the tool binary ref), `policy_digest`, `world`. " +
+      "A ranged read (`offset` and/or `limit`) also returns `total_lines` (the file's line count), `offset` and `limit` (the lines returned). " +
+      "The tool binary clamps `limit` to 2000 (and to the end of the file), and an `offset` past the end returns no `content`.",
+    refusals: [
+      PATH_RULE,
+      'missing required argument "path"',
+      'argument "path" must be a string',
+      'argument "offset" must be an integer',
+      'argument "limit" must be an integer >= 1 (got 0)',
+      'unknown argument "lines"; ailang-read admits only: path, offset, limit',
+    ],
     policy: [
       'read /etc/hosts: path "/etc/hosts" escapes sandbox "<worktree>"',
       "read nope.ail: openat nope.ail: no such file or directory",
@@ -77,13 +87,28 @@ const NOTES = {
       "edit hello.ail: old_text not found — the file may have changed; read it again",
     ],
   },
+  "ailang-delete": {
+    handlerOp: "policy-tool `delete`",
+    finish: false,
+    example: { path: "tmp/helper_test.go" },
+    result: "`ok`, `tool`, `policy_digest`, `world`. A symlink is removed itself, never its target.",
+    refusals: [PATH_RULE, 'missing required argument "path"', 'unknown argument "recursive"; ailang-delete admits only: path'],
+    policy: [
+      'delete .github/ci.yml: matches fs_deny_write ".github/**" — read-only under this policy',
+      "delete .git: .git/ is read-only to the lane's tools",
+      "delete tmp: is a directory — delete removes one file at a time",
+      "delete nope.txt: statat nope.txt: no such file or directory",
+    ],
+  },
   "ailang-check": {
     handlerOp: "policy-tool `ai_check`",
     finish: true,
     finishText:
       "The finish phase parses `ai_check`'s JSON report into `ok: true`, `passed`, `error_count` and `errors` (each `code`, `message`, `file`; line and column stay inside `message`). `ok: true` means the check ran; `passed` is the verdict. When no report is produced the result is `ok: false` with `status` and `refused` (for example `the Ailang.Check effect ended denied`).",
     example: { path: "hello.ail" },
-    result: "`ok`, `passed`, `error_count`, `errors`, `world` (the finish output; no `tool` or `policy_digest`).",
+    result:
+      "`ok`, `passed`, `error_count`, `errors`, `world` (the finish output; no `tool`, `policy_digest` or `worktree_delta`). " +
+      "When the check changed the worktree, the `worktree_delta` is in the effect's own output: resolve the effect record.",
     refusals: [PATH_RULE, 'unknown argument "limit"; ailang-check admits only: path'],
     policy: [],
   },
@@ -94,7 +119,7 @@ const NOTES = {
     finish: false,
     example: { path: "benchmark/solution.ail", caps: ["IO"], stdin: "1\n2\n3\n4\n5\n" },
     result:
-      "`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `policy`, `world`. `policy` is `{digest, security_mode, caps, net_allow}` of the policy the run executed under. " +
+      "`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `policy`, `worktree_delta` (only when the run changed the worktree), `world`. `policy` is `{digest, security_mode, caps, net_allow}` of the policy the run executed under. " +
       "See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.\n\n" +
       "Which effect a call spends follows `caps`: with `Env` it is `Ailang.RunEnv`, with `Net` it is `Ailang.RunNet`, otherwise `Ailang.Run` (a `Declassify` run included). " +
       "Each needs its own grant, and each capability beyond `IO` and `FS` must also be enabled by the operator (`serve --run-allow-caps`), or the handler refuses the call before anything runs (the effect is recorded `failed`). " +
@@ -138,7 +163,7 @@ const NOTES = {
     handlerOp: "policy-tool, `op` from the binary's `cli` list",
     finish: false,
     example: { op: "iface", module: "std/io", flags: { compact: "" } },
-    result: "`ok`, `argv`, `exit_code`, `stdout`, `stderr`, `tool`, `policy_digest`, `world`.",
+    result: "`ok`, `argv`, `exit_code`, `stdout`, `stderr`, `tool`, `policy_digest`, `worktree_delta` (only when the op changed the worktree), `world`.",
     refusals: [
       'op "read" is not an ailang-cli op; reads, writes and edits have their own tools, and run is ailang-run',
       'op "fmt" flag "write" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)',
@@ -156,7 +181,7 @@ const NOTES = {
     finish: false,
     example: { command: "test", args: ["-run", "TestLex", "./internal/lexer/"] },
     result:
-      "`exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `world`. " +
+      "`exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `worktree_delta` (only when the command changed the worktree), `world`. " +
       "`exit_code` is the command's own status (a signal death is 128 + n), reported, never judged; each stream keeps its first 8 KiB and last 56 KiB with its total size and sha256.\n\n" +
       "The operator writes the profile: the program, its fixed leading arguments, the flags and positional class `args` must match, the environment, the read roots and the timeout (at most 9 s). " +
       "The command runs under `srt` with writes confined to the worktree and the episode's exec cache, your home directory, World's state and every other episode unreadable, and no network. " +
@@ -196,7 +221,7 @@ const out = (s = "") => lines.push(s);
 out("---");
 out("title: Tool reference");
 out("sidebar_position: 3");
-out("description: The nine AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.");
+out(`description: The ${tools.length} AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.`);
 out("---");
 out();
 out("# Tool reference");
@@ -223,7 +248,7 @@ for (const t of tools) {
 }
 out();
 out(
-  "Seven grants cover the nine tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, the two searches share `Ailang.Discover`, and `workspace-exec` has its own `Workspace.Exec`. " +
+  `${new Set(tools.map((t) => t.access.effect)).size} grants cover the ${tools.length} tools: \`ailang-write\` and \`ailang-edit\` share \`Workspace.Write\`, the two searches share \`Ailang.Discover\`, and \`ailang-delete\` and \`workspace-exec\` have their own \`Workspace.Delete\` and \`Workspace.Exec\` (deleting is a different authority from writing). ` +
     "Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. " +
     "`tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.",
 );
@@ -266,7 +291,10 @@ for (const t of tools) {
   out(`\`additionalProperties\` is \`${t.inputSchema.additionalProperties}\`: any other key is refused.`);
   out();
   if (t.id === "ailang-cli") {
-    out("Admitted ops and their flags (v0.52.1 tool binary). Pass flags as `{\"name\": \"value\"}`; boolean flags take `\"\"`.");
+    out(
+      "Admitted ops and their flags (World's audited set, first audited on the v0.52.1 tool binary;\n" +
+        "the operator's compatibility gate re-ran the audit on v0.54.15 with no change). Pass flags as `{\"name\": \"value\"}`; boolean flags take `\"\"`.",
+    );
     out();
     out("| `op` | Fields | Admitted flags |");
     out("|---|---|---|");
