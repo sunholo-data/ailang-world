@@ -199,8 +199,8 @@ func TestVersionThreeStoreIsRefusedUnmodified(t *testing.T) {
 			_ = s.Close()
 		}
 		var legacy *LegacySchemaVersionError
-		if !errors.As(err, &legacy) || legacy.Found != 3 || legacy.Current != 4 {
-			t.Fatalf("%s: err = %v, want legacy Found=3 Current=4", open.name, err)
+		if !errors.As(err, &legacy) || legacy.Found != 3 || legacy.Current != 5 {
+			t.Fatalf("%s: err = %v, want legacy Found=3 Current=5", open.name, err)
 		}
 	}
 	db = rawDB(t, path)

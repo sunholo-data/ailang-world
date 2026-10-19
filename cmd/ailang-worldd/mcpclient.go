@@ -218,7 +218,7 @@ func denialHint(body string) string {
 	case strings.Contains(body, "malformed"):
 		return "the session file must hold exactly one 64-hex token"
 	case strings.Contains(body, "expired"):
-		return "the session has expired: mint a new one (`ailang-worldd session mint`, daemon stopped)"
+		return "the session has expired: mint a new one (`ailang-worldd session new` at a terminal; the daemon may keep running)"
 	case strings.Contains(body, "unknown"):
 		return "this daemon's store does not know that credential: check --addr and that the session was minted into this --db (it may have been revoked)"
 	default:

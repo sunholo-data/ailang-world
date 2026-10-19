@@ -110,7 +110,7 @@ func newCLISeRig(t *testing.T, genesis bool) cliSeRig {
 		broker.EffectWorkspaceDelete} {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
 	}
-	tok, _, _, err := authority.Mint(ctx, st, "ep1", grants, 3600, now, nil)
+	tok, _, _, err := authority.Mint(ctx, credsFor(t, db), "ep1", grants, 3600, now, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

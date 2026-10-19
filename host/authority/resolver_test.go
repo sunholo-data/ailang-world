@@ -14,19 +14,20 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
-// newTestStore opens an in-memory store with the full (v3) schema.
-func newTestStore(t *testing.T) *store.Store {
+// newTestStore opens an in-memory credentials store (row 189: credentials no
+// longer live in the world store).
+func newTestStore(t *testing.T) *store.Credentials {
 	t.Helper()
-	st, err := store.Open(":memory:")
+	st, err := store.OpenCredentials(":memory:")
 	if err != nil {
-		t.Fatalf("open in-memory store: %v", err)
+		t.Fatalf("open in-memory credentials store: %v", err)
 	}
 	t.Cleanup(func() { _ = st.Close() })
 	return st
 }
 
 // mintTestToken mints a credential for a test and returns just the raw token.
-func mintTestToken(t *testing.T, st *store.Store, episode string, grants []broker.Capability, ttl, now int64) string {
+func mintTestToken(t *testing.T, st *store.Credentials, episode string, grants []broker.Capability, ttl, now int64) string {
 	t.Helper()
 	tok, _, _, err := Mint(boundedTestContext(t), st, episode, grants, ttl, now, io.Discard)
 	if err != nil {

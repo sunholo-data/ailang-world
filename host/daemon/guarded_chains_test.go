@@ -45,13 +45,19 @@ func TestGuardedStartupChain(t *testing.T) {
 }
 
 func TestGuardedCredentialLookupChain(t *testing.T) {
-	s, err := store.Open(filepath.Join(t.TempDir(), "world.db"))
+	dir := t.TempDir()
+	s, err := store.Open(filepath.Join(dir, "world.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer s.Close()
-	d := &Daemon{store: s}
-	d.resolver = authority.New(d.store)
+	credPath := filepath.Join(dir, store.CredentialsFileName)
+	if err := ensureCredentialsStore(credPath); err != nil {
+		t.Fatal(err)
+	}
+	// The production resolver shape (row 189): a read-only open per lookup.
+	d := &Daemon{store: s, credentialsPath: credPath}
+	d.resolver = authority.New(authority.ReadOnlyAt(d.credentialsPath))
 	header := "Bearer " + strings.Repeat("a", 64)
 	if _, err := d.resolver.ResolveContext(context.Background(), header, 0); !errors.Is(err, store.ErrNoDeadline) {
 		t.Fatalf("unbounded lookup = %v", err)

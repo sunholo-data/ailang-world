@@ -217,6 +217,28 @@ Option A is what row 188 (a desktop approval) and row 196 (delegated minting for
 - **M5:** the plugin: two skills, three commands, marketplace manifest, and the CI help-check.
 - **M6:** docs (QUICKSTART §0 and a new "Use World on your repo" page), then the AC7 attended run.
 
+## 8a. M0 findings (row 189, 2026-10-19, read before the M1 change; lines are pre-change)
+
+- **No join (C stands, B not needed).** The only statements on `session_credentials` were the four
+  credential methods, each alone in its own statement or transaction: INSERT `store.go:1317`
+  (`MintSession`, `:1300`), point SELECT `:1341` (`ResolveSession`), DELETE `:1370`
+  (`RevokeSession`), list SELECT `:1398` (`ListSessions`). `Commit` (`store.go:1076`) and the
+  journal never name it; `schema.sql:107` has no `REFERENCES` to or from it (the only foreign keys
+  are `commit_objects`, `schema.sql:121-122`) and the schema has no triggers.
+- **Budget does not live on the credential row.** `grants_json` (with each grant's minted `Budget`)
+  is written once at mint (`authority/mint.go:52-64`) and never updated. The remaining budget is
+  computed in Go, never in SQL: `coordinator/effectful.go:105-117` (`seedGrants`) subtracts the
+  episode's durable spend, which `store/journal.go:1079-1111` (`EffectSpend`) sums from the world
+  journal's effect intents. `broker/broker.go:94-97` debits only the in-memory session.
+  `cmd/ailang-worldd/demo_seed.go:151-169` does the same subtraction. Spend stays in the world store
+  and nothing moves with the credential.
+- **`/v1/health` today** (`host/daemon/daemon.go:569-590`, handler `:973-981`): `status`,
+  `daemon_version` (the constant `Version = "0.1.0"`, `daemon.go:70`, not a build id), `db_path`,
+  `interpreter_ref`, `interpreter_version` and `degraded_episodes`. It reports **no** tool-binary
+  pin (the daemon knows `workspace.binRef`, `daemon.go:693`, but does not return it), no VCS revision
+  or build id, no exec-profile digests and no credentials path. AC3 needs at least the tool ref and
+  a build identity added.
+
 ## 9. V-rows
 
 | # | claim | evidence |

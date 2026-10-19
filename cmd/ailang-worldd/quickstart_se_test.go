@@ -20,7 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -186,14 +185,9 @@ func TestSessionMintGrantsExpireWithTheSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	st, err := store.Open(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = st.Close() }()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	res, err := authority.New(st).ResolveContext(ctx, "Bearer "+string(token), now)
+	res, err := daemonView(t, db).ResolveContext(ctx, "Bearer "+string(token), now)
 	if err != nil || res.Success == nil || len(res.Success.Caps) != 2 {
 		t.Fatalf("resolve = %+v %v", res, err)
 	}

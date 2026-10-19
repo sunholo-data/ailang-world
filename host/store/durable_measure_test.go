@@ -55,6 +55,7 @@ func TestMeasureDurableOps(t *testing.T) {
 		})
 	}
 	s := openFileStore(t)
+	creds := openTestCredentials(t)
 	genesis := seedGenesis(t, s)
 	head := genesis
 	for i := 0; i < measureN; i++ {
@@ -81,11 +82,11 @@ func TestMeasureDurableOps(t *testing.T) {
 		timeIt("GetObject", func() error { _, _, err := s.GetObject(ctx, body.Hash); return err })
 		timeIt("SelectedHead", func() error { _, _, err := s.SelectedHead(ctx); return err })
 		cred := fmt.Sprintf("cred-%d", i)
-		if err := s.MintSession(boundedTestContext(t), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
+		if err := creds.MintSession(boundedTestContext(t), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
 			ExpiresAt: 1 << 40, CreatedAt: 1}); err != nil {
 			t.Fatal(err)
 		}
-		timeIt("ResolveSession", func() error { _, _, err := s.ResolveSession(ctx, cred); return err })
+		timeIt("ResolveSession", func() error { _, _, err := creds.ResolveSession(ctx, cred); return err })
 		timeIt("BeginTx+Rollback (uncontended acquisition)", func() error {
 			tx, err := s.db.BeginTx(ctx, nil)
 			if err != nil {
@@ -124,6 +125,7 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		samples[name] = append(samples[name], time.Since(start))
 	}
 	s := openFileStore(t)
+	creds := openTestCredentials(t)
 	genesis := seedGenesis(t, s)
 	for i := 0; i < MaxPendingIntentsPage; i++ {
 		c := journalCommitFixture(t, s, fmt.Sprintf("p-%d", i))
@@ -173,10 +175,10 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		})
 		cred := "mint-" + id
 		timeIt("MintSession", func() error {
-			return s.MintSession(boundedTestContext(t), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
+			return creds.MintSession(boundedTestContext(t), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
 				ExpiresAt: 1 << 40, CreatedAt: 1})
 		})
-		timeIt("RevokeSession", func() error { return s.RevokeSession(ctx, cred) })
+		timeIt("RevokeSession", func() error { return creds.RevokeSession(ctx, cred) })
 		var effectID string
 		timeIt("AppendNextEffectIntent", func() error {
 			var err error

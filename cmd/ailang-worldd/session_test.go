@@ -91,13 +91,11 @@ func TestSessionMint_PrintsOnceExactly(t *testing.T) {
 		t.Fatalf("stderr does not name credential_id for revocation: %q", stderr.String())
 	}
 
-	// Exactly one row persisted, and it resolves.
-	st, err := store.Open(db)
-	if err != nil {
-		t.Fatalf("reopen store: %v", err)
+	// Exactly one row persisted, and it resolves the way the daemon reads it.
+	if rows := credRows(t, db); len(rows) != 1 {
+		t.Fatalf("%d credential rows, want 1", len(rows))
 	}
-	defer func() { _ = st.Close() }()
-	out := resolveNow(t, authority.New(st), "Bearer "+tok, 1001)
+	out := resolveNow(t, daemonView(t, db), "Bearer "+tok, 1001)
 	if out.Success == nil || out.Success.EpisodeID != "e1" {
 		t.Fatalf("minted token did not resolve to episode e1: %#v", out)
 	}
@@ -264,12 +262,7 @@ func TestSessionRevokeCLI(t *testing.T) {
 
 	// The token now resolves as UNKNOWN (delete-from-mapping = unknown, D4).
 	tok := hex64TokenRegex.FindString(mintOut.String())
-	st, err := store.Open(db)
-	if err != nil {
-		t.Fatalf("reopen store: %v", err)
-	}
-	defer func() { _ = st.Close() }()
-	outR := resolveNow(t, authority.New(st), "Bearer "+tok, 1001)
+	outR := resolveNow(t, daemonView(t, db), "Bearer "+tok, 1001)
 	if outR.Success != nil || outR.Denied == nil || *outR.Denied != authority.DenialUnknown {
 		t.Fatalf("post-revoke resolve = %#v, want DenialUnknown", outR)
 	}

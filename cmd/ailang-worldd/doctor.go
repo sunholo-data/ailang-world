@@ -296,10 +296,10 @@ func doctorStore(r *doctorReport, db, healthDB string) {
 		r.add(markFail, "store", fmt.Sprintf("writer lock probe: %v", lockErr), "")
 	case held && healthDB != "" && sameStorePath(healthDB, db):
 		r.add(markWarn, "store", "writer lock held by the running daemon",
-			"stop it before world-publish, session new/mint and session revoke (they need the writer lock)")
+			"stop it before world-publish (it needs the world writer lock); session new/mint/revoke use the credentials store's own lock and work while it serves")
 	case held:
 		r.add(markWarn, "store", "writer lock held by another process",
-			"stop that writer before world-publish, session new/mint and session revoke")
+			"stop that writer before world-publish; session new/mint/revoke use the credentials store's own lock")
 	default:
 		r.add(markOK, "store", "writer lock free ("+db+")", "")
 	}

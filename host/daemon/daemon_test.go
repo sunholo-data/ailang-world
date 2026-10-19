@@ -1058,7 +1058,7 @@ func mintSessionGrants(t *testing.T, d *Daemon, episode string, effects ...strin
 	for _, e := range effects {
 		grants = append(grants, broker.Capability{Effect: e, Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10})
 	}
-	tok, _, _, err := authority.Mint(boundedTestContext(t), d.store, episode, grants, 3600, time.Now().Unix(), nil)
+	tok, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), episode, grants, 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint session: %v", err)
 	}
@@ -1118,8 +1118,8 @@ func TestCardDenial_ByteIdenticalToCommitMiddleware(t *testing.T) {
 		"Token abc",                         // malformed -> 400 InvalidSession
 		"Bearer z",                          // malformed (bad token shape)
 	}
-	// Also an EXPIRED credential, minted against the daemon's own store.
-	expiredTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-expired",
+	// Also an EXPIRED credential, minted into the credentials store the daemon reads.
+	expiredTok, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "ep-expired",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
 	if err != nil {
 		t.Fatalf("mint expired: %v", err)
@@ -1147,7 +1147,7 @@ func TestCardDenial_ByteIdenticalToCommitMiddleware(t *testing.T) {
 // as literals, asserted pairwise distinct.
 func TestCardDenial_ExactClassAndMessagePerKind(t *testing.T) {
 	d := newHandlerDaemon(t)
-	expiredTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-expired",
+	expiredTok, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "ep-expired",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
 	if err != nil {
 		t.Fatalf("mint expired: %v", err)

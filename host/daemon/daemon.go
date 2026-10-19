@@ -218,6 +218,12 @@ type Config struct {
 	// DBPath is the world store database. The daemon takes SOLE writer
 	// authority over it for the lifetime of the process (Decision 2).
 	DBPath string
+	// CredentialsPath (`--credentials-db`, row 189) is the session credentials
+	// store; "" means store.DefaultCredentialsPath(DBPath), credentials.db
+	// beside the world store. The daemon NEVER holds its writer lock: it
+	// resolves each request through a fresh read-only handle, so `session
+	// new/mint/revoke` work at the terminal while it serves.
+	CredentialsPath string
 	// BindHost must satisfy isLoopbackHost (Decision 4).
 	BindHost string
 	// BindPort is the TCP port; 0 asks the kernel for an ephemeral port, whose
@@ -382,10 +388,12 @@ type Daemon struct {
 
 	// resolver maps an inbound Authorization: Bearer session credential to a
 	// binding (w-session-authority D5/D6). New wires it to authority.New over
-	// the SAME store the daemon serves, so the session_credentials table and
-	// the world tables live in one database. It is consulted by the session
-	// middleware before any protected handler runs.
+	// authority.ReadOnlyAt(credentialsPath): the credentials store is its own
+	// file (row 189), opened read-only per request, never held. It is
+	// consulted by the session middleware before any protected handler runs.
 	resolver authority.Resolver
+	// credentialsPath is the resolved credentials store the resolver reads.
+	credentialsPath string
 
 	// reads is the read seam every /v1 GET route goes through. New always wires
 	// it to the SAME *store.Store held in `store`, so the production path is
@@ -660,6 +668,28 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		}
 	}
 
+	// Row 189: session credentials live in their own store. A schema-4 world
+	// store still holds them; move them out once, before taking the world
+	// writer lock for good (MigrateCredentials takes and drops it itself).
+	credPath, err := resolveCredentialsPath(cfg)
+	if err != nil {
+		return nil, &StartupError{Stage: StageConfig, Detail: "the credentials store is refused", Err: err}
+	}
+	// A credentials store an agent can write is a mint without a human:
+	// refuse one under --workspace-root exactly like the store (AC4.5).
+	if workspace.root != "" {
+		if err := checkCredentialsOutsideRoot(credPath, workspace.root); err != nil {
+			return nil, &StartupError{Stage: StageConfig, Detail: "the credentials store is refused", Err: err}
+		}
+	}
+	moved, err := store.MigrateCredentials(ctx, cfg.DBPath, credPath)
+	if err != nil {
+		return nil, &StartupError{Stage: StageStoreOpen, Detail: "cannot move the session credentials out of the world store", Err: err}
+	}
+	if moved > 0 {
+		fmt.Fprintf(resolveErrorLog(cfg.ErrorLog), "ailang-worldd: moved %d session credential(s) from %s to %s (one-time, world schema 5)\n", moved, cfg.DBPath, credPath)
+	}
+
 	s, err := store.Open(cfg.DBPath)
 	if err != nil {
 		detail := "cannot open the world store for writing"
@@ -674,6 +704,10 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		return nil, &StartupError{Stage: StageStoreOpen,
 			Detail: "the store's lock-retry window is not below the read deadline", Err: err}
 	}
+	if err := ensureCredentialsStore(credPath); err != nil {
+		_ = s.Close()
+		return nil, &StartupError{Stage: StageStoreOpen, Detail: "cannot open the credentials store", Err: err}
+	}
 
 	d := &Daemon{
 		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
@@ -681,7 +715,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
-		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s), workspace: workspace,
+		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
+		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
 	}
 	d.human = serializedHandler{mu: &d.humanMu, h: broker.NewHumanHandler(s)}
 	release := unpinnedRelease

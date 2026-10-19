@@ -8,8 +8,9 @@ import (
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
 
-// TestConvertedStoreMethodsM5b proves bounded pool waits and reconciles all six
-// writes after the commit cutoff using the settled durable state.
+// TestConvertedStoreMethodsM5b proves bounded pool waits and reconciles all five
+// writes after the commit cutoff using the settled durable state. (MintSession
+// left the world store with row 189: credentials.go owns it.)
 func TestConvertedStoreMethodsM5b(t *testing.T) {
 	type method struct {
 		name  string
@@ -30,15 +31,6 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 						t.Fatalf("CAS not durable: %v %v %v", got, ok, err)
 					}
 				}
-		}, true},
-		{"MintSession", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
-			row := SessionRow{CredentialID: "m5b-credential", EpisodeID: "ep", GrantsJSON: "[]", ExpiresAt: 100, CreatedAt: 1}
-			return func(ctx context.Context) error { return s.MintSession(ctx, row) }, func(t *testing.T) {
-				got, ok, err := s.ResolveSession(boundedTestContext(t), row.CredentialID)
-				if err != nil || !ok || got != row {
-					t.Fatalf("mint not durable: %+v %v %v", got, ok, err)
-				}
-			}
 		}, true},
 		{"PendingIntents", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			return func(ctx context.Context) error { _, err := s.PendingIntents(ctx, 1); return err }, nil
