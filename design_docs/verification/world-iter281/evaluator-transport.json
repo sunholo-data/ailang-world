@@ -1,0 +1,13 @@
+{
+  "pin": "pi:openrouter/minimax/minimax-m3",
+  "judge_attempt": "stopped on controller order containment violation",
+  "runner_rc": 14,
+  "runner_verdict": "launch_failed",
+  "outside_fixture_path": "/private/tmp/claude/eval281-fixtures",
+  "outside_evidence_admissible": false,
+  "run_cost": 0.14705748,
+  "probe_cost": 0.00035862,
+  "sonnet": "rc1 HTTP429 usage_limit_reached; cost0 tokens0",
+  "opus": "rc1 HTTP429 usage_limit_reached; cost0 tokens0",
+  "fallback": "D-WORLD-48 fresh-context gpt-6.1-sol independent Agent, FLAGGED"
+}

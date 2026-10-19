@@ -1,0 +1,46 @@
+{
+  "designer": {
+    "pin": "codex:gpt-6.1-sol",
+    "transport": "native Agent tool (operator override of recipe transport)",
+    "outcome": "M1c premise blocked; no design change",
+    "quota_tokens": null
+  },
+  "planner": {
+    "pin": "codex:gpt-6.1-sol",
+    "reason": "declared:planner-lane-default-pin",
+    "transport": "native Agent tool",
+    "outcome": "bounded replan assessment; preserve semantics; no human ask",
+    "quota_tokens": null
+  },
+  "executor": {
+    "pin": "codex:gpt-6.1-sol",
+    "transport": "native Agent tool",
+    "outcome": "reproducible evidence; M1c incomplete",
+    "quota_tokens": null
+  },
+  "evaluator": {
+    "configured_pin": "pi:openrouter/minimax/minimax-m3",
+    "dispatcher": "native Agent gpt-6.1-sol; no verdict",
+    "preferred_attempt": {
+      "pin": "pi:openrouter/minimax/minimax-m3",
+      "judge_attempt": "stopped on controller order containment violation",
+      "runner_rc": 14,
+      "runner_verdict": "launch_failed",
+      "outside_fixture_path": "/private/tmp/claude/eval281-fixtures",
+      "outside_evidence_admissible": false,
+      "run_cost": 0.14705748,
+      "probe_cost": 0.00035862,
+      "sonnet": "rc1 HTTP429 usage_limit_reached; cost0 tokens0",
+      "opus": "rc1 HTTP429 usage_limit_reached; cost0 tokens0",
+      "fallback": "D-WORLD-48 fresh-context gpt-6.1-sol independent Agent, FLAGGED"
+    },
+    "actual_judge": "gpt-6.1-sol",
+    "actual_transport": "fresh native Agent in second clean isolated worktree",
+    "judge_independence": "same-model-fresh-context FLAGGED (D-WORLD-48)",
+    "verdict": "PASS 83/100, evidence only",
+    "judged_sha": "d8e17680b642b34736ce1e57c74c73aa54c07d60",
+    "quota_tokens": null
+  },
+  "metered_usd": 0.1474161,
+  "native_usage_limitation": "Provider token usage not exposed by Agent tool; unknown, not zero."
+}

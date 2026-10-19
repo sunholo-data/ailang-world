@@ -53,6 +53,8 @@ This establishes a counterexample for Git 2.54.0 on the recorded macOS host. It 
 not measure every Git/platform/locale, the full M1c matrix, r3 root/subdirectory or
 replacement mutation controls, other engines, full broker tests, CI or integrity
 correctness. Broad broker gates remain unmeasured due to PF6 real-HOME writes.
-No production, tests, design, sprint status, driver or skill files were changed.
+The measurement script and executor did not change production, tests, design, sprint status, driver or skills. The controller added factual design/plan annotations, and the Gate-4 record adds mission bookkeeping and the independent report; M1c remains incomplete.
 Preserve the Unicode semantics and route detection redesign through bounded design
 revision/review/replanning; do not weaken fixtures or call this equivalence green.
+
+Independent review: [evaluator-r1.md](evaluator-r1.md), PASS 83/100 for this evidence only. [routing-evidence.json](routing-evidence.json) records the configured MiniMax attempt, its inadmissible fixture deviation, failed Anthropic probes and the ratified fresh-context Sol fallback. The original PR and merge CI receipts are banked alongside this record. Native Agent quota token counts were not exposed.

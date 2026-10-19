@@ -1,0 +1,9 @@
+{
+  "input": 62106,
+  "output": 11655,
+  "cacheRead": 1907328,
+  "cacheWrite": 0,
+  "totalTokens": 1981089,
+  "cost": 0.14705748,
+  "completed_turns": 49
+}

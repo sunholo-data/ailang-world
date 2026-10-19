@@ -12,12 +12,13 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 280 | 2026-10-17 | row 156 M1b protected renderers (AILANG rebase, srt darwin/linux, git pathspecs) + pinned policy-tool fixture (PR #307; judge r1 PASS 80 → r2 PASS 84) [PRODUCT] |
-| 279 | 2026-10-17 | row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) + M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 94) [PRODUCT] |
+| 281 | 2026-10-19 | row 156 M1c Unicode equivalence premise REFUTED; evidence banked (PR #309 / `228645a`, independent PASS 83) [REFUTATION] |
+| 280 | 2026-10-17 | row 156 M1b protected renderers (AILANG rebase, srt darwin/linux, git pathspecs) + pinned policy-tool fixture (PR #307; judge r1 PASS 80 → r2 PASS ... |
+| 279 | 2026-10-17 | row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) built with the M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 9... |
 | 278 | 2026-10-17 | row 156 M0b Linux protected-write matrix (48 rows) measured on CI, banked as V14/V15 (PR #299; judge r1 PASS 85) [PRODUCT] |
 | 277 | 2026-10-17 | row 156 `w-exec-protected-test-paths` designed (V1–V13), planned (19 milestones), M0a matrix oracle built (PR #298; judge r1 PASS 82) [PRODUCT] |
 | 276 | 2026-10-16 | row 150 M5a bounded anchored evidence roster (ATTESTED + demo-authored CLAIMED) LANDED `bcd2d7c` (PR #295; judge r1 PASS 90) [PRODUCT] |
-| 275 | 2026-10-16 | row 150 M4b seed S6 why validation + one anchored packet + public manifest assembly (fail-closed) LANDED `acb3f54` (PR #289; judge r1 FAIL 66 → r2 PASS 86 → r3 PASS 86) [PRODUCT] |
+| 275 | 2026-10-16 | row 150 M4b seed S6 why validation + one anchored packet + public manifest assembly (fail-closed) LANDED `acb3f54` (PR #289; judge r1 FAIL 66 → r2 ... |
 | 274 | 2026-10-16 | row 150 M4a seed S5 real approval transition + one pending packet + exact budget delta LANDED `7ed1152` (PR #283; judge r1 PASS 91) [PRODUCT] |
 | 273 | 2026-10-16 | row 150 M3b seed S4 proof stage + proof/key refusals LANDED `c08729b` (PR #277; judge r1 PASS 88 → r2 PASS 93) [PRODUCT] |
 | 272 | 2026-10-16 | row 150 M3a HTTP proof adapters + real producer success LANDED `1ad2743` (PR #275; judge r1 PASS 82 → r2 PASS 90) [PRODUCT] |
