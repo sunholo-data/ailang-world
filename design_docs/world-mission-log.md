@@ -1366,3 +1366,50 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **8/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M3a (append protected sandbox settings without changing old bytes), then M3b. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 284 — 2026-10-19 — row 156 M3a + M3b built: protected srt `denyWrite` and real-srt protected-write rows (PR #319; judge r1 PASS 91 → r2 PASS 93) [PRODUCT]
+
+**Kind:** two milestones of one row (156). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 283's **Next** was row 156 M3a, then M3b, both design M3 (sandbox rendering). One executor run took both, with per-milestone snapshots. The attended PRs open at Gate 1 (#311, #315, #316, #317) keep 156 first (189 is "NEXT after 156"); #315/#316 merged mid-fire (design docs only, no charter edit) and this branch was rebased onto `5386215` before the record. The main checkout sat on attended branches (`docs/rulings-d84-d85`, then `docs/row198-episode-report`) and was left untouched; all work ran in `.wt-world-iter284-row156-m3`.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (4 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok; the one #246 crash notice is outside the window, already credited). `ailang-world` inbox: 1 unread, the v0.54.15 release note (#1872–#1875), informational. Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** origin/dev `1f36947` (attended #318 merge), CI pending at read (check-runs 3); running skill (resolved symlink) and pin copy match origin on SKILL.md and all 13 resources (per-file loop). Ledger valid, 70 rows, zero OPEN. Orphan traces: none for 284 (283's worktree is landed residue). Doc unchanged since iteration 282's two quorum rounds → no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M3a/M3b ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe rc 0; evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (rule 3e / false-green 4), pristine `1f36947`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset:** `go vet ./...` rc 0; focused broker tests rc 0; broker `-race` rc 0 (242.7 s).
+
+**Execute (codex gpt-6.1-sol, 114,044 tok, rc 0):**
+- **M3a** `exec_settings.go` +2, `handlers_exec.go` +1/−1, `exec_settings_test.go` +142. `execSettingsSpec.Protected`; `renderExecSettings` appends M1b's `renderSrtProtected` after the srt defaults; `NewExecHandler` forwards `cfg.Profile.Protected`. Inline protected goldens (darwin, linux); existing golden files unchanged. Tests `TestExecSettingsProtectedRendered`, `TestExecSettingsGoldenDarwin`, `TestExecSettingsGoldenLinux`, `TestExecSettingsNoProtectedIsByteIdentical` (absent and `[]`, digest identical).
+- **M3b** `handlers_exec_srt_test.go` +141, `handlers_exec_m2_test.go` +46. `TestExecSrtProtectedWrites`: synthetic operator home (no realHome), profile `tests/**` + `*_test.go`, 18 rows (modify, creates, delete, renames, case, symlink, hard links, parent and protected dir renames, unprotected control); a configured corrupt pin fails before any OS skip. `TestExecProtectedSettingsThroughHandler` (always on, fake srt) reads the settings file the handler passed.
+- Executor mutation table: 5/5 killed in-sandbox (MUT-NO-SRT-PROTECTED, -PROTECTED-BEFORE-GITHOOKS, -LINUX-GLOB, -SRT-EMPTY-BYTES, -HANDLER-PROTECTED-DROPPED); the real-srt `/modify` kill was UNMEASURED (srt absent in the sandbox). It reported `TestExecHandlerTimeoutKillsTheGroup` red in-sandbox at base too.
+
+**Controller verification (outside the sandbox):** real srt darwin `TestExecSrtProtectedWrites` 18/18 PASS. MUT-NO-SRT-PROTECTED against it: `/modify` FAIL (`token "WORLD-PROBE-WROTE"`, host hash changed) plus 15 more prevention rows; parent-dir-rename and the control still pass; restored green. `TestExecHandlerTimeoutKillsTheGroup` passes outside the sandbox (sandbox artifact). Commits rebuilt from snapshots; the M3a boundary was tested alone; `shasum -c` OK on all five files. `go vet ./...` rc 0, broker `-race` rc 0, daemon `-race` rc 0 (313 s). Evidence: `design_docs/verification/world-iter284/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter284`; generator codex ≠ judge sonnet):** r1 **PASS 91** (38/23/15/8/7), zero blocking. It re-ran the five named kills and added five of its own (darwin `<wt>/*/G`, glob without `**`, dir pattern keeping `/**`, append before the srt defaults, the real-srt append deletion). **NB1**: the handler test built its expectation from `f.profile.Protected`, so a profile that lost its set passed both arms. The controller measured it (clearing `p.Protected` after load SURVIVED) and fixed it test-only in `1f598c6` (literal suffix in canonical order); the same mutant now fails `/true`. A first draft of the fix used the wrong literal order and failed clean — caught before commit. r2 (resumed) **PASS 93**, both mutants re-verified. NB2/NB3 carried on row 156.
+
+**Gate 3b:** PR #319 (`sprint/world-iter284-row156-m3`), record on the same branch so one CI cycle covers code and record. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=1f369473045f0770472106c64baf1ce728b66e59@2026-10-19T15:26:39Z (Gate 1); rebased onto `5386215` (attended #315/#316, docs only) before the record. Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (114,044 tok) · evaluator Agent sonnet (54,532 + 58,212 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Reading the executor's in-sandbox `TestExecHandlerTimeoutKillsTheGroup` red as a base red: the base race suite was green outside the sandbox and the test passes there.
+- Re-quorum at pick: the doc has not changed since iteration 282.
+- Re-running real srt on Linux locally: no bubblewrap on darwin; CI's Linux job is the measurement.
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: zsh again did not split `$FILES` (memory already says so); the manifest and checkout steps silently became no-ops and were recovered by per-file `cmp` against the snapshots before any commit — use arrays (`FILES=(…)`) in every multi-file command. Backlog lane: none new. Harness share over the latest 20 including 284: **0/20**. Last three landings (284, 283, 282) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **10/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M4a (refuse configured git filters before any integrity status), then M4b. DECISIONS FOR MARK: none; ledger OPEN zero.
