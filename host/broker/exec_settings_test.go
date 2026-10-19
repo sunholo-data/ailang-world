@@ -264,3 +264,145 @@ func TestWriteAndVerifyExecSettings(t *testing.T) {
 		t.Fatal("a missing settings file verified")
 	}
 }
+
+func protectedSettingsSpec(t *testing.T, goos string) execSettingsSpec {
+	t.Helper()
+	spec := goldenSettingsSpec(goos)
+	var err error
+	spec.Protected, err = ParseProtectedPatterns([]string{"tests/**", "*_test.go"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return spec
+}
+
+func TestExecSettingsProtectedRendered(t *testing.T) {
+	for _, goos := range []string{"darwin", "linux"} {
+		t.Run(goos, func(t *testing.T) {
+			data, err := renderExecSettings(protectedSettingsSpec(t, goos))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var settings execSettings
+			if err := json.Unmarshal(data, &settings); err != nil {
+				t.Fatal(err)
+			}
+			want := []string{"/W/workspace/ep1/tests"}
+			if goos == "darwin" {
+				want = append([]string{"/W/workspace/ep1/**/*_test.go"}, want...)
+			}
+			legacyBytes, err := os.ReadFile(filepath.Join("testdata", "exec_settings_"+goos+".golden.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var legacy execSettings
+			if err := json.Unmarshal(legacyBytes, &legacy); err != nil {
+				t.Fatal(err)
+			}
+			want = append(legacy.Filesystem.DenyWrite, want...)
+			got := settings.Filesystem.DenyWrite
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("protected denyWrite suffix = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+// Full protected bytes, independent of the production renderer and deny lists.
+const protectedSettingsGolden = `{
+ "filesystem": {
+  "denyRead": [
+   "/Users/op",
+   "/W/state",
+   "/W/workspace"
+  ],
+  "allowRead": [
+   "/W/workspace/ep1",
+   "/W/state/exec-cache/ep1/ailang-compiler",
+   "/Users/op/go/pkg/mod",
+   "/opt/homebrew/Cellar/go/1.26.4/libexec"@SECCOMP@
+  ],
+  "allowWrite": [
+   "/W/workspace/ep1",
+   "/W/state/exec-cache/ep1/ailang-compiler"
+  ],
+  "denyWrite": [
+   "/W/workspace/ep1/.git/hooks",
+   "/W/workspace/ep1/.git/config",
+   "/W/workspace/ep1/.git",
+   "/W/workspace/ep1/.github",
+   "/W/workspace/ep1/.pi",
+   "/W/workspace/ep1/.claude",
+   "/W/workspace/ep1/.ailang",
+   "/W/workspace/ep1/.gitmodules",
+   "/W/workspace/ep1/.gitattributes",
+   "/tmp/claude",
+@PRIVATE@   "/Users/op/.npm/_logs",
+   "/Users/op/.claude/debug",
+@BASENAME@   "/W/workspace/ep1/tests"
+  ]
+ },
+ "network": {
+  "allowedDomains": [],
+  "deniedDomains": [],
+  "allowLocalBinding": false,
+  "allowAllUnixSockets": false
+ },
+ "enableWeakerNetworkIsolation": false,
+ "allowAppleEvents": false
+}
+`
+
+func checkProtectedSettingsGolden(t *testing.T, goos string) {
+	t.Helper()
+	seccomp, private, basename := "", "", ""
+	if goos == "darwin" {
+		private = "   \"/private/tmp/claude\",\n"
+		basename = "   \"/W/workspace/ep1/**/*_test.go\",\n"
+	} else {
+		seccomp = ",\n   \"/W/state/archive/exec-sandbox/d/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64\""
+	}
+	want := strings.NewReplacer("@SECCOMP@", seccomp, "@PRIVATE@", private, "@BASENAME@", basename).Replace(protectedSettingsGolden)
+	got, err := renderExecSettings(protectedSettingsSpec(t, goos))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Fatalf("protected %s golden bytes/order differ:\ngot:\n%s\nwant:\n%s", goos, got, want)
+	}
+}
+
+func TestExecSettingsGoldenDarwin(t *testing.T) { checkProtectedSettingsGolden(t, "darwin") }
+func TestExecSettingsGoldenLinux(t *testing.T)  { checkProtectedSettingsGolden(t, "linux") }
+
+func TestExecSettingsNoProtectedIsByteIdentical(t *testing.T) {
+	for _, goos := range []string{"darwin", "linux"} {
+		for _, empty := range []bool{false, true} {
+			t.Run(goos+"/empty="+strconv.FormatBool(empty), func(t *testing.T) {
+				spec := goldenSettingsSpec(goos)
+				if empty {
+					spec.Protected = []string{}
+				}
+				want, err := os.ReadFile(filepath.Join("testdata", "exec_settings_"+goos+".golden.json"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				got, err := renderExecSettings(spec)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !bytes.Equal(got, want) {
+					t.Fatal("absent/empty protected changed legacy golden bytes")
+				}
+				path := filepath.Join(t.TempDir(), "settings.json")
+				digest, err := writeExecSettings(path, got)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if digest != "sha256:"+sha256Hex(want) {
+					t.Fatal("absent/empty protected changed settings_digest")
+				}
+			})
+		}
+	}
+}

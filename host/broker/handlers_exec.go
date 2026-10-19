@@ -154,7 +154,7 @@ func NewExecHandler(cfg ExecHandlerConfig) (*ExecHandler, error) {
 		h.maxOutput = DefaultExecMaxOutputBytes
 	}
 	data, err := renderExecSettings(execSettingsSpec{Worktree: cfg.Worktree, Cache: h.cache, OperatorHome: home,
-		StateDir: cfg.StateDir, WorkspaceRoot: cfg.WorkspaceRoot, ReadRoots: dedupe(readRoots),
+		StateDir: cfg.StateDir, WorkspaceRoot: cfg.WorkspaceRoot, ReadRoots: dedupe(readRoots), Protected: cfg.Profile.Protected,
 		SeccompDir: cfg.Sandbox.SeccompDir(hostGOOS(), hostGOARCH()), GOOS: hostGOOS()})
 	if err != nil {
 		return nil, err

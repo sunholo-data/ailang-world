@@ -854,3 +854,57 @@ func driveExecChild(t *testing.T, probe string) {
 		t.Fatalf("drive the exec child: %v", err)
 	}
 }
+
+// The fake srt records the exact settings path consumed by the launch.
+func TestExecProtectedSettingsThroughHandler(t *testing.T) {
+	for _, protected := range []bool{true, false} {
+		t.Run(strconv.FormatBool(protected), func(t *testing.T) {
+			f := newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) {
+				if protected {
+					m["protected"] = []string{"tests/**", "*_test.go"}
+				}
+			}})
+			r := f.mustRun(t, "test")
+			if r.ExitCode == nil || *r.ExitCode != 0 {
+				t.Fatalf("fake srt command failed: %+v", r)
+			}
+			argv, err := os.ReadFile(f.argvLog)
+			if err != nil {
+				t.Fatal(err)
+			}
+			args := strings.Split(string(argv), "\x00")
+			wantPath := filepath.Join(f.state, "exec", "ep1.proj.srt.json")
+			if len(args) < 4 || args[1] != "--settings" || args[2] != wantPath {
+				t.Fatalf("fake srt settings argument = %q, want %s", args, wantPath)
+			}
+			data, err := os.ReadFile(args[2])
+			if err != nil {
+				t.Fatal(err)
+			}
+			var settings execSettings
+			if err := json.Unmarshal(data, &settings); err != nil {
+				t.Fatal(err)
+			}
+			want := []string{}
+			for _, name := range execDenyNames() {
+				want = append(want, filepath.Join(f.worktree, name))
+			}
+			want = append(want, srtDefaultWritePaths(f.home, hostGOOS())...)
+			// The suffix is spelled out, not derived from f.profile.Protected, so a
+			// profile that lost its protected set cannot pass the protected arm.
+			// Canonical order sorts "*_test.go" before "tests/**".
+			if protected {
+				if hostGOOS() == "darwin" {
+					want = append(want, f.worktree+"/**/*_test.go")
+				}
+				want = append(want, filepath.Join(f.worktree, "tests"))
+			}
+			if !reflect.DeepEqual(settings.Filesystem.DenyWrite, want) {
+				t.Fatalf("handler protected denyWrite suffix missing or unexpected: got %q, want %q", settings.Filesystem.DenyWrite, want)
+			}
+			if r.Sandbox.SettingsDigest != "sha256:"+sha256Hex(data) {
+				t.Fatal("handler settings_digest does not name consumed bytes")
+			}
+		})
+	}
+}
