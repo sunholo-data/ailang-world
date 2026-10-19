@@ -28,6 +28,7 @@ type execSettingsSpec struct {
 	OperatorHome  string   // denied for reading; anchors srt's two $HOME write defaults
 	StateDir      string   // World's state dir: denied for reading
 	WorkspaceRoot string   // every episode's parent: denied, so siblings are unreadable
+	Protected     []string // canonical profile patterns
 	ReadRoots     []string // the profile's read_roots plus each one's realpath
 	SeccompDir    string   // linux only: the archived seccomp helper dir [M0, V43/V44]
 	GOOS          string
@@ -99,6 +100,7 @@ func renderExecSettings(spec execSettingsSpec) ([]byte, error) {
 		denyWrite = append(denyWrite, filepath.Join(spec.Worktree, n))
 	}
 	denyWrite = append(denyWrite, srtDefaultWritePaths(spec.OperatorHome, spec.GOOS)...)
+	denyWrite = append(denyWrite, renderSrtProtected(spec.Protected, spec.Worktree, spec.GOOS)...)
 	allowRead := dedupe(append([]string{spec.Worktree, spec.Cache}, spec.ReadRoots...))
 	if spec.GOOS == "linux" {
 		if !cleanAbs(spec.SeccompDir) {
