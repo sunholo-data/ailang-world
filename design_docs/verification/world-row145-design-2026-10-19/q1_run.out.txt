@@ -1,0 +1,10 @@
+== allowLocalBinding=false
+pre-bind: connect to the World daemon 127.0.0.1:47330: FAIL URLError
+bind FAIL PermissionError [Errno 1] Operation not permitted
+== allowLocalBinding=true
+127.0.0.1 - - [19/Oct/2026 16:30:44] "GET / HTTP/1.1" 200 -
+pre-bind: connect to the World daemon 127.0.0.1:47330: OK (reachable)
+bind ok
+connect to own loopback server: ok 200
+connect to the World daemon 127.0.0.1:47330: OK (reachable)
+external https: FAIL URLError
