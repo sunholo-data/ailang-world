@@ -1318,3 +1318,51 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **6/21 milestones built** (M1c split, M6-pre added); release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M2a (the `protected` profile key), then M2b. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 283 — 2026-10-19 — row 156 M2a + M2b built: the `protected` profile key and startup grammar refusal rows (PR #314; judge r1 PASS 90 → r2 PASS 92) [PRODUCT]
+
+**Kind:** two milestones of one row (156). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 282's **Next** was row 156 M2a, then M2b. Both are ~25-minute milestones in the same contract (design M2), so one executor run took both, with per-milestone snapshots. Fresh origin `02bd141` (iteration 282's merge). The main checkout sits on the attended branch `docs/row198-episode-report` (PR #311) and was left untouched; all work ran in `.wt-world-iter283-row156-m2`.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313 and #246: 0 allowlisted directives since `2026-10-18T23:25:31Z` (2 and 49 comments). Self-notice scan rc 0 (control 107:4 ok): the one crash notice on #246 (2026-10-13) is outside the window and already credited. `mission-world` inbox: 0 unread of 36. Weekly sweep already run this week by iteration 282.
+
+**Gates 1–2:** origin/dev `02bd141` CI success, check-runs 3, none not-green. The running skill (resolved symlink) and the pin copy both match origin on SKILL.md and all 13 resources (per-file loop, silent). Ledger valid, 70 rows, zero OPEN. Orphan traces: no iteration-283 worktree or branch; iteration 281's worktrees are landed residue; open PRs = #311 only (attended). Quorum: the doc is r4.2, reviewed twice in iteration 282; no change since.
+
+**Routing:** designer not spawned (doc current); planner not spawned (the plan's M2a/M2b were ready; same pattern as iteration 265). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe rc 0; evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (rule 3e / false-green 4):** the directive's gate list was first run on the pristine worktree and the broker and daemon `-race` suites came back **rc 1**. The failure lines were `AILANG_BIN is unset: … never skips` (`templates_test.go:61`, `episode_test.go:169`), so the instrument was wrong, not the base: CI sets `AILANG_BIN` to the v0.41.0 pin. Re-run with `AILANG_BIN=~/.pinned-ailang/ailang`: broker rc 0 (143 s), daemon rc 0 (216 s). The directive was amended to say so before the spawn.
+
+**Execute (codex gpt-6.1-sol, 151,430 tok, rc 0, ≈20 min):**
+- **M2a** `host/broker/exec_profile.go` +30/−1, `exec_profile_test.go` +89. `protected` joins the strict allowlist. The raw value must start with `[` (so `null`, which `encoding/json` would accept into a slice, is refused), and each element must start with `"`. The list goes through `ParseProtectedPatterns`, and `ExecProfile.Protected` / `ProtectedDigest` are stored. Tests: `TestExecProfileProtected` (`absent`, `empty`, `list`, `wrong-type` ×6, `compatibility` with whitespace-padded input so a re-marshalled digest would differ) and `TestExecProfileProtectedUnknownFormRefused`.
+- **M2b** `host/daemon/exec_startup_test.go` +48/−3, `docs/QUICKSTART.md` +4. Four rows; each asserts the field is named, no daemon is returned, and there is no probe marker from an instrumented srt shim, no `archive/exec-sandbox`, no `exec-probe`, zero dispatches and zero summaries. Census pinned at 51.
+- Executor mutation table: 4/4 killed (MUT-PROFILE-NO-CHECK, -TYPE, -COMPAT, MUT-STARTUP-PROTECTED-IGNORED). It labelled the broker `-race` run UNINFORMATIVE UNDER SANDBOX (denied `$HOME` writes and `ps`). The sandbox did not see `AILANG_BIN`, so the executor fetched and hash-checked the pinned interpreter into `.snap/` (733 MB, deleted before commit; nothing under it was committed).
+
+**Controller verification (outside the sandbox, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; changed files gofmt-clean; focused broker tests ok; `TestExecStartupRefusalTable` rc 0 (50 subtests PASS, 1 pre-existing real-srt SKIP `probe-package-only`); broker `-race` rc 0; daemon `-race` rc 0. Commits were rebuilt from the snapshots (`ebc6f0f` M2a, `eb46e92` M2b) and are sha256-identical to the executor's final tree. The M2a boundary was tested on its own (broker ok, refusal table ok). Controller mutant: accepting `null` as "no protected set" is killed by `wrong-type/null` alone. Observation: `gofmt -l host/` flags `host/store/deadline_guard_test.go` under go1.26.6; that file is unchanged from base and CI is green on it, so it was left alone.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter283`; generator codex ≠ judge sonnet):** r1 **PASS 90** (38/25/15/12), zero blocking. It re-ran the 4 claimed kills and added 8 mutants of its own. A deferred-refusal mutant in `StartExec` is caught by the `archive/exec-sandbox` stat on all four rows. `TrimSpace(data)` hashing is caught by `compatibility`. Dropping canonicalization or the digest is caught by `list`. `len>=0` is an equivalent mutant. **NB1**: renaming the malformed-value field to `prot` survives the daemon row, because the subtest's temp path already contains the word "protected". The controller reproduced it and fixed it doc-only in `9bbcbd7` (the row now quotes `protected: must be an array of strings`), and showed the rename now goes red at `exec_startup_test.go:482`. NB2–NB4 are carried on row 156. r2 (resumed, re-checked on `9bbcbd7`) **PASS 92**. Reports: `design_docs/verification/world-iter283/`.
+
+**Gate 3b:** PR #314 (`sprint/world-iter283-row156-m2`). The record is committed on the same branch, so one CI cycle covers code and record. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=02bd141068ce6a1b21179d3a9469e2183b83c3be@2026-10-19T12:11:22Z (Gate 4; Gate 1 read the same SHA at 11:26:18Z). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (151,430 tok) · evaluator Agent sonnet (66,735 + 69,566 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Reading the first baseline's `-race` rc 1 as a red base: the failure lines named the unset `AILANG_BIN`, and the pinned re-run was green.
+- Re-quorum at pick: the doc has not changed since iteration 282's two quorum rounds.
+- Fixing NB2 (the doubled `protected:` prefix) in this row: the prefix comes from wrapping M1a's refusal text; it is cosmetic and touches the M1a error contract, so it is carried to M7b's guidance pass.
+- Reformatting `host/store/deadline_guard_test.go`: out of scope and green on CI.
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: the memory index already said full `go test` needs `AILANG_BIN`, and the first baseline still omitted it. The failure line, not the rc, told the truth: read the first FAIL line of a baseline red before calling the base red. Backlog lane: none new. Harness share over the latest 20 including 283: **0/20**. Last three landings (283, 282, 281) moved no UNMET clause; all clauses are MET and no routable UNMET row exists, so there is no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **8/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M3a (append protected sandbox settings without changing old bytes), then M3b. DECISIONS FOR MARK: none; ledger OPEN zero.

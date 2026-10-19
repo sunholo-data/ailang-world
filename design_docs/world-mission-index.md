@@ -13,6 +13,7 @@ confidently and wrongly is worse than none.
 | # | date | what happened |
 |---|---|---|
 | 282 | 2026-10-19 | row 156 detection redesigned [r4 → r4.2] and M1c + M1d built: Git candidates, mirror authority (PR #312; judge r1 FAIL 68 → r2 PASS 88) [PRODUCT] |
+| 283 | 2026-10-19 | row 156 M2a + M2b built: the `protected` profile key and startup grammar refusal rows (PR #314; judge r1 PASS 90 → r2 PASS 92) [PRODUCT] |
 | 281 | 2026-10-19 | row 156 M1c Unicode equivalence premise REFUTED; evidence banked (PR #309 / `228645a`, independent PASS 83) [REFUTATION] |
 | 280 | 2026-10-17 | row 156 M1b protected renderers (AILANG rebase, srt darwin/linux, git pathspecs) + pinned policy-tool fixture (PR #307; judge r1 PASS 80 → r2 PASS ... |
 | 279 | 2026-10-17 | row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) built with the M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 9... |
