@@ -1,0 +1,24 @@
+{
+  "target": "228645a358d24e9bc12a891467e8cea46c935029",
+  "run": "39196307642",
+  "event": "push",
+  "verdict": "GREEN",
+  "conclusion": "success",
+  "checks": [
+    {
+      "name": "ailang-code verify gate",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "go race gate (go test -race, own job)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "go host build + test gate",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

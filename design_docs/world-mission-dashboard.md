@@ -1,12 +1,15 @@
-# World mission dashboard — iteration 280 (2026-10-17)
+# World mission dashboard — iteration 281 (2026-10-19)
 
-- **This fire:** row 156 M1b (PR #307). The protected set now renders for all four consumers, as pure Go with no wiring yet: AILANG `fs_deny_write` re-based to the module-root sandbox, srt `denyWrite` for darwin (dirs plus `**/G`) and linux (dirs only), and root-anchored git pathspecs (`top,glob,icase`, bare `D` and `D/**`).
-- **Measured against the real engine:** a pinned test runs AILANG v0.52.1's policy-tool over the V7 fixture table, empty-deny controls and two module-root rows (23 PASS); it skips without the pin.
-- **Judge:** independent sonnet r1 **PASS 80** → r2 **PASS 84**, zero blocking. Its two surviving rebase mutants are now killed by three test rows. The diff is ~393 lines against the plan's 250 cap (recorded).
-- **Latest GitHub release:** `v1.0.0-rc.1` (pre-release, 2026-10-16). Proof/compiler pin AILANG 0.41.0; tool pin 0.52.1.
-- **Clauses:** **7 of 7 MET.** Before `v1.0.0` (D-WORLD-81): finish row 156 (4/19), then row 150 (9/17), then row 151.
-- **Parked on Mark:** none open (ledger 70 rows, zero OPEN).
-- **Next:** row 156 M1c (real-git pathspec equivalence, incl. the r3 rows).
-- **Routing/cadence:** executor Agent haiku (pin `claude:claude-haiku-5-5`; codex over daily ration), judge Agent sonnet; no designer/planner (ready-made milestone). 4h throttle.
-- **Metered:** $0. No shared skill, harness or routing-policy edit.
-- **Evidence:** log entry 280; judge reports in `~/.ailang/state/world-iter280/`.
+- **This fire:** row 156 M1c premise REFUTED; evidence PR #309, merge `228645a`. No product implementation; M1c incomplete.
+- **Finding:** Git icase misses long-s/Kelvin paths accepted by the NFC/SimpleFold mirror. Both patterns are ASCII, so restricting pattern bytes cannot repair it.
+- **Evidence:** four isolated Git repos, exact unfiltered controls, ASCII selected controls, NUL-safe raw outputs; controller rerun and independent index-only/porcelain-v2 reproduction.
+- **Judge:** independent fresh-context Sol 6.1 PASS 83/100 for evidence only (D-WORLD-48, FLAGGED). MiniMax attempt stopped for containment deviation; Sonnet/Opus weekly quota HTTP429. No MiniMax verdict accepted.
+- **Verification:** PR #309 and its exact merge CI green, 3/3. Local focused protected tests 46 PASS and vet clean on darwin/arm64; broad local broker tests remain PF6-unmeasured.
+- **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15 (attended row139 update already on base).
+- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row156 (4/19), row150 (9/17), then row151.
+- **Next:** bounded row156 detection design revision preserving Unicode semantics, quorum and replan; then resume M1c. No semantic weakening or new human ask.
+- **Parked on Mark:** none (ledger 70 rows, zero OPEN).
+- **Routing/cadence:** all four roles spawned through Agent tool; designer/planner/executor Sol 6.1, evaluator dispatcher plus separate fresh Sol judge after configured lane failures; 4h throttle.
+- **Cost:** metered $0.14741610 (failed MiniMax attempt + probe); subscription quota tokens unavailable from native Agent tool.
+- **Retro:** harness share 0/20; last three landings (281 evidence, 280/279 product) moved no UNMET clause, with all clauses already MET (no drift alarm). No shared skill/driver/routing-policy edit.
+- **Record:** world-mission-log.md entry 281; design_docs/verification/world-iter281/.
