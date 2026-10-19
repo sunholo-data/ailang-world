@@ -563,9 +563,10 @@ func protectedStatusRecord(xy, p string) string {
 }
 func TestProtectedCandidateParseFailsClosed(t *testing.T) {
 	for _, tc := range []struct{ name, status, ignored, flags string }{
-		{"over-cap-status", strings.Repeat("x", protectedCheckMaxOutput+1), "", ""},
-		{"over-cap-ignored", "", strings.Repeat("x", protectedCheckMaxOutput+1), ""},
-		{"over-cap-flags", "", "", strings.Repeat("x", protectedCheckMaxOutput+1)},
+		// Oversize streams of WELL-FORMED records, so only the cap can refuse them.
+		{"over-cap-status", strings.Repeat("? a\x00", protectedCheckMaxOutput/4+1), "", ""},
+		{"over-cap-ignored", "", strings.Repeat("a\x00", protectedCheckMaxOutput/2+1), ""},
+		{"over-cap-flags", "", "", strings.Repeat("H a\x00", protectedCheckMaxOutput/4+1)},
 		{"missing-nul", "? false.txt", "", ""}, {"unknown-status", "! false/\x00", "", ""},
 		{"bad-flag", "", "", "Z false.txt\x00"}, {"bad-fields", "1 .M bad false.txt\x00", "", ""},
 		{"bad-modes", strings.Replace(protectedStatusRecord(".M", "false.txt"), "100644", "notmod", 1), "", ""}, {"bad-hash", strings.Replace(protectedStatusRecord(".M", "false.txt"), strings.Repeat("a", 40), "no", 1), "", ""}, {"missing-rename-source", "2" + protectedStatusRecord("R.", "tests/new")[1:len(protectedStatusRecord("R.", "tests/new"))-1] + "\x00", "", ""}, {"ignored-missing-nul", "", "false.txt", ""}, {"flags-missing-nul", "", "", "H false.txt"},
