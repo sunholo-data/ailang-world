@@ -187,7 +187,7 @@ func TestCallJSONOutIsByteExact(t *testing.T) {
 // TestCallStrictRefusal is D-CLI-3: a committed refusal (ok:false) is exit 0,
 // and exit 3 under --strict.
 func TestCallStrictRefusal(t *testing.T) {
-	text := `{"ok":false,"refused":"unknown argument limit","world":{"effects":[],"plan":"sha256:2222222222222222222222222222222222222222222222222222222222222222"}}`
+	text := `{"ok":false,"refused":"unknown argument lines","world":{"effects":[],"plan":"sha256:2222222222222222222222222222222222222222222222222222222222222222"}}`
 	f := &fakeMCP{status: 200, ctype: "text/event-stream", body: sseFrame(fakeResult(1, text)), heads: []string{"sha256:aa"}}
 	srv := f.serve(t)
 	sess := sessionFile(t, fakeToken)

@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 25 || ailFiles != 23 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 25 / 23", files, ailFiles)
+	if files != 26 || ailFiles != 24 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 26 / 24", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 23 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 24 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 25 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 25", files)
+	if files != 26 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 26", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 23 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 23", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 24 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 24", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -448,9 +448,12 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 	arms := []struct {
 		name, old, replacement, want string
 	}{
-		{"contract", "ensures { result == (k == \"path\") }\n", "",
+		{"contract", "ensures { result == (k == \"path\" || k == \"offset\" || k == \"limit\") }\n", "",
 			"argKeyAllowed) MISSING from verify.results[]"},
-		{"plan-bytes", `cost\":1,\"payload`, `cost\":0,\"payload`,
+		// Anchored on main_test_1's own payload: since row 190 three more
+		// admitted plans (the ranged reads) carry the same cost bytes.
+		{"plan-bytes", `cost\":1,\"payload\":{\"op\":\"read\",\"path\":\"src/main.ail\"}`,
+			`cost\":0,\"payload\":{\"op\":\"read\",\"path\":\"src/main.ail\"}`,
 			"se_tools/read.ail required named tests missing/failing: main_test_1="},
 	}
 	for _, arm := range arms {
@@ -572,6 +575,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
   packages/se-tools/se_tools/builtins_search.ail
   packages/se-tools/se_tools/check.ail
   packages/se-tools/se_tools/cli.ail
+  packages/se-tools/se_tools/delete.ail
   packages/se-tools/se_tools/edit.ail
   packages/se-tools/se_tools/examples_search.ail
   packages/se-tools/se_tools/exec.ail

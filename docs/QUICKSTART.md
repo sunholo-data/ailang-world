@@ -44,7 +44,7 @@ naming the epoch, the release and the store). Its `--candidate` form is headless
   from the repo root.
 - `--ailang-bin`: the `.ail` interpreter pin, `$PIN` (AILANG v0.41.0).
 
-At the prompt, type the line it shows exactly: `publish 9 transitions to /tmp/se-world/world.db`
+At the prompt, type the line it shows exactly: `publish 10 transitions to /tmp/se-world/world.db`
 (the manifest's descriptor count and your `--store`). On success it prints
 `published transition registry revision N (head sha256:…)`. Running it again with nothing
 changed prints `transition registry UNCHANGED at revision N`.
@@ -385,9 +385,10 @@ Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).
 ### 9. Software-engineering tools
 
 **Attended — run verbatim in the row 134 M6 smoke, 2026-10-03** (evidence:
-`design_docs/verification/world-attended-2026-10-03-row134-m6/`). This section serves the nine
+`design_docs/verification/world-attended-2026-10-03-row134-m6/`). This section serves the ten
 `packages/se-tools` transitions (`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`,
-`ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`, and row 140's `workspace-exec`)
+`ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`, row 140's `workspace-exec` and
+row 191a's `ailang-delete`)
 over `/mcp/` and `/a2a/`. This section configures no exec profile, so `workspace-exec` answers
 every call `{"ok":false,"refused":"no exec profile configured: …"}` and runs nothing; §10 turns it
 on.
@@ -493,7 +494,7 @@ EOF
 **Publish (attended, TTY fence).** Run this from the **repo root**, because the manifest's
 `transitionFnFile` paths are repo-relative. The daemon must be stopped, since publishing needs
 single-writer authority. `world-publish` refuses without a controlling terminal and asks you, at
-the terminal, to type `publish 9 transitions to /tmp/se-world/world.db` (the manifest's
+the terminal, to type `publish 10 transitions to /tmp/se-world/world.db` (the manifest's
 descriptor count and the store). An agent cannot run this step. It is the first step of
 [§0](#0-attended-steps-the-only-commands-a-person-must-run):
 
@@ -506,12 +507,13 @@ The output is `published transition registry revision 1 (head sha256:…)`. Re-r
 `UNCHANGED`.
 
 **Session (attended, TTY fence).** `session new` mints a session for episode `ep1` holding the
-nine effect grants, one per effect name the se-tools transitions declare (`--preset
+ten effect grants, one per effect name the se-tools transitions declare (`--preset
 se-tools`): `Workspace.Read`, `Workspace.Write` (shared by `write` and `edit`), `Ailang.Check`,
 `Ailang.Run`, `Ailang.RunEnv` and `Ailang.RunNet` (the `ailang-run` calls whose `caps` hold
-`Env` or `Net`, row 135), `Ailang.Discover` (shared by the two searches), `Ailang.CLI` and
-`Workspace.Exec` (`workspace-exec`, row 140), each with scope `worktree` and a budget of 50
-calls. It reuses the worktree made above (without it,
+`Env` or `Net`, row 135), `Ailang.Discover` (shared by the two searches), `Ailang.CLI`,
+`Workspace.Exec` (`workspace-exec`, row 140) and `Workspace.Delete` (`ailang-delete`, row 191a:
+deleting is its own grant, never part of `Workspace.Write`), each with scope `worktree` and a
+budget of 50 calls. It reuses the worktree made above (without it,
 `--repo /tmp/se-proj` makes one), asks y/N on the terminal (type `y`), and writes the token once
 to `--out` (mode 0600; the file must not exist yet). It is the second step of
 [§0](#0-attended-steps-the-only-commands-a-person-must-run):
@@ -570,10 +572,12 @@ curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"hello.ail"}}}' http://127.0.0.1:7644/mcp/
 ```
 
-The list holds exactly the nine names. Each MCP name is its ID, because `-` needs no
+The list holds exactly the ten names. Each MCP name is its ID, because `-` needs no
 escaping. A session sees only the tools whose effect it holds a grant for. The call result
 carries the handler's fields (`ok`, `content`, `tool`, `policy_digest`) plus
-`world: {effects:[{id, status, record}], plan}`. Resolve the record with
+`world: {effects:[{id, status, record}], plan}`. A large file can be read in pages: `ailang-read`
+takes optional integer `offset` (1-based first line) and `limit` (line count, capped at 2000 by
+the tool binary), and a ranged read also returns `total_lines`, `offset` and `limit` (row 190). Resolve the record with
 `curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" http://127.0.0.1:7644/v1/objects/<record>`.
 An argument outside a tool's schema is refused by its plan (`{"ok":false,"refused":"…"}`,
 `effects: []`), and the refusal still commits.
@@ -608,7 +612,7 @@ export WORLD_SESSION=$(cat /tmp/se-session)
 pi --mcp-config /tmp/se-pi-mcp.json
 ```
 
-In that interactive session, run `/mcp tools` and confirm the nine `world_*` names. This first
+In that interactive session, run `/mcp tools` and confirm the ten `world_*` names. This first
 session also writes the adapter's metadata cache (`~/.pi/agent/mcp-cache.json`). Direct tools
 register from that cache, and until it exists they fall back to the proxy. Then run the smoke
 with every built-in disabled:
@@ -653,7 +657,8 @@ through World (D-WORLD-60; label such PRs `ailang-world`).
 When `why` elides a long input, it prints the short top-level fields (`path`, `command`, `op`, …)
 first, so you can see which file an `ailang-edit` touched. A toolchain call (`ailang-run`,
 `ailang-check`, `ailang-cli`, `workspace-exec`) that changed the worktree carries a
-`worktree_delta` in its result: the files it created, modified or deleted (path, size, sha256;
+`worktree_delta` in its effect's output (and in the result, except `ailang-check`'s, which is its
+finish report): the files it created, modified or deleted (path, size, sha256;
 at most 256, then `truncated` with a `total`), on the `git-status` basis in a git worktree.
 `why` prints it as `worktree: N created, M modified, K deleted (basis git-status)` and the
 first paths; `--json` holds the whole list. A call that changes nothing has no `worktree_delta`.
@@ -1017,8 +1022,8 @@ therefore names the packages a result depended on. An exec profile's `root` (§1
 of the module root: it only places a toolchain command's cwd.
 
 **Operator lines.** Each is written once per refused call. The episode's AILANG tools
-(`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`, `ailang-run`, `builtins-search`,
-`examples-search`, `ailang-cli`) stay refused (every declared effect fails) until you fix the
+(`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-delete`, `ailang-check`, `ailang-run`,
+`builtins-search`, `examples-search`, `ailang-cli`) stay refused (every declared effect fails) until you fix the
 cause. `workspace-exec` is not bound to that build: it needs only the episode worktree, not the
 module root, the package cache or the policy. It is still refused when the worktree is missing or
 unsafe, when no exec profile is configured (or none maps to the episode), and when building the

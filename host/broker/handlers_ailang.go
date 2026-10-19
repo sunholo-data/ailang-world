@@ -30,6 +30,12 @@ const (
 	EffectAilangDiscover = "Ailang.Discover"
 	EffectAilangCLI      = "Ailang.CLI"
 
+	// EffectWorkspaceDelete (row 191a) removes one worktree file through
+	// policy-tool's `delete` op (v0.54.15, ailang#1875). It is its own grant,
+	// never a Workspace.Write op: deleting is a different authority from
+	// writing.
+	EffectWorkspaceDelete = "Workspace.Delete"
+
 	// The two extra run effects (row 135, D-135-3 = A): an ailang-run whose
 	// caps hold Env is Ailang.RunEnv, one whose caps hold Net Ailang.RunNet;
 	// any other run (Declassify included, D-135-5 = A) is Ailang.Run.
@@ -132,10 +138,11 @@ func foldClassPattern(name string) string {
 // Ailang.CLI's allowlist is the policy summary's `cli` list (V40), read at
 // construction; Ailang.Run never reaches policy-tool (it refuses `run`, V16).
 var fixedToolOps = map[string][]string{
-	EffectWorkspaceRead:  {"read"},
-	EffectWorkspaceWrite: {"write", "edit"},
-	EffectAilangCheck:    {"ai_check"},
-	EffectAilangDiscover: {"builtins_list", "examples_search"},
+	EffectWorkspaceRead:   {"read"},
+	EffectWorkspaceWrite:  {"write", "edit"},
+	EffectWorkspaceDelete: {"delete"},
+	EffectAilangCheck:     {"ai_check"},
+	EffectAilangDiscover:  {"builtins_list", "examples_search"},
 }
 
 // cliWriteFlags names, per op, the policy-tool flags that make an op write
@@ -155,7 +162,11 @@ var cliWriteFlags = map[string][]string{
 // policyToolRequestKeys are the policy-tool Request fields the handler reads
 // (op) or polices (flags). policy-tool decodes into a Go struct, whose field
 // match is case-insensitive, so any other spelling of these keys ("OP",
-// "FLAGS", "flagſ") would reach it unseen and is refused.
+// "FLAGS", "flagſ") would reach it unseen and is refused. (That decoding was
+// v0.51's; v0.54.15 refuses any key that is not exactly one of its own, so
+// the guard is defence in depth.) Row 190's offset and limit stay out: the
+// handler neither reads nor polices them, so an alias of either bypasses no
+// check here (TestPolicyToolRefusesCaseVariantRangeKeysItself).
 var policyToolRequestKeys = []string{"op", "flags"}
 
 // RenderEpisodePolicy renders the per-episode AILANG operator policy with
@@ -410,7 +421,7 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	switch req.Effect {
 	case EffectAilangRun, EffectAilangRunEnv, EffectAilangRunNet:
 		return h.executeRun(ctx, req.Effect, payload)
-	case EffectWorkspaceRead, EffectWorkspaceWrite, EffectAilangCheck, EffectAilangDiscover, EffectAilangCLI:
+	case EffectWorkspaceRead, EffectWorkspaceWrite, EffectWorkspaceDelete, EffectAilangCheck, EffectAilangDiscover, EffectAilangCLI:
 	default:
 		return nil, fmt.Errorf("broker: ailang tool handler does not implement %q", req.Effect)
 	}
@@ -533,10 +544,37 @@ func decodePayloadObject(payload []byte) (map[string]json.RawMessage, error) {
 	return fields, nil
 }
 
+// toolTmpDirName names the toolchain children's TMPDIR under the episode's
+// cache root (row 197): v0.54.15's policy-tool makes a private cache dir in
+// the temp dir, which was /tmp (Go's default with no TMPDIR), outside the
+// episode and recorded nowhere. Under CacheDir it is outside the worktree
+// like the rest of the episode cache, so no worktree_delta accounts for it.
+const toolTmpDirName = "tmp"
+
+func (h *AilangToolHandler) tmpDir() string { return filepath.Join(h.cacheDir, toolTmpDirName) }
+
+// ensureToolTmpDir makes dir (0700) before a toolchain child launches, so a
+// cache cleaned between calls never sends the child back to /tmp; it refuses
+// anything at dir that is not a real directory (a symlink included).
+func ensureToolTmpDir(dir string) error {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("broker: toolchain TMPDIR: %w", err)
+	}
+	info, err := os.Lstat(dir)
+	if err != nil {
+		return fmt.Errorf("broker: toolchain TMPDIR: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("broker: toolchain TMPDIR %q is not a directory", dir)
+	}
+	return os.Chmod(dir, 0o700)
+}
+
 // childEnv is the whole child environment of both branches: minimal, never
 // the parent's (so the registry credential cannot reach a tool), with the
 // compile cache pointed outside the worktree (honoured by policy-tool; ignored
 // by `run --policy`, V57 / R-SE-4, which the .ailang/** deny glob covers).
+// TMPDIR is the episode's own temp dir (row 197, ensureToolTmpDir).
 //
 // AILANG_EXAMPLES (only when a corpus is configured) points examples_search at
 // the operator's corpus: HOME is the per-episode cache, so the binary's
@@ -548,6 +586,7 @@ func (h *AilangToolHandler) childEnv() []string {
 		"LANG=C",
 		"LC_ALL=C",
 		"AILANG_CACHE_DIR=" + h.cacheDir,
+		"TMPDIR=" + h.tmpDir(),
 	}
 	if h.examplesDir != "" {
 		env = append(env, "AILANG_EXAMPLES="+h.examplesDir)
@@ -565,6 +604,9 @@ func (h *AilangToolHandler) policyTool(ctx context.Context, request []byte) ([]b
 // policyToolWith runs policy-tool under policyPath (the base policy, or a run
 // variant being verified by its summary).
 func (h *AilangToolHandler) policyToolWith(ctx context.Context, policyPath string, request []byte) ([]byte, error) {
+	if err := ensureToolTmpDir(h.tmpDir()); err != nil {
+		return nil, err
+	}
 	stderr := newBoundedSink(h.bounds.maxOutputBytes)
 	stdout, err := runBounded(ctx, h.bounds, handlerCommand{
 		path: h.bin, args: []string{"policy-tool", "--policy", policyPath},
@@ -597,6 +639,9 @@ func (h *AilangToolHandler) executeRun(ctx context.Context, effect string, paylo
 	var stdin []byte
 	if req.stdin != nil {
 		stdin = []byte(*req.stdin)
+	}
+	if err := ensureToolTmpDir(h.tmpDir()); err != nil {
+		return nil, err
 	}
 	stderr := newBoundedSink(h.bounds.maxOutputBytes)
 	probe := beginWorktreeDelta(ctx, h.root) // row 184 D1, outside the child's timeout

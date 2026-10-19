@@ -39,8 +39,8 @@ func execIDRefusal(id string) string {
 // schema is closed (additionalProperties:false) over exactly {command, args}.
 func TestSeToolsExecDescriptor(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
-	if len(manifest) != 9 {
-		t.Fatalf("manifest has %d tools, want 9 (row 140 adds workspace-exec)", len(manifest))
+	if len(manifest) != 10 {
+		t.Fatalf("manifest has %d tools, want 10 (row 140 adds workspace-exec, row 191a ailang-delete)", len(manifest))
 	}
 	e, ok := manifest["workspace-exec"]
 	if !ok {

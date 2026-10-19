@@ -162,8 +162,10 @@ type seToolsCase struct {
 }
 
 var seToolsCases = []seToolsCase{
+	// Row 190: limit and offset are read's own arguments now; a misspelled
+	// range key is still refused.
 	{"ailang-read", `{"path":"src/main.ail"}`, `{"op":"read","path":"src/main.ail"}`, false,
-		`{"path":"src/main.ail","limit":5}`, "limit"},
+		`{"path":"src/main.ail","lines":5}`, "lines"},
 	{"ailang-write", `{"path":"src/new.ail","content":"module src/new\n"}`,
 		`{"op":"write","path":"src/new.ail","content":"module src/new\n"}`, false,
 		`{"path":"src/new.ail","content":"x","old_text":"y"}`, "old_text"},
@@ -183,6 +185,48 @@ var seToolsCases = []seToolsCase{
 	// Row 140: the 9th tool, the first outside the ailang_only lane.
 	{"workspace-exec", `{"command":"test","args":["-run=X"]}`, `{"command":"test","args":["-run=X"]}`, false,
 		`{"command":"test","cwd":"/"}`, "cwd"},
+	// Row 191a: the 10th, its own Workspace.Delete grant.
+	{"ailang-delete", `{"path":"tmp/helper_test.go"}`, `{"op":"delete","path":"tmp/helper_test.go"}`, false,
+		`{"path":"tmp","recursive":true}`, "recursive"},
+}
+
+// TestSeToolsReadRangePlansAdmittedByPlanLaw is row 190 through the real
+// capsule: a ranged read plans its integer offset/limit into the payload, and
+// parsePlan's canonical re-encode (L4) keeps them integers; a range value the
+// plan refuses is a zero-effect refusal naming the argument.
+func TestSeToolsReadRangePlansAdmittedByPlanLaw(t *testing.T) {
+	manifest := loadSeToolsManifest(t)
+	rig := newSeToolsRig(t)
+	e := manifest["ailang-read"]
+	for args, payload := range map[string]string{
+		`{"path":"docs/big.md","offset":201,"limit":100}`: `{"op":"read","path":"docs/big.md","offset":201,"limit":100}`,
+		`{"path":"docs/big.md","limit":2000}`:             `{"op":"read","path":"docs/big.md","limit":2000}`,
+		`{"path":"docs/big.md","offset":3.0}`:             `{"op":"read","path":"docs/big.md","offset":3}`,
+	} {
+		plan, err := parsePlan(rig.run(e, planInput(args)), e.declared())
+		if err != nil || len(plan.Effects) != 1 {
+			t.Fatalf("%s: err=%v plan=%+v; want one Workspace.Read effect", args, err, plan)
+		}
+		if got := string(plan.Effects[0].Payload); got != canonical(t, payload) {
+			t.Fatalf("%s: payload %s, want %s", args, got, canonical(t, payload))
+		}
+	}
+	for args, why := range map[string]string{
+		`{"path":"a.txt","offset":0}`:    `argument \"offset\" must be an integer >= 1 (got 0)`,
+		`{"path":"a.txt","limit":-3}`:    `argument \"limit\" must be an integer >= 1 (got -3)`,
+		`{"path":"a.txt","limit":2.5}`:   `argument \"limit\" must be an integer`,
+		`{"path":"a.txt","offset":"10"}`: `argument \"offset\" must be an integer`,
+		`{"path":"a.txt","offset":null}`: `argument \"offset\" must be an integer`,
+		`{"path":"-a.txt","offset":-1}`:  `refused: it must be relative`,
+	} {
+		plan, err := parsePlan(rig.run(e, planInput(args)), e.declared())
+		if err != nil {
+			t.Fatalf("%s: parsePlan: %v", args, err)
+		}
+		if len(plan.Effects) != 0 || !strings.Contains(string(plan.Result), why) {
+			t.Fatalf("%s: effects=%d result=%s; want the refusal %q", args, len(plan.Effects), plan.Result, why)
+		}
+	}
 }
 
 // TestSeToolsPlansAdmittedByPlanLaw is AC5 (M5a): per tool, the module run
@@ -193,8 +237,9 @@ var seToolsCases = []seToolsCase{
 // a refusal is a lawful pure plan, L7).
 func TestSeToolsPlansAdmittedByPlanLaw(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
-	if len(manifest) != 9 || len(seToolsCases) != 9 {
-		t.Fatalf("manifest has %d tools, cases %d; the ailang_only lane has 8, plus row 140's workspace-exec", len(manifest), len(seToolsCases))
+	if len(manifest) != 10 || len(seToolsCases) != 10 {
+		t.Fatalf("manifest has %d tools, cases %d; the ailang_only lane has 8, plus row 140's workspace-exec and row 191a's ailang-delete",
+			len(manifest), len(seToolsCases))
 	}
 	rig := newSeToolsRig(t)
 	for _, c := range seToolsCases {
@@ -266,12 +311,13 @@ func TestSeToolsPathPredicateRefusesBeforeAnyEffect(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
 	rig := newSeToolsRig(t)
 	calls := map[string]string{
-		"ailang-read":  `{"path":%q}`,
-		"ailang-write": `{"path":%q,"content":"x"}`,
-		"ailang-edit":  `{"path":%q,"old_text":"a","new_text":"b"}`,
-		"ailang-check": `{"path":%q}`,
-		"ailang-run":   `{"path":%q}`,
-		"ailang-cli":   `{"op":"check","path":%q}`,
+		"ailang-read":   `{"path":%q}`,
+		"ailang-delete": `{"path":%q}`,
+		"ailang-write":  `{"path":%q,"content":"x"}`,
+		"ailang-edit":   `{"path":%q,"old_text":"a","new_text":"b"}`,
+		"ailang-check":  `{"path":%q}`,
+		"ailang-run":    `{"path":%q}`,
+		"ailang-cli":    `{"op":"check","path":%q}`,
 	}
 	for id, shape := range calls {
 		for _, p := range []string{"-policy.ail", "../ailang/go.mod", "/etc/hosts"} {

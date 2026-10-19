@@ -49,7 +49,7 @@ var (
 )
 
 var seToolNames = []string{
-	"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run",
+	"ailang-check", "ailang-cli", "ailang-delete", "ailang-edit", "ailang-read", "ailang-run",
 	"ailang-write", "builtins-search", "examples-search", "workspace-exec",
 }
 
@@ -230,11 +230,12 @@ func publishSeTools(t *testing.T, d *Daemon, db string) {
 	}
 }
 
-// seGrants are the seven effect grants: §4.2's six (one per effect name)
-// plus row 140's Workspace.Exec.
+// seGrants are the eight effect grants: §4.2's six (one per effect name),
+// row 140's Workspace.Exec and row 191a's Workspace.Delete.
 var seGrantEffects = []string{
 	broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
 	broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI, broker.EffectWorkspaceExec,
+	broker.EffectWorkspaceDelete,
 }
 
 func (r *seRig) mint(episode string, effects ...string) string {
@@ -430,6 +431,20 @@ func TestSeToolsMCPEndToEnd(t *testing.T) {
 			}
 			return nil
 		}},
+		// Row 191a: the file ailang-write made goes, through its own grant.
+		{"ailang-delete", broker.EffectWorkspaceDelete, map[string]any{"path": "made.txt"}, func(out map[string]any) error {
+			if _, err := os.Lstat(filepath.Join(ep, "made.txt")); out["ok"] != true || !os.IsNotExist(err) {
+				return fmt.Errorf("delete: made.txt still there (%v)", err)
+			}
+			return nil
+		}},
+		// Row 190: a ranged read returns its lines and the file's line count.
+		{"ailang-read", broker.EffectWorkspaceRead, map[string]any{"path": "notes.txt", "offset": 1, "limit": 1}, func(out map[string]any) error {
+			if out["ok"] != true || out["content"] != "alpha gamma\n" || out["total_lines"] != float64(1) {
+				return fmt.Errorf("ranged read: want line 1 and total_lines 1")
+			}
+			return nil
+		}},
 		{"ailang-check", broker.EffectAilangCheck, map[string]any{"path": "broken.ail"}, func(out map[string]any) error {
 			errs, _ := out["errors"].([]any)
 			if out["passed"] != false || len(errs) == 0 || out["error_count"] == float64(0) {
@@ -506,8 +521,8 @@ func TestSeToolsMCPEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for effect, want := range map[string]int64{broker.EffectWorkspaceRead: 1, broker.EffectWorkspaceWrite: 2, broker.EffectAilangCheck: 1,
-		broker.EffectAilangRun: 1, broker.EffectAilangDiscover: 2, broker.EffectAilangCLI: 1} {
+	for effect, want := range map[string]int64{broker.EffectWorkspaceRead: 2, broker.EffectWorkspaceWrite: 2, broker.EffectWorkspaceDelete: 1,
+		broker.EffectAilangCheck: 1, broker.EffectAilangRun: 1, broker.EffectAilangDiscover: 2, broker.EffectAilangCLI: 1} {
 		if got := spend[store.EffectKey{Effect: effect, Scope: broker.WorkspaceScope}]; got != want {
 			t.Fatalf("spend[%s] = %d, want %d (all: %v)", effect, got, want, spend)
 		}
@@ -516,10 +531,10 @@ func TestSeToolsMCPEndToEnd(t *testing.T) {
 	// Plan refusal: an argument outside the tool's schema (L-ARGS) returns the
 	// refusal text, runs no effect, and still commits.
 	before, spendBefore := r.entryCount(), spend
-	wire, took := r.call(token, "ailang-read", map[string]any{"path": "data.txt", "limit": 5})
+	wire, took := r.call(token, "ailang-read", map[string]any{"path": "data.txt", "lines": 5})
 	timings["ailang-read (L-ARGS refusal)"] = took
 	out := wire.Result.StructuredContent
-	if wire.Error != nil || out["ok"] != false || !strings.Contains(fmt.Sprint(out["refused"]), "limit") {
+	if wire.Error != nil || out["ok"] != false || !strings.Contains(fmt.Sprint(out["refused"]), `unknown argument "lines"`) {
 		t.Fatalf("refusal = %+v", wire)
 	}
 	if w := worldOf(t, out); len(w.Effects) != 0 {

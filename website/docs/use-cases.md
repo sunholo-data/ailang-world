@@ -27,8 +27,8 @@ Each use case below is marked:
 rewrite `.git/config`, plant a CI workflow, or drop hooks into an editor config that run
 the next time a human opens the repo. You manage that risk with prompts and hope.
 
-**What World does.** The agent gets a **worktree, not a machine**. It works through nine tools
-over MCP: read, write, edit, check, run, builtins-search, examples-search, the AILANG CLI, and
+**What World does.** The agent gets a **worktree, not a machine**. It works through ten tools
+over MCP: read, write, edit, delete, check, run, builtins-search, examples-search, the AILANG CLI, and
 `workspace-exec`, which runs only the commands an operator's exec profile lists (`go test`,
 `npm test`, `pytest`, …). Every call is a transition:
 
@@ -102,7 +102,7 @@ touch which repo, which one may spend money, which one may ask a human.
 `Workspace.Read` on one worktree and nothing else; a cloud executor can hold `Workspace.Write`
 plus `Ailang.Run` with a budget of 50 calls. Grants carry scope, expiry and budget. Spend persists
 across calls and restarts. Denials are recorded, and a session only sees the tools it holds grants
-for. The `se-tools` preset is nine grants for today's nine tools. Git, GitHub, deploy and
+for. The `se-tools` preset is ten grants for today's ten tools. Git, GitHub, deploy and
 model-call effects follow the same pattern; they are designed but not yet served over MCP.
 
 → [Effects, capabilities and budgets](concepts/effects-capabilities-budgets.md) · [Sessions and episodes](concepts/sessions-and-episodes.md)

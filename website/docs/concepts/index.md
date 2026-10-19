@@ -27,7 +27,7 @@ intent, because the two are not the same thing, even in a release candidate.
 | Effect broker | The in-process authority boundary: capability, scope, budget, recorded outcome | [Effects, capabilities and budgets](effects-capabilities-budgets.md) |
 | Sessions | A bearer credential bound to one episode and a set of grants, minted at a terminal | [Sessions and episodes](sessions-and-episodes.md) |
 | Transition registry | Published, pinned transitions, served per session over MCP and A2A | [Transitions manifest](../reference/transitions-manifest.md) |
-| `se-tools` | Nine coding tools (read, write, edit, check, run, two searches, CLI, and `workspace-exec` for operator-profiled commands) | [Coding tools](../getting-started/coding-tools.md) |
+| `se-tools` | Ten coding tools (read, write, edit, delete, check, run, two searches, CLI, and `workspace-exec` for operator-profiled commands) | [Coding tools](../getting-started/coding-tools.md) |
 | `world-publish` | The attended operator entrypoint for registry writes and the `world/core` package publish | [Attended steps](../guides/attended-steps.md) |
 
 ## The model in one paragraph per idea

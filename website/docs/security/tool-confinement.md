@@ -1,13 +1,13 @@
 ---
 title: Tool confinement
 sidebar_position: 2
-description: The measured confinement facts for the nine coding tools — worktree root, path refusals, .git protection, the case-folded deny list, environment, cache, flag injection, the run outcome shapes and the workspace-exec sandbox — with the design's V-row evidence.
+description: The measured confinement facts for the ten coding tools — worktree root, path refusals, .git protection, the case-folded deny list, environment, cache, flag injection, the run outcome shapes and the workspace-exec sandbox — with the design's V-row evidence.
 ---
 
 # Tool confinement
 
-World serves nine coding tools. Eight run the AILANG tool binary under AILANG's policy layer;
-the ninth, `workspace-exec`, runs operator-profiled commands under the srt sandbox and is
+World serves ten coding tools. Nine run the AILANG tool binary under AILANG's policy layer;
+the tenth, `workspace-exec`, runs operator-profiled commands under the srt sandbox and is
 covered in [its own section](#workspace-exec-operator-profiled-commands-under-srt).
 
 Every AILANG-tool fact on this page was measured first-party on the AILANG **v0.51.0** tool binary,
@@ -82,11 +82,12 @@ The rendered policy makes these read-only to the agent:
 
 | Fact | Evidence |
 |---|---|
-| There is no shell tool. Each effect name has a fixed op allowlist: `Workspace.Read` → `read`; `Workspace.Write` → `write`, `edit`; `Ailang.Check` → `ai_check`; `Ailang.Discover` → `builtins_list`, `examples_search`; `Ailang.CLI` → the policy summary's `cli` list; `Ailang.Run` → the run path only. `Workspace.Exec` runs only an operator-profiled command, never a shell line (below). | §4.3, V40 |
+| There is no shell tool. Each effect name has a fixed op allowlist: `Workspace.Read` → `read`; `Workspace.Write` → `write`, `edit`; `Workspace.Delete` → `delete` (v0.54.15; it refuses the same protected paths, `.git/`, symlinks out and directories, and removes a symlink itself, never its target; row 191a); `Ailang.Check` → `ai_check`; `Ailang.Discover` → `builtins_list`, `examples_search`; `Ailang.CLI` → the policy summary's `cli` list; `Ailang.Run` → the run path only. `Workspace.Exec` runs only an operator-profiled command, never a shell line (below). | §4.3, V40 |
 | `ailang-cli`'s allowlist is the policy summary's 20 `cli` ops: `agent_prompt`, `ai_check`, `axioms`, `builtins_list`, `builtins_show`, `check`, `devtools_prompt`, `docs_search`, `examples_list`, `examples_search`, `examples_show`, `examples_tags`, `fmt`, `iface`, `pkg_docs`, `policy_check`, `prompt`, `test`, `tree`, `version`. Not read, write, edit or run. | V40 |
 | Per-op flag admission is `policy-tool`'s own: for example `fmt --check --write`, `test --allow-skips --json --no-color --package`, `check --json --quiet --strict-syntax`, `docs_search --json --limit`, `builtins_list --json`; most ops admit none. | V56, V67 |
 | `policy-tool` silently ignores unknown top-level request keys, so each transition refuses any argument key outside its schema (L-ARGS). | V56 |
-| An op with `write`/`edit` on `Workspace.Read` is refused by the handler, with no file change. | AC4.2 |
+| An op with `write`/`edit` on `Workspace.Read` is refused by the handler, with no file change; so is `delete` on any effect but `Workspace.Delete`. | AC4.2, row 191a |
+| Every toolchain child (policy-tool, `run --policy`, the CLI ops) gets `TMPDIR` = the episode cache's own `tmp/` (0700), never `/tmp`: v0.54.15's CLI ops make a private cache dir there while they run. | row 197 |
 
 ## Flag injection
 

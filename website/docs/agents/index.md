@@ -13,13 +13,14 @@ AILANG World is the 1.0 release candidate (`v1.0.0-rc.1`). The tool surface belo
 ## What World gives you
 
 - **A confined worktree.** The operator creates one git worktree per episode. Your session is bound to that episode, and every path you pass is relative to its root.
-- **Nine tools**, over MCP at `/mcp/` and over A2A at `/a2a/`:
+- **Ten tools**, over MCP at `/mcp/` and over A2A at `/a2a/`:
 
   | Tool | What it does |
   |---|---|
-  | `ailang-read` | Read a file in the worktree |
+  | `ailang-read` | Read a file in the worktree, whole or a line range (`offset`, `limit`) |
   | `ailang-write` | Create or overwrite a file in the worktree |
   | `ailang-edit` | Replace one exact, unique occurrence of text in a file |
+  | `ailang-delete` | Delete one file in the worktree (its own `Workspace.Delete` grant) |
   | `ailang-check` | Type-check and Z3-verify an `.ail` file; structured diagnostics |
   | `ailang-run` | Run an AILANG program under the operator's policy (IO and FS by default; Env, Net or Declassify only if the operator enables them; 8 s) |
   | `builtins-search` | Search the real builtin inventory of the tool binary |

@@ -201,4 +201,4 @@ step is covered in [Transitions manifest](../reference/transitions-manifest.md) 
 [MCP and A2A](../reference/mcp-and-a2a.md). The session you minted above already holds the
 `world.apply` grant the echo transition's `access` names.
 
-Next: [Coding tools](coding-tools.md), the nine real transitions.
+Next: [Coding tools](coding-tools.md), the ten real transitions.

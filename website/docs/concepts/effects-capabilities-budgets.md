@@ -57,10 +57,11 @@ Two different triples are checked at two different points:
 - **Execution**: each planned request must exactly equal one of the descriptor's
   `declaredEffects`, and then pass the broker's decision against the grants.
 
-The nine `se-tools` transitions each declare `access` at cost 0 and one effect at cost 1, so
-one grant per effect name covers both. Seven grants make all nine tools visible and callable,
+The ten `se-tools` transitions each declare `access` at cost 0 and one effect at cost 1, so
+one grant per effect name covers both. Eight grants make all ten tools visible and callable,
 because `ailang-write` and `ailang-edit` share `Workspace.Write` and the two searches share
-`Ailang.Discover`. The `session new --preset se-tools` preset is nine grants: those seven plus
+`Ailang.Discover`; `ailang-delete` has its own `Workspace.Delete`, since deleting is a different
+authority from writing. The `session new --preset se-tools` preset is ten grants: those eight plus
 `Ailang.RunEnv` and `Ailang.RunNet` (below). A grant with budget 0 still shows the tool, but
 every call is recorded as `denied:budget`.
 
@@ -73,7 +74,7 @@ must enable the capability with `serve --run-allow-caps`
 
 | Effect | Handler | Status |
 |---|---|---|
-| `Workspace.Read`, `Workspace.Write`, `Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv`, `Ailang.RunNet`, `Ailang.Discover`, `Ailang.CLI` | `AilangToolHandler` (the coding tools) | Served when `serve` has both `--workspace-root` and `--tool-ailang-bin`; an `Env` or `Net` run also needs `--run-allow-caps` |
+| `Workspace.Read`, `Workspace.Write`, `Workspace.Delete`, `Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv`, `Ailang.RunNet`, `Ailang.Discover`, `Ailang.CLI` | `AilangToolHandler` (the coding tools) | Served when `serve` has both `--workspace-root` and `--tool-ailang-bin`; an `Env` or `Net` run also needs `--run-allow-caps` |
 | `Workspace.Exec` | Exec handler (`workspace-exec`): an operator-profiled command under the srt sandbox | Bound with the workspace tools; every call is refused `no exec profile configured` unless `serve` has `--exec-profile` (and `--exec-sandbox`) |
 | `Human.Approve` | Approval-request handler, serialized daemon-wide | Bound by the daemon for every episode (row 172), so an invocation can request approval and mint its decision packet |
 | `FS.Read`, `FS.Write` | Direct file handler, scope = one canonical absolute file path | Library only; no production caller |
