@@ -1,0 +1,32 @@
+git git version 2.54.0
+repo e-nfc: pkg/é_test.go (NFC, 2-byte é), modified
+  :(top,glob,icase)**/*_test.go  ls-files=1 status=1
+  :(top,glob,icase)**/?_test.go  ls-files=0 status=0
+  :(top,glob,icase)**/??_test.go  ls-files=1 status=1
+  :(top,glob,icase)**/[^a]_test.go  ls-files=0 status=0
+  :(top,glob,icase)**/[é]_test.go  ls-files=0 status=0
+  :(top,glob,icase)**/é_test.go  ls-files=1 status=1
+repo e-nfd: pkg/e+U+0301_test.go in the index as NFD bytes (precomposeunicode=true)
+  :(top,glob,icase)**/é_test.go  ls-files=1 status=1
+  :(top,glob,icase)**/*_test.go  ls-files=1 status=1
+  :(top,glob,icase)**/*_te*t.go  ls-files=1 status=1
+repo longs: teſts/x.py modified; pattern tests/** widened
+  :(top,glob,icase)tests  ls-files=0 status=0
+  :(top,glob,icase)tests/**  ls-files=0 status=0
+  :(top,glob,icase)te*t*  ls-files=0 status=0
+  :(top,glob,icase)te*t*/**  ls-files=1 status=1
+repo kelvin: pkg/K(U+212A)_test.go modified; pattern *k_test.go widened
+  :(top,glob,icase)**/*k_test.go  ls-files=0 status=0
+  :(top,glob,icase)**/*_te*t.go  ls-files=1 status=1
+repo semi: pkg/a(U+037E)_test.go; pattern a;_test.go widened
+  :(top,glob,icase)**/a;_test.go  ls-files=0 status=0
+  :(top,glob,icase)**/a*_te*t.go  ls-files=1 status=1
+repo ign: zzign/a_test.go + nm/c.txt in info/exclude'd dirs
+  status matching:  ! nm/ ! zzign/ 
+  status no-pathspec matching: 1 .M N... 100644 100644 100644 587be6b4c3f93f93c489c0111bba5596147a26cb 587be6b4c3f93f93c489c0111bba5596147a26cb keep.txt ! nm/ ! zzign/ 
+  ls-files -o -i:   zzign/a_test.go 
+  ls-files -o -i no-pathspec: nm/c.txt zzign/a_test.go zzign/b.txt 
+repo repl: tests/ replaced by a symlink, run from sub/
+  :(top,glob,icase)te*t*  ls-files=0 status=1
+  :(top,glob,icase)te*t*/**  ls-files=1 status=1
+  :(glob,icase)te*t*  ls-files=0 status=0
