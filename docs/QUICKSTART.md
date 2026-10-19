@@ -894,6 +894,10 @@ configuration is refused: …`, naming the flag and the field:
 | `episode-twice` | one episode mapped twice | `a second time` |
 | `project-twice` | two profiles with one `project` | `is configured twice` |
 | `profile-absent` | an `--exec-profile` file that does not exist | `--exec-profile` `does not exist` |
+| `protected-double-star` | a protected pattern with a leading double star, such as `**/x_test.go` | `protected[0]` `**/x_test.go` |
+| `protected-slash-glob` | a protected slash glob, such as `src/*.ts` | `protected[0]` `src/*.ts` |
+| `protected-over-limit` | 65 protected entries (the limit is 64) | `protected[64]` `65 entries exceeds the limit of 64` |
+| `protected-malformed-value` | a protected string instead of an array | `protected` `must be an array of strings` |
 | `unknown-key` | a profile key World does not know | `unknown key "network"` |
 | `root-escapes` | a `root` that is not a clean relative path | `root:` |
 | `argv0-missing` | a command's `argv[0]` that is not on `path` | `does not resolve on path` |
