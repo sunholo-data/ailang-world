@@ -223,9 +223,20 @@ var execRefusalCases = map[string]func(r *execRig){
 	},
 	"profile-absent": func(r *execRig) { r.cfg.ExecProfiles = []string{filepath.Join(r.f.outside, "nope.json")} },
 	// §4.3 load-time refusals.
-	"unknown-key":   func(r *execRig) { r.profile["network"] = []any{"example.com"} },
-	"root-escapes":  func(r *execRig) { r.profile["root"] = "../other" },
-	"argv0-missing": func(r *execRig) { cmdOf(r)["argv"] = []any{"cargo", "test"} },
+	// Row 156 M2b: grammar and JSON-shape refusals precede the probe.
+	"protected-double-star": func(r *execRig) { r.profile["protected"] = []string{"**/x_test.go"} },
+	"protected-slash-glob":  func(r *execRig) { r.profile["protected"] = []string{"src/*.ts"} },
+	"protected-over-limit": func(r *execRig) {
+		patterns := make([]string, 65)
+		for i := range patterns {
+			patterns[i] = "x_test.go"
+		}
+		r.profile["protected"] = patterns
+	},
+	"protected-malformed-value": func(r *execRig) { r.profile["protected"] = "tests/**" },
+	"unknown-key":               func(r *execRig) { r.profile["network"] = []any{"example.com"} },
+	"root-escapes":              func(r *execRig) { r.profile["root"] = "../other" },
+	"argv0-missing":             func(r *execRig) { cmdOf(r)["argv"] = []any{"cargo", "test"} },
 	"env-world-owned": func(r *execRig) {
 		r.profile["env"] = map[string]any{"HTTPS_PROXY": "http://example.com"}
 	},
@@ -420,6 +431,9 @@ func TestWorkspaceExecEpisodeSelectsItsProfile(t *testing.T) {
 // row quotes, and the table and these cases are the same set.
 func TestExecStartupRefusalTable(t *testing.T) {
 	rows := quickstartExecRefusals(t)
+	if len(rows) != 51 || len(execRefusalCases) != 51 {
+		t.Errorf("exact refusal census: QUICKSTART=%d Go=%d, want 51 each", len(rows), len(execRefusalCases))
+	}
 	var ids []string
 	for id := range execRefusalCases {
 		if _, ok := rows[id]; !ok {
@@ -437,7 +451,24 @@ func TestExecStartupRefusalTable(t *testing.T) {
 		t.Run(id, func(t *testing.T) {
 			r := newExecRig(t)
 			execRefusalCases[id](r)
+			protected := strings.HasPrefix(id, "protected-")
+			probeMarker := filepath.Join(r.f.outside, "probe-started")
+			if protected {
+				// The existing shim records any sandbox subprocess launch.
+				markerJSON, err := json.Marshal(probeMarker)
+				if err != nil {
+					t.Fatal(err)
+				}
+				pin := writeSrtTree(t, r.srt, "0.0.0-test",
+					"require('fs').writeFileSync("+string(markerJSON)+", 'started');\n"+execShimCLIs["passthrough"])
+				r.pin = &pin
+			}
+			// start -> newWSDaemon -> boundedTestContext creates this
+			// subtest's own context.WithTimeout and t.Cleanup(cancel).
 			d, err := r.start()
+			if d != nil {
+				t.Fatalf("refused startup returned a daemon (listener must not start)")
+			}
 			if err == nil {
 				_ = d
 				t.Fatalf("serve started; want the refusal %q", rows[id])
@@ -449,6 +480,20 @@ func TestExecStartupRefusalTable(t *testing.T) {
 			for _, want := range rows[id] {
 				if !strings.Contains(err.Error(), want) {
 					t.Fatalf("refusal %q does not name %q (QUICKSTART §10 row %s)", err, want, id)
+				}
+			}
+			if protected {
+				for _, path := range []string{probeMarker, filepath.Join(r.f.stateDir, "archive", "exec-sandbox"),
+					filepath.Join(r.f.stateDir, "exec-probe")} {
+					if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
+						t.Fatalf("protected refusal reached sandbox/probe construction: %s: %v", path, statErr)
+					}
+				}
+				if got := r.f.dispatches(t); got != 0 {
+					t.Fatalf("protected refusal dispatched %d tool subprocesses, want 0", got)
+				}
+				if got := r.f.summaries(t); got != 0 {
+					t.Fatalf("protected refusal ran %d policy summaries, want 0", got)
 				}
 			}
 			t.Logf("%s: %v", id, err)

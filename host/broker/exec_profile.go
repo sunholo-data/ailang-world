@@ -62,6 +62,9 @@ type ExecProfile struct {
 	Caches    map[string]ExecCache
 	TimeoutMS int
 	Commands  map[string]ExecProfileCommand
+	// Protected is the canonical optional pattern set (row 156 §4.1).
+	Protected       []string
+	ProtectedDigest string // separate set digest; empty means no protected set
 	// Probe is the startup probe's toolchain argv (§4.6 arm 7, row 140 M3):
 	// the `probe` key, or by default the argv[0] of the first command (in
 	// byte order of id) with --version. Its argv[0] is resolved like a
@@ -126,7 +129,7 @@ func decodeField(field string, raw json.RawMessage, v any) error {
 // host relies on and resolves each command's argv[0] on the profile path.
 func ParseExecProfile(data []byte) (*ExecProfile, error) {
 	top, err := strictObject("profile", data, "profile", "project", "root", "path", "env", "read_roots", "caches",
-		"timeout_ms", "commands", "probe")
+		"timeout_ms", "commands", "probe", "protected")
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +148,32 @@ func ParseExecProfile(data []byte) (*ExecProfile, error) {
 	sum := sha256.Sum256(data)
 	p := &ExecProfile{Root: ".", Env: map[string]string{}, Caches: map[string]ExecCache{},
 		Commands: map[string]ExecProfileCommand{}, Digest: "sha256:" + hex.EncodeToString(sum[:])}
+	if raw, ok := top["protected"]; ok {
+		// Decode elements separately: encoding/json accepts null for both a
+		// slice and a string, but this field requires an array of strings.
+		if len(raw) == 0 || raw[0] != '[' {
+			return nil, profileErr("protected", "must be an array of strings")
+		}
+		var entries []json.RawMessage
+		if err := decodeField("protected", raw, &entries); err != nil {
+			return nil, err
+		}
+		patterns := make([]string, len(entries))
+		for i, entry := range entries {
+			field := fmt.Sprintf("protected[%d]", i)
+			if len(entry) == 0 || entry[0] != '"' {
+				return nil, profileErr(field, "must be a string")
+			}
+			if err := decodeField(field, entry, &patterns[i]); err != nil {
+				return nil, err
+			}
+		}
+		p.Protected, err = ParseProtectedPatterns(patterns)
+		if err != nil {
+			return nil, profileErr("protected", "%v", err)
+		}
+		p.ProtectedDigest = protectedDigest(p.Protected)
+	}
 	if err := decodeField("project", top["project"], &p.Project); err != nil {
 		return nil, err
 	}

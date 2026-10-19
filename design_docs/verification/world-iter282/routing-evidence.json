@@ -1,0 +1,56 @@
+{
+ "iteration": 282,
+ "controller": {
+  "model": "claude:claude-opus-5-5",
+  "tok": "not reported"
+ },
+ "roles": [
+  {
+   "role": "designer",
+   "resolver": "recipe claude:claude-opus-5-5 declared:provider-pin",
+   "ran": "Agent tool model=opus (same Claude weights as the pin; operator asked for Agent-tool spawns)",
+   "runs": 2,
+   "subagent_tokens": [
+    101194,
+    120922
+   ],
+   "note": "initial r4 + one protocol-mandated revision r4.1 (Fable-diet unit = one doc)"
+  },
+  {
+   "role": "planner",
+   "resolver": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+   "ran": "codex exec gpt-6.1-sol, detached planner worktree, probe rc0",
+   "rc": 0,
+   "tokens": 130570
+  },
+  {
+   "role": "executor",
+   "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
+   "ran": "codex exec gpt-6.1-sol workspace-write, probe rc0",
+   "rc": 0,
+   "tokens": 144910
+  },
+  {
+   "role": "evaluator",
+   "resolver": "agent-tool sonnet declared:alias-pin",
+   "ran": "Agent tool model=sonnet, own worktree .eval-world-iter282",
+   "rounds": [
+    {
+     "head": "e4810dc",
+     "verdict": "FAIL",
+     "score": 68,
+     "subagent_tokens": 98887
+    },
+    {
+     "head": "ba544c0",
+     "verdict": "PASS",
+     "score": 88,
+     "subagent_tokens": 106355
+    }
+   ],
+   "judge_independence": "cross-vendor (generator codex/opus, judge sonnet)"
+  }
+ ],
+ "quorum_metered_usd": 0.470166,
+ "designer_rotation": "pointer was codex:gpt-6.1-sol; resolver returned claude:claude-opus-5-5 (driver MISSION_DESIGNER_RESOLVED); followed resolver verbatim"
+}

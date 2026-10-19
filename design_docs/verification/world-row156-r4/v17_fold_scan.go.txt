@@ -1,0 +1,64 @@
+package main
+
+// Exhaustive: which non-ASCII scalar values r give foldKey(string(r)) containing an ASCII rune
+// (same fold as host/broker/exec_protected.go foldProtectedKey, x/text from go.mod).
+import (
+	"fmt"
+	"strings"
+	"unicode"
+	"unicode/utf8"
+
+	"golang.org/x/text/unicode/norm"
+)
+
+func foldRune(r rune) rune {
+	m := r
+	for f := unicode.SimpleFold(r); f != r; f = unicode.SimpleFold(f) {
+		if f < m {
+			m = f
+		}
+	}
+	return m
+}
+func key(s string) string { return strings.Map(foldRune, norm.NFC.String(s)) }
+
+func main() {
+	n, scanned := 0, 0
+	for r := rune(0x80); r <= 0x10FFFF; r++ {
+		if r >= 0xD800 && r <= 0xDFFF {
+			continue
+		}
+		scanned++
+		k := key(string(r))
+		has := false
+		for _, c := range k {
+			if c < 0x80 {
+				has = true
+			}
+		}
+		if has {
+			n++
+			fmt.Printf("U+%04X %q nfc=%q key=%q\n", r, string(r), norm.NFC.String(string(r)), k)
+		}
+	}
+	// ASCII runes whose key is not themselves (orbit min differs), for the record.
+	for r := rune(0x21); r < 0x7f; r++ {
+		if k := key(string(r)); k != string(r) {
+			fmt.Printf("ASCII %q key=%q\n", string(r), k)
+		}
+	}
+	// combining control: ASCII + every combining mark (Mn) that NFC does NOT compose keeps the ASCII rune
+	comp := 0
+	for r := rune(0x300); r <= 0x10FFFF; r++ {
+		if !unicode.Is(unicode.Mn, r) {
+			continue
+		}
+		for _, b := range "skKSe;`" {
+			s := norm.NFC.String(string(b) + string(r))
+			if utf8.RuneCountInString(s) == 1 {
+				comp++
+			}
+		}
+	}
+	fmt.Printf("scanned=%d nonascii_with_ascii_key=%d composed_pairs_sample=%d\n", scanned, n, comp)
+}
