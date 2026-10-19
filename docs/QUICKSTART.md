@@ -71,6 +71,10 @@ At `[y/N]`, type `y`. On success it prints `session for episode ep1: 9 grant(s),
 token written to /tmp/se-session`, plus `credential_id=…` on stderr (the hash `session revoke`
 takes; the token itself is never printed).
 
+`episode start` (row 189) is the other way to mint: it runs the same fence, y/N and mint for a
+whole episode once a daemon is serving. See [Start a whole episode in one
+act](#start-a-whole-episode-in-one-act) at the end of §1.
+
 **Two snags, both handled:**
 - **IDE terminal panes work as they are.** Both commands open `/dev/tty` themselves and ask
   there, so you no longer need to add `< /dev/tty`. It is still accepted, and reads the same
@@ -142,6 +146,48 @@ directory older than twenty seconds.
 ```
 
 Returns the daemon version, DB path, and the pinned `interpreter_ref` + version.
+
+### Start a whole episode in one act
+
+`episode start` (row 189) is attended like §0's two steps: run it yourself in a terminal. With a
+daemon of the same build already serving, it validates everything, checks the daemon, runs the
+same fence, y/N and mint as `session new`, and prints the agent's launch line. It never starts,
+restarts or stops a daemon, and it never runs the agent.
+
+```bash
+/tmp/ailang-worldd episode start ep2 --repo ~/dev/my-project --profile my-project \
+  --task ~/tasks/ep2.md --db /tmp/se-world/world.db --workspace-root /tmp/se-ws \
+  --addr 127.0.0.1:7644
+```
+
+- `--profile my-project` binds the session to `~/.ailang-world-exec/profiles/my-project.json`
+  (`--exec-profiles-dir` names another directory). The y/N names the project **and the sha256
+  of the file's exact bytes**, and the credential records both. The daemon runs the episode's
+  `workspace-exec` under that profile from its first call, **with no restart and no
+  `--exec-episode-project` flag**. If the profile file changes later and the daemon is restarted
+  on the new bytes, every exec of that episode refuses, naming both digests: re-mint it. Without
+  `--profile` the session holds no `Workspace.Exec` grant.
+- Before the terminal opens it reads `GET /v1/health` on `--addr` (default `127.0.0.1:47330`) and
+  refuses a daemon of another build, one serving another tool binary than this build pins, one
+  reading another credentials store, or one that has not loaded the profile's current bytes. Two
+  builds are the same when their executables have the same sha256, or, failing that, when both
+  carry the same clean (unmodified) VCS revision. A build in a git worktree carries no revision,
+  so there only the same binary file matches. Each refusal names the fix, usually a rebuild and
+  restart. With no daemon serving it refuses and prints the `serve` line to run.
+- The token goes once to `~/.ailang/world/sessions/ep2.session` (0600, directory 0700;
+  `--sessions-dir` names another), and for claude also to a private 0600
+  `~/.ailang/world/sessions/ep2.mcp.json`. Delete the `.mcp.json` after the run. Either file
+  existing already is refused before the terminal opens. The token is printed nowhere.
+- The launch line is the bare `claude --tools '' --strict-mcp-config --mcp-config <file>
+  --allowedTools <the World tools the grants cover>` (the `trial.py` shape), or with
+  `--agent codex` the `WORLD_SESSION="$(cat <session file>)" codex exec …` form. Run it from an
+  empty directory, never the worktree.
+
+The daemon side, once: start `serve` with `--exec-sandbox <srt node_modules>` and no
+`--exec-profile`, and it loads every `<project>.json` in `~/.ailang-world-exec/profiles/`
+(`--exec-profiles-dir` names another; `*.proposed.json` is skipped until you rename it). A
+profile there that fails to parse or probe is left out, named on stderr and in `/v1/health`
+(`exec_profiles_excluded`), and the rest serve. `ailang-worldd episode start --help` has every flag.
 
 ## 2. Commit the genesis transition
 
@@ -851,7 +897,11 @@ each with `--preset se-tools`, which grants `Workspace.Exec`. Write each token t
 **Serve.** The four flags:
 - `--exec-profile` is repeatable. With more than one profile, `--exec-episode-project EP=PROJECT`
   says which episode runs which. With one profile it is optional. An unmapped episode with
-  several profiles is refused on each call.
+  several profiles is refused on each call. (Row 189: a session minted with
+  `session new`/`episode start --profile PROJECT` carries its own binding, which comes first and
+  needs no flag and no restart; `--exec-episode-project` is for sessions minted without one.
+  `--exec-profiles-dir` loads a whole directory of `<project>.json` instead, leaving out, rather
+  than refusing startup for, a profile that fails; see §0.)
 - `--exec-sandbox` names srt's `node_modules`.
 - `--exec-node` names the node (default: `node` on `PATH`).
 - `--exec-max-output-bytes` is the per-stream kill (default 64 MiB).
@@ -961,7 +1011,10 @@ curl -s -H "Authorization: Bearer $(cat /tmp/se-go1-session)" \
 
 Each call is one log entry, and its record holds the full result. So `why` and replay return it
 without running anything again. A change to a profile, node or srt shows as a different digest
-in later records. `serve` reads a profile file once, so restart it after editing one.
+in later records. `serve` reads a profile file once, so restart it after editing one. A session
+minted with `--profile` is bound to the digest of the bytes confirmed at its y/N: after an edit
+and a restart, its every exec refuses naming both digests until the episode is re-minted
+(`session revoke --episode EP`, then `episode start`/`session new --profile` again).
 
 ### 11. Projects with a module root and registry packages
 

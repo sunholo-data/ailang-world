@@ -34,8 +34,28 @@ import (
 var credentialsSchemaSQL string
 
 // credentialsSchemaVersion is the credentials store's own user_version,
-// independent of the world store's currentSchemaVersion.
-const credentialsSchemaVersion = 1
+// independent of the world store's currentSchemaVersion. Version 2 (row 189
+// M2) adds the profile binding columns, project and profile_digest.
+const credentialsSchemaVersion = 2
+
+// CredentialsSchemaVersion exports credentialsSchemaVersion: serve compares a
+// store's version with it to decide whether to upgrade.
+const CredentialsSchemaVersion = credentialsSchemaVersion
+
+// credentialsSchemaV1 is the version before the profile binding: the five
+// columns only. It stays readable and writable (unbound mints) so a `session`
+// verb of this build never breaks a serving daemon of an older build, which
+// refuses a newer user_version; only `serve` of this build upgrades it
+// (UpgradeCredentials).
+const credentialsSchemaV1 = 1
+
+// credentialsUpgradeV2 is the version 1 -> 2 upgrade: two nullable columns, so
+// every existing row stays byte-identical and is unbound (NULL, NULL). The
+// column definitions match credentials_schema.sql exactly.
+var credentialsUpgradeV2 = []string{
+	`ALTER TABLE session_credentials ADD COLUMN project TEXT CHECK (project IS NULL OR project <> '')`,
+	`ALTER TABLE session_credentials ADD COLUMN profile_digest TEXT CHECK ((profile_digest IS NULL) = (project IS NULL) AND (profile_digest IS NULL OR profile_digest <> ''))`,
+}
 
 // CredentialsFileName is the default credentials store's file name, created in
 // the world store's directory.
@@ -49,12 +69,31 @@ const credentialsTable = "session_credentials"
 // encoding of the []broker.Capability the authority package marshalled; the store
 // deliberately does not interpret it (store must not import broker — broker imports
 // store), so the field is typed as a plain string and round-trips unchanged.
+//
+// Project and ProfileDigest are the exec profile binding (row 189 M2): both
+// empty for an unbound credential (stored as NULL), both set for a bound one.
 type SessionRow struct {
-	CredentialID string
-	EpisodeID    string
-	GrantsJSON   string
-	ExpiresAt    int64
-	CreatedAt    int64
+	CredentialID  string
+	EpisodeID     string
+	GrantsJSON    string
+	ExpiresAt     int64
+	CreatedAt     int64
+	Project       string
+	ProfileDigest string
+}
+
+// Bound reports whether the credential carries an exec profile binding.
+func (r SessionRow) Bound() bool { return r.Project != "" }
+
+// UnboundCredentialsStoreError refuses a bound mint into a version-1
+// credentials store, which has no binding columns yet. Only `serve` of a
+// build with the binding upgrades it, so a serving daemon of an older build
+// is never handed a store it refuses.
+type UnboundCredentialsStoreError struct{ Path string }
+
+func (e *UnboundCredentialsStoreError) Error() string {
+	return fmt.Sprintf("store: credentials store %q is schema version 1, from before the exec profile binding; "+
+		"restart `ailang-worldd serve` with this build once (it upgrades the store at startup), then mint with --profile again", e.Path)
 }
 
 // CredentialsSchemaError reports a file that is not a credentials store this
@@ -77,7 +116,16 @@ func (e *CredentialsSchemaError) Error() string {
 type Credentials struct {
 	db   *sql.DB
 	lock *writerLock
+	// version is the schema version the handle was opened at: 1 (no binding
+	// columns) or credentialsSchemaVersion.
+	version int
+	display string
+	// upgradedFrom is the version UpgradeCredentials upgraded from (0: none).
+	upgradedFrom int
 }
+
+// Version is the credentials store's schema version as opened.
+func (c *Credentials) Version() int { return c.version }
 
 // DefaultCredentialsPath is the credentials store beside the world store at
 // worldDB: <dir of worldDB>/credentials.db. For the default world store
@@ -127,13 +175,41 @@ func SameDatabase(a, b string) (bool, error) {
 // contention returns *WriterAlreadyActive immediately. The lock file is
 // "<canonical credentials path>.writer.lock", a different file from the world
 // store's, so it never contends with a serving daemon.
+//
+// A fresh file is created at credentialsSchemaVersion. An existing version-1
+// store is opened as it is, never upgraded here: unbound mints and revokes
+// work on it, and a bound mint is refused (UnboundCredentialsStoreError).
 func OpenCredentials(path string) (*Credentials, error) {
+	return openCredentialsWritable(path, false)
+}
+
+// UpgradeCredentials brings an existing credentials store to
+// credentialsSchemaVersion under its writer lock, in one transaction: the
+// version 1 -> 2 upgrade adds the binding columns, every existing row unchanged
+// and unbound. It reports whether it upgraded; a current store is left
+// untouched (idempotent), and a missing one is created current. `serve`
+// calls it at startup — after that, a daemon of an older build would refuse
+// the store, which is why the session verbs never upgrade it.
+func UpgradeCredentials(path string) (upgraded bool, err error) {
+	c, err := openCredentialsWritable(path, true)
+	if err != nil {
+		return false, err
+	}
+	upgraded = c.upgradedFrom != 0
+	return upgraded, c.Close()
+}
+
+func openCredentialsWritable(path string, upgrade bool) (*Credentials, error) {
+	mode := credOpenWrite
+	if upgrade {
+		mode = credOpenUpgrade
+	}
 	if isInMemoryDSN(path) {
-		db, err := openCredentialsSQLite(path, path, true)
+		c, err := openCredentialsSQLite(path, path, mode)
 		if err != nil {
 			return nil, err
 		}
-		return &Credentials{db: db}, nil
+		return c, nil
 	}
 	canonical, params, err := resolveDSN(path)
 	if err != nil {
@@ -143,12 +219,13 @@ func OpenCredentials(path string) (*Credentials, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := openCredentialsSQLite(path, writeDSN(canonical, params), true)
+	c, err := openCredentialsSQLite(path, writeDSN(canonical, params), mode)
 	if err != nil {
 		_ = lock.release()
 		return nil, err
 	}
-	return &Credentials{db: db, lock: lock}, nil
+	c.lock = lock
+	return c, nil
 }
 
 // OpenCredentialsReadOnly opens an EXISTING credentials store read-only. It
@@ -162,11 +239,7 @@ func OpenCredentialsReadOnly(path string) (*Credentials, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := openCredentialsSQLite(path, readOnlyDSN(canonical, params), false)
-	if err != nil {
-		return nil, err
-	}
-	return &Credentials{db: db}, nil
+	return openCredentialsSQLite(path, readOnlyDSN(canonical, params), credOpenRead)
 }
 
 // Close closes the database, then releases the writer lock if held.
@@ -181,24 +254,36 @@ func (c *Credentials) Close() error {
 	return err
 }
 
+// credOpenMode is what an open may do to the schema.
+type credOpenMode int
+
+const (
+	credOpenRead    credOpenMode = iota // nothing: a fresh file is refused
+	credOpenWrite                       // initialize a fresh file
+	credOpenUpgrade                     // initialize a fresh file, upgrade version 1
+)
+
 // openCredentialsSQLite opens the driver handle and enforces the credentials
-// schema: a fresh file is initialized (only when apply is set), version
-// credentialsSchemaVersion must hold exactly the session_credentials table,
-// and anything else is refused unmodified.
-func openCredentialsSQLite(display, dsn string, apply bool) (*sql.DB, error) {
+// schema: a fresh file is initialized (unless mode is credOpenRead), version 1
+// or credentialsSchemaVersion must hold exactly the session_credentials table,
+// version 1 is upgraded only with credOpenUpgrade, and anything else is
+// refused unmodified.
+func openCredentialsSQLite(display, dsn string, mode credOpenMode) (*Credentials, error) {
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("store: open credentials %q: %w", display, err)
 	}
 	db.SetMaxOpenConns(1)
-	if err := enforceCredentialsSchema(display, db, apply); err != nil {
+	c := &Credentials{db: db, display: display}
+	if err := c.enforceSchema(mode); err != nil {
 		_ = db.Close()
 		return nil, err
 	}
-	return db, nil
+	return c, nil
 }
 
-func enforceCredentialsSchema(display string, db *sql.DB, apply bool) error {
+func (c *Credentials) enforceSchema(mode credOpenMode) error {
+	display, db := c.display, c.db
 	var version int
 	if err := db.QueryRow("PRAGMA user_version").Scan(&version); err != nil {
 		return fmt.Errorf("store: open credentials %q: read schema version: %w", display, err)
@@ -207,15 +292,24 @@ func enforceCredentialsSchema(display string, db *sql.DB, apply bool) error {
 	if err != nil {
 		return fmt.Errorf("store: open credentials %q: inspect schema: %w", display, err)
 	}
+	known := version == credentialsSchemaVersion || version == credentialsSchemaV1
 	switch {
 	case version == 0 && len(tables) == 0:
-		if !apply {
+		if mode == credOpenRead {
 			return &CredentialsSchemaError{Path: display, Detail: "it has no credentials schema yet (serve or session new creates it)"}
 		}
+		c.version = credentialsSchemaVersion
 		return initCredentialsSchema(display, db)
-	case version == credentialsSchemaVersion && len(tables) == 1 && tables[0] == credentialsTable:
+	case known && len(tables) == 1 && tables[0] == credentialsTable:
+		c.version = version
+		if version == credentialsSchemaV1 && mode == credOpenUpgrade {
+			if err := upgradeCredentialsV2(display, db); err != nil {
+				return err
+			}
+			c.version, c.upgradedFrom = credentialsSchemaVersion, credentialsSchemaV1
+		}
 		return nil
-	case version == credentialsSchemaVersion && len(tables) == 0:
+	case known && len(tables) == 0:
 		// Its only table was dropped: recreating it empty would silently
 		// revoke every credential, so it is refused like commit_objects is.
 		return &CredentialsSchemaError{Path: display, Detail: "it is missing table " + credentialsTable}
@@ -224,6 +318,29 @@ func enforceCredentialsSchema(display string, db *sql.DB, apply bool) error {
 	default:
 		return &CredentialsSchemaError{Path: display, Detail: fmt.Sprintf("user_version %d with tables %v is not a credentials store (is it the world store?)", version, tables)}
 	}
+}
+
+// upgradeCredentialsV2 adds the binding columns and stamps version 2 in one
+// transaction: after a crash the store is either version 1 unchanged or
+// version 2 with every row unchanged and unbound.
+func upgradeCredentialsV2(display string, db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("store: upgrade credentials %q: begin: %w", display, err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	for _, stmt := range credentialsUpgradeV2 {
+		if _, err := tx.Exec(stmt); err != nil {
+			return fmt.Errorf("store: upgrade credentials %q: %w", display, err)
+		}
+	}
+	if _, err := tx.Exec(fmt.Sprintf("PRAGMA user_version = %d", credentialsSchemaVersion)); err != nil {
+		return fmt.Errorf("store: upgrade credentials %q: set version: %w", display, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("store: upgrade credentials %q: commit: %w", display, err)
+	}
+	return nil
 }
 
 // initCredentialsSchema applies the schema and stamps the version in one
@@ -276,16 +393,28 @@ func (c *Credentials) MintSession(ctx context.Context, row SessionRow) error {
 	if row.CredentialID == "" || row.EpisodeID == "" {
 		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
 	}
+	if (row.Project == "") != (row.ProfileDigest == "") {
+		return fmt.Errorf("store: mint session: a profile binding needs both the project and its digest")
+	}
+	if row.Bound() && c.version < credentialsSchemaVersion {
+		return &UnboundCredentialsStoreError{Path: c.display}
+	}
 	tx, err := c.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("store: mint session: begin: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	if _, err := tx.ExecContext(ctx,
-		`INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
-		 VALUES (?, ?, ?, ?, ?);`,
-		row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt,
-	); err != nil {
+	// An unbound row names only the five original columns, so the same
+	// statement works on a version-1 store; the binding columns stay NULL.
+	stmt := `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
+		 VALUES (?, ?, ?, ?, ?);`
+	args := []any{row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt}
+	if row.Bound() {
+		stmt = `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest)
+		 VALUES (?, ?, ?, ?, ?, ?, ?);`
+		args = append(args, row.Project, row.ProfileDigest)
+	}
+	if _, err := tx.ExecContext(ctx, stmt, args...); err != nil {
 		return fmt.Errorf("store: mint session: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -303,18 +432,29 @@ func (c *Credentials) ResolveSession(ctx context.Context, credentialID string) (
 		return SessionRow{}, false, err
 	}
 	var row SessionRow
+	var project, digest sql.NullString
 	err := c.db.QueryRowContext(ctx,
-		`SELECT credential_id, episode_id, grants_json, expires_at, created_at
-		   FROM session_credentials WHERE credential_id = ?;`,
+		sessionColumns(c.version)+` FROM session_credentials WHERE credential_id = ?;`,
 		credentialID,
-	).Scan(&row.CredentialID, &row.EpisodeID, &row.GrantsJSON, &row.ExpiresAt, &row.CreatedAt)
+	).Scan(&row.CredentialID, &row.EpisodeID, &row.GrantsJSON, &row.ExpiresAt, &row.CreatedAt, &project, &digest)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return SessionRow{}, false, nil
 	case err != nil:
 		return SessionRow{}, false, fmt.Errorf("store: resolve session: %w", err)
 	}
+	row.Project, row.ProfileDigest = project.String, digest.String
 	return row, true, nil
+}
+
+// sessionColumns is the SELECT list of one SessionRow at a schema version: a
+// version-1 table (and a schema-4 world store's) has no binding columns, so
+// they read as NULL there — unbound.
+func sessionColumns(version int) string {
+	if version >= credentialsSchemaVersion {
+		return `SELECT credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest`
+	}
+	return `SELECT credential_id, episode_id, grants_json, expires_at, created_at, NULL, NULL`
 }
 
 // RevokeSession deletes the mapping row for a credential_id in a transaction
@@ -343,11 +483,6 @@ func (c *Credentials) RevokeSession(ctx context.Context, credentialID string) er
 // MaxListSessions caps one ListSessions page (row 138 M5, `session list`).
 const MaxListSessions = 500
 
-// listSessionsSQL is the ListSessions query; LegacySessions reuses it on a
-// schema-4 world store, whose table has the same columns.
-const listSessionsSQL = `SELECT credential_id, episode_id, grants_json, expires_at, created_at
-        FROM session_credentials`
-
 // ListSessions returns up to limit session_credentials rows (at most
 // MaxListSessions), ordered by created_at then credential_id; a non-empty
 // episodeID restricts it to that episode. Rows carry the credential_id HASH
@@ -357,14 +492,16 @@ func (c *Credentials) ListSessions(ctx context.Context, episodeID string, limit 
 	if err := requireDeadline(ctx); err != nil {
 		return nil, err
 	}
-	return listSessions(ctx, c.db, episodeID, limit)
+	return listSessions(ctx, c.db, c.version, episodeID, limit)
 }
 
-func listSessions(ctx context.Context, db *sql.DB, episodeID string, limit int) ([]SessionRow, error) {
+// listSessions is ListSessions at a schema version; LegacySessions reuses it
+// on a schema-4 world store, whose table has the five version-1 columns.
+func listSessions(ctx context.Context, db *sql.DB, version int, episodeID string, limit int) ([]SessionRow, error) {
 	if limit <= 0 || limit > MaxListSessions {
 		limit = MaxListSessions
 	}
-	q := listSessionsSQL
+	q := sessionColumns(version) + ` FROM session_credentials`
 	args := []any{}
 	if episodeID != "" {
 		q += ` WHERE episode_id = ?`
@@ -380,9 +517,11 @@ func listSessions(ctx context.Context, db *sql.DB, episodeID string, limit int) 
 	var out []SessionRow
 	for rows.Next() {
 		var r SessionRow
-		if err := rows.Scan(&r.CredentialID, &r.EpisodeID, &r.GrantsJSON, &r.ExpiresAt, &r.CreatedAt); err != nil {
+		var project, digest sql.NullString
+		if err := rows.Scan(&r.CredentialID, &r.EpisodeID, &r.GrantsJSON, &r.ExpiresAt, &r.CreatedAt, &project, &digest); err != nil {
 			return nil, fmt.Errorf("store: list sessions: scan: %w", err)
 		}
+		r.Project, r.ProfileDigest = project.String, digest.String
 		out = append(out, r)
 	}
 	if err := rows.Err(); err != nil {

@@ -10,15 +10,27 @@ import (
 	"time"
 )
 
-// canonicalCredentialsDDL is review-visible policy, hardcoded like
-// canonicalTableDDL: the credentials store's one table, byte-identical in
+// canonicalCredentialsV1DDL is review-visible policy, hardcoded like
+// canonicalTableDDL: the version-1 credentials table, byte-identical in
 // columns to the world store's v3/v4 table so the move copies it unchanged.
-var canonicalCredentialsDDL = `CREATE TABLE session_credentials (
+var canonicalCredentialsV1DDL = `CREATE TABLE session_credentials (
     credential_id TEXT PRIMARY KEY,
     episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
     grants_json  TEXT NOT NULL,
     expires_at   INTEGER NOT NULL,
     created_at   INTEGER NOT NULL
+)`
+
+// canonicalCredentialsDDL is the current (version 2, row 189 M2) table: the
+// version-1 columns plus the nullable profile binding.
+var canonicalCredentialsDDL = `CREATE TABLE session_credentials (
+    credential_id TEXT PRIMARY KEY,
+    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
+    grants_json  TEXT NOT NULL,
+    expires_at   INTEGER NOT NULL,
+    created_at   INTEGER NOT NULL,
+    project TEXT CHECK (project IS NULL OR project <> ''),
+    profile_digest TEXT CHECK ((profile_digest IS NULL) = (project IS NULL) AND (profile_digest IS NULL OR profile_digest <> ''))
 )`
 
 func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
@@ -28,13 +40,13 @@ func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 	if got, want := normalizeDDL(ddl["session_credentials"]), normalizeDDL(canonicalCredentialsDDL); got != want {
 		t.Fatalf("credentials DDL:\n got: %s\nwant: %s", got, want)
 	}
-	// The pre-split world table is the same, column for column.
+	// The pre-split world table is the version-1 table, column for column.
 	v4 := rawDB(t, filepath.Join(t.TempDir(), "v4.db"))
 	if _, err := v4.Exec(schemaV4SQL); err != nil {
 		t.Fatal(err)
 	}
-	if got := normalizeDDL(tableDDL(t, v4)["session_credentials"]); got != normalizeDDL(canonicalCredentialsDDL) {
-		t.Fatalf("v4 world table differs from the credentials table: %s", got)
+	if got := normalizeDDL(tableDDL(t, v4)["session_credentials"]); got != normalizeDDL(canonicalCredentialsV1DDL) {
+		t.Fatalf("v4 world table differs from the version-1 credentials table: %s", got)
 	}
 	var version int
 	if err := c.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != credentialsSchemaVersion {

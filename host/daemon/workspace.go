@@ -29,6 +29,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"sync"
 	"time"
 
@@ -122,6 +123,11 @@ type workspaceTools struct {
 	// construction never waits behind an AILANG build (row 152).
 	execMu sync.Mutex
 	execH  map[string]episodeTool // episode id -> constructed exec handler
+
+	// bindingFor reads an episode's minted exec profile binding at request
+	// time (row 189 M2); nil means every episode is unbound. New wires it to
+	// Daemon.episodeBinding.
+	bindingFor func(episodeID string) (execBinding, error)
 }
 
 // ailangBuild is one in-flight AILANG handler build. Callers for the same
@@ -140,24 +146,85 @@ type ailangBuild struct {
 // runs them (row 140 §4.6).
 type workspaceExec struct {
 	// profile is the episode default: the only profile, when exactly one is
-	// configured (nil with several).
+	// configured (nil with several, or beside a left-out one).
 	profile *broker.ExecProfile
-	// byProject and episodeProject are the --exec-episode-project map.
+	// byProject is every loaded profile; episodeProject the
+	// --exec-episode-project map.
 	byProject      map[string]*broker.ExecProfile
 	episodeProject map[string]string
+	// sources is each loaded profile's file; excluded the profiles directory's
+	// left-out profiles (row 189 M2), with excludedWhy their reasons by project.
+	sources        map[string]string
+	excluded       []broker.ExecProfileExclusion
+	excludedWhy    map[string]string
 	sandbox        *broker.ExecSandbox
 	maxOutputBytes int64  // 0 = broker.DefaultExecMaxOutputBytes
 	operatorHome   string // "" = os.UserHomeDir, as the probe resolved it
 }
 
-// profileFor selects an episode's profile: its --exec-episode-project
-// mapping, else the only profile; nil when several are configured and the
-// episode is unmapped.
-func (e *workspaceExec) profileFor(episodeID string) *broker.ExecProfile {
-	if project, ok := e.episodeProject[episodeID]; ok {
-		return e.byProject[project]
+// profileFor selects an episode's profile at request time (row 189 M2), in
+// this order:
+//  1. the binding its session credential was minted with: that project's
+//     profile, refused when the daemon has not loaded it (naming why it was
+//     left out) or when its digest is not the minted one — the human confirmed
+//     those bytes and no others;
+//  2. for an unbound episode, its --exec-episode-project mapping;
+//  3. the only profile.
+//
+// It returns the profile, or nil and the refusal the call answers.
+func (e *workspaceExec) profileFor(episodeID string, b execBinding) (*broker.ExecProfile, string) {
+	project := ""
+	switch {
+	case b.bound():
+		project = b.Project
+	default:
+		mapped, ok := e.episodeProject[episodeID]
+		if !ok {
+			if e.profile == nil {
+				return nil, broker.ExecNoEpisodeProfileRefusal(episodeID)
+			}
+			return e.profile, ""
+		}
+		project = mapped
 	}
-	return e.profile
+	if why, left := e.excludedWhy[project]; left {
+		return nil, broker.ExecProfileNotLoadedRefusal(episodeID, project, why)
+	}
+	p := e.byProject[project]
+	if p == nil {
+		return nil, broker.ExecProfileNotLoadedRefusal(episodeID, project, "")
+	}
+	if b.bound() && p.Digest != b.Digest {
+		return nil, broker.ExecProfileDigestMismatchRefusal(episodeID, project, b.Digest, p.Digest)
+	}
+	return p, ""
+}
+
+// healthProfiles is /v1/health's view of the exec profiles: every loaded one
+// with its digest and file, by project, and the left-out ones with reasons.
+// Loaded is [] (never null) when exec is off.
+func (w *workspaceTools) healthProfiles() ([]HealthExecProfile, []HealthExecExclusion) {
+	loaded := []HealthExecProfile{}
+	if w == nil || w.exec == nil {
+		return loaded, nil
+	}
+	for _, project := range sortedProjects(w.exec.byProject) {
+		loaded = append(loaded, HealthExecProfile{Project: project, Digest: w.exec.byProject[project].Digest, File: w.exec.sources[project]})
+	}
+	var excluded []HealthExecExclusion
+	for _, x := range w.exec.excluded {
+		excluded = append(excluded, HealthExecExclusion{Project: x.Project, File: x.File, Reason: x.Reason})
+	}
+	return loaded, excluded
+}
+
+func sortedProjects(m map[string]*broker.ExecProfile) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // execStartupHook adjusts the exec startup config before it runs. It is nil
@@ -169,9 +236,9 @@ var execStartupHook func(*broker.ExecStartupConfig)
 // placement of the confinement stack and the pin, and runs the startup probe
 // for every profile. Any refusal stops startup; nothing is enabled partly.
 func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
-	sc := broker.ExecStartupConfig{ProfileFiles: cfg.ExecProfiles, EpisodeProjects: cfg.ExecEpisodeProjects,
-		SandboxDir: cfg.ExecSandbox, Node: cfg.ExecNode, MaxOutputBytes: cfg.ExecMaxOutputBytes}
-	if len(sc.ProfileFiles)+len(sc.EpisodeProjects) == 0 && sc.SandboxDir == "" && sc.Node == "" && sc.MaxOutputBytes == 0 {
+	sc := broker.ExecStartupConfig{ProfileFiles: cfg.ExecProfiles, ProfilesDir: cfg.ExecProfilesDir,
+		EpisodeProjects: cfg.ExecEpisodeProjects, SandboxDir: cfg.ExecSandbox, Node: cfg.ExecNode, MaxOutputBytes: cfg.ExecMaxOutputBytes}
+	if len(sc.ProfileFiles)+len(sc.EpisodeProjects) == 0 && sc.ProfilesDir == "" && sc.SandboxDir == "" && sc.Node == "" && sc.MaxOutputBytes == 0 {
 		return nil
 	}
 	if !w.enabled() {
@@ -187,7 +254,15 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
 		return err
 	}
 	w.exec = &workspaceExec{profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
+		sources: st.Sources, excluded: st.Excluded, excludedWhy: map[string]string{},
 		sandbox: st.Sandbox, maxOutputBytes: st.MaxOutputBytes, operatorHome: st.OperatorHome}
+	// Row 189 M2: a left-out directory profile does not stop the daemon; it
+	// is named here and in /v1/health, and a mint or an exec naming it
+	// refuses with the reason.
+	for _, x := range st.Excluded {
+		w.exec.excludedWhy[x.Project] = x.Reason
+		fmt.Fprintf(w.errLog, "ailang-worldd: exec profile %q (%s) left out: %s\n", x.Project, x.File, x.Reason)
+	}
 	return nil
 }
 
@@ -203,6 +278,9 @@ func (h execFailedHandler) Execute(context.Context, broker.EffectRequest, []byte
 type episodeTool struct {
 	root string // the canonical worktree the handler is bound to
 	h    broker.Handler
+	// profile is the exec profile an exec handler is bound to (nil for the
+	// AILANG handler): a new binding for the episode builds a new handler.
+	profile *broker.ExecProfile
 }
 
 // WorkspaceStateError is the AC4.5 daemon-half refusal: the daemon's own
@@ -385,14 +463,28 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 	if w.exec == nil {
 		return broker.ExecUnconfiguredHandler{}
 	}
+	// The binding is read per request (row 189 M2): a mint since the last
+	// call takes effect at once, with no restart.
+	var b execBinding
+	if w.bindingFor != nil {
+		var err error
+		if b, err = w.bindingFor(episodeID); err != nil {
+			var conflict *bindingConflictError
+			if errors.As(err, &conflict) {
+				return broker.ExecRefusalHandler{Why: err.Error()}
+			}
+			fmt.Fprintf(w.errLog, "ailang-worldd: workspace-exec unavailable for episode %q: %v\n", episodeID, err)
+			return execFailedHandler{err: err}
+		}
+	}
+	profile, why := w.exec.profileFor(episodeID, b)
+	if profile == nil {
+		return broker.ExecRefusalHandler{Why: why}
+	}
 	w.execMu.Lock()
 	defer w.execMu.Unlock()
-	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot {
+	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot && cached.profile == profile {
 		return cached.h
-	}
-	profile := w.exec.profileFor(episodeID)
-	if profile == nil {
-		return broker.ExecRefusalHandler{Why: broker.ExecNoEpisodeProfileRefusal(episodeID)}
 	}
 	var h broker.Handler
 	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Profile: profile, Sandbox: w.exec.sandbox,
@@ -406,7 +498,7 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 	if w.execH == nil {
 		w.execH = map[string]episodeTool{}
 	}
-	w.execH[episodeID] = episodeTool{root: epRoot, h: h}
+	w.execH[episodeID] = episodeTool{root: epRoot, h: h, profile: profile}
 	return h
 }
 

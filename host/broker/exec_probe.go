@@ -138,15 +138,28 @@ type execProbeEnv struct {
 // ProbeExecProfiles runs the startup probe for every profile, concurrently,
 // and returns one *ExecProbeError per refused profile (joined).
 func ProbeExecProfiles(ctx context.Context, cfg ExecProbeConfig, profiles []*ExecProfile) error {
+	errs, err := ProbeExecProfilesEach(ctx, cfg, profiles)
+	if err != nil {
+		return err
+	}
+	return errors.Join(errs...)
+}
+
+// ProbeExecProfilesEach runs the startup probe for every profile,
+// concurrently, and returns each profile's own result (errs[i] is profiles[i]'s,
+// nil when it passed), so a caller can leave out one profile and keep the
+// rest (row 189 M2, the profiles directory). err is a failure of the shared
+// probe scratch (the decoys), which no profile can pass without.
+func ProbeExecProfilesEach(ctx context.Context, cfg ExecProbeConfig, profiles []*ExecProfile) (errs []error, err error) {
 	if cfg.Sandbox == nil {
-		return errors.New("broker: exec probe needs a verified sandbox")
+		return nil, errors.New("broker: exec probe needs a verified sandbox")
 	}
 	env, err := plantExecProbe(cfg.Paths)
 	defer env.cleanup(cfg.Paths)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	errs := make([]error, len(profiles))
+	errs = make([]error, len(profiles))
 	var wg sync.WaitGroup
 	for i, p := range profiles {
 		wg.Add(1)
@@ -156,7 +169,7 @@ func ProbeExecProfiles(ctx context.Context, cfg ExecProbeConfig, profiles []*Exe
 		}()
 	}
 	wg.Wait()
-	return errors.Join(errs...)
+	return errs, nil
 }
 
 const execProbeDecoyText = "DECOY-NOT-A-SECRET\n"

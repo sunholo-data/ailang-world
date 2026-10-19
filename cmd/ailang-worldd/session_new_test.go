@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/worktree"
@@ -160,7 +161,7 @@ func TestSessionNewMintFailureRollsBackTheWorktree(t *testing.T) {
 	f := newEpisodeFixture(t)
 	old := sessionMint
 	defer func() { sessionMint = old }()
-	sessionMint = func(context.Context, *store.Credentials, string, []broker.Capability, int64, int64, io.Writer) (string, string, store.SessionRow, error) {
+	sessionMint = func(context.Context, *store.Credentials, string, authority.ProfileBinding, []broker.Capability, int64, int64, io.Writer) (string, string, store.SessionRow, error) {
 		return "", "", store.SessionRow{}, errors.New("injected mint failure")
 	}
 	var stdout, stderr bytes.Buffer

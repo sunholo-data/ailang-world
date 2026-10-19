@@ -30,7 +30,12 @@ var ExecMinNode = [2]int{20, 11}
 
 // ExecStartupConfig is the `serve --exec-*` flags (§4.6).
 type ExecStartupConfig struct {
-	ProfileFiles    []string // --exec-profile, repeatable
+	ProfileFiles []string // --exec-profile, repeatable
+	// ProfilesDir is --exec-profiles-dir (row 189 M2, D-189-2 A): every
+	// <project>.json in it except *.proposed.json is loaded. Unlike a
+	// --exec-profile, a directory profile that fails to load or probe is
+	// left out (ExecStartup.Excluded) instead of refusing startup.
+	ProfilesDir     string
 	EpisodeProjects []string // --exec-episode-project EP=PROJECT, repeatable
 	SandboxDir      string   // --exec-sandbox: srt's node_modules (or its package dir)
 	Node            string   // --exec-node; "" = node on the operator's PATH
@@ -46,18 +51,44 @@ type ExecStartupConfig struct {
 
 // configured reports whether any exec flag was given.
 func (c ExecStartupConfig) configured() bool {
-	return len(c.ProfileFiles) > 0 || len(c.EpisodeProjects) > 0 || c.SandboxDir != "" || c.Node != "" || c.MaxOutputBytes != 0
+	return len(c.ProfileFiles) > 0 || c.ProfilesDir != "" || len(c.EpisodeProjects) > 0 || c.SandboxDir != "" || c.Node != "" || c.MaxOutputBytes != 0
 }
 
 // ExecStartup is the verified exec configuration `serve` binds.
 type ExecStartup struct {
-	Profiles        map[string]*ExecProfile // by project
-	Only            *ExecProfile            // the profile, when exactly one is configured
-	EpisodeProjects map[string]string       // episode -> project
-	Sandbox         *ExecSandbox
-	MaxOutputBytes  int64
-	OperatorHome    string
+	Profiles map[string]*ExecProfile // by project
+	// Only is the profile when exactly one is configured: loaded, and none
+	// left out (a left-out sibling must never make another project's profile
+	// every episode's default).
+	Only            *ExecProfile
+	EpisodeProjects map[string]string // episode -> project
+	// Sources is each loaded profile's file (its realpath), by project.
+	Sources map[string]string
+	// Excluded are the profiles directory's left-out profiles, in file order.
+	Excluded       []ExecProfileExclusion
+	Sandbox        *ExecSandbox
+	MaxOutputBytes int64
+	OperatorHome   string
 }
+
+// ExecProfileExclusion is one profile of --exec-profiles-dir that `serve` left
+// out: it failed to load (parse, placement, read_roots, cache seeds) or the
+// startup probe, or it named a project another profile already configures.
+// Project is the file's stem, which a loaded directory profile must equal, so
+// a mint or an exec naming it can be refused with Reason.
+type ExecProfileExclusion struct {
+	File    string
+	Project string
+	Reason  string
+}
+
+// ExecProfileSuffix and ExecProposedSuffix name the profiles directory's
+// files: <project>.json is active; <project>.proposed.json (D-189-5, written
+// by `profile init`) is inert until the operator renames it.
+const (
+	ExecProfileSuffix  = ".json"
+	ExecProposedSuffix = ".proposed.json"
+)
 
 // ExecStartupError is a startup refusal naming the flag (and its value).
 type ExecStartupError struct {
@@ -88,19 +119,19 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 	if !cfg.configured() {
 		return nil, nil
 	}
-	if len(cfg.ProfileFiles) == 0 {
+	if len(cfg.ProfileFiles) == 0 && cfg.ProfilesDir == "" {
 		for _, f := range []struct {
 			flag string
 			set  bool
 		}{{"--exec-sandbox", cfg.SandboxDir != ""}, {"--exec-node", cfg.Node != ""},
 			{"--exec-episode-project", len(cfg.EpisodeProjects) > 0}, {"--exec-max-output-bytes", cfg.MaxOutputBytes != 0}} {
 			if f.set {
-				return nil, startupErr(f.flag, "", "needs --exec-profile (it configures workspace-exec, which is off without a profile)")
+				return nil, startupErr(f.flag, "", "needs --exec-profile or --exec-profiles-dir (it configures workspace-exec, which is off without a profile)")
 			}
 		}
 	}
 	if cfg.SandboxDir == "" {
-		return nil, startupErr("--exec-sandbox", "", "is required with --exec-profile: an installed %s@%s (node_modules)",
+		return nil, startupErr("--exec-sandbox", "", "is required with --exec-profile or --exec-profiles-dir: an installed %s@%s (node_modules)",
 			ExecSandboxPackage, ExecSandboxRelease)
 	}
 	maxOut := cfg.MaxOutputBytes
@@ -132,9 +163,10 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 	if err != nil {
 		return nil, err
 	}
-	st := &ExecStartup{Profiles: map[string]*ExecProfile{}, EpisodeProjects: map[string]string{}, MaxOutputBytes: maxOut,
-		OperatorHome: paths.OperatorHome}
+	st := &ExecStartup{Profiles: map[string]*ExecProfile{}, EpisodeProjects: map[string]string{}, Sources: map[string]string{},
+		MaxOutputBytes: maxOut, OperatorHome: paths.OperatorHome}
 	var order []*ExecProfile
+	flaggedFiles := map[string]string{} // realpath -> the flag value
 	for _, file := range cfg.ProfileFiles {
 		p, err := loadExecProfileFile(file, paths, forbidden)
 		if err != nil {
@@ -144,10 +176,26 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 			return nil, startupErr("--exec-profile", file, "project %q is configured twice", p.Project)
 		}
 		st.Profiles[p.Project] = p
+		real := realpathOr(file)
+		st.Sources[p.Project] = real
+		flaggedFiles[real] = file
 		order = append(order, p)
 	}
-	if len(order) == 1 {
-		st.Only = order[0]
+	flagged := len(order)
+	if cfg.ProfilesDir != "" {
+		loaded, err := loadExecProfilesDir(cfg.ProfilesDir, paths, forbidden, st, flaggedFiles)
+		if err != nil {
+			return nil, err
+		}
+		order = append(order, loaded...)
+	}
+	excludedProject := func(project string) bool {
+		for _, x := range st.Excluded {
+			if x.Project == project {
+				return true
+			}
+		}
+		return false
 	}
 	for _, pair := range cfg.EpisodeProjects {
 		ep, project, ok := strings.Cut(pair, "=")
@@ -156,7 +204,10 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 			return nil, startupErr("--exec-episode-project", pair, "is not EP=PROJECT")
 		case !execEpisodePattern.MatchString(ep):
 			return nil, startupErr("--exec-episode-project", pair, "episode %q is outside the episode grammar %s", ep, execEpisodePattern)
-		case st.Profiles[project] == nil:
+		case st.Profiles[project] == nil && !excludedProject(project):
+			// A left-out directory profile is still a configured project:
+			// the mapping stands, and that episode's exec refuses with the
+			// reason instead of taking every other episode down with it.
 			return nil, startupErr("--exec-episode-project", pair, "names no configured profile (projects: %s)",
 				strings.Join(sortedKeys(st.Profiles), ", "))
 		case st.EpisodeProjects[ep] != "":
@@ -172,11 +223,109 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 	if err != nil {
 		return nil, &ExecStartupError{Flag: "--exec-sandbox", Value: cfg.SandboxDir, Err: err}
 	}
-	if err := ProbeExecProfiles(ctx, ExecProbeConfig{Sandbox: st.Sandbox, Paths: paths, MaxOutputBytes: maxOut,
-		Client: cfg.ProbeClient}, order); err != nil {
+	errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: st.Sandbox, Paths: paths, MaxOutputBytes: maxOut,
+		Client: cfg.ProbeClient}, order)
+	if err != nil {
+		return nil, err
+	}
+	if err := st.applyProbe(order, flagged, errs); err != nil {
 		return nil, err
 	}
 	return st, nil
+}
+
+// applyProbe applies the startup probe's per-profile results (errs[i] is
+// order[i]'s): a failed --exec-profile (the first flagged of order) refuses
+// startup, as before; a failed directory profile is left out with the probe's
+// reason and every other profile serves. Only is set last, from what remains.
+func (st *ExecStartup) applyProbe(order []*ExecProfile, flagged int, errs []error) error {
+	if err := errors.Join(errs[:flagged]...); err != nil {
+		return err
+	}
+	for i := flagged; i < len(order); i++ {
+		if errs[i] == nil {
+			continue
+		}
+		p := order[i]
+		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error()})
+		delete(st.Profiles, p.Project)
+		delete(st.Sources, p.Project)
+	}
+	if len(st.Profiles) == 1 && len(st.Excluded) == 0 {
+		for _, p := range st.Profiles {
+			st.Only = p
+		}
+	}
+	return nil
+}
+
+// realpathOr is path's absolute, symlink-free form, or path itself when it
+// does not resolve (the loader has already refused that case).
+func realpathOr(path string) string {
+	abs, err := filepath.Abs(path)
+	if err == nil {
+		abs, err = filepath.EvalSymlinks(abs)
+	}
+	if err != nil {
+		return path
+	}
+	return abs
+}
+
+// loadExecProfilesDir loads the profiles directory (row 189 M2): every
+// <project>.json in it, in name order, except *.proposed.json. The directory
+// itself must resolve to a directory outside every agent-writable root, or
+// startup refuses. A file that is also a --exec-profile is skipped (it is
+// already loaded); any other file that fails to load, whose project is not
+// its file stem, or whose project is already configured is left out in
+// st.Excluded, and the rest load. It returns the loaded profiles in order.
+func loadExecProfilesDir(dir string, paths ExecHostPaths, forbidden []namedRoot, st *ExecStartup, flaggedFiles map[string]string) ([]*ExecProfile, error) {
+	abs, err := filepath.Abs(dir)
+	if err == nil {
+		abs, err = filepath.EvalSymlinks(abs)
+	}
+	if err != nil {
+		return nil, startupErr("--exec-profiles-dir", dir, "does not resolve: %v", err)
+	}
+	if info, err := os.Stat(abs); err != nil || !info.IsDir() {
+		return nil, startupErr("--exec-profiles-dir", dir, "is not a directory")
+	}
+	if err := checkPlacement("--exec-profiles-dir", dir, abs, forbidden); err != nil {
+		return nil, err
+	}
+	ents, err := os.ReadDir(abs)
+	if err != nil {
+		return nil, startupErr("--exec-profiles-dir", dir, "%v", err)
+	}
+	var loaded []*ExecProfile
+	for _, e := range ents {
+		name := e.Name()
+		if e.IsDir() || !strings.HasSuffix(name, ExecProfileSuffix) || strings.HasSuffix(name, ExecProposedSuffix) {
+			continue
+		}
+		file := filepath.Join(abs, name)
+		if _, dup := flaggedFiles[realpathOr(file)]; dup {
+			continue
+		}
+		stem := strings.TrimSuffix(name, ExecProfileSuffix)
+		exclude := func(why string) {
+			st.Excluded = append(st.Excluded, ExecProfileExclusion{File: file, Project: stem, Reason: why})
+		}
+		p, err := loadExecProfileFile(file, paths, forbidden)
+		switch {
+		case err != nil:
+			exclude(err.Error())
+		case p.Project != stem:
+			exclude(fmt.Sprintf("its project is %q, not its file name %q: a directory profile is <project>.json", p.Project, stem))
+		case st.Profiles[p.Project] != nil:
+			exclude(fmt.Sprintf("project %q is already configured by %s", p.Project, st.Sources[p.Project]))
+		default:
+			st.Profiles[p.Project] = p
+			st.Sources[p.Project] = file
+			loaded = append(loaded, p)
+		}
+	}
+	return loaded, nil
 }
 
 // execEpisodePattern is the daemon's episode grammar (§4.3).

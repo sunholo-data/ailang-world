@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"errors"
+	"io"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -52,7 +53,7 @@ func TestGuardedCredentialLookupChain(t *testing.T) {
 	}
 	defer s.Close()
 	credPath := filepath.Join(dir, store.CredentialsFileName)
-	if err := ensureCredentialsStore(credPath); err != nil {
+	if err := ensureCredentialsStore(credPath, io.Discard); err != nil {
 		t.Fatal(err)
 	}
 	// The production resolver shape (row 189): a read-only open per lookup.

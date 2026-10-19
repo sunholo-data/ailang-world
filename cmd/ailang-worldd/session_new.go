@@ -7,17 +7,30 @@ package main
 //
 // session new keeps every fence `session mint` has, in this order:
 //  1. validate: the episode grammar, an EXISTING --db (never created), a sane
-//     workspace root that does not contain the store, the grants;
+//     workspace root that does not contain the store, the grants, and the
+//     exec profile --profile names (prepareMint);
 //  2. the unchanged mint fence, env.openTerminal(), BEFORE any side effect
 //     (MUT-FENCE-BYPASS: no TTY -> no worktree and no row);
-//  3. a y/N on that terminal naming the worktree and every grant;
+//  3. a y/N on that terminal naming the worktree, every grant and, with
+//     --profile, the exec profile's project and digest;
 //  4. the CREDENTIALS store's writer lock (row 189: its own file, so a
 //     serving daemon does not block it), failing fast if another session
 //     verb holds it;
 //  5. host/worktree.Add (detached, or -b <branch>), unless the episode's
 //     worktree already exists;
-//  6. authority.Mint through the existing core;
+//  6. authority.MintBound through the existing core;
 //  7. on a mint failure, remove the worktree THIS run created.
+//
+// Steps 2-7 are provisionEpisode, the ONE fence-and-mint path: `episode
+// start` (episode.go, row 189 M3) runs it too, after its own validation, so
+// the two verbs cannot drift apart and no other code creates a credential.
+//
+// Row 189 M2 (D-189-2 A): --profile <project> binds the credential to the
+// exec profile <exec-profiles-dir>/<project>.json. The file is parsed (never
+// probed) before the fence, its project and the sha256 of its exact bytes are
+// named on the y/N line, and both are recorded on the credential; the daemon
+// then runs the episode's workspace-exec under exactly those bytes, with no
+// restart.
 //
 // Row 185 (w-episode-requires-git): an existing <workspace-root>/<episode>
 // that is not a git worktree is refused, the refusal naming --allow-non-git.
@@ -55,7 +68,7 @@ import (
 const sessionNewHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
            [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
-           [--allow-non-git]
+           [--allow-non-git] [--profile <project>] [--exec-profiles-dir <dir>]
 
 ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
 and a session credential bound to it, after a y/N typed at /dev/tty (any
@@ -95,6 +108,19 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
                        expires with the session
   --out <file>         write the token once to <file> (mode 0600); default:
                        print it to stdout once
+  --profile <project>  bind the session to the exec profile
+                       <exec-profiles-dir>/<project>.json: it is parsed (not
+                       probed) before the terminal opens, the y/N names the
+                       project and the sha256 of its exact bytes, and both are
+                       recorded on the credential. The daemon runs the
+                       episode's workspace-exec under that profile from the
+                       next request, with no restart, and refuses every exec
+                       if the profile it loaded has a different digest
+                       (re-mint). The credentials store must be schema 2:
+                       a serve of this build upgrades it once at startup.
+  --exec-profiles-dir <dir>
+                       where --profile looks (default
+                       ~/.ailang-world-exec/profiles, serve's default)
 
 The credential_id (the hash 'session revoke' takes) goes to stderr; the token
 never does. If the mint fails, the worktree this run created is removed.
@@ -103,11 +129,13 @@ never does. If the mint fails, the worktree this run created is removed.
 const sessionListHelp = `usage: ailang-worldd session list [--db <path>] [--credentials-db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
 
 Lists the session credentials (at most 500): credential_id (the hash, never
-the token), episode, live or expired, expiry and grants. It reads the
-credentials store (--credentials-db, default credentials.db beside --db)
-through a read-only handle, so it works while the daemon is running; for a
-world store from before the split (schema 4) it reads the credentials still
-inside it, also read-only. A --db that does not exist is refused, never created.
+the token), episode, live or expired, expiry, grants and, for a credential
+minted with --profile, the exec profile binding (project and digest; "project"
+and "profileDigest" with --json). It reads the credentials store
+(--credentials-db, default credentials.db beside --db) through a read-only
+handle, so it works while the daemon is running; for a world store from before
+the split (schema 4) it reads the credentials still inside it, also read-only.
+A --db that does not exist is refused, never created.
 
 An episode whose <workspace-root>/<episode> exists but is not a git worktree
 (adopted with session new --allow-non-git) is marked DEGRADED ("degraded":
@@ -136,8 +164,347 @@ const sessionNewBudget = 75 * time.Second
 // sessionGit resolves the git binary; a test seam.
 var sessionGit = func() (string, error) { return exec.LookPath("git") }
 
-// sessionMint is authority.Mint; a test seam for the rollback arm (AC5.3).
-var sessionMint = authority.Mint
+// sessionMint is authority.MintBound; a test seam for the rollback arm (AC5.3).
+var sessionMint = authority.MintBound
+
+// defaultExecProfilesDir is ~/.ailang-world-exec/profiles: where `serve
+// --exec-profiles-dir` and `--profile` look by default (row 189 M2).
+func defaultExecProfilesDir() string {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		home = "."
+	}
+	return filepath.Join(home, ".ailang-world-exec", "profiles")
+}
+
+// mintOptions is what a provisioning verb asks for, before validation.
+type mintOptions struct {
+	verb        string // "session new" or "episode start": every message's prefix
+	episode     string
+	db          string
+	credsDB     string
+	wsRoot      string
+	repo        string
+	branch      string
+	allowNonGit bool
+	grants      []broker.Capability
+	ttl         int64
+	outPath     string
+	// outDirCreate: outPath's directory may be absent and is then created
+	// mode 0700 after the y/N (episode start's sessions dir); an existing one
+	// must already be private.
+	outDirCreate bool
+	profile      string // --profile project, "" for an unbound session
+	profilesDir  string
+}
+
+// mintRequest is a validated provisioning: everything provisionEpisode needs,
+// computed with no side effect.
+type mintRequest struct {
+	mintOptions
+	credPath string
+	dir      string
+	reuse    bool
+	degraded bool
+	git      string
+	// prof is the parsed --profile (nil when unbound); profFile its path.
+	prof     *broker.ExecProfile
+	profFile string
+	// afterToken runs once the token is written to outPath (episode start's
+	// MCP config). A failure revokes the credential and rolls back like a
+	// mint failure.
+	afterToken func(token string) error
+}
+
+// prepareMint is step 1: it validates every input of a provisioning before
+// the fence and touches nothing. A non-nil error is a usage refusal.
+func prepareMint(o mintOptions) (*mintRequest, error) {
+	if !workspaceEpisodePattern.MatchString(o.episode) {
+		return nil, fmt.Errorf("episode %q does not match %s", o.episode, workspaceEpisodePattern)
+	}
+	if o.ttl < 0 {
+		return nil, errors.New("--ttl and --budget must be non-negative")
+	}
+	if err := requireExistingStore(o.db); err != nil {
+		return nil, err
+	}
+	credPath, err := credentialsFor(o.db, o.credsDB)
+	if err != nil {
+		return nil, err
+	}
+	if len(o.grants) == 0 {
+		return nil, errors.New("no grants: pass --preset se-tools or at least one --grant EFFECT=SCOPE:BUDGET")
+	}
+	r := &mintRequest{mintOptions: o, credPath: credPath}
+	root, err := filepath.Abs(o.wsRoot)
+	if err != nil {
+		return nil, fmt.Errorf("--workspace-root: %v", err)
+	}
+	if info, err := os.Lstat(root); err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("workspace root %s is not an existing directory (a symlink is refused too); ailang-worldd setup creates it", root)
+	}
+	storeDir, _ := filepath.Abs(filepath.Dir(o.db))
+	if within(root, storeDir) {
+		return nil, fmt.Errorf("the workspace root %s contains the store directory %s; serve refuses this layout", root, storeDir)
+	}
+	// An agent that can write the credentials store can mint without a human.
+	// credPath is symlink-free, so compare it with the root's canonical form too.
+	canonicalRoot, _ := filepath.EvalSymlinks(root)
+	for _, rt := range []string{root, canonicalRoot} {
+		if rt != "" && within(rt, filepath.Dir(credPath)) {
+			return nil, fmt.Errorf("the workspace root %s contains the credentials store %s; serve refuses this layout", root, credPath)
+		}
+	}
+	r.dir = filepath.Join(root, o.episode)
+	if info, err := os.Lstat(r.dir); err == nil {
+		switch {
+		case !info.IsDir():
+			return nil, fmt.Errorf("%s exists and is not a directory (a symlink is refused too); remove it or pick another episode", r.dir)
+		case isGitWorktree(r.dir):
+		case !o.allowNonGit:
+			return nil, fmt.Errorf("%s exists and is not a git worktree: an episode without git has no own branch, "+
+				"no branch diff or provenance trailer, no reset to a base and no git-status worktree deltas. "+
+				"fix: remove it or pick another episode (session new --repo makes the worktree), "+
+				"or pass --allow-non-git to adopt it as a DEGRADED episode", r.dir)
+		default:
+			r.degraded = true
+		}
+		r.reuse = true
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("%s: %v", r.dir, err)
+	}
+	if o.outPath != "" {
+		if _, err := os.Lstat(o.outPath); err == nil {
+			return nil, fmt.Errorf("--out %s already exists; the token is written once, never over a file", o.outPath)
+		}
+		if err := checkOutDir(filepath.Dir(o.outPath), o.outDirCreate); err != nil {
+			return nil, err
+		}
+	}
+	if !r.reuse {
+		if o.repo == "" {
+			return nil, fmt.Errorf("--repo is required to create the worktree %s", r.dir)
+		}
+		if info, err := os.Stat(o.repo); err != nil || !info.IsDir() {
+			return nil, fmt.Errorf("--repo %s is not a directory", o.repo)
+		}
+		if r.git, err = sessionGit(); err != nil {
+			return nil, fmt.Errorf("git not found: %v", err)
+		}
+	}
+	if o.profile != "" {
+		if r.prof, r.profFile, err = loadMintProfile(o.profilesDir, o.profile); err != nil {
+			return nil, err
+		}
+		if err := checkBindingFits(credPath, o.episode, r.prof); err != nil {
+			return nil, err
+		}
+	}
+	return r, nil
+}
+
+// checkOutDir requires the token file's directory to exist — or, for
+// episode start, to be creatable — and, when it is the private sessions dir,
+// to be readable by its owner only.
+func checkOutDir(dir string, create bool) error {
+	info, err := os.Stat(dir)
+	switch {
+	case err == nil && info.IsDir():
+		if create && info.Mode().Perm()&0o077 != 0 {
+			return fmt.Errorf("the sessions directory %s is mode %v; it holds session tokens and must be private: chmod 700 %s", dir, info.Mode().Perm(), dir)
+		}
+		return nil
+	case err == nil:
+		return fmt.Errorf("--out %s: %s is not a directory", dir, dir)
+	case create && errors.Is(err, os.ErrNotExist):
+		return nil
+	default:
+		return fmt.Errorf("--out %s: its directory does not exist", dir)
+	}
+}
+
+// loadMintProfile reads <dir>/<project>.json once and parses it with the
+// daemon's own loader. It is never probed here: serve's startup probe stays
+// the real check, and the digest names the exact bytes read.
+func loadMintProfile(dir, project string) (*broker.ExecProfile, string, error) {
+	if !workspaceEpisodePattern.MatchString(project) {
+		return nil, "", fmt.Errorf("--profile %q is not a project name (%s)", project, workspaceEpisodePattern)
+	}
+	file := filepath.Join(dir, project+broker.ExecProfileSuffix)
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return nil, "", fmt.Errorf("--profile %s: %v (profiles live in --exec-profiles-dir %s; a *.proposed.json is activated by renaming it)", project, err, dir)
+	}
+	p, err := broker.ParseExecProfile(data)
+	if err != nil {
+		return nil, "", fmt.Errorf("--profile %s: %s: %v", project, file, err)
+	}
+	if p.Project != project {
+		return nil, "", fmt.Errorf("--profile %s: %s declares project %q; a profiles-dir file is <project>.json", project, file, p.Project)
+	}
+	return p, file, nil
+}
+
+// checkBindingFits refuses, before the fence, a bound mint the credentials
+// store cannot take or the daemon would refuse: a store still at schema 1
+// (only serve upgrades it), and an episode that already holds a live
+// credential bound to another profile or other bytes. It only reads.
+func checkBindingFits(credPath, episode string, p *broker.ExecProfile) error {
+	if _, err := os.Stat(credPath); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	ro, err := store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		var schema *store.CredentialsSchemaError
+		if errors.As(err, &schema) {
+			return err
+		}
+		return nil // a store this can't read yet (pre-split): the mint moves it first
+	}
+	defer func() { _ = ro.Close() }()
+	if ro.Version() < store.CredentialsSchemaVersion {
+		return &store.UnboundCredentialsStoreError{Path: credPath}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, err := ro.ListSessions(ctx, episode, store.MaxListSessions)
+	if err != nil {
+		return err
+	}
+	now := time.Now().Unix()
+	for _, r := range rows {
+		if now > r.ExpiresAt || !r.Bound() || (r.Project == p.Project && r.ProfileDigest == p.Digest) {
+			continue
+		}
+		return fmt.Errorf("episode %s already holds the live credential %s bound to exec profile %s %s; "+
+			"one episode runs under one profile: revoke it first (ailang-worldd session revoke %s), then mint again",
+			episode, r.CredentialID, r.Project, r.ProfileDigest, r.CredentialID)
+	}
+	return nil
+}
+
+// provisionEpisode is steps 2-7: the fence, the y/N, the credentials lock,
+// the worktree, the mint and the rollback, in that order, for both session
+// new and episode start. It returns the exit code.
+func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) int {
+	prefix := "ailang-worldd " + r.verb + ": "
+	// 2. The mint fence, unchanged, before any side effect.
+	term, err := env.openTerminal()
+	if err != nil {
+		fmt.Fprintf(stderr, "%srefusing: no controlling terminal (%v); "+
+			"provisioning a session credential requires one human act at a terminal. %s\n", prefix, err, sessionTTYFix)
+		return exitUsage
+	}
+	defer func() { _ = term.Close() }()
+
+	// 3. y/N naming the worktree, every grant and the exec profile binding.
+	now := env.now()
+	grants := append([]broker.Capability(nil), r.grants...)
+	for i := range grants {
+		grants[i].ExpiresAt = now + r.ttl
+	}
+	action := "Create worktree " + r.dir + " from " + r.repo
+	switch {
+	case r.degraded:
+		action = "Use the existing NON-GIT directory " + r.dir + " as a DEGRADED episode (no branch diff, " +
+			"provenance trailer or reset to a base; walk-basis worktree deltas)"
+	case r.reuse:
+		action = "Use the existing worktree " + r.dir
+	}
+	if !r.reuse && r.branch != "" {
+		action += " on new branch " + r.branch
+	}
+	binding := authority.ProfileBinding{}
+	bound := ""
+	if r.prof != nil {
+		binding = authority.ProfileBinding{Project: r.prof.Project, Digest: r.prof.Digest}
+		bound = fmt.Sprintf(", bound to exec profile %s %s (%s)", r.prof.Project, r.prof.Digest, r.profFile)
+	}
+	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds? [y/N] ",
+		action, r.episode, len(grants), grantList(grants), bound, r.ttl)
+	if !isYes(readTermLine(term)) {
+		fmt.Fprintf(stderr, "%saborted (not confirmed). fix: run it again and type y at the prompt\n", prefix)
+		return exitUsage
+	}
+
+	// 4. The credentials writer lock, before the worktree exists.
+	ctx, cancel := context.WithTimeout(context.Background(), sessionNewBudget)
+	defer cancel()
+	st, err := openCredentialsForSession(ctx, r.db, r.credPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "%scannot open the credentials store %q: %v\n", prefix, r.credPath, err)
+		return exitFatal
+	}
+	defer func() { _ = st.Close() }()
+
+	// 5. The worktree.
+	created := false
+	if !r.reuse {
+		if err := worktree.Add(ctx, r.git, r.repo, r.dir, r.branch); err != nil {
+			fmt.Fprintf(stderr, "%s%v\n", prefix, err)
+			return exitFatal
+		}
+		created = true
+		fmt.Fprintf(stderr, "%sworktree %s created\n", prefix, r.dir)
+	}
+
+	// 6. The mint, through the existing core.
+	var out io.Writer
+	if r.outPath == "" {
+		out = stdout
+	}
+	mintCtx, cancelMint := context.WithTimeout(ctx, 3*time.Second)
+	rawToken, credentialID, row, err := sessionMint(mintCtx, st, r.episode, binding, grants, r.ttl, now, out)
+	cancelMint()
+	minted := err == nil
+	if err == nil && r.outPath != "" {
+		if r.outDirCreate {
+			err = os.MkdirAll(filepath.Dir(r.outPath), 0o700)
+		}
+		if err == nil {
+			err = writeTokenFile(r.outPath, rawToken)
+		}
+		if err == nil && r.afterToken != nil {
+			if err = r.afterToken(rawToken); err != nil {
+				_ = os.Remove(r.outPath)
+			}
+		}
+	}
+	if err != nil && minted {
+		// The row exists but nobody holds its token: revoke it too.
+		if rerr := authority.Revoke(ctx, st, credentialID); rerr != nil {
+			fmt.Fprintf(stderr, "%scould not revoke the unwritten credential %s: %v\n", prefix, credentialID, rerr)
+		}
+	}
+	if err != nil {
+		fmt.Fprintf(stderr, "%s%v\n", prefix, err)
+		// 7. Roll back the worktree this run created.
+		if created {
+			if rerr := worktree.Remove(ctx, r.git, r.repo, r.dir); rerr != nil {
+				fmt.Fprintf(stderr, "%scould not remove the worktree it created: %v\n", prefix, rerr)
+			} else {
+				fmt.Fprintf(stderr, "%sremoved the worktree %s it created\n", prefix, r.dir)
+			}
+		}
+		return exitFatal
+	}
+	if r.outPath != "" {
+		fmt.Fprintf(stdout, "session for episode %s: %d grant(s), expires epoch %d, token written to %s\n",
+			r.episode, len(grants), row.ExpiresAt, r.outPath)
+	} else {
+		io.WriteString(stdout, "\n")
+	}
+	fmt.Fprintf(stderr, "%scredential_id=%s (episode %s, worktree %s, %d grant(s), expires %d)\n",
+		prefix, credentialID, r.episode, r.dir, len(grants), row.ExpiresAt)
+	if r.prof != nil {
+		fmt.Fprintf(stderr, "%sbound to exec profile %s %s\n", prefix, r.prof.Project, r.prof.Digest)
+	}
+	if r.degraded {
+		fmt.Fprintf(stderr, "%sepisode %s is DEGRADED: %s is not a git worktree (--allow-non-git); "+
+			"session list and /v1/health show it\n", prefix, r.episode, r.dir)
+	}
+	return exitOK
+}
 
 func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	def := defaultWorldPaths()
@@ -156,6 +523,8 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
 	ttl := fs.Int64("ttl", 3600, "session lifetime in seconds")
 	outPath := fs.String("out", "", "write the token once to this file (0600)")
+	profile := fs.String("profile", "", "bind the session to this exec profile's project")
+	profilesDir := fs.String("exec-profiles-dir", defaultExecProfilesDir(), "where --profile looks")
 	positional, err := parseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -175,174 +544,36 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 		fmt.Fprint(stderr, sessionNewHelp)
 		return exitUsage
 	}
-	episode := positional[0]
-	if !workspaceEpisodePattern.MatchString(episode) {
-		return fail("episode %q does not match %s", episode, workspaceEpisodePattern)
+	if !workspaceEpisodePattern.MatchString(positional[0]) {
+		return fail("episode %q does not match %s", positional[0], workspaceEpisodePattern)
 	}
 	if *ttl < 0 || *budget < 0 {
 		return fail("--ttl and --budget must be non-negative")
-	}
-	if err := requireExistingStore(*db); err != nil {
-		return fail("%v", err)
-	}
-	credPath, err := credentialsFor(*db, *credsDB)
-	if err != nil {
-		return fail("%v", err)
 	}
 	grants, err := sessionNewGrants(*preset, grantSpecs, *budget)
 	if err != nil {
 		return fail("%v", err)
 	}
-	root, err := filepath.Abs(*wsRoot)
+	req, err := prepareMint(mintOptions{verb: "session new", episode: positional[0], db: *db, credsDB: *credsDB,
+		wsRoot: *wsRoot, repo: *repo, branch: *branch, allowNonGit: *allowNonGit, grants: grants, ttl: *ttl,
+		outPath: *outPath, profile: *profile, profilesDir: *profilesDir})
 	if err != nil {
-		return fail("--workspace-root: %v", err)
+		return fail("%v", err)
 	}
-	if info, err := os.Lstat(root); err != nil || !info.IsDir() {
-		return fail("workspace root %s is not an existing directory (a symlink is refused too); ailang-worldd setup creates it", root)
+	if req.prof != nil && !hasGrant(grants, broker.EffectWorkspaceExec) {
+		fmt.Fprintf(stderr, "ailang-worldd session new: note: --profile %s binds workspace-exec, but no Workspace.Exec grant is minted\n", req.prof.Project)
 	}
-	storeDir, _ := filepath.Abs(filepath.Dir(*db))
-	if within(root, storeDir) {
-		return fail("the workspace root %s contains the store directory %s; serve refuses this layout", root, storeDir)
-	}
-	// An agent that can write the credentials store can mint without a human.
-	// credPath is symlink-free, so compare it with the root's canonical form too.
-	canonicalRoot, _ := filepath.EvalSymlinks(root)
-	for _, r := range []string{root, canonicalRoot} {
-		if r != "" && within(r, filepath.Dir(credPath)) {
-			return fail("the workspace root %s contains the credentials store %s; serve refuses this layout", root, credPath)
-		}
-	}
-	dir := filepath.Join(root, episode)
-	reuse, degraded := false, false
-	if info, err := os.Lstat(dir); err == nil {
-		switch {
-		case !info.IsDir():
-			return fail("%s exists and is not a directory (a symlink is refused too); remove it or pick another episode", dir)
-		case isGitWorktree(dir):
-		case !*allowNonGit:
-			return fail("%s exists and is not a git worktree: an episode without git has no own branch, "+
-				"no branch diff or provenance trailer, no reset to a base and no git-status worktree deltas. "+
-				"fix: remove it or pick another episode (session new --repo makes the worktree), "+
-				"or pass --allow-non-git to adopt it as a DEGRADED episode", dir)
-		default:
-			degraded = true
-		}
-		reuse = true
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return fail("%s: %v", dir, err)
-	}
-	if *outPath != "" {
-		if _, err := os.Lstat(*outPath); err == nil {
-			return fail("--out %s already exists; the token is written once, never over a file", *outPath)
-		}
-		if info, err := os.Stat(filepath.Dir(*outPath)); err != nil || !info.IsDir() {
-			return fail("--out %s: its directory does not exist", *outPath)
-		}
-	}
-	git := ""
-	if !reuse {
-		if *repo == "" {
-			return fail("--repo is required to create the worktree %s", dir)
-		}
-		if info, err := os.Stat(*repo); err != nil || !info.IsDir() {
-			return fail("--repo %s is not a directory", *repo)
-		}
-		if git, err = sessionGit(); err != nil {
-			return fail("git not found: %v", err)
-		}
-	}
+	return provisionEpisode(req, stdout, stderr, env)
+}
 
-	// 2. The mint fence, unchanged, before any side effect.
-	term, err := env.openTerminal()
-	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session new: refusing: no controlling terminal (%v); "+
-			"provisioning a session credential requires one human act at a terminal. %s\n", err, sessionTTYFix)
-		return exitUsage
-	}
-	defer func() { _ = term.Close() }()
-
-	// 3. y/N naming the worktree and every grant.
-	now := env.now()
-	for i := range grants {
-		grants[i].ExpiresAt = now + *ttl
-	}
-	action := "Create worktree " + dir + " from " + *repo
-	switch {
-	case degraded:
-		action = "Use the existing NON-GIT directory " + dir + " as a DEGRADED episode (no branch diff, " +
-			"provenance trailer or reset to a base; walk-basis worktree deltas)"
-	case reuse:
-		action = "Use the existing worktree " + dir
-	}
-	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s], expiry +%ds? [y/N] ",
-		action, episode, len(grants), grantList(grants), *ttl)
-	if !isYes(readTermLine(term)) {
-		fmt.Fprintln(stderr, "ailang-worldd session new: aborted (not confirmed). fix: run it again and type y at the prompt")
-		return exitUsage
-	}
-
-	// 4. The credentials writer lock, before the worktree exists.
-	ctx, cancel := context.WithTimeout(context.Background(), sessionNewBudget)
-	defer cancel()
-	st, err := openCredentialsForSession(ctx, *db, credPath)
-	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session new: cannot open the credentials store %q: %v\n", credPath, err)
-		return exitFatal
-	}
-	defer func() { _ = st.Close() }()
-
-	// 5. The worktree.
-	created := false
-	if !reuse {
-		if err := worktree.Add(ctx, git, *repo, dir, *branch); err != nil {
-			fmt.Fprintf(stderr, "ailang-worldd session new: %v\n", err)
-			return exitFatal
-		}
-		created = true
-		fmt.Fprintf(stderr, "ailang-worldd session new: worktree %s created\n", dir)
-	}
-
-	// 6. The mint, through the existing core.
-	var out io.Writer
-	if *outPath == "" {
-		out = stdout
-	}
-	mintCtx, cancelMint := context.WithTimeout(ctx, 3*time.Second)
-	rawToken, credentialID, row, err := sessionMint(mintCtx, st, episode, grants, *ttl, now, out)
-	cancelMint()
-	if err == nil && *outPath != "" {
-		if err = writeTokenFile(*outPath, rawToken); err != nil {
-			// The row exists but nobody holds its token: revoke it too.
-			if rerr := authority.Revoke(ctx, st, credentialID); rerr != nil {
-				fmt.Fprintf(stderr, "ailang-worldd session new: could not revoke the unwritten credential %s: %v\n", credentialID, rerr)
-			}
+// hasGrant reports whether grants hold effect at any scope.
+func hasGrant(grants []broker.Capability, effect string) bool {
+	for _, g := range grants {
+		if g.Effect == effect {
+			return true
 		}
 	}
-	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd session new: %v\n", err)
-		// 7. Roll back the worktree this run created.
-		if created {
-			if rerr := worktree.Remove(ctx, git, *repo, dir); rerr != nil {
-				fmt.Fprintf(stderr, "ailang-worldd session new: could not remove the worktree it created: %v\n", rerr)
-			} else {
-				fmt.Fprintf(stderr, "ailang-worldd session new: removed the worktree %s it created\n", dir)
-			}
-		}
-		return exitFatal
-	}
-	if *outPath != "" {
-		fmt.Fprintf(stdout, "session for episode %s: %d grant(s), expires epoch %d, token written to %s\n",
-			episode, len(grants), row.ExpiresAt, *outPath)
-	} else {
-		io.WriteString(stdout, "\n")
-	}
-	fmt.Fprintf(stderr, "ailang-worldd session new: credential_id=%s (episode %s, worktree %s, %d grant(s), expires %d)\n",
-		credentialID, episode, dir, len(grants), row.ExpiresAt)
-	if degraded {
-		fmt.Fprintf(stderr, "ailang-worldd session new: episode %s is DEGRADED: %s is not a git worktree (--allow-non-git); "+
-			"session list and /v1/health show it\n", episode, dir)
-	}
-	return exitOK
+	return false
 }
 
 // writeTokenFile writes the token once at mode 0600, refusing to overwrite.
@@ -414,6 +645,10 @@ type sessionListing struct {
 	// Degraded: the episode's directory exists and is not a git worktree
 	// (row 185, session new --allow-non-git).
 	Degraded bool `json:"degraded"`
+	// Project and ProfileDigest are the exec profile binding (row 189 M2);
+	// absent for an unbound credential.
+	Project       string `json:"project,omitempty"`
+	ProfileDigest string `json:"profileDigest,omitempty"`
 }
 
 // episodeDegraded reports whether <root>/<episode> exists as a real
@@ -505,7 +740,7 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		sort.SliceStable(grants, func(i, j int) bool { return grants[i].Effect < grants[j].Effect })
 		listing = append(listing, sessionListing{CredentialID: r.CredentialID, Episode: r.EpisodeID,
 			Live: now < r.ExpiresAt, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, Grants: grants,
-			Degraded: episodeDegraded(root, r.EpisodeID)})
+			Degraded: episodeDegraded(root, r.EpisodeID), Project: r.Project, ProfileDigest: r.ProfileDigest})
 	}
 	if *asJSON {
 		enc := json.NewEncoder(stdout)
@@ -519,8 +754,11 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 			state = "expired"
 		}
 		mark := ""
+		if l.Project != "" {
+			mark += "  profile " + l.Project + " " + l.ProfileDigest
+		}
 		if l.Degraded {
-			mark = "  DEGRADED (not a git worktree)"
+			mark += "  DEGRADED (not a git worktree)"
 		}
 		fmt.Fprintf(stdout, "%s  %-12s %-7s expires %s  %s%s\n", l.CredentialID, l.Episode, state,
 			time.Unix(l.ExpiresAt, 0).UTC().Format(time.RFC3339), grantList(l.Grants), mark)
