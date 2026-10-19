@@ -108,15 +108,40 @@ func TestProtectedGitFilterPreflight(t *testing.T) {
 	}
 }
 
+// protectedRelaxBound lifts the phase bound for rows that are not about it: a
+// loaded runner (go test ./...) measured 2.5 s for one fake-Git spawn.
+func protectedRelaxBound(t *testing.T) {
+	old := protectedCheckTimeout
+	protectedCheckTimeout = 30 * time.Second
+	t.Cleanup(func() { protectedCheckTimeout = old })
+}
+
 func TestProtectedChecker(t *testing.T) {
-	for _, name := range []string{"clean", "modified", "deleted", "untracked", "ignored", "index-flag", "head-moved", "malformed"} {
+	for _, name := range []string{"clean", "modified", "deleted", "untracked", "ignored", "index-flag", "head-moved", "malformed", "filter-refused"} {
 		t.Run(name, func(t *testing.T) {
+			protectedRelaxBound(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 			defer cancel()
 			root, git, run := protectedRepo(t, ctx)
 			base := run("rev-parse", "HEAD")
 			want := name
 			switch name {
+			case "filter-refused":
+				// The checker itself must stop at the preflight: no status, no filter run.
+				marker := filepath.Join(root, "marker")
+				mustWrite(t, filepath.Join(root, ".gitattributes"), "a_test.go filter=probe\n")
+				run("config", "filter.probe.clean", "touch '"+marker+"'; cat")
+				mustWrite(t, filepath.Join(root, "a_test.go"), "after!\n")
+				fake, log := protectedFakeGit(t, "exec '"+git+"' \"$@\"")
+				r := checkProtected(ctx, fake, root, base, []string{"*_test.go"}, nil)
+				_, markerErr := os.Stat(marker)
+				if r.err == nil || !strings.Contains(r.err.Error(), WorktreeFilterRefused) || r.intact != nil {
+					t.Fatalf("filter not refused: %+v", r)
+				}
+				if spawns := strings.Count(protectedLog(t, log), " status "); spawns != 0 || !os.IsNotExist(markerErr) {
+					t.Fatalf("unsafe progression: status spawns=%d marker error=%v", spawns, markerErr)
+				}
+				return
 			case "modified":
 				mustWrite(t, filepath.Join(root, "a_test.go"), "changed\n")
 			case "deleted":
@@ -185,6 +210,9 @@ func TestProtectedChecker(t *testing.T) {
 func TestProtectedCheckerRootAndBound(t *testing.T) {
 	for _, name := range []string{"cwd", "shared-phase-bound", "argv", "nonzero", "output-failure", "stderr-failure", "missing-head"} {
 		t.Run(name, func(t *testing.T) {
+			if name != "shared-phase-bound" {
+				protectedRelaxBound(t)
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 			defer cancel()
 			// Canonical, as snapshotWorktree passes it: the fake git logs a resolved $PWD.

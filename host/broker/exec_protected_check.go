@@ -20,7 +20,8 @@ func protectedGitPreflight(ctx context.Context, git, root string) error {
 	return nil
 }
 
-const protectedCheckTimeout = 2500 * time.Millisecond
+// protectedCheckTimeout is the provisional phase bound; M6-pre (V24) resizes it.
+var protectedCheckTimeout = 2500 * time.Millisecond
 
 type protectedCheck struct {
 	intact  *bool
