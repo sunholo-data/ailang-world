@@ -1,6 +1,7 @@
 # w-workspace-exec-long-run-lane — long `workspace-exec` runs as a recorded start / collect pair, on a snapshot, inside the frozen D7 deadlines
 
 **Status**: DRAFT for attended review (2026-10-19). Queue row 145. No quorum yet. Every OPEN decision (§8) carries a recommended default.
+- **RULED (Mark, attended 2026-10-19, D-WORLD-84):** all A (D-145-1…7) — every recommendation accepted ("thank you yes go with all recommendations"); ledger PR #317.
 - **Direction:**
   - Row 145 was re-tagged an evidence row, attended on 2026-10-19 (Mark: "is our 9 second timeout too harsh?" → "yeah sounds good"). Its cost is measured as friction #15 (PR #311).
   - D-140-4 = A (D-WORLD-62, 2026-10-03) named this lane as the follow-up for runs longer than the handler cap.
