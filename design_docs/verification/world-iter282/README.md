@@ -1,0 +1,7 @@
+# Iteration 282 — row 156 detection redesign [r4] + M1c/M1d
+
+- Designer (Agent opus): [r4] → quorum r1 BLOCKED (gemini-4-argon, oc-glm-5-3 reject; gpt6-1-sol, oc-kimi-k3 unreachable) → [r4.1] → quorum r2 BLOCKED, all three present seats on one surface (the 500 ms phase budget V23 refuted) → [r4.2] controller narrow-refinement carve-out applying the reviewers' fixes (see design §12). Summaries: [quorum.json](quorum.json). V17–V23 evidence: `../world-row156-r4/`.
+- Controller premise checks: V17 fold scan rerun (4 runes, scan fold == `foldProtectedRune`); r1 ligature premise measured FALSE (key("ß")="ß", key("ﬀ")="ﬀ"); V10/V23 ambient-ignored premise REAL.
+- Planner (codex gpt-6.1-sol): [planner.md](planner.md). Executor (codex gpt-6.1-sol): [executor.md](executor.md). Controller re-ran all gates outside the sandbox, rebuilt one commit per milestone from snapshots (sha256-verified), and ran its own mutant (drop `sS` from the widen set → `long-s` FAILs both CWDs, kelvin green).
+- Evaluator (Agent sonnet, own worktree): r1 FAIL 68 (over-cap rows vacuous — reproduced by the controller: cap check deleted, all three still PASS) → test-only fix `ba544c0` (both cap mutants now killed) → r2 [PASS 88](evaluator-r2.md). r1 full report: carried in the r2 report's findings table and the log entry.
+- Routing: [routing-evidence.json](routing-evidence.json). Weekly sweep: [weekly-sweep.md](weekly-sweep.md).

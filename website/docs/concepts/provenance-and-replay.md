@@ -10,7 +10,7 @@ description: What every commit records, how the records link together, what repl
 
 Every MCP `tools/call` or A2A `tasks/send` of a published transition commits exactly one log
 entry, including calls that were refused by the transition's own plan. For an effectful
-transition (all nine coding tools) the commit writes these objects:
+transition (all ten coding tools) the commit writes these objects:
 
 | Object (`semanticId`) | Contents |
 |---|---|

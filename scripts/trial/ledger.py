@@ -24,7 +24,7 @@ import os
 import sys
 
 # World tool name suffix -> ledger column. Anything else is counted under "other".
-KINDS = {'ailang-read': 'read', 'ailang-write': 'write', 'ailang-edit': 'edit', 'ailang-run': 'run',
+KINDS = {'ailang-read': 'read', 'ailang-write': 'write', 'ailang-edit': 'edit', 'ailang-delete': 'write', 'ailang-run': 'run',
          'ailang-check': 'check', 'ailang-cli': 'cli', 'workspace-exec': 'exec',
          # the paired shell arm's native tools (Claude Code)
          'Read': 'read', 'Grep': 'read', 'Glob': 'read', 'LS': 'read', 'Write': 'write', 'Edit': 'edit',

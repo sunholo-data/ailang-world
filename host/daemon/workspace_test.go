@@ -176,10 +176,10 @@ func registryNames(reg broker.Registry) []string {
 	return names
 }
 
-// wantWorkspaceEffects is the nine names (row 135 AC3: 6 -> 8; row 140 AC1.3:
-// 8 -> 9, Workspace.Exec; always bound).
+// wantWorkspaceEffects is the ten names (row 135 AC3: 6 -> 8; row 140 AC1.3:
+// 8 -> 9, Workspace.Exec; always bound; row 191a: 9 -> 10, Workspace.Delete).
 var wantWorkspaceEffects = []string{"Ailang.CLI", "Ailang.Check", "Ailang.Discover", "Ailang.Run", "Ailang.RunEnv",
-	"Ailang.RunNet", "Workspace.Exec", "Workspace.Read", "Workspace.Write"}
+	"Ailang.RunNet", "Workspace.Delete", "Workspace.Exec", "Workspace.Read", "Workspace.Write"}
 
 // refusedEpisodes are AC4.4's shapes: each must yield an empty registry.
 var refusedEpisodes = []string{
@@ -207,7 +207,7 @@ func TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot(t *testing.T) 
 	if n := f.summaries(t); n != 0 {
 		t.Fatalf("a refused episode constructed a handler (%d summary runs)", n)
 	}
-	// Positive control: the provisioned episode gets the nine effect names.
+	// Positive control: the provisioned episode gets the ten effect names.
 	reg := d.workspace.registry("ep1")
 	if got := registryNames(reg); fmt.Sprint(got) != fmt.Sprint(wantWorkspaceEffects) {
 		t.Fatalf("registry(ep1) = %v, want %v", got, wantWorkspaceEffects)
@@ -725,8 +725,9 @@ func TestWorkspaceExamplesDirReachesTheToolEnv(t *testing.T) {
 		cfg.ExamplesDir = corpus
 	})
 	cache := filepath.Join(f.stateDir, "cache", "ep1")
+	// Row 197: TMPDIR is the episode cache's own tmp/, never /tmp.
 	want := []string{"AILANG_CACHE_DIR=" + cache, "AILANG_EXAMPLES=" + filepath.Join(f.outside, "examples"),
-		"HOME=" + cache, "LANG=C", "LC_ALL=C", "PATH=/usr/bin:/bin"}
+		"HOME=" + cache, "LANG=C", "LC_ALL=C", "PATH=/usr/bin:/bin", "TMPDIR=" + filepath.Join(cache, "tmp")}
 	if strings.Join(with, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("tool env with --examples-dir =\n%s\nwant\n%s", strings.Join(with, "\n"), strings.Join(want, "\n"))
 	}

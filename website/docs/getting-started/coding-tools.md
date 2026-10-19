@@ -1,20 +1,21 @@
 ---
 title: Coding tools over MCP
 sidebar_position: 3
-description: Publish the nine se-tools transitions, mint a session, serve them with a worktree, and call them from curl, pi or Claude Code.
+description: Publish the ten se-tools transitions, mint a session, serve them with a worktree, and call them from curl, pi or Claude Code.
 ---
 
 # Coding tools over MCP
 
-The `packages/se-tools` package holds nine transitions that give an agent a complete AILANG
+The `packages/se-tools` package holds ten transitions that give an agent a complete AILANG
 coding loop inside one git worktree, plus operator-profiled commands for other toolchains, with
 every tool effect going through World's broker:
 
 | Tool (ID = MCP name) | Arguments | Effect (scope `worktree`, cost 1) |
 |---|---|---|
-| `ailang-read` | `path` | `Workspace.Read` |
+| `ailang-read` | `path`, optional `offset`, `limit` | `Workspace.Read` |
 | `ailang-write` | `path`, `content` | `Workspace.Write` |
 | `ailang-edit` | `path`, `old_text`, `new_text` | `Workspace.Write` |
+| `ailang-delete` | `path` | `Workspace.Delete` |
 | `ailang-check` | `path` | `Ailang.Check` |
 | `ailang-run` | `path`, optional `args_json`, `stdin`, `argv`, `caps` | `Ailang.Run` (`Ailang.RunEnv` / `Ailang.RunNet` when `caps` holds `Env` / `Net`) |
 | `builtins-search` | optional `query`, `module` | `Ailang.Discover` |
@@ -31,7 +32,7 @@ sandboxed by srt. This page configures no profile, so it answers every call
 
 This page follows `docs/QUICKSTART.md` §9, which was run verbatim in the attended smoke on
 2026-10-03: pi and Claude Code each read, edited, checked and ran `hello.ail` through World's
-MCP tools only. The runbook has since moved to `session new` and nine tools, and this page
+MCP tools only. The runbook has since moved to `session new` and ten tools, and this page
 with it. Where this page and the runbook disagree, the runbook wins.
 
 :::tip One command per step
@@ -143,7 +144,7 @@ repo-relative. The daemon must be stopped: publishing needs single-writer author
   --manifest packages/se-tools/transitions.json --ailang-bin $PIN
 ```
 
-It asks you to type a confirmation phrase at the terminal, `publish 9 transitions to
+It asks you to type a confirmation phrase at the terminal, `publish 10 transitions to
 /tmp/se-world/world.db` (see
 [Attended steps](../guides/attended-steps.md#the-confirmation-phrase)), then prints
 `published transition registry revision 1 (head sha256:…)`. Running it again prints
@@ -151,11 +152,11 @@ It asks you to type a confirmation phrase at the terminal, `publish 9 transition
 
 ## 6. Mint a session (attended)
 
-`session new --preset se-tools` mints nine grants, one per effect name the se-tools transitions
+`session new --preset se-tools` mints ten grants, one per effect name the se-tools transitions
 declare: `Workspace.Read`, `Workspace.Write` (shared by `ailang-write` and `ailang-edit`),
 `Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv` and `Ailang.RunNet` (an `ailang-run` whose `caps`
-hold `Env` or `Net`), `Ailang.Discover` (shared by the two searches), `Ailang.CLI` and
-`Workspace.Exec`. Each is `EFFECT=SCOPE:BUDGET` with scope `worktree` and a budget of 50 calls.
+hold `Env` or `Net`), `Ailang.Discover` (shared by the two searches), `Ailang.CLI`,
+`Workspace.Exec` and `Workspace.Delete` (`ailang-delete`; deleting is its own grant). Each is `EFFECT=SCOPE:BUDGET` with scope `worktree` and a budget of 50 calls.
 It reuses the worktree made above (without it, `--repo /tmp/se-proj` makes one), asks y/N at
 the terminal (type `y`), and writes the token once to `--out`:
 
@@ -210,7 +211,7 @@ curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"hello.ail"}}}' http://127.0.0.1:7644/mcp/
 ```
 
-The list holds exactly the nine names. The call answers as SSE. This is the `ailang-read`
+The list holds exactly the ten names. The call answers as SSE. This is the `ailang-read`
 result from the attended run (`structuredContent`, abbreviated):
 
 ```text
@@ -244,7 +245,7 @@ export WORLD_SESSION=$(cat /tmp/se-session)
 pi --mcp-config /tmp/se-pi-mcp.json
 ```
 
-Run `/mcp tools` in that session and confirm the nine `world_*` names. This first session also
+Run `/mcp tools` in that session and confirm the ten `world_*` names. This first session also
 writes the adapter's cache (`~/.pi/agent/mcp-cache.json`); direct tools register from it. Then
 run with every built-in tool disabled:
 

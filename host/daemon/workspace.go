@@ -6,7 +6,8 @@ package daemon
 // `serve --workspace-root DIR --tool-ailang-bin PATH` binds episode E to the
 // worktree DIR/E. For each episode the daemon renders the §4.3 policy at
 // <db-dir>/policies/E.toml (mode 0600), points AILANG_CACHE_DIR at
-// <db-dir>/cache/E, and binds the six Workspace.*/Ailang.* effect names to
+// <db-dir>/cache/E (and TMPDIR at its tmp/, row 197), and binds the
+// Workspace.*/Ailang.* effect names (ailangToolEffects) to
 // one broker.AilangToolHandler running the ARCHIVED tool binary. Anything
 // short of that — a flag missing, an episode id outside the grammar, a
 // worktree that is absent, not a directory, or reached through a symlink —
@@ -58,21 +59,21 @@ var workspaceHandlerBudget = 3 * time.Second
 // directory directly under the workspace root, never a path.
 var episodeIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
 
-// ailangToolEffects are the eight effect names an episode's AILANG tool
-// handler serves: row 134's six plus row 135's Ailang.RunEnv and
-// Ailang.RunNet. All eight are bound together whenever the episode's AILANG
-// handler is built (R8 refuses a plan whose declared effects lack a handler,
-// and ailang-run declares all three run effects); the operator's run
-// allowlist is enforced inside the handler, never by leaving a name
-// unregistered (§4.2). When the handler cannot be built (row 152) none of the
-// eight is bound and R8 refuses only the AILANG transitions.
+// ailangToolEffects are the nine effect names an episode's AILANG tool
+// handler serves: row 134's six, row 135's Ailang.RunEnv and Ailang.RunNet,
+// and row 191a's Workspace.Delete. All nine are bound together whenever the
+// episode's AILANG handler is built (R8 refuses a plan whose declared effects
+// lack a handler, and ailang-run declares all three run effects); the
+// operator's run allowlist is enforced inside the handler, never by leaving a
+// name unregistered (§4.2). When the handler cannot be built (row 152) none of
+// the nine is bound and R8 refuses only the AILANG transitions.
 var ailangToolEffects = []string{
-	broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
+	broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectWorkspaceDelete, broker.EffectAilangCheck,
 	broker.EffectAilangRun, broker.EffectAilangRunEnv, broker.EffectAilangRunNet,
 	broker.EffectAilangDiscover, broker.EffectAilangCLI,
 }
 
-// workspaceEffects are the nine names an episode's registry binds: the eight
+// workspaceEffects are the ten names an episode's registry binds: the nine
 // above plus row 140's Workspace.Exec, bound whenever the episode worktree
 // resolves, independently of the AILANG handler (row 152; workspace-exec
 // declares only it). With no exec profile configured its handler is
@@ -336,7 +337,7 @@ func verifyArchivedTool(path string, ref hashref.HashRef) error {
 func (w *workspaceTools) enabled() bool { return w != nil && w.root != "" && w.bin != "" }
 
 // registry is workspaceRegistry(episodeID) of §4.3: Workspace.Exec bound to
-// the episode's own handler whenever the worktree resolves, plus the eight
+// the episode's own handler whenever the worktree resolves, plus the nine
 // AILANG tool effect names bound to the episode's AILANG handler when it can
 // be built. A flag missing or an unsafe worktree yields an empty registry; an
 // AILANG build failure prints its operator line and leaves only Workspace.Exec.
@@ -367,7 +368,7 @@ func (w *workspaceTools) registry(episodeID string) broker.Registry {
 }
 
 // ailangFamily resolves the episode's module root and builds (or fetches)
-// its AILANG tool handler: the inputs only the eight AILANG names need.
+// its AILANG tool handler: the inputs only the nine AILANG names need.
 func (w *workspaceTools) ailangFamily(episodeID, epRoot string) (broker.Handler, error) {
 	sandbox, err := w.sandboxRoot(episodeID, epRoot)
 	if err != nil {

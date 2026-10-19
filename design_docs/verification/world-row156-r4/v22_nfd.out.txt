@@ -1,0 +1,5 @@
+index bytes:  p k g / e 314 201 _ t e s t . g o \0  
+precompose=false :(top,glob,icase)**/é_test.go ls-files=0
+precompose=false :(top,glob,icase)**/*_te*t.go ls-files=1
+precompose=true :(top,glob,icase)**/é_test.go ls-files=0
+precompose=true :(top,glob,icase)**/*_te*t.go ls-files=1

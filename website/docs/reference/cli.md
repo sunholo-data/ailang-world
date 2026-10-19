@@ -582,7 +582,8 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
   --preset se-tools    one grant per effect the se-tools transitions declare:
                        Workspace.Read, Workspace.Write, Ailang.Check, Ailang.Run,
                        Ailang.RunEnv, Ailang.RunNet, Ailang.Discover, Ailang.CLI,
-                       Workspace.Exec, each scope worktree with --budget calls
+                       Workspace.Exec, Workspace.Delete, each scope worktree
+                       with --budget calls
   --grant EFFECT=SCOPE:BUDGET
                        an explicit grant (repeatable); it overrides a preset
                        grant with the same effect and scope
@@ -603,15 +604,15 @@ ailang-worldd session new ep1 --repo ~/src/my-project --preset se-tools --out ~/
 On the terminal it asks:
 
 ```text
-Create worktree <workspace-root>/ep1 from <repo> and mint a session for episode ep1 with 9 grant(s) [Workspace.Read=worktree:50 Workspace.Write=worktree:50 Ailang.Check=worktree:50 Ailang.Run=worktree:50 Ailang.RunEnv=worktree:50 Ailang.RunNet=worktree:50 Ailang.Discover=worktree:50 Ailang.CLI=worktree:50 Workspace.Exec=worktree:50], expiry +3600s? [y/N]
+Create worktree <workspace-root>/ep1 from <repo> and mint a session for episode ep1 with 10 grant(s) [Workspace.Read=worktree:50 Workspace.Write=worktree:50 Ailang.Check=worktree:50 Ailang.Run=worktree:50 Ailang.RunEnv=worktree:50 Ailang.RunNet=worktree:50 Ailang.Discover=worktree:50 Ailang.CLI=worktree:50 Workspace.Exec=worktree:50 Workspace.Delete=worktree:50], expiry +3600s? [y/N]
 ```
 
 and, after `y`:
 
 ```text
-session for episode ep1: 9 grant(s), expires epoch 1791060000, token written to <session-file>
+session for episode ep1: 10 grant(s), expires epoch 1791060000, token written to <session-file>
 ailang-worldd session new: worktree <workspace-root>/ep1 created
-ailang-worldd session new: credential_id=<64-hex> (episode ep1, worktree <workspace-root>/ep1, 9 grant(s), expires 1791060000)
+ailang-worldd session new: credential_id=<64-hex> (episode ep1, worktree <workspace-root>/ep1, 10 grant(s), expires 1791060000)
 ```
 
 With `--allow-non-git` and an existing non-git directory, the prompt instead begins

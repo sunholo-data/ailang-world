@@ -72,11 +72,11 @@ Direct tools register from the adapter's metadata cache (`~/.pi/agent/mcp-cache.
 export WORLD_SESSION="$(cat /path/to/session-file)"
 pi --mcp-config world-mcp.json --no-builtin-tools -p "Reply with the single word ok." </dev/null >/dev/null
 pi --mcp-config world-mcp.json --no-builtin-tools \
-  --tools world_ailang-read,world_ailang-write,world_ailang-edit,world_ailang-check,world_ailang-run,world_builtins-search,world_examples-search,world_ailang-cli,world_workspace-exec \
+  --tools world_ailang-read,world_ailang-write,world_ailang-edit,world_ailang-delete,world_ailang-check,world_ailang-run,world_builtins-search,world_examples-search,world_ailang-cli,world_workspace-exec \
   -p "Read hello.ail, change its message to 'hello from pi', check it, then run it and report its stdout." </dev/null
 ```
 
-`</dev/null` matters: pi reads a non-TTY stdin as extra prompt input and waits for end of file. In an interactive `pi --mcp-config world-mcp.json` session, `/mcp tools` lists the nine `world_*` names (fewer if your session lacks a grant). Leave `world_workspace-exec` out of `--tools` if the operator configured no exec profile.
+`</dev/null` matters: pi reads a non-TTY stdin as extra prompt input and waits for end of file. In an interactive `pi --mcp-config world-mcp.json` session, `/mcp tools` lists the ten `world_*` names (fewer if your session lacks a grant). Leave `world_workspace-exec` out of `--tools` if the operator configured no exec profile.
 
 ## Claude Code
 
@@ -93,7 +93,7 @@ Then run with the built-in tools disabled. `--allowedTools` alone leaves the bui
 ```bash
 claude -p "Read hello.ail, change its message to 'hello from claude', check it, then run it and report its stdout." \
   --tools "" --strict-mcp-config --mcp-config /tmp/world-claude/.mcp.json \
-  --allowedTools mcp__world__ailang-read,mcp__world__ailang-write,mcp__world__ailang-edit,mcp__world__ailang-check,mcp__world__ailang-run,mcp__world__builtins-search,mcp__world__examples-search,mcp__world__ailang-cli,mcp__world__workspace-exec \
+  --allowedTools mcp__world__ailang-read,mcp__world__ailang-write,mcp__world__ailang-edit,mcp__world__ailang-delete,mcp__world__ailang-check,mcp__world__ailang-run,mcp__world__builtins-search,mcp__world__examples-search,mcp__world__ailang-cli,mcp__world__workspace-exec \
   </dev/null
 ```
 

@@ -146,13 +146,14 @@ Note the pattern: `access` at cost 0 and one declared effect at cost 1, so one g
 name both admits the tool and pays for each call. `transitionFnFile` paths are relative to the
 **repo root**, so run the publish from there.
 
-All nine `se-tools` entries:
+All ten `se-tools` entries:
 
 | `id` | Source | `access.effect` | Required args | Optional args |
 |---|---|---|---|---|
-| `ailang-read` | `se_tools/read.ail` | `Workspace.Read` | `path` | |
+| `ailang-read` | `se_tools/read.ail` | `Workspace.Read` | `path` | `offset`, `limit` |
 | `ailang-write` | `se_tools/write.ail` | `Workspace.Write` | `path`, `content` | |
 | `ailang-edit` | `se_tools/edit.ail` | `Workspace.Write` | `path`, `old_text`, `new_text` | |
+| `ailang-delete` | `se_tools/delete.ail` | `Workspace.Delete` | `path` | |
 | `ailang-check` | `se_tools/check.ail` | `Ailang.Check` | `path` | |
 | `ailang-run` | `se_tools/run.ail` | `Ailang.Run` | `path` | `args_json`, `stdin`, `argv`, `caps` |
 | `builtins-search` | `se_tools/builtins_search.ail` | `Ailang.Discover` | | `query`, `module` |

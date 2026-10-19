@@ -141,6 +141,7 @@ func newFakeTool(t *testing.T, mode string) fakeTool {
 	script := `#!/bin/sh
 d=$(dirname "$0")
 printf '%s\n' "$@" > "$d/argv"
+printf '%s' "${TMPDIR-unset}" > "$d/tmpdir"
 mode=$(cat "$d/mode")
 if [ "$1" = "policy-tool" ]; then
   req=$(cat)
@@ -253,14 +254,17 @@ func newFakeToolHandler(t *testing.T, mode string) (*AilangToolHandler, fakeTool
 
 func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 	h, tool, _ := newFakeToolHandler(t, "ok")
+	// Row 191a: delete is Workspace.Delete's only op and no other effect's,
+	// Workspace.Write's included (deleting is its own authority).
 	allowed := map[string][]string{
-		EffectWorkspaceRead:  {"read"},
-		EffectWorkspaceWrite: {"write", "edit"},
-		EffectAilangCheck:    {"ai_check"},
-		EffectAilangDiscover: {"builtins_list", "examples_search"},
-		EffectAilangCLI:      {"check", "tree", "fmt"}, // the fake summary's cli list
+		EffectWorkspaceRead:   {"read"},
+		EffectWorkspaceWrite:  {"write", "edit"},
+		EffectWorkspaceDelete: {"delete"},
+		EffectAilangCheck:     {"ai_check"},
+		EffectAilangDiscover:  {"builtins_list", "examples_search"},
+		EffectAilangCLI:       {"check", "tree", "fmt"}, // the fake summary's cli list
 	}
-	universe := []string{"read", "write", "edit", "ai_check", "builtins_list", "examples_search",
+	universe := []string{"read", "write", "edit", "delete", "ai_check", "builtins_list", "examples_search",
 		"check", "tree", "summary", "run", "fmt", "policy_check", ""}
 	want, refusals := 0, 0
 	for effect, ops := range allowed {
@@ -292,7 +296,7 @@ func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 		}
 	}
 	t.Logf("op allowlist: %d admitted, %d refused", want, refusals)
-	if want != 9 || refusals != 5*len(universe)-9 {
+	if want != 10 || refusals != 6*len(universe)-10 {
 		t.Fatalf("matrix counted %d admitted / %d refused", want, refusals)
 	}
 }

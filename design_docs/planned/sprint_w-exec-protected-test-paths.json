@@ -1,17 +1,17 @@
 {
   "id": "w-exec-protected-test-paths",
-  "iteration": 277,
+  "iteration": 282,
   "row": 156,
   "clause": "5 (+3)",
   "authority": [
-    "design_docs/planned/w-exec-protected-test-paths.md (all §§1–12, V1–V13, r3 fix read)",
+    "design_docs/planned/w-exec-protected-test-paths.md §§3 V16–V23, 4.2/4.5, 6 M1c/M6, 7, 9 R-156-6/7/8, 12 [r4/r4.1/r4.2]; M1 may proceed, M6 gated on V24",
     "CLAUDE.md; design_docs/coding-standards.md",
     "design_docs/world-mission.md row156 and D-WORLD-81=A",
     "design_docs/DESIGN.md §§1,14",
     "design_docs/planned/w-exec-protected-test-paths-sprint-plan.md"
   ],
-  "estimate": "19 executor runs, 530 minutes; 4307 changed LOC total including production/tests/docs. <=250 LOC and <=30min each; CI wait separate from active executor work.",
-  "scope": "Planner creates exactly this JSON and its Markdown pair; no git write operations. Executor follows design M0–M7, with ordered splits. Each run is a separately reviewable, compiling PR with green normal CI, never a prerequisite on a later unlanded patch. M0 is Linux CI only. Defaults A,A,A,B; M5 policy only.",
+  "estimate": "21 executor/controller runs, 590 minutes; 4757 changed LOC total including production/tests/docs. <=250 LOC and <=30min each; CI/measurement waiting separate from active work. M1c <=140 production +110 tests; M1d <=240 tests.",
+  "scope": "Planner creates exactly this JSON and its Markdown pair; no git write operations. Executor follows design M0–M7, with ordered splits. Each run is a separately reviewable, compiling PR with green normal CI, never a prerequisite on a later unlanded patch. M0 is Linux CI only. Defaults A,A,A,B; M5 policy only. Iteration 282 detection revision supersedes historical ASCII-pattern fallback language in done planning records: do not drop Unicode rows / do not narrow the guarantee. V24 remains unmeasured and gates M6a.",
   "environment": [
     "WORLD_TOOL_AILANG_BIN MUST be unset for every normal gate (CI does not provision it); optional real v0.52.1 arm skips cleanly when unset.",
     "No .ail changes: do NOT run scripts/verify_ail.sh for this plan. If scope later changes to .ail, first perform S5 reference/builtin/pin checks and add ./scripts/verify_ail.sh to that milestone; re-estimate/split, do not assume it compiles.",
@@ -21,26 +21,20 @@
     "Every daemon/REST t.Run owns context.WithTimeout inside its closure plus cancellation/cleanup. Never one shared context across subtests, even if they currently finish quickly."
   ],
   "measured_baseline": {
-    "tree": "d919701931c48247d64a12e51ad32e7e5361cc06",
-    "date": "2026-10-17",
+    "tree": "451dc3d",
+    "date": "2026-10-19",
     "gates": [
       {
-        "command": "go vet ./...",
+        "command": "go vet ./host/broker/",
         "rc": 0,
-        "seconds": 1.46,
-        "result": "GREEN with WORLD_TOOL_AILANG_BIN unset"
+        "seconds": 0.53,
+        "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
       },
       {
-        "command": "go test -race -count=1 ./host/broker/... -run '^(TestRenderExecSettings.*|TestWriteAndVerifyExecSettings|TestParseExecProfile.*|TestRenderEpisodePolicyHasExactlyTheDesignKeySet|TestQuickstartSection10ProfilesLoad)$' -timeout 90s",
+        "command": "go test -count=1 ./host/broker/ -run '^TestProtected' -timeout 300s",
         "rc": 0,
-        "seconds": 4.52,
-        "result": "GREEN focused broker race baseline (no sockets); not a full package pass"
-      },
-      {
-        "command": "go test -count=1 ./host/broker/ -run '^(TestRenderExecSettings.*|TestWriteAndVerifyExecSettings|TestParseExecProfile.*|TestRenderEpisodePolicyHasExactlyTheDesignKeySet|TestQuickstartSection10ProfilesLoad)$' -timeout 90s -v",
-        "rc": 0,
-        "seconds": 2.1,
-        "result": "Named existing tests PASS, no pin, no sockets"
+        "seconds": 0.495,
+        "result": "GREEN existing TestProtected tests; pinned optional arm skips with tool binary unset. New candidate tests absent at base; zero tests is not a pass."
       }
     ],
     "unmeasured": [
@@ -55,6 +49,10 @@
       {
         "command": "go test -race -count=1 ./cmd/ailang-worldd/...",
         "result": "UNKNOWN; NOT RUN: legacy off-worktree writes and/or sockets, not safe within planner scope. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+      },
+      {
+        "command": "V24: WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+        "result": "NOT MEASURED; hard controller/executor prerequisite before M6a. No fixture repositories created."
       }
     ],
     "matrix": "Linux/bubblewrap unmeasured locally; M0 runs CI ONLY. Future named tests absent; no empty-selection pass. No socket test was run.",
@@ -123,7 +121,7 @@
       "anchor": "host/broker/worktree_delta.go:274, :297, :326-354",
       "evidence": "gitEnv disables global/system configuration, not local filter.<name>.clean/process. Existing gitSnapshot calls configuredGitFilters and refuses before status, a third invocation. The design's two-call description omits this mandatory host execution guard.",
       "command": "sed -n '274,290p' host/broker/worktree_delta.go; sed -n '297,355p' host/broker/worktree_delta.go",
-      "disposition": "New M4a preflight; M4b includes query+status+ls-files in one500ms bound. Design correction is explicitly banked, no new host filter execution allowed."
+      "disposition": "M4a preflight retained. [r4.x] M4b has query plus THREE candidate data calls through parseProtectedCandidates, one shared 2500ms provisional bound; V24 measures all overhead before M6a."
     }
   ],
   "planner_decisions": {
@@ -179,7 +177,7 @@
       ],
       "plan": "Policy half only. Do not implement precheck on unanswered decision. If A arrives, replan separate <=250LOC/30min M5c/M5d after M5b, before later integration: resolution guard killed by MUT-PRECHECK-LEXICAL-ONLY via TestWorkspaceWriteProtectedPrecheck/symlink-dir, and Nlink guard killed by MUT-NO-NLINK via TestWorkspaceWriteProtectedPrecheck/hardlink; lexical/file-alias rows and spawn counter0. Existing anchors handlers_ailang.go:203 resolveExistingPrefix, :406 Execute, :242 AilangToolConfig. No current milestone/JSON entry for this conditional unapproved work."
     },
-    "ordering": "Strict dependency chain: M0a→M0b→M1a→M1b→M1c→M2a→M2b→M3a→M3b→M4a→M4b→M4c→M5a→M5b→M6a→M6b→M6c→M7a→M7b. M4a preflight, M4b reusable checker, M4c startup arm; M6 reuses these.",
+    "ordering": "Strict chain: M0a→M0b→M1a→M1b→M1c→M1d→M2a→M2b→M3a→M3b→M4a→M4b→M4c→M5a→M5b→M6-pre→M6a→M6b→M6c→M7a→M7b. M6-pre additionally depends explicitly on M1d; M6a blocked until measured V24 and resized bounds.",
     "new_path_verification": "Every existing file in milestone files was checked with ls/rg and pathlib.is_file; new files explicitly absent with verified existing parent. Base function lines below refer to d919701, not design b7bae72.",
     "gate_boundary": "Full narrowest-package race commands are mandatory, listed verbatim for each milestone. Full baseline green is unknown because legacy tests seed off-worktree locations. Controller must provide containment before running those gates; plan grants no permission to seed HOME and does not substitute focused success for a full green."
   },
@@ -846,113 +844,392 @@
     },
     {
       "id": "M1c",
-      "title": "Prove root-anchored git pathspec equivalence including r3",
+      "title": "Pure candidate renderer and mirror filter",
       "design_milestone": "M1",
       "estimated_minutes": 30,
       "depends_on": [
         "M1b"
       ],
       "files": [
+        "host/broker/exec_protected.go",
         "host/broker/exec_protected_test.go"
       ],
       "status": "planned",
       "new_tests": [
-        "TestProtectedGitPathspecEquivalence"
+        "TestProtectedFoldToASCIIClosed",
+        "TestProtectedCandidatePathspecsGolden",
+        "TestProtectedCandidateParseFailsClosed",
+        "TestProtectedIgnoredBaseline",
+        "TestProtectedRenderers"
       ],
       "tests_first": [
         {
-          "ac": "M1",
-          "tests": "TestProtectedGitPathspecEquivalence",
-          "assertions": "Matrix: root/deep, case, ignored file/dir, Unicode probes, directory itself and descendants, and both status/ls-files root anchoring.",
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v",
-          "red_first": "Add the named positive and negative rows first; require named execution, not an empty -run match. Optional real-engine SKIP requires the always-on companion to PASS."
+          "ac": "AC1c.1",
+          "tests": "TestProtectedFoldToASCIIClosed",
+          "assertions": "/closed-set scans U+0080..U+10FFFF excluding surrogates: exactly U+017F, U+037E, U+1FEF, U+212A have ASCII in foldProtectedKey; both ASCII cases of every key must be in protectedWidenRunes. /no-multi-rune asserts keys of ß, ﬀ, ﬁ stay themselves (NFC, not NFKC).",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v",
+          "red_first": "Write named positive and negative rows first; require named discovery/PASS. NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "ac": "AC1c.2",
+          "tests": "TestProtectedCandidatePathspecsGolden",
+          "assertions": "Independent fixed strings: /directory tests/** -> te*t* and te*t*/**; /kelvin *k_test.go -> **/*_te*t.go; /non-ascii é_test.go and /qmark ?_test.go -> **/*_te*t.go; /class [ab]_x.go -> **/*_x.go. Every string carries :(top,glob,icase); /collapse-stars checks collapse and slash preservation.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v",
+          "red_first": "Write named positive and negative rows first; require named discovery/PASS. NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "ac": "AC1c.4",
+          "tests": "TestProtectedCandidateParseFailsClosed",
+          "assertions": "Synthetic bytes only: /over-cap-status, /over-cap-ignored, /over-cap-flags each exceeds 8 MiB and must error; /missing-nul, /unknown-status, /bad-flag and /bad-fields must error even for mirror-false paths; /valid-three-streams asserts head and exact filtered path/status set, including type-change, ignored and index flags.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v",
+          "red_first": "Write named positive and negative rows first; require named discovery/PASS. NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "ac": "AC1c.5",
+          "tests": "TestProtectedIgnoredBaseline",
+          "assertions": "Synthetic inputs: /standing suppresses snapshot entry; /new reports new path as ignored; /case-variant and /nfc-variant suppress equivalent fold keys; /tracked-not-exempt ensures snapshot cannot mask a tracked modification.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v",
+          "red_first": "Write named positive and negative rows first; require named discovery/PASS. NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "ac": "M1b golden re-derived",
+          "tests": "TestProtectedRenderers",
+          "assertions": "Existing /git calls gitCandidatePathspecs and compares the widened fixed golden; other existing consumers retain their prior expectations.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v",
+          "red_first": "Write named positive and negative rows first; require named discovery/PASS. NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         }
       ],
       "acceptance_criteria": [
         {
-          "criterion": "M1",
-          "test": "TestProtectedGitPathspecEquivalence",
-          "assertions": "Matrix: root/deep, case, ignored file/dir, Unicode probes, directory itself and descendants, and both status/ls-files root anchoring.",
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v"
+          "criterion": "AC1c.1",
+          "test": "TestProtectedFoldToASCIIClosed",
+          "assertions": "/closed-set scans U+0080..U+10FFFF excluding surrogates: exactly U+017F, U+037E, U+1FEF, U+212A have ASCII in foldProtectedKey; both ASCII cases of every key must be in protectedWidenRunes. /no-multi-rune asserts keys of ß, ﬀ, ﬁ stay themselves (NFC, not NFKC).",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v"
+        },
+        {
+          "criterion": "AC1c.2",
+          "test": "TestProtectedCandidatePathspecsGolden",
+          "assertions": "Independent fixed strings: /directory tests/** -> te*t* and te*t*/**; /kelvin *k_test.go -> **/*_te*t.go; /non-ascii é_test.go and /qmark ?_test.go -> **/*_te*t.go; /class [ab]_x.go -> **/*_x.go. Every string carries :(top,glob,icase); /collapse-stars checks collapse and slash preservation.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v"
+        },
+        {
+          "criterion": "AC1c.4",
+          "test": "TestProtectedCandidateParseFailsClosed",
+          "assertions": "Synthetic bytes only: /over-cap-status, /over-cap-ignored, /over-cap-flags each exceeds 8 MiB and must error; /missing-nul, /unknown-status, /bad-flag and /bad-fields must error even for mirror-false paths; /valid-three-streams asserts head and exact filtered path/status set, including type-change, ignored and index flags.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v"
+        },
+        {
+          "criterion": "AC1c.5",
+          "test": "TestProtectedIgnoredBaseline",
+          "assertions": "Synthetic inputs: /standing suppresses snapshot entry; /new reports new path as ignored; /case-variant and /nfc-variant suppress equivalent fold keys; /tracked-not-exempt ensures snapshot cannot mask a tracked modification.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v"
+        },
+        {
+          "criterion": "M1b golden re-derived",
+          "test": "TestProtectedRenderers",
+          "assertions": "Existing /git calls gitCandidatePathspecs and compares the widened fixed golden; other existing consumers retain their prior expectations.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/broker/exec_protected_test.go NEW at base; add TestProtectedGitPathspecEquivalence; reuse git fixture pattern at host/broker/worktree_delta_test.go:83 TestWorktreeDeltaGitBasis (read only reuse). Use real git in disposable test repositories under the worktree and the common path×pattern bank. Drive both status and ls-files from root and subdirectory CWD, keeping production invocation root set. Include directory D replaced by a file and separately a symlink, including initially untracked D replacements so deleted descendants cannot mask omission of bare D. CWD row includes a root-level basename outside the selected subdir, ensuring loss of top actually misses it. Independently compute expected matching using banked fixture answers, not renderer output.",
+      "implementation": "[r4/r4.1/r4.2] Replace gitPathspecs with gitCandidatePathspecs in host/broker/exec_protected.go:317; keep top,glob,icase and bare W(D) plus W(D)/**. W replaces s S k K ; `, every non-ASCII rune, every ? and each whole bracket class with *, collapses adjacent stars within a segment, and preserves / and the structural /**. protectedWidenRunes is the closed widen set, checked against a full scalar scan. Git is only a candidate generator; matchProtected remains authoritative. Re-derive M1b TestProtectedRenderers/git's fixed golden for *.test.ts, conftest.py, src/gen/**, tests/** as **/*.te*t.t*, **/confte*t.py, *rc/gen plus *rc/gen/**, te*t* plus te*t*/**, each with :(top,glob,icase); call the replacement renderer. No production I/O. parseProtectedCandidates receives canonical patterns, statusOut/ignoredOut/flagsOut []byte and the fold-keyed episode-start ignored set, returns head, changes, error. Parse all three NUL-terminated streams, preserve raw path bytes for matchProtected's NFC fold, keep branch.oid unfiltered; map ordinary changed/deleted/type-change and ? records, ignored files, and lower-case/S index flags. Validate complete record fields/types/tags before filtering; malformed or >8 MiB in ANY input returns an error, never a clean empty success. Parse v2 2-record extra NUL path correctly even with --no-renames; preserve whitespace/newlines inside NUL-delimited paths. Snapshot subtraction applies ONLY to ignored entries; deduplicate exact raw path/status pairs without hiding case-distinct paths or distinct statuses; only ignored snapshot membership uses fold keys. Introduce the minimal protectedChange data type consumed by the parser here; M6a reuses it rather than declaring a second type. Budget <=140 changed production LOC + <=110 changed test LOC, <=250 total and <=30 minutes; if this cannot fit, split again before coding, never omit rows. Signature contract: parseProtectedCandidates(canonical []string, statusOut, ignoredOut, flagsOut []byte, ignoredBaseline map[string]struct{}) (head string, changes []protectedChange, err error); the exact set representation may follow local style, but neither canonical patterns nor the ignored baseline may be omitted.",
       "acceptance": [
-        "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "commands": [
-        "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "mutations": [
         {
-          "mutant": "MUT-PATHSPEC-NO-ICASE",
-          "mutation": "Drop icase",
-          "must_fail_test": "TestProtectedGitPathspecEquivalence/case",
-          "must_fail_assertion": "case variant still reported on case-sensitive git index",
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence/case$' -timeout 120s -v",
-          "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+          "mutant": "MUT-WIDEN-SET-STALE",
+          "mutation": "Remove ; from protectedWidenRunes",
+          "must_fail_test": "TestProtectedFoldToASCIIClosed/closed-set",
+          "must_fail_assertion": "Scan still finds U+037E -> ; and rejects missing coverage.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed/closed-set$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         },
         {
-          "mutant": "MUT-PATHSPEC-NO-BARE-D",
-          "mutation": "Drop bare D pathspec, keep D/**",
-          "must_fail_test": "TestProtectedGitPathspecEquivalence/directory-replaced-by-file",
-          "must_fail_assertion": "untracked file at D must be observed",
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence/directory-replaced-by-file$' -timeout 120s -v",
-          "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+          "mutant": "MUT-CAP-SILENT",
+          "mutation": "Truncate excess ignored output to cap and return success",
+          "must_fail_test": "TestProtectedCandidateParseFailsClosed/over-cap-ignored",
+          "must_fail_assertion": "An oversized ignored stream returns non-nil error.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed/over-cap-ignored$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         },
         {
-          "mutant": "MUT-PATHSPEC-NO-BARE-D-SYMLINK",
-          "mutation": "Drop bare D pathspec, keep D/**",
-          "must_fail_test": "TestProtectedGitPathspecEquivalence/directory-replaced-by-symlink",
-          "must_fail_assertion": "symlink at D must be observed",
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence/directory-replaced-by-symlink$' -timeout 120s -v",
-          "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+          "mutant": "MUT-NO-IGNORED-BASELINE",
+          "mutation": "Ignore the supplied episode-start snapshot",
+          "must_fail_test": "TestProtectedIgnoredBaseline/standing",
+          "must_fail_assertion": "Standing ignored protected path produces zero changes, with no error.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline/standing$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         },
         {
-          "mutant": "MUT-PATHSPEC-NO-TOP",
-          "mutation": "Drop top from all pathspecs",
-          "must_fail_test": "TestProtectedGitPathspecEquivalence/subdirectory-CWD",
-          "must_fail_assertion": "root path outside cwd must remain reported in status and ls-files",
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence/subdirectory-CWD$' -timeout 120s -v",
-          "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+          "mutant": "MUT-PARSE-MALFORMED-OPEN",
+          "mutation": "Accept unterminated status record",
+          "must_fail_test": "TestProtectedCandidateParseFailsClosed/missing-nul",
+          "must_fail_assertion": "Malformed stream returns non-nil error.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed/missing-nul$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-PARSE-STATUS-OPEN",
+          "mutation": "Ignore unknown porcelain record type",
+          "must_fail_test": "TestProtectedCandidateParseFailsClosed/unknown-status",
+          "must_fail_assertion": "Unknown type returns non-nil error.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed/unknown-status$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-PARSE-FLAG-OPEN",
+          "mutation": "Accept invalid ls-files tag",
+          "must_fail_test": "TestProtectedCandidateParseFailsClosed/bad-flag",
+          "must_fail_assertion": "Invalid tag returns non-nil error.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed/bad-flag$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-PARSE-FIELDS-OPEN",
+          "mutation": "Accept malformed porcelain field count",
+          "must_fail_test": "TestProtectedCandidateParseFailsClosed/bad-fields",
+          "must_fail_assertion": "Bad required fields return non-nil error even on a mirror-false path.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed/bad-fields$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         }
       ],
       "repo_gates": [
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
-          "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v",
+          "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v",
+          "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v",
+          "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v",
+          "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v",
+          "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v",
           "go test -race -count=1 ./host/broker/...",
-          "go vet ./..."
+          "go vet ./host/broker/"
         ],
         "may_touch": [
+          "host/broker/exec_protected.go",
           "host/broker/exec_protected_test.go"
         ],
         "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
-        "timebox": "30 minutes including gates; 240 estimated changed LOC TOTAL (production + tests + docs). Split again before exceeding approximately 250 LOC or 30 minutes.",
-        "additional": "§12 r3 rows are mandatory and separate; a root-CWD-only test cannot kill MUT-PATHSPEC-NO-TOP. Planner does not create any fixture git repo. Future executor tests may write only disposable git metadata under the worktree, never the checkout index/HEAD."
+        "timebox": "30 minutes including gates; <= 250 changed LOC TOTAL (production + tests + docs). Split before exceeding 250 LOC or 30 minutes.",
+        "additional": "Do not drop Unicode rows / do not narrow the guarantee. V16 refuted the old premise; the r4.2 narrow-refinement disposition now authorizes this replacement. Both files exist at 451dc3d; candidate functions/tests are absent. Existing TestProtectedRenderers/git passed only its OLD golden in the focused baseline, not the new candidate golden."
       },
       "measured_baseline": [
         {
-          "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v",
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v",
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v",
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v",
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v",
+          "result": "Exact standalone gate NOT MEASURED. Existing old golden passed within focused TestProtected baseline (rc 0); widened assertions absent at base; zero tests is not a pass."
         },
         {
           "command": "go test -race -count=1 ./host/broker/...",
-          "result": "NOT MEASURED; green on this base is UNKNOWN. Unfiltered suites include legacy off-worktree writes and/or sockets; do not execute here or infer green from the focused baseline. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
         },
         {
-          "command": "go vet ./...",
-          "result": "GREEN: rc 0, 1.46 s, measured on this base with WORLD_TOOL_AILANG_BIN unset."
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
         }
       ],
-      "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
+      "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
+      "completion_evidence": {}
+    },
+    {
+      "id": "M1d",
+      "title": "Real-Git candidate and mirror equivalence",
+      "design_milestone": "M1",
+      "estimated_minutes": 30,
+      "depends_on": [
+        "M1c"
+      ],
+      "files": [
+        "host/broker/exec_protected_git_test.go",
+        "host/broker/exec_protected.go"
+      ],
+      "status": "planned",
+      "new_tests": [
+        "TestProtectedGitCandidateEquivalence"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC1c.3",
+          "tests": "TestProtectedGitCandidateEquivalence",
+          "assertions": "Full unchanged fixture bank plus all r4/r4.1/r4.2 rows listed below; root and subdirectory CWD for every spelling; candidate+filter output equals independent mirror-true changed path/status set, and every mirror-false row is absent.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v",
+          "red_first": "Write named positive and negative rows first; require named discovery/PASS. NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "AC1c.3",
+          "test": "TestProtectedGitCandidateEquivalence",
+          "assertions": "Full unchanged fixture bank plus all r4/r4.1/r4.2 rows listed below; root and subdirectory CWD for every spelling; candidate+filter output equals independent mirror-true changed path/status set, and every mirror-false row is absent.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v"
+        }
+      ],
+      "implementation": "Implement AC1c.3 only in NEW host/broker/exec_protected_git_test.go (parent host/broker exists); read-only reuse of protectedFixtureRows and matcher helpers. <=240 changed test LOC, no production edits; M1c+M1d totals <=140 production + <=350 tests. One disposable repo per spelling/row under t.TempDir(), with fake HOME inside fixture, GIT_CONFIG_NOSYSTEM=1, GIT_CONFIG_GLOBAL=/dev/null, cleared inherited Git overrides, deterministic local user config, no hooks/filters, GIT_OPTIONAL_LOCKS=0, core.fsmonitor=false. Git absence: host/broker test search found no CI absence-detection convention (CI=1 occurs only in child environments); use os.Getenv(\"CI\") != \"\" to FAIL when absent on CI, SKIP only locally. Never convert a Git setup/command error into a skip. Every protectedFixtureRows row is retained unchanged: pkg-A_TEST.GO, root, deep, dir-root, dir-deep, long-s, kelvin, non-hit-sibling, non-hit-nested-dir, non-hit-base. Add greek-question-mark path pkg/a;_test.go (U+037E; pattern a;_test.go), greek-varia (U+1FEF vs ASCII backtick pattern), NFD pkg/e+U+0301_test.go indexed with core.precomposeunicode=false (assert index raw bytes; use cacheinfo if needed), qmark-utf8 pkg/é_test.go vs ?_test.go, class-utf8 pkg/é_test.go vs [^a]_test.go, excluded zzign/a_test.go beside excluded nm/c.txt, directory-replaced-by-file and directory-replaced-by-symlink, deleted tests/x.py, assume-unchanged and skip-worktree. Add mirror-false controls sharp-s (pkg/a_teßt.go vs *_test.go, assert candidate is actually selected before filtering) and ligature-ff (buﬀ/x.py vs buff/**); all mirror-false rows absent after filter. For EVERY row run root-CWD and subdirectory-CWD subtests, executing the three design §4.5 invocations with gitCandidatePathspecs then parseProtectedCandidates and snapshot. Require exact expected path/status set, no missing or extra entries, expected mirror boolean independently checked against fixture bank; branch.oid equals known commit. Root/subdir CWD must exercise actual selector anchoring, not force -C root for both; normalize any CWD-relative ls-files output to root-relative test input without changing selection. Production always uses cmd.Dir=h.worktree. The subdirectory-CWD control includes a root-level matching path outside sub/. Replacements include an initially untracked bare tests path, so deleting tracked descendants cannot mask losing W(D). Ignored nm/c.txt row asserts successful empty filtered output and command argv --ignored=no plus a per-file ignored stream; replacing the ignored leg with status --ignored=matching must fail that exact assertion, even if parser would otherwise discard ! entries. For each real-Git row capture the ignored baseline AFTER initial fixture setup but BEFORE the row mutation; ignored-creation arms create zzign/a_test.go only after that snapshot, while nm/c.txt remains a mirror-false control. Assert nonempty raw candidate selection where the row is intended to exercise filtering; candidate absence cannot prove a filter kill.",
+      "acceptance": [
+        "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v",
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ],
+      "commands": [
+        "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v",
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ],
+      "mutations": [
+        {
+          "mutant": "MUT-ASCII-ONLY-SUPERSET",
+          "mutation": "Restore r3 unwidened pathspecs",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/long-s/root-CWD",
+          "must_fail_assertion": "teſts/x.py is selected and reported as modified.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/long-s/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-ASCII-ONLY-SUPERSET",
+          "mutation": "Restore r3 unwidened pathspecs",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/kelvin/root-CWD",
+          "must_fail_assertion": "pkg/K_test.go is selected and reported.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/kelvin/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-ASCII-ONLY-SUPERSET",
+          "mutation": "Restore r3 unwidened pathspecs",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/greek-question-mark/root-CWD",
+          "must_fail_assertion": "U+037E spelling is reported.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/greek-question-mark/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-QMARK-KEPT",
+          "mutation": "Leave ? and bracket classes unwidened",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/qmark-utf8/root-CWD",
+          "must_fail_assertion": "pkg/é_test.go is reported under ?_test.go.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/qmark-utf8/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-QMARK-KEPT",
+          "mutation": "Leave bracket classes unwidened",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/class-utf8/root-CWD",
+          "must_fail_assertion": "Multi-byte é matches mirror [^a] and is reported.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/class-utf8/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-NO-MIRROR-FILTER",
+          "mutation": "Report every Git candidate",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/non-hit-sibling/root-CWD",
+          "must_fail_assertion": "tests2/x.py is a candidate but absent from reported changes.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/non-hit-sibling/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-IGNORED-MATCHING",
+          "mutation": "Use status --ignored=matching as ignored-file source",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/ignored-nm-c-txt/root-CWD",
+          "must_fail_assertion": "Excluded nm/c.txt yields successful empty result; no ! directory record is accepted and argv remains per-file ignored enumeration.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/ignored-nm-c-txt/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-NO-TOP",
+          "mutation": "Remove top from all pathspecs",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/root/subdirectory-CWD",
+          "must_fail_assertion": "Root c_test.go outside sub/ is still selected and reported.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/root/subdirectory-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-NO-BARE-D",
+          "mutation": "Drop bare W(D), keep W(D)/**",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/directory-replaced-by-file/subdirectory-CWD",
+          "must_fail_assertion": "Untracked bare tests file is reported, independently of descendant deletions.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/directory-replaced-by-file/subdirectory-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-NO-BARE-D",
+          "mutation": "Drop bare W(D), keep W(D)/**",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/directory-replaced-by-symlink/subdirectory-CWD",
+          "must_fail_assertion": "Bare tests symlink is reported without descendant masking.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/directory-replaced-by-symlink/subdirectory-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-PATHSPEC-NO-ICASE",
+          "mutation": "Drop icase",
+          "must_fail_test": "TestProtectedGitCandidateEquivalence/pkg-A_TEST.GO/root-CWD",
+          "must_fail_assertion": "Case-varied basename is selected on case-sensitive Git index.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence/pkg-A_TEST.GO/root-CWD$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        }
+      ],
+      "repo_gates": [
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v",
+          "go test -race -count=1 ./host/broker/...",
+          "go vet ./host/broker/"
+        ],
+        "may_touch": [
+          "host/broker/exec_protected_git_test.go",
+          "host/broker/exec_protected.go"
+        ],
+        "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
+        "timebox": "30 minutes including gates; <= 240 changed LOC TOTAL (production + tests + docs). Split before exceeding 250 LOC or 30 minutes.",
+        "additional": "Do not drop Unicode rows / do not narrow the guarantee. No old TestProtectedGitPathspecEquivalence acceptance remains. Git fixture operations are executor-only and confined to t.TempDir(); planner creates none. Mutation-only allowlist: host/broker/exec_protected.go may be temporarily changed for renderer/filter mutants, then restored byte-for-byte without Git; its persistent diff must be empty. Only exec_protected_git_test.go gains persistent test code."
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v",
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
+        },
+        {
+          "command": "go test -race -count=1 ./host/broker/...",
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
+        },
+        {
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
+        }
+      ],
+      "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
       "completion_evidence": {}
     },
     {
@@ -961,7 +1238,7 @@
       "design_milestone": "M2",
       "estimated_minutes": 25,
       "depends_on": [
-        "M1c"
+        "M1d"
       ],
       "files": [
         "host/broker/exec_profile.go",
@@ -1500,16 +1777,16 @@
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitFilterPreflight$' -timeout 120s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/broker/exec_protected_check.go and exec_protected_check_test.go NEW/absent with host/broker parent verified; add protectedGitPreflight; reuse existing host/broker/worktree_delta.go:297 configuredGitFilters and :326 gitSnapshot no-filter refusal; design_docs/planned/w-exec-protected-test-paths.md:202 integrity-check prose. gitEnv disables system/global config, but repository filter.<name>.clean/process remains active. Add bounded filter preflight before each phase, refusing configured filters or preflight errors without running status. Reuse row184 query semantics. The later M4b checker includes this query and both data commands in the SAME 500ms phase bound. This is three git invocations in a clean phase, correcting the design's two-invocation cost premise while preserving its no-host-filter-execution requirement. Annotate §4.5 with this measured coupling before later code lands. No result field yet.",
+      "implementation": "Verified base anchors: host/broker/exec_protected_check.go and exec_protected_check_test.go NEW/absent with host/broker parent verified; add protectedGitPreflight; reuse existing host/broker/worktree_delta.go:297 configuredGitFilters and :326 gitSnapshot no-filter refusal; design_docs/planned/w-exec-protected-test-paths.md:202 integrity-check prose. gitEnv disables system/global config, but repository filter.<name>.clean/process remains active. Add bounded filter preflight before each phase, refusing configured filters or preflight errors without running status. Reuse row184 query semantics. The later M4b checker includes this query and three candidate data commands in the SAME 2500ms provisional phase bound. This is one preflight query PLUS three data invocations in a clean phase, extending the r4 cost accounting while preserving its no-host-filter-execution requirement. Annotate §4.5 with this measured coupling before later code lands. No result field yet.",
       "acceptance": [
         "go test -count=1 ./host/broker/... -run '^TestProtectedGitFilterPreflight$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestProtectedGitFilterPreflight$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "mutations": [
         {
@@ -1531,13 +1808,13 @@
       ],
       "repo_gates": [
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
           "go test -count=1 ./host/broker/... -run '^TestProtectedGitFilterPreflight$' -timeout 120s -v",
           "go test -race -count=1 ./host/broker/...",
-          "go vet ./..."
+          "go vet ./host/broker/"
         ],
         "may_touch": [
           "host/broker/exec_protected_check.go",
@@ -1546,20 +1823,20 @@
         ],
         "directive": "Own PR; no planner git writes. Fixtures under worktree, no external seeded guards; full package gate requires contained runner as PF6.",
         "timebox": "20 minutes including gates; 170 estimated changed LOC TOTAL, including tests and design correction.",
-        "additional": "Preflight must run each phase, not only construction: host-side config may change after the baseline. The three commands share 500ms; check failure records error/null once M6 integrates it."
+        "additional": "Preserve no-filter preflight; M4b accounts for the query plus all three r4 data calls within one provisional 2500ms bound, later sized by V24."
       },
       "measured_baseline": [
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedGitFilterPreflight$' -timeout 120s -v",
-          "result": "NEW TEST absent at base; NOT RUN; no green claim."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass."
         },
         {
           "command": "go test -race -count=1 ./host/broker/...",
-          "result": "NOT MEASURED; legacy external writes require contained runner. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy real-HOME writes); socket checks UNINFORMATIVE UNDER SANDBOX."
         },
         {
-          "command": "go vet ./...",
-          "result": "GREEN rc0, 1.46s, tool pin unset."
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; package-only vet measured, worktree-local TMPDIR/GOTMPDIR and tool binary unset."
         }
       ],
       "baseline_new_tests": "New preflight test absent at base. Existing configuredGitFilters behavior was read, not executed as a new test.",
@@ -1593,7 +1870,7 @@
         {
           "ac": "M4",
           "tests": "TestProtectedCheckerRootAndBound",
-          "assertions": "Fake git observes root dir/env/pathspecs and combined ≤500ms bound, filter preflight and both data invocation sequences.",
+          "assertions": "Fake Git records root, minimal environment, widened argv and all three data legs plus filter preflight under one shared 2500ms deadline; output/nonzero failures produce diagnostic/null.",
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v",
           "red_first": "Add the named positive and negative rows first; require named execution, not an empty -run match. Optional real-engine SKIP requires the always-on companion to PASS."
         }
@@ -1608,22 +1885,22 @@
         {
           "criterion": "M4",
           "test": "TestProtectedCheckerRootAndBound",
-          "assertions": "Fake git observes root dir/env/pathspecs and combined ≤500ms bound, filter preflight and both data invocation sequences.",
+          "assertions": "Fake Git records root, minimal environment, widened argv and all three data legs plus filter preflight under one shared 2500ms deadline; output/nonzero failures produce diagnostic/null.",
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/broker/exec_protected_check.go NEW; add checkProtected, parseProtectedStatus, parseProtectedFlags, protectedCheckTimeout; reuse without editing host/broker/worktree_delta.go:274 gitEnv, :279 runWorktreeGit pattern; host/broker/exec_protected_check_test.go NEW; fixture pattern host/broker/worktree_delta_test.go:83. Resolve the M4→M6 dependency by introducing the shared checker now, without handler record wiring. Given explicit root/base/patterns, run status v2 branch -z ignored=matching --no-renames --ignore-submodules=all, then ls-files -v -z, in ONE 500ms phase context, each through runBounded with gitEnv and cmd.Dir=root, after M4a filter preflight. Include the preflight in that same 500ms bound; two data commands plus preflight are three git calls total. Reject malformed/incomplete output as error, never intact. Require HEAD==base and no status/index-flag entries. This is the actual checker later used by M6, not a probe-only approximation.",
+      "implementation": "[r4.x] Add checkProtected in NEW exec_protected_check.go; reuse gitEnv/runBounded and M4a configured-filter preflight without editing worktree_delta.go. Inputs include root/base/canonical patterns AND fold-key ignored snapshot. After preflight run exactly three data invocations with gitCandidatePathspecs: status --porcelain=v2 -z --branch --untracked-files=all --ignored=no --no-renames --ignore-submodules=all -- <candidates>; ls-files -z -o -i --exclude-standard -- <candidates>; ls-files -v -z -- <candidates>. All data legs and preflight share ONE protectedCheckTimeout=2500ms context, cmd.Dir=root, minimal gitEnv, optional locks off and core.fsmonitor=false. The preflight is an additional config query, not a fourth candidate stream; do not drop this no-host-filter-execution guard. Feed all three capped outputs to M1c parseProtectedCandidates, never duplicate parsers. HEAD==base and zero filtered changes are required for intact; moved HEAD emits head-moved even with empty paths. Each invocation enforces 8MiB, timeout/nonzero/malformed yields error with intact null, report-only. Probe fixtures capture their ignored snapshot before the probe mutation; M6a owns episode construction. No production result field yet. V24 will measure complete preflight+three-leg cost and resize before M6a.",
       "acceptance": [
         "go test -count=1 ./host/broker/... -run '^TestProtectedChecker$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestProtectedChecker$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "mutations": [
         {
@@ -1644,7 +1921,7 @@
         },
         {
           "mutant": "MUT-IGNORED-NO",
-          "mutation": "Use ignored=no",
+          "mutation": "Remove ls-files -o -i ignored-file leg (status --ignored=no is intentional)",
           "must_fail_test": "TestProtectedChecker/ignored",
           "must_fail_assertion": "ignored protected creation listed",
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedChecker/ignored$' -timeout 120s -v",
@@ -1668,23 +1945,23 @@
         },
         {
           "mutant": "MUT-CHECK-DOUBLE-BUDGET",
-          "mutation": "Give each subprocess a separate 500ms budget",
+          "mutation": "Give each subprocess a fresh 2500ms deadline",
           "must_fail_test": "TestProtectedCheckerRootAndBound/shared-phase-bound",
-          "must_fail_assertion": "preflight plus both data invocations share one 500ms deadline",
+          "must_fail_assertion": "Preflight plus all THREE data calls share one phase deadline, rather than one per command.",
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound/shared-phase-bound$' -timeout 120s -v",
           "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
         }
       ],
       "repo_gates": [
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
           "go test -count=1 ./host/broker/... -run '^TestProtectedChecker$' -timeout 120s -v",
           "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v",
           "go test -race -count=1 ./host/broker/...",
-          "go vet ./..."
+          "go vet ./host/broker/"
         ],
         "may_touch": [
           "host/broker/exec_protected_check.go",
@@ -1692,24 +1969,24 @@
         ],
         "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
         "timebox": "30 minutes including gates; 245 estimated changed LOC TOTAL (production + tests + docs). Split again before exceeding approximately 250 LOC or 30 minutes.",
-        "additional": "This is M6 §4.5 checking infrastructure pulled into M4 solely because Linux arm 8 must prove detection. M6 still owns per-episode base capture, before/after integration, deadline reserve and result compatibility. No production record field emitted yet. M4a filter preflight is mandatory before either data command; no third separate 500ms budget."
+        "additional": "One shared 2500ms provisional phase bound, including filter preflight plus THREE candidate data calls; later re-sized from V24. M1c pure parser owns syntax and filtering; no duplicate parseProtectedStatus/parseProtectedFlags."
       },
       "measured_baseline": [
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedChecker$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass."
         },
         {
           "command": "go test -race -count=1 ./host/broker/...",
-          "result": "NOT MEASURED; green on this base is UNKNOWN. Unfiltered suites include legacy off-worktree writes and/or sockets; do not execute here or infer green from the focused baseline. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy real-HOME writes); socket checks UNINFORMATIVE UNDER SANDBOX."
         },
         {
-          "command": "go vet ./...",
-          "result": "GREEN: rc 0, 1.46 s, measured on this base with WORLD_TOOL_AILANG_BIN unset."
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; package-only vet measured, worktree-local TMPDIR/GOTMPDIR and tool binary unset."
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
@@ -2255,17 +2532,142 @@
       "completion_evidence": {}
     },
     {
+      "id": "M6-pre",
+      "title": "Measure V24 and size phase/construction bounds",
+      "design_milestone": "M6",
+      "estimated_minutes": 30,
+      "depends_on": [
+        "M5b",
+        "M1d"
+      ],
+      "files": [
+        "host/broker/exec_protected_v24_test.go",
+        "design_docs/verification/world-row156-v24/README.md",
+        "design_docs/verification/world-row156-v24/result.json",
+        "design_docs/planned/w-exec-protected-test-paths.md"
+      ],
+      "status": "planned",
+      "new_tests": [
+        "TestProtectedV24RealWorktree"
+      ],
+      "tests_first": [
+        {
+          "ac": "V24",
+          "tests": "TestProtectedV24RealWorktree",
+          "assertions": "Both installed worktrees measured with real mirror; clean intact non-null, p95 < resized bound; constructor max ×1.5 and install ordering recorded. Synthetic reject-null/reject-over-budget/required-legs controls are always-on.",
+          "command": "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+          "red_first": "Missing measurement inputs or SKIP do not satisfy V24."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "V24",
+          "test": "TestProtectedV24RealWorktree",
+          "assertions": "Both installed worktrees measured with real mirror; clean intact non-null, p95 < resized bound; constructor max ×1.5 and install ordering recorded. Synthetic reject-null/reject-over-budget/required-legs controls are always-on.",
+          "command": "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v"
+        }
+      ],
+      "implementation": "Controller/executor measurement prerequisite, NOT performed by this planner. M6a may not start until design V24 is measured and the bounds re-sized from it. Design §6 M6 [r4.2] requires git worktree add of sunholo-platform and ailang with .venv/node_modules installed, measuring all three §4.5 legs plus construction-time snapshot together, warm and cold, using the REAL matchProtected filter, never V23's ASCII stand-in. Prepare authorized disposable source copies and V24_SCRATCH under the controller-owned worktree/scratch; the two worktree-add commands below operate only on those copies, never live source metadata. Populate dependency trees from existing local caches/offline copies before construction; no network required by this plan. Harness TestProtectedV24RealWorktree in new host/broker/exec_protected_v24_test.go requires WORLD_PROTECTED_V24_ROOT, SKIP with an explicit missing-measurement diagnostic if unset; a skipped gate never satisfies V24. Require both installed trees, current project profiles and real Git; fail on incomplete input. Record revs, toolchain/Git versions, installed dependency census, 20 samples per project per warm/cold class (first fresh-worktree access labelled cold; describe cache preparation, never claim OS-cache cold without evidence), per-leg and combined phase p95/max, output bytes and selected/filtered counts. Use existing M4b checker (filter preflight included) plus M1c's renderer/parser. Time construction as rev-parse + full ls-tree mirror filter + ignored enumeration and fold-key snapshot/digest; no M6a implementation dependency. Log exact argv: status --porcelain=v2 -z --branch --untracked-files=all --ignored=no --no-renames --ignore-submodules=all -- <candidates>; ls-files -z -o -i --exclude-standard -- <candidates>; ls-files -v -z -- <candidates>. Use gitEnv, GIT_OPTIONAL_LOCKS=0 and core.fsmonitor=false; preflight must precede status and be included in measured phase total. Provisional protectedCheckTimeout=2500ms and protectedBaselineTimeout=3200ms are NOT acceptance evidence: size phase and construction bounds separately from their V24 observed max ×1.5 (round upward in ms); retain at least the stated provisional bounds, increase if needed, amend design V24 and plan constants before M6a. Require every clean phase's intact verdict non-null/true and p95 below chosen phase bound, construction successful within its chosen bound; record null/error/CHANGED counts explicitly. Verify from M4 episode construction flow/logs whether ALL dependency installation precedes NewExecHandler. If not, demonstrate a new ignored post-snapshot dependency reports CHANGED and disclose R-156-6, never silently whitelist it. Evidence belongs in design_docs/verification/world-row156-v24/README.md and result.json, with controller-authored V24 design entry; no measurement or design amendment is fabricated here. <=200 changed LOC artifacts/harness, <=30 active minutes, split if needed. Run reject-null, reject-over-budget and required-legs synthetic subtests BEFORE the optional /measurement subtest checks WORLD_PROTECTED_V24_ROOT. V24 completion additionally requires /measurement to PASS for BOTH projects with nonempty recorded samples; parent PASS with /measurement SKIP is not acceptance.",
+      "acceptance": [
+        "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
+        "git -C \"$V24_AILANG_SOURCE\" worktree add --detach \"$V24_SCRATCH/ailang\" HEAD",
+        "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ],
+      "commands": [
+        "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
+        "git -C \"$V24_AILANG_SOURCE\" worktree add --detach \"$V24_SCRATCH/ailang\" HEAD",
+        "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ],
+      "mutations": [
+        {
+          "mutant": "MUT-V24-NULL-PASS",
+          "mutation": "Treat timed-out/null phase as measured intact",
+          "must_fail_test": "TestProtectedV24RealWorktree/reject-null",
+          "must_fail_assertion": "Injected null sample rejects acceptance.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree/reject-null$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-V24-BUDGET-PASS",
+          "mutation": "Accept p95 >= selected phase bound",
+          "must_fail_test": "TestProtectedV24RealWorktree/reject-over-budget",
+          "must_fail_assertion": "Synthetic over-budget sample rejects acceptance.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree/reject-over-budget$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-V24-NO-IGNORED",
+          "mutation": "Drop ignored leg from combined timing",
+          "must_fail_test": "TestProtectedV24RealWorktree/required-legs",
+          "must_fail_assertion": "Missing ignored timing/census rejects acceptance.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree/required-legs$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        }
+      ],
+      "repo_gates": [
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
+          "git -C \"$V24_AILANG_SOURCE\" worktree add --detach \"$V24_SCRATCH/ailang\" HEAD",
+          "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+          "go test -race -count=1 ./host/broker/...",
+          "go vet ./host/broker/"
+        ],
+        "may_touch": [
+          "host/broker/exec_protected_v24_test.go",
+          "design_docs/verification/world-row156-v24/README.md",
+          "design_docs/verification/world-row156-v24/result.json",
+          "design_docs/planned/w-exec-protected-test-paths.md"
+        ],
+        "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
+        "timebox": "30 minutes including gates; <= 200 changed LOC TOTAL (production + tests + docs). Split before exceeding 250 LOC or 30 minutes.",
+        "additional": "Controller/executor only; requires separately authorized contained real-worktree measurement environment. Design V24 remains unmeasured in iteration 282. This is a hard dependency, not a timing estimate."
+      },
+      "measured_baseline": [
+        {
+          "command": "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
+          "result": "NOT MEASURED: controller/executor V24 worktree measurement; no Git writes/fixtures permitted for planner; harness absent at base; zero tests is not a pass."
+        },
+        {
+          "command": "git -C \"$V24_AILANG_SOURCE\" worktree add --detach \"$V24_SCRATCH/ailang\" HEAD",
+          "result": "NOT MEASURED: controller/executor V24 worktree measurement; no Git writes/fixtures permitted for planner; harness absent at base; zero tests is not a pass."
+        },
+        {
+          "command": "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+          "result": "NOT MEASURED: controller/executor V24 worktree measurement; no Git writes/fixtures permitted for planner; harness absent at base; zero tests is not a pass."
+        },
+        {
+          "command": "go test -race -count=1 ./host/broker/...",
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
+        },
+        {
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
+        }
+      ],
+      "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
+      "completion_evidence": {}
+    },
+    {
       "id": "M6a",
       "title": "Capture the immutable episode baseline and bounded record shape",
       "design_milestone": "M6",
       "estimated_minutes": 30,
       "depends_on": [
-        "M5b"
+        "M6-pre"
       ],
       "files": [
         "host/broker/exec_protected_record.go",
         "host/broker/exec_protected_record_test.go",
-        "host/broker/handlers_exec.go"
+        "host/broker/handlers_exec.go",
+        "host/broker/exec_protected_check.go"
       ],
       "status": "planned",
       "new_tests": [
@@ -2277,14 +2679,14 @@
         {
           "ac": "M6",
           "tests": "TestExecProtectedBaseline",
-          "assertions": "Independent real git ls-tree reconstructs base/base_digest/base_files including symlinks, exact tree ordering and no pattern entries.",
+          "assertions": "Independent committed-tree digest plus /ignored-snapshot sorted fold-key digest/count (case/NFC dedup, empty set), /snapshot-immutable across calls; committed digest ignores dirty bytes.",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaseline$' -timeout 120s -v",
           "red_first": "Add the named positive and negative rows first; require named execution, not an empty -run match. Optional real-engine SKIP requires the always-on companion to PASS."
         },
         {
           "ac": "M6",
           "tests": "TestExecProtectedBaselineFailure",
-          "assertions": "Missing git and non-git handler construction succeeds with bounded baseline error.",
+          "assertions": "Missing Git/non-Git, /snapshot-error, /snapshot-over-cap and /construction-timeout: handler constructed, retained error, both intact verdicts null; one named baseline bound covers all construction legs.",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v",
           "red_first": "Add the named positive and negative rows first; require named execution, not an empty -run match. Optional real-engine SKIP requires the always-on companion to PASS."
         },
@@ -2300,13 +2702,13 @@
         {
           "criterion": "M6",
           "test": "TestExecProtectedBaseline",
-          "assertions": "Independent real git ls-tree reconstructs base/base_digest/base_files including symlinks, exact tree ordering and no pattern entries.",
+          "assertions": "Independent committed-tree digest plus /ignored-snapshot sorted fold-key digest/count (case/NFC dedup, empty set), /snapshot-immutable across calls; committed digest ignores dirty bytes.",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaseline$' -timeout 120s -v"
         },
         {
           "criterion": "M6",
           "test": "TestExecProtectedBaselineFailure",
-          "assertions": "Missing git and non-git handler construction succeeds with bounded baseline error.",
+          "assertions": "Missing Git/non-Git, /snapshot-error, /snapshot-over-cap and /construction-timeout: handler constructed, retained error, both intact verdicts null; one named baseline bound covers all construction legs.",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v"
         },
         {
@@ -2316,20 +2718,20 @@
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/broker/exec_protected_record.go NEW; add ProtectedResult, ProtectedChange, newProtectedBaseline and record bounds; host/broker/exec_protected_record_test.go NEW; independent git fixture pattern host/broker/worktree_delta_test.go:83 and :588 TestWorktreeDeltaWorstCaseFitsTheOutputCap; host/broker/handlers_exec.go:106 ExecHandler; :123 NewExecHandler. When patterns nonempty, capture HEAD once and ls-tree -r -z --full-tree base, filtering using M1 mirror; pin base_files and sha256 of mode SP oid TAB path LF in ls-tree order. Use bounded gitEnv/runBounded calls. Store baseline/error on handler without changing result bytes until M6b. Not-git or missing git is a retained diagnostic, not NewExecHandler failure. Define result fields, nullable intact pointers, 32-entry changes, total/truncated and row184 JSON path bound reuse.",
+      "implementation": "M6a may not start until design V24 is measured and the bounds re-sized from it. Apply V24 bounds (at least protectedCheckTimeout=2500ms, protectedBaselineTimeout=3200ms), not pre-r4 constants. NewExecHandler once per episode/project, only nonempty patterns: one shared named protectedBaselineTimeout for rev-parse HEAD, ls-tree -r -z --full-tree <base> filtered by matchProtected (digest mode SP oid TAB path LF in tree order, base_files), AND candidate ls-files -z -o -i --exclude-standard followed by mirror filtering to an immutable fold-key set. Store base_ignored_digest=sha256 over sorted unique fold keys, each LF terminated, and base_ignored_files=count, alongside base/base_digest/base_files; reuse the same snapshot for every phase, never refresh it after commands. Empty snapshot hashes the empty byte string, not an absent field. Use gitEnv/runBounded and 8MiB stdout caps with no-filter preflight included under construction bound. Missing Git/non-Git, any malformed/oversized stream, nonzero, snapshot failure or construction timeout is retained episode error/null, never construction failure or intact. Reuse M1c protectedChange; do not redeclare it. Result shape includes nullable phase verdicts, ignored metadata, max32 changes, total/truncated and bounded path JSON; no result emission until M6b. All fixtures worktree-local; no sockets.",
       "acceptance": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaseline$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaseline$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "mutations": [
         {
@@ -2363,11 +2765,27 @@
           "must_fail_assertion": "at most32 entries and bounded encoded size",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v",
           "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+        },
+        {
+          "mutant": "MUT-NO-IGNORED-SNAPSHOT",
+          "mutation": "Omit construction snapshot or digest/count",
+          "must_fail_test": "TestExecProtectedBaseline/ignored-snapshot",
+          "must_fail_assertion": "Independent ignored fold-key digest/count equal expected.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedBaseline/ignored-snapshot$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
+        },
+        {
+          "mutant": "MUT-BASELINE-FRESH-BUDGET",
+          "mutation": "Give each construction subprocess a fresh bound",
+          "must_fail_test": "TestExecProtectedBaselineFailure/construction-timeout",
+          "must_fail_assertion": "Total construction shares one protectedBaselineTimeout and records error on exhaustion.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedBaselineFailure/construction-timeout$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         }
       ],
       "repo_gates": [
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
@@ -2375,40 +2793,41 @@
           "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v",
           "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v",
           "go test -race -count=1 ./host/broker/...",
-          "go vet ./..."
+          "go vet ./host/broker/"
         ],
         "may_touch": [
           "host/broker/exec_protected_record.go",
           "host/broker/exec_protected_record_test.go",
-          "host/broker/handlers_exec.go"
+          "host/broker/handlers_exec.go",
+          "host/broker/exec_protected_check.go"
         ],
         "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
         "timebox": "30 minutes including gates; 245 estimated changed LOC TOTAL (production + tests + docs). Split again before exceeding approximately 250 LOC or 30 minutes.",
-        "additional": ""
+        "additional": "V24 is a hard prerequisite. <=245 total LOC /30 minutes includes construction snapshot tests and resized constants; split before exceeding cap."
       },
       "measured_baseline": [
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaseline$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -race -count=1 ./host/broker/...",
-          "result": "NOT MEASURED; green on this base is UNKNOWN. Unfiltered suites include legacy off-worktree writes and/or sockets; do not execute here or infer green from the focused baseline. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
         },
         {
-          "command": "go vet ./...",
-          "result": "GREEN: rc 0, 1.46 s, measured on this base with WORLD_TOOL_AILANG_BIN unset."
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
         }
       ],
-      "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
+      "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
       "completion_evidence": {}
     },
     {
@@ -2443,7 +2862,7 @@
         {
           "ac": "M6",
           "tests": "TestExecProtectedCheckTimeout",
-          "assertions": "Fake git consumes phase budget; command still executes, error recorded/null intact; child budget reserves after-check and total fits deadline.",
+          "assertions": "Fake Git sleeps beyond 2500ms (or V24 bound); /reserve asserts exact min(timeout_ms, remaining-after-before - phaseBound) including 9s/10s cases; /shared-phase asserts single deadline for all three legs; /null and /before-only assert error/null retention and command still succeeds within original deadline.",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedCheckTimeout$' -timeout 120s -v",
           "red_first": "Add the named positive and negative rows first; require named execution, not an empty -run match. Optional real-engine SKIP requires the always-on companion to PASS."
         },
@@ -2472,7 +2891,7 @@
         {
           "criterion": "M6",
           "test": "TestExecProtectedCheckTimeout",
-          "assertions": "Fake git consumes phase budget; command still executes, error recorded/null intact; child budget reserves after-check and total fits deadline.",
+          "assertions": "Fake Git sleeps beyond 2500ms (or V24 bound); /reserve asserts exact min(timeout_ms, remaining-after-before - phaseBound) including 9s/10s cases; /shared-phase asserts single deadline for all three legs; /null and /before-only assert error/null retention and command still succeeds within original deadline.",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedCheckTimeout$' -timeout 120s -v"
         },
         {
@@ -2488,14 +2907,14 @@
           "command": "go test -count=1 ./host/broker/... -run '^TestExecNoProtectedIsByteIdentical$' -timeout 120s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/broker/handlers_exec.go:173 execResult; :210 Execute; :247 budget (within Execute); :293 finish/marshal; host/broker/exec_protected_record.go NEW at base; add phase merge and error/null handling; host/broker/exec_protected_record_test.go NEW; shim fixture anchor host/broker/handlers_exec_m2_test.go:73 defaultExecProfile; host/broker/handlers_exec_m2_test.go:162 execDecode (uses execResult, no independent duplicate struct). Emit protected omitempty only for nonempty profile. Run before check after stack verification, after check before worktree-delta finish. Recompute remaining child budget after preparation AND before-check; reserve 500ms for after-check. Preserve both phase errors/nullable values; after phase uses bounded cancellation-independent context with the original deadline as outer cap. Return command rc/stdout regardless of check errors or changed tests under D-156-1=A. Populate enforced=glob/dirs-only from actual GOOS. execDecode already decodes execResult: verify field accepted without adding a second schema.",
+      "implementation": "[r4.x] Emit protected omitempty only for nonempty profile, including base_ignored_digest/base_ignored_files and the immutable construction snapshot. Before-phase after stack verification, after-phase before worktree-delta finish: each uses M4b checkProtected with THREE data outputs via parseProtectedCandidates and stored ignored set, all within one shared protectedCheckTimeout=2500ms (or V24 resized bound), including no-filter preflight. Recompute child budget after preparation AND before-phase as min(timeout_ms, time.Until(originalDeadline)-protectedCheckTimeout). With 9s command cap/10s handler deadline the protected command gets about 7.3s after a warm before-phase (~0.2–0.65s; ~6.85–7.3s across that range), about 5s after cold 2.5s, less other elapsed preparation; without protected keep 9s unchanged. After-phase uses cancellation-independent bounded context capped by ORIGINAL handler deadline; never extend deadline or grant each subprocess a full phase. A failed construction snapshot makes both phase verdicts null for episode. Preserve before/after errors without overwrite, nonzero Git/timeout/over-cap/malformed all error/null; command rc/stdout still returned under report-only D-156-1. Enforced=glob/dirs-only; execDecode already uses execResult, no duplicate schema. Compare normalized legacy bytes, never fixed nondeterministic duration_ms.",
       "acceptance": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedIntact$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedCheckTimeout$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedNotGit$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecNoProtectedIsByteIdentical$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedIntact$' -timeout 120s -v",
@@ -2503,7 +2922,7 @@
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedNotGit$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecNoProtectedIsByteIdentical$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "mutations": [
         {
@@ -2545,11 +2964,19 @@
           "must_fail_assertion": "before error remains visible and before intact null",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedCheckTimeout/before-only$' -timeout 120s -v",
           "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+        },
+        {
+          "mutant": "MUT-PHASE-FRESH-BUDGET",
+          "mutation": "Reset context for each data leg",
+          "must_fail_test": "TestExecProtectedCheckTimeout/shared-phase",
+          "must_fail_assertion": "Combined phase times out at one shared bound; no threefold allowance.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedCheckTimeout/shared-phase$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         }
       ],
       "repo_gates": [
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
@@ -2558,7 +2985,7 @@
           "go test -count=1 ./host/broker/... -run '^TestExecProtectedNotGit$' -timeout 120s -v",
           "go test -count=1 ./host/broker/... -run '^TestExecNoProtectedIsByteIdentical$' -timeout 120s -v",
           "go test -race -count=1 ./host/broker/...",
-          "go vet ./..."
+          "go vet ./host/broker/"
         ],
         "may_touch": [
           "host/broker/handlers_exec.go",
@@ -2568,35 +2995,35 @@
         ],
         "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
         "timebox": "30 minutes including gates; 245 estimated changed LOC TOTAL (production + tests + docs). Split again before exceeding approximately 250 LOC or 30 minutes.",
-        "additional": "Do not compare nondeterministic duration_ms as fixed output bytes: compare old golden schema plus normalized legacy outputs. No special-case test bypass in production. One 500ms phase budget shared by both git calls."
+        "additional": "V24-sized one-phase reserve, three candidate legs and preflight per phase. 2500ms/3200ms are provisional floors; use recorded V24 choices. Unprotected profile has no new Git calls and retains 9000ms command cap."
       },
       "measured_baseline": [
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedIntact$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedCheckTimeout$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedNotGit$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecNoProtectedIsByteIdentical$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -race -count=1 ./host/broker/...",
-          "result": "NOT MEASURED; green on this base is UNKNOWN. Unfiltered suites include legacy off-worktree writes and/or sockets; do not execute here or infer green from the focused baseline. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
         },
         {
-          "command": "go vet ./...",
-          "result": "GREEN: rc 0, 1.46 s, measured on this base with WORLD_TOOL_AILANG_BIN unset."
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
         }
       ],
-      "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
+      "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
       "completion_evidence": {}
     },
     {
@@ -2620,7 +3047,8 @@
         "TestExecProtectedHeadMoved",
         "TestExecSrtIndexWriteRefused",
         "TestExecProtectedRecordReplay",
-        "TestExecSrtReplayIsByteEqual"
+        "TestExecSrtReplayIsByteEqual",
+        "TestExecProtectedAmbientIgnoredIntact"
       ],
       "tests_first": [
         {
@@ -2671,6 +3099,13 @@
           "assertions": "Extend existing optional srt/tool E2E with protected field; exact output bytes and no reexecution.",
           "command": "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v",
           "red_first": "Add the named positive and negative rows first; require named execution, not an empty -run match. Optional real-engine SKIP requires the always-on companion to PASS."
+        },
+        {
+          "ac": "AC1c.5/M6",
+          "tests": "TestExecProtectedAmbientIgnoredIntact",
+          "assertions": "Standing .venv protected file snapshot gives true/true; newly created sibling gives false/ignored, stored baseline unchanged.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v",
+          "red_first": "Absent at base; require named execution, zero tests is not a pass."
         }
       ],
       "acceptance_criteria": [
@@ -2715,9 +3150,15 @@
           "test": "TestExecSrtReplayIsByteEqual",
           "assertions": "Extend existing optional srt/tool E2E with protected field; exact output bytes and no reexecution.",
           "command": "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v"
+        },
+        {
+          "criterion": "AC1c.5/M6",
+          "test": "TestExecProtectedAmbientIgnoredIntact",
+          "assertions": "Standing .venv protected file snapshot gives true/true; newly created sibling gives false/ignored, stored baseline unchanged.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/broker/exec_protected_record_test.go NEW; reuse host/broker/worktree_delta_test.go:670 TestExecHandlerWorktreeDelta fixture style; host/broker/handlers_exec_srt_test.go:359 TestExecSrtGitHeadIsNotWritable; host/daemon/exec_e2e_srt_test.go:118 execRequest; :249 TestExecSrtReplayIsByteEqual. Through a pass-through fake srt, test creation, ignored creation via .gitignore and info/exclude, deletion/rename/replacement, sticky before=false on next call, host-set assume-unchanged/skip-worktree and host commit moving HEAD. Mutations and git commits occur ONLY in disposable fixture repositories under worktree. Real-srt linked-worktree regression refuses index writes and commit and observes flag/HEAD unchanged; skip absent engine. Add pin-free broker record replay companion and extend optional daemon replay bytes without reexecution. Old records have no protected field and remain readable.",
+      "implementation": "Verified base anchors: host/broker/exec_protected_record_test.go NEW; reuse host/broker/worktree_delta_test.go:670 TestExecHandlerWorktreeDelta fixture style; host/broker/handlers_exec_srt_test.go:359 TestExecSrtGitHeadIsNotWritable; host/daemon/exec_e2e_srt_test.go:118 execRequest; :249 TestExecSrtReplayIsByteEqual. Through a pass-through fake srt, test creation, ignored creation via .gitignore and info/exclude, deletion/rename/replacement, sticky before=false on next call, host-set assume-unchanged/skip-worktree and host commit moving HEAD. Mutations and git commits occur ONLY in disposable fixture repositories under worktree. Real-srt linked-worktree regression refuses index writes and commit and observes flag/HEAD unchanged; skip absent engine. Add pin-free broker record replay companion and extend optional daemon replay bytes without reexecution. Old records have no protected field and remain readable. [r4.1/r4.2] Every phase exercises all three candidate legs and parseProtectedCandidates with immutable episode-start ignored set. Add TestExecProtectedAmbientIgnoredIntact with protected test_*.py: ignored .venv/lib/site-packages/pkg/test_a.py exists BEFORE construction; /standing gets true/true with snapshot digest/count; /new creates test_b.py AFTER construction and gets after=false, ignored. /snapshot-mutation documents existing snapshot file content edits remain exempt (R-156-6); dependency installs after construction report CHANGED, never whitelist/refresh the snapshot. Repeat .gitignore and info/exclude creation controls against snapshot. Replay asserts ignored baseline fields stored byte-for-byte; no re-enumeration on replay.",
       "acceptance": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedDetectsCreation$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedDetectsIgnoredCreation$' -timeout 120s -v",
@@ -2726,9 +3167,10 @@
         "go test -count=1 ./host/broker/... -run '^TestExecSrtIndexWriteRefused$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedRecordReplay$' -timeout 120s -v",
         "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v",
+        "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v",
         "go test -race -count=1 ./host/broker/...",
         "go test -race -count=1 ./host/daemon/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedDetectsCreation$' -timeout 120s -v",
@@ -2738,9 +3180,10 @@
         "go test -count=1 ./host/broker/... -run '^TestExecSrtIndexWriteRefused$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedRecordReplay$' -timeout 120s -v",
         "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v",
+        "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v",
         "go test -race -count=1 ./host/broker/...",
         "go test -race -count=1 ./host/daemon/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "mutations": [
         {
@@ -2753,7 +3196,7 @@
         },
         {
           "mutant": "MUT-IGNORED-NO",
-          "mutation": "Use ignored=no",
+          "mutation": "Remove ls-files -o -i ignored leg; status --ignored=no is correct by design",
           "must_fail_test": "TestExecProtectedDetectsIgnoredCreation/info-exclude",
           "must_fail_assertion": "ignored new protected file must be named",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedDetectsIgnoredCreation/info-exclude$' -timeout 120s -v",
@@ -2782,12 +3225,20 @@
           "must_fail_assertion": "saved result bytes equal and spawn counter unchanged",
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedRecordReplay$' -timeout 120s -v",
           "reachability": "One compiling mutation at a time; a named assertion must turn red. Compile failure, panic, timeout, absent dependency, SKIP, zero discovered tests or an unrelated guard is not a kill. Restore allowed source bytes without git and rerun green."
+        },
+        {
+          "mutant": "MUT-NO-IGNORED-BASELINE",
+          "mutation": "Ignore episode snapshot",
+          "must_fail_test": "TestExecProtectedAmbientIgnoredIntact/standing",
+          "must_fail_assertion": "Existing site-packages test_a.py does not cause CHANGED; both phase verdicts true.",
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact/standing$' -timeout 300s -v",
+          "reachability": "One valid guard/data mutant at a time, exact named killer/subtest and assertion. Save and restore allowed bytes in worktree-local scratch without git. Require named red, then restoration green. No compile error, panic, timeout, skip, missing executable, socket denial, unrelated refusal or grep-only assertion is a kill. Fixed independent expectation must be reachable after the changed guard; delete/move masking cannot satisfy r3 bare-D control."
         }
       ],
       "repo_gates": [
         "go test -race -count=1 ./host/broker/...",
         "go test -race -count=1 ./host/daemon/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
@@ -2798,9 +3249,10 @@
           "go test -count=1 ./host/broker/... -run '^TestExecSrtIndexWriteRefused$' -timeout 120s -v",
           "go test -count=1 ./host/broker/... -run '^TestExecProtectedRecordReplay$' -timeout 120s -v",
           "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v",
+          "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v",
           "go test -race -count=1 ./host/broker/...",
           "go test -race -count=1 ./host/daemon/...",
-          "go vet ./..."
+          "go vet ./host/broker/"
         ],
         "may_touch": [
           "host/broker/exec_protected_record_test.go",
@@ -2814,46 +3266,50 @@
       "measured_baseline": [
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedDetectsCreation$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedDetectsIgnoredCreation$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedIndexFlag$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedHeadMoved$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecSrtIndexWriteRefused$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/broker/... -run '^TestExecProtectedRecordReplay$' -timeout 120s -v",
-          "result": "NEW TEST/ROW absent at base; NOT RUN. Zero tests would not be a baseline pass."
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v",
-          "result": "Existing optional test; new protected replay assertions absent. Exact command NOT RUN; real srt/tool unavailable for acceptance and socket activity UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED: existing optional daemon E2E, protected assertions absent; socket-touching results UNINFORMATIVE UNDER SANDBOX."
+        },
+        {
+          "command": "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v",
+          "result": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner."
         },
         {
           "command": "go test -race -count=1 ./host/broker/...",
-          "result": "NOT MEASURED; green on this base is UNKNOWN. Unfiltered suites include legacy off-worktree writes and/or sockets; do not execute here or infer green from the focused baseline. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
         },
         {
           "command": "go test -race -count=1 ./host/daemon/...",
-          "result": "NOT MEASURED; green on this base is UNKNOWN. Unfiltered suites include legacy off-worktree writes and/or sockets; do not execute here or infer green from the focused baseline. Any socket result is UNINFORMATIVE UNDER SANDBOX."
+          "result": "NOT MEASURED (PF6: legacy tests write real HOME); requires controller-contained runner. Socket-touching results are UNINFORMATIVE UNDER SANDBOX."
         },
         {
-          "command": "go vet ./...",
-          "result": "GREEN: rc 0, 1.46 s, measured on this base with WORLD_TOOL_AILANG_BIN unset."
+          "command": "go vet ./host/broker/",
+          "result": "GREEN rc 0 at 451dc3d, iteration 282; WORLD_TOOL_AILANG_BIN unset, TMPDIR/GOTMPDIR worktree-local. Package-only vet measured; no repository-wide vet claim."
         }
       ],
-      "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
+      "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
       "completion_evidence": {}
     },
     {
@@ -3168,9 +3624,21 @@
     {
       "milestone": "M1c",
       "commands": [
-        "go test -count=1 ./host/broker/... -run '^TestProtectedGitPathspecEquivalence$' -timeout 120s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedFoldToASCIIClosed$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedCandidatePathspecsGolden$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedCandidateParseFailsClosed$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedIgnoredBaseline$' -timeout 300s -v",
+        "go test -count=1 ./host/broker/ -run '^TestProtectedRenderers$' -timeout 300s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
+      ]
+    },
+    {
+      "milestone": "M1d",
+      "commands": [
+        "go test -count=1 ./host/broker/ -run '^TestProtectedGitCandidateEquivalence$' -timeout 300s -v",
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
       ]
     },
     {
@@ -3215,7 +3683,7 @@
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestProtectedGitFilterPreflight$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ]
     },
     {
@@ -3224,7 +3692,7 @@
         "go test -count=1 ./host/broker/... -run '^TestProtectedChecker$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestProtectedCheckerRootAndBound$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ]
     },
     {
@@ -3262,13 +3730,23 @@
       ]
     },
     {
+      "milestone": "M6-pre",
+      "commands": [
+        "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
+        "git -C \"$V24_AILANG_SOURCE\" worktree add --detach \"$V24_SCRATCH/ailang\" HEAD",
+        "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v",
+        "go test -race -count=1 ./host/broker/...",
+        "go vet ./host/broker/"
+      ]
+    },
+    {
       "milestone": "M6a",
       "commands": [
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaseline$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedBaselineFailure$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedWorstCaseFitsOutputCap$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ]
     },
     {
@@ -3279,7 +3757,7 @@
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedNotGit$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecNoProtectedIsByteIdentical$' -timeout 120s -v",
         "go test -race -count=1 ./host/broker/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ]
     },
     {
@@ -3292,9 +3770,10 @@
         "go test -count=1 ./host/broker/... -run '^TestExecSrtIndexWriteRefused$' -timeout 120s -v",
         "go test -count=1 ./host/broker/... -run '^TestExecProtectedRecordReplay$' -timeout 120s -v",
         "go test -count=1 ./host/daemon/... -run '^TestExecSrtReplayIsByteEqual$' -timeout 120s -v",
+        "go test -count=1 ./host/broker/ -run '^TestExecProtectedAmbientIgnoredIntact$' -timeout 300s -v",
         "go test -race -count=1 ./host/broker/...",
         "go test -race -count=1 ./host/daemon/...",
-        "go vet ./..."
+        "go vet ./host/broker/"
       ]
     },
     {
@@ -3321,18 +3800,19 @@
     "Full package race baselines remain unmeasured; PF6 runner containment prerequisite must be resolved before claiming any complete milestone green. CI result cannot be invented by planning.",
     "Linux basename writes and Darwin parent-directory rename remain detection-only; no claim of semantic test execution.",
     "D-156-4=B leaves write-tool symlink/hardlink aliases and ailang-run aliases; detection occurs at next exec and may never occur before episode end.",
-    "Git pathspec Unicode folding may diverge from NFC/full Unicode fileguard; M1c must expose it and use only design-authorized ASCII restriction with recorded evidence if necessary.",
-    "Cold git phases can exceed 500ms; explicit error/null is correct, never true.",
     "New TOML encoding must preserve exact bytes for old inputs.",
     "Budget after-check reserve also depends on existing worktree_delta finish; preserve prior behavior and original outer deadline, report measured timing rather than assuming wall bounds.",
-    "Actual clean protected phases require filter-config query plus status plus ls-files, all in one500ms bound. The original two-invocation cost estimate is incomplete; M0 does not measure this Go phase timing."
+    "V16 refuted plain Git equivalence even with ASCII patterns: widen candidates then use mirror filter; preserve every Unicode row. Invalid UTF-8 paths and toolchain/binary Unicode skew remain unmeasured residuals (R-156-7).",
+    "R-156-6: modifications of pre-existing snapshot ignored files are not detected; installs after construction yield CHANGED. V24 must record install ordering.",
+    "V24 unmeasured: 2500ms phase and 3200ms construction are provisional floors; resize each from measured max ×1.5, require p95 below phase bound and non-null intact before M6a. Include filter preflight overhead."
   ],
   "controller_owned": [
     "Run M0 Linux CI, collect actual 48 observations and bank V rows; reconcile enforcement table before M3 if different.",
     "Provide a contained runner for mandatory unfiltered package gates so legacy off-worktree writes cannot touch actual HOME/state or external scratch. Without it those gate results remain unmeasured; no green CI assertion is authorized.",
     "Resolve D-156-1..4; until then defaults A,A,A,B stand.",
     "At landing file upstream lexical fileguard alias issue and mission-control note as design §10 requests; planner does not send messages or create external issues.",
-    "Own individual PRs/merge/CI and re-fetch conflict hunks with rows150/151/157. Planner performs no git writes."
+    "Own individual PRs/merge/CI and re-fetch conflict hunks with rows150/151/157. Planner performs no git writes.",
+    "Execute M6-pre/V24 on disposable dependency-installed sunholo-platform and ailang worktrees; record real mirror, warm/cold full costs, p95/max, install ordering and chosen bounds, amend design V24 before releasing M6a."
   ],
   "coverage": {
     "design_milestones": [
@@ -3345,7 +3825,7 @@
       "M6",
       "M7"
     ],
-    "executor_runs": 19,
+    "executor_runs": 21,
     "criteria": [
       "AC0.1",
       "AC0.2",
@@ -3356,10 +3836,12 @@
       "§4.5 baseline/integrity/record/replay/why",
       "§6 M0–M7",
       "§7 mutants except conditional precheck guards",
-      "§12 r2 flags/HEAD and r3 bare-D/top"
+      "§12 r2 flags/HEAD and r3 bare-D/top",
+      "AC1c.1–AC1c.5 [r4/r4.1]",
+      "V24 [r4.2] prerequisite before M6a"
     ],
-    "planned_tests": 52,
-    "mutations": 78,
+    "planned_tests": 58,
+    "mutations": 99,
     "release_acceptance": "No release operation. Optional real-engine skips disclosed with always-on companions; full CI/required package gates must actually pass under contained runner before land."
   }
 }

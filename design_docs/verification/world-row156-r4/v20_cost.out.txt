@@ -1,0 +1,16 @@
+files tracked: 28713
+clean | r3 status --ignored=matching | entries=4 bytes=119 | warm ms 109-112
+clean | r4 status --ignored=no | entries=4 bytes=119 | warm ms 100-104
+clean | r4 ls-files -o -i | entries=0 bytes=0 | warm ms 44-47
+clean | r4 ls-files -v | entries=2292 bytes=99890 | warm ms 18-19
+clean | none status --ignored=no | entries=4 bytes=119 | warm ms 193-195
+clean | none ls-files -o -i | entries=0 bytes=0 | warm ms 43-45
+clean | none ls-files -v | entries=28713 bytes=2301918 | warm ms 12-13
+ignored-30k | r3 status --ignored=matching | entries=5 bytes=135 | warm ms 112-118
+ignored-30k | r4 status --ignored=no | entries=4 bytes=119 | warm ms 101-113
+ignored-30k | r4 ls-files -o -i | entries=2 bytes=54 | warm ms 63-64
+ignored-30k | r4 ls-files -v | entries=2292 bytes=99890 | warm ms 18-19
+ignored-30k | none status --ignored=no | entries=4 bytes=119 | warm ms 194-208
+ignored-30k | none ls-files -o -i | entries=30002 bytes=736054 | warm ms 65-66
+ignored-30k | none ls-files -v | entries=28713 bytes=2301918 | warm ms 12-12
+removed clone
