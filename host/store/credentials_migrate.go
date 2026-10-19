@@ -121,7 +121,7 @@ func LegacySessions(ctx context.Context, worldPath, episodeID string, limit int)
 	if version != preSplitSchemaVersion {
 		return nil, fmt.Errorf("store: legacy sessions %q: user_version %d is not the pre-split schema %d", worldPath, version, preSplitSchemaVersion)
 	}
-	return listSessions(ctx, db, episodeID, limit)
+	return listSessions(ctx, db, credentialsSchemaV1, episodeID, limit)
 }
 
 // MigrateCredentials moves every session_credentials row of the schema-4 world

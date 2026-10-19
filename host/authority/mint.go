@@ -26,6 +26,24 @@ import (
 // st is the credentials store (row 189), opened writable by the attended
 // `session` verbs only, after their terminal fence and y/N.
 func Mint(ctx context.Context, st *store.Credentials, episodeID string, grants []broker.Capability, ttl, now int64, out io.Writer) (rawToken, credentialID string, row store.SessionRow, err error) {
+	return MintBound(ctx, st, episodeID, ProfileBinding{}, grants, ttl, now, out)
+}
+
+// ProfileBinding is the exec profile a credential is bound to at the mint
+// (row 189 M2, D-189-2 A): the profile's project and Digest, the sha256 of the
+// exact profile bytes the human confirmed at the y/N. The zero value is an
+// unbound credential.
+type ProfileBinding struct {
+	Project string
+	Digest  string
+}
+
+// MintBound is Mint recording a profile binding on the credential. A binding
+// needs both fields; the zero binding mints exactly what Mint mints.
+func MintBound(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer) (rawToken, credentialID string, row store.SessionRow, err error) {
+	if (binding.Project == "") != (binding.Digest == "") {
+		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: a profile binding needs both the project and its digest")
+	}
 	if episodeID == "" {
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: empty episode id")
 	}
@@ -53,11 +71,13 @@ func Mint(ctx context.Context, st *store.Credentials, episodeID string, grants [
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: marshal grants: %w", err)
 	}
 	row = store.SessionRow{
-		CredentialID: credentialID,
-		EpisodeID:    episodeID,
-		GrantsJSON:   string(grantsJSON),
-		ExpiresAt:    expiresAt,
-		CreatedAt:    now,
+		CredentialID:  credentialID,
+		EpisodeID:     episodeID,
+		GrantsJSON:    string(grantsJSON),
+		ExpiresAt:     expiresAt,
+		CreatedAt:     now,
+		Project:       binding.Project,
+		ProfileDigest: binding.Digest,
 	}
 	if err := st.MintSession(ctx, row); err != nil {
 		return "", "", store.SessionRow{}, err

@@ -23,7 +23,8 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/session.go|runSessionMint|Background":                 1,
 	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":               1,
 	"cmd/ailang-worldd/doctor.go|doctorStore|Background":                     1, // row 138 M4: doctor's read-only store reads (3 s) through OpenReadOnly
-	"cmd/ailang-worldd/session_new.go|runSessionNew|Background":              1, // row 138 M5: worktree add + 3 s mint + rollback (75 s)
+	"cmd/ailang-worldd/session_new.go|provisionEpisode|Background":           1, // row 138 M5 / row 189 M3: worktree add + 3 s mint + rollback (75 s), shared by session new and episode start
+	"cmd/ailang-worldd/session_new.go|checkBindingFits|Background":           1, // row 189 M2: read-only ListSessions of one episode before the fence (3 s)
 	"cmd/ailang-worldd/session_new.go|runSessionList|Background":             1, // row 138 M5: read-only ListSessions (3 s)
 	"cmd/ailang-worldd/setup.go|runSetup|Background":                         1, // row 138 M3: setup's whole-command budget (12 min); no Store call
 	"cmd/world-publish/main.go|runApprove|Background":                        1,
@@ -48,7 +49,11 @@ var contextRootPins = map[string]int{
 	// BinderFor, which carries no ctx; its one summary subprocess is bounded
 	// by workspaceHandlerBudget (3 s) fed directly from this root, and it
 	// makes no Store call.
-	"host/daemon/workspace.go|episodeHandler|Background":                      1,
+	"host/daemon/workspace.go|episodeHandler|Background": 1,
+	// Row 189 M2: the exec profile binding is read inside the same ctx-less
+	// BinderFor, through a fresh read-only credentials handle bounded by the
+	// credential budget (3 s, B4) fed directly from this root.
+	"host/daemon/binding.go|episodeBinding|Background":                        1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,
 	"host/store/lookup_index.go|provisionLookupIndex|Background":              1,
 	"host/store/reference_index.go|provisionReferenceIndexes|Background":      1,

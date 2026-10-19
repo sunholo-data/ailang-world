@@ -65,11 +65,15 @@ func (k DenialKind) String() string {
 // sprint hands to the row-40 consumer (F6). CredentialID (the stored hash) is
 // deliberately NOT exposed: no consumer needs the secret's hash as a capability
 // signal.
+//
+// Profile is the exec profile binding recorded at the mint (row 189 M2); the
+// zero value for an unbound credential.
 type SessionBinding struct {
 	EpisodeID string
 	Caps      []broker.Capability
 	ExpiresAt int64
 	CreatedAt int64
+	Profile   ProfileBinding
 }
 
 // ResolveOutcome is the typed result of credential resolution. Exactly one of
@@ -156,6 +160,7 @@ func (r *resolver) ResolveContext(ctx context.Context, header string, now int64)
 		Caps:      grants,
 		ExpiresAt: row.ExpiresAt,
 		CreatedAt: row.CreatedAt,
+		Profile:   ProfileBinding{Project: row.Project, Digest: row.ProfileDigest},
 	}}, nil
 }
 

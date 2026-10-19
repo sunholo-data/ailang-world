@@ -239,6 +239,36 @@ Option A is what row 188 (a desktop approval) and row 196 (delegated minting for
   or build id, no exec-profile digests and no credentials path. AC3 needs at least the tool ref and
   a build identity added.
 
+## 8b. M2 + M3a/M3b as built (row 189, `episode start` and the profile binding)
+
+```
+ailang-worldd episode start <ep> --repo <dir> [--branch world/<ep>] [--profile <project>] [--task <file>]
+    [--agent claude|codex] [--model <m>] [--ttl N] [--preset|--grant|--budget as session new]
+    [--db …] [--credentials-db …] [--workspace-root …] [--sessions-dir ~/.ailang/world/sessions]
+    [--exec-profiles-dir ~/.ailang-world-exec/profiles] [--addr 127.0.0.1:47330]
+```
+
+- **Order** (`cmd/ailang-worldd/episode.go`, `runEpisodeStart`): validate (grammar, `--agent`,
+  `--addr` loopback, `--task`, the session/MCP files absent, then `prepareMint`: store, workspace
+  root, repo, `--profile` parsed with `ParseExecProfile`, never probed) → `GET /v1/health` and
+  `checkDaemon` (build identity, tool ref against the manifest pin, credentials path, the profile's
+  digest loaded and not left out; no daemon = refusal printing the `serve` line) →
+  `provisionEpisode` (`session_new.go`), the one fence-and-mint function `session new` also runs:
+  TTY → y/N → credentials lock → worktree → `authority.MintBound` → token file → MCP config →
+  rollback → launch line. It never starts a daemon (M3c), runs the agent, commits or pushes.
+- **Default grants:** the se-tools preset without `Workspace.Exec`, plus it with `--profile`.
+- **Binding (D-189-2 A):** credentials schema 2 adds nullable `project` and `profile_digest`
+  (version-1 rows stay, unbound). Only `serve` upgrades a version-1 store, so a session verb of
+  this build never hands an older serving daemon a store it would refuse. `profileFor` resolves
+  per request: the episode's live credentials' binding → `--exec-episode-project` → the only
+  profile. A bound digest the daemon did not load refuses every exec ("re-mint").
+- **`/v1/health` adds** `build` (`vcs_revision`, `vcs_modified`, `executable_sha256`,
+  `go_version`), `tool_ref`, `credentials_db`, `exec_profiles` and `exec_profiles_excluded`.
+- **Profiles directory:** `serve --exec-profiles-dir` (default `~/.ailang-world-exec/profiles`
+  when `--exec-sandbox` is given without `--exec-profile`) loads every `<project>.json`, skips
+  `*.proposed.json`, and leaves out — never refuses startup for — a profile that fails to parse or
+  probe; the `--exec-profile` flags keep their all-or-nothing rule.
+
 ## 9. V-rows
 
 | # | claim | evidence |

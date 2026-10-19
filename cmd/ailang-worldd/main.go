@@ -13,7 +13,7 @@
 //	                    [--workspace-package-cache <dir>]
 //	                    [--run-allow-caps Env,Net,Declassify]
 //	                    [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
-//	                    [--exec-profile <file> ... --exec-sandbox <dir>]
+//	                    [--exec-profile <file> ... --exec-sandbox <dir>] [--exec-profiles-dir <dir>]
 //	                    [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
 //	                    [--exec-max-output-bytes N]
 //	                    [--proof-key-file <file> --proof-required-identity NAME ...]
@@ -33,6 +33,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] provenance [--since <entry>] [--episode <ep>]
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
+//	ailang-worldd episode start <episode> --repo <dir> [--profile <project>] ...
 //	ailang-worldd session new|list|revoke|mint ...
 //	ailang-worldd help [<verb>]
 //
@@ -77,7 +78,7 @@ Usage:
                       [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
                       [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
-                      [--exec-profile <file> ... --exec-sandbox <dir>]
+                      [--exec-profile <file> ... --exec-sandbox <dir>] [--exec-profiles-dir <dir>]
                       [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
                       [--exec-max-output-bytes N]
                       [--proof-key-file <file> --proof-required-identity NAME ...]
@@ -104,10 +105,15 @@ Usage:
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
                     [--examples-dir <dir>] [--online]
+  ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
+                    [--task <file>] [--agent claude|codex] [--model <m>] [--ttl N]
+                    [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
+                    [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
+                    [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
   ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
-                    [--allow-non-git]
+                    [--allow-non-git] [--profile <project>] [--exec-profiles-dir <dir>]
   ailang-worldd session list [--db <path>] [--credentials-db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
   ailang-worldd session revoke --db <path> [--credentials-db <path>] <credential_id-hash> | --episode <ep>
   ailang-worldd session mint --db <path> [--credentials-db <path>] --episode <ep> --grant EFFECT=SCOPE:BUDGET...
@@ -150,7 +156,7 @@ serve flags:
                        only when both this and --workspace-root are set.
                        Workspace.Exec (workspace-exec) is bound with them; it
                        refuses every call "no exec profile configured" unless
-                       --exec-profile is given
+                       --exec-profile or --exec-profiles-dir is in effect
   --examples-dir <dir> AILANG examples corpus examples-search reads (passed
                        to the tool as AILANG_EXAMPLES; World never falls back
                        to a corpus in the binary). Default: ~/.ailang/examples
@@ -196,14 +202,29 @@ serve flags:
                        outside --workspace-root and the state dir. Each
                        profile must pass the startup probe (seven arms,
                        arm1-write-inside … arm7-toolchain) or serve refuses
+  --exec-profiles-dir <dir>
+                       a directory of exec profiles, one <project>.json each
+                       (default ~/.ailang-world-exec/profiles when
+                       --exec-sandbox is given without --exec-profile).
+                       Every <project>.json is loaded and probed at startup;
+                       *.proposed.json is skipped until renamed. Unlike
+                       --exec-profile, a profile here that fails to load or
+                       probe is LEFT OUT — named on stderr and in /v1/health —
+                       and every other profile still serves; an episode bound
+                       to it refuses with the reason. An episode minted with
+                       episode start / session new --profile PROJECT runs
+                       under that profile from its first call, no restart
   --exec-episode-project EP=PROJECT
                        run episode EP's workspace-exec under the profile
                        whose project is PROJECT (repeatable; optional with
-                       one profile, which every episode then uses)
+                       one profile, which every episode then uses). Only for
+                       sessions minted without --profile: a credential's own
+                       binding comes first
   --exec-sandbox <dir> the node_modules holding @anthropic-ai/sandbox-runtime
                        ` + broker.ExecSandboxRelease + ` (its dist/cli.js must hash to the pin);
                        World archives the whole tree and re-verifies it
-                       before every call. Required with --exec-profile
+                       before every call. Required with --exec-profile and
+                       --exec-profiles-dir
   --exec-node <path>   the node (>= 20.11) that runs srt and the probe
                        client (default: node on PATH, resolved once)
   --exec-max-output-bytes N
@@ -363,6 +384,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return runSession(rest[1:], stdout, stderr)
 
+	// Row 189 M3: one attended act starts an episode on a serving daemon.
+	case "episode":
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: the global --addr is not valid for 'episode'; "+
+				"pass episode start --addr host:port (the daemon whose health it checks)")
+			return exitUsage
+		}
+		return runEpisode(rest[1:], stdout, stderr)
+
 	case "help":
 		fmt.Fprint(stdout, usage)
 		return exitOK
@@ -426,6 +456,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		execEpisodeProjects = append(execEpisodeProjects, v)
 		return nil
 	})
+	execProfilesDir := fs.String("exec-profiles-dir", "", "a directory of <project>.json exec profiles (default ~/.ailang-world-exec/profiles with --exec-sandbox and no --exec-profile)")
 	execSandbox := fs.String("exec-sandbox", "", "node_modules holding the pinned @anthropic-ai/sandbox-runtime")
 	execNode := fs.String("exec-node", "", "the node that runs srt (default: node on PATH)")
 	var execMaxOutput int64
@@ -477,11 +508,29 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin,
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
-		ExecProfiles: execProfiles, ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
+		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),
+		ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
 		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,
 		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache,
 		ProofKeyFile: *proofKeyFile, ProofRequiredIdentities: proofIdentities}
 	return serveResult(runDaemon(ctx, cfg, stdout), stderr)
+}
+
+// resolveProfilesDirDefault is --exec-profiles-dir's default (row 189 M2):
+// an explicit flag wins; with --exec-profile flags there is none (their
+// all-or-nothing configuration is unchanged); otherwise, when exec is being
+// configured (--exec-sandbox) and ~/.ailang-world-exec/profiles is a
+// directory, that directory. A serve without --exec-sandbox never picks it
+// up, so exec stays off unless the operator turns it on.
+func resolveProfilesDirDefault(flagValue string, profiles []string, sandbox string) string {
+	if flagValue != "" || len(profiles) > 0 || sandbox == "" {
+		return flagValue
+	}
+	dir := defaultExecProfilesDir()
+	if info, err := os.Stat(dir); err == nil && info.IsDir() {
+		return dir
+	}
+	return ""
 }
 
 // runDaemon is daemon.Run; a test replaces it to see the Config serve built.
@@ -523,7 +572,7 @@ func serveResult(err error, stderr io.Writer) int {
 // ownHelpVerbs handle --help themselves (each prints its own help, exit 0).
 var ownHelpVerbs = map[string]bool{
 	"tools": true, "call": true, "why": true, "provenance": true,
-	"setup": true, "doctor": true, "session": true,
+	"setup": true, "doctor": true, "session": true, "episode": true,
 }
 
 // genericVerbHelp answers `<verb> ... --help` for the verbs that have no help

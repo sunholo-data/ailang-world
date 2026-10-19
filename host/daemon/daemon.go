@@ -267,7 +267,14 @@ type Config struct {
 	// (0 = 64 MiB). Startup refuses an exec flag without the workspace tools
 	// and any §4.3/§4.6 violation, and runs the startup probe for every
 	// profile; with no profile, workspace-exec refuses every call.
-	ExecProfiles        []string
+	ExecProfiles []string
+	// ExecProfilesDir (`--exec-profiles-dir`, row 189 M2) is a directory of
+	// <project>.json profiles, loaded at startup beside any --exec-profile;
+	// *.proposed.json is skipped. A directory profile that fails to load or
+	// probe is left out — named on the error log and in /v1/health — while
+	// every other profile serves; the --exec-profile flags keep their
+	// all-or-nothing rule.
+	ExecProfilesDir     string
 	ExecEpisodeProjects []string
 	ExecSandbox         string
 	ExecNode            string
@@ -595,6 +602,35 @@ type HealthResponse struct {
 	// `session new --allow-non-git` adopted. Absent when there is none, or
 	// when serve has no --workspace-root, so the body is otherwise unchanged.
 	DegradedEpisodes []string `json:"degraded_episodes,omitempty"`
+
+	// Row 189 M3 (AC3): what `episode start` compares before it mints.
+	// Build is this daemon binary's build identity (build.go).
+	Build BuildIdentity `json:"build"`
+	// ToolRef is the archived workspace tool binary's "sha256:<hex>"
+	// (--tool-ailang-bin), "" when serve has none.
+	ToolRef string `json:"tool_ref"`
+	// CredentialsDB is the credentials store this daemon resolves sessions
+	// from: a mint into any other file is invisible to it.
+	CredentialsDB string `json:"credentials_db"`
+	// ExecProfiles are the loaded exec profiles with their digests, by
+	// project; ExecProfilesExcluded the profiles directory's left-out ones
+	// with the reason (row 189 M2).
+	ExecProfiles         []HealthExecProfile   `json:"exec_profiles"`
+	ExecProfilesExcluded []HealthExecExclusion `json:"exec_profiles_excluded,omitempty"`
+}
+
+// HealthExecProfile is one loaded exec profile.
+type HealthExecProfile struct {
+	Project string `json:"project"`
+	Digest  string `json:"digest"`
+	File    string `json:"file"`
+}
+
+// HealthExecExclusion is one left-out profile of --exec-profiles-dir.
+type HealthExecExclusion struct {
+	Project string `json:"project"`
+	File    string `json:"file"`
+	Reason  string `json:"reason"`
 }
 
 // resolveErrorLog turns Config.ErrorLog's optional nil into the concrete
@@ -704,7 +740,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		return nil, &StartupError{Stage: StageStoreOpen,
 			Detail: "the store's lock-retry window is not below the read deadline", Err: err}
 	}
-	if err := ensureCredentialsStore(credPath); err != nil {
+	if err := ensureCredentialsStore(credPath, resolveErrorLog(cfg.ErrorLog)); err != nil {
 		_ = s.Close()
 		return nil, &StartupError{Stage: StageStoreOpen, Detail: "cannot open the credentials store", Err: err}
 	}
@@ -719,6 +755,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
 	}
 	d.human = serializedHandler{mu: &d.humanMu, h: broker.NewHumanHandler(s)}
+	workspace.bindingFor = d.episodeBinding
 	release := unpinnedRelease
 	if cfg.ToolAilangBin != "" {
 		bin, ref, err := archiveToolBinary(archive.New(cfg.DBPath), cfg.ToolAilangBin)
@@ -1013,7 +1050,13 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		InterpreterRef:     d.interpreterRef,
 		InterpreterVersion: d.interpreterVersion,
 		DegradedEpisodes:   d.workspace.degradedEpisodes(),
+		Build:              CurrentBuild(),
+		CredentialsDB:      d.credentialsPath,
 	}
+	if d.workspace.bin != "" {
+		body.ToolRef = d.workspace.binRef.String()
+	}
+	body.ExecProfiles, body.ExecProfilesExcluded = d.workspace.healthProfiles()
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		// The status line is already written; there is nothing left to say to

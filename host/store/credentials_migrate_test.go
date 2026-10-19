@@ -73,7 +73,7 @@ func credentialRows(t *testing.T, credPath string) []SessionRow {
 	t.Helper()
 	db := rawDB(t, credPath)
 	defer func() { _ = db.Close() }()
-	got, err := listSessions(boundedTestContext(t), db, "", 0)
+	got, err := listSessions(boundedTestContext(t), db, credentialsSchemaVersion, "", 0)
 	if err != nil {
 		t.Fatal(err)
 	}

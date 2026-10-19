@@ -48,11 +48,35 @@ func (ExecUnconfiguredHandler) Execute(_ context.Context, req EffectRequest, _ [
 }
 
 // ExecNoEpisodeProfileRefusal is the Workspace.Exec answer for an episode
-// that no `--exec-episode-project` names while several profiles are
-// configured (row 140 M3, §4.6): World never guesses a project.
+// whose credential binds no profile and that no `--exec-episode-project`
+// names while several profiles are configured (row 140 M3, §4.6): World never
+// guesses a project. Row 189 M2: the fix that needs no restart is a credential
+// bound at the mint.
 func ExecNoEpisodeProfileRefusal(episode string) string {
-	return fmt.Sprintf("no exec profile for episode %q: several profiles are configured; start ailang-worldd serve with "+
-		"--exec-episode-project %s=PROJECT", episode, episode)
+	return fmt.Sprintf("no exec profile for episode %q: its session credential binds none and several profiles are configured; "+
+		"mint the episode's session with --profile PROJECT (ailang-worldd episode start or session new; no restart needed), "+
+		"or start ailang-worldd serve with --exec-episode-project %s=PROJECT", episode, episode)
+}
+
+// ExecProfileDigestMismatchRefusal is the Workspace.Exec answer for a
+// credential bound at the mint to profile bytes other than the ones the
+// daemon loaded (row 189 M2, D-189-2 A): the human confirmed the minted
+// digest and no other, so every exec refuses until the session is re-minted.
+func ExecProfileDigestMismatchRefusal(episode, project, minted, loaded string) string {
+	return fmt.Sprintf("exec profile %q changed since episode %q was minted: the session credential is bound to %s, "+
+		"the daemon loaded %s; re-mint the session against the current profile (ailang-worldd session revoke --episode %s, "+
+		"then episode start or session new --profile %s)", project, episode, minted, loaded, episode, project)
+}
+
+// ExecProfileNotLoadedRefusal is the Workspace.Exec answer for an episode
+// bound to a project the daemon has no profile for. why is the reason the
+// profiles directory left it out, or "" when it was never configured.
+func ExecProfileNotLoadedRefusal(episode, project, why string) string {
+	if why != "" {
+		return fmt.Sprintf("exec profile %q of episode %q was left out at serve startup: %s", project, episode, why)
+	}
+	return fmt.Sprintf("episode %q is bound to exec profile %q, which this daemon has not loaded; "+
+		"put %s.json in the serve --exec-profiles-dir and restart serve once", episode, project, project)
 }
 
 // ExecRefusalHandler answers every Workspace.Exec call {ok:false, refused:
