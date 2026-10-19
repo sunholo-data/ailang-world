@@ -1,6 +1,7 @@
 # w-world-onboarding — start a World episode on any repo in one attended act, and let agents and operators learn World from a plugin
 
 **Status**: DRAFT r1 (attended design, 2026-10-19). Five decisions are OPEN for Mark (§6). No milestone may start before they are ruled.
+- **RULED (Mark, attended 2026-10-19, D-WORLD-85):** C, A, C, A, A (D-189-1…5) — every recommendation accepted ("thank you yes go with all recommendations"); ledger PR #317.
 
 **Direction:**
 - Queue row 189, filed attended 2026-10-16. Mark asked: "how do I now start to use this on other projects? do we have an ailang world skill that needs to be globally available so I can ask the agents in there?"
