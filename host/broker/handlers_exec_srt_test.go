@@ -18,6 +18,8 @@ package broker
 // host bytes are unchanged", plus a positive refusal token on darwin.
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -25,6 +27,7 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -491,5 +494,143 @@ func TestExecSrtProfileEnvNeverReachesTheHostNode(t *testing.T) {
 	sort.Strings(want)
 	if !reflect.DeepEqual(child, want) {
 		t.Fatalf("child env through srt = %q\nwant exactly %q (no srt proxy vars, no TMPDIR=/tmp/claude)", child, want)
+	}
+}
+
+// Real prevention and the documented detection residuals; all writes are fixtures.
+func TestExecSrtProtectedWrites(t *testing.T) {
+	nm, node := realSrt(t) // dependency absence skips before fixture setup
+	// Check a configured pin even when Linux's bwrap dependency is absent.
+	pkgDir := filepath.Join(nm, "@anthropic-ai", "sandbox-runtime")
+	raw, err := os.ReadFile(filepath.Join(pkgDir, "package.json"))
+	var pkg struct {
+		Version string `json:"version"`
+	}
+	if err != nil || json.Unmarshal(raw, &pkg) != nil || pkg.Version != ExecSandboxRelease {
+		t.Fatalf("configured srt package pin is invalid: version %q, read %v", pkg.Version, err)
+	}
+	if sum, err := sha256File(filepath.Join(pkgDir, "dist", "cli.js")); err != nil || sum != ExecSandboxCLISHA256 {
+		t.Fatalf("configured srt CLI pin is invalid: sha256 %s, read %v", sum, err)
+	}
+	if runtime.GOOS == "linux" {
+		if _, err := exec.LookPath("bwrap"); err != nil {
+			t.Skipf("SKIP %s: bwrap absent: %v", t.Name(), err)
+		}
+	}
+	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
+		t.Skipf("SKIP %s: unsupported OS %s", t.Name(), runtime.GOOS)
+	}
+	type arm struct {
+		name, js                    string
+		paths, written              []string // exact host states after a successful operation
+		linuxAllowed, darwinAllowed bool
+	}
+	modify := "pkg/modify_test.go"
+	if runtime.GOOS == "linux" {
+		modify = "tests/modify.py"
+	}
+	arms := []arm{
+		{"modify", "writeFileSync(" + strconv.Quote(modify) + ",'x')", []string{modify}, []string{"x"}, false, false},
+		{"create-nested", "writeFileSync('pkg/deep/new_test.go','x')", []string{"pkg/deep/new_test.go"}, []string{"x"}, true, false},
+		{"create-root", "writeFileSync('new_test.go','x')", []string{"new_test.go"}, []string{"x"}, true, false},
+		{"create-directory-file", "writeFileSync('tests/deep/new.py','x')", []string{"tests/deep/new.py"}, []string{"x"}, false, false},
+		{"delete", "unlinkSync('tests/delete.py')", []string{"tests/delete.py"}, []string{"<absent>"}, false, false},
+		{"rename-away", "renameSync('tests/rename.py','moved.py')", []string{"tests/rename.py", "moved.py"}, []string{"<absent>", "old"}, false, false},
+		{"case-variant", "writeFileSync('PKG/A_TEST.GO','x')", []string{"PKG/A_TEST.GO"}, []string{"x"}, true, false},
+		{"case-new", "writeFileSync('pkg/B_TEST.GO','x')", []string{"pkg/B_TEST.GO"}, []string{"x"}, true, false},
+		{"basename-modify", "writeFileSync('pkg/base_test.go','x')", []string{"pkg/base_test.go"}, []string{"x"}, true, false},
+		{"basename-delete", "unlinkSync('pkg/delete_test.go')", []string{"pkg/delete_test.go"}, []string{"<absent>"}, true, false},
+		{"rename-onto", "renameSync('pkg/source.go','pkg/onto_test.go')", []string{"pkg/source.go", "pkg/onto_test.go"}, []string{"<absent>", "old"}, true, false},
+		{"basename-rename", "renameSync('pkg/rename_test.go','base-moved.go')", []string{"pkg/rename_test.go", "base-moved.go"}, []string{"<absent>", "old"}, true, false},
+		{"symlink", "writeFileSync('alias/linked.py','x')", []string{"tests/linked.py"}, []string{"x"}, false, false},
+		{"hardlink", "linkSync('tests/hard.py','hard-alias');writeFileSync('hard-alias','x')", []string{"tests/hard.py", "hard-alias"}, []string{"x", "x"}, false, false},
+		{"basename-hardlink", "linkSync('pkg/hard_test.go','base-hard-alias');writeFileSync('base-hard-alias','x')", []string{"pkg/hard_test.go", "base-hard-alias"}, []string{"x", "x"}, true, false},
+		{"parent-dir-rename", "renameSync('parent','parent2')", []string{"parent/a_test.go", "parent2/a_test.go"}, []string{"<absent>", "old"}, true, true},
+		{"protected-dir-rename", "renameSync('tests','tests2')", []string{"tests/modify.py", "tests2/modify.py"}, []string{"<absent>", "old"}, false, false},
+		{"unprotected-control", "writeFileSync('ordinary.txt','x')", []string{"ordinary.txt"}, []string{"x"}, true, true},
+	}
+	pin := ExecSandboxPin{Version: ExecSandboxRelease, CLISHA256: ExecSandboxCLISHA256}
+	f := newExecFixture(t, execFixtureOpts{node: node, tree: nm, pin: &pin,
+		home: filepath.Join(canonicalTempDir(t), "operator-home"),
+		profileF: func(m map[string]any, f *execFixture) {
+			m["protected"] = []string{"tests/**", "*_test.go"}
+			m["path"] = []any{filepath.Dir(node), "/usr/bin", "/bin"}
+			cmds := map[string]any{}
+			for _, a := range arms {
+				js := "try{const {writeFileSync,unlinkSync,renameSync,linkSync}=require('fs');" + a.js + ";console.log('WORLD-PROBE-WROTE')}catch(e){console.log('WORLD-PROBE-REFUSED '+e.code)}"
+				cmds[a.name] = map[string]any{"argv": []any{"node", "-e", js}}
+			}
+			addCommands(m, cmds)
+		}, setup: func(f *execFixture) {
+			for _, dir := range []string{"tests/deep", "pkg/deep", "PKG", "parent"} {
+				if err := os.MkdirAll(filepath.Join(f.worktree, dir), 0o755); err != nil {
+					t.Fatal(err)
+				}
+			}
+			for _, rel := range []string{modify, "tests/modify.py", "tests/delete.py", "tests/rename.py", "tests/linked.py", "tests/hard.py", "PKG/A_TEST.GO", "pkg/base_test.go", "pkg/delete_test.go", "pkg/rename_test.go", "pkg/hard_test.go", "pkg/source.go", "parent/a_test.go"} {
+				if err := os.WriteFile(filepath.Join(f.worktree, rel), []byte("old"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.Symlink("tests", filepath.Join(f.worktree, "alias")); err != nil {
+				t.Fatal(err)
+			}
+		}})
+	// Absence is explicit; unexpected stat/read failures cannot resemble absence.
+	snapshot := func(t *testing.T, paths []string) []string {
+		t.Helper()
+		states := make([]string, len(paths))
+		for i, rel := range paths {
+			data, err := os.ReadFile(filepath.Join(f.worktree, rel))
+			if errors.Is(err, os.ErrNotExist) {
+				states[i] = "<absent>"
+				continue
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			states[i] = "sha256:" + sha256Hex(data)
+		}
+		return states
+	}
+	for _, a := range arms {
+		t.Run(a.name, func(t *testing.T) {
+			before := snapshot(t, a.paths)
+			r := f.mustRun(t, a.name)
+			if r.ExitCode == nil || *r.ExitCode != 0 || r.TimedOut || r.Limit != nil {
+				t.Fatalf("probe did not complete: %+v", r)
+			}
+			token := probeToken(r)
+			after := snapshot(t, a.paths)
+			allowed := a.darwinAllowed
+			if runtime.GOOS == "linux" {
+				allowed = a.linuxAllowed
+			}
+			if allowed {
+				if token != "WORLD-PROBE-WROTE" {
+					t.Fatalf("expected written operation: token %q, stderr %q", token, r.Stderr)
+				}
+				want := append([]string(nil), a.written...)
+				for i, v := range want {
+					if v != "<absent>" {
+						want[i] = "sha256:" + sha256Hex([]byte(v))
+					}
+				}
+				if !reflect.DeepEqual(after, want) || reflect.DeepEqual(before, after) {
+					t.Fatalf("written host states = %v, want %v; before %v", after, want, before)
+				}
+				if a.name != "unprotected-control" {
+					t.Logf("written-and-recorded-as-detection-residual: %s on %s; before %v after %v", a.name, runtime.GOOS, before, after)
+				}
+				return
+			}
+			refusals := []string{"WORLD-PROBE-REFUSED EPERM", "WORLD-PROBE-REFUSED EACCES", "WORLD-PROBE-REFUSED EROFS", "WORLD-PROBE-REFUSED EBUSY", "WORLD-PROBE-REFUSED EXDEV"}
+			if !slicesContains(refusals, token) {
+				t.Errorf("protected operation must be refused: token %q, stderr %q", token, r.Stderr)
+			}
+			if !reflect.DeepEqual(before, after) {
+				t.Errorf("protected host hashes/absence changed: before %v after %v", before, after)
+			}
+		})
 	}
 }
