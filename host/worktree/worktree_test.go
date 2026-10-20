@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -135,6 +136,42 @@ func TestIsLinked(t *testing.T) {
 		if got := IsLinked(dir); got != want {
 			t.Errorf("IsLinked(%s) = %v, want %v", dir, got, want)
 		}
+	}
+}
+
+// writeScript writes an executable shell script standing in for git.
+func writeScript(t *testing.T, body string) string {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "fake-git")
+	if err := os.WriteFile(p, []byte("#!/bin/sh\n"+body), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// Row 188 M0a: Output returns git's stdout alone; stderr is not mixed in.
+func TestOutputReturnsStdoutWithoutStderr(t *testing.T) {
+	fake := writeScript(t, "echo out-line\necho err-line >&2\n")
+	got, err := Output(testCtx(t), fake, []string{"log"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "out-line\n" {
+		t.Fatalf("Output = %q, want only stdout %q", got, "out-line\n")
+	}
+}
+
+// Row 188 M0a: stdout up to MaxStdout is returned whole; one byte past it is
+// refused, never truncated.
+func TestOutputRefusesStdoutPastItsCap(t *testing.T) {
+	fake := writeScript(t, "head -c \"$1\" /dev/zero\n")
+	got, err := Output(testCtx(t), fake, []string{strconv.Itoa(MaxStdout)})
+	if err != nil || len(got) != MaxStdout {
+		t.Fatalf("Output at the cap = %d bytes (%v), want %d", len(got), err, MaxStdout)
+	}
+	got, err = Output(testCtx(t), fake, []string{strconv.Itoa(MaxStdout + 1)})
+	if err == nil || !strings.Contains(err.Error(), "over the bound") || got != "" {
+		t.Fatalf("Output past the cap = %d bytes, err %v; want a refusal and no output", len(got), err)
 	}
 }
 

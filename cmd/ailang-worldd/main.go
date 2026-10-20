@@ -36,6 +36,8 @@
 //	ailang-worldd episode start <episode> --repo <dir> [--profile <project>] ...
 //	ailang-worldd [--addr http://127.0.0.1:7644] episode report <episode> [--json] [--follow]
 //	ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
+//	ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
+//	ailang-worldd surface-index --validate <file>
 //	ailang-worldd session new|list|revoke|mint ...
 //	ailang-worldd help [<verb>]
 //
@@ -114,6 +116,8 @@ Usage:
                     [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
   ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
   ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
+  ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
+  ailang-worldd surface-index --validate <file>
   ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
@@ -406,6 +410,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 	case "profile": // row 189 M4: profile_init.go
 		return runProfile(rest[1:], stdout, stderr)
 
+	case "surface-index": // row 188 M0a: surface_index.go
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'surface-index'; it reads git, not a daemon")
+			return exitUsage
+		}
+		return runSurfaceIndex(rest[1:], stdout, stderr)
+
 	case "help":
 		fmt.Fprint(stdout, usage)
 		return exitOK
@@ -586,7 +597,7 @@ func serveResult(err error, stderr io.Writer) int {
 var ownHelpVerbs = map[string]bool{
 	"tools": true, "call": true, "why": true, "provenance": true,
 	"setup": true, "doctor": true, "session": true, "episode": true,
-	"profile": true,
+	"profile": true, "surface-index": true,
 }
 
 // genericVerbHelp answers `<verb> ... --help` for the verbs that have no help
