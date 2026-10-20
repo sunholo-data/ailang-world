@@ -152,9 +152,9 @@ few words each, and the proposal bar appears only when there is something to pro
 
 ### §3.2 Near: one brane, the front card open
 
-The brane's states are stacked in depth like Time Machine windows. Older states recede behind,
-and the newest is in front, unless an open step is waiting for you, in which case that step
-leads. **The front card is the state itself, fully open**, so there is no "go inside" step:
+The front card is the state you are at. Earlier states stack above it, and later states below,
+as mirrored bars that narrow and fade with distance (three deep). The newest state is in front,
+unless an open step is waiting for you, in which case that step leads. **The front card is the state itself, fully open**, so there is no "go inside" step:
 
 | | what it holds | w189e, measured |
 |---|---|---|
@@ -167,13 +167,13 @@ leads. **The front card is the state itself, fully open**, so there is no "go in
 column for each line of history that flowed into it. Ahead of it is one tab for each state it
 led to.
 
-- **Behind.** A merge shows two columns. A step shows its own brane, plus every other brane
+- **Above (earlier).** A merge shows two columns. A step shows its own brane, plus every other brane
   whose work reached the shared world between this brane's previous step and this one.
   Measured on the board:
   - w189e: onboarding, and the loop's iteration 288 (the merge into `9003555`);
   - w189d: onboarding, w198, and loop iterations 285–287, all landed between w189c and
     w189d's start at `0ee1945`.
-- **Ahead.** The same stack, mirrored below the card, with one column for each brane the
+- **Below (later).** The same stack, mirrored, with one column for each brane the
   state led to, up to three states deep. A branch point shows several columns. `0ee1945` has
   three: the shared world, w189d's onboarding line, and iteration 288's loop line, which both
   left from there.
