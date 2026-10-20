@@ -30,7 +30,8 @@ Summarises one episode from World's own store, in one request
 decisions by effect (allowed / failed / denied:<why>), budget per grant
 (minted, used, left), plan refusals (refused before any effect) and handler
 refusals (the effect was allowed and ran, but the handler answered ok:false),
-the first and last entries and their times.
+the files read (successful ailang-read calls; --json lists them), the first
+and last entries and their times.
 
   --json        print the route's JSON (one object; with --follow one compact
                 line per change)
@@ -209,6 +210,7 @@ func printReport(w io.Writer, r daemon.EpisodeReport) {
 	for _, kv := range sortedCounts(r.CallsByTool) {
 		fmt.Fprintf(w, "  %-18s %6d\n", kv.name, kv.n)
 	}
+	fmt.Fprintln(w, readsLine(r.Reads))
 	fmt.Fprintln(w, "effects:")
 	for _, e := range r.Effects {
 		fmt.Fprintf(w, "  %-22s %-16s %6d\n", e.Effect, e.Decision, e.Count)
@@ -222,6 +224,18 @@ func printReport(w io.Writer, r daemon.EpisodeReport) {
 	if r.Uncommitted > 0 {
 		fmt.Fprintf(w, "uncommitted intents: %d\n", r.Uncommitted)
 	}
+}
+
+// readsLine is the one-line reads summary; --json carries the file list.
+func readsLine(r daemon.ReportReads) string {
+	line := fmt.Sprintf("reads: %d calls, %d files", r.Count, len(r.Files))
+	if r.Truncated > 0 {
+		line += fmt.Sprintf(", %d more not listed", r.Truncated)
+	}
+	if r.Unlisted > 0 {
+		line += fmt.Sprintf(", %d outside the worktree", r.Unlisted)
+	}
+	return line
 }
 
 func printRefusals(w io.Writer, title string, r daemon.ReportRefusals) {

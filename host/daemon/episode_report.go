@@ -33,6 +33,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -55,6 +56,7 @@ type EpisodeReport struct {
 	Budgets         []ReportBudget    `json:"budgets"`
 	PlanRefusals    ReportRefusals    `json:"plan_refusals"`
 	HandlerRefusals ReportRefusals    `json:"handler_refusals"`
+	Reads           ReportReads       `json:"reads"`
 	FirstAt         string            `json:"first_at"`
 	LastAt          string            `json:"last_at"`
 	BySurface       map[string]int    `json:"calls_by_surface"`
@@ -95,6 +97,30 @@ type ReportRefusal struct {
 	Reason string `json:"reason"`
 }
 
+// ReportReads is the files the episode read, from its committed ailang-read
+// calls' invocation records (row 188 M0b): the record's input object names
+// the path, so the source is World's own log, the same for every agent.
+type ReportReads struct {
+	Count     int          `json:"count"`     // read calls listed below, summed
+	Files     []ReportRead `json:"files"`     // one per distinct path, first read first
+	Truncated int          `json:"truncated"` // distinct paths beyond the cap, not listed
+	Unlisted  int          `json:"unlisted"`  // read calls whose path is not a local relative path
+}
+
+// ReportRead is one distinct path: how often it was read, and first when.
+type ReportRead struct {
+	Path       string `json:"path"`
+	Count      int    `json:"count"`
+	FirstEntry int64  `json:"first_entry"`
+}
+
+// reportReadTool is the tool whose calls are reads.
+const reportReadTool = "ailang-read"
+
+// reportReadFiles caps the distinct paths listed. A variable, not a const,
+// so a test can lower it rather than commit a thousand calls.
+var reportReadFiles = 1000
+
 // reportFirstRefusals is how many refusals each class lists; reportReasonMax
 // bounds one reason's length.
 const (
@@ -113,6 +139,7 @@ var reportNotes = map[string]string{
 	"handler_refusals": "calls whose effect was allowed and ran, but whose handler result is ok:false (the effect record alone shows these as allowed)",
 	"budgets":          "per (effect, scope) with at least one effect record: left = latest budgetAfter, used = cost of allowed records, minted = left + used",
 	"first_at":         "coordinator logical time (unix seconds) of the first and last committed call, UTC",
+	"reads":            "committed ailang-read calls with a v2 record whose every effect was allowed and did not fail and whose handler result is not ok:false; the path is the record input's \"path\" (a ranged read counts); a path that is not local and relative counts in unlisted and is never shown; files are ordered by first entry, at most 1000",
 }
 
 // intentReader is the report's journal seam; *store.Store satisfies it.
@@ -131,6 +158,7 @@ type reportRecord struct {
 	EpisodeID string   `json:"episodeId"`
 	SkillID   string   `json:"skillId"`
 	Plan      string   `json:"plan"`
+	Input     string   `json:"input"`
 	Effects   []string `json:"effects"`
 }
 
@@ -148,6 +176,7 @@ type reportBuilder struct {
 	rep     EpisodeReport
 	effects map[[2]string]int
 	budgets map[budgetKey]*budgetState
+	reads   map[string]*ReportRead
 	firstAt int64
 	lastAt  int64
 }
@@ -160,9 +189,11 @@ func buildEpisodeReport(ctx context.Context, intents intentReader, reads objectW
 			Effects: []ReportEffect{}, Budgets: []ReportBudget{},
 			PlanRefusals:    ReportRefusals{ByTool: map[string]int{}, First: []ReportRefusal{}},
 			HandlerRefusals: ReportRefusals{ByTool: map[string]int{}, First: []ReportRefusal{}},
+			Reads:           ReportReads{Files: []ReportRead{}},
 			Notes:           reportNotes},
 		effects: map[[2]string]int{},
 		budgets: map[budgetKey]*budgetState{},
+		reads:   map[string]*ReportRead{},
 	}
 	for _, surface := range reportSurfaces {
 		prefix := string(surface) + ":" + episode + ":"
@@ -227,6 +258,10 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 		return b.planRefusal(ctx, reads, entry, tool, rec.Plan)
 	}
 	handlerRefused := ""
+	// A read is an ailang-read call whose every effect was allowed and did
+	// not fail and whose handler did not answer ok:false (the refusal test
+	// below); a plan refusal returned above, before any effect.
+	isRead := tool == reportReadTool
 	for pos, text := range rec.Effects {
 		ref, err := hashref.Parse(text)
 		if err != nil {
@@ -244,6 +279,9 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 			return fmt.Errorf("entry %d: %w", entry, err)
 		}
 		b.effect(entry, pos, d)
+		if !d.Allowed || d.Failed {
+			isRead = false
+		}
 		if d.Allowed && !d.Failed && handlerRefused == "" {
 			if handlerRefused, err = handlerRefusal(ctx, reads, d.ResultRef); err != nil {
 				return fmt.Errorf("entry %d: %w", entry, err)
@@ -252,6 +290,44 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 	}
 	if handlerRefused != "" {
 		addRefusal(&b.rep.HandlerRefusals, entry, tool, handlerRefused)
+		return nil
+	}
+	if isRead {
+		return b.read(ctx, reads, entry, rec.Input)
+	}
+	return nil
+}
+
+// read folds one read call: the path is the record's input object's "path"
+// (offset/limit and any other key are ignored, so a ranged read counts). A
+// path that is not local and relative is counted, never echoed.
+func (b *reportBuilder) read(ctx context.Context, reads objectWorldReader, entry int64, inputText string) error {
+	ref, err := hashref.Parse(inputText)
+	if err != nil {
+		return fmt.Errorf("entry %d: input ref: %w", entry, err)
+	}
+	obj, ok, err := reads.GetObject(ctx, ref)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("entry %d: input %s does not resolve", entry, inputText)
+	}
+	var in struct {
+		Path *string `json:"path"`
+	}
+	if json.Unmarshal(obj.Payload, &in) != nil || in.Path == nil || !filepath.IsLocal(*in.Path) {
+		b.rep.Reads.Unlisted++
+		return nil
+	}
+	r := b.reads[*in.Path]
+	if r == nil {
+		r = &ReportRead{Path: *in.Path, FirstEntry: entry}
+		b.reads[*in.Path] = r
+	}
+	r.Count++
+	if entry < r.FirstEntry {
+		r.FirstEntry = entry
 	}
 	return nil
 }
@@ -420,6 +496,23 @@ func (b *reportBuilder) finish() {
 		}
 		return x.Scope < y.Scope
 	})
+	for _, r := range b.reads {
+		b.rep.Reads.Files = append(b.rep.Reads.Files, *r)
+	}
+	sort.Slice(b.rep.Reads.Files, func(i, j int) bool {
+		x, y := b.rep.Reads.Files[i], b.rep.Reads.Files[j]
+		if x.FirstEntry != y.FirstEntry {
+			return x.FirstEntry < y.FirstEntry
+		}
+		return x.Path < y.Path
+	})
+	if n := len(b.rep.Reads.Files); n > reportReadFiles {
+		b.rep.Reads.Truncated = n - reportReadFiles
+		b.rep.Reads.Files = b.rep.Reads.Files[:reportReadFiles]
+	}
+	for _, r := range b.rep.Reads.Files {
+		b.rep.Reads.Count += r.Count
+	}
 	b.rep.FirstAt = time.Unix(b.firstAt, 0).UTC().Format(time.RFC3339)
 	b.rep.LastAt = time.Unix(b.lastAt, 0).UTC().Format(time.RFC3339)
 }

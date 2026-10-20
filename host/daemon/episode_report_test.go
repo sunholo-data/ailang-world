@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
@@ -33,6 +34,9 @@ type reportSeed struct {
 	t    *testing.T
 	d    *Daemon
 	head store.World
+	// input, when set, is the next call's input object (readCall sets it);
+	// otherwise the input is {"task": <invocation id>}.
+	input map[string]any
 }
 
 func reportObject(semantic string, payload []byte) store.Object {
@@ -59,7 +63,11 @@ func (s *reportSeed) build(surface, episode, task, tool string, effects []seeded
 	t := s.t
 	id := string(surface) + ":" + episode + ":" + task
 	index := s.head.Revision + 1
-	input := reportObject(coordinator.InputV1, mustMarshal(t, map[string]any{"task": id}))
+	in := map[string]any{"task": id}
+	if s.input != nil {
+		in = s.input
+	}
+	input := reportObject(coordinator.InputV1, mustMarshal(t, in))
 	var objects []store.Object
 	var recordRefs []string
 	var planned []map[string]any
@@ -126,6 +134,15 @@ func (s *reportSeed) call(surface, episode, task, tool string, effects []seededE
 	}
 	s.head = c.NextWorld
 	return c.Entry.Header.EntryIndex
+}
+
+// readCall commits one ailang-read call whose input object is input, as the
+// MCP surface records a read's arguments.
+func (s *reportSeed) readCall(episode, task string, input map[string]any, effects []seededEffect, planResult map[string]any) int64 {
+	s.t.Helper()
+	s.input = input
+	defer func() { s.input = nil }()
+	return s.call("mcp", episode, task, "ailang-read", effects, planResult)
 }
 
 // pending journals an intent whose commit never lands.
@@ -294,7 +311,7 @@ func TestEpisodeReportRESTRoute(t *testing.T) {
 		t.Errorf("REST body differs from the report:\n got %s\nwant %s", rec.Body, want)
 	}
 	for _, key := range []string{"episode", "entries", "total_calls", "calls_by_tool", "effects", "budgets",
-		"plan_refusals", "handler_refusals", "first_at", "last_at"} {
+		"plan_refusals", "handler_refusals", "reads", "first_at", "last_at"} {
 		if _, ok := got.(map[string]any)[key]; !ok {
 			t.Errorf("REST body lacks %q", key)
 		}
@@ -313,4 +330,104 @@ func TestEpisodeReportRESTRoute(t *testing.T) {
 	}
 	s.d.readDeadline = expiredReadDeadline
 	assertErrorClass(t, requestRecorder(t, s.d, http.MethodGet, "/v1/episodes/ep-a/report", nil), http.StatusServiceUnavailable, "Timeout")
+}
+
+// Row 188 M0b: reads come from the ailang-read calls' recorded input objects.
+
+var readOK = map[string]any{"ok": true, "content": "x"}
+
+func assertReads(t *testing.T, got, want ReportReads) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("reads = %+v\nwant %+v", got, want)
+	}
+}
+
+func TestEpisodeReportReadsCountPerPathInFirstEntryOrder(t *testing.T) {
+	s := newReportSeed(t)
+	b1 := s.readCall("r", "1", map[string]any{"path": "b.go"}, read(50, readOK), nil)
+	a := s.readCall("r", "2", map[string]any{"path": "a.go"}, read(49, readOK), nil)
+	s.readCall("r", "3", map[string]any{"path": "b.go"}, read(48, readOK), nil)
+	// Another tool's input naming a path is not a read.
+	s.input = map[string]any{"path": "c.go", "content": "y"}
+	s.call("mcp", "r", "4", "ailang-write", []seededEffect{{effect: broker.EffectWorkspaceWrite, scope: "worktree",
+		cost: 1, before: 50, allowed: true, result: map[string]any{"ok": true}}}, nil)
+	s.input = nil
+	assertReads(t, reportFor(t, s.d, "r").Reads, ReportReads{Count: 3,
+		Files: []ReportRead{{Path: "b.go", Count: 2, FirstEntry: b1}, {Path: "a.go", Count: 1, FirstEntry: a}}})
+}
+
+func TestEpisodeReportRangedReadCountsAsItsPath(t *testing.T) {
+	s := newReportSeed(t)
+	e := s.readCall("r", "1", map[string]any{"path": "host/x.go", "offset": 10, "limit": 40}, read(50, readOK), nil)
+	assertReads(t, reportFor(t, s.d, "r").Reads, ReportReads{Count: 1,
+		Files: []ReportRead{{Path: "host/x.go", Count: 1, FirstEntry: e}}})
+}
+
+func TestEpisodeReportHandlerRefusedReadIsNotARead(t *testing.T) {
+	s := newReportSeed(t)
+	s.readCall("r", "1", map[string]any{"path": "missing.go"}, read(50, map[string]any{"ok": false, "refused": "no such file"}), nil)
+	rep := reportFor(t, s.d, "r")
+	assertReads(t, rep.Reads, ReportReads{Files: []ReportRead{}})
+	if rep.HandlerRefusals.Count != 1 {
+		t.Errorf("handler_refusals = %d, want 1", rep.HandlerRefusals.Count)
+	}
+}
+
+func TestEpisodeReportPlanRefusedReadIsNotARead(t *testing.T) {
+	s := newReportSeed(t)
+	s.readCall("r", "1", map[string]any{"path": "a.go", "offset": -1}, nil, map[string]any{"ok": false, "refused": "offset must be positive"})
+	e := s.readCall("r", "2", map[string]any{"path": "a.go"}, read(50, readOK), nil)
+	rep := reportFor(t, s.d, "r")
+	assertReads(t, rep.Reads, ReportReads{Count: 1, Files: []ReportRead{{Path: "a.go", Count: 1, FirstEntry: e}}})
+	if rep.PlanRefusals.Count != 1 {
+		t.Errorf("plan_refusals = %d, want 1", rep.PlanRefusals.Count)
+	}
+}
+
+func TestEpisodeReportNonLocalReadIsUnlistedAndNeverEchoed(t *testing.T) {
+	for _, path := range []string{"/etc/passwd", "../x"} {
+		t.Run(path, func(t *testing.T) {
+			s := newReportSeed(t)
+			s.readCall("r", "1", map[string]any{"path": path}, read(50, readOK), nil)
+			rep := reportFor(t, s.d, "r")
+			assertReads(t, rep.Reads, ReportReads{Files: []ReportRead{}, Unlisted: 1})
+			body := string(mustMarshal(t, rep))
+			if strings.Contains(body, `"`+path+`"`) {
+				t.Errorf("the report echoes %q: %s", path, body)
+			}
+		})
+	}
+}
+
+// The cap is tested at a lowered value: reportReadFiles is a package
+// variable, so the test commits 4 calls rather than 1001.
+func TestEpisodeReportReadsCapTruncates(t *testing.T) {
+	saved := reportReadFiles
+	reportReadFiles = 3
+	t.Cleanup(func() { reportReadFiles = saved })
+	s := newReportSeed(t)
+	var want []ReportRead
+	for i := 0; i < reportReadFiles+1; i++ {
+		p := fmt.Sprintf("f%d.go", i)
+		e := s.readCall("r", fmt.Sprint(i), map[string]any{"path": p}, read(int64(50-i), readOK), nil)
+		want = append(want, ReportRead{Path: p, Count: 1, FirstEntry: e})
+	}
+	got := reportFor(t, s.d, "r").Reads
+	if len(got.Files) != reportReadFiles {
+		t.Errorf("len(files) = %d, want %d", len(got.Files), reportReadFiles)
+	}
+	assertReads(t, got, ReportReads{Count: reportReadFiles, Files: want[:reportReadFiles], Truncated: 1})
+}
+
+func TestEpisodeReportNoReadsMarshalsAnEmptyFileList(t *testing.T) {
+	s := newReportSeed(t)
+	s.call("mcp", "r", "1", "ailang-write", []seededEffect{{effect: broker.EffectWorkspaceWrite, scope: "worktree",
+		cost: 1, before: 50, allowed: true, result: map[string]any{"ok": true}}}, nil)
+	rep := reportFor(t, s.d, "r")
+	assertReads(t, rep.Reads, ReportReads{Files: []ReportRead{}})
+	body := string(mustMarshal(t, rep))
+	if !strings.Contains(body, `"reads":{"count":0,"files":[],"truncated":0,"unlisted":0}`) {
+		t.Errorf(`want "files":[] in %s`, body)
+	}
 }
