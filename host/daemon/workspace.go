@@ -613,7 +613,7 @@ func (w *workspaceTools) buildAilangHandler(ctx context.Context, episodeID, sand
 		return nil, err
 	}
 	policyPath := filepath.Join(policyDir, episodeID+".toml")
-	policy, err := broker.RenderEpisodePolicy(sandbox)
+	policy, err := broker.RenderEpisodePolicy(sandbox, nil)
 	if err != nil {
 		return nil, err
 	}

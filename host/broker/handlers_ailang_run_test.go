@@ -60,7 +60,7 @@ var testRunOp = RunCapsConfig{
 
 func TestRenderRunVariantKeySetsPerClass(t *testing.T) {
 	root := "/w/root/ep1"
-	base, err := RenderEpisodePolicy(root)
+	base, err := RenderEpisodePolicy(root, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestRenderRunVariantKeySetsPerClass(t *testing.T) {
 		{[]string{"Env", "IO"}, "trusted_host", `["Env", "FS", "IO"]`, "0", "", false, true, true},
 	} {
 		t.Run(strings.Join(tc.caps, "+"), func(t *testing.T) {
-			got, err := RenderRunVariant(root, tc.caps, testRunOp)
+			got, err := RenderRunVariant(root, tc.caps, testRunOp, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -140,11 +140,11 @@ func TestRenderRunVariantKeySetsPerClass(t *testing.T) {
 		})
 	}
 	// {FS, IO} is row 134's base policy, byte for byte.
-	if got, err := RenderRunVariant(root, []string{"FS", "IO"}, testRunOp); err != nil || string(got) != string(base) {
+	if got, err := RenderRunVariant(root, []string{"FS", "IO"}, testRunOp, nil); err != nil || string(got) != string(base) {
 		t.Fatalf("RenderRunVariant(FS, IO) is not the base policy: %v", err)
 	}
 	for _, bad := range [][]string{nil, {}, {"IO", "FS"}, {"IO", "IO"}, {"Env", "IO", "Net"}, {"IO", "Process"}} {
-		if _, err := RenderRunVariant(root, bad, testRunOp); err == nil {
+		if _, err := RenderRunVariant(root, bad, testRunOp, nil); err == nil {
 			t.Errorf("RenderRunVariant(%v) accepted a non-canonical or refused cap set", bad)
 		}
 	}
@@ -641,5 +641,262 @@ func TestAilangRunTamperedVariantIsRefused(t *testing.T) {
 	var unverified *RunVariantUnverifiedError
 	if !errors.As(err, &unverified) || !strings.Contains(err.Error(), "would open every loopback port") {
 		t.Fatalf("bare-host Net variant: err = %v, want *RunVariantUnverifiedError naming the load refusal", err)
+	}
+}
+
+// Frozen pre-M5a policy bytes. The literal deny list below was independently
+// enumerated from the four directory names, with lower/upper ASCII spellings.
+const protectedLegacyDeny = `".github/**", ".githuB/**", ".githUb/**", ".githUB/**", ".gitHub/**", ".gitHuB/**", ".gitHUb/**", ".gitHUB/**", ".giThub/**", ".giThuB/**", ".giThUb/**", ".giThUB/**", ".giTHub/**", ".giTHuB/**", ".giTHUb/**", ".giTHUB/**", ".gIthub/**", ".gIthuB/**", ".gIthUb/**", ".gIthUB/**", ".gItHub/**", ".gItHuB/**", ".gItHUb/**", ".gItHUB/**", ".gIThub/**", ".gIThuB/**", ".gIThUb/**", ".gIThUB/**", ".gITHub/**", ".gITHuB/**", ".gITHUb/**", ".gITHUB/**", ".Github/**", ".GithuB/**", ".GithUb/**", ".GithUB/**", ".GitHub/**", ".GitHuB/**", ".GitHUb/**", ".GitHUB/**", ".GiThub/**", ".GiThuB/**", ".GiThUb/**", ".GiThUB/**", ".GiTHub/**", ".GiTHuB/**", ".GiTHUb/**", ".GiTHUB/**", ".GIthub/**", ".GIthuB/**", ".GIthUb/**", ".GIthUB/**", ".GItHub/**", ".GItHuB/**", ".GItHUb/**", ".GItHUB/**", ".GIThub/**", ".GIThuB/**", ".GIThUb/**", ".GIThUB/**", ".GITHub/**", ".GITHuB/**", ".GITHUb/**", ".GITHUB/**", ".pi/**", ".pI/**", ".Pi/**", ".PI/**", ".claude/**", ".claudE/**", ".clauDe/**", ".clauDE/**", ".claUde/**", ".claUdE/**", ".claUDe/**", ".claUDE/**", ".clAude/**", ".clAudE/**", ".clAuDe/**", ".clAuDE/**", ".clAUde/**", ".clAUdE/**", ".clAUDe/**", ".clAUDE/**", ".cLaude/**", ".cLaudE/**", ".cLauDe/**", ".cLauDE/**", ".cLaUde/**", ".cLaUdE/**", ".cLaUDe/**", ".cLaUDE/**", ".cLAude/**", ".cLAudE/**", ".cLAuDe/**", ".cLAuDE/**", ".cLAUde/**", ".cLAUdE/**", ".cLAUDe/**", ".cLAUDE/**", ".Claude/**", ".ClaudE/**", ".ClauDe/**", ".ClauDE/**", ".ClaUde/**", ".ClaUdE/**", ".ClaUDe/**", ".ClaUDE/**", ".ClAude/**", ".ClAudE/**", ".ClAuDe/**", ".ClAuDE/**", ".ClAUde/**", ".ClAUdE/**", ".ClAUDe/**", ".ClAUDE/**", ".CLaude/**", ".CLaudE/**", ".CLauDe/**", ".CLauDE/**", ".CLaUde/**", ".CLaUdE/**", ".CLaUDe/**", ".CLaUDE/**", ".CLAude/**", ".CLAudE/**", ".CLAuDe/**", ".CLAuDE/**", ".CLAUde/**", ".CLAUdE/**", ".CLAUDe/**", ".CLAUDE/**", ".ailang/**", ".ailanG/**", ".ailaNg/**", ".ailaNG/**", ".ailAng/**", ".ailAnG/**", ".ailANg/**", ".ailANG/**", ".aiLang/**", ".aiLanG/**", ".aiLaNg/**", ".aiLaNG/**", ".aiLAng/**", ".aiLAnG/**", ".aiLANg/**", ".aiLANG/**", ".aIlang/**", ".aIlanG/**", ".aIlaNg/**", ".aIlaNG/**", ".aIlAng/**", ".aIlAnG/**", ".aIlANg/**", ".aIlANG/**", ".aILang/**", ".aILanG/**", ".aILaNg/**", ".aILaNG/**", ".aILAng/**", ".aILAnG/**", ".aILANg/**", ".aILANG/**", ".Ailang/**", ".AilanG/**", ".AilaNg/**", ".AilaNG/**", ".AilAng/**", ".AilAnG/**", ".AilANg/**", ".AilANG/**", ".AiLang/**", ".AiLanG/**", ".AiLaNg/**", ".AiLaNG/**", ".AiLAng/**", ".AiLAnG/**", ".AiLANg/**", ".AiLANG/**", ".AIlang/**", ".AIlanG/**", ".AIlaNg/**", ".AIlaNG/**", ".AIlAng/**", ".AIlAnG/**", ".AIlANg/**", ".AIlANG/**", ".AILang/**", ".AILanG/**", ".AILaNg/**", ".AILaNG/**", ".AILAng/**", ".AILAnG/**", ".AILANg/**", ".AILANG/**", ".[gG][iI][tT][mM][oO][dD][uU][lL][eE][sſS]", ".[gG][iI][tT][aA][tT][tT][rR][iI][bB][uU][tT][eE][sſS]"`
+const protectedBaseGolden = `security_mode = "restricted"
+allowed_caps = ["IO", "FS"]
+fs_sandbox = "/w/root/ep1"
+timeout_ms = 8000
+fs_deny_write = [` + protectedLegacyDeny + `]
+entry = "main"
+
+[budgets]
+FS = 1000
+`
+
+// These fixed substitutions describe the old variant bytes independently of
+// runVariantSpec, renderPolicy, and the TOML encoder.
+func protectedPolicyCases() []struct {
+	name string
+	caps []string
+	want string
+} {
+	return []struct {
+		name string
+		caps []string
+		want string
+	}{
+		{"base", []string{"FS", "IO"}, protectedBaseGolden},
+		{"Declassify", []string{"Declassify", "IO"}, strings.ReplaceAll(strings.ReplaceAll(protectedBaseGolden,
+			`allowed_caps = ["IO", "FS"]`, `allowed_caps = ["Declassify", "FS", "IO"]`), "FS = 1000", "FS = 0")},
+		{"Net", []string{"IO", "Net"}, strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(protectedBaseGolden,
+			`allowed_caps = ["IO", "FS"]`, `allowed_caps = ["FS", "IO", "Net"]`), "FS = 1000", "FS = 0"),
+			"\n\n[budgets]", "\nnet_allow = [\"127.0.0.1:17655\"]\nnet_allow_http = true\n\n[budgets]")},
+		{"Env", []string{"Env", "FS", "IO"}, strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(protectedBaseGolden,
+			`security_mode = "restricted"`, `security_mode = "trusted_host"`),
+			`allowed_caps = ["IO", "FS"]`, `allowed_caps = ["Env", "FS", "IO"]`),
+			`fs_deny_write = [`, `fs_deny_write = [".git/**", `), "\n\n[budgets]",
+			"\nmax_source_bytes = 1048576\nmax_module_graph_bytes = 16777216\nmax_output_bytes = 8388608\nmax_fs_transfer_bytes = 8388608\n\n[budgets]")},
+	}
+}
+
+func protectedPolicyDeny(t *testing.T, data []byte) []string {
+	t.Helper()
+	fields, _ := policyLines(t, data)
+	var deny []string
+	// The renderer emits the common JSON/TOML basic-string-array subset:
+	// double-quoted strings, comma separators, and \\, \" and \uXXXX escapes.
+	// encoding/json independently decodes that subset, including quote escapes;
+	// the other policy fields/layout are covered by the frozen byte expectations.
+	if err := json.Unmarshal([]byte(fields["fs_deny_write"]), &deny); err != nil {
+		t.Fatalf("fs_deny_write is not a valid TOML basic-string array: %v", err)
+	}
+	return deny
+}
+
+func TestEpisodePolicyProtectedGolden(t *testing.T) {
+	const want = `security_mode = "restricted"
+allowed_caps = ["IO", "FS"]
+fs_sandbox = "/w/root/ep1"
+timeout_ms = 8000
+fs_deny_write = [` + protectedLegacyDeny + `, "tests/**", "*_test.go"]
+entry = "main"
+
+[budgets]
+FS = 1000
+`
+	got, err := RenderEpisodePolicy("/w/root/ep1", []string{"tests/**", "*_test.go"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Fatalf("protected policy differs from independent golden:\n%s", got)
+	}
+	t.Run("quote", func(t *testing.T) {
+		const original = `a"b_test.go`
+		got, err := RenderEpisodePolicy("/w/root/ep1", []string{original})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(got), `"a\"b_test.go"`) {
+			t.Error("missing exact TOML quote escape")
+		}
+		deny := protectedPolicyDeny(t, got)
+		if deny[len(deny)-1] != original {
+			t.Fatalf("decoded quote pattern = %q, want %q", deny[len(deny)-1], original)
+		}
+	})
+	t.Run("escapes", func(t *testing.T) {
+		original := "back\\slash"
+		for r := rune(0); r <= 0x9f; r++ {
+			if r < 0x20 || r >= 0x7f {
+				original += string(r)
+			}
+		}
+		got, err := RenderEpisodePolicy("/w/root/ep1", []string{original})
+		if err != nil {
+			t.Fatal(err)
+		}
+		deny := protectedPolicyDeny(t, got)
+		if deny[len(deny)-1] != original || !strings.Contains(string(got), `back\\slash\u0000`) {
+			t.Fatal("backslash/control escaping did not round trip")
+		}
+	})
+}
+
+func TestEpisodePolicyProtectedAllVariants(t *testing.T) {
+	for _, tc := range protectedPolicyCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			protected := []string{"tests/**", "*_test.go"}
+			got, err := RenderRunVariant("/w/root/ep1", tc.caps, testRunOp, protected)
+			if err != nil {
+				t.Fatal(err)
+			}
+			plain, err := RenderRunVariant("/w/root/ep1", tc.caps, testRunOp, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			deny, before := protectedPolicyDeny(t, got), protectedPolicyDeny(t, plain)
+			if len(deny) != len(before)+2 || !slices.Equal(deny[len(before):], protected) {
+				t.Fatal("protected entries are not the exact trailing denies")
+			}
+			if !slices.Equal(deny[:len(before)], before) {
+				t.Fatal("prior denies changed")
+			}
+			fields, _ := policyLines(t, plain)
+			want := strings.Replace(string(plain), fields["fs_deny_write"], strings.TrimSuffix(fields["fs_deny_write"], "]")+`, "tests/**", "*_test.go"]`, 1)
+			if string(got) != want {
+				t.Fatal("fields other than the appended denies changed")
+			}
+		})
+	}
+}
+
+func TestEpisodePolicyNoProtectedIsByteIdentical(t *testing.T) {
+	// Force spare capacity so even an append that leaves the global slice's
+	// length unchanged exposes its backing-array mutation deterministically.
+	saved := episodeDenyWrite
+	backing := append(append([]string(nil), saved...), "untouched", "untouched")
+	episodeDenyWrite = backing[:len(saved)]
+	defer func() { episodeDenyWrite = saved }()
+	for _, tc := range protectedPolicyCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := RenderRunVariant("/w/root/ep1", tc.caps, testRunOp, []string{"tests/**", "*_test.go"}); err != nil {
+				t.Fatal(err)
+			}
+			for _, protected := range [][]string{nil, {}} {
+				got, err := RenderRunVariant("/w/root/ep1", tc.caps, testRunOp, protected)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if string(got) != tc.want {
+					t.Fatal("empty protection changed frozen legacy policy bytes")
+				}
+			}
+			if backing[len(saved)] != "untouched" || backing[len(saved)+1] != "untouched" {
+				t.Fatal("render mutated episodeDenyWrite backing array")
+			}
+		})
+	}
+	for _, protected := range [][]string{nil, {}} {
+		got, err := RenderEpisodePolicy("/w/root/ep1", protected)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != protectedBaseGolden {
+			t.Fatal("empty episode protection changed frozen legacy bytes")
+		}
+	}
+}
+
+// A shell-only fake reports the actual policy's fields and digest, so the
+// production variant verifier checks honestly; it does not enforce the policy.
+func protectedPolicyTool(t *testing.T, dir string) string {
+	t.Helper()
+	bin := filepath.Join(dir, "policy-tool-fake")
+	script := `#!/bin/sh
+set -eu
+if [ "$1" = "--version" ]; then echo 'VERSION_LINE'; exit 0; fi
+[ "$1" = policy-tool ] && [ "$2" = --policy ]
+case "$(cat)" in *'"summary"'*) ;; *) exit 2 ;; esac
+mode=$(awk -F ' = ' '$1 == "security_mode" {print $2}' "$3")
+caps=$(awk -F ' = ' '$1 == "allowed_caps" {print $2}' "$3")
+net=$(awk -F ' = ' '$1 == "net_allow" {print $2}' "$3")
+root=$(awk -F ' = ' '$1 == "fs_sandbox" {print $2}' "$3")
+digest=$(shasum -a 256 "$3" | cut -d ' ' -f 1)
+printf '{"ok":true,"summary":{"security_mode":%s,"caps":%s,"net_allow":%s,"fs_sandbox":%s,"policy_digest":"%s","cli":["check"]}}' "$mode" "$caps" "${net:-[]}" "$root" "$digest"
+`
+	if err := os.WriteFile(bin, []byte(strings.ReplaceAll(script, "VERSION_LINE", measuredToolVersion)), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	return bin
+}
+
+func TestEpisodePolicyProtectedThroughHandler(t *testing.T) {
+	for _, enabled := range []bool{true, false} {
+		t.Run(fmt.Sprint(enabled), func(t *testing.T) {
+			ctx := boundedTestContext(t)
+			l := newToolLayout(t)
+			var protected []string
+			if enabled {
+				protected = []string{"tests/**", "*_test.go"}
+			}
+			bin := protectedPolicyTool(t, l.base)
+			cfg := AilangToolConfig{Bin: bin, BinRef: realBinRef(t, bin), Root: l.root,
+				PolicyPath: l.policyPath, CacheDir: l.cacheDir, RunCaps: testRunOp, Protected: protected}
+			// Start with an unprotected base to prove VerifyRunCaps itself renders it.
+			base, err := RenderEpisodePolicy(l.root, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(cfg.PolicyPath, base, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			h, err := NewAilangToolHandler(ctx, cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if enabled {
+				protected[0] = "caller-mutated/**"
+			}
+			check := func(path string) {
+				t.Helper()
+				data, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				deny := protectedPolicyDeny(t, data)
+				if enabled {
+					if !slices.Equal(deny[len(deny)-2:], []string{"tests/**", "*_test.go"}) {
+						t.Fatalf("%s: handler policy lacks protected trailing entries", filepath.Base(path))
+					}
+				} else if slices.Contains(deny, "tests/**") || slices.Contains(deny, "*_test.go") {
+					t.Fatal("nil handler unexpectedly rendered protected entries")
+				}
+			}
+			for _, caps := range [][]string{{"Env", "FS", "IO"}, {"IO", "Net"}} {
+				v, err := h.runVariantFor(ctx, caps)
+				if err != nil {
+					t.Fatal(err)
+				}
+				check(v.path)
+				cached, err := h.runVariantFor(ctx, caps)
+				if err != nil || cached.path != v.path {
+					t.Fatalf("cached variant: %v", err)
+				}
+				check(cached.path)
+			}
+			if enabled {
+				protected[0] = "tests/**"
+			}
+			if err := VerifyRunCaps(ctx, cfg); err != nil {
+				t.Fatal(err)
+			}
+			check(cfg.PolicyPath)
+		})
 	}
 }

@@ -165,6 +165,7 @@ func ValidateRunNetAllow(entry string) error {
 type runPolicySpec struct {
 	mode         string   // security_mode
 	caps         []string // allowed_caps, in rendered order
+	protected    []string // Already rebased fileguard patterns, appended after the built-in denies.
 	gitDeny      bool     // prepend trustedHostGitDeny to fs_deny_write
 	netAllow     []string // net_allow (rendered only when non-empty)
 	netAllowHTTP bool
@@ -184,10 +185,12 @@ func renderPolicy(root string, spec runPolicySpec) ([]byte, error) {
 			return nil, fmt.Errorf("broker: episode policy root %q has a character TOML would need escaped", root)
 		}
 	}
-	deny := episodeDenyWrite
+	deny := make([]string, 0, 1+len(episodeDenyWrite)+len(spec.protected))
 	if spec.gitDeny {
-		deny = append([]string{trustedHostGitDeny}, episodeDenyWrite...)
+		deny = append(deny, trustedHostGitDeny)
 	}
+	deny = append(deny, episodeDenyWrite...)
+	deny = append(deny, spec.protected...)
 	var b strings.Builder
 	b.WriteString(`security_mode = "` + spec.mode + `"` + "\n")
 	b.WriteString("allowed_caps = " + tomlStrings(spec.caps) + "\n")
@@ -210,14 +213,33 @@ func renderPolicy(root string, spec runPolicySpec) ([]byte, error) {
 	return []byte(b.String()), nil
 }
 
-// tomlStrings renders a TOML array of strings that need no escaping (cap
-// names, the fold-variant deny globs, validated IP:PORT literals).
+// tomlStrings renders TOML basic strings, preserving bytes for safe strings.
 func tomlStrings(xs []string) string {
 	quoted := make([]string, len(xs))
 	for i, x := range xs {
-		quoted[i] = `"` + x + `"`
+		quoted[i] = tomlString(x)
 	}
 	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
+// tomlString escapes TOML basic-string metacharacters and control runes.
+func tomlString(x string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range x {
+		switch {
+		case r == '\\':
+			b.WriteString(`\\`)
+		case r == '"':
+			b.WriteString(`\"`)
+		case unicode.IsControl(r):
+			fmt.Fprintf(&b, `\u%04X`, r)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
 }
 
 // runVariantSpec maps a requested cap set (canonical: sorted, distinct,
@@ -254,15 +276,17 @@ func runVariantSpec(caps []string, op RunCapsConfig) runPolicySpec {
 
 // RenderRunVariant renders the policy a run with exactly caps executes
 // under, for the episode worktree root and the operator's allowlist. caps
-// must be canonical (validateRunCaps).
-func RenderRunVariant(root string, caps []string, op RunCapsConfig) ([]byte, error) {
+// must be canonical (validateRunCaps); protected is already rebased to root.
+func RenderRunVariant(root string, caps []string, op RunCapsConfig, protected []string) ([]byte, error) {
 	if err := validateRunCaps(caps); err != nil {
 		return nil, err
 	}
 	if slices.Equal(caps, runBaseCaps) {
-		return RenderEpisodePolicy(root)
+		return RenderEpisodePolicy(root, protected)
 	}
-	return renderPolicy(root, runVariantSpec(caps, op))
+	spec := runVariantSpec(caps, op)
+	spec.protected = append([]string(nil), protected...)
+	return renderPolicy(root, spec)
 }
 
 // validateRunCaps requires a canonical, non-empty cap set.
@@ -328,6 +352,7 @@ func (h *AilangToolHandler) runVariantFor(ctx context.Context, caps []string) (r
 		return v, nil
 	}
 	spec := runVariantSpec(caps, h.runCaps)
+	spec.protected = append([]string(nil), h.protected...)
 	data, err := renderPolicy(h.root, spec)
 	if err != nil {
 		return runVariant{}, err
@@ -428,7 +453,7 @@ func (h *AilangToolHandler) verifyVariant(ctx context.Context, path string, data
 // (the daemon passes the workspace root); the files are the caller's to
 // remove.
 func VerifyRunCaps(ctx context.Context, cfg AilangToolConfig) error {
-	base, err := RenderEpisodePolicy(cfg.Root)
+	base, err := RenderEpisodePolicy(cfg.Root, cfg.Protected)
 	if err != nil {
 		return err
 	}

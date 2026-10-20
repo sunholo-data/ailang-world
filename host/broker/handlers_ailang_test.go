@@ -41,7 +41,7 @@ var measuredToolVersion = pins.VersionLine(pins.RoleTool)
 // ---------------------------------------------------------------------------
 
 func TestRenderEpisodePolicyHasExactlyTheDesignKeySet(t *testing.T) {
-	got, err := RenderEpisodePolicy("/w/root/ep1")
+	got, err := RenderEpisodePolicy("/w/root/ep1", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ FS = 1000
 		t.Fatalf("rendered keys = %v", keys)
 	}
 	for _, bad := range []string{"", "relative/ep1", "/w/root/../ep1", "/w/root/ep1/", `/w/"q"`, `/w/back\slash`, "/w/new\nline"} {
-		if _, err := RenderEpisodePolicy(bad); err == nil {
+		if _, err := RenderEpisodePolicy(bad, nil); err == nil {
 			t.Errorf("RenderEpisodePolicy(%q) accepted", bad)
 		}
 	}
@@ -590,7 +590,7 @@ func newRealFixture(t *testing.T, topology string) *realFixture {
 		"net.ail": progNet, "loop.ail": progLoop, "-policy.ail": progReadit} {
 		mustWrite(t, filepath.Join(f.root, name), src)
 	}
-	policy, err := RenderEpisodePolicy(f.root)
+	policy, err := RenderEpisodePolicy(f.root, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
