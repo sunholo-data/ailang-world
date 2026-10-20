@@ -3,6 +3,7 @@ package broker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -225,7 +226,9 @@ func TestProtectedCheckerRootAndBound(t *testing.T) {
 			t.Setenv("PROTECTED_PARENT_SECRET", "must-not-inherit")
 			body := "printf 'cwd=%s\\n' \"$PWD\" >> '" + envLog + "'\n/usr/bin/env >> '" + envLog + "'\n"
 			if name == "shared-phase-bound" {
-				body += "sleep 0.9\n"
+				// Derived from the bound (rule 3m): each of the four calls
+				// fits it alone, the four together exceed it by 40%.
+				body += fmt.Sprintf("sleep %.3f\n", protectedCheckTimeout.Seconds()*0.35)
 			}
 			body += "case \" $* \" in *' config '*) exit 1;; esac\n"
 			switch name {

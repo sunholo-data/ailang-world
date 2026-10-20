@@ -1869,3 +1869,115 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **17/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M6a, applying `protectedCheckTimeout`=3 751 ms and `protectedBaselineTimeout`=4 848 ms, then M6b. M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).
+
+## 291 — 2026-10-20 — row 156 M6a built: the protected baseline is captured once at NewExecHandler, with the bounded record shape (PR #338; judge r1 PASS 79 → r2 PASS 88 → r3 PASS 90) [PRODUCT]
+
+**Kind:** one code milestone of row 156 (M6a): production plus tests in `host/broker`, and one pin in `host/store`'s context-root inventory. No release, no semantic weakening, no design-direction change. Nothing is emitted into exec results yet; that is M6b.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 290's **Next** was row 156 M6a, with V24's bounds. Reality check:
+- No open PR from this loop.
+- No orphan worktree or branch for M6a.
+- `exec_protected_record.go` was absent at base, and `git log --grep M6a` showed nothing.
+- The plan was ready, so no designer or planner was spawned.
+- Attended row 188 work (#334–#337, "trial" episodes) merged during the day without touching row 156's files. #337's dogfood friction #22 names a row 156 load flake, carried below.
+
+**Clause map:** 1–7 all MET (deterministic kernel, local-first daemon, explicit authority, resident-agent floor, provenance value proof, protocol boundary, controlled self-modification).
+
+**Gate 0:**
+- Kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN.
+- #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (10 comments, all the loop's).
+- Self-notice scan rc 0 (control ok).
+- `mission-world` inbox: 0 unread (the read list returned rows, so the filter works).
+- The weekly sweep already ran this week (iteration 282). No thread rotation is due.
+
+**Gates 1–2:**
+- Local dev = origin/dev `d7c647d8` (#336 merge).
+- dev CI: 3/3 checks success on `d7c647d8`.
+- The running skill matches origin on SKILL.md and all 13 resource files, through both the resolved symlink and the pin copy.
+- Ledger valid, 74 rows, one OPEN (D-WORLD-86).
+
+**Baseline (pristine `d7c647d8`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):**
+- `go vet ./host/broker/` rc 0.
+- The M6a named tests select zero tests at base (absent, not a pass).
+- `go test -race ./host/broker/...` at Go's default 10-minute timeout panicked at 600 s, with `TestExecHandlerWorktreeDelta` running for 2 s. The rig was at load 37–49, and the package simply ran past 10 minutes. With `-timeout 1800s` the same package passed in 370 s on the M6a tree. CI gives that job 25 minutes.
+
+**Execute (codex gpt-6.1-sol, 1 run, 121,065 tok, rc 0, ~12 min):**
+- `captureProtectedBaseline` runs preflight, `rev-parse`, the mirror-filtered `ls-tree` digest (`<mode> <oid>\t<path>\n` in tree order) and the fold-keyed ignored snapshot (sorted keys, LF-terminated; the empty set hashes empty bytes). Any failure discards partial identities.
+- `protectedRecord`/`buildProtectedRecord` produce the bounded design block: 32 changes, `boundPathJSON`, nullable intact verdicts, error precedence baseline → before → after, a 4 KiB error cap.
+- `NewExecHandler` captures only for a non-empty set and keeps errors on the handler.
+- Bounds are 3 751 / 4 848 ms.
+- Unasked: `protectedGitPreflight` queries `git config` directly with the 8 MiB cap, closing the carried M4 judge finding. The refusal text no longer lists the filter names.
+- The executor killed the plan's 6 mutants plus 2 more (unwired, no-fold).
+- 552 added lines against the plan's 245 cap; recorded as a deviation.
+- The fixture Git repositories are built from hand-written loose objects (the directive forbade Git writes). The judge ruled them faithful: real `git` reads them.
+
+**Controller verification (outside any sandbox):**
+- Named rows 8/12/1 PASS and the M4 neighbours 34/34. Vet and gofmt clean.
+- **Found:** `TestProtectedCheckerRootAndBound/shared-phase-bound` slept 4 × 0.9 s = 3.6 s to force a timeout against a bound that is now 3 751 ms. That leaves ~150 ms of spawn overhead, so it passed here only because the rig was loaded and would likely go red on an idle runner. Fixed `123f666e`: each call sleeps 0.35 × the bound. `TestProtectedV24BoundsApplied` pins 3 751 / 4 848 ms.
+- 10 own wiring mutants, 9 killed. The survivor (drop the final `ctx.Err()`) is equivalent.
+- **Found:** `./scripts/verify_go.sh` on `555cc281` was red on `host/store` `TestProductionContextRoots`, because the new `context.Background()` did not feed `WithTimeout` and was not pinned. CI would have caught it; nothing in the plan or the executor's gate list did. `host/verifygate` timed out at 10 min in the same run; it does not import `host/broker`, so that is load.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter291`; generator codex ≠ judge sonnet; the controller's fixes are same-vendor as the judge, FLAGGED, mitigated by the judge re-mutating every fix):**
+- **r1 PASS 79**, zero blocking. Gates rc 0, 49 PASS. ~65 own mutants.
+- r1 survivors:
+  - The preflight rewrite was undefended (revert it wholesale: all green).
+  - Both over-cap rows were vacuous (NUL filler fails the parse with or without the cap).
+  - Removing the ignored-key sort survived 7 of 7.
+  - The record's identity values and JSON tags were unasserted.
+  - The ignored-leg mirror filter was never exercised.
+  - The outer bound constant was untested.
+  - A flat tree left `-r` untested.
+- **Fix `4c8d8933`** (controller; each survivor re-run as a mutant, all killed):
+  - The context root feeds `WithTimeout(protectedBaselineTimeout)` and is pinned.
+  - `protectedKeysDigest` was extracted, with a sort test that builds the set in reverse 64×.
+  - Non-NUL over-cap filler, plus `ErrHandlerOverflow` asserts.
+  - An `info/exclude`d `x.text` that the widened pathspec selects and the mirror rejects.
+  - `pkg/c_test.go` in the fixture. The judge recomputed the new literal outside Go: byte-identical.
+  - `TestProtectedRecordGolden`, for glob and dirs-only.
+- **r2 PASS 88**, zero blocking. Finding A: the new outer bound and the capture's inner bound masked each other, so a wrong or removed bound on either side survived.
+- `verify_go.sh` on `4c8d8933`: every package passed in the non-race leg (daemon 322.9 s vs 324.2 s before, so no slowdown). The race leg hit the 8-minute per-package timeout on broker, daemon and verifygate (load ~25). In that leg the redesigned `construction-timeout` row went red: its first 0.4 s leg overran the 1 s bound.
+- **Fix `88071ca8`:**
+  - One bound: the capture uses the caller's root-fed deadline.
+  - `construction-timeout`: config and rev-parse are instant, then two 1.2 s legs against a 2 s bound. 5/5 under `-race`.
+  - Wrong-constant, 24 h and fresh-per-leg mutants are all killed.
+- **r3:** **PASS 90**, zero blocking. The delta is exactly as described. `captureProtectedBaseline` has one production caller, and every leg still carries a per-leg `execTimeout`. Removing the inner bound is ruled safe. Outer-bound mutants (wrong constant, 24 h, removed, 1 ns, 300 ms) and fresh-per-leg mutants are all killed. New cosmetic finding: an expired construction ctx reports the pre-existing `HandlerTimeoutError` text ("timed out after 30s"), not the real bound.
+
+**Result:** M6a built. 18 of 24 row-156 milestones are done (M5c/M5d held on D-WORLD-86). The sprint JSON also gets M5e set to done; it read `planned` despite landing in iteration 289.
+
+**Gate 3b:** PR #338 (`sprint/world-iter291-row156-m6a`). CI on `88071ca8`: `ailang-code verify gate` pass; the go host and race jobs were still running when this record was written (outcome in the report and on the merge commit). The record rides the same PR. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=2284096eedfd784751d462f06f322106de1a39b6@2026-10-20T20:54:14Z (Gate 4; Gate 1 read `d7c647d806c0be8bb33f58201267d75bc448211e` at 2026-10-20T19:28:02Z; origin/dev advanced by attended #337, which touches no file in this PR).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: the design is ready. The resolver said `recipe claude:claude-opus-5-5 declared:provider-pin`.
+- Planner not spawned: the plan is ready. The resolver said `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`.
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin` (1 run, 121,065 tok; probe rc 0).
+- Evaluator `agent-tool sonnet declared:alias-pin` (r1 114,824 + r2 141,388 + r3 152,841 subagent tok).
+- judge-independence: cross-vendor for the executor's code; same-vendor (Anthropic) for the controller's three fix commits, mitigated because the judge re-ran them as mutants.
+- Metered **$0.00** (no quorum, no pi).
+- Every required role for this pick ran.
+
+**Ruled out:**
+- Reading the base `-race` panic as a red: the package outran Go's 10-minute default under load, and it passes with an explicit bound.
+- Attributing the `host/verifygate` timeouts to this diff: verifygate does not import `host/broker`.
+- Attributing the race-leg broker/daemon timeouts to the new capture: the non-race leg's daemon time is unchanged (322.9 s vs 324.2 s).
+- Keeping the double construction bound "for safety": each bound hid the other's mutants.
+- Reverting the preflight rewrite: the judge ruled it correct and in scope, and the r1 fix now defends it. The filter names are dropped from the refusal text, which is accepted (callers match only the `WorktreeFilterRefused` prefix).
+
+**Carried (non-blocking):**
+- From the judge: capture legs' Git env unasserted (shared `gitEnv()`); `--full-tree` equivalent at the repo root; the error cut can split a rune (`json.Marshal` → U+FFFD); LOC over cap.
+- From #337's dogfood friction #22: `TestExecProbeArm8FailsUnsandboxed/darwin-create-forged` times out at the 8 s handler budget under a loaded full suite. Candidate: size arm 8's probe budget for a loaded host, as V24 sized the phase bounds.
+
+**Retro:**
+- **Skill lane:** none (World does not edit the shared skill).
+- **Process lane:**
+  - Changing a bound constant must sweep every test whose STIMULUS was sized against the old value. A timeout test with a fixed sleep turns marginal silently when its bound grows (rule 3m).
+  - Run the repo's whole `verify_go.sh` before judging, not only the plan's named gates. The plan's gate list could not see a repo-wide guard (`TestProductionContextRoots`) that any new `context.Background()` trips.
+  - A timing row redesigned to kill a constant mutant must also be checked under load and `-race` before landing. My first redesign went red within the hour.
+- **Process lane:** in zsh, `rm -f prefix.*` with no match broke an `&&` chain for the second time (iteration 288 lesson). Used exact paths after that.
+- **Backlog lane:** row 156 gains a carried candidate (arm 8 probe budget under load, friction #22).
+- Harness share over the latest 20 including 291: **0/20**.
+- The last three landings (291, 290, 289) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **18/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M6b: attach the before/after integrity to exec results while preserving the command deadline (the child budget becomes `min(timeout_ms, until(deadline) − protectedCheckTimeout)`), then M6c. M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).

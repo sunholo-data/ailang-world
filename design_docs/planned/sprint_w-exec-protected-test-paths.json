@@ -2589,7 +2589,7 @@
       "allowlist": [
         "host/daemon/workspace_protected_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestWorkspaceWriteProtectedAliasesPolicyTool"
       ],
@@ -3216,7 +3216,7 @@
         "host/broker/handlers_exec.go",
         "host/broker/exec_protected_check.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecProtectedBaseline",
         "TestExecProtectedBaselineFailure",
