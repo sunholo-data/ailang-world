@@ -137,8 +137,9 @@ type ExecHandler struct {
 	settingsDigest string
 	maxOutput      int64
 	seedMu         sync.Mutex
-	// spawns counts every subprocess this handler starts (cache seeding and
-	// srt). A refusal or a drifted stack leaves it unchanged (AC2.4, AC2.9).
+	baseline       *protectedBaseline
+	// spawns counts cache seeding and srt, excluding baseline Git calls.
+	// A refusal or a drifted stack leaves it unchanged (AC2.4, AC2.9).
 	spawns atomic.Int64
 }
 
@@ -190,6 +191,10 @@ func NewExecHandler(cfg ExecHandlerConfig) (*ExecHandler, error) {
 		return nil, err
 	}
 	h.settings = data
+	if len(cfg.Profile.Protected) > 0 {
+		baseline := captureProtectedBaseline(context.Background(), "", cfg.Worktree, cfg.Profile.Protected)
+		h.baseline = &baseline
+	}
 	return h, nil
 }
 

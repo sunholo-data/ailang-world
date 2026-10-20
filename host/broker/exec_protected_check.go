@@ -9,19 +9,24 @@ import (
 
 // protectedGitPreflight refuses config-defined host commands before status.
 func protectedGitPreflight(ctx context.Context, git, root string) error {
-	filters, err := configuredGitFilters(ctx, git, root)
+	stderr := newBoundedSink(4096)
+	out, err := runBounded(ctx, handlerBounds{execTimeout: protectedBaselineTimeout, maxOutputBytes: protectedCheckMaxOutput},
+		handlerCommand{path: git, args: []string{"-c", "core.fsmonitor=false", "config", "--null", "--get-regexp", `^filter\.`}, dir: root, env: gitEnv(), stderr: stderr})
 	if err != nil {
-		return fmt.Errorf("protected Git filter query: %w", err)
+		if code, exited := handlerExitStatus(err); exited && code == 1 && len(out) == 0 {
+			return nil
+		}
+		return fmt.Errorf("protected Git filter query: %w (stderr %q)", err, stderr.Bytes())
 	}
-	if len(filters) > 0 {
-		return fmt.Errorf("%s: %s (git status would run a configured command)",
-			WorktreeFilterRefused, strings.Join(filters, ", "))
+	if len(out) == 0 || out[len(out)-1] != 0 {
+		return fmt.Errorf("protected Git filter query: malformed output")
 	}
-	return nil
+	return fmt.Errorf("%s (git status would run a configured command)", WorktreeFilterRefused)
 }
 
-// protectedCheckTimeout is the provisional phase bound; M6-pre (V24) resizes it.
-var protectedCheckTimeout = 2500 * time.Millisecond
+// Design V24, iteration 290: measured maxima times 1.5, rounded up.
+var protectedCheckTimeout = 3751 * time.Millisecond
+var protectedBaselineTimeout = 4848 * time.Millisecond
 
 type protectedCheck struct {
 	intact  *bool
