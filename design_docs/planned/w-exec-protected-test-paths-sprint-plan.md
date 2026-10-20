@@ -133,7 +133,7 @@ The new mode exits before legacy HOME/decoy/archive setup. Test 16 operation arm
 | M5c | World pre-check: resolved-path refusal | 250 | 30 | M5b | held:D-WORLD-86; build only B, dropped A |
 | M5d | World pre-check: multi-link refusal | 250 | 30 | M5c | held:D-WORLD-86; build only B, dropped A |
 | M6-pre | Measure V24 and size phase/construction bounds | 200 | 30 | M5b, M1d | done (iteration 290; harness 361 lines, over the 200 target) |
-| M6a | Capture the immutable episode baseline and bounded record shape | 245 | 30 | M6-pre | planned |
+| M6a | Capture the immutable episode baseline and bounded record shape | 245 | 30 | M6-pre | done (iteration 291, PR #338; ~660 lines, over the 245 cap; bounds 3751/4848 ms applied) |
 | M6b | Attach before/after integrity while preserving the command deadline | 245 | 30 | M6a | planned |
 | M6c | Kill tamper, ignored-file, flag and moved-HEAD mutants; pin replay | 245 | 30 | M6b | planned |
 | M7a | Show intact, changed, unchecked and unprotected runs in why | 230 | 30 | M6c | planned |
@@ -1033,7 +1033,7 @@ No `.ail` changes; no AIL verification. Full package acceptance requires contain
 
 ### M6a — Capture the immutable episode baseline and bounded record shape
 
-Design M6; **245 LOC total / 30 min**, own PR/evidence boundary, depends on M6-pre. Status **planned**.
+Design M6; **245 LOC total / 30 min**, own PR/evidence boundary, depends on M6-pre. Status **done** (iteration 291, PR #338: `captureProtectedBaseline` under a caller-supplied root-fed `protectedBaselineTimeout`, `protectedKeysDigest`, `protectedRecord`/`buildProtectedRecord`; named tests plus `TestProtectedV24BoundsApplied`, `TestProtectedIgnoredDigestSorted`, `TestProtectedRecordGolden`; the `context.Background()` root pinned in `host/store` `TestProductionContextRoots`, a file outside this allowlist).
 
 **Files + allowlist:** `host/broker/exec_protected_record.go`, `host/broker/exec_protected_record_test.go`, `host/broker/handlers_exec.go`, `host/broker/exec_protected_check.go`. No other files. Future files/tests are absent at base unless explicitly stated.
 
