@@ -75,6 +75,9 @@ takes; the token itself is never printed).
 whole episode once a daemon is serving. See [Start a whole episode in one
 act](#start-a-whole-episode-in-one-act) at the end of §1.
 
+To run a coding agent on your own repo, follow [Use World on your repo](USE_WORLD_ON_YOUR_REPO.md),
+which puts these steps in order.
+
 **Two snags, both handled:**
 - **IDE terminal panes work as they are.** Both commands open `/dev/tty` themselves and ask
   there, so you no longer need to add `< /dev/tty`. It is still accepted, and reads the same

@@ -217,6 +217,13 @@ Option A is what row 188 (a desktop approval) and row 196 (delegated minting for
 - **M5 — DONE (2026-10-20, episode w189d; §8d):** the plugin: two skills, three commands,
   marketplace manifest, and the CI help-check.
 - **M6:** docs (QUICKSTART §0 and a new "Use World on your repo" page), then the AC7 attended run.
+  - **Docs half DONE (2026-10-20, episode w189e):** `docs/USE_WORLD_ON_YOUR_REPO.md`, linked
+    from `README.md`, QUICKSTART §0 and the plugin README. Its `ailang-worldd` lines are checked
+    against the CLI help by `TestUseWorldPageCommandsMatchTheCLIHelp`
+    (`cmd/ailang-worldd/use_world_page_test.go`, reusing `checkWorlddLine`). It counts six
+    human acts per episode against P1's eleven.
+  - **Still to come: AC7**, the attended run on platform-source that follows the page verbatim
+    and counts the operator's steps.
 
 ## 8a. M0 findings (row 189, 2026-10-19, read before the M1 change; lines are pre-change)
 

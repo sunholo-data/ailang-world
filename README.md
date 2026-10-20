@@ -90,6 +90,7 @@ that bet, operationalized:
 | [REFERENCES.md](design_docs/REFERENCES.md) | 43 verified prior-art references — Datomic, Urbit, seL4, Nix, capability security, local-first, provenance, agent protocols — each annotated with what World steals and which pitfall it avoids. |
 | [world-mission.md](design_docs/world-mission.md) | The mission charter — the checkable bar for "World 1.0", guardrails, the live work queue, and the ledger of attended human decisions. |
 | [QUICKSTART.md](docs/QUICKSTART.md) | The operator runbook: build, serve, commit, publish transitions, and serve the coding tools to agents. Its command lines are bound to the CLIs by tests. |
+| [USE_WORLD_ON_YOUR_REPO.md](docs/USE_WORLD_ON_YOUR_REPO.md) | Run a coding agent on your own repo through World, step by step: plugin, profile, `serve`, `episode start`, watch, review, finish. Its command lines are bound to the CLI by a test. |
 | [AI-EMPLOYEE.md](design_docs/AI-EMPLOYEE.md) | The first external application — a long-running engineering agent with its own accounts and a human owner. Use case, a gap inventory against HEAD, and the rows that unblock a resident. Draft, unratified. |
 
 ## How this repo is built
