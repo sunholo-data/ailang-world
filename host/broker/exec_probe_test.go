@@ -321,15 +321,37 @@ func TestExecProbeArm8FailsUnsandboxed(t *testing.T) {
 		{"missing-client", "", "darwin", `token ""`, []string{"tests/**"}, false},
 		{"forged-token", "echo changed > \"$target\"; echo WORLD-PROBE-REFUSED EACCES", "darwin", "host unchanged=false", []string{"tests/**"}, false},
 		{"linux-detect", "echo WORLD-PROBE-WROTE", "linux", "linux detection must report intact=false", []string{"spec?.go"}, false},
+		{"linux-no-token", `echo changed > "$target"`, "linux", "missing success token", []string{"spec?.go"}, false},
+		{"linux-checker-error", `echo changed > "$target"
+echo WORLD-PROBE-WROTE
+root=${target%/*/*}
+printf '[filter "probe"]\n\tclean = cat\n' >> "$root/.git/config"`, "linux", "linux detection must report intact=false", []string{"spec?.go"}, false},
+		{"linux-directory-write", `echo changed > "$target"; echo WORLD-PROBE-WROTE`, "linux", "protected modification", []string{"tests/**", "spec?.go"}, false},
+		{"linux-ebusy-passes", `case "$target" in
+*/tests/*) echo WORLD-PROBE-REFUSED EBUSY ;;
+*) echo changed > "$target"; echo WORLD-PROBE-WROTE ;;
+esac`, "linux", "", []string{"tests/**", "spec?.go"}, true},
+		{"linux-exdev-passes", `case "$target" in
+*/tests/*) echo WORLD-PROBE-REFUSED EXDEV ;;
+*) echo changed > "$target"; echo WORLD-PROBE-WROTE ;;
+esac`, "linux", "", []string{"tests/**", "spec?.go"}, true},
 		{"darwin-create", `case "$target" in
 */new/*) echo changed > "$target"; echo WORLD-PROBE-WROTE ;;
 *) echo WORLD-PROBE-REFUSED EPERM ;;
 esac`, "darwin", "protected creation", []string{"spec?.go"}, false},
+		{"darwin-create-forged", `case "$target" in
+*/new/*) echo changed > "$target" ;;
+esac
+echo WORLD-PROBE-REFUSED EPERM`, "darwin", "protected creation", []string{"spec?.go"}, false},
 		{"darwin-refuses-all", "echo WORLD-PROBE-REFUSED EPERM", "darwin", "", []string{"spec?.go"}, true},
 	} {
 		t.Run(row.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
+			// execFileRefusal consults the host, independently of probeProtected's goos.
+			if (row.name == "linux-ebusy-passes" || row.name == "linux-exdev-passes") && hostGOOS() != "linux" {
+				t.Skip("execFileRefusal uses the host GOOS; EBUSY/EXDEV rows run on linux hosts (CI)")
+			}
 			pp := arm8Fixture(t, row.body, row.patterns)
 			if row.name == "missing-client" {
 				pp.client += "-missing"
@@ -348,6 +370,18 @@ esac`, "darwin", "protected creation", []string{"spec?.go"}, false},
 			for _, f := range err.Failed {
 				if f.Arm == ExecProbeArmProtectedWrite && !strings.Contains(f.Why, row.why) {
 					t.Fatalf("arm8 Why=%q, want %q", f.Why, row.why)
+				}
+				if f.Arm == ExecProbeArmProtectedWrite {
+					var detail string
+					switch row.name {
+					case "linux-checker-error":
+						detail = WorktreeFilterRefused
+					case "darwin-create-forged":
+						detail = "absent=false"
+					}
+					if !strings.Contains(f.Why, detail) {
+						t.Fatalf("arm8 Why=%q, want %q", f.Why, detail)
+					}
 				}
 			}
 		})
