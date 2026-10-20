@@ -130,6 +130,11 @@ No brane is amber.
   filled amber;
 - inputs you have set or changed turn amber, and so does the one button that proposes them.
 
+**Time in words.** Every time on the surface reads the way people say it ("6 min ago",
+"2 h ago", "yesterday 17:29", "17 days ago"), measured from when the state landed. The open
+card adds the exact time beside it, and items that need you say how long they have waited
+("AC7 · waiting 6 min"). The timeline axis keeps clock times, because it is an axis.
+
 Text is kept to labels and numbers. Checks are tiles, outputs are file names, decisions are a
 few words each, and the proposal bar appears only when there is something to propose.
 
