@@ -1752,3 +1752,120 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **16/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M6-pre (V24 real-worktree timing of the integrity legs on sunholo-platform and ailang, then size the bounds), then M6a. M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).
+
+## 290 — 2026-10-20 — row 156 M6-pre built: design V24 measured on installed worktrees; protected-check bounds re-sized to 3 751 / 4 848 ms (PR #333; judge r1 PASS 78 → r2 PASS 86) [PRODUCT]
+
+**Kind:** one measurement milestone of row 156 (M6-pre): a test-only harness, controller-run evidence, and a design and plan amendment. No production code changed. No release, no semantic weakening, no design-direction change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 289's **Next** was row 156 M6-pre. Reality check:
+- No open PR from this loop.
+- No orphan worktree for M6-pre; `exec_protected_v24_test.go` and `world-row156-v24/` were absent at base.
+- An attended session merged the row 188 re-scope earlier today (D-WORLD-87 RESOLVED attended, provenance `Mark Edmondson` commit `4a6789ac`; design PR #331, S1 plan PR #332). Row 188's S1 is marked attended ("as World episodes"), so the loop does not take it, and it does not change the 156 → 150 → 151 order.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:**
+- Kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN.
+- #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (9 comments, all the loop's).
+- Self-notice scan rc 0 (control 107:4 ok).
+- `mission-world` inbox: 1 unread, iteration 289's own claim note.
+- The weekly sweep already ran this week (iteration 282). No thread rotation is due.
+
+**Gates 1–2:**
+- Local dev = origin/dev `17c28324` (#332 merge).
+- CI success on `adffe4c1`; on `17c28324` it was in progress at Gate 1, with the race and verify jobs green.
+- The running skill matches origin on SKILL.md and all 13 resource files. My first per-file loop printed DIFF for every resource because it passed bare filenames as `resources/` paths. That was an instrument failure; I re-ran it with the right paths and every file read SAME.
+- Ledger valid, 74 rows, one OPEN (D-WORLD-86).
+
+**Scratch (controller, outside any sandbox, `~/.ailang/state/world-row156-v24/scratch`):**
+- Disposable `git clone --shared --no-checkout` copies of sunholo-platform `fe80714f` and ailang `f0f7df204`. Sharing makes the clones read the source objects without writing to the source repositories.
+- One `git worktree add --detach … HEAD` per clone.
+- The real checkouts' ignored entries were APFS-clone-copied in (`cp -cRp`, 18 s and 32 s). Agent and mission state, `.env` files and one untracked-not-ignored directory were excluded. That left 51 / 206 entries and 93 732 / 107 711 ignored files.
+- Manifests in `<project>.deps`.
+- Patterns: V23's sets. The live profiles carry no `protected` key (0 hits across `~/.ailang-world-exec/profiles/*.json`).
+
+**Baseline (pristine `17c28324`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./host/broker/` rc 0; broker `-race` rc 0.
+
+**Execute (codex gpt-6.1-sol, 1 run, 159,781 tok, rc 0):**
+- `TestProtectedV24RealWorktree`, with three always-on synthetic arms and a `measurement` arm that SKIPs unless `WORLD_PROTECTED_V24_ROOT` is set.
+- Per project: 1 discarded warm-up, 20 warm samples, and 20 cold samples. Each cold sample is a fresh `worktree add` with the dependency entries renamed in; construction runs, then one phase, then everything is restored.
+- A post-snapshot dependency arm.
+- The production `checkProtected` is the verdict authority at its own 2 500 ms bound.
+- The executor killed the plan's three mutants. Its in-sandbox measurement was not used as evidence (UNINFORMATIVE UNDER SANDBOX), and it left the scratch restored.
+- 330 lines against the plan's 200 target.
+
+**Controller verification:**
+- Read the harness.
+- Own mutant: accepting a CHANGED verdict survived the always-on suite. Fixed with two `reject-null` rows; the mutant is now killed.
+- Measured outside the sandbox, twice: both PASS. Run 1's slowest phase was 1 958 ms (ailang cold) and slowest construction 1 583 ms. Run 2's were 1 066 / 1 331.
+- Install order: QUICKSTART tells the operator to install dependencies before the session, and the handler is built lazily on the episode's first exec call (`host/daemon/workspace.go` `execHandler`). Nothing enforces the order. The post-snapshot arm, in every run, shows a later ignored protected file reporting `intact: false`, status `ignored`, and `intact: true` again once removed (R-156-6).
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter290`; generator codex ≠ judge sonnet; the controller-authored design text and measurements are same-vendor as the judge, FLAGGED, mitigated because the judge re-ran the measurement itself):**
+- **r1 PASS 78**, zero blocking.
+- The judge ran two measurements:
+  - Run A, with its own mutation fixtures running at the same time, FAILED closed: one production check timed out (`null`); phase max 2 501 ms; construction max 3 232 ms, above the 3 200 floor.
+  - Run B PASSED.
+- 29 own mutants; 13 survivors, mostly wiring:
+  - The cold class was unguarded: three mutants made it identical to warm.
+  - The P50-for-P95 swap, the P95-for-Max swap, a dropped phase leg, a dropped sample-count check and a 1.0 bound factor all survived.
+- I verified run A from its JSON before acting on it.
+- **Fix `05445bc5`:**
+  - Bounds are now sized over ALL five runs. Run A is not excluded; dropping the run that disagrees would be cherry-picking.
+  - `v24Bound` and six synthetic rows. All six unit mutants were killed by named subtests, with byte-identical restore.
+  - Cold-class guard: a sample's root and ignored snapshot (count + digest) must match. A cold-root mutant now fails on the first cold sample, and the scratch was restored after that mid-run fatal.
+  - Controller run 3 on the final harness: PASS.
+  - Prose fixed: ignored share 60–95 %, R-156-8 budget arithmetic.
+- **r2 PASS 86**, zero blocking.
+  - Re-derived both bounds and every quoted number from `result.json`.
+  - Its two doc nits are verified and fixed in the record commit: the construction max is the sample whose check then timed out, and a stale §4.5 sentence.
+- Remaining survivors are cosmetic: preflight timing, parse snapshot, census, and arm `before`.
+
+**Result (design V24, `design_docs/verification/world-row156-v24/`):**
+- Runs 1–3 and B: 320/320 samples intact. Run A: 1 `null`.
+- Slowest phase / construction per run: 1 958 / 1 583; 1 066 / 1 331; 954 / 1 052; **2 501 / 3 232** (A); 1 779 / 1 842 (B).
+- Bounds, max × 1.5 rounded up: phase **3 751 ms** (provisional 2 500); construction **4 848 ms** (provisional 3 200).
+- A protected command keeps ≈ 3.7–5.9 s of the 10 s handler deadline.
+- The ignored leg is 60–95 % of a phase. On ailang it walks `docs/node_modules`, which is 2.5 GB.
+- Plan: V24 row MEASURED, M6-pre done, M6a/M6b constants stated, JSON status done.
+
+**Gate 3b:**
+- PR #333 (`sprint/world-iter290-row156-m6pre`). CI on the first push `0637d1b3`: all 3 jobs SUCCESS.
+- Fix and record ride the same PR. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=17c283243260fdf7ec1a5a23197f40a872e20282@2026-10-20T16:43:10Z (Gate 4; Gate 1 read the same SHA at 15:26:24Z).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: the evidence-only V24 entry is controller-authored by the plan's own terms. The resolver said `recipe claude:claude-opus-5-5 declared:provider-pin`.
+- Planner not spawned: the plan was ready. The resolver said `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`.
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin` (1 run, 159,781 tok; probe rc 0).
+- Evaluator `agent-tool sonnet declared:alias-pin` (r1 97,158 + r2 121,616 = 218,774 subagent tok).
+- judge-independence: cross-vendor for the executor's harness; same-vendor (Anthropic) for the controller's measurements and design text, mitigated by the judge's own two measurement runs.
+- Metered **$0.00** (no quorum, no pi).
+- Every required role for this pick ran.
+
+**Ruled out:**
+- Sizing the bounds from controller runs 1–3 only (2 937 / 3 200). Run A is a real V24 observation under load, and the 1.5× margin over one unloaded run did not cover it.
+- Treating "every run passed" as load-proof: run A failed closed.
+- Copying the V1 checkout's agent state into the scratch: `.claude/`, `.ailang/state/` and `.eval_workspace/` were excluded.
+- `git worktree add` straight off the live source checkouts: disposable shared clones were used, per the plan.
+- Claiming "OS-cold": the page cache was not purged. "Cold" means a fresh worktree's first Git access.
+
+**Retro:**
+- **Skill lane:** none (World does not edit the shared skill).
+- **Process lane:**
+  - When a bound is sized from "observed max × k", the judge's own reproduction under different load is a sample of the same distribution. Fold it in, don't explain it away. Here the 1.5× margin over the controller's runs did not cover the judge's run.
+  - A harness whose acceptance takes its bound from the same samples is partly tautological. Its real gates are the verdict checks and the floors, so mutate those first.
+- **Process lane:** my resource-file drift loop passed bare filenames. Every DIFF it printed was the instrument, which the identical-SHA HEAD vs origin/dev check exposed. Build compared paths from the same root the `git show` uses.
+- **Backlog lane:** none new. Carried items stay on row 156's M6-pre line.
+- Harness share over the latest 20 including 290: **0/20**.
+- The last three landings (290, 289, 288) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **17/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M6a, applying `protectedCheckTimeout`=3 751 ms and `protectedBaselineTimeout`=4 848 ms, then M6b. M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).

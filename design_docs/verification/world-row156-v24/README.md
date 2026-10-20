@@ -59,7 +59,8 @@ Run 1 p95 / max per class, phase then construction, in ms:
 
 - Phase: **3 751 ms**.
 - Construction: **4 848 ms**.
-- Both maxima come from run A. Runs 1–3 alone would have given 2 937 / 3 200.
+- Both maxima come from run A, ailang cold. The 2 501 ms phase is an intact sample. The 3 232 ms construction is sample 17, whose production check then timed out (`null`), so the construction bound is sized from a failed sample and errs long.
+- Runs 1–3 alone would have given 2 937 / 3 200.
 - So the 1.5× margin over one unloaded run did not cover one loaded run. These bounds are not load-proof. An over-bound check records `error` / `null`, never intact.
 
 **The ignored leg** is 60–95 % of a phase. On ailang it walks `docs/node_modules`, which is 2.5 GB.
