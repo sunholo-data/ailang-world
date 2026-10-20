@@ -745,6 +745,16 @@ FS = 1000
 		if deny[len(deny)-1] != original || !strings.Contains(string(got), `back\\slash\u0000`) {
 			t.Fatal("backslash/control escaping did not round trip")
 		}
+		// encoding/json accepts a raw DEL, TOML basic strings do not: pin the
+		// escape and refuse any raw C0 control or DEL outside the line breaks.
+		if !strings.Contains(string(got), `\u007F`) {
+			t.Fatal("DEL is not escaped")
+		}
+		for _, r := range strings.ReplaceAll(string(got), "\n", "") {
+			if r < 0x20 || r == 0x7f {
+				t.Fatalf("raw control rune %U in rendered policy", r)
+			}
+		}
 	})
 }
 
