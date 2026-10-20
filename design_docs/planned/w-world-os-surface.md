@@ -150,9 +150,23 @@ kept per viewer on that device:
   - Action orange for the human.
 
   *Night* is the earlier dark look. *Match system* picks Paper or Slate from the OS setting.
-- **Brane marks:** *Shape* (the brand default: slate glyphs, so colour is never the only
-  signal) or *Shape and colour*.
+- **Brane marks:** *Shape and colour* (default) or *Shape*, which gives slate glyphs only.
 - **Motion:** *Full* or *Reduced*. The default follows the OS's reduced-motion setting.
+
+**A UI layer on the Sunholo palette.** The brand palette is built for pages and documents. A
+working surface needs a little more, so the themes add a small layer, documented as an extension
+of the guide rather than new brand colours:
+
+| token | value | use |
+|---|---|---|
+| slate tints | `#EDF1F4` stage, `#F6F8FA` lane bands and column heads | structure without shadows |
+| orange tint | `#FDF1EE` | fills for your inputs and the proposal bar |
+| brane accents | harbour blue `#2F6690`, sage `#3F7A5E`, plum `#6B4F8A`, each ≥5:1 on white | glyphs, and the matching actor pills (Agent, Loop, Review) |
+| logo coral | `#F9A697`, from the Sunholo mark | the prompt and messages on the slate header |
+
+Structure comes from the brand's own slate emphasis: a slate header band, a slate bar on the
+open card, alternating lane bands, and a header strip on each card column. Orange stays the
+human's alone, and glyph shapes remain, so colour is never the only signal.
 
 The header carries the AILANG mark with "World", on a white tile as the guide requires on any
 surface. The Sunholo mark appears in the Appearance panel.
