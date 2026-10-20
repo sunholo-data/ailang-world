@@ -149,12 +149,27 @@ leads. **The front card is the state itself, fully open**, so there is no "go in
 | **Decisions** | the mint, its grants and TTL, questions the agent asked and the answers, refusals, review rounds, the merge | typed mint, 12 h; read and write in the worktree, exec ×600 (6 used); 0 refusals; "merge 329"; session revoked |
 | **Checks** | graders, mutants caught, CI, judges, calls and minutes | 8/8 in 1 round; 3 help-check mutants caught; 42 calls, 3.5 agent minutes |
 
-**Moving.** *Back in time* and *toward now* step along **this brane only**. That is why
-navigation never has to choose between ancestors. Leaving the brane is always explicit: click
-a *came from* or *led to* link, and the stack becomes that state's brane, with that state in
-front. At a merge (a shared state with two ancestors), *back* follows the shared world. The
-other ancestor is a link, one click away, and so is its brane. A rail lists every state on the
-brane, so you can jump to any of them.
+**The stack shows the history, not just the brane.** Behind the front card is one receding
+column for each line of history that flowed into it. Ahead of it is one tab for each state it
+led to.
+
+- **Behind.** A merge shows two columns. A step shows its own brane, plus every other brane
+  whose work reached the shared world between this brane's previous step and this one.
+  Measured on the board:
+  - w189e: onboarding, and the loop's iteration 288 (the merge into `9003555`);
+  - w189d: onboarding, w198, and loop iterations 285–287, all landed between w189c and
+    w189d's start at `0ee1945`.
+- **Ahead.** A branch point shows several tabs. `0ee1945` has three: the next shared state,
+  w189d, and iteration 288, which both left from there.
+- **Moving.** ↑ and ↓ step along **this brane only**, so navigation never has to choose
+  between ancestors. Leaving the brane is always explicit:
+  - click a card in another column;
+  - click a tab ahead;
+  - click a *came from* or *led to* link.
+
+  The stack then becomes that brane, with that state in front. At the end of a brane, ↓
+  follows on into the state it led to. A rail lists every state on the brane, so you can jump
+  to any of them.
 
 **The one action: change from here.** The front card's **inputs are live controls**: the agent,
 the task, the grants. Change from here is not a button or a mode; it is what happens when you
