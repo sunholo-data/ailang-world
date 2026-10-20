@@ -582,6 +582,9 @@ func TestExecProtectedCheckTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			git := recordEnv(t)
 			bound := 2 * time.Second
+			if name == "before-only" {
+				bound = 15 * time.Second // Error precedence, not scheduling: a loaded rig must not time out the after-phase.
+			}
 			recordPhaseBound(t, bound)
 			f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
 			marker := shellQuote(filepath.Join(t.TempDir(), "first-status"))
@@ -621,32 +624,25 @@ func TestExecProtectedCheckTimeout(t *testing.T) {
 		bound := 3 * time.Second
 		recordPhaseBound(t, bound)
 		f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
-		dir := t.TempDir()
-		marker, delta := shellQuote(filepath.Join(dir, "command")), shellQuote(filepath.Join(dir, "delta"))
-		// Delay only row 184's first snapshot, which follows budget computation.
-		body := fmt.Sprintf("if [ \"$1\" = -C ] && [ ! -f %s ]; then touch %s; sleep %.3f; fi\n", delta, delta, (bound * 11 / 4).Seconds())
-		body += fmt.Sprintf("if [ \"$1\" = -c ] && [ \"$3\" = status ] && [ -f %s ]; then sleep %.3f; fi\n", marker, (3 * bound).Seconds())
-		fake, _ := protectedFakeGit(t, body+"exec "+shellQuote(git)+" \"$@\"")
-		recordSwapGit(t, fake)
-		// The command marks the transition; neither baseline nor before-check sleeps.
-		m := defaultExecProfile(f)
-		m["protected"] = recordPatterns
-		m["commands"].(map[string]any)["mark"] = map[string]any{"argv": []string{"/bin/sh", "-c", "touch " + marker + "; printf '[a]'"}}
-		data, _ := json.Marshal(m)
-		var err error
-		f.profile, err = ParseExecProfile(data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		f.h, err = NewExecHandler(ExecHandlerConfig{Profile: f.profile, Sandbox: f.sandbox, Episode: "ep1", Worktree: f.worktree, WorkspaceRoot: f.root, StateDir: f.state, OperatorHome: f.home})
-		if err != nil {
-			t.Fatal(err)
-		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*bound)
 		defer cancel()
 		deadline, _ := ctx.Deadline()
-		p := recordSuccess(t, recordExecute(t, f, ctx, "mark"))
-		if p.IntactBefore == nil || !*p.IntactBefore || p.IntactAfter != nil || !recordTimeoutError(p.Error) {
+		dir := t.TempDir()
+		first, delta := shellQuote(filepath.Join(dir, "first-status")), shellQuote(filepath.Join(dir, "delta"))
+		// Row 184's first snapshot follows the budget computation. Hold it until
+		// bound/4 before the deadline (an absolute target, so load before it
+		// cannot move it), so the after-phase starts inside (deadline-bound/2,
+		// deadline): capped it ends at the deadline, uncapped a bound later.
+		target := float64(deadline.Add(-bound/4).UnixNano()) / 1e9
+		body := fmt.Sprintf("if [ \"$1\" = -C ] && [ ! -f %s ]; then touch %s; perl -MTime::HiRes=time,sleep -e 'my $d = %.3f - time; sleep($d) if $d > 0'; fi\n", delta, delta, target)
+		// The second status call is the after-phase's; it outlasts any bound.
+		body += fmt.Sprintf("if [ \"$1\" = -c ] && [ \"$3\" = status ]; then if [ -f %s ]; then sleep %.3f; else touch %s; fi; fi\n", first, (3 * bound).Seconds(), first)
+		fake, _ := protectedFakeGit(t, body+"exec "+shellQuote(git)+" \"$@\"")
+		recordSwapGit(t, fake)
+		// The command's result is not this row's subject: under load the held
+		// snapshot can leave the child no budget, and the cap must hold anyway.
+		p := recordExecute(t, f, ctx, "test").Protected
+		if p == nil || p.IntactAfter != nil || !recordTimeoutError(p.Error) {
 			t.Fatalf("original deadline must cap after-phase: %+v", p)
 		}
 		if time.Now().After(deadline.Add(bound / 2)) {
@@ -672,6 +668,11 @@ func TestExecProtectedCheckTimeout(t *testing.T) {
 		r := recordExecute(t, f, ctx, "sleep")
 		if !r.TimedOut || r.Protected == nil {
 			t.Fatalf("child must time out inside its reserved budget: %+v", r)
+		}
+		// One reserve only: about 1.4 bound remains for the child (less load),
+		// a doubled reserve leaves at most 0.4 bound.
+		if r.DurationMS < (bound * 6 / 10).Milliseconds() {
+			t.Fatalf("child budget %d ms is below one reserve's share (bound %s)", r.DurationMS, bound)
 		}
 		// Only the after verdict is asserted: a loaded rig may time out the
 		// before-phase too, and that spends the same budget.
@@ -719,6 +720,59 @@ func TestExecProtectedCheckTimeout(t *testing.T) {
 			t.Fatalf("after-phase must survive call cancellation: %+v", p)
 		}
 	})
+	// The before-phase is bounded by the call's deadline too, not only by its
+	// own bound: a deadline shorter than the bound ends the call at the deadline.
+	t.Run("before-cap", func(t *testing.T) {
+		git := recordEnv(t)
+		bound := 3 * time.Second
+		recordPhaseBound(t, bound)
+		f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+		fake, _ := protectedFakeGit(t, fmt.Sprintf("if [ \"$1\" = -c ] && [ \"$3\" = status ]; then sleep %.3f; fi\nexec %s \"$@\"", (3*bound).Seconds(), shellQuote(git)))
+		recordSwapGit(t, fake)
+		ctx, cancel := context.WithTimeout(context.Background(), bound/3)
+		defer cancel()
+		start := time.Now()
+		payload := []byte(`{"command":"test","args":["a"]}`)
+		_, _ = f.h.Execute(ctx, EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope}, payload)
+		if elapsed := time.Since(start); elapsed >= bound*2/3 {
+			t.Fatalf("before-phase outlived the call deadline (%s) by running to its own bound: %s", bound/3, elapsed)
+		}
+	})
+}
+
+// TestExecProtectedPhaseOrder pins where each phase runs relative to row 184's
+// worktree snapshots: before-phase, delta begin, (command), after-phase, delta finish.
+func TestExecProtectedPhaseOrder(t *testing.T) {
+	git := recordEnv(t)
+	recordPhaseBound(t, 15*time.Second) // Order, not scheduling.
+	f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+	fake, log := protectedFakeGit(t, "exec "+shellQuote(git)+" \"$@\"")
+	recordSwapGit(t, fake)
+	recordSuccess(t, f.mustRun(t, "test", "a"))
+	var classes []string
+	for _, line := range strings.Split(strings.TrimSpace(protectedLog(t, log)), "\n") {
+		class := "?"
+		switch {
+		case strings.HasPrefix(line, "-C "):
+			class = "delta"
+		case strings.HasPrefix(line, "-c core.fsmonitor=false "):
+			class = "protected"
+		}
+		if len(classes) == 0 || classes[len(classes)-1] != class {
+			classes = append(classes, class)
+		}
+	}
+	if want := []string{"protected", "delta", "protected", "delta"}; !reflect.DeepEqual(classes, want) {
+		t.Fatalf("git call order = %v, want %v:\n%s", classes, want, protectedLog(t, log))
+	}
+}
+
+func TestProtectedEnforced(t *testing.T) {
+	for goos, want := range map[string]string{"darwin": "glob", "linux": "dirs-only"} {
+		if got := protectedEnforced(goos); got != want {
+			t.Errorf("protectedEnforced(%q) = %q, want %q", goos, got, want)
+		}
+	}
 }
 
 func TestExecProtectedNotGit(t *testing.T) {

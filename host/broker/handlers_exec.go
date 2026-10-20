@@ -337,15 +337,21 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 			}
 			after = h.checkProtected(afterCtx)
 		}
-		enforced := "glob"
-		if hostGOOS() == "linux" {
-			enforced = "dirs-only"
-		}
-		record := buildProtectedRecord(*h.baseline, h.profile.Protected, enforced, before, after)
+		record := buildProtectedRecord(*h.baseline, h.profile.Protected, protectedEnforced(hostGOOS()), before, after)
 		res.Protected = &record
 	}
 	res.WorktreeDelta = probe.finish(ctx)
 	return json.Marshal(res)
+}
+
+// protectedEnforced names what the sandbox enforces on goos (design §4.5):
+// srt denies both pattern forms on darwin; Linux renders only the directory
+// form, so base-name matches are detected, not prevented (D-156-3).
+func protectedEnforced(goos string) string {
+	if goos == "linux" {
+		return "dirs-only"
+	}
+	return "glob"
 }
 
 // execChildBudget reserves the after-phase inside the original call deadline.
