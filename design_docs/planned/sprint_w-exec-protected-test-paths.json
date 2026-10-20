@@ -2649,7 +2649,7 @@
             "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-singlelink"
           ],
           "pin_specific_control": "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-hardlink",
-          "invariant_controls_command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/(symlink.*|hardlink.*|no-protected-symlink.*|no-protected-singlelink)$' -timeout 120s -v"
+          "invariant_controls_command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink.*|hardlink.*|no-protected-symlink.*|no-protected-singlelink)$' -timeout 120s -v"
         },
         {
           "mutant": "MUT-NO-PROTECTED-IN-POLICY",
@@ -2671,7 +2671,7 @@
           "mutation": "Rule 3i: skip creating lnk / alias.txt / hl.txt, one setup hunk at a time; ensure setup-shape checks cannot mask the post-call mechanism assertion.",
           "must_fail_test": "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
           "must_fail_assertion": "Corresponding /symlink-dir-new-write, /symlink-file-edit, /hardlink-edit RED on missing resolves to + fs_deny_write / more than one hard link, even for generic ok:false.",
-          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/(symlink-dir-new-write|symlink-file-edit|hardlink-edit)$' -timeout 120s -v",
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink-dir-new-write|symlink-file-edit|hardlink-edit)$' -timeout 120s -v",
           "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0.",
           "must_fail_tests": [
             "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
@@ -2731,11 +2731,11 @@
             "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
           },
           {
-            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/(symlink-dir-new-write|symlink-file-edit|hardlink-edit)$' -timeout 120s -v",
+            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink-dir-new-write|symlink-file-edit|hardlink-edit)$' -timeout 120s -v",
             "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
           },
           {
-            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/(symlink.*|hardlink.*|no-protected-symlink.*|no-protected-singlelink)$' -timeout 120s -v",
+            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink.*|hardlink.*|no-protected-symlink.*|no-protected-singlelink)$' -timeout 120s -v",
             "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
           }
         ]
