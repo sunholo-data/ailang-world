@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>World</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#bd3012}a:hover{color:#8f240d}
+@keyframes needsyou{0%,100%{box-shadow:0 0 0 0 rgba(231,60,23,0.45)}50%{box-shadow:0 0 0 7px rgba(231,60,23,0)}}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid #bd3012;outline-offset:2px}
+</style>
+</helmet>
+<div ref="{{rootRef}}" tabIndex="0" onKeyDown="{{onKeys}}" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home End Enter Escape n / ? ," style="outline: none; width: 1600px; height: 1000px; box-sizing: border-box; background: {{T.bg}}; color: {{T.text}}; font-family: {{T.font}}; font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="height: 64px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid {{T.hLine}}; background: {{T.hBar}}">
+<span style="display: inline-flex; align-items: center; gap: 12px; margin-right: 6px">
+<span style="width: 48px; height: 48px; box-sizing: border-box; border-radius: 3px; background: #ffffff; border: 1px solid {{T.tileLine}}; display: flex; align-items: center; justify-content: center"><img src="/_blob/7ac13302d92aba20c0beece36b17751b" alt="AILANG" width="32" height="32"></span>
+<span style="font-weight: 700; font-size: 17px; color: {{T.hText}}">World</span>
+</span>
+<nav aria-label="Where you are" style="display: flex; align-items: center; gap: 2px; font-family: {{T.mono}}; font-size: 14px">
+<sc-for list="{{crumbs}}" as="c" hint-placeholder-count="2">
+<button type="button" onClick="{{c.go}}" aria-current="{{c.current}}" style="font: inherit; height: 36px; padding: 0 10px; border-radius: {{T.r}}; border: 0; cursor: pointer; background: {{c.bg}}; color: {{c.fg}}">{{c.text}}</button>
+</sc-for>
+</nav>
+<label style="flex: 1; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: {{T.r}}; border: 1px solid {{T.hCtl}}; background: {{T.hField}}; font-family: {{T.mono}}; font-size: 13.5px">
+<span style="color: {{T.hPrompt}}">world&gt;</span>
+<input ref="{{inputRef}}" type="text" value="{{typed}}" onInput="{{onType}}" onKeyDown="{{onKey}}" aria-label="Go to an address" placeholder="onboarding@6 · shared@0ee1945 · back" style="flex: 1; min-width: 0; font: inherit; color: {{T.hText}}; background: transparent; border: 0; outline: none">
+</label>
+<span style="font-size: 13px; color: {{msgFg}}; font-weight: 600; max-width: 380px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{msg}}</span>
+<button type="button" onClick="{{toggleKeys}}" aria-label="Keyboard shortcuts" aria-keyshortcuts="?" aria-expanded="{{keysOpen}}" style="font: inherit; width: 44px; height: 44px; border-radius: {{T.r}}; border: 1px solid {{T.hCtl}}; background: {{T.hBtn}}; color: {{T.hText}}; cursor: pointer; font-family: {{T.mono}}">?</button>
+<button type="button" onClick="{{toggleLook}}" aria-label="Appearance" aria-keyshortcuts="," aria-expanded="{{lookOpen}}" style="width: 44px; height: 44px; border-radius: {{T.r}}; border: 1px solid {{T.hCtl}}; background: {{T.hBtn}}; color: {{T.hText}}; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"></path></svg></button>
+</header>
+
+<div style="position: relative; flex: 1; min-height: 0">
+
+<section aria-label="The world timeline" style="position: absolute; inset: 0; transition: {{motion.zoom}}; transform-origin: {{origin}}; transform: {{L0.tf}}; opacity: {{L0.op}}; pointer-events: {{L0.pe}}">
+<sc-for list="{{lanes}}" as="l" hint-placeholder-count="4"><div aria-hidden="true" style="position: absolute; left: 0; top: {{l.bandTop}}; width: {{l.bandW}}; height: {{l.bandH}}; background: {{l.band}}; border-top: 1px solid {{T.laneEdge}}; border-bottom: 1px solid {{T.laneEdge}}"></div></sc-for>
+<sc-for list="{{lanes}}" as="l" hint-placeholder-count="4">
+<button type="button" onClick="{{l.go}}" style="font: inherit; position: absolute; left: 16px; top: {{l.labTop}}; height: 30px; padding: 0 8px; border: 0; border-radius: {{T.r}}; background: transparent; cursor: pointer; color: {{l.fg}}; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 11px; height: 11px; background: {{l.g.gbg}}; clip-path: {{l.g.gclip}}; border-radius: {{l.g.grad}}; border: {{l.g.gbd}}; opacity: {{l.g.gop}}"></span>{{l.title}}</button>
+</sc-for>
+
+<svg aria-hidden="true" width="1600" height="936" style="position: absolute; left: 0; top: 0; pointer-events: none">
+<sc-for list="{{edges}}" as="e" hint-placeholder-count="30">
+<path d="{{e.d}}" fill="none" stroke="{{e.c}}" stroke-width="{{e.w}}" stroke-dasharray="{{e.dash}}" opacity="{{e.op}}"></path>
+</sc-for>
+</svg>
+
+<sc-for list="{{nodes}}" as="n" hint-placeholder-count="26">
+<button type="button" onClick="{{n.go}}" onPointerEnter="{{n.hover}}" aria-label="{{n.aria}}" style="font: inherit; position: absolute; left: {{n.left}}; top: {{n.top}}; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 13px; box-shadow: {{n.glow}}; animation: {{n.anim}}"><span style="display: block; box-sizing: border-box; width: {{n.size}}; height: {{n.size}}; background: {{n.bg}}; clip-path: {{n.clip}}; border-radius: {{n.radius}}; border: {{n.bd}}; opacity: {{n.op}}"></span></span>
+</button>
+<sc-if value="{{n.hasYou}}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="position: absolute; left: {{n.youLeft}}; top: {{n.youTop}}; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 3px; background: {{T.you}}; color: {{T.onYou}}; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; pointer-events: none">{{n.you}}</div></sc-if>
+<div style="position: absolute; left: {{n.labLeft}}; top: {{n.labTop}}; width: 96px; text-align: {{n.labAlign}}; font-size: 11.5px; line-height: 1.25; color: {{n.labFg}}; font-weight: {{n.labW}}; pointer-events: none">{{n.label}}<div style="font-size: 10.5px; color: {{T.text}}; font-weight: 500; white-space: nowrap">{{n.rel}}</div></div>
+</sc-for>
+
+<div style="position: absolute; left: {{nowX}}; top: 70px; width: 2px; height: 760px; background: {{T.text}}; opacity: 0.75"></div>
+<div style="position: absolute; left: {{bandX}}; top: 56px; width: 296px; box-sizing: border-box; padding: 14px 14px 16px; background: {{T.nowBg}}; border: 1px solid {{T.nowLine}}; border-radius: {{T.r}}; display: flex; flex-direction: column; gap: 14px">
+<div><div style="font-size: 12px; font-weight: 600; color: {{T.sub}}">Now</div><div style="font-size: 15px; font-weight: 700">Tue 20 Oct · 12:55</div></div>
+<div style="display: flex; gap: 9px; align-items: center"><span style="width: 9px; height: 9px; border-radius: 5px; background: {{T.okDot}}; flex: none"></span><span style="font-weight: 700; color: {{T.ok}}">Healthy</span><span style="font-size: 12.5px; color: {{T.sub}}">checked 12:55 · 0ee1945</span></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<div style="background: {{T.panel}}; border: 1px solid {{T.line}}; border-radius: {{T.r}}; padding: 8px 10px"><div style="font-size: 18px; font-weight: 700">0</div><div style="font-size: 12px; color: {{T.sub}}">running</div></div>
+<div style="background: {{T.panel}}; border: 1px solid {{T.line}}; border-radius: {{T.r}}; padding: 8px 10px"><div style="font-size: 18px; font-weight: 700">0</div><div style="font-size: 12px; color: {{T.sub}}">live sessions</div></div>
+</div>
+<div>
+<div style="font-size: 12px; font-weight: 700; color: {{T.youShell}}; margin-bottom: 4px">Needs you · {{needCount}}</div>
+<sc-for list="{{needs}}" as="x" hint-placeholder-count="1">
+<button type="button" onClick="{{x.go}}" style="font: inherit; display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; margin-top: 6px; min-height: 44px; padding: 8px 11px; border-radius: {{T.r}}; border: 1px solid {{T.youLine}}; background: {{T.youWash}}; color: {{T.text}}; cursor: pointer"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{T.you}}; flex: none"></span><span style="font-weight: 600">{{x.title}}</span><span style="margin-left: auto; font-size: 12px; color: {{T.sub}}">{{x.since}}</span></button>
+</sc-for>
+</div>
+</div>
+
+<sc-for list="{{ticks}}" as="t" hint-placeholder-count="16">
+<div style="position: absolute; left: {{t.left}}; top: 790px; width: 60px; text-align: center; font-family: {{T.mono}}; font-size: 10.5px; color: {{T.faint}}">{{t.time}}</div>
+<div style="position: absolute; left: {{t.left}}; top: 806px; width: 60px; text-align: center; font-size: 10.5px; font-weight: 600; color: {{T.sub}}">{{t.day}}</div>
+</sc-for>
+<div aria-label="Legend" style="position: absolute; left: 24px; top: 866px; display: flex; gap: 20px; align-items: center; font-size: 12.5px; color: {{T.sub}}">
+<span style="display: inline-flex; align-items: center; gap: 7px"><span style="min-width: 15px; height: 15px; border-radius: 3px; background: {{T.you}}; color: {{T.onYou}}; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center">2</span>your decisions</span>
+<span style="display: inline-flex; align-items: center; gap: 7px"><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 3px; border: 2px dashed {{T.youLine}}"></span>waiting for you</span>
+<span style="display: inline-flex; align-items: center; gap: 7px"><span style="width: 14px; height: 14px; border-radius: 7px; box-shadow: 0 0 0 4px {{T.halo}}"></span>connected to the state you point at</span>
+<span style="display: inline-flex; align-items: center; gap: 7px"><span style="width: 18px; border-top: 2px dotted {{T.read}}"></span>read</span>
+<span style="display: inline-flex; align-items: center; gap: 7px"><span style="width: 18px; border-top: 2px dashed {{T.ran}}"></span>ran on</span>
+</div>
+</section>
+
+<section aria-label="One brane" style="position: absolute; inset: 0; transition: {{motion.zoom}}; transform-origin: {{origin}}; transform: {{L1.tf}}; opacity: {{L1.op}}; pointer-events: {{L1.pe}}">
+<div style="position: absolute; left: 0; top: 0; width: 1290px; height: 936px; background: {{T.stageBg}}">
+<sc-for list="{{backs}}" as="w" hint-placeholder-count="4">
+<button type="button" onClick="{{w.go}}" aria-label="{{w.aria}}" aria-keyshortcuts="{{w.key}}" style="font: inherit; text-align: left; position: absolute; left: 50%; top: {{w.top}}; width: {{w.width}}; margin-left: {{w.ml}}; height: 38px; box-sizing: border-box; border-radius: {{T.r}}; border: 1px solid {{T.cardLine}}; background: {{T.strip}}; color: {{T.ink}}; padding: 0 14px; cursor: pointer; opacity: {{w.op}}; z-index: {{w.z}}; box-shadow: {{T.shadowS}}; display: flex; align-items: center; gap: 10px; font-size: 13px; white-space: nowrap; overflow: hidden; transition: {{motion.strip}}">
+<span style="color: {{T.inkSub}}">↑</span><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 11px; height: 11px; background: {{w.g.gbg}}; clip-path: {{w.g.gclip}}; border-radius: {{w.g.grad}}; border: {{w.g.gbd}}; opacity: {{w.g.gop}}"></span><span style="font-weight: 600">{{w.tag}}</span><span style="color: {{T.inkSub}}">{{w.when}}</span><span style="flex: 1"></span><sc-if value="{{w.hasYou}}" hint-placeholder-val="{{ false }}"><span style="min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 3px; background: {{T.you}}; color: {{T.onYou}}; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center">{{w.you}}</span></sc-if><span style="font-size: 12px; color: {{T.inkSub}}">{{w.lane}}</span>
+</button>
+</sc-for>
+
+<article aria-label="{{fr.aria}}" style="position: absolute; left: 50%; top: 150px; width: 1180px; margin-left: -590px; height: 640px; box-sizing: border-box; border-radius: {{T.rL}}; border: 1px solid {{T.cardEdge}}; background: {{T.card}}; color: {{T.ink}}; overflow: hidden; z-index: 40; box-shadow: {{T.shadow}}; display: flex; flex-direction: column">
+<div style="height: 40px; flex: none; background: {{T.cardBar}}; color: {{T.cardBarText}}; border-bottom: 1px solid {{T.cardEdge}}; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 13px"><span style="font-weight: 700">{{fr.tag}}</span><span style="color: {{T.cardBarSub}}">{{fr.when}}</span><span style="flex: 1"></span><span style="display: inline-flex; align-items: center; gap: 7px; color: {{T.cardBarSub}}"><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 11px; height: 11px; background: {{fr.g.gbg}}; clip-path: {{fr.g.gclip}}; border-radius: {{fr.g.grad}}; border: {{fr.g.gbd}}; opacity: {{fr.g.gop}}"></span>{{fr.lane}}</span><span style="color: {{T.cardBarSub}}">{{fr.pos}}</span></div>
+<div style="flex: 1; min-height: 0; padding: 14px 18px 14px; display: flex; flex-direction: column; gap: 12px; position: relative">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<div style="font-size: 22px; font-weight: 700; letter-spacing: -0.01em">{{fr.head}}</div>
+<div style="font-size: 13.5px; color: {{T.inkSub}}">{{fr.can}}</div>
+</div>
+
+<sc-if value="{{fr.hasView}}" hint-placeholder-val="{{ false }}">
+<section aria-label="From the agent" style="flex: none; border: 1px solid {{T.colLine}}; border-radius: {{T.r}}; background: {{T.viewBg}}; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: {{T.inkSub}}"><span style="font-weight: 700; color: {{T.ink}}">From the agent</span><span>{{fr.view.by}}</span><span style="flex: 1"></span><span style="padding: 1px 7px; border-radius: 3px; border: 1px solid {{T.colLine}}">A2UI · World catalog</span><span style="padding: 1px 7px; border-radius: 3px; border: 1px dashed {{T.ctlCard}}">{{fr.view.note}}</span></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-size: 14px; font-weight: 600">{{fr.view.title}}</span><span style="font-size: 12px; color: {{T.inkSub}}">{{fr.view.foot}}</span></div>
+<sc-if value="{{fr.view.isTable}}" hint-placeholder-val="{{ false }}">
+<div style="display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{fr.view.cells}}" as="c" hint-placeholder-count="9">
+<div style="border: 1px solid {{c.bd}}; background: {{c.bg}}; border-radius: 3px; padding: 5px 7px"><div style="font-size: 11px; color: {{T.inkSub}}">{{c.n}}</div><div style="font-size: 12.5px; font-weight: 600; color: {{T.ink}}">{{c.what}}</div><div style="font-size: 11.5px; color: {{c.whoFg}}; font-weight: 700">{{c.who}}</div></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{fr.view.isAsk}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex: 1; font-size: 13.5px">{{fr.view.ask}}</span>
+<sc-for list="{{fr.view.actions}}" as="a" hint-placeholder-count="2">
+<span style="font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 3px; border: 1px solid {{a.bd}}; background: {{a.bg}}; color: {{a.fg}}">{{a.label}}</span>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-if>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 12px; flex: 1; min-height: 0">
+
+<div style="background: {{T.col}}; border: 1px solid {{fr.inBd}}; border-radius: {{T.r}}; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden">
+<div style="margin: -12px -14px 2px; padding: 7px 14px; background: {{T.colHead}}; border-bottom: 1px solid {{T.colLine}}; font-size: 12.5px; font-weight: 700; color: {{T.cInputs}}">Inputs</div>
+<div style="display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px 10px; align-items: center">
+<span style="font-size: 12.5px; color: {{T.inkSub}}">Agent</span>
+<div role="group" aria-label="Agent" style="display: flex; gap: 6px">
+<sc-for list="{{fr.agents}}" as="a" hint-placeholder-count="2">
+<button type="button" onClick="{{a.pick}}" aria-pressed="{{a.on}}" disabled="{{fr.locked}}" style="font: inherit; font-size: 13px; min-height: 34px; padding: 0 12px; border-radius: {{T.r}}; cursor: {{fr.cursor}}; border: 1px solid {{a.bd}}; background: {{a.bg}}; color: {{T.ink}}; font-weight: {{a.fw}}">{{a.name}}</button>
+</sc-for>
+</div>
+<label for="front-task" style="font-size: 12.5px; color: {{T.inkSub}}; align-self: start; padding-top: 7px">Task</label>
+<textarea id="front-task" onInput="{{fr.onTask}}" value="{{fr.task}}" rows="2" readonly="{{fr.locked}}" placeholder="What should the agent do?" style="font: inherit; font-size: 13.5px; resize: none; border-radius: {{T.r}}; border: 1px solid {{fr.taskBd}}; background: {{fr.taskBg}}; color: {{T.ink}}; padding: 6px 9px"></textarea>
+<span style="font-size: 12.5px; color: {{T.inkSub}}; align-self: start; padding-top: 7px">Grants</span>
+<div role="group" aria-label="Grants" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{fr.grants}}" as="x" hint-placeholder-count="5">
+<button type="button" onClick="{{x.toggle}}" aria-pressed="{{x.on}}" disabled="{{x.locked}}" style="font: inherit; font-size: 12.5px; min-height: 32px; padding: 0 11px; border-radius: {{T.rPill}}; cursor: {{x.cursor}}; border: 1px solid {{x.bd}}; background: {{x.bg}}; color: {{x.fg}}">{{x.name}}</button>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{fr.hasCame}}" hint-placeholder-val="{{ true }}">
+<div style="border-top: 1px solid {{T.rule}}; padding-top: 10px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12px; color: {{T.inkSub}}">{{fr.cameLabel}}</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{fr.came}}" as="k" hint-placeholder-count="4">
+<button type="button" onClick="{{k.go}}" style="font: inherit; font-size: 12.5px; min-height: 30px; padding: 3px 10px; border-radius: {{T.rPill}}; cursor: pointer; border: 1px solid {{T.cardLine}}; background: {{T.chip}}; color: {{T.ink}}; display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 10px; height: 10px; background: {{k.g.gbg}}; clip-path: {{k.g.gclip}}; border-radius: {{k.g.grad}}; border: {{k.g.gbd}}; opacity: {{k.g.gop}}"></span>{{k.label}}<span style="font-size: 11px; color: {{T.inkSub}}">{{k.via}}</span></button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+
+<div style="background: {{T.col}}; border: 1px solid {{T.colLine}}; border-radius: {{T.r}}; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow: hidden">
+<div style="margin: -12px -14px 2px; padding: 7px 14px; background: {{T.colHead}}; border-bottom: 1px solid {{T.colLine}}; font-size: 12.5px; font-weight: 700; color: {{T.cOutputs}}">Outputs</div>
+<sc-for list="{{fr.files}}" as="f" hint-placeholder-count="3">
+<button type="button" onClick="{{f.open}}" disabled="{{f.noDiff}}" aria-label="{{f.aria}}" style="font: inherit; display: flex; align-items: center; gap: 8px; min-width: 0; width: 100%; min-height: 30px; padding: 2px 6px; margin: 0 -6px; border: 0; border-radius: 3px; background: {{f.bg}}; cursor: {{f.cursor}}; text-align: left"><span style="flex: 1; min-width: 0; font-family: {{T.mono}}; font-size: 12px; color: {{T.ink}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: {{f.ul}}">{{f.name}}</span><span style="font-size: 11px; color: {{f.tc}}">{{f.tag}}</span></button>
+</sc-for>
+<sc-if value="{{fr.hasPr}}" hint-placeholder-val="{{ true }}"><div style="align-self: flex-start; font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 3px; background: {{T.prBg}}; color: {{T.prInk}}; border: 1px solid {{T.colLine}}">{{fr.pr}}</div></sc-if>
+<sc-if value="{{fr.hasLed}}" hint-placeholder-val="{{ true }}">
+<div style="border-top: 1px solid {{T.rule}}; padding-top: 10px; margin-top: auto; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12px; color: {{T.inkSub}}">↓ Led to</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{fr.led}}" as="k" hint-placeholder-count="2">
+<button type="button" onClick="{{k.go}}" style="font: inherit; font-size: 12.5px; min-height: 30px; padding: 3px 10px; border-radius: {{T.rPill}}; cursor: pointer; border: 1px solid {{T.cardLine}}; background: {{T.chip}}; color: {{T.ink}}; display: inline-flex; align-items: center; gap: 6px"><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 10px; height: 10px; background: {{k.g.gbg}}; clip-path: {{k.g.gclip}}; border-radius: {{k.g.grad}}; border: {{k.g.gbd}}; opacity: {{k.g.gop}}"></span>{{k.label}}<span style="font-size: 11px; color: {{T.inkSub}}">{{k.via}}</span></button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+
+<div style="background: {{T.col}}; border: 1px solid {{T.colLine}}; border-radius: {{T.r}}; padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; min-height: 0; overflow: hidden">
+<div style="margin: -12px -14px 2px; padding: 7px 14px; background: {{T.colHead}}; border-bottom: 1px solid {{T.colLine}}; font-size: 12.5px; font-weight: 700; color: {{T.cDecisions}}">Decisions</div>
+<sc-for list="{{fr.acts}}" as="d" hint-placeholder-count="3">
+<div style="display: flex; align-items: flex-start; gap: 8px">
+<span style="flex: none; min-width: 52px; text-align: center; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 3px; background: {{d.bg}}; color: {{d.fg}}; border: 1px solid {{d.bd}}">{{d.who}}</span>
+<span style="font-size: 13px; color: {{T.ink}}; line-height: 1.35">{{d.text}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="background: {{T.col}}; border: 1px solid {{T.colLine}}; border-radius: {{T.r}}; padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; min-height: 0; overflow: hidden">
+<div style="margin: -12px -14px 2px; padding: 7px 14px; background: {{T.colHead}}; border-bottom: 1px solid {{T.colLine}}; font-size: 12.5px; font-weight: 700; color: {{T.cChecks}}">Checks</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{fr.tiles}}" as="t" hint-placeholder-count="4">
+<div style="background: {{T.tileBg}}; border-radius: 3px; padding: 7px 9px"><div style="font-size: 18px; font-weight: 700; color: {{T.ink}}">{{t.v}}</div><div style="font-size: 11.5px; color: {{T.inkSub}}">{{t.k}}</div></div>
+</sc-for>
+</div>
+<sc-for list="{{fr.notes}}" as="x" hint-placeholder-count="1">
+<div style="font-size: 12.5px; color: {{T.inkSub}}">{{x}}</div>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{fr.hasBar}}" hint-placeholder-val="{{ false }}">
+<div style="flex: none; min-height: 52px; display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; border-radius: {{T.r}}; background: {{T.barWash}}; border: 1px solid {{T.barLine}}">
+<sc-for list="{{fr.chips}}" as="c" hint-placeholder-count="2">
+<span style="font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 3px; background: {{T.card}}; border: 1px solid {{T.barLine}}; color: {{T.youInk}}">{{c}}</span>
+</sc-for>
+<span style="flex: 1; font-size: 12.5px; color: {{T.inkSub}}">{{fr.barNote}}</span>
+<sc-if value="{{fr.canDiscard}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{fr.discard}}" style="font: inherit; height: 44px; padding: 0 14px; border-radius: {{T.r}}; border: 1px solid {{T.youInk}}; background: transparent; color: {{T.youInk}}; cursor: pointer">Discard</button></sc-if>
+<sc-if value="{{fr.hasPropose}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{fr.propose}}" disabled="{{fr.proposeOff}}" style="font: inherit; height: 44px; padding: 0 16px; border-radius: {{T.r}}; border: 1px solid {{fr.proposeBg}}; background: {{fr.proposeBg}}; color: {{fr.proposeFg}}; font-weight: 700; cursor: {{fr.proposeCursor}}">{{fr.proposeLabel}}</button></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{fr.hasDiff}}" hint-placeholder-val="{{ false }}">
+<section role="dialog" aria-label="{{fr.diff.aria}}" style="position: absolute; left: 18px; right: 18px; top: 52px; bottom: 14px; z-index: 5; background: {{T.card}}; border: 1px solid {{T.ctlCard}}; border-radius: {{T.r}}; display: flex; flex-direction: column; overflow: hidden">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 14px; border-bottom: 1px solid {{T.colLine}}; background: {{T.cardHead}}">
+<span style="font-family: {{T.mono}}; font-size: 13px; font-weight: 600">{{fr.diff.name}}</span><span style="font-size: 12px; color: {{T.inkSub}}">{{fr.diff.stat}}</span><span style="flex: 1"></span>
+<button type="button" onClick="{{fr.diff.close}}" aria-label="Close the diff" aria-keyshortcuts="Escape" style="font: inherit; height: 36px; padding: 0 12px; border-radius: {{T.r}}; border: 1px solid {{T.ctlCard}}; background: transparent; color: {{T.ink}}; cursor: pointer">Close · Esc</button>
+</div>
+<div style="flex: 1; min-height: 0; overflow: auto; font-family: {{T.mono}}; font-size: 12.5px; line-height: 1.6; padding: 8px 0">
+<sc-for list="{{fr.diff.lines}}" as="l" hint-placeholder-count="12">
+<div style="display: flex; gap: 0; background: {{l.bg}}; padding: 0 14px"><span style="width: 44px; flex: none; color: {{T.inkSub}}; text-align: right; padding-right: 12px">{{l.no}}</span><span style="width: 16px; flex: none; color: {{l.sc}}; font-weight: 700">{{l.sign}}</span><span style="white-space: pre-wrap; color: {{T.ink}}">{{l.text}}</span></div>
+</sc-for>
+</div>
+</section>
+</sc-if>
+</div>
+</article>
+
+<sc-for list="{{fwd}}" as="a" hint-placeholder-count="4">
+<button type="button" onClick="{{a.go}}" aria-label="{{a.aria}}" aria-keyshortcuts="{{a.key}}" style="font: inherit; text-align: left; position: absolute; left: 50%; top: {{a.top}}; width: {{a.width}}; margin-left: {{a.ml}}; height: 38px; box-sizing: border-box; border-radius: {{T.r}}; border: 1px solid {{T.cardLine}}; background: {{T.strip}}; color: {{T.ink}}; padding: 0 14px; cursor: pointer; opacity: {{a.op}}; z-index: {{a.z}}; box-shadow: {{T.shadowS}}; display: flex; align-items: center; gap: 10px; font-size: 13px; white-space: nowrap; overflow: hidden; transition: {{motion.strip}}">
+<span style="color: {{T.inkSub}}">↓</span><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 11px; height: 11px; background: {{a.g.gbg}}; clip-path: {{a.g.gclip}}; border-radius: {{a.g.grad}}; border: {{a.g.gbd}}; opacity: {{a.g.gop}}"></span><span style="font-weight: 600">{{a.tag}}</span><span style="color: {{T.inkSub}}">{{a.when}}</span><span style="flex: 1"></span><sc-if value="{{a.hasYou}}" hint-placeholder-val="{{ false }}"><span style="min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 3px; background: {{T.you}}; color: {{T.onYou}}; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center">{{a.you}}</span></sc-if><span style="font-size: 12px; color: {{T.inkSub}}">{{a.lane}}</span>
+</button>
+</sc-for>
+</div>
+<nav aria-label="Brane timeline" style="position: absolute; left: 1290px; top: 0; width: 310px; height: 936px; box-sizing: border-box; padding: 22px 16px; border-left: 1px solid {{T.line}}; background: {{T.bg}}; display: flex; flex-direction: column; gap: 2px; overflow: hidden">
+<div style="font-size: 12px; font-weight: 700; color: {{T.sub}}; margin-bottom: 8px; display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="display: inline-block; flex: none; box-sizing: border-box; width: 11px; height: 11px; background: {{rg.gbg}}; clip-path: {{rg.gclip}}; border-radius: {{rg.grad}}; border: {{rg.gbd}}; opacity: {{rg.gop}}"></span>{{braneTitle}}</div>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="7">
+<button type="button" onClick="{{r.go}}" aria-current="{{r.current}}" style="font: inherit; text-align: left; border: 0; background: {{r.bg}}; cursor: pointer; min-height: 36px; padding: 6px 10px; border-radius: {{T.r}}; color: {{r.fg}}; display: flex; align-items: center; gap: 10px; font-size: 13px"><span style="flex: 1; font-weight: 600">{{r.label}}</span><sc-if value="{{r.hasYou}}" hint-placeholder-val="{{ false }}"><span style="min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 3px; background: {{T.you}}; color: {{T.onYou}}; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center">{{r.you}}</span></sc-if><span style="opacity: 0.85; font-size: 12px">{{r.when}}</span></button>
+</sc-for>
+</nav>
+</section>
+
+<sc-if value="{{showKeys}}" hint-placeholder-val="{{ false }}">
+<div role="dialog" aria-label="Keyboard shortcuts" style="position: absolute; right: 16px; top: 10px; z-index: 90; width: 390px; box-sizing: border-box; padding: 16px 18px; border-radius: {{T.r}}; background: {{T.panel}}; border: 1px solid {{T.ctl}}; box-shadow: {{T.shadowS}}; display: flex; flex-direction: column; gap: 6px">
+<div style="display: grid; grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; font-size: 13px; color: {{T.sub}}; align-items: center">
+<span></span><span style="font-size: 12px; font-weight: 700; color: {{kTimeFg}}">Timeline</span><span style="font-size: 12px; font-weight: 700; color: {{kBraneFg}}">Brane</span>
+<sc-for list="{{keyRows}}" as="k" hint-placeholder-count="10">
+<span style="font-family: {{T.mono}}; font-size: 12.5px; color: {{T.text}}"><span style="display: inline-block; min-width: 18px; padding: 1px 6px; border-radius: 3px; border: 1px solid {{T.ctl}}; background: {{T.btn}}; text-align: center">{{k.key}}</span></span><span>{{k.far}}</span><span>{{k.near}}</span>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showLook}}" hint-placeholder-val="{{ false }}">
+<div role="dialog" aria-label="Appearance" style="position: absolute; right: 16px; top: 10px; z-index: 91; width: 420px; box-sizing: border-box; padding: 18px 20px; border-radius: {{T.r}}; background: {{T.panel}}; border: 1px solid {{T.ctl}}; box-shadow: {{T.shadowS}}; display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 15px; font-weight: 700">Appearance</div>
+<sc-for list="{{lookRows}}" as="r" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12.5px; color: {{T.sub}}">{{r.name}}</div>
+<div role="group" aria-label="{{r.name}}" style="display: flex; gap: 6px">
+<sc-for list="{{r.opts}}" as="o" hint-placeholder-count="3">
+<button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="font: inherit; flex: 1; min-height: 44px; border-radius: {{T.r}}; cursor: pointer; border: 1px solid {{o.bd}}; background: {{o.bg}}; color: {{o.fg}}; font-weight: {{o.fw}}; font-size: 13px">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<div style="display: flex; align-items: center; gap: 10px; border-top: 1px solid {{T.line}}; padding-top: 12px; font-size: 12px; color: {{T.sub}}">
+<span style="width: 40px; height: 40px; flex: none; box-sizing: border-box; border-radius: 3px; background: #ffffff; border: 1px solid {{T.tileLine}}; display: flex; align-items: center; justify-content: center"><img src="/_blob/1a934cf4d5285d9faa53dc775d57828a" alt="Sunholo" width="32" height="32"></span>
+<span>Paper and Slate follow the Sunholo brand guide. Your choices stay on this device.</span>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    // Appearance is a per-viewer convenience, so it lives in this browser only.
+    let look = { theme: 'paper', marks: null, motion: null };
+    try { const saved = JSON.parse(window.localStorage.getItem('world.appearance') || 'null'); if (saved) look = { ...look, ...saved }; } catch (e) {}
+    let reduced = false;
+    try { reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+    let dark = false;
+    try { dark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); } catch (e) {}
+    this.state = { d: 0, brane: 'onboarding', sid: 's6', focus: 's6', typed: '', msg: '', msgBad: false, origin: '50% 40%', drafts: {}, started: {}, branches: [], keys: false, look, lookOpen: false, sysReduced: reduced, sysDark: dark, diff: null };
+    this.rootRef = el => { this.root = el; };
+    this.inputRef = el => { this.input = el; };
+  }
+  componentDidMount() { if (this.root) this.root.focus({ preventScroll: true }); }
+  setLook(o) { const look = { ...this.state.look, ...o }; this.setState({ look }); try { window.localStorage.setItem('world.appearance', JSON.stringify(look)); } catch (e) {} }
+  model() {
+    // Real history, 19–20 Oct 2026: dev merges (git log --first-parent --merges), merge-bases per PR,
+    // the trial rig's mint blocks, daemon builds and transcripts. Only proposals made on the board are not real.
+    const N = {};
+    const T = [
+      ['t314', 0, '19 Oct', '14:26', '78f2860', '#314'], ['t318', 1, '', '17:25', '1f36947', '#318'], ['t316', 2, '', '17:29', '5386215', '#316'],
+      ['t311', 3, '', '18:13', '93410ac', '#311'], ['t317', 4, '', '18:13', 'b889e05', '#317'], ['t319', 5, '', '19:00', '826f2a0', '#319'],
+      ['t320', 6, '', '19:25', '9527bc5', '#320'], ['t321', 7, '', '20:52', 'fd7b325', '#321'], ['t322', 8, '', '22:31', 'c9ab49b', '#322'],
+      ['t325', 9, '20 Oct', '02:29', '0adeb70', '#325'], ['t326', 10, '', '06:06', '96d4901', '#326'], ['t324', 11, '', '08:18', 'fe2cc96', '#324'],
+      ['t323', 12, '', '08:25', '0ee1945', '#323'], ['t328', 13, '', '10:22', '7fb99da', '#328'], ['t327', 14, '', '10:31', '9003555', '#327'],
+      ['t329', 15, '', '12:49', '0ffbb9c', '#329']
+    ];
+    const FILES = { t316: 2, t320: 52, t321: 31, t324: 13, t327: 17, t329: 7, t323: 23, t328: 12 };
+    const NOW = 1440 + 12 * 60 + 55;
+    T.forEach(([id, s, day, time, hash, pr], k) => {
+      const [hh, mm] = time.split(':').map(Number);
+      N[id] = { id, at: (s >= 9 ? 1440 : 0) + hh * 60 + mm, brane: 'shared', kind: 'shared', slot: s, day: day || (s >= 9 ? '20 Oct' : '19 Oct'), time, hash, pr, label: hash, parents: k ? [T[k - 1][0]] : ['x138'], nfiles: FILES[id] };
+    });
+    N.x138 = { id: 'x138', at: -16 * 1440, brane: 'shared', kind: 'shared', old: true, slot: -1.6, day: '3 Oct', time: '', hash: '2d3a255', pr: '#196', label: 'row 138', parents: [] };
+    const step = (id, brane, base, merge, o) => {
+      N[id] = { id, brane, kind: o.open ? 'open' : 'step', base, merge, at: merge && N[merge] ? N[merge].at : N[base].at, parents: [base], slot: merge && N[merge] ? N[merge].slot : 16, files: [], tiles: [], notes: [], acts: [], ...o };
+      if (merge && N[merge]) N[merge].parents.push(id);
+    };
+    const C = 'Claude Opus 5.5';
+    const ep = (mins, rounds, checks, calls) => [{ v: checks, k: 'checks' }, { v: String(rounds), k: rounds === 1 ? 'round' : 'rounds' }, { v: mins, k: 'agent min' }, { v: calls, k: 'World calls' }];
+    step('s1', 'onboarding', 't314', 't316', { label: 'design', who: 'you', when: '19 Oct', head: 'Rulings D-189-1…5', can: 'the brane starts here', pr: '#316 · 2 files',
+      files: [['w-world-onboarding.md', 'new']], acts: [['you', 'Ruled C, A, C, A, A']] });
+    step('s2', 'onboarding', 't316', 't320', { label: 'w189a', who: C, when: '19 Oct', head: 'Credentials store split', can: 'mint while another episode runs', task: 'tasks/w189a.md', pr: '#320 · 52 files',
+      tiles: ep('37.3', 1, '5/5', '383'), acts: [['you', 'Minted'], ['you', 'Merged #320']] });
+    step('s3', 'onboarding', 't320', 't321', { label: 'w189b', who: C, when: '19 Oct', head: 'episode start', can: 'start without restarting anything', task: 'tasks/w189b.md', pr: '#321 · 31 files',
+      files: [['episode.go', 'new'], ['session_new.go', 'edit']], tiles: ep('26.8', 2, '8/8', '221'), acts: [['you', 'Minted'], ['you', 'Merged #321']] });
+    step('s4', 'onboarding', 't321', 't324', { label: 'w189c', who: C, when: '19 Oct', head: 'profile init', can: 'set up a repo in one command', task: 'tasks/w189c.md', pr: '#324 · 13 files',
+      files: [['profile_init.go', 'new'], ['profile_init_test.go', 'new']], tiles: ep('18.5', 3, '8/8', '187'), notes: ['CI red on Linux only; fixed in 60ca0b3'], acts: [['you', 'Minted'], ['you', 'Merged #324']] });
+    step('s5', 'onboarding', 't323', 't327', { label: 'w189d', who: C, when: '20 Oct 09:09', head: 'The ailang-world plugin', can: 'teach any agent to use World', task: 'tasks/w189d.md', pr: '#327 · 17 files',
+      files: [['plugins/ailang-world/', 'new'], ['marketplace.json', 'new'], ['host/plugindoc/', 'new']], tiles: ep('6.8', 2, '8/8', '77'), notes: ['4 mutants caught'],
+      acts: [['you', 'Minted'], ['agent', 'Asked: remove cmd/internal'], ['you', 'Approved'], ['review', 'revoke lacked --db → round 2'], ['you', 'Merged #327']] });
+    step('s6', 'onboarding', 't327', 't329', { label: 'w189e', who: C, when: '20 Oct 12:20', head: '“Use World on your repo”', can: 'show any operator the whole path', task: 'tasks/w189e.md', reads: '22 reads', pr: '#329 · 7 files',
+      files: [['USE_WORLD_ON_YOUR_REPO.md', 'new'], ['use_world_page_test.go', 'new'], ['README.md', 'edit'], ['QUICKSTART.md', 'edit']], tiles: ep('3.5', 1, '8/8', '42'), notes: ['3 mutants caught'],
+      acts: [['you', 'Minted · 12 h'], ['world', '0 refusals'], ['you', 'Merged #329']] });
+    step('s7', 'onboarding', 't329', null, { open: true, label: 'AC7', who: 'you', when: 'open', head: 'AC7 · platform-source', can: 'your steps, measured against 11', task: '', acts: [] });
+    const loop = [['l1', 't317', 't319', 'iteration 284', 'Row 156 M3'], ['l2', 't321', 't322', 'iteration 285', 'Row 156 M4a+b'], ['l3', 't322', 't325', 'iteration 286', 'Row 156 M4c'], ['l4', 't325', 't326', 'iteration 287', 'Row 156 M5a'], ['l5', 't323', 't328', 'iteration 288', 'Row 156 M5b']];
+    loop.forEach(([id, base, merge, label, head]) => step(id, 'loop', base, merge, { label: label.replace('iteration ', 'it '), who: 'mission loop', when: N[merge].day, head, can: id === 'l5' ? 'protect an episode’s policy files' : '', pr: N[merge].pr + (N[merge].nfiles ? ' · ' + N[merge].nfiles + ' files' : ''),
+      files: id === 'l5' ? [['exec_protected.go', 'edit'], ['workspace.go', 'edit']] : [], tiles: id === 'l5' ? [{ v: '91', k: 'judge' }, { v: 'green', k: 'CI' }] : [],
+      acts: id === 'l5' ? [['review', 'Judge 88 → 91'], ['loop', 'Merged #328']] : [['loop', 'Merged ' + N[merge].pr]] }));
+    step('r1', 'report', 't318', 't311', { label: 'design', who: 'you', when: '19 Oct', head: 'Row 198 filed', can: '', pr: '#311', acts: [['you', 'Filed row 198']] });
+    step('r2', 'report', 't326', 't323', { label: 'w198', who: C, when: '20 Oct 08:25', head: 'episode report', can: 'answer “what did the agent do?”', task: 'tasks/w198.md', pr: '#323 · 23 files',
+      files: [['episode_report.go', 'new'], ['episode_report_test.go', 'new']], tiles: ep('16.6', 1, '8/8', '195'), acts: [['you', 'Minted'], ['agent', 'Charter conflict: kept both'], ['you', 'Merged #323']] });
+    const READS = { s6: ['s1', 's3', 's4', 's5', 'r2', 'x138'] };
+    const RUNS = { s3: 't320', s4: 't321', s5: 't323', s6: 't323' };
+    const B = {
+      onboarding: { key: 'onboarding', title: 'Onboarding · row 189', y: 270, fg: '#9cc2ff', rule: '#26304a', ids: ['s1', 's2', 's3', 's4', 's5', 's6', 's7'] },
+      shared: { key: 'shared', title: 'Shared world', y: 430, fg: '#ecebe6', rule: '#30343f', ids: ['x138'].concat(T.map(t => t[0])) },
+      loop: { key: 'loop', title: 'Release loop · row 156', y: 580, fg: '#8fd1b3', rule: '#21312b', ids: ['l1', 'l2', 'l3', 'l4', 'l5'] },
+      report: { key: 'report', title: 'Episode report · row 198', y: 700, fg: '#c9a8ff', rule: '#2c2440', ids: ['r1', 'r2'] }
+    };
+    this.state.branches.forEach((br, k) => {
+      const id = 'p' + k;
+      N[id] = { id, at: NOW, brane: br.key, kind: 'open', proposed: true, base: br.base, parents: [br.base], slot: 16, label: br.label, who: br.agent, when: 'proposed', head: br.title, can: 'compare with ' + N[br.from].label, task: br.task, grantKeys: br.grantKeys, files: [], tiles: [], notes: [], acts: [] };
+      B[br.key] = { key: br.key, title: br.key, y: 150 - k * 52, fg: '#9cc2ff', rule: '#1f2638', ids: [id] };
+    });
+    const kids = {}; Object.values(N).forEach(n => n.parents.forEach(p => { (kids[p] = kids[p] || []).push(n.id); }));
+    const up = id => { const r = []; (N[id].parents || []).forEach(p => r.push([p, 'built on'])); (READS[id] || []).forEach(p => r.push([p, 'read'])); if (RUNS[id]) r.push([RUNS[id], 'ran on']); return r; };
+    const down = id => { const r = []; (kids[id] || []).forEach(c => r.push([c, 'built on'])); Object.keys(READS).forEach(x => { if (READS[x].includes(id)) r.push([x, 'read']); }); Object.keys(RUNS).forEach(x => { if (RUNS[x] === id) r.push([x, 'ran on']); }); return r; };
+    return { N, T, B, up, down, NOW };
+  }
+  renderVals() {
+    const { N, T: TL, B, up, down, NOW } = this.model();
+    const S = this.state, set = o => this.setState(o);
+    // Themes. Paper and Slate follow the Sunholo guide: white paper, slate structure, Action orange
+    // for the human, 3 px corners, no shadows or gradients. Night is the earlier dark mockup.
+    // The Sunholo palette, plus a small UI layer: slate and orange tints for surfaces, and three muted
+    // brane accents tuned to sit beside slate (each ≥5:1 on white). Orange stays the human's alone.
+    const SUN = { font: "'Montserrat', 'Segoe UI', sans-serif", mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace", r: '3px', rL: '3px', rPill: '3px', shadow: 'none', shadowS: 'none',
+      card: '#ffffff', cardHead: '#f6f8fa', cardLine: '#dce3e8', cardEdge: '#8496a5', cardBar: '#314352', cardBarText: '#ffffff', cardBarSub: '#dce3e8',
+      col: '#ffffff', colLine: '#dce3e8', colHead: '#f6f8fa', chip: '#f6f8fa', ink: '#2c3e50', inkSub: '#526677', rule: '#e6ebef', strip: '#ffffff', tileBg: '#f6f8fa', prBg: '#eaf3ee', prInk: '#2f5f48', viewBg: '#f6f8fa', ctlCard: '#8496a5',
+      cInputs: '#2c3e50', cOutputs: '#2c3e50', cDecisions: '#2c3e50', cChecks: '#2c3e50', youInk: '#bd3012', youFill: '#fdf1ee', youOff: '#f2d6ce', barWash: '#fdf1ee', barLine: '#bd3012', addBg: '#eaf3ee', delBg: '#fdf1ee', addSign: '#3f7a5e', delSign: '#bd3012',
+      gCard: { onboarding: '#2c3e50', loop: '#2c3e50', report: '#2c3e50', shared: '#526677' }, hueCard: { onboarding: '#2f6690', loop: '#3f7a5e', report: '#6b4f8a', shared: '#526677' },
+      act: { agent: ['#eaf1f7', '#2f6690', '#b9cfe1'], world: ['#f6f8fa', '#526677', '#dce3e8'], review: ['#f1edf6', '#6b4f8a', '#d6cbe4'], loop: ['#eaf3ee', '#3f7a5e', '#c3dccf'] }, marks: 'colour',
+      hBar: '#314352', hLine: '#2c3e50', hText: '#ffffff', hPrompt: '#f9a697', hField: '#2c3e50', hCtl: '#8496a5', hBtn: '#314352', hSel: '#526677', hSelFg: '#ffffff', hSub: '#dce3e8' };
+    const THEMES = {
+      paper: { ...SUN, name: 'Paper', laneBand: '#f6f8fa', laneEdge: '#e6ebef', nowBg: '#ffffff', nowLine: '#8496a5', bg: '#ffffff', bar: '#ffffff', field: '#ffffff', panel: '#f6f8fa', btn: '#ffffff', line: '#dce3e8', ctl: '#8496a5', text: '#2c3e50', sub: '#526677', faint: '#5f7383', prompt: '#314352', ok: '#2c3e50', okDot: '#314352', warn: '#bd3012',
+        you: '#bd3012', onYou: '#ffffff', youShell: '#bd3012', youLine: '#bd3012', youWash: '#fdf1ee', stageBg: '#edf1f4', edge: '#8496a5', laneRule: '#dce3e8', lit: '#2c3e50', halo: 'rgba(44,62,80,0.2)', read: '#6b4f8a', ran: '#3f7a5e', sel: '#e8edf1', selFg: '#2c3e50', tileLine: '#dce3e8', shellBg: '#ffffff',
+        gShell: { onboarding: '#2c3e50', loop: '#2c3e50', report: '#2c3e50', shared: '#526677' }, hueShell: { onboarding: '#2f6690', loop: '#3f7a5e', report: '#6b4f8a', shared: '#526677' } },
+      slate: { ...SUN, name: 'Slate', laneBand: '#314352', laneEdge: '#3d5266', nowBg: '#314352', nowLine: '#8496a5', hBar: '#263544', hLine: '#526677', hField: '#2c3e50', bg: '#2c3e50', bar: '#314352', field: '#2c3e50', panel: '#314352', btn: '#314352', line: '#526677', ctl: '#8496a5', text: '#ffffff', sub: '#dce3e8', faint: '#b9c5cf', prompt: '#dce3e8', ok: '#ffffff', okDot: '#ffffff', warn: '#ffd2c6',
+        you: '#bd3012', onYou: '#ffffff', youShell: '#ffffff', youLine: '#e73c17', youWash: '#314352', stageBg: '#2c3e50', edge: '#8496a5', laneRule: '#3d5266', lit: '#ffffff', halo: 'rgba(255,255,255,0.3)', read: '#dce3e8', ran: '#b9c5cf', sel: '#526677', selFg: '#ffffff', tileLine: '#526677', shellBg: '#2c3e50',
+        gShell: { onboarding: '#ffffff', loop: '#ffffff', report: '#ffffff', shared: '#dce3e8' }, hueShell: { onboarding: '#9cc0dd', loop: '#9fcbb3', report: '#c4b2dc', shared: '#dce3e8' } },
+      night: { name: 'Night', laneBand: 'transparent', laneEdge: 'transparent', nowBg: 'transparent', nowLine: 'transparent', cardEdge: '#3a3b40', cardBar: '#e9e7df', cardBarText: '#1a1a17', cardBarSub: '#55544e', colHead: '#ffffff',
+        hBar: '#121317', hLine: '#23242a', hText: '#ecebe6', hPrompt: '#7fd4b0', hField: '#0b0c0f', hCtl: '#3a3b40', hBtn: '#1d1e22', hSel: '#22314f', hSelFg: '#ffffff', hSub: '#a9a8a2', font: 'Inter, system-ui, sans-serif', mono: "'IBM Plex Mono', monospace", r: '9px', rL: '14px', rPill: '15px', shadow: '0 30px 60px rgba(0,0,0,0.45)', shadowS: '0 10px 24px rgba(0,0,0,0.35)', stageBg: 'radial-gradient(ellipse at 50% 0%, #1e2a42 0%, #0f1014 55%)',
+        bg: '#0f1014', bar: '#121317', field: '#0b0c0f', panel: '#16171a', btn: '#1d1e22', line: '#23242a', ctl: '#3a3b40', text: '#ecebe6', sub: '#a9a8a2', faint: '#8f8e88', prompt: '#7fd4b0', ok: '#7fd4b0', okDot: '#7fd4b0', warn: '#f0a06a',
+        you: '#f0c06a', onYou: '#241a05', youShell: '#f0c06a', youLine: '#f0c06a', youWash: '#221c10', edge: '#3c4252', laneRule: '#26304a', lit: '#ecebe6', halo: 'rgba(255,255,255,0.28)', read: '#b18cff', ran: '#5fc9b5', sel: '#22314f', selFg: '#ffffff', tileLine: '#3a3b40', shellBg: '#0f1014',
+        card: '#f6f5f0', cardHead: '#e9e7df', cardLine: '#dedcd3', col: '#ffffff', colLine: '#e0ded5', chip: '#f4f3ee', ink: '#1a1a17', inkSub: '#55544e', rule: '#eeede8', strip: '#ecebe5', tileBg: '#f6f4fb', prBg: '#e7f3ec', prInk: '#1d5c41', viewBg: '#f8f7f3', ctlCard: '#a9a8a2',
+        cInputs: '#1f5fbf', cOutputs: '#1d7a55', cDecisions: '#8a5d00', cChecks: '#6b4bb0', youInk: '#8a5d00', youFill: '#fff3dc', youOff: '#f3e6c8', barWash: '#fff7e6', barLine: '#ecd29a', addBg: '#e7f3ec', delBg: '#fbe9e4', addSign: '#1d7a55', delSign: '#a33',
+        gShell: { onboarding: '#5b9bff', loop: '#3ccf8e', report: '#b48cff', shared: '#a9a8a2' }, gCard: { onboarding: '#1f5fbf', loop: '#1d7a55', report: '#6b4bb0', shared: '#6f6e68' },
+        hueShell: { onboarding: '#5b9bff', loop: '#3ccf8e', report: '#b48cff', shared: '#a9a8a2' }, hueCard: { onboarding: '#1f5fbf', loop: '#1d7a55', report: '#6b4bb0', shared: '#6f6e68' },
+        act: { agent: ['#eef3fc', '#1f4f9f', '#c9d7f0'], world: ['#f1f0ea', '#45443f', '#dedcd3'], review: ['#f3effb', '#4a3d6b', '#ddd3f0'], loop: ['#e9f5ef', '#1d5c41', '#c4e3d3'] }, marks: 'colour' }
+    };
+    const themeKey = S.look.theme === 'auto' ? (S.sysDark ? 'slate' : 'paper') : S.look.theme;
+    const T = THEMES[themeKey] || THEMES.paper;
+    const marks = S.look.marks || T.marks;
+    const reduced = S.look.motion ? S.look.motion === 'reduced' : S.sysReduced;
+    const motion = { zoom: reduced ? 'opacity 120ms' : 'transform 460ms cubic-bezier(.2,.7,.2,1), opacity 320ms', strip: reduced ? 'none' : 'top 300ms, opacity 300ms, margin-left 300ms, width 300ms' };
+    const X = s => 190 + s * 66, NOWX = 1262;
+    // Times read as people say them; the exact time sits beside them on the open card.
+    const hm = m => { const x = ((m % 1440) + 1440) % 1440; return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+    const rel = m => { const d = NOW - m; if (d < 1) return 'just now'; if (d < 60) return d + ' min ago'; if (m >= 1440) return Math.floor(d / 60) + ' h ago'; if (m >= 0) return 'yesterday ' + hm(m); return Math.floor(d / 1440) + ' days ago'; };
+    const since = m => { const d = NOW - m; return d < 1 ? 'under a minute' : d < 60 ? d + ' min' : Math.floor(d / 60) + ' h'; };
+    const exact = n => n.old ? '3 Oct' : (n.at >= 1440 ? '20 Oct ' : '19 Oct ') + hm(n.at);
+    const relOf = n => n.kind === 'open' ? (n.proposed ? 'proposed ' + rel(n.at) : 'open · waiting ' + since(n.at)) : rel(n.at);
+    // One glyph per brane: the shape always differs; colour only when the viewer turns it on.
+    const SHAPE = { onboarding: 'square', loop: 'triangle', report: 'diamond', shared: 'ring' };
+    const baseKey = key => SHAPE[key] ? key : (key.startsWith('from-') ? 'shared' : (SHAPE[key.split('/')[0]] ? key.split('/')[0] : 'shared'));
+    const isBranch = key => !SHAPE[key];
+    const CLIP = { square: 'none', triangle: 'polygon(50% 4%, 100% 96%, 0 96%)', diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)', ring: 'none' };
+    const gColour = (key, onCard) => { const k = baseKey(key); return (marks === 'colour' ? (onCard ? T.hueCard : T.hueShell) : (onCard ? T.gCard : T.gShell))[k]; };
+    const glyph = (key, onCard) => { const sh = SHAPE[baseKey(key)], c = gColour(key, onCard); return { gbg: sh === 'ring' ? 'transparent' : c, gclip: CLIP[sh], grad: sh === 'ring' ? '50%' : sh === 'square' ? '2px' : '0', gbd: sh === 'ring' ? '2px solid ' + c : 'none', gop: isBranch(key) ? '0.55' : '1' }; };
+    const needsYou = n => (n.kind === 'open' && !S.started[n.id]) || !!n.proposed;
+    const youN = n => (n.acts || []).filter(a => a[0] === 'you').length;
+    const pos = id => { const n = N[id]; const y = B[n.brane].y; if (n.old) return [64, y]; if (n.kind === 'shared') return [X(n.slot), y]; if (n.kind === 'open') return [NOWX, y]; return [X(n.slot) - 26, y]; };
+    const nameOf = id => { const n = N[id]; return n.kind === 'shared' ? (n.old ? 'row 138' : n.hash) : n.label; };
+    const addrOf = id => { const n = N[id]; if (n.kind === 'shared') return 'shared@' + n.hash; return n.brane + '@' + (B[n.brane].ids.indexOf(id) + 1); };
+    const open = (id, from) => { const n = N[id]; const [x, y] = pos(id); set({ d: 1, sid: id, brane: n.brane, focus: id, diff: null, origin: S.d === 0 ? (from || (x + 'px ' + y + 'px')) : S.origin, msg: '', typed: '' }); };
+    const toBrane = key => { const ids = B[key].ids; open(ids[ids.length - 1], '24px ' + B[key].y + 'px'); };
+    const toBlock = () => { set({ d: 0, focus: S.sid, diff: null, msg: '', typed: '' }); if (this.root) this.root.focus({ preventScroll: true }); };
+    // The world timeline. Pointing at a state lights what it connects to; time already says which way.
+    const f = S.focus && N[S.focus] ? S.focus : null;
+    const linked = new Set(f ? up(f).concat(down(f)).map(x => x[0]) : []);
+    const edges = [];
+    Object.values(B).forEach(b => edges.push({ d: `M 24 ${b.y} L ${NOWX} ${b.y}`, c: T.laneRule, w: 1, dash: '', op: '1' }));
+    edges.push({ d: `M 64 ${B.shared.y} L ${X(0)} ${B.shared.y}`, c: T.edge, w: 1.4, dash: '3 5', op: '1' });
+    Object.values(N).forEach(n => n.parents.forEach(p => {
+      if (n.old || !N[p]) return;
+      const [x1, y1] = pos(p), [x2, y2] = pos(n.id), dash = n.kind === 'open' ? '5 5' : '';
+      const lit = f && ((p === f && linked.has(n.id)) || (n.id === f && linked.has(p)));
+      const own = n.kind === 'shared' ? (n.parents[1] === p ? N[p].brane : 'shared') : n.brane;
+      const c = lit ? T.lit : own === 'shared' ? T.edge : gColour(own, false), w = lit ? 2.6 : 1.6, op = lit || own === 'shared' ? '1' : '0.6';
+      if (y1 === y2) return edges.push({ d: `M ${x1} ${y1} L ${x2} ${y2}`, c, w, dash, op });
+      if (n.kind === 'shared') return edges.push({ d: `M ${x1} ${y1} C ${x2} ${y1}, ${x2} ${y2}, ${x2} ${y2}`, c, w, dash, op });
+      const k = Math.min(30, Math.max(8, (x2 - x1) / 2));
+      edges.push({ d: `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x1} ${y2}, ${x1 + k} ${y2} L ${x2} ${y2}`, c, w, dash, op });
+    }));
+    if (f) up(f).concat(down(f)).forEach(([o, via]) => {
+      if (via === 'built on') return;
+      const [x1, y1] = pos(o), [x2, y2] = pos(f);
+      edges.push({ d: `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${via === 'read' ? Math.min(y1, y2) - 70 : Math.max(y1, y2) + 60}, ${x2} ${y2}`, c: via === 'read' ? T.read : T.ran, w: 2, dash: via === 'read' ? '2 4' : '6 4', op: '1' });
+    });
+    const nodes = Object.values(N).map(n => {
+      const [x, y] = pos(n.id), isF = n.id === f, isL = linked.has(n.id), wait = needsYou(n), yn = youN(n);
+      const gl = glyph(n.brane, false), sh = SHAPE[baseKey(n.brane)], shared = n.kind === 'shared';
+      const size = shared ? 12 : sh === 'square' ? 15 : 18;
+      const bd = wait ? '2px dashed ' + T.youLine : shared ? '2px solid ' + (isF || isL ? T.lit : T.edge) : 'none';
+      return { left: (x - 15) + 'px', top: (y - 15) + 'px', size: size + 'px', radius: wait ? '3px' : gl.grad, clip: wait ? 'none' : gl.gclip, bg: wait ? 'transparent' : shared ? T.shellBg : gl.gbg, bd, op: wait ? '1' : gl.gop, anim: wait && !reduced ? 'needsyou 2.4s ease-in-out infinite' : 'none',
+        glow: isF ? `0 0 0 3px ${T.shellBg}, 0 0 0 5px ${T.lit}` : isL ? `0 0 0 4px ${T.halo}` : 'none',
+        hasYou: yn > 0, you: String(yn), youLeft: (x + 6) + 'px', youTop: (y - 19) + 'px',
+        labLeft: (n.kind === 'open' ? x - 114 : x - 48) + 'px', labTop: (n.kind === 'open' ? y - 8 : n.kind === 'shared' ? y + 14 : y - 34) + 'px', labAlign: n.kind === 'open' ? 'right' : 'center',
+        label: n.kind === 'shared' ? (n.old ? '3 Oct' : n.pr) : n.label, rel: isF ? relOf(n) : '', labFg: wait ? T.youShell : isF || isL ? T.text : T.sub, labW: isF || wait ? '700' : '500',
+        aria: (n.head || ('World state ' + n.hash)) + (n.parents.length > 1 ? ', two ancestors' : '') + (yn ? ', ' + yn + ' of your decisions' : '') + (wait ? ', waiting for you' : ''),
+        go: () => open(n.id), hover: () => { if (S.d === 0) set({ focus: n.id }); } };
+    });
+    const lanes = Object.values(B).sort((p, q) => p.y - q.y).map((b, k) => ({ title: b.title, fg: T.text, g: glyph(b.key, false), labTop: (b.y - 44) + 'px', bandTop: (b.y - 52) + 'px', bandH: '96px', bandW: NOWX + 'px', band: k % 2 === 0 ? T.laneBand : 'transparent', go: () => toBrane(b.key) }));
+    const ticks = TL.map(([, s, day, time]) => ({ left: (X(s) - 30) + 'px', time, day }));
+    const needs = Object.values(N).filter(needsYou).map(n => ({ title: n.proposed ? 'Approve ' + n.label : 'Start ' + n.label, since: 'waiting ' + since(n.at), go: () => open(n.id) }));
+    const L = k => ({ tf: k === S.d ? 'scale(1)' : reduced ? 'scale(1)' : k < S.d ? 'scale(1.9)' : 'scale(0.55)', op: k === S.d ? '1' : '0', pe: k === S.d ? 'auto' : 'none' });
+    // One brane: earlier states stack above the open card, later ones below; one column per brane.
+    const b = B[S.brane] || B.onboarding, ids = b.ids, fi = Math.max(0, ids.indexOf(S.sid));
+    const tagOf = n => n.kind === 'shared' ? (n.old ? n.hash + ' · row 138' : n.hash + ' · ' + n.pr) : (n.label + ' · ' + n.who);
+    const F0 = N[ids[fi]], prevId = fi > 0 ? ids[fi - 1] : null;
+    const slotOf = id => N[id].kind === 'shared' ? N[id].slot : (N[id].base ? N[N[id].base].slot : -9);
+    const lines = [{ key: F0.brane, upto: prevId }];
+    if (F0.kind === 'shared') {
+      if (F0.parents.length > 1) lines.push({ key: N[F0.parents[1]].brane, upto: F0.parents[1] });
+    } else if (F0.base) {
+      const lo = prevId ? slotOf(prevId) : slotOf(F0.id) - 5, hi = N[F0.base].slot, seen = {};
+      Object.values(N).filter(t => t.kind === 'shared' && !t.old && t.parents.length > 1 && t.slot > lo && t.slot <= hi).sort((p, q) => q.slot - p.slot).forEach(t => {
+        const m = N[t.parents[1]]; if (m.brane !== F0.brane && !seen[m.brane]) { seen[m.brane] = 1; lines.push({ key: m.brane, upto: m.id }); }
+      });
+    }
+    const gap = 12;
+    const stack = (cols, dir) => {
+      const nc = Math.max(1, cols.length), cw = (1180 - (nc - 1) * gap) / nc, out = [];
+      cols.forEach((l, c) => {
+        const li = B[l.key].ids, at = li.indexOf(l.from);
+        for (let k = at, dd = 1; k >= 0 && k < li.length && dd <= 3; k += dir, dd++) {
+          const id = li[k], n2 = N[id], yn = youN(n2), shrink = (dd - 1) * 24, w = needsYou(n2);
+          out.push({ tag: n2.kind === 'shared' ? (n2.old ? 'row 138' : n2.hash + ' ' + n2.pr) : n2.label, when: relOf(n2), hasYou: yn > 0 || w, you: w ? '!' : String(yn),
+            lane: nc > 1 && dd === 1 ? B[l.key].title : '', g: glyph(l.key, true), aria: (dir < 0 ? 'Back to ' : 'Ahead to ') + tagOf(n2) + (l.key !== F0.brane ? ', on ' + B[l.key].title : ''),
+            key: dd === 1 && l.key === F0.brane ? (dir < 0 ? 'ArrowUp' : 'ArrowDown') : '',
+            width: (cw - shrink) + 'px', ml: (-590 + c * (cw + gap) + shrink / 2) + 'px', top: (dir < 0 ? 106 - (dd - 1) * 46 : 796 + (dd - 1) * 46) + 'px', op: String(Math.max(0.35, 1 - (dd - 1) * 0.28)), z: String(39 - dd),
+            go: () => (l.key === S.brane ? set({ sid: id, diff: null }) : open(id)) });
+        }
+      });
+      return out;
+    };
+    const backs = stack(lines.filter(l => l.upto).slice(0, 3).map(l => ({ key: l.key, from: l.upto })), -1);
+    const nextId = fi < ids.length - 1 ? ids[fi + 1] : null;
+    const aheadIds = (nextId ? [nextId] : []).concat(down(F0.id).filter(([id, via]) => via === 'built on' && id !== nextId).map(x => x[0]));
+    const fwd = stack([...new Set(aheadIds)].map(id => ({ key: N[id].brane, from: id })).filter((l, k, a) => a.findIndex(x => x.key === l.key) === k).slice(0, 3), 1);
+    const rail = ids.slice().reverse().map(id => { const n = N[id], on = id === ids[fi], yn = youN(n); return { label: n.kind === 'shared' ? (n.old ? 'row 138' : n.hash + ' ' + n.pr) : n.label, when: relOf(n), hasYou: yn > 0 || needsYou(n), you: needsYou(n) ? '!' : String(yn), current: String(on), bg: on ? T.sel : 'transparent', fg: on ? T.selFg : T.sub, go: () => set({ sid: id, diff: null }) }; });
+    const n = N[ids[fi]], isShared = n.kind === 'shared';
+    const merged = isShared && n.parents.length > 1 ? N[n.parents[1]] : null;
+    const chipsOf = raw => { const m = new Map(); raw.forEach(([id, via]) => { if (!m.has(id)) m.set(id, via); }); return [...m.entries()].map(([id, via]) => ({ label: nameOf(id), g: glyph(N[id].brane, true), via: via === 'built on' ? '' : via, go: () => open(id) })); };
+    // Inputs are live controls. The human's colour marks what you chose, decided, or are waited on for.
+    const AG = ['Claude Opus 5.5', 'Codex'];
+    const GR = [['read', 'Read'], ['write', 'Write'], ['delete', 'Delete ×200'], ['exec', 'Exec ×600'], ['net', 'Network']];
+    const GN = Object.fromEntries(GR);
+    const STD = ['read', 'write', 'delete', 'exec'];
+    const isEp = n.who === 'Claude Opus 5.5' || n.who === 'Codex';
+    const isOpen = n.kind === 'open' && !n.proposed;
+    const orig = { agent: (isEp || n.proposed) ? n.who : null, task: n.task || '', grants: n.proposed ? n.grantKeys : (isEp || isOpen || isShared) ? STD : [] };
+    const locked = !!n.proposed || !!n.old || (isOpen && !!S.started[n.id]) || n.who === 'mission loop' || (n.who === 'you' && !isOpen);
+    const dr = S.drafts[n.id] || orig;
+    const setDr = o => set({ drafts: { ...S.drafts, [n.id]: { ...dr, ...o } } });
+    const changes = [];
+    if (dr.agent !== orig.agent && dr.agent) changes.push(dr.agent);
+    if (dr.task !== orig.task && !isOpen && !isShared) changes.push('new task');
+    STD.forEach(g => { if (dr.grants.includes(g) && !orig.grants.includes(g)) changes.push('+' + GN[g]); if (!dr.grants.includes(g) && orig.grants.includes(g)) changes.push('−' + GN[g]); });
+    const ready = (isOpen || isShared) ? !!(dr.agent && dr.task.trim()) : changes.length > 0;
+    const baseOf = x => N[x].kind === 'shared' ? x : N[x].base;
+    const branchKey = () => { const tag = dr.agent === 'Codex' && orig.agent !== 'Codex' ? 'try-codex' : 'again'; let key = isShared ? 'from-' + n.hash : n.brane + '/' + tag, k = 2; const have = S.branches.map(x => x.key); while (have.includes(key)) key = key.replace(/-\d+$/, '') + '-' + (k++); return key; };
+    const propose = () => {
+      if (isOpen) return set({ started: { ...S.started, [n.id]: true }, msg: 'Start proposed · type y at your terminal', msgBad: false });
+      const key = branchKey();
+      const br = { key, from: n.id, base: baseOf(n.id), agent: dr.agent || 'Claude Opus 5.5', task: dr.task, grantKeys: dr.grants.slice(), label: isShared ? 'new work' : n.label + '′', title: isShared ? 'New work from ' + n.hash : n.label + ' again' + (dr.agent !== orig.agent ? ' · ' + dr.agent : '') };
+      const drafts = { ...S.drafts }; delete drafts[n.id];
+      this.setState({ branches: S.branches.concat(br), drafts, d: 0, focus: 'p' + S.branches.length, origin: '50% 40%', diff: null, msg: 'Proposed ' + key + ' · waits for your typed y', msgBad: false });
+    };
+    const youAct = [T.you, T.onYou, T.you];
+    const actOf = w => w === 'you' ? youAct : T.act[w];
+    const LABEL = { you: 'You', agent: 'Agent', world: 'World', review: 'Review', loop: 'Loop' };
+    const acts = (n.acts || []).map(([w, text]) => { const [bg, fg, bd] = actOf(w); return { who: LABEL[w], bg, fg, bd, text }; });
+    if (needsYou(n)) acts.push({ who: 'You', bg: T.youFill, fg: T.youInk, bd: T.you, text: n.proposed ? 'Approve with a typed y' : 'Start it' });
+    if (isOpen && S.started[n.id]) acts.push({ who: 'You', bg: T.you, fg: T.onYou, bd: T.you, text: 'Proposed the start · type y' });
+    if (isShared && !n.old) { const w = merged ? (merged.brane === 'loop' ? 'loop' : 'you') : 'world', [bg, fg, bd] = actOf(w); acts.push({ who: LABEL[w], bg, fg, bd, text: 'Merged ' + n.pr }); }
+    // What the agent made for this step: A2UI views through World's closed catalog (row 151, not built yet).
+    const VIEWS = {
+      s6: { by: 'Claude Opus 5.5 · propose_view', title: 'The page, step by step', note: 'illustrative · row 151', isTable: true,
+        cells: [['1', 'Install', 'you'], ['2', 'Profile', 'either · you'], ['3', 'Daemon', 'either'], ['4', 'Task', 'you'], ['5', 'Start', 'you'], ['6', 'Launch', 'you'], ['7', 'Watch', 'either'], ['8', 'Review', 'you'], ['9', 'Finish', 'you']],
+        foot: 'Bound to the page’s nine headings; 10 ailang-worldd lines help-checked against the CLI.' },
+      s5: { by: 'Claude Opus 5.5 · propose_view', title: 'A decision it needed from you', note: 'illustrative · row 151', isAsk: true,
+        ask: 'Remove the empty cmd/internal directory? The boundary guard counts every directory under cmd/, and World’s delete tool removes files only.',
+        actions: [['Approved', true], ['Decline', false]], foot: 'An action-button only proposes; your answer went through the decision path.' }
+    };
+    const v = VIEWS[n.id];
+    const view = v ? { ask: '', ...v, isTable: !!v.isTable, isAsk: !!v.isAsk,
+      cells: (v.cells || []).map(([no, what, who]) => { const mine = who === 'you' || who.endsWith('· you'); return { n: no, what, who, whoFg: mine ? T.youInk : T.inkSub, bd: mine ? T.you : T.colLine, bg: T.col }; }),
+      actions: (v.actions || []).map(([label, chosen]) => ({ label, bd: chosen ? T.you : T.ctlCard, bg: chosen ? T.you : 'transparent', fg: chosen ? T.onYou : T.ink })) } : null;
+    // Outputs open in place: a diff for text, the picture for images. The board carries w189e's real diffs.
+    const DIFFS = {
+      's6:README.md': { stat: '+1', lines: [[92, ' ', '| [QUICKSTART.md](docs/QUICKSTART.md) | The operator runbook: build, serve, commit, publish transitions, and serve the coding tools to agents. … |'], [93, '+', '| [USE_WORLD_ON_YOUR_REPO.md](docs/USE_WORLD_ON_YOUR_REPO.md) | Run a coding agent on your own repo through World, step by step: plugin, profile, `serve`, `episode start`, watch, review, finish. Its command lines are bound to the CLI by a test. |'], [94, ' ', '| [AI-EMPLOYEE.md](design_docs/AI-EMPLOYEE.md) | The first external application — a long-running engineering agent … |']] },
+      's6:QUICKSTART.md': { stat: '+3', lines: [[77, ' ', ''], [78, '+', 'To run a coding agent on your own repo, follow [Use World on your repo](USE_WORLD_ON_YOUR_REPO.md),'], [79, '+', 'which puts these steps in order.'], [80, '+', ''], [81, ' ', '**Two snags, both handled:**']] },
+      's6:USE_WORLD_ON_YOUR_REPO.md': { stat: 'new · 217 lines', lines: [[1, '+', '# Use World on your repo'], [2, '+', ''], [3, '+', 'Run a coding agent on your own repository through AILANG World. The agent works only through'], [4, '+', 'World’s tools, so every act it takes is in World’s log and can be explained afterwards.'], [5, '+', ''], [6, '+', '**Before you start:** you have a git repository, a coding agent (Claude Code or codex), and an'], [7, '+', '`ailang-worldd` built from this repo ([QUICKSTART §1](QUICKSTART.md#1-build-and-start)).'], [8, '+', ''], [9, '+', 'Each step says who does it: **you** (the human, at a terminal), **the agent**, or **either** (you,'], [10, '+', 'a script or an agent).'], [15, '+', '## Once per machine'], [17, '+', '### 1. Install the plugin, the pins and the store (you)'], [45, '+', '## Once per repo'], [66, '+', '## Once per machine session'], [85, '+', '## Per episode'], [93, '+', '### 5. Start the episode (you)'], [166, '+', '### 9. Finish (you)']] },
+      's6:use_world_page_test.go': { stat: 'new · 83 lines', lines: [[12, '+', '// Row 189 M6 (w-world-onboarding.md §8, AC7): the "Use World on your repo"'], [13, '+', '// page is the script the attended AC7 run follows verbatim, so every'], [14, '+', '// ailang-worldd line in it is checked against this binary’s help with the'], [15, '+', '// plugin’s checker (checkWorlddLine).'], [18, '+', 'const useWorldPage = "../../docs/USE_WORLD_ON_YOUR_REPO.md"'], [22, '+', 'const useWorldPageLines = 10']] }
+    };
+    const dk = S.diff && DIFFS[S.diff] ? S.diff : null, dd0 = dk ? DIFFS[dk] : null;
+    const diff = dd0 ? { name: dk.split(':')[1], stat: dd0.stat, aria: 'Changes to ' + dk.split(':')[1],
+      lines: dd0.lines.map(([no, sign, text]) => ({ no: String(no), sign: sign === ' ' ? '' : sign, text, sc: sign === '+' ? T.addSign : T.delSign, bg: sign === '+' ? T.addBg : sign === '-' ? T.delBg : 'transparent' })),
+      close: () => set({ diff: null }) } : { name: '', stat: '', aria: '', lines: [], close: () => {} };
+    const showBar = !locked && (ready || isOpen || (isShared && !n.old));
+    const fr = {
+      tag: tagOf(n), when: relOf(n) + (n.kind === 'open' ? '' : ' · ' + exact(n)), pos: (fi + 1) + ' / ' + ids.length, aria: tagOf(n), g: glyph(n.brane, true), lane: B[n.brane].title,
+      head: isShared ? (merged ? merged.label + ' merged' : n.old ? 'Row 138' : 'Shared world') : n.head,
+      can: isShared ? (merged ? 'two ancestors' : '') : (n.can ? '→ ' + n.can : ''),
+      hasView: !!view, view: view || { by: '', title: '', note: '', isTable: false, isAsk: false, cells: [], ask: '', actions: [], foot: '' },
+      locked, cursor: locked ? 'default' : 'pointer', inBd: ready && !locked ? T.you : T.colLine,
+      agents: AG.map(a => { const on = dr.agent === a; return { name: a, on: String(on), bd: on ? T.you : T.cardLine, bg: on ? T.youFill : T.col, fw: on ? '700' : '400', pick: () => { if (!locked) setDr({ agent: a }); } }; }),
+      task: dr.task, onTask: e => { if (!locked) setDr({ task: e.target.value }); },
+      taskBd: dr.task !== orig.task ? T.you : T.cardLine, taskBg: locked ? T.cardHead : T.col,
+      grants: GR.map(([k, name]) => { const never = k === 'net', on = !never && dr.grants.includes(k), lk = never || locked; return { name: never ? 'Network · never' : name, on: String(on), locked: lk, cursor: lk ? 'default' : 'pointer', bd: on ? T.you : T.cardLine, bg: on ? T.youFill : T.col, fg: never ? T.inkSub : T.ink, toggle: () => { if (!lk) setDr({ grants: on ? dr.grants.filter(g => g !== k) : dr.grants.concat(k) }); } }; }),
+      hasCame: up(n.id).length > 0, cameLabel: '↑ ' + (merged ? 'Two ancestors' : 'Came from') + (n.reads ? ' · ' + n.reads : ''), came: chipsOf(up(n.id)),
+      files: isShared ? [] : (n.files || []).map(([name, tag]) => { const key = n.id + ':' + name, has = !!DIFFS[key], on = S.diff === key; return { name, tag, tc: tag === 'new' ? T.ink : T.inkSub, noDiff: !has, cursor: has ? 'pointer' : 'default', ul: has ? 'underline' : 'none', bg: on ? T.chip : 'transparent', aria: has ? 'Open the changes to ' + name : name, open: () => { if (has) set({ diff: key }); } }; }),
+      hasPr: !!n.pr, pr: isShared ? n.pr + (n.nfiles ? ' · ' + n.nfiles + ' files' : '') : (n.pr || ''),
+      hasLed: down(n.id).length > 0, led: chipsOf(down(n.id)),
+      acts, tiles: isShared ? [] : n.tiles, notes: isShared || n.tiles.length || n.notes.length ? (isShared ? [] : n.notes) : ['—'],
+      hasBar: showBar, chips: isOpen || isShared ? (dr.agent ? [dr.agent] : []) : changes.concat(ready ? ['→ ' + branchKey()] : []),
+      barNote: isOpen ? (ready ? 'then your typed y' : 'pick an agent and write the task') : isShared ? (ready ? '→ ' + branchKey() + ' · then your typed y' : 'start new work from here') : 'then your typed y',
+      canDiscard: !isOpen && !isShared && changes.length > 0, discard: () => { const drafts = { ...S.drafts }; delete drafts[n.id]; set({ drafts }); },
+      hasPropose: showBar, proposeOff: !ready, proposeBg: ready ? T.you : T.youOff, proposeFg: ready ? T.onYou : T.inkSub, proposeCursor: ready ? 'pointer' : 'not-allowed',
+      proposeLabel: isOpen ? 'Propose start' : isShared ? 'Propose' : 'Propose branch', propose: () => { if (ready) propose(); },
+      hasDiff: !!dd0, diff
+    };
+    const crumbs = [{ text: 'world', go: toBlock, current: String(S.d === 0) }];
+    if (S.d === 1) crumbs.push({ text: addrOf(n.id), go: () => {}, current: 'true' });
+    crumbs.forEach((c, k) => { const last = k === crumbs.length - 1; c.bg = last ? T.hSel : 'transparent'; c.fg = last ? T.hSelFg : T.hSub; });
+    const go = raw => {
+      const t = raw.trim().replace(/^world\b\s*/, '');
+      const bad = m => set({ msg: m, msgBad: true });
+      if (t === '' || t === 'back') return toBlock();
+      const m = t.match(/^([a-z0-9/-]+)?(?:@([0-9a-f]+))?$/);
+      if (!m) return bad('no such place: ' + t);
+      const key = m[1] || S.brane; if (!B[key]) return bad('no brane called ' + key);
+      if (!m[2]) return toBrane(key);
+      const list = B[key].ids; const id = /^\d{1,2}$/.test(m[2]) ? list[+m[2] - 1] : Object.keys(N).find(x => N[x].hash && N[x].hash.startsWith(m[2]));
+      if (!id) return bad('no state ' + m[2] + ' on ' + key);
+      open(id, '50% 50%');
+    };
+    // Keys: one map for both distances. Arrows move in time and across lanes; End is now.
+    const laneOrder = Object.values(B).sort((p, q) => p.y - q.y).map(x => x.key);
+    const nearestOn = (key, x) => { const l = B[key].ids; let best = l[l.length - 1], dx = 1e9; l.forEach(id => { const d = Math.abs(pos(id)[0] - x); if (d < dx) { dx = d; best = id; } }); return best; };
+    const cur = S.d === 0 ? (f || 's6') : ids[fi];
+    const laneOf = id => N[id].brane, listOf = id => B[laneOf(id)].ids;
+    const stepIn = (id, k) => { const l = listOf(id), i = l.indexOf(id); return l[Math.max(0, Math.min(l.length - 1, i + k))]; };
+    const stepLane = (id, k) => { const i = laneOrder.indexOf(laneOf(id)), j = Math.max(0, Math.min(laneOrder.length - 1, i + k)); return j === i ? id : nearestOn(laneOrder[j], pos(id)[0]); };
+    const show = id => S.d === 0 ? set({ focus: id }) : (N[id].brane === S.brane ? set({ sid: id, diff: null }) : open(id));
+    const firstNeed = () => { const w = Object.values(N).find(needsYou); if (w) open(w.id); };
+    const onKeys = e => {
+      const t = e.target && e.target.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA') return;
+      const k = e.key; let done = true;
+      if (k === '?') set({ keys: !S.keys, lookOpen: false });
+      else if (k === ',') set({ lookOpen: !S.lookOpen, keys: false });
+      else if (k === 'Escape') { if (S.keys || S.lookOpen) set({ keys: false, lookOpen: false }); else if (S.diff) set({ diff: null }); else if (S.d === 1) toBlock(); }
+      else if (k === '/') { if (this.input) this.input.focus(); }
+      else if (k === 'n' || k === 'N') firstNeed();
+      else if (k === 'End') show(listOf(cur)[listOf(cur).length - 1]);
+      else if (k === 'Home') show(listOf(cur)[0]);
+      else if (S.d === 0 && k === 'Enter') open(cur);
+      else if (S.d === 0 && k === 'ArrowLeft') show(stepIn(cur, -1));
+      else if (S.d === 0 && k === 'ArrowRight') show(stepIn(cur, 1));
+      else if (S.d === 0 && k === 'ArrowUp') show(stepLane(cur, -1));
+      else if (S.d === 0 && k === 'ArrowDown') show(stepLane(cur, 1));
+      else if (S.d === 1 && k === 'ArrowUp') show(stepIn(cur, -1));
+      else if (S.d === 1 && k === 'ArrowDown') { if (nextId) show(nextId); else if (aheadIds.length) open(aheadIds[0]); }
+      else if (S.d === 1 && k === 'ArrowLeft') show(stepLane(cur, -1));
+      else if (S.d === 1 && k === 'ArrowRight') show(stepLane(cur, 1));
+      else done = false;
+      if (done) e.preventDefault();
+    };
+    const keyRows = [['↑ ↓', 'lane above · below', 'back in time · toward now'], ['← →', 'earlier · later', 'brane above · below'], ['End', 'most recent', 'most recent'], ['Home', 'earliest', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'close · back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']]
+      .map(([key, far, near]) => ({ key, far, near }));
+    const opt = (cur, val, label, pick) => { const on = cur === val; return { label, on: String(on), bd: on ? T.you : T.ctl, bg: on ? T.you : T.btn, fg: on ? T.onYou : T.text, fw: on ? '700' : '500', pick }; };
+    const lookRows = [
+      { name: 'Theme', opts: [['paper', 'Paper'], ['slate', 'Slate'], ['night', 'Night'], ['auto', 'Match system']].map(([v2, l]) => opt(S.look.theme, v2, l, () => this.setLook({ theme: v2 }))) },
+      { name: 'Brane marks', opts: [['shape', 'Shape'], ['colour', 'Shape and colour']].map(([v2, l]) => opt(marks, v2, l, () => this.setLook({ marks: v2 }))) },
+      { name: 'Motion', opts: [['full', 'Full'], ['reduced', 'Reduced']].map(([v2, l]) => opt(reduced ? 'reduced' : 'full', v2, l, () => this.setLook({ motion: v2 }))) }
+    ];
+    return {
+      T, motion, crumbs, typed: S.typed, msg: S.msg, msgFg: S.msgBad ? T.hPrompt : T.hPrompt,
+      onType: e => set({ typed: e.target.value, msg: '', msgBad: false }), onKey: e => { e.stopPropagation(); if (e.key === 'Enter') { go(e.target.value); if (this.root) this.root.focus({ preventScroll: true }); } if (e.key === 'Escape') { set({ typed: '' }); if (this.root) this.root.focus({ preventScroll: true }); } },
+      origin: S.origin, L0: L(0), L1: L(1),
+      rootRef: this.rootRef, inputRef: this.inputRef, onKeys, keyRows, showKeys: S.keys, keysOpen: String(S.keys), toggleKeys: () => set({ keys: !S.keys, lookOpen: false }), kTimeFg: S.d === 0 ? T.text : T.faint, kBraneFg: S.d === 1 ? T.text : T.faint,
+      showLook: S.lookOpen, lookOpen: String(S.lookOpen), toggleLook: () => set({ lookOpen: !S.lookOpen, keys: false }), lookRows,
+      lanes, edges, nodes, ticks, nowX: NOWX + 'px', bandX: (NOWX + 22) + 'px', needs, needCount: String(needs.length),
+      backs, fwd, rail, braneTitle: b.title, rg: glyph(b.key, false), fr
+    };
+  }
+}
+</script>
+</body>
+</html>
