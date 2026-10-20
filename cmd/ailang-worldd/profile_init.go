@@ -390,6 +390,9 @@ func proposeProfile(ctx context.Context, repoAbs, project string) (initProposal,
 			skipped = append(skipped, fmt.Sprintf("skipped %s (%s): %v", strings.Join(d.commands, ", "), strings.Join(d.markers, " + "), err))
 			continue
 		}
+		if err := argv0InToolchain(d, r); err != nil {
+			return initProposal{}, nil, err
+		}
 		for _, name := range d.commands {
 			s := initShapes[name]
 			p.Commands[name] = s.cmd
@@ -519,6 +522,31 @@ func detectInitIn(repoAbs, dir string) ([]initDetected, []string) {
 		}
 	}
 	return found, notes
+}
+
+// argv0InToolchain refuses a command whose argv[0] is not in its own
+// toolchain's directories. The /usr/bin and /bin appended for sh can hold
+// another toolchain's gofmt or node (a Linux distro's), which the parser
+// would accept on the joined path. sh is the one argv[0] they are for.
+func argv0InToolchain(d initDetected, r initResolved) error {
+	for _, name := range d.commands {
+		argv0 := initShapes[name].cmd.Argv[0]
+		if argv0 == "sh" {
+			continue
+		}
+		found := false
+		for _, dir := range r.path {
+			if info, err := os.Stat(filepath.Join(dir, argv0)); err == nil && info.Mode().IsRegular() && info.Mode().Perm()&0o111 != 0 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("commands.%s.argv: %s is not in the %s toolchain's %v; one further along the path would be another "+
+				"toolchain's, so nothing was written", name, argv0, d.kind, r.path)
+		}
+	}
+	return nil
 }
 
 // resolveInitGo asks the repo's own go for the toolchain: the go that runs

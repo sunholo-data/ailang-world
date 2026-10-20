@@ -443,13 +443,16 @@ func TestProfileInitWritesOnceExclusively(t *testing.T) {
 	}
 }
 
-// A proposal the parser refuses is never written, not even its directory.
-func TestProfileInitWritesNothingWhenTheParserRefuses(t *testing.T) {
+// A command whose argv[0] is not in its toolchain's directories is refused
+// and nothing is written, not even the directory. The parser alone would
+// accept it wherever /usr/bin holds a gofmt: the GitHub Linux runner does,
+// and this test passed on macOS but failed there (CI on #324).
+func TestProfileInitWritesNothingWhenACommandIsNotInItsToolchain(t *testing.T) {
 	repo, _ := goFixture(t, false) // GOROOT/bin has no gofmt
 	dir := filepath.Join(t.TempDir(), "profiles")
 	code, _, errs := runProfileInitCLI("--repo", repo, "--project", "nofmt", "--profiles-dir", dir)
-	if code != exitUsage || !strings.Contains(errs, "does not pass the profile parser, so nothing was written") ||
-		!strings.Contains(errs, "commands.gofmt-l.argv") {
+	if code != exitUsage || !strings.Contains(errs, "commands.gofmt-l.argv: gofmt is not in the go toolchain's") ||
+		!strings.Contains(errs, "so nothing was written") {
 		t.Fatalf("exit %d, stderr %q", code, errs)
 	}
 	if _, err := os.Stat(dir); !os.IsNotExist(err) {
