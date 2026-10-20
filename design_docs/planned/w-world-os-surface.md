@@ -191,6 +191,25 @@ a text form:
 The same addresses work in a terminal. Today's commands (`episode report`, `why`, `provenance`)
 already answer front-card questions, so their output is what the card renders.
 
+### §3.3a Keys — one map for both distances
+
+Time always runs on one axis and lanes on the other, so the same keys mean the same thing at
+either distance:
+
+| key | world timeline | one brane |
+|---|---|---|
+| ↑ ↓ | lane above · below | back in time · toward now |
+| ← → | earlier · later on the lane | the brane above · below, at the nearest moment |
+| End · Home | most recent · earliest | most recent · earliest |
+| Enter | open the brane | — |
+| Esc | — | back to the timeline |
+| N | jump to what needs you | jump to what needs you |
+| / | the address bar | the address bar |
+| ? | show these keys | show these keys |
+
+Keys never fire while you are typing in the address bar or the task. Esc there returns to the
+board.
+
 ### §3.4 What r1 and r2 cut, and why
 
 | earlier view | where its job went |
