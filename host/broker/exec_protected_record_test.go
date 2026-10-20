@@ -653,6 +653,72 @@ func TestExecProtectedCheckTimeout(t *testing.T) {
 			t.Fatal("after-phase extended original deadline by more than cleanup allowance")
 		}
 	})
+	// The before-phase's own time is charged to the child: with the budget
+	// read before it, the child ends 0.6 bound later and the 0.7-bound
+	// after-phase no longer fits.
+	t.Run("reserve-after-before", func(t *testing.T) {
+		git := recordEnv(t)
+		bound := 3 * time.Second
+		recordPhaseBound(t, bound)
+		f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+		first := shellQuote(filepath.Join(t.TempDir(), "first-status"))
+		sleep := func(d time.Duration) string { return fmt.Sprintf("sleep %.3f", d.Seconds()) }
+		fake, _ := protectedFakeGit(t, fmt.Sprintf("if [ \"$1\" = -c ] && [ \"$3\" = status ]; then\n"+
+			"if [ -f %s ]; then %s; else touch %s; %s; fi\nfi\nexec %s \"$@\"", first, sleep(bound*7/10), first, sleep(bound*6/10), shellQuote(git)))
+		recordSwapGit(t, fake)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*bound)
+		defer cancel()
+		deadline, _ := ctx.Deadline()
+		r := recordExecute(t, f, ctx, "sleep")
+		if !r.TimedOut || r.Protected == nil {
+			t.Fatalf("child must time out inside its reserved budget: %+v", r)
+		}
+		// Only the after verdict is asserted: a loaded rig may time out the
+		// before-phase too, and that spends the same budget.
+		if p := r.Protected; p.IntactAfter == nil || !*p.IntactAfter {
+			t.Fatalf("after-phase must keep a full bound after a slow before-phase: %+v", p)
+		}
+		if !time.Now().Before(deadline) {
+			t.Fatal("reserve-after-before returned at/after the original deadline")
+		}
+	})
+	// Cancelling the call after the command ran must not abort the after-phase.
+	t.Run("after-cancel", func(t *testing.T) {
+		git := recordEnv(t)
+		bound := 3 * time.Second
+		recordPhaseBound(t, bound)
+		f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+		dir := t.TempDir()
+		first, after := filepath.Join(dir, "first-status"), filepath.Join(dir, "after-status")
+		fake, _ := protectedFakeGit(t, fmt.Sprintf("if [ \"$1\" = -c ] && [ \"$3\" = status ]; then\n"+
+			"if [ -f %s ]; then touch %s; sleep %.3f; else touch %s; fi\nfi\nexec %s \"$@\"",
+			shellQuote(first), shellQuote(after), (bound*3/10).Seconds(), shellQuote(first), shellQuote(git)))
+		recordSwapGit(t, fake)
+		ctx, cancel := context.WithTimeout(context.Background(), 6*bound)
+		defer cancel()
+		done := make(chan struct{})
+		defer close(done)
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				case <-time.After(5 * time.Millisecond):
+				}
+				if _, err := os.Stat(after); err == nil {
+					cancel()
+					return
+				}
+			}
+		}()
+		p := recordSuccess(t, recordExecute(t, f, ctx, "test"))
+		if ctx.Err() != context.Canceled {
+			t.Fatalf("instrument: the call was not cancelled during the after-phase (ctx err %v)", ctx.Err())
+		}
+		if p.IntactAfter == nil || !*p.IntactAfter {
+			t.Fatalf("after-phase must survive call cancellation: %+v", p)
+		}
+	})
 }
 
 func TestExecProtectedNotGit(t *testing.T) {
