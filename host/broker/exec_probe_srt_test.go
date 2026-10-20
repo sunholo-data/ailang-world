@@ -9,7 +9,10 @@ package broker
 // verbosely and fails unless each prints --- PASS.
 
 import (
+	"context"
+	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -61,4 +64,34 @@ func TestExecSrtProbeRefusesAPackageOnlySandbox(t *testing.T) {
 		t.Fatalf("the refusal does not carry srt's load failure: %v", err)
 	}
 	f.assertProbeCleaned(t)
+}
+
+func TestExecProbeArm8(t *testing.T) {
+	nm, _ := realSrt(t)
+	pin := ExecSandboxPin{Version: ExecSandboxRelease, CLISHA256: ExecSandboxCLISHA256}
+	// Validate configured pins before an optional Linux dependency skip.
+	pkg := filepath.Join(nm, "@anthropic-ai", "sandbox-runtime")
+	raw, err := os.ReadFile(filepath.Join(pkg, "package.json"))
+	var meta struct{ Version string }
+	if err != nil || json.Unmarshal(raw, &meta) != nil || meta.Version != pin.Version {
+		t.Fatalf("configured srt package pin invalid: %q, %v", meta.Version, err)
+	}
+	if sum, err := sha256File(filepath.Join(pkg, "dist", "cli.js")); err != nil || sum != pin.CLISHA256 {
+		t.Fatalf("configured srt CLI pin invalid: %s, %v", sum, err)
+	}
+	if hostGOOS() == "linux" {
+		if _, err := exec.LookPath("bwrap"); err != nil {
+			t.Skipf("SKIP %s: bwrap absent: %v", t.Name(), err)
+		}
+	}
+	f := newProbeFixture(t, nm, &pin, "", []any{"sh", "-c", "exit 0"})
+	f.profile.Protected = []string{"spec?.go", "tests/**"}
+	pp := f.arm8Prober(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	pp.probeProtected(ctx, hostGOOS())
+	if len(pp.failed) != 0 {
+		t.Fatalf("arm8 real srt: %v", pp.failed)
+	}
+	t.Logf("arm8 directory refusal; %s basename oracle passed", hostGOOS())
 }
