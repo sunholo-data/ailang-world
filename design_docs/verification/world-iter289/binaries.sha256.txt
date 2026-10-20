@@ -1,0 +1,2 @@
+0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5  ~/.pinned-ailang-tools/v0.52.1/ailang
+d821dad0d6e906604182a8b5bb29d60e57c872395ba11ad9e8a7f34e440ac043  ~/.pinned-ailang-tools/v0.54.15/ailang

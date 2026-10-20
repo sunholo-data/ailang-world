@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -341,5 +342,127 @@ func TestWorkspaceWriteProtectedPolicyTool(t *testing.T) {
 	out := protectedCall(t, ctx, h, broker.EffectWorkspaceWrite, map[string]string{"op": "write", "path": "ok.txt", "content": "allowed\n"})
 	if !strings.Contains(string(out), `"ok":true`) || string(protectedRead(t, filepath.Join(f.root, "ep1/ok.txt"))) != "allowed\n" {
 		t.Fatalf("unprotected write failed: %s", out)
+	}
+}
+
+// V25 pins resolved-path refusals and R-156-10's unconditional hard-link refusal.
+// This test SKIPs in CI (no tool pin; row 160); it has no pin-free companion
+// because a fake tool cannot prove the upstream matcher.
+func TestWorkspaceWriteProtectedAliasesPolicyTool(t *testing.T) {
+	bin := realToolBin(t)
+	for _, tc := range []struct{ name, path, target, alias, linkTo, op string }{
+		{"symlink-dir-new-write", "lnk/new.py", "tests/new.py", "lnk", "tests", "write"},
+		{"symlink-dir-write", "lnk/test_x.py", "tests/test_x.py", "lnk", "tests", "write"},
+		{"symlink-dir-edit", "lnk/test_x.py", "tests/test_x.py", "lnk", "tests", "edit"},
+		{"symlink-file-write", "alias.txt", "a_test.go", "alias.txt", "a_test.go", "write"},
+		{"symlink-file-edit", "alias.txt", "a_test.go", "alias.txt", "a_test.go", "edit"},
+		{"hardlink-write", "hl.txt", "a_test.go", "hl.txt", "", "write"},
+		{"hardlink-edit", "hl.txt", "a_test.go", "hl.txt", "", "edit"},
+		{"no-protected-symlink-dir-new-write", "lnk/new.py", "tests/new.py", "lnk", "tests", "write"},
+		{"no-protected-symlink-dir-write", "lnk/test_x.py", "tests/test_x.py", "lnk", "tests", "write"},
+		{"no-protected-symlink-dir-edit", "lnk/test_x.py", "tests/test_x.py", "lnk", "tests", "edit"},
+		{"no-protected-symlink-file-write", "alias.txt", "a_test.go", "alias.txt", "a_test.go", "write"},
+		{"no-protected-symlink-file-edit", "alias.txt", "a_test.go", "alias.txt", "a_test.go", "edit"},
+		{"no-protected-hardlink", "hl.txt", "plain.txt", "hl.txt", "", "write"},
+		{"no-protected-singlelink", "plain.txt", "plain.txt", "", "", "write"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := boundedTestContext(t)
+			f := newWSFixture(t)
+			root := filepath.Join(f.root, "ep1")
+			mkdirs(t, filepath.Join(root, "tests"))
+			target, alias := filepath.Join(root, tc.target), filepath.Join(root, tc.alias)
+			fresh := strings.HasSuffix(tc.name, "dir-new-write")
+			hard := strings.Contains(tc.name, "hardlink")
+			wantLinks := uint64(1)
+			if hard {
+				wantLinks = 2
+			}
+			protected := !strings.HasPrefix(tc.name, "no-protected-")
+			if !fresh {
+				writeFile(t, target, "seed\n")
+			}
+			if tc.linkTo != "" {
+				if err := os.Symlink(tc.linkTo, alias); err != nil {
+					t.Fatal(err)
+				}
+			} else if hard {
+				if err := os.Link(target, alias); err != nil {
+					t.Fatal(err)
+				}
+			}
+			// Retain setup observations, but enforce them after the mechanism check.
+			before, beforeErr := os.Lstat(alias)
+			linkBefore, linkErr := os.Readlink(alias)
+			targetBefore, targetErr := os.Lstat(target)
+			d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: bin})
+			if protected {
+				d.workspace.exec = &workspaceExec{profile: protectedProfile(t, "alpha", "tests/**", "*_test.go")}
+			}
+			payload := map[string]string{"op": tc.op, "path": tc.path}
+			if tc.op == "write" {
+				payload["content"] = "changed\n"
+			} else {
+				payload["old_text"], payload["new_text"] = "seed", "changed"
+			}
+			out := protectedCall(t, ctx, d.workspace.registry("ep1")[broker.EffectWorkspaceWrite], broker.EffectWorkspaceWrite, payload)
+			refused := protected || hard
+			var response map[string]any
+			if json.Unmarshal(out, &response) != nil || response["ok"] != !refused {
+				t.Errorf("want ok:%t, got %s", !refused, out)
+			}
+			if refused {
+				fragments := []string{"resolves to", "fs_deny_write"}
+				if hard {
+					fragments = []string{"more than one hard link"}
+				}
+				for _, fragment := range fragments {
+					if !strings.Contains(string(out), fragment) {
+						t.Errorf("refusal mechanism missing %q: %s", fragment, out)
+					}
+				}
+			}
+			if fresh && refused {
+				if _, err := os.Lstat(target); !os.IsNotExist(err) {
+					t.Errorf("new protected target must remain absent: %v", err)
+				}
+			} else {
+				want := "changed\n"
+				if refused {
+					want = "seed\n"
+				}
+				if got := string(protectedRead(t, target)); got != want {
+					t.Errorf("host target bytes = %q, want %q", got, want)
+				}
+				after, err := os.Lstat(target)
+				if err != nil || !after.Mode().IsRegular() || uint64(after.Sys().(*syscall.Stat_t).Nlink) != wantLinks {
+					t.Errorf("final target must be regular with nlink %d: %v, %v", wantLinks, after, err)
+				}
+			}
+			if fresh {
+				if !os.IsNotExist(targetErr) {
+					t.Errorf("new target was not initially absent: %v", targetErr)
+				}
+			} else if targetErr != nil || !targetBefore.Mode().IsRegular() || uint64(targetBefore.Sys().(*syscall.Stat_t).Nlink) != wantLinks {
+				t.Errorf("initial target must be regular with expected link count: %v, %v", targetBefore, targetErr)
+			}
+			if tc.linkTo != "" {
+				after, err := os.Lstat(alias)
+				linkAfter, readErr := os.Readlink(alias)
+				if beforeErr != nil || before.Mode()&os.ModeSymlink == 0 || linkErr != nil || linkBefore != tc.linkTo ||
+					err != nil || after.Mode()&os.ModeSymlink == 0 || readErr != nil || linkAfter != tc.linkTo || !os.SameFile(before, after) {
+					t.Errorf("alias must remain the same symlink to %q: before=%v/%q/%v, after=%v/%q/%v", tc.linkTo, before, linkBefore, beforeErr, after, linkAfter, err)
+				}
+			} else if hard {
+				after, err := os.Lstat(alias)
+				targetAfter, errTarget := os.Lstat(target)
+				if beforeErr != nil || targetErr != nil || !before.Mode().IsRegular() || !os.SameFile(before, targetBefore) ||
+					uint64(before.Sys().(*syscall.Stat_t).Nlink) != 2 || err != nil || errTarget != nil ||
+					!after.Mode().IsRegular() || !targetAfter.Mode().IsRegular() || !os.SameFile(after, targetAfter) ||
+					uint64(after.Sys().(*syscall.Stat_t).Nlink) != 2 || uint64(targetAfter.Sys().(*syscall.Stat_t).Nlink) != 2 {
+					t.Errorf("alias and target must remain regular hard links to the same inode with nlink 2: before=%v/%v, after=%v/%v", before, targetBefore, after, targetAfter)
+				}
+			}
+		})
 	}
 }

@@ -1,6 +1,6 @@
 {
   "id": "w-exec-protected-test-paths",
-  "iteration": 282,
+  "iteration": 289,
   "row": 156,
   "clause": "5 (+3)",
   "authority": [
@@ -8,12 +8,13 @@
     "CLAUDE.md; design_docs/coding-standards.md",
     "design_docs/world-mission.md row156 and D-WORLD-81=A",
     "design_docs/DESIGN.md §§1,14",
-    "design_docs/planned/w-exec-protected-test-paths-sprint-plan.md"
+    "design_docs/planned/w-exec-protected-test-paths-sprint-plan.md",
+    "Iteration 289 V25: approved design §§3 V25, 4.1, 4.3.2, 5 P6, 8 D-156-4, 9 R-156-10, 10; design_docs/verification/world-iter289/README.md; controller facts F1–F8"
   ],
-  "estimate": "21 executor/controller runs, 590 minutes; 4757 changed LOC total including production/tests/docs. <=250 LOC and <=30min each; CI/measurement waiting separate from active work. M1c <=140 production +110 tests; M1d <=240 tests.",
-  "scope": "Planner creates exactly this JSON and its Markdown pair; no git write operations. Executor follows design M0–M7, with ordered splits. Each run is a separately reviewable, compiling PR with green normal CI, never a prerequisite on a later unlanded patch. M0 is Linux CI only. Defaults A,A,A,B; M5 policy only. Iteration 282 detection revision supersedes historical ASCII-pattern fallback language in done planning records: do not drop Unicode rows / do not narrow the guarantee. V24 remains unmeasured and gates M6a.",
+  "estimate": "24 executor/controller milestone entries, up to 670 minutes; 5407 changed LOC total including production/tests/docs. Includes held M5c/M5d (60 minutes / 500 LOC); if D-WORLD-86=A drops them: 22 runs / 610 minutes / 4907 LOC. M5e <=150 LOC /20min; all other runs <=250 LOC /30min.",
+  "scope": "Bounded iteration-289 plan amendment; planner edits exactly the Markdown/JSON pair, no Git writes, fixtures, network or unfiltered suites. Original M0a..M1b objects unchanged. M1c..M5b landed with controller-provided merge SHAs. D-156-1..4 answered A, attended 2026-10-17 (D-WORLD-82). V25 on v0.54.15 supersedes the old write-tool alias residual. M5e test-only and independent of D-WORLD-86; M5c/M5d held, build only B, dropped A. M6-pre depends only on M5b and M1d, not M5c/M5d/M5e; V24 still gates M6a. Historical milestones/baselines retain their dates and are not current green claims.",
   "environment": [
-    "WORLD_TOOL_AILANG_BIN MUST be unset for every normal gate (CI does not provision it); optional real v0.52.1 arm skips cleanly when unset.",
+    "WORLD_TOOL_AILANG_BIN MUST be unset for normal gates (CI does not provision it, row 160); explicit controller real-tool gates use v0.54.15 and require PASS, not SKIP. AILANG_BIN=$HOME/.pinned-ailang/ailang throughout. M5e has no pin-free companion; see its evidence boundary below.",
     "No .ail changes: do NOT run scripts/verify_ail.sh for this plan. If scope later changes to .ail, first perform S5 reference/builtin/pin checks and add ./scripts/verify_ail.sh to that milestone; re-estimate/split, do not assume it compiles.",
     "Real srt uses WORLD_EXEC_SRT_NODE_MODULES and WORLD_EXEC_NODE, pin @anthropic-ai/sandbox-runtime@0.0.78 / cli sha256 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e. Linux also requires bwrap; missing dependency skips before fixture setup; configured corrupt pin fails.",
     "Git and Python3 are CI prerequisites, not optional skips for the real pathspec/matrix companion tests.",
@@ -126,7 +127,6 @@
   ],
   "planner_decisions": {
     "D-156-1": {
-      "default": "A",
       "affects": [
         "M4a",
         "M4b",
@@ -136,10 +136,13 @@
         "M7a",
         "M7b"
       ],
-      "plan": "Report changed paths/error without failing or refusing command or next call."
+      "plan": "Report changed paths/error without failing or refusing command or next call.",
+      "answer": "A",
+      "status": "answered",
+      "attended": "2026-10-17",
+      "decision_record": "D-WORLD-82"
     },
     "D-156-2": {
-      "default": "A",
       "affects": [
         "M1a",
         "M2a",
@@ -151,10 +154,13 @@
         "M7a",
         "M7b"
       ],
-      "plan": "No defaults; absent/[] means exact old policy/settings/result bytes, why none declared."
+      "plan": "No defaults; absent/[] means exact old policy/settings/result bytes, why none declared.",
+      "answer": "A",
+      "status": "answered",
+      "attended": "2026-10-17",
+      "decision_record": "D-WORLD-82"
     },
     "D-156-3": {
-      "default": "A",
       "affects": [
         "M0a",
         "M0b",
@@ -165,21 +171,47 @@
         "M6b",
         "M7b"
       ],
-      "plan": "Linux basename detected only, no literal expansion production path, enforced dirs-only."
+      "plan": "Linux basename detected only, no literal expansion production path, enforced dirs-only.",
+      "answer": "A",
+      "status": "answered",
+      "attended": "2026-10-17",
+      "decision_record": "D-WORLD-82"
     },
     "D-156-4": {
-      "default": "B",
       "affects": [
         "M5a",
         "M5b",
+        "M5c",
+        "M5d",
         "M6c",
         "M7b"
       ],
-      "plan": "Policy half only. Do not implement precheck on unanswered decision. If A arrives, replan separate <=250LOC/30min M5c/M5d after M5b, before later integration: resolution guard killed by MUT-PRECHECK-LEXICAL-ONLY via TestWorkspaceWriteProtectedPrecheck/symlink-dir, and Nlink guard killed by MUT-NO-NLINK via TestWorkspaceWriteProtectedPrecheck/hardlink; lexical/file-alias rows and spawn counter0. Existing anchors handlers_ailang.go:203 resolveExistingPrefix, :406 Execute, :242 AilangToolConfig. No current milestone/JSON entry for this conditional unapproved work."
+      "plan": "World pre-check before write tools plus upstream ticket; M5c/M5d after M5b. Subsequently held on D-WORLD-86 after V25: neither build nor drop until answered; B builds, A drops. Killers must use fakeToolBin, World typed refusals and dispatch 0; v0.54.15 masks a removed World guard. Current handlers_ailang.go anchors: resolveExistingPrefix :217, AilangToolConfig :256, Execute :423.",
+      "answer": "A",
+      "status": "answered",
+      "attended": "2026-10-17",
+      "decision_record": "D-WORLD-82"
     },
-    "ordering": "Strict chain: M0a→M0b→M1a→M1b→M1c→M1d→M2a→M2b→M3a→M3b→M4a→M4b→M4c→M5a→M5b→M6-pre→M6a→M6b→M6c→M7a→M7b. M6-pre additionally depends explicitly on M1d; M6a blocked until measured V24 and resized bounds.",
+    "ordering": "Existing chain through landed M5b. M5e depends only on M5b, independent of D-WORLD-86. Held M5c depends on M5b; held M5d depends on M5c; build only D-WORLD-86=B, drop A. M6-pre depends on M5b and M1d only, explicitly NOT on M5c/M5d/M5e; then M6a→M6b→M6c→M7a→M7b. V24 and resized bounds still gate M6a.",
     "new_path_verification": "Every existing file in milestone files was checked with ls/rg and pathlib.is_file; new files explicitly absent with verified existing parent. Base function lines below refer to d919701, not design b7bae72.",
-    "gate_boundary": "Full narrowest-package race commands are mandatory, listed verbatim for each milestone. Full baseline green is unknown because legacy tests seed off-worktree locations. Controller must provide containment before running those gates; plan grants no permission to seed HOME and does not substitute focused success for a full green."
+    "gate_boundary": "Full narrowest-package race commands are mandatory, listed verbatim for each milestone. Full baseline green is unknown because legacy tests seed off-worktree locations. Controller must provide containment before running those gates; plan grants no permission to seed HOME and does not substitute focused success for a full green.",
+    "D-WORLD-86": {
+      "status": "open",
+      "default": "HOLD",
+      "affects": [
+        "M5c",
+        "M5d"
+      ],
+      "plan": "Being filed iteration 289: neither build nor drop while unanswered. A recommended: drop M5c/M5d, rely on v0.54.15 tool pin plus M5e real-tool alias regression arms on every future pin move. B: build M5c/M5d as defence in depth. M5e wanted under both answers; M6-pre independent."
+    },
+    "tool_pin": {
+      "version": "v0.54.15",
+      "since": "2026-10-17",
+      "manifest": "host/pins/ailang-releases.json",
+      "role": "tool",
+      "binary_sha256_abbrev": "d821dad0…ac043",
+      "plan": "M5b historical v0.52.1 wording retained with current-pin annotation. V25 proves write/edit alias refusals; ailang-run FS remains unmeasured on this pin."
+    }
   },
   "must_not_change": [
     "world/**",
@@ -854,7 +886,7 @@
         "host/broker/exec_protected.go",
         "host/broker/exec_protected_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedFoldToASCIIClosed",
         "TestProtectedCandidatePathspecsGolden",
@@ -1061,7 +1093,8 @@
         }
       ],
       "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "02bd1410 (#312)"
     },
     {
       "id": "M1d",
@@ -1075,7 +1108,7 @@
         "host/broker/exec_protected_git_test.go",
         "host/broker/exec_protected.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedGitCandidateEquivalence"
       ],
@@ -1230,7 +1263,8 @@
         }
       ],
       "baseline_new_tests": "NOT MEASURED: absent at base; zero tests is not a pass. No fixture Git repositories were created by planner.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "02bd1410 (#312)"
     },
     {
       "id": "M2a",
@@ -1244,7 +1278,7 @@
         "host/broker/exec_profile.go",
         "host/broker/exec_profile_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecProfileProtected",
         "TestExecProfileProtectedUnknownFormRefused"
@@ -1356,7 +1390,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "78f2860c (#314)"
     },
     {
       "id": "M2b",
@@ -1370,7 +1405,7 @@
         "host/daemon/exec_startup_test.go",
         "docs/QUICKSTART.md"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecStartupRefusalTable"
       ],
@@ -1445,7 +1480,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "78f2860c (#314)"
     },
     {
       "id": "M3a",
@@ -1460,7 +1496,7 @@
         "host/broker/exec_settings_test.go",
         "host/broker/handlers_exec.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecSettingsProtectedRendered",
         "TestExecSettingsGoldenDarwin",
@@ -1623,7 +1659,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "826f2a0b (#319)"
     },
     {
       "id": "M3b",
@@ -1637,7 +1674,7 @@
         "host/broker/handlers_exec_srt_test.go",
         "host/broker/handlers_exec_m2_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecSrtProtectedWrites",
         "TestExecProtectedSettingsThroughHandler"
@@ -1741,7 +1778,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "826f2a0b (#319)"
     },
     {
       "id": "M4a",
@@ -1756,7 +1794,7 @@
         "host/broker/exec_protected_check_test.go",
         "design_docs/planned/w-exec-protected-test-paths.md"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedGitFilterPreflight"
       ],
@@ -1840,7 +1878,8 @@
         }
       ],
       "baseline_new_tests": "New preflight test absent at base. Existing configuredGitFilters behavior was read, not executed as a new test.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "c9ab49b7 (#322)"
     },
     {
       "id": "M4b",
@@ -1854,7 +1893,7 @@
         "host/broker/exec_protected_check.go",
         "host/broker/exec_protected_check_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedChecker",
         "TestProtectedCheckerRootAndBound"
@@ -1990,7 +2029,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "c9ab49b7 (#322)"
     },
     {
       "id": "M4c",
@@ -2005,7 +2045,7 @@
         "host/broker/exec_probe_test.go",
         "host/broker/exec_probe_srt_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecProbeArm8",
         "TestExecProbeArm8FailsUnsandboxed",
@@ -2176,7 +2216,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "0adeb703 (#325)"
     },
     {
       "id": "M5a",
@@ -2196,7 +2237,7 @@
         "host/daemon/workspace_layout.go",
         "host/daemon/workspace_layout_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestEpisodePolicyProtectedGolden",
         "TestEpisodePolicyProtectedAllVariants",
@@ -2351,7 +2392,8 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
-      "completion_evidence": {}
+      "completion_evidence": {},
+      "landed": "96d49010 (#326)"
     },
     {
       "id": "M5b",
@@ -2366,7 +2408,7 @@
         "host/daemon/workspace_protected_test.go",
         "host/broker/exec_protected_tools_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestEpisodePolicyProtectedRebased",
         "TestWorkspaceProtectedPolicyWiring",
@@ -2429,7 +2471,7 @@
           "command": "go test -count=1 ./host/broker/... -run '^TestWorkspaceProtectedPolicyRequests$' -timeout 120s -v"
         }
       ],
-      "implementation": "Verified base anchors: host/daemon/workspace.go:154 profileFor; :507 buildAilangHandler; :522 policy construction; host/daemon/workspace_protected_test.go NEW; existing fake binary host/daemon/workspace_test.go:95 fakeToolBin; module root host/daemon/workspace_layout.go:85 sandboxRoot; host/broker/exec_protected_tools_test.go NEW; fixture anchors host/broker/handlers_ailang_test.go:39 and host/daemon/workspace_test.go:593 realToolBin. Select episode profile, rebase protected list from worktree to AILANG sandbox, pass to base policy and config for cached variants. Fake-tool tests assert policy bytes and spawn transcript directly without sockets. Optional pinned policy-tool replay uses v0.52.1 and V7 lexical write/edit/CLI/FS operations; symlink aliases remain a documented upstream residual under B. Run all REST/daemon table rows with contexts made inside t.Run.",
+      "implementation": "Verified base anchors: host/daemon/workspace.go:154 profileFor; :507 buildAilangHandler; :522 policy construction; host/daemon/workspace_protected_test.go NEW; existing fake binary host/daemon/workspace_test.go:95 fakeToolBin; module root host/daemon/workspace_layout.go:85 sandboxRoot; host/broker/exec_protected_tools_test.go NEW; fixture anchors host/broker/handlers_ailang_test.go:39 and host/daemon/workspace_test.go:593 realToolBin. Select episode profile, rebase protected list from worktree to AILANG sandbox, pass to base policy and config for cached variants. Fake-tool tests assert policy bytes and spawn transcript directly without sockets. Optional pinned policy-tool replay uses v0.52.1 and V7 lexical write/edit/CLI/FS operations; symlink aliases remain a documented upstream residual under B. Run all REST/daemon table rows with contexts made inside t.Run. Iteration-289 annotation (historical plan retained): Landed `7fb99dae (#328)`. The real-tool arm now uses the **v0.54.15 tool pin**, not the historical v0.52.1 below. Actual tests live in daemon: `host/daemon/workspace_protected_test.go:311 TestWorkspaceWriteProtectedPolicyTool` covers lexical write/edit refusal and an unprotected write; it does not claim CLI/FS coverage. The historical broker selectors below select zero tests and are not current acceptance commands. Use the controller-measured daemon commands in the iteration-289 baseline above. Helpers already exist: `workspace_test.go:54 newWSFixture`, `:95 fakeToolBin`, `:161 mustWSDaemon`, `:593 realToolBin`; `workspace_protected_test.go:18 protectedProfile`, `:65 protectedRead`, `:85 protectedCall`. D-156-4 is answered A; subsequent pre-check work is held on D-WORLD-86, not on an unanswered D-156-4.",
       "acceptance": [
         "go test -count=1 ./host/daemon/... -run '^TestEpisodePolicyProtectedRebased$' -timeout 120s -v",
         "go test -count=1 ./host/daemon/... -run '^TestWorkspaceProtectedPolicyWiring$' -timeout 120s -v",
@@ -2496,7 +2538,7 @@
         ],
         "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
         "timebox": "30 minutes including gates; 235 estimated changed LOC TOTAL (production + tests + docs). Split again before exceeding approximately 250 LOC or 30 minutes.",
-        "additional": "Policy half only under D-156-4=B. Optional TestWorkspaceWriteProtectedPolicyTool has pin-free TestWorkspaceProtectedPolicyRequests plus M5a golden companion. A fake policy-tool refusal is not proof of the upstream matcher."
+        "additional": "Policy half only under D-156-4=B. Optional TestWorkspaceWriteProtectedPolicyTool has pin-free TestWorkspaceProtectedPolicyRequests plus M5a golden companion. A fake policy-tool refusal is not proof of the upstream matcher. Current annotation: Landed `7fb99dae (#328)`. The real-tool arm now uses the **v0.54.15 tool pin**, not the historical v0.52.1 below. Actual tests live in daemon: `host/daemon/workspace_protected_test.go:311 TestWorkspaceWriteProtectedPolicyTool` covers lexical write/edit refusal and an unprotected write; it does not claim CLI/FS coverage. The historical broker selectors below select zero tests and are not current acceptance commands. Use the controller-measured daemon commands in the iteration-289 baseline above. Helpers already exist: `workspace_test.go:54 newWSFixture`, `:95 fakeToolBin`, `:161 mustWSDaemon`, `:593 realToolBin`; `workspace_protected_test.go:18 protectedProfile`, `:65 protectedRead`, `:85 protectedCall`. D-156-4 is answered A; subsequent pre-check work is held on D-WORLD-86, not on an unanswered D-156-4."
       },
       "measured_baseline": [
         {
@@ -2529,6 +2571,511 @@
         }
       ],
       "baseline_new_tests": "All named additions are future tests, not measured PASS. Existing focused broker baseline is green; see root measured_baseline.",
+      "completion_evidence": {},
+      "landed": "7fb99dae (#328)"
+    },
+    {
+      "id": "M5e",
+      "title": "Pin V25's alias refusals on the real tool",
+      "design_milestone": "M5",
+      "estimated_minutes": 20,
+      "estimated_loc": 150,
+      "depends_on": [
+        "M5b"
+      ],
+      "files": [
+        "host/daemon/workspace_protected_test.go"
+      ],
+      "allowlist": [
+        "host/daemon/workspace_protected_test.go"
+      ],
+      "status": "planned",
+      "new_tests": [
+        "TestWorkspaceWriteProtectedAliasesPolicyTool"
+      ],
+      "tests_first": [
+        {
+          "ac": "V25",
+          "tests": "TestWorkspaceWriteProtectedAliasesPolicyTool",
+          "assertions": "Separate t.Run with own bounded context, fresh episode tree and daemon for EVERY arm. realToolBin before ANY fixture; protected profile tests/** + *_test.go; REAL d.workspace.registry(\"ep1\")[broker.EffectWorkspaceWrite] via protectedCall. symlink-dir-new-write, symlink-dir-write, symlink-dir-edit, symlink-file-write, symlink-file-edit: ok:false; resolves to AND fs_deny_write; protected host bytes unchanged, new target ABSENT; Lstat/Readlink alias intact. hardlink-write, hardlink-edit: ok:false, more than one hard link, unchanged target, alias/target still same regular inode and nlink 2. Hard links created ONLY in hard-link arms. Five identical no-profile symlink controls WRITTEN to target; no-profile unprotected hard-link refusal pins unconditional R-156-10; single-link unprotected write succeeds. Existing seed must match edit old_text. Inspect alias setup before call; enforce setup-shape after mechanism so alias-creation neuter fails on mechanism first.",
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "red_first": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. LANDED + BUILDS before each mutation; real-pin M5e must PASS, fake precheck controls must PASS."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "V25",
+          "test": "TestWorkspaceWriteProtectedAliasesPolicyTool",
+          "assertions": "Separate t.Run with own bounded context, fresh episode tree and daemon for EVERY arm. realToolBin before ANY fixture; protected profile tests/** + *_test.go; REAL d.workspace.registry(\"ep1\")[broker.EffectWorkspaceWrite] via protectedCall. symlink-dir-new-write, symlink-dir-write, symlink-dir-edit, symlink-file-write, symlink-file-edit: ok:false; resolves to AND fs_deny_write; protected host bytes unchanged, new target ABSENT; Lstat/Readlink alias intact. hardlink-write, hardlink-edit: ok:false, more than one hard link, unchanged target, alias/target still same regular inode and nlink 2. Hard links created ONLY in hard-link arms. Five identical no-profile symlink controls WRITTEN to target; no-profile unprotected hard-link refusal pins unconditional R-156-10; single-link unprotected write succeeds. Existing seed must match edit old_text. Inspect alias setup before call; enforce setup-shape after mechanism so alias-creation neuter fails on mechanism first.",
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v"
+        }
+      ],
+      "implementation": "Add one table-driven real-tool test, `TestWorkspaceWriteProtectedAliasesPolicyTool`. Call `bin := realToolBin(t)` **before any fixture**; unset pin SKIPs by name, configured bad pin fails. Every arm below is a separate `t.Run` whose closure creates its own bounded context/cancel and fresh `newWSFixture` episode tree and daemon; no shared mutable fixture, handler or context. Use `mustWSDaemon`, `protectedProfile(t, \"alpha\", \"tests/**\", \"*_test.go\")`, and World's REAL handler `d.workspace.registry(\"ep1\")[broker.EffectWorkspaceWrite]`; send write/content or edit/old_text/new_text through `protectedCall`. Do not call policy-tool directly or use fake responses as upstream evidence. Seed existing targets with `seed\\n`, request `changed\\n`, and inspect host bytes independently after each call.",
+      "acceptance": [
+        "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go test -race -count=1 ./host/daemon/"
+      ],
+      "commands": [
+        "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go test -race -count=1 ./host/daemon/"
+      ],
+      "mutations": [
+        {
+          "mutant": "MUT-TOOL-REGRESSION",
+          "mutation": "Use real retired v0.52.1 binary; temporary TEST-ONLY ToolBinaryRelease=\"AILANG v0.52.1\" with cleanup/serialization admits it through archiveToolBinary (:377/:386), without production manifest edits or fake version.",
+          "must_fail_test": "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
+          "must_fail_assertion": "ALL /symlink-dir-new-write, /symlink-dir-write, /symlink-dir-edit, /symlink-file-write, /symlink-file-edit, /hardlink-write, /hardlink-edit RED on ok:false/mechanism and unchanged/absent host-byte assertions; symlink and single-link invariant controls GREEN. R-156-10 /no-protected-hardlink also REDs on v0.52.1 (measured exception, never claim it stays green in full run).",
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0.",
+          "must_fail_tests": [
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-edit",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-file-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-file-edit",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/hardlink-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/hardlink-edit"
+          ],
+          "invariant_controls": [
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-symlink-dir-new-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-symlink-dir-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-symlink-dir-edit",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-symlink-file-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-symlink-file-edit",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-singlelink"
+          ],
+          "pin_specific_control": "TestWorkspaceWriteProtectedAliasesPolicyTool/no-protected-hardlink",
+          "invariant_controls_command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink.*|hardlink.*|no-protected-symlink.*|no-protected-singlelink)$' -timeout 120s -v"
+        },
+        {
+          "mutant": "MUT-NO-PROTECTED-IN-POLICY",
+          "mutation": "Temporary production hunk host/daemon/workspace.go:642 RenderEpisodePolicy(sandbox, nil), restore after drill; not a landed edit or allowlist expansion. Run before optional World guards can mask it.",
+          "must_fail_test": "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
+          "must_fail_assertion": "All five protected symlink arms RED on ok:false, resolves to AND fs_deny_write, unchanged/absent host-byte assertions; unconditional hard-link arms may stay green.",
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0.",
+          "must_fail_tests": [
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-edit",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-file-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-file-edit"
+          ]
+        },
+        {
+          "mutant": "PRECONDITION-NEUTER",
+          "mutation": "Rule 3i: skip creating lnk / alias.txt / hl.txt, one setup hunk at a time; ensure setup-shape checks cannot mask the post-call mechanism assertion.",
+          "must_fail_test": "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
+          "must_fail_assertion": "Corresponding /symlink-dir-new-write, /symlink-file-edit, /hardlink-edit RED on missing resolves to + fs_deny_write / more than one hard link, even for generic ok:false.",
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink-dir-new-write|symlink-file-edit|hardlink-edit)$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0.",
+          "must_fail_tests": [
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-dir-new-write",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/symlink-file-edit",
+            "TestWorkspaceWriteProtectedAliasesPolicyTool/hardlink-edit"
+          ]
+        }
+      ],
+      "repo_gates": [
+        "go vet ./host/daemon/",
+        "go test -race -count=1 ./host/daemon/"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "go vet ./host/daemon/",
+          "go test -race -count=1 ./host/daemon/"
+        ],
+        "may_touch": [
+          "host/daemon/workspace_protected_test.go"
+        ],
+        "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
+        "timebox": "20 minutes including gates; <= 150 changed LOC TOTAL. Split before exceeding either bound.",
+        "additional": "No pin-free companion; pin-free CI row 160 SKIPs before any fixture. Evidence controller real-pin run and row-139 D4 on EVERY future tool pin move. a fake policy-tool cannot prove the upstream matcher. In CI without the tool pin (row 160) this named test SKIPs. Its evidence is the controller's real-pin run plus row-139 **D4 compatibility gate on every future pin move**, including the R-156-10 control. If D-WORLD-86 = B, a World pre-check refusal must never be relabelled as upstream evidence; preserve this evidence boundary when integrating the held milestones.",
+        "build_precondition": "go test -count=1 ./host/daemon/ -run '^$'",
+        "mutation_baseline": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured.",
+        "current_anchors": "- `host/daemon/workspace_protected_test.go:18 protectedProfile; :65 protectedRead; :85 protectedCall; :311 TestWorkspaceWriteProtectedPolicyTool`.\n- Read-only reuse: `host/daemon/workspace_test.go:54 newWSFixture; :95 fakeToolBin; :161 mustWSDaemon; :593 realToolBin`. The fake cannot prove this milestone.\n- Production path read-only: `host/daemon/workspace.go:627 buildAilangHandler; :642 RenderEpisodePolicy(sandbox, protected); :651 AilangToolConfig.Protected`. Release admission is `:377 archiveToolBinary; :386 ToolBinaryRelease`.\n\nAllowlist: **`host/daemon/workspace_protected_test.go` only** (including any temporary test-harness mutation preparation). No helper-file or production edits land.",
+        "fixture_rule": "Hard links ONLY in hard-link arms; every t.Run owns context/cancel and fresh episode tree/daemon. Inspect setup shape before call, enforce after mechanism assertion to make PRECONDITION-NEUTER fail on the missing mechanism first.",
+        "named_subtests": [
+          "symlink-dir-new-write",
+          "symlink-dir-write",
+          "symlink-dir-edit",
+          "symlink-file-write",
+          "symlink-file-edit",
+          "hardlink-write",
+          "hardlink-edit",
+          "no-protected-symlink-dir-new-write",
+          "no-protected-symlink-dir-write",
+          "no-protected-symlink-dir-edit",
+          "no-protected-symlink-file-write",
+          "no-protected-symlink-file-edit",
+          "no-protected-hardlink",
+          "no-protected-singlelink"
+        ],
+        "mutation_gate_baselines": [
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^$'",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink-dir-new-write|symlink-file-edit|hardlink-edit)$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$/^(symlink.*|hardlink.*|no-protected-symlink.*|no-protected-singlelink)$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          }
+        ]
+      },
+      "measured_baseline": [
+        {
+          "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "result": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. After landing must PASS, not SKIP. Related existing lexical TestWorkspaceWriteProtectedPolicyTool controller gate on v0.54.15: rc 0 PASS 1.45 s; no alias pass claimed."
+        },
+        {
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+          "result": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. After landing require discovered named SKIP before fixture; not matcher acceptance. Existing lexical test controller gate rc 0 SKIP with pin unset."
+        },
+        {
+          "command": "go vet ./host/daemon/",
+          "result": "Controller-measured at pristine 0ffbb9c9, darwin/arm64, AILANG_BIN=$HOME/.pinned-ailang/ailang, WORLD_TOOL_AILANG_BIN unset: rc 0."
+        },
+        {
+          "command": "go test -race -count=1 ./host/daemon/",
+          "result": "controller-measured; see the iteration-289 record; outside sandbox, not run by planner (PF6)."
+        }
+      ],
+      "baseline_new_tests": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured.",
+      "completion_evidence": {}
+    },
+    {
+      "id": "M5c",
+      "title": "World pre-check: resolved-path refusal",
+      "design_milestone": "M5",
+      "estimated_minutes": 30,
+      "estimated_loc": 250,
+      "depends_on": [
+        "M5b"
+      ],
+      "files": [
+        "host/broker/handlers_ailang.go",
+        "host/daemon/workspace_protected_test.go"
+      ],
+      "allowlist": [
+        "host/broker/handlers_ailang.go",
+        "host/daemon/workspace_protected_test.go"
+      ],
+      "status": "held:D-WORLD-86",
+      "new_tests": [
+        "TestWorkspaceWriteProtectedPrecheck"
+      ],
+      "tests_first": [
+        {
+          "ac": "§4.3.2",
+          "tests": "TestWorkspaceWriteProtectedPrecheck",
+          "assertions": "`TestWorkspaceWriteProtectedPrecheck` drives the REAL registry handler but uses existing **fakeToolBin**, which would return ok:true if spawned. Every t.Run owns fresh episode tree, daemon, context/cancel. Direct `Execute` (not `protectedCall`, which fatals on error) asserts `errors.As` to `*broker.AilangToolRefusalError`, exact Why text including pattern, protected host bytes unchanged/target absent, symlink identity intact, and **dispatch/spawn counter 0 before and after** the request. Registry initialization's one summary launch is separate: create registry first, verify summary count 1 and dispatch count 0; zero means no write-tool dispatch, not no constructor summary.\n\n- `/symlink-dir`: `lnk -> tests`, write NEW `lnk/new.py`; typed Why names `tests/new.py` / `tests/**`, target absent, alias intact, dispatch 0. Separate `/symlink-dir-edit` uses seeded `tests/test_x.py` and a real old-text match.\n- `/file-alias`: `alias.txt -> a_test.go`, write; exact resolved `a_test.go` / `*_test.go`, unchanged bytes, symlink intact, dispatch 0. `/file-alias-edit` repeats edit in its own tree.\n- `/lexical`: `tests/escape.py -> ../plain.txt`, write `tests/escape.py`; lexical match must refuse with the exact typed Why naming the matched lexical protected path / `tests/**`, even though resolved `plain.txt` is unprotected; unchanged host bytes, dispatch 0. `/lexical-edit` separately edits direct protected `tests/test_x.py` in its own tree.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+          "red_first": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. LANDED + BUILDS before each mutation; real-pin M5e must PASS, fake precheck controls must PASS."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "§4.3.2",
+          "test": "TestWorkspaceWriteProtectedPrecheck",
+          "assertions": "`TestWorkspaceWriteProtectedPrecheck` drives the REAL registry handler but uses existing **fakeToolBin**, which would return ok:true if spawned. Every t.Run owns fresh episode tree, daemon, context/cancel. Direct `Execute` (not `protectedCall`, which fatals on error) asserts `errors.As` to `*broker.AilangToolRefusalError`, exact Why text including pattern, protected host bytes unchanged/target absent, symlink identity intact, and **dispatch/spawn counter 0 before and after** the request. Registry initialization's one summary launch is separate: create registry first, verify summary count 1 and dispatch count 0; zero means no write-tool dispatch, not no constructor summary.\n\n- `/symlink-dir`: `lnk -> tests`, write NEW `lnk/new.py`; typed Why names `tests/new.py` / `tests/**`, target absent, alias intact, dispatch 0. Separate `/symlink-dir-edit` uses seeded `tests/test_x.py` and a real old-text match.\n- `/file-alias`: `alias.txt -> a_test.go`, write; exact resolved `a_test.go` / `*_test.go`, unchanged bytes, symlink intact, dispatch 0. `/file-alias-edit` repeats edit in its own tree.\n- `/lexical`: `tests/escape.py -> ../plain.txt`, write `tests/escape.py`; lexical match must refuse with the exact typed Why naming the matched lexical protected path / `tests/**`, even though resolved `plain.txt` is unprotected; unchanged host bytes, dispatch 0. `/lexical-edit` separately edits direct protected `tests/test_x.py` in its own tree.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v"
+        }
+      ],
+      "implementation": "Only after explicit B: before `Execute` forwards Workspace.Write write/edit to policy-tool, use the already copied sandbox-rebased protected patterns; check lexical and `resolveExistingPrefix` resolved paths with World's existing protected matcher. Resolve under the canonical handler root, convert back to sandbox-relative slash paths, including missing final components; do not turn a containment violation into an allowed path. On a match return `*broker.AilangToolRefusalError` with Why exactly `path %q resolves to protected %q (pattern %q)` using request spelling, resolved protected path and matched pattern. Empty/nil set keeps prior forwarding. No Nlink guard in this PR (M5d owns it); no `ailang-run` FS claim. Usage refusal examples remain in this local typed refusal and existing profile guidance; no new CLI/config surface.",
+      "acceptance": [
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ],
+      "commands": [
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ],
+      "mutations": [
+        {
+          "mutant": "MUT-PRECHECK-LEXICAL-ONLY",
+          "mutation": "Skip resolveExistingPrefix matching while preserving lexical matching.",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/symlink-dir",
+          "must_fail_assertion": "Missing exact World typed Why path %q resolves to protected %q (pattern %q), fake success/dispatch 1 instead of 0.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^symlink-dir$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        },
+        {
+          "mutant": "MUT-PRECHECK-NO-LEXICAL",
+          "mutation": "Skip lexical matching; lexical tests/escape.py symlink resolves to unprotected plain.txt so resolved guard cannot mask this killer.",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/lexical",
+          "must_fail_assertion": "Missing exact typed lexical protected-path Why / dispatch 1.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^lexical$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        },
+        {
+          "mutant": "MUT-PRECHECK-NO-FILE-ALIAS",
+          "mutation": "Resolve parent directory only, not final symlink.",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/file-alias",
+          "must_fail_assertion": "Missing typed Why naming a_test.go / *_test.go; dispatch 1.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^file-alias$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        },
+        {
+          "mutant": "MUT-PRECHECK-ALWAYS",
+          "mutation": "Refuse without a protected set.",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/no-protected-symlink",
+          "must_fail_assertion": "Expected fake ok:true and dispatch exactly 1.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^no-protected-symlink$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        }
+      ],
+      "repo_gates": [
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+          "go vet ./host/daemon/",
+          "go vet ./host/broker/",
+          "go test -race -count=1 ./host/daemon/",
+          "go test -race -count=1 ./host/broker/"
+        ],
+        "may_touch": [
+          "host/broker/handlers_ailang.go",
+          "host/daemon/workspace_protected_test.go"
+        ],
+        "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
+        "timebox": "30 minutes including gates; <= 250 changed LOC TOTAL. Split before exceeding either bound.",
+        "additional": "Held: build only if D-WORLD-86=B; DROPPED if A; neither while unanswered. Real-tool tests cannot kill removed World guards on v0.54.15; use fakeToolBin, typed World refusal, dispatch 0. M6-pre independent. Start LANDED + BUILDS (`M5b 7fb99dae (#328)`, test landed in mutation subject, `go test -count=1 ./host/daemon/ -run '^$'` builds) and named fake-tool green baseline. One compiling hunk at a time; save/restore without git, red then green. `/no-protected-symlink` (same symlink with no profile), `/unprotected` (protected profile but unrelated single-linked path), `/read` (protected path through Workspace.Read) must forward to fake ok:true and dispatch exactly 1; these are pre-check scope controls, not upstream write/byte evidence.\n\n- **MUT-PRECHECK-LEXICAL-ONLY** skips resolution but preserves lexical matching → `TestWorkspaceWriteProtectedPrecheck/symlink-dir` RED on missing World typed Why / dispatch 1 (fake returns ok:true), not an upstream refusal.\n- **MUT-PRECHECK-NO-LEXICAL** skips the lexical check → `TestWorkspaceWriteProtectedPrecheck/lexical` uses a lexical `tests/escape.py` symlink resolving to unprotected `plain.txt` so resolved matching cannot mask the lexical check; RED on missing exact typed Why / dispatch 1. Keep normal `/lexical-edit` direct-file coverage separately.\n- **MUT-PRECHECK-NO-FILE-ALIAS** resolves parent directory only → `TestWorkspaceWriteProtectedPrecheck/file-alias` RED on typed Why / dispatch 1.\n- **MUT-PRECHECK-ALWAYS** refuses when no protected set → `TestWorkspaceWriteProtectedPrecheck/no-protected-symlink` RED on fake ok:true / dispatch 1.\n\nExact mutation selectors: `go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^symlink-dir$' -timeout 120s -v`, then same command replacing final subtest with `lexical`, `file-alias`, or `no-protected-symlink` respectively. All are pin-unset fake-tool killers. **No real-tool test can kill removal of this World guard on v0.54.15**: upstream refuses the same aliases (F4); spawn 0 and World's typed text are mandatory. A generic ok:false or a configured tool's refusal is not a kill. Before any B integration, keep M5e's upstream evidence separately observable; the real handler's new World refusal cannot satisfy its `fs_deny_write` mechanism assertion. If this requires an additional test seam, split/replan within the B authorization before changing M5e's boundary; do not silently weaken it.",
+        "build_precondition": "go test -count=1 ./host/daemon/ -run '^$'",
+        "mutation_baseline": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured.",
+        "current_anchors": "- `host/broker/handlers_ailang.go:217 resolveExistingPrefix; :256 AilangToolConfig (Protected :265); :303 NewAilangToolHandler; :423 Execute; :386 AilangToolRefusalError` (CURRENT iteration-289 lines, not the historical :203/:242/:406).\n- `host/daemon/workspace_protected_test.go:18 protectedProfile; :65 protectedRead; :85 protectedCall` for new `TestWorkspaceWriteProtectedPrecheck`.\n- Read-only `host/daemon/workspace_test.go:54 newWSFixture; :95 fakeToolBin; :135 dispatches; :161 mustWSDaemon`; `host/daemon/workspace.go:651` already passes the rebased `Protected` set.\n\nAllowlist: `host/broker/handlers_ailang.go`, `host/daemon/workspace_protected_test.go` only. No production manifest or upstream matcher edits.",
+        "mutation_commands": [
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^symlink-dir$' -timeout 120s -v",
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^lexical$' -timeout 120s -v",
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^file-alias$' -timeout 120s -v",
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^no-protected-symlink$' -timeout 120s -v"
+        ],
+        "mutation_gate_baselines": [
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^$'",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^symlink-dir$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^lexical$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^file-alias$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^no-protected-symlink$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          }
+        ]
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+          "result": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. Pin-unset fake-tool test, must PASS after landing."
+        },
+        {
+          "command": "go vet ./host/daemon/",
+          "result": "Controller-measured at pristine 0ffbb9c9, darwin/arm64, AILANG_BIN=$HOME/.pinned-ailang/ailang, WORLD_TOOL_AILANG_BIN unset: rc 0."
+        },
+        {
+          "command": "go vet ./host/broker/",
+          "result": "NOT MEASURED at 0ffbb9c9; historical 451dc3d rc 0 is not current evidence."
+        },
+        {
+          "command": "go test -race -count=1 ./host/daemon/",
+          "result": "controller-measured; see the iteration-289 record; outside sandbox, not run by planner (PF6)."
+        },
+        {
+          "command": "go test -race -count=1 ./host/broker/",
+          "result": "NOT MEASURED (PF6); controller-contained runner outside sandbox required."
+        }
+      ],
+      "baseline_new_tests": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured.",
+      "completion_evidence": {}
+    },
+    {
+      "id": "M5d",
+      "title": "World pre-check: multi-link refusal",
+      "design_milestone": "M5",
+      "estimated_minutes": 30,
+      "estimated_loc": 250,
+      "depends_on": [
+        "M5c"
+      ],
+      "files": [
+        "host/broker/handlers_ailang.go",
+        "host/daemon/workspace_protected_test.go"
+      ],
+      "allowlist": [
+        "host/broker/handlers_ailang.go",
+        "host/daemon/workspace_protected_test.go"
+      ],
+      "status": "held:D-WORLD-86",
+      "new_tests": [
+        "TestWorkspaceWriteProtectedPrecheck"
+      ],
+      "tests_first": [
+        {
+          "ac": "§4.3.2",
+          "tests": "TestWorkspaceWriteProtectedPrecheck",
+          "assertions": "Extend `TestWorkspaceWriteProtectedPrecheck` using existing **fakeToolBin** and REAL registry handler. Each arm creates its own context, daemon and tree. Hard links are created ONLY in hard-link arms. `/hardlink` links protected `a_test.go` to lexically unprotected `hl.txt`, writes `hl.txt`; `/hardlink-edit` repeats edit in a separate tree with matching old_text. Require typed World error with the exact multi-link Why, dispatch/spawn counter **0** (constructor summary accounted separately), host protected bytes unchanged, same inode and nlink 2 on both names. `/hardlink-dir-target` links `tests/test_x.py` to `hl.txt` and repeats refusal. Re-run inherited `/lexical`, `/file-alias`, `/symlink-dir` typed pattern/spawn-0 rows so multi-link logic cannot mask resolved-name coverage.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+          "red_first": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. LANDED + BUILDS before each mutation; real-pin M5e must PASS, fake precheck controls must PASS."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "§4.3.2",
+          "test": "TestWorkspaceWriteProtectedPrecheck",
+          "assertions": "Extend `TestWorkspaceWriteProtectedPrecheck` using existing **fakeToolBin** and REAL registry handler. Each arm creates its own context, daemon and tree. Hard links are created ONLY in hard-link arms. `/hardlink` links protected `a_test.go` to lexically unprotected `hl.txt`, writes `hl.txt`; `/hardlink-edit` repeats edit in a separate tree with matching old_text. Require typed World error with the exact multi-link Why, dispatch/spawn counter **0** (constructor summary accounted separately), host protected bytes unchanged, same inode and nlink 2 on both names. `/hardlink-dir-target` links `tests/test_x.py` to `hl.txt` and repeats refusal. Re-run inherited `/lexical`, `/file-alias`, `/symlink-dir` typed pattern/spawn-0 rows so multi-link logic cannot mask resolved-name coverage.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v"
+        }
+      ],
+      "implementation": "Only after explicit B: extend World's pre-check, while a nonempty protected set is declared, to refuse an existing regular file whose host `Lstat` reports Nlink > 1; inspect the resolved target as well for a symlink onto such a file. Portable Darwin/Linux stat handling must compile on both CI targets; do not follow an alias outside the sandbox to inspect it. Use typed `AilangToolRefusalError`; pin World's own Why as `path %q has more than one hard link while protected patterns are declared`. Unlike a lexical/resolved match, this refusal cannot identify another name or claim to know a protected target's pattern; retain M5c's exact `path %q resolves to protected %q (pattern %q)` for those matches. No set means World forwards (the real v0.54.15 tool may still refuse unconditionally: R-156-10, pinned by M5e). No inode census, upstream patch, new policy key or FS-effect claim.",
+      "acceptance": [
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ],
+      "commands": [
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ],
+      "mutations": [
+        {
+          "mutant": "MUT-NO-NLINK",
+          "mutation": "Remove World Nlink guard; keep lexical/resolved guards (hl.txt matches neither).",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/hardlink",
+          "must_fail_assertion": "Missing World typed multi-link Why / fake success and dispatch 1 instead of 0.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        },
+        {
+          "mutant": "MUT-NLINK-UNCONDITIONAL",
+          "mutation": "Apply World multi-link refusal without protected set.",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/hardlink-no-protected",
+          "must_fail_assertion": "Expected fake ok:true and dispatch exactly 1.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink-no-protected$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        },
+        {
+          "mutant": "MUT-NLINK-GE1",
+          "mutation": "Refuse nlink >=1 instead of >1.",
+          "must_fail_test": "TestWorkspaceWriteProtectedPrecheck/singlelink",
+          "must_fail_assertion": "Expected fake ok:true and dispatch exactly 1.",
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^singlelink$' -timeout 120s -v",
+          "reachability": "Assert LANDED + BUILDS first, named baseline green, one compiling mutation at a time, save/restore without Git; require exact named red then restoration green. No startup release refusal, compile failure, skip, zero tests, timeout or generic ok:false is a kill. v0.54.15 upstream masking means World pre-check killers MUST use fakeToolBin and typed World Why plus dispatch 0."
+        }
+      ],
+      "repo_gates": [
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+          "go vet ./host/daemon/",
+          "go vet ./host/broker/",
+          "go test -race -count=1 ./host/daemon/",
+          "go test -race -count=1 ./host/broker/"
+        ],
+        "may_touch": [
+          "host/broker/handlers_ailang.go",
+          "host/daemon/workspace_protected_test.go"
+        ],
+        "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
+        "timebox": "30 minutes including gates; <= 250 changed LOC TOTAL. Split before exceeding either bound.",
+        "additional": "Held: build only if D-WORLD-86=B; DROPPED if A; neither while unanswered. Real-tool tests cannot kill removed World guards on v0.54.15; use fakeToolBin, typed World refusal, dispatch 0. M6-pre independent. Assert LANDED + BUILDS first (M5c landed in mutation subject, `go test -count=1 ./host/daemon/ -run '^$'` builds), current fake-tool named suite green, then one compiling mutation at a time and restore green. `/hardlink-no-protected` uses unprotected `plain.txt` linked to `hl.txt`, no exec profile, and requires fake ok:true and dispatch 1; `/singlelink` uses a protected profile with an unrelated nlink-1 `plain.txt`, requires fake ok:true / dispatch 1. No fake control claims actual upstream writes.\n\n- **MUT-NO-NLINK** removes Nlink refusal → `TestWorkspaceWriteProtectedPrecheck/hardlink` RED on World typed multi-link Why / dispatch 1, while lexical/resolved guards remain active (neither sees protected spelling `hl.txt`).\n- **MUT-NLINK-UNCONDITIONAL** applies World guard without a protected set → `TestWorkspaceWriteProtectedPrecheck/hardlink-no-protected` RED on fake ok:true / dispatch 1.\n- **MUT-NLINK-GE1** refuses every regular file → `TestWorkspaceWriteProtectedPrecheck/singlelink` RED on fake ok:true / dispatch 1.\n\nExact mutation commands: `go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink$' -timeout 120s -v`, with final subtest `hardlink-no-protected` and `singlelink` respectively for the other two guards. All use fake tool; **real v0.54.15 tests cannot kill MUT-NO-NLINK**, because upstream masks the missing guard (F4). Missing typed Why, spawn 1, or fake success is the exact failure; generic ok:false is insufficient. Alias-neutering must not turn a generic edit miss into a pass. Preserve M5e's distinct upstream evidence boundary before B integration as stated in M5c.",
+        "build_precondition": "go test -count=1 ./host/daemon/ -run '^$'",
+        "mutation_baseline": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured.",
+        "current_anchors": "`host/broker/handlers_ailang.go:217 resolveExistingPrefix; :256 AilangToolConfig (Protected :265); :423 Execute; :386 AilangToolRefusalError`; `host/daemon/workspace_protected_test.go:18 protectedProfile; :65 protectedRead; :85 protectedCall`. These are CURRENT iteration-289 anchors; rebase after M5c. Read-only existing `host/daemon/workspace_test.go:95 fakeToolBin; :135 dispatches; :161 mustWSDaemon`.\n\nAllowlist: `host/broker/handlers_ailang.go`, `host/daemon/workspace_protected_test.go` only.",
+        "mutation_commands": [
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink$' -timeout 120s -v",
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink-no-protected$' -timeout 120s -v",
+          "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^singlelink$' -timeout 120s -v"
+        ],
+        "mutation_gate_baselines": [
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^$'",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^hardlink-no-protected$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          },
+          {
+            "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$/^singlelink$' -timeout 120s -v",
+            "result": "NOT MEASURED by planner; new named tests absent at 0ffbb9c9; LANDED + BUILDS plus named green baseline required before each mutation. Zero tests / SKIP not a kill; build-only selector is not acceptance."
+          }
+        ]
+      },
+      "measured_baseline": [
+        {
+          "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+          "result": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured. Pin-unset fake-tool test, must PASS after landing."
+        },
+        {
+          "command": "go vet ./host/daemon/",
+          "result": "Controller-measured at pristine 0ffbb9c9, darwin/arm64, AILANG_BIN=$HOME/.pinned-ailang/ailang, WORLD_TOOL_AILANG_BIN unset: rc 0."
+        },
+        {
+          "command": "go vet ./host/broker/",
+          "result": "NOT MEASURED at 0ffbb9c9; historical 451dc3d rc 0 is not current evidence."
+        },
+        {
+          "command": "go test -race -count=1 ./host/daemon/",
+          "result": "controller-measured; see the iteration-289 record; outside sandbox, not run by planner (PF6)."
+        },
+        {
+          "command": "go test -race -count=1 ./host/broker/",
+          "result": "NOT MEASURED (PF6); controller-contained runner outside sandbox required."
+        }
+      ],
+      "baseline_new_tests": "NEW named test absent at 0ffbb9c9; NOT MEASURED. Zero tests is not a pass; all new mutation drills unmeasured.",
       "completion_evidence": {}
     },
     {
@@ -2567,7 +3114,7 @@
           "command": "WORLD_PROTECTED_V24_ROOT=\"$V24_SCRATCH\" go test -count=1 ./host/broker/ -run '^TestProtectedV24RealWorktree$' -timeout 300s -v"
         }
       ],
-      "implementation": "Controller/executor measurement prerequisite, NOT performed by this planner. M6a may not start until design V24 is measured and the bounds re-sized from it. Design §6 M6 [r4.2] requires git worktree add of sunholo-platform and ailang with .venv/node_modules installed, measuring all three §4.5 legs plus construction-time snapshot together, warm and cold, using the REAL matchProtected filter, never V23's ASCII stand-in. Prepare authorized disposable source copies and V24_SCRATCH under the controller-owned worktree/scratch; the two worktree-add commands below operate only on those copies, never live source metadata. Populate dependency trees from existing local caches/offline copies before construction; no network required by this plan. Harness TestProtectedV24RealWorktree in new host/broker/exec_protected_v24_test.go requires WORLD_PROTECTED_V24_ROOT, SKIP with an explicit missing-measurement diagnostic if unset; a skipped gate never satisfies V24. Require both installed trees, current project profiles and real Git; fail on incomplete input. Record revs, toolchain/Git versions, installed dependency census, 20 samples per project per warm/cold class (first fresh-worktree access labelled cold; describe cache preparation, never claim OS-cache cold without evidence), per-leg and combined phase p95/max, output bytes and selected/filtered counts. Use existing M4b checker (filter preflight included) plus M1c's renderer/parser. Time construction as rev-parse + full ls-tree mirror filter + ignored enumeration and fold-key snapshot/digest; no M6a implementation dependency. Log exact argv: status --porcelain=v2 -z --branch --untracked-files=all --ignored=no --no-renames --ignore-submodules=all -- <candidates>; ls-files -z -o -i --exclude-standard -- <candidates>; ls-files -v -z -- <candidates>. Use gitEnv, GIT_OPTIONAL_LOCKS=0 and core.fsmonitor=false; preflight must precede status and be included in measured phase total. Provisional protectedCheckTimeout=2500ms and protectedBaselineTimeout=3200ms are NOT acceptance evidence: size phase and construction bounds separately from their V24 observed max ×1.5 (round upward in ms); retain at least the stated provisional bounds, increase if needed, amend design V24 and plan constants before M6a. Require every clean phase's intact verdict non-null/true and p95 below chosen phase bound, construction successful within its chosen bound; record null/error/CHANGED counts explicitly. Verify from M4 episode construction flow/logs whether ALL dependency installation precedes NewExecHandler. If not, demonstrate a new ignored post-snapshot dependency reports CHANGED and disclose R-156-6, never silently whitelist it. Evidence belongs in design_docs/verification/world-row156-v24/README.md and result.json, with controller-authored V24 design entry; no measurement or design amendment is fabricated here. <=200 changed LOC artifacts/harness, <=30 active minutes, split if needed. Run reject-null, reject-over-budget and required-legs synthetic subtests BEFORE the optional /measurement subtest checks WORLD_PROTECTED_V24_ROOT. V24 completion additionally requires /measurement to PASS for BOTH projects with nonempty recorded samples; parent PASS with /measurement SKIP is not acceptance.",
+      "implementation": "Dependency boundary: M5b and M1d only; explicitly NOT M5c/M5d/M5e. Controller/executor measurement prerequisite, NOT performed by this planner. M6a may not start until design V24 is measured and the bounds re-sized from it. Design §6 M6 [r4.2] requires git worktree add of sunholo-platform and ailang with .venv/node_modules installed, measuring all three §4.5 legs plus construction-time snapshot together, warm and cold, using the REAL matchProtected filter, never V23's ASCII stand-in. Prepare authorized disposable source copies and V24_SCRATCH under the controller-owned worktree/scratch; the two worktree-add commands below operate only on those copies, never live source metadata. Populate dependency trees from existing local caches/offline copies before construction; no network required by this plan. Harness TestProtectedV24RealWorktree in new host/broker/exec_protected_v24_test.go requires WORLD_PROTECTED_V24_ROOT, SKIP with an explicit missing-measurement diagnostic if unset; a skipped gate never satisfies V24. Require both installed trees, current project profiles and real Git; fail on incomplete input. Record revs, toolchain/Git versions, installed dependency census, 20 samples per project per warm/cold class (first fresh-worktree access labelled cold; describe cache preparation, never claim OS-cache cold without evidence), per-leg and combined phase p95/max, output bytes and selected/filtered counts. Use existing M4b checker (filter preflight included) plus M1c's renderer/parser. Time construction as rev-parse + full ls-tree mirror filter + ignored enumeration and fold-key snapshot/digest; no M6a implementation dependency. Log exact argv: status --porcelain=v2 -z --branch --untracked-files=all --ignored=no --no-renames --ignore-submodules=all -- <candidates>; ls-files -z -o -i --exclude-standard -- <candidates>; ls-files -v -z -- <candidates>. Use gitEnv, GIT_OPTIONAL_LOCKS=0 and core.fsmonitor=false; preflight must precede status and be included in measured phase total. Provisional protectedCheckTimeout=2500ms and protectedBaselineTimeout=3200ms are NOT acceptance evidence: size phase and construction bounds separately from their V24 observed max ×1.5 (round upward in ms); retain at least the stated provisional bounds, increase if needed, amend design V24 and plan constants before M6a. Require every clean phase's intact verdict non-null/true and p95 below chosen phase bound, construction successful within its chosen bound; record null/error/CHANGED counts explicitly. Verify from M4 episode construction flow/logs whether ALL dependency installation precedes NewExecHandler. If not, demonstrate a new ignored post-snapshot dependency reports CHANGED and disclose R-156-6, never silently whitelist it. Evidence belongs in design_docs/verification/world-row156-v24/README.md and result.json, with controller-authored V24 design entry; no measurement or design amendment is fabricated here. <=200 changed LOC artifacts/harness, <=30 active minutes, split if needed. Run reject-null, reject-over-budget and required-legs synthetic subtests BEFORE the optional /measurement subtest checks WORLD_PROTECTED_V24_ROOT. V24 completion additionally requires /measurement to PASS for BOTH projects with nonempty recorded samples; parent PASS with /measurement SKIP is not acceptance.",
       "acceptance": [
         "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
         "git -C \"$V24_AILANG_SOURCE\" worktree add --detach \"$V24_SCRATCH/ailang\" HEAD",
@@ -2628,7 +3175,7 @@
         ],
         "directive": "Own PR, green CI, dependency order. Executor/controller owns PR operations; planner performs NO git writes. New fixture repos, keys, profiles, caches and outputs stay under disposable directories in this worktree. No snapshots or acceptance writes to $HOME, ~/.ailang/state, sibling checkouts or real state. Observe external guards by before/after hashes only. Do not copy the reference plan's state snapshot directive.",
         "timebox": "30 minutes including gates; <= 200 changed LOC TOTAL (production + tests + docs). Split before exceeding 250 LOC or 30 minutes.",
-        "additional": "Controller/executor only; requires separately authorized contained real-worktree measurement environment. Design V24 remains unmeasured in iteration 282. This is a hard dependency, not a timing estimate."
+        "additional": "Controller/executor only; requires separately authorized contained real-worktree measurement environment. Design V24 remains unmeasured in iteration 282. This is a hard dependency, not a timing estimate. Depends only on M5b and M1d, explicitly NOT on M5c/M5d/M5e; a held D-WORLD-86 never blocks M6."
       },
       "measured_baseline": [
         {
@@ -3730,6 +4277,35 @@
       ]
     },
     {
+      "milestone": "M5e",
+      "commands": [
+        "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedAliasesPolicyTool$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go test -race -count=1 ./host/daemon/"
+      ]
+    },
+    {
+      "milestone": "M5c",
+      "commands": [
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ]
+    },
+    {
+      "milestone": "M5d",
+      "commands": [
+        "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPrecheck$' -timeout 120s -v",
+        "go vet ./host/daemon/",
+        "go vet ./host/broker/",
+        "go test -race -count=1 ./host/daemon/",
+        "go test -race -count=1 ./host/broker/"
+      ]
+    },
+    {
       "milestone": "M6-pre",
       "commands": [
         "git -C \"$V24_SUNHOLO_SOURCE\" worktree add --detach \"$V24_SCRATCH/sunholo-platform\" HEAD",
@@ -3799,20 +4375,24 @@
   "risks": [
     "Full package race baselines remain unmeasured; PF6 runner containment prerequisite must be resolved before claiming any complete milestone green. CI result cannot be invented by planning.",
     "Linux basename writes and Darwin parent-directory rename remain detection-only; no claim of semantic test execution.",
-    "D-156-4=B leaves write-tool symlink/hardlink aliases and ailang-run aliases; detection occurs at next exec and may never occur before episode end.",
+    "V25 on v0.54.15 closes all measured write/edit symlink and hard-link aliases upstream. No World-precheck removal mutant is killable with this real tool; held M5c/M5d must use fake tools. ailang-run FS aliases and Linux remain unmeasured on this pin.",
     "New TOML encoding must preserve exact bytes for old inputs.",
     "Budget after-check reserve also depends on existing worktree_delta finish; preserve prior behavior and original outer deadline, report measured timing rather than assuming wall bounds.",
     "V16 refuted plain Git equivalence even with ASCII patterns: widen candidates then use mirror filter; preserve every Unicode row. Invalid UTF-8 paths and toolchain/binary Unicode skew remain unmeasured residuals (R-156-7).",
     "R-156-6: modifications of pre-existing snapshot ignored files are not detected; installs after construction yield CHANGED. V24 must record install ordering.",
-    "V24 unmeasured: 2500ms phase and 3200ms construction are provisional floors; resize each from measured max ×1.5, require p95 below phase bound and non-null intact before M6a. Include filter preflight overhead."
+    "V24 unmeasured: 2500ms phase and 3200ms construction are provisional floors; resize each from measured max ×1.5, require p95 below phase bound and non-null intact before M6a. Include filter preflight overhead.",
+    "R-156-10: v0.54.15 unconditionally refuses every multi-linked file, even without protected set / with EMPTY fs_deny_write (V25); M5e no-profile control pins this property. v0.52.1 writes it, so this pin-specific control cannot stay green in a full old-pin regression run.",
+    "archiveToolBinary rejects v0.52.1 at startup unless a temporary serialized test-only ToolBinaryRelease admission override is used for MUT-TOOL-REGRESSION; startup refusal is not an alias kill.",
+    "If D-WORLD-86=B, World prechecks would mask upstream mechanism assertions in M5e. Held integration must preserve separately observable upstream evidence, split/replan any extra test seam before B implementation; do not relabel World refusals as upstream evidence."
   ],
   "controller_owned": [
     "Run M0 Linux CI, collect actual 48 observations and bank V rows; reconcile enforcement table before M3 if different.",
     "Provide a contained runner for mandatory unfiltered package gates so legacy off-worktree writes cannot touch actual HOME/state or external scratch. Without it those gate results remain unmeasured; no green CI assertion is authorized.",
-    "Resolve D-156-1..4; until then defaults A,A,A,B stand.",
-    "At landing file upstream lexical fileguard alias issue and mission-control note as design §10 requests; planner does not send messages or create external issues.",
+    "D-156-1..4 answered A attended 2026-10-17 (D-WORLD-82). File/resolve D-WORLD-86: HOLD while unanswered; A drops M5c/M5d, B builds. M5e independent, M6-pre unblocked.",
+    "Upstream ailang#1873 already filed and fixed in v0.54.15 (V25); own any external follow-up. Planner sends no messages or external issues.",
     "Own individual PRs/merge/CI and re-fetch conflict hunks with rows150/151/157. Planner performs no git writes.",
-    "Execute M6-pre/V24 on disposable dependency-installed sunholo-platform and ailang worktrees; record real mirror, warm/cold full costs, p95/max, install ordering and chosen bounds, amend design V24 before releasing M6a."
+    "Execute M6-pre/V24 on disposable dependency-installed sunholo-platform and ailang worktrees; record real mirror, warm/cold full costs, p95/max, install ordering and chosen bounds, amend design V24 before releasing M6a.",
+    "Run M5e on real v0.54.15 pin outside sandbox and retain row-139 D4 compatibility gate on every future pin move; row-160 CI has no pin and SKIPs. Add controller daemon race result to iteration-289 record; never infer a pass here."
   ],
   "coverage": {
     "design_milestones": [
@@ -3825,23 +4405,52 @@
       "M6",
       "M7"
     ],
-    "executor_runs": 21,
+    "executor_runs": 24,
     "criteria": [
       "AC0.1",
       "AC0.2",
       "§4.1 grammar/digest",
       "§4.2 equivalence/rebase/r3",
-      "§4.3 policy (B)",
+      "§4.3 policy; D-156-4 answered A, precheck held on D-WORLD-86",
       "§4.4 settings/probe",
       "§4.5 baseline/integrity/record/replay/why",
       "§6 M0–M7",
-      "§7 mutants except conditional precheck guards",
+      "§7 mutants including assigned held fake-tool precheck killers",
       "§12 r2 flags/HEAD and r3 bare-D/top",
       "AC1c.1–AC1c.5 [r4/r4.1]",
-      "V24 [r4.2] prerequisite before M6a"
+      "V24 [r4.2] prerequisite before M6a",
+      "V25 real-tool alias mechanisms, host-byte invariants, pin-free named SKIP, R-156-10 pin compatibility control"
     ],
-    "planned_tests": 58,
-    "mutations": 99,
-    "release_acceptance": "No release operation. Optional real-engine skips disclosed with always-on companions; full CI/required package gates must actually pass under contained runner before land."
+    "planned_tests": 60,
+    "mutations": 109,
+    "release_acceptance": "No release operation. Required CI/package gates must actually pass under controller containment. M5e explicitly has NO pin-free companion: CI row 160 SKIPs; upstream evidence is controller real-pin PASS and row-139 D4 every future pin move. M5c/M5d held on D-WORLD-86 and cannot block M6-pre."
+  },
+  "controller_measured_baseline_iteration_289": {
+    "tree": "0ffbb9c9",
+    "platform": "darwin/arm64",
+    "ailang_bin": "$HOME/.pinned-ailang/ailang",
+    "provenance": "Controller facts F8, outside sandbox; not planner runs.",
+    "gates": [
+      {
+        "command": "go vet ./host/daemon/",
+        "rc": 0,
+        "result": "Controller-measured at pristine 0ffbb9c9, darwin/arm64, AILANG_BIN=$HOME/.pinned-ailang/ailang, WORLD_TOOL_AILANG_BIN unset: rc 0."
+      },
+      {
+        "command": "go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPolicyTool$' -v",
+        "rc": 0,
+        "result": "SKIP; WORLD_TOOL_AILANG_BIN unset; not matcher acceptance."
+      },
+      {
+        "command": "WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 ./host/daemon/ -run '^TestWorkspaceWriteProtectedPolicyTool$' -v",
+        "rc": 0,
+        "seconds": 1.45,
+        "result": "PASS; lexical write/edit refused, unprotected write allowed."
+      },
+      {
+        "command": "go test -race -count=1 ./host/daemon/",
+        "result": "controller-measured; see the iteration-289 record; outside sandbox, not run by planner (PF6)."
+      }
+    ]
   }
 }

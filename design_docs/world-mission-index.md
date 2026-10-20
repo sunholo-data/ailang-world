@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 289 | 2026-10-20 | row 156 V25 re-measure and M5e built: the v0.54.15 tool pin already refuses every alias; M5c/M5d held on D-WORLD-86 (PR #330; judge r1 PASS 90) [PRODUCT] |
 | 288 | 2026-10-20 | row 156 M5b built: the episode profile's protected set reaches its AILANG policy (PR #328; judge r1 PASS 88 → r2 PASS 91) [PRODUCT] |
 | 287 | 2026-10-20 | row 156 M5a built: protected AILANG policies in every variant (PR #326; judge r1 PASS 88 → r2 PASS 91) [PRODUCT] |
 | 286 | 2026-10-20 | row 156 M4c built: startup probe arm 8 — protected-write prevention and Linux detection (PR #325; judge r1 PASS 84 → r2 PASS 91) [PRODUCT] |
