@@ -30,31 +30,42 @@ the controller measures outside it.
 
 ## Results
 
-Controller-measured outside the sandbox, iteration 290 (2026-10-20), on base `17c28324`.
-Two runs, rig load average 14–19 during both (`run1.test.log`, `run2.test.log`; both
-`result.json` bodies under `runs`). Both runs: `--- PASS: TestProtectedV24RealWorktree/measurement`.
+Measured outside the sandbox on 2026-10-20 (iteration 290, base `17c28324`). There were five runs:
 
-Scratch: `git clone --shared --no-checkout` copies of sunholo-platform `fe80714f` and
-ailang `f0f7df204`, one `git worktree add --detach … HEAD` each, and the real checkouts'
-ignored entries APFS-clone-copied in (`cp -cRp`), excluding agent and mission state
-(`.claude/`, `.ailang/state/`, `.eval_workspace/`, `.dev-logs/`, `.env` files,
-`settings.local.json`) and one untracked-not-ignored directory. 51 and 206 entries;
-93 732 and 107 711 ignored files.
+- **Runs 1–3, controller.** The rig load average was 14–19 from other missions. Runs 1 and 2 used the harness at `0637d1b3`, whose measurement path is identical to the final one. Run 3 used the final harness, with the cold-class guard on.
+- **Run A, independent judge (sonnet).** Its own mutation fixtures were running at the same time.
+- **Run B, independent judge.** Nothing else was running.
 
-| Project / class | Phase p95 / max ms (run 1; run 2) | Construction p95 / max ms (run 1; run 2) |
-|---|---|---|
-| sunholo-platform warm | 653 / 859; 484 / 573 | 468 / 787; 486 / 490 |
-| sunholo-platform cold | 755 / 776; 662 / 686 | 918 / 1 007; 709 / 726 |
-| ailang warm | 1 130 / 1 133; 819 / 881 | 1 167 / 1 216; 834 / 909 |
-| ailang cold | 1 611 / **1 958**; 988 / 1 066 | 1 244 / **1 583**; 935 / 1 331 |
+Each run's body is under `runs` in `result.json`, with its log beside it.
 
-- All 160 samples: production `checkProtected` intact `true`, null 0, error 0, changed 0.
-- The ignored leg is 70–80 % of each phase. On ailang it walks `docs/node_modules` (2.5 GB).
-- Chosen bounds (max over both runs × 1.5, rounded up, never below the provisional floor):
-  phase **2 937 ms**; construction **3 200 ms** (2 375 computed, floor kept).
-- Post-snapshot dependency arm, both projects, both runs: a new ignored protected file
-  reports `intact: false` with status `ignored`; removing it reports `intact: true`.
-- Install order: documented, not enforced (QUICKSTART installs before the session; the
-  handler is built on the episode's first exec call). A later install reports CHANGED,
-  never a false intact (R-156-6).
-- "Cold" is a fresh worktree's first Git access; the OS page cache was not purged.
+The scratch was built from `git clone --shared --no-checkout` copies of sunholo-platform `fe80714f` and ailang `f0f7df204`. Each got one `git worktree add --detach … HEAD`. The real checkouts' ignored entries were then APFS-clone-copied in (`cp -cRp`). Excluded were agent and mission state (`.claude/`, `.ailang/state/`, `.eval_workspace/`, `.dev-logs/`), `.env` files, `settings.local.json` and one untracked-not-ignored directory. That left 51 and 206 entries, holding 93 732 and 107 711 ignored files.
+
+| Run | Verdicts | Slowest phase ms | Slowest construction ms |
+|---|---|---|---|
+| 1 | 80/80 intact | 1 958 | 1 583 |
+| 2 | 80/80 intact | 1 066 | 1 331 |
+| 3 | 80/80 intact | 954 | 1 052 |
+| A | 1 `null` (check timed out at 2 500 ms; harness FAILED closed) | **2 501** | **3 232** |
+| B | 80/80 intact | 1 779 | 1 842 |
+
+Run 1 p95 / max per class, phase then construction, in ms:
+
+| Project | Warm phase | Cold phase | Warm construction | Cold construction |
+|---|---|---|---|---|
+| sunholo-platform | 653 / 859 | 755 / 776 | 468 / 787 | 918 / 1 007 |
+| ailang | 1 130 / 1 133 | 1 611 / 1 958 | 1 167 / 1 216 | 1 244 / 1 583 |
+
+**Bounds.** Each bound is the maximum over all five runs × 1.5, rounded up, and never below the provisional floor.
+
+- Phase: **3 751 ms**.
+- Construction: **4 848 ms**.
+- Both maxima come from run A. Runs 1–3 alone would have given 2 937 / 3 200.
+- So the 1.5× margin over one unloaded run did not cover one loaded run. These bounds are not load-proof. An over-bound check records `error` / `null`, never intact.
+
+**The ignored leg** is 60–95 % of a phase. On ailang it walks `docs/node_modules`, which is 2.5 GB.
+
+**Post-snapshot dependency arm** (both projects, every run): a new ignored protected file reports `intact: false` with status `ignored`. Removing it reports `intact: true`.
+
+**Install order** is documented but not enforced. QUICKSTART installs dependencies before the session, and the handler is built on the episode's first exec call. A later install reports CHANGED, never a false intact (R-156-6).
+
+**"Cold"** here means a fresh worktree's first Git access. The OS page cache was not purged.

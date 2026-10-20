@@ -25,6 +25,7 @@ type v24Sample struct {
 	Error                           string            `json:"error"`
 	Changes                         []protectedChange `json:"changes"`
 	Base, BaseDigest, IgnoredDigest string
+	Root                            string `json:"root"`
 	BaseFiles, BaseIgnoredFiles     int
 }
 type v24Stats struct {
@@ -75,6 +76,9 @@ func v24Accept(s v24Summary, phaseBoundMS, constructBoundMS int) error {
 	}
 	return nil
 }
+
+// v24Bound sizes a bound from an observed max: ×1.5, rounded up in ms, never below the floor.
+func v24Bound(maxMS float64, floor int) int { return max(floor, int(math.Ceil(1.5*maxMS))) }
 func v24Need(t *testing.T, ok bool, format string, args ...any) {
 	if t.Helper(); !ok {
 		t.Fatalf(format, args...)
@@ -109,10 +113,24 @@ func TestProtectedV24RealWorktree(t *testing.T) {
 				expect(t, s, leg+map[string]string{"phase": " p95", "construction": " max"}[leg]+" >= bound")
 			}
 		}
+		// 20 samples: 18 at 1 ms and 2 at 12 ms, so p50 = 1 < 10 <= p95 = max = 12 (phase);
+		// 19 at 1 ms and 1 at 12 ms, so p95 = 1 < 10 <= max = 12 (construction).
+		for leg, slow := range map[string]int{"phase": 2, "construction": 1} {
+			samples := []v24Sample{}
+			for i := range 20 {
+				ms := map[string]float64{"status": 1, "ignored": 1, "flags": 1, "phase": 1, "construction": 1}
+				if i >= 20-slow {
+					ms[leg] = 12
+				}
+				samples = append(samples, v24Sample{MS: ms, Intact: &yes})
+			}
+			expect(t, v24Summarize(samples, &n), leg+map[string]string{"phase": " p95", "construction": " max"}[leg]+" >= bound")
+		}
+		v24Need(t, v24Bound(1957.598, 2500) == 2937 && v24Bound(1582.97, 3200) == 3200 && v24Bound(2500.0, 2500) == 3750, "v24Bound arithmetic")
 	})
 	t.Run("required-legs", func(t *testing.T) {
 		expect(t, good(), "")
-		for _, leg := range []string{"ignored", "status", "flags"} {
+		for _, leg := range []string{"ignored", "status", "flags", "phase", "construction"} {
 			s := good()
 			delete(s.Stats, leg)
 			expect(t, s, "missing "+leg+" timing/sample count")
@@ -123,6 +141,9 @@ func TestProtectedV24RealWorktree(t *testing.T) {
 		s := good()
 		s.IgnoredCensus = nil
 		expect(t, s, "missing ignored census")
+		s = good()
+		s.Samples = append(s.Samples, s.Samples[0]) // two samples, stats from one
+		expect(t, s, "timing/sample count")
 	})
 	t.Run("measurement", v24Measurement)
 }
@@ -156,7 +177,7 @@ func v24Filter(canonical []string, leg string, out []byte) (candidates int, kept
 	return
 }
 func (h v24Harness) measure(root string, canonical []string, argv [][]string) (v24Sample, map[string]struct{}) {
-	s := v24Sample{MS: map[string]float64{}, Bytes: map[string]int{}, Candidates: map[string]int{}, Mirror: map[string]int{}}
+	s := v24Sample{MS: map[string]float64{}, Bytes: map[string]int{}, Candidates: map[string]int{}, Mirror: map[string]int{}, Root: root}
 	tick := func(leg string, f func()) {
 		if leg == "construction" || leg == "phase" {
 			var cancel context.CancelFunc
@@ -297,15 +318,20 @@ func v24Measurement(t *testing.T) {
 		}
 		census := strings.Count(string(h.run(warm, "ls-files", "-z", "-o", "-i", "--exclude-standard")), "\x00")
 		report[project.name] = map[string]any{"canonical": canonical, "argv": argv, "argv_prefix": []string{git, "-c", "core.fsmonitor=false"}, "deps_entries": len(deps), "ignored_files": census, "revision": strings.TrimSpace(string(h.run(warm, "rev-parse", "HEAD")))}
-		h.measure(warm, canonical, argv) // One discarded warm-up.
+		ref, _ := h.measure(warm, canonical, argv) // One discarded warm-up; its snapshot is the per-class reference.
+		roots := map[string]bool{}
 		for _, class := range []string{"warm", "cold"} {
 			samples := []v24Sample{}
 			for k := 1; k <= 20; k++ {
 				cold := map[bool]string{true: fmt.Sprintf("%s-cold-%02d", warm, k)}[class == "cold"]
 				s, snapshot := h.sampleInWorktree(warm, source, cold, deps, canonical, argv)
+				// A cold sample must measure its own fresh worktree with every dependency moved in.
+				v24Need(t, s.Root == map[bool]string{true: cold, false: warm}[class == "cold"] && !roots[s.Root+class] && s.BaseIgnoredFiles == ref.BaseIgnoredFiles && s.IgnoredDigest == ref.IgnoredDigest,
+					"%s %s sample %d: root %s, snapshot %d/%s vs warm %d/%s", project.name, class, k, s.Root, s.BaseIgnoredFiles, s.IgnoredDigest, ref.BaseIgnoredFiles, ref.IgnoredDigest)
+				roots[s.Root+class] = class == "cold"
 				samples = append(samples, s)
 				groups[project.name+"/"+class] = v24Summarize(samples, &census)
-				phaseBound, constructBound = max(phaseBound, int(math.Ceil(1.5*s.MS["phase"]))), max(constructBound, int(math.Ceil(1.5*s.MS["construction"])))
+				phaseBound, constructBound = max(phaseBound, v24Bound(s.MS["phase"], 2500)), max(constructBound, v24Bound(s.MS["construction"], 3200))
 				if class == "warm" && k == 20 {
 					report[project.name+"/post_snapshot"] = h.arm(warm, project.probe, canonical, s.Base, snapshot)
 				}
