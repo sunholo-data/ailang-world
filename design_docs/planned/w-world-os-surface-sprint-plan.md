@@ -1,0 +1,102 @@
+# w-world-os-surface — S1 sprint plan (row 188, D-WORLD-87)
+
+**Status:** draft plan, attended 2026-10-20, for Mark's review before M0 starts.
+**Design:** [w-world-os-surface.md](w-world-os-surface.md) r2 (§3 the surface, §5 the gaps, §7 S1).
+**Mockup:** [mockups/world-os-surface.dc.html](../mockups/world-os-surface.dc.html).
+**Base:** ailang-world `dev` `adffe4c1`.
+**How it is built:** attended, as World episodes, the way row 189 was. Each milestone is one
+episode on the trial rig (`~/.ailang/state/trial-2026-10-16`), minted by Mark with `episode
+start`, graded by a rig grader, then a PR, merged on Mark's word.
+
+**Size:** six milestones. Each is at most ~30 minutes of agent work and ~250 lines.
+
+## What S1 delivers
+
+The two distances, read-only, over data that exists today:
+
+- **The world timeline:** branes as lanes, merges, the now edge, and *needs you*.
+- **One brane:** the earlier and later stacks, and the front card holding inputs, outputs,
+  decisions and checks.
+
+Both are served by `worldd` at a new `GET /surface`, with the three themes, the keyboard map and
+the address bar.
+
+**Not in S1:**
+- live inputs and "change from here" (S5; needs the fork API, R2 on hold);
+- the agent band (row 151);
+- diffs and images in Outputs (S2);
+- brane data inside World's store (S3).
+
+## Constraints the build must meet (measured 2026-10-20 on `dev`)
+
+1. **One script, strict CSP.** The workbench's CSP is pinned as a literal by
+   `TestWorkbenchSecurityHeaders`: no inline script, no `on*=` handlers, same-origin links only.
+   `/surface` copies that header and serves one script of its own, `/surface/surface.js`
+   (`go:embed`, as `host/workbench/live.js` is).
+2. **No new routes in the frozen table.** `/v1` is pinned by `TestFrozenV1RouteTableMatchesMux`.
+   `/surface` and its two companions register beside `/workbench`, outside the frozen table, and
+   are GET-only.
+3. **No new Go dependencies.** `TestDaemonDependencyAllowlist` admits only the standard library,
+   this repo, and the store's sqlite. The page is `html/template` plus pure layout functions, the
+   same way `host/workbench/graph.go` lays out SVG.
+4. **Its own tokens.** The workbench's 11-token, two-theme test (`TestTokensBothThemes`) is not
+   touched. `/surface` has its own token set (Paper, Slate, Night) with its own test.
+5. **The daemon has no git, charter or rig input today.** Its only filesystem inputs are the
+   store, the credentials store, the workspace root and exec profiles. S1 adds **one read-only
+   input**: a generated surface index (M0, M1). S3 later replaces it with World objects.
+6. **Loopback only.** GET routes are unauthenticated (row 199, residual R1), so `/surface` is
+   for the local machine until row 199 lands.
+
+## The surface index (`world/surface-index/v1`)
+
+A JSON document, bounded at 4 MiB, built outside the daemon by a script and read by it.
+
+| field | from | example |
+|---|---|---|
+| `branes[]`: key, title, row, kind (`attended` · `loop` · `shared`) | merge branch names (`trial/row189-…`, `sprint/world-iter288-row156-…`, `design/row189-…`) and the charter's queue row titles | `onboarding · row 189` |
+| `states[]`: id, brane, kind (`step` · `shared` · `open`), merge hash, PR, parents[], landed time | `git log --first-parent --merges` on `dev`, and the merge-base of each PR | `9003555`, parents `7fb99da` and `f36428a` |
+| `steps[]`: episode, task file, agent, rounds, graders x/y, agent minutes, calls, log range, base | the rig's `evidence/<project>/episodes/<ep>.json` and `prs.json` | w189e, 8/8, 3.5 min, 42 calls |
+| `ran_on{}`: step → shared state | the rig's daemon builds (`bin/ailang-worldd.<sha>` by time) | w189c → `fd7b325` |
+| `reads{}`: step → states | the episode transcript's `ailang-read` paths, each mapped to the commit that created the file | w189e → design, w189b, w189c, w189d, w198, row 138 |
+| `files{}`: state → [path, new/edit] | `git diff --name-status` per merge | w189e: 7 files |
+| `decisions[]`: actor, text | the episode report (mint, refusals), the merge's PR, ledger review rounds | You · Merged #329 |
+
+Every field names its source in the index, so a value the builder could not measure is absent,
+never invented, and the card renders it as missing.
+
+## Milestones
+
+| M | Episode | Delivers | Grader checks (a rig script, written before the run) |
+|---|---|---|---|
+| **M0** | w188a | `scripts/surface/build_index.py`: builds the index from a repo, the rig root and the charter; `host/surface` with the Go type `Index`, `Validate` (bounds, ids unique, parents resolve, times ordered) and a fixture | build on a fixture repo of 6 merges and 2 episodes and compare with a golden; `Validate` refuses 5 broken indexes (one mutant each); real build on `dev` reproduces §4 of the design (w189e has 2 lines behind it; `9003555` has 2 parents) |
+| **M1** | w188b | `worldd serve --surface-index <file>`; `GET /surface/index.json` re-reads, validates and serves it (bounded); missing → a positive empty state | non-GET → 405; oversize → refused; invalid → refused with the reason; no flag → empty state; the frozen-table and dependency tests stay green |
+| **M2** | w188c | `GET /surface`: the world timeline, server-rendered — lanes, glyphs, merges, the now edge with health and *needs you*, ticks and legend; Paper, Slate and Night tokens | layout goldens (`LayoutTimeline` is deterministic and has no map-order dependence); one `<script` and no `on*=`; local links only; the tokens test; the row 189 fixture shows w189d's badge "3" and AC7 waiting |
+| **M3** | w188d | `GET /surface?brane=&at=`: one brane — earlier stack above, later below (one column per brane, three deep), the open card's four columns, relative and exact times; a closed query grammar `{brane, at}` | stack truth table on the fixture: w189e has 2 columns behind and 2 ahead; w189d 3 behind; `0ee1945` 3 ahead. Unknown key → inert 400. Every field in the view types renders (field census). |
+| **M4** | w188e | `/surface/surface.js`: the keyboard map, address bar, zoom, Appearance (stored in this browser only), and live refresh from `/agui/` by re-fetch and a fixed region swap | a node harness, as with `live_script_test`: keys move as §3.3a says; typing in the address bar is ignored by the shortcuts; unknown addresses keep the page; the region list is pinned; `STATE_DELTA` paths outside `/lastIndex` and `/logHead` are refused |
+| **M5** | w188f | `docs/QUICKSTART.md` "See your work" section; the plugin's `/world-watch` points at `/surface`; `build_index.py` documented | help-check for every command on the page (as `TestUseWorldPageCommandsMatchTheCLIHelp`); the docs link and stale-phrase checks |
+
+**S1 is done when** Mark opens `/surface` on his machine, built from the real index on `dev`,
+and the row 189 brane matches the mockup's facts:
+
+- the two-ancestor merge;
+- w189d's three lines behind it;
+- `0ee1945`'s three columns ahead;
+- AC7 waiting.
+
+He then rules S2 on.
+
+## Order and parallelism
+
+M0 → M1 → (M2 ∥ M3 after M1) → M4 → M5. M2 and M3 touch different templates and can run as two
+episodes at once, since minting no longer stops the daemon (row 189 M1). Each PR's CI is about
+25 minutes, so the critical path is about 4 PR cycles plus Mark's mints and reviews.
+
+## Risks
+
+- **Index drift.** The index is a projection. If it is rebuilt late, it shows an old world.
+  M1 serves the index's own build time on the now edge, so staleness is visible, never silent.
+- **Reads mapping.** "Read" edges come from transcripts mapped to the commits that created each
+  file. A file edited by many steps maps only to its creator. M0 records the method in the
+  index (`reads.method`), and the card labels these edges as *read*, never as a cause.
+- **Branch-name parsing.** Branes from branch names miss merges that follow no convention
+  (`docs/…`). Those land on the shared lane with no brane, and the M0 fixture covers one.

@@ -395,6 +395,8 @@ This design keeps all three.
 
 ## §7 Proposed sequence
 
+S1's milestones, constraints and graders: [w-world-os-surface-sprint-plan.md](w-world-os-surface-sprint-plan.md).
+
 Each stage is useful on its own and adds no authority until S5.
 
 1. **S1 — the timeline and the brane stack, read-only, over today's data.** Branes from charter rows, states from
