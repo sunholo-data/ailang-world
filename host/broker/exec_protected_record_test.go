@@ -265,11 +265,13 @@ func TestExecProtectedBaselineFailure(t *testing.T) {
 				// without the 8 MiB cap, so only overflow proves the cap.
 				body = "case \" $* \" in *' " + leg + " '*) head -c 8388609 /dev/zero | tr '\\000' x; exit 0;; esac\n" + body
 			case "construction-timeout":
-				// Four 0.4 s legs (1.6 s) exceed the 1 s construction bound but
-				// fit protectedCheckTimeout, so a capture bounded by the wrong
-				// constant, or by a fresh bound per leg, records no error.
-				protectedBaselineTimeout = time.Second
-				body = "sleep 0.4\ncase \" $* \" in *' config '*) exit 1;; *' rev-parse '*) echo 0000000000000000000000000000000000000000;; esac"
+				// The two quick legs start before any deadline even on a loaded
+				// rig; the two 1.2 s legs each fit the 2 s bound alone but not
+				// together, and fit protectedCheckTimeout, so a capture bounded
+				// by the wrong constant, or by a fresh bound per leg, records no
+				// error.
+				protectedBaselineTimeout = 2 * time.Second
+				body = "case \" $* \" in *' config '*) exit 1;; *' rev-parse '*) echo 0000000000000000000000000000000000000000;; *) sleep 1.2;; esac"
 			case "bad-head":
 				body = "case \" $* \" in *' rev-parse '*) echo not-hex; exit 0;; esac\n" + body
 			case "bad-tree":

@@ -23,11 +23,10 @@ type protectedBaseline struct {
 var protectedTreeRecord = regexp.MustCompile(`^(100644|100755|120000|160000) (blob|commit) (` + protectedHash + `)$`)
 var protectedBaseHash = regexp.MustCompile(`^` + protectedHash + `$`)
 
-// captureProtectedBaseline shares one construction deadline across every leg.
-// On any failure, discard all partially captured identities and the snapshot.
+// captureProtectedBaseline shares ctx's one construction deadline across every
+// leg; the caller supplies it (NewExecHandler: protectedBaselineTimeout). On
+// any failure, discard all partially captured identities and the snapshot.
 func captureProtectedBaseline(ctx context.Context, git, root string, canonical []string) (b protectedBaseline) {
-	ctx, cancel := context.WithTimeout(ctx, protectedBaselineTimeout)
-	defer cancel()
 	defer func() {
 		if b.err != nil {
 			b = protectedBaseline{err: b.err}
