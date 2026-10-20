@@ -23,6 +23,9 @@ claude plugin install ailang-world@ailang-world-marketplace
 
 `marketplace add` also takes a git URL or the path of a local checkout of this repo.
 
+The whole operator path, from install to finishing an episode, is
+[Use World on your repo](../../docs/USE_WORLD_ON_YOUR_REPO.md).
+
 ## Kept honest
 
 Every `ailang-worldd` and `world-publish` line in these files is checked against the CLI's own
