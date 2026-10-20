@@ -192,7 +192,11 @@ func NewExecHandler(cfg ExecHandlerConfig) (*ExecHandler, error) {
 	}
 	h.settings = data
 	if len(cfg.Profile.Protected) > 0 {
-		baseline := captureProtectedBaseline(context.Background(), "", cfg.Worktree, cfg.Profile.Protected)
+		// The handler is built inside the ctx-less BinderFor; the capture's
+		// one construction bound is fed directly from this root.
+		ctx, cancel := context.WithTimeout(context.Background(), protectedBaselineTimeout)
+		baseline := captureProtectedBaseline(ctx, "", cfg.Worktree, cfg.Profile.Protected)
+		cancel()
 		h.baseline = &baseline
 	}
 	return h, nil

@@ -22,7 +22,7 @@ import (
 
 var recordPatterns = []string{"*.test", "*_test.go"}
 
-const recordTreeDigest = "sha256:93bf23786be8a684897f9230be9317ffac55afe7585a821fc7f0b8effc03944e"
+const recordTreeDigest = "sha256:c81ac713cec2a6c252a5e8f79c8131e00fb251549d9e51a2abab9ad283d40c58"
 const recordIgnoredDigest = "sha256:df2826e62a4850b13e1f6ec3d690171f5e45423b78526862bcd3abb412bd4529"
 const recordEmptyDigest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
@@ -66,6 +66,14 @@ func recordRepo(t *testing.T, root string) {
 		tree = append(tree, oid...)
 		mustWrite(t, filepath.Join(root, f.path), f.data)
 	}
+	// A nested protected file, so the capture's ls-tree must recurse (-r).
+	blob, _ := hex.DecodeString(object("blob", []byte("gamma\n")))
+	sub, _ := hex.DecodeString(object("tree", append([]byte("100644 c_test.go\x00"), blob...)))
+	tree = append(append(tree, []byte("40000 pkg\x00")...), sub...)
+	if err := os.MkdirAll(filepath.Join(root, "pkg"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	mustWrite(t, filepath.Join(root, "pkg", "c_test.go"), "gamma\n")
 	commit := object("commit", []byte("tree "+object("tree", tree)+"\nauthor Fixture <fixture@example.invalid> 1 +0000\ncommitter Fixture <fixture@example.invalid> 1 +0000\n\nfixture\n"))
 	mustWrite(t, filepath.Join(gitdir, "refs/heads/main"), commit+"\n")
 	mustWrite(t, filepath.Join(gitdir, "HEAD"), "ref: refs/heads/main\n")
@@ -119,7 +127,7 @@ func recordAssertTree(t *testing.T, b *protectedBaseline, git, root string) {
 	if b == nil {
 		t.Fatal("handler baseline missing: capture was not wired")
 	}
-	if b.err != nil || b.base != base || b.digest != digest || b.digest != recordTreeDigest || b.files != files || files != 2 {
+	if b.err != nil || b.base != base || b.digest != digest || b.digest != recordTreeDigest || b.files != files || files != 3 {
 		t.Fatalf("committed tree identity: baseline=%+v error=%v independent=%s/%s/%d fixed=%s", b, b.err, base, digest, files, recordTreeDigest)
 	}
 }
@@ -171,6 +179,13 @@ func TestExecProtectedBaseline(t *testing.T) {
 			if name == "ignored-snapshot" || name == "snapshot-immutable" {
 				mustWrite(t, filepath.Join(root, "Case.test"), "case\n")
 				mustWrite(t, filepath.Join(root, "é.test"), "accent\n")
+				// Ignored and selected by the widened pathspec (*.te*t) but not
+				// by the mirror (*.test): only the mirror filter excludes it.
+				if err := os.MkdirAll(filepath.Join(root, ".git", "info"), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				mustWrite(t, filepath.Join(root, ".git", "info", "exclude"), "x.text\n")
+				mustWrite(t, filepath.Join(root, "x.text"), "widened only\n")
 				// APFS cannot hold both case/NFC aliases. Keep real Git's
 				// ignored output and append equivalent spellings as on ext4.
 				git, _ = protectedFakeGit(t, "case \" $* \" in *' ls-files '*) '"+git+"' \"$@\" || exit $?; printf 'case.test\\000é.test\\000é.test\\000';; *) exec '"+git+"' \"$@\";; esac")
@@ -246,10 +261,15 @@ func TestExecProtectedBaselineFailure(t *testing.T) {
 				if name == "preflight-over-cap" {
 					leg = "config"
 				}
-				body = "case \" $* \" in *' " + leg + " '*) head -c 8388609 /dev/zero; exit 0;; esac\n" + body
+				// Non-NUL filler: NUL bytes would fail the record parse with or
+				// without the 8 MiB cap, so only overflow proves the cap.
+				body = "case \" $* \" in *' " + leg + " '*) head -c 8388609 /dev/zero | tr '\\000' x; exit 0;; esac\n" + body
 			case "construction-timeout":
-				protectedBaselineTimeout = 2 * time.Second
-				body = "sleep 0.8\ncase \" $* \" in *' config '*) exit 1;; *' rev-parse '*) echo 0000000000000000000000000000000000000000;; esac"
+				// Four 0.4 s legs (1.6 s) exceed the 1 s construction bound but
+				// fit protectedCheckTimeout, so a capture bounded by the wrong
+				// constant, or by a fresh bound per leg, records no error.
+				protectedBaselineTimeout = time.Second
+				body = "sleep 0.4\ncase \" $* \" in *' config '*) exit 1;; *' rev-parse '*) echo 0000000000000000000000000000000000000000;; esac"
 			case "bad-head":
 				body = "case \" $* \" in *' rev-parse '*) echo not-hex; exit 0;; esac\n" + body
 			case "bad-tree":
@@ -287,6 +307,9 @@ func TestExecProtectedBaselineFailure(t *testing.T) {
 			}
 			if name == "non-git" && r.Error != "worktree is not a git checkout" {
 				t.Fatalf("non-git diagnostic: %q", r.Error)
+			}
+			if strings.HasSuffix(name, "-over-cap") && !errors.Is(b.err, ErrHandlerOverflow) {
+				t.Fatalf("over-cap leg must overflow the 8 MiB cap: %v", b.err)
 			}
 			if name == "snapshot-error" && !strings.Contains(r.Error, "snapshot-broken") {
 				t.Fatalf("snapshot error missing: %s", r.Error)
@@ -358,5 +381,51 @@ func TestExecProtectedWorstCaseFitsOutputCap(t *testing.T) {
 func TestProtectedV24BoundsApplied(t *testing.T) {
 	if protectedCheckTimeout != 3751*time.Millisecond || protectedBaselineTimeout != 4848*time.Millisecond {
 		t.Fatalf("bounds = %v / %v, want design V24's 3.751s / 4.848s", protectedCheckTimeout, protectedBaselineTimeout)
+	}
+}
+
+// TestProtectedIgnoredDigestSorted builds the set in reverse order many times:
+// a digest over map order instead of sorted keys differs on some iteration.
+func TestProtectedIgnoredDigestSorted(t *testing.T) {
+	keys := []string{"z.test", "y.test", "x.test", "w.test", "v.test", "u.test", "t.test"}
+	want := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte("t.test\nu.test\nv.test\nw.test\nx.test\ny.test\nz.test\n")))
+	for i := 0; i < 64; i++ {
+		set := map[string]struct{}{}
+		for _, k := range keys {
+			set[k] = struct{}{}
+		}
+		if got := protectedKeysDigest(set); got != want {
+			t.Fatalf("iteration %d: digest %s, want sorted %s", i, got, want)
+		}
+	}
+	if got := protectedKeysDigest(map[string]struct{}{}); got != recordEmptyDigest {
+		t.Fatalf("empty set digest %s, want %s", got, recordEmptyDigest)
+	}
+}
+
+// TestProtectedRecordGolden pins every key and value of the design §4.5 block.
+func TestProtectedRecordGolden(t *testing.T) {
+	yes, no := true, false
+	patterns := []string{"*.test", "tests/**"}
+	b := protectedBaseline{base: strings.Repeat("a", 40), digest: "sha256:" + strings.Repeat("b", 64), files: 2,
+		ignoredDigest: "sha256:" + strings.Repeat("c", 64), ignored: map[string]struct{}{"k1": {}, "k2": {}}}
+	head := `{"digest":"` + protectedDigest(patterns) + `","patterns":["*.test","tests/**"],"enforced":"%s","base":"` + strings.Repeat("a", 40) +
+		`","base_digest":"sha256:` + strings.Repeat("b", 64) + `","base_files":2,"base_ignored_digest":"sha256:` + strings.Repeat("c", 64) + `","base_ignored_files":2,`
+	for _, c := range []struct {
+		name          string
+		before, after protectedCheck
+		want          string
+	}{
+		{"changed", protectedCheck{intact: &yes}, protectedCheck{intact: &no, changes: []protectedChange{{Path: "tests/x.py", Status: "modified"}}},
+			`"intact_before":true,"intact_after":false,"changes":[{"path":"tests/x.py","status":"modified","phase":"after"}],"truncated":false,"total":1,"error":""}`},
+		{"intact", protectedCheck{intact: &yes}, protectedCheck{intact: &yes},
+			`"intact_before":true,"intact_after":true,"changes":[],"truncated":false,"total":0,"error":""}`},
+	} {
+		enforced := map[string]string{"changed": "glob", "intact": "dirs-only"}[c.name]
+		want := fmt.Sprintf(head, enforced) + c.want
+		got, err := json.Marshal(buildProtectedRecord(b, patterns, enforced, c.before, c.after))
+		if err != nil || string(got) != want {
+			t.Fatalf("%s record:\n got %s\nwant %s (%v)", c.name, got, want, err)
+		}
 	}
 }

@@ -104,18 +104,24 @@ func captureProtectedBaseline(ctx context.Context, git, root string, canonical [
 	if b.err != nil {
 		return
 	}
-	keys := make([]string, 0, len(b.ignored))
-	for key := range b.ignored {
+	b.ignoredDigest = protectedKeysDigest(b.ignored)
+	b.err = ctx.Err()
+	return
+}
+
+// protectedKeysDigest is sha256 over the sorted fold keys, each LF-terminated;
+// the empty set hashes the empty byte string.
+func protectedKeysDigest(set map[string]struct{}) string {
+	keys := make([]string, 0, len(set))
+	for key := range set {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	h.Reset()
+	h := sha256.New()
 	for _, key := range keys {
 		fmt.Fprintln(h, key)
 	}
-	b.ignoredDigest = fmt.Sprintf("sha256:%x", h.Sum(nil))
-	b.err = ctx.Err()
-	return
+	return fmt.Sprintf("sha256:%x", h.Sum(nil))
 }
 
 // protectedRecord is data only in M6a; execResult starts emitting it in M6b.

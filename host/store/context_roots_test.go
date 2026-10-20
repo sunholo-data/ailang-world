@@ -55,7 +55,12 @@ var contextRootPins = map[string]int{
 	// Row 189 M2: the exec profile binding is read inside the same ctx-less
 	// BinderFor, through a fresh read-only credentials handle bounded by the
 	// credential budget (3 s, B4) fed directly from this root.
-	"host/daemon/binding.go|episodeBinding|Background":                        1,
+	"host/daemon/binding.go|episodeBinding|Background": 1,
+	// Row 156 M6a: NewExecHandler (built inside the same ctx-less BinderFor)
+	// captures the protected baseline under protectedBaselineTimeout (4 848 ms,
+	// design V24) fed directly from this root; Git subprocesses only, no Store
+	// call.
+	"host/broker/handlers_exec.go|NewExecHandler|Background":                  1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,
 	"host/store/lookup_index.go|provisionLookupIndex|Background":              1,
 	"host/store/reference_index.go|provisionReferenceIndexes|Background":      1,
