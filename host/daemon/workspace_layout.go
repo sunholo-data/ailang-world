@@ -44,7 +44,7 @@ func checkModuleRoot(flag, value, rel, root string) error {
 	case filepath.Clean(rel) != rel:
 		return fmt.Errorf("%s %q: %q is not clean", flag, value, rel)
 	}
-	if _, err := broker.RenderEpisodePolicy(filepath.Join(root, rel)); err != nil {
+	if _, err := broker.RenderEpisodePolicy(filepath.Join(root, rel), nil); err != nil {
 		return fmt.Errorf("%s %q: %v", flag, value, err)
 	}
 	return nil

@@ -112,7 +112,7 @@ func TestWorkspaceModuleRootIsTheSandbox(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want, err := broker.RenderEpisodePolicy(sandbox)
+	want, err := broker.RenderEpisodePolicy(sandbox, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -668,7 +668,7 @@ func TestWorkspacePackageCacheLinkedIntoEpisodeHome(t *testing.T) {
 		t.Fatalf("tool env lacks %q:\n%s", want, env)
 	}
 	got, _ := os.ReadFile(filepath.Join(f.stateDir, "policies", "ep1.toml"))
-	if want, _ := broker.RenderEpisodePolicy(filepath.Join(f.root, "ep1")); string(got) != string(want) {
+	if want, _ := broker.RenderEpisodePolicy(filepath.Join(f.root, "ep1"), nil); string(got) != string(want) {
 		t.Fatalf("policy bytes changed with the cache flag:\n%s\nwant\n%s", got, want)
 	}
 	// The keep arm: a symlink already pointing at the snapshot is left as is.

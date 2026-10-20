@@ -1504,3 +1504,47 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **13/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M5a (protected AILANG policies in every variant), then M5b. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 287 — 2026-10-20 — row 156 M5a built: protected AILANG policies in every variant (PR #326; judge r1 PASS 88 → r2 PASS 91) [PRODUCT]
+
+**Kind:** one milestone of row 156 (M5a). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 286's **Next** was row 156 M5a; `TestEpisodePolicyProtected*` absent on origin/dev and no M5a PR existed (reality check). Open PRs #323/#324 are attended trial branches (rows 198/189), not loop work. No orphan traces for 287. D-WORLD-82 (D-156-4 = A) puts the World pre-check in M5c/M5d after M5b, so M5a is the policy half only, as planned. All work ran in `.wt-world-iter287-row156-m5a`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313 and #246: 0 allowlisted directives since `2026-10-18T23:25:31Z` (7 and 49 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 0 unread (37 total, control). Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** local dev = origin/dev `0adeb70` (#325 merge); CI success on it, check-runs 3, none not-green. Running skill (resolved symlink) and the driver pin both match origin on SKILL.md and every resource (per-file loop). Ledger valid, 72 rows, zero OPEN. Design doc unchanged in substance since iteration 282's quorum, so no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M5a ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `0adeb70`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; broker `-race` rc 0 (213 s); daemon `-race` rc 0 (272 s).
+
+**Execute (codex gpt-6.1-sol, 1 run, ≈96k tok, rc 0):** `RenderEpisodePolicy(root, protected)`, `RenderRunVariant(…, protected)`, `runPolicySpec.protected` appended after `episodeDenyWrite` (Env: `.git/**`, built-ins, protected) in a fresh slice; `AilangToolConfig.Protected` copied onto the handler and used by `runVariantFor` and `VerifyRunCaps`; `tomlString` escapes `\`, `"` and control runes; all callers pass nil. Four named tests, including a production-entry-point wiring test (`TestEpisodePolicyProtectedThroughHandler`, a fake policy-tool through `NewAilangToolHandler`), as last iteration's retro asked. 8/8 directed mutants killed in-sandbox; it used a JSON decoder for the deny array because BurntSushi/toml needed a go.sum edit outside its allowlist.
+
+**Controller verification (outside the sandbox):** gofmt clean, vet, 6 + 3 named tests, broker `-race` (185 s), daemon `-race` (230 s), `./cmd/...` rc 0. Five controller mutants anchored on the diff (base short-circuit nil, raw backslash, raw control runes, protected before `.git/**`, handler aliasing the caller's slice), each killed by a named test. Committed `6350cb3`. Evidence: `design_docs/verification/world-iter287/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter287`; generator codex ≠ judge sonnet):** r1 **PASS 88** (29/22/20/10/7), zero blocking. All 7 executor claims re-verified. Survivor N1: `IsControl` narrowed to `r < 0x20` passed every test, because `encoding/json` accepts a raw DEL that TOML forbids. The controller reproduced it (rc 0), then made a test-only fix `3852dbc`: `/escapes` requires `\u007F` and no raw C0/DEL rune. Both narrowed mutants are now red. r2 (resumed) **PASS 91**, zero blocking; N1 closed; N3 (invalid UTF-8 → U+FFFD) is unreachable through a profile, because `ParseProtectedPatterns` refuses invalid UTF-8 (`exec_protected.go:75`), and is carried to M5b.
+
+**Gate 3b:** PR #326 (`sprint/world-iter287-row156-m5a`), with the record on the same branch. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=0adeb70398a1de4ff26f488eb8e384fbe866672a@2026-10-20T03:52:23Z (Gate 4; Gate 1 read the same SHA at 03:27:00Z). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (1 run, ≈96,017 tok) · evaluator Agent sonnet (64,674 + 73,675 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Importing BurntSushi/toml in the test: it is in the module graph but needs a go.sum edit (outside the allowlist) and would meet the dependency allowlist test; the JSON proxy plus the raw-rune scan covers the renderer's subset.
+- Wiring the episode profile in the daemon now: that is M5b by plan; M5a callers pass nil.
+- Treating the `runVariantFor` copy, the `\u%04x` case and the `len==0 && !nil` form as gaps: each is equivalent by construction (judge-confirmed).
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: last iteration's lesson (demand a production-entry-point test for anything wired) was put in the directive and held: the wiring test killed the handler/VerifyRunCaps drops on the first run, and no controller mutant survived. The remaining survivor came from the TEST ORACLE: a decoder that is laxer than the format under test (JSON accepts raw DEL, TOML does not) makes an escape test pass for unescaped output. Where a test round-trips through a stand-in decoder, the directive should also demand a byte-level assertion for every character class the real format forbids. Backlog lane: none new; N3 carried on row 156 for M5b. Harness share over the latest 20 including 287: **0/20**. Last three landings (287, 286, 285) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **14/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M5b (episode profile selection and module-root policy rebasing; feed only `ParseProtectedPatterns` output), then the M5c/M5d pre-check (re-measure V7 on v0.54.15 first). DECISIONS FOR MARK: none; ledger OPEN zero.

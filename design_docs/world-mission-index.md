@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 287 | 2026-10-20 | row 156 M5a built: protected AILANG policies in every variant (PR #326; judge r1 PASS 88 → r2 PASS 91) [PRODUCT] |
 | 286 | 2026-10-20 | row 156 M4c built: startup probe arm 8 — protected-write prevention and Linux detection (PR #325; judge r1 PASS 84 → r2 PASS 91) [PRODUCT] |
 | 285 | 2026-10-19 | row 156 M4a + M4b built: git-filter preflight and the bounded protected integrity checker (PR #322; judge r1 FAIL 78 → r2 PASS 93) [PRODUCT] |
 | 284 | 2026-10-19 | row 156 M3a + M3b built: protected srt `denyWrite` and real-srt protected-write rows (PR #319; judge r1 PASS 91 → r2 PASS 93) [PRODUCT] |
