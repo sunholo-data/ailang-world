@@ -430,8 +430,12 @@ below until Mark rules otherwise.
 
 ## §9 Mockup
 
-One board, real data from 19–20 October 2026, on the private design canvas:
-`https://claude.ai/artifact/4z7uXX5GgRj9ZzdAjxwD6L`
+One board, real data from 19–20 October 2026, on the design canvas:
+`https://claude.ai/artifact/4z7uXX5GgRj9ZzdAjxwD6L`. Its source is committed as
+[mockups/world-os-surface.dc.html](../mockups/world-os-surface.dc.html), as of canvas version 26.
+It is a design-canvas component, not a self-contained page: it renders inside the canvas, and its
+two logos are canvas uploads of the AILANG and Sunholo SVGs from sunholo.com. Like the other
+fixtures it pins grammar (distances, stacks, the human's colour, live inputs), not pixels.
 
 - It opens on the world timeline, showing what w189e came from and led to.
 - Point at a state to see its connections, click a lane or a state to open its brane, and
