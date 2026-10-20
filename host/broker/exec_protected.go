@@ -251,6 +251,12 @@ func matchProtected(canonical []string, rel string) bool {
 	return false
 }
 
+// RebaseProtectedForSandbox rebases patterns for an AILANG sandbox. The input
+// must be ParseProtectedPatterns output.
+func RebaseProtectedForSandbox(canonical []string, moduleRoot string) []string {
+	return rebaseForSandbox(canonical, moduleRoot)
+}
+
 // rebaseForSandbox renders the canonical set as AILANG's fs_deny_write, relative
 // to the sandbox at moduleRoot (design §4.2 "Re-basing for AILANG"). Segments
 // compare under foldProtectedKey. A D/** strictly under the root loses the root
