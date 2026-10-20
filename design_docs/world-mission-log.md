@@ -1460,3 +1460,47 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **12/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M4c (wire startup probe arm 8 for prevention and Linux detection), then M5a. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 286 — 2026-10-20 — row 156 M4c built: startup probe arm 8, protected-write prevention and Linux detection (PR #325; judge r1 PASS 84 → r2 PASS 91) [PRODUCT]
+
+**Kind:** one milestone of row 156 (M4c). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 285's **Next** was row 156 M4c. Open PRs #323/#324 are attended trial branches (rows 198/189), not loop work and not touching row 156. No orphan traces for 286 (no worktree, branch or stamp). All work ran in `.wt-world-iter286-row156-m4c`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (6 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 0 unread. Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** local dev fast-forwarded to origin/dev `c9ab49b` (#322 merge); CI 3/3 success on it. Running skill (resolved symlink) matches origin on SKILL.md and all 13 resources (per-file loop after a fresh fetch). Ledger valid, 72 rows, zero OPEN. Doc unchanged since iteration 282's quorum rounds, so no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M4c ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe from the worktree rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `c9ab49b`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; broker `-race` rc 0 (194 s).
+
+**Execute (codex gpt-6.1-sol, run 1 102,571 tok, rc 0):** `ExecProbeArmProtectedWrite = "arm8-protected-write"`; `execProbeOrder` (arms 1–7, plus arm 8 only when `protected` is non-empty; the refusal text says "of N arms"); `execProbeProtectedSample` (a specimen per pattern, found with the grammar's own matcher; unsupported constructions refused); `probeProtected`/`protectedProbe`: scratch git repo and base commit in the probe episode, planted files proven writable unsandboxed, prevention legs require an accepted refusal errno and unchanged host bytes, the darwin creation leg requires refused and absent, and the linux base-name leg requires WROTE and then `checkProtected` intact=false. `execRefusalCodes("linux")` gains EBUSY/EXDEV (V14). 5/5 planned mutants killed in-sandbox.
+
+**Controller verification (outside the sandbox):** vet, named tests, broker `-race` rc 0, and real srt 0.0.78 on darwin: `TestExecProbeArm8` and `TestExecSrtStartupProbePasses` PASS. Two controller mutants **survived** every test: removing the `probeProtected` call from `probeExecProfile` (every arm-8 test called the arm directly, so "wire" was untested), and dropping the darwin creation leg. Fix round 1 (codex, test-only, 62,422 tok): `TestExecProbeArm8Wired` drives the production entry point (8 vs 7 arms), plus `darwin-create` and a positive control `darwin-refuses-all`. Both mutants now killed (controller re-run). Commit `885af2d`. Evidence: `design_docs/verification/world-iter286/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter286`; generator codex ≠ judge sonnet):** r1 **PASS 84** (27/19/15/13/10), zero blocking. It killed J-TOTAL; 11 of its own mutants survived, 5 of them on spec'd behaviour (A linux success token, D host-deleted, E darwin created-file absent, I linux directory leg, K EBUSY/EXDEV). The controller measured `execFileRefusal` reading `hostGOOS()` (`exec_settings.go:86` = `runtime.GOOS`) rather than `probeProtected`'s goos, so K cannot be killed on darwin. Fix round 2 (codex, test-only, 61,309 tok; commit `9edf116`): rows `linux-no-token`, `linux-checker-error` (pins `WorktreeFilterRefused`), `linux-directory-write`, `darwin-create-forged`, and positive rows `linux-ebusy-passes`/`linux-exdev-passes`, which run on linux hosts (CI) and skip by name elsewhere. A, E and I killed; C single-drop equivalent (a checker error always carries nil intact; the double drop panics, not a kill); D, B, H and F equivalent. r2 (resumed) **PASS 91**, zero blocking; its N1–N4 all killed.
+
+**Gate 3b:** PR #325 (`sprint/world-iter286-row156-m4c`), with the record on the same branch so one CI cycle covers code and record. PR-head CI: `885af2d` 3/3 green. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978@2026-10-19T23:26:05Z (Gate 1). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (3 runs: 102,571 + 62,422 + 61,309 = 226,302 tok) · evaluator Agent sonnet (63,408 + 78,444 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Treating the in-sandbox `^TestExecProbe` rc 1 as a regression: it was `bind: operation not permitted` (sockets inside the sandbox); the same selection is green outside.
+- Editing `exec_probe.go` to thread goos into `execFileRefusal` in this PR: the judge rates it non-blocking, and the fix rounds were test-only by directive. Carried on row 156.
+- Chasing the C/D/B/H/F survivors: each is shown equivalent by construction (judge-confirmed).
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: an executor that implements a planned test list kills exactly the planned mutants, and the plan named no mutant for its own milestone title ("Wire") or for the darwin creation leg. The controller's out-of-sandbox mutants found both before the judge saw the code. A directive should demand one production-entry-point test per milestone that *wires* something, and a negative control for every leg the design spells out, not only the plan's listed mutants. Second: a test seam (`goos` parameter) that only part of the code consults gives darwin-green rows that cannot exercise linux refusal codes; the rows are honest only because they skip by name. Backlog lane: none new; M4c residuals carried on row 156. Harness share over the latest 20 including 286: **0/20**. Last three landings (286, 285, 284) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **13/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M5a (protected AILANG policies in every variant), then M5b. DECISIONS FOR MARK: none; ledger OPEN zero.
