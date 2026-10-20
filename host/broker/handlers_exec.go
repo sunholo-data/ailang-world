@@ -138,7 +138,7 @@ type ExecHandler struct {
 	maxOutput      int64
 	seedMu         sync.Mutex
 	baseline       *protectedBaseline
-	// spawns counts cache seeding and srt, excluding baseline Git calls.
+	// spawns counts cache seeding and srt, excluding baseline and phase Git calls.
 	// A refusal or a drifted stack leaves it unchanged (AC2.4, AC2.9).
 	spawns atomic.Int64
 }
@@ -221,7 +221,8 @@ type execResult struct {
 	Sandbox         execResultSandbox `json:"sandbox"`
 	// WorktreeDelta (row 184) is what the command changed in the episode
 	// worktree; omitted when nothing changed (byte-identical results).
-	WorktreeDelta *WorktreeDelta `json:"worktree_delta,omitempty"`
+	WorktreeDelta *WorktreeDelta   `json:"worktree_delta,omitempty"`
+	Protected     *protectedRecord `json:"protected,omitempty"`
 }
 
 type execResultProfile struct {
@@ -279,10 +280,14 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	if err := h.prepareCache(ctx); err != nil {
 		return nil, err
 	}
-	budget := time.Duration(h.profile.TimeoutMS) * time.Millisecond
-	if dl, ok := ctx.Deadline(); ok {
-		budget = min(budget, time.Until(dl))
+	deadline, hasDeadline := ctx.Deadline()
+	var before protectedCheck
+	var reserve time.Duration
+	if h.baseline != nil && h.baseline.err == nil {
+		before = h.checkProtected(ctx)
+		reserve = protectedCheckTimeout
 	}
+	budget := execChildBudget(time.Duration(h.profile.TimeoutMS)*time.Millisecond, deadline, hasDeadline, time.Now(), reserve)
 	if budget <= 0 {
 		return nil, fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id)
 	}
@@ -321,8 +326,43 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	out, errOut := capture.stdout.snapshot(), capture.stderr.snapshot()
 	res.Stdout, res.StdoutBytes, res.StdoutTruncated, res.StdoutSHA256 = out.Text, out.Bytes, out.Truncated, out.SHA256
 	res.Stderr, res.StderrBytes, res.StderrTruncated, res.StderrSHA256 = errOut.Text, errOut.Bytes, errOut.Truncated, errOut.SHA256
+	if h.baseline != nil {
+		var after protectedCheck
+		if h.baseline.err == nil {
+			afterCtx := context.WithoutCancel(ctx)
+			if hasDeadline {
+				var cancel context.CancelFunc
+				afterCtx, cancel = context.WithDeadline(afterCtx, deadline)
+				defer cancel()
+			}
+			after = h.checkProtected(afterCtx)
+		}
+		enforced := "glob"
+		if hostGOOS() == "linux" {
+			enforced = "dirs-only"
+		}
+		record := buildProtectedRecord(*h.baseline, h.profile.Protected, enforced, before, after)
+		res.Protected = &record
+	}
 	res.WorktreeDelta = probe.finish(ctx)
 	return json.Marshal(res)
+}
+
+// execChildBudget reserves the after-phase inside the original call deadline.
+func execChildBudget(timeout time.Duration, deadline time.Time, hasDeadline bool, now time.Time, reserve time.Duration) time.Duration {
+	if hasDeadline {
+		return min(timeout, deadline.Sub(now)-reserve)
+	}
+	return timeout
+}
+
+// checkProtected resolves Git at call time; resolution failures belong to this phase.
+func (h *ExecHandler) checkProtected(ctx context.Context) protectedCheck {
+	git, err := worktreeGit()
+	if err != nil {
+		return protectedCheck{err: err}
+	}
+	return checkProtected(ctx, git, h.worktree, h.baseline.base, h.profile.Protected, h.baseline.ignored)
 }
 
 // launch is the §4.5 launch line the host node runs for argv: srt's own

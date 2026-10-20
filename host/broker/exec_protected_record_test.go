@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -429,5 +430,315 @@ func TestProtectedRecordGolden(t *testing.T) {
 		if err != nil || string(got) != want {
 			t.Fatalf("%s record:\n got %s\nwant %s (%v)", c.name, got, want, err)
 		}
+	}
+}
+
+// M6b fixtures use a real index and commit so status can prove a clean tree.
+func recordCommittedRepo(t *testing.T, git, root string) {
+	t.Helper()
+	mustWrite(t, filepath.Join(root, "a_test.go"), "alpha\n")
+	mustWrite(t, filepath.Join(root, ".gitignore"), "*.test\n")
+	for _, args := range [][]string{{"init", "-q", "--template="}, {"add", "."},
+		{"-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture"}} {
+		recordReadGit(t, git, root, args...)
+	}
+	mustWrite(t, filepath.Join(root, "standing.test"), "ignored at construction\n")
+}
+
+func recordSwapGit(t *testing.T, git string) {
+	t.Helper()
+	old := worktreeGit
+	worktreeGit = func() (string, error) { return git, nil }
+	t.Cleanup(func() { worktreeGit = old })
+}
+
+func recordPhaseBound(t *testing.T, bound time.Duration) {
+	t.Helper()
+	old := protectedCheckTimeout
+	protectedCheckTimeout = bound
+	t.Cleanup(func() { protectedCheckTimeout = old })
+}
+
+func recordSuccess(t *testing.T, r execResult) *protectedRecord {
+	t.Helper()
+	if r.ExitCode == nil || *r.ExitCode != 0 || r.Stdout != "[a]" || r.TimedOut {
+		t.Fatalf("report-only command result changed: %+v", r)
+	}
+	if r.Protected == nil {
+		t.Fatal("protected result absent")
+	}
+	return r.Protected
+}
+
+func TestExecProtectedIntact(t *testing.T) {
+	for _, name := range []string{"intact", "changed", "command-changed"} {
+		t.Run(name, func(t *testing.T) {
+			git := recordEnv(t)
+			recordPhaseBound(t, 15*time.Second) // Identity rows do not test scheduling.
+			f := newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) {
+				m["protected"] = recordPatterns
+				m["commands"].(map[string]any)["modify"] = map[string]any{"argv": []string{"/bin/sh", "-c", "printf changed > a_test.go; printf '[a]'"}}
+			}, setup: func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) }})
+			base, digest, files := recordIndependent(t, git, f.worktree)
+			ignored := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte("STANDING.TEST\n")))
+			command := "test"
+			if name == "changed" {
+				mustWrite(t, filepath.Join(f.worktree, "a_test.go"), "host changed\n")
+			}
+			var r execResult
+			if name == "command-changed" {
+				command = "modify"
+				r = f.mustRun(t, command)
+			} else {
+				r = f.mustRun(t, command, "a")
+			}
+			p := recordSuccess(t, r)
+			if p.Base != base || p.BaseDigest != digest || p.BaseFiles != files || p.BaseIgnoredDigest != ignored || p.BaseIgnoredFiles != 1 || p.Digest != protectedDigest(recordPatterns) || !reflect.DeepEqual(p.Patterns, recordPatterns) {
+				t.Fatalf("independent protected identity mismatch: %+v", p)
+			}
+			wantEnforced := "glob"
+			if runtime.GOOS == "linux" {
+				wantEnforced = "dirs-only"
+			}
+			if p.Enforced != wantEnforced {
+				t.Fatalf("enforced = %q, want %q on %s", p.Enforced, wantEnforced, runtime.GOOS)
+			}
+			if p.IntactBefore == nil || p.IntactAfter == nil || *p.IntactBefore != (name != "changed") || *p.IntactAfter != (name == "intact") || p.Error != "" {
+				t.Fatalf("before/after verdict mismatch: %+v", p)
+			}
+			want := []protectedRecordChange{}
+			for _, phase := range []string{"before", "after"} {
+				if name == "changed" || (name == "command-changed" && phase == "after") {
+					want = append(want, protectedRecordChange{protectedChange: protectedChange{Path: "a_test.go", Status: "modified"}, Phase: phase})
+				}
+			}
+			if !reflect.DeepEqual(p.Changes, want) || p.Total != len(want) || p.Truncated {
+				t.Fatalf("phase changes = %+v/%d, want %+v", p.Changes, p.Total, want)
+			}
+			if f.h.Spawns() != 1 {
+				t.Fatalf("phase git counted as command spawn: %d", f.h.Spawns())
+			}
+		})
+	}
+}
+
+func recordExecute(t *testing.T, f *execFixture, ctx context.Context, command string) execResult {
+	t.Helper()
+	payload, _ := json.Marshal(map[string]any{"command": command, "args": []string{}})
+	if command == "test" {
+		payload = []byte(`{"command":"test","args":["a"]}`)
+	}
+	out, err := f.h.Execute(ctx, EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope}, payload)
+	if err != nil {
+		t.Fatalf("report-only Execute failed: %v", err)
+	}
+	return execDecode(t, out)
+}
+
+func recordTimeoutError(message string) bool {
+	return strings.Contains(message, "timed out") || strings.Contains(message, "deadline exceeded")
+}
+
+func TestExecProtectedCheckTimeout(t *testing.T) {
+	t.Run("reserve", func(t *testing.T) {
+		now := time.Unix(100, 0)
+		for _, tc := range []struct {
+			name              string
+			elapsed, deadline time.Duration
+			hasDeadline       bool
+			want              time.Duration
+		}{
+			{"warm", 200 * time.Millisecond, 10 * time.Second, true, 6049 * time.Millisecond},
+			{"warm-slow", 650 * time.Millisecond, 10 * time.Second, true, 5599 * time.Millisecond},
+			{"cold", 2500 * time.Millisecond, 10 * time.Second, true, 3749 * time.Millisecond},
+			{"spent", 7 * time.Second, 10 * time.Second, true, -751 * time.Millisecond},
+			{"no-deadline", 0, 0, false, 9 * time.Second},
+			{"capped", 0, 30 * time.Second, true, 9 * time.Second},
+		} {
+			got := execChildBudget(9*time.Second, now.Add(tc.deadline), tc.hasDeadline, now.Add(tc.elapsed), 3751*time.Millisecond)
+			if got != tc.want {
+				t.Errorf("exact reserve %s: got %s want %s", tc.name, got, tc.want)
+			}
+		}
+		git := recordEnv(t)
+		bound := 2 * time.Second
+		recordPhaseBound(t, bound)
+		f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+		ctx, cancel := context.WithTimeout(context.Background(), 3*bound)
+		defer cancel()
+		deadline, _ := ctx.Deadline()
+		r := recordExecute(t, f, ctx, "sleep")
+		if !r.TimedOut || r.Protected == nil {
+			t.Fatalf("reserve handler must time out child and retain protected: %+v", r)
+		}
+		if r.Protected.IntactAfter == nil && (r.Protected.Error == "" || recordTimeoutError(r.Protected.Error)) {
+			t.Errorf("reserve must leave after-check time: %+v", r.Protected)
+		}
+		if !time.Now().Before(deadline) {
+			t.Error("reserve handler returned at/after original deadline")
+		}
+	})
+	for _, name := range []string{"shared-phase", "null", "before-only"} {
+		t.Run(name, func(t *testing.T) {
+			git := recordEnv(t)
+			bound := 2 * time.Second
+			recordPhaseBound(t, bound)
+			f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+			marker := shellQuote(filepath.Join(t.TempDir(), "first-status"))
+			body := ""
+			sleep := func(d time.Duration) string { return fmt.Sprintf("sleep %.3f\n", d.Seconds()) }
+			switch name {
+			case "shared-phase":
+				body = "if [ \"$1\" = -c ] && { [ \"$3\" = status ] || [ \"$3\" = ls-files ]; }; then\n" + sleep(bound*4/10) + "fi\n"
+			case "null":
+				body = "if [ \"$1\" = -c ] && [ \"$3\" = status ]; then\n" + sleep(3*bound) + "fi\n"
+			case "before-only":
+				body = "if [ \"$1\" = -c ] && [ \"$3\" = status ] && [ ! -f " + marker + " ]; then touch " + marker + "; echo BEFORE-ONLY >&2; exit 73; fi\n"
+			}
+			fake, _ := protectedFakeGit(t, body+"exec "+shellQuote(git)+" \"$@\"")
+			recordSwapGit(t, fake) // Baseline is already captured; only phases are injected.
+			ctx, cancel := context.WithTimeout(context.Background(), 6*bound)
+			defer cancel()
+			deadline, _ := ctx.Deadline()
+			p := recordSuccess(t, recordExecute(t, f, ctx, "test"))
+			if p.IntactBefore != nil || p.Error == "" {
+				t.Fatalf("failed before-check must be null with error: %+v", p)
+			}
+			if name == "before-only" {
+				if p.IntactAfter == nil || !*p.IntactAfter || !strings.Contains(p.Error, "BEFORE-ONLY") {
+					t.Fatalf("before error must survive successful after-check: %+v", p)
+				}
+			} else if p.IntactAfter != nil || !recordTimeoutError(p.Error) {
+				t.Fatalf("timed-out phases must both be null with timeout error: %+v", p)
+			}
+			if !time.Now().Before(deadline) {
+				t.Fatal("report-only timeout call exceeded original deadline")
+			}
+		})
+	}
+	t.Run("after-cap", func(t *testing.T) {
+		git := recordEnv(t)
+		bound := 3 * time.Second
+		recordPhaseBound(t, bound)
+		f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+		dir := t.TempDir()
+		marker, delta := shellQuote(filepath.Join(dir, "command")), shellQuote(filepath.Join(dir, "delta"))
+		// Delay only row 184's first snapshot, which follows budget computation.
+		body := fmt.Sprintf("if [ \"$1\" = -C ] && [ ! -f %s ]; then touch %s; sleep %.3f; fi\n", delta, delta, (bound * 11 / 4).Seconds())
+		body += fmt.Sprintf("if [ \"$1\" = -c ] && [ \"$3\" = status ] && [ -f %s ]; then sleep %.3f; fi\n", marker, (3 * bound).Seconds())
+		fake, _ := protectedFakeGit(t, body+"exec "+shellQuote(git)+" \"$@\"")
+		recordSwapGit(t, fake)
+		// The command marks the transition; neither baseline nor before-check sleeps.
+		m := defaultExecProfile(f)
+		m["protected"] = recordPatterns
+		m["commands"].(map[string]any)["mark"] = map[string]any{"argv": []string{"/bin/sh", "-c", "touch " + marker + "; printf '[a]'"}}
+		data, _ := json.Marshal(m)
+		var err error
+		f.profile, err = ParseExecProfile(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.h, err = NewExecHandler(ExecHandlerConfig{Profile: f.profile, Sandbox: f.sandbox, Episode: "ep1", Worktree: f.worktree, WorkspaceRoot: f.root, StateDir: f.state, OperatorHome: f.home})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*bound)
+		defer cancel()
+		deadline, _ := ctx.Deadline()
+		p := recordSuccess(t, recordExecute(t, f, ctx, "mark"))
+		if p.IntactBefore == nil || !*p.IntactBefore || p.IntactAfter != nil || !recordTimeoutError(p.Error) {
+			t.Fatalf("original deadline must cap after-phase: %+v", p)
+		}
+		if time.Now().After(deadline.Add(bound / 2)) {
+			t.Fatal("after-phase extended original deadline by more than cleanup allowance")
+		}
+	})
+}
+
+func TestExecProtectedNotGit(t *testing.T) {
+	for _, name := range []string{"not-git", "missing-git"} {
+		t.Run(name, func(t *testing.T) {
+			git := recordEnv(t)
+			fake, log := protectedFakeGit(t, "exec "+shellQuote(git)+" \"$@\"")
+			recordSwapGit(t, fake)
+			if name == "missing-git" {
+				worktreeGit = func() (string, error) { return "", errors.New("git missing") }
+			}
+			f := recordHandler(t, nil)
+			// Baseline errors are sticky even if Git becomes available for Execute.
+			worktreeGit = func() (string, error) { return fake, nil }
+			mustWrite(t, log, "")
+			p := recordSuccess(t, f.mustRun(t, "test", "a"))
+			if p.Error == "" || len(p.Error) > 4096 || p.IntactBefore != nil || p.IntactAfter != nil {
+				t.Fatalf("baseline failure must be episode error/null: %+v", p)
+			}
+			if name == "not-git" && !strings.Contains(p.Error, "worktree is not a git checkout") {
+				t.Fatalf("not-git baseline error: %s", p.Error)
+			}
+			if calls := protectedLog(t, log); strings.Contains(calls, "-c core.fsmonitor=false status") || strings.Contains(calls, "ls-files -v") || strings.Contains(calls, ":(top,glob,icase)") {
+				t.Fatalf("baseline failure ran protected phase git: %s", calls)
+			}
+		})
+	}
+}
+
+func TestExecNoProtectedIsByteIdentical(t *testing.T) {
+	for _, name := range []string{"absent", "empty"} {
+		t.Run(name, func(t *testing.T) {
+			git := recordEnv(t)
+			fake, log := protectedFakeGit(t, "exec "+shellQuote(git)+" \"$@\"")
+			recordSwapGit(t, fake)
+			f := newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) {
+				if name == "empty" {
+					m["protected"] = []string{}
+				}
+			}, setup: func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) }})
+			out, err := f.call(t, "test", "a")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var got map[string]any
+			if err := json.Unmarshal(out, &got); err != nil {
+				t.Fatal(err)
+			}
+			if _, ok := got["protected"]; ok {
+				t.Fatal("unprotected JSON must omit protected key")
+			}
+			data, _ := json.Marshal(defaultExecProfile(f)) // Same paths, sandbox and config; no protected key.
+			profile, err := ParseExecProfile(data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// Digest identifies exact operator bytes, so [] and absent already
+			// differ at M6a. Hold that identity constant to compare exec behavior.
+			profile.Digest = f.profile.Digest
+			f.h, err = NewExecHandler(ExecHandlerConfig{Profile: profile, Sandbox: f.sandbox, Episode: "ep1", Worktree: f.worktree, WorkspaceRoot: f.root, StateDir: f.state, OperatorHome: f.home})
+			if err != nil {
+				t.Fatal(err)
+			}
+			control, err := f.call(t, "test", "a")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var want map[string]any
+			if err := json.Unmarshal(control, &want); err != nil {
+				t.Fatal(err)
+			}
+			got["duration_ms"], want["duration_ms"] = 0, 0
+			gotBytes, _ := json.Marshal(got)
+			wantBytes, _ := json.Marshal(want)
+			if !bytes.Equal(gotBytes, wantBytes) {
+				t.Fatalf("legacy normalized bytes differ: got %s want %s", gotBytes, wantBytes)
+			}
+			calls := protectedLog(t, log)
+			if !strings.Contains(calls, "-C "+f.worktree+" -c core.fsmonitor=false -c core.quotePath=false") {
+				t.Fatal("logging positive control: worktree delta git never ran")
+			}
+			for _, line := range strings.Split(calls, "\n") {
+				if strings.HasPrefix(line, "-c core.fsmonitor=false") || strings.Contains(line, ":(top,glob,icase)") {
+					t.Fatalf("unprotected profile ran protected git: %s", line)
+				}
+			}
+		})
 	}
 }

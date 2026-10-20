@@ -123,7 +123,7 @@ func protectedKeysDigest(set map[string]struct{}) string {
 	return fmt.Sprintf("sha256:%x", h.Sum(nil))
 }
 
-// protectedRecord is data only in M6a; execResult starts emitting it in M6b.
+// protectedRecord reports the episode baseline and both command integrity phases.
 type protectedRecord struct {
 	Digest            string                  `json:"digest"`
 	Patterns          []string                `json:"patterns"`
