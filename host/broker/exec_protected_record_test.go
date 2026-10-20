@@ -351,3 +351,12 @@ func TestExecProtectedWorstCaseFitsOutputCap(t *testing.T) {
 		t.Fatal("baseline error precedence")
 	}
 }
+
+// TestProtectedV24BoundsApplied pins design V24's bounds (iteration 290: the
+// slowest phase 2 501 ms and construction 3 232 ms, each x 1.5 rounded up), so
+// reverting either to its provisional 2 500 / 3 200 ms value goes red.
+func TestProtectedV24BoundsApplied(t *testing.T) {
+	if protectedCheckTimeout != 3751*time.Millisecond || protectedBaselineTimeout != 4848*time.Millisecond {
+		t.Fatalf("bounds = %v / %v, want design V24's 3.751s / 4.848s", protectedCheckTimeout, protectedBaselineTimeout)
+	}
+}
