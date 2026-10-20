@@ -1,10 +1,11 @@
-# w-world-os-surface (proposed re-scope of queue row 188, clause 5) — r2
+# w-world-os-surface (queue row 188, re-scoped by D-WORLD-87; clause 5) — r2
 
-**Status:** r2 draft, attended with Mark on 2026-10-20. r1 cut r0's five views to one, and r2 cuts its three
-distances to two (§3), at Mark's direction: *"each section must be useful and we dont duplicate … elegance, form and function.
-where there is nothing left to take away"*. **Nothing here is ratified.** It
-proposes re-scoping row 188 (`w-desktop-shell`) and filing one new row; §8 lists the rulings
-it needs. Until they are made, row 188 stands as written. Mockups: §9.
+**Status:** r2, **approved for build by Mark, attended 2026-10-20** (*"ok this looks great. lets
+build it"*). Recorded as **D-WORLD-87**: R1 = yes, row 188 is re-scoped to this design and built
+in the order of §7. R2–R6 stand at the defaults in §8 until ruled otherwise. r1 cut r0's five
+views to one, and r2 cut its three distances to two, at Mark's direction: *"each section must
+be useful and we dont duplicate … elegance, form and function. where there is nothing left to
+take away"*.
 
 Builds on [HUMAN-SURFACE.md](../HUMAN-SURFACE.md) (ratified v0.3), especially P4 (time is
 navigation), P5 (quiet must read as health), P6 (five zoom levels), P7 (speculation as a
@@ -358,8 +359,8 @@ Each stage is useful on its own and adds no authority until S5.
 
 ## §8 Rulings for Mark
 
-Proposed. When answered, each one is filed OPEN in the charter and recorded through
-`mission_answer.sh`, as usual.
+Filed and answered together as **D-WORLD-87** (attended 2026-10-20): R1 = yes; R2–R6 at the defaults
+below until Mark rules otherwise.
 
 - **R1 — re-scope row 188** from "a Tauri shell around the workbench" to this view, sequenced
   as §7. Default if unanswered: hold (row 188 stays as written).
