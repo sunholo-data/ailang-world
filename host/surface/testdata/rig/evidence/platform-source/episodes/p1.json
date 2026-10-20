@@ -1,0 +1,4 @@
+{"schema": "trial-episode/1", "episode": "p1", "project": "platform-source", "agent": "claude", "model": "claude-opus-5-5",
+ "task": "other-project", "started_at": "2026-10-20T09:00:00+00:00", "finished_at": "2026-10-20T09:10:00+00:00",
+ "agent_run": {"wall_ms": 60000}, "solution": {"base": "6eaa997f0bfc126c55765aa15337515b6342e633", "state": "changed"},
+ "graders": [{"name": "g", "passed": true}], "worktree": "/rig/ws/p1"}

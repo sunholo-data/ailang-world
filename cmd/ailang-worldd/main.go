@@ -37,6 +37,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] episode report <episode> [--json] [--follow]
 //	ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
 //	ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
+//	                    [--rig <dir> --addr <url> [--project ailang-world]]
 //	ailang-worldd surface-index --validate <file>
 //	ailang-worldd session new|list|revoke|mint ...
 //	ailang-worldd help [<verb>]
@@ -117,6 +118,7 @@ Usage:
   ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
   ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
   ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
+                    [--rig <dir> --addr <url> [--project ailang-world]]
   ailang-worldd surface-index --validate <file>
   ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
@@ -412,7 +414,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	case "surface-index": // row 188 M0a: surface_index.go
 		if addrGiven {
-			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'surface-index'; it reads git, not a daemon")
+			fmt.Fprintln(stderr, "ailang-worldd: the global --addr is not valid for 'surface-index'; "+
+				"pass surface-index --rig <dir> --addr <url> (the loopback daemon serving the episode reports)")
 			return exitUsage
 		}
 		return runSurfaceIndex(rest[1:], stdout, stderr)

@@ -1,6 +1,6 @@
 // Package surface is the surface index (row 188, w-world-os-surface S1 M0a):
 // the document `GET /surface` reads, built outside the daemon from git
-// history alone.
+// history, and with a rig the episode facts (M0c, episodes.go).
 //
 //   - The shared world is the first-parent merge commits on a branch, one
 //     shared state each.
@@ -50,14 +50,22 @@ type Index struct {
 	Source  Source  `json:"source"`
 	Branes  []Brane `json:"branes"`
 	States  []State `json:"states"`
+	// The episode facts (M0c, AttachRig): present only when the index was
+	// built with a rig, so an index from git alone is unchanged.
+	Steps     []Step                 `json:"steps,omitempty"`
+	Files     map[string]FileChanges `json:"files,omitempty"` // step id → its changes
+	Reads     map[string][]Read      `json:"reads,omitempty"` // step id → its reads
+	Decisions []Decision             `json:"decisions,omitempty"`
 }
 
 // Source says what the index was built from. It never holds a filesystem
 // path.
 type Source struct {
-	Rev    string `json:"rev"`    // the revision asked for, e.g. dev
-	Head   string `json:"head"`   // the commit it resolved to
-	Merges int    `json:"merges"` // first-parent merges read
+	Rev         string     `json:"rev"`    // the revision asked for, e.g. dev
+	Head        string     `json:"head"`   // the commit it resolved to
+	Merges      int        `json:"merges"` // first-parent merges read
+	Rig         *RigSource `json:"rig,omitempty"`
+	ReadsMethod string     `json:"reads_method,omitempty"` // ReadsMethod, with a rig
 }
 
 // Brane is a named strand of work: one charter row.

@@ -1,0 +1,28 @@
+{
+  "episode": "e1",
+  "entries": [1200, 1290],
+  "total_calls": 42,
+  "calls_by_tool": {"ailang-read": 9, "ailang-write": 20, "workspace-exec": 13},
+  "effects": [],
+  "budgets": [],
+  "plan_refusals": {"count": 2, "by_tool": {"ailang-read": 2}, "first": []},
+  "handler_refusals": {"count": 1, "by_tool": {"workspace-exec": 1}, "first": []},
+  "reads": {
+    "count": 9,
+    "files": [
+      {"path": "design_docs/planned/w-world-onboarding.md", "count": 3, "first_entry": 1201},
+      {"path": "plugins/ailang-world/README.md", "count": 1, "first_entry": 1203},
+      {"path": "cmd/ailang-worldd/main.go", "count": 2, "first_entry": 1204},
+      {"path": "CLAUDE.md", "count": 1, "first_entry": 1205},
+      {"path": "./cmd/ailang-worldd/main.go", "count": 1, "first_entry": 1210},
+      {"path": "../outside.md", "count": 1, "first_entry": 1211}
+    ],
+    "truncated": 0,
+    "unlisted": 1
+  },
+  "first_at": "2026-10-20T07:01:00Z",
+  "last_at": "2026-10-20T07:49:00Z",
+  "calls_by_surface": {"mcp": 42},
+  "uncommitted_intents": 0,
+  "notes": {}
+}

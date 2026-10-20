@@ -1,0 +1,770 @@
+{
+  "schema": "world/surface-index/v1",
+  "built_at": "2026-10-20T15:00:00Z",
+  "source": {
+    "rev": "dev",
+    "head": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+    "merges": 24,
+    "rig": {
+      "episodes": 5,
+      "attached": 2,
+      "unattached": [
+        "e3",
+        "e4",
+        "e5"
+      ]
+    },
+    "reads_method": "last-change-at-base/v1"
+  },
+  "branes": [
+    {
+      "key": "row-139",
+      "row": 139,
+      "title": "",
+      "kind": "attended"
+    },
+    {
+      "key": "row-145",
+      "row": 145,
+      "title": "",
+      "kind": "attended"
+    },
+    {
+      "key": "row-156",
+      "row": 156,
+      "title": "w-exec-protected-test-paths",
+      "kind": "loop"
+    },
+    {
+      "key": "row-189",
+      "row": 189,
+      "title": "w-world-onboarding",
+      "kind": "attended"
+    },
+    {
+      "key": "row-190",
+      "row": 190,
+      "title": "",
+      "kind": "attended"
+    },
+    {
+      "key": "row-198",
+      "row": 198,
+      "title": "w-episode-report",
+      "kind": "attended"
+    }
+  ],
+  "states": [
+    {
+      "id": "4af2f51df3d2bd10480ba3a41adbf4055b7df5df",
+      "kind": "step",
+      "at": "2026-10-17T10:14:31+02:00",
+      "pr": 303,
+      "parents": [],
+      "brane": "",
+      "base": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+      "merge": "1172cedfab11129e517c9ca84c849bd53b3e038c",
+      "branch": "docs/evidence-loop-d82-rows"
+    },
+    {
+      "id": "1172cedfab11129e517c9ca84c849bd53b3e038c",
+      "kind": "shared",
+      "at": "2026-10-17T10:14:31+02:00",
+      "pr": 303,
+      "parents": [
+        "987512d7941ddc5a1a0d9be04299906511e78c17",
+        "4af2f51df3d2bd10480ba3a41adbf4055b7df5df"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "38adaeecb17a6b9a7b073fb4233e614cda04d659",
+      "kind": "step",
+      "at": "2026-10-17T13:06:45+02:00",
+      "pr": 305,
+      "parents": [],
+      "brane": "",
+      "base": "fb1f0c2700222b911f7a6f33796efb774965d165",
+      "merge": "cd447c7cd9a17ab37deaa93032362b08cf44cebb",
+      "branch": "docs/upstream-v0.54.15-notes"
+    },
+    {
+      "id": "cd447c7cd9a17ab37deaa93032362b08cf44cebb",
+      "kind": "shared",
+      "at": "2026-10-17T13:06:45+02:00",
+      "pr": 305,
+      "parents": [
+        "1172cedfab11129e517c9ca84c849bd53b3e038c",
+        "38adaeecb17a6b9a7b073fb4233e614cda04d659"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "05efc0cf0a6843e7a3b937934deb621a9e6214d1",
+      "kind": "step",
+      "at": "2026-10-17T13:06:49+02:00",
+      "pr": 306,
+      "parents": [],
+      "brane": "",
+      "base": "fb1f0c2700222b911f7a6f33796efb774965d165",
+      "merge": "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+      "branch": "trial/ledger-arms"
+    },
+    {
+      "id": "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+      "kind": "shared",
+      "at": "2026-10-17T13:06:49+02:00",
+      "pr": 306,
+      "parents": [
+        "cd447c7cd9a17ab37deaa93032362b08cf44cebb",
+        "05efc0cf0a6843e7a3b937934deb621a9e6214d1"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "a2730e4486b8376c8db94c572e22ef0a2d3f180e",
+      "kind": "step",
+      "at": "2026-10-17T19:46:19+02:00",
+      "pr": 308,
+      "parents": [
+        "498683c4e81f29f23a1e9885716a5a7cdbeb4595"
+      ],
+      "brane": "row-139",
+      "base": "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+      "merge": "a0c73053f10092fd511ad22fcf6b95d6a3f896aa",
+      "branch": "trial/row139-tool-pin-v0.54.15"
+    },
+    {
+      "id": "a0c73053f10092fd511ad22fcf6b95d6a3f896aa",
+      "kind": "shared",
+      "at": "2026-10-17T19:46:19+02:00",
+      "pr": 308,
+      "parents": [
+        "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+        "a2730e4486b8376c8db94c572e22ef0a2d3f180e"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "c6a43dd6493ce39c4485819ebdb59f7ab8ed687c",
+      "kind": "step",
+      "at": "2026-10-19T10:41:40+02:00",
+      "pr": 312,
+      "parents": [],
+      "brane": "row-156",
+      "base": "6eaa997f0bfc126c55765aa15337515b6342e633",
+      "merge": "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+      "branch": "sprint/world-iter282-row156-detection"
+    },
+    {
+      "id": "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+      "kind": "shared",
+      "at": "2026-10-19T10:41:40+02:00",
+      "pr": 312,
+      "parents": [
+        "a0c73053f10092fd511ad22fcf6b95d6a3f896aa",
+        "c6a43dd6493ce39c4485819ebdb59f7ab8ed687c"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "c8429a5532a13824e1a72b549c91a38bcd076c10",
+      "kind": "step",
+      "at": "2026-10-19T14:26:23+02:00",
+      "pr": 314,
+      "parents": [
+        "02bd141068ce6a1b21179d3a9469e2183b83c3be"
+      ],
+      "brane": "row-156",
+      "base": "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+      "merge": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+      "branch": "sprint/world-iter283-row156-m2"
+    },
+    {
+      "id": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+      "kind": "shared",
+      "at": "2026-10-19T14:26:23+02:00",
+      "pr": 314,
+      "parents": [
+        "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+        "c8429a5532a13824e1a72b549c91a38bcd076c10"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "dfb9f4d2646e43b3bf0f0e9afe6bc2df98f39270",
+      "kind": "step",
+      "at": "2026-10-19T17:25:19+02:00",
+      "pr": 318,
+      "parents": [],
+      "brane": "row-190",
+      "base": "6eaa997f0bfc126c55765aa15337515b6342e633",
+      "merge": "1f369473045f0770472106c64baf1ce728b66e59",
+      "branch": "trial/rows190-191-197-read-ranges-delete-tmpdir"
+    },
+    {
+      "id": "1f369473045f0770472106c64baf1ce728b66e59",
+      "kind": "shared",
+      "at": "2026-10-19T17:25:19+02:00",
+      "pr": 318,
+      "parents": [
+        "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+        "dfb9f4d2646e43b3bf0f0e9afe6bc2df98f39270"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "243106a57c0dea99eef99cdb2de7bbec11ef7c6c",
+      "kind": "step",
+      "at": "2026-10-19T17:29:24+02:00",
+      "pr": 315,
+      "parents": [
+        "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd"
+      ],
+      "brane": "row-145",
+      "base": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+      "merge": "7a679bfed34fc3fccfe37677c699ba02721b4ca1",
+      "branch": "design/row145-long-run-lane"
+    },
+    {
+      "id": "7a679bfed34fc3fccfe37677c699ba02721b4ca1",
+      "kind": "shared",
+      "at": "2026-10-19T17:29:24+02:00",
+      "pr": 315,
+      "parents": [
+        "1f369473045f0770472106c64baf1ce728b66e59",
+        "243106a57c0dea99eef99cdb2de7bbec11ef7c6c"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "59bbded417388861f3acae45c07eb9046f3cacaa",
+      "kind": "step",
+      "at": "2026-10-19T17:29:30+02:00",
+      "pr": 316,
+      "parents": [
+        "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd"
+      ],
+      "brane": "row-189",
+      "base": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+      "merge": "53862152280c2928a8a6c1fd78b2c362573f8450",
+      "branch": "design/row189-world-onboarding"
+    },
+    {
+      "id": "53862152280c2928a8a6c1fd78b2c362573f8450",
+      "kind": "shared",
+      "at": "2026-10-19T17:29:30+02:00",
+      "pr": 316,
+      "parents": [
+        "7a679bfed34fc3fccfe37677c699ba02721b4ca1",
+        "59bbded417388861f3acae45c07eb9046f3cacaa"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "de79d9868fc88faead0fa40dc7fd2f8e282de07e",
+      "kind": "step",
+      "at": "2026-10-19T18:13:17+02:00",
+      "pr": 311,
+      "parents": [
+        "1f369473045f0770472106c64baf1ce728b66e59"
+      ],
+      "brane": "row-198",
+      "base": "1f369473045f0770472106c64baf1ce728b66e59",
+      "merge": "93410ac3a627e90de097d6f53b50a75fcdeeb9ee",
+      "branch": "docs/row198-episode-report"
+    },
+    {
+      "id": "93410ac3a627e90de097d6f53b50a75fcdeeb9ee",
+      "kind": "shared",
+      "at": "2026-10-19T18:13:17+02:00",
+      "pr": 311,
+      "parents": [
+        "53862152280c2928a8a6c1fd78b2c362573f8450",
+        "de79d9868fc88faead0fa40dc7fd2f8e282de07e"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "bf0002b1a35371d6984dce6827c652c885599588",
+      "kind": "step",
+      "at": "2026-10-19T18:13:53+02:00",
+      "pr": 317,
+      "parents": [
+        "de79d9868fc88faead0fa40dc7fd2f8e282de07e"
+      ],
+      "brane": "",
+      "base": "de79d9868fc88faead0fa40dc7fd2f8e282de07e",
+      "merge": "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+      "branch": "docs/rulings-d84-d85"
+    },
+    {
+      "id": "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+      "kind": "shared",
+      "at": "2026-10-19T18:13:53+02:00",
+      "pr": 317,
+      "parents": [
+        "93410ac3a627e90de097d6f53b50a75fcdeeb9ee",
+        "bf0002b1a35371d6984dce6827c652c885599588"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "96637566d11ab0f37af16c94b8ac28b597f5d617",
+      "kind": "step",
+      "at": "2026-10-19T19:00:45+02:00",
+      "pr": 319,
+      "parents": [
+        "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1"
+      ],
+      "brane": "row-156",
+      "base": "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+      "merge": "826f2a0badb3599a17bfc48392748606c8d8dfe6",
+      "branch": "sprint/world-iter284-row156-m3"
+    },
+    {
+      "id": "826f2a0badb3599a17bfc48392748606c8d8dfe6",
+      "kind": "shared",
+      "at": "2026-10-19T19:00:45+02:00",
+      "pr": 319,
+      "parents": [
+        "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+        "96637566d11ab0f37af16c94b8ac28b597f5d617"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "ebe083b24a621565935276198660dd3a8cde6f2c",
+      "kind": "step",
+      "at": "2026-10-19T19:25:18+02:00",
+      "pr": 320,
+      "parents": [
+        "53862152280c2928a8a6c1fd78b2c362573f8450"
+      ],
+      "brane": "row-189",
+      "base": "53862152280c2928a8a6c1fd78b2c362573f8450",
+      "merge": "9527bc546026d2169eeed3decc5307fd402f88f9",
+      "branch": "trial/row189-m1-credentials-store"
+    },
+    {
+      "id": "9527bc546026d2169eeed3decc5307fd402f88f9",
+      "kind": "shared",
+      "at": "2026-10-19T19:25:18+02:00",
+      "pr": 320,
+      "parents": [
+        "826f2a0badb3599a17bfc48392748606c8d8dfe6",
+        "ebe083b24a621565935276198660dd3a8cde6f2c"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "5a8af7cd21360766d992662ddcf19a8928387c64",
+      "kind": "step",
+      "at": "2026-10-19T20:52:32+02:00",
+      "pr": 321,
+      "parents": [
+        "9527bc546026d2169eeed3decc5307fd402f88f9"
+      ],
+      "brane": "row-189",
+      "base": "9527bc546026d2169eeed3decc5307fd402f88f9",
+      "merge": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+      "branch": "trial/row189-m2-m3-episode-start"
+    },
+    {
+      "id": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+      "kind": "shared",
+      "at": "2026-10-19T20:52:32+02:00",
+      "pr": 321,
+      "parents": [
+        "9527bc546026d2169eeed3decc5307fd402f88f9",
+        "5a8af7cd21360766d992662ddcf19a8928387c64"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "985bee9a4d86380cd13d730ae1ed0ccd6bbc6d43",
+      "kind": "step",
+      "at": "2026-10-19T22:31:11+02:00",
+      "pr": 322,
+      "parents": [
+        "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3"
+      ],
+      "brane": "row-156",
+      "base": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+      "merge": "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+      "branch": "sprint/world-iter285-row156-m4"
+    },
+    {
+      "id": "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+      "kind": "shared",
+      "at": "2026-10-19T22:31:11+02:00",
+      "pr": 322,
+      "parents": [
+        "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+        "985bee9a4d86380cd13d730ae1ed0ccd6bbc6d43"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "1bbf57514e13f28f30cb3dc4042353d5d309452a",
+      "kind": "step",
+      "at": "2026-10-20T02:29:49+02:00",
+      "pr": 325,
+      "parents": [
+        "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978"
+      ],
+      "brane": "row-156",
+      "base": "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+      "merge": "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+      "branch": "sprint/world-iter286-row156-m4c"
+    },
+    {
+      "id": "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+      "kind": "shared",
+      "at": "2026-10-20T02:29:49+02:00",
+      "pr": 325,
+      "parents": [
+        "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+        "1bbf57514e13f28f30cb3dc4042353d5d309452a"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "b0f989f9a8afb3ac5bd34b936cae1641cf421be9",
+      "kind": "step",
+      "at": "2026-10-20T06:06:33+02:00",
+      "pr": 326,
+      "parents": [
+        "0adeb70398a1de4ff26f488eb8e384fbe866672a"
+      ],
+      "brane": "row-156",
+      "base": "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+      "merge": "96d49010022b336352240fdee17a11981fe4ba0a",
+      "branch": "sprint/world-iter287-row156-m5a"
+    },
+    {
+      "id": "96d49010022b336352240fdee17a11981fe4ba0a",
+      "kind": "shared",
+      "at": "2026-10-20T06:06:33+02:00",
+      "pr": 326,
+      "parents": [
+        "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+        "b0f989f9a8afb3ac5bd34b936cae1641cf421be9"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+      "kind": "step",
+      "at": "2026-10-20T08:18:58+02:00",
+      "pr": 324,
+      "parents": [
+        "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3"
+      ],
+      "brane": "row-189",
+      "base": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+      "merge": "fe2cc96a7881dfa440121b3ae8c5aa7ea603d548",
+      "branch": "trial/row189-m4-profile-init"
+    },
+    {
+      "id": "fe2cc96a7881dfa440121b3ae8c5aa7ea603d548",
+      "kind": "shared",
+      "at": "2026-10-20T08:18:58+02:00",
+      "pr": 324,
+      "parents": [
+        "96d49010022b336352240fdee17a11981fe4ba0a",
+        "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "e42f030f9fb344c16789a8f888214fbe7bee7e41",
+      "kind": "step",
+      "at": "2026-10-20T08:25:45+02:00",
+      "pr": 323,
+      "parents": [
+        "96d49010022b336352240fdee17a11981fe4ba0a"
+      ],
+      "brane": "row-198",
+      "base": "96d49010022b336352240fdee17a11981fe4ba0a",
+      "merge": "0ee1945ffba795812f06dce95998b646adfac343",
+      "branch": "trial/row198-episode-report"
+    },
+    {
+      "id": "0ee1945ffba795812f06dce95998b646adfac343",
+      "kind": "shared",
+      "at": "2026-10-20T08:25:45+02:00",
+      "pr": 323,
+      "parents": [
+        "fe2cc96a7881dfa440121b3ae8c5aa7ea603d548",
+        "e42f030f9fb344c16789a8f888214fbe7bee7e41"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+      "kind": "step",
+      "at": "2026-10-20T10:22:02+02:00",
+      "pr": 328,
+      "parents": [
+        "0ee1945ffba795812f06dce95998b646adfac343"
+      ],
+      "brane": "row-156",
+      "base": "0ee1945ffba795812f06dce95998b646adfac343",
+      "merge": "7fb99dae21d0416b09eed95d2da1bfe04e95aa1d",
+      "branch": "sprint/world-iter288-row156-m5b"
+    },
+    {
+      "id": "7fb99dae21d0416b09eed95d2da1bfe04e95aa1d",
+      "kind": "shared",
+      "at": "2026-10-20T10:22:02+02:00",
+      "pr": 328,
+      "parents": [
+        "0ee1945ffba795812f06dce95998b646adfac343",
+        "4af9b24109b2f5cd376dbf91e32daf9774863c48"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "kind": "step",
+      "at": "2026-10-20T10:31:33+02:00",
+      "pr": 327,
+      "parents": [
+        "0ee1945ffba795812f06dce95998b646adfac343"
+      ],
+      "brane": "row-189",
+      "base": "0ee1945ffba795812f06dce95998b646adfac343",
+      "merge": "90035557b2012895551867c0ebe2f36b853aac09",
+      "branch": "trial/row189-m5-plugin"
+    },
+    {
+      "id": "90035557b2012895551867c0ebe2f36b853aac09",
+      "kind": "shared",
+      "at": "2026-10-20T10:31:33+02:00",
+      "pr": 327,
+      "parents": [
+        "7fb99dae21d0416b09eed95d2da1bfe04e95aa1d",
+        "f36428abd9a72e5093b61cba14e716c37019f1ef"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "652c341d5072c5f49fefe29f9409c93a5119a5be",
+      "kind": "step",
+      "at": "2026-10-20T12:49:48+02:00",
+      "pr": 329,
+      "parents": [
+        "90035557b2012895551867c0ebe2f36b853aac09"
+      ],
+      "brane": "row-189",
+      "base": "90035557b2012895551867c0ebe2f36b853aac09",
+      "merge": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+      "branch": "trial/row189-m6-docs"
+    },
+    {
+      "id": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+      "kind": "shared",
+      "at": "2026-10-20T12:49:48+02:00",
+      "pr": 329,
+      "parents": [
+        "90035557b2012895551867c0ebe2f36b853aac09",
+        "652c341d5072c5f49fefe29f9409c93a5119a5be"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "debb8ef81b00c98b95e1bcb6bd8c06f48f07d1af",
+      "kind": "step",
+      "at": "2026-10-20T14:25:50+02:00",
+      "pr": 330,
+      "parents": [
+        "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845"
+      ],
+      "brane": "row-156",
+      "base": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+      "merge": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+      "branch": "sprint/world-iter289-row156-v7r"
+    },
+    {
+      "id": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+      "kind": "shared",
+      "at": "2026-10-20T14:25:50+02:00",
+      "pr": 330,
+      "parents": [
+        "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+        "debb8ef81b00c98b95e1bcb6bd8c06f48f07d1af"
+      ],
+      "brane": ""
+    },
+    {
+      "id": "49ac0d15c8c2ec5f6d84c0fdb19555b2e4e24eab",
+      "kind": "step",
+      "at": "2026-10-20T16:56:23+02:00",
+      "pr": 331,
+      "parents": [
+        "1998f5e7a8bdf0fac6305d8f179956622e5d761a"
+      ],
+      "brane": "",
+      "base": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+      "merge": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+      "branch": "design/world-os-surface"
+    },
+    {
+      "id": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+      "kind": "shared",
+      "at": "2026-10-20T16:56:23+02:00",
+      "pr": 331,
+      "parents": [
+        "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+        "49ac0d15c8c2ec5f6d84c0fdb19555b2e4e24eab"
+      ],
+      "brane": ""
+    }
+  ],
+  "steps": [
+    {
+      "episode": "e2",
+      "state": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+      "pr": 328,
+      "task": "row-156-m5b.md",
+      "agent": "codex",
+      "model": "gpt-x",
+      "rounds": 1,
+      "graders": {
+        "passed": 2,
+        "total": 2
+      },
+      "minutes": 4.3,
+      "base": "0ee1945ffba795812f06dce95998b646adfac343"
+    },
+    {
+      "episode": "e1",
+      "state": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "pr": 327,
+      "task": "row-189-M5-plugin",
+      "agent": "claude",
+      "model": "claude-opus-5-5",
+      "rounds": 2,
+      "graders": {
+        "passed": 4,
+        "total": 4
+      },
+      "minutes": 13.5,
+      "calls": 42,
+      "entries": [
+        1200,
+        1290
+      ],
+      "base": "0ee1945ffba795812f06dce95998b646adfac343"
+    }
+  ],
+  "files": {
+    "4af9b24109b2f5cd376dbf91e32daf9774863c48": {
+      "changes": [
+        {
+          "path": "host/broker/exec.go",
+          "status": "M"
+        },
+        {
+          "path": "host/broker/exec_test.go",
+          "status": "A"
+        }
+      ],
+      "truncated": 0
+    },
+    "f36428abd9a72e5093b61cba14e716c37019f1ef": {
+      "changes": [
+        {
+          "path": "CLAUDE.md",
+          "status": "M"
+        },
+        {
+          "path": "host/surface/surface.go",
+          "status": "A"
+        },
+        {
+          "path": "old/notes.md",
+          "status": "D"
+        },
+        {
+          "path": "plugins/ailang-world/README.md",
+          "status": "M"
+        }
+      ],
+      "truncated": 0
+    }
+  },
+  "reads": {
+    "f36428abd9a72e5093b61cba14e716c37019f1ef": [
+      {
+        "path": "design_docs/planned/w-world-onboarding.md",
+        "count": 3,
+        "via": "step",
+        "from": "59bbded417388861f3acae45c07eb9046f3cacaa"
+      },
+      {
+        "path": "plugins/ailang-world/README.md",
+        "count": 1,
+        "via": "new",
+        "from": ""
+      },
+      {
+        "path": "cmd/ailang-worldd/main.go",
+        "count": 3,
+        "via": "commit",
+        "from": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "path": "CLAUDE.md",
+        "count": 1,
+        "via": "outside",
+        "from": ""
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "step": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "actor": "world",
+      "kind": "grade",
+      "text": "round 1: 3/4 graders",
+      "at": "2026-10-20T07:20:00Z"
+    },
+    {
+      "step": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "actor": "world",
+      "kind": "refusal",
+      "text": "2 plan + 1 handler refusals",
+      "at": "2026-10-20T07:49:00Z"
+    },
+    {
+      "step": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "actor": "world",
+      "kind": "grade",
+      "text": "round 2: 4/4 graders",
+      "at": "2026-10-20T07:50:00Z"
+    },
+    {
+      "step": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+      "actor": "world",
+      "kind": "grade",
+      "text": "round 1: 2/2 graders",
+      "at": "2026-10-20T07:58:00Z"
+    },
+    {
+      "step": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+      "actor": "loop",
+      "kind": "merge",
+      "text": "merged #328",
+      "at": "2026-10-20T08:22:02Z"
+    },
+    {
+      "step": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "actor": "you",
+      "kind": "merge",
+      "text": "merged #327",
+      "at": "2026-10-20T08:31:33Z"
+    }
+  ]
+}
