@@ -113,6 +113,33 @@ func TestEpisodeReportTablePrintsEveryClass(t *testing.T) {
 	}
 }
 
+func TestEpisodeReportTablePrintsTheReadsLine(t *testing.T) {
+	files := []daemon.ReportRead{{Path: "a.go", Count: 2, FirstEntry: 11}, {Path: "b.go", Count: 1, FirstEntry: 13}}
+	for _, c := range []struct {
+		reads daemon.ReportReads
+		want  string
+	}{
+		{daemon.ReportReads{Files: []daemon.ReportRead{}}, "reads: 0 calls, 0 files\n"},
+		{daemon.ReportReads{Count: 3, Files: files}, "reads: 3 calls, 2 files\n"},
+		{daemon.ReportReads{Count: 3, Files: files, Truncated: 4}, "reads: 3 calls, 2 files, 4 more not listed\n"},
+		{daemon.ReportReads{Count: 3, Files: files, Unlisted: 1}, "reads: 3 calls, 2 files, 1 outside the worktree\n"},
+		{daemon.ReportReads{Count: 3, Files: files, Truncated: 4, Unlisted: 1}, "reads: 3 calls, 2 files, 4 more not listed, 1 outside the worktree\n"},
+	} {
+		rep := sampleReport()
+		rep.Reads = c.reads
+		var out bytes.Buffer
+		printReport(&out, rep)
+		text := out.String()
+		// The line follows the calls-by-tool block, before effects.
+		if !strings.Contains(text, "  workspace-exec          1\n"+c.want+"effects:\n") {
+			t.Errorf("table lacks %q after calls by tool:\n%s", c.want, text)
+		}
+		if strings.Contains(text, "a.go") {
+			t.Errorf("text mode lists files:\n%s", text)
+		}
+	}
+}
+
 // fakeReportDaemon serves /v1/head and the report route; bump moves the head
 // and the report on.
 type fakeReportDaemon struct {
