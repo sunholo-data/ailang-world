@@ -1,0 +1,14 @@
+{
+  "name": "ailang-world-marketplace",
+  "owner": {
+    "name": "Sunholo"
+  },
+  "description": "AILANG World's own Claude Code plugin, versioned and CI-checked with the ailang-worldd CLI it documents.",
+  "plugins": [
+    {
+      "name": "ailang-world",
+      "source": "./plugins/ailang-world",
+      "description": "Work inside an AILANG World episode, and start, watch, grade and finish one: two skills and three print-only commands. No MCP server: an agent gets World's tools only from the launch line episode start prints."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "ailang-world",
+  "version": "1.0.0-rc.1",
+  "description": "Work inside an AILANG World episode, and start, watch, grade and finish one. Skills and print-only commands; no MCP server.",
+  "author": {
+    "name": "Sunholo"
+  }
+}

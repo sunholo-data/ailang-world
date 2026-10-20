@@ -28,6 +28,8 @@ AILANG. It is built by an autonomous mission loop with human ratification gates.
   (`D-WORLD-DRIVER-1`, ratified 2026-08-17): updates land here only as fleet-authored commits,
   and `D-WORLD-34` retires World's local-copy certification; shared-driver verification remains
   the fleet's responsibility, never something to absorb into a World change.
+  "Skills" here means the shared mission and fleet skills; World's own product plugin,
+  `plugins/ailang-world/`, lives in this repo (D-WORLD-85 / D-189-3 = C).
 - **Never touch** `~/.ailang/state/mission-v1*` or the V1 checkout from work in this repo.
 
 ## Operating the daemon
