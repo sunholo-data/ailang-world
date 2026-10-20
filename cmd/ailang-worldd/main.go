@@ -35,6 +35,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
 //	ailang-worldd episode start <episode> --repo <dir> [--profile <project>] ...
 //	ailang-worldd [--addr http://127.0.0.1:7644] episode report <episode> [--json] [--follow]
+//	ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
 //	ailang-worldd session new|list|revoke|mint ...
 //	ailang-worldd help [<verb>]
 //
@@ -112,6 +113,7 @@ Usage:
                     [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
   ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
+  ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
   ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
@@ -584,6 +586,7 @@ func serveResult(err error, stderr io.Writer) int {
 var ownHelpVerbs = map[string]bool{
 	"tools": true, "call": true, "why": true, "provenance": true,
 	"setup": true, "doctor": true, "session": true, "episode": true,
+	"profile": true,
 }
 
 // genericVerbHelp answers `<verb> ... --help` for the verbs that have no help

@@ -214,7 +214,8 @@ Option A is what row 188 (a desktop approval) and row 196 (delegated minting for
 - **M2:** profile binding at mint (D-189-2 A). `serve` loads the profiles directory.
 - **M3a/M3b:** `episode start`: fence and mint reuse, the daemon check and start, the launch line.
 - **M4 — DONE (2026-10-19, episode w189c; §8c):** `profile init` for Python and Go, plus `package.json`.
-- **M5:** the plugin: two skills, three commands, marketplace manifest, and the CI help-check.
+- **M5 — DONE (2026-10-20, episode w189d; §8d):** the plugin: two skills, three commands,
+  marketplace manifest, and the CI help-check.
 - **M6:** docs (QUICKSTART §0 and a new "Use World on your repo" page), then the AC7 attended run.
 
 ## 8a. M0 findings (row 189, 2026-10-19, read before the M1 change; lines are pre-change)
@@ -309,6 +310,49 @@ ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profi
   - an `--out` naming the active `<project>.json`;
   - no detectable or resolvable toolchain;
   - a parser refusal.
+
+## 8d. M5 as built (row 189, the `ailang-world` plugin, D-189-3 = C, D-189-4 = A)
+
+```
+.claude-plugin/marketplace.json                       marketplace ailang-world-marketplace, owner Sunholo
+plugins/ailang-world/.claude-plugin/plugin.json       ailang-world 1.0.0-rc.1, author Sunholo; no mcpServers
+plugins/ailang-world/skills/ailang-world/SKILL.md            the agent side
+plugins/ailang-world/skills/ailang-world-operator/SKILL.md   the human side
+plugins/ailang-world/commands/{world-start,world-watch,world-why}.md   print-only
+plugins/ailang-world/README.md                        the two install lines
+```
+
+- **No MCP entry** (D-189-4 A): no `.mcp.json`, no `mcpServers`. An agent gets World's tools only
+  from the launch line `episode start` prints. The plugin holds no token, address book, personal
+  name or home path.
+- **Human acts stay human:** the operator skill and `/world-start` print `episode start` and say
+  the human runs it at a terminal and types `y`; they never run it, feed it input, or run
+  `session new`/`session mint`. `world-publish` lines are printed, never run. `/world-start`'s
+  `allowed-tools` is `Bash(git rev-parse:*)` and `Bash(ls:*)`; the other two have none.
+- **CLAUDE.md** reads "never copy skills into this repo" as the shared mission and fleet skills,
+  not this plugin (D-WORLD-85 / D-189-3).
+- **The help-check (AC6's CI half):** `TestPluginCommandsMatchTheCLIHelp`, in
+  `cmd/ailang-worldd/plugin_help_test.go` and `cmd/world-publish/plugin_help_test.go`, over
+  `host/plugindoc` (a test helper beside `host/proctest` and `host/ptytest`, not under `cmd/`,
+  which `TestEveryCommandDirectoryIsAProtectedGroup` treats as commands):
+  - it walks every `.md` under `plugins/ailang-world/` and takes each fenced line (joined across
+    a trailing `\`) and each inline code span that starts with the program name, after a leading
+    `$ ` and `VAR=value` assignments;
+  - the verb path is the longest path in the top-level usage the line starts with (the global
+    `--addr` before the verb is skipped), and every `--flag` must be in that verb's own `--help`
+    (ailang-worldd, run in-process) or its usage block (world-publish);
+  - controls: the walk must find at least 16 ailang-worldd and 2 world-publish lines, and in-test
+    unknown verbs and flags (`episode frobnicate`, `profile frobnicate`, `episode report
+    --no-such-flag`, `world-publish frobnicate`, …) must refuse through the same checker.
+    Appending the four grader mutants to the operator skill made both tests fail, naming the
+    file and line; removing them made both pass;
+  - known limit: the check proves every printed flag exists in the verb's help, not that the
+    verb's required flags are present, so a line missing `--db` (as `session revoke` needs) passes;
+  - the top-level usage now lists `profile init` (`TestUsageListsProfileInit`), and `profile`
+    prints its own help.
+- **AC6's install half** (`claude plugin validate --strict`, `claude plugin install` into a
+  throwaway config dir, `plugin details`) needs the `claude` CLI, which the episode could not
+  run; the operator's grader measures it.
 
 ## 9. V-rows
 

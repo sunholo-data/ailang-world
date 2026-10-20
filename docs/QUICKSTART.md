@@ -217,6 +217,17 @@ the repo's own files. It needs no daemon and no terminal, and it never activates
 Seed `GOCACHE` yourself if you want warm builds (§10). `ailang-worldd profile init --help` has
 every flag.
 
+**The Claude Code plugin.** The `ailang-world` plugin (row 189) teaches an agent inside an
+episode how to work through World, and teaches you, in any repo, the commands above:
+`/world-start <episode>` prints the `episode start` line for that repo (you run it and type
+`y`), and `/world-watch` and `/world-why` print the watching commands. It runs none of them and
+carries no MCP server or token. Install it once:
+
+```bash
+claude plugin marketplace add sunholo-data/ailang-world
+claude plugin install ailang-world@ailang-world-marketplace
+```
+
 ## 2. Commit the genesis transition
 
 `POST /v1/commit` is **session-gated**: without a session it answers
