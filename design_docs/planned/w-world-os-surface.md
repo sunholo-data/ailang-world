@@ -107,6 +107,20 @@ distances. Each answers a question the other does not:
 Clicking a lane or a state opens its brane, at that state. The address bar takes you back out
 (§3.3). The zoom is spatial: you move into the point you clicked.
 
+**One glyph per brane.** Every brane has one shape and one colour, and it is used everywhere
+the brane appears: timeline nodes, lane names, the stacks behind and ahead, *came from* and
+*led to* links, and the card header. On the timeline, the connector into a merge takes the
+colour of the brane it came from. A branch wears its parent's glyph, faded.
+
+| brane | glyph |
+|---|---|
+| Onboarding · row 189 | blue ■ |
+| Release loop · row 156 | green ▲ |
+| Episode report · row 198 | purple ◆ |
+| Shared world | grey ○ |
+
+No brane is amber.
+
 **One colour for you.** Amber marks the human, and nothing else is amber:
 
 - on the timeline, a number on each state counts your decisions there (w189d: 3, for the
@@ -159,12 +173,13 @@ led to.
   - w189e: onboarding, and the loop's iteration 288 (the merge into `9003555`);
   - w189d: onboarding, w198, and loop iterations 285–287, all landed between w189c and
     w189d's start at `0ee1945`.
-- **Ahead.** A branch point shows several tabs. `0ee1945` has three: the next shared state,
-  w189d, and iteration 288, which both left from there.
+- **Ahead.** The same stack, mirrored below the card, with one column for each brane the
+  state led to, up to three states deep. A branch point shows several columns. `0ee1945` has
+  three: the shared world, w189d's onboarding line, and iteration 288's loop line, which both
+  left from there.
 - **Moving.** ↑ and ↓ step along **this brane only**, so navigation never has to choose
   between ancestors. Leaving the brane is always explicit:
-  - click a card in another column;
-  - click a tab ahead;
+  - click a card in another column, behind or ahead;
   - click a *came from* or *led to* link.
 
   The stack then becomes that brane, with that state in front. At the end of a brane, ↓
