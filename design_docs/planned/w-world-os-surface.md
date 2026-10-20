@@ -107,6 +107,18 @@ distances. Each answers a question the other does not:
 Clicking a lane or a state opens its brane, at that state. The address bar takes you back out
 (§3.3). The zoom is spatial: you move into the point you clicked.
 
+**One colour for you.** Amber marks the human, and nothing else is amber:
+
+- on the timeline, a number on each state counts your decisions there (w189d: 3, for the
+  mint, the approval it asked you for, and the merge);
+- a dashed, pulsing state is waiting for you, and so is everything under *needs you*;
+- on a card, every decision carries its actor (You, Agent, World, Review, Loop), and yours are
+  filled amber;
+- inputs you have set or changed turn amber, and so does the one button that proposes them.
+
+Text is kept to labels and numbers. Checks are tiles, outputs are file names, decisions are a
+few words each, and the proposal bar appears only when there is something to propose.
+
 ### §3.1 Far: the world timeline, with now as its edge
 
 - **Lanes** are branes, with the shared world (dev) as one lane among them. A step leaves the
