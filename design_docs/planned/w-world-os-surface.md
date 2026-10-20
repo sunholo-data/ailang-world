@@ -120,16 +120,18 @@ colour of the brane it came from. A branch wears its parent's glyph, faded.
 | Episode report · row 198 | purple ◆ |
 | Shared world | grey ○ |
 
-No brane is amber.
+No brane uses the human's colour.
 
-**One colour for you.** Amber marks the human, and nothing else is amber:
+**One colour for you.** One colour marks the human, and nothing else uses it. In the Sunholo themes it is
+Action orange (`#BD3012`), the brand's colour for action, so your decisions and your buttons
+match. In Night it is amber:
 
 - on the timeline, a number on each state counts your decisions there (w189d: 3, for the
   mint, the approval it asked you for, and the merge);
 - a dashed, pulsing state is waiting for you, and so is everything under *needs you*;
 - on a card, every decision carries its actor (You, Agent, World, Review, Loop), and yours are
   filled amber;
-- inputs you have set or changed turn amber, and so does the one button that proposes them.
+- inputs you have set or changed take your colour, and so does the one button that proposes them.
 
 **Time in words.** Every time on the surface reads the way people say it ("6 min ago",
 "2 h ago", "yesterday 17:29", "17 days ago"), measured from when the state landed. The open
@@ -138,6 +140,22 @@ card adds the exact time beside it, and items that need you say how long they ha
 
 Text is kept to labels and numbers. Checks are tiles, outputs are file names, decisions are a
 few words each, and the proposal bar appears only when there is something to propose.
+
+**Themes, like an operating system's.** An Appearance panel (gear, or `,`) has three settings,
+kept per viewer on that device:
+
+- **Theme:** *Paper* (default) and *Slate* follow the [Sunholo brand guide](https://www.sunholo.com/assets.html):
+  - white paper and slate structure, Montserrat, 3 px corners;
+  - no shadows or gradients, 1 px rules;
+  - Action orange for the human.
+
+  *Night* is the earlier dark look. *Match system* picks Paper or Slate from the OS setting.
+- **Brane marks:** *Shape* (the brand default: slate glyphs, so colour is never the only
+  signal) or *Shape and colour*.
+- **Motion:** *Full* or *Reduced*. The default follows the OS's reduced-motion setting.
+
+The header carries the AILANG mark with "World", on a white tile as the guide requires on any
+surface. The Sunholo mark appears in the Appearance panel.
 
 ### §3.1 Far: the world timeline, with now as its edge
 
@@ -191,6 +209,24 @@ led to.
   The stack then becomes that brane, with that state in front. At the end of a brane, ↓
   follows on into the state it led to. A rail lists every state on the brane, so you can jump
   to any of them.
+
+**From the agent.** When the agent made a view for its step, the card shows it in a band between
+the title and the columns:
+
+- **How it is made:** the agent calls `propose_view` (row 151) to propose an A2UI view as a
+  typed world object attached to its episode, and World checks it against the closed catalog
+  (§5.1).
+- **What it can be:** a summary the agent drew, such as w189e's nine-step table of the page,
+  with who does each step; or a decision it needs, such as w189d's "remove the empty
+  `cmd/internal`?", with its action buttons.
+- **The limit:** buttons in a view only propose. Your answer still goes through the decision
+  path.
+- **On the board:** these two examples are labelled illustrative, because row 151 is not built.
+
+**Outputs open in place.** Clicking a file in Outputs opens it over the columns, and Esc closes
+it. A text file opens as its diff; on the board these are w189e's real diffs from PR #329: README
++1, QUICKSTART +3, and the new page and its test. An image opens as the picture, and a large
+file as its first page with its size.
 
 **The one action: change from here.** The front card's **inputs are live controls**: the agent,
 the task, the grants. Change from here is not a button or a mode; it is what happens when you
@@ -292,6 +328,9 @@ later states by all three edges:
 | **Merge: two-ancestor states** | git only (M4) | a merge record object naming every ancestor world, referenced from the merging entry's transition. The frozen six-field `LogHeader` keeps one `PrevEntryHash`, so ancestors cannot go in the header. Conflicts need a rule (§10.1). |
 | The view (§3) | the workbench and AG-UI stream served by `worldd` | the timeline and the brane stack as read-only projections first; then change |
 | Addresses (§3.3) | `episode report`, `why`, `provenance` | address parsing in the CLI and the view, one grammar for both |
+| Themes and appearance | the workbench has exactly 11 colour tokens in a light and a dark `:root` block, pinned by `TestTokensBothThemes` | a token set for Paper, Slate and Night, plus the human's colour and the brane glyphs; that test changes with it |
+| The agent band | the A2UI catalog design (row 151, D9); not built | `propose_view`, the view object and its render on the card (row 151 is the dependency) |
+| Diffs and images in Outputs | effect results carry `worktree_delta` paths and hashes; objects are content-addressed | a read route that renders an object's diff or image, same origin, under the workbench CSP |
 | Approval as a gesture | the typed `y` at a TTY (the human-typed rule) | only on a ruling (§8 R3) that keeps the human-typed guarantee: the gesture must be unforgeable by an agent in the same way |
 
 ### §5.1 Fit with the protocol-led approach (D-WORLD-64)
