@@ -172,9 +172,12 @@ var policyToolRequestKeys = []string{"op", "flags"}
 // RenderEpisodePolicy renders the per-episode AILANG operator policy with
 // exactly the §4.3 key set (measured admitted on v0.51.0, V39). root is the
 // episode worktree, rendered verbatim as fs_sandbox; it must be an absolute,
-// clean path with no character that would need TOML escaping.
-func RenderEpisodePolicy(root string) ([]byte, error) {
-	return renderPolicy(root, baseRunSpec)
+// clean path with no character that would need TOML escaping. protected holds
+// fileguard patterns already rebased to root; nil or empty preserves legacy bytes.
+func RenderEpisodePolicy(root string, protected []string) ([]byte, error) {
+	spec := baseRunSpec
+	spec.protected = append([]string(nil), protected...)
+	return renderPolicy(root, spec)
 }
 
 // PolicyInsideWorkspaceError is the D4-style refusal (§4.3, AC4.5): a policy an
@@ -259,6 +262,7 @@ type AilangToolConfig struct {
 	ExamplesDir    string
 	ExecTimeout    time.Duration
 	MaxOutputBytes int64
+	Protected      []string // Already rebased to Root for AILANG fileguard.
 	RunCaps        RunCapsConfig
 	// PackageCacheDigest (row 141) is the startup digest of the read-only
 	// registry package snapshot linked into the episode's HOME. When set it
@@ -280,6 +284,7 @@ type AilangToolHandler struct {
 	examplesDir  string // "" = no corpus configured: examples_search is refused
 	bounds       handlerBounds
 	cliOps       map[string]bool
+	protected    []string
 	policyDigest string
 	// packageCacheDigest is AilangToolConfig.PackageCacheDigest.
 	packageCacheDigest string
@@ -329,7 +334,8 @@ func NewAilangToolHandler(ctx context.Context, cfg AilangToolConfig) (*AilangToo
 		return nil, err
 	}
 	h := &AilangToolHandler{
-		bin: cfg.Bin, binRef: cfg.BinRef, policyPath: cfg.PolicyPath, root: root,
+		protected: append([]string(nil), cfg.Protected...),
+		bin:       cfg.Bin, binRef: cfg.BinRef, policyPath: cfg.PolicyPath, root: root,
 		cacheDir: cfg.CacheDir, examplesDir: cfg.ExamplesDir, runCaps: cfg.RunCaps, packageCacheDigest: cfg.PackageCacheDigest,
 		bounds: handlerBounds{
 			execTimeout: cfg.ExecTimeout, maxOutputBytes: cfg.MaxOutputBytes,

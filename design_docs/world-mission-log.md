@@ -1413,3 +1413,138 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **10/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M4a (refuse configured git filters before any integrity status), then M4b. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 285 — 2026-10-19 — row 156 M4a + M4b built: git-filter preflight and the bounded protected integrity checker (PR #322; judge r1 FAIL 78 → r2 PASS 93) [PRODUCT]
+
+**Kind:** two milestones of one row (156). No release, no semantic weakening, no design or plan change beyond the planned §4.5 annotation.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 284's **Next** was row 156 M4a, then M4b (design M4). Attended rows 189 M1–M3 merged before this fire (#320, #321); row 189 stays "NEXT after 156", so 156 keeps the slot. All work ran in `.wt-world-iter285-row156-m4`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (5 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 1 unread, the fleet's `harness-resolved` reply for `skill:design-scaffold-hardcodes-owning-repo` (ghost, fixed by ailang#1542 `b51353bcd`) → row 130 annotated HARNESS-RESOLVED, reply acknowledged. Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** origin/dev `fd7b325` (attended #321 merge), CI success 3/3 on it. Running skill (resolved symlink) and pin copy match origin on SKILL.md and all resources (per-file loop, after a fresh fetch of the skill repo). Ledger valid, 72 rows, zero OPEN. No open PRs; no orphan traces for 285. Doc unchanged since iteration 282's quorum rounds → no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M4a/M4b ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; probe from `/tmp` rc 1 (`Not inside a trusted directory` — instrument failure, as memory warns), re-probe from the worktree rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `fd7b325`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; broker `-race` rc 0 (144 s).
+
+**Execute (codex gpt-6.1-sol, 131,261 tok, rc 0):**
+- **M4a** `exec_protected_check.go` (NEW) `protectedGitPreflight`: reuses `configuredGitFilters`; a configured `filter.*` key (local or via `include.path`) or a query error refuses before any status call. `TestProtectedGitFilterPreflight` (configured-clean, configured-process, configured-process-include, no-filter, query-error) drives a spawn-logging fake git and a marker the filter would create. Design §4.5 annotated: the preflight is a config query inside the same provisional 2 500 ms phase bound.
+- **M4b** `checkProtected`: preflight, then `status --porcelain=v2 -z --branch …`, `ls-files -z -o -i --exclude-standard`, `ls-files -v -z`, each over `gitCandidatePathspecs`, all under one `protectedCheckTimeout` context, `cmd.Dir`=root, `gitEnv`, `core.fsmonitor=false`, 8 MiB stdout/stderr caps; streams go to M1c's `parseProtectedCandidates`; intact needs HEAD == base and no filtered change, `head-moved` reported, any failure leaves intact nil. `TestProtectedChecker` (8 real-Git rows), `TestProtectedCheckerRootAndBound` (7 fake-Git rows). No caller or result field (M6).
+- Executor mutation table 8/8 killed in-sandbox. It flagged two gaps in the reused row-184 helper (96 MiB stdout cap on the config query; `configuredGitFilters`' rc-1-with-output check unreachable) and did not edit the read-only file.
+
+**Controller verification (outside the sandbox):** M4a rebuilt from its snapshot and gated alone; both M4a mutants killed by the controller (the marker WAS created under the first). M4b as delivered: `RootAndBound/cwd` and `/argv` red — the fake git logs `$PWD`=`/private/var/…` while the test expected `t.TempDir()`'s `/var/…` (macOS symlink); the executor's worktree-local TMPDIR hid it. Fixed test-only (`EvalSymlinks`, matching the canonical root `snapshotWorktree` passes). Four controller M4b mutants killed. Snapshots `shasum -c` OK. Full `go vet ./...` rc 0, broker `-race` rc 0. Evidence: `design_docs/verification/world-iter285/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter285`; generator codex ≠ judge sonnet):** r1 **FAIL 78** (36/15/9/10/8), one blocker: a `checkProtected` that ran the preflight but ignored its result passed every test — the preflight rows call the helper directly and every checker fake answers `config` rc 1. The controller reproduced the survivor. NB2 (load flake): the controller's own `go test ./...` at `167ec9a` had already failed 5 RootAndBound rows on phase timeouts. Fix `d4ff957` (test-only plus `const` → `var`): `TestProtectedChecker/filter-refused` drives the checker over a real `filter.probe.clean` repo (refusal diagnostic, intact nil, marker absent, zero status spawns); every row except `shared-phase-bound` lifts the bound to 30 s via `protectedRelaxBound` (`t.Cleanup` restores it). Survivor now killed; per-call-context mutant still killed; 6 concurrent `-race` copies green. r2 (resumed) **PASS 93**, zero blocking; its two new mutants on the relax helper killed; 8-way stress ×2 green. Its NB1 (the cleanup-restore kill depends on subtest order) and NB2 (unlocked package var) are carried on row 156.
+
+**Gate 3b:** PR #322 (`sprint/world-iter285-row156-m4`), record on the same branch so one CI cycle covers code and record. PR-head CI: `167ec9a` 3/3 green; `d4ff957` race gate red on the row-200 flake (verify + host gates green); the final head (record + row 200, code identical to `d4ff957`) is re-run before merge. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3@2026-10-19T19:26:16Z (Gate 1). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (131,261 tok) · evaluator Agent sonnet (78,166 + 91,203 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Reading the codex probe's rc 1 as a dead lane: it ran from `/tmp` (untrusted, non-git CWD); the same probe from the worktree is rc 0.
+- Attributing the `d4ff957` full-run reds (`TestCLIRealSubprocessEpisode`, `TestWorkspaceExecEpisodeSelectsItsProfile`, `TestProducerExecTimeoutKillsTheWholeProcessGroup`) to this PR: they are in packages the PR does not touch, ran under the judge's 8-way stress, and each passes in isolation at the same head; broker + daemon `-race` is green there.
+- Fixing `configuredGitFilters` in this PR: row-184 code the plan marks read-only for M4; real `git config --get-regexp` prints nothing on rc 1, so the dead branch is not exploitable today. Carried on row 156.
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: an executor's in-sandbox green with a worktree-local TMPDIR cannot see macOS's `/var` → `/private/var` symlink — every fake-binary test that compares a logged `$PWD` must canonicalise its temp root; the controller's out-of-sandbox re-run is what caught it. And a test that pins a production deadline (2 500 ms) over several fork-heavy spawns flakes under `go test ./...` load; lift the bound for rows that are not about it. Backlog lane: **row 200** filed — PR #322's CI `go race gate` at `d4ff957` went red on `TestWorktreeSnapshotRefusesAConfiguredFilter` (row 184's test, untouched here): its control step's plain `git status` sometimes skips the clean filter. Negative control at base `fd7b325`: **3/150** `-race` runs fail the same line (1/60 at `d4ff957`), so it predates this PR; it fails safe. M4 residuals carried on row 156. Harness share over the latest 20 including 285: **0/20**. Last three landings (285, 284, 283) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **12/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M4c (wire startup probe arm 8 for prevention and Linux detection), then M5a. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 286 — 2026-10-20 — row 156 M4c built: startup probe arm 8, protected-write prevention and Linux detection (PR #325; judge r1 PASS 84 → r2 PASS 91) [PRODUCT]
+
+**Kind:** one milestone of row 156 (M4c). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 285's **Next** was row 156 M4c. Open PRs #323/#324 are attended trial branches (rows 198/189), not loop work and not touching row 156. No orphan traces for 286 (no worktree, branch or stamp). All work ran in `.wt-world-iter286-row156-m4c`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (6 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 0 unread. Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** local dev fast-forwarded to origin/dev `c9ab49b` (#322 merge); CI 3/3 success on it. Running skill (resolved symlink) matches origin on SKILL.md and all 13 resources (per-file loop after a fresh fetch). Ledger valid, 72 rows, zero OPEN. Doc unchanged since iteration 282's quorum rounds, so no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M4c ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe from the worktree rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `c9ab49b`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; broker `-race` rc 0 (194 s).
+
+**Execute (codex gpt-6.1-sol, run 1 102,571 tok, rc 0):** `ExecProbeArmProtectedWrite = "arm8-protected-write"`; `execProbeOrder` (arms 1–7, plus arm 8 only when `protected` is non-empty; the refusal text says "of N arms"); `execProbeProtectedSample` (a specimen per pattern, found with the grammar's own matcher; unsupported constructions refused); `probeProtected`/`protectedProbe`: scratch git repo and base commit in the probe episode, planted files proven writable unsandboxed, prevention legs require an accepted refusal errno and unchanged host bytes, the darwin creation leg requires refused and absent, and the linux base-name leg requires WROTE and then `checkProtected` intact=false. `execRefusalCodes("linux")` gains EBUSY/EXDEV (V14). 5/5 planned mutants killed in-sandbox.
+
+**Controller verification (outside the sandbox):** vet, named tests, broker `-race` rc 0, and real srt 0.0.78 on darwin: `TestExecProbeArm8` and `TestExecSrtStartupProbePasses` PASS. Two controller mutants **survived** every test: removing the `probeProtected` call from `probeExecProfile` (every arm-8 test called the arm directly, so "wire" was untested), and dropping the darwin creation leg. Fix round 1 (codex, test-only, 62,422 tok): `TestExecProbeArm8Wired` drives the production entry point (8 vs 7 arms), plus `darwin-create` and a positive control `darwin-refuses-all`. Both mutants now killed (controller re-run). Commit `885af2d`. Evidence: `design_docs/verification/world-iter286/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter286`; generator codex ≠ judge sonnet):** r1 **PASS 84** (27/19/15/13/10), zero blocking. It killed J-TOTAL; 11 of its own mutants survived, 5 of them on spec'd behaviour (A linux success token, D host-deleted, E darwin created-file absent, I linux directory leg, K EBUSY/EXDEV). The controller measured `execFileRefusal` reading `hostGOOS()` (`exec_settings.go:86` = `runtime.GOOS`) rather than `probeProtected`'s goos, so K cannot be killed on darwin. Fix round 2 (codex, test-only, 61,309 tok; commit `9edf116`): rows `linux-no-token`, `linux-checker-error` (pins `WorktreeFilterRefused`), `linux-directory-write`, `darwin-create-forged`, and positive rows `linux-ebusy-passes`/`linux-exdev-passes`, which run on linux hosts (CI) and skip by name elsewhere. A, E and I killed; C single-drop equivalent (a checker error always carries nil intact; the double drop panics, not a kill); D, B, H and F equivalent. r2 (resumed) **PASS 91**, zero blocking; its N1–N4 all killed.
+
+**Gate 3b:** PR #325 (`sprint/world-iter286-row156-m4c`), with the record on the same branch so one CI cycle covers code and record. PR-head CI: `885af2d` 3/3 green. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978@2026-10-19T23:26:05Z (Gate 1). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (3 runs: 102,571 + 62,422 + 61,309 = 226,302 tok) · evaluator Agent sonnet (63,408 + 78,444 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Treating the in-sandbox `^TestExecProbe` rc 1 as a regression: it was `bind: operation not permitted` (sockets inside the sandbox); the same selection is green outside.
+- Editing `exec_probe.go` to thread goos into `execFileRefusal` in this PR: the judge rates it non-blocking, and the fix rounds were test-only by directive. Carried on row 156.
+- Chasing the C/D/B/H/F survivors: each is shown equivalent by construction (judge-confirmed).
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: an executor that implements a planned test list kills exactly the planned mutants, and the plan named no mutant for its own milestone title ("Wire") or for the darwin creation leg. The controller's out-of-sandbox mutants found both before the judge saw the code. A directive should demand one production-entry-point test per milestone that *wires* something, and a negative control for every leg the design spells out, not only the plan's listed mutants. Second: a test seam (`goos` parameter) that only part of the code consults gives darwin-green rows that cannot exercise linux refusal codes; the rows are honest only because they skip by name. Backlog lane: none new; M4c residuals carried on row 156. Harness share over the latest 20 including 286: **0/20**. Last three landings (286, 285, 284) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **13/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M5a (protected AILANG policies in every variant), then M5b. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 287 — 2026-10-20 — row 156 M5a built: protected AILANG policies in every variant (PR #326; judge r1 PASS 88 → r2 PASS 91) [PRODUCT]
+
+**Kind:** one milestone of row 156 (M5a). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 286's **Next** was row 156 M5a; `TestEpisodePolicyProtected*` absent on origin/dev and no M5a PR existed (reality check). Open PRs #323/#324 are attended trial branches (rows 198/189), not loop work. No orphan traces for 287. D-WORLD-82 (D-156-4 = A) puts the World pre-check in M5c/M5d after M5b, so M5a is the policy half only, as planned. All work ran in `.wt-world-iter287-row156-m5a`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313 and #246: 0 allowlisted directives since `2026-10-18T23:25:31Z` (7 and 49 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 0 unread (37 total, control). Weekly sweep already run this week (iteration 282).
+
+**Gates 1–2:** local dev = origin/dev `0adeb70` (#325 merge); CI success on it, check-runs 3, none not-green. Running skill (resolved symlink) and the driver pin both match origin on SKILL.md and every resource (per-file loop). Ledger valid, 72 rows, zero OPEN. Design doc unchanged in substance since iteration 282's quorum, so no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M5a ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `0adeb70`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):** `go vet ./...` rc 0; broker `-race` rc 0 (213 s); daemon `-race` rc 0 (272 s).
+
+**Execute (codex gpt-6.1-sol, 1 run, ≈96k tok, rc 0):** `RenderEpisodePolicy(root, protected)`, `RenderRunVariant(…, protected)`, `runPolicySpec.protected` appended after `episodeDenyWrite` (Env: `.git/**`, built-ins, protected) in a fresh slice; `AilangToolConfig.Protected` copied onto the handler and used by `runVariantFor` and `VerifyRunCaps`; `tomlString` escapes `\`, `"` and control runes; all callers pass nil. Four named tests, including a production-entry-point wiring test (`TestEpisodePolicyProtectedThroughHandler`, a fake policy-tool through `NewAilangToolHandler`), as last iteration's retro asked. 8/8 directed mutants killed in-sandbox; it used a JSON decoder for the deny array because BurntSushi/toml needed a go.sum edit outside its allowlist.
+
+**Controller verification (outside the sandbox):** gofmt clean, vet, 6 + 3 named tests, broker `-race` (185 s), daemon `-race` (230 s), `./cmd/...` rc 0. Five controller mutants anchored on the diff (base short-circuit nil, raw backslash, raw control runes, protected before `.git/**`, handler aliasing the caller's slice), each killed by a named test. Committed `6350cb3`. Evidence: `design_docs/verification/world-iter287/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter287`; generator codex ≠ judge sonnet):** r1 **PASS 88** (29/22/20/10/7), zero blocking. All 7 executor claims re-verified. Survivor N1: `IsControl` narrowed to `r < 0x20` passed every test, because `encoding/json` accepts a raw DEL that TOML forbids. The controller reproduced it (rc 0), then made a test-only fix `3852dbc`: `/escapes` requires `\u007F` and no raw C0/DEL rune. Both narrowed mutants are now red. r2 (resumed) **PASS 91**, zero blocking; N1 closed; N3 (invalid UTF-8 → U+FFFD) is unreachable through a profile, because `ParseProtectedPatterns` refuses invalid UTF-8 (`exec_protected.go:75`), and is carried to M5b.
+
+**Gate 3b:** PR #326 (`sprint/world-iter287-row156-m5a`), with the record on the same branch. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=0adeb70398a1de4ff26f488eb8e384fbe866672a@2026-10-20T03:52:23Z (Gate 4; Gate 1 read the same SHA at 03:27:00Z). Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (doc current) · planner not spawned (plan ready) · executor codex `gpt-6.1-sol` (1 run, ≈96,017 tok) · evaluator Agent sonnet (64,674 + 73,675 subagent tok). judge-independence: cross-vendor. Metered **$0.00** (no quorum, no pi). Every required role for a plan-ready pick ran; no role silently omitted.
+
+**Ruled out:**
+- Importing BurntSushi/toml in the test: it is in the module graph but needs a go.sum edit (outside the allowlist) and would meet the dependency allowlist test; the JSON proxy plus the raw-rune scan covers the renderer's subset.
+- Wiring the episode profile in the daemon now: that is M5b by plan; M5a callers pass nil.
+- Treating the `runVariantFor` copy, the `\u%04x` case and the `len==0 && !nil` form as gaps: each is equivalent by construction (judge-confirmed).
+
+**Retro:** Skill lane: none (World does not edit the shared skill). Process lane: last iteration's lesson (demand a production-entry-point test for anything wired) was put in the directive and held: the wiring test killed the handler/VerifyRunCaps drops on the first run, and no controller mutant survived. The remaining survivor came from the TEST ORACLE: a decoder that is laxer than the format under test (JSON accepts raw DEL, TOML does not) makes an escape test pass for unescaped output. Where a test round-trips through a stand-in decoder, the directive should also demand a byte-level assertion for every character class the real format forbids. Backlog lane: none new; N3 carried on row 156 for M5b. Harness share over the latest 20 including 287: **0/20**. Last three landings (287, 286, 285) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **14/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M5b (episode profile selection and module-root policy rebasing; feed only `ParseProtectedPatterns` output), then the M5c/M5d pre-check (re-measure V7 on v0.54.15 first). DECISIONS FOR MARK: none; ledger OPEN zero.

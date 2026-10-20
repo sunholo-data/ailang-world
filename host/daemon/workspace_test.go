@@ -312,7 +312,7 @@ func TestWorkspacePolicyRenderedPerEpisode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want, err := broker.RenderEpisodePolicy(epRoot)
+	want, err := broker.RenderEpisodePolicy(epRoot, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
