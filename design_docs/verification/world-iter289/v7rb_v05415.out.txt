@@ -1,0 +1,7 @@
+binary AILANG v0.54.15
+depth0 a.test.ts                           REFUSED: write a.test.ts: matches fs_deny_write "**/*.test.ts" — read-only under this policy host=absent
+depth1 src/foo.test.ts                     REFUSED: write src/foo.test.ts: matches fs_deny_write "**/*.test.ts" — read-only under this policy host=ORIG
+depth2 src/deep/x.test.ts                  REFUSED: write src/deep/x.test.ts: matches fs_deny_write "**/*.test.ts" — read-only under this policy host=ORIG
+nested cli/tests/x.py vs tests/**          ok                                                                          host=WRITTEN
+EMPTY deny, single-link free/plain.txt     ok                                                                          host=WRITTEN
+EMPTY deny, hard-linked free/plain2.txt    REFUSED: write free/plain2.txt: the file has more than one hard link, so another of its names may be protected — refuse host=ORIG

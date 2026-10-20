@@ -1,0 +1,7 @@
+binary AILANG v0.52.1
+depth0 a.test.ts                           ok                                                                          host=WRITTEN
+depth1 src/foo.test.ts                     REFUSED: write src/foo.test.ts: matches fs_deny_write "**/*.test.ts" — read-only under this policy host=ORIG
+depth2 src/deep/x.test.ts                  ok                                                                          host=WRITTEN
+nested cli/tests/x.py vs tests/**          ok                                                                          host=WRITTEN
+EMPTY deny, single-link free/plain.txt     ok                                                                          host=WRITTEN
+EMPTY deny, hard-linked free/plain2.txt    ok                                                                          host=WRITTEN
