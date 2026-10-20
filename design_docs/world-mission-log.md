@@ -1641,3 +1641,114 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **15/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 — re-measure V7 on the v0.54.15 tool binary (symlink/hard-link arms through policy-tool). If v0.54.15 already refuses them, drop M5c/M5d with the measurement; otherwise plan and build them. Then M6-pre (V24 timing) before M6a. DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 289 — 2026-10-20 — row 156 V25 re-measure and M5e built: the v0.54.15 tool pin already refuses every alias; M5c/M5d held on D-WORLD-86 (PR #330; judge r1 PASS 90) [PRODUCT]
+
+**Kind:** one measurement (design V25) plus one test-only milestone of row 156 (M5e); a plan amendment; one new decision for Mark. No release, no semantic weakening, no design-direction change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 288's **Next** was: re-measure V7 on the v0.54.15 tool binary, then keep or drop M5c/M5d. Reality check: no open PR from this loop, no orphan worktree with uncommitted row-156 work (the dirty `.eval-*`/`.wt-*` trees are old evaluator residue from iterations 182–281), and nothing on origin/dev touched V7 after iteration 288. Upstream ailang#1873 (filed by World from V7) was closed as fixed by `db9719bb7` in v0.54.15. That closure is a claim, so it was measured rather than taken.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313 and #246: 0 allowlisted directives since `2026-10-18T23:25:31Z` (8 and 49 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 0 unread (37 total). No thread rotation is due (#313 was created 2026-10-19 10:42 local, after Monday's 07:00 boundary; 8 comments).
+
+**Gates 1–2:** local dev = origin/dev `0ffbb9c9` (#329 merge, attended row-189 trial docs); CI success on it, check-runs 3, none not-green. The running skill matches origin on SKILL.md and every resource file (28 comparisons across the resolved symlink and the pin copy; a 30-commit-old control fires). Ledger valid, 72 rows, zero OPEN at pick time.
+
+**V25 (controller measurement, `design_docs/verification/world-iter289/`):**
+- Harness: V7's fixture and patterns, plus hard-link arms V7 never ran (D-156-4 names both), plus an unprotected hard link. Each arm runs on a fresh tree, and the verdict is the host bytes read back. The v0.54.15 digest equals the `host/pins` tool role; v0.52.1 is the control arm.
+- **v0.52.1 reproduces V7:** symlink-dir (new and existing file), symlink-file and both hard-link aliases are written through into protected paths, write and edit.
+- **v0.54.15 refuses all of them, host bytes unchanged.** Symlinks are refused with `(resolves to …): matches fs_deny_write`, hard links with "the file has more than one hard link".
+- **Controls:**
+  - Without a protected set every v0.54.15 symlink arm is written, so the refusal comes from the protected set.
+  - The multi-link refusal is unconditional: it fires even with an EMPTY `fs_deny_write` (R-156-10).
+  - `**` is doublestar on v0.54.15: `**/*.test.ts` refuses depth 0, 1 and 2, where v0.52.1 refused depth 1 only.
+- **First-run confound, caught before banking:** my first harness hard-linked the symlink arms' targets too, so the v0.54.15 no-pattern control refused two symlink arms for the multi-link reason. I set up hard links only in hard-link arms, re-ran both binaries, and banked the clean run.
+
+**Design and plan:**
+- **Design:** V25 row, plus [V25] notes in the status line, §4.1 (the `**/x` refusal text cites V7's v0.52.1-only reading), §4.3.2, P6, D-156-4, the new R-156-10, and §10. The amendment is evidence only, so there was no designer spawn and no re-quorum (precedent: the plan names a controller-authored V24 entry).
+- **Decision:** D-WORLD-86 filed rather than dropping M5c/M5d. D-156-4 = A was Mark's attended ruling, and the loop may not drop a ruled milestone on its own.
+- **Planner** (codex gpt-6.1-sol, ≈141k tok):
+  - Fixed the stale "D-156-4 = B while unanswered" plan line; D-156-1..4 now read answered A (D-WORLD-82). This was a plan/design divergence since 2026-10-17.
+  - Added M5e and wrote M5c/M5d as HELD; their killers must use the fake tool, because the real one already refuses.
+  - Made M6-pre independent of M5c/M5d/M5e.
+  - Marked JSON M1c..M5b done with re-derived merge SHAs.
+  - Found that the regression drill needs a temporary `ToolBinaryRelease` admission hunk, because the daemon admits only the pinned release.
+
+**Baseline (pristine `0ffbb9c9`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):**
+- `go vet ./host/daemon/` rc 0.
+- Named lexical real-tool test: SKIP when unset; PASS 1.45 s on v0.54.15.
+- Daemon `-race` rc 0 (229 s).
+
+**Execute (codex gpt-6.1-sol, 1 run, ≈87k tok, rc 0):**
+- `TestWorkspaceWriteProtectedAliasesPolicyTool`, 123 LOC in `host/daemon/workspace_protected_test.go` only. 14 arms through World's real `Workspace.Write` handler, each with its own context, fixture and daemon.
+- Each protected arm asserts:
+  - the mechanism text, plus bytes unchanged (or the target absent);
+  - symlink identity, or a hard link with nlink 2 on the same inode.
+- Controls: 5 no-protected symlink arms write through; `no-protected-hardlink` is refused (R-156-10); `no-protected-singlelink` writes.
+- In-sandbox drills: D1, D2 ×3 and D3, all killed.
+- **Finding:** the plan's isolated D3 selector was unanchored at the subtest level. The controller measured it (the second selector picked 5 subtests, not 3) and anchored both in plan and JSON (`0629962a`).
+
+**Controller verification (outside the sandbox, `design_docs/verification/world-iter289/controller-verification.md`):**
+- G1 real pin `-count=3`: 42/42 PASS, 0 SKIP.
+- Pin unset: discovered SKIP.
+- `go vet ./...` rc 0; gofmt clean.
+- Lexical test still PASS.
+- Daemon `-race` rc 0 (262 s).
+- Own drills:
+  - D3, the retired v0.52.1 tool (response digest `0dd70a1d…` proves it ran): the 7 alias arms and `no-protected-hardlink` FAIL, the 6 other controls PASS, as predicted.
+  - D1, `RenderEpisodePolicy(sandbox, nil)`: the 5 symlink arms FAIL; hard-link arms and controls PASS.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter289`; generator codex ≠ judge sonnet; the controller-authored evidence is same-vendor as the judge, and that is FLAGGED):**
+- r1 **PASS 90** (28/21/18/13/10), zero blocking.
+- It re-ran both V25 harnesses on both binaries: identical to the banked outputs, digest matched.
+- Plan totals re-summed (24 rows, 5 407 LOC, 670 min); two merge SHAs re-derived.
+- Own mutants:
+  - Retired tool and nil-policy: as predicted.
+  - `AilangToolConfig.Protected`=nil and un-rebased: both survive M5e but are killed by M5b's `TestWorkspaceProtectedPolicyRequests` / `TestEpisodePolicyProtectedRebased`.
+  - One dropped pattern: killed.
+  - Neutered aliases: each dies on its mechanism assertion.
+- Non-blocking findings:
+  - N1: R-156-10 gave the wrong reason ("because the policy is non-empty"; the refusal is unconditional).
+  - N2: the pnpm/uv examples are unmeasured.
+  - N3: D-WORLD-86 was not yet in the charter. It is filed in this record.
+  - N4: the protected hard-link arms are no wiring mutant's sole killer.
+  - N5: M5e SKIPs in CI.
+- N1/N2 fixed in `5ab76bca` (doc wording). N3 is this record. N4/N5 are carried.
+
+**Gate 3b:** PR #330 (`sprint/world-iter289-row156-v7r`). CI on the first push `1b61eba9` was all 3 jobs SUCCESS. The record rides the same PR. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845@2026-10-20T12:08:21Z (Gate 4; Gate 1 read the same SHA at 11:26:15Z).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: evidence-only amendment, controller-measured. The resolver said `recipe claude:claude-opus-5-5 declared:provider-pin`.
+- Planner `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin` (1 run, ≈140,904 tok).
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin` (1 run, ≈87,314 tok).
+- Evaluator `agent-tool sonnet declared:alias-pin` (100,888 subagent tok).
+- judge-independence: cross-vendor for the planner and executor output; same-vendor (Anthropic) for the controller's V25 and design text, mitigated by the judge re-running V25 itself.
+- Metered **$0.00** (no quorum, no pi).
+- Every required role for this pick ran; the codex probe was rc 0.
+
+**Ruled out:**
+- Dropping M5c/M5d on the measurement alone: D-156-4 = A is an attended ruling (D-WORLD-86 asks).
+- Building M5c/M5d now: the pin already refuses every target alias, so the work would be unkillable on the real tool and is held.
+- Reading the first V25 run's no-pattern refusals as "v0.54.15 bans symlinks": the hard-linked-target confound, removed.
+- Treating ailang#1873's "fixed" closure as evidence: it was re-measured as V25.
+- Re-quorum: no design-direction change.
+
+**Retro:**
+- **Skill lane:** none (World does not edit the shared skill).
+- **Process lane:** in a multi-arm fixture, each arm's precondition objects (here a hard link) must exist only in that arm. A global fixture contaminated the control arm in exactly the direction that reads as "the mechanism is broader than it is". The control arm caught it (rule 3d). The planner then wrote the same rule into M5e unprompted.
+- **Process lane:** a planner-written drill selector is an instrument. `go test -run` matches each `/`-level separately and unanchored, so `/(x|y)$` over-selects siblings whose names end in x or y. Measure every isolated selector's subtest count before relying on its "controls stay green".
+- **Backlog lane:** none new. Carried items are on row 156: the §4.1 message and R-156-3 FS-effect aliases are unmeasured on v0.54.15.
+- Harness share over the latest 20 including 289: **0/20**.
+- The last three landings (289, 288, 287) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **16/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M6-pre (V24 real-worktree timing of the integrity legs on sunholo-platform and ailang, then size the bounds), then M6a. M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).

@@ -1,0 +1,33 @@
+binary /Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang: AILANG v0.52.1 Commit: c68ded4
+
+=== fs_deny_write WITHOUT protected patterns (control)
+control write pkg/a.go                         rc=0 ok                                                           host=pkg/a.go:CHANGED
+lexical write pkg/a_test.go                    rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+lexical write NEW tests/new.py                 rc=0 ok                                                           host=tests/new.py:NEW
+symlink-dir write NEW lnk/new5.py              rc=0 ok                                                           host=tests/new5.py:NEW
+symlink-dir write lnk/test_x.py                rc=0 ok                                                           host=tests/test_x.py:CHANGED
+symlink-dir edit lnk/test_x.py                 rc=0 ok                                                           host=tests/test_x.py:CHANGED
+symlink-file write alias.txt                   rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+symlink-file edit alias.txt                    rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+hardlink write hl.txt (=pkg/a_test.go)         rc=0 ok                                                           host=hl.txt:CHANGED,pkg/a_test.go:CHANGED
+hardlink edit hl.txt (=pkg/a_test.go)          rc=0 ok                                                           host=hl.txt:CHANGED,pkg/a_test.go:CHANGED
+hardlink write pkg/hl2.go (=tests/test_x.py)   rc=0 ok                                                           host=pkg/hl2.go:CHANGED,tests/test_x.py:CHANGED
+hardlink edit pkg/hl2.go (=tests/test_x.py)    rc=0 ok                                                           host=pkg/hl2.go:CHANGED,tests/test_x.py:CHANGED
+UNPROTECTED hardlink write free/plain2.txt     rc=0 ok                                                           host=free/plain.txt:CHANGED,free/plain2.txt:CHANGED
+
+=== fs_deny_write WITH ["tests/**", "*_test.go", "*.test.ts", "conftest.py"]
+control write pkg/a.go                         rc=0 ok                                                           host=pkg/a.go:CHANGED
+lexical write pkg/a_test.go                    rc=0 REFUSED: write pkg/a_test.go: matches fs_deny_write "*_test.go" — read-only under this policy host=none
+lexical write NEW tests/new.py                 rc=0 REFUSED: write tests/new.py: matches fs_deny_write "tests/**" — read-only under this policy host=none
+symlink-dir write NEW lnk/new5.py              rc=0 ok                                                           host=tests/new5.py:NEW
+symlink-dir write lnk/test_x.py                rc=0 ok                                                           host=tests/test_x.py:CHANGED
+symlink-dir edit lnk/test_x.py                 rc=0 ok                                                           host=tests/test_x.py:CHANGED
+symlink-file write alias.txt                   rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+symlink-file edit alias.txt                    rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+hardlink write hl.txt (=pkg/a_test.go)         rc=0 ok                                                           host=hl.txt:CHANGED,pkg/a_test.go:CHANGED
+hardlink edit hl.txt (=pkg/a_test.go)          rc=0 ok                                                           host=hl.txt:CHANGED,pkg/a_test.go:CHANGED
+hardlink write pkg/hl2.go (=tests/test_x.py)   rc=0 ok                                                           host=pkg/hl2.go:CHANGED,tests/test_x.py:CHANGED
+hardlink edit pkg/hl2.go (=tests/test_x.py)    rc=0 ok                                                           host=pkg/hl2.go:CHANGED,tests/test_x.py:CHANGED
+UNPROTECTED hardlink write free/plain2.txt     rc=0 ok                                                           host=free/plain.txt:CHANGED,free/plain2.txt:CHANGED
+
+arms_run=26

@@ -1,0 +1,33 @@
+binary /Users/voightkampff/.pinned-ailang-tools/v0.54.15/ailang: AILANG v0.54.15 Commit: 0384450
+
+=== fs_deny_write WITHOUT protected patterns (control)
+control write pkg/a.go                         rc=0 ok                                                           host=pkg/a.go:CHANGED
+lexical write pkg/a_test.go                    rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+lexical write NEW tests/new.py                 rc=0 ok                                                           host=tests/new.py:NEW
+symlink-dir write NEW lnk/new5.py              rc=0 ok                                                           host=tests/new5.py:NEW
+symlink-dir write lnk/test_x.py                rc=0 ok                                                           host=tests/test_x.py:CHANGED
+symlink-dir edit lnk/test_x.py                 rc=0 ok                                                           host=tests/test_x.py:CHANGED
+symlink-file write alias.txt                   rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+symlink-file edit alias.txt                    rc=0 ok                                                           host=pkg/a_test.go:CHANGED
+hardlink write hl.txt (=pkg/a_test.go)         rc=0 REFUSED: write hl.txt: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+hardlink edit hl.txt (=pkg/a_test.go)          rc=0 REFUSED: edit hl.txt: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+hardlink write pkg/hl2.go (=tests/test_x.py)   rc=0 REFUSED: write pkg/hl2.go: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+hardlink edit pkg/hl2.go (=tests/test_x.py)    rc=0 REFUSED: edit pkg/hl2.go: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+UNPROTECTED hardlink write free/plain2.txt     rc=0 REFUSED: write free/plain2.txt: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+
+=== fs_deny_write WITH ["tests/**", "*_test.go", "*.test.ts", "conftest.py"]
+control write pkg/a.go                         rc=0 ok                                                           host=pkg/a.go:CHANGED
+lexical write pkg/a_test.go                    rc=0 REFUSED: write pkg/a_test.go: matches fs_deny_write "*_test.go" — read-only under this policy host=none
+lexical write NEW tests/new.py                 rc=0 REFUSED: write tests/new.py: matches fs_deny_write "tests/**" — read-only under this policy host=none
+symlink-dir write NEW lnk/new5.py              rc=0 REFUSED: write lnk/new5.py (resolves to tests/new5.py): matches fs_deny_write "tests/**" — read-only under this policy host=none
+symlink-dir write lnk/test_x.py                rc=0 REFUSED: write lnk/test_x.py (resolves to tests/test_x.py): matches fs_deny_write "tests/**" — read-only under this policy host=none
+symlink-dir edit lnk/test_x.py                 rc=0 REFUSED: edit lnk/test_x.py (resolves to tests/test_x.py): matches fs_deny_write "tests/**" — read-only under this policy host=none
+symlink-file write alias.txt                   rc=0 REFUSED: write alias.txt (resolves to pkg/a_test.go): matches fs_deny_write "*_test.go" — read-only under this policy host=none
+symlink-file edit alias.txt                    rc=0 REFUSED: edit alias.txt (resolves to pkg/a_test.go): matches fs_deny_write "*_test.go" — read-only under this policy host=none
+hardlink write hl.txt (=pkg/a_test.go)         rc=0 REFUSED: write hl.txt: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+hardlink edit hl.txt (=pkg/a_test.go)          rc=0 REFUSED: edit hl.txt: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+hardlink write pkg/hl2.go (=tests/test_x.py)   rc=0 REFUSED: write pkg/hl2.go: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+hardlink edit pkg/hl2.go (=tests/test_x.py)    rc=0 REFUSED: edit pkg/hl2.go: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+UNPROTECTED hardlink write free/plain2.txt     rc=0 REFUSED: write free/plain2.txt: the file has more than one hard link, so another of its names may be protected — refused under this policy host=none
+
+arms_run=26
