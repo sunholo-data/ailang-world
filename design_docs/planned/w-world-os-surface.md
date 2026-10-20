@@ -1,7 +1,7 @@
-# w-world-os-surface (proposed re-scope of queue row 188, clause 5) — r1
+# w-world-os-surface (proposed re-scope of queue row 188, clause 5) — r2
 
-**Status:** r1 draft, attended with Mark on 2026-10-20. r1 cuts r0's five views to one (§3), at Mark's
-direction: *"each section must be useful and we dont duplicate … elegance, form and function.
+**Status:** r2 draft, attended with Mark on 2026-10-20. r1 cut r0's five views to one, and r2 cuts its three
+distances to two (§3), at Mark's direction: *"each section must be useful and we dont duplicate … elegance, form and function.
 where there is nothing left to take away"*. **Nothing here is ratified.** It
 proposes re-scoping row 188 (`w-desktop-shell`) and filing one new row; §8 lists the rulings
 it needs. Until they are made, row 188 stands as written. Mockups: §9.
@@ -42,7 +42,7 @@ really."* Then, in order (typos corrected):
 | M4 | **Real two-ancestor states exist, but only in git.** Two strands forked from `0ee1945` (#323 merged, 20 Oct 08:25): the mission loop's iteration 288 (row 156 M5b, 3 commits, #328) and episode w189d (row 189 M5, 2 commits, #327). They merged at 10:22 and 10:31, so `9003555` has two ancestors from two different strands of work. Earlier, row 198's strand forked from `96d4901` (06:06), w189c's #324 landed underneath it, and #323 merged at 08:25 with a conflict in `world-mission.md`, resolved by keeping both sides (row 199's note and row 200). |
 | M5 | **World's own store is linear.** `host/store/store.go`: `worlds` holds immutable, content-addressed revisions (state root and log head), but there is one `selected_world_head` row. Each `LogHeader` has one `PrevEntryHash`, and the six-field header is frozen (`world/logepoch.ail`). A stale observed head is a `ConflictError`, not a branch. HUMAN-SURFACE P7 already records the gap: *"one selected head and no fork, branch, or compare-arms API"*. |
 | M6 | World does record what each step **read**, which git cannot. Invocation records carry `episodeId`, `skillId`, input, output, plan and effects (row 182 M2), and `episode report w189e` counts 22 `ailang-read` calls. That gives a causal upstream (what this step actually looked at), narrower than ancestry (everything before it). |
-| M7 | **The read cone is real and crosses branes.** w189e's transcript (`evidence/ailang-world/transcripts/w189e.jsonl` on the rig) has 22 `ailang-read` calls over 17 distinct files. By the commit that created each file, they come from: row 189's design doc (`28f90b5`), w189b (`episode.go`), w189c (`profile_init.go`), w189d (`plugin_help_test.go`, `host/plugindoc`, the plugin's README and skills), row 198's brane (`episode_report.go`), and row 138, two and a half weeks older (`session_new.go`, 3 Oct). That is six earlier steps on three branes, out of 931 commits in its ancestry (`git rev-list --count 0ffbb9c`). |
+| M7 | **What a step actually came from is small, and crosses branes.** w189e's transcript (`evidence/ailang-world/transcripts/w189e.jsonl` on the rig) has 22 `ailang-read` calls over 17 distinct files. By the commit that created each file, they come from: row 189's design doc (`28f90b5`), w189b (`episode.go`), w189c (`profile_init.go`), w189d (`plugin_help_test.go`, `host/plugindoc`, the plugin's README and skills), row 198's brane (`episode_report.go`), and row 138, two and a half weeks older (`session_new.go`, 3 Oct). That is six earlier steps on three branes, out of 931 commits in its ancestry (`git rev-list --count 0ffbb9c`). |
 | M8 | Human acts per episode fell from 11 to 6 with row 189 (`docs/USE_WORLD_ON_YOUR_REPO.md`). The mint among them is still a typed `y` at a terminal. |
 
 ## §2 The model — a block universe of world states
@@ -69,7 +69,7 @@ On top of that block:
   row 189's brane.
 
 **Every state is a place, not a picture.** Selecting a state *enters* it: the world as it was
-at that moment, with everything that went into it and came out of it (§3.3). Changing anything
+at that moment, with everything that went into it and came out of it (§3.2). Changing anything
 there (an input, a grant, a decision) makes a new branch from that state. The state itself is
 never edited, so every view of the past stays true.
 
@@ -82,58 +82,53 @@ each answers a different question:
 | **read** | a step in B looked at an object A wrote | invocation records (M6) | w189e read `episode_report.go`, which row 198's brane wrote (M7) |
 | **ran on** | a step in B ran on a tool built from A | the rig keeps binaries by commit (M3); nothing records it as a World fact yet | w189c ran on `fd7b325` |
 
-**Upstream and downstream cones.** Pick any state and World can light up:
+**What it came from, and what it led to.** For any state, World can show:
 
-- its **upstream cone**: everything that could have shaped it (built on), and, narrower, what
-  actually did (read, ran on);
-- its **downstream cone**: everything built on it since, across every brane, including steps
-  that only ran on it.
+- **what it came from**: everything that could have shaped it (built on) and, more narrowly,
+  what actually did (read, ran on);
+- **what it led to**: everything built on it since, across every brane, including steps that
+  only ran on it.
 
-Ancestry alone says everything before w189e is upstream of it. The read and ran-on edges say
-which few states mattered: for w189e, six steps on three branes (M7). Only World can draw that narrower cone, because only World
-records the reads, and that is the "state graph power" the views exist to show.
+Ancestry alone says everything before w189e is something it came from. The read and ran-on edges say
+which few states mattered: for w189e, six steps on three branes (M7). Only World can show that
+narrower set, because only World records the reads, and that is the "state graph power" the
+view exists to show.
 
-## §3 The surface — one space, three distances, one action
+## §3 The surface — two distances, one action
 
-There is one view. The whole world is the block (§2), and the only thing that changes is how
-close you are looking. Each distance answers one question that the others do not:
+There is one view. The whole world is the block (§2), and you look at it from one of two
+distances. Each answers a question the other does not:
 
 | distance | the question it answers | what you see |
 |---|---|---|
-| **Far: the block** | *Where is everything, and what needs me now?* | Every brane as a lane through time, with branches and merges where lanes split and join. The right edge is **now**. |
-| **Near: one brane** | *How did this piece of work get here?* | The lane's states as full cards, flipped Time Machine style: who, what changed, checks, cost, and "World could now…". |
-| **Inside: one state** | *What exactly happened here, and what if it had gone differently?* | The place itself: inputs, outputs, decisions and checks (§3.3), and the one action. |
+| **The world timeline** (far) | *Where is everything, and what needs me now?* | Every brane as a lane through time, with branches and merges where lanes split and join. The right edge is **now**. |
+| **One brane** (near) | *What happened here, how did it get here, and what if it had gone differently?* | The brane's states as a Time Machine stack. **The front card is the state, open**: inputs, outputs, decisions and checks, plus the one action. |
 
-Clicking a lane moves you closer and clicking a state takes you inside. The address bar takes you
-back out (§3.4). The zoom is spatial: you move into the point you clicked, so you always know
-where you are in the block.
+Clicking a lane or a state opens its brane, at that state. The address bar takes you back out
+(§3.3). The zoom is spatial: you move into the point you clicked.
 
-### §3.1 Far: the block, and now as its edge
+### §3.1 Far: the world timeline, with now as its edge
 
 - **Lanes** are branes, with the shared world (dev) as one lane among them. A step leaves the
   shared world at the state it started from and returns to it at its merge, so a merge state's
   two ancestors are visible as two lines meeting.
-- **The now edge** holds everything a separate System manager would have shown, and nothing
+- **Pointing at a state shows its connections:** blue for what it came from, amber for what
+  it led to, with arcs for what it read (purple) and the build it ran on (teal). These are
+  the same links the open card lists (§3.2), drawn in place. There is no toggle and no mode.
+- **The now edge** holds everything a separate system overview would have shown, and nothing
   else:
   - a positive, timestamped health line ("World healthy · checked 12:55 · daemon `0ee1945`,
     clean"), so quiet reads as health (P5);
   - what is running and how many sessions are live;
-  - **needs you**: open steps and proposed branches, each one click from its state.
+  - **needs you**: open steps and proposed branches, each one click from its card.
 - **Open and proposed steps sit on the now edge, dashed.** That covers AC7 today, and any
   branch you have proposed but not yet approved.
 
-### §3.2 Near: one brane
+### §3.2 Near: one brane, the front card open
 
-- The lane's states become cards stacked in depth, newest in front. If the brane has an open
-  step waiting for you, that step leads instead.
-- You flip back and forward through time; a rail lists every state, so you can jump to one.
-- At a merge, the card names both ancestors. Going inside the merge state (§3.3) shows them as
-  links, so the other brane is one click away.
-
-### §3.3 Inside: one state — a place, and the one action
-
-The state as it was at that moment. This is P6's inspect and walk zoom, applied to a moment in
-time.
+The brane's states are stacked in depth like Time Machine windows. Older states recede behind,
+and the newest is in front, unless an open step is waiting for you, in which case that step
+leads. **The front card is the state itself, fully open**, so there is no "go inside" step:
 
 | | what it holds | w189e, measured |
 |---|---|---|
@@ -142,10 +137,15 @@ time.
 | **Decisions** | the mint, its grants and TTL, questions the agent asked and the answers, refusals, review rounds, the merge | typed mint, 12 h; read and write in the worktree, exec ×600 (6 used); 0 refusals; "merge 329"; session revoked |
 | **Checks** | graders, mutants caught, CI, judges, calls and minutes | 8/8 in 1 round; 3 help-check mutants caught; 42 calls, 3.5 agent minutes |
 
-*Came from* and *led to* are the cones (§2), one hop of each kind, as links. Walking them is
-how you follow history across branes, so the cones need no view of their own.
+**Moving.** *Back in time* and *toward now* step along **this brane only**. That is why
+navigation never has to choose between ancestors. Leaving the brane is always explicit: click
+a *came from* or *led to* link, and the stack becomes that state's brane, with that state in
+front. At a merge (a shared state with two ancestors), *back* follows the shared world. The
+other ancestor is a link, one click away, and so is its brane. A rail lists every state on the
+brane, so you can jump to any of them.
 
-**The one action: change from here.** Change the agent, the task or a grant, then propose.
+**The one action: change from here.** On the front card, change the agent, the task or a
+grant, then propose.
 
 - For a step, the new branch re-runs that step from the world it started in. For a shared
   state, it starts new work from that world.
@@ -155,34 +155,33 @@ how you follow history across branes, so the cones need no view of their own.
   stays true.
 - Grants that can never be given, such as network, are shown and locked rather than hidden.
 
-### §3.4 The address bar — the same space as text
+### §3.3 The address bar — the same space as text
 
-The address bar is both the breadcrumb and the command line. An address names a distance, so
-every place you can click to has a text form:
+The address bar is both the breadcrumb and the command line. Every place you can click to has
+a text form:
 
-| you type | you go to |
+| you type | you get |
 |---|---|
-| `world` | the block |
-| `world onboarding` | that brane |
-| `world onboarding@6` | the 6th state of that brane |
-| `world shared@0ee1945` | a shared state, by hash |
-| `cones` | turn the cone lens on or off (far distance) |
-| `change` | start "change from here" (inside) |
-| `back` | one distance out |
+| `world` | the world timeline |
+| `world onboarding` | that brane, newest (or open) state in front |
+| `world onboarding@6` | that brane, its 6th state in front |
+| `world shared@0ee1945` | the shared world, that state in front, by hash |
+| `change` | start "change from here" on the front card |
+| `back` | out to the world timeline |
 
 The same addresses work in a terminal. Today's commands (`episode report`, `why`, `provenance`)
-answer *inside* questions already, so their output is what the state view renders.
+already answer front-card questions, so their output is what the card renders.
 
-### §3.5 What r1 cut, and why
+### §3.4 What r1 and r2 cut, and why
 
-| r0 view | where its job went |
+| earlier view | where its job went |
 |---|---|
-| System manager | the now edge (§3.1). Its brane table was the block's lanes a second time. |
-| Branes (separate screen) | the near distance (§3.2): the same lane, closer |
-| Block (separate screen) | the far distance, as the home |
-| Graph (node editor) | inside a state (§3.3). Its sources, prompts, grants and outputs *are* the state's inputs, outputs and decisions, and "change from here" edits them. |
-| Console (a view) | the address bar (§3.4), and the same addresses in a terminal |
-| Upstream/downstream panel | *came from* and *led to* inside the state; the lens at the far distance |
+| System manager (r0) | the now edge (§3.1). Its brane table was the timeline's lanes a second time. |
+| Block as a separate screen (r0) | the world timeline, as the home |
+| Graph, the node editor (r0) | the front card. Its sources, prompts, grants and outputs *are* the state's inputs, outputs and decisions, and "change from here" edits them. |
+| Console as a view (r0) | the address bar (§3.3), and the same addresses in a terminal |
+| "Inside a state" as a third distance (r1) | the front card of the brane stack (r2). A separate inside view needed its own back and forward, which is ambiguous at a merge. |
+| The "cones" toggle (r1) | always on: pointing at a state shows what it came from and what it led to |
 
 ## §4 Worked example — row 189 as a brane (real data, 2026-10-19/20)
 
@@ -209,15 +208,15 @@ later states by all three edges:
 |---|---|---|
 | States, immutable and replayable | `worlds` and the append-only log (M5); replay proven | — |
 | Steps with cost, checks, PR | `episode report`, outcome records (row 182), ledger | a projection that joins them per step |
-| **Inside a state: inputs** | reads and effects are World records (M6). The task prompt is a file on the trial rig, not a World object. | commit the task and prompt as an object at `episode start`, so "change from here" edits a World object |
-| **Inside a state: decisions** | grants and TTL at mint (credentials store); refusals (`episode report`); review rounds in the ledger. Merges happen on GitHub, outside World. | record the merge decision and the review rounds as World facts, linked to the state they produced |
+| **Front card: inputs** | reads and effects are World records (M6). The task prompt is a file on the trial rig, not a World object. | commit the task and prompt as an object at `episode start`, so "change from here" edits a World object |
+| **Front card: decisions** | grants and TTL at mint (credentials store); refusals (`episode report`); review rounds in the ledger. Merges happen on GitHub, outside World. | record the merge decision and the review rounds as World facts, linked to the state they produced |
 | **The brane object** | nothing names a brane (M2) | `world/brane/v1`: a name, its states, its steps (episode ids, ruling ids, PRs); appended as states advance, never edited |
 | Read edges | invocation records (M6) | an index from object to the invocations that read it |
 | Ran-on edges | binaries kept by commit on the rig, by convention only (M3) | record the daemon's build (`vcs.revision`, `vcs.modified`) on every invocation record, or on the episode's mint |
 | **Fork: "change from here"** | none: one `selected_world_head` (M5) | **M5's fork API**: more than one head, named by brane; a fork is a new head pointing at an existing world, which is O(1) through structure sharing (DESIGN.md §13.5) |
 | **Merge: two-ancestor states** | git only (M4) | a merge record object naming every ancestor world, referenced from the merging entry's transition. The frozen six-field `LogHeader` keeps one `PrevEntryHash`, so ancestors cannot go in the header. Conflicts need a rule (§10.1). |
-| The view (§3) | the workbench and AG-UI stream served by `worldd` | the far and near distances as read-only projections first; then inside; then change |
-| Addresses (§3.4) | `episode report`, `why`, `provenance` | address parsing in the CLI and the view, one grammar for both |
+| The view (§3) | the workbench and AG-UI stream served by `worldd` | the timeline and the brane stack as read-only projections first; then change |
+| Addresses (§3.3) | `episode report`, `why`, `provenance` | address parsing in the CLI and the view, one grammar for both |
 | Approval as a gesture | the typed `y` at a TTY (the human-typed rule) | only on a ruling (§8 R3) that keeps the human-typed guarantee: the gesture must be unforgeable by an agent in the same way |
 
 ### §5.1 Fit with the protocol-led approach (D-WORLD-64)
@@ -235,17 +234,17 @@ This design keeps all three.
   already emits `RUN_STARTED`, `RUN_FINISHED`, `RUN_ERROR`, `STATE_SNAPSHOT`, `STATE_DELTA` and
   `CUSTOM`. A brane advancing *is* new committed entries, so the view stays live over the
   existing stream. How brane projections ride `STATE_*` events is S1 design work.
-- **Payload: A2UI fits the near and inside distances.** Row 151 (not landed) gives agents a
+- **Payload: A2UI fits the brane stack.** Row 151 (not landed) gives agents a
   closed catalog: text, list, table, card, object-link, grade-badge, timeline and
-  action-button. A brane is a timeline of cards. A state is four lists whose *came from* and
-  *led to* entries are object-links. So an agent could generate either, with D9's rules intact:
+  action-button. A brane is a timeline of cards, and the front card is four lists whose
+  *came from* and *led to* entries are object-links. So an agent could generate it, with D9's rules intact:
   links must resolve, grades come from the referenced object, and ungrounded text renders
   CLAIMED.
 - **Actions: already right.** "Change from here" and "propose" are action-buttons, and D9 maps
   an action-button to a **transition proposal**, never an effect. That is §6's authority rule in
   protocol form.
-- **The one gap: the far distance is not in the catalog.** Lanes, merges and cones are neither a
-  table nor a timeline. There are two ways forward:
+- **The one gap: the world timeline is not in the catalog.** Lanes, merges and connections are
+  neither a table nor a timeline. There are two ways forward:
   - (a) draw them as a **bespoke view in the reference renderer**, as the workbench already
     does for entry edges (`host/workbench/graph.go`, `LayoutGraph`);
   - (b) **extend the catalog** with a read-only `state-graph` component whose every node must be
@@ -270,11 +269,12 @@ This design keeps all three.
 
 Each stage is useful on its own and adds no authority until S5.
 
-1. **S1 — far and near, read-only, over today's data.** Branes from charter rows, states from
+1. **S1 — the timeline and the brane stack, read-only, over today's data.** Branes from charter rows, states from
    git merges, episode reports and outcome records. No store change. This answers M1
    directly.
-2. **S2 — inside, read-only, and addresses.** The four-part state view, *came from* and *led
-   to* over the read edges that exist (M6), and one address grammar in the view and the CLI.
+2. **S2 — the open front card and addresses.** Inputs, outputs, decisions and checks; *came
+   from* and *led to* over the read edges that exist (M6); one address grammar in the view and
+   the CLI.
 3. **S3 — the brane object, ran-on recording, and the task as a World object.** Brane
    membership and inputs become World facts rather than projections over git and the rig.
 4. **S4 — the fork API (M5 pulled forward) and merge records.** Real two-ancestor World
@@ -298,15 +298,16 @@ Proposed. When answered, each one is filed OPEN in the charter and recorded thro
 - **R5 — the first renderer**: the browser via `worldd` (as the workbench is today), or the
   desktop shell row 188 named. Default: the browser first; the shell wraps the same page later.
 - **R6 — a `state-graph` component in World's A2UI catalog** (§5.1 b), so agents can draw the
-  far distance too. Default: no.
+  world timeline too. Default: no.
 
 ## §9 Mockup
 
 One board, real data from 19–20 October 2026, on the private design canvas:
 `https://claude.ai/artifact/4z7uXX5GgRj9ZzdAjxwD6L`
 
-- It opens at the far distance with the cone lens on w189e.
-- Click a lane to move closer, a state to go inside, and type addresses in the bar.
+- It opens on the world timeline, showing what w189e came from and led to.
+- Point at a state to see its connections, click a lane or a state to open its brane, and
+  type addresses in the bar.
 - "Change from here" proposes a branch, which then appears in the block and under *needs you*.
 - Proposals made on the board are the only content that is not real.
 
@@ -320,6 +321,6 @@ r0's eleven boards (v1–v5) are superseded and are kept in the canvas's version
 2. **What starts a brane?** A charter row, a ruling, an episode with no parent brane? S1 can
    infer branes from charter rows; S3 has to decide.
 3. **The mission loop as a resident.** The loop's iterations form a brane. Should its states
-   show at the same distance as attended episodes, or fold into one step per row?
-4. **Long time.** The board covers two days. Months of history need the far distance to
+   show like attended episodes, or fold into one step per row?
+4. **Long time.** The board covers two days. Months of history need the world timeline to
    compress quiet stretches. What does it compress, and how does it show that it has?
