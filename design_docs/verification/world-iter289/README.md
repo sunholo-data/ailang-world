@@ -43,10 +43,10 @@ multi-link reason; that confound was removed before banking).
 
 1. **The multi-link refusal is unconditional.** On v0.54.15 a write to ANY file with more than one
    hard link is refused, with or without a protected set, and with an EMPTY `fs_deny_write`
-   (`v7rb_v05415.out.txt`, last row; single-linked control written). v0.52.1 wrote it. World
-   episodes always carry a non-empty deny list (`episodeDenyWrite`), so since the row-139 D7 tool
-   move (2026-10-17) `ailang-write`/`ailang-edit` refuse every hard-linked file in an episode
-   worktree. That is a property of the pin, not of row 156.
+   (`v7rb_v05415.out.txt`, last row; single-linked control written). v0.52.1 wrote it. Because the
+   refusal does not depend on the deny list at all, since the row-139 D7 tool move (2026-10-17)
+   `ailang-write`/`ailang-edit` refuse every hard-linked file in an episode worktree. That is a
+   property of the pin, not of row 156.
 2. **`**` is doublestar on v0.54.15.** `**/*.test.ts` refuses depth 0, 1 and 2; v0.52.1 refused depth
    1 only (V7). `tests/**` still does not match `cli/tests/x.py` on either binary. Design §4.1's refusal
    text for `**/x` cites V7's one-level reading, which is now v0.52.1-only.
