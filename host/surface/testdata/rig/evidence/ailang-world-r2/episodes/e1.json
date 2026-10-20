@@ -1,0 +1,21 @@
+{
+  "schema": "trial-episode/1",
+  "episode": "e1",
+  "project": "ailang-world",
+  "agent": "claude",
+  "model": "claude-opus-5-5",
+  "task": "row-189-M5-plugin-round-2",
+  "started_at": "2026-10-20T07:40:00+00:00",
+  "finished_at": "2026-10-20T07:50:00+00:00",
+  "agent_run": {"wall_ms": 210000, "argv": ["agent", "--worktree", "/rig/ws/e1"]},
+  "solution": {"base": "1111111111111111111111111111111111111111", "state": "changed"},
+  "graders": [
+    {"name": "go-vet", "passed": true, "stdout_path": "/rig/evidence/ailang-world-r2/e1/go-vet.out"},
+    {"name": "go-test", "passed": true, "stdout_path": "/rig/evidence/ailang-world-r2/e1/go-test.out"},
+    {"name": "gofmt", "passed": true, "stdout_path": "/rig/evidence/ailang-world-r2/e1/gofmt.out"},
+    {"name": "plugin-check", "passed": true, "stdout_path": "/rig/evidence/ailang-world-r2/e1/plugin.out"}
+  ],
+  "worktree": "/rig/ws/e1",
+  "transcript": {"path": "/rig/transcripts/e1-r2.jsonl"},
+  "report": {"path": "/rig/reports/e1.json", "total_calls": 42}
+}

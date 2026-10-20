@@ -1,0 +1,4 @@
+{"schema": "trial-episode/1", "episode": "e5", "project": "ailang-world", "agent": "claude", "model": "claude-opus-5-5",
+ "task": "later-pr", "started_at": "2026-10-20T15:00:00+00:00", "finished_at": "2026-10-20T15:10:00+00:00",
+ "agent_run": {"wall_ms": 60000}, "solution": {"base": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9", "state": "changed"},
+ "graders": [{"name": "g", "passed": false}], "worktree": "/rig/ws/e5"}

@@ -1,0 +1,19 @@
+{
+  "schema": "trial-episode/1",
+  "episode": "e2",
+  "project": "ailang-world",
+  "agent": "codex",
+  "model": "gpt-x",
+  "task": "tasks/row-156-m5b.md",
+  "started_at": "2026-10-20T07:30:00+00:00",
+  "finished_at": "2026-10-20T07:58:00+00:00",
+  "agent_run": {"wall_ms": 255000, "argv": ["agent", "/rig/ws/e2"]},
+  "solution": {"base": "0ee1945ffba795812f06dce95998b646adfac343", "state": "changed"},
+  "graders": [
+    {"name": "go-vet", "passed": true, "stdout_path": "/rig/evidence/ailang-world/e2/go-vet.out"},
+    {"name": "go-test", "passed": true, "stdout_path": "/rig/evidence/ailang-world/e2/go-test.out"}
+  ],
+  "worktree": "/rig/ws/e2",
+  "transcript": {"path": "/rig/transcripts/e2.jsonl"},
+  "report": {"path": "/rig/reports/e2.json", "total_calls": 0}
+}

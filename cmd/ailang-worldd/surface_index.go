@@ -8,6 +8,11 @@ package main
 // merge-base, and everything else (parsing, branes, the index, its checks)
 // is host/surface's pure code. The file is written atomically (a temporary
 // file in the same directory, then a rename) and never inside the repo.
+//
+// Row 188 M0c: with --rig and --addr it also reads the rig's episode records
+// and prs.json, GETs each attached episode's report from the loopback
+// daemon, and runs git diff, ls-tree and log per step, so surface.AttachRig
+// can add steps[], files{}, reads{} and decisions[].
 
 import (
 	"context"
@@ -15,9 +20,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +35,7 @@ import (
 )
 
 const surfaceIndexHelp = `usage: ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
+                                 [--rig <dir> --addr <url> [--project ailang-world]]
        ailang-worldd surface-index --validate <file>
 
 Build the surface index (` + surface.Schema + `) that /surface reads, from a
@@ -45,32 +54,72 @@ brane: its step sits on the shared lane. Brane titles are the rows' slugs in
 (a temporary file beside --out, then a rename). It holds commit hashes, times,
 PR numbers, branch names and row slugs, never a filesystem path.
 
+With --rig, the index also holds the episode facts (otherwise it is unchanged):
+  steps[]      one per episode of --project whose PR (<rig>/trial/prs.json,
+               "<project>#N") is a step in the index: task, agent, model, base
+               (round 1), rounds, graders (the last round), agent minutes, and
+               the report's calls and entries. Records are
+               <rig>/evidence/<project>[-rN]/episodes/<ep>.json, one per
+               round, ordered by started_at; the rest are listed by id in
+               source.rig.unattached
+  files{}      git diff --name-status --no-renames -z <base> <step>
+  reads{}      the report's reads, each path classified at the step's base:
+                 git ls-tree -r -z --name-only <base>      (once per step)
+                 git log --first-parent -1 --format=%H %P <base> -- <path>
+               new (not at base), step (a merge of a step in the index),
+               commit (a non-merge commit) or outside (an older merge)
+  decisions[]  each round's grade, the report's refusals, and the merge
+The report is GET <addr>/v1/episodes/<ep>/report (404: no report, its
+fields absent). No path field of a record is copied into the index.
+
 --validate reads an index and checks it: the schema, unique ids, every parent
 resolving (but the oldest shared state's first parent), every step's brane
 listed, every step's merge pointing back at it, times in order along the shared
-chain, the allowed kinds, and at most 5000 states. It exits 0, or 1 with the
-reason.
+chain, the allowed kinds, and at most 5000 states; with a rig, every episode
+fact names a listed step, holds allowed values and local paths. It exits 0, or
+1 with the reason.
 
 Refused: a missing flag, --validate with any build flag, a --limit outside
-1..2500, a --rev starting with -, and an --out inside --repo.
+1..2500, a --rev starting with -, an --out inside --repo, --rig without --addr
+(or --addr or --project without --rig), an --addr that is not loopback
+(127.0.0.1, localhost or ::1), an episode record over 1 MiB or more than 2000
+of them, and a report over 4 MiB or slower than 30s.
 
   --repo <dir>       the git repository to read (required to build)
   --charter <file>   the charter whose queue rows title the branes (required to build)
   --out <file>       the index to write (required to build)
   --rev <rev>        the branch whose first-parent merges are read (default dev)
   --limit N          read at most N merges (default 200)
+  --rig <dir>        the trial rig whose episode records and prs.json are read
+  --project <name>   the rig project whose episodes are read (default ailang-world)
+  --addr <url>       the loopback daemon serving the episode reports (with --rig)
   --validate <file>  check an index instead of building one
 `
 
 // surfaceIndexMaxBytes bounds an index --validate reads (the M1 serving bound).
 const surfaceIndexMaxBytes = 4 << 20
 
-// surfaceIndexBudget bounds the git calls of one build as a whole.
-const surfaceIndexBudget = 2 * time.Minute
+// surfaceIndexBudget bounds the git calls and report GETs of one build as a
+// whole.
+const surfaceIndexBudget = 5 * time.Minute
+
+// The rig's bounds (M0c): each episode record and prs.json, the number of
+// records, each report body, and each report GET.
+const (
+	surfaceRecordMaxBytes = 1 << 20
+	surfaceRecordMaxFiles = 2000
+	surfaceReportMaxBytes = 4 << 20
+	surfaceReportTimeout  = 30 * time.Second
+)
+
+// surfaceReportTransport carries the report GETs, with no proxy; a test
+// replaces it with a handler, so no socket is needed.
+var surfaceReportTransport http.RoundTripper = &http.Transport{Proxy: nil}
 
 // surfaceIndexArgs is a parsed command line.
 type surfaceIndexArgs struct {
 	repo, charter, out, rev, validate string
+	rig, project, addr                string
 	limit                             int
 }
 
@@ -86,9 +135,14 @@ func parseSurfaceIndexArgs(args []string, stderr io.Writer) (surfaceIndexArgs, e
 	fs.StringVar(&a.rev, "rev", "dev", "the branch whose first-parent merges are read")
 	fs.IntVar(&a.limit, "limit", 200, "read at most N merges")
 	fs.StringVar(&a.validate, "validate", "", "check an index instead of building one")
+	fs.StringVar(&a.rig, "rig", "", "the trial rig whose episode records and prs.json are read")
+	fs.StringVar(&a.project, "project", "ailang-world", "the rig project whose episodes are read")
+	fs.StringVar(&a.addr, "addr", "", "the loopback daemon serving the episode reports")
 	if err := fs.Parse(args); err != nil {
 		return a, err
 	}
+	projectGiven := false
+	fs.Visit(func(f *flag.Flag) { projectGiven = projectGiven || f.Name == "project" })
 	switch {
 	case fs.NArg() > 0:
 		return a, fmt.Errorf("unexpected argument %q", fs.Arg(0))
@@ -104,8 +158,40 @@ func parseSurfaceIndexArgs(args []string, stderr io.Writer) (surfaceIndexArgs, e
 		return a, fmt.Errorf("--limit %d is outside 1..%d", a.limit, surface.MaxStates/2)
 	case a.rev == "" || strings.HasPrefix(a.rev, "-"):
 		return a, fmt.Errorf("--rev %q is not a revision", a.rev)
+	case (a.rig == "") != (a.addr == ""):
+		return a, errors.New("--rig and --addr go together: the rig's episodes need the daemon's reports")
+	case projectGiven && a.rig == "":
+		return a, errors.New("--project needs --rig")
+	case a.rig != "" && (a.project == "" || strings.ContainsAny(a.project, `/\`) || strings.HasPrefix(a.project, ".")):
+		return a, fmt.Errorf("--project %q is not a project name", a.project)
+	}
+	if a.addr != "" {
+		base, err := surfaceLoopbackBase(a.addr)
+		if err != nil {
+			return a, err
+		}
+		a.addr = base
 	}
 	return a, nil
+}
+
+// surfaceLoopbackBase is --addr as a base URL, refused unless it is plain
+// http(s) to 127.0.0.1, localhost or ::1 with no path, user or query.
+func surfaceLoopbackBase(addr string) (string, error) {
+	u, err := url.Parse(clientBaseURL(addr))
+	if err != nil {
+		return "", fmt.Errorf("--addr %q is not a URL: %v", addr, err)
+	}
+	if (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.RawQuery != "" || u.Fragment != "" ||
+		(u.Path != "" && u.Path != "/") {
+		return "", fmt.Errorf("--addr %q is not a daemon base URL (http://host:port)", addr)
+	}
+	switch u.Hostname() {
+	case "127.0.0.1", "localhost", "::1":
+	default:
+		return "", fmt.Errorf("--addr %q is not loopback: the reports are read from 127.0.0.1, localhost or ::1 only", addr)
+	}
+	return u.Scheme + "://" + u.Host, nil
 }
 
 func runSurfaceIndex(args []string, stdout, stderr io.Writer) int {
@@ -154,6 +240,12 @@ func runSurfaceIndex(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return fail("--charter: %v", err)
 	}
+	var rig surface.RigInput
+	if a.rig != "" {
+		if rig, err = loadSurfaceRig(a.rig, a.project); err != nil {
+			return fail("--rig: %v", err)
+		}
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), surfaceIndexBudget)
 	defer cancel()
@@ -164,6 +256,11 @@ func runSurfaceIndex(args []string, stdout, stderr io.Writer) int {
 	in.Titles = surface.ChartRowTitles(string(charter))
 	in.BuiltAt = time.Now()
 	ix, err := surface.Build(in)
+	if err == nil && a.rig != "" {
+		if rig.Reports, err = fetchSurfaceReports(ctx, a.addr, surfaceReportEpisodes(ix, rig)); err == nil {
+			ix, err = surface.AttachRig(ix, rig, surfaceGitResolver{ctx: ctx, repo: repoAbs})
+		}
+	}
 	if err == nil {
 		err = surface.Validate(ix)
 	}
@@ -188,7 +285,164 @@ func surfaceIndexCounts(ix surface.Index) string {
 			shared++
 		}
 	}
-	return fmt.Sprintf("%d shared states, %d steps, %d branes", shared, len(ix.States)-shared, len(ix.Branes))
+	counts := fmt.Sprintf("%d shared states, %d steps, %d branes", shared, len(ix.States)-shared, len(ix.Branes))
+	if r := ix.Source.Rig; r != nil {
+		counts += fmt.Sprintf("; rig: %d episodes, %d attached, %d decisions", r.Episodes, r.Attached, len(ix.Decisions))
+	}
+	return counts
+}
+
+// loadSurfaceRig reads project's episode records from every round directory
+// of <rig>/evidence (surface.RoundDir) and its PRs from <rig>/trial/prs.json.
+// Each file is read under surfaceRecordMaxBytes and at most
+// surfaceRecordMaxFiles records are read; past either the build is refused.
+func loadSurfaceRig(rig, project string) (surface.RigInput, error) {
+	evidence := filepath.Join(rig, "evidence")
+	dirs, err := os.ReadDir(evidence)
+	if err != nil {
+		return surface.RigInput{}, err
+	}
+	var records []surface.EpisodeRecord
+	for _, d := range dirs {
+		if !d.IsDir() || !surface.RoundDir(project, d.Name()) {
+			continue
+		}
+		dir := filepath.Join(evidence, d.Name(), "episodes")
+		files, err := os.ReadDir(dir)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return surface.RigInput{}, err
+		}
+		for _, f := range files {
+			if !f.Type().IsRegular() || !strings.HasSuffix(f.Name(), ".json") {
+				continue
+			}
+			if len(records) == surfaceRecordMaxFiles {
+				return surface.RigInput{}, fmt.Errorf("more than %d episode records", surfaceRecordMaxFiles)
+			}
+			data, err := readFileCapped(filepath.Join(dir, f.Name()), surfaceRecordMaxBytes)
+			if err != nil {
+				return surface.RigInput{}, err
+			}
+			r, err := surface.ParseEpisodeRecord(data)
+			if err != nil {
+				return surface.RigInput{}, fmt.Errorf("%s/episodes/%s: %v", d.Name(), f.Name(), err)
+			}
+			records = append(records, r)
+		}
+	}
+	data, err := readFileCapped(filepath.Join(rig, "trial", "prs.json"), surfaceRecordMaxBytes)
+	if err != nil {
+		return surface.RigInput{}, err
+	}
+	prs, err := surface.ParsePRs(data, project)
+	if err != nil {
+		return surface.RigInput{}, err
+	}
+	return surface.RigInput{Episodes: surface.GroupRounds(records), PRs: prs}, nil
+}
+
+// surfaceReportEpisodes lists the episodes whose PR is a step in the index:
+// only their reports are fetched.
+func surfaceReportEpisodes(ix surface.Index, rig surface.RigInput) []string {
+	stepPRs := map[int]bool{}
+	for _, s := range ix.States {
+		if s.Kind == surface.KindStep && s.PR > 0 {
+			stepPRs[s.PR] = true
+		}
+	}
+	var out []string
+	for _, ep := range rig.Episodes {
+		if stepPRs[rig.PRs[ep.ID]] {
+			out = append(out, ep.ID)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// fetchSurfaceReports GETs each episode's report from the loopback daemon at
+// base (already checked by surfaceLoopbackBase). A 404 is no report; any
+// other non-200, a redirect, a body over surfaceReportMaxBytes or a request
+// over surfaceReportTimeout refuses the build.
+func fetchSurfaceReports(ctx context.Context, base string, episodes []string) (map[string]surface.Report, error) {
+	hc := &http.Client{
+		Timeout:       surfaceReportTimeout,
+		Transport:     surfaceReportTransport,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("redirect refused") },
+	}
+	out := map[string]surface.Report{}
+	for _, ep := range episodes {
+		path := "/v1/episodes/" + url.PathEscape(ep) + "/report"
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+path, nil)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := hc.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("GET %s: %w", path, err)
+		}
+		body, err := io.ReadAll(io.LimitReader(resp.Body, surfaceReportMaxBytes+1))
+		_ = resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("GET %s: %w", path, err)
+		}
+		if len(body) > surfaceReportMaxBytes {
+			return nil, fmt.Errorf("GET %s: the report is over %d bytes", path, surfaceReportMaxBytes)
+		}
+		switch resp.StatusCode {
+		case http.StatusOK:
+			rep, err := surface.ParseReport(body)
+			if err != nil {
+				return nil, fmt.Errorf("GET %s: %v", path, err)
+			}
+			out[ep] = rep
+		case http.StatusNotFound:
+		default:
+			return nil, fmt.Errorf("GET %s returned HTTP %d", path, resp.StatusCode)
+		}
+	}
+	return out, nil
+}
+
+// surfaceGitResolver is surface.Git over the repo, through surfaceGit. Every
+// revision it is given is a full commit hash from the index, never an option.
+type surfaceGitResolver struct {
+	ctx  context.Context
+	repo string
+}
+
+func (g surfaceGitResolver) NameStatus(base, step string) (string, error) {
+	return surfaceGit(g.ctx, g.repo, "diff", "--name-status", "--no-renames", "-z", base, step, "--")
+}
+
+func (g surfaceGitResolver) Tree(rev string) (string, error) {
+	return surfaceGit(g.ctx, g.repo, "ls-tree", "-r", "-z", "--name-only", rev)
+}
+
+// LastChange reads the path literally (--literal-pathspecs), so a read of a
+// file named with * or : matches only that file.
+func (g surfaceGitResolver) LastChange(rev, path string) (string, error) {
+	return surfaceGit(g.ctx, g.repo, "--literal-pathspecs", "log", "--first-parent", "-1", "--format=%H %P", rev, "--", path)
+}
+
+// readFileCapped reads path, refusing it over max bytes.
+func readFileCapped(path string, bound int64) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	data, err := io.ReadAll(io.LimitReader(f, bound+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(data)) > bound {
+		return nil, fmt.Errorf("%s is over the bound of %d bytes", filepath.Base(path), bound)
+	}
+	return data, nil
 }
 
 // outInsideRepo reports out lying in repo, as given or once both are resolved
