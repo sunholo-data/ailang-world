@@ -3093,7 +3093,7 @@
         "design_docs/verification/world-row156-v24/result.json",
         "design_docs/planned/w-exec-protected-test-paths.md"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestProtectedV24RealWorktree"
       ],

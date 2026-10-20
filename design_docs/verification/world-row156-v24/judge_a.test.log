@@ -1,0 +1,25 @@
+=== RUN   TestProtectedV24RealWorktree
+=== RUN   TestProtectedV24RealWorktree/reject-null
+=== RUN   TestProtectedV24RealWorktree/reject-over-budget
+=== RUN   TestProtectedV24RealWorktree/required-legs
+=== RUN   TestProtectedV24RealWorktree/measurement
+    exec_protected_v24_test.go:296: sunholo-platform argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "status" "--porcelain=v2" "-z" "--branch" "--untracked-files=all" "--ignored=no" "--no-renames" "--ignore-submodules=all" "--" ":(top,glob,icase)**/*.te*t.t*" ":(top,glob,icase)**/*.te*t.t*x" ":(top,glob,icase)bac*end/te*t*" ":(top,glob,icase)bac*end/te*t*/**" ":(top,glob,icase)cli/te*t*" ":(top,glob,icase)cli/te*t*/**" ":(top,glob,icase)**/confte*t.py" ":(top,glob,icase)**/te*t_*.py"]
+    exec_protected_v24_test.go:296: sunholo-platform argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-z" "-o" "-i" "--exclude-standard" "--" ":(top,glob,icase)**/*.te*t.t*" ":(top,glob,icase)**/*.te*t.t*x" ":(top,glob,icase)bac*end/te*t*" ":(top,glob,icase)bac*end/te*t*/**" ":(top,glob,icase)cli/te*t*" ":(top,glob,icase)cli/te*t*/**" ":(top,glob,icase)**/confte*t.py" ":(top,glob,icase)**/te*t_*.py"]
+    exec_protected_v24_test.go:296: sunholo-platform argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-v" "-z" "--" ":(top,glob,icase)**/*.te*t.t*" ":(top,glob,icase)**/*.te*t.t*x" ":(top,glob,icase)bac*end/te*t*" ":(top,glob,icase)bac*end/te*t*/**" ":(top,glob,icase)cli/te*t*" ":(top,glob,icase)cli/te*t*/**" ":(top,glob,icase)**/confte*t.py" ":(top,glob,icase)**/te*t_*.py"]
+    exec_protected_v24_test.go:296: ailang argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "status" "--porcelain=v2" "-z" "--branch" "--untracked-files=all" "--ignored=no" "--no-renames" "--ignore-submodules=all" "--" ":(top,glob,icase)**/*.golden" ":(top,glob,icase)**/*_te*t.go" ":(top,glob,icase)example*/te*t*" ":(top,glob,icase)example*/te*t*/**" ":(top,glob,icase)te*t*" ":(top,glob,icase)te*t*/**"]
+    exec_protected_v24_test.go:296: ailang argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-z" "-o" "-i" "--exclude-standard" "--" ":(top,glob,icase)**/*.golden" ":(top,glob,icase)**/*_te*t.go" ":(top,glob,icase)example*/te*t*" ":(top,glob,icase)example*/te*t*/**" ":(top,glob,icase)te*t*" ":(top,glob,icase)te*t*/**"]
+    exec_protected_v24_test.go:296: ailang argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-v" "-z" "--" ":(top,glob,icase)**/*.golden" ":(top,glob,icase)**/*_te*t.go" ":(top,glob,icase)example*/te*t*" ":(top,glob,icase)example*/te*t*/**" ":(top,glob,icase)te*t*" ":(top,glob,icase)te*t*/**"]
+    exec_protected_v24_test.go:328: sunholo-platform/warm n=20 phase(p50/p95/max)={N:20 P50:586.949541 P95:892.708834 Max:1261.290833} construction={N:20 P50:581.3635 P95:868.535375 Max:1474.712542} bounds=3751/4848 ms
+    exec_protected_v24_test.go:328: sunholo-platform/cold n=20 phase(p50/p95/max)={N:20 P50:491.060166 P95:663.023666 Max:690.37075} construction={N:20 P50:507.254417 P95:691.077 Max:692.619} bounds=3751/4848 ms
+    exec_protected_v24_test.go:328: ailang/warm n=20 phase(p50/p95/max)={N:20 P50:603.53775 P95:1194.349 Max:1508.834625} construction={N:20 P50:629.829833 P95:1230.925917 Max:1283.630791} bounds=3751/4848 ms
+    exec_protected_v24_test.go:328: ailang/cold n=20 phase(p50/p95/max)={N:20 P50:966.312209 P95:1988.492958 Max:2500.597542} construction={N:20 P50:921.966083 P95:2249.664208 Max:3231.518416} bounds=3751/4848 ms
+    exec_protected_v24_test.go:333: production checker: null=1 error=1 changed=0
+    exec_protected_v24_test.go:334: null verdict: protected Git ls-files: broker: handler subprocess timed out after 2.5s (stderr "")
+--- FAIL: TestProtectedV24RealWorktree (345.75s)
+    --- PASS: TestProtectedV24RealWorktree/reject-null (0.00s)
+    --- PASS: TestProtectedV24RealWorktree/reject-over-budget (0.00s)
+    --- PASS: TestProtectedV24RealWorktree/required-legs (0.00s)
+    --- FAIL: TestProtectedV24RealWorktree/measurement (345.75s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	346.541s
+FAIL

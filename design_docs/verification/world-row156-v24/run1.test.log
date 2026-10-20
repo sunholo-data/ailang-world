@@ -1,0 +1,23 @@
+=== RUN   TestProtectedV24RealWorktree
+=== RUN   TestProtectedV24RealWorktree/reject-null
+=== RUN   TestProtectedV24RealWorktree/reject-over-budget
+=== RUN   TestProtectedV24RealWorktree/required-legs
+=== RUN   TestProtectedV24RealWorktree/measurement
+    exec_protected_v24_test.go:291: sunholo-platform argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "status" "--porcelain=v2" "-z" "--branch" "--untracked-files=all" "--ignored=no" "--no-renames" "--ignore-submodules=all" "--" ":(top,glob,icase)**/*.te*t.t*" ":(top,glob,icase)**/*.te*t.t*x" ":(top,glob,icase)bac*end/te*t*" ":(top,glob,icase)bac*end/te*t*/**" ":(top,glob,icase)cli/te*t*" ":(top,glob,icase)cli/te*t*/**" ":(top,glob,icase)**/confte*t.py" ":(top,glob,icase)**/te*t_*.py"]
+    exec_protected_v24_test.go:291: sunholo-platform argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-z" "-o" "-i" "--exclude-standard" "--" ":(top,glob,icase)**/*.te*t.t*" ":(top,glob,icase)**/*.te*t.t*x" ":(top,glob,icase)bac*end/te*t*" ":(top,glob,icase)bac*end/te*t*/**" ":(top,glob,icase)cli/te*t*" ":(top,glob,icase)cli/te*t*/**" ":(top,glob,icase)**/confte*t.py" ":(top,glob,icase)**/te*t_*.py"]
+    exec_protected_v24_test.go:291: sunholo-platform argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-v" "-z" "--" ":(top,glob,icase)**/*.te*t.t*" ":(top,glob,icase)**/*.te*t.t*x" ":(top,glob,icase)bac*end/te*t*" ":(top,glob,icase)bac*end/te*t*/**" ":(top,glob,icase)cli/te*t*" ":(top,glob,icase)cli/te*t*/**" ":(top,glob,icase)**/confte*t.py" ":(top,glob,icase)**/te*t_*.py"]
+    exec_protected_v24_test.go:291: ailang argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "status" "--porcelain=v2" "-z" "--branch" "--untracked-files=all" "--ignored=no" "--no-renames" "--ignore-submodules=all" "--" ":(top,glob,icase)**/*.golden" ":(top,glob,icase)**/*_te*t.go" ":(top,glob,icase)example*/te*t*" ":(top,glob,icase)example*/te*t*/**" ":(top,glob,icase)te*t*" ":(top,glob,icase)te*t*/**"]
+    exec_protected_v24_test.go:291: ailang argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-z" "-o" "-i" "--exclude-standard" "--" ":(top,glob,icase)**/*.golden" ":(top,glob,icase)**/*_te*t.go" ":(top,glob,icase)example*/te*t*" ":(top,glob,icase)example*/te*t*/**" ":(top,glob,icase)te*t*" ":(top,glob,icase)te*t*/**"]
+    exec_protected_v24_test.go:291: ailang argv: ["/opt/homebrew/bin/git" "-c" "core.fsmonitor=false" "ls-files" "-v" "-z" "--" ":(top,glob,icase)**/*.golden" ":(top,glob,icase)**/*_te*t.go" ":(top,glob,icase)example*/te*t*" ":(top,glob,icase)example*/te*t*/**" ":(top,glob,icase)te*t*" ":(top,glob,icase)te*t*/**"]
+    exec_protected_v24_test.go:323: sunholo-platform/warm n=20 phase(p50/p95/max)={N:20 P50:435.510084 P95:653.452875 Max:859.013792} construction={N:20 P50:437.25875 P95:467.826125 Max:786.920833} bounds=2937/3200 ms
+    exec_protected_v24_test.go:323: sunholo-platform/cold n=20 phase(p50/p95/max)={N:20 P50:678.781792 P95:755.195208 Max:775.821} construction={N:20 P50:715.210625 P95:917.969958 Max:1007.388875} bounds=2937/3200 ms
+    exec_protected_v24_test.go:323: ailang/warm n=20 phase(p50/p95/max)={N:20 P50:887.804916 P95:1130.135166 Max:1132.668167} construction={N:20 P50:866.28675 P95:1166.937875 Max:1215.712084} bounds=2937/3200 ms
+    exec_protected_v24_test.go:323: ailang/cold n=20 phase(p50/p95/max)={N:20 P50:880.236333 P95:1610.561417 Max:1957.59875} construction={N:20 P50:877.89 P95:1244.103917 Max:1582.966125} bounds=2937/3200 ms
+    exec_protected_v24_test.go:328: production checker: null=0 error=0 changed=0
+--- PASS: TestProtectedV24RealWorktree (322.32s)
+    --- PASS: TestProtectedV24RealWorktree/reject-null (0.00s)
+    --- PASS: TestProtectedV24RealWorktree/reject-over-budget (0.00s)
+    --- PASS: TestProtectedV24RealWorktree/required-legs (0.00s)
+    --- PASS: TestProtectedV24RealWorktree/measurement (322.32s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	322.580s
