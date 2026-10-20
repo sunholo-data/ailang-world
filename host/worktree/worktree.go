@@ -1,8 +1,10 @@
-// Package worktree is World's one bounded, environment-scrubbed `git worktree
-// add|remove` site (row 138 M5, design_docs/planned/w-worldd-developer-cli.md
-// §3.7). `ailang-worldd session new` uses it to make an episode's worktree
-// before the session is minted, and to remove that worktree again when the
-// mint fails.
+// Package worktree is World's one bounded, environment-scrubbed git site (row
+// 138 M5, design_docs/planned/w-worldd-developer-cli.md §3.7). `ailang-worldd
+// session new` uses it to make an episode's worktree before the session is
+// minted (`git worktree add`), and to remove that worktree again when the mint
+// fails (`git worktree remove`). `ailang-worldd surface-index` (row 188 M0a)
+// uses Output for its read-only git calls (rev-parse, log, merge-base). All
+// three launch through the one runGit.
 //
 // Why a package: the AC10 census (host/broker registry_publish_test.go)
 // requires every production subprocess site to be DRIVEN and to scrub the
@@ -12,10 +14,11 @@
 // The child environment is the process environment minus every registry
 // variable (childenv.Scrubbed) and minus every GIT_* variable, so an ambient
 // GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE or GIT_CONFIG_* cannot redirect the
-// worktree operation at a different repository (MUT-WORKTREE-ENV).
+// git operation at a different repository (MUT-WORKTREE-ENV).
 package worktree
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -34,6 +37,10 @@ const (
 	waitDelay = 2 * time.Second
 	// maxOutput caps the git output kept for an error message.
 	maxOutput = 4096
+	// MaxStdout caps the standard output Output returns (8 MiB): surface-index's
+	// largest read, a git log of at most 2500 merges, sits well under it.
+	// Output past it is refused, never truncated.
+	MaxStdout = 8 << 20
 )
 
 // Env is the child environment: environ without registry or GIT_* variables.
@@ -60,7 +67,20 @@ func Add(ctx context.Context, git, repo, dir, branch string) error {
 	} else {
 		args = append(args, "--detach", dir)
 	}
-	return runGit(ctx, git, args)
+	return runGit(ctx, git, args, nil)
+}
+
+// Output runs `git args...` and returns its standard output. Stderr is kept
+// only for the error message; stdout over MaxStdout is an error.
+func Output(ctx context.Context, git string, args []string) (string, error) {
+	out := &capped{max: MaxStdout}
+	if err := runGit(ctx, git, args, out); err != nil {
+		return "", err
+	}
+	if out.over {
+		return "", fmt.Errorf("worktree: git %s: stdout is over the bound of %d bytes", strings.Join(args, " "), MaxStdout)
+	}
+	return out.buf.String(), nil
 }
 
 // IsLinked reports whether dir has the `.git` FILE a linked worktree carries
@@ -80,19 +100,44 @@ func IsLinked(dir string) bool {
 
 // Remove runs `git -C repo worktree remove --force dir`.
 func Remove(ctx context.Context, git, repo, dir string) error {
-	return runGit(ctx, git, []string{"-C", repo, "worktree", "remove", "--force", dir})
+	return runGit(ctx, git, []string{"-C", repo, "worktree", "remove", "--force", dir}, nil)
 }
 
-func runGit(ctx context.Context, git string, args []string) error {
+// capped keeps the first max bytes written to it and notes any beyond, which
+// it discards so the child never blocks on a full pipe.
+type capped struct {
+	buf  bytes.Buffer
+	max  int
+	over bool
+}
+
+func (c *capped) Write(p []byte) (int, error) {
+	keep := p
+	if room := c.max - c.buf.Len(); len(p) > room {
+		c.over = true
+		keep = p[:max(room, 0)]
+	}
+	c.buf.Write(keep)
+	return len(p), nil
+}
+
+// runGit is the package's one git launch. With stdout nil, git's stdout and
+// stderr both go to the error message (Add, Remove); otherwise stdout goes to
+// stdout and only stderr to the message (Output).
+func runGit(ctx context.Context, git string, args []string, stdout *capped) error {
 	runCtx, cancel := context.WithTimeout(ctx, Timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, git, args...)
 	cmd.Env = Env(os.Environ())
 	cmd.Stdin = nil
 	cmd.WaitDelay = waitDelay
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		text := strings.TrimSpace(string(out))
+	msg := &capped{max: maxOutput + 1}
+	cmd.Stdout, cmd.Stderr = msg, msg
+	if stdout != nil {
+		cmd.Stdout = stdout
+	}
+	if err := cmd.Run(); err != nil {
+		text := strings.TrimSpace(msg.buf.String())
 		if len(text) > maxOutput {
 			text = text[:maxOutput] + "…"
 		}

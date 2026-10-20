@@ -1206,7 +1206,8 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// on a failed mint, removes the episode worktree through the one
 		// bounded git site; its child must see neither the registry
 		// credential nor any GIT_* redirect.
-		"host/worktree/worktree.go": {driveWorktreeAdd, driveWorktreeRemove},
+		// Row 188 M0a: `surface-index` reads git history through its Output.
+		"host/worktree/worktree.go": {driveWorktreeAdd, driveWorktreeRemove, driveWorktreeOutput},
 		// Row 26 (w-bounded-z3-report-producer): the bounded proof producer's one
 		// exec site runs the pinned checker for its version probe and its ai-check
 		// run; both children must be scrubbed like every other World subprocess.
@@ -1290,6 +1291,14 @@ func driveWorktreeRemove(t *testing.T, probe string) {
 	t.Helper()
 	if err := worktree.Remove(boundedTestContext(t), probe, t.TempDir(), filepath.Join(t.TempDir(), "ep")); err != nil {
 		t.Fatalf("worktree.Remove via the probe: %v", err)
+	}
+}
+
+func driveWorktreeOutput(t *testing.T, probe string) {
+	t.Helper()
+	t.Setenv("GIT_DIR", filepath.Join(t.TempDir(), "decoy.git"))
+	if _, err := worktree.Output(boundedTestContext(t), probe, []string{"-C", t.TempDir(), "log", "-n", "1"}); err != nil {
+		t.Fatalf("worktree.Output via the probe: %v", err)
 	}
 }
 

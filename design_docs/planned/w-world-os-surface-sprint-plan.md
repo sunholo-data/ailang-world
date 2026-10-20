@@ -43,13 +43,15 @@ the address bar.
    touched. `/surface` has its own token set (Paper, Slate, Night) with its own test.
 5. **The daemon has no git, charter or rig input today.** Its only filesystem inputs are the
    store, the credentials store, the workspace root and exec profiles. S1 adds **one read-only
-   input**: a generated surface index (M0, M1). S3 later replaces it with World objects.
+   input**: a generated surface index (M0a, M0b, M1). S3 later replaces it with World objects.
 6. **Loopback only.** GET routes are unauthenticated (row 199, residual R1), so `/surface` is
    for the local machine until row 199 lands.
 
 ## The surface index (`world/surface-index/v1`)
 
-A JSON document, bounded at 4 MiB, built outside the daemon by a script and read by it.
+A JSON document, bounded at 4 MiB, built outside the daemon by `ailang-worldd surface-index`
+and read by it. M0a builds `branes[]` and `states[]` (brane kinds `attended`, `loop`, `mixed`;
+state kinds `shared`, `step`); M0b adds the rest.
 
 | field | from | example |
 |---|---|---|
@@ -66,9 +68,18 @@ never invented, and the card renders it as missing.
 
 ## Milestones
 
+**M0 is split in two** (w188a, 2026-10-20). The episode sandbox runs Go only (`go-test`,
+`go-vet`, `gofmt-l`; no git, no Python), so the builder is pure Go plus a thin git subcommand,
+not a Python script. The pure functions are tested from fixtures inside the sandbox, and the
+grader runs the subcommand against the real repository:
+
+- **M0a**: the index from git history alone (the shared world, the steps, their branes).
+- **M0b**: the episode facts from the rig (steps' episodes, reads, ran-on, files, decisions).
+
 | M | Episode | Delivers | Grader checks (a rig script, written before the run) |
 |---|---|---|---|
-| **M0** | w188a | `scripts/surface/build_index.py`: builds the index from a repo, the rig root and the charter; `host/surface` with the Go type `Index`, `Validate` (bounds, ids unique, parents resolve, times ordered) and a fixture | build on a fixture repo of 6 merges and 2 episodes and compare with a golden; `Validate` refuses 5 broken indexes (one mutant each); real build on `dev` reproduces §4 of the design (w189e has 2 lines behind it; `9003555` has 2 parents) |
+| **M0a** ✅ | w188a | **Done.** The index from git history alone. `host/surface` (standard library only): the type `Index`; `ParseMerges`, `BraneOf`, `ChartRowTitles`, `Build` (deterministic) and `Validate`. Plus `ailang-worldd surface-index --repo --charter --out [--rev dev] [--limit 200]`, the thin git side (git log, then git merge-base per merge), which writes atomically and never inside the repo, and `surface-index --validate <file>`. Fixtures: 24 real `dev` merges ending at `adffe4c1`, their merge-bases, and charter rows 101, 156, 188, 189 and 198. The golden has 24 shared states, 24 steps and 6 branes. | `go test ./host/surface/...`: parse errors by line, `BraneOf` for every branch form, row slugs (188's tags, 101's none), the golden, and `Validate` refusing 18 mutants. A real `surface-index` on `dev`: `9003555` is shared with parents `7fb99da` and `f36428a`; `f36428a` is on `row-189` (`w-world-onboarding`) with base `0ee1945`; #328's step is on `row-156` (loop), with base `0ee1945`; #317's step has no brane; no path or email appears in the file. `--validate` accepts the index and refuses the grader's mutants |
+| **M0b** | (not yet minted) | The episode facts: `steps[]` from the rig's episode records and `prs.json`, `reads{}`, `ran_on{}`, `files{}` and `decisions[]`, added to the same index and `Validate` | build on a fixture rig of 2 episodes and compare with a golden; real build reproduces §4 (w189e has 2 lines behind it) |
 | **M1** | w188b | `worldd serve --surface-index <file>`; `GET /surface/index.json` re-reads, validates and serves it (bounded); missing → a positive empty state | non-GET → 405; oversize → refused; invalid → refused with the reason; no flag → empty state; the frozen-table and dependency tests stay green |
 | **M2** | w188c | `GET /surface`: the world timeline, server-rendered — lanes, glyphs, merges, the now edge with health and *needs you*, ticks and legend; Paper, Slate and Night tokens | layout goldens (`LayoutTimeline` is deterministic and has no map-order dependence); one `<script` and no `on*=`; local links only; the tokens test; the row 189 fixture shows w189d's badge "3" and AC7 waiting |
 | **M3** | w188d | `GET /surface?brane=&at=`: one brane — earlier stack above, later below (one column per brane, three deep), the open card's four columns, relative and exact times; a closed query grammar `{brane, at}` | stack truth table on the fixture: w189e has 2 columns behind and 2 ahead; w189d 3 behind; `0ee1945` 3 ahead. Unknown key → inert 400. Every field in the view types renders (field census). |
@@ -87,7 +98,7 @@ He then rules S2 on.
 
 ## Order and parallelism
 
-M0 → M1 → (M2 ∥ M3 after M1) → M4 → M5. M2 and M3 touch different templates and can run as two
+M0a → M0b → M1 → (M2 ∥ M3 after M1) → M4 → M5. M1 needs only M0a's index to start. M2 and M3 touch different templates and can run as two
 episodes at once, since minting no longer stops the daemon (row 189 M1). Each PR's CI is about
 25 minutes, so the critical path is about 4 PR cycles plus Mark's mints and reviews.
 
