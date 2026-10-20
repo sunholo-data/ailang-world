@@ -51,6 +51,8 @@ import world  # noqa: E402
 TRIAL_GRADER_VERSION = 'trial-grader/1'
 EXEC_TOOL = 'workspace-exec'
 EXEC_ALLOWED = f'mcp__{arms.MCP_SERVER}__{EXEC_TOOL}'
+DELETE_TOOL = 'ailang-delete'
+DELETE_ALLOWED = f'mcp__{arms.MCP_SERVER}__{DELETE_TOOL}'
 AGENTS = ('claude', 'codex')
 DEFAULT_DEADLINE_S = 45 * 60  # D4: 45 min per episode
 DEFAULT_GRADER_TIMEOUT_S = 900
@@ -163,13 +165,15 @@ def build_prompt(task_text: str, exec_commands: list, arm: str = 'world') -> str
 
 # ---------------------------------------------------------------- the agent (D4)
 
-def trial_allowed_tools() -> tuple:
-    """The floor's 8 AILANG tools plus ``workspace-exec``."""
-    return tuple(arms.world_allowed_tools()) + (EXEC_ALLOWED,)
+def trial_allowed_tools(served: tuple = ()) -> tuple:
+    """The floor's 8 AILANG tools plus ``workspace-exec``, plus ``ailang-delete`` when the session
+    serves it (a ``Workspace.Delete`` grant; friction #19: a fixed list kept it from the agent)."""
+    extra = (DELETE_ALLOWED,) if DELETE_TOOL in served else ()
+    return tuple(arms.world_allowed_tools()) + (EXEC_ALLOWED,) + extra
 
 
 def build_trial_argv(agent: str, *, model: str, prompt_text: str, cwd: str, mcp_config_path: str | None,
-                     addr: str, max_budget_usd: float | None = None) -> list:
+                     addr: str, max_budget_usd: float | None = None, served_tools: tuple = ()) -> list:
     """``arms.build_argv`` for the World arm, with the Claude ``--allowedTools`` widened by
     ``mcp__world__workspace-exec``. codex has no per-tool allowlist on the ``world`` server (the
     overrides set url, bearer env var, required and approval mode only): it sees every tool the
@@ -178,7 +182,7 @@ def build_trial_argv(agent: str, *, model: str, prompt_text: str, cwd: str, mcp_
                            mcp_config_path=mcp_config_path, addr=addr, max_budget_usd=max_budget_usd)
     if agent == 'claude':
         i = argv.index('--allowedTools')
-        argv[i + 1] = ','.join(trial_allowed_tools())
+        argv[i + 1] = ','.join(trial_allowed_tools(tuple(served_tools)))
     return argv
 
 
@@ -216,9 +220,16 @@ def run_trial_agent(e: dict, *, prompt_text: str, private_dir: str, void_dir: st
     mcp_path = None
     try:
         if agent == 'claude':
+            # `episode start` leaves <private>/<ep>.mcp.json (the same token) at the path this run
+            # writes with O_EXCL (friction #18): replace it, and say so in the row.
+            stale = os.path.join(private_dir, f'{ep}.mcp.json')
+            if os.path.isfile(stale) and not os.path.islink(stale):
+                os.unlink(stale)
+                row['replaced_episode_start_mcp_config'] = True
             mcp_path = run_task.write_private_mcp_config(private_dir, ep, token, addr)
         argv = build_trial_argv(agent, model=e['model'], prompt_text=prompt_text, cwd=void_dir,
-                                mcp_config_path=mcp_path, addr=addr, max_budget_usd=max_budget_usd)
+                                mcp_config_path=mcp_path, addr=addr, max_budget_usd=max_budget_usd,
+                                served_tools=tuple((row.get('preflight') or {}).get('tools') or ()))
         row['argv'] = arms.redact_argv(argv, prompt_text, (token,))
         env = run_task.agent_env(agent, 'world', private_dir=private_dir, tool_bin=None, token=token)
         row.update(run_task.spawn(argv, cwd=void_dir, env=env, transcript_path=transcript_path,
@@ -502,7 +513,8 @@ def run_episode(spec: dict, ep: str, *, rig: str, addr: str, evidence: str, clie
     tr = drv.pop('transcript', None) or {}
     row['agent_run'] = {k: drv.get(k) for k in ('rc', 'wall_ms', 'finish_reason', 'error_category',
                                                  'cause_evidence', 'argv', 'preflight', 'mcp_config_deleted',
-                                                 'void_listing', 'log_to_error', 'stdout_reader_done')}
+                                                 'void_listing', 'log_to_error', 'stdout_reader_done',
+                                                 'replaced_episode_start_mcp_config')}
     row['agent_run']['tool_items'] = tr.get('tool_items')
     row['agent_summary'] = ((tr.get('result') or {}).get('result') if e['agent'] == 'claude'
                             else tr.get('final_message'))

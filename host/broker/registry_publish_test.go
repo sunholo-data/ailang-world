@@ -31,6 +31,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/pkgproj"
 	"github.com/sunholo-data/ailang-world/host/replay"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/toolprobe"
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
@@ -1210,6 +1211,9 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// exec site runs the pinned checker for its version probe and its ai-check
 		// run; both children must be scrubbed like every other World subprocess.
 		"host/evidence/proof_producer.go": {driveEvidenceProducer},
+		// Row 189 M4: `profile init` asks the repo's toolchain where it lives
+		// (go env, uv python find) through host/toolprobe's one exec site.
+		"host/toolprobe/toolprobe.go": {driveToolprobeOutput},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -1344,6 +1348,16 @@ func driveEvidenceProducer(t *testing.T, probe string) {
 	}
 	if childenv.Has(readEnvDump(t, versionDump), RegistryCredentialVariable) {
 		t.Fatalf("host/evidence/proof_producer.go: the version probe observed %s", RegistryCredentialVariable)
+	}
+}
+
+// driveToolprobeOutput launches host/toolprobe's site with the env-dumping
+// probe standing in for go, with the arguments resolveInitGo passes.
+func driveToolprobeOutput(t *testing.T, probe string) {
+	t.Helper()
+	if _, err := toolprobe.Output(boundedTestContext(t), probe, t.TempDir(),
+		"env", "GOROOT", "GOMODCACHE", "GOVERSION"); err != nil {
+		t.Fatalf("toolprobe.Output via the probe: %v", err)
 	}
 }
 

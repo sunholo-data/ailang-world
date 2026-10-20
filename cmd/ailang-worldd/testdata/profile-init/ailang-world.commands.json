@@ -1,0 +1,21 @@
+{
+ "source": "The command entries of ~/.ailang-world-exec/profiles/ailang-world.json, the profile with digest sha256:ca1abce320ee95ce3233d1b97db98096d255457b4d48d855eb1b1f11386a8e0f that served episode w189c (2026-10-19). The episode could not read the file itself (its home is fenced), so these entries were observed through workspace-exec: argv from the emitted argv of real calls; flags, positional class and max_args from the grammar's refusals (an unlisted flag, a non-pkgpattern positional, the first argument over max_args). Replace this file with the profile's own entries when you can read it, and the shape test checks profile init against them.",
+ "commands": {
+  "go-test": {
+   "argv": ["go", "test", "-count=1"],
+   "flags": {"-run": "regex", "-short": "bool", "-v": "bool"},
+   "positional": "pkgpattern",
+   "max_args": 8
+  },
+  "go-vet": {
+   "argv": ["go", "vet"],
+   "positional": "pkgpattern",
+   "max_args": 4
+  },
+  "gofmt-l": {
+   "argv": ["gofmt", "-l"],
+   "positional": "relpath",
+   "max_args": 8
+  }
+ }
+}

@@ -213,7 +213,7 @@ Option A is what row 188 (a desktop approval) and row 196 (delegated minting for
 - **M1a/M1b:** the credentials store split (C), covering schema, migration, resolver and `session new/list/revoke`.
 - **M2:** profile binding at mint (D-189-2 A). `serve` loads the profiles directory.
 - **M3a/M3b:** `episode start`: fence and mint reuse, the daemon check and start, the launch line.
-- **M4:** `profile init` for Python and Go, plus `package.json`.
+- **M4 — DONE (2026-10-19, episode w189c; §8c):** `profile init` for Python and Go, plus `package.json`.
 - **M5:** the plugin: two skills, three commands, marketplace manifest, and the CI help-check.
 - **M6:** docs (QUICKSTART §0 and a new "Use World on your repo" page), then the AC7 attended run.
 
@@ -268,6 +268,47 @@ ailang-worldd episode start <ep> --repo <dir> [--branch world/<ep>] [--profile <
   when `--exec-sandbox` is given without `--exec-profile`) loads every `<project>.json`, skips
   `*.proposed.json`, and leaves out — never refuses startup for — a profile that fails to parse or
   probe; the `--exec-profile` flags keep their all-or-nothing rule.
+
+## 8c. M4 as built (row 189, `profile init`, D-189-5 = A)
+
+```
+ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir ~/.ailang-world-exec/profiles]
+```
+
+- **Where:** `cmd/ailang-worldd/profile_init.go`. `main.go` gains only the `profile` dispatch
+  case, and `host/broker` exports `ExecProjectGrammar`/`ExecProjectOk`.
+- **Detection:**
+  - `go.mod` → `go-test`, `go-vet`, `gofmt-l`.
+  - `pyproject.toml`/`uv.lock` → `pytest-file`, `ruff-file`.
+  - `package.json` → `vitest-file`/`jest-file`, by `devDependencies`.
+  - `Makefile`: its targets are listed, and nothing is proposed from them.
+  - The repo root wins. With no marker there, init reads one directory down, ranking Go, then
+    Python, then node, and that directory becomes `root` (platform-source's `backend`).
+- **Paths are resolved, never guessed:**
+  - **Go:** `go env GOROOT GOMODCACHE GOVERSION` run in the root. `path` is `GOROOT/bin`, the
+    toolchain go.mod switched to. `env` is `GOFLAGS`/`GOPROXY`/`GOTOOLCHAIN`/`GOTELEMETRY`/
+    `GOMODCACHE`, and `read_roots` is GOMODCACHE, plus GOROOT when it lies outside it.
+    `caches.GOCACHE` starts empty.
+  - **Python:** the install directory of every hop on `<root>/.venv/bin/python`'s link chain
+    (or `uv python find`'s) is a read root, and so is the realpath's. The probe is
+    `<realpath> --version`.
+  - **Node:** node's directory on `PATH`. Its install directory is a read root when it lies
+    under HOME.
+  - A toolchain that does not resolve is skipped, with its reason.
+- **Shapes:** `initShapes` holds the command entries, bound by
+  `TestProfileInitShapesMatchTheMeasuredProfiles` to
+  `cmd/ailang-worldd/testdata/profile-init/{ailang-world,platform-source}.commands.json`.
+  - The ailang-world copy was observed through the live profile (digest `sha256:ca1abce3…`).
+  - The platform-source copy is a reconstruction (see its `source` field). The episode could
+    not read the file, so the operator owes the real entries.
+- **Writing:** the proposal must pass `ParseExecProfile` before any byte or directory is
+  written. It is written with O_EXCL, and init prints the digest and the activating `mv`.
+- **Refusals:**
+  - a `--project` outside the grammar;
+  - an existing output;
+  - an `--out` naming the active `<project>.json`;
+  - no detectable or resolvable toolchain;
+  - a parser refusal.
 
 ## 9. V-rows
 

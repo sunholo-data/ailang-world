@@ -207,6 +207,15 @@ class Argv(unittest.TestCase):
         self.assertEqual(argv[argv.index('--tools') + 1], '')  # still no native tools
         self.assertNotIn('--max-budget-usd', argv)  # subscription (F1): no budget flag unless the spec sets one
 
+    def test_claude_allows_ailang_delete_only_when_the_session_serves_it(self):
+        def allowed(served):
+            argv = trial.build_trial_argv('claude', model='m', prompt_text='P', cwd='/v', mcp_config_path='/p/x.mcp.json',
+                                          addr='127.0.0.1:7644', served_tools=served)
+            return argv[argv.index('--allowedTools') + 1].split(',')
+        self.assertIn('mcp__world__ailang-delete', allowed(('ailang-read', 'ailang-delete', 'workspace-exec')))
+        self.assertNotIn('mcp__world__ailang-delete', allowed(('ailang-read', 'workspace-exec')))  # control: no grant, no tool
+        self.assertNotIn('mcp__world__ailang-delete', allowed(()))
+
     def test_floor_argv_is_unchanged(self):
         golden = arms.golden_argv('claude', 'world')
         self.assertNotIn('workspace-exec', golden[golden.index('--allowedTools') + 1])
@@ -226,6 +235,22 @@ class Argv(unittest.TestCase):
 
 
 class Episode(Base):
+    def test_claude_episode_replaces_the_mcp_config_episode_start_left(self):
+        # friction #18: `episode start --sessions-dir <rig>/private` leaves <ep>.mcp.json where the run
+        # writes its own with O_EXCL; the run replaces it, records that, and still deletes its own.
+        stale = os.path.join(self.private, 'tps-a.mcp.json')
+        with open(stale, 'w') as f:
+            f.write('{}')
+        os.chmod(stale, 0o600)
+        row = self.run_ep('claude')
+        self.assertTrue(row['agent_run'].get('replaced_episode_start_mcp_config'))
+        self.assertIsNone(row['agent_run']['error_category'])
+        self.assertFalse(os.path.exists(stale))  # the run's own config is deleted after the run too
+
+    def test_claude_episode_without_a_leftover_config_replaces_nothing(self):
+        row = self.run_ep('claude')  # control
+        self.assertFalse(row['agent_run'].get('replaced_episode_start_mcp_config'))
+
     def test_claude_episode_end_to_end(self):
         row = self.run_ep('claude')
         f = self.facts()

@@ -42,8 +42,15 @@ const (
 	ExecFormSep = "sep" // two items: -f, v (argparse short options)
 )
 
+// ExecProjectGrammar is a profile's `project` grammar (§4.3).
+const ExecProjectGrammar = `^[a-z0-9][a-z0-9-]{0,63}$`
+
+// ExecProjectOk reports whether name is in ExecProjectGrammar; `profile init`
+// (row 189 M4) refuses any other name before it reads the repo.
+func ExecProjectOk(name string) bool { return execProjectPattern.MatchString(name) }
+
 var (
-	execProjectPattern   = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
+	execProjectPattern   = regexp.MustCompile(ExecProjectGrammar)
 	execCommandIDPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,31}$`)
 	execEnvNamePattern   = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 )

@@ -1,0 +1,17 @@
+{
+ "source": "RECONSTRUCTED, NOT COPIED: the episode that wrote this (w189c, 2026-10-19) could not read ~/.ailang-world-exec/profiles/platform-source.json. pytest-file is the measured row-140 M4 Python command (design_docs/verification/world-row140-m4/sunholo-cli.json, test-file: sh -c wrapper, -k regex with form sep, -x bool, testfile .py, max_args 6); ruff-file is w-real-project-trials.md D2's .venv/bin/ruff check with a relpath positional, in the same sh -c wrapper; its max_args (8) is not measured. The operator should replace these two entries with the file's own, after which TestProfileInitShapesMatchTheMeasuredProfiles fails on any difference.",
+ "commands": {
+  "pytest-file": {
+   "argv": ["sh", "-c", "exec .venv/bin/python -m pytest -q -p no:cacheprovider \"$@\"", "pytest"],
+   "flags": {"-k": {"class": "regex", "form": "sep"}, "-x": "bool"},
+   "positional": "testfile",
+   "suffixes": [".py"],
+   "max_args": 6
+  },
+  "ruff-file": {
+   "argv": ["sh", "-c", "exec .venv/bin/ruff check \"$@\"", "ruff"],
+   "positional": "relpath",
+   "max_args": 8
+  }
+ }
+}

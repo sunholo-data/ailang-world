@@ -189,6 +189,34 @@ The daemon side, once: start `serve` with `--exec-sandbox <srt node_modules>` an
 profile there that fails to parse or probe is left out, named on stderr and in `/v1/health`
 (`exec_profiles_excluded`), and the rest serve. `ailang-worldd episode start --help` has every flag.
 
+**Propose a profile instead of writing one.** `profile init` (row 189) drafts the profile from
+the repo's own files. It needs no daemon and no terminal, and it never activates anything:
+
+```bash
+/tmp/ailang-worldd profile init --repo ~/dev/my-project --project my-project
+```
+
+- **What it reads.** `go.mod` gives `go-test`, `go-vet` and `gofmt-l`. `pyproject.toml` or
+  `uv.lock` gives `pytest-file` and `ruff-file`. `package.json` gives `vitest-file` or
+  `jest-file`, whichever its `devDependencies` name. A `Makefile`'s targets are listed, but no
+  command is proposed from them.
+- **Where it looks.** It reads the repo root first. A repo with no such file at its root is read
+  one directory down, and that directory becomes the profile's `root` (for example `backend`).
+- **What each command looks like.** Each command has the argv, flags, positional and `max_args`
+  of the measured profile's command of the same name.
+- **Where the paths come from.** Every path comes from this machine: `go env` run in the root,
+  the venv interpreter's link chain (or `uv python find`), and `node` on `PATH`.
+- **What it prints and writes.** It prints one line per command saying which file triggered it
+  and which measured command it copies. Only after the profile parser accepts the file does it
+  write `~/.ailang-world-exec/profiles/my-project.proposed.json`, once. An existing file is
+  refused, never overwritten (`--out` and `--profiles-dir` name others).
+- **How to activate it.** Review the file, then run the `mv` it prints to rename it to
+  `my-project.json`. `serve` skips `*.proposed.json`, and it validates and probes the renamed
+  profile at startup.
+
+Seed `GOCACHE` yourself if you want warm builds (§10). `ailang-worldd profile init --help` has
+every flag.
+
 ## 2. Commit the genesis transition
 
 `POST /v1/commit` is **session-gated**: without a session it answers
