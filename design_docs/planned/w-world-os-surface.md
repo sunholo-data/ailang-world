@@ -102,7 +102,7 @@ distances. Each answers a question the other does not:
 | distance | the question it answers | what you see |
 |---|---|---|
 | **The world timeline** (far) | *Where is everything, and what needs me now?* | Every brane as a lane through time, with branches and merges where lanes split and join. The right edge is **now**. |
-| **One brane** (near) | *What happened here, how did it get here, and what if it had gone differently?* | The brane's states as a Time Machine stack. **The front card is the state, open**: inputs, outputs, decisions and checks, plus the one action. |
+| **One brane** (near) | *What happened here, how did it get here, and what if it had gone differently?* | The brane's states as a Time Machine stack. **The front card is the state, open**: inputs (live controls), outputs, decisions and checks. |
 
 Clicking a lane or a state opens its brane, at that state. The address bar takes you back out
 (§3.3). The zoom is spatial: you move into the point you clicked.
@@ -144,16 +144,24 @@ front. At a merge (a shared state with two ancestors), *back* follows the shared
 other ancestor is a link, one click away, and so is its brane. A rail lists every state on the
 brane, so you can jump to any of them.
 
-**The one action: change from here.** On the front card, change the agent, the task or a
-grant, then propose.
+**The one action: change from here.** The front card's **inputs are live controls**: the agent,
+the task, the grants. Change from here is not a button or a mode; it is what happens when you
+change one of them.
 
-- For a step, the new branch re-runs that step from the world it started in. For a shared
-  state, it starts new work from that world.
-- The proposal is a decision packet (P1). It appears on the now edge as *needs you*, as a new
-  dashed lane, and nothing runs until the typed `y`.
+- **Unchanged,** they are the record of what ran. The card says so.
+- **Changed,** the card lists what changed ("agent Claude Opus 5.5 → Codex, grants −Delete
+  ×200"), names the branch it would make, and offers **Propose** and **Discard**. For a step,
+  the branch re-runs that step from the world it started in. For a shared state, it starts new
+  work from that world.
+- **On an open step** (AC7 today), the same controls are how you start it: pick the agent,
+  write the task, and propose the start.
+- A proposal is a decision packet (P1). It appears on the now edge as *needs you* (and, for a
+  branch, as a new dashed lane), and nothing runs until the typed `y`.
 - The original brane keeps every later state. Nothing is edited, so every view of the past
   stays true.
 - Grants that can never be given, such as network, are shown and locked rather than hidden.
+  The default grants are the ones every row 189 episode was minted with (read, write, delete
+  ×200, exec ×600, in the worktree).
 
 ### §3.3 The address bar — the same space as text
 
@@ -166,7 +174,6 @@ a text form:
 | `world onboarding` | that brane, newest (or open) state in front |
 | `world onboarding@6` | that brane, its 6th state in front |
 | `world shared@0ee1945` | the shared world, that state in front, by hash |
-| `change` | start "change from here" on the front card |
 | `back` | out to the world timeline |
 
 The same addresses work in a terminal. Today's commands (`episode report`, `why`, `provenance`)
@@ -182,6 +189,7 @@ already answer front-card questions, so their output is what the card renders.
 | Console as a view (r0) | the address bar (§3.3), and the same addresses in a terminal |
 | "Inside a state" as a third distance (r1) | the front card of the brane stack (r2). A separate inside view needed its own back and forward, which is ambiguous at a merge. |
 | The "cones" toggle (r1) | always on: pointing at a state shows what it came from and what it led to |
+| The "Change from here" button and its panel (r1) | the front card's inputs, which are the controls (r2) |
 
 ## §4 Worked example — row 189 as a brane (real data, 2026-10-19/20)
 
