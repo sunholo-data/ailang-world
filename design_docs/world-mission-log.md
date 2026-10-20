@@ -1548,3 +1548,96 @@ The planner found problems the doc had not covered:
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **14/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M5b (episode profile selection and module-root policy rebasing; feed only `ParseProtectedPatterns` output), then the M5c/M5d pre-check (re-measure V7 on v0.54.15 first). DECISIONS FOR MARK: none; ledger OPEN zero.
+
+## 288 — 2026-10-20 — row 156 M5b built: the episode profile's protected set reaches its AILANG policy (PR #328; judge r1 PASS 88 → r2 PASS 91) [PRODUCT]
+
+**Kind:** one milestone of row 156 (M5b). No release, no semantic weakening, no design or plan change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 287's **Next** was row 156 M5b. Reality check: `RebaseProtectedForSandbox` and `workspace_protected_test.go` were absent on origin/dev `0ee1945`, the daemon still passed nil (`workspace.go:616`), no M5b branch or PR existed, and no open PR came from this loop (#323/#324 were attended trial branches and merged before this fire). The iteration-287 worktrees were clean, so there were no orphan traces. All work ran in `.wt-world-iter288-row156-m5b`; the main checkout was not touched.
+
+**Clause map:**
+- 1 MET — deterministic kernel.
+- 2 MET — local-first daemon.
+- 3 MET — explicit authority.
+- 4 MET — resident-agent floor.
+- 5 MET — provenance value proof.
+- 6 MET — protocol boundary.
+- 7 MET — controlled self-modification.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. #313 and #246: 0 allowlisted directives since `2026-10-18T23:25:31Z` (8 and 49 comments, all the loop's). Self-notice scan rc 0 (control 107:4 ok). `mission-world` inbox: 0 unread (37 total, control). The weekly sweep already ran this week (iteration 282); no thread rotation is due, because #313 was created after Monday's 07:00 local boundary.
+
+**Gates 1–2:** local dev = origin/dev `0ee1945` (#323 merge); CI success on it, check-runs 3, none not-green. The running skill (resolved symlink) matches origin on SKILL.md and on every resource file (per-file loop). Ledger valid, 72 rows, zero OPEN. The design doc is unchanged since iteration 282's quorum, so no re-quorum.
+
+**Routing:** designer not spawned (doc current); planner not spawned (plan's M5b ready). Executor resolver `recipe codex:gpt-6.1-sol declared:provider-pin`, probe rc 0. Evaluator resolver `agent-tool sonnet declared:alias-pin`.
+
+**Baseline (pristine `0ee1945`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):**
+- `go vet ./...` rc 0.
+- Broker `-race` rc 0 (211 s).
+- Daemon `-race` rc 0 (279 s).
+
+**Directive facts the plan did not carry (controller-measured):**
+- `rebaseForSandbox` is unexported, so the wrapper needed `exec_protected.go` in the allowlist.
+- The AILANG handler cache and its single-flight join keyed on the sandbox only, so a binding minted after the first build would have kept the old policy.
+- The plan's two broker-file tests need daemon-package fixtures (`fakeToolBin`, `realToolBin`, the registry), so they moved to package daemon.
+- The tool pin is now v0.54.15, not the plan's v0.52.1.
+- Semantics where the design is silent: exec off → nil; no usable profile → nil; binding read error → fail closed.
+
+**Execute (codex gpt-6.1-sol, 1 run, ≈112k tok, rc 0):**
+- `broker.RebaseProtectedForSandbox`, a wrapper over the existing rebase.
+- `episodeHandler` selects the profile through `bindingFor` + `profileFor` and rebases `profile.Protected` onto `Rel(epRoot, sandbox)`.
+- The rebased set reaches `RenderEpisodePolicy` and `AilangToolConfig.Protected`.
+- The cache and the single-flight join compare `(sandbox, protected)`; a mismatched in-flight build is waited for, and then the call retries.
+- Four named tests plus regressions. 7 of 8 directed mutants were killed in-sandbox; MUT-RAW-PATTERNS was honestly reported as unkillable, because re-parsing canonical input is idempotent.
+
+**Controller verification (outside the sandbox):**
+- gofmt clean; vet rc 0; named tests 5 PASS + 1 SKIP.
+- The **real v0.54.15 tool arm PASSES**: protected write/edit is refused with `fs_deny_write` and host bytes are unchanged; an unprotected write succeeds.
+- Broker `-race` (258 s), daemon `-race` (278 s) and `./cmd/...` rc 0.
+- Five diff-anchored controller mutants:
+  - C1 (single-flight join ignores the set) SURVIVED every executor test. The controller added `TestWorkspaceProtectedPolicyJoinRequiresSameSet`, which kills it 3/3 and passes 3/3 under `-race`.
+  - C2–C4 were killed.
+  - C5 (config drop) survives the real arm, as expected, and is killed by `…PolicyRequests:227`. That confirms the executor's claim.
+- Committed `3f8af26`.
+- Evidence: `design_docs/verification/world-iter288/`.
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter288`; generator codex ≠ judge sonnet):**
+- r1 **PASS 88** (27/20/17/14/10), zero blocking, 16 own mutants.
+- Survivors:
+  - M9 (join ignores the module root): accepted residual. The sandbox derives from startup-static config, so a same-episode root mismatch cannot occur at runtime.
+  - M10 (in-flight build does not record its set): the controller reproduced it (rc 0), then made a test-only fix `c8ab0c3`, `TestWorkspaceProtectedPolicyJoinSameSetShares`, which now kills it 3/3 at `:270`.
+- r2 (resumed) **PASS 91**, zero blocking.
+- Carried non-blocking:
+  - The real-tool arm covers write/edit only, not CLI/FS ops.
+  - A bound episode whose profile is refused (stale digest / not loaded) keeps unprotected AILANG write/edit while exec is refused. This is a policy call, recorded as a residual.
+  - The plan's M5b broker gate selectors would select zero tests.
+
+**Final tree `c8ab0c3`:** vet rc 0, daemon `-race` rc 0 (270 s). Broker production code is unchanged since the r1 run.
+
+**Gate 3b:** PR #328 (`sprint/world-iter288-row156-m5b`), with the record on the same branch. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=0ee1945ffba795812f06dce95998b646adfac343@2026-10-20T08:05:04Z (Gate 4; Gate 1 read the same SHA at 07:26:29Z).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned (doc current); planner not spawned (plan ready).
+- Executor codex `gpt-6.1-sol` (1 run, ≈111,731 tok).
+- Evaluator Agent sonnet (67,493 + 72,586 subagent tok).
+- judge-independence: cross-vendor.
+- Metered **$0.00** (no quorum, no pi).
+- Every required role for a plan-ready pick ran; no role was silently omitted.
+
+**Ruled out:**
+- Treating the `./cmd/...` rc 1 (`TestDemoProofNoVerifiedSetRefuses` MOD010) as a regression. It reproduces only with a non-temp-shaped scratch TMPDIR; with the default TMPDIR the same tree is rc 0.
+- Treating the first final-tree `vet rc=1` as a verdict. A zsh `rm -f` glob with no match broke the `&&` chain before vet ran; re-run rc 0.
+- Adding a test for M9: a runtime root mismatch for one episode is unreachable (judge agreed).
+- Building the World pre-check now: that is M5c/M5d, gated on re-measuring V7 on v0.54.15.
+
+**Retro:**
+- Skill lane: none (World does not edit the shared skill).
+- Process lane: both survivors this iteration were in the CONCURRENCY branch the milestone edited (single-flight join), which no executor test reached. The executor's mutant list came from the plan, and the plan did not list the cache. Where a milestone edits a cache or a single-flight path, the directive should name both join outcomes (must join, must not join) as required rows. This is rule 3n (anchor the mutation set to the diff) aimed at the directive.
+- Instrument lesson: in zsh, `rm -f <glob>` with no match exits 1 and breaks an `&&` chain. Use `rm -f -- <exact paths>` or `setopt nullglob`.
+- Backlog lane: none new; three non-blocking carries on row 156.
+- Harness share over the latest 20 including 288: **0/20**.
+- The last three landings (288, 287, 286) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **15/21 milestones built**. Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 — re-measure V7 on the v0.54.15 tool binary (symlink/hard-link arms through policy-tool). If v0.54.15 already refuses them, drop M5c/M5d with the measurement; otherwise plan and build them. Then M6-pre (V24 timing) before M6a. DECISIONS FOR MARK: none; ledger OPEN zero.
