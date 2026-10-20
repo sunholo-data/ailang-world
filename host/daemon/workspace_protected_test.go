@@ -246,6 +246,35 @@ func TestWorkspaceProtectedPolicyJoinRequiresSameSet(t *testing.T) {
 	requireProtectedPolicy(t, filepath.Join(r.f.stateDir, "policies/ep1.toml"), filepath.Join(r.f.root, "ep1"), []string{"beta/**"})
 }
 
+// Two concurrent callers under the SAME non-empty protected set still share
+// one build: one summary, one handler (MUT-BUILD-SET-UNRECORDED, which would
+// make the second caller wait and build again).
+func TestWorkspaceProtectedPolicyJoinSameSetShares(t *testing.T) {
+	withHandlerBudget(t, 5*time.Second)
+	r := newFamilyRig(t, Config{})
+	var pending []*pendingRegistry
+	r.joinOnCleanup([]string{"ep1"}, &pending)
+	r.d.workspace.exec.profile = protectedProfile(t, "alpha", "alpha/**")
+
+	r.set("hold", "ep1")
+	first := r.startRegistry("ep1")
+	pending = append(pending, first)
+	waitFor(t, "ep1's first summary", 30*time.Second, func() bool { return r.summaries("ep1") == 1 })
+	second := r.startRegistry("ep1")
+	pending = append(pending, second)
+	waitFor(t, "the second caller to join ep1's build", 30*time.Second, func() bool { return r.buildWaiters("ep1") >= 1 || r.summaries("ep1") >= 2 })
+	r.clear("hold", "ep1")
+	<-first.done
+	<-second.done
+	if n := r.summaries("ep1"); n != 1 {
+		t.Fatalf("summaries = %d, want 1: callers under one protected set share the build", n)
+	}
+	if h1, h2 := first.reg[broker.EffectWorkspaceRead], second.reg[broker.EffectWorkspaceRead]; h1 == nil || h1 != h2 {
+		t.Fatalf("handlers = %v, %v: want one shared AILANG handler", h1, h2)
+	}
+	requireProtectedPolicy(t, filepath.Join(r.f.stateDir, "policies/ep1.toml"), filepath.Join(r.f.root, "ep1"), []string{"alpha/**"})
+}
+
 func TestWorkspaceProtectedPolicyRequests(t *testing.T) {
 	ctx := boundedTestContext(t)
 	f := newWSFixture(t)
