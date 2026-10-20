@@ -730,7 +730,21 @@ An MCP result carries no entry index, so read calls back with the developer CLI 
 /tmp/ailang-worldd call ailang-read --session /tmp/se-session --arg path=hello.ail --json-out | /tmp/ailang-worldd why -
 /tmp/ailang-worldd log tail
 /tmp/ailang-worldd provenance --episode ep1
+/tmp/ailang-worldd episode report ep1
+/tmp/ailang-worldd --addr 127.0.0.1:7644 episode report ep1 --json
+curl -s http://127.0.0.1:7644/v1/episodes/ep1/report
 ```
+
+`episode report` (row 198) summarises the episode in one request to the daemon: total calls,
+calls by tool, effect decisions by effect (`allowed`, `failed`, `denied:<why>`), budget per grant
+(`minted`, `used`, `left`), plan refusals (the plan named no effect and answered `ok:false`) and
+handler refusals (the effect was allowed and ran, but the handler answered `ok:false`, which the
+effect record alone shows as allowed), with the first and last entries and their times. `--json`
+prints the `GET /v1/episodes/{episode}/report` body unchanged; `--follow` re-prints it whenever the
+store's head moves, until Ctrl-C. It reads only that episode's journal rows and their records, so
+its cost does not grow with other episodes. Like every `/v1` read it is unauthenticated today
+(residual R1, row 199). `--addr` takes a bare `host:port` as well as `http://…`, for every client
+verb.
 
 `call --json-out` prints the committed output bytes, whose hash is the output ref, so `why -`
 finds the entry that committed it and walks the chain (exit 3 on any broken link). `log tail`

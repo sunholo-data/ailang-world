@@ -11,6 +11,12 @@ outcome records and the PR. It reads only; nothing is written to World or the ri
 from the transcript's final usage record: Claude Code's ``result`` event (input, cache read and
 write, output) or Codex's ``turn.completed``. A missing or unreadable transcript leaves them blank.
 
+A World arm's tool calls and refusals come from World's own record when ``trial.py run`` banked it
+(row 198): ``<evidence>/reports/<ep>.json``, the output of ``ailang-worldd episode report --json``
+(``calls_source: world-report``). It is agent-independent, so Claude and Codex rows are counted the
+same way. Without it (episodes run before row 198) they come from the transcript as before
+(``calls_source: transcript``). Tokens, and every shell-arm count, always come from the transcript.
+
 There is no comparison arm here: every row is a World episode. A row says what World cost and
 delivered on real work; it does not say World beat a plain shell.
 """
@@ -45,9 +51,38 @@ def tool_counts(tool_items: dict | None) -> dict:
     return out
 
 
+def world_report(path: str, d: dict) -> dict | None:
+    """The episode's banked ``episode report --json`` (row 198), or None: the row's recorded
+    ``report.path``, else ``reports/<ep>.json`` beside the ``episodes/`` dir holding ``path``. Only a
+    report that names this episode and carries ``calls_by_tool`` is used."""
+    cands = []
+    rec = d.get('report')
+    if isinstance(rec, dict) and rec.get('path'):
+        cands.append(rec['path'])
+    cands.append(os.path.join(os.path.dirname(os.path.dirname(path)), 'reports', f"{d.get('episode')}.json"))
+    for p in cands:
+        try:
+            with open(p, encoding='utf-8') as f:
+                rep = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if isinstance(rep, dict) and rep.get('episode') == d.get('episode') and isinstance(rep.get('calls_by_tool'), dict):
+            return rep
+    return None
+
+
+def report_refusals(rep: dict) -> dict:
+    """Plan and handler refusal counts from a World report."""
+    def count(k):
+        v = rep.get(k)
+        return int(v.get('count') or 0) if isinstance(v, dict) else 0
+    return {'plan': count('plan_refusals'), 'handler': count('handler_refusals')}
+
+
 def codex_tool_items(path: str | None) -> dict:
     """Codex's runner ``tool_items`` counts item TYPES (``mcp_tool_call``), so count tools from the
-    transcript's completed ``mcp_tool_call`` items instead (``item.tool``)."""
+    transcript's completed ``mcp_tool_call`` items instead (``item.tool``). Only the fallback for a
+    World row without a banked report uses this."""
     out: dict = {}
     if not path or not os.path.isfile(path):
         return out
@@ -127,19 +162,29 @@ def episode_row(path: str, prs: dict) -> dict:
     run = d.get('agent_run') if isinstance(d.get('agent_run'), dict) else {}
     graders = d.get('graders') or []
     transcript = (d.get('transcript') or {}).get('path') if isinstance(d.get('transcript'), dict) else d.get('transcript')
+    arm = d.get('arm') or 'world'
+    rep = world_report(path, d) if arm == 'world' else None
+    if rep is not None:
+        tools, refusals, source = tool_counts(rep['calls_by_tool']), report_refusals(rep), 'world-report'
+    else:
+        items = run.get('tool_items')
+        if 'mcp_tool_call' in (items or {}):  # Codex counts item types: the pre-row-198 fallback
+            items = codex_tool_items(transcript)
+        tools, refusals, source = tool_counts(items), None, 'transcript'
     return {
         'episode': d.get('episode'),
         'date': (d.get('started_at') or '')[:10],
         'project': d.get('project'),
         'agent': f"{d.get('agent')} {d.get('model')}",
-        'arm': d.get('arm') or 'world',
+        'arm': arm,
         'pair_of': d.get('pair_of'),
         'finish': (run.get('error_category') or run.get('finish_reason') or ''),
         'task': d.get('task'),
         'agent_rc': run.get('rc'),
         'wall_min': _minutes(d.get('started_at'), d.get('finished_at'), run.get('wall_ms')),
-        'tools': tool_counts(codex_tool_items(transcript) if 'mcp_tool_call' in (run.get('tool_items') or {})
-                             else run.get('tool_items')),
+        'tools': tools,
+        'calls_source': source,
+        'refusals': refusals,
         'tokens': transcript_usage(transcript),
         'graders_passed': sum(1 for g in graders if g.get('passed')),
         'graders_total': len(graders),
@@ -163,6 +208,8 @@ def markdown(rows: list) -> str:
         calls = sum(t.values())
         split = f"{t.get('read', 0)}/{t.get('edit', 0) + t.get('write', 0)}/{t.get('run', 0)}/{t.get('exec', 0)}/" \
                 f"{t.get('check', 0) + t.get('cli', 0) + t.get('other', 0)}"
+        if r.get('refusals'):
+            split += f"; refused {r['refusals']['plan']} plan + {r['refusals']['handler']} handler"
         tok = f"{_k(u.get('input', 0) + u.get('cache_read', 0) + u.get('cache_write', 0))} / {_k(u.get('output'))}" if u else ''
         if u.get('partial'):
             tok += ' (partial)'

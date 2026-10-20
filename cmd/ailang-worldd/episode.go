@@ -52,6 +52,8 @@ const episodeHelp = `usage: ailang-worldd episode start <episode> --repo <dir> [
            [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
            [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
            [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
+       ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s]
+           (a client verb: see 'ailang-worldd episode report --help')
 
 ATTENDED, like session new: start one World episode on a repo and print the
 launch line for its agent. In order:
@@ -135,8 +137,9 @@ func defaultSessionsDir() string {
 	return filepath.Join(home, ".ailang", "world", "sessions")
 }
 
-// runEpisode dispatches the `episode` verb family.
-func runEpisode(args []string, stdout, stderr io.Writer) int {
+// runEpisode dispatches the `episode` verb family. addr is the global
+// --addr, which only `episode report` (a client verb) uses.
+func runEpisode(addr string, args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
 		fmt.Fprint(stderr, episodeHelp)
 		return exitUsage
@@ -144,6 +147,8 @@ func runEpisode(args []string, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "start":
 		return runEpisodeStart(args[1:], stdout, stderr, realSessionEnv())
+	case "report":
+		return runEpisodeReport(addr, args[1:], stdout, stderr)
 	case "--help", "-help", "-h", "help":
 		fmt.Fprint(stdout, episodeHelp)
 		return exitOK

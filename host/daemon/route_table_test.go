@@ -48,7 +48,8 @@ func TestFrozenV1RouteTableMatchesMux(t *testing.T) {
 	}
 	sort.Strings(mux)
 	sort.Strings(sketch)
-	if len(mux) != 10 || len(sketch) != 10 || !reflect.DeepEqual(mux, sketch) {
-		t.Fatalf("frozen routes: mux=%v sketch=%v; want identical ten pairs", mux, sketch)
+	// Eleven since row 198 added GET /v1/episodes/{episode}/report.
+	if len(mux) != 11 || len(sketch) != 11 || !reflect.DeepEqual(mux, sketch) {
+		t.Fatalf("frozen routes: mux=%v sketch=%v; want identical eleven pairs", mux, sketch)
 	}
 }

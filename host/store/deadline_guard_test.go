@@ -103,6 +103,7 @@ func guardFixtures() map[string]guardFixture {
 		"LogEntriesAfter":      simple(int64(-1), 1),
 		"LogEntriesLatest":     simple(1),
 		"GetWorld":             simple(ref("missing")),
+		"InvocationIntents":    simple("mcp:episode:", int64(0), 1),
 		"ObjectCommits":        simple(ref("missing"), int64(0), 1),
 		"ObjectReferences":     simple(ref("missing"), (*ObjectReferenceCursor)(nil), 1),
 		"ObjectsBySemanticID":  simple("missing", "", 1),

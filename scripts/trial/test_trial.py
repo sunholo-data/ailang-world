@@ -68,6 +68,12 @@ sys.exit(0 if mode in ('pass', 'env') else 3)
 '''
 
 
+REPORT = {'episode': 'tps-a', 'entries': [11, 14], 'total_calls': 4,
+          'calls_by_tool': {'ailang-read': 2, 'workspace-exec': 2},
+          'plan_refusals': {'count': 1, 'by_tool': {'ailang-read': 1}, 'first': []},
+          'handler_refusals': {'count': 0, 'by_tool': {}, 'first': []}}
+
+
 class FakeClient:
     """head_index answers by whether the agent has run, so before/after is observable."""
 
@@ -91,9 +97,9 @@ class FakeClient:
 class FakeWorldd:
     """Stands in for <rig>/bin/ailang-worldd: records every call, answers outcome/provenance."""
 
-    def __init__(self, outcome_rc=0, raise_on=None):
+    def __init__(self, outcome_rc=0, raise_on=None, report_rc=0):
         self.calls = []
-        self.outcome_rc, self.raise_on = outcome_rc, raise_on
+        self.outcome_rc, self.raise_on, self.report_rc = outcome_rc, raise_on, report_rc
         self.n = 0
 
     def __call__(self, argv, input=None, capture_output=True, env=None, timeout=None):
@@ -107,6 +113,10 @@ class FakeWorldd:
                 return subprocess.CompletedProcess(argv, self.outcome_rc, b'', b'commit refused HTTP 401')
             return subprocess.CompletedProcess(argv, 0, (f'recorded world/task-outcome/v1 x: object sha256:'
                                                          f'{"%064x" % self.n} entry {100 + self.n}\n').encode(), b'')
+        if verb == 'episode':  # episode report <ep> --json (row 198)
+            if self.report_rc:
+                return subprocess.CompletedProcess(argv, self.report_rc, b'', b'episode has no committed calls')
+            return subprocess.CompletedProcess(argv, 0, (json.dumps(dict(REPORT, episode=argv[5])) + '\n').encode(), b'')
         ep = argv[argv.index('--episode') + 1]
         since = argv[argv.index('--since') + 1]
         return subprocess.CompletedProcess(argv, 0, f'World-Provenance: store=/rig/world.db episode={ep} entries={since}-14\n'.encode(), b'')
@@ -311,6 +321,34 @@ class Episode(Base):
         self.assertEqual(row['agent_summary'], 'Added tests 5-8.')
         self.assertEqual(len([c for c in self.worldd.calls if c['verb'] == 'outcome']), 2)
 
+    def test_world_episode_banks_the_report_with_the_row(self):
+        row = self.run_ep('claude')
+        reps = [c for c in self.worldd.calls if c['verb'] == 'episode']
+        self.assertEqual(len(reps), 1)
+        self.assertEqual(reps[0]['argv'][3:], ['episode', 'report', 'tps-a', '--json'])
+        path = os.path.join(self.evidence, 'reports', 'tps-a.json')
+        self.assertEqual(row['report'], {'path': path, 'sha256': trial.sha256_file(path), 'total_calls': 4})
+        with open(path) as fh:
+            self.assertEqual(json.load(fh)['calls_by_tool'], REPORT['calls_by_tool'])
+        with open(os.path.join(self.evidence, 'episodes', 'tps-a.json')) as fh:
+            self.assertEqual(json.load(fh)['report']['path'], path)  # in the same row write
+
+    def test_report_failure_is_recorded_not_raised(self):
+        row = self.run_ep('claude', worldd=FakeWorldd(report_rc=1))
+        self.assertIn('episode has no committed calls', row['report']['error'])
+        self.assertFalse(os.path.exists(os.path.join(self.evidence, 'reports', 'tps-a.json')))
+        self.assertEqual(row['outcome_record_errors'], 0)
+
+    def test_report_for_another_episode_is_refused(self):
+        class Wrong(FakeWorldd):
+            def __call__(self, argv, **kw):
+                p = super().__call__(argv, **kw)
+                if argv[3] == 'episode':
+                    p.stdout = p.stdout.replace(b'"tps-a"', b'"other"')
+                return p
+        row = self.run_ep('claude', worldd=Wrong())
+        self.assertEqual(row['report'], {'error': 'report does not describe this episode'})
+
     def run_shell(self, agent='claude'):
         if os.path.exists(self.marker):
             os.unlink(self.marker)
@@ -335,6 +373,7 @@ class Episode(Base):
         self.assertEqual(self.worldd.calls, [])   # no outcome record, no provenance
         self.assertEqual((row['arm'], row['pair_of']), ('shell', 'tps-w'))
         self.assertIsNone(row['provenance'])
+        self.assertIsNone(row['report'])          # no World report for the shell arm
         self.assertEqual(row['log_range'], {'from': None, 'to': None})
         self.assertEqual([g['name'] for g in row['graders']], ['pass', 'fail'])
         self.assertTrue(all('outcome_record' not in g for g in row['graders']))

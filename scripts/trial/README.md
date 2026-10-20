@@ -80,6 +80,8 @@ against the real validator; needs `go`).
     python3 scripts/trial/ledger.py --root ~/.ailang/state/trial-2026-10-16 [--prs prs.json] [--json]
 
 One Markdown row per episode: wall time, World calls by kind, tokens (from the transcript), graders,
-outcome records, and the PR. Reads only. The committed table is
+outcome records, and the PR. Reads only. A World arm's calls and refusals come from
+`<evidence>/reports/<ep>.json`, which `trial.py run` banks from `ailang-worldd episode report <ep>
+--json` (row 198) when it writes the episode row; episodes without one fall back to the transcript. The committed table is
 `design_docs/verification/world-dogfood/episodes.md`. Tests: `python3 -m unittest -v test_ledger`.
 

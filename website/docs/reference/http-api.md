@@ -22,6 +22,7 @@ gets `405 Method Not Allowed` from the router.
 | `GET` | `/v1/registry/{name...}` | none | A registry head |
 | `POST` | `/v1/commit` | **session** | Commit a world transition (the only REST mutation) |
 | `GET` | `/v1/receipts/{id}` | none | Receipt of a `rest:` commit |
+| `GET` | `/v1/episodes/{episode}/report` | none | One episode's summary: calls by tool, effects, budgets, refusals |
 | `GET` | `/workbench` | none | Read-only HTML operator renderer |
 | `GET` | `/workbench/live.js` | none | The workbench's embedded same-origin live client script |
 | `GET` | `/.well-known/agent.json` | **session** | Session-scoped A2A agent card |
@@ -29,7 +30,7 @@ gets `405 Method Not Allowed` from the router.
 | `POST` | `/mcp/` | **session** | MCP Streamable HTTP (`initialize`, `ping`, `tools/list`, `tools/call`) |
 | `POST` | `/agui/` | none | Read-only AG-UI 1.0 SSE run of the world's live state, bounded to 18 s; resume with standard state or `Last-Event-ID` (QUICKSTART, "Watch the world live") |
 
-The ten `/v1` routes are the frozen v1 machine table, pinned against a checked sketch by a test.
+The eleven `/v1` routes are the frozen v1 machine table, pinned against a checked sketch by a test.
 `/workbench`, `/workbench/live.js`, the agent card, `/a2a/`, `/mcp/` and `/agui/` are additive.
 
 **Auth** means `Authorization: Bearer <64-hex-credential>` holding a live session (see
@@ -193,6 +194,31 @@ Only IDs starting with `rest:` (otherwise `400` `receipt id must be rest:<id>`).
 
 `state` is `resolved` (it landed; `resultRef` is the committed `nextWorld.ref`), `not-started`
 or `indeterminate`. Treat `indeterminate` as not landed and fail-closed.
+
+## `GET /v1/episodes/{episode}/report`
+
+One episode's summary in one pass over that episode's own journal rows and the records they
+name (row 198); `ailang-worldd episode report <episode> --json` prints this body unchanged.
+
+```json
+{"episode":"ep1","entries":[12,40],"total_calls":27,
+ "calls_by_tool":{"ailang-edit":9,"ailang-read":12,"workspace-exec":6},
+ "effects":[{"effect":"Workspace.Exec","decision":"allowed","count":6},
+            {"effect":"Workspace.Read","decision":"allowed","count":11}],
+ "budgets":[{"effect":"Workspace.Exec","scope":"worktree","minted":600,"used":6,"left":594}],
+ "plan_refusals":{"count":1,"by_tool":{"ailang-read":1},
+                  "first":[{"entry":15,"tool":"ailang-read","reason":"missing required argument \"path\""}]},
+ "handler_refusals":{"count":0,"by_tool":{},"first":[]},
+ "first_at":"2026-10-19T09:00:00Z","last_at":"2026-10-19T09:31:12Z",
+ "calls_by_surface":{"mcp":27},"uncommitted_intents":0,"notes":{"…":"…"}}
+```
+
+`decision` is `allowed`, `failed` or `denied:<denial>`. A plan refusal named no effect and
+answered `ok:false`; a handler refusal's effect was allowed and ran, but its result is
+`ok:false`. `budgets` has one row per (effect, scope) with an effect record: `left` is the latest
+`budgetAfter`, `used` the cost of the allowed records. Times are the coordinator's logical clock
+(UTC). An episode with no committed call is `404 NotFound`. Unauthenticated like the other GET
+routes (residual R1, row 199).
 
 ## `GET /workbench`
 
