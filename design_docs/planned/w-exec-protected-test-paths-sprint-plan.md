@@ -129,7 +129,7 @@ The new mode exits before legacy HOME/decoy/archive setup. Test 16 operation arm
 | M4c | Wire startup arm 8 for prevention and Linux detection | 245 | 30 | M4b | done |
 | M5a | Render protected AILANG policies in every variant | 245 | 30 | M4c | done |
 | M5b | Wire episode profile selection and module-root policy rebasing | 235 | 30 | M5a | done |
-| M5e | Pin V25’s alias refusals on the real tool | 150 | 20 | M5b | planned |
+| M5e | Pin V25’s alias refusals on the real tool | 150 | 20 | M5b | done (iteration 289, PR #330) |
 | M5c | World pre-check: resolved-path refusal | 250 | 30 | M5b | held:D-WORLD-86; build only B, dropped A |
 | M5d | World pre-check: multi-link refusal | 250 | 30 | M5c | held:D-WORLD-86; build only B, dropped A |
 | M6-pre | Measure V24 and size phase/construction bounds | 200 | 30 | M5b, M1d | done (iteration 290; harness 361 lines, over the 200 target) |
@@ -137,7 +137,7 @@ The new mode exits before legacy HOME/decoy/archive setup. Test 16 operation arm
 | M6b | Attach before/after integrity while preserving the command deadline | 245 | 30 | M6a | done (iteration 292, PR #339; 518 added lines (production +51), over the 245 cap) |
 | M6c | Kill tamper, ignored-file, flag and moved-HEAD mutants; pin replay | 245 | 30 | M6b | done (iteration 293, PR #340; test-only, +394/−44 lines, over the 245 cap) |
 | M7a | Show intact, changed, unchecked and unprotected runs in why | 230 | 30 | M6c | done (iteration 294, PR #341; 240 changed lines with the controller rows, over the 230 cap; walk-rig `invokeEffectResult` allowlist extension) |
-| M7b | Ship executable protected-profile guidance and residuals | 210 | 25 | M7a | planned |
+| M7b | Ship executable protected-profile guidance and residuals | 210 | 25 | M7a | done (iteration 295; QUICKSTART §10 + `TestQuickstartProtectedContract`; ~310 changed lines with the controller rows, over the 210 budget; allowlist extended to the one `exec_protected.go` refusal string) |
 
 ### M0a — Contain the new Linux measurement mode and validate its oracle
 

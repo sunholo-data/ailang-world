@@ -4013,7 +4013,7 @@
         "docs/QUICKSTART.md",
         "host/broker/exec_quickstart_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestQuickstartSection10ProfilesLoad",
         "TestQuickstartProtectedContract"
