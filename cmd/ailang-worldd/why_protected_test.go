@@ -30,6 +30,7 @@ func TestWhyProtectedLine(t *testing.T) {
 		{"error-beside-changed", `{"intact_after":false,"changes":[{"path":"a","status":"modified"}],"total":1,"error":"before failed"}`, "protected: CHANGED after the call — a (modified); not checked — before failed", true},
 		{"error-beside-true", `{"intact_before":true,"intact_after":true,"error":"failed"}`, "protected: not checked — failed", true},
 		{"missing-verdict", `{"intact_before":true}`, "protected: not checked — no verdict recorded", true},
+		{"missing-before", `{"intact_after":true,"base_files":12,"base":"123456789","base_digest":"sha256:tree","enforced":"glob"}`, "protected: not checked — no verdict recorded", true},
 		{"malformed", `"broken"`, "protected: not checked — malformed protected block", true},
 		{"malformed-null", `null`, "protected: not checked — malformed protected block", true},
 		{"malformed-field", `{"intact_before":"true"}`, "protected: not checked — malformed protected block", true},
