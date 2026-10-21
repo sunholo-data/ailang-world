@@ -3391,7 +3391,7 @@
         "host/broker/exec_protected_record_test.go",
         "host/broker/handlers_exec_m2_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecProtectedIntact",
         "TestExecProtectedCheckTimeout",
