@@ -24,6 +24,9 @@ import (
 //     than the step;
 //   - the episode facts hold (validateRig).
 func Validate(ix Index) error {
+	if err := validateHuman(ix); err != nil {
+		return err
+	}
 	if ix.Schema != Schema {
 		return fmt.Errorf("surface index: schema %q, want %q", ix.Schema, Schema)
 	}

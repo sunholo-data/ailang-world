@@ -73,6 +73,8 @@ type Source struct {
 
 // Brane is a named strand of work: one charter row.
 type Brane struct {
+	Name  string `json:"name,omitempty"`
+	Goal  string `json:"goal,omitempty"`
 	Key   string `json:"key"` // row-189
 	Row   int    `json:"row"`
 	Title string `json:"title"` // the row's slug, "" when the charter has no such row
@@ -82,6 +84,8 @@ type Brane struct {
 // State is one world state. States are listed oldest first, each step just
 // before the shared state that merged it.
 type State struct {
+	Title string `json:"title,omitempty"`
+
 	ID   string `json:"id"`   // the full commit hash
 	Kind string `json:"kind"` // shared or step
 	At   string `json:"at"`   // RFC 3339; a step's is its merge's
@@ -100,6 +104,7 @@ type State struct {
 // Merge is one line of `git log --first-parent --merges
 // --format=%H%x09%P%x09%cI%x09%s`.
 type Merge struct {
+	Title   string
 	Hash    string
 	Parents []string // exactly two: the first parent, then the PR's side
 	At      time.Time
@@ -117,14 +122,35 @@ var (
 // lines are skipped; any other malformed line is an error naming its line.
 func ParseMerges(text string) ([]Merge, error) {
 	var out []Merge
-	for i, line := range strings.Split(text, "\n") {
+	separator := "\n"
+	if strings.Contains(text, "\x1f") {
+		separator = "\x1e"
+	}
+	for i, line := range strings.Split(text, separator) {
 		line = strings.TrimSuffix(line, "\r")
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
+		body := ""
+		if separator == "\x1e" {
+			fields := strings.SplitN(strings.TrimSpace(line), "\x1f", 5)
+			if len(fields) != 5 {
+				return nil, fmt.Errorf("surface: merge record %d: want 5 fields", i+1)
+			}
+			line = strings.Join(fields[:4], "\t")
+			body = fields[4]
+		}
 		m, err := parseMerge(line)
 		if err != nil {
 			return nil, fmt.Errorf("surface: merges line %d: %v", i+1, err)
+		}
+		if m.PR > 0 {
+			for _, b := range strings.Split(body, "\n") {
+				if strings.TrimSpace(b) != "" {
+					m.Title = capHuman(strings.TrimSpace(b), 200)
+					break
+				}
+			}
 		}
 		out = append(out, m)
 	}
@@ -216,7 +242,8 @@ func ChartRowTitles(charter string) map[int]string {
 type BuildInput struct {
 	Merges  []Merge           // newest first, as ParseMerges returns them
 	Bases   map[string]string // merge hash → merge-base of its two parents
-	Titles  map[int]string    // ChartRowTitles
+	Goals   map[int]string
+	Titles  map[int]string // ChartRowTitles
 	BuiltAt time.Time
 	Rev     string
 	Head    string // the commit Rev resolved to; "" means the newest merge
@@ -252,7 +279,7 @@ func Build(in BuildInput) (Index, error) {
 		}
 		at := m.At.Format(time.RFC3339)
 		step := State{ID: m.Parents[1], Kind: KindStep, At: at, PR: m.PR, Parents: []string{},
-			Base: base, Merge: m.Hash, Branch: m.Branch}
+			Base: base, Merge: m.Hash, Branch: m.Branch, Title: m.Title}
 		if ids[base] {
 			step.Parents = []string{base}
 		}
@@ -260,7 +287,7 @@ func Build(in BuildInput) (Index, error) {
 			step.Brane = key
 			b := branes[key]
 			if b == nil {
-				b = &Brane{Key: key, Row: row, Title: in.Titles[row], Kind: kind}
+				b = &Brane{Key: key, Row: row, Title: in.Titles[row], Kind: kind, Name: humanName(in.Titles[row]), Goal: in.Goals[row]}
 				branes[key] = b
 			} else if b.Kind != kind {
 				b.Kind = BraneMixed
