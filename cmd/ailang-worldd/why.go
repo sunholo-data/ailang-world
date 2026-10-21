@@ -574,7 +574,88 @@ type whyLink struct {
 	Detail string `json:"detail"`
 	// Worktree (row 184 D3) is an effect result's worktree_delta: the files
 	// the toolchain call created, modified or deleted in the worktree.
-	Worktree *broker.WorktreeDelta `json:"worktree,omitempty"`
+	Worktree   *broker.WorktreeDelta `json:"worktree,omitempty"`
+	Protected  json.RawMessage       `json:"protected,omitempty"`
+	ExecResult bool                  `json:"-"`
+}
+
+// Keep the complete stored block for JSON; nil alone means the key is absent.
+func resultProtected(payload []byte) json.RawMessage {
+	var res struct {
+		Protected json.RawMessage `json:"protected"`
+	}
+	if json.Unmarshal(payload, &res) != nil {
+		return nil
+	}
+	return res.Protected
+}
+
+// whyProtected mirrors broker's private protectedRecord for text decoding.
+type whyProtected struct {
+	Digest            string   `json:"digest"`
+	Patterns          []string `json:"patterns"`
+	Enforced          string   `json:"enforced"`
+	Base              string   `json:"base"`
+	BaseDigest        string   `json:"base_digest"`
+	BaseFiles         int      `json:"base_files"`
+	BaseIgnoredDigest string   `json:"base_ignored_digest"`
+	BaseIgnoredFiles  int      `json:"base_ignored_files"`
+	IntactBefore      *bool    `json:"intact_before"`
+	IntactAfter       *bool    `json:"intact_after"`
+	Changes           []struct {
+		Path          string `json:"path"`
+		Status        string `json:"status"`
+		Phase         string `json:"phase"`
+		PathTruncated bool   `json:"path_truncated,omitempty"`
+	} `json:"changes"`
+	Truncated bool   `json:"truncated"`
+	Total     int    `json:"total"`
+	Error     string `json:"error"`
+}
+
+func protectedLine(raw json.RawMessage, exec bool) string {
+	if raw == nil {
+		if exec {
+			return "protected: none declared"
+		}
+		return ""
+	}
+	var p *whyProtected
+	if json.Unmarshal(raw, &p) != nil || p == nil {
+		return "protected: not checked — malformed protected block"
+	}
+	var phases []string
+	if p.IntactBefore != nil && !*p.IntactBefore {
+		phases = append(phases, "before")
+	}
+	if p.IntactAfter != nil && !*p.IntactAfter {
+		phases = append(phases, "after")
+	}
+	if len(phases) > 0 {
+		var paths []string
+		for _, c := range p.Changes {
+			if len(paths) == whyWorktreePaths {
+				break
+			}
+			paths = append(paths, fmt.Sprintf("%s (%s)", c.Path, c.Status))
+		}
+		line := "protected: CHANGED " + strings.Join(phases, " and ") + " the call — " + strings.Join(paths, ", ")
+		if p.Total > len(paths) {
+			line += fmt.Sprintf(" (+%d more)", p.Total-len(paths))
+		}
+		if p.Error != "" {
+			line += "; not checked — " + p.Error
+		}
+		return line
+	}
+	if p.IntactBefore == nil || p.IntactAfter == nil || p.Error != "" {
+		reason := p.Error
+		if reason == "" {
+			reason = "no verdict recorded"
+		}
+		return "protected: not checked — " + reason
+	}
+	return fmt.Sprintf("protected: intact (%d files @ %.7s, digest %s, enforced %s)", p.BaseFiles, p.Base, p.BaseDigest, p.Enforced)
 }
 
 // whyWorktreePaths is how many changed paths the text form prints.
@@ -809,18 +890,24 @@ func (r worldReader) buildChain(e wireEntry, result []byte) (whyChain, error) {
 			okAll = okAll && reqOK
 			resText := "no result"
 			var delta *broker.WorktreeDelta
+			var protected json.RawMessage
+			execResult := false
 			if !d.ResultRef.IsZero() {
 				res, resOK, _ := r.checkedObject(d.ResultRef.String(), broker.EffectResultV1)
 				okAll = okAll && resOK
 				resText = fmt.Sprintf("result %d B", len(res.Payload))
 				if resOK {
 					delta = resultWorktreeDelta(res.Payload)
+					protected = resultProtected(res.Payload)
+					execResult = d.Effect == broker.EffectWorkspaceExec
 				}
 			}
 			ch.add("effect", okAll, ref, "%s %s %s@%s cost %d budget %d→%d request %d B %s%s", id, verdict, d.Effect, d.Scope, d.Cost,
 				d.BudgetBefore, d.BudgetAfter, len(req.Payload), resText,
 				failNote(okAll, "the record is inconsistent or its request/result does not resolve to its hash"))
 			ch.Links[len(ch.Links)-1].Worktree = delta
+			ch.Links[len(ch.Links)-1].Protected = protected
+			ch.Links[len(ch.Links)-1].ExecResult = execResult
 		}
 	}
 
@@ -880,6 +967,9 @@ func printChain(w io.Writer, ch whyChain) {
 		fmt.Fprintf(w, "  %s %-7s %s%s\n", mark, l.Name, ref, l.Detail)
 		if l.Worktree != nil {
 			fmt.Fprintf(w, "            %s\n", worktreeLine(l.Worktree))
+		}
+		if line := protectedLine(l.Protected, l.ExecResult); line != "" {
+			fmt.Fprintf(w, "            %s\n", line)
 		}
 	}
 	if bad == 0 {

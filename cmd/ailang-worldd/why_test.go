@@ -121,18 +121,22 @@ func (r *walkRig) invokeAs(surface coordinator.Surface, episode, skill, task, co
 // invokeResult is invokeAs with the effect result's bytes given (nil = the
 // Workspace.Read {"content": …} result).
 func (r *walkRig) invokeResult(surface coordinator.Surface, episode, skill, task, content string, result []byte) synthInv {
+	return r.invokeEffectResult(surface, episode, skill, task, content, result, "Workspace.Read")
+}
+
+func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill, task, content string, result []byte, effect string) synthInv {
 	t := r.t
 	t.Helper()
 	by := "coordinator:" + string(surface)
 	in := synthObject(coordinator.InputV1, by, mustJSONT(t, map[string]string{"path": "data.txt"}))
 	plan := synthObject(coordinator.EffectPlanV1, by,
-		[]byte(`{"effects":[{"cost":1,"effect":"Workspace.Read","id":"e1","payload":{"op":"read","path":"data.txt"},"scope":"worktree"}],"finish":true,"plan":"world/effect-plan/v1","result":null}`))
+		[]byte(`{"effects":[{"cost":1,"effect":"`+effect+`","id":"e1","payload":{"op":"read","path":"data.txt"},"scope":"worktree"}],"finish":true,"plan":"world/effect-plan/v1","result":null}`))
 	reqObj := synthObject(broker.EffectRequestV1, "host/broker", []byte(`{"op":"read","path":"data.txt","task":"`+task+`"}`))
 	if result == nil {
 		result = mustJSONT(t, map[string]string{"content": content})
 	}
 	resObj := synthObject(broker.EffectResultV1, "host/broker", result)
-	rec := broker.EffectRecord{Effect: "Workspace.Read", Scope: "worktree", Cost: 1, BudgetBefore: 20, BudgetAfter: 19, Allowed: true,
+	rec := broker.EffectRecord{Effect: effect, Scope: "worktree", Cost: 1, BudgetBefore: 20, BudgetAfter: 19, Allowed: true,
 		RequestRef: hashref.MustParse(reqObj.Hash), ResultRef: hashref.MustParse(resObj.Hash)}
 	recObj := synthObject(broker.EffectRecordV1, "host/broker", broker.EncodeRecord(rec))
 	outputText := string(mustJSONT(t, map[string]any{"ok": true, "content": content,
