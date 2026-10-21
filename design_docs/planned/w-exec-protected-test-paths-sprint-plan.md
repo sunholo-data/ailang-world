@@ -136,7 +136,7 @@ The new mode exits before legacy HOME/decoy/archive setup. Test 16 operation arm
 | M6a | Capture the immutable episode baseline and bounded record shape | 245 | 30 | M6-pre | done (iteration 291, PR #338; ~660 lines, over the 245 cap; bounds 3751/4848 ms applied) |
 | M6b | Attach before/after integrity while preserving the command deadline | 245 | 30 | M6a | done (iteration 292, PR #339; 518 added lines (production +51), over the 245 cap) |
 | M6c | Kill tamper, ignored-file, flag and moved-HEAD mutants; pin replay | 245 | 30 | M6b | done (iteration 293, PR #340; test-only, +394/−44 lines, over the 245 cap) |
-| M7a | Show intact, changed, unchecked and unprotected runs in why | 230 | 30 | M6c | planned |
+| M7a | Show intact, changed, unchecked and unprotected runs in why | 230 | 30 | M6c | done (iteration 294, PR #341; 240 changed lines with the controller rows, over the 230 cap; walk-rig `invokeEffectResult` allowlist extension) |
 | M7b | Ship executable protected-profile guidance and residuals | 210 | 25 | M7a | planned |
 
 ### M0a — Contain the new Linux measurement mode and validate its oracle
@@ -1194,7 +1194,7 @@ No `.ail` changes; no AIL verification. Full package acceptance requires contain
 
 ### M7a — Show intact, changed, unchecked and unprotected runs in why
 
-Design M7; **230 LOC total / 30 min**, own PR, depends on M6c. Status **planned**.
+Design M7; **230 LOC total / 30 min**, own PR, depends on M6c. Status **done** (iteration 294, PR #341).
 
 **Files touched and base functions:**
 

@@ -3871,7 +3871,7 @@
         "cmd/ailang-worldd/why.go",
         "cmd/ailang-worldd/why_protected_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestWhyProtectedLine",
         "TestWhyProtectedJSON"

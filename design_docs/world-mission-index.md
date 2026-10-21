@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 294 | 2026-10-21 | row 156 M7a built: `why` shows intact, changed, not-checked and none-declared protected exec runs (PR #341; judge r1 PASS 86 → r2 PASS 90) [PRODUCT] |
 | 293 | 2026-10-21 | row 156 M6c built: tamper, ignored-file, index-flag and moved-HEAD detection pinned through the handler, with byte-identical replay (PR #340; judge... |
 | 292 | 2026-10-21 | row 156 M6b built: exec results carry the before/after protected integrity, with the after-check reserved inside the call deadline (PR #339; judge ... |
 | 291 | 2026-10-20 | row 156 M6a built: the protected baseline is captured once at NewExecHandler, with the bounded record shape (PR #338; judge r1 PASS 79 → r2 PASS 88... |

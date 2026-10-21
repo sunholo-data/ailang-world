@@ -1,19 +1,21 @@
-# World mission dashboard — iteration 293 (2026-10-21)
+# World mission dashboard — iteration 294 (2026-10-21)
 
-- **This fire:** row 156 M6c built, PR #340, test-only. Every tamper class the design names is now pinned through the production handler: creation (including in a new directory), deletion, rename, replacement, `.gitignore`/`info/exclude` ignored creations, assume-unchanged/skip-worktree index flags, and a moved HEAD. The episode-start snapshot exempts standing `.venv` files. Recorded protected results replay byte-for-byte without running anything. Real srt refuses a linked worktree's index/HEAD writes.
-- **Controller catches:** the judge's survivor (`--untracked-files=normal`) came with a suggested fixture that did not kill it, because Git recurses into a new directory under a file-name pathspec in both modes. Re-aimed at a `tests/**` directory pattern, and now killed. A race-leg red under judge co-load was re-run isolated (green), then the full unloaded `verify_go.sh` gave rc 0.
-- **Judge:** Agent sonnet, own worktree: r1 PASS 80 → fix → r2 **PASS 87**, zero blocking throughout.
+- **This fire:** row 156 M7a built, PR #341. `ailang-worldd why` now prints a `protected:` line for every exec run: `intact (N files @ base, digest, enforced)` only when both integrity verdicts are true with no error; `CHANGED before/after the call — path (status) … (+K more)`; `not checked — <error>` for a null verdict, an error or a malformed block; `none declared` for an exec result with no protected set. Non-exec effects print nothing. `--json` carries the whole block, and a result that fails hash verification is never decoded.
+- **Controller catches:** own drill survivor (a null before-verdict beside a true after-verdict rendered intact) → `missing-before` row. Judge survivor (the decode-only-when-verified guard) → `e2e-tampered` row through `tamperProxy`.
+- **Judge:** Agent sonnet, own worktree: r1 PASS 86 → fix → r2 **PASS 90**, zero blocking throughout.
+- **Gate noise:** `verify_go.sh` rc 0 on `b008434c`. On the final head it went red twice under load 5–12 from sibling missions, each time somewhere else; every red package was isolated-green on the same commit. CI arbitrates.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
-- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (20/24, M5c/M5d held), row 150 (9/17), then row 151.
-- **Next:** row 156 M7a (`why` shows intact / changed / unchecked / unprotected runs), then M7b (QUICKSTART guidance).
+- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (21/24, M5c/M5d held), row 150 (9/17), then row 151.
+- **Next:** row 156 M7b (QUICKSTART §10 protected-profile guidance, worked patterns for ailang / TwilightGame / sunholo-cli, residuals).
 - **Carried:**
-  - the parser's unmerged `u` branch is unpinned but fails closed;
-  - `exec_protected_record_test.go` is 1 094 lines (split at M7);
+  - the `why` text omits `path_truncated` and the per-change phase (`--json` has both);
+  - `/reserve-after-before` reds under load (293, 294);
+  - the parser's `u` branch is unpinned but fails closed;
+  - `exec_protected_record_test.go` is 1 094 lines;
   - "budget is spent" after a slow before-phase;
-  - `/after-cap` needs `/usr/bin/perl`;
-  - arm 8's probe budget under load (dogfood friction #22).
+  - `/after-cap` needs `/usr/bin/perl`.
 - **Parked on Mark:** D-WORLD-86: drop M5c/M5d (A, recommended) or build them anyway (B). Default: hold.
 - **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet. No designer or planner: the design and plan are ready.
-- **Cost:** metered $0.00. codex executor 116,969 tok; Agent judge subagent ≈136k tok over 2 rounds.
-- **Retro:** harness share 0/20; no drift alarm. Process fix: never run the judge's mutation drills while `verify_go.sh` runs. Also, re-run the mutant against a judge's suggested fixture before committing it (charter Repo Profile).
-- **Record:** world-mission-log.md entry 293 (log rotated: 20 entries live).
+- **Cost:** metered $0.00. codex executor 83,428 tok; Agent judge ≈93k subagent tok over 2 rounds.
+- **Retro:** harness share 0/20; no drift alarm. Process fix: record rig load beside every full-suite run, and attribute a red only after isolated controls and a base byte-identity check (charter Repo Profile).
+- **Record:** world-mission-log.md entry 294 (log rotated: 20 entries live).

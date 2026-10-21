@@ -34,36 +34,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 274 — 2026-10-16 — row 150 M4a seed S5 real approval transition + one pending packet + exact budget delta LANDED `7ed1152` (PR #283; judge r1 PASS 91) [PRODUCT]
-
-**Kind:** one product milestone on the D-WORLD-69 release path. Seed stages S1–S5 now run. S6 (packet listing, `why` walk) and the public manifest come in M4b, and the seed still refuses completion.
-
-**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-16T04:02:59Z` (31 comments). `mission_gate0_self_notices.sh` rc 1 on the same 2026-10-13T02:01:58Z rc=143 notice (orphan 255, already credited by 256); control 107:4 ok, watermarks 2/2. Unread `mission-world` inbox: 0. Weekly rotation not due (#246 created 2026-10-12T12:08Z).
-
-**Gate 1:** local dev = origin/dev = `206ce2e` (Gate-1 base `206ce2e2822acc60f6bcb613d3f06bf04238106e@2026-10-16T11:25:48Z`); dev CI success on `206ce2e`, check-runs 2, none not-green. Skill directory: SKILL.md and all 13 `resources/*.md` at the resolved symlink target match V1 origin/dev (per-file check, zero DIFF lines). Open PRs by this account: #282 (row 139 M1, `sprint/row139-m1-release-manifest`) and #281 (row 183 trial runner). Both come from attended `.claude/worktrees/agent-*` worktrees, and neither branch carries a later log entry. Also #166 (row 114's preserved old draft). Ledger: D-WORLD-75 the only OPEN row.
-
-**Gate 2 — clause map:** 1/2/3/4/6/7 MET. 5 UNMET: row 139 is NEXT as an attended build (D-WORLD-78, attended PR #282 open), row 183 is IN-SPRINT ATTENDED (PR #281 open), and row 114 waits on 183's stores. No loop-routable UNMET-clause row → **pick row 150 M4a** (iteration 273's Next). Reality check: no M4a commit on origin/dev (`git log --grep M4a` shows only unrelated rows), no M4a branch, worktree or index line; sprint JSON M4a `pending`. Quorum: none owed (plan r4 already routed in 266).
-
-**Execute:** resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; probe rc 0. Before writing the directive, the controller baselined the gate list on pristine `206ce2e` outside the sandbox: 18/18 `TestDemo*` PASS, plus `TestDaemonInvocationMintsDecisionPacket`, `TestRESTCommitRefusesDecisionPacketObjects` and `TestDecisionPacketCodec`. The directive carried the plan's M4a contract and iteration 273's lessons: skip on an unset tool pin like `cliSeBins`, pin-free controls for every pure guard, one named negative control per guard plus a run-it mutant, REST read-back, and no git writes. The executor ran about 19 min (219,425 tok) and changed only the 2 allowlisted files. S5 sends one `demo-approval` A2A call to `demo-approve`. Its roster holds the S3 test invocation record, the S2 read effect record, an S1 authored claim and the S4 envelope. The goal and candidates come from the S1 committed objects. After S5 the seed refuses with "S1-S5 recorded; S6 incomplete; no success manifest written". New tests: `TestDemoSeedApprovalPacket` (real checked-in approve.ail on the pinned capsule, coordinator and HumanHandler), `TestDemoSeedApprovalControls` and `TestDemoSeedApprovalBudgetControl` (pin-free). The budget delta is read from REST effect records against the fixture's minted grant and cross-checked against the broker record's BudgetBefore/After. The ledger has 13 mutants, each red at a named assertion, including the plan's M4a-extra-effect (the coordinator's L1 refusal is visible in the diagnostic). The controller re-ran outside the sandbox and scanned the diff for writes outside the worktree first (all `os.WriteFile` sites are under `t.TempDir()`; `TMPDIR` is set to `t.TempDir()`). Results: vet clean; gofmt clean on the diff (the one gofmt hit, `host/store/deadline_guard_test.go`, is pre-existing on base, row 101); 21/21 `TestDemo*` PASS with both pins; with the tool pin unset rc 0, 18 PASS and 3 SKIP (ReadTestCheck, ProofStage, ApprovalPacket); `-race` on the three new tests clean; the two daemon packet tests PASS. Committed as `ded5f0b` (draft PR #283).
-
-**Independent evaluation:** Agent `sonnet` (`agent-tool sonnet declared:alias-pin`; generator codex ≠ judge sonnet), in its own detached worktree `.eval-world-iter274`. r1 **PASS 91/100, zero blocking.** It reproduced every gate. It found the budget observation not circular. It ran 11 mutants (the plan's M4a-extra-effect, roster ref swaps, a forced `EntryIndex=0`, a replaced goal, a duplicate S5 call, plan cost, output status, published access cost 1, and approvals-chain pending→resolved), all 11 killed at named assertions. The controller checked the eight cited assertion lines in the file. Non-blocking: a live double spend is covered only by the pure predicate plus the broker cross-check; the seed ignores `json.Unmarshal` errors on its own fixed S1 payloads; a missing `entry_index` would decode to 0 (the test catches it); CI without the tool pin skips the only real S5 test (row 160). Reports: `design_docs/verification/world-iter274/evaluator/r1.md`, `…/executor/REPORT.md`. The raw mutant logs are banked under `~/.ailang/state/world-iter274/snap/M4a/evidence/`.
-
-**Gate 3b:** PR #283. ailang-code verify success on both heads. The go gate **failed** on `ded5f0b` and on `cd4d0e8` (reports-only delta). Each log was about 100 KB with 84 `--- PASS` and 0 FAIL, ending `verify_go.sh: FATAL: -race leg timed out after 600s`. That is row 181's flake, instances 7 and 8; run 38897729178 attempts 3 and 4 were instances 9 and 10, same signature. Per-package race times show the diff is not the cause: `cmd/ailang-worldd` took 83.1 s and 81.7 s, against 78.6–81.5 s on recent greens, and the new S5 test skips in CI. `host/broker` took 344 s and 338 s, `host/daemon` 310 s and 302 s. PR CI 2/2 on `cd4d0e8` at run 38897729178 attempt 5. Re-fetch before merge: origin/dev unchanged at `206ce2e`; `mergeable` MERGEABLE/CLEAN; closing-keyword scan of the PR title and body clean (control fired). Squash-merged `7ed1152`. `git diff cd4d0e8 7ed1152` is empty, so the merge tree is the green PR head. The merge-push CI verdict is in the record PR. Filed **D-WORLD-79** (promote row 181? default B = keep the order).
-
-**Record:** no separate record judge. Gate 4 does not require one, and the record carries no new claim beyond the judged milestone, the CI logs and D-WORLD-79.
-
-**Routing evidence:** base=206ce2e2822acc60f6bcb613d3f06bf04238106e@2026-10-16T11:25:48Z. Controller `claude-opus-5-5` (tok: not reported) · designer not spawned (no doc needed) · planner not spawned (plan exists, M4a ready-made) · executor `codex:gpt-6.1-sol` via recipe for resolver `recipe codex:gpt-6.1-sol declared:provider-pin` (219,425 tok) · evaluator Agent `sonnet` (66,102 tok). judge-independence: cross-vendor. Metered $0.
-
-**Ruled out:**
-- Row 139 or 183 as the pick: both are attended builds with open attended PRs (#282, #281) from attended agent worktrees. The loop must not take an attended row.
-- A fix round on r1's non-blocking findings: none blocks, and the residuals (S1 unmarshal errors, `entry_index` default) belong with M4b, which edits the same seed and validates the full why set.
-- Attributing the go-gate reds to the diff: 0 FAIL in both logs, the S5 integration test skips in CI, and `cmd/ailang-worldd` race time is unchanged within runner variance.
-
-**Retro:** Skill lane: none. Process lane: carrying iteration 273's lesson into the directive (skip on an unset tool pin, pin-free controls) worked. The executor shipped no CI-only defect this time, and r1 passed with zero survivors among the judge's own mutants. The remaining CI cost is row 181: each landing now spends 2–3 go-gate attempts on the 600 s race cap. Backlog lane: row 181 gained instances 7–10 and is now D-WORLD-79 (promote it? default keep order); row 160 gained one (TestDemoSeedApprovalPacket is rig-only).
-
-**Progress**: World 1.0: **6 of 7 clauses MET**; clause 5 is the last UNMET, and its rows (139, 183, then 114) are attended. Release row 150 advanced to 7/17 milestones.
-
-**Next:** re-read the row 139 and 183 tags first. If either has become loop-routable, it outranks release work under Gate 2 rule (b). If D-WORLD-79 is answered A, take row 181. Otherwise row 150 M4b (complete why validation and public manifest assembly). Fold in r1's NB2/NB3 (S1 unmarshal errors, `entry_index` presence).
+> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
+> the thing to grep before picking work, so the loop never repeats itself — is in
+> `world-mission-index.md`.
 
 ## 275 — 2026-10-16 — row 150 M4b seed S6 why validation + one anchored packet + public manifest assembly (fail-closed) LANDED `acb3f54` (PR #289; judge r1 FAIL 66 → r2 PASS 86 → r3 PASS 86) [PRODUCT]
 
@@ -1252,3 +1226,120 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **20/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
 
 **Next:** row 156 M7a: `why` shows intact, changed, unchecked and unprotected runs (`cmd/ailang-worldd/why.go`), then M7b (QUICKSTART guidance). M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).
+
+## 294 — 2026-10-21 — row 156 M7a built: `why` shows intact, changed, not-checked and none-declared protected exec runs (PR #341; judge r1 PASS 86 → r2 PASS 90) [PRODUCT]
+
+**Kind:** one milestone of row 156 (M7a): `cmd/ailang-worldd/why.go` plus tests. No `.ail` change, no release, no design-direction change.
+
+**Pick and why:** all seven bar clauses are MET, so D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Iteration 293's **Next** was row 156 M7a. Reality check:
+- No open PR from this loop (`gh pr list --author @me` empty).
+- No orphan worktree, branch or uncommitted work for M7a; `git log origin/dev --grep M7a` matched only iteration 293's record.
+- `why.go` had no `protected` code at base; the two new selectors chose zero tests (absent, not a pass).
+- The plan was ready, so no designer or planner was spawned.
+
+**Clause map:** 1–7 all MET.
+
+**Gate 0:**
+- Kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN.
+- #313: 0 allowlisted directives since `2026-10-18T23:25:31Z` (13 comments, all the loop's).
+- Self-notice scan rc 0 (control 107:4 ok).
+- `mission-world` inbox: 2 unread, both this loop's own claims (291, 292).
+- No weekly sweep or thread rotation due (#313 created after Monday 07:00).
+
+**Gates 1–2:**
+- Local dev fast-forwarded to origin/dev `782ef02e` (#340 merge). dev CI: 3/3 checks success on `782ef02e`.
+- The running skill matches origin on SKILL.md and all 13 resource files (resolved symlink).
+- Ledger valid, 74 rows, one OPEN (D-WORLD-86).
+
+**Baseline (pristine `782ef02e`, pinned `AILANG_BIN`, `WORLD_TOOL_AILANG_BIN` unset):**
+- `go vet ./...` rc 0.
+- The two M7a selectors chose zero tests.
+- `go test -race ./cmd/ailang-worldd/...` rc 0 (83.6 s).
+- `go test -race ./host/broker/...` rc 0.
+
+**Execute (codex gpt-6.1-sol, 1 run, 83,428 tok, rc 0, ~7 min; cap 45 min):**
+- `resultProtected` keeps the stored block as `json.RawMessage` (absent = nil; present-but-undecodable is distinct and renders `not checked — malformed protected block`).
+- `protectedLine`, in this precedence:
+  - CHANGED, naming each phase whose verdict is false, the first 5 `path (status)`, `(+K more)` from `total`, and any error appended;
+  - not checked, for a null verdict or an error;
+  - intact, only when both verdicts are true and there is no error: `N files @ <base7>, digest <base_digest>, enforced <…>`;
+  - `none declared`, for a `Workspace.Exec` result with no key.
+- `buildChain` sets the block and an explicit exec identity (`d.Effect == broker.EffectWorkspaceExec`) on the link, only when the result object verified. `printChain` prints the line under the effect link.
+- `whyLink.Protected` is `omitempty`: links without a block marshal byte-identically.
+- Tests: `TestWhyProtectedLine` (17 renderer rows + `e2e-exec` through `whyRun` → REST → `buildChain` → `printChain`) and `TestWhyProtectedJSON` (verbatim block, literal `null` verdicts, old-link bytes pinned).
+- The walk rig gains `invokeEffectResult(…, effect)` (`why_test.go` +6/−2), a controller-approved extension of the plan's two-file allowlist, because `invokeResult` hard-coded `Workspace.Read`.
+- Drills: 5 of 7 were killed in-sandbox. The two wiring mutants were socket-bound, so they were labelled UNMEASURED UNDER SANDBOX rather than claimed.
+- 240 changed LOC against the plan's 230 cap; recorded as a deviation.
+
+**Controller verification (outside any sandbox):**
+- `go vet ./...`, `gofmt`, both named tests (19 `--- PASS`), `-run '^TestWhy'`, and `TestProductionContextRoots`: all rc 0.
+- Commit `014ac927`; own drill in check worktree `.check-world-iter294`, each against its named row, restored byte-identically:
+  - killed: the two wiring mutants (as `_ = protected`; the first form did not compile and was re-run), exec identity forced false and forced true, base digest → ignored digest, full base SHA, `(+K more)` dropped, CHANGED's error suffix dropped, the after-nil guard dropped, the error test dropped from not-checked, the path cap → 32, a false before-verdict ignored, and decoding outside `resOK` in one form;
+  - **survived:** dropping the `IntactBefore == nil` guard. A null before-verdict beside a true after-verdict rendered `intact`, because the only missing-verdict row nulled the after phase.
+- **Fix `b008434c`** (test-only): row `missing-before`. The mutant now reds it.
+- `verify_go.sh` on `b008434c`: **rc 0**, all legs (cmd/ailang-worldd 116.0 / 132.6 s; broker 224.6 / 267.0 s).
+
+**Independent evaluation (Agent sonnet, own worktree `.eval-world-iter294`; generator codex ≠ judge sonnet; the controller's two test-only commits are same-vendor as the judge, FLAGGED, mitigated by the judge re-mutating the production hunks):**
+- **r1 PASS 86**, zero blocking. Gates rc 0, the plan's four mutants re-run and killed, 30 own mutants.
+  - N1, survivor: `if resOK {` → `if true {` around the protected decode survived every row. A result whose bytes fail verification would still render a verdict from unverified bytes.
+  - N2: 240 LOC over the 230 cap; the `invokeEffectResult` extension was judged warranted.
+  - N3: `path_truncated` and the per-change phase are not shown in text.
+  - N4: plan-named subtests are renamed; an all-null-verdict record with changes is unreachable from `buildProtectedRecord`.
+- **Reproduced N1 before acting:** confirmed (rc 0 across both named tests).
+- **Fix `7d24aa70`** (test-only): row `e2e-tampered` serves a forged intact block for a `Workspace.Exec` record through the existing `tamperProxy`. It asserts exit 3, `✗ effect`, no `protected:` line, and no `protected` JSON key. The mutant now reds it ("a tampered result printed a protected line").
+- **r2 PASS 90**, zero blocking. The diff matched the controller's exhaustive list (one file, +26).
+  - N1 closed: the judge re-ran the mutant and confirmed discrimination.
+  - N2/N3/N4: accepted residuals.
+  - One new equivalent survivor (`raw == nil` → `len(raw) == 0`).
+- **`verify_go.sh` on `7d24aa70`, run 2: rc 1.** One red: the broker race leg's `TestExecProtectedCheckTimeout/reserve-after-before` (`git ls-files` over its 3 s bound). No judge was running; a sibling's headless `godot` held ~74 % CPU (load ~5.4).
+  - Negative controls on the same commit: `-race -count=5 -run '^TestExecProtectedCheckTimeout$'` rc 0; isolated `go test -race ./host/broker/` rc 0 (220.6 s).
+  - `host/broker` is byte-identical to base `782ef02e`.
+- **Run 3: rc 1**, now with subprocess timeouts across `host/broker` and a `TestDemoSeedPreflightRefusals/unknown-session` archive `--version` failure in `cmd/ailang-worldd`.
+  - Load was 7–12 from sibling work: an `ailang test` at 234 % CPU, the headless `godot` eval, a llama-server/opencode model run, and the fleet mission's unittest discovery.
+  - Controls on the same commit at load 12: `TestDemoSeedPreflightRefusals` isolated rc 0, the whole `cmd/ailang-worldd` package rc 0 (116.7 s).
+  - The judge's r2 race run of `cmd/ailang-worldd` was rc 0 (98.4 s).
+  - Run 1 (`b008434c`, differing by one test-only subtest) was rc 0 on all legs.
+
+**Result:** M7a built. 21 of 24 row-156 milestones are done (M5c/M5d held on D-WORLD-86). Plan and sprint JSON mark M7a done.
+
+**Gate 3b:** PR #341 (`sprint/world-iter294-row156-m7a`). The record rides the same PR. Merge CI is verified before Gate 5 reports LANDED.
+
+**Routing evidence:** base=782ef02e65789a7791c94f1025e2ccce4f5fd141@2026-10-21T08:25:23Z (Gate 4; Gate 1 read the same SHA at 2026-10-21T07:26:42Z; origin/dev did not move).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: the design is ready. The resolver said `recipe claude:claude-opus-5-5 declared:provider-pin`.
+- Planner not spawned: the plan is ready. The resolver said `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`.
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin` (1 run, 83,428 tok; probe rc 0).
+- Evaluator `agent-tool sonnet declared:alias-pin` (r1 59,283 + r2 33,401 subagent tok).
+- The operator's standing request asked for Agent-tool roles "exactly as the routing table specifies". The table routes the executor through the codex recipe, not the Agent tool, so it ran there. The evaluator ran through the Agent tool as required, both rounds, in the foreground.
+- judge-independence: cross-vendor for the executor's code; same-vendor (Anthropic) for the controller's two test-only commits, mitigated because the judge re-mutated the production hunks.
+- Metered **$0.00** (no quorum, no pi).
+- Every required role for this pick ran.
+
+**Ruled out:**
+- Attributing run 2's broker red to this diff: `host/broker` is byte-identical to base, and the row passes ×5 under `-race` on the same commit.
+- Attributing run 3's cross-package reds to this diff: they span untouched packages, they coincide with load 7–12 from sibling missions, and the touched package and the failing test are green isolated on the same commit.
+- Surfacing `path_truncated` in the text line now: design §4.5 does not require it, `--json` carries it, and the milestone is already over its LOC cap. Carried.
+
+**Carried (non-blocking):**
+- From the judge:
+  - the text line omits `path_truncated` and the per-change phase when both phases changed;
+  - the plan-named subtests `not-checked`/`non-exec` exist under other names;
+  - 240 LOC against the 230 cap.
+- `TestExecProtectedCheckTimeout/reserve-after-before` went red in the race leg under load in 293 and 294, isolated green both times. Derive its bound from the measured stimulus (rule 3m).
+- Still carried from 293: the parser's unmerged `u` branch (fails closed); `exec_protected_record_test.go` 1 094 lines; the daemon protected replay does not check the ignored-baseline fields.
+- Still carried from 292: the call-site `"darwin"` literal is Linux-CI-only; `/after-cap` needs `/usr/bin/perl`; a slow before-phase still returns "budget is spent".
+
+**Retro:**
+- **Skill lane:** none (World does not edit the shared skill).
+- **Process lane:** sibling missions load the rig as well as the judge does.
+  - Runs 2 and 3 of `verify_go.sh` went red under load 5–12 that no part of this iteration produced, each time in a different place.
+  - Record `uptime` and the top CPU consumers beside every full-suite run. Attribute a red only after the touched package re-runs green in isolation and the red package is checked for byte-identity against base.
+  - Added to the charter Repo Profile, beside the iteration-293 sequencing rule (the same class, a second source of load).
+- **Process lane (symmetric guards):** a renderer whose rule is "either verdict null → not checked" needs a row for EACH null. The executor's single missing-verdict row covered one phase, and the controller's drill found the other.
+- **Backlog lane:** row 156 carries the `/reserve-after-before` flake (2 instances) and the `path_truncated` text residual.
+- Harness share over the latest 20 including 294: **0/20**.
+- The last three landings (294, 293, 292) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 156 **21/24 milestones built** (M5c/M5d held on D-WORLD-86). Release `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
+
+**Next:** row 156 M7b: QUICKSTART §10 protected-profile guidance, worked patterns for the three projects, and residuals (`docs/QUICKSTART.md`, `host/broker/exec_quickstart_test.go`). M5c/M5d only if D-WORLD-86 = B. DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold).
