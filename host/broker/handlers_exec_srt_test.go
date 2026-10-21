@@ -634,3 +634,87 @@ func TestExecSrtProtectedWrites(t *testing.T) {
 		})
 	}
 }
+
+// M6c/V13: linked-worktree metadata is outside the sandbox's allowWrite.
+func TestExecSrtIndexWriteRefused(t *testing.T) {
+	_, _ = realSrt(t) // Skip by name before even constructing the stub control.
+	for _, tc := range []struct {
+		name      string
+		sandboxed bool
+	}{{"sandbox", true}, {"stub-control", false}} {
+		t.Run(tc.name, func(t *testing.T) { testExecIndexWrites(t, tc.sandboxed) })
+	}
+}
+
+// Keep the real-srt test's positive control executable in pin-free CI too.
+func TestExecSrtIndexWriteStubControl(t *testing.T) { testExecIndexWrites(t, false) }
+
+func testExecIndexWrites(t *testing.T, sandboxed bool) {
+	t.Helper()
+	git, err := exec.LookPath("git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	recordPhaseBound(t, 15*time.Second)
+	profile := func(m map[string]any, f *execFixture) {
+		m["protected"] = recordPatterns
+		m["path"] = append(m["path"].([]any), filepath.Dir(git))
+		m["read_roots"] = []any{filepath.Join(f.base, "source")}
+		for name, args := range map[string]string{
+			"assume": "update-index --assume-unchanged a_test.go",
+			"skip":   "update-index --skip-worktree a_test.go",
+			"commit": "commit --allow-empty -m x",
+		} {
+			// These identical commands run in both the sandbox and control.
+			script := "GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null git -c user.name=Fixture -c user.email=fixture@example.invalid -c core.hooksPath=/dev/null -c commit.gpgsign=false " + args + "; rc=$?; printf '\\nrc=%s\\n' \"$rc\""
+			addCommands(m, map[string]any{name: map[string]any{"argv": []string{"/bin/sh", "-c", script}}})
+		}
+	}
+	setup := func(f *execFixture) {
+		src := filepath.Join(f.base, "source")
+		if err := os.MkdirAll(src, 0700); err != nil {
+			t.Fatal(err)
+		}
+		recordCommittedRepo(t, git, src)
+		if err := os.Remove(f.worktree); err != nil {
+			t.Fatal(err)
+		}
+		recordReadGit(t, git, src, "worktree", "add", "--detach", f.worktree)
+		if info, err := os.Stat(filepath.Join(f.worktree, ".git")); err != nil || !info.Mode().IsRegular() {
+			t.Fatalf("episode .git must be a pointer file: %v %v", info, err)
+		}
+	}
+	var f *execFixture
+	prepare := func(f *execFixture) { recordEnv(t); setup(f) } // Set fake HOME after newSrtFixture reads the operator HOME.
+	if sandboxed {
+		f = newSrtFixture(t, profile, prepare)
+	} else {
+		f = newExecFixture(t, execFixtureOpts{profileF: profile, setup: prepare})
+	}
+	base := string(recordReadGit(t, git, f.worktree, "rev-parse", "HEAD"))
+	for _, command := range []string{"assume", "skip", "commit"} {
+		r := f.mustRun(t, command)
+		tag := string(recordReadGit(t, git, f.worktree, "ls-files", "-v", "a_test.go"))
+		head := string(recordReadGit(t, git, f.worktree, "rev-parse", "HEAD"))
+		if r.ExitCode == nil || *r.ExitCode != 0 || r.TimedOut {
+			t.Fatalf("command wrapper failed: %+v", r)
+		}
+		if sandboxed {
+			if tag != "H a_test.go\n" || head != base {
+				t.Fatalf("sandbox allowed metadata write: tag %q HEAD %s want %s", tag, head, base)
+			}
+			refusal := strings.Contains(r.Stderr, "Operation not permitted") || strings.Contains(r.Stderr, "Permission denied") || strings.Contains(r.Stderr, "Read-only file system")
+			if !strings.Contains(r.Stderr, "index.lock") || !refusal || !strings.Contains(r.Stdout, "rc=128") {
+				t.Fatalf("%s must refuse index.lock with errno and rc: stdout %q stderr %q", command, r.Stdout, r.Stderr)
+			}
+		} else {
+			wantTag := map[string]string{"assume": "h a_test.go\n", "skip": "S a_test.go\n", "commit": "H a_test.go\n"}[command]
+			if !strings.Contains(r.Stdout, "rc=0") || tag != wantTag || (head != base) != (command == "commit") {
+				t.Fatalf("unsandboxed %s positive control: tag %q HEAD %s stdout %q stderr %q", command, tag, head, r.Stdout, r.Stderr)
+			}
+			for _, flag := range []string{"--no-assume-unchanged", "--no-skip-worktree"} {
+				recordReadGit(t, git, f.worktree, "update-index", flag, "a_test.go")
+			}
+		}
+	}
+}

@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 293 | 2026-10-21 | row 156 M6c built: tamper, ignored-file, index-flag and moved-HEAD detection pinned through the handler, with byte-identical replay (PR #340; judge... |
 | 292 | 2026-10-21 | row 156 M6b built: exec results carry the before/after protected integrity, with the after-check reserved inside the call deadline (PR #339; judge ... |
 | 291 | 2026-10-20 | row 156 M6a built: the protected baseline is captured once at NewExecHandler, with the bounded record shape (PR #338; judge r1 PASS 79 → r2 PASS 88... |
 | 290 | 2026-10-20 | row 156 M6-pre built: design V24 measured on installed worktrees; protected-check bounds re-sized to 3 751 / 4 848 ms (PR #333; judge r1 PASS 78 → ... |

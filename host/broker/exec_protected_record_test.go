@@ -19,6 +19,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
 )
 
 var recordPatterns = []string{"*.test", "*_test.go"}
@@ -858,6 +860,233 @@ func TestExecNoProtectedIsByteIdentical(t *testing.T) {
 				if strings.HasPrefix(line, "-c core.fsmonitor=false") || strings.Contains(line, ":(top,glob,icase)") {
 					t.Fatalf("unprotected profile ran protected git: %s", line)
 				}
+			}
+		})
+	}
+}
+
+// M6c uses the production constructor and Execute, with an unsandboxed srt
+// stand-in so the command can tamper with the disposable checkout.
+func recordTamperFixture(t *testing.T, git string, patterns []string, script string, setup func(*execFixture)) *execFixture {
+	t.Helper()
+	return newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) {
+		m["protected"] = patterns
+		addCommands(m, map[string]any{"tamper": map[string]any{"argv": []string{"/bin/sh", "-ec", script + "; printf '[a]'"}}})
+	}, setup: func(f *execFixture) {
+		recordCommittedRepo(t, git, f.worktree)
+		if err := os.MkdirAll(filepath.Join(f.worktree, ".git", "info"), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if setup != nil {
+			setup(f)
+		}
+	}})
+}
+
+func recordChange(path, status, phase string) protectedRecordChange {
+	return protectedRecordChange{protectedChange: protectedChange{Path: path, Status: status}, Phase: phase}
+}
+
+func recordVerdicts(t *testing.T, p *protectedRecord, before, after bool, changes ...protectedRecordChange) {
+	t.Helper()
+	if p.Error != "" || p.IntactBefore == nil || p.IntactAfter == nil || *p.IntactBefore != before || *p.IntactAfter != after {
+		t.Fatalf("protected verdicts want %t/%t: %+v", before, after, p)
+	}
+	want := append([]protectedRecordChange{}, changes...)
+	if !reflect.DeepEqual(p.Changes, want) || p.Total != len(want) || p.Truncated {
+		t.Fatalf("protected changes = %+v (total %d truncated %t), want %+v", p.Changes, p.Total, p.Truncated, want)
+	}
+}
+
+func TestExecProtectedDetectsCreation(t *testing.T) {
+	for _, tc := range []struct {
+		name, script string
+		changes      []protectedRecordChange
+	}{
+		{"creation", "printf new > zz_test.go", []protectedRecordChange{recordChange("zz_test.go", "untracked", "after")}},
+		// A new directory under a directory pattern: --untracked-files=normal reports
+		// only "tests/" here (a file-name pathspec makes Git recurse anyway; judge r1 N1).
+		{"new-dir", "mkdir tests; printf new > tests/x.py", []protectedRecordChange{recordChange("tests/x.py", "untracked", "after")}},
+		{"deletion", "rm a_test.go", []protectedRecordChange{recordChange("a_test.go", "deleted", "after")}},
+		{"rename", "mv a_test.go b_test.go", []protectedRecordChange{recordChange("a_test.go", "deleted", "after"), recordChange("b_test.go", "untracked", "after")}},
+		// Real Git porcelain v2 reports a regular-file -> symlink type change
+		// as .T; the checker intentionally calls that status "modified".
+		{"replacement", "rm a_test.go; ln -s .gitignore a_test.go", []protectedRecordChange{recordChange("a_test.go", "modified", "after")}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			git := recordEnv(t)
+			recordPhaseBound(t, 15*time.Second)
+			f := recordTamperFixture(t, git, append(append([]string{}, recordPatterns...), "tests/**"), tc.script, nil)
+			recordVerdicts(t, recordSuccess(t, recordExecute(t, f, context.Background(), "tamper")), true, false, tc.changes...)
+			// The same handler keeps its episode baseline on the second call.
+			want := []protectedRecordChange{}
+			for _, phase := range []string{"before", "after"} {
+				for _, c := range tc.changes {
+					c.Phase = phase
+					want = append(want, c)
+				}
+			}
+			recordVerdicts(t, recordSuccess(t, recordExecute(t, f, context.Background(), "test")), false, false, want...)
+		})
+	}
+}
+
+func TestExecProtectedDetectsIgnoredCreation(t *testing.T) {
+	for _, name := range []string{"gitignore", "info-exclude"} {
+		t.Run(name, func(t *testing.T) {
+			git := recordEnv(t)
+			recordPhaseBound(t, 15*time.Second)
+			script, path := "printf 'zz*\\n' >> .gitignore; printf new > zz_ign_test.go", "zz_ign_test.go"
+			if name == "info-exclude" {
+				script, path = "mkdir zzign; printf new > zzign/a_test.go; printf noise > zzign/b.txt", "zzign/a_test.go"
+			}
+			f := recordTamperFixture(t, git, recordPatterns, script, func(f *execFixture) {
+				mustWrite(t, filepath.Join(f.worktree, ".git", "info", "exclude"), "zzign/\n")
+			})
+			// V20: exactly the protected file, never the directory or b.txt.
+			recordVerdicts(t, recordSuccess(t, recordExecute(t, f, context.Background(), "tamper")), true, false, recordChange(path, "ignored", "after"))
+		})
+	}
+}
+
+func TestExecProtectedIndexFlag(t *testing.T) {
+	for _, flag := range []string{"assume-unchanged", "skip-worktree"} {
+		t.Run(flag, func(t *testing.T) {
+			git := recordEnv(t)
+			recordPhaseBound(t, 15*time.Second)
+			f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+			recordReadGit(t, git, f.worktree, "update-index", "--"+flag, "a_test.go")
+			mustWrite(t, filepath.Join(f.worktree, "a_test.go"), "hidden change\n")
+			if out := recordReadGit(t, git, f.worktree, "status", "--porcelain", "--", "a_test.go"); len(out) != 0 {
+				t.Fatalf("V13 positive control: status must be blind to flagged content: %q", out)
+			}
+			recordVerdicts(t, recordSuccess(t, recordExecute(t, f, context.Background(), "test")), false, false,
+				recordChange("a_test.go", "index-flag", "before"), recordChange("a_test.go", "index-flag", "after"))
+		})
+	}
+}
+
+func TestExecProtectedHeadMoved(t *testing.T) {
+	git := recordEnv(t)
+	recordPhaseBound(t, 15*time.Second)
+	f := recordHandler(t, func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) })
+	base, _, _ := recordIndependent(t, git, f.worktree)
+	recordReadGit(t, git, f.worktree, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "core.hooksPath=/dev/null", "commit", "--allow-empty", "-qm", "move HEAD")
+	if head, _, _ := recordIndependent(t, git, f.worktree); head == base {
+		t.Fatal("positive control: host commit did not move HEAD")
+	}
+	if out := recordReadGit(t, git, f.worktree, "status", "--porcelain"); len(out) != 0 {
+		t.Fatalf("positive control: moved HEAD must have clean status: %q", out)
+	}
+	p := recordSuccess(t, recordExecute(t, f, context.Background(), "test"))
+	if p.Base != base {
+		t.Fatalf("episode base refreshed: %s want %s", p.Base, base)
+	}
+	recordVerdicts(t, p, false, false, recordChange("HEAD", "head-moved", "before"), recordChange("HEAD", "head-moved", "after"))
+}
+
+func TestExecProtectedAmbientIgnoredIntact(t *testing.T) {
+	const standing = ".venv/lib/site-packages/pkg/test_a.py"
+	// ASCII SimpleFold orbit minima are uppercase; compute this identity
+	// independently of foldProtectedKey/protectedKeysDigest and the baseline.
+	ignored := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(".VENV/LIB/SITE-PACKAGES/PKG/TEST_A.PY\n")))
+	for _, tc := range []struct{ name, script, path string }{
+		{"standing", ":", ""},
+		{"new", "printf new > .venv/lib/site-packages/pkg/test_b.py", ".venv/lib/site-packages/pkg/test_b.py"},
+		// R-156-6 residual: content edits to a standing snapshot file are exempt.
+		{"snapshot-mutation", "printf edited > " + standing, ""},
+		{"gitignore", "printf 'test_new.py\\n' >> .gitignore; printf new > test_new.py", "test_new.py"},
+		{"info-exclude", "mkdir zzign; printf new > zzign/test_new.py; printf noise > zzign/b.txt", "zzign/test_new.py"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			git := recordEnv(t)
+			recordPhaseBound(t, 15*time.Second)
+			f := recordTamperFixture(t, git, []string{"test_*.py"}, tc.script, func(f *execFixture) {
+				mustWrite(t, filepath.Join(f.worktree, ".gitignore"), "*.test\n.venv/\n")
+				recordReadGit(t, git, f.worktree, "add", ".gitignore")
+				recordReadGit(t, git, f.worktree, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "ignore dependencies")
+				if err := os.MkdirAll(filepath.Dir(filepath.Join(f.worktree, standing)), 0700); err != nil {
+					t.Fatal(err)
+				}
+				mustWrite(t, filepath.Join(f.worktree, standing), "ambient\n")
+				mustWrite(t, filepath.Join(f.worktree, ".git", "info", "exclude"), "zzign/\n")
+			})
+			// Capture standing values through Execute before any command tampering.
+			p := recordSuccess(t, recordExecute(t, f, context.Background(), "test"))
+			recordVerdicts(t, p, true, true)
+			if p.BaseIgnoredFiles != 1 || p.BaseIgnoredDigest != ignored {
+				t.Fatalf("standing ignored identity: %+v want %s/1", p, ignored)
+			}
+			p = recordSuccess(t, recordExecute(t, f, context.Background(), "tamper"))
+			changes := []protectedRecordChange{}
+			if tc.path != "" {
+				changes = append(changes, recordChange(tc.path, "ignored", "after"))
+			}
+			recordVerdicts(t, p, true, tc.path == "", changes...)
+			if p.BaseIgnoredFiles != 1 || p.BaseIgnoredDigest != ignored {
+				t.Fatalf("ignored snapshot refreshed: %+v", p)
+			}
+		})
+	}
+}
+
+func TestExecProtectedRecordReplay(t *testing.T) {
+	for _, name := range []string{"protected", "unprotected"} {
+		t.Run(name, func(t *testing.T) {
+			git := recordEnv(t)
+			recordPhaseBound(t, 15*time.Second)
+			fake, log := protectedFakeGit(t, "exec "+shellQuote(git)+" \"$@\"")
+			recordSwapGit(t, fake)
+			f := newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) {
+				if name == "protected" {
+					m["protected"] = recordPatterns
+				}
+			}, setup: func(f *execFixture) { recordCommittedRepo(t, git, f.worktree) }})
+			s := openTestStore(t)
+			grants := []Capability{{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, ExpiresAt: 10, Budget: 5}}
+			registry := Registry{EffectWorkspaceExec: f.h}
+			req := EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, Cost: 1, Now: 1}
+			payload := []byte(`{"command":"test","args":["a"]}`)
+			out, ref, err := NewSession(s, "protected-replay", grants, registry).Invoke(boundedTestContext(t), req, payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			live := execDecode(t, out)
+			if name == "protected" {
+				p := recordSuccess(t, live)
+				recordVerdicts(t, p, true, true)
+				ignored := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte("STANDING.TEST\n")))
+				if p.BaseIgnoredFiles != 1 || p.BaseIgnoredDigest != ignored {
+					t.Fatalf("live ignored snapshot: %+v", p)
+				}
+			} else if live.Protected != nil || bytes.Contains(out, []byte(`"protected"`)) {
+				t.Fatalf("old-shape output gained protected: %s", out)
+			}
+			calls, spawns, gitCalls := f.stubCalls(t), f.h.Spawns(), protectedLog(t, log)
+			if calls != 1 || spawns != 1 || gitCalls == "" {
+				t.Fatalf("live observers not exercised: %d/%d/%q", calls, spawns, gitCalls)
+			}
+			replayed, replayRef, err := NewReplaySession(s, grants, registry, []hashref.HashRef{ref}).Invoke(boundedTestContext(t), req, payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if f.stubCalls(t) != calls || f.h.Spawns() != spawns || protectedLog(t, log) != gitCalls {
+				t.Fatal("replay executed command or Git: stub calls, spawns and Git argv log must be unchanged")
+			}
+			if !bytes.Equal(replayed, out) || replayRef != ref {
+				t.Fatalf("replay bytes/reference differ:\nlive %s\nreplay %s", out, replayed)
+			}
+			if got := execDecode(t, replayed); !reflect.DeepEqual(got.Protected, live.Protected) {
+				t.Fatalf("replay protected block changed: %+v want %+v", got.Protected, live.Protected)
+			}
+			// A replay must answer from the record, never reach a handler (judge r1 N2).
+			trap := Registry{EffectWorkspaceExec: HandlerFunc(func(context.Context, EffectRequest, []byte) ([]byte, error) {
+				t.Error("replay dispatched to the workspace-exec handler")
+				return nil, errors.New("replay dispatched")
+			})}
+			again, _, err := NewReplaySession(s, grants, trap, []hashref.HashRef{ref}).Invoke(boundedTestContext(t), req, payload)
+			if err != nil || !bytes.Equal(again, out) {
+				t.Fatalf("replay with a trap registry = %s, %v; want the recorded bytes", again, err)
 			}
 		})
 	}
