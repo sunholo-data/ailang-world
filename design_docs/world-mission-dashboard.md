@@ -1,21 +1,28 @@
-# World mission dashboard — iteration 294 (2026-10-21)
+# World mission dashboard — iteration 295 (2026-10-21)
 
-- **This fire:** row 156 M7a built, PR #341. `ailang-worldd why` now prints a `protected:` line for every exec run: `intact (N files @ base, digest, enforced)` only when both integrity verdicts are true with no error; `CHANGED before/after the call — path (status) … (+K more)`; `not checked — <error>` for a null verdict, an error or a malformed block; `none declared` for an exec result with no protected set. Non-exec effects print nothing. `--json` carries the whole block, and a result that fails hash verification is never decoded.
-- **Controller catches:** own drill survivor (a null before-verdict beside a true after-verdict rendered intact) → `missing-before` row. Judge survivor (the decode-only-when-verified guard) → `e2e-tampered` row through `tamperProxy`.
-- **Judge:** Agent sonnet, own worktree: r1 PASS 86 → fix → r2 **PASS 90**, zero blocking throughout.
-- **Gate noise:** `verify_go.sh` rc 0 on `b008434c`. On the final head it went red twice under load 5–12 from sibling missions, each time somewhere else; every red package was isolated-green on the same commit. CI arbitrates.
+- **This fire:** row 156 M7b built, PR #345. QUICKSTART §10 now teaches protected test paths:
+  - the generator writes a protected set for ailang, TwilightGame and sunholo-cli (`cli/tests/**`, which is worktree-relative);
+  - it covers the two forms and their refusals, darwin `glob` against linux `dirs-only`, report-only and no default;
+  - also the record block, the four `why` lines, the alias residual on the v0.54.15 tool pin, the after-check reserve and arm 8.
+  - `TestQuickstartProtectedContract` checks the doc's tables and figures against the parser, the renderers, the record type, re-basing, the limits, `protectedCheckTimeout` and the pins manifest.
+- **Controller catches:** 5 figure mutants survived the executor's tests (the limits, the 3 751 ms reserve, the tool pin, a `[]` default). Fixed with the `numbers` row and the `[]` arm.
+- **Judge:** Agent sonnet in its own worktree. r1 PASS 88, zero blocking; it found two overstated budget sentences, the missing module-root note, and a parser that skipped rows. After the fix, r2 **PASS 92**, zero blocking.
+- **Gates:** `verify_go.sh` rc 0 on `76ec06f5`. The broker race suite was rc 0 at base and at head.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
-- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81): row 156 (21/24, M5c/M5d held), row 150 (9/17), then row 151.
-- **Next:** row 156 M7b (QUICKSTART §10 protected-profile guidance, worked patterns for ailang / TwilightGame / sunholo-cli, residuals).
+- **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81):
+  - row 156: 22/24, nothing buildable; M5c/M5d are held on D-WORLD-86, which also gates the row's close;
+  - row 150: 9/17;
+  - then row 151.
+- **Next:** row 150 M5b (TESTED/PROVEN resolution and rendering; settle the "source subject sibling" phrase; fold in M5a's survivors).
 - **Carried:**
-  - the `why` text omits `path_truncated` and the per-change phase (`--json` has both);
-  - `/reserve-after-before` reds under load (293, 294);
-  - the parser's `u` branch is unpinned but fails closed;
-  - `exec_protected_record_test.go` is 1 094 lines;
-  - "budget is spent" after a slow before-phase;
-  - `/after-cap` needs `/usr/bin/perl`.
-- **Parked on Mark:** D-WORLD-86: drop M5c/M5d (A, recommended) or build them anyway (B). Default: hold.
-- **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet. No designer or planner: the design and plan are ready.
-- **Cost:** metered $0.00. codex executor 83,428 tok; Agent judge ≈93k subagent tok over 2 rounds.
-- **Retro:** harness share 0/20; no drift alarm. Process fix: record rig load beside every full-suite run, and attribute a red only after isolated controls and a base byte-identity check (charter Repo Profile).
-- **Record:** world-mission-log.md entry 294 (log rotated: 20 entries live).
+  - the doc's `why` lines, alias and arm-8 paragraphs and "10 s" figure are prose, not bound to code;
+  - the `why` text omits `path_truncated`;
+  - `/reserve-after-before` reds under load;
+  - `exec_protected_record_test.go` is 1 094 lines.
+- **Parked on Mark:** D-WORLD-86: drop M5c/M5d (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
+- **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet. No designer or planner: the design and plan were ready.
+- **Cost:** metered $0.00. codex executor 100,064 tok. Agent judge: r1 89,250 and r2 100,653 subagent tok.
+- **Retro:** harness share 0/20; no drift alarm. Process fixes:
+  - baselines run in their own detached worktree with `AILANG_BIN` exported;
+  - a doc-contract test binds every figure the prose quotes.
+- **Record:** world-mission-log.md entry 295 (log rotated: 20 entries live).

@@ -109,7 +109,7 @@ func parseProtectedEntry(i int, in string) (string, error) {
 			suggest = "*"
 		}
 		return "", protRefusal(i, p, protTagDoubleStar,
-			"'**' is only valid as the final '/**' of a directory form; use the base-name form `%s` (World's write tools read '**/' as exactly one directory)",
+			"'**' is only valid as the final '/**' of a directory form; use the base-name form `%s` (a protected set has exactly two forms, so every matcher reads it the same way)",
 			suggest)
 	}
 	if strings.Contains(p, "/") {
