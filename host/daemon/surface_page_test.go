@@ -107,8 +107,22 @@ func TestSurfacePage(t *testing.T) {
 		}
 	})
 
+	t.Run("stack", func(t *testing.T) {
+		check(request("GET", "/surface?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef"), 200, header, `class="front"`, `data-col="inputs"`)
+		for _, target := range []string{
+			"/surface?brane=unknown&at=f36428abd9a72e5093b61cba14e716c37019f1ef",
+			"/surface?brane=row-189&at=missing",
+			"/surface?brane=shared&at=f36428abd9a72e5093b61cba14e716c37019f1ef",
+		} {
+			check(request("GET", target), 404, header, `href="/surface"`)
+		}
+		if w := request("POST", "/surface?brane=shared&at=x"); w.Code != 405 {
+			t.Fatalf("stack POST = %d", w.Code)
+		}
+	})
+
 	t.Run("query", func(t *testing.T) {
-		for _, target := range []string{"/surface?x=1", "/surface?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef", "/surface?world"} {
+		for _, target := range []string{"/surface?x=1", "/surface?brane=row-189", "/surface?at=x", "/surface?brane=x&at=y&other=z", "/surface?brane=x&brane=y&at=z", "/surface?brane=x&at=y&at=z", "/surface?brane=%zz&at=x", "/surface?world"} {
 			w := request("GET", target)
 			check(w, 400, "unsupported surface query parameter")
 			if strings.Contains(w.Body.String(), `class="lane"`) {

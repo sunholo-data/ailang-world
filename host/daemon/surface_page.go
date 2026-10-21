@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -18,10 +19,11 @@ const (
 	liveSessionsUnavailable  = "live sessions could not be read"
 )
 
-// handleSurface serves GET /surface. M2's query grammar is closed and empty:
-// any query is an inert 400 (M3 adds brane and at).
+// handleSurface accepts either no query or exactly one brane and one at.
 func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
-	if r.URL.RawQuery != "" {
+	q, queryErr := url.ParseQuery(r.URL.RawQuery)
+	stackQuery := r.URL.RawQuery != ""
+	if queryErr != nil || stackQuery && (len(q) != 2 || len(q["brane"]) != 1 || len(q["at"]) != 1) {
 		writeWorkbenchError(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
 		return
 	}
@@ -34,6 +36,31 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
 	var tl surfacepage.Timeline
 	_, ix, empty, err := d.readSurfaceIndex()
+	if stackQuery {
+		s := surfacepage.Stack{}
+		switch {
+		case err != nil:
+			status = http.StatusServiceUnavailable
+			s.Reason = d.surfaceIndexRefusal(err)
+		case empty != "":
+			s.Reason = empty
+		default:
+			s, err = surfacepage.LayoutStack(ix, q.Get("brane"), q.Get("at"), now.At)
+			if err != nil {
+				status = http.StatusNotFound
+				s.Reason = err.Error()
+			}
+		}
+		body, renderErr := surfacepage.RenderStack(s)
+		if renderErr != nil {
+			d.writeWorkbenchInternalError(w, r, renderErr)
+			return
+		}
+		setWorkbenchHeaders(w)
+		w.WriteHeader(status)
+		_, _ = w.Write(body)
+		return
+	}
 	switch {
 	case err != nil:
 		status = http.StatusServiceUnavailable
