@@ -904,6 +904,9 @@ func TestExecProtectedDetectsCreation(t *testing.T) {
 		changes      []protectedRecordChange
 	}{
 		{"creation", "printf new > zz_test.go", []protectedRecordChange{recordChange("zz_test.go", "untracked", "after")}},
+		// A new directory under a directory pattern: --untracked-files=normal reports
+		// only "tests/" here (a file-name pathspec makes Git recurse anyway; judge r1 N1).
+		{"new-dir", "mkdir tests; printf new > tests/x.py", []protectedRecordChange{recordChange("tests/x.py", "untracked", "after")}},
 		{"deletion", "rm a_test.go", []protectedRecordChange{recordChange("a_test.go", "deleted", "after")}},
 		{"rename", "mv a_test.go b_test.go", []protectedRecordChange{recordChange("a_test.go", "deleted", "after"), recordChange("b_test.go", "untracked", "after")}},
 		// Real Git porcelain v2 reports a regular-file -> symlink type change
@@ -913,7 +916,7 @@ func TestExecProtectedDetectsCreation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			git := recordEnv(t)
 			recordPhaseBound(t, 15*time.Second)
-			f := recordTamperFixture(t, git, recordPatterns, tc.script, nil)
+			f := recordTamperFixture(t, git, append(append([]string{}, recordPatterns...), "tests/**"), tc.script, nil)
 			recordVerdicts(t, recordSuccess(t, recordExecute(t, f, context.Background(), "tamper")), true, false, tc.changes...)
 			// The same handler keeps its episode baseline on the second call.
 			want := []protectedRecordChange{}
@@ -1075,6 +1078,15 @@ func TestExecProtectedRecordReplay(t *testing.T) {
 			}
 			if got := execDecode(t, replayed); !reflect.DeepEqual(got.Protected, live.Protected) {
 				t.Fatalf("replay protected block changed: %+v want %+v", got.Protected, live.Protected)
+			}
+			// A replay must answer from the record, never reach a handler (judge r1 N2).
+			trap := Registry{EffectWorkspaceExec: HandlerFunc(func(context.Context, EffectRequest, []byte) ([]byte, error) {
+				t.Error("replay dispatched to the workspace-exec handler")
+				return nil, errors.New("replay dispatched")
+			})}
+			again, _, err := NewReplaySession(s, grants, trap, []hashref.HashRef{ref}).Invoke(boundedTestContext(t), req, payload)
+			if err != nil || !bytes.Equal(again, out) {
+				t.Fatalf("replay with a trap registry = %s, %v; want the recorded bytes", again, err)
 			}
 		})
 	}
