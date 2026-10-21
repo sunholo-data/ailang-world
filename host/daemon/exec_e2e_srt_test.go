@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -27,7 +28,7 @@ import (
 
 // newExecSrtRig serves the published se-tools from a daemon whose exec
 // profile names three commands in the fixture worktree ep1.
-func newExecSrtRig(t *testing.T) *seRig {
+func newExecSrtRig(t *testing.T, hooks ...func(map[string]any, string)) *seRig {
 	t.Helper()
 	interp := os.Getenv("AILANG_BIN")
 	if interp == "" {
@@ -48,6 +49,9 @@ func newExecSrtRig(t *testing.T) *seRig {
 			"where": map[string]any{"argv": []any{"sh", "-c", "pwd -P"}},
 			"mark":  map[string]any{"argv": []any{"sh", "-c", "echo ran >> ran.txt; echo marked"}},
 		}}
+	for _, hook := range hooks {
+		hook(profile, filepath.Join(f.root, "ep1"))
+	}
 	data, err := json.Marshal(profile)
 	if err != nil {
 		t.Fatal(err)
@@ -247,49 +251,82 @@ func TestExecSrtMCPGrantAndBudget(t *testing.T) {
 // with no registry — nothing executes — to the committed output byte for
 // byte (row 134 V10/V46).
 func TestExecSrtReplayIsByteEqual(t *testing.T) {
-	r := newExecSrtRig(t)
-	token := r.mint("ep1", broker.EffectWorkspaceExec)
-	code, raw := r.post("/a2a/", token, a2aSendBody("row140-replay", "workspace-exec", map[string]any{"command": "mark"}))
-	var wire struct {
-		Result struct {
-			Metadata struct {
-				InvocationID string `json:"invocation_id"`
-			} `json:"metadata"`
-			Artifacts []struct {
-				Parts []struct {
-					Data map[string]any `json:"data"`
-				} `json:"parts"`
-			} `json:"artifacts"`
-		} `json:"result"`
-	}
-	if code != http.StatusOK || json.Unmarshal(raw, &wire) != nil || wire.Result.Metadata.InvocationID == "" ||
-		len(wire.Result.Artifacts) != 1 || len(wire.Result.Artifacts[0].Parts) != 1 {
-		t.Fatalf("tasks/send = %d %s", code, raw)
-	}
-	live := wire.Result.Artifacts[0].Parts[0].Data
-	if live["exit_code"] != float64(0) {
-		t.Fatalf("live run %v", live)
-	}
-	spawned := r.execSpawns()
-	ran := filepath.Join(r.f.root, "ep1", "ran.txt")
-	before := mustReadFile(t, ran)
-	replayed, err := r.d.coord.Replay(boundedTestContext(t), wire.Result.Metadata.InvocationID,
-		func(grants []broker.Capability, refs []hashref.HashRef) transitionreg.Binder {
-			return broker.OpenReplayBinder(r.d.store, grants, refs)
+	for _, protected := range []bool{false, true} {
+		name := "unprotected"
+		if protected {
+			name = "protected"
+		}
+		t.Run(name, func(t *testing.T) {
+			r := newExecSrtRig(t, func(profile map[string]any, root string) {
+				if !protected {
+					return
+				}
+				profile["protected"] = []string{"*_test.go"}
+				if err := os.WriteFile(filepath.Join(root, "a_test.go"), []byte("protected fixture\n"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				for _, args := range [][]string{{"init", "-q", "--template="}, {"add", "a_test.go"},
+					{"-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture"}} {
+					cmd := exec.CommandContext(boundedTestContext(t), "git", args...)
+					cmd.Dir = root
+					cmd.Env = append(os.Environ(), "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null")
+					if out, err := cmd.CombinedOutput(); err != nil {
+						t.Fatalf("fixture git %v: %v %s", args, err, out)
+					}
+				}
+			})
+			token := r.mint("ep1", broker.EffectWorkspaceExec)
+			code, raw := r.post("/a2a/", token, a2aSendBody("row140-replay", "workspace-exec", map[string]any{"command": "mark"}))
+			var wire struct {
+				Result struct {
+					Metadata struct {
+						InvocationID string `json:"invocation_id"`
+					} `json:"metadata"`
+					Artifacts []struct {
+						Parts []struct {
+							Data map[string]any `json:"data"`
+						} `json:"parts"`
+					} `json:"artifacts"`
+				} `json:"result"`
+			}
+			if code != http.StatusOK || json.Unmarshal(raw, &wire) != nil || wire.Result.Metadata.InvocationID == "" ||
+				len(wire.Result.Artifacts) != 1 || len(wire.Result.Artifacts[0].Parts) != 1 {
+				t.Fatalf("tasks/send = %d %s", code, raw)
+			}
+			live := wire.Result.Artifacts[0].Parts[0].Data
+			if live["exit_code"] != float64(0) {
+				t.Fatalf("live run %v", live)
+			}
+			if p, ok := live["protected"].(map[string]any); protected {
+				if !ok || p["error"] != "" || p["intact_before"] != true || p["intact_after"] != true {
+					t.Fatalf("live protected result: %v", live)
+				}
+			} else if ok {
+				t.Fatalf("unprotected output gained protected: %v", live)
+			}
+			spawned := r.execSpawns()
+			ran := filepath.Join(r.f.root, "ep1", "ran.txt")
+			before := mustReadFile(t, ran)
+			ctx := boundedTestContext(t) // Each subtest owns its replay deadline and cleanup.
+			replayed, err := r.d.coord.Replay(ctx, wire.Result.Metadata.InvocationID,
+				func(grants []broker.Capability, refs []hashref.HashRef) transitionreg.Binder {
+					return broker.OpenReplayBinder(r.d.store, grants, refs)
+				})
+			if err != nil {
+				t.Fatalf("replay: %v", err)
+			}
+			var replayedOut map[string]any
+			if err := json.Unmarshal(replayed, &replayedOut); err != nil || !reflect.DeepEqual(replayedOut, live) {
+				t.Fatalf("replayed %s, live %v (%v)", replayed, live, err)
+			}
+			liveBytes, _ := json.Marshal(live)
+			again, _ := json.Marshal(replayedOut)
+			if string(liveBytes) != string(again) {
+				t.Fatalf("replay is not byte-equal:\n%s\n%s", again, liveBytes)
+			}
+			if r.execSpawns() != spawned || mustReadFile(t, ran) != before {
+				t.Fatalf("the replay executed: spawns %d -> %d", spawned, r.execSpawns())
+			}
 		})
-	if err != nil {
-		t.Fatalf("replay: %v", err)
-	}
-	var replayedOut map[string]any
-	if err := json.Unmarshal(replayed, &replayedOut); err != nil || !reflect.DeepEqual(replayedOut, live) {
-		t.Fatalf("replayed %s, live %v (%v)", replayed, live, err)
-	}
-	liveBytes, _ := json.Marshal(live)
-	again, _ := json.Marshal(replayedOut)
-	if string(liveBytes) != string(again) {
-		t.Fatalf("replay is not byte-equal:\n%s\n%s", again, liveBytes)
-	}
-	if r.execSpawns() != spawned || mustReadFile(t, ran) != before {
-		t.Fatalf("the replay executed: spawns %d -> %d", spawned, r.execSpawns())
 	}
 }
