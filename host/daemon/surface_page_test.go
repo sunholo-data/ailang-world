@@ -12,7 +12,43 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/surface"
+	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
+
+// TestSurfaceScriptRoute: GET /surface/surface.js serves the embedded
+// script with /workbench/live.js's headers, outside the frozen /v1 table.
+func TestSurfaceScriptRoute(t *testing.T) {
+	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	h := d.Handler()
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/surface/surface.js", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d", w.Code)
+	}
+	for k, v := range map[string]string{"Content-Type": "text/javascript; charset=utf-8", "Content-Security-Policy": "default-src 'none'",
+		"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"} {
+		if got := w.Header().Get(k); got != v {
+			t.Errorf("%s = %q, want %q", k, got, v)
+		}
+	}
+	if len(surfacepage.Script) == 0 || w.Body.String() != string(surfacepage.Script) {
+		t.Fatal("served script is not the embedded asset")
+	}
+	for _, seam := range []string{"laneStates", "parseAddress", "keyAction", "shouldHandle", "buildModel", "loadLook", "saveLook", "resolveLook"} {
+		if !strings.Contains(w.Body.String(), seam) {
+			t.Errorf("served script lacks seam %s", seam)
+		}
+	}
+	w = httptest.NewRecorder()
+	h.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/surface/surface.js", nil))
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("POST = %d", w.Code)
+	}
+}
 
 func TestSurfacePage(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "operator-index.json")
@@ -45,7 +81,13 @@ func TestSurfacePage(t *testing.T) {
 				t.Errorf("body lacks %q", s)
 			}
 		}
-		inertSurfacePage(t, body)
+		// A 400 is the workbench's plain error page; every surface page
+		// carries the one script.
+		scripts := 1
+		if status == http.StatusBadRequest {
+			scripts = 0
+		}
+		inertSurfacePage(t, body, scripts)
 		return body
 	}
 	header := `<span class="name">World</span>`
@@ -162,12 +204,13 @@ func TestSurfacePage(t *testing.T) {
 	})
 }
 
-// inertSurfacePage is M2's page rule: no script, no on*= handler, and every
-// href local.
-func inertSurfacePage(t *testing.T, body string) {
+// inertSurfacePage is the page rule (M2, M4a): scripts script elements, each
+// exactly /surface/surface.js with no inline body; no on*= handler; and
+// every href local.
+func inertSurfacePage(t *testing.T, body string, scripts int) {
 	t.Helper()
-	if strings.Contains(strings.ToLower(body), "<script") {
-		t.Error("page has a <script")
+	if n := strings.Count(strings.ToLower(body), "<script"); n != scripts || strings.Count(body, surfacepage.ScriptElement) != scripts {
+		t.Errorf("page has %d <script elements, want %d of %s", n, scripts, surfacepage.ScriptElement)
 	}
 	if m := regexp.MustCompile(`(?i)\son[a-z]+\s*=`).FindString(body); m != "" {
 		t.Errorf("page has a handler attribute %q", m)

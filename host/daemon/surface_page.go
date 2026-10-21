@@ -12,7 +12,7 @@ import (
 
 // Row 188 M2: GET /surface, the world timeline, server-rendered from the
 // surface index. It is outside the frozen /v1 table, GET-only, under the
-// workbench's CSP; it carries no script until M4 adds /surface/surface.js.
+// workbench's CSP. Its one script is GET /surface/surface.js (M4a).
 
 const (
 	unknownSurfaceKeyMessage = "unsupported surface query parameter"
@@ -81,6 +81,16 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 	setWorkbenchHeaders(w)
 	w.WriteHeader(status)
 	_, _ = w.Write(body)
+}
+
+// handleSurfaceScript serves the surface's one embedded script, with the
+// headers of /workbench/live.js.
+func (d *Daemon) handleSurfaceScript(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	_, _ = w.Write(surfacepage.Script)
 }
 
 // liveSessions reads the credentials store read-only, as `session list`

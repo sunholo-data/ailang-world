@@ -114,9 +114,7 @@ func TestSurfaceStackDeterminismAndRender(t *testing.T) {
 		if strings.Count(body, `aria-current="true"`) != 1 {
 			t.Error("current rail state")
 		}
-		if strings.Contains(strings.ToLower(body), "<script") || regexp.MustCompile(`(?i)\son[a-z]+\s*=`).MatchString(body) {
-			t.Error("active content")
-		}
+		checkInert(t, body)
 		for _, m := range regexp.MustCompile(`href="([^"]*)"`).FindAllStringSubmatch(body, -1) {
 			if !strings.HasPrefix(m[1], "/surface") {
 				t.Error("nonlocal href", m[1])
@@ -298,8 +296,18 @@ func TestSurfaceStackW189eInlineReads(t *testing.T) {
 			}
 		}
 	}
+	// A decision's pill, text and time share one flex line: only the text
+	// wraps, inside its own box, never away from its pill.
 	if !strings.Contains(body, ".source-chip { display:inline-flex;") ||
-		!strings.Contains(body, ".decision-line { white-space:nowrap }") {
+		!strings.Contains(body, ".decision { display:flex; align-items:baseline;") ||
+		!strings.Contains(body, ".decision .actor { flex:none }") ||
+		!strings.Contains(body, ".decision-text { flex:1 1 auto; min-width:0; overflow-wrap:anywhere }") ||
+		!strings.Contains(body, ".decision small { flex:none; white-space:nowrap }") {
 		t.Error("missing inline layout rules")
+	}
+	for _, d := range regexp.MustCompile(`<li class="decision"[^>]*>(.*?)</li>`).FindAllStringSubmatch(body, -1) {
+		if !regexp.MustCompile(`^<span class="actor">[^<]*</span><span class="decision-text">[^<]*</span><small>[^<]*</small>$`).MatchString(d[1]) {
+			t.Errorf("decision is not pill, text, time: %s", d[1])
+		}
 	}
 }
