@@ -1019,7 +1019,8 @@ func releaseFromVersion(version string) string {
 // by row 198, mirrored in the sketch's routes()).
 // The next registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
-// ten. GET /surface/index.json is also an unversioned read route outside the frozen table.
+// ten. GET /surface/index.json and GET /surface (the world timeline page, row 188 M2) are also
+// unversioned read routes outside the frozen table.
 // The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
@@ -1038,6 +1039,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)
+	mux.HandleFunc("GET /surface", d.handleSurface)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session

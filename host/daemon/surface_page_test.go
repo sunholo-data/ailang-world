@@ -1,0 +1,166 @@
+package daemon
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/surface"
+)
+
+func TestSurfacePage(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "operator-index.json")
+	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost, SurfaceIndex: path})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	h := d.Handler()
+	request := func(method, target string) *httptest.ResponseRecorder {
+		t.Helper()
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(method, target, nil))
+		return w
+	}
+	check := func(w *httptest.ResponseRecorder, status int, want ...string) string {
+		t.Helper()
+		body := w.Body.String()
+		if w.Code != status {
+			t.Fatalf("status = %d, want %d: %s", w.Code, status, body)
+		}
+		for k, v := range map[string]string{"Content-Security-Policy": workbenchCSP, "X-Content-Type-Options": "nosniff",
+			"Referrer-Policy": "no-referrer", "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store"} {
+			if got := w.Header().Get(k); got != v {
+				t.Errorf("%s = %q, want %q", k, got, v)
+			}
+		}
+		for _, s := range want {
+			if !strings.Contains(body, s) {
+				t.Errorf("body lacks %q", s)
+			}
+		}
+		inertSurfacePage(t, body)
+		return body
+	}
+	header := `<span class="name">World</span>`
+
+	t.Run("not built", func(t *testing.T) {
+		check(request("GET", "/surface"), 200, header, "the surface index has not been built yet", "Nothing needs you")
+	})
+	t.Run("not configured", func(t *testing.T) {
+		d.cfg.SurfaceIndex = ""
+		defer func() { d.cfg.SurfaceIndex = path }()
+		body := check(request("GET", "/surface"), 200, header, "no surface index is configured", "World serving, no index shown")
+		if strings.Contains(body, "World healthy") {
+			t.Error("an absent index reads as healthy")
+		}
+	})
+
+	rig, err := os.ReadFile(filepath.Join("..", "surface", "testdata", "index-rig.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, rig, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	creds, err := store.OpenCredentials(d.credentialsPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().Unix()
+	for _, row := range []store.SessionRow{
+		{CredentialID: strings.Repeat("a", 64), EpisodeID: "w188e", GrantsJSON: "[]", CreatedAt: now - 360, ExpiresAt: now + 3600},
+		{CredentialID: strings.Repeat("b", 64), EpisodeID: "w-old", GrantsJSON: "[]", CreatedAt: now - 7200, ExpiresAt: now - 1},
+	} {
+		if err := creds.MintSession(boundedTestContext(t), row); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := creds.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("fixture index", func(t *testing.T) {
+		w189d := "f36428abd9a72e5093b61cba14e716c37019f1ef"
+		body := check(request("GET", "/surface"), 200,
+			header, "World healthy · checked ",
+			`<g class="lane" data-brane="shared" data-glyph="circle">`,
+			`<g class="lane" data-brane="row-189" data-glyph="triangle"><title>w-world-onboarding · row 189</title>`,
+			`<a class="state" data-state="`+w189d+`" data-kind="step" data-brane="row-189" href="/surface?brane=row-189&amp;at=`+w189d+`">`,
+			`<a class="state" data-state="90035557b2012895551867c0ebe2f36b853aac09" data-kind="shared" data-brane="shared" href="/surface?brane=shared&amp;at=90035557b2012895551867c0ebe2f36b853aac09">`,
+			`<path class="link" data-from="0ee1945ffba795812f06dce95998b646adfac343" data-to="`+w189d+`"`,
+			`<path class="link" data-from="`+w189d+`" data-to="90035557b2012895551867c0ebe2f36b853aac09"`,
+			`<text class="badge" data-state="`+w189d+`"`,
+			`<text class="tick" x="288" y="14">17 Oct</text>`,
+			"1 live session", "running w188e · started 6 min ago", "Nothing needs you")
+		if got := strings.Count(body, `<a class="state" `); got != 48 {
+			t.Errorf("%d states, want 48", got)
+		}
+		if strings.Contains(body, "w-old") {
+			t.Error("an expired session is listed as live")
+		}
+	})
+
+	t.Run("query", func(t *testing.T) {
+		for _, target := range []string{"/surface?x=1", "/surface?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef", "/surface?world"} {
+			w := request("GET", target)
+			check(w, 400, "unsupported surface query parameter")
+			if strings.Contains(w.Body.String(), `class="lane"`) {
+				t.Errorf("%s rendered the timeline", target)
+			}
+		}
+	})
+
+	t.Run("refused", func(t *testing.T) {
+		for name, data := range map[string]string{
+			"path in validation error": strings.Replace(string(rig), surface.Schema, path, 1),
+			"undecodable":              "{",
+		} {
+			if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			w := request("GET", "/surface")
+			body := check(w, 503, header, "the configured surface index: ", "Nothing needs you")
+			if strings.Contains(body, path) || strings.Contains(body, filepath.Dir(path)) {
+				t.Errorf("%s: configured path leaked", name)
+			}
+			if strings.Contains(body, `class="lane"`) || strings.Contains(body, "World healthy") {
+				t.Errorf("%s: a refused index rendered as healthy lanes", name)
+			}
+		}
+		d.cfg.SurfaceIndex = filepath.Dir(path)
+		defer func() { d.cfg.SurfaceIndex = path }()
+		if body := check(request("GET", "/surface"), 503, header); strings.Contains(body, d.cfg.SurfaceIndex) {
+			t.Error("read error leaked the configured path")
+		}
+	})
+
+	t.Run("POST", func(t *testing.T) {
+		if w := request(http.MethodPost, "/surface"); w.Code != 405 {
+			t.Fatalf("POST = %d", w.Code)
+		}
+	})
+}
+
+// inertSurfacePage is M2's page rule: no script, no on*= handler, and every
+// href local.
+func inertSurfacePage(t *testing.T, body string) {
+	t.Helper()
+	if strings.Contains(strings.ToLower(body), "<script") {
+		t.Error("page has a <script")
+	}
+	if m := regexp.MustCompile(`(?i)\son[a-z]+\s*=`).FindString(body); m != "" {
+		t.Errorf("page has a handler attribute %q", m)
+	}
+	for _, h := range regexp.MustCompile(`(?i)\bhref\s*=\s*["']?([^"'\s>]*)`).FindAllStringSubmatch(body, -1) {
+		if !(strings.HasPrefix(h[1], "/") || strings.HasPrefix(h[1], "#")) || strings.HasPrefix(h[1], "//") {
+			t.Errorf("href %q is not local", h[1])
+		}
+	}
+}

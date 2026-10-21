@@ -29,51 +29,59 @@ func (d *Daemon) handleSurfaceIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	empty := func(reason string) {
+	data, _, empty, err := d.readSurfaceIndex()
+	switch {
+	case err != nil:
+		writeAPIError(w, "SurfaceIndexRefused", d.surfaceIndexRefusal(err), http.StatusServiceUnavailable)
+	case empty != "":
 		// These fixed reasons contain no filesystem path.
-		_, _ = io.WriteString(w, `{"schema":"`+surface.Schema+`","empty":true,"reason":"`+reason+`"}`)
+		_, _ = io.WriteString(w, `{"schema":"`+surface.Schema+`","empty":true,"reason":"`+empty+`"}`)
+	default:
+		_, _ = w.Write(data)
 	}
-	refuse := func(err error) {
-		// os.PathError includes its path. Unwrap it before reporting detail,
-		// and redact a configured path echoed by a decoder or validator.
-		var pe *os.PathError
-		if errors.As(err, &pe) {
-			err = pe.Err
-		}
-		reason := strings.ReplaceAll(err.Error(), d.cfg.SurfaceIndex, "the configured surface index")
-		writeAPIError(w, "SurfaceIndexRefused", "the configured surface index: "+reason, http.StatusServiceUnavailable)
-	}
+}
+
+// readSurfaceIndex is the one read of the configured index that both
+// surface routes share: re-read on every request, bounded by
+// surface.MaxBytes, decoded and validated. empty is a positive empty state's
+// fixed reason (no index configured, or not built yet); err is a refusal, to
+// be reported through surfaceIndexRefusal.
+func (d *Daemon) readSurfaceIndex() (data []byte, ix surface.Index, empty string, err error) {
 	if d.cfg.SurfaceIndex == "" {
-		empty("no surface index is configured: start serve with --surface-index <file>")
-		return
+		return nil, ix, "no surface index is configured: start serve with --surface-index <file>", nil
 	}
 	f, err := os.Open(d.cfg.SurfaceIndex)
 	if errors.Is(err, os.ErrNotExist) {
-		empty("the surface index has not been built yet: run ailang-worldd surface-index")
-		return
+		return nil, ix, "the surface index has not been built yet: run ailang-worldd surface-index", nil
 	}
 	if err != nil {
-		refuse(err)
-		return
+		return nil, ix, "", err
 	}
 	defer f.Close()
-	data, err := io.ReadAll(io.LimitReader(f, surface.MaxBytes+1))
+	data, err = io.ReadAll(io.LimitReader(f, surface.MaxBytes+1))
 	if err != nil {
-		refuse(err)
-		return
+		return nil, ix, "", err
 	}
 	if len(data) > surface.MaxBytes {
-		refuse(fmt.Errorf("over the 4 MiB (%d bytes) bound", surface.MaxBytes))
-		return
+		return nil, ix, "", fmt.Errorf("over the 4 MiB (%d bytes) bound", surface.MaxBytes)
 	}
-	var ix surface.Index
 	if err := json.Unmarshal(data, &ix); err != nil {
-		refuse(err)
-		return
+		return nil, surface.Index{}, "", err
 	}
 	if err := surface.Validate(ix); err != nil {
-		refuse(err)
-		return
+		return nil, surface.Index{}, "", err
 	}
-	_, _ = w.Write(data)
+	return data, ix, "", nil
+}
+
+// surfaceIndexRefusal is a refusal's text, without the configured path.
+func (d *Daemon) surfaceIndexRefusal(err error) string {
+	// os.PathError includes its path. Unwrap it before reporting detail,
+	// and redact a configured path echoed by a decoder or validator.
+	var pe *os.PathError
+	if errors.As(err, &pe) {
+		err = pe.Err
+	}
+	reason := strings.ReplaceAll(err.Error(), d.cfg.SurfaceIndex, "the configured surface index")
+	return "the configured surface index: " + reason
 }
