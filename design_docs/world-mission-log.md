@@ -1427,6 +1427,7 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
   - the generator rows SKIP without python3 (pre-existing).
 - Still carried from 294: `path_truncated` and the per-change phase are absent from the `why` text; `/reserve-after-before` reds under load.
 - Still carried from 293: the parser's `u` branch; `exec_protected_record_test.go` at 1 094 lines; the daemon replay's ignored-baseline fields.
+- **[HARNESS] ticket:routing-models-check:bold-colon-heading** (filed to mission-fleet, blocking none): Gate 4's `mission_routing_models_check.sh` matches `**Routing evidence**` but World writes `**Routing evidence:**`, so it returns rc 2 (instrument failure) on entry 295 and on the control, entry 294. A manual read of entry 295 finds only `gpt-6.1-sol`, which is allowlisted.
 
 **Retro:**
 - **Skill lane:** none (World does not edit the shared skill).
