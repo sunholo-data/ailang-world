@@ -30,12 +30,14 @@
       "kind": "attended"
     },
     {
+      "name": "Exec protected test paths",
       "key": "row-156",
       "row": 156,
       "title": "w-exec-protected-test-paths",
       "kind": "loop"
     },
     {
+      "name": "World onboarding",
       "key": "row-189",
       "row": 189,
       "title": "w-world-onboarding",
@@ -48,6 +50,7 @@
       "kind": "attended"
     },
     {
+      "name": "Episode report",
       "key": "row-198",
       "row": 198,
       "title": "w-episode-report",
@@ -624,6 +627,11 @@
   ],
   "steps": [
     {
+      "delivered": {
+        "passed": 2,
+        "total": 2,
+        "regraded": []
+      },
       "episode": "e2",
       "state": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
       "pr": 328,
@@ -639,6 +647,11 @@
       "base": "0ee1945ffba795812f06dce95998b646adfac343"
     },
     {
+      "delivered": {
+        "passed": 4,
+        "total": 4,
+        "regraded": []
+      },
       "episode": "e1",
       "state": "f36428abd9a72e5093b61cba14e716c37019f1ef",
       "pr": 327,

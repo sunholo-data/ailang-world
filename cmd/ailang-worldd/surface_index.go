@@ -42,7 +42,7 @@ Build the surface index (` + surface.Schema + `) that /surface reads, from a
 repo's git history and the charter's queue rows, or check one.
 
 Building runs, in --repo:
-  git log --first-parent --merges --format=%H%x09%P%x09%cI%x09%s -n <limit> <rev>
+  git log --first-parent --merges --format=%x1e%H%x1f%P%x1f%cI%x1f%s%x1f%b -n <limit> <rev>
   git merge-base <first parent> <second parent>    (once per merge)
 Each merge is a shared state, and its second parent is a step (the PR's side).
 A step's brane is the first row its PR branch names (trial/row189-…,
@@ -53,6 +53,8 @@ brane: its step sits on the shared lane. Brane titles are the rows' slugs in
 --charter. The index is validated, then written with a newline, atomically
 (a temporary file beside --out, then a rename). It holds commit hashes, times,
 PR numbers, branch names and row slugs, never a filesystem path.
+Step titles are the first non-empty PR merge body line (raw, at most 200
+characters); brane names and goals come from the charter slug and problem statement.
 
 With --rig, the index also holds the episode facts (otherwise it is unchanged):
   steps[]      one per episode of --project whose PR (<rig>/trial/prs.json,
@@ -61,7 +63,11 @@ With --rig, the index also holds the episode facts (otherwise it is unchanged):
                the report's calls and entries. Records are
                <rig>/evidence/<project>[-rN]/episodes/<ep>.json, one per
                round, ordered by started_at; the rest are listed by id in
-               source.rig.unattached
+               source.rig.unattached. Summaries are round 1 agent_summary, stripped of
+               markdown, emails and absolute path tokens before bounding.
+               delivered counts last-round graders plus matching successful
+               trial-regrade/1 .regrade.json records beside their grader logs;
+               regrade files are bounded at 64 KiB. Raw graders stay unchanged.
   files{}      git diff --name-status --no-renames -z <base> <step>
   reads{}      the report's reads, each path classified at the step's base:
                  git ls-tree -r -z --name-only <base>      (once per step)
@@ -254,6 +260,7 @@ func runSurfaceIndex(args []string, stdout, stderr io.Writer) int {
 		return fail("%v", err)
 	}
 	in.Titles = surface.ChartRowTitles(string(charter))
+	in.Goals = surface.ChartRowGoals(string(charter))
 	in.BuiltAt = time.Now()
 	ix, err := surface.Build(in)
 	if err == nil && a.rig != "" {
@@ -329,6 +336,16 @@ func loadSurfaceRig(rig, project string) (surface.RigInput, error) {
 			r, err := surface.ParseEpisodeRecord(data)
 			if err != nil {
 				return surface.RigInput{}, fmt.Errorf("%s/episodes/%s: %v", d.Name(), f.Name(), err)
+			}
+			r.Regraded = map[string]bool{}
+			for _, g := range r.Graders {
+				if g.Passed || g.Name == "" || strings.ContainsAny(g.Name, `/\\`) || g.Name == "." || g.Name == ".." {
+					continue
+				}
+				data, readErr := readFileCapped(filepath.Join(evidence, d.Name(), "graders", r.Episode+"."+g.Name+".regrade.json"), 64<<10)
+				if readErr == nil && surface.RegradePassed(data, r.Episode, g.Name) {
+					r.Regraded[g.Name] = true
+				}
 			}
 			records = append(records, r)
 		}
@@ -480,7 +497,7 @@ func gitSurfaceInput(ctx context.Context, repo, rev string, limit int) (surface.
 		return surface.BuildInput{}, err
 	}
 	log, err := surfaceGit(ctx, repo, "log", "--first-parent", "--merges",
-		"--format=%H%x09%P%x09%cI%x09%s", "-n", strconv.Itoa(limit), rev)
+		"--format=%x1e%H%x1f%P%x1f%cI%x1f%s%x1f%b", "-n", strconv.Itoa(limit), rev)
 	if err != nil {
 		return surface.BuildInput{}, err
 	}

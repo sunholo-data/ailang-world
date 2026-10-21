@@ -267,14 +267,14 @@ func TestAttachRigFacts(t *testing.T) {
 	e2, e1 := ix.Steps[0], ix.Steps[1]
 	calls, entries := 42, [2]int64{1200, 1290}
 	want1 := Step{Episode: "e1", State: stepE1, PR: 327, Task: "row-189-M5-plugin", Agent: "claude", Model: "claude-opus-5-5",
-		Rounds: 2, Graders: Graders{4, 4}, Minutes: 13.5, Calls: &calls, Entries: &entries, Base: base0}
+		Rounds: 2, Graders: Graders{4, 4}, Delivered: &Delivered{Passed: 4, Total: 4, Regraded: []string{}}, Minutes: 13.5, Calls: &calls, Entries: &entries, Base: base0}
 	if !reflect.DeepEqual(e1, want1) {
 		t.Errorf("e1 = %+v, want %+v", e1, want1)
 	}
 	// 255000 ms is 4.25 minutes, rounded to 4.3; no report, so no calls or
 	// entries; a task file keeps its base name only.
 	want2 := Step{Episode: "e2", State: stepE2, PR: 328, Task: "row-156-m5b.md", Agent: "codex", Model: "gpt-x",
-		Rounds: 1, Graders: Graders{2, 2}, Minutes: 4.3, Base: base0}
+		Rounds: 1, Graders: Graders{2, 2}, Delivered: &Delivered{Passed: 2, Total: 2, Regraded: []string{}}, Minutes: 4.3, Base: base0}
 	if !reflect.DeepEqual(e2, want2) {
 		t.Errorf("e2 = %+v, want %+v", e2, want2)
 	}

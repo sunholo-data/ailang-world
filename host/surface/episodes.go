@@ -51,6 +51,13 @@ const (
 	DecisionMerge   = "merge"
 )
 
+// Delivered is the last round with successful operator re-runs applied.
+type Delivered struct {
+	Passed   int      `json:"passed"`
+	Total    int      `json:"total"`
+	Regraded []string `json:"regraded"`
+}
+
 // Step is one episode that built a step state.
 //
 // State is the step state's id. Task, Agent, Model and Base (solution.base)
@@ -58,18 +65,22 @@ const (
 // of every round. Calls (total_calls) and Entries ([first, last] log
 // entries) are the report's, absent when the daemon has no report.
 type Step struct {
-	Episode string    `json:"episode"`
-	State   string    `json:"state"`
-	PR      int       `json:"pr"`
-	Task    string    `json:"task"`
-	Agent   string    `json:"agent"`
-	Model   string    `json:"model"`
-	Rounds  int       `json:"rounds"`
-	Graders Graders   `json:"graders"`
-	Minutes float64   `json:"minutes"`
-	Calls   *int      `json:"calls,omitempty"`
-	Entries *[2]int64 `json:"entries,omitempty"`
-	Base    string    `json:"base"`
+	Summary     string     `json:"summary,omitempty"`
+	SummaryFull string     `json:"summary_full,omitempty"`
+	Failed      []string   `json:"failed,omitempty"`
+	Delivered   *Delivered `json:"delivered,omitempty"`
+	Episode     string     `json:"episode"`
+	State       string     `json:"state"`
+	PR          int        `json:"pr"`
+	Task        string     `json:"task"`
+	Agent       string     `json:"agent"`
+	Model       string     `json:"model"`
+	Rounds      int        `json:"rounds"`
+	Graders     Graders    `json:"graders"`
+	Minutes     float64    `json:"minutes"`
+	Calls       *int       `json:"calls,omitempty"`
+	Entries     *[2]int64  `json:"entries,omitempty"`
+	Base        string     `json:"base"`
 }
 
 // Graders counts a round's graders.
@@ -119,17 +130,19 @@ type RigSource struct {
 // Its path fields (worktree, transcript, report, graders' outputs) are not
 // decoded at all.
 type EpisodeRecord struct {
-	Schema     string         `json:"schema"`
-	Episode    string         `json:"episode"`
-	Project    string         `json:"project"`
-	Agent      string         `json:"agent"`
-	Model      string         `json:"model"`
-	Task       string         `json:"task"`
-	StartedAt  string         `json:"started_at"`
-	FinishedAt string         `json:"finished_at"`
-	AgentRun   recordRun      `json:"agent_run"`
-	Solution   recordSolution `json:"solution"`
-	Graders    []recordGrader `json:"graders"`
+	AgentSummary string          `json:"agent_summary"`
+	Regraded     map[string]bool `json:"-"`
+	Schema       string          `json:"schema"`
+	Episode      string          `json:"episode"`
+	Project      string          `json:"project"`
+	Agent        string          `json:"agent"`
+	Model        string          `json:"model"`
+	Task         string          `json:"task"`
+	StartedAt    string          `json:"started_at"`
+	FinishedAt   string          `json:"finished_at"`
+	AgentRun     recordRun       `json:"agent_run"`
+	Solution     recordSolution  `json:"solution"`
+	Graders      []recordGrader  `json:"graders"`
 
 	Started, Finished time.Time `json:"-"`
 }
@@ -143,7 +156,8 @@ type recordSolution struct {
 }
 
 type recordGrader struct {
-	Passed bool `json:"passed"`
+	Name   string `json:"name"`
+	Passed bool   `json:"passed"`
 }
 
 // ParseEpisodeRecord decodes one record and checks the fields the index uses.
@@ -477,6 +491,19 @@ func stepOf(ep Episode, st State, rep Report, hasReport bool) Step {
 	s := Step{Episode: ep.ID, State: st.ID, PR: st.PR, Task: taskName(first.Task), Agent: first.Agent,
 		Model: first.Model, Rounds: len(ep.Rounds), Graders: gradersOf(last),
 		Minutes: math.Round(float64(wall)/6000) / 10}
+	s.Summary, s.SummaryFull = summaries(first.AgentSummary)
+	s.Delivered = &Delivered{Passed: s.Graders.Passed, Total: s.Graders.Total, Regraded: []string{}}
+	for _, g := range last.Graders {
+		if !g.Passed && g.Name != "" {
+			s.Failed = append(s.Failed, g.Name)
+			if last.Regraded[g.Name] {
+				s.Delivered.Passed++
+				s.Delivered.Regraded = append(s.Delivered.Regraded, g.Name)
+			}
+		}
+	}
+	sort.Strings(s.Failed)
+	sort.Strings(s.Delivered.Regraded)
 	if commitHash.MatchString(first.Solution.Base) {
 		s.Base = first.Solution.Base
 	}

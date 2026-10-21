@@ -20,12 +20,14 @@
       "kind": "attended"
     },
     {
+      "name": "Exec protected test paths",
       "key": "row-156",
       "row": 156,
       "title": "w-exec-protected-test-paths",
       "kind": "loop"
     },
     {
+      "name": "World onboarding",
       "key": "row-189",
       "row": 189,
       "title": "w-world-onboarding",
@@ -38,6 +40,7 @@
       "kind": "attended"
     },
     {
+      "name": "Episode report",
       "key": "row-198",
       "row": 198,
       "title": "w-episode-report",

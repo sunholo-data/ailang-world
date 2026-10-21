@@ -213,9 +213,9 @@ func TestBuildFacts(t *testing.T) {
 		t.Errorf("02bd141 = %+v", s)
 	}
 	want := map[string]Brane{
-		"row-189": {Key: "row-189", Row: 189, Title: "w-world-onboarding", Kind: BraneAttended},
-		"row-156": {Key: "row-156", Row: 156, Title: "w-exec-protected-test-paths", Kind: BraneLoop},
-		"row-198": {Key: "row-198", Row: 198, Title: "w-episode-report", Kind: BraneAttended},
+		"row-189": {Key: "row-189", Row: 189, Title: "w-world-onboarding", Name: "World onboarding", Kind: BraneAttended},
+		"row-156": {Key: "row-156", Row: 156, Title: "w-exec-protected-test-paths", Name: "Exec protected test paths", Kind: BraneLoop},
+		"row-198": {Key: "row-198", Row: 198, Title: "w-episode-report", Name: "Episode report", Kind: BraneAttended},
 		"row-190": {Key: "row-190", Row: 190, Kind: BraneAttended},
 	}
 	for _, b := range ix.Branes {
