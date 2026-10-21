@@ -908,3 +908,33 @@ func TestExecProtectedSettingsThroughHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestExecDecodeProtectedCompatibility(t *testing.T) {
+	// Independently spell the full wire block; execDecode uses DisallowUnknownFields.
+	wire := []byte(`{"protected":{"digest":"sha256:patterns","patterns":["tests/**"],"enforced":"glob","base":"abc","base_digest":"sha256:tree","base_files":2,"base_ignored_digest":"sha256:ignored","base_ignored_files":1,"intact_before":true,"intact_after":false,"changes":[{"path":"tests/x","status":"modified","phase":"after","path_truncated":true}],"truncated":true,"total":33,"error":"before error"}}`)
+	r := execDecode(t, wire)
+	if r.Protected == nil {
+		t.Fatal("full protected block was lost")
+	}
+	encoded, err := json.Marshal(r.Protected)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(wire, &fields); err != nil {
+		t.Fatal(err)
+	}
+	var got, want any
+	if err := json.Unmarshal(encoded, &got); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(fields["protected"], &want); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("protected round-trip: got %s want %s", encoded, fields["protected"])
+	}
+	if old := execDecode(t, []byte(`{"exit_code":0,"stdout":"old"}`)); old.Protected != nil {
+		t.Fatal("legacy record gained protected")
+	}
+}

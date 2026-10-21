@@ -45,6 +45,11 @@ var contextRootPins = map[string]int{
 	// caller's cancellation (the toolchain call already ran) and feeds
 	// context.WithTimeout directly (worktreeAfterBudget, 60 s); no Store call.
 	"host/broker/worktree_delta.go|finish|WithoutCancel": 1,
+	// Row 156 M6b: the after-command protected check is detached from the
+	// caller's cancellation, re-capped by the call's ORIGINAL deadline
+	// (context.WithDeadline), and checkProtected bounds it by
+	// protectedCheckTimeout (3 751 ms, design V24); Git only, no Store call.
+	"host/broker/handlers_exec.go|Execute|WithoutCancel": 1,
 	"host/capsule/capsule.go|Run|Background":             1,
 	"host/daemon/daemon.go|drain|Background":             1,
 	// Row 134 M4b: an episode's tool handler is built inside the coordinator's

@@ -12,16 +12,17 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 291 | 2026-10-20 | row 156 M6a built: the protected baseline is captured once at NewExecHandler, with the bounded record shape (PR #338; judge r1 PASS 79 → r2 PASS 88 → r3 PASS 90) [PRODUCT] |
-| 290 | 2026-10-20 | row 156 M6-pre built: design V24 measured on installed worktrees; protected-check bounds re-sized to 3 751 / 4 848 ms (PR #333; judge r1 PASS 78 → r2 PASS 86) [PRODUCT] |
-| 289 | 2026-10-20 | row 156 V25 re-measure and M5e built: the v0.54.15 tool pin already refuses every alias; M5c/M5d held on D-WORLD-86 (PR #330; judge r1 PASS 90) [PRODUCT] |
+| 292 | 2026-10-21 | row 156 M6b built: exec results carry the before/after protected integrity, with the after-check reserved inside the call deadline (PR #339; judge ... |
+| 291 | 2026-10-20 | row 156 M6a built: the protected baseline is captured once at NewExecHandler, with the bounded record shape (PR #338; judge r1 PASS 79 → r2 PASS 88... |
+| 290 | 2026-10-20 | row 156 M6-pre built: design V24 measured on installed worktrees; protected-check bounds re-sized to 3 751 / 4 848 ms (PR #333; judge r1 PASS 78 → ... |
+| 289 | 2026-10-20 | row 156 V25 re-measure and M5e built: the v0.54.15 tool pin already refuses every alias; M5c/M5d held on D-WORLD-86 (PR #330; judge r1 PASS 90) [PR... |
 | 288 | 2026-10-20 | row 156 M5b built: the episode profile's protected set reaches its AILANG policy (PR #328; judge r1 PASS 88 → r2 PASS 91) [PRODUCT] |
 | 287 | 2026-10-20 | row 156 M5a built: protected AILANG policies in every variant (PR #326; judge r1 PASS 88 → r2 PASS 91) [PRODUCT] |
-| 286 | 2026-10-20 | row 156 M4c built: startup probe arm 8 — protected-write prevention and Linux detection (PR #325; judge r1 PASS 84 → r2 PASS 91) [PRODUCT] |
+| 286 | 2026-10-20 | row 156 M4c built: startup probe arm 8, protected-write prevention and Linux detection (PR #325; judge r1 PASS 84 → r2 PASS 91) [PRODUCT] |
 | 285 | 2026-10-19 | row 156 M4a + M4b built: git-filter preflight and the bounded protected integrity checker (PR #322; judge r1 FAIL 78 → r2 PASS 93) [PRODUCT] |
 | 284 | 2026-10-19 | row 156 M3a + M3b built: protected srt `denyWrite` and real-srt protected-write rows (PR #319; judge r1 PASS 91 → r2 PASS 93) [PRODUCT] |
-| 282 | 2026-10-19 | row 156 detection redesigned [r4 → r4.2] and M1c + M1d built: Git candidates, mirror authority (PR #312; judge r1 FAIL 68 → r2 PASS 88) [PRODUCT] |
 | 283 | 2026-10-19 | row 156 M2a + M2b built: the `protected` profile key and startup grammar refusal rows (PR #314; judge r1 PASS 90 → r2 PASS 92) [PRODUCT] |
+| 282 | 2026-10-19 | row 156 detection redesigned [r4 → r4.2] and M1c + M1d built: Git candidates, mirror authority (PR #312; judge r1 FAIL 68 → r2 PASS 88) [PRODUCT] |
 | 281 | 2026-10-19 | row 156 M1c Unicode equivalence premise REFUTED; evidence banked (PR #309 / `228645a`, independent PASS 83) [REFUTATION] |
 | 280 | 2026-10-17 | row 156 M1b protected renderers (AILANG rebase, srt darwin/linux, git pathspecs) + pinned policy-tool fixture (PR #307; judge r1 PASS 80 → r2 PASS ... |
 | 279 | 2026-10-17 | row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) built with the M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 9... |
