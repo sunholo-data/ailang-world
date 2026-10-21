@@ -16,8 +16,11 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/pins"
 )
 
 func quickstartSection10(t *testing.T) string {
@@ -283,17 +286,24 @@ func TestQuickstartProtectedContract(t *testing.T) {
 		if err := json.Unmarshal(files["ailang-compiler"], &profile); err != nil {
 			t.Fatal(err)
 		}
-		delete(profile, "protected")
-		data, err := json.Marshal(profile)
-		if err != nil {
-			t.Fatal(err)
-		}
-		p, err := ParseExecProfile(data)
-		if err != nil || p == nil {
-			t.Fatalf("profile without protected: %v", err)
-		}
-		if len(p.Protected) != 0 || p.ProtectedDigest != "" {
-			t.Fatalf("absent protected must have no default: %q / %q", p.Protected, p.ProtectedDigest)
+		// Both spellings the sentence names: the key absent, and the key as [].
+		for _, arm := range []string{"absent", "[]"} {
+			if arm == "absent" {
+				delete(profile, "protected")
+			} else {
+				profile["protected"] = json.RawMessage("[]")
+			}
+			data, err := json.Marshal(profile)
+			if err != nil {
+				t.Fatal(err)
+			}
+			p, err := ParseExecProfile(data)
+			if err != nil || p == nil {
+				t.Fatalf("profile with protected %s: %v", arm, err)
+			}
+			if len(p.Protected) != 0 || p.ProtectedDigest != "" {
+				t.Fatalf("protected %s must have no default: %q / %q", arm, p.Protected, p.ProtectedDigest)
+			}
 		}
 		if !strings.Contains(quickstartSection10(t), "There is no default: absent `protected` or `[]` means no protected set, no `protected` key\nin the exec result, and `why` prints `protected: none declared`.") {
 			t.Fatal("no-default sentence must state absent/empty behavior and protected: none declared")
@@ -303,6 +313,28 @@ func TestQuickstartProtectedContract(t *testing.T) {
 		_, err := ParseProtectedPatterns([]string{"**/x_test.go"})
 		if err == nil || !strings.Contains(err.Error(), "use the base-name form `x_test.go`") || strings.Contains(err.Error(), "exactly one directory") {
 			t.Fatalf("double-star refusal must name x_test.go without the old one-directory claim: %v", err)
+		}
+	})
+	// The figures the prose quotes are the code's, so a moved bound or pin reds here.
+	t.Run("numbers", func(t *testing.T) {
+		section := quickstartSection10(t)
+		find := func(re string) []string {
+			m := regexp.MustCompile(re).FindStringSubmatch(section)
+			if m == nil {
+				t.Fatalf("QUICKSTART §10 has no match for %s", re)
+			}
+			return m
+		}
+		m := find(`At most (\d+) entries are allowed, each 1–(\d+) bytes`)
+		if m[1] != strconv.Itoa(protectedMaxEntries) || m[2] != strconv.Itoa(protectedMaxBytes) {
+			t.Errorf("documented limits %s entries / %s bytes, code %d / %d", m[1], m[2], protectedMaxEntries, protectedMaxBytes)
+		}
+		m = find(`deadline − ([0-9][0-9 ]*) ms\)`)
+		if got := strings.ReplaceAll(m[1], " ", ""); got != strconv.FormatInt(protectedCheckTimeout.Milliseconds(), 10) {
+			t.Errorf("documented after-check reserve %s ms, protectedCheckTimeout %v", m[1], protectedCheckTimeout)
+		}
+		if m = find(`On the (v[0-9.]+) tool pin`); m[1] != pins.ReleaseFor(pins.RoleTool).Release {
+			t.Errorf("documented tool pin %s, manifest %s", m[1], pins.ReleaseFor(pins.RoleTool).Release)
 		}
 	})
 }
