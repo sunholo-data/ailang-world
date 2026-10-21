@@ -1,0 +1,112 @@
+{
+  "failed_tests": 0,
+  "module_path": "All Tests",
+  "passed_tests": 7,
+  "properties": [
+    {
+      "discarded_inputs": 0,
+      "duration": "239.833µs",
+      "error": "no generator for parameter w: World",
+      "generated_inputs": 0,
+      "location": "world/contracts.ail:13:11",
+      "name": "proposalMatchesWorld_property_1",
+      "seed": "6627782443238827273",
+      "skip_kind": "no_generator",
+      "status": "skip",
+      "tests_run": 0
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "231.125µs",
+      "error": "no generator for parameter p: Proposal",
+      "generated_inputs": 0,
+      "location": "world/contracts.ail:42:11",
+      "name": "verificationMatchesProposal_property_1",
+      "seed": "3776944692256576174",
+      "skip_kind": "no_generator",
+      "status": "skip",
+      "tests_run": 0
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "241.625µs",
+      "error": "no generator for parameter w: World",
+      "generated_inputs": 0,
+      "location": "world/contracts.ail:70:11",
+      "name": "commitAllowed_property_1",
+      "seed": "-955884535797599955",
+      "skip_kind": "no_generator",
+      "status": "skip",
+      "tests_run": 0
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "242.916µs",
+      "error": "no generator for parameter w: World",
+      "generated_inputs": 0,
+      "location": "world/contracts.ail:113:11",
+      "name": "isValidNextWorld_property_1",
+      "seed": "-1816056384394631336",
+      "skip_kind": "no_generator",
+      "status": "skip",
+      "tests_run": 0
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "9.621125ms",
+      "generated_inputs": 100,
+      "location": "world/contracts.ail:157:11",
+      "name": "commitBoundaryHolds_property_1",
+      "seed": "-2695030515519193750",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    }
+  ],
+  "seed": "0",
+  "seed_derivation": "ailang-property-seed-v1",
+  "seed_mode": "derived",
+  "skipped_tests": 4,
+  "success": false,
+  "tests": [
+    {
+      "duration": "135.416166ms",
+      "location": "world/contracts.ail:16:3",
+      "name": "proposalMatchesWorld_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "394.75µs",
+      "location": "world/contracts.ail:25:3",
+      "name": "proposalMatchesWorld_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "443.125µs",
+      "location": "world/contracts.ail:45:3",
+      "name": "verificationMatchesProposal_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "366.166µs",
+      "location": "world/contracts.ail:53:3",
+      "name": "verificationMatchesProposal_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "1.336458ms",
+      "location": "world/contracts.ail:73:3",
+      "name": "commitAllowed_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "416µs",
+      "location": "world/contracts.ail:84:3",
+      "name": "commitAllowed_test_2",
+      "status": "pass"
+    }
+  ],
+  "total_duration": "148.949289ms",
+  "total_tests": 11,
+  "vacuous_skips": 4
+}

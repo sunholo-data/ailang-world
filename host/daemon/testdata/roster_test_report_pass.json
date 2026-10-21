@@ -1,0 +1,87 @@
+{
+  "failed_tests": 0,
+  "module_path": "All Tests",
+  "passed_tests": 10,
+  "properties": [
+    {
+      "discarded_inputs": 0,
+      "duration": "7.508375ms",
+      "generated_inputs": 100,
+      "location": "world/logepoch.ail:80:11",
+      "name": "sameRef_property_1",
+      "seed": "1903923920200694712",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    },
+    {
+      "discarded_inputs": 0,
+      "duration": "10.191667ms",
+      "generated_inputs": 100,
+      "location": "world/logepoch.ail:96:11",
+      "name": "servesEntry_property_1",
+      "seed": "1929385417861017890",
+      "skip_kind": "",
+      "status": "pass",
+      "tests_run": 100
+    }
+  ],
+  "seed": "0",
+  "seed_derivation": "ailang-property-seed-v1",
+  "seed_mode": "derived",
+  "skipped_tests": 0,
+  "success": true,
+  "tests": [
+    {
+      "duration": "10.745708ms",
+      "location": "world/logepoch.ail:63:3",
+      "name": "renderRef_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "396.334µs",
+      "location": "world/logepoch.ail:64:3",
+      "name": "renderRef_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "1.280334ms",
+      "location": "world/logepoch.ail:82:3",
+      "name": "sameRef_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "470.083µs",
+      "location": "world/logepoch.ail:83:3",
+      "name": "sameRef_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "449.375µs",
+      "location": "world/logepoch.ail:98:3",
+      "name": "servesEntry_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "420.5µs",
+      "location": "world/logepoch.ail:104:3",
+      "name": "servesEntry_test_2",
+      "status": "pass"
+    },
+    {
+      "duration": "326.625µs",
+      "location": "world/logepoch.ail:126:3",
+      "name": "cacheKey_test_1",
+      "status": "pass"
+    },
+    {
+      "duration": "346.375µs",
+      "location": "world/logepoch.ail:131:3",
+      "name": "cacheKey_test_2",
+      "status": "pass"
+    }
+  ],
+  "total_duration": "32.135376ms",
+  "total_tests": 10,
+  "vacuous_skips": 0
+}

@@ -2,6 +2,7 @@ package workbench
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"testing"
 	"text/template/parse"
+	"time"
 )
 
 func TestGradeViewRejectsUnavailableOrInvalidInput(t *testing.T) {
@@ -406,7 +408,7 @@ var workbenchViewTypes = []reflect.Type{
 	reflect.TypeOf(Page{}), reflect.TypeOf(TimelineView{}), reflect.TypeOf(EntryView{}),
 	reflect.TypeOf(WorldView{}), reflect.TypeOf(ObjectView{}), reflect.TypeOf(GradeView{}),
 	reflect.TypeOf(EdgeView{}), reflect.TypeOf(CommitView{}), reflect.TypeOf(ReferenceView{}),
-	reflect.TypeOf(LiveView{}),
+	reflect.TypeOf(PacketView{}), reflect.TypeOf(PacketEvidenceView{}), reflect.TypeOf(LiveView{}),
 	reflect.TypeOf(GraphView{}), reflect.TypeOf(GraphNode{}), reflect.TypeOf(GraphEdge{}),
 	reflect.TypeOf(DecisionsView{}), reflect.TypeOf(DecisionRow{}),
 }
@@ -816,4 +818,91 @@ func TestCommitView(t *testing.T) {
 			t.Fatal(body)
 		}
 	})
+}
+
+func TestRenderPacketEvidenceFourRows(t *testing.T) {
+	for _, tc := range []struct {
+		name                                string
+		validated, packet, refused, escaped bool
+	}{
+		{name: "four-rows", validated: true, packet: true}, {name: "escaped", validated: true, packet: true, escaped: true},
+		{name: "unavailable-row", validated: true, packet: true, refused: true}, {name: "refused-packet", packet: true}, {name: "non-packet"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			marker := "producer"
+			if tc.escaped {
+				marker = `<script>alert("x")</script>`
+			}
+			packet := &PacketView{Validated: tc.validated, ProposalRef: "proposal", TransitionFnRef: "transition", ProposalGrade: NewGradeUnavailable("proposal unchanged"), TransitionGrade: NewGradeUnavailable("transition unchanged")}
+			for _, label := range []string{"TESTED", "ATTESTED", "CLAIMED", "PROVEN"} {
+				row := PacketEvidenceView{Kind: label, Label: label, Ref: marker, Href: "?object=" + marker, Producer: marker}
+				if label == "TESTED" {
+					row.Verdict = "pass"
+					row.Passed = 10
+				}
+				if label == "CLAIMED" {
+					row.Producer = "demo-authored"
+					row.Caption = "demo-authored"
+				}
+				if label == "PROVEN" {
+					row.Subject = marker
+					row.SubjectHref = "?object=" + marker
+					row.Compiler = marker
+					row.CompilerHref = "?object=" + marker
+					row.Version = marker
+					if tc.refused {
+						row.Label = ""
+						row.Unavailable = "wrong key"
+					}
+				}
+				packet.Roster = append(packet.Roster, row)
+			}
+			page := Page{Object: &ObjectView{}}
+			if tc.packet {
+				page.Object.Packet = packet
+			}
+			var buf bytes.Buffer
+			if err := Render(&buf, page); err != nil {
+				t.Fatal(err)
+			}
+			body := buf.String()
+			if ctx.Err() != nil {
+				t.Fatal(ctx.Err())
+			}
+			if !tc.packet || !tc.validated {
+				if strings.Contains(body, `aria-label="evidence roster"`) {
+					t.Fatal("roster on refused/non-packet page")
+				}
+				return
+			}
+			for _, want := range []string{`aria-label="evidence roster"`, "TESTED", "ATTESTED", "CLAIMED", "demo-authored", "verdict pass", "10 named passes", "evidence: proposal", "proposal unchanged", "transition unchanged"} {
+				if !strings.Contains(body, want) {
+					t.Fatalf("missing %q: %s", want, body)
+				}
+			}
+			if strings.Count(body, "producer/author:") != 4 {
+				t.Fatal("producer/author required on every row")
+			}
+			if tc.refused {
+				if !strings.Contains(body, "UNAVAILABLE — wrong key") {
+					t.Fatal("proof reason absent")
+				}
+			} else {
+				for _, want := range []string{"PROVEN", "subject:", "compiler", "version"} {
+					if !strings.Contains(body, want) {
+						t.Fatalf("missing %s", want)
+					}
+				}
+			}
+			if tc.escaped {
+				if strings.Contains(body, marker) || !strings.Contains(body, "&lt;script&gt;") {
+					t.Fatal("evidence values were not escaped")
+				}
+			} else if !strings.Contains(body, `href="/workbench?object=producer"`) {
+				t.Fatal("report/subject link absent")
+			}
+		})
+	}
 }
