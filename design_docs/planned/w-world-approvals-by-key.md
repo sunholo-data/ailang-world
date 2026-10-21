@@ -1,6 +1,6 @@
 # w-world-approvals-by-key: approve with an enrolled key, in open formats, with the typed `y` as root
 
-- **Status:** planned (attended design, 2026-10-21). Rulings R1–R5 are filed as **D-WORLD-89**.
+- **Status:** planned (attended design, 2026-10-21). Rulings R1–R5 are answered: **D-WORLD-89**, all at their defaults (Mark, attended 2026-10-21: "all defaults").
 - **Queue row:** 201, `w-world-approvals-by-key` (attended). Sequenced after row 188's style port, because it builds on the Tauri surface's *needs you* panel (D-WORLD-88).
 - **Asked by Mark** (attended, 2026-10-21):
   - "when we say mints stayed typed, is that the cli we are doing today? why is that the only option - what is a better UX for this that is possible?"
