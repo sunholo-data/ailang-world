@@ -1,6 +1,6 @@
 # w-world-os-surface — S1 sprint plan (row 188, D-WORLD-87)
 
-**Status:** draft plan, attended 2026-10-20, for Mark's review before M0 starts.
+**Status:** M0a–M4a landed or in review (2026-10-20/21). **Re-cut 2026-10-21 by D-WORLD-88:** the rest of S1 is §"S1 re-cut" below. M4b and M5 in the table are superseded by N2 and N5.
 **Design:** [w-world-os-surface.md](w-world-os-surface.md) r2 (§3 the surface, §5 the gaps, §7 S1).
 **Mockup:** [mockups/world-os-surface.dc.html](../mockups/world-os-surface.dc.html).
 **Base:** ailang-world `dev` `adffe4c1`.
@@ -85,7 +85,7 @@ grader runs the subcommand against the real repository:
 | M | Episode | Delivers | Grader checks (a rig script, written before the run) |
 |---|---|---|---|
 | **M0a** ✅ | w188a | **Done.** The index from git history alone. `host/surface` (standard library only): the type `Index`; `ParseMerges`, `BraneOf`, `ChartRowTitles`, `Build` (deterministic) and `Validate`. Plus `ailang-worldd surface-index --repo --charter --out [--rev dev] [--limit 200]`, the thin git side (git log, then git merge-base per merge), which writes atomically and never inside the repo, and `surface-index --validate <file>`. Fixtures: 24 real `dev` merges ending at `adffe4c1`, their merge-bases, and charter rows 101, 156, 188, 189 and 198. The golden has 24 shared states, 24 steps and 6 branes. | `go test ./host/surface/...`: parse errors by line, `BraneOf` for every branch form, row slugs (188's tags, 101's none), the golden, and `Validate` refusing 18 mutants. A real `surface-index` on `dev`: `9003555` is shared with parents `7fb99da` and `f36428a`; `f36428a` is on `row-189` (`w-world-onboarding`) with base `0ee1945`; #328's step is on `row-156` (loop), with base `0ee1945`; #317's step has no brane; no path or email appears in the file. `--validate` accepts the index and refuses the grader's mutants |
-| **M0b** | w188b | Reads in the episode report, from World's invocation records: `EpisodeReport.reads` = `{count, files[{path, count, first_entry}], truncated, unlisted}`. A read is a committed `ailang-read` call with a v2 record whose effects were allowed and did not fail and whose handler result is not `ok:false`. Its path is the record input's `path`; a ranged read counts. Only `filepath.IsLocal` paths are listed, the rest count in `unlisted`. Files are ordered by first entry, capped at 1000 (`truncated`). The text form adds a `reads:` line | `go test` cases for the read rules (counts and order, ranged, handler- and plan-refused, non-local, the cap, an empty `files: []`, the text line); every other report field unchanged against the running daemon on six episodes; a live check of real episodes' `reads` against independently measured read sets |
+| **M0b** ✅ | w188b | **Done** (#336). Reads in the episode report, from World's invocation records: `EpisodeReport.reads` = `{count, files[{path, count, first_entry}], truncated, unlisted}`. A read is a committed `ailang-read` call with a v2 record whose effects were allowed and did not fail and whose handler result is not `ok:false`. Its path is the record input's `path`; a ranged read counts. Only `filepath.IsLocal` paths are listed, the rest count in `unlisted`. Files are ordered by first entry, capped at 1000 (`truncated`). The text form adds a `reads:` line | `go test` cases for the read rules (counts and order, ranged, handler- and plan-refused, non-local, the cap, an empty `files: []`, the text line); every other report field unchanged against the running daemon on six episodes; a live check of real episodes' `reads` against independently measured read sets |
 | **M0c** ✅ | w188c | **Done.** The episode facts, added to the same index only when it is built with a rig (without one the output is byte-identical to M0a's). `host/surface/episodes.go` (pure): `Step`, `Graders`, `FileChanges`/`Change`, `Read`, `Decision`, `RigSource` (`source.rig`: episodes, attached, unattached) and `source.reads_method`; `ParseEpisodeRecord` (`trial-episode/1`, path fields never decoded), `GroupRounds` (one record per round, ordered by `started_at`), `RoundDir` (`<project>`, `<project>-rN`), `ParsePRs` (only `"<project>#N"`), `ParseReport`, `ParseNameStatus`, `ParseTree`, `ClassifyLastChange` and `AttachRig` over a `Git` seam. `steps[]`: one per episode whose PR is a step state (task, agent, model, base from round 1; graders from the last round; minutes summed over rounds; calls and entries from the report, absent on a 404). `files{}`: `git diff --name-status --no-renames -z <base> <step>`, capped at 1000. `reads{}`: each report path as `new` (not at base), `step` (the last change at base is a merge of a step in the index), `commit` or `outside`, via `git ls-tree` once per step and `git log --first-parent -1` per path. `decisions[]`: each round's grade, the report's refusals, the merge (`you`, or `loop` on a loop brane). `Validate` gains the rig rules. `ailang-worldd surface-index` gains `--rig`, `--project`, `--addr` (loopback only; bounded GET, 4 MiB; records ≤ 1 MiB, ≤ 2000). `ran_on{}` stays absent (no source before S3). **Reads use the last change at the step's base, not the creating commit**: that is what reproduces the design's M8, where w189e's reads come from six earlier sources on three branes; a creator-only mapping would send every long-lived file to its first author | `go test ./host/surface/...`: a fixture rig of 2 episodes (one with two rounds and a refusal) against the golden `testdata/index-rig.json`, the read cases, the 1000 cap, and one `Validate` mutant per rig rule; a real build reproduces §4 (w189e has 2 lines behind it) |
 | **M1** ✅ | w188d | **Done.** `worldd serve --surface-index <file>`; startup refuses files or directories under the workspace root, resolving symlinks. `GET /surface/index.json` re-reads and validates each request with the shared `surface.MaxBytes` 4 MiB bound; serves exact bytes with JSON, no-store and nosniff headers. Unconfigured or absent → positive empty state; read/decode/validation failures → 503 without the configured path. | Handler recorder tests: exact bytes and headers, both empty states, rebuild, oversize, decode and duplicate-state refusal, read errors, path redaction, POST 405, and startup refusal directly and through a symlinked directory; frozen-table and dependency guards |
 | **M2** ✅ | w188e | **Done.** `GET /surface`: the world timeline, server-rendered — lanes, glyphs, merges, the now edge with health and *needs you*, ticks and legend; Paper, Slate and Night tokens. `host/surfacepage` (standard library and this repo): `LayoutTimeline` (pure; shared lane first, then branes newest first; six glyphs then slate; x by rank of `at`, 28 px; one UTC tick per day), `RelativeTime`, `RenderTimeline` (`html/template`, the AILANG mark inlined, no script). The daemon route shares M1's read-and-validate (`readSurfaceIndex`), uses the workbench's headers, and answers any query with an inert 400. The now edge's health line is the daemon's build and the index's validation, and its sessions are the credentials store's live rows, read-only. **Needs you renders "Nothing needs you" in S1: mints and approvals waiting on Mark are not recorded anywhere the daemon can read (S2/S3 add them), so AC7 waiting is not shown and nothing is invented in its place.** | layout goldens (`LayoutTimeline` is deterministic and has no map-order dependence); one `<script` and no `on*=`; local links only; the tokens test; the row 189 fixture shows w189d's badge "3" and AC7 waiting |
@@ -94,13 +94,66 @@ grader runs the subcommand against the real repository:
 | **M4b** | (not yet minted) | live refresh from `/agui/` by re-fetch and a fixed region swap, in `/surface/surface.js` | a node harness, as with `live_script_test`: the region list is pinned; `STATE_DELTA` paths outside `/lastIndex` and `/logHead` are refused |
 | **M5** | (not yet minted) | `docs/QUICKSTART.md` "See your work" section; the plugin's `/world-watch` points at `/surface`; `ailang-worldd surface-index` documented | help-check for every command on the page (as `TestUseWorldPageCommandsMatchTheCLIHelp`); the docs link and stale-phrase checks |
 
-**S1 is done when** Mark opens `/surface` on his machine, built from the real index on `dev`,
-and the row 189 brane matches the mockup's facts:
+## S1 re-cut: the Tauri app on the artifact's design (D-WORLD-88, attended 2026-10-21)
+
+**What happened.** M2 to M4a built the surface as server-rendered pages. They are correct, and
+graded state by state, but Mark found them "functionally the same but not great". He asked for "an
+operating system full screen … somewhere I want to live in". A same-data spike compared Tauri v2
+(Claude) with SwiftUI (Codex), and D-WORLD-88 chose Tauri:
+- one HTML interface for both the native window and the browser on his tailnet;
+- self-hosted fonts under `/surface`'s own CSP;
+- the approved artifact as the visual target, ported from its own source.
+
+Two working copies followed, judged by Mark on the tailnet:
+- **v2:** the artifact's markup, styles and layout maths with real data;
+- **v3:** timeline pan, zoom and an overview strip, and a human layer: titles, the agents' own summaries, brane goals and progress, and a Today line.
+
+Mark: "starting to look good … we will iterate more im sure but this is good to build on top of".
+
+**The working copy** lives outside the repo, in the session scratchpad (`spike/tauri-v3`):
+- `dist/`: plain HTML, CSS and JS, with fonts and the logo;
+- the Rust shell;
+- `make-app.sh`;
+- `spike-data.json`: frozen real data, recording the source of every field in a `provenance` block.
+
+N2 brings the interface into the repo; N3 brings the shell.
+
+**What stays from M0–M4a.** The index (M0a–M0c), the serving route (M1) and the stack rules (M3's
+`LayoutStack`) stay. So do M4a's address grammar and Appearance seams, which the app reuses. The
+server-rendered timeline and stack pages stay as the no-script fallback and the graders' structural
+fixture, until N2's model route carries the same rules.
+
+**Principle: human first.** Every field a person reads must come from the records. Nothing is
+invented, and each field's source is named. A missing field shows as an honest gap, which becomes a
+data milestone. Identifiers (hashes, PR numbers, episode ids) appear on hover and in the detail
+view, never as the main label.
+
+| N | agent | delivers | grader checks |
+|---|---|---|---|
+| **N0** | Codex | **The index's human layer.** Step `title` from the merge commit's body line (GitHub puts the PR title there; git alone, no network). Step `summary`: the agent's own round-1 summary from the rig record, first sentence plus the full text, bounded. Brane `name` and `goal`, the charter row's bolded problem statement. The **delivered verdict**: the last round's graders, plus the operator's recorded re-runs (`graders/<ep>.<grader>.regrade.out`, a rig convention made explicit). `Validate` rules for each. | real build: w189e's title "The Use World on your repo page" and summary "I've written the …"; row 189's name and goal; w188d/w188e/w188f delivered 8/8 with their re-runs; no path or email; titles never invented (a merge without a PR has none) |
+| **N1** | Claude | **`GET /surface/model.json`:** the view model in Go, from the index plus the daemon's live facts. Lanes in order, with glyphs and progress; states with labels; links; every state's stack from `LayoutStack`; the now edge (health, build, live sessions, running episodes, Today). Bounded, deterministic, loopback, outside the frozen `/v1` table. The JS renders; the rules stay in tested Go. | every state's stack equals `row188_stack_rules.py` on the real index; Today matches the episode records; an index refusal comes back as a reason |
+| **N2** | Codex | **The app shell at `/surface`.** The working copy's `dist/` is embedded (`go:embed`) and reads `/surface/model.json`. `/surface` gets its own CSP (the workbench's, plus `font-src 'self'`), and the fonts are served from `/surface/fonts/` with their OFL texts in the repo. Navigation (pan, zoom, overview), M4a's address grammar and keys, Appearance, and **live refresh over AG-UI** (M4b's rules: deltas only for `/lastIndex` and `/logHead`, then a re-fetch of the model). | a node harness on the pure seams; headless Chrome screenshots of the timeline, a hover card and w189e's brane at 1600×1000 and 1600×932, reviewed by the operator against the working copy; one script, no `on*=`, local links; the CSP literal and font route; live refresh driven by a real commit on a store copy |
+| **N3** | operator, then Claude | **The Tauri shell in the repo** (`desktop/`): a small Rust app whose window loads `http://127.0.0.1:<port>/surface` from the local daemon, or a tailnet address given at launch. `make-app.sh` builds `World.app`. The World sandbox has no `cargo`, so the operator builds it until the `ailang-world` exec profile gains a build command (Mark's yes). | the app launches and stays up; the window shows `/surface` from the daemon; no bundled data |
+| **N4** | Mark-led | **The style pass:** iterated with Mark against the artifact rendered locally, compared screenshot to screenshot. | Mark's eye |
+| **N5** | Claude | **Docs:** QUICKSTART's "See your work" (the app, the tailnet via `tailscale serve`, never Funnel); the plugin's `/world-watch` points at `/surface`. | help-check for every command on the page |
+
+**Data milestones after S1** (each fills a gap the working copy shows):
+- ran-on recording (S3);
+- waiting and open steps (the AC7 kind);
+- mutants caught (from judge records);
+- agent views (row 151);
+- approvals and mints as records, which also gives *needs you* a source (row 201, D-WORLD-89).
+
+**Order:** N0 → N1 → N2 → N3, with N4 continuous from N2 on, then N5. Agents alternate between Claude and Codex (Mark, 2026-10-21).
+
+**S1 is done when** Mark opens the World app on his machine, and his tailnet link, on the real index and live daemon, and lives in it. The row 189 brane must still match the mockup's facts:
 
 - the two-ancestor merge;
 - w189d's three lines behind it;
 - `0ee1945`'s three columns ahead;
-- AC7 waiting.
+- w189e's six read sources on three branes.
+
+AC7 waiting is shown only once open steps are recorded (a data milestone); until then the gap is shown honestly.
 
 He then rules S2 on.
 
