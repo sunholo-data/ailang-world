@@ -97,7 +97,7 @@ of them, and a report over 4 MiB or slower than 30s.
 `
 
 // surfaceIndexMaxBytes bounds an index --validate reads (the M1 serving bound).
-const surfaceIndexMaxBytes = 4 << 20
+const surfaceIndexMaxBytes = surface.MaxBytes
 
 // surfaceIndexBudget bounds the git calls and report GETs of one build as a
 // whole.

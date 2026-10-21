@@ -8,7 +8,7 @@
 //
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	                    [--workspace-root <dir> --tool-ailang-bin <path>]
-//	                    [--examples-dir <dir>]
+//	                    [--examples-dir <dir>] [--surface-index <file>]
 //	                    [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
 //	                    [--workspace-package-cache <dir>]
 //	                    [--run-allow-caps Env,Net,Declassify]
@@ -78,7 +78,7 @@ var usage = `ailang-worldd — AILANG World local daemon (loopback only)
 Usage:
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
-                      [--examples-dir <dir>]
+                      [--examples-dir <dir>] [--surface-index <file>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
                       [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
@@ -109,7 +109,7 @@ Usage:
                     [--workspace-root <dir>] [--from-dir <dir>] [--replace]
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
-                    [--examples-dir <dir>] [--online]
+                    [--examples-dir <dir>] [--surface-index <file>] [--online]
   ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
                     [--task <file>] [--agent claude|codex] [--model <m>] [--ttl N]
                     [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
@@ -241,6 +241,10 @@ serve flags:
   --exec-max-output-bytes N
                        kill a workspace-exec command whose stdout or stderr
                        passes N bytes (default 67108864, 64 MiB)
+  --surface-index <file>
+                       generated index served at GET /surface/index.json;
+                       optional, may be built later, must be outside
+                       --workspace-root (including symlink targets)
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof
@@ -445,6 +449,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
 	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
+	surfaceIndex := fs.String("surface-index", "", "generated surface index outside --workspace-root (optional; may be built later)")
 	var moduleRoot string
 	var episodeModuleRoots []string
 	fs.Func("workspace-module-root", "REL under each episode worktree that is the AILANG sandbox and module root (default .)", func(v string) error {
@@ -532,7 +537,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	defer stop()
 
 	cfg := daemon.Config{DBPath: *dbPath, CredentialsPath: *credsDB, BindHost: host, BindPort: port, AilangBin: *ailangBin,
-		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin,
+		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin, SurfaceIndex: *surfaceIndex,
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),
