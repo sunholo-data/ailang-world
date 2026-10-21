@@ -250,6 +250,9 @@ type Config struct {
 	// examples-search answers NoExamplesCorpusRefusal. (The CLI defaults it to
 	// the operator's ~/.ailang/examples when that exists.)
 	ExamplesDir string
+	// SurfaceIndex is the optional generated index, outside WorkspaceRoot.
+	// It may appear after startup and is read anew on each request.
+	SurfaceIndex string
 	// RunAllowCaps, RunNetAllow and RunNetAllowHTTP (`--run-allow-caps`,
 	// `--run-net-allow`, `--run-net-allow-http`; row 135 §4.3/§4.6) are the
 	// operator's ailang-run allowlist: the extra capabilities (Declassify,
@@ -687,6 +690,11 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			return nil, &StartupError{Stage: StageConfig, Detail: "the workspace root is refused", Err: err}
 		}
 		workspace.root, workspace.stateDir = root, stateDir
+		if cfg.SurfaceIndex != "" {
+			if err := checkSurfaceIndexOutsideRoot(cfg.SurfaceIndex, root); err != nil {
+				return nil, &StartupError{Stage: StageConfig, Detail: "the surface index is refused", Err: err}
+			}
+		}
 		if cfg.ExamplesDir != "" {
 			examples, err := resolveExamplesDir(cfg.ExamplesDir, root)
 			if err != nil {
@@ -1011,7 +1019,8 @@ func releaseFromVersion(version string) string {
 // by row 198, mirrored in the sketch's routes()).
 // The next registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
-// ten. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
+// ten. GET /surface/index.json is also an unversioned read route outside the frozen table.
+// The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -1028,6 +1037,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/episodes/{episode}/report", d.handleEpisodeReport)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
+	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session

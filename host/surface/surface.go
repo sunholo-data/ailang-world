@@ -27,6 +27,9 @@ import (
 // Schema is the index's document type.
 const Schema = "world/surface-index/v1"
 
+// MaxBytes bounds index reads by the builder and daemon (4 MiB).
+const MaxBytes = 4 << 20
+
 // MaxStates bounds an index: Validate refuses more.
 const MaxStates = 5000
 
