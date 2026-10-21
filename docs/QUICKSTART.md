@@ -848,6 +848,7 @@ or system node is. A node under `$HOME` (nvm) needs its directory in every profi
 | `env` | extra child variables (e.g. `GOFLAGS`). World owns `HOME`, `TMPDIR`, `PATH`, `LANG`, `LC_ALL`, `PYTHONPYCACHEPREFIX`, `npm_config_cache`, `CI`, `NO_COLOR`, `SANDBOX_RUNTIME`, every `*_PROXY`, `NO_PROXY`, `GIT_*` and the registry credentials. Naming one refuses startup |
 | `read_roots` | absolute paths the child may read beyond the worktree and its cache (a module cache, a toolchain). Never `$HOME`, the state dir, the workspace root, an ancestor of them, a path inside the state dir or the root, or `/`, by path or by realpath |
 | `caches` | `{"NAME": {"seed": "/abs/dir"}}`. The child gets `NAME=<episode cache>/NAME`, cloned from the read-only seed on first use; `{}` starts empty |
+| `protected` | optional list of worktree-relative directory forms and base-name patterns; see below. No default |
 | `timeout_ms` | 1 to 9000 |
 | `probe` | the startup probe's toolchain argv. It must exit 0 in an empty scratch worktree. Default: the first command's `argv[0] --version` |
 | `commands.ID.argv` | the fixed program and leading arguments; `argv[0]` is a bare name on `path` or an absolute path |
@@ -877,6 +878,7 @@ E = os.environ
 V = "world/exec-profile/v1"
 profiles = {
   "ailang-compiler": {"profile": V, "project": "ailang-compiler", "root": ".",
+    "protected": ["*_test.go", "*.golden", "tests/**"],
     "path": [E["GODIR"], "/usr/bin", "/bin"],
     "env": {"GOFLAGS": "-mod=readonly", "GOPROXY": "off", "GOTOOLCHAIN": E["GOTC"],
             "GOTELEMETRY": "off", "GOMODCACHE": E["GOMOD"]},
@@ -889,6 +891,7 @@ profiles = {
                "positional": "pkgpattern", "max_args": 8},
       "vet": {"argv": ["go", "vet"], "positional": "pkgpattern", "max_args": 4}}},
   "twilightgame": {"profile": V, "project": "twilightgame", "root": ".",
+    "protected": ["tests/**", "*.test.ts", "*.test.tsx", "vitest.config.ts"],
     "path": [E["NODEDIR"], "/usr/bin", "/bin"],
     "timeout_ms": 9000, "probe": ["node", "--version"],
     "commands": {
@@ -896,6 +899,7 @@ profiles = {
       "test-file": {"argv": ["node", "node_modules/vitest/vitest.mjs", "run"],
                     "positional": "testfile", "suffixes": [".test.ts", ".test.tsx"], "max_args": 4}}},
   "sunholo-cli": {"profile": V, "project": "sunholo-cli", "root": "cli",
+    "protected": ["cli/tests/**", "conftest.py", "pyproject.toml"],
     "path": ["/usr/bin", "/bin"],
     "read_roots": sorted({os.path.dirname(os.path.dirname(E["PYLINK"])), os.path.dirname(os.path.dirname(E["PYBIN"]))}),
     "timeout_ms": 9000, "probe": [E["PYBIN"], "--version"],
@@ -921,6 +925,93 @@ EOF
   `=expr`. The `sh -c '… "$@"'` prefix belongs to the profile: the agent's arguments arrive as
   `"$@"`, and the shell never parses them. `-p no:cacheprovider` keeps `.pytest_cache` out of the
   worktree.
+
+**Protect the tests.** Every pattern has one of two forms: `D/**` protects a clean
+relative directory and everything beneath it; `G` has no `/` and matches a base name using
+`*`, `?` or `[…]`. Base-name patterns match at any depth. Thus `pyproject.toml` and
+`conftest.py` protect every such file. There is no single-file form.
+Paths are relative to the worktree, not the profile's `root`: the CLI's `root` is `cli`,
+so its tests need `cli/tests/**`. Using `tests/**` would protect `<worktree>/tests` instead.
+Patterns are NFC-normalized, compared by case fold, deduplicated and sorted by fold key.
+
+<!-- exec-protected-patterns:begin -->
+| Pattern | Load | Why |
+|---|---|---|
+| `tests/**` | accepted | directory form |
+| `cli/tests/**` | accepted | worktree-relative directory form |
+| `*_test.go` | accepted | base-name form, any depth |
+| `*.test.tsx` | accepted | base-name form, any depth |
+| `pyproject.toml` | accepted | every file with this base name |
+| `**/x_test.go` | refused | use the base-name form `x_test.go` |
+| `tests/**/x` | refused | `**` is only valid as a final `/**` |
+| `src/*.ts` | refused | slash patterns must be directory forms |
+| `*` | refused | whole tree |
+| `**` | refused | whole tree |
+| `./**` | refused | whole tree |
+| `{a,b}` | refused | braces are unsupported |
+| `a\b` | refused | backslashes are unsupported |
+| `!tests` | refused | leading negation is unsupported |
+| `.git/hooks/**` | refused | already denied by World |
+| `.github/**` | refused | already denied by World |
+| ` tests/**` | refused | leading whitespace |
+| `tests/** ` | refused | trailing whitespace |
+<!-- exec-protected-patterns:end -->
+
+At most 64 entries are allowed, each 1–256 bytes, without NUL or control characters.
+The directory part must have no glob, leading `/`, empty, `.` or `..` segment, and must
+not name or lie inside a World deny name or contain a `.git` segment.
+
+The exec sandbox enforces these forms as follows:
+
+<!-- exec-protected-os:begin -->
+| OS | `enforced` | Directory form | Base-name form |
+|---|---|---|---|
+| darwin | glob | refused | refused |
+| linux | dirs-only | refused | detected only |
+<!-- exec-protected-os:end -->
+
+On Linux, base-name writes, including creation, are detected by the integrity check.
+They are not prevented by srt. A changed protected path is reported with `intact_after: false`;
+the call still returns the command's result, and later calls are not refused.
+Protected bytes do not prove that every test ran or that project code kept test semantics.
+There is no default: absent `protected` or `[]` means no protected set, no `protected` key
+in the exec result, and `why` prints `protected: none declared`.
+
+The result's `protected` block records the base commit, its protected content digest and
+file count, the episode-start ignored-path snapshot, and both integrity checks:
+
+<!-- exec-protected-record:begin -->
+```json
+{"protected": {
+  "digest": "sha256:…", "patterns": ["*.test.ts", "tests/**"], "enforced": "glob",
+  "base": "37d6641b308a3e8ffb4d5a2023ba4faa89a5254a", "base_digest": "sha256:…", "base_files": 247,
+  "base_ignored_digest": "sha256:…", "base_ignored_files": 0,
+  "intact_before": true, "intact_after": false,
+  "changes": [{"path": "tests/zz_new.test.ts", "status": "untracked", "phase": "after"}],
+  "truncated": false, "total": 1, "error": ""
+}}
+```
+<!-- exec-protected-record:end -->
+
+A failed or timed-out check records an error and a null verdict, never an intact verdict.
+`why` prints one of these lines (CHANGED can say `before`, `after` or `before and after`):
+
+```text
+protected: intact (247 files @ 37d6641, digest sha256:…, enforced glob)
+protected: CHANGED after the call — tests/zz_new.test.ts (untracked)
+protected: not checked — <error>
+protected: none declared
+```
+
+On the v0.54.15 tool pin, `ailang-write` and `ailang-edit` refuse symlink and hard-link
+aliases upstream. They refuse any multiply-linked file, even unprotected ones.
+World's own alias pre-check is not built. `ailang-run` FS aliases are unmeasured on this pin;
+a write through one is detected at the next exec call. An episode can end without that call.
+
+For a protected profile, the command gets `min(timeout_ms, time left before the 10 s handler
+deadline − 3 751 ms)`, reserving time for the after-check. Unprotected profiles keep their 9 s.
+Install dependencies before the session: later ignored protected files report as changes.
+Changes to pre-existing ignored protected files are not detected by the ignored-path snapshot.
 
 **Seed the caches.** Warm the Go build cache once, from your own checkout, with the profile's
 environment. Each episode then starts from a clonefile copy (`cp -cR`; `cp -a --reflink=auto` on
@@ -972,7 +1063,7 @@ each with `--preset se-tools`, which grants `Workspace.Exec`. Write each token t
   --exec-sandbox $EXEC/srt/node_modules --exec-node $NODEDIR/node --exec-max-output-bytes 67108864 &
 ```
 
-**The startup probe.** Before `serve` listens, World runs seven arms for each profile, against
+**The startup probe.** Before `serve` listens, World runs seven arms, plus an eighth when `protected` is declared, against
 that profile's own sandbox settings. A scratch episode under the workspace root stands in for a
 worktree, and World removes it afterwards, pass or fail. Every refusal must be a positive token
 from the probe client, never a bare non-zero exit: `WORLD-PROBE-REFUSED EPERM` on macOS, and
@@ -990,6 +1081,10 @@ control.
    accepted first. A raw connect and a connect through srt's proxy must not reach it, and a port
    the child binds must be unreachable from the host.
 7. `arm7-toolchain`: the profile's `probe` exits 0.
+8. `arm8-protected-write` (protected profiles only): directory writes are refused. Base-name
+   writes are refused on darwin; on Linux they succeed and must be detected by the integrity
+   check. The arm checks host bytes and has an unsandboxed control. Linux refusals also accept
+   `EBUSY` and `EXDEV`.
 
 **Startup refusals.** `serve` exits 2 with `daemon startup failed at config: the exec
 configuration is refused: …`, naming the flag and the field:
