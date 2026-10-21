@@ -932,6 +932,9 @@ relative directory and everything beneath it; `G` has no `/` and matches a base 
 `conftest.py` protect every such file. There is no single-file form.
 Paths are relative to the worktree, not the profile's `root`: the CLI's `root` is `cli`,
 so its tests need `cli/tests/**`. Using `tests/**` would protect `<worktree>/tests` instead.
+World's write tools work inside the episode's module root (§11), so World re-bases the set
+onto it for them: with module root `cli`, `cli/tests/**` becomes `tests/**`. A directory
+outside the module root is dropped there, because those tools cannot reach it.
 Patterns are NFC-normalized, compared by case fold, deduplicated and sorted by fold key.
 
 <!-- exec-protected-patterns:begin -->
@@ -1008,8 +1011,10 @@ aliases upstream. They refuse any multiply-linked file, even unprotected ones.
 World's own alias pre-check is not built. `ailang-run` FS aliases are unmeasured on this pin;
 a write through one is detected at the next exec call. An episode can end without that call.
 
-For a protected profile, the command gets `min(timeout_ms, time left before the 10 s handler
-deadline − 3 751 ms)`, reserving time for the after-check. Unprotected profiles keep their 9 s.
+For a protected profile whose baseline was captured, the command gets `min(timeout_ms, time
+left before the 10 s handler deadline − 3 751 ms)`, reserving time for the after-check. If the
+baseline failed, both checks are skipped, the record carries the error, and nothing is
+reserved. Unprotected profiles keep their own `timeout_ms`.
 Install dependencies before the session: later ignored protected files report as changes.
 Changes to pre-existing ignored protected files are not detected by the ignored-path snapshot.
 

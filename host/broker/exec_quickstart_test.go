@@ -174,10 +174,15 @@ func TestQuickstartSection10ProfilesLoad(t *testing.T) {
 // quickstartProtectedBlock scopes parsing so unrelated tables/examples cannot satisfy a guard.
 func quickstartProtectedBlock(t *testing.T, kind string) string {
 	t.Helper()
-	_, block, ok := strings.Cut(quickstartSection10(t), "<!-- exec-protected-"+kind+":begin -->")
-	block, _, end := strings.Cut(block, "<!-- exec-protected-"+kind+":end -->")
+	before, block, ok := strings.Cut(quickstartSection10(t), "<!-- exec-protected-"+kind+":begin -->")
+	block, after, end := strings.Cut(block, "<!-- exec-protected-"+kind+":end -->")
 	if !ok || !end {
 		t.Fatalf("protected %s block is absent", kind)
+	}
+	// A table that runs past either marker would have rows no guard reads.
+	lines := strings.Split(strings.TrimRight(before, "\n"), "\n")
+	if strings.HasPrefix(lines[len(lines)-1], "|") || strings.HasPrefix(strings.TrimLeft(after, "\n"), "|") {
+		t.Fatalf("protected %s table continues outside its markers", kind)
 	}
 	return block
 }
@@ -185,9 +190,14 @@ func quickstartProtectedBlock(t *testing.T, kind string) string {
 func quickstartProtectedRows(t *testing.T, kind string) [][]string {
 	t.Helper()
 	var rows [][]string
+	separator := regexp.MustCompile(`^\|(-+\|)+$`)
 	for _, line := range strings.Split(quickstartProtectedBlock(t, kind), "\n") {
-		if !strings.HasPrefix(line, "| ") {
+		if line == "" || separator.MatchString(line) {
 			continue
+		}
+		// Every other line must be a row, so a malformed one cannot be skipped unread.
+		if !strings.HasPrefix(line, "| ") || !strings.HasSuffix(line, " |") {
+			t.Fatalf("protected %s block line is not a table row: %q", kind, line)
 		}
 		cells := strings.Split(strings.Trim(line, "|"), "|")
 		for i := range cells {
@@ -305,7 +315,7 @@ func TestQuickstartProtectedContract(t *testing.T) {
 				t.Fatalf("protected %s must have no default: %q / %q", arm, p.Protected, p.ProtectedDigest)
 			}
 		}
-		if !strings.Contains(quickstartSection10(t), "There is no default: absent `protected` or `[]` means no protected set, no `protected` key\nin the exec result, and `why` prints `protected: none declared`.") {
+		if !strings.Contains(strings.Join(strings.Fields(quickstartSection10(t)), " "), "There is no default: absent `protected` or `[]` means no protected set, no `protected` key in the exec result, and `why` prints `protected: none declared`.") {
 			t.Fatal("no-default sentence must state absent/empty behavior and protected: none declared")
 		}
 	})
@@ -335,6 +345,14 @@ func TestQuickstartProtectedContract(t *testing.T) {
 		}
 		if m = find(`On the (v[0-9.]+) tool pin`); m[1] != pins.ReleaseFor(pins.RoleTool).Release {
 			t.Errorf("documented tool pin %s, manifest %s", m[1], pins.ReleaseFor(pins.RoleTool).Release)
+		}
+		m = find("with module root `([^`]+)`, `([^`]+)` becomes `([^`]+)`")
+		canonical, err := ParseProtectedPatterns([]string{m[2]})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := RebaseProtectedForSandbox(canonical, m[1]); !reflect.DeepEqual(got, []string{m[3]}) {
+			t.Errorf("documented re-base of %s onto %s is %s, code %q", m[2], m[1], m[3], got)
 		}
 	})
 }
