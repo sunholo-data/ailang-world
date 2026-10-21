@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/sunholo-data/ailang-world/host/evidence"
-	"github.com/sunholo-data/ailang-world/host/transitionreg"
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,8 +15,11 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
+	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/transitionreg"
+	"github.com/sunholo-data/ailang-world/host/workbench"
 )
 
 // Forward real reads; controls alter one field after the genuine producer/store.
@@ -689,7 +692,8 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 	cases = append(cases,
 		control{name: "named-over-cap", reason: "test named count", report: func(v map[string]any) {
 			tests := v["tests"].([]any)
-			for len(tests) < 257 {
+			for len(tests) < 255 { // 255 tests + the report's 2 properties = 257 named = cap+1
+
 				tests = append(tests, tests[0])
 			}
 			v["tests"] = tests
@@ -924,6 +928,13 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 				if reason != tc.reason {
 					t.Fatalf("refusal guard %s: got %+v", tc.reason, got)
 				}
+				// A stored-report refusal reaches the page through the real projection.
+				if tc.report != nil && !tc.proof && tc.name != "stdout-over-cap" {
+					projected, err := d.projectPacket(ctx, f.packet)
+					if err != nil || projected.view.RosterUnavailable != tc.reason || len(projected.view.Roster) != 0 {
+						t.Fatalf("refused projection %s: %+v %v", tc.reason, projected, err)
+					}
+				}
 				return
 			}
 			if got.unavailable != "" || len(got.rows) != 4 {
@@ -941,9 +952,35 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 			if got.rows[0].passed != wantPasses || got.rows[0].verdict != "pass" || got.rows[3].subject == "" || got.rows[3].version != rig.version || got.rows[3].compiler != rig.compiler.String() {
 				t.Fatalf("verdict/pins: %+v", got)
 			}
+			// Producers are the stored objects' own provenance, not merely non-empty.
+			wantProducers := rosterWantProducers(t, f)
+			for i := range got.rows {
+				if got.rows[i].producer != wantProducers[i] {
+					t.Fatalf("row %d producer %q, want %q", i, got.rows[i].producer, wantProducers[i])
+				}
+			}
 			projected, err := d.projectPacket(ctx, f.packet)
 			if err != nil || len(projected.view.Roster) != 4 {
 				t.Fatalf("render projection: %+v %v", projected, err)
+			}
+			rosterAssertView(t, projected.view, got)
+			code, body := gradePage(t, d, f.packet.Hash)
+			if code != http.StatusOK {
+				t.Fatalf("packet page: status %d", code)
+			}
+			for _, want := range []string{
+				`aria-label="evidence roster"`,
+				"test-invocation: TESTED · producer/author: " + wantProducers[0] + " · report:",
+				"recorded-effect: ATTESTED · producer/author: " + wantProducers[1] + " · report:",
+				"authored-claim: CLAIMED · producer/author: demo-authored · demo-authored · report:",
+				"proof-envelope: PROVEN · producer/author: " + wantProducers[3] + " · report:",
+				fmt.Sprintf("verdict pass · %d named passes", wantPasses),
+				`subject: <a href="/workbench?object=` + got.rows[3].subject + `">`,
+				"version " + rig.version,
+			} {
+				if !strings.Contains(body, want) {
+					t.Fatalf("packet page lacks %q", want)
+				}
 			}
 		})
 	}
@@ -973,4 +1010,54 @@ type rosterForeignResolver struct{ proofValidator }
 
 func (r rosterForeignResolver) Resolve(evidence.ValidatedEvidence) evidence.ResolutionResult {
 	return r.proofValidator.Resolve(evidence.ValidatedEvidence{})
+}
+
+// rosterWantProducers reads each roster row's producer from the stored object
+// that row is projected from: the test result, the recorded effect, the authored
+// claim and the proof envelope.
+func rosterWantProducers(t *testing.T, f *rosterFixture) [4]string {
+	t.Helper()
+	rec := rosterGet(t, f.d, hashref.MustParse(rosterPair(f, 0)["ref"].(string)))
+	var wire packetTestRecord
+	if err := json.Unmarshal(rec.Payload, &wire); err != nil {
+		t.Fatal(err)
+	}
+	er, err := broker.DecodeRecord(rosterGet(t, f.d, hashref.MustParse(wire.Effects[0])).Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [4]string{
+		rosterGet(t, f.d, er.ResultRef).Provenance,
+		rosterGet(t, f.d, hashref.MustParse(rosterPair(f, 1)["ref"].(string))).Provenance,
+		"demo-authored",
+		rosterGet(t, f.d, hashref.MustParse(rosterPair(f, 3)["ref"].(string))).Provenance,
+	}
+	for i, p := range want {
+		if p == "" || p == "unavailable" {
+			t.Fatalf("instrument: row %d's stored provenance %q cannot discriminate a dropped producer", i, p)
+		}
+	}
+	return want
+}
+
+// rosterAssertView requires the daemon's workbench rows to carry every resolved
+// field, the CLAIMED caption on the authored claim alone, and links built from
+// each row's own refs.
+func rosterAssertView(t *testing.T, v *workbench.PacketView, got packetRoster) {
+	t.Helper()
+	if v.RosterUnavailable != "" || len(v.Roster) != len(got.rows) {
+		t.Fatalf("view roster: unavailable %q, %d rows", v.RosterUnavailable, len(v.Roster))
+	}
+	for i, row := range got.rows {
+		caption := ""
+		if row.kind == "authored-claim" {
+			caption = "demo-authored"
+		}
+		want := workbench.PacketEvidenceView{Kind: row.kind, Ref: row.ref, Href: "?object=" + row.ref, Label: row.label, Producer: row.producer,
+			Caption: caption, Unavailable: row.unavailable, Subject: row.subject, SubjectHref: "?object=" + row.subject,
+			Compiler: row.compiler, CompilerHref: "?object=" + row.compiler, Version: row.version, Verdict: row.verdict, Passed: row.passed}
+		if v.Roster[i] != want {
+			t.Fatalf("view row %d:\n got %+v\nwant %+v", i, v.Roster[i], want)
+		}
+	}
 }

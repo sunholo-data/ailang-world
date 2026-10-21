@@ -836,8 +836,10 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 				marker = `<script>alert("x")</script>`
 			}
 			packet := &PacketView{Validated: tc.validated, ProposalRef: "proposal", TransitionFnRef: "transition", ProposalGrade: NewGradeUnavailable("proposal unchanged"), TransitionGrade: NewGradeUnavailable("transition unchanged")}
+			// Kinds differ from labels so a dropped label cannot be satisfied by its kind.
+			kinds := map[string]string{"TESTED": "test-invocation", "ATTESTED": "recorded-effect", "CLAIMED": "authored-claim", "PROVEN": "proof-envelope"}
 			for _, label := range []string{"TESTED", "ATTESTED", "CLAIMED", "PROVEN"} {
-				row := PacketEvidenceView{Kind: label, Label: label, Ref: marker, Href: "?object=" + marker, Producer: marker}
+				row := PacketEvidenceView{Kind: kinds[label], Label: label, Ref: marker, Href: "?object=" + marker, Producer: marker}
 				if label == "TESTED" {
 					row.Verdict = "pass"
 					row.Passed = 10
@@ -877,7 +879,7 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 				}
 				return
 			}
-			for _, want := range []string{`aria-label="evidence roster"`, "TESTED", "ATTESTED", "CLAIMED", "demo-authored", "verdict pass", "10 named passes", "evidence: proposal", "proposal unchanged", "transition unchanged"} {
+			for _, want := range []string{`aria-label="evidence roster"`, "test-invocation: TESTED · ", "recorded-effect: ATTESTED · ", "authored-claim: CLAIMED · producer/author: demo-authored · demo-authored · report:", "verdict pass · 10 named passes", "evidence: proposal", "proposal unchanged", "transition unchanged"} {
 				if !strings.Contains(body, want) {
 					t.Fatalf("missing %q: %s", want, body)
 				}
@@ -886,11 +888,11 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 				t.Fatal("producer/author required on every row")
 			}
 			if tc.refused {
-				if !strings.Contains(body, "UNAVAILABLE — wrong key") {
-					t.Fatal("proof reason absent")
+				if !strings.Contains(body, "proof-envelope: UNAVAILABLE — wrong key · ") || strings.Contains(body, "PROVEN") {
+					t.Fatal("proof reason absent, or a refused row still reads PROVEN")
 				}
 			} else {
-				for _, want := range []string{"PROVEN", "subject:", "compiler", "version"} {
+				for _, want := range []string{"proof-envelope: PROVEN · ", "subject:", "compiler", "version"} {
 					if !strings.Contains(body, want) {
 						t.Fatalf("missing %s", want)
 					}
