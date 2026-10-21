@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/surface"
 )
 
 func renderRig(t *testing.T, now Now) string {
@@ -187,7 +189,8 @@ func TestRenderOpensAtNow(t *testing.T) {
 	// Same height and the same y user units: each label lines up with its
 	// lane. The plot's viewBox starts at PlotX, so its x are the layout's.
 	h := strconv.Itoa(tl.Height)
-	if !strings.HasPrefix(labels, `<svg class="labels" width="`+strconv.Itoa(PlotX)+`" height="`+h+`" viewBox="0 0 `+strconv.Itoa(PlotX)+` `+h+`"`) {
+	lw := strconv.Itoa(LabelWidth(tl.Lanes))
+	if !strings.HasPrefix(labels, `<svg class="labels" width="`+lw+`" height="`+h+`" viewBox="0 0 `+lw+` `+h+`"`) {
 		t.Errorf("label column = %.120s", labels)
 	}
 	w := strconv.Itoa(tl.Width - PlotX)
@@ -205,12 +208,13 @@ func TestRenderOpensAtNow(t *testing.T) {
 	}
 }
 
-// checkInert is the page's script rule: no script, no handler attribute,
-// and every link local.
+// checkInert is the page's script rule (M4a): exactly one script element,
+// /surface/surface.js with no inline body, no handler attribute, and every
+// link local.
 func checkInert(t *testing.T, body string) {
 	t.Helper()
-	if strings.Contains(strings.ToLower(body), "<script") {
-		t.Error("page has a <script")
+	if n := strings.Count(strings.ToLower(body), "<script"); n != 1 || strings.Count(body, ScriptElement) != 1 {
+		t.Errorf("page has %d <script elements, want exactly one %s", n, ScriptElement)
 	}
 	if m := regexp.MustCompile(`(?i)\son[a-z]+\s*=`).FindString(body); m != "" {
 		t.Errorf("page has a handler attribute %q", m)
@@ -287,6 +291,41 @@ func TestRenderReasonAndEscaping(t *testing.T) {
 	if strings.Contains(s, "<img") || !strings.Contains(s, "running &lt;img src=x") {
 		t.Error("an episode name was not escaped")
 	}
+}
+
+// TestRenderLabelColumnFitsNames: the label column grows to the longest
+// lane name (the real index's row 114 was clipped at PlotX), and a name past
+// the cap is ellipsized with the whole name in its lane's <title>.
+func TestRenderLabelColumnFitsNames(t *testing.T) {
+	long := "w-provenance-teeth-unseeded-baselined-walk · row 114"
+	huge := strings.Repeat("w-very-long-brane-name-", 5) + "end · row 999"
+	tl := LayoutTimeline(rigIndex(t), fixedNow)
+	tl.Lanes[1].Title, tl.Lanes[2].Title = long, huge
+	body, err := RenderTimeline(tl, rigNow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := LabelWidth(tl.Lanes)
+	if w <= PlotX || w > maxLabelW || w < LabelX+len([]rune(long))*7 {
+		t.Fatalf("label column %d px for a %d-character name", w, len([]rune(long)))
+	}
+	if !strings.Contains(string(body), `<svg class="labels" width="`+strconv.Itoa(w)+`"`) ||
+		!strings.Contains(string(body), `dy="4">`+long+`</text>`) {
+		t.Error("the long name is not shown whole in a column sized for it")
+	}
+	short := LabelText(huge)
+	if !strings.HasSuffix(short, "…") || len([]rune(short)) != maxLabelRunes ||
+		!strings.Contains(string(body), `dy="4">`+short+`</text>`) || !strings.Contains(string(body), `<title>`+huge+`</title>`) {
+		t.Errorf("an over-long name is not ellipsized with its title kept: %q", short)
+	}
+	if got := LabelWidth(LayoutTimeline(surfaceIndexOf(t, "row 1"), fixedNow).Lanes); got != PlotX {
+		t.Errorf("short names widened the column to %d", got)
+	}
+}
+
+func surfaceIndexOf(t *testing.T, title string) surface.Index {
+	t.Helper()
+	return surface.Index{Branes: []surface.Brane{{Key: "row-1", Title: title, Kind: surface.BraneAttended}}}
 }
 
 func TestRenderBound(t *testing.T) {

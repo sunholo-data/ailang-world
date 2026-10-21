@@ -10,12 +10,26 @@ func RenderStack(s Stack) ([]byte, error) {
 	var b bytes.Buffer
 	err := stackTemplate.Execute(&b, struct {
 		Stack
-		Logo template.HTML
-	}{s, template.HTML(logoSVG)})
+		Logo    template.HTML
+		Address string
+	}{s, template.HTML(logoSVG), StackAddress(s)})
 	return b.Bytes(), err
 }
 
-var stackTemplate = template.Must(template.New("stack").Parse(`<!doctype html>
+// StackAddress is the stack's address bar text: "world KEY@SHORT", or as
+// much of it as the page has.
+func StackAddress(s Stack) string {
+	addr := "world"
+	if s.Lane.Key != "" {
+		addr += " " + s.Lane.Key
+		if s.Front.ID != "" {
+			addr += "@" + short(s.Front.ID)
+		}
+	}
+	return addr
+}
+
+var stackTemplate = template.Must(template.Must(template.New("stack").Parse(chromeTemplate)).Parse(`<!doctype html>
 <html lang="en" data-theme="paper"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AILANG World</title><style>
 :root[data-theme="paper"] { --bg: #FFFFFF; --band: #F6F8FA; --edge: #8496A5; --ink: #2C3E50; --sub: #526677; --line: #DCE3E8; --you: #BD3012; --tint: #FDF1EE; --header: #314352; --headink: #FFFFFF; --now: #FFFFFF; --ok: #2C3E50; }
 :root[data-theme="slate"] { --bg: #2C3E50; --band: #314352; --edge: #8496A5; --ink: #FFFFFF; --sub: #DCE3E8; --line: #526677; --you: #BD3012; --tint: #314352; --header: #263544; --headink: #FFFFFF; --now: #314352; --ok: #FFFFFF; }
@@ -39,7 +53,7 @@ main { max-width:1500px; margin:auto; padding:16px 24px }
 .later .column { justify-content:flex-start }
 .front { margin:12px 0; border:1px solid var(--edge); border-radius:3px; overflow:hidden }
 h1 { font-size:18px; margin:0 }
-.cols { display:grid; grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr)); gap:12px; padding:16px }
+.cols { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.4fr) minmax(0,.6fr); gap:12px; padding:16px }
 .col { min-width:0; border:1px solid var(--line); border-radius:3px; padding:12px; overflow-wrap:anywhere }
 h2 { font-size:13px; margin:-12px -12px 12px; padding:8px 12px; background:var(--band); border-bottom:1px solid var(--line) }
 ul { list-style:none; padding:0 }
@@ -48,7 +62,10 @@ li { margin:8px 0 }
 .read { display:flex; align-items:baseline; gap:4px }
 .read-path { min-width:0; overflow-wrap:anywhere }
 .read-detail { white-space:nowrap; flex:none }
-.decision-line { white-space:nowrap }
+.decision { display:flex; align-items:baseline; gap:6px }
+.decision .actor { flex:none }
+.decision-text { flex:1 1 auto; min-width:0; overflow-wrap:anywhere }
+.decision small { flex:none; white-space:nowrap }
 .actor { display:inline-block; padding:2px 7px; border:1px solid var(--edge); border-radius:3px }
 [data-actor="you"] .actor { background:var(--you); color:#FFFFFF; border-color:var(--you) }
 .check { display:block; font-size:24px; font-weight:600 }
@@ -56,9 +73,11 @@ small { color:var(--sub) }
 .rail { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px }
 .rail a { padding:4px 8px; border:1px solid var(--line); border-radius:3px }
 .rail [aria-current] { border-color:var(--ink); font-weight:700 }
+a:focus-visible { outline:2px solid var(--you); outline-offset:2px }
 @media(max-width:800px) { .cols { grid-template-columns:1fr 1fr } }
-</style></head><body>
-<header class="top"><span class="tile" aria-hidden="true">{{.Logo}}</span><span class="name">World</span></header>
+{{template "chrome-style"}}
+</style><script src="/surface/surface.js" defer></script></head><body>
+<header class="top"><span class="tile" aria-hidden="true">{{.Logo}}</span><span class="name">World</span>{{template "chrome-head" .Address}}</header>
 <main><a class="back" href="/surface">{{template "laneGlyph" .Lane}} {{.Lane.Title}} · World timeline</a>
 {{if .Reason}}<p class="reason">{{.Reason}}</p>{{else}}
 <section class="earlier">{{range .Earlier}}<div class="column" data-brane="{{.Brane}}">{{range .Cards}}{{template "card" .}}{{end}}</div>{{end}}</section>
@@ -71,7 +90,7 @@ small { color:var(--sub) }
 {{if eq .Front.Kind "step"}}<p>{{.ReadSummary}}</p><p>Task · {{.Task}}</p><p>Agent · {{.Agent}}<br>Model · {{.Model}}</p>{{end}}</div>
 <div class="col" data-col="outputs"><h2>Outputs · led to</h2><p>{{if eq .Front.Kind "step"}}Merged into{{else}}Led to{{end}}</p><ul>{{range .Outputs}}<li>{{template "target" .}}</li>{{end}}</ul>
 <ul>{{range .Files}}<li class="file" data-path="{{.Path}}" data-status="{{.Status}}">{{if eq .Status "A"}}+{{else if eq .Status "M"}}~{{else}}−{{end}} {{.Path}}</li>{{end}}</ul>{{if .PR}}<p>PR #{{.PR}}</p>{{end}}</div>
-<div class="col" data-col="decisions"><h2>Decisions</h2><ul>{{range .Decisions}}<li class="decision" data-actor="{{.Actor}}" data-kind="{{.Kind}}"><span class="decision-line"><span class="actor">{{.ActorTitle}}</span> {{.Text}}</span> <small>{{.Relative}}</small></li>{{end}}</ul></div>
+<div class="col" data-col="decisions"><h2>Decisions</h2><ul>{{range .Decisions}}<li class="decision" data-actor="{{.Actor}}" data-kind="{{.Kind}}"><span class="actor">{{.ActorTitle}}</span><span class="decision-text">{{.Text}}</span><small>{{.Relative}}</small></li>{{end}}</ul></div>
 <div class="col" data-col="checks"><h2>Checks</h2><p><span class="check" data-k="graders">{{.Graders}}</span>graders</p><p><span class="check" data-k="rounds">{{.Rounds}}</span>rounds</p><p><span class="check" data-k="calls">{{.Calls}}</span>calls</p><p><span class="check" data-k="minutes">{{.Minutes}}</span>agent minutes</p></div>
 </div></article>
 <section class="later">{{range .Later}}<div class="column" data-brane="{{.Brane}}">{{range .Cards}}{{template "card" .}}{{end}}</div>{{end}}</section>

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/sunholo-data/ailang-world/host/surface"
 )
@@ -42,16 +43,48 @@ type page struct {
 	PlotX   int // the plot's viewBox starts here, so its x stays the layout's
 	PlotW   int
 	LabelX  int
+	LabelW  int // the label column, sized from the lane names
 	Health  string
 	Count   string
 	Running []string
 	Note    string
 }
 
+// The label column is sized from the longest lane name at labelCharW (7.4 px
+// a character at 12 px, a little over Montserrat's average), never narrower
+// than PlotX. A name past maxLabelW is ellipsized; its lane's <title> keeps
+// the whole name.
+const (
+	labelPad  = 12
+	maxLabelW = 480
+)
+
+func labelCharsW(n int) int { return (n*37 + 4) / 5 }
+
+var maxLabelRunes = (maxLabelW - LabelX - labelPad) * 5 / 37
+
+// LabelText is a lane name as its label shows it.
+func LabelText(title string) string {
+	r := []rune(title)
+	if len(r) <= maxLabelRunes {
+		return title
+	}
+	return string(r[:maxLabelRunes-1]) + "…"
+}
+
+// LabelWidth is the label column's width for these lanes.
+func LabelWidth(lanes []Lane) int {
+	w := PlotX
+	for _, l := range lanes {
+		w = max(w, LabelX+labelCharsW(utf8.RuneCountInString(LabelText(l.Title)))+labelPad)
+	}
+	return w
+}
+
 // RenderTimeline renders the page. It refuses a timeline past
 // surface.MaxStates, which Validate already bounds.
 func RenderTimeline(tl Timeline, now Now) ([]byte, error) {
-	p := page{T: tl, Logo: template.HTML(logoSVG), PlotX: PlotX, PlotW: tl.Width - PlotX, LabelX: LabelX, Note: now.SessionsUnavailable}
+	p := page{T: tl, Logo: template.HTML(logoSVG), PlotX: PlotX, PlotW: tl.Width - PlotX, LabelX: LabelX, LabelW: LabelWidth(tl.Lanes), Note: now.SessionsUnavailable}
 	for _, l := range tl.Lanes {
 		p.States += len(l.Nodes)
 	}
@@ -92,7 +125,7 @@ func healthLine(now Now) string {
 	return status + " · checked " + now.At.Format("15:04") + " · " + build
 }
 
-var pageTemplate = template.Must(template.New("surface").Parse(`<!doctype html>
+var pageTemplate = template.Must(template.Must(template.New("surface").Funcs(template.FuncMap{"label": LabelText}).Parse(chromeTemplate)).Parse(`<!doctype html>
 <html lang="en" data-theme="paper">
 <head>
 <meta charset="utf-8">
@@ -127,14 +160,17 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: c
 .link { fill: none; stroke-width: 1.5; opacity: 0.8; }
 .ring { fill: var(--bg); stroke-width: 2; }
 .state:focus-visible, .state:hover { outline: none; }
-.state:hover polygon, .state:hover circle, .state:focus-visible polygon, .state:focus-visible circle { stroke: var(--ink); stroke-width: 2; }
+.state:hover polygon, .state:hover circle { stroke: var(--ink); stroke-width: 2; }
+.state:focus polygon, .state:focus circle, .state:focus-visible polygon, .state:focus-visible circle { stroke: var(--you); stroke-width: 3; }
 .badge { fill: var(--you); font-size: 10px; font-weight: 700; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 8px 16px; padding: 0; list-style: none; color: var(--sub); font-size: 12px; }
 .legend li { display: inline-flex; align-items: center; gap: 4px; }
+{{template "chrome-style"}}
 </style>
+<script src="/surface/surface.js" defer></script>
 </head>
 <body>
-<header class="top"><span class="tile" aria-hidden="true">{{.Logo}}</span><span class="name">World</span></header>
+<header class="top"><span class="tile" aria-hidden="true">{{.Logo}}</span><span class="name">World</span>{{template "chrome-head" "world"}}</header>
 <main>
 <section class="world" aria-label="world timeline">
 {{- if .T.Reason}}
@@ -143,12 +179,12 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: c
 <p class="reason">The surface index holds no states yet.</p>
 {{- else}}
 <div class="frame">
-<svg class="labels" width="{{.PlotX}}" height="{{.T.Height}}" viewBox="0 0 {{.PlotX}} {{.T.Height}}" role="img" aria-label="lanes">
-<g class="bands">{{range .T.Lanes}}{{if .Band}}<rect class="band" x="0" y="{{.Top}}" width="{{$.PlotX}}" height="40"/>{{end}}{{end}}</g>
+<svg class="labels" width="{{.LabelW}}" height="{{.T.Height}}" viewBox="0 0 {{.LabelW}} {{.T.Height}}" role="img" aria-label="lanes">
+<g class="bands">{{range .T.Lanes}}{{if .Band}}<rect class="band" x="0" y="{{.Top}}" width="{{$.LabelW}}" height="40"/>{{end}}{{end}}</g>
 {{- range $lane := .T.Lanes}}
 <g class="lane" data-brane="{{$lane.Key}}" data-glyph="{{$lane.Glyph}}"><title>{{$lane.Title}}</title>
 {{- if $lane.Mark}}<polygon points="{{$lane.Mark}}" fill="{{$lane.Colour}}"/>{{else}}<circle class="ring" cx="16" cy="{{$lane.Y}}" r="6" stroke="{{$lane.Colour}}"/>{{end -}}
-<text class="lane-label" x="{{$.LabelX}}" y="{{$lane.Y}}" dy="4">{{$lane.Title}}</text></g>
+<text class="lane-label" x="{{$.LabelX}}" y="{{$lane.Y}}" dy="4">{{label $lane.Title}}</text></g>
 {{- end}}
 </svg>
 <div class="timeline">
