@@ -89,6 +89,32 @@ func TestWhyProtectedLine(t *testing.T) {
 			assertProtectedBlock(t, got, wantBlock)
 		}
 	})
+	t.Run("e2e-tampered", func(t *testing.T) {
+		// A result whose bytes fail verification is never decoded: a forged
+		// intact block on a Workspace.Exec result prints no protected line
+		// and carries no protected key, while the effect link is ✗.
+		r := newWalkRig(t)
+		inv := r.invokeEffectResult(coordinator.SurfaceA2A, "ep", "tool", "task-0", "", []byte(`{"protected":`+protectedFixture+`}`), broker.EffectWorkspaceExec)
+		forged := `{"protected":{"intact_before":true,"intact_after":true,"base_files":12,"base":"123456789","base_digest":"sha256:tree","enforced":"glob"}}`
+		addr := tamperProxy(t, r.url, inv.result, []byte(forged))
+		code, out, _ := whyRun(t, addr, "", inv.id)
+		if code != exitIntegrity || !strings.Contains(out, "✗ effect") {
+			t.Fatalf("tampered exec result: exit %d\n%s", code, out)
+		}
+		if strings.Contains(out, "protected:") {
+			t.Fatalf("a tampered result printed a protected line:\n%s", out)
+		}
+		code, out, _ = whyRun(t, addr, "", inv.id, "--json")
+		var ch whyChain
+		if code != exitIntegrity || json.Unmarshal([]byte(out), &ch) != nil {
+			t.Fatalf("--json over a tampered result: exit %d: %s", code, out)
+		}
+		for _, l := range ch.Links {
+			if l.Protected != nil {
+				t.Fatalf("a tampered result carried a protected block: %s", l.Protected)
+			}
+		}
+	})
 }
 
 func assertProtectedBlock(t *testing.T, got, want json.RawMessage) {
