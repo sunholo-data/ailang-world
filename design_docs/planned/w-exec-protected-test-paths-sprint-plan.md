@@ -135,7 +135,7 @@ The new mode exits before legacy HOME/decoy/archive setup. Test 16 operation arm
 | M6-pre | Measure V24 and size phase/construction bounds | 200 | 30 | M5b, M1d | done (iteration 290; harness 361 lines, over the 200 target) |
 | M6a | Capture the immutable episode baseline and bounded record shape | 245 | 30 | M6-pre | done (iteration 291, PR #338; ~660 lines, over the 245 cap; bounds 3751/4848 ms applied) |
 | M6b | Attach before/after integrity while preserving the command deadline | 245 | 30 | M6a | done (iteration 292, PR #339; 518 added lines (production +51), over the 245 cap) |
-| M6c | Kill tamper, ignored-file, flag and moved-HEAD mutants; pin replay | 245 | 30 | M6b | planned |
+| M6c | Kill tamper, ignored-file, flag and moved-HEAD mutants; pin replay | 245 | 30 | M6b | done (iteration 293, PR #340; test-only, +394/−44 lines, over the 245 cap) |
 | M7a | Show intact, changed, unchecked and unprotected runs in why | 230 | 30 | M6c | planned |
 | M7b | Ship executable protected-profile guidance and residuals | 210 | 25 | M7a | planned |
 
@@ -1130,7 +1130,7 @@ No `.ail` changes; no AIL verification. Full package acceptance requires contain
 
 ### M6c — Kill tamper, ignored-file, flag and moved-HEAD mutants; pin replay
 
-Design M6; **245 LOC total / 30 min**, own PR/evidence boundary, depends on M6b. Status **planned**.
+Design M6; **245 LOC total / 30 min**, own PR/evidence boundary, depends on M6b. Status **done** (iteration 293, PR #340, test-only: the eight named tests plus `TestExecProtectedDetectsCreation/new-dir` (a `tests/**` file in a brand-new directory: the only row that kills `--untracked-files=normal`, because a file-name pathspec makes Git recurse into a new directory in both modes) and `TestExecSrtIndexWriteStubControl` (the real-srt row's unsandboxed positive control, always on); `newExecSrtRig` gained an optional profile hook so the other rig tests keep their profile. MUT-PROTECTED-REPLAY was drilled two ways (replay dispatching to the registry; protected dropped from the stored bytes), and a trap-registry replay asserts no handler is reached. Residual: removing the parser's unmerged `u` branch survives the behavioural rows, failing closed (malformed → error, never a false intact).)
 
 **Files + allowlist:** `host/broker/exec_protected_record_test.go`, `host/broker/handlers_exec_srt_test.go`, `host/daemon/exec_e2e_srt_test.go`. No other files. Future files/tests are absent at base unless explicitly stated.
 

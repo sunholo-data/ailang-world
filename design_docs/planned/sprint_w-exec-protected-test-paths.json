@@ -3586,7 +3586,7 @@
         "host/broker/handlers_exec_srt_test.go",
         "host/daemon/exec_e2e_srt_test.go"
       ],
-      "status": "planned",
+      "status": "done",
       "new_tests": [
         "TestExecProtectedDetectsCreation",
         "TestExecProtectedDetectsIgnoredCreation",
