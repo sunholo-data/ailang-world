@@ -54,39 +54,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 278 — 2026-10-17 — row 156 M0b Linux protected-write matrix (48 rows) measured on CI, banked as V14/V15 (PR #299; judge r1 PASS 85) [PRODUCT]
-
-**Kind:** the second product milestone on row 156 (D-WORLD-81 release order 156 → 150 → 151). A measurement milestone: CI-only Python, a Go contract test, and design V-rows written from real CI output.
-
-**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-17T00:34:31Z` (35 comments); watermark unchanged (no newer comment). `mission_gate0_self_notices.sh` rc 1 on the same 2026-10-13T02:01:58Z rc=143 notice (orphan 255, credited by 256); control 107:4 ok, watermarks 2/2. `mission-world` unread inbox empty. Weekly rotation not due (#246 created 2026-10-12).
-
-**Gate 1:** local dev fast-forwarded to origin/dev `8d2ee68` (Gate-1 base `8d2ee689f1f385c87d3d1c6c632ea5956abb22ab@2026-10-17T03:26:07Z`). Dev CI 3 check-runs, all success. Skill directory: SKILL.md and all 13 `resources/*.md` at the resolved symlink target match V1 origin/dev, and the pin copy matches too (14/14). Open PRs: #297 only (attended row-187 dogfood docs sweep; left alone).
-
-**Gate 2 — clause map:** 1–7 MET. No UNMET clause, so D-WORLD-81 = A governs: row 156 (`[IN-SPRINT]`, NEXT) at its plan's next milestone, **M0b**. Reality check: no commit or branch for M0b past `8d2ee68`; no iteration-278 worktree; ledger valid, D-WORLD-82 the only OPEN row. Ready-made plan milestone → no designer or planner.
-
-**Execute:** resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; probe from the sprint worktree rc 0. The controller baselined the directive's gates on pristine `8d2ee68` first (self-test 5/5, `go vet` rc 0, golden test PASS, all with `WORLD_TOOL_AILANG_BIN` unset). Codex recipe, 92,573 tok, ~4 min: `runProtectedMatrix` (16 V5 arms × NONE / DIRS_ONLY / LITERAL, fresh tree per row, unsandboxed host sha256 snapshots, outcome from the host as WROTE / REFUSED / PARTIAL, bounded subprocesses, `PROTECTED-JSON` line); self-test 5 → 12 named cases (the M0a judge survivors); `--help` lists the modes; `TestProtectedMatrixModeContract` (rc, census line, every named PASS); a second invocation in the existing Linux CI step against the already pinned and verified srt install (no second npm install: a plan deviation, recorded). Executor's own mutation table: 16 self-test mutants and 4 contract-test mutants killed.
-
-**Controller re-run outside the sandbox:** self-test 12/12, `go vet` rc 0, contract test PASS, and a real macOS `--protected-only` run (rig srt 0.0.78 at the pin, scratch root inside the worktree): rc 0 in 8 s, matching V5. Real-engine control MUT-M0-NO-DIR-DENY (DIRS_ONLY without the `tests` deny): rc 1 with exactly `DIRS_ONLY/dir-modify` failing. Committed `4c3b878`, draft PR #299.
-
-**Linux measurement (CI run 38999371033):** all 48 rows, every gate PASS. Then the job went **red** in three repo-wide Go scans (`TestRegistryDispatchBindingBoundary`, `TestProductionGoSurface`, `TestSubprocessSinkGate`): the matrix's fixture trees, with package-less `.go` files, were still under `$GITHUB_WORKSPACE/.row156-ci`. Controller fix `4c12f2c`: remove each row's tree right after its snapshot, add a `fixtures-removed` gate, and assert the directory is gone in CI; control: with the `rmtree` removed the macOS run exits 1 on `fixtures-removed` only. Re-run 39000212431 green 3/3 with **identical rows** (arm, rendering, outcome, token, host change).
-
-**What Linux showed:** NONE wrote all 16. DIRS_ONLY refused only the directory form: create `tests/new.py` `EROFS`, `mv tests tests2` `EBUSY`, write through a new `lnk→tests` symlink `EROFS` (the link itself is created); every base-name arm written. LITERAL refused the existing literals (`EROFS` modify, `EBUSY` rm / mv away / parent rename, `EXDEV` hard link) and wrote the same six creation arms as V5. macOS with the same harness is identical outcome for outcome (`EPERM` everywhere). Design: V14 (Linux) + V15 (macOS) with `m0b_linux_ci.json` (re-banked from the green run) and `m0b_darwin.json`; §4.4's Linux column is now "measured", with a Linux-errno bullet (refusal checks from M3b on must accept `EROFS`/`EBUSY`/`EXDEV`) and the symlink row measured; P5 gains "Linux confirms". No §4.4/P5 statement was contradicted, so M3 is not blocked.
-
-**Independent evaluation:** Agent `sonnet` (`agent-tool sonnet declared:alias-pin`; generator codex ≠ judge sonnet) in its own detached worktree `.eval-world-iter278` at `4c12f2c`, foreground, 61,570 tok, ~3 min. **r1 PASS 85/100, zero blocking** (35/40, 22/30, 19/20, 9/10). It fetched the Linux job log itself (160 KB), matched `PROTECTED-JSON` to the banked JSON and to V14, found the red's cause in the log and judged the fix, and re-ran the macOS matrix (identical to both JSONs). Its 21 mutants: 13 killed; 8 survived (validator `rc` check, before/after key equality, PARTIAL-token rule, WROTE-with-REFUSED-token, the LITERAL/modify gate, a vacuous-but-named contract case, and two it judged equivalent). The controller reproduced the `rc` survivor (12/12 with the guard removed). Non-blocking doc nits fixed in the record commit: V14 now cites the green run and LITERAL's PARTIAL symlink row, and §4.4's parent-rename row names the rendering. The remaining survivors are carried to M1a in the row-156 tag.
-
-**Routing evidence:** base=8d2ee689f1f385c87d3d1c6c632ea5956abb22ab@2026-10-17T04:03:14Z (Gate 4). Controller `claude-opus-5-5` (tok: not reported) · designer: none (ready-made plan milestone) · planner: none · executor `codex:gpt-6.1-sol` via recipe (92,573 tok) · evaluator Agent `sonnet` (61,570 tok, one round). judge-independence: cross-vendor. Metered $0.
-
-**Ruled out:**
-- A second npm install for the new mode (plan text): the step already pins and sha256-verifies one install; a second adds time inside the 8-minute timeout and no evidence.
-- Writing the Linux V-rows before CI ran: the plan forbids a planner- or executor-authored outcome; they were written from the CI JSON.
-- Attributing the first red to the measurement: every matrix gate passed; the failures were later repo scans parsing the leftover fixtures.
-- A fix round for the judge's survivors before landing: all non-blocking and in a measurement harness that has already produced its evidence; carried to M1a.
-
-**Retro:** Skill lane: none. Process lane: (1) a measurement that writes fixtures inside `$GITHUB_WORKSPACE` must clean them before later steps, because this repo's Go guards scan the whole tree; ask for that in any CI-fixture directive. (2) Pushing the draft PR straight after the controller re-run let the Linux step finish in ~1 min of job time, but job logs appear only when the whole job ends (~10 min). Backlog lane: none new.
-
-**Progress**: World 1.0: **7 of 7 clauses MET**; `v1.0.0-rc.1` pre-released. Goal unmoved by this iteration. Row 156: 2 of 19 milestones built.
-
-**Next:** row 156 **M1a** (parse, fold, canonicalize and digest the protected grammar), folding in the M0b judge survivors. D-WORLD-82 open with defaults A, A, A, B.
+> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
+> the thing to grep before picking work, so the loop never repeats itself — is in
+> `world-mission-index.md`.
 
 ## 279 — 2026-10-17 — row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) built with the M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 94) [PRODUCT]
 
@@ -1562,3 +1533,73 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **11/17 milestones built**; next M6. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
 
 **Next:** row 150 M6: still serve flag and stable complete server HTML (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.
+
+## 300 — 2026-10-22 — row 150 M6 built: `serve --workbench-still` serves the complete workbench page without its one live script (PR #359; judge r1 PASS 93) [PRODUCT]
+
+**Kind:** one milestone of row 150 (M6). Production: `cmd/ailang-worldd/main.go`, `host/daemon/daemon.go`, `host/daemon/workbench.go`, `host/workbench/render.go`. Tests: `host/daemon/workbench_still_test.go` (new), `cmd/ailang-worldd/main_test.go`, `host/workbench/render_test.go`. Docs: QUICKSTART §11, `website/docs/guides/operating-the-daemon.md`, `website/docs/reference/cli.md`. No `.ail` change, no release, no design-direction change.
+
+**Pick and why:**
+- All seven clauses are MET; D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Row 156 has nothing buildable (D-WORLD-86 OPEN), so row 150's next milestone, M6, was the pick (iteration 299's **Next**).
+- Reality check: `--workbench-still`/`WorkbenchStill`/the three new test names had zero hits in `cmd/` and `host/` at base; no M6 commit on origin; no iteration-300 worktree, branch or PR. Open PRs #356/#357/#358 are attended work (D-WORLD-90, row 188 trial), not this loop's, and were left alone. The 2026-10-21T16:56:25Z rc=143 notice is iteration 296's, already credited (log count 1).
+- Quorum-at-pick: not re-run — the design carries its r1–r4 record from iteration 266 and the plan has been executing since.
+
+**Clause map:** 1–7 all MET.
+
+**Gate 0:**
+- Kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN.
+- #313: 0 allowlisted directives since `2026-10-22T01:34:42Z` (19 comments). Self-notice scan: one rc=143 notice in window (iteration 296's, already credited); control 107:4 ok, watermarks 2/2.
+- `mission-world` inbox: 8 unread, all this loop's own claims.
+
+**Gates 1–2:**
+- Local dev = origin/dev `9aca8812`; dev CI 3/3 checks green on it.
+- The running skill matches origin on SKILL.md and all 13 resource files (resolved symlink, per-file).
+- Ledger valid, 76 rows; one OPEN (D-WORLD-86).
+
+**Executor (codex gpt-6.1-sol, one run, 103,331 tok, ~6.6 min):**
+- `--workbench-still` (default false) → `daemon.Config.WorkbenchStill` → `workbench.Page.Still`; the template emits the `live.js` tag inside `{{if .Still}}{{else}}…{{end}}` (the field census reads a direct bool branch; `not` is not in the template's FuncMap).
+- Tests first: `TestWorkbenchStillAllRegions` (home, entry and packet-object routes on a store with a produced packet and a recorded deny: timeline entry, live-list head, graph edges, decisions row, packet refs, inspector; zero `<script`; full headers `DeepEqual` to default; still HTML equals default minus exactly the tag; repeat GETs after a real 2 s sleep byte-identical; selected head and log head unchanged), `TestServeWorkbenchStillFlag` (help, parser, Config, default one script, `=notabool` refused), `TestWorkbenchStillDefaultLiveScript` (one/zero scripts, census).
+- In-sandbox: all gates PASS, no socket denial; 5 mutants killed (plan M6-script/graph/default plus threading and census).
+
+**Controller verification (outside any sandbox, both pins):**
+- Base `9aca8812` baseline: the six pre-existing focused gates PASS; the new test name selects nothing (negative control). My first baseline loop used zsh `set -- $spec`, which does not word-split, so every gate read rc 1 — an instrument failure; re-run under bash.
+- On `aeaa957d`: 12 focused gates top-level PASS (the plan's 9 + `TestQuickstartSection11FlagsMatchTheCLI`, `TestWorkbenchErrorPageInert`, `TestWorkbenchFieldCensusMutations`); gofmt and vet clean.
+- `verify_ail.sh` rc 0. `verify_go.sh` rc 1 (935 s): non-race leg all ok; race leg red while the judge ran concurrently (load 12.8) — `cmd/ailang-worldd` and `host/daemon` `signal: terminated` at ~218 s, and `host/broker` `TestWorktreeSnapshotRefusesAConfiguredFilter` failing its own control arm (`plain git status did not run the clean filter`). M6 touches neither broker nor git filters. Isolated `go test -race -count=1` of the three packages afterwards: rc 0 (cmd 192 s, daemon 417 s, broker 267 s).
+- Diff read for out-of-worktree writes: none.
+- Commits: `aeaa957d` (executor work, controller-committed), `ac1abe7f` (controller docs fix), `4f935c8a` (plan/JSON status).
+
+**Independent evaluation (Agent sonnet, background, own worktree `.eval-world-iter300`; generator codex ≠ judge sonnet):**
+- **r1 PASS 93**, zero blocking; 51,395 subagent tok, 9 tool calls, ~13.8 min. Gates PASS; full `./host/daemon` and `./cmd/ailang-worldd` UNMEASURED by it (600 s foreground cap; it ran `-run` subsets instead — the controller's isolated runs cover them).
+- 10 mutants killed: plan M6-script (both packages), M6-graph, M6-default; Page threading; always-suppress; inverted condition; flag mapped to `&& false`; help text mangled; flag renamed. It re-made two non-compiling forms as compiling ones.
+- Non-blocking: N1 the cmd test builds the Page itself (the cfg→daemon→Page link is killed only in the daemon test); N2 graph assertion skips the object route by index; **N3 the CLI reference's serve-flag help copy lacked the flag — reproduced (`cli.md` carries a `serve flags:` copy of the help text) and fixed `ac1abe7f`, docs only, no r2**; N4 the plan lists a mutation command twice; N5 QUICKSTART wording.
+
+**Result:** M6 built. Row 150 has 12 of 17 milestones. Plan and sprint JSON mark M6 completed.
+
+**Gate 3b:** PR #359 (`sprint/world-iter300-row150-m6`); the record rides the same PR. CI is verified on the PR head and the merge before Gate 5 reports LANDED.
+
+**Routing evidence:** base=9aca881297dcc9f84a2809bacffb95878e93e4e6@2026-10-22T08:00:44Z (Gate 4; Gate 1 and Gate 3 read the same SHA).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: the design is ready. Planner not spawned: the plan is ready.
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin`: probe rc 0; one run, rc 0, 103,331 tok.
+- Evaluator `agent-tool sonnet declared:alias-pin`: r1 51,395 subagent tok, background, controller polled in-turn.
+- The operator's standing request asked for Agent-tool roles exactly as the routing table specifies. The evaluator ran through the Agent tool as required; the executor's table lane is the codex recipe (an Agent spawn for a provider-pinned role is denied by the spawn-pin hook). No role was unspawnable.
+- Judge independence: cross-vendor for the executor's work; the controller's `ac1abe7f` is docs only.
+- Metered **$0.00**.
+
+**Ruled out:**
+- Reading the race-leg reds as an M6 regression: two were external terminations at the same instant, the third a control-arm failure in an untouched package; all three packages are green in isolation.
+- Treating my zsh baseline loop's rc 1 as a red base: the loop never selected a test.
+
+**Carried (non-blocking):**
+- M6: N1, N2 above.
+- M5c: M9, M11, M13; the compact-vs-indented public-bytes scan. M5b: `report:` link labels; the dead `utf8.Valid` guard.
+- **[HARNESS] ticket:stall:watchdog:foreground-agent-and-wrong-transcript** and **ticket:routing-models-check:bold-colon-heading**: still open.
+
+**Retro:**
+- **Skill lane:** none; World does not edit the shared skill.
+- **Process lane:** a judge running its own full-package suites concurrently with the controller's `verify_go.sh` is the second instance of "sequence the judge and the suite" (iteration 293 recorded the first). Remedy recorded here, not yet in the Repo Profile: start `verify_go.sh` only after the judge returns, or give the judge `-run` subsets by directive. Two instances; a third makes it a charter guardrail.
+- **Backlog lane:** none new.
+- Harness share 0 of the last 20. The last three landings (300, 299, 298) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **12/17 milestones built**; next M7a. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
+
+**Next:** row 150 M7a: bounded capture supervisor with mandatory fake Chrome companions (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.

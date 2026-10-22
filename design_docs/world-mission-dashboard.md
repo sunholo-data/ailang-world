@@ -1,23 +1,26 @@
-# World mission dashboard — iteration 299 (2026-10-22)
+# World mission dashboard — iteration 300 (2026-10-22)
 
-- **This fire:** row 150 M5c built, PR #354. `ailang-worldd demo seed` now completes.
-  - After S1–S6 it re-reads the S5 input it committed and checks every roster slot: order, ref = manifest ref, re-hash, declared kind. The packet page must show four resolved grade rows and no roster-unavailable banner.
-  - Only then does it publish one success manifest atomically: temp file, fsync, `os.Link` (never overwrites), mode 0644. Exit 0 only after that.
-  - Help, QUICKSTART §12 and the CLI reference now describe a complete seed.
-- **Defects found and fixed:**
-  - M5b's TESTED rule required `exit_code == 0`, but the pinned v0.54.15 tool omits `exit_code` on a passing `test --json`. M5b's fake tool always sent it, so a real TESTED row never resolved. Controller fix `c9fd10af`, with the tool's real response checked in as the fixture.
-  - A denied/failed recorded effect (no result) rendered ATTESTED; it now refuses (`effect result absent`).
-- **Judge:** Agent sonnet in its own worktree. r1 PASS 80, zero blocking (survivors: page-check wiring, slot order, manifest/input compare, re-hash, file mode). After test-only fix `be270368`, r2 **PASS 85**, zero blocking, no new findings. It re-measured the tool shape itself.
-- **Gates:** all named gates rc 0 with both pins; `verify_ail.sh` rc 0; `verify_go.sh` rc 0 (771 s) on `c9fd10af`; `go test -race ./cmd/ailang-worldd` rc 0 on `be270368`.
+- **This fire:** row 150 M6 built, PR #359. `ailang-worldd serve --workbench-still` (default off) serves the workbench page without its one `live.js` script, for the marketing captures.
+  - Still HTML equals the default page minus exactly that tag. This is asserted on the home, entry and packet-object routes of a populated store (timeline, live list, graph, decisions, packet, inspector).
+  - Headers (CSP included) are unchanged, and repeat GETs 2 s apart are byte-identical. GETs commit nothing.
+  - QUICKSTART §11, the operator guide's serve-flag table and the CLI reference name the flag.
+- **Judge:** Agent sonnet in its own worktree, r1 **PASS 93**, zero blocking, 10 mutants killed. Its docs finding (the CLI reference's help copy lacked the flag) was reproduced and fixed in `ac1abe7f`.
+- **Gates:**
+  - 12 focused gates got a top-level PASS outside the sandbox; `verify_ail.sh` rc 0.
+  - `verify_go.sh` rc 1: the non-race leg is all ok, but the race leg went red while the judge ran concurrently (two packages terminated at about 218 s, plus one broker control arm).
+  - An isolated `-race` run of cmd, daemon and broker is rc 0.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
 - **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81):
   - row 156: 22/24, nothing buildable (D-WORLD-86);
-  - row 150: 11/17;
+  - row 150: 12/17;
   - then row 151.
-- **Next:** row 150 M6 (still serve flag and stable complete server HTML).
-- **Carried:** M5c M9 (count `<4`, unreachable), fsync unobservable, a redundant second manifest validation, the public-bytes scan on compact JSON; M5b `report:` link labels and the dead `utf8.Valid` guard.
+- **Next:** row 150 M7a (bounded capture supervisor with mandatory fake Chrome companions).
+- **Carried:**
+  - M6: the cmd flag test builds the Page itself, and the graph assertion skips the object route by index.
+  - M5c: M9, M11, M13 and the compact-JSON public-bytes scan.
+  - M5b: `report:` link labels and the dead `utf8.Valid` guard.
 - **Parked on Mark:** D-WORLD-86: drop M5c/M5d of row 156 (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
-- **Routing/cadence:** executor codex gpt-6.1-sol (1 run); evaluator Agent sonnet (background, resumed for r2). No designer or planner: the design and plan were ready.
-- **Cost:** metered $0.00. Codex executor 162,686 tok. Agent judge: r1 79,345 and r2 91,250 subagent tok.
-- **Retro:** harness share 0/20; no drift alarm. Process fix: a fake-tool test row needs a sibling row fed the real tool's captured response. Skill proposal: extend Gate 3's hand-typed-fixture rule to fake binaries.
-- **Record:** world-mission-log.md entry 299 (log rotated: 20 entries live).
+- **Routing/cadence:** executor codex gpt-6.1-sol (1 run); evaluator Agent sonnet (background, polled in-turn). No designer or planner: the design and plan were ready.
+- **Cost:** metered $0.00. Codex executor 103,331 tok. Agent judge 51,395 subagent tok.
+- **Retro:** harness share 0/20; no drift alarm. Process watch-item at instance 2: sequence the judge and `verify_go.sh` (iterations 293 and 300).
+- **Record:** world-mission-log.md entry 300 (log rotated: 20 entries live).
