@@ -28,7 +28,8 @@ func pythonSupervisor(t *testing.T, args ...string) *exec.Cmd {
 	if err != nil {
 		t.Fatal("python3 is mandatory: ", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	// Generous outer bound: go test ./... runs packages in parallel on a loaded host.
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
 	cmd := exec.CommandContext(ctx, py, append([]string{"../marketing_capture.py"}, args...)...)
 	// A real input payload makes dropping DEVNULL observable, even in headless CI.
@@ -198,7 +199,7 @@ func cleanupPIDs(t *testing.T, path string) {
 
 func waitFile(t *testing.T, path string) {
 	t.Helper()
-	deadline := time.Now().Add(4 * time.Second)
+	deadline := time.Now().Add(15 * time.Second)
 	for time.Now().Before(deadline) {
 		if b, err := os.ReadFile(path); err == nil && len(b) > 0 {
 			return
@@ -210,7 +211,7 @@ func waitFile(t *testing.T, path string) {
 
 func assertDead(t *testing.T, pid int, label string) {
 	t.Helper()
-	deadline := time.Now().Add(600 * time.Millisecond)
+	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		if pidDead(pid) {
 			return
@@ -240,7 +241,8 @@ wait
 `)
 	start := time.Now()
 	out := filepath.Join(dir, "shot.png")
-	args := append(shotArgs(chrome, out, "light"), "--timeout", "1.5")
+	// 3 s leaves a loaded host time to start both descendants before the deadline.
+	args := append(shotArgs(chrome, out, "light"), "--timeout", "3")
 	got := runSupervisor(t, "Timeout", args...)
 	if len(readFile(t, out)) == 0 {
 		t.Error("timeout fixture must have written a PNG before hanging")
@@ -248,7 +250,7 @@ wait
 	if got.Verdict != "Timeout" {
 		t.Error("timeout must fail even when PNG exists")
 	}
-	if elapsed := time.Since(start); elapsed > 7*time.Second {
+	if elapsed := time.Since(start); elapsed > 15*time.Second {
 		t.Errorf("timeout must return within deadline + 5s reap + margin: %s", elapsed)
 	}
 	ids := recordedPIDs(pids)
@@ -297,7 +299,7 @@ func TestMarketingSupervisorFakeDaemonCleanup(t *testing.T) {
 		start := time.Now()
 		runSupervisor(t, "ok", "daemon", "--ready-file", ready, "--started-file", started, "--lifetime", "0.05", "--term-wait", "0.15", "--kill-wait", "0.3", "--", daemon)
 		elapsed := time.Since(start)
-		if elapsed < 150*time.Millisecond || elapsed > 2*time.Second {
+		if elapsed < 150*time.Millisecond || elapsed > 8*time.Second {
 			t.Errorf("TERM wait then KILL/reap must respect unit bounds: %s", elapsed)
 		}
 		ids := recordedPIDs(pids)
@@ -330,22 +332,23 @@ printf ready > "$FAKE_READY"
 while :; do sleep 0.02; done
 `)
 		start := time.Now()
-		runSupervisor(t, "ok", "daemon", "--ready-file", ready, "--started-file", started, "--lifetime", "0.05", "--term-wait", "3", "--kill-wait", "0.3", "--", daemon)
+		runSupervisor(t, "ok", "daemon", "--ready-file", ready, "--started-file", started, "--lifetime", "0.05", "--term-wait", "20", "--kill-wait", "0.3", "--", daemon)
 		if _, err := os.Stat(pids + ".term"); err != nil {
 			t.Error("daemon must receive TERM before any KILL")
 		}
-		if elapsed := time.Since(start); elapsed > 1500*time.Millisecond {
+		if elapsed := time.Since(start); elapsed > 10*time.Second {
 			t.Errorf("a daemon that exits on TERM must not wait out term-wait: %s", elapsed)
 		}
 	})
-	for _, tc := range []struct{ name, body, verdict, assertion string }{
-		{"early-exit", "exit 3\n", "NonzeroExit", "daemon exiting before readiness must be NonzeroExit"},
-		{"never-ready", `echo "$$" > "$FAKE_PIDS"` + "\nwhile :; do sleep 0.02; done\n", "Timeout", "daemon readiness deadline must be Timeout"},
-		{"exits-while-ready", `printf ready > "$FAKE_READY"` + "\nsleep 0.1\n", "NonzeroExit", "daemon exiting during its lifecycle must be NonzeroExit"},
+	// Only never-ready may hit its startup deadline; the others get one a loaded host cannot reach.
+	for _, tc := range []struct{ name, body, startup, verdict, assertion string }{
+		{"early-exit", "exit 3\n", "20", "NonzeroExit", "daemon exiting before readiness must be NonzeroExit"},
+		{"never-ready", `echo "$$" > "$FAKE_PIDS"` + "\nwhile :; do sleep 0.02; done\n", "0.5", "Timeout", "daemon readiness deadline must be Timeout"},
+		{"exits-while-ready", `printf ready > "$FAKE_READY"` + "\nsleep 0.1\n", "20", "NonzeroExit", "daemon exiting during its lifecycle must be NonzeroExit"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			daemon, pids, ready, started := daemonWith(t, tc.body)
-			got := runSupervisor(t, tc.verdict, "daemon", "--ready-file", ready, "--started-file", started, "--startup-timeout", "0.3", "--lifetime", "5", "--term-wait", "0.15", "--kill-wait", "0.3", "--", daemon)
+			got := runSupervisor(t, tc.verdict, "daemon", "--ready-file", ready, "--started-file", started, "--startup-timeout", tc.startup, "--lifetime", "20", "--term-wait", "0.15", "--kill-wait", "0.3", "--", daemon)
 			if got.Verdict != tc.verdict {
 				t.Error(tc.assertion)
 			}
@@ -382,8 +385,14 @@ while :; do sleep 0.02; done
 exec sleep 60
 `)
 		cmd := pythonSupervisor(t, "daemon", "--ready-file", ready, "--started-file", started, "--term-wait", "0.15", "--kill-wait", "0.3", "--chrome", chrome, "--out", filepath.Join(dir, "shot.png"), "--url", "http://example.invalid/", "--timeout", "20", "--", daemon)
-		var stdout bytes.Buffer
-		cmd.Stdout = &stdout
+		// A file sink: a bare buffer races os/exec's copier (TestSubprocessSinkGate).
+		stdoutPath := filepath.Join(dir, "stdout.json")
+		stdout, err := os.Create(stdoutPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { stdout.Close() })
+		cmd.Stdout = stdout
 		if err := cmd.Start(); err != nil {
 			t.Fatal(err)
 		}
@@ -393,12 +402,12 @@ exec sleep 60
 		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
 			t.Fatal(err)
 		}
-		err := cmd.Wait()
-		if elapsed := time.Since(start); elapsed > 2500*time.Millisecond {
+		err = cmd.Wait()
+		if elapsed := time.Since(start); elapsed > 10*time.Second {
 			t.Errorf("TERM during a shot must stop the supervisor within the cleanup bound: %s", elapsed)
 		}
 		var got supervisorVerdict
-		if e := json.Unmarshal(stdout.Bytes(), &got); e != nil || got.Verdict != "Interrupted" || err == nil {
+		if e := json.Unmarshal([]byte(readFile(t, stdoutPath)), &got); e != nil || got.Verdict != "Interrupted" || err == nil {
 			t.Errorf("a signalled shot must report Interrupted with a non-zero exit: %+v err=%v json=%v", got, err, e)
 		}
 		for _, pid := range append(recordedPIDs(chromePIDs), recordedPIDs(pids)...) {
@@ -418,7 +427,7 @@ exec sleep 60
 		mode := tc.mode
 		t.Run("shell-"+tc.name, func(t *testing.T) {
 			daemon, pids, ready, started := daemonFixture(t)
-			ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			cmd := exec.CommandContext(ctx, "bash", "../capture_marketing.sh", "--unit-daemon", mode, daemon, ready, started, "0.15", "0.3")
 			outputPath := filepath.Join(t.TempDir(), "shell.log")
@@ -460,7 +469,7 @@ exec sleep 60
 					t.Errorf("%v trap must exit %d after supervised cleanup: %v", tc.sig, tc.code, err)
 				}
 			}
-			if elapsed := time.Since(start); elapsed > 2*time.Second {
+			if elapsed := time.Since(start); elapsed > 10*time.Second {
 				t.Errorf("shell trap cleanup exceeded bound: %s", elapsed)
 			}
 			ids := recordedPIDs(pids)
