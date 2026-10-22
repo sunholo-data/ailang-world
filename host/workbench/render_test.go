@@ -827,6 +827,7 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 	}{
 		{name: "four-rows", validated: true, packet: true}, {name: "escaped", validated: true, packet: true, escaped: true},
 		{name: "unavailable-row", validated: true, packet: true, refused: true}, {name: "refused-packet", packet: true}, {name: "non-packet"},
+		{name: "roster-unavailable", validated: true, packet: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -861,6 +862,9 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 				}
 				packet.Roster = append(packet.Roster, row)
 			}
+			if tc.name == "roster-unavailable" {
+				packet.Roster, packet.RosterUnavailable = nil, `test report "null" <refused>`
+			}
 			page := Page{Object: &ObjectView{}}
 			if tc.packet {
 				page.Object.Packet = packet
@@ -876,6 +880,12 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 			if !tc.packet || !tc.validated {
 				if strings.Contains(body, `aria-label="evidence roster"`) {
 					t.Fatal("roster on refused/non-packet page")
+				}
+				return
+			}
+			if tc.name == "roster-unavailable" {
+				if !strings.Contains(body, "<p>evidence roster UNAVAILABLE — test report &#34;null&#34; &lt;refused&gt;</p>") || strings.Contains(body, `aria-label="evidence roster"`) {
+					t.Fatalf("refused roster banner absent, or rows rendered beside it: %s", body)
 				}
 				return
 			}
@@ -896,6 +906,9 @@ func TestRenderPacketEvidenceFourRows(t *testing.T) {
 					if !strings.Contains(body, want) {
 						t.Fatalf("missing %s", want)
 					}
+				}
+				if !tc.escaped && !strings.Contains(body, ` · subject: <a href="/workbench?object=producer">producer</a> · compiler <a href="/workbench?object=producer">producer</a> · version producer</p>`) {
+					t.Fatalf("proof row links: %s", body)
 				}
 			}
 			if tc.escaped {

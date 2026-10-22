@@ -744,6 +744,14 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 		control{name: "promote-claim", reason: "unknown kind", mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) {
 			rosterPair(f, 2)["kind"] = "PROVEN"
 		}},
+		// The fixture's effect and result share a provenance; split them so the
+		// TESTED producer must come from the result object itself.
+		control{name: "result-provenance", mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) {
+			rosterTestChain(t, f, "result", func(o *store.Object) {
+				o.Payload = append(o.Payload, '\n')
+				o.Provenance = rosterResultProvenance
+			})
+		}},
 	)
 	for _, c := range []struct {
 		name, reason string
@@ -924,6 +932,17 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 					if got.rows[3].label != "" {
 						t.Fatal("refused proof promoted")
 					}
+					// A refused envelope's subject is unauthenticated, so it is never shown.
+					if got.rows[3].subject != "" || got.rows[3].compiler != "" || got.rows[3].version != "" {
+						t.Fatalf("refused proof carries pins: %+v", got.rows[3])
+					}
+					// Store-real refusals (no read seam) reach the page through the real projection.
+					if r.edit == nil && r.missing.IsZero() && r.waitAt.IsZero() {
+						projected, err := d.projectPacket(ctx, f.packet)
+						if err != nil || len(projected.view.Roster) != 4 || projected.view.Roster[3].Unavailable != tc.reason || projected.view.Roster[3].Label != "" || projected.view.Roster[3].Subject != "" {
+							t.Fatalf("refused proof projection %s: %+v %v", tc.reason, projected, err)
+						}
+					}
 				}
 				if reason != tc.reason {
 					t.Fatalf("refusal guard %s: got %+v", tc.reason, got)
@@ -954,6 +973,9 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 			}
 			// Producers are the stored objects' own provenance, not merely non-empty.
 			wantProducers := rosterWantProducers(t, f)
+			if tc.name == "result-provenance" && wantProducers[0] != rosterResultProvenance {
+				t.Fatalf("instrument: result provenance %q was not stored", wantProducers[0])
+			}
 			for i := range got.rows {
 				if got.rows[i].producer != wantProducers[i] {
 					t.Fatalf("row %d producer %q, want %q", i, got.rows[i].producer, wantProducers[i])
@@ -985,6 +1007,9 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 		})
 	}
 }
+
+const rosterResultProvenance = "host/broker/result-control"
+
 func rosterProofSubject(t *testing.T, f *rosterFixture) hashref.HashRef {
 	t.Helper()
 	obj := rosterGet(t, f.d, hashref.MustParse(rosterPair(f, 3)["ref"].(string)))

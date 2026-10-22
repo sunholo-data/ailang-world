@@ -487,7 +487,6 @@ func packetProvenRow(ctx context.Context, read packetObjectRead, ref hashref.Has
 	if _, reason = read(report.Subject, "proof subject", "world/source/ailang/v1", packetRosterReadLimit); reason != "" {
 		return refuse(reason)
 	}
-	row.subject = report.Subject.String()
 	if grader == nil {
 		return refuse(objectGradeUnavailableReason)
 	}
@@ -500,6 +499,7 @@ func packetProvenRow(ctx context.Context, read packetObjectRead, ref hashref.Has
 	if _, proven := grader.Resolve(sealed).Proven(); !proven {
 		return refuse(gradeReasonNoneValidated)
 	}
-	row.label, row.compiler, row.version = "PROVEN", report.Compiler.String(), report.CompilerVersion
+	// The subject is shown only once the MAC and Resolve have authenticated it.
+	row.label, row.subject, row.compiler, row.version = "PROVEN", report.Subject.String(), report.Compiler.String(), report.CompilerVersion
 	return row
 }
