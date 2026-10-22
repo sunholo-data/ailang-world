@@ -59,40 +59,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 279 — 2026-10-17 — row 156 M1a protected grammar (parse, fold, canonicalize, digest, match) built with the M0b judge carry-over (PR #300; judge r1 PASS 88 → r2 PASS 94) [PRODUCT]
-
-**Kind:** the third product milestone on row 156 (D-WORLD-81 release order 156 → 150 → 151). Pure Go, no wiring: the grammar and digest core that M1b–M7b consume.
-
-**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-17T04:30:18Z` (36 comments); watermark unchanged. `mission_gate0_self_notices.sh` rc 1 on the same 2026-10-13T02:01:58Z rc=143 notice (orphan 255, credited by 256); control 107:4 ok, watermarks 2/2. `mission-world` unread inbox empty (`-unread -limit 500 -json` → null). Weekly rotation not due (#246 created 2026-10-12).
-
-**Gate 1:** local dev = origin/dev `1a073ce` (Gate-1 base `1a073cedb49c8b64696a447bfd70c3a8a75fd374@2026-10-17T07:27:03Z`). Dev CI 3 check-runs, all success. Skill directory: SKILL.md and all 13 `resources/*.md` at the resolved symlink target, and the pin copy, match V1 origin/dev (no DRIFT line). Open PRs: #297 only (attended row-187 docs sweep; left alone — it merged mid-fire as `6731d87`, touching no charter/log file, and the sprint branch was rebased onto it before the record).
-
-**Gate 2 — clause map:** 1–7 MET. No UNMET clause, so D-WORLD-81 = A governs: row 156 (`[IN-SPRINT]`, NEXT) at its plan's next milestone, **M1a**. Reality check: `host/broker/exec_protected.go` absent at `1a073ce`, no M1a commit or branch on origin, no iteration-279 worktree, quorum artifacts present (`w-exec-protected-test-paths-2026-10-16T23-43-50Z.json`, `…T23-46-12Z.json`), ledger valid (69 rows), D-WORLD-82 the only OPEN row. Ready-made plan milestone → no designer or planner.
-
-**Execute:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin` (codex over daily ration, `$MISSION_ROUTING_NOTE`); run as Agent `haiku`, same weights, per the operator's standing Agent-tool request and the iteration-271/273 precedent. The controller baselined first on pristine `1a073ce` (`go vet` rc 0; matrix self-test 12/12, both with `WORLD_TOOL_AILANG_BIN` unset) and measured the facts the directive carried: `golang.org/x/text` absent from go.mod/go.sum but selected at v0.42.0 and cached; fileguard v0.52.1's `foldKey`/`foldRune` source; World's deny names (`handlers_ailang.go:57-58`). Executor (105,944 tok, ~5 min): `exec_protected.go` (`ParseProtectedPatterns`, `canonicalProtected`, `protectedDigest`, `foldProtectedKey`, `matchProtected`; reuses `execDenyNames()`), `exec_protected_test.go` (the four plan-named tests, one refusal subtest per guard), x/text v0.42.0 direct (it hand-removed two stray x/mod and x/tools go.sum lines that `go get` added). Part B, the M0b judge carry-over: four validator self-test cases (`invalid-rc`, `snapshot-keys`, `partial-token`, `wrote-refused-token`; self-test 12 → 16) and `TestProtectedMatrixModeContract` now fails instead of skipping without python3. Its mutation table: 19 mutants, all killed by the named subtests.
-
-**Controller re-run (own tree, tool pin unset):** the five named gates PASS (11/1/1/12/1), self-test 16/16, `go vet` rc 0, gofmt clean, `go mod verify` ok. Test bytes checked with python: the NFD row really is `é`, the long-s row U+017F, the kelvin row U+212A. Golden digest re-derived with `hashlib`. Five controller mutants, all killed by their named subtest: no-NFC fold (`nfc`), ToLower fold (`long-s`), deny prefix arm removed (`already-denied`), no dedupe (golden), dir prefix without `/` (`non-hit-sibling`). Committed `b128e0f`, draft PR #300.
-
-**Independent evaluation:** Agent `sonnet` (`agent-tool sonnet declared:alias-pin`; generator haiku ≠ judge sonnet, same vendor), in its own detached worktree `.eval-world-iter279`, foreground. **r1 PASS 88/100, zero blocking** (35/40, 24/30, 19/20, 10/10): about 45 mutants of its own; findings N1 padded entries accepted while fileguard `TrimSpace`s patterns; N2 the digest depended on which spelling of a fold-key duplicate came first (`["tests/**","TESTS/**"]` vs the reverse: two digests); N3 the dir-part glob guard, `matchProtected`'s `path.Clean` and the slash-free `**` message untested; N4 "the kelvin row is ASCII"; N5 `sub/.git/**` accepted. The controller reproduced N1, N2, N3 and N5 with a probe test, and refuted N4's premise (the row's path is U+212A; it cannot kill a ToLower fold because `ToLower(U+212A) == 'k'`, and `long-s` carries that). **Fix round** (same executor, resumed; 120,949 tok): padded entries refused (`entry-characters`), byte-smallest NFC spelling per fold key (golden recomputed outside Go: `bbe9239e…`), `dir-glob` and `clean-path` subtests plus slash-free `**` rows, a `.git` segment refused at any depth; 5/5 new mutants killed; the controller re-derived the digest and re-ran the first-seen mutant. A controller edit to design §4.1 records the canonical-spelling, padding and any-depth `.git` rules. **r2 PASS 94/100, zero blocking** (38/40, 27/30, 19/20, 10/10): 15 new-branch mutants, one survivor (ASCII-only whitespace check), and the judge withdrew N4 after dumping the bytes. Its nits N6 (non-ASCII whitespace rows) and N7 (stale golden comment) were applied by the controller (test-only, commit 3); the ASCII-only mutant now fails `TestProtectedGrammar/characters`.
-
-**CI (PR #300):** the first run on the record head `c8c4bfd` was **red** on two jobs, only in `TestBrokerDependencyAllowlist` and `TestDaemonDependencyAllowlist/daemon_core_build_graph`: the zero-cloud allowlists rejected `golang.org/x/text/transform` and `golang.org/x/text/unicode/norm`, which the plan (PF7) mandated without naming these guards, and which the directive's gate list never ran. Controller fix (commit 5): the two package paths (exactly what `go list -deps` reaches), never the module root, in both lists with a justification comment; both guards plus their null-case and intruder subtests PASS locally; the first CI run is the negative control. Reviewed by the same judge as an r3 delta (see below).
-
-**Routing evidence:** base=6731d87e745e9bbc7a88bdd12b5b442d9844c2cf@2026-10-17T07:54:05Z (Gate 4; Gate 1 read `1a073ce`, attended #297 merged between). Controller `claude-opus-5-5` (tok: not reported) · designer: none (ready-made plan milestone) · planner: none · executor Agent `haiku` for pin `claude:claude-haiku-5-5` (105,944 + 120,949 tok) · evaluator Agent `sonnet` (79,775 + 92,956 tok, two rounds). judge-independence: same-vendor, different model (codex lane over ration). Metered $0.
-
-**Ruled out:**
-- Judge r1 N4 ("kelvin row uses ASCII K"): refuted by a byte dump (U+212A); the judge agreed in r2.
-- Refusing a base-name pattern `.git`: fileguard denies any `.git` component before the protected check, so the grammar only refuses the directory form.
-- Running the unfiltered `go test -race ./host/broker/...` locally: it seeds the real HOME (plan PF6); CI runs it.
-- Admitting the whole `golang.org/x/text` module to the allowlists: two package paths suffice and keep the guard narrow.
-- A second executor round for N6/N7: two test rows and a comment; applied by the controller with a mutation proof.
-
-**Retro:** Skill lane: none. Process lane: (1) asking the executor for a digest computed outside Go, with the command written in the test, paid off twice — the judge and the controller each re-derived both goldens in one line. (2) "Keep the first spelling" is order-dependent whenever a dedupe is case-insensitive; a canonical form needs a total order on spellings, not first-seen. Ask for that in any future canonicalization directive. (3) A new third-party import must name the repo's dependency-allowlist guards in the directive's gate list (rule 3g): the plan said "add x/text", and neither the plan nor the directive ran `TestBrokerDependencyAllowlist`/`TestDaemonDependencyAllowlist`, so CI found it. Backlog lane: none new.
-
-**Progress**: World 1.0: **7 of 7 clauses MET**; `v1.0.0-rc.1` pre-released. Goal unmoved by this iteration. Row 156: 3 of 19 milestones built.
-
-**Next:** row 156 **M1b** (render the four consumers and rebase module roots).
-
-**Mid-fire attended activity (Gate 3b):** Mark merged PR #300 himself (`ee773d1`, 08:14Z, tree identical to the green head `b7666b0`) together with #301–#303, and resolved **D-WORLD-82 = A, A, A, A** in-session (`167f5f9`; `mission_ledger_provenance.sh` verdict `attended`). D-156-4 = A changes the plan: M5c/M5d (World's own symlink/hard-link pre-check, precedent `cliWriteFlags`) must be split and planned after M5b. D-WORLD-83 = A (attended) filed evidence rows 190–196 for after the v1.0.0 tag. A correction commit updated this entry, the 279 stamp, row 156 and the dashboard, which had been written while D-WORLD-82 was still OPEN.
+> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
+> the thing to grep before picking work, so the loop never repeats itself — is in
+> `world-mission-index.md`.
 
 ## 280 — 2026-10-17 — row 156 M1b protected renderers (AILANG rebase, srt darwin/linux, git pathspecs) + pinned policy-tool fixture (PR #307; judge r1 PASS 80 → r2 PASS 84) [PRODUCT]
 
@@ -1603,3 +1573,81 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **12/17 milestones built**; next M7a. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
 
 **Next:** row 150 M7a: bounded capture supervisor with mandatory fake Chrome companions (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.
+
+## 301 — 2026-10-22 — row 150 M7a built: the bounded capture supervisor and its fake-Chrome/fake-daemon companions (PR #360; judge r1 PASS 86 → r2 PASS 91 → r3 PASS 91) [PRODUCT]
+
+**Kind:** one milestone of row 150 (M7a). Production: `scripts/marketing_capture.py` (new), `scripts/capture_marketing.sh` (new). Tests: `scripts/marketingcheck/supervisor_test.go` (new, test-only package; M7b adds `main.go`). No `.ail`, no `go.mod`/`go.sum`, no `host/` change, no release, no design-direction change.
+
+**Pick and why:**
+- All seven clauses are MET; D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Row 156 has nothing buildable (D-WORLD-86 still OPEN, re-read at Gate 0), so row 150's next milestone, M7a, was the pick (iteration 300's **Next**).
+- Reality check: no `marketing_capture`/`capture_marketing`/`marketingcheck` file at base, the four test names appear only in the plan and sprint JSON, no M7a commit on origin, no iteration-301 branch or worktree. No open PRs. The attended merges since iteration 300 (#356/#357/#358: D-WORLD-90 font allowance, row 188 N1) touch none of M7a's files.
+- Quorum-at-pick: not re-run — the design carries its r1–r4 record from iteration 266 and the plan has been executing since.
+
+**Clause map:** 1–7 all MET.
+
+**Gate 0:**
+- Kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN.
+- #313: 0 allowlisted directives since `2026-10-22T01:34:42Z` (20 comments). Self-notice scan: one rc=143 notice in window (iteration 296's, already credited, log count 1); control 107:4 ok, watermarks 2/2.
+- Ledger valid, 77 rows; one OPEN (D-WORLD-86). D-WORLD-90 is new since iteration 300 and RESOLVED by an attended ruling: provenance `attended` (flip `b948cf3b`, creation `3b09253e`). It governs row 188, not this pick.
+- `mission-world` inbox: only this loop's own claims.
+
+**Gates 1–2:**
+- Local dev = origin/dev `cfa6d583`; dev CI 3/3 checks green on it (the host build+test check was still pending at the first read and green at the second).
+- The running skill matches origin on SKILL.md and all 13 resource files (resolved symlink, per-file).
+
+**Executor (codex gpt-6.1-sol, one run, 102,443 tok, ~9.4 min):**
+- `marketing_capture.py`: `shot` (one Chrome screenshot: the revision-notes argv with per-shot `preferredColorScheme=1|0`, a fresh absolute profile, stdin `/dev/null`, HOME inherited, own session; success = rc 0 AND a new regular nonempty PNG, any existing destination refused before launch; on the 30 s deadline a group SIGKILL, reap ≤5 s, `Timeout` even with a PNG) and `daemon` (file readiness ≤30 s, TERM → ≤5 s → group KILL → reap ≤5 s; a cleanup failure overrides shot success; hidden `--unit-cleanup-failure` seam injected after real cleanup). One JSON verdict on stdout; exit 0 only for `ok`.
+- `capture_marketing.sh`: `--help` documents the full M7c configuration; EXIT/INT/TERM/HUP traps clean up a supervised daemon; a real capture exits 1 ("six-shot pass is not implemented yet (M7c)"); `--unit-daemon exit|wait` unit control.
+- Four tests drive the real Python/shell with `/bin/sh` fakes in `t.TempDir()`; 10 mutants killed in-sandbox, no sandbox denials. C11 observation before/after byte-identical.
+
+**Controller verification (outside any sandbox):**
+- Diff read for out-of-worktree writes: none (fakes and outputs under `t.TempDir()`).
+- On `38ac4167`: the four focused gates top-level PASS; `bash -n`, vet, gofmt clean; `--help` names all ten flags; `-race -count=3` rc 0; a full capture refuses rc 1. Plan mutants re-run by me: M7a-no-file, -child-only, -timeout-success each red at the named assertion, restore sha OK. A stray `sleep 60` in the process table was traced (ppid) to another session's PR poll, not a leak.
+- `verify_ail.sh` rc 0 (51 s).
+- `verify_go.sh`, three runs, each started only after the judge had returned:
+  - **`98f48b20` rc 1 (487 s).** The non-race `go test ./...` failed five NEW M7a subtests on timing alone, at load ~6. A 0.3 s startup deadline lost to a slow-starting daemon, so early-exit and exits-while-ready read `Timeout`. The other three blew their bounds: escalation 4.07 s against 2 s, term-first 2.79 s against 1.5 s, and the interrupted-shot readiness wait (4 s). This is the judge's r2 risk R2-3, now measured. `TestSubprocessSinkGate` also flagged my interrupted-shot subtest's bare `bytes.Buffer` stdout sink, a real defect: it can race os/exec's copier. Fixed in `dd647909` (wider upper bounds, a per-case startup deadline, a file sink).
+  - **`dd647909` rc 1 (468 s).** The daemon subtests held. `TimeoutKillsGroup` found no `shot.png` at its 3 s deadline, because the fake shell had not yet written it. Fixed in `c70b58b9` with an 8 s deadline.
+  - **`c70b58b9` rc 1 (970 s).** The non-race leg is **all ok**, including `marketingcheck`. The race leg was red under load in three packages M7a does not touch: `host/daemon` hit the 8 m package timeout; `host/projection` failed `TestMCPToolsInnerBudget` on a 30 ms deadline; `host/verifygate` failed `TestMissionConfigDefaultFlowIntegration/valid_ledger` on its 10 s fixture bound. `marketingcheck` was ok in the race leg. Isolated `-race` afterwards was rc 0 for all three: daemon 409 s, projection ok, verifygate ok. The verifygate test also passed isolated in the non-race mode (8 s); it has no prior mention in the log.
+- After each widening I re-applied the timing-sensitive mutants. All 11 stayed red at their named assertions: the three plan mutants, N2, S1, X18, X19, X21, X24, X26 and the TERM trap.
+- Commits: `38ac4167` (executor work, controller-committed), `98f48b20` (controller r1 fix round), `dd647909` and `c70b58b9` (controller load-robust test bounds and the sink fix, test-only), `cde96472` (plan/JSON status).
+
+**Independent evaluation (Agent sonnet, background, own worktree `.eval-world-iter301`; generator codex ≠ judge sonnet):**
+- **r1 PASS 86**, zero blocking (79,502 subagent tok, ~4.8 min). Gates and the three plan mutants confirmed; 26 own mutants from the diff, 16 survived. Findings: **N1** untested branches (shell INT/HUP traps, daemon early exit / readiness timeout / exit during lifecycle, TERM-before-KILL, argument validation, marker freshness, dangling-symlink destination; KILL-reap CleanupFailed unreachable); **N2** a real defect — in `daemon --chrome`, TERM only set the stop event while `shot()` sat in `communicate()`, so the supervisor lived **29 s** after TERM (measured by the judge); **N3** the lifetime mutant reds only via the 12 s context; **N4** the shell's `$SECONDS` bound is 4–5 s.
+- **Controller fix `98f48b20`** (production + tests): `shot()` waits in 50 ms slices and, when signalled, kills the Chrome group and reports `Interrupted`; subtests for every N1 survivor plus `interrupted-shot`; comments on the two unreachable branches. Each targeted survivor was re-applied on the fixed tree and went red at its named assertion (N2-no-stop, S1, S2, X4, X18, X19, X21, X24, X25, X26); X25b reds through a Python traceback (the defect's real shape); X26 first reddened only via the context kill, so the subtest got short waits and then reddened at its assertion. Plan mutants re-measured on the fixed tree: all three red, restores OK; `-race -count=3` rc 0.
+- **r2 PASS 91**, zero blocking (resumed judge, 99,375 subagent tok, ~5 min). N2 CLOSED (0.63 s vs 29 s); N1 CLOSED for S1/S2/X4/X18/X19/X21/X24/X25/X26; 8 new-code mutants, 7 red. Still open, non-blocking: X23 (Python HUP handler untested — HUP reaches only the shell), X13/X14 redundant pair, S6/S7 (shell cleanup-status propagation, shell readiness bound), N3, N4, R2-1 (a 1 s deadline slack in `wait_bounded` survives), R2-3 (the new sub-second/2 s bounds are the first to flake on a loaded Linux `-race` runner).
+
+- **r3 PASS 91**, zero blocking (resumed judge, 113,672 subagent tok, ~5.7 min), on the test-only delta `98f48b20..c70b58b9`. The diff holds exactly the listed bound, deadline and sink changes. 12 mutants re-applied: 10 red at named assertions, and X13/X14 are the known equivalent pair. No widening let a mutant survive: escalation's 8 s bound cannot hide a no-KILL mutant (X28 reds at the dead-PID check), and term-first still separates TERM from KILL-only (X24 measured 20.4 s against its 10 s bound). R2-3 is CLOSED. New, both non-blocking: R3-1, a TERM-path regression now takes 20–30 s to surface (still named); R3-2, under the S1 mutant the test cleanup SIGKILLs the supervisor and orphans the daemon (fix: kill the group; unreachable on the shipped tree). The package takes ~17 s with or without `-race`.
+
+**Result:** M7a built. Row 150 has 13 of 17 milestones. Plan and sprint JSON mark M7a completed.
+
+**Gate 3b:** PR #360 (`sprint/world-iter301-row150-m7a`); the record rides the same PR. CI is verified on the PR head and the merge before Gate 5 reports LANDED.
+
+**Routing evidence:** base=cfa6d583ff769cd61b08be9c55c1d615db76753f@2026-10-22T11:26:41Z (Gate 1; Gate 3 re-read the same SHA at 11:29:56Z).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: the design is ready. Planner not spawned: the plan is ready.
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin`: probe rc 0; one run, rc 0, 102,443 tok.
+- Evaluator `agent-tool sonnet declared:alias-pin`: r1 79,502 / r2 99,375 / r3 113,672 subagent tok (as reported per round; one resumed agent), background, controller polled in-turn (the harness refuses a bare foreground `sleep`; the poll was a bounded `until` on the transcript's size/mtime, read by `stat` only).
+- The operator's standing request asked for Agent-tool roles exactly as the routing table specifies. The evaluator ran through the Agent tool as required; the executor's table lane is the codex recipe (an Agent spawn for a provider-pinned role is denied by the spawn-pin hook). No role was unspawnable.
+- Judge independence: cross-vendor for the executor's work. The controller's `98f48b20` (production + tests) was judged in r2, and `dd647909`/`c70b58b9` (tests) in r3. Three rounds: the maximum.
+- Metered **$0.00**.
+
+**Ruled out:**
+- Treating the stray `sleep 60` as a leak from the child-only mutant: its parent is another session's `gh pr view` poll loop.
+- Counting X26's first red as a kill: it was the 12 s context, not the assertion.
+- Reading the race-leg reds on `c70b58b9` as M7a's: three untouched packages, each green isolated under `-race`; `marketingcheck` green in both legs.
+- Reading `TestMissionConfigDefaultFlowIntegration` as pre-existing-flaky: unproven either way. It has no prior log mention, and the two non-race reds coincided with M7a's package first running in the suite. It passed in the non-race leg once M7a's bounds were fixed; not attributed further.
+
+**Carried (non-blocking):**
+- M7a: X23, X13/X14, S6, S7, N3, N4, R2-1, R3-1, R3-2 above. M7c should take N4 (the shell bound) and R3-2 (group kill in the test cleanup).
+- M6: N1, N2 (iteration 300). M5c: M9, M11, M13; the compact-vs-indented public-bytes scan. M5b: `report:` link labels; the dead `utf8.Valid` guard.
+- **[HARNESS] ticket:stall:watchdog:foreground-agent-and-wrong-transcript** and **ticket:routing-models-check:bold-colon-heading**: still open.
+
+**Retro:**
+- **Skill lane:** none; World does not edit the shared skill.
+- **Process lane:** "sequence the judge and the suite" (instances 293, 300) was applied this time: `verify_go.sh` started only after each judge round returned, so the watch-item stays at two. New watch-item, instance 1: an always-on companion package whose subtests carry sub-second elapsed bounds passed every focused gate, `-race -count=3` and three judge rounds, then failed five subtests under the full parallel `go test ./...`. The focused gate list never runs a package under whole-suite load. Remedy, held here: before the judge, run new timing-bounded tests under `go test ./... -count=1` once, or require bounds ≥10× the measured unloaded time. New observation, instance 1: a round-1 judge that derives its own mutants from the diff found a real production defect (N2) the executor's 10-mutant ledger missed, because the ledger was anchored on the plan's mutants plus a directive-supplied list — the directive should ask the executor for branch-complete mutants, not a named list.
+- **Backlog lane:** none new.
+- Harness share 0 of the last 20. The last three landings (301, 300, 299) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **13/17 milestones built**; next M7b. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
+
+**Next:** row 150 M7b: PNG structure, decoded content and exact two-pass verifier (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.

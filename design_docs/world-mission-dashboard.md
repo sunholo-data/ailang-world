@@ -1,26 +1,32 @@
-# World mission dashboard — iteration 300 (2026-10-22)
+# World mission dashboard — iteration 301 (2026-10-22)
 
-- **This fire:** row 150 M6 built, PR #359. `ailang-worldd serve --workbench-still` (default off) serves the workbench page without its one `live.js` script, for the marketing captures.
-  - Still HTML equals the default page minus exactly that tag. This is asserted on the home, entry and packet-object routes of a populated store (timeline, live list, graph, decisions, packet, inspector).
-  - Headers (CSP included) are unchanged, and repeat GETs 2 s apart are byte-identical. GETs commit nothing.
-  - QUICKSTART §11, the operator guide's serve-flag table and the CLI reference name the flag.
-- **Judge:** Agent sonnet in its own worktree, r1 **PASS 93**, zero blocking, 10 mutants killed. Its docs finding (the CLI reference's help copy lacked the flag) was reproduced and fixed in `ac1abe7f`.
+- **This fire:** row 150 M7a built, PR #360: the bounded capture supervisor and its fake-Chrome/fake-daemon companions.
+  - `scripts/marketing_capture.py` has two modes, `shot` and `daemon`.
+  - A shot succeeds only on rc 0 plus a new regular nonempty PNG. At the 30 s deadline it SIGKILLs the process group and reports `Timeout`, even with a PNG.
+  - The daemon is stopped with TERM, a 5 s wait, then KILL. A cleanup failure overrides shot success, and a signal stops a hung shot (`Interrupted`).
+  - `scripts/capture_marketing.sh` has the full M7c `--help` and EXIT/INT/TERM/HUP traps. A real capture refuses (rc 1) until M7c.
+- **Judge:** Agent sonnet in its own worktree, three rounds.
+  - r1 **PASS 86**. It found 16 surviving mutants and a real defect: a TERM during a hung shot took 29 s.
+  - The controller fixed it in `98f48b20` → r2 **PASS 91**.
+  - Load-robust test bounds followed in `dd647909`/`c70b58b9` → r3 **PASS 91**. Zero blocking in every round.
 - **Gates:**
-  - 12 focused gates got a top-level PASS outside the sandbox; `verify_ail.sh` rc 0.
-  - `verify_go.sh` rc 1: the non-race leg is all ok, but the race leg went red while the judge ran concurrently (two packages terminated at about 218 s, plus one broker control arm).
-  - An isolated `-race` run of cmd, daemon and broker is rc 0.
+  - Four focused gates PASS, and `-race -count=3` is rc 0. `verify_ail.sh` is rc 0.
+  - `verify_go.sh`: the non-race leg is all ok, once its five timing reds and one sink-gate red (all in M7a's new tests) were fixed.
+  - The race leg was red under load in daemon/projection/verifygate, which M7a does not touch. Each is rc 0 isolated under `-race`.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
 - **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81):
   - row 156: 22/24, nothing buildable (D-WORLD-86);
-  - row 150: 12/17;
+  - row 150: 13/17;
   - then row 151.
-- **Next:** row 150 M7a (bounded capture supervisor with mandatory fake Chrome companions).
+- **Next:** row 150 M7b (PNG structure, decoded content and exact two-pass verifier).
 - **Carried:**
-  - M6: the cmd flag test builds the Page itself, and the graph assertion skips the object route by index.
-  - M5c: M9, M11, M13 and the compact-JSON public-bytes scan.
-  - M5b: `report:` link labels and the dead `utf8.Valid` guard.
+  - M7a: X23, S6/S7, N3, N4, R2-1, R3-2 (all test-depth notes).
+  - M6: two test-shape notes.
+  - M5c/M5b: as before.
 - **Parked on Mark:** D-WORLD-86: drop M5c/M5d of row 156 (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
-- **Routing/cadence:** executor codex gpt-6.1-sol (1 run); evaluator Agent sonnet (background, polled in-turn). No designer or planner: the design and plan were ready.
-- **Cost:** metered $0.00. Codex executor 103,331 tok. Agent judge 51,395 subagent tok.
-- **Retro:** harness share 0/20; no drift alarm. Process watch-item at instance 2: sequence the judge and `verify_go.sh` (iterations 293 and 300).
-- **Record:** world-mission-log.md entry 300 (log rotated: 20 entries live).
+- **Routing/cadence:** executor codex gpt-6.1-sol (1 run); evaluator Agent sonnet (one agent resumed for r2/r3, background, polled in-turn). No designer or planner: the design and plan were ready.
+- **Cost:** metered $0.00. Codex executor 102,443 tok. Judge 79,502 / 99,375 / 113,672 subagent tok (r1/r2/r3).
+- **Retro:**
+  - Harness share 0/20; no drift alarm.
+  - New watch-item at instance 1: focused gates never run a new package under whole-suite load.
+- **Record:** world-mission-log.md entry 301 (log rotated: 20 entries live).
