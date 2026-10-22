@@ -858,7 +858,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M7a — Bounded supervisor with mandatory fake Chrome companions
 
-Design M7; 28 minutes; dependency: M6; status **pending**.
+Design M7; 28 minutes; dependency: M6; status **completed** — built iteration 301 (executor codex gpt-6.1-sol `38ac4167`; controller judge-r1 fix `98f48b20`: a signal now stops a hung shot (`Interrupted`) plus branch subtests; controller load-robust test bounds `dd647909`/`c70b58b9` after `verify_go.sh` measured timing reds). Judge Agent sonnet r1 PASS 86 → r2 PASS 91 → r3 PASS 91 (load-bound delta), zero blocking. Interface: `marketing_capture.py shot|daemon`, one JSON verdict; `capture_marketing.sh --unit-daemon` unit control; a real capture refuses rc 1 until M7c.
 
 Exact executor files:
 

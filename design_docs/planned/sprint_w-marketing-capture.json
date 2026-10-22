@@ -2043,7 +2043,7 @@
         "scripts/marketing_capture.py",
         "scripts/marketingcheck/supervisor_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestMarketingSupervisorFakeChromeSuccess",
         "TestMarketingSupervisorFakeChromeNoFile",
