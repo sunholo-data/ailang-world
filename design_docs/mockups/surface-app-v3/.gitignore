@@ -1,0 +1,4 @@
+dist/fonts/*.ttf
+World.app/
+target/
+icons/
