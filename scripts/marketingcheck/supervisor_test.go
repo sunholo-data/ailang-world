@@ -241,8 +241,8 @@ wait
 `)
 	start := time.Now()
 	out := filepath.Join(dir, "shot.png")
-	// 3 s leaves a loaded host time to start both descendants before the deadline.
-	args := append(shotArgs(chrome, out, "light"), "--timeout", "3")
+	// 8 s: under go test ./... load a fake shell took >3 s to write its PNG (measured).
+	args := append(shotArgs(chrome, out, "light"), "--timeout", "8")
 	got := runSupervisor(t, "Timeout", args...)
 	if len(readFile(t, out)) == 0 {
 		t.Error("timeout fixture must have written a PNG before hanging")
@@ -250,7 +250,7 @@ wait
 	if got.Verdict != "Timeout" {
 		t.Error("timeout must fail even when PNG exists")
 	}
-	if elapsed := time.Since(start); elapsed > 15*time.Second {
+	if elapsed := time.Since(start); elapsed > 20*time.Second {
 		t.Errorf("timeout must return within deadline + 5s reap + margin: %s", elapsed)
 	}
 	ids := recordedPIDs(pids)
