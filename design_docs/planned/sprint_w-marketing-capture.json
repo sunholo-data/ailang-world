@@ -1871,7 +1871,7 @@
         "host/workbench/render_test.go",
         "docs/QUICKSTART.md"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestWorkbenchStillAllRegions",
         "TestServeWorkbenchStillFlag",
