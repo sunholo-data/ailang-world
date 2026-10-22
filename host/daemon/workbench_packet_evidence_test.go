@@ -748,6 +748,49 @@ func TestWorkbenchPacketRosterTestedAndProven(t *testing.T) {
 				o.Payload = rosterJSON(t, v)
 			})
 		}},
+		// The real tool's success response carries no exit_code. The fixture is its
+		// verbatim stdout for {"op":"test","path":"world/logepoch.ail","flags":{"json":""}}
+		// piped to `ailang policy-tool --policy P` (v0.54.15); the handler's stamps are kept.
+		control{name: "real-tool-success-shape", mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) {
+			raw, e := os.ReadFile("testdata/roster_cli_test_result_real.json")
+			if e != nil {
+				t.Fatal(e)
+			}
+			var real map[string]any
+			if e = json.Unmarshal(raw, &real); e != nil {
+				t.Fatal(e)
+			}
+			if _, has := real["exit_code"]; has || real["ok"] != true {
+				t.Fatal("instrument: the fixture must be the tool's success shape (ok, no exit_code)")
+			}
+			rosterTestChain(t, f, "result", func(o *store.Object) {
+				var v map[string]any
+				_ = json.Unmarshal(o.Payload, &v)
+				for _, k := range []string{"tool", "policy_digest", "package_cache"} {
+					if x, ok := v[k]; ok {
+						real[k] = x
+					}
+				}
+				o.Payload = rosterJSON(t, real)
+			})
+		}},
+		control{name: "exit-code-absent-not-ok", reason: "test not ok", mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) {
+			rosterTestChain(t, f, "result", func(o *store.Object) {
+				var v map[string]any
+				_ = json.Unmarshal(o.Payload, &v)
+				delete(v, "exit_code")
+				v["ok"] = false
+				o.Payload = rosterJSON(t, v)
+			})
+		}},
+		control{name: "exit-code-null", reason: "test exit code", mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) {
+			rosterTestChain(t, f, "result", func(o *store.Object) {
+				var v map[string]any
+				_ = json.Unmarshal(o.Payload, &v)
+				v["exit_code"] = nil
+				o.Payload = rosterJSON(t, v)
+			})
+		}},
 		control{name: "no-grader", reason: objectGradeUnavailableReason, proof: true, mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) { f.d.grader = nil }},
 		control{name: "wrong-key", reason: gradeReasonUnauthenticated, proof: true, mutate: func(t *testing.T, f *rosterFixture, g *gradeRig, r *rosterReadControl) {
 			g.key[0] ^= 1
