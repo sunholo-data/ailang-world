@@ -291,8 +291,8 @@ func demoRun(t *testing.T, r *demoTestRig, args []string) (int, string, string) 
 func TestDemoSeedAuthenticatedCommits(t *testing.T) {
 	r := newDemoTestRig(t, "")
 	code, out, errOut := demoRun(t, r, r.args())
-	if code != exitUsage || !strings.Contains(errOut, "S2-S6 incomplete") {
-		t.Fatalf("successful seed commit stage must reach explicit incomplete boundary: code=%d out=%s err=%s", code, out, errOut)
+	if code != exitUsage || !strings.Contains(errOut, "S2/S3 refused:") {
+		t.Fatalf("successful seed commit stage must reach the real tool refusal: code=%d out=%s err=%s", code, out, errOut)
 	}
 	if out != "" {
 		t.Fatalf("incomplete CLI printed success output: %q", out)
@@ -445,7 +445,7 @@ func TestDemoSeedPreflightRefusals(t *testing.T) {
 			if len(r.commits) != before {
 				t.Fatalf("%s: refusal changed public inventory: commits%d before%d", mode, len(r.commits), before)
 			}
-			if code != exitUsage || errOut == "" || strings.Contains(errOut, "S1 domain commits recorded; S2-S6 incomplete") {
+			if code != exitUsage || errOut == "" || strings.Contains(errOut, "S1 domain commits recorded;") {
 				t.Fatalf("preflight must refuse before stage: %d %s %s", code, out, errOut)
 			}
 			expected := map[string]string{"manifest": "manifest must", "nonempty": "nonempty public", "absent-session": "no session credential", "unknown-session": "SessionUnknown", "expired-session": "SessionExpired", "missing-grant": "world.apply@world grant", "expired-grant": "world.apply@world grant", "wrong-db": "db/health identity", "pin-mismatch": "interpreter pin mismatch", "health-interpreter": "interpreter pin mismatch", "health-version": "interpreter version mismatch", "insufficient-budget": "world.apply@world grant", "spent-budget": "Ailang.CLI@worktree grant", "wrong-episode": "demo episode session required", "cas-change": "unexpected CAS head", "positional": "unexpected positional", "missing-db": "are required", "missing-pin": "are required", "missing-key": "are required", "missing-manifest": "are required", "health-absent": "required resource absent", "health-malformed": "malformed body", "health-down": "HTTP 503", "missing-epoch": "required resource absent", "epoch-hash": "epoch registry object mismatch", "readonly-db": "cannot open read-only authority", "pin-absent": "cannot read interpreter pin", "world-only": "nonempty public", "epoch-decode": "registry: decode", "epoch-candidate": "no nominated epoch", "source-absent": "prepare worktree containing", "unknown-verb": "usage:", "archive-absent": "interpreter archive manifest unavailable", "archive-hash": "interpreter archive identity mismatch", "archive-size": "interpreter archive identity mismatch", "archive-version": "interpreter version mismatch", "archive-release": "interpreter version mismatch"}[mode]
@@ -473,14 +473,14 @@ func TestDemoSeedHelpPreparation(t *testing.T) {
 		t.Fatalf("demo help=%d %s", code, errOut.String())
 	}
 	// The proof pin and the tool release are the manifest's (pins/ailang-releases.json).
-	for _, s := range []string{"--db", "--session", "--ailang-bin", "--proof-key-file", "--addr", "--manifest", pins.ReleaseFor(pins.RoleProof).Release, toolRelease(), "S2-S6"} {
+	for _, s := range []string{"--db", "--session", "--ailang-bin", "--proof-key-file", "--addr", "--manifest", pins.ReleaseFor(pins.RoleProof).Release, toolRelease(), "writes the public success manifest only after every check passes"} {
 		if !strings.Contains(out.String(), s) {
 			t.Errorf("help missing %s", s)
 		}
 	}
 	for _, args := range [][]string{{"demo", "--help"}, {"help", "demo"}, {"help", "demo", "seed"}} {
 		var o, e bytes.Buffer
-		if code := run(args, &o, &e); code != exitOK || !strings.Contains(o.String(), "S2-S6") {
+		if code := run(args, &o, &e); code != exitOK || !strings.Contains(o.String(), "writes the public success manifest only after every check passes") {
 			t.Fatalf("help form %v failed: %d %s", args, code, e.String())
 		}
 	}
@@ -488,7 +488,7 @@ func TestDemoSeedHelpPreparation(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	for _, s := range []string{"demo seed", "world/logepoch.ail", "packages/world-demo/transitions.json", "typed", "git worktree add", "Human.Approve=worktree:1", "S2-S6"} {
+	for _, s := range []string{"demo seed", "world/logepoch.ail", "packages/world-demo/transitions.json", "typed", "git worktree add", "Human.Approve=worktree:1", "writes the public success manifest only after every check passes"} {
 		if !bytes.Contains(doc, []byte(s)) {
 			t.Errorf("preparation docs missing %s", s)
 		}
@@ -497,7 +497,7 @@ func TestDemoSeedHelpPreparation(t *testing.T) {
 	if !ok {
 		t.Fatal("demo preparation section absent")
 	}
-	for _, command := range []string{`export DEMO_BIN=$DEMO_DIR/ailang-worldd`, `go build -o "$DEMO_BIN" ./cmd/ailang-worldd`, `"$DEMO_BIN" session mint`, `"$DEMO_BIN" serve`, `"$DEMO_BIN" demo seed`} {
+	for _, command := range []string{"writes the public success manifest only after every check passes", `export DEMO_BIN=$DEMO_DIR/ailang-worldd`, `go build -o "$DEMO_BIN" ./cmd/ailang-worldd`, `"$DEMO_BIN" session mint`, `"$DEMO_BIN" serve`, `"$DEMO_BIN" demo seed`} {
 		if !strings.Contains(preparation, command) {
 			t.Errorf("demo artifact command wiring missing %s", command)
 		}
@@ -546,8 +546,8 @@ func requireBinaryRelease(t *testing.T, bin, want string) {
 }
 
 type demoSeRig struct {
-	url, db, token, ws string
-	log                *bytes.Buffer
+	url, db, token, ws, proofKey string
+	log                          *bytes.Buffer
 }
 
 func newDemoSeRig(t *testing.T, interp, tool string) demoSeRig {
@@ -582,8 +582,13 @@ func newDemoApprovalRig(t *testing.T, interp, tool string, empty, extra bool, bu
 	}
 	writeFileT(t, filepath.Join(corpus, "manifest.json"), `{"examples":[]}`+"\n")
 	log := new(bytes.Buffer)
+	keyPath := filepath.Join(t.TempDir(), "proof.key")
+	key := freshProofKey(t)
+	if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
+		t.Fatal(err)
+	}
 	cfg := daemon.Config{DBPath: db, BindHost: daemon.DefaultBindHost, AilangBin: interp, WorkspaceRoot: ws,
-		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: log}
+		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: log, ProofKeyFile: keyPath, ProofRequiredIdentities: []string{"sameRef", "servesEntry"}}
 	d, err := daemon.New(boundedTestContext(t), cfg)
 	if err != nil {
 		t.Fatalf("daemon.New: %v", err)
@@ -642,7 +647,7 @@ func newDemoApprovalRig(t *testing.T, interp, tool string, empty, extra bool, bu
 		srv.Close()
 		_ = d.Close()
 	})
-	return demoSeRig{url: srv.URL, db: db, token: tok, ws: ws, log: log}
+	return demoSeRig{url: srv.URL, db: db, token: tok, ws: ws, log: log, proofKey: keyPath}
 }
 
 // demoSpend reads the episode's per-effect spend through the read-only view.
@@ -880,7 +885,7 @@ func TestDemoSeedProofStage(t *testing.T) {
 			r := newDemoSeRigForSeed(t, interp, tool, true)
 			ctx := boundedTestContext(t)
 			c := demoProofClient(r.url)
-			key := freshProofKey(t)
+			key := demoRigProofKey(t, r)
 			private := t.TempDir()
 			keyPath := filepath.Join(private, "proof.key")
 			raw := append([]byte(nil), key[:]...)
@@ -1024,11 +1029,15 @@ func TestDemoSeedProofStage(t *testing.T) {
 			if contents, err := os.ReadFile(manifest); err == nil {
 				assertDemoProofKeyPrivate(t, map[string]string{"manifest-contents": string(contents)}, key[:], raw)
 			}
-			if code != exitUsage || out != "" {
-				t.Fatalf("seed must refuse completion without stdout: code=%d stdout=%q stderr=%q", code, out, errOut)
+			wantCode := exitUsage
+			if arm == "success" {
+				wantCode = exitOK
 			}
-			if _, err := os.Stat(manifest); !os.IsNotExist(err) {
-				t.Fatal("seed through S4 must never create a success manifest")
+			if code != wantCode || (arm != "success" && out != "") {
+				t.Fatalf("seed stage outcome: code=%d stdout=%q stderr=%q", code, out, errOut)
+			}
+			if _, err := os.Stat(manifest); (arm == "success" && err != nil) || (arm != "success" && !os.IsNotExist(err)) {
+				t.Fatal("manifest presence must match complete seed success")
 			}
 			entries, err := (worldReader{ctx: ctx, c: c}).page(0, 500)
 			if err != nil {
@@ -1046,8 +1055,8 @@ func TestDemoSeedProofStage(t *testing.T) {
 				}
 			}
 			if arm == "success" {
-				if writes != 1 || len(envelopes) != 1 || !strings.Contains(errOut, "S1-S6 checked; roster checks M5c pending; no success manifest written") {
-					t.Fatalf("seed must record exactly one S4 envelope and refuse S6 completion: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
+				if writes != 1 || len(envelopes) != 1 || !strings.Contains(out, "success manifest written:") {
+					t.Fatalf("seed must record exactly one S4 envelope and complete S6: writes=%d envelopes=%d err=%q", writes, len(envelopes), errOut)
 				}
 				if proofCalls != 1 || readerRequests == 0 || writerRequests != 1 {
 					t.Fatalf("seed-s4-observed: need one real producer call with bounded reads and write; calls=%d reads=%d writes=%d", proofCalls, readerRequests, writerRequests)
@@ -1217,7 +1226,7 @@ func TestDemoSeedApprovalControls(t *testing.T) {
 			http.NotFound(w, r)
 		}))
 		defer srv.Close()
-		err := demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "token", demoDomainObjects(nil), demoToolStages{}, proof)
+		err := demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "token", demoDomainObjects(nil), demoToolStages{}, proof, filepath.Join(t.TempDir(), "manifest.json"))
 		if calls != 0 || err == nil || !strings.Contains(err.Error(), "test invocation unavailable") {
 			t.Fatalf("missing S3 entry must refuse before dispatch: calls=%d err=%v", calls, err)
 		}
@@ -1306,7 +1315,7 @@ func TestDemoSeedApprovalPacket(t *testing.T) {
 			ctx := boundedTestContext(t)
 			r := worldReader{ctx: ctx, c: newClient(rig.url)}
 			private := t.TempDir()
-			key := freshProofKey(t)
+			key := demoRigProofKey(t, rig)
 			keyPath, session, manifest := filepath.Join(private, "proof.key"), filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
 			if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
 				t.Fatal(err)
@@ -1358,11 +1367,15 @@ func TestDemoSeedApprovalPacket(t *testing.T) {
 			defer proxy.Close()
 			code, out, stderr := demoRun(t, &demoTestRig{addr: proxy.URL}, []string{"demo", "seed", "--db", rig.db,
 				"--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest})
-			if code != exitUsage || out != "" {
-				t.Fatalf("seed must refuse completion: code=%d out=%q err=%q", code, out, stderr)
+			wantCode := exitUsage
+			if arm == "single-approval" {
+				wantCode = exitOK
 			}
-			if _, err := os.Stat(manifest); !os.IsNotExist(err) {
-				t.Fatal("S6 incomplete: no success manifest may be written")
+			if code != wantCode || (arm != "single-approval" && out != "") {
+				t.Fatalf("seed stage outcome: code=%d out=%q err=%q", code, out, stderr)
+			}
+			if _, err := os.Stat(manifest); (arm == "single-approval" && err != nil) || (arm != "single-approval" && !os.IsNotExist(err)) {
+				t.Fatal("manifest presence must match complete seed success")
 			}
 			packets := demoRESTObjects(t, r, coordinator.DecisionPacketV1)
 			entries, err := r.page(0, 500)
@@ -1542,8 +1555,8 @@ func TestDemoSeedApprovalPacket(t *testing.T) {
 					t.Fatalf("seed must invoke demo-approval exactly once: calls=%d", calls)
 				}
 			})
-			if !strings.Contains(stderr, "S1-S6 checked; roster checks M5c pending; no success manifest written") {
-				t.Fatalf("successful S5 must still refuse S6 completion: %s", stderr)
+			if code != exitOK || !strings.Contains(out, "success manifest written:") {
+				t.Fatalf("successful S5 must complete S6: %s", stderr)
 			}
 		})
 	}
@@ -1707,6 +1720,11 @@ func TestDemoSeedWhyNamedLinks(t *testing.T) {
 // Executes the same S1-S5 composition as TestDemoSeedApprovalPacket, including
 // the production proof producer and HumanHandler; then independently reassembles.
 func demoM4bRealSeed(t *testing.T) (worldReader, demoPublicManifest) {
+	r, m, _ := demoM5cRealSeed(t)
+	return r, m
+}
+
+func demoM5cRealSeed(t *testing.T) (worldReader, demoPublicManifest, string) {
 	t.Helper()
 	t.Setenv("TMPDIR", t.TempDir())
 	interp := requireProofPin(t)
@@ -1714,7 +1732,7 @@ func demoM4bRealSeed(t *testing.T) (worldReader, demoPublicManifest) {
 	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
 	rig := newDemoApprovalRig(t, interp, tool, true, false, 20)
 	private := t.TempDir()
-	key := freshProofKey(t)
+	key := demoRigProofKey(t, rig)
 	keyPath, session, manifest := filepath.Join(private, "proof.key"), filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
 	if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
 		t.Fatal(err)
@@ -1731,11 +1749,37 @@ func demoM4bRealSeed(t *testing.T) (worldReader, demoPublicManifest) {
 	if strings.Contains(stderr, "manifest completeness:") {
 		t.Fatalf("manifest completeness: real seed assembly must contain every required role: %s", stderr)
 	}
-	if code != exitUsage || out != "" || !strings.Contains(stderr, "S1-S6 checked; roster checks M5c pending; no success manifest written") {
-		t.Fatalf("S1-S6 checked fail-closed boundary: code=%d out=%q err=%s", code, out, stderr)
+	if code != exitOK || !strings.Contains(out, manifest) {
+		t.Fatalf("S1-S6 success: code=%d out=%q err=%s", code, out, stderr)
 	}
-	if _, err := os.Stat(manifest); !os.IsNotExist(err) {
-		t.Fatal("S6 never writes success manifest")
+	published, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := demoValidatePublicBytes(published, rig.token); err != nil {
+		t.Fatal(err)
+	}
+	var decoded demoPublicManifest
+	if err := json.Unmarshal(published, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"demo", "seed", "--db", rig.db, "--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest}
+	code, _, stderr = demoRun(t, &demoTestRig{addr: rig.url}, args)
+	after, err := os.ReadFile(manifest)
+	if code != exitUsage || !strings.Contains(stderr, "manifest must be a new absent path") || err != nil || sum(after) != sum(published) {
+		t.Fatal("second seed must refuse and preserve manifest SHA256")
+	}
+	args[len(args)-1] = filepath.Join(private, "second.json")
+	code, _, stderr = demoRun(t, &demoTestRig{addr: rig.url}, args)
+	if code != exitUsage || !strings.Contains(stderr, "empty public") {
+		t.Fatalf("nonempty store must refuse: %s", stderr)
+	}
+	if _, err := os.Stat(args[len(args)-1]); !os.IsNotExist(err) {
+		t.Fatal("refused reseed wrote manifest")
+	}
+	files, err := filepath.Glob(filepath.Join(private, ".demo-manifest-*"))
+	if err != nil || len(files) != 0 {
+		t.Fatal("publication must leave no temporary manifests")
 	}
 	r := worldReader{ctx: boundedTestContext(t), c: newClient(rig.url)}
 	entries, err := r.page(0, 500)
@@ -1777,7 +1821,30 @@ func demoM4bRealSeed(t *testing.T) (worldReader, demoPublicManifest) {
 	if err != nil {
 		t.Fatalf("real S6 assembly: %v", err)
 	}
-	return r, m
+	if err := demoValidateManifest(demoM4bFreshReader(t, r), decoded, rig.token); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(mustDemoJSON(t, m), mustDemoJSON(t, decoded)) {
+		t.Fatal("published manifest differs from real S6 assembly")
+	}
+	return r, m, rig.token
+}
+
+func demoRigProofKey(t *testing.T, rig demoSeRig) [32]byte {
+	t.Helper()
+	key, err := demoLoadProofKey(rig.proofKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return key
+}
+func mustDemoJSON(t *testing.T, v any) []byte {
+	t.Helper()
+	raw, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
 }
 
 // The fixture commits real REST content to a unit daemon. Only health (the
@@ -2009,6 +2076,38 @@ func TestDemoSeedManifestReferences(t *testing.T) {
 				}
 			}
 		})
+		for _, control := range []struct {
+			name, want string
+			edit       func(*demoPublicManifest)
+		}{
+			{"stray-extra-ref", "manifest completeness: extra role", func(bad *demoPublicManifest) {
+				for _, ref := range m.References {
+					if ref.Role == "invocation" {
+						ref.Index = 999
+						bad.References = append(slices.Clone(m.References), ref)
+						break
+					}
+				}
+			}},
+			{"why-count-extra", "role why requires exactly 4 hashes", func(bad *demoPublicManifest) {
+				w := m.Why[0]
+				w.Role = "extra"
+				bad.Why = append(slices.Clone(m.Why), w)
+			}},
+			{"why-count-fewer", "role why-approval requires exactly 1 hash", func(bad *demoPublicManifest) { bad.Why = slices.Clone(m.Why[:3]) }},
+			{"duplicate-why-entry", "duplicates entry", func(bad *demoPublicManifest) {
+				bad.Why = slices.Clone(m.Why)
+				bad.Why[1].Entry = bad.Why[0].Entry
+				bad.Why[1].SHA256 = bad.Why[0].SHA256
+			}},
+		} {
+			t.Run(control.name, func(t *testing.T) {
+				bad := m
+				control.edit(&bad)
+				demoM4bRefusal(t, demoValidateManifest(demoM4bFreshReader(t, r), bad, fixture.token), control.want)
+			})
+		}
+
 		t.Run("absent-ref", func(t *testing.T) {
 			bad := m
 			bad.References = append([]demoManifestRef(nil), m.References...)
@@ -2109,7 +2208,7 @@ func TestDemoSeedM4bBoundaryControls(t *testing.T) {
 				objects[i].Payload = []byte("{invalid")
 				srv := httptest.NewServer(http.NotFoundHandler())
 				defer srv.Close()
-				err := demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "", objects, demoToolStages{}, hashref.HashRef{})
+				err := demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "", objects, demoToolStages{}, hashref.HashRef{}, filepath.Join(t.TempDir(), "manifest.json"))
 				demoM4bRefusal(t, err, fmt.Sprintf("S1 payload %d decode refused", i))
 			})
 		}
@@ -2119,21 +2218,25 @@ func TestDemoSeedM4bBoundaryControls(t *testing.T) {
 			_, _ = io.WriteString(w, `{"header":{},"transitionRef":"present"}`)
 		}))
 		defer srv.Close()
-		demoM4bRefusal(t, demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "", demoDomainObjects(nil), demoToolStages{}, hashref.HashRef{}), "test entry entryIndex must be present and match")
+		demoM4bRefusal(t, demoSeedApproval(boundedTestContext(t), newClient(srv.URL), "", demoDomainObjects(nil), demoToolStages{}, hashref.HashRef{}, filepath.Join(t.TempDir(), "manifest.json")), "test entry entryIndex must be present and match")
 	})
 	t.Run("metadata-index", func(t *testing.T) {
 		c, _ := demoFakeA2A(t, "completed", map[string]any{"invocation_id": "actual-id"}, map[string]any{"world": map[string]any{"effects": []any{map[string]any{"record": "present"}}}})
 		_, _, err := demoA2ASend(boundedTestContext(t), c, "token", "task", "skill", nil)
 		demoM4bRefusal(t, err, "entry_index must be present and integral")
 	})
-	t.Run("s6-fail-closed", func(t *testing.T) {
+	t.Run("s6-final-roster-refusal", func(t *testing.T) {
 		fixture := demoM4bManifestFixture(t, 1, "decision packet validated: committed with its invocation record at entry #4;")
 		// First establish that S6 reaches its successful end, not an earlier guard.
 		if _, err := demoSeedS6(fixture.r, fixture.token, fixture.objects, fixture.stages, fixture.approval, fixture.roster); err != nil {
 			t.Fatalf("unit S6 prerequisite: %v", err)
 		}
-		err := demoSeedApproval(fixture.r.ctx, fixture.r.c, fixture.token, fixture.objects, fixture.stages, hashref.MustParse(fixture.roster[3].Ref))
-		demoM4bRefusal(t, err, "S1-S6 checked; roster checks M5c pending; no success manifest written")
+		path := filepath.Join(t.TempDir(), "manifest.json")
+		err := demoSeedApproval(fixture.r.ctx, fixture.r.c, fixture.token, fixture.objects, fixture.stages, hashref.MustParse(fixture.roster[3].Ref), path)
+		demoM4bRefusal(t, err, "roster count: require four stored slots")
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatal("final roster refusal must write no success manifest")
+		}
 	})
 }
 
@@ -2227,4 +2330,202 @@ func demoM4bFreshReader(t *testing.T, r worldReader) worldReader {
 	t.Helper()
 	r.ctx = boundedTestContext(t)
 	return r
+}
+
+func TestDemoSeedEndToEnd(t *testing.T) {
+	r, m := demoM4bRealSeed(t)
+	if err := demoValidateSeedRoster(demoM4bFreshReader(t, r), m); err != nil {
+		t.Fatalf("four real roster rows must resolve: %v", err)
+	}
+	var stored []demoEvidenceRef
+	for _, w := range m.Why {
+		ch, _, err := demoWhy(demoM4bFreshReader(t, r), w.Entry)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := demoValidateWhy(ch); err != nil {
+			t.Fatal(err)
+		}
+		if w.Role == "approval" {
+			e, _, err := r.entry(w.Entry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rec, _, err := r.record(e)
+			if err != nil {
+				t.Fatal(err)
+			}
+			obj := demoRESTObject(t, r, rec.Input, coordinator.InputV1)
+			var input struct{ Roster []demoEvidenceRef }
+			if err := json.Unmarshal(obj.Payload, &input); err != nil {
+				t.Fatal(err)
+			}
+			stored = input.Roster
+		}
+	}
+	var declared []demoEvidenceRef
+	for _, ref := range m.References {
+		switch ref.Role {
+		case "test-invocation", "recorded-effect", "authored-claim", "proof-envelope":
+			declared = append(declared, demoEvidenceRef{ref.Role, ref.Ref})
+		}
+	}
+	if len(stored) != 4 || !slices.Equal(stored, declared) {
+		t.Fatalf("manifest roster must equal actual S5 producer input in order: stored=%+v declared=%+v", stored, declared)
+	}
+}
+
+func TestDemoSeedRosterKindMismatchRefuses(t *testing.T) {
+	t.Run("unavailable-banner", demoRosterPageControls)
+	t.Run("real-store", func(t *testing.T) {
+		r, m, token := demoM5cRealSeed(t)
+		if err := demoValidateSeedRoster(demoM4bFreshReader(t, r), m); err != nil {
+			t.Fatalf("positive final roster validator must accept real seed: %v", err)
+		}
+		// Commit another real approval through the same coordinator, changing only
+		// CLAIMED's ref to the genuine S1 goal object from this store.
+		var runs []demoToolRun
+		var input struct {
+			Goal       string
+			Candidates []string
+			Roster     []demoEvidenceRef
+		}
+		for _, w := range m.Why {
+			if w.Role != "approval" {
+				runs = append(runs, demoToolRun{EntryIndex: w.Entry})
+				continue
+			}
+			e, _, err := r.entry(w.Entry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rec, _, err := r.record(e)
+			if err != nil {
+				t.Fatal(err)
+			}
+			obj := demoRESTObject(t, r, rec.Input, coordinator.InputV1)
+			if err := json.Unmarshal(obj.Payload, &input); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		oldPacket := ""
+		for _, ref := range m.References {
+			if ref.Role == "goal" {
+				input.Roster[2].Ref = ref.Ref
+			}
+			if ref.Role == "packet" {
+				oldPacket = ref.Ref
+			}
+		}
+		// Human.Approve requests contain real Unix seconds. Let the recorded
+		// second elapse so this deliberate second invocation has a distinct
+		// request/packet, even on a fast runner. No clock or history is rewritten.
+		old := demoRESTObject(t, r, oldPacket, coordinator.DecisionPacketV1)
+		previous, err := coordinator.DecodeDecisionPacket(old.Payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if delay := time.Until(time.Unix(previous.CreatedAt+1, 0)); delay > 0 {
+			timer := time.NewTimer(delay)
+			defer timer.Stop()
+			select {
+			case <-timer.C:
+			case <-r.ctx.Done():
+				t.Fatal(r.ctx.Err())
+			}
+		}
+		args, err := demoApprovalInput(input.Goal, input.Candidates, input.Roster)
+		if err != nil {
+			t.Fatal(err)
+		}
+		approval, _, err := demoA2ASend(boundedTestContext(t), r.c, token, "demo-kind-mismatch", "demo-approve", args)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runs = append(runs, approval)
+		e, _, err := r.entry(approval.EntryIndex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rec, _, err := r.record(e)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var packet wireObject
+		for _, obj := range demoRESTObjects(t, r, coordinator.DecisionPacketV1) {
+			p, err := coordinator.DecodeDecisionPacket(obj.Payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if p.ProposalHash.String() == rec.Plan && obj.Hash != oldPacket {
+				packet = obj
+			}
+		}
+		if packet.Hash == "" {
+			t.Fatal("new real approval must carry packet")
+		}
+		p, err := coordinator.DecodeDecisionPacket(packet.Payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		bad, err := demoAssembleManifest(demoM4bFreshReader(t, r), demoDomainObjects(demoProofSource(t)), runs, input.Roster, packet.Hash, p.RequestRef.String(), p.ProposalHash.String())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := demoValidateManifest(demoM4bFreshReader(t, r), bad, token); err != nil {
+			t.Fatalf("mismatch must pass manifest prerequisite: %v", err)
+		}
+		status, page, err := r.c.do(r.ctx, "GET", "/workbench?object="+packet.Hash, nil)
+		if err != nil || status != 200 || !bytes.Contains(page, []byte("<p>evidence roster UNAVAILABLE — claim kind</p>")) {
+			t.Fatalf("workbench must refuse real wrong-kind roster: HTTP %d err=%v page=%s", status, err, page)
+		}
+		path := filepath.Join(t.TempDir(), "manifest.json")
+		err = demoFinalizeSeed(demoM4bFreshReader(t, r), bad, token, path)
+		if err == nil || !strings.Contains(err.Error(), "roster kind: authored-claim.ref") {
+			t.Fatalf("seed must independently refuse roster kind: authored-claim.ref: %v", err)
+		}
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatal("kind refusal must write no success manifest")
+		}
+	})
+}
+
+func TestDemoPublishManifestAbsent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "manifest.json")
+	old := []byte("original public manifest")
+	if err := demoPublishManifest(path, old); err != nil {
+		t.Fatal(err)
+	}
+	if err := demoPublishManifest(path, []byte("replacement")); err == nil {
+		t.Fatal("publish must refuse existing target")
+	}
+	after, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(old, after) {
+		t.Fatal("publish must preserve existing bytes")
+	}
+	files, err := filepath.Glob(filepath.Join(filepath.Dir(path), ".demo-manifest-*"))
+	if err != nil || len(files) != 0 {
+		t.Fatal("publication must clean temporary files")
+	}
+}
+
+func TestDemoSeedRosterPageControls(t *testing.T) { demoRosterPageControls(t) }
+
+func demoRosterPageControls(t *testing.T) {
+	page := []byte(`<div aria-label="evidence roster"><p>test-invocation: TESTED · producer/author: host · verdict pass · 1 named passes</p><p>recorded-effect: ATTESTED · producer/author: host</p><p>authored-claim: CLAIMED · producer/author: demo-authored</p><p>proof-envelope: PROVEN · producer/author: host</p></div>`)
+	if err := demoValidateRosterPage(page); err != nil {
+		t.Fatal(err)
+	}
+	bad := append(slices.Clone(page), []byte("<p>evidence roster UNAVAILABLE — claim kind</p>")...)
+	if err := demoValidateRosterPage(bad); err == nil {
+		t.Fatal("roster-unavailable banner must refuse even with four resolved markers")
+	}
+	for _, marker := range []string{"TESTED", "ATTESTED", "CLAIMED", "PROVEN", "verdict pass", "demo-authored"} {
+		t.Run(marker, func(t *testing.T) {
+			if err := demoValidateRosterPage(bytes.ReplaceAll(page, []byte(marker), []byte("UNAVAILABLE"))); err == nil {
+				t.Fatal("missing resolved row must refuse")
+			}
+		})
+	}
 }

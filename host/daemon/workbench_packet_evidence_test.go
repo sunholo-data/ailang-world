@@ -287,6 +287,39 @@ func TestWorkbenchPacketRosterAnchoredBounds(t *testing.T) {
 			r.entryErr = errors.New("read unavailable")
 		}},
 		{name: "carrying-entry-deadline", reason: "read deadline", prepare: func(t *testing.T, f *rosterFixture, r *rosterReadControl) { r.entryErr = context.DeadlineExceeded }},
+		{name: "object-read-error", reason: "record missing", prepare: func(t *testing.T, f *rosterFixture, r *rosterReadControl) {
+			r.readErr = errors.New("plain object read failure")
+		}},
+		{name: "candidate-empty", reason: "input schema", change: func(t *testing.T, f *rosterFixture) { f.args["candidates"] = []string{"", "b"} }},
+		{name: "effect-denied-no-result", reason: "effect result absent", change: func(t *testing.T, f *rosterFixture) {
+			replaceRosterObject(t, f, 1, f.effect, func(o *store.Object) {
+				er, err := broker.DecodeRecord(o.Payload)
+				if err != nil {
+					t.Fatal(err)
+				}
+				er.Allowed, er.Failed, er.Denial, er.ResultRef = false, false, "denied", hashref.HashRef{}
+				er.BudgetAfter = er.BudgetBefore
+				if !broker.RecordConsistent(er) {
+					t.Fatal("denied control must be record-consistent")
+				}
+				o.Payload = broker.EncodeRecord(er)
+			})
+		}},
+		{name: "effect-failed-no-result", reason: "effect result absent", change: func(t *testing.T, f *rosterFixture) {
+			replaceRosterObject(t, f, 1, f.effect, func(o *store.Object) {
+				er, err := broker.DecodeRecord(o.Payload)
+				if err != nil {
+					t.Fatal(err)
+				}
+				er.Allowed, er.Failed, er.Denial, er.ResultRef = true, true, "", hashref.HashRef{}
+				er.BudgetAfter = er.BudgetBefore - er.Cost
+				if !broker.RecordConsistent(er) {
+					t.Fatal("failed control must be record-consistent")
+				}
+				o.Payload = broker.EncodeRecord(er)
+			})
+		}},
+
 		{name: "record-missing", reason: "record missing", prepare: func(t *testing.T, f *rosterFixture, r *rosterReadControl) { r.missing = f.record.Hash }},
 		{name: "input-missing", reason: "input missing", prepare: func(t *testing.T, f *rosterFixture, r *rosterReadControl) { r.missing = f.input.Hash }},
 		{name: "effect-missing", reason: "effect missing", prepare: func(t *testing.T, f *rosterFixture, r *rosterReadControl) { r.missing = f.effect.Hash }},

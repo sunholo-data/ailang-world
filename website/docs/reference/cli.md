@@ -717,12 +717,11 @@ publishes, creates a worktree or opens another writable database.
 --session is a private session file (default WORLD_SESSION).
 --ailang-bin is the capsule/proof pin (v0.41.0); serve's separate
 --tool-ailang-bin must be v0.54.15 for the workspace tools.
---proof-key-file is the private operator key required by later proof stages.
+--proof-key-file is the private operator key; serve must use the same key.
 --manifest is a new output path; existing files are refused.
 --addr is the daemon URL, also accepted as the global client flag.
 
-This incremental build implements preflight and S1 domain commits only.
-S2-S6 incomplete: the command refuses completion and writes no success manifest.
+The seed runs S1-S6 and writes the public success manifest only after every check passes.
 Do not retry a partial seed; inspect its recorded history first.
 ```
 

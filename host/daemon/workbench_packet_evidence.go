@@ -223,6 +223,9 @@ func packetRosterFromValidated(parent context.Context, r packetRosterReader, pac
 	if !broker.RecordConsistent(er) {
 		return refuse("effect inconsistent")
 	}
+	if er.ResultRef.IsZero() {
+		return refuse("effect result absent")
+	}
 	if _, reason = read(er.RequestRef, "request", broker.EffectRequestV1, packetRosterReadLimit); reason != "" {
 		return refuse(reason)
 	}
