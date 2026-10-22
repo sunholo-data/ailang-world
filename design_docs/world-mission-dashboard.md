@@ -1,21 +1,23 @@
-# World mission dashboard — iteration 298 (2026-10-22)
+# World mission dashboard — iteration 299 (2026-10-22)
 
-- **This fire:** row 150 M5b built, PR #353. This lands iteration 296's orphaned work; 296 and 297 were both STALL-killed while their judges ran.
-  - TESTED comes from a real `Ailang.CLI` `test` invocation with a strict, passing, non-vacuous report. Prose or null refuses the roster.
-  - PROVEN comes only through ValidateProof → Resolve. The subject is from the envelope's MAC-authenticated report and is shown only once PROVEN.
-  - The packet page renders all four grade rows with producer/author, caption, links, verdict and the refused-roster banner, escaped.
-- **Why 296/297 died:** the STALL watchdog cannot see a foreground sub-agent. It reads the newest transcript in a shared project dir (297's kill line measured another 317 MB session) and ignores `subagents/*.jsonl`. The judges' `&`-launched mutant runners also left the descendant tree. Ticket `stall:watchdog:foreground-agent-and-wrong-transcript` filed to mission-fleet. This fire's background judge plus in-turn polls survived.
-- **Judge:** Agent sonnet in its own worktree. r1 PASS 86, zero blocking (survivors: result provenance, refused-roster banner, the PROVEN refusal through the projection, an unauthenticated subject on refused rows, the compiler anchor). After fix `f9503386`, r2 **PASS 90**, zero blocking, no new findings.
-- **Gates:** all M5b gates rc 0. `verify_go.sh` was red only in the race leg under sibling load 6–17 (verifygate 8 m timeout; agui slow-reader EOF). Isolated `-race` re-runs at 1500 s were rc 0 on both heads.
+- **This fire:** row 150 M5c built, PR #354. `ailang-worldd demo seed` now completes.
+  - After S1–S6 it re-reads the S5 input it committed and checks every roster slot: order, ref = manifest ref, re-hash, declared kind. The packet page must show four resolved grade rows and no roster-unavailable banner.
+  - Only then does it publish one success manifest atomically: temp file, fsync, `os.Link` (never overwrites), mode 0644. Exit 0 only after that.
+  - Help, QUICKSTART §12 and the CLI reference now describe a complete seed.
+- **Defects found and fixed:**
+  - M5b's TESTED rule required `exit_code == 0`, but the pinned v0.54.15 tool omits `exit_code` on a passing `test --json`. M5b's fake tool always sent it, so a real TESTED row never resolved. Controller fix `c9fd10af`, with the tool's real response checked in as the fixture.
+  - A denied/failed recorded effect (no result) rendered ATTESTED; it now refuses (`effect result absent`).
+- **Judge:** Agent sonnet in its own worktree. r1 PASS 80, zero blocking (survivors: page-check wiring, slot order, manifest/input compare, re-hash, file mode). After test-only fix `be270368`, r2 **PASS 85**, zero blocking, no new findings. It re-measured the tool shape itself.
+- **Gates:** all named gates rc 0 with both pins; `verify_ail.sh` rc 0; `verify_go.sh` rc 0 (771 s) on `c9fd10af`; `go test -race ./cmd/ailang-worldd` rc 0 on `be270368`.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
 - **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81):
   - row 156: 22/24, nothing buildable (D-WORLD-86);
-  - row 150: 10/17;
+  - row 150: 11/17;
   - then row 151.
-- **Next:** row 150 M5c (seed roster validation and success manifest publication; fold in the remaining M5a survivors and M4b's validator mutants).
-- **Carried:** every roster link is labelled `report:`; the `utf8.Valid` guard is dead (equivalent); `/reserve-after-before` reds under load; `TestAGUISlowReaderCutIsResumable` reds under `-race` load.
-- **Parked on Mark:** D-WORLD-86: drop M5c/M5d (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
-- **Routing/cadence:** executor codex gpt-6.1-sol (iteration 296, reused); evaluator Agent sonnet (background, resumed for r2). No designer or planner: the design and plan were ready.
-- **Cost:** metered $0.00. codex executor 206,730 tok (iteration 296). Agent judge: r1 74,842 and r2 85,026 subagent tok.
-- **Retro:** harness share 0/20; no drift alarm. Process fix: judge directives forbid `&`/nohup/sleep-polls, cap Bash calls at ≤290 s and require an incremental report file. Skill proposal: a long judge is safer in the background with controller polls until the watchdog ticket is fixed.
-- **Record:** world-mission-log.md entry 298 (log rotated: 20 entries live).
+- **Next:** row 150 M6 (still serve flag and stable complete server HTML).
+- **Carried:** M5c M9 (count `<4`, unreachable), fsync unobservable, a redundant second manifest validation, the public-bytes scan on compact JSON; M5b `report:` link labels and the dead `utf8.Valid` guard.
+- **Parked on Mark:** D-WORLD-86: drop M5c/M5d of row 156 (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
+- **Routing/cadence:** executor codex gpt-6.1-sol (1 run); evaluator Agent sonnet (background, resumed for r2). No designer or planner: the design and plan were ready.
+- **Cost:** metered $0.00. Codex executor 162,686 tok. Agent judge: r1 79,345 and r2 91,250 subagent tok.
+- **Retro:** harness share 0/20; no drift alarm. Process fix: a fake-tool test row needs a sibling row fed the real tool's captured response. Skill proposal: extend Gate 3's hand-typed-fixture rule to fake binaries.
+- **Record:** world-mission-log.md entry 299 (log rotated: 20 entries live).

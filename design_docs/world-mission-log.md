@@ -49,40 +49,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 277 — 2026-10-17 — row 156 `w-exec-protected-test-paths` designed (V1–V13), planned (19 milestones), M0a matrix oracle built (PR #298; judge r1 PASS 82) [PRODUCT]
-
-**Kind:** the first product iteration on row 156, the release row D-WORLD-81 = A puts before row 150's remaining milestones. Design, quorum, plan, and one milestone (M0a, CI-only Python).
-
-**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-16T13:53:04Z` (34 comments); watermark moved to `2026-10-16T20:38:37Z`. `mission_gate0_self_notices.sh` rc 1 on the same 2026-10-13T02:01:58Z rc=143 notice (orphan 255, already credited by 256); control 107:4 ok, watermarks 2/2. `mission-world` unread inbox empty (`-unread -limit 500 -json`). Weekly rotation not due (#246 created 2026-10-12T12:08Z).
-
-**Gate 1:** local dev == origin/dev `b7bae72` (Gate-1 base `b7bae72709ce46f4d3c236314d653ad2b6ff2190@2026-10-16T23:26:27Z`). Dev CI 3 check-runs, all success. Skill directory: SKILL.md and all 13 `resources/*.md` at the resolved symlink target match V1 origin/dev (14/14 `same`), and the pin copy matches too. Open PRs: #297 only (attended row-187 dogfood docs sweep, not this loop's; left alone).
-
-**Gate 2 — clause map:** 1–7 MET (as of iteration 276). No UNMET clause, so the release order D-WORLD-81 = A governs: **pick row 156** (`[NEXT]`). Reality check: no row-156 commit beyond the attended filing (`1bf36bd`, `47cae3f`), no design doc, no branch or worktree; ledger valid, zero OPEN. The worktrees with dirty files are all consumed eval/record trees from iterations ≤ 268.
-
-**Design:** the rotation pointer read `codex:gpt-6.1-sol` (last used), so the next entry was `pi:ollama/glm-5.3:cloud`. Its probe returned rc 0 with `stopReason: error`, `429 … Pro weekly limit`, recorded with `mission-lane-dead.sh`. `kimi-k3:cloud` shares the Ollama bucket and the OpenRouter twins are over ration, so the rotation fell to `claude:claude-opus-5-5`, which is also what the resolver printed (`recipe claude:claude-opus-5-5 declared:provider-pin`). Spawned as Agent `opus` (the operator prompt asks for Agent-tool roles; same model). It ran ~15 min (220,707 tok) and banked 12 V-rows with raw outputs under `design_docs/verification/world-row156-design-2026-10-17/`. Findings against the charter row: (1) `**/*.test.ts` protects exactly one directory level in AILANG v0.52.1 `fileguard` (depth 0 and 2 written, V7), so the grammar allows only `D/**` and base-name globs; (2) render-time expansion to literals protects existing files but 6/6 creation arms were written on macOS (V5), so prevention is backed by a per-call integrity check; (3) AILANG's deny check is lexical and a symlink alias writes into a protected path (V7; upstream ticket at landing); (4) "Linux srt has no globs" is partly stale: only `denyWrite`/`allowWrite` are literal-only on srt 0.0.78 (README). Targeted test runs in all three M4 projects wrote nothing under test paths (V3).
-
-**Quorum:** author `claude:claude-opus-5-5`, seats `gpt6-1-sol`, `gemini-4-argon`, `oc-glm-5-3` (reserve `oc-kimi-k3`). Every round only `gemini-4-argon` was present (others unreachable), so each verdict rests on one external seat. r1 BLOCKED: `git status` against HEAD honours assume-unchanged/skip-worktree, and a moved HEAD hides changes against base. The controller measured first that episode worktrees are `git worktree add` checkouts (`host/worktree/worktree.go:57`) whose index lives outside srt's `allowWrite`; the designer's r2 then measured it (V13: sandboxed `update-index`/`commit` fail on `index.lock: Operation not permitted`) and found the reviewer's `diff-index`/`diff-files` alternative is blind to the flags too, so it added a `git ls-files -v` check (36–42 ms) and the reviewer's `head-moved` rule. r2 BLOCKED on a new, narrow point (CWD-relative pathspecs; `D/**` misses `D` replaced by a file/symlink) with a verbatim fix and no dispute of direction → applied verbatim as r3 under the narrow-refinement carve-out (§12 of the doc). Cost $0.076 metered.
-
-**Plan:** `derive-planner-lane.sh` → `codex:gpt-6.1-sol declared:planner-lane-default-pin`; probe rc 0 (a first probe from `/tmp` was rc 1 "Not inside a trusted directory", an instrument failure, re-run from the repo). Codex recipe 2a in a detached sibling worktree (191,237 tok, ~17 min): 19 milestones ≤ 250 LOC each, 78 named negative controls, planning findings PF1–PF8 (legacy M0 matrix writes under real HOME; TOML quoting for patterns; `golang.org/x/text` needed for NFC; a git-filter preflight before the integrity check). Artifacts validated (`jq -e`, no placeholders), copied, planner worktree removed.
-
-**Execute (M0a):** resolver `recipe codex:gpt-6.1-sol declared:provider-pin`. Directive: Python + `ci.yml` only, no git writes, one named negative control per guard, no legacy matrix or broker Go tests (they write under HOME). Executor 49,881 tok: +116 lines in `m0_matrix.py`, +1 in `ci.yml`. Controller re-ran outside the sandbox: self-test 5/5 rc 0, `--help` rc 0, AST parse ok, workflow YAML parses (ruby), and a scratch root outside the worktree is refused rc 2 with nothing created. Committed `e03aee9`; draft PR #298 pushed before judging.
-
-**Independent evaluation:** Agent `sonnet` (`agent-tool sonnet declared:alias-pin`; generator codex ≠ judge sonnet) in its own detached worktree `.eval-world-iter277`. **r1 PASS 82/100, zero blocking** (34/40, 21/30, 18/20, 9/10). All four named mutants killed by their named cases; containment shown with HOME pointed at an empty in-worktree dir; legacy code below the dispatch byte-identical. Non-blocking survivors: a WROTE row with an unchanged host snapshot is accepted; invalid-outcome, snapshot/digest format, `root == allowed` and symlink-escape mutants survive; the self-test's own exit code is unguarded; `--help` omits the new modes. The controller reproduced the exit-code survivor first-party (with the census check also disabled, `self-test: 5 cases, 4 passed` and rc 0; file restored byte-identical). All carried to M0b in the row-156 tag.
-
-**Routing evidence:** base=b7bae72709ce46f4d3c236314d653ad2b6ff2190@2026-10-17T00:05:18Z (Gate 4). Controller `claude-opus-5-5` (tok: not reported) · designer Agent `opus` for resolver `recipe claude:claude-opus-5-5 declared:provider-pin` after rotation entry `pi:ollama/glm-5.3:cloud` was dead (220,707 tok + r2 revision; one doc, one revision, within the diet) · planner `codex:gpt-6.1-sol` via recipe (191,237 tok) · executor `codex:gpt-6.1-sol` via recipe (49,881 tok) · evaluator Agent `sonnet` (49,614 tok, one round). judge-independence: cross-vendor. Quorum: one external seat present in both rounds. Metered $0.076 (quorum).
-
-**Ruled out:**
-- Following the rotation to `pi:ollama/glm-5.3:cloud` or `kimi-k3:cloud`: Ollama weekly limit (429); OpenRouter twins over ration.
-- Treating the r1 objection's attack as live: V13 shows sandboxed code cannot write the episode index or move HEAD; the flag check stays as defence in depth.
-- The reviewer's `diff-index`/`diff-files` fix: measured blind to assume-unchanged/skip-worktree, like `status`.
-- A third quorum round for the r2 objection: narrow, verbatim fix, direction undisputed (carve-out).
-- Running the legacy M0 matrix or the full broker package locally: both write under the real HOME (plan PF1/PF6); CI runs them.
-
-**Retro:** Skill lane: none. Process lane: (1) the quorum ran on a single external seat in both rounds (OpenAI seat and both Ollama seats unreachable); the doc's verdicts should be quoted that way. (2) Measuring a reviewer's premise before routing the revision (the linked-worktree index location) again let the designer answer with a V-row instead of a re-assertion. Backlog lane: the upstream `fileguard` symlink ticket is owed at row 156's landing (design §10).
-
-**Progress**: World 1.0: **7 of 7 clauses MET**; `v1.0.0-rc.1` pre-released. Goal unmoved by this iteration. Row 156 (first of D-WORLD-81's three release rows): designed, planned, 1 of 19 milestones built.
-
-**Next:** row 156 **M0b** (extend the protected-only mode with V5's 16 arms × NONE/DIRS_ONLY/LITERAL on Linux CI, bank the real outputs as V-rows, amend §4.4/P5 if Linux differs), folding in M0a's judge survivors. Then M1a. D-WORLD-82 is open with defaults A, A, A, B.
+> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
+> the thing to grep before picking work, so the loop never repeats itself — is in
+> `world-mission-index.md`.
 
 ## 278 — 2026-10-17 — row 156 M0b Linux protected-write matrix (48 rows) measured on CI, banked as V14/V15 (PR #299; judge r1 PASS 85) [PRODUCT]
 
@@ -1516,3 +1486,79 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **10/17 milestones built**; next M5c. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
 
 **Next:** row 150 M5c: seed roster validation and success manifest publication. Fold in the remaining M5a r1 survivors and M4b r2's validator mutants (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.
+
+## 299 — 2026-10-22 — row 150 M5c built: the demo seed completes with a final roster check and one atomic success manifest; M5b's TESTED rule fixed to the real tool shape (PR #354; judge r1 PASS 80 → r2 PASS 85) [PRODUCT]
+
+**Kind:** one milestone of row 150 (M5c). Production: `cmd/ailang-worldd/demo_seed.go`, `cmd/ailang-worldd/demo.go`, `host/daemon/workbench_packet_evidence.go`. Tests, one tool-generated fixture (`host/daemon/testdata/roster_cli_test_result_real.json`), QUICKSTART §12 and `website/docs/reference/cli.md`. No `.ail` change, no release, no design-direction change.
+
+**Pick and why:**
+- All seven clauses are MET; D-WORLD-81's attended order governs: 156 → 150 → 151 → v1.0.0. Row 156 has nothing buildable (D-WORLD-86 OPEN), so row 150's next milestone, M5c, was the pick (iteration 298's **Next**).
+- Reality check: no open PR of this loop's; no M5c commit on origin (`git log origin/dev --grep M5c` = row 156's M5c only); no iteration-299 worktree or branch residue. The 2026-10-21T16:56:25Z rc=143 notice is iteration 296's, already credited by 298.
+
+**Clause map:** 1–7 all MET.
+
+**Gate 0:**
+- Kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN.
+- #313: 0 allowlisted directives since `2026-10-22T01:34:42Z` (18 comments). Self-notice scan rc 1 on the already-credited 296 notice (control 107:4 ok, watermarks 2/2).
+- `mission-world` inbox: 7 unread, all this loop's own claims.
+
+**Gates 1–2:**
+- Local dev = origin/dev `f4b2dfdb`; dev CI 3/3 checks green on it.
+- The running skill matches origin on SKILL.md and all 13 resource files (resolved symlink). My first loop again omitted `resources/` and printed 13 DIFFs; the corrected loop printed 13 SAME (third time this trap fired: 290, 298, 299).
+- Ledger valid, 76 rows; one OPEN (D-WORLD-86).
+
+**Executor (codex gpt-6.1-sol, one run, 162,686 tok, ~14 min):**
+- `demoFinalizeSeed`: re-validates the manifest, then `demoValidateSeedRoster` reads the S5 input actually committed and, per slot, requires slot order, ref = manifest ref, an object that re-hashes to its ref, and the declared semantic kind (`demoValidateRosterKind`, independent of the projection); then fetches the packet page and requires four resolved grade markers and no roster-unavailable banner (`demoValidateRosterPage`).
+- `demoPublishManifest`: `CreateTemp` in the target dir, chmod 0644, write, fsync, `os.Link` (refuses an existing target), temp removed. `runDemo` returns exit 0 only after it.
+- Help, QUICKSTART §12 and the CLI reference now describe a complete seed.
+- Carried survivors: M4b r2's stray extra ref, why-hash count and duplicate why entry got pin-free controls; M5a r1's non-deadline read error, empty candidate and resultless effect got projection rows. The last was a **real defect**: a denied/failed recorded effect (no result) rendered ATTESTED; it now refuses `effect result absent`.
+- In-sandbox: 6 gates PASS, 5 socket-bound tests UNINFORMATIVE; 6 mutants killed, 5 UNMEASURED-SANDBOX.
+
+**Controller verification (outside any sandbox, both pins):**
+- Base `f4b2dfdb`, in the sprint worktree and a separate base worktree: every directive gate green; `go test ./cmd/ailang-worldd` rc 0 (136 s).
+- On the executor's tree: four real-stack tests RED — `roster page: evidence roster UNAVAILABLE`. A debug patch (restored, `cmp`) showed the reason `test exit code`, and the stored result carried no `exit_code` key.
+- **Measured the pinned tool directly** (`policy-tool --policy <rendered>` from a scratch root): passing `test --json` → `{argv, ok:true, stderr, stdout}`, no `exit_code`; failing → `exit_code:1, ok:false`. M5b's `packetTestedRow` required `exit_code == 0`, and M5b's tests used a fake tool that always emitted it — so no real TESTED row could ever resolve. Only M5c's real end-to-end seed exercises that path.
+- **Fix `c9fd10af`** (controller): `exit_code`, when present, must be 0; `ok` must be true. Rows `real-tool-success-shape` (fixture = the tool's verbatim stdout, checked in; instrument check that it has no `exit_code`), `exit-code-absent-not-ok`, `exit-code-null`. Mutants C1 (require exit_code again), C2 (accept null), C3 (drop ok) each killed at the new row.
+- Executor's UNMEASURED-SANDBOX mutants run here: kind-finalizer (first form build-red, compiling form killed at `demo_test.go:2486`), early-write (killed `:2489`), extra ref (build-red, compiling form killed), why count (killed), duplicate entry (killed at the named assertion; another guard also refuses, so it is defence in depth).
+- After the fix: all 9 named gates top-level PASS, no SKIP. `verify_ail.sh` rc 0. `verify_go.sh` rc 0 (771 s, zero FAIL lines, load 3–7) on `c9fd10af`.
+- Commits: `137b615d` (executor; reconstructed by removing the controller hunks, all 8 final files SHA-matched after), `c9fd10af` (controller fix).
+
+**Independent evaluation (Agent sonnet, background, own worktree `.eval-world-iter299`; generator codex ≠ judge sonnet; the controller's two commits are same-vendor with the judge, FLAGGED, and the directive told it to scrutinise them equally):**
+- **r1 PASS 80**, zero blocking; 79,345 subagent tok; ~10.4 min. All gates PASS. It re-measured the tool shape first-party (pass, fail, and a nonexistent path → `{ok:false, refused}`) and ruled the controller fix CORRECT, with nothing else fitted to the fake tool. 11 of its mutants killed.
+  - Survivors: M4 (the page check's production wiring), M5 (manifest-vs-stored-roster compare), M6 (slot order), M8 (re-hash), M9 (count `<4`), M10 (file mode), M11 (fsync), M13 (redundant validation). Notes: public-bytes scan runs on compact JSON while the file is indented; scope beyond the plan's file list (directive-allowed).
+- **Fix `be270368`** (controller, test-only): real-store arms committing a genuine extra approval through the same coordinator — TESTED → S3's `ai_check` record (right kind; only the page refuses, `test op`), and the first two slots swapped (package law and projection are order-free; only the seed's slot order refuses, with an instrument check that the page still resolves); `TestDemoSeedEndToEnd` arms for a manifest naming the goal as CLAIMED and for forged CLAIMED bytes through `tamperProxy`; a 0644 mode assertion. Controller mutants F4/F5/F6/F8/F10 each killed at the new assertion with `<nil>` as the error (the guard alone catches it).
+- `go test ./cmd/ailang-worldd` rc 0 with the tool pin unset (CI configuration, 55 s); `go test -race ./cmd/ailang-worldd` rc 0 with both pins (205 s).
+- **r2 PASS 85**, zero blocking, no new findings; 91,250 subagent tok. Its own M4/M5/M6/M8/M10 all killed; it checked each new arm reaches the guard it claims and that the extra-approval helper uses the genuine coordinator path. M9/M11/M13 and the two notes stay open, accepted.
+
+**Result:** M5c built. Row 150 has 11 of 17 milestones. Plan and sprint JSON mark M5c completed.
+
+**Gate 3b:** PR #354 (`sprint/world-iter299-row150-m5c`); the record rides the same PR. CI is verified on the PR head and the merge before Gate 5 reports LANDED.
+
+**Routing evidence:** base=f4b2dfdbcf1b2e342fce961dd4740a8bf3e0f37a@2026-10-22T03:27:47Z (Gate 3 worktree).
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer not spawned: the design is ready. Planner not spawned: the plan is ready.
+- Executor `recipe codex:gpt-6.1-sol declared:provider-pin`: one run, rc 0, 162,686 tok. Probe rc 0.
+- Evaluator `agent-tool sonnet declared:alias-pin`: r1 79,345 and r2 91,250 subagent tok. r1 ran in the background; r2 resumed the same agent with `SendMessage`.
+- The operator's standing request asked for Agent-tool roles exactly as the routing table specifies. The evaluator ran through the Agent tool as required; the executor's table lane is the codex recipe. No role was unspawnable.
+- Judge independence: cross-vendor for the executor's work; same-vendor for the controller's `c9fd10af` and `be270368`, mitigated by the judge's own first-party tool measurement and its own mutants on both.
+- Metered **$0.00**.
+
+**Ruled out:**
+- Reading the four real-stack reds as an M5c defect: the reason was M5b's TESTED rule, reproduced against the pinned tool directly.
+- Treating the build-red K1/K3 mutants as kills: re-run as compiling mutants.
+- Making a >4-slot roster reach the validator for M9: the package law refuses it first.
+
+**Carried (non-blocking):**
+- M5c: M9, M11, M13; the compact-vs-indented public-bytes scan.
+- M5b: every roster link labelled `report:`; the dead `utf8.Valid` guard.
+- **[HARNESS] ticket:stall:watchdog:foreground-agent-and-wrong-transcript** and **ticket:routing-models-check:bold-colon-heading**: still open.
+
+**Retro:**
+- **Skill lane:** none applied; World does not edit the shared skill. Gate 3's "hand-typed fixture" rule (V1 iteration 348) gained a World instance at a NEW boundary: not a parser's fixture but a FAKE TOOL's output shape, two milestones upstream of the test that could see it. Proposal to the fleet: extend that rule to fake binaries — a fake tool's response must be generated from the real tool's output, and the first milestone that runs the real tool end-to-end re-validates every fake-derived rule. One instance; recorded so a second is recognisable.
+- **Process lane:** a World note in the Repo Profile: a fake-tool test row must carry a sibling row fed the real tool's captured response (generated, checked in, with the command in a comment).
+- **Backlog lane:** none new.
+- Harness share 0 of the last 20. The last three landings (299, 298, 295) moved no UNMET clause; all clauses are MET, so no drift alarm.
+
+**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **11/17 milestones built**; next M6. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
+
+**Next:** row 150 M6: still serve flag and stable complete server HTML (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.

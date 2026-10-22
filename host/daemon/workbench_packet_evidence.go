@@ -223,6 +223,9 @@ func packetRosterFromValidated(parent context.Context, r packetRosterReader, pac
 	if !broker.RecordConsistent(er) {
 		return refuse("effect inconsistent")
 	}
+	if er.ResultRef.IsZero() {
+		return refuse("effect result absent")
+	}
 	if _, reason = read(er.RequestRef, "request", broker.EffectRequestV1, packetRosterReadLimit); reason != "" {
 		return refuse(reason)
 	}
@@ -359,9 +362,11 @@ func packetTestedRow(ctx context.Context, r packetRosterReader, read packetObjec
 	if json.Unmarshal(out["argv"], &argv) != nil || len(argv) == 0 || argv[0] != "test" {
 		return row, "test argv"
 	}
+	// The tool omits exit_code on success and sends it with ok:false on failure
+	// (measured v0.54.15; testdata/roster_cli_test_result_real.json). Present means 0.
 	var exit *int
 	var good bool
-	if json.Unmarshal(out["exit_code"], &exit) != nil || exit == nil || *exit != 0 {
+	if raw, present := out["exit_code"]; present && (json.Unmarshal(raw, &exit) != nil || exit == nil || *exit != 0) {
 		return row, "test exit code"
 	}
 	if json.Unmarshal(out["ok"], &good) != nil || !good {

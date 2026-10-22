@@ -735,7 +735,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M5c — Seed roster validation and success manifest publication
 
-Design M5; 23 minutes; dependency: M5b; status **pending**.
+Design M5; 23 minutes; dependency: M5b; status **completed** — built iteration 299, PR #354 (executor codex gpt-6.1-sol `137b615d`; controller `c9fd10af` fixes M5b's TESTED rule to the real v0.54.15 tool shape, which omits `exit_code` on success; controller tests `be270368` for judge r1's survivors). Judge Agent sonnet r1 PASS 80 → r2 PASS 85, zero blocking. Deviations: `demo.go`, QUICKSTART §12 and `website/docs/reference/cli.md` edited to keep help/docs truthful; `host/daemon/workbench_packet_evidence.go` got two production fixes (resultless effect, TESTED exit_code).
 
 Exact executor files:
 

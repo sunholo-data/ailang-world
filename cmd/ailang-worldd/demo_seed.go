@@ -20,6 +20,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -185,7 +186,7 @@ func demoGrants(ctx context.Context, db, token string) (bool, error) {
 	}
 	return worlds.Scanned > 0, nil
 }
-func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
+func demoSeedDomain(ctx context.Context, o demoOptions, token string) (err error) {
 	c := demoProofClient(o.addr)
 	r := worldReader{ctx: ctx, c: c}
 	h, epoch, err := demoPreflight(ctx, o, token, r)
@@ -197,6 +198,11 @@ func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
 		return fmt.Errorf("prepare worktree containing unchanged world/logepoch.ail; run from repository root")
 	}
 	objects := demoDomainObjects(source)
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("%w; inspect history before any further action; never blindly retry", err)
+		}
+	}()
 	observed := ""
 	prev := hashref.SumSHA256([]byte("world-demo-genesis")).String()
 	for i, obj := range objects {
@@ -231,17 +237,17 @@ func demoSeedDomain(ctx context.Context, o demoOptions, token string) error {
 		prev = commit.Entry.EntryHash
 	}
 	// S2/S3 run after S1 is recorded. A refusal keeps S1 on record and never
-	// writes a manifest; the caller's S2-S6 boundary text stays truthful.
+	// writes a success manifest.
 	stages, err := demoRunToolStages(ctx, c, token, source)
 	if err != nil {
-		return fmt.Errorf("S1 domain commits recorded; S2/S3 refused: %v; S2-S6 incomplete; no success manifest written", err)
+		return fmt.Errorf("S1 domain commits recorded; S2/S3 refused: %v; no success manifest written", err)
 	}
 	// S4 proves the exact source object committed by S1, after S2/S3 succeed.
 	envelope, err := demoSeedProof(ctx, c, token, h, o.key, hashref.SumSHA256(source))
 	if err != nil {
 		return err
 	}
-	return demoSeedApproval(ctx, c, token, objects, stages, envelope)
+	return demoSeedApproval(ctx, c, token, objects, stages, envelope, o.manifest)
 }
 
 // demoSeedProve forwards to the real producer. The seed integration control
@@ -564,7 +570,7 @@ func demoApprovalInput(goal string, candidates []string, roster []demoEvidenceRe
 	return map[string]any{"goal": goal, "candidates": candidates, "roster": roster}, nil
 }
 
-func demoSeedApproval(ctx context.Context, c *client, token string, objects []demoObject, stages demoToolStages, envelope hashref.HashRef) error {
+func demoSeedApproval(ctx context.Context, c *client, token string, objects []demoObject, stages demoToolStages, envelope hashref.HashRef, manifest string) error {
 	// These are the seed's own fixed S1 payloads, already committed unchanged.
 	var goal struct{ Goal string }
 	var a, b struct{ Description string }
@@ -594,11 +600,12 @@ func demoSeedApproval(ctx context.Context, c *client, token string, objects []de
 	if err != nil {
 		return fmt.Errorf("S5 refused: %w; no success manifest written", err)
 	}
-	_, err = demoSeedS6(worldReader{ctx: ctx, c: c}, token, objects, stages, approval, roster)
+	r := worldReader{ctx: ctx, c: c}
+	m, err := demoSeedS6(r, token, objects, stages, approval, roster)
 	if err != nil {
 		return fmt.Errorf("S6 refused: %w; no success manifest written", err)
 	}
-	return demoS6Incomplete()
+	return demoFinalizeSeed(r, m, token, manifest)
 }
 
 func demoRequestApproval(ctx context.Context, c *client, token, goal string, candidates []string, roster []demoEvidenceRef) error {
@@ -983,8 +990,130 @@ func demoSeedS6(r worldReader, token string, objects []demoObject, stages demoTo
 	return m, demoValidateManifest(r, m, token)
 }
 
-func demoS6Incomplete() error {
-	return fmt.Errorf("S1-S6 checked; roster checks M5c pending; no success manifest written; inspect history before any further action")
+// Keep the final kind refusal independent of the projection's UNAVAILABLE guard.
+func demoValidateRosterKind(slot demoEvidenceRef, obj demoObject) error {
+	ids := map[string]string{"test-invocation": coordinator.RecordV2, "recorded-effect": broker.EffectRecordV1,
+		"authored-claim": "world/demo/authored-claim/v1", "proof-envelope": evidence.ProofSemanticID}
+	id := ids[slot.Kind]
+	iface := sum([]byte(id))
+	if slot.Kind == "proof-envelope" {
+		iface = evidence.InterfaceHashV1.String()
+	}
+	if id == "" || obj.SemanticID != id || obj.InterfaceHash != iface {
+		return fmt.Errorf("roster kind: %s.ref must resolve to %s", slot.Kind, id)
+	}
+	return nil
+}
+
+func demoValidateRosterPage(body []byte) error {
+	page := string(body)
+	if strings.Contains(page, "<p>evidence roster UNAVAILABLE — ") {
+		return fmt.Errorf("roster page: evidence roster UNAVAILABLE")
+	}
+	if strings.Count(page, `<div aria-label="evidence roster">`) != 1 {
+		return fmt.Errorf("roster page: evidence roster absent")
+	}
+	for _, marker := range []string{"<p>recorded-effect: ATTESTED · producer/author: ",
+		"<p>authored-claim: CLAIMED · producer/author: demo-authored", "<p>test-invocation: TESTED · producer/author: ",
+		"<p>proof-envelope: PROVEN · producer/author: ", " · verdict pass · "} {
+		if strings.Count(page, marker) != 1 {
+			return fmt.Errorf("roster page: missing resolved marker %s", marker)
+		}
+	}
+	return nil
+}
+
+func demoValidateSeedRoster(r worldReader, m demoPublicManifest) error {
+	refs := map[string]string{}
+	for _, ref := range m.References {
+		refs[ref.Role] = ref.Ref
+	}
+	var input struct {
+		Roster []demoEvidenceRef `json:"roster"`
+	}
+	for _, why := range m.Why {
+		if why.Role != "approval" {
+			continue
+		}
+		e, ok, err := r.entry(why.Entry)
+		if err != nil || !ok {
+			return fmt.Errorf("roster approval entry unavailable: %v", err)
+		}
+		rec, _, err := r.record(e)
+		if err != nil || rec == nil {
+			return fmt.Errorf("roster approval record unavailable: %v", err)
+		}
+		obj, ok, reason := r.checkedObject(rec.Input, coordinator.InputV1)
+		if !ok {
+			return fmt.Errorf("roster input: %s", reason)
+		}
+		if err := json.Unmarshal(obj.Payload, &input); err != nil {
+			return err
+		}
+	}
+	kinds := []string{"test-invocation", "recorded-effect", "authored-claim", "proof-envelope"}
+	if len(input.Roster) != len(kinds) {
+		return fmt.Errorf("roster count: require four stored slots")
+	}
+	for i, slot := range input.Roster {
+		if slot.Kind != kinds[i] || refs[slot.Kind] != slot.Ref {
+			return fmt.Errorf("roster slot %d: manifest/input mismatch", i)
+		}
+		var obj demoObject
+		err := demoGet(r, "/v1/objects/"+slot.Ref+"?payload=true", &obj)
+		if err != nil || obj.Hash != slot.Ref || sum(obj.Payload) != slot.Ref {
+			return fmt.Errorf("roster %s.ref unavailable or hash mismatch", slot.Kind)
+		}
+		if err := demoValidateRosterKind(slot, obj); err != nil {
+			return err
+		}
+	}
+	status, body, err := r.c.do(r.ctx, "GET", "/workbench?object="+refs["packet"], nil)
+	if err != nil || status != 200 {
+		return fmt.Errorf("roster page unavailable: HTTP %d: %v", status, err)
+	}
+	return demoValidateRosterPage(body)
+}
+
+func demoFinalizeSeed(r worldReader, m demoPublicManifest, token, path string) error {
+	if err := demoValidateManifest(r, m, token); err != nil {
+		return err
+	}
+	if err := demoValidateSeedRoster(r, m); err != nil {
+		return err
+	}
+	raw, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return err
+	}
+	return demoPublishManifest(path, append(raw, '\n'))
+}
+
+// Link publishes complete, synced public bytes atomically and cannot replace a
+// target created since preflight. The scratch file is on the same filesystem.
+func demoPublishManifest(path string, raw []byte) error {
+	f, err := os.CreateTemp(filepath.Dir(path), ".demo-manifest-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+	if err = f.Chmod(0644); err == nil {
+		_, err = f.Write(raw)
+	}
+	if err == nil {
+		err = f.Sync()
+	}
+	closeErr := f.Close()
+	if err != nil {
+		return err
+	}
+	if closeErr != nil {
+		return closeErr
+	}
+	if err := os.Link(f.Name(), path); err != nil {
+		return fmt.Errorf("publish manifest requires absent target: %w", err)
+	}
+	return nil
 }
 
 // The daemon's existing packet validator establishes carrying-commit membership;

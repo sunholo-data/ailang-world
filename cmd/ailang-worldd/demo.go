@@ -19,12 +19,11 @@ publishes, creates a worktree or opens another writable database.
 --session is a private session file (default WORLD_SESSION).
 --ailang-bin is the capsule/proof pin (` + pins.ReleaseFor(pins.RoleProof).Release + `); serve's separate
 --tool-ailang-bin must be ` + toolRelease() + ` for the workspace tools.
---proof-key-file is the private operator key required by later proof stages.
+--proof-key-file is the private operator key; serve must use the same key.
 --manifest is a new output path; existing files are refused.
 --addr is the daemon URL, also accepted as the global client flag.
 
-This incremental build implements preflight and S1 domain commits only.
-S2-S6 incomplete: the command refuses completion and writes no success manifest.
+The seed runs S1-S6 and writes the public success manifest only after every check passes.
 Do not retry a partial seed; inspect its recorded history first.
 `
 
@@ -42,7 +41,7 @@ func runDemo(addr string, args []string, stdout, stderr io.Writer) int {
 	fs.StringVar(&o.db, "db", "", "daemon database identity")
 	fs.StringVar(&o.session, "session", "", "private session file")
 	fs.StringVar(&o.pin, "ailang-bin", "", "capsule/proof pin "+pins.ReleaseFor(pins.RoleProof).Release)
-	fs.StringVar(&o.key, "proof-key-file", "", "private proof key for later stages")
+	fs.StringVar(&o.key, "proof-key-file", "", "private proof key shared with serve")
 	fs.StringVar(&o.manifest, "manifest", "", "new success manifest path")
 	fs.StringVar(&o.addr, "addr", addr, "daemon URL")
 	if code, done := parseVerbFlags(fs, args[1:], demoHelp, stdout, stderr); done {
@@ -67,6 +66,6 @@ func runDemo(addr string, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "ailang-worldd demo seed: %v\n", err)
 		return exitUsage
 	}
-	fmt.Fprintln(stderr, "ailang-worldd demo seed: S1 domain commits recorded; S2-S6 incomplete; no success manifest written. Inspect history; do not blindly retry.")
-	return exitUsage
+	fmt.Fprintf(stdout, "ailang-worldd demo seed: success manifest written: %s\n", o.manifest)
+	return exitOK
 }
