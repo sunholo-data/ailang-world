@@ -1,28 +1,21 @@
-# World mission dashboard — iteration 295 (2026-10-21)
+# World mission dashboard — iteration 298 (2026-10-22)
 
-- **This fire:** row 156 M7b built, PR #345. QUICKSTART §10 now teaches protected test paths:
-  - the generator writes a protected set for ailang, TwilightGame and sunholo-cli (`cli/tests/**`, which is worktree-relative);
-  - it covers the two forms and their refusals, darwin `glob` against linux `dirs-only`, report-only and no default;
-  - also the record block, the four `why` lines, the alias residual on the v0.54.15 tool pin, the after-check reserve and arm 8.
-  - `TestQuickstartProtectedContract` checks the doc's tables and figures against the parser, the renderers, the record type, re-basing, the limits, `protectedCheckTimeout` and the pins manifest.
-- **Controller catches:** 5 figure mutants survived the executor's tests (the limits, the 3 751 ms reserve, the tool pin, a `[]` default). Fixed with the `numbers` row and the `[]` arm.
-- **Judge:** Agent sonnet in its own worktree. r1 PASS 88, zero blocking; it found two overstated budget sentences, the missing module-root note, and a parser that skipped rows. After the fix, r2 **PASS 92**, zero blocking.
-- **Gates:** `verify_go.sh` rc 0 on `76ec06f5`. The broker race suite was rc 0 at base and at head.
+- **This fire:** row 150 M5b built, PR #353. This lands iteration 296's orphaned work; 296 and 297 were both STALL-killed while their judges ran.
+  - TESTED comes from a real `Ailang.CLI` `test` invocation with a strict, passing, non-vacuous report. Prose or null refuses the roster.
+  - PROVEN comes only through ValidateProof → Resolve. The subject is from the envelope's MAC-authenticated report and is shown only once PROVEN.
+  - The packet page renders all four grade rows with producer/author, caption, links, verdict and the refused-roster banner, escaped.
+- **Why 296/297 died:** the STALL watchdog cannot see a foreground sub-agent. It reads the newest transcript in a shared project dir (297's kill line measured another 317 MB session) and ignores `subagents/*.jsonl`. The judges' `&`-launched mutant runners also left the descendant tree. Ticket `stall:watchdog:foreground-agent-and-wrong-transcript` filed to mission-fleet. This fire's background judge plus in-turn polls survived.
+- **Judge:** Agent sonnet in its own worktree. r1 PASS 86, zero blocking (survivors: result provenance, refused-roster banner, the PROVEN refusal through the projection, an unauthenticated subject on refused rows, the compiler anchor). After fix `f9503386`, r2 **PASS 90**, zero blocking, no new findings.
+- **Gates:** all M5b gates rc 0. `verify_go.sh` was red only in the race leg under sibling load 6–17 (verifygate 8 m timeout; agui slow-reader EOF). Isolated `-race` re-runs at 1500 s were rc 0 on both heads.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
 - **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81):
-  - row 156: 22/24, nothing buildable; M5c/M5d are held on D-WORLD-86, which also gates the row's close;
-  - row 150: 9/17;
+  - row 156: 22/24, nothing buildable (D-WORLD-86);
+  - row 150: 10/17;
   - then row 151.
-- **Next:** row 150 M5b (TESTED/PROVEN resolution and rendering; settle the "source subject sibling" phrase; fold in M5a's survivors).
-- **Carried:**
-  - the doc's `why` lines, alias and arm-8 paragraphs and "10 s" figure are prose, not bound to code;
-  - the `why` text omits `path_truncated`;
-  - `/reserve-after-before` reds under load;
-  - `exec_protected_record_test.go` is 1 094 lines.
+- **Next:** row 150 M5c (seed roster validation and success manifest publication; fold in the remaining M5a survivors and M4b's validator mutants).
+- **Carried:** every roster link is labelled `report:`; the `utf8.Valid` guard is dead (equivalent); `/reserve-after-before` reds under load; `TestAGUISlowReaderCutIsResumable` reds under `-race` load.
 - **Parked on Mark:** D-WORLD-86: drop M5c/M5d (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
-- **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet. No designer or planner: the design and plan were ready.
-- **Cost:** metered $0.00. codex executor 100,064 tok. Agent judge: r1 89,250 and r2 100,653 subagent tok.
-- **Retro:** harness share 0/20; no drift alarm. Process fixes:
-  - baselines run in their own detached worktree with `AILANG_BIN` exported;
-  - a doc-contract test binds every figure the prose quotes.
-- **Record:** world-mission-log.md entry 295 (log rotated: 20 entries live).
+- **Routing/cadence:** executor codex gpt-6.1-sol (iteration 296, reused); evaluator Agent sonnet (background, resumed for r2). No designer or planner: the design and plan were ready.
+- **Cost:** metered $0.00. codex executor 206,730 tok (iteration 296). Agent judge: r1 74,842 and r2 85,026 subagent tok.
+- **Retro:** harness share 0/20; no drift alarm. Process fix: judge directives forbid `&`/nohup/sleep-polls, cap Bash calls at ≤290 s and require an incremental report file. Skill proposal: a long judge is safer in the background with controller polls until the watchdog ticket is fixed.
+- **Record:** world-mission-log.md entry 298 (log rotated: 20 entries live).
