@@ -74,9 +74,19 @@ type ReferenceView struct {
 	FirstHref string
 }
 
-// PacketView is the decision-packet panel (row 172 D6). A refused packet
-// carries only Sentence; links, status and evidence exist only when Validated.
+// PacketEvidenceView is a validated evidence row, separate from subject grades.
+type PacketEvidenceView struct {
+	CompilerHref                                     string
+	Caption                                          string
+	Kind, Ref, Href, Label, Producer, Unavailable    string
+	Subject, SubjectHref, Compiler, Version, Verdict string
+	Passed                                           int
+}
+
+// PacketView carries links and evidence only when Validated.
 type PacketView struct {
+	Roster                    []PacketEvidenceView
+	RosterUnavailable         string
 	Validated                 bool
 	Sentence                  string
 	EntryIndex                int64
@@ -259,7 +269,7 @@ const partialsHTML = `{{define "edge"}}<p>{{.Relation}}: {{if edgeUnavailable .}
 {{define "entryFields"}}<dt>entry hash</dt><dd><span class="hash" title="{{.EntryHash}}" aria-label="{{.EntryHash}}">{{.EntryHash}}</span></dd>
 <dt>previous entry</dt><dd><span class="hash" title="{{.PrevEntryHash}}" aria-label="{{.PrevEntryHash}}">{{.PrevEntryHash}}</span></dd>
 <dt>semantics epoch</dt><dd>{{.SemanticsEpoch}}</dd><dt>written by</dt><dd>{{.WrittenBy}}</dd>{{end}}
-{{define "packet"}}<section aria-label="decision packet"><h3>decision packet</h3><p>{{.Sentence}}</p>{{if .Validated}}<p>createdAt {{.CreatedAt}} · deadlineAt {{.DeadlineAt}} — logical times; this host emits no Timeout transition (item 7 owns the emitter), so this page does not state whether the deadline has passed</p><p>policy {{.Policy}} · escalationsRemaining {{.Escalations}}</p><p>proposal: <a href="{{workbenchHref .ProposalHref}}" class="hash">{{.ProposalRef}}</a></p><p>approval request: <a href="{{workbenchHref .RequestHref}}" class="hash">{{.RequestRef}}</a></p><p>committed at: <a href="{{workbenchHref .EntryHref}}">entry {{.EntryIndex}}</a></p><p>approvals chain: {{.ApprovalStatus}}</p><p>evidence: proposal <span class="hash">{{.ProposalRef}}</span> — {{template "packetGrade" .ProposalGrade}}</p><p>evidence: transition function <span class="hash">{{.TransitionFnRef}}</span> — {{template "packetGrade" .TransitionGrade}}</p>{{end}}</section>{{end}}
+{{define "packet"}}<section aria-label="decision packet"><h3>decision packet</h3><p>{{.Sentence}}</p>{{if .Validated}}<p>createdAt {{.CreatedAt}} · deadlineAt {{.DeadlineAt}} — logical times; this host emits no Timeout transition (item 7 owns the emitter), so this page does not state whether the deadline has passed</p><p>policy {{.Policy}} · escalationsRemaining {{.Escalations}}</p><p>proposal: <a href="{{workbenchHref .ProposalHref}}" class="hash">{{.ProposalRef}}</a></p><p>approval request: <a href="{{workbenchHref .RequestHref}}" class="hash">{{.RequestRef}}</a></p><p>committed at: <a href="{{workbenchHref .EntryHref}}">entry {{.EntryIndex}}</a></p><p>approvals chain: {{.ApprovalStatus}}</p><p>evidence: proposal <span class="hash">{{.ProposalRef}}</span> — {{template "packetGrade" .ProposalGrade}}</p><p>evidence: transition function <span class="hash">{{.TransitionFnRef}}</span> — {{template "packetGrade" .TransitionGrade}}</p>{{if .RosterUnavailable}}<p>evidence roster UNAVAILABLE — {{.RosterUnavailable}}</p>{{end}}{{with .Roster}}<div aria-label="evidence roster">{{range .}}<p>{{.Kind}}: {{if .Unavailable}}UNAVAILABLE — {{.Unavailable}}{{else}}{{.Label}}{{end}} · producer/author: {{.Producer}}{{if .Caption}} · {{.Caption}}{{end}} · report: <a href="{{workbenchHref .Href}}">{{.Ref}}</a>{{if .Subject}} · subject: <a href="{{workbenchHref .SubjectHref}}">{{.Subject}}</a>{{end}}{{if .Verdict}} · verdict {{.Verdict}} · {{.Passed}} named passes{{end}}{{if .Compiler}} · compiler <a href="{{workbenchHref .CompilerHref}}">{{.Compiler}}</a> · version {{.Version}}{{end}}</p>{{end}}</div>{{end}}{{end}}</section>{{end}}
 {{define "packetGrade"}}{{if .Available}}<span>{{.Label}}</span>{{if .HasVerdict}} verdict: {{.Verdict}}{{end}}{{else}}GRADE UNAVAILABLE — {{with .Unavailable}}{{.}}{{else}}no grade reason was supplied{{end}}{{end}}{{end}}`
 
 var pageTemplate = template.Must(template.Must(template.New("workbench").Funcs(template.FuncMap{

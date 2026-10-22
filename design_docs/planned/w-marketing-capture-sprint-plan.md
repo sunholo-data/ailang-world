@@ -669,7 +669,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M5b — TESTED/PROVEN resolution and truthful roster rendering
 
-Design M5; 29 minutes; dependency: M5a; status **pending**.
+Design M5; 29 minutes; dependency: M5a; status **completed** — built iterations 296–298, PR #353 (executor codex gpt-6.1-sol in 296; controller test bindings `66208c2a` and the r1 fix `f9503386`). Judge Agent sonnet r1 PASS 86 → r2 PASS 90, zero blocking. PROVEN's subject comes from the envelope's MAC-authenticated report (no sibling pair: the S5 producer emits four pairs and the package pins `additionalProperties:false`). It is shown only once PROVEN.
 
 Exact executor files:
 

@@ -51,8 +51,7 @@ func packetRefusalSentence(res coordinator.PacketResult) string {
 	return packetRefusedBytes
 }
 
-// packetProjection retains the validated roster internally until M5b adds its
-// workbench fields and renderer. Existing subject grades still use row 105.
+// packetProjection retains validated evidence separately from subject grades.
 type packetProjection struct {
 	view   *workbench.PacketView
 	roster packetRoster
@@ -91,10 +90,22 @@ func (d *Daemon) projectPacket(ctx context.Context, obj store.Object) (*packetPr
 	if res.Approval.DecidedBy != "" {
 		status += " by " + res.Approval.DecidedBy
 	}
-	return &packetProjection{roster: packetRosterFromValidated(ctx, d.reads, res), view: &workbench.PacketView{Validated: true, Sentence: sentence, EntryIndex: res.Entry, EntryHref: pageHref(res.Entry, res.Entry),
+	roster := packetRosterFromValidated(ctx, d.reads, res, d.grader)
+	rows := make([]workbench.PacketEvidenceView, 0, len(roster.rows))
+	for _, row := range roster.rows {
+		caption := ""
+		if row.kind == "authored-claim" {
+			caption = "demo-authored"
+		}
+		rows = append(rows, workbench.PacketEvidenceView{
+			Kind: row.kind, Ref: row.ref, Href: "?object=" + row.ref, SubjectHref: "?object=" + row.subject, Label: row.label, Producer: row.producer, Caption: caption, Unavailable: row.unavailable,
+			Subject: row.subject, Compiler: row.compiler, CompilerHref: "?object=" + row.compiler, Version: row.version, Verdict: row.verdict, Passed: row.passed,
+		})
+	}
+	return &packetProjection{roster: roster, view: &workbench.PacketView{Validated: true, Sentence: sentence, EntryIndex: res.Entry, EntryHref: pageHref(res.Entry, res.Entry),
 		ProposalRef: res.Packet.ProposalHash.String(), ProposalHref: "?object=" + res.Packet.ProposalHash.String(),
 		RequestRef: res.Packet.RequestRef.String(), RequestHref: "?object=" + res.Packet.RequestRef.String(),
 		CreatedAt: res.Packet.CreatedAt, DeadlineAt: res.Packet.DeadlineAt, Policy: res.Packet.Policy,
 		Escalations: res.Packet.EscalationsRemaining, ApprovalStatus: status, TransitionFnRef: res.TransitionFn.String(),
-		ProposalGrade: proposalGrade, TransitionGrade: tfGrade}}, nil
+		Roster: rows, RosterUnavailable: roster.unavailable, ProposalGrade: proposalGrade, TransitionGrade: tfGrade}}, nil
 }

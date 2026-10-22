@@ -146,7 +146,7 @@ func TestWorkbenchNewViewTypesInCensus(t *testing.T) {
 		}
 	}
 	page := reflect.TypeOf(Page{})
-	for _, name := range []string{"Live", "Graph", "Decisions"} {
+	for _, name := range []string{"Live", "Graph", "Decisions", "Object"} {
 		if f, ok := page.FieldByName(name); ok {
 			visit(f.Type)
 		}
