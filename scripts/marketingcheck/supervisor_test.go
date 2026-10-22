@@ -1,4 +1,4 @@
-package marketingcheck
+package main
 
 import (
 	"bytes"
