@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "World",
+  "version": "0.1.0",
+  "identifier": "com.sunholo.ailang.world.spike",
+  "build": { "frontendDist": "dist" },
+  "app": {
+    "windows": [
+      {
+        "title": "World",
+        "width": 1600,
+        "height": 1000,
+        "minWidth": 1100,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "backgroundColor": "#314352"
+      }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": false, "icon": ["icons/icon.png"] }
+}
