@@ -25,6 +25,7 @@ WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 #   png-trailing      well-formed PNG with a binary payload appended after IEND
 #   bin               Mach-O magic plus NUL-bearing bytes
 #   padded-bin        8,100 ASCII bytes, then bin (NUL first appears past git's 8000-byte window)
+#   ttf [bytes]       a TrueType-signed blob (00 01 00 00) of NUL-bearing bytes (D-WORLD-90 arms)
 mk() {
   mkdir -p "$(dirname "$1")"
   python3 -I - "$@" <<'PY'
@@ -44,6 +45,7 @@ elif kind == "png-badcrc":
 elif kind == "png-trailing": data = png() + binary
 elif kind == "bin":        data = binary
 elif kind == "padded-bin": data = b"A" * 8100 + binary
+elif kind == "ttf":        data = b"\x00\x01\x00\x00" + bytes((i * 13) % 251 for i in range(arg))
 else: sys.exit(f"mk: unknown kind {kind}")
 open(out, "wb").write(data)
 PY
@@ -99,5 +101,31 @@ arm 13-row150-deliverable-names pass                     s13 "${ALLOW[@]}"
 arm 14-bad-name-and-subdir      not-allowlisted          s14 "${ALLOW[@]}"
 arm 15-no-allowance-no-images   not-allowlisted          s01
 
+# D-WORLD-90: the pinned font allowance. Pins are the sha256 of the arms' own synthetic blobs.
+F=host/surfacepage/fonts
+REF="$WORK/ref"; mk "$REF/a4096" ttf 4096; mk "$REF/a5000" ttf 5000; mk "$REF/a60000" ttf 60000
+mk "$REF/a70000" ttf 70000; mk "$REF/bin" bin
+sha() { shasum -a 256 "$1" | cut -d' ' -f1; }
+FCAPS=(--allow-font "$F/" --font-file-cap 65536 --font-dir-cap 100000)
+s16() { mk $F/a.ttf ttf 4096; }
+s17() { mk $F/x.ttf bin; }
+s18() { mk $F/b.ttf ttf 4096; }
+s19() { mk $F/a.ttf ttf 5000; }
+s20() { mk $F/big.ttf ttf 70000; }
+s21() { mk host/surfacepage/a.ttf ttf 4096; }
+s22() { mk $F/sub/a.ttf ttf 4096; }
+s23() { mk $F/a.ttf ttf 60000; mk $F/c.ttf ttf 60000; }
+s24() { s01; s16; }
+PIN_A="a.ttf=$(sha "$REF/a4096")"
+arm 16-pinned-font-in-dir        pass                     s16 "${FCAPS[@]}" --font-pin "$PIN_A"
+arm 17-renamed-binary-pinned     bad-signature            s17 "${FCAPS[@]}" --font-pin "x.ttf=$(sha "$REF/bin")"
+arm 18-unpinned-font             not-allowlisted          s18 "${FCAPS[@]}" --font-pin "$PIN_A"
+arm 19-pinned-name-other-bytes   sha256-mismatch          s19 "${FCAPS[@]}" --font-pin "$PIN_A"
+arm 20-font-over-file-cap        file-cap-exceeded        s20 "${FCAPS[@]}" --font-pin "big.ttf=$(sha "$REF/a70000")"
+arm 21-font-outside-dir          not-allowlisted          s21 "${FCAPS[@]}" --font-pin "$PIN_A"
+arm 22-font-in-subdirectory      not-allowlisted          s22 "${FCAPS[@]}" --font-pin "$PIN_A"
+arm 23-font-dir-cap              dir-cap-exceeded         s23 "${FCAPS[@]}" --font-pin "a.ttf=$(sha "$REF/a60000")" --font-pin "c.ttf=$(sha "$REF/a60000")"
+arm 24-png-and-font-together     pass                     s24 "${ALLOW[@]}" "${FCAPS[@]}" --font-pin "$PIN_A"
+
 echo "test_tracked_binary_gate: $pass passed, $fail failed"
-[ "$fail" -eq 0 ] && [ "$pass" -eq 15 ]
+[ "$fail" -eq 0 ] && [ "$pass" -eq 24 ]

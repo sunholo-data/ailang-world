@@ -233,9 +233,16 @@ echo "── tracked-binary hygiene gate"
 # (CRCs, image-only chunks, nothing after IEND) within the caps below. Fleet-owned (ticket
 # ci:world:tracked-binary-rejects-release-png, D-WORLD-DRIVER-1); widen it only by a reviewed
 # edit to this line, never a wildcard. Its adversarial arms run first so a broken detector reds.
+# D-WORLD-90 (attended 2026-10-22) adds ONE narrower allowance: the World app's OFL fonts under
+# host/surfacepage/fonts/, each pinned by exact sha256 (google/fonts at pinned commits; see
+# design_docs/mockups/surface-app-v3/fetch-fonts.sh). A new or changed font needs a reviewed edit here.
 bash scripts/test_tracked_binary_gate.sh
 bash scripts/tracked_binary_gate.sh --allow-png 'website/static/img/v1/' \
-  --png-file-cap 1048576 --png-dir-cap 8388608
+  --png-file-cap 1048576 --png-dir-cap 8388608 \
+  --allow-font 'host/surfacepage/fonts/' --font-file-cap 1048576 --font-dir-cap 2097152 \
+  --font-pin 'Montserrat-Variable.ttf=0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7' \
+  --font-pin 'IBMPlexMono-Regular.ttf=6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46' \
+  --font-pin 'IBMPlexMono-Medium.ttf=a9b4c49bb299e05b5f6c481e7fb5e78943d2793249a0c8874ab574a2d1ea6755'
 
 echo "── World mission-input gate (decision ledger)"
 check_mission_config
