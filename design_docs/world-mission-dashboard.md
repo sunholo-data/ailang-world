@@ -1,28 +1,26 @@
-# World mission dashboard — iteration 295 (2026-10-21)
+# World mission dashboard — iteration 300 (2026-10-22)
 
-- **This fire:** row 156 M7b built, PR #345. QUICKSTART §10 now teaches protected test paths:
-  - the generator writes a protected set for ailang, TwilightGame and sunholo-cli (`cli/tests/**`, which is worktree-relative);
-  - it covers the two forms and their refusals, darwin `glob` against linux `dirs-only`, report-only and no default;
-  - also the record block, the four `why` lines, the alias residual on the v0.54.15 tool pin, the after-check reserve and arm 8.
-  - `TestQuickstartProtectedContract` checks the doc's tables and figures against the parser, the renderers, the record type, re-basing, the limits, `protectedCheckTimeout` and the pins manifest.
-- **Controller catches:** 5 figure mutants survived the executor's tests (the limits, the 3 751 ms reserve, the tool pin, a `[]` default). Fixed with the `numbers` row and the `[]` arm.
-- **Judge:** Agent sonnet in its own worktree. r1 PASS 88, zero blocking; it found two overstated budget sentences, the missing module-root note, and a parser that skipped rows. After the fix, r2 **PASS 92**, zero blocking.
-- **Gates:** `verify_go.sh` rc 0 on `76ec06f5`. The broker race suite was rc 0 at base and at head.
+- **This fire:** row 150 M6 built, PR #359. `ailang-worldd serve --workbench-still` (default off) serves the workbench page without its one `live.js` script, for the marketing captures.
+  - Still HTML equals the default page minus exactly that tag. This is asserted on the home, entry and packet-object routes of a populated store (timeline, live list, graph, decisions, packet, inspector).
+  - Headers (CSP included) are unchanged, and repeat GETs 2 s apart are byte-identical. GETs commit nothing.
+  - QUICKSTART §11, the operator guide's serve-flag table and the CLI reference name the flag.
+- **Judge:** Agent sonnet in its own worktree, r1 **PASS 93**, zero blocking, 10 mutants killed. Its docs finding (the CLI reference's help copy lacked the flag) was reproduced and fixed in `ac1abe7f`.
+- **Gates:**
+  - 12 focused gates got a top-level PASS outside the sandbox; `verify_ail.sh` rc 0.
+  - `verify_go.sh` rc 1: the non-race leg is all ok, but the race leg went red while the judge ran concurrently (two packages terminated at about 218 s, plus one broker control arm).
+  - An isolated `-race` run of cmd, daemon and broker is rc 0.
 - **Release:** `v1.0.0-rc.1` pre-release. Proof/compiler pin 0.41.0; tool pin 0.54.15.
 - **Clauses:** 7/7 MET; goal unmoved. Before v1.0.0 (D-WORLD-81):
-  - row 156: 22/24, nothing buildable; M5c/M5d are held on D-WORLD-86, which also gates the row's close;
-  - row 150: 9/17;
+  - row 156: 22/24, nothing buildable (D-WORLD-86);
+  - row 150: 12/17;
   - then row 151.
-- **Next:** row 150 M5b (TESTED/PROVEN resolution and rendering; settle the "source subject sibling" phrase; fold in M5a's survivors).
+- **Next:** row 150 M7a (bounded capture supervisor with mandatory fake Chrome companions).
 - **Carried:**
-  - the doc's `why` lines, alias and arm-8 paragraphs and "10 s" figure are prose, not bound to code;
-  - the `why` text omits `path_truncated`;
-  - `/reserve-after-before` reds under load;
-  - `exec_protected_record_test.go` is 1 094 lines.
-- **Parked on Mark:** D-WORLD-86: drop M5c/M5d (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
-- **Routing/cadence:** executor codex gpt-6.1-sol, evaluator Agent sonnet. No designer or planner: the design and plan were ready.
-- **Cost:** metered $0.00. codex executor 100,064 tok. Agent judge: r1 89,250 and r2 100,653 subagent tok.
-- **Retro:** harness share 0/20; no drift alarm. Process fixes:
-  - baselines run in their own detached worktree with `AILANG_BIN` exported;
-  - a doc-contract test binds every figure the prose quotes.
-- **Record:** world-mission-log.md entry 295 (log rotated: 20 entries live).
+  - M6: the cmd flag test builds the Page itself, and the graph assertion skips the object route by index.
+  - M5c: M9, M11, M13 and the compact-JSON public-bytes scan.
+  - M5b: `report:` link labels and the dead `utf8.Valid` guard.
+- **Parked on Mark:** D-WORLD-86: drop M5c/M5d of row 156 (A, recommended) or build them anyway (B). Default: hold. The answer also closes row 156.
+- **Routing/cadence:** executor codex gpt-6.1-sol (1 run); evaluator Agent sonnet (background, polled in-turn). No designer or planner: the design and plan were ready.
+- **Cost:** metered $0.00. Codex executor 103,331 tok. Agent judge 51,395 subagent tok.
+- **Retro:** harness share 0/20; no drift alarm. Process watch-item at instance 2: sequence the judge and `verify_go.sh` (iterations 293 and 300).
+- **Record:** world-mission-log.md entry 300 (log rotated: 20 entries live).

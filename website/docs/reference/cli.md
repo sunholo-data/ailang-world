@@ -17,6 +17,7 @@ ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
+                      [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
@@ -77,6 +78,8 @@ serve flags:
   --bind host:port     loopback listen address (default 127.0.0.1:7644);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
+  --workbench-still    suppress only the workbench live.js script for static
+                       captures of recorded history; reload to refresh (default off)
   --workspace-root <dir>
                        episode worktrees live at <dir>/<episode> (made by the
                        operator with git worktree add before session mint); it
@@ -717,12 +720,11 @@ publishes, creates a worktree or opens another writable database.
 --session is a private session file (default WORLD_SESSION).
 --ailang-bin is the capsule/proof pin (v0.41.0); serve's separate
 --tool-ailang-bin must be v0.54.15 for the workspace tools.
---proof-key-file is the private operator key required by later proof stages.
+--proof-key-file is the private operator key; serve must use the same key.
 --manifest is a new output path; existing files are refused.
 --addr is the daemon URL, also accepted as the global client flag.
 
-This incremental build implements preflight and S1 domain commits only.
-S2-S6 incomplete: the command refuses completion and writes no success manifest.
+The seed runs S1-S6 and writes the public success manifest only after every check passes.
 Do not retry a partial seed; inspect its recorded history first.
 ```
 

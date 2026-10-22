@@ -232,6 +232,9 @@ type Config struct {
 	// AilangBin, when non-empty, is the interpreter archived at startup
 	// (Decision 6 pinning) and reported by GET /v1/health.
 	AilangBin string
+	// WorkbenchStill suppresses only the workbench live.js script for static
+	// captures of recorded history. False preserves the default live page.
+	WorkbenchStill bool
 	// WorkspaceRoot (`--workspace-root`, row 134 D-SE-4 A) is the directory
 	// whose child <root>/<episode> is that episode's worktree. It must be a
 	// directory that contains none of the daemon's state (store, archive,

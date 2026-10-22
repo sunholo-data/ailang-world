@@ -77,6 +77,7 @@ var usage = `ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
+                      [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>] [--surface-index <file>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
@@ -155,6 +156,8 @@ serve flags:
   --bind host:port     loopback listen address (default ` + daemon.DefaultBind + `);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
+  --workbench-still    suppress only the workbench live.js script for static
+                       captures of recorded history; reload to refresh (default off)
   --workspace-root <dir>
                        episode worktrees live at <dir>/<episode> (made by the
                        operator with git worktree add before session mint); it
@@ -446,6 +449,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	credsDB := fs.String("credentials-db", "", "session credentials store, read per request, never locked (default: credentials.db beside --db)")
 	bind := fs.String("bind", daemon.DefaultBind, "loopback listen address host:port")
 	ailangBin := fs.String("ailang-bin", "", "interpreter to archive and pin at startup")
+	workbenchStill := fs.Bool("workbench-still", false, "suppress only the workbench live.js script for static captures (default off)")
 	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
 	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
@@ -537,7 +541,8 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	defer stop()
 
 	cfg := daemon.Config{DBPath: *dbPath, CredentialsPath: *credsDB, BindHost: host, BindPort: port, AilangBin: *ailangBin,
-		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin, SurfaceIndex: *surfaceIndex,
+		WorkbenchStill: *workbenchStill,
+		WorkspaceRoot:  *workspaceRoot, ToolAilangBin: *toolAilangBin, SurfaceIndex: *surfaceIndex,
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),

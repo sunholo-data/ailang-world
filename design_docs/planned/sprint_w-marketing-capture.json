@@ -1581,7 +1581,7 @@
         "host/workbench/render_test.go",
         "host/workbench/live_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestWorkbenchPacketRosterTestedAndProven",
         "TestRenderPacketEvidenceFourRows"
@@ -1725,7 +1725,9 @@
           "detail": "ok  \tgithub.com/sunholo-data/ailang-world/host/workbench\t1.669s"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completed": "2026-10-22T01:05:00Z",
+      "notes": "PR #353; iterations 296-298 (296 and 297 STALL-killed during judging); judge sonnet r1 PASS 86 -> r2 PASS 90, zero blocking"
     },
     {
       "id": "M5c",
@@ -1740,7 +1742,7 @@
         "cmd/ailang-worldd/demo_test.go",
         "host/daemon/workbench_packet_evidence_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestDemoSeedEndToEnd",
         "TestDemoSeedRosterKindMismatchRefuses"
@@ -1847,7 +1849,9 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completed": "2026-10-22T04:40:00Z",
+      "notes": "PR #354; iteration 299; judge sonnet r1 PASS 80 -> r2 PASS 85, zero blocking; controller fix c9fd10af (TESTED accepts the real tool success shape without exit_code)"
     },
     {
       "id": "M6",
@@ -1867,7 +1871,7 @@
         "host/workbench/render_test.go",
         "docs/QUICKSTART.md"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestWorkbenchStillAllRegions",
         "TestServeWorkbenchStillFlag",

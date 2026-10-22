@@ -3,6 +3,8 @@
 # allowance admits it. Called by verify_go.sh; exercised by test_tracked_binary_gate.sh.
 #
 #   tracked_binary_gate.sh [--allow-png <dir/> --png-file-cap <bytes> --png-dir-cap <bytes>]
+#                          [--allow-font <dir/> --font-file-cap <bytes> --font-dir-cap <bytes>
+#                           --font-pin <name>=<sha256> ...]
 #
 # With no flags NOTHING binary is allowed. The allowance is declared by the CALLER so the
 # policy stays readable in verify_go.sh. Design: design_docs/implemented/w-release-png-allowance.md
@@ -28,14 +30,27 @@
 # [a-z0-9][a-z0-9-]* (no subdirectories) AND the blob is a well-formed PNG: signature, IHDR
 # first (length 13), every chunk CRC valid, chunk types limited to IMAGE_CHUNKS (no text/EXIF
 # payload chunks), exactly one IEND, last, with zero trailing bytes, and size within caps.
+#
+# FONT ALLOWANCE (D-WORLD-90, attended 2026-10-22). A second, narrower allowance for the World
+# app's OFL fonts: a binary blob is admitted only if its path is <font-dir/><name> with no
+# subdirectory, <name> is PINNED by --font-pin <name>=<sha256> (exact bytes: any new or changed
+# font fails until a reviewed edit to verify_go.sh updates the pin), the blob starts with a font
+# signature (TrueType 00 01 00 00 or 'true', OpenType 'OTTO', WOFF2 'wOF2'), and the per-file and
+# directory caps hold. Reasons: not-allowlisted, bad-signature, sha256-mismatch,
+# file-cap-exceeded, dir-cap-exceeded. The PNG allowance is unchanged.
 set -euo pipefail
 
 allow_png="" file_cap="" dir_cap=""
+allow_font="" font_file_cap="" font_dir_cap="" font_pins=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --allow-png)    allow_png="${2:?--allow-png needs a directory}"; shift 2 ;;
     --png-file-cap) file_cap="${2:?--png-file-cap needs bytes}"; shift 2 ;;
     --png-dir-cap)  dir_cap="${2:?--png-dir-cap needs bytes}"; shift 2 ;;
+    --allow-font)    allow_font="${2:?--allow-font needs a directory}"; shift 2 ;;
+    --font-file-cap) font_file_cap="${2:?--font-file-cap needs bytes}"; shift 2 ;;
+    --font-dir-cap)  font_dir_cap="${2:?--font-dir-cap needs bytes}"; shift 2 ;;
+    --font-pin)      font_pins="${font_pins}${font_pins:+,}${2:?--font-pin needs <name>=<sha256>}"; shift 2 ;;
     *) echo "tracked_binary_gate.sh: FATAL: unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -47,10 +62,27 @@ if [ -n "$allow_png" ]; then
   fi
 fi
 
-python3 -I - "$allow_png" "${file_cap:-0}" "${dir_cap:-0}" <<'PY'
-import re, struct, subprocess, sys, zlib
+if [ -n "$allow_font" ]; then
+  case "$allow_font" in */) ;; *) echo "tracked_binary_gate.sh: FATAL: --allow-font must end in '/': $allow_font" >&2; exit 2 ;; esac
+  if [ -z "$font_file_cap" ] || [ -z "$font_dir_cap" ] || [ -z "$font_pins" ]; then
+    echo "tracked_binary_gate.sh: FATAL: --allow-font requires --font-file-cap, --font-dir-cap and at least one --font-pin" >&2
+    exit 2
+  fi
+fi
+
+python3 -I - "$allow_png" "${file_cap:-0}" "${dir_cap:-0}" "$allow_font" "${font_file_cap:-0}" "${font_dir_cap:-0}" "$font_pins" <<'PY'
+import hashlib, re, struct, subprocess, sys, zlib
 
 allow_dir, file_cap, dir_cap = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+font_dir, font_file_cap, font_dir_cap = sys.argv[4], int(sys.argv[5]), int(sys.argv[6])
+FONT_PINS = {}
+for pin in filter(None, sys.argv[7].split(",")):
+    name, _, sha = pin.partition("=")
+    if not name or "/" in name or not re.fullmatch(r"[0-9a-f]{64}", sha):
+        print(f"tracked_binary_gate.sh: FATAL: --font-pin must be <name>=<sha256>: {pin}", file=sys.stderr)
+        sys.exit(2)
+    FONT_PINS[name] = sha
+FONT_SIGS = (b"\x00\x01\x00\x00", b"true", b"OTTO", b"wOF2")
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
 IMAGE_CHUNKS = {b"IHDR", b"PLTE", b"IDAT", b"IEND", b"sRGB", b"gAMA", b"cHRM", b"iCCP", b"pHYs"}
 NAME = re.compile(r"[a-z0-9][a-z0-9-]*\.png")
@@ -58,6 +90,18 @@ NAME = re.compile(r"[a-z0-9][a-z0-9-]*\.png")
 def fatal(msg):
     print(f"tracked_binary_gate.sh: FATAL: {msg}", file=sys.stderr)
     sys.exit(1)
+
+def font_reason(name, b):
+    """None if b is the pinned font <name> within the font allowance; else one stable reason token."""
+    if name not in FONT_PINS:
+        return "not-allowlisted"
+    if len(b) > font_file_cap:
+        return "file-cap-exceeded"
+    if not b[:4] in FONT_SIGS:
+        return "bad-signature"
+    if hashlib.sha256(b).hexdigest() != FONT_PINS[name]:
+        return "sha256-mismatch"
+    return None
 
 def png_reason(b):
     """None if b is a well-formed PNG within the allowance; else one stable reason token."""
@@ -122,8 +166,17 @@ for sha, path in blobs:
 if streamed != declared or pos != len(out):
     fatal(f"streamed {streamed} of {declared} declared bytes; the detector did not read every blob.")
 
-rejected, allowed, allowed_bytes = [], 0, 0
+rejected, allowed, allowed_bytes, fonts, font_bytes = [], 0, 0, 0, 0
 for path, data in binaries:
+    if font_dir and path.startswith(font_dir):
+        rest = path[len(font_dir):]
+        reason = "not-allowlisted" if "/" in rest else font_reason(rest, data)
+        if reason:
+            rejected.append((path, reason))
+        else:
+            fonts += 1
+            font_bytes += len(data)
+        continue
     if not allow_dir or not path.startswith(allow_dir) or not NAME.fullmatch(path[len(allow_dir):]):
         rejected.append((path, "not-allowlisted"))
         continue
@@ -135,6 +188,8 @@ for path, data in binaries:
         allowed_bytes += len(data)
 if allowed_bytes > dir_cap and allowed:
     rejected.append((allow_dir, f"dir-cap-exceeded ({allowed_bytes} > {dir_cap} bytes)"))
+if font_bytes > font_dir_cap and fonts:
+    rejected.append((font_dir, f"dir-cap-exceeded ({font_bytes} > {font_dir_cap} bytes)"))
 
 if rejected:
     print("tracked_binary_gate.sh: FATAL: binary blob(s) rejected:", file=sys.stderr)
@@ -145,9 +200,15 @@ if rejected:
     if allow_dir:
         print(f"  The only binary allowance is well-formed PNG under {allow_dir} (see verify_go.sh).",
               file=sys.stderr)
+    if font_dir:
+        print(f"  ...plus the fonts pinned by sha256 under {font_dir} (D-WORLD-90; see verify_go.sh).",
+              file=sys.stderr)
     sys.exit(1)
+if fonts:
+    print(f"   ✓ {fonts} pinned font(s) validated, {font_bytes} bytes ({font_dir})")
 if allowed:
     print(f"   ✓ {allowed} allowlisted PNG(s) validated, {allowed_bytes} bytes ({allow_dir})")
+if allowed or fonts:
     print(f"   ✓ 0 other binary blobs among {len(blobs)} tracked files")
 else:
     print(f"   ✓ 0 binary blobs among {len(blobs)} tracked files")

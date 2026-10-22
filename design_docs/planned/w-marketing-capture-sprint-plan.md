@@ -669,7 +669,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M5b — TESTED/PROVEN resolution and truthful roster rendering
 
-Design M5; 29 minutes; dependency: M5a; status **pending**.
+Design M5; 29 minutes; dependency: M5a; status **completed** — built iterations 296–298, PR #353 (executor codex gpt-6.1-sol in 296; controller test bindings `66208c2a` and the r1 fix `f9503386`). Judge Agent sonnet r1 PASS 86 → r2 PASS 90, zero blocking. PROVEN's subject comes from the envelope's MAC-authenticated report (no sibling pair: the S5 producer emits four pairs and the package pins `additionalProperties:false`). It is shown only once PROVEN.
 
 Exact executor files:
 
@@ -735,7 +735,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M5c — Seed roster validation and success manifest publication
 
-Design M5; 23 minutes; dependency: M5b; status **pending**.
+Design M5; 23 minutes; dependency: M5b; status **completed** — built iteration 299, PR #354 (executor codex gpt-6.1-sol `137b615d`; controller `c9fd10af` fixes M5b's TESTED rule to the real v0.54.15 tool shape, which omits `exit_code` on success; controller tests `be270368` for judge r1's survivors). Judge Agent sonnet r1 PASS 80 → r2 PASS 85, zero blocking. Deviations: `demo.go`, QUICKSTART §12 and `website/docs/reference/cli.md` edited to keep help/docs truthful; `host/daemon/workbench_packet_evidence.go` got two production fixes (resultless effect, TESTED exit_code).
 
 Exact executor files:
 
@@ -789,7 +789,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M6 — Still serve flag and stable complete server HTML
 
-Design M6; 25 minutes; dependency: M5c; status **pending**.
+Design M6; 25 minutes; dependency: M5c; status **completed** — built iteration 300 (executor codex gpt-6.1-sol `aeaa957d`; controller docs fix `ac1abe7f` for judge r1 N3). Judge Agent sonnet r1 PASS 93, zero blocking. Deviation: `website/docs/guides/operating-the-daemon.md` and `website/docs/reference/cli.md` also name the flag (controller-authorised, docs only). The template branch is `{{if .Still}}{{else}}…{{end}}` because the field census reads a direct bool branch.
 
 Exact executor files:
 

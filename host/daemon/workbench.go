@@ -357,7 +357,7 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	page := workbench.Page{Title: "AILANG World Workbench", World: workbench.WorldView{Unavailable: "no world selected"}}
+	page := workbench.Page{Title: "AILANG World Workbench", Still: d.cfg.WorkbenchStill, World: workbench.WorldView{Unavailable: "no world selected"}}
 
 	var worldRefText string
 	if values := query["world"]; values != nil {

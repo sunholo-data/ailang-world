@@ -12,6 +12,9 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 300 | 2026-10-22 | row 150 M6 built: `serve --workbench-still` serves the complete workbench page without its one live script (PR #359; judge r1 PASS 93) [PRODUCT] |
+| 299 | 2026-10-22 | row 150 M5c built: the demo seed completes with a final roster check and one atomic success manifest; M5b's TESTED rule fixed to the real tool shap... |
+| 298 | 2026-10-22 | row 150 M5b built: TESTED/PROVEN roster rows and the four-row packet evidence render, landing iteration 296's orphan (PR #353; judge r1 PASS 86 → r... |
 | 295 | 2026-10-21 | row 156 M7b built: QUICKSTART §10 protected-profile guidance, bound to the parser, renderers and pins (PR #345; judge r1 PASS 88 → r2 PASS 92) [PRO... |
 | 294 | 2026-10-21 | row 156 M7a built: `why` shows intact, changed, not-checked and none-declared protected exec runs (PR #341; judge r1 PASS 86 → r2 PASS 90) [PRODUCT] |
 | 293 | 2026-10-21 | row 156 M6c built: tamper, ignored-file, index-flag and moved-HEAD detection pinned through the handler, with byte-identical replay (PR #340; judge... |

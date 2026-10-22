@@ -1,0 +1,2302 @@
+window.SPIKE_DATA = {
+ "schema": "world/spike-data/v1",
+ "now": "2026-10-21T15:30:00Z",
+ "nowEdge": {
+  "health": "World healthy",
+  "checked": "15:30",
+  "daemon": "d7c647d",
+  "clean": true,
+  "sessions": [
+   {
+    "episode": "w188g",
+    "started": "44 min ago"
+   }
+  ],
+  "needsYou": [],
+  "today": {
+   "landed": 3,
+   "byAgent": {
+    "claude": 1,
+    "codex": 2
+   },
+   "firstRound": 1,
+   "fixRounds": 3,
+   "agentMinutes": 25.1
+  }
+ },
+ "lanes": [
+  {
+   "key": "shared",
+   "title": "Shared world",
+   "row": null,
+   "glyph": "circle",
+   "colour": "#8496A5",
+   "states": [
+    {
+     "id": "68403eaf5233ecafc657c10c1e00cc26682c8697",
+     "kind": "shared",
+     "label": "68403ea",
+     "at": "2026-09-02T21:08:55Z",
+     "rel": "49 days ago",
+     "rank": 0,
+     "badge": 0,
+     "pr": null
+    },
+    {
+     "id": "725ad5a292eb900ce0faa41fbff3121bfd4c7c8f",
+     "kind": "step",
+     "label": "725ad5a",
+     "at": "2026-09-02T21:08:55Z",
+     "rel": "49 days ago",
+     "rank": 1,
+     "badge": 0,
+     "pr": null
+    },
+    {
+     "id": "dab0639f983d7b414d75a031f81db2cd8e0a22d5",
+     "kind": "shared",
+     "label": "dab0639",
+     "at": "2026-10-16T19:40:23Z",
+     "rel": "5 days ago",
+     "rank": 3,
+     "badge": 0,
+     "pr": 286,
+     "title": "Row 114 (attended): Q3 + K5 Q4\u2013Q6 \u2014 2 of \u22653 qualifying walks (Q4, Q6); F-7 why hides edit paths"
+    },
+    {
+     "id": "b95e9e2cf0bdadf26d4b7612ac159e8fe7f7f398",
+     "kind": "shared",
+     "label": "b95e9e2",
+     "at": "2026-10-16T19:40:39Z",
+     "rel": "5 days ago",
+     "rank": 5,
+     "badge": 0,
+     "pr": 291,
+     "title": "Session new refuses non-git episodes unless --allow-non-git \u2014 built inside World (trial w185)"
+    },
+    {
+     "id": "4db3af15f9482ce82f08e9a30d96947b57a6e707",
+     "kind": "shared",
+     "label": "4db3af1",
+     "at": "2026-10-16T20:07:53Z",
+     "rel": "5 days ago",
+     "rank": 6,
+     "badge": 0,
+     "pr": 292,
+     "title": "Print an elided input's short fields first, so an edit's path is visible (row 114 F-7)"
+    },
+    {
+     "id": "fc485916a9c170457fd4594ab48b5e04542472f0",
+     "kind": "step",
+     "label": "#292",
+     "at": "2026-10-16T20:07:53Z",
+     "rel": "5 days ago",
+     "rank": 7,
+     "badge": 0,
+     "pr": 292,
+     "title": "Print an elided input's short fields first, so an edit's path is visible (row 114 F-7)"
+    },
+    {
+     "id": "605c0eba839128393768e120a9803b800f9cc046",
+     "kind": "shared",
+     "label": "605c0eb",
+     "at": "2026-10-16T20:08:05Z",
+     "rel": "5 days ago",
+     "rank": 9,
+     "badge": 0,
+     "pr": 293,
+     "title": "Row 114 (attended): Q8 PASS \u2192 3 of \u22653 qualifying walks; D-WORLD-80 OPEN (clause 5 MET?)"
+    },
+    {
+     "id": "e0615e182e5185ba7ab3c2398a6835ca508c8aad",
+     "kind": "shared",
+     "label": "e0615e1",
+     "at": "2026-10-16T20:21:05Z",
+     "rel": "5 days ago",
+     "rank": 10,
+     "badge": 0,
+     "pr": 294,
+     "title": "Rows 187 (dogfood World-on-World) + 188 (desktop shell), attended"
+    },
+    {
+     "id": "e2711dc90a6a2a915c3ab600424d485410f87fe3",
+     "kind": "step",
+     "label": "#294",
+     "at": "2026-10-16T20:21:05Z",
+     "rel": "5 days ago",
+     "rank": 11,
+     "badge": 0,
+     "pr": 294,
+     "title": "Rows 187 (dogfood World-on-World) + 188 (desktop shell), attended"
+    },
+    {
+     "id": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+     "kind": "shared",
+     "label": "6731d87",
+     "at": "2026-10-17T07:35:36Z",
+     "rel": "4 days ago",
+     "rank": 12,
+     "badge": 0,
+     "pr": 297,
+     "title": "Stale-info sweep for the 1.0 release candidate \u2014 made through World (dogfood wdocs, row 187)"
+    },
+    {
+     "id": "fd03d78268228ae8bdcb4c7929206f1c22061ac1",
+     "kind": "step",
+     "label": "wdocs",
+     "at": "2026-10-17T07:35:36Z",
+     "rel": "4 days ago",
+     "rank": 13,
+     "badge": 1,
+     "pr": 297,
+     "title": "Stale-info sweep for the 1.0 release candidate \u2014 made through World (dogfood wdocs, row 187)",
+     "episode": "wdocs",
+     "summary": "I've fixed most of the 92 items across all 27 in-scope files.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "3/3",
+     "rounds": 1,
+     "minutes": 12.6,
+     "firstRoundPass": true
+    },
+    {
+     "id": "ee773d161024dbfc8c5c23da13733ec53fc4f58a",
+     "kind": "shared",
+     "label": "ee773d1",
+     "at": "2026-10-17T08:14:05Z",
+     "rel": "4 days ago",
+     "rank": 15,
+     "badge": 0,
+     "pr": 300,
+     "title": "Protected grammar \u2014 parse, fold, canonicalize, digest, match"
+    },
+    {
+     "id": "a9c325c8b25f0b97efbb478d9a0cd439f79363d6",
+     "kind": "shared",
+     "label": "a9c325c",
+     "at": "2026-10-17T08:14:15Z",
+     "rel": "4 days ago",
+     "rank": 16,
+     "badge": 0,
+     "pr": 301,
+     "title": "Episode evidence ledger + episodes page (row 187)"
+    },
+    {
+     "id": "f1b326c087cd3f1915f1aacce6f5552b7b9f614d",
+     "kind": "step",
+     "label": "#301",
+     "at": "2026-10-17T08:14:15Z",
+     "rel": "4 days ago",
+     "rank": 17,
+     "badge": 0,
+     "pr": 301,
+     "title": "Episode evidence ledger + episodes page (row 187)"
+    },
+    {
+     "id": "97b9299810775b24b4d3d7a11eb68804062e6d00",
+     "kind": "step",
+     "label": "#302",
+     "at": "2026-10-17T08:14:22Z",
+     "rel": "4 days ago",
+     "rank": 18,
+     "badge": 0,
+     "pr": 302,
+     "title": "Paired shell arm (row 187 evidence loop)"
+    },
+    {
+     "id": "987512d7941ddc5a1a0d9be04299906511e78c17",
+     "kind": "shared",
+     "label": "987512d",
+     "at": "2026-10-17T08:14:22Z",
+     "rel": "4 days ago",
+     "rank": 19,
+     "badge": 0,
+     "pr": 302,
+     "title": "Paired shell arm (row 187 evidence loop)"
+    },
+    {
+     "id": "1172cedfab11129e517c9ca84c849bd53b3e038c",
+     "kind": "shared",
+     "label": "1172ced",
+     "at": "2026-10-17T08:14:31Z",
+     "rel": "4 days ago",
+     "rank": 20,
+     "badge": 0,
+     "pr": 303,
+     "title": "D-WORLD-83 evidence loop (RESOLVED A, attended) + rows 190\u2013196"
+    },
+    {
+     "id": "4af2f51df3d2bd10480ba3a41adbf4055b7df5df",
+     "kind": "step",
+     "label": "#303",
+     "at": "2026-10-17T08:14:31Z",
+     "rel": "4 days ago",
+     "rank": 21,
+     "badge": 0,
+     "pr": 303,
+     "title": "D-WORLD-83 evidence loop (RESOLVED A, attended) + rows 190\u2013196"
+    },
+    {
+     "id": "38adaeecb17a6b9a7b073fb4233e614cda04d659",
+     "kind": "step",
+     "label": "#305",
+     "at": "2026-10-17T11:06:45Z",
+     "rel": "4 days ago",
+     "rank": 22,
+     "badge": 0,
+     "pr": 305,
+     "title": "AILANG v0.54.15 ships World's four upstream asks \u2014 re-measure before row 156 M5c/M5d"
+    },
+    {
+     "id": "cd447c7cd9a17ab37deaa93032362b08cf44cebb",
+     "kind": "shared",
+     "label": "cd447c7",
+     "at": "2026-10-17T11:06:45Z",
+     "rel": "4 days ago",
+     "rank": 23,
+     "badge": 0,
+     "pr": 305,
+     "title": "AILANG v0.54.15 ships World's four upstream asks \u2014 re-measure before row 156 M5c/M5d"
+    },
+    {
+     "id": "05efc0cf0a6843e7a3b937934deb621a9e6214d1",
+     "kind": "step",
+     "label": "#306",
+     "at": "2026-10-17T11:06:49Z",
+     "rel": "4 days ago",
+     "rank": 24,
+     "badge": 0,
+     "pr": 306,
+     "title": "Ledger arms + the first World/shell pair (ADK 03a); friction #9\u2013#10"
+    },
+    {
+     "id": "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+     "kind": "shared",
+     "label": "498683c",
+     "at": "2026-10-17T11:06:49Z",
+     "rel": "4 days ago",
+     "rank": 25,
+     "badge": 0,
+     "pr": 306,
+     "title": "Ledger arms + the first World/shell pair (ADK 03a); friction #9\u2013#10"
+    },
+    {
+     "id": "a0c73053f10092fd511ad22fcf6b95d6a3f896aa",
+     "kind": "shared",
+     "label": "a0c7305",
+     "at": "2026-10-17T17:46:19Z",
+     "rel": "4 days ago",
+     "rank": 26,
+     "badge": 0,
+     "pr": 308,
+     "title": "Tool pin \u2192 AILANG v0.54.15 (World's 4 upstream fixes) \u2014 made through World (w139t)"
+    },
+    {
+     "id": "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+     "kind": "shared",
+     "label": "02bd141",
+     "at": "2026-10-19T08:41:40Z",
+     "rel": "2 days ago",
+     "rank": 28,
+     "badge": 0,
+     "pr": 312,
+     "title": "Row 156: [r4] Unicode-preserving detection redesign + M1c/M1d"
+    },
+    {
+     "id": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+     "kind": "shared",
+     "label": "78f2860",
+     "at": "2026-10-19T12:26:23Z",
+     "rel": "2 days ago",
+     "rank": 30,
+     "badge": 0,
+     "pr": 314,
+     "title": "Row 156 M2a+M2b: protected profile key + startup refusal rows"
+    },
+    {
+     "id": "1f369473045f0770472106c64baf1ce728b66e59",
+     "kind": "shared",
+     "label": "1f36947",
+     "at": "2026-10-19T15:25:19Z",
+     "rel": "2 days ago",
+     "rank": 32,
+     "badge": 0,
+     "pr": 318,
+     "title": "Ailang-read ranges, ailang-delete, toolchain TMPDIR \u2014 made through World (w190)"
+    },
+    {
+     "id": "7a679bfed34fc3fccfe37677c699ba02721b4ca1",
+     "kind": "shared",
+     "label": "7a679bf",
+     "at": "2026-10-19T15:29:24Z",
+     "rel": "2 days ago",
+     "rank": 35,
+     "badge": 0,
+     "pr": 315,
+     "title": "Workspace-exec long-run lane \u2014 start/collect inside D7 (attended draft, 7 OPEN decisions)"
+    },
+    {
+     "id": "53862152280c2928a8a6c1fd78b2c362573f8450",
+     "kind": "shared",
+     "label": "5386215",
+     "at": "2026-10-19T15:29:30Z",
+     "rel": "2 days ago",
+     "rank": 36,
+     "badge": 0,
+     "pr": 316,
+     "title": "World onboarding \u2014 episode start, profile init, ailang-world plugin (attended draft, 5 OPEN decisions)"
+    },
+    {
+     "id": "93410ac3a627e90de097d6f53b50a75fcdeeb9ee",
+     "kind": "shared",
+     "label": "93410ac",
+     "at": "2026-10-19T16:13:17Z",
+     "rel": "2 days ago",
+     "rank": 38,
+     "badge": 0,
+     "pr": 311,
+     "title": "Rows 198 (episode report) + 145 (long-run lane \u2192 evidence row); friction #13\u2013#15 (attended)"
+    },
+    {
+     "id": "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+     "kind": "shared",
+     "label": "b889e05",
+     "at": "2026-10-19T16:13:53Z",
+     "rel": "2 days ago",
+     "rank": 40,
+     "badge": 0,
+     "pr": 317,
+     "title": "Attended rulings D-WORLD-84 (row 145, all A) + D-WORLD-85 (row 189, C,A,C,A,A); row 199 filed"
+    },
+    {
+     "id": "bf0002b1a35371d6984dce6827c652c885599588",
+     "kind": "step",
+     "label": "#317",
+     "at": "2026-10-19T16:13:53Z",
+     "rel": "2 days ago",
+     "rank": 41,
+     "badge": 0,
+     "pr": 317,
+     "title": "Attended rulings D-WORLD-84 (row 145, all A) + D-WORLD-85 (row 189, C,A,C,A,A); row 199 filed"
+    },
+    {
+     "id": "826f2a0badb3599a17bfc48392748606c8d8dfe6",
+     "kind": "shared",
+     "label": "826f2a0",
+     "at": "2026-10-19T17:00:45Z",
+     "rel": "2 days ago",
+     "rank": 42,
+     "badge": 0,
+     "pr": 319,
+     "title": "Row 156 M3a + M3b: protected srt denyWrite + real-srt protected writes"
+    },
+    {
+     "id": "9527bc546026d2169eeed3decc5307fd402f88f9",
+     "kind": "shared",
+     "label": "9527bc5",
+     "at": "2026-10-19T17:25:18Z",
+     "rel": "2 days ago",
+     "rank": 44,
+     "badge": 0,
+     "pr": 320,
+     "title": "Session credentials in their own store \u2014 mint while the daemon serves (made through World, w189a)"
+    },
+    {
+     "id": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+     "kind": "shared",
+     "label": "fd7b325",
+     "at": "2026-10-19T18:52:32Z",
+     "rel": "2 days ago",
+     "rank": 47,
+     "badge": 0,
+     "pr": 321,
+     "title": "Exec profile bound at mint, and `episode start` (through World, w189b)"
+    },
+    {
+     "id": "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+     "kind": "shared",
+     "label": "c9ab49b",
+     "at": "2026-10-19T20:31:11Z",
+     "rel": "2 days ago",
+     "rank": 49,
+     "badge": 0,
+     "pr": 322,
+     "title": "Protected git filter preflight + bounded integrity checker"
+    },
+    {
+     "id": "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+     "kind": "shared",
+     "label": "0adeb70",
+     "at": "2026-10-20T00:29:49Z",
+     "rel": "yesterday 00:29",
+     "rank": 50,
+     "badge": 0,
+     "pr": 325,
+     "title": "Startup probe arm 8 (protected-write prevention + Linux detection)"
+    },
+    {
+     "id": "96d49010022b336352240fdee17a11981fe4ba0a",
+     "kind": "shared",
+     "label": "96d4901",
+     "at": "2026-10-20T04:06:33Z",
+     "rel": "yesterday 04:06",
+     "rank": 52,
+     "badge": 0,
+     "pr": 326,
+     "title": "Protected AILANG policies in every variant"
+    },
+    {
+     "id": "fe2cc96a7881dfa440121b3ae8c5aa7ea603d548",
+     "kind": "shared",
+     "label": "fe2cc96",
+     "at": "2026-10-20T06:18:58Z",
+     "rel": "yesterday 06:18",
+     "rank": 55,
+     "badge": 0,
+     "pr": 324,
+     "title": "`profile init` \u2014 propose an exec profile from a repo (through World, w189c)"
+    },
+    {
+     "id": "0ee1945ffba795812f06dce95998b646adfac343",
+     "kind": "shared",
+     "label": "0ee1945",
+     "at": "2026-10-20T06:25:45Z",
+     "rel": "yesterday 06:25",
+     "rank": 56,
+     "badge": 0,
+     "pr": 323,
+     "title": "`episode report` \u2014 one-pass episode summary from World's store (through World, w198)"
+    },
+    {
+     "id": "7fb99dae21d0416b09eed95d2da1bfe04e95aa1d",
+     "kind": "shared",
+     "label": "7fb99da",
+     "at": "2026-10-20T08:22:02Z",
+     "rel": "yesterday 08:22",
+     "rank": 59,
+     "badge": 0,
+     "pr": 328,
+     "title": "Episode profile protected set in the AILANG policy"
+    },
+    {
+     "id": "90035557b2012895551867c0ebe2f36b853aac09",
+     "kind": "shared",
+     "label": "9003555",
+     "at": "2026-10-20T08:31:33Z",
+     "rel": "yesterday 08:31",
+     "rank": 60,
+     "badge": 0,
+     "pr": 327,
+     "title": "The ailang-world plugin and its CI help-check"
+    },
+    {
+     "id": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+     "kind": "shared",
+     "label": "0ffbb9c",
+     "at": "2026-10-20T10:49:48Z",
+     "rel": "yesterday 10:49",
+     "rank": 62,
+     "badge": 0,
+     "pr": 329,
+     "title": "The Use World on your repo page"
+    },
+    {
+     "id": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+     "kind": "shared",
+     "label": "1998f5e",
+     "at": "2026-10-20T12:25:50Z",
+     "rel": "yesterday 12:25",
+     "rank": 64,
+     "badge": 0,
+     "pr": 330,
+     "title": "Row 156: V25 re-measure (v0.54.15 refuses every alias) + M5e real-tool alias pin; M5c/M5d held on D-WORLD-86"
+    },
+    {
+     "id": "49ac0d15c8c2ec5f6d84c0fdb19555b2e4e24eab",
+     "kind": "step",
+     "label": "#331",
+     "at": "2026-10-20T14:56:23Z",
+     "rel": "yesterday 14:56",
+     "rank": 66,
+     "badge": 0,
+     "pr": 331,
+     "title": "W-world-os-surface r2 \u2014 approved for build (D-WORLD-87)"
+    },
+    {
+     "id": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+     "kind": "shared",
+     "label": "adffe4c",
+     "at": "2026-10-20T14:56:23Z",
+     "rel": "yesterday 14:56",
+     "rank": 67,
+     "badge": 0,
+     "pr": 331,
+     "title": "W-world-os-surface r2 \u2014 approved for build (D-WORLD-87)"
+    },
+    {
+     "id": "17c283243260fdf7ec1a5a23197f40a872e20282",
+     "kind": "shared",
+     "label": "17c2832",
+     "at": "2026-10-20T15:13:03Z",
+     "rel": "yesterday 15:13",
+     "rank": 69,
+     "badge": 0,
+     "pr": 332,
+     "title": "W-world-os-surface S1 sprint plan"
+    },
+    {
+     "id": "afabe48be91dc5a30c4bca6eed5245de76c1fe9f",
+     "kind": "shared",
+     "label": "afabe48",
+     "at": "2026-10-20T16:58:07Z",
+     "rel": "yesterday 16:58",
+     "rank": 70,
+     "badge": 0,
+     "pr": 333,
+     "title": "V24 measured on installed worktrees; phase bound 2937 ms"
+    },
+    {
+     "id": "d7036fba7e9cd542c8731881fd8cb7a51b824da9",
+     "kind": "shared",
+     "label": "d7036fb",
+     "at": "2026-10-20T17:54:52Z",
+     "rel": "yesterday 17:54",
+     "rank": 72,
+     "badge": 0,
+     "pr": 334,
+     "title": "Rename row 188 to w-world-os-surface"
+    },
+    {
+     "id": "5d26a0d06dd91bc09825895c18859ed0cd141bc6",
+     "kind": "shared",
+     "label": "5d26a0d",
+     "at": "2026-10-20T18:02:03Z",
+     "rel": "yesterday 18:02",
+     "rank": 75,
+     "badge": 0,
+     "pr": 335,
+     "title": "The surface index from git history"
+    },
+    {
+     "id": "d7c647d806c0be8bb33f58201267d75bc448211e",
+     "kind": "shared",
+     "label": "d7c647d",
+     "at": "2026-10-20T18:40:10Z",
+     "rel": "yesterday 18:40",
+     "rank": 76,
+     "badge": 0,
+     "pr": 336,
+     "title": "The episode report lists the files read"
+    },
+    {
+     "id": "2284096eedfd784751d462f06f322106de1a39b6",
+     "kind": "shared",
+     "label": "2284096",
+     "at": "2026-10-20T19:51:59Z",
+     "rel": "yesterday 19:51",
+     "rank": 78,
+     "badge": 0,
+     "pr": 337,
+     "title": "The surface index's episode facts"
+    },
+    {
+     "id": "7fa8b8ee8157f593fd352eac9da434c2c2ff4ab6",
+     "kind": "shared",
+     "label": "7fa8b8e",
+     "at": "2026-10-20T21:12:34Z",
+     "rel": "yesterday 21:12",
+     "rank": 80,
+     "badge": 0,
+     "pr": 338,
+     "title": "Immutable protected baseline at NewExecHandler + bounded record shape"
+    },
+    {
+     "id": "5e8bbb954bf78d64b6f9eb3ca7f92180b84be002",
+     "kind": "shared",
+     "label": "5e8bbb9",
+     "at": "2026-10-21T00:29:23Z",
+     "rel": "15 h ago",
+     "rank": 83,
+     "badge": 0,
+     "pr": 339,
+     "title": "Before/after protected integrity in exec results"
+    },
+    {
+     "id": "782ef02e65789a7791c94f1025e2ccce4f5fd141",
+     "kind": "shared",
+     "label": "782ef02",
+     "at": "2026-10-21T05:00:26Z",
+     "rel": "10 h ago",
+     "rank": 84,
+     "badge": 0,
+     "pr": 340,
+     "title": "Tamper, ignored-file, index-flag and moved-HEAD detection through the handler; pinned replay"
+    },
+    {
+     "id": "800cca381b6c6af6a234fc1079788e5f46273124",
+     "kind": "shared",
+     "label": "800cca3",
+     "at": "2026-10-21T08:43:51Z",
+     "rel": "6 h ago",
+     "rank": 87,
+     "badge": 0,
+     "pr": 342,
+     "title": "Serve --surface-index and GET /surface/index.json"
+    },
+    {
+     "id": "15442605cd56e6a45aeb62cb741dfd92c1774d49",
+     "kind": "shared",
+     "label": "1544260",
+     "at": "2026-10-21T08:48:11Z",
+     "rel": "6 h ago",
+     "rank": 88,
+     "badge": 0,
+     "pr": 341,
+     "title": "Why shows intact, changed, not-checked and none-declared protected exec runs"
+    },
+    {
+     "id": "ea860b0f4ca4c7305542e99c4c720be5e0c2e80b",
+     "kind": "shared",
+     "label": "ea860b0",
+     "at": "2026-10-21T10:47:53Z",
+     "rel": "4 h ago",
+     "rank": 91,
+     "badge": 0,
+     "pr": 343,
+     "title": "GET /surface \u2014 the world timeline"
+    },
+    {
+     "id": "9c3c38bd94fa5f40341d8abcd97ac03e21fc19f2",
+     "kind": "shared",
+     "label": "9c3c38b",
+     "at": "2026-10-21T12:24:42Z",
+     "rel": "3 h ago",
+     "rank": 92,
+     "badge": 0,
+     "pr": 344,
+     "title": "The brane stack, front card open"
+    }
+   ],
+   "name": "Shared world",
+   "goal": "Everything merged into dev: the one world every brane starts from and returns to."
+  },
+  {
+   "key": "row-188",
+   "title": "w-world-os-surface",
+   "row": 188,
+   "glyph": "square",
+   "colour": "#2F6690",
+   "states": [
+    {
+     "id": "150b3cf2380450b99db7f6f0a7a373099c78e274",
+     "kind": "step",
+     "label": "#332",
+     "at": "2026-10-20T15:13:03Z",
+     "rel": "yesterday 15:13",
+     "rank": 68,
+     "badge": 0,
+     "pr": 332,
+     "title": "W-world-os-surface S1 sprint plan"
+    },
+    {
+     "id": "f1b8936ec2453bedb602acd1d87265687366518b",
+     "kind": "step",
+     "label": "#334",
+     "at": "2026-10-20T17:54:52Z",
+     "rel": "yesterday 17:54",
+     "rank": 73,
+     "badge": 0,
+     "pr": 334,
+     "title": "Rename row 188 to w-world-os-surface"
+    },
+    {
+     "id": "0b60e442a27eb6d12628f7986e72ca424008c79f",
+     "kind": "step",
+     "label": "w188a",
+     "at": "2026-10-20T18:02:03Z",
+     "rel": "yesterday 18:02",
+     "rank": 74,
+     "badge": 1,
+     "pr": 335,
+     "title": "The surface index from git history",
+     "episode": "w188a",
+     "summary": "M0a is done: the host/surface package, the ailang-worldd surface-index subcommand and the sprint plan split are all in place.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "8/8",
+     "rounds": 2,
+     "minutes": 10.6,
+     "firstRoundPass": false
+    },
+    {
+     "id": "f5b101644372e2f5a842f0dd1acb817248961af9",
+     "kind": "step",
+     "label": "w188b",
+     "at": "2026-10-20T18:40:10Z",
+     "rel": "yesterday 18:40",
+     "rank": 77,
+     "badge": 1,
+     "pr": 336,
+     "title": "The episode report lists the files read",
+     "episode": "w188b",
+     "summary": "The episode report now has a reads field, taken from World's own invocation records.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "8/8",
+     "rounds": 1,
+     "minutes": 4.2,
+     "firstRoundPass": true
+    },
+    {
+     "id": "f8de97db7af026fc5d8eca4cce32250d491f319c",
+     "kind": "step",
+     "label": "w188c",
+     "at": "2026-10-20T19:51:59Z",
+     "rel": "yesterday 19:51",
+     "rank": 79,
+     "badge": 1,
+     "pr": 337,
+     "title": "The surface index's episode facts",
+     "episode": "w188c",
+     "summary": "M0c is in place. The surface index now gains steps[], files{}, reads{} and decisions[] when it is built with --rig.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "7/8",
+     "rounds": 1,
+     "minutes": 11.7,
+     "firstRoundPass": false
+    },
+    {
+     "id": "666ea33b2a038717eac62a20458d2e70bf71710c",
+     "kind": "step",
+     "label": "w188d",
+     "at": "2026-10-21T08:43:51Z",
+     "rel": "6 h ago",
+     "rank": 86,
+     "badge": 1,
+     "pr": 342,
+     "title": "Serve --surface-index and GET /surface/index.json",
+     "episode": "w188d",
+     "summary": "Implemented M1.  - Added optional serve --surface-index <file, including usage and help.",
+     "agent": "codex",
+     "model": "gpt-6.1-sol",
+     "graders": "7/8",
+     "rounds": 1,
+     "minutes": 1.8,
+     "firstRoundPass": false
+    },
+    {
+     "id": "8b282b0ad6b2bedbe3b2afc96ecede945f91abe4",
+     "kind": "step",
+     "label": "w188e",
+     "at": "2026-10-21T10:47:53Z",
+     "rel": "4 h ago",
+     "rank": 90,
+     "badge": 1,
+     "pr": 343,
+     "title": "GET /surface \u2014 the world timeline",
+     "episode": "w188e",
+     "summary": "GET /surface is built: the new host/surfacepage package lays out and renders the world timeline from the surface index, and the daemon serves it.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "7/8",
+     "rounds": 2,
+     "minutes": 13.4,
+     "firstRoundPass": true
+    },
+    {
+     "id": "c3acfcff4c1c01cedadeae6d9877156243acc149",
+     "kind": "step",
+     "label": "w188f",
+     "at": "2026-10-21T12:24:42Z",
+     "rel": "3 h ago",
+     "rank": 93,
+     "badge": 1,
+     "pr": 344,
+     "title": "The brane stack, front card open",
+     "episode": "w188f",
+     "summary": "Implemented M3.  - Types: Stack holds the front card, earlier/later columns, rail and facts.",
+     "agent": "codex",
+     "model": "gpt-6.1-sol",
+     "graders": "8/8",
+     "rounds": 3,
+     "minutes": 9.9,
+     "firstRoundPass": false
+    }
+   ],
+   "name": "World os surface",
+   "goal": "The human surface is a browser tab and a tty prompt.",
+   "stepsLanded": 8,
+   "milestones": {
+    "done": 6,
+    "total": 9,
+    "names": [
+     "M0a",
+     "M0b",
+     "M0c",
+     "M1",
+     "M2",
+     "M3",
+     "M4a",
+     "M4b",
+     "M5"
+    ],
+    "doneNames": [
+     "M0a",
+     "M0b",
+     "M0c",
+     "M1",
+     "M2",
+     "M3"
+    ],
+    "inReview": "M4a",
+    "next": "M4b"
+   }
+  },
+  {
+   "key": "row-156",
+   "title": "w-exec-protected-test-paths",
+   "row": 156,
+   "glyph": "triangle",
+   "colour": "#3F7A5E",
+   "states": [
+    {
+     "id": "b7666b00877a360ba34cb96cbc1e7ee248342360",
+     "kind": "step",
+     "label": "#300",
+     "at": "2026-10-17T08:14:05Z",
+     "rel": "4 days ago",
+     "rank": 14,
+     "badge": 0,
+     "pr": 300,
+     "title": "Protected grammar \u2014 parse, fold, canonicalize, digest, match"
+    },
+    {
+     "id": "c6a43dd6493ce39c4485819ebdb59f7ab8ed687c",
+     "kind": "step",
+     "label": "#312",
+     "at": "2026-10-19T08:41:40Z",
+     "rel": "2 days ago",
+     "rank": 29,
+     "badge": 0,
+     "pr": 312,
+     "title": "Row 156: [r4] Unicode-preserving detection redesign + M1c/M1d"
+    },
+    {
+     "id": "c8429a5532a13824e1a72b549c91a38bcd076c10",
+     "kind": "step",
+     "label": "#314",
+     "at": "2026-10-19T12:26:23Z",
+     "rel": "2 days ago",
+     "rank": 31,
+     "badge": 0,
+     "pr": 314,
+     "title": "Row 156 M2a+M2b: protected profile key + startup refusal rows"
+    },
+    {
+     "id": "96637566d11ab0f37af16c94b8ac28b597f5d617",
+     "kind": "step",
+     "label": "#319",
+     "at": "2026-10-19T17:00:45Z",
+     "rel": "2 days ago",
+     "rank": 43,
+     "badge": 0,
+     "pr": 319,
+     "title": "Row 156 M3a + M3b: protected srt denyWrite + real-srt protected writes"
+    },
+    {
+     "id": "985bee9a4d86380cd13d730ae1ed0ccd6bbc6d43",
+     "kind": "step",
+     "label": "#322",
+     "at": "2026-10-19T20:31:11Z",
+     "rel": "2 days ago",
+     "rank": 48,
+     "badge": 0,
+     "pr": 322,
+     "title": "Protected git filter preflight + bounded integrity checker"
+    },
+    {
+     "id": "1bbf57514e13f28f30cb3dc4042353d5d309452a",
+     "kind": "step",
+     "label": "#325",
+     "at": "2026-10-20T00:29:49Z",
+     "rel": "yesterday 00:29",
+     "rank": 51,
+     "badge": 0,
+     "pr": 325,
+     "title": "Startup probe arm 8 (protected-write prevention + Linux detection)"
+    },
+    {
+     "id": "b0f989f9a8afb3ac5bd34b936cae1641cf421be9",
+     "kind": "step",
+     "label": "#326",
+     "at": "2026-10-20T04:06:33Z",
+     "rel": "yesterday 04:06",
+     "rank": 53,
+     "badge": 0,
+     "pr": 326,
+     "title": "Protected AILANG policies in every variant"
+    },
+    {
+     "id": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+     "kind": "step",
+     "label": "#328",
+     "at": "2026-10-20T08:22:02Z",
+     "rel": "yesterday 08:22",
+     "rank": 58,
+     "badge": 0,
+     "pr": 328,
+     "title": "Episode profile protected set in the AILANG policy"
+    },
+    {
+     "id": "debb8ef81b00c98b95e1bcb6bd8c06f48f07d1af",
+     "kind": "step",
+     "label": "#330",
+     "at": "2026-10-20T12:25:50Z",
+     "rel": "yesterday 12:25",
+     "rank": 65,
+     "badge": 0,
+     "pr": 330,
+     "title": "Row 156: V25 re-measure (v0.54.15 refuses every alias) + M5e real-tool alias pin; M5c/M5d held on D-WORLD-86"
+    },
+    {
+     "id": "be0d47e543ff296046cc775b7e7f4a05fb29cc34",
+     "kind": "step",
+     "label": "#333",
+     "at": "2026-10-20T16:58:07Z",
+     "rel": "yesterday 16:58",
+     "rank": 71,
+     "badge": 0,
+     "pr": 333,
+     "title": "V24 measured on installed worktrees; phase bound 2937 ms"
+    },
+    {
+     "id": "bfc858982292c54f2f4cc8af1de01570554f6614",
+     "kind": "step",
+     "label": "#338",
+     "at": "2026-10-20T21:12:34Z",
+     "rel": "yesterday 21:12",
+     "rank": 81,
+     "badge": 0,
+     "pr": 338,
+     "title": "Immutable protected baseline at NewExecHandler + bounded record shape"
+    },
+    {
+     "id": "33fdd8ea66cae1a66fd131231ba85f572ea01a24",
+     "kind": "step",
+     "label": "#339",
+     "at": "2026-10-21T00:29:23Z",
+     "rel": "15 h ago",
+     "rank": 82,
+     "badge": 0,
+     "pr": 339,
+     "title": "Before/after protected integrity in exec results"
+    },
+    {
+     "id": "f9cfa20cb1ffd98a1c79c70cc7b703bc7ac3db63",
+     "kind": "step",
+     "label": "#340",
+     "at": "2026-10-21T05:00:26Z",
+     "rel": "10 h ago",
+     "rank": 85,
+     "badge": 0,
+     "pr": 340,
+     "title": "Tamper, ignored-file, index-flag and moved-HEAD detection through the handler; pinned replay"
+    },
+    {
+     "id": "430cb6ec8130091d0bd95d0fd09d7815e2c8f7e8",
+     "kind": "step",
+     "label": "#341",
+     "at": "2026-10-21T08:48:11Z",
+     "rel": "6 h ago",
+     "rank": 89,
+     "badge": 0,
+     "pr": 341,
+     "title": "Why shows intact, changed, not-checked and none-declared protected exec runs"
+    }
+   ],
+   "name": "Exec protected test paths",
+   "goal": null,
+   "stepsLanded": 14
+  },
+  {
+   "key": "row-189",
+   "title": "w-world-onboarding",
+   "row": 189,
+   "glyph": "diamond",
+   "colour": "#6B4F8A",
+   "states": [
+    {
+     "id": "59bbded417388861f3acae45c07eb9046f3cacaa",
+     "kind": "step",
+     "label": "#316",
+     "at": "2026-10-19T15:29:30Z",
+     "rel": "2 days ago",
+     "rank": 37,
+     "badge": 0,
+     "pr": 316,
+     "title": "World onboarding \u2014 episode start, profile init, ailang-world plugin (attended draft, 5 OPEN decisions)"
+    },
+    {
+     "id": "ebe083b24a621565935276198660dd3a8cde6f2c",
+     "kind": "step",
+     "label": "w189a",
+     "at": "2026-10-19T17:25:18Z",
+     "rel": "2 days ago",
+     "rank": 45,
+     "badge": 1,
+     "pr": 320,
+     "title": "Session credentials in their own store \u2014 mint while the daemon serves (made through World, w189a)",
+     "episode": "w189a",
+     "summary": "Session credentials now live in their own store with their own writer lock.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "5/5",
+     "rounds": 1,
+     "minutes": 37.3,
+     "firstRoundPass": true
+    },
+    {
+     "id": "5a8af7cd21360766d992662ddcf19a8928387c64",
+     "kind": "step",
+     "label": "w189b",
+     "at": "2026-10-19T18:52:32Z",
+     "rel": "2 days ago",
+     "rank": 46,
+     "badge": 1,
+     "pr": 321,
+     "title": "Exec profile bound at mint, and `episode start` (through World, w189b)",
+     "episode": "w189b",
+     "summary": "I've built M2 + M3a + M3b: an episode is now bound to its exec profile when it is minted, so a new episode can use workspace-exec without restarting the daemon, and ailang-worldd episode start exists.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "8/8",
+     "rounds": 2,
+     "minutes": 26.8,
+     "firstRoundPass": false
+    },
+    {
+     "id": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+     "kind": "step",
+     "label": "w189c",
+     "at": "2026-10-20T06:18:58Z",
+     "rel": "yesterday 06:18",
+     "rank": 54,
+     "badge": 1,
+     "pr": 324,
+     "title": "`profile init` \u2014 propose an exec profile from a repo (through World, w189c)",
+     "episode": "w189c",
+     "summary": "ailang-worldd profile init is built and all 9 of its tests pass.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "7/8",
+     "rounds": 3,
+     "minutes": 18.4,
+     "firstRoundPass": false
+    },
+    {
+     "id": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+     "kind": "step",
+     "label": "w189d",
+     "at": "2026-10-20T08:31:33Z",
+     "rel": "yesterday 08:31",
+     "rank": 61,
+     "badge": 1,
+     "pr": 327,
+     "title": "The ailang-world plugin and its CI help-check",
+     "episode": "w189d",
+     "summary": "M5 is built. The plugin, both skills, the three print-only commands and TestPluginCommandsMatchTheCLIHelp in both CLI packages are in place, and the help-check passes on the clean tree.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "7/8",
+     "rounds": 2,
+     "minutes": 6.8,
+     "firstRoundPass": false
+    },
+    {
+     "id": "652c341d5072c5f49fefe29f9409c93a5119a5be",
+     "kind": "step",
+     "label": "w189e",
+     "at": "2026-10-20T10:49:48Z",
+     "rel": "yesterday 10:49",
+     "rank": 63,
+     "badge": 1,
+     "pr": 329,
+     "title": "The Use World on your repo page",
+     "episode": "w189e",
+     "summary": "I've written the \"Use World on your repo\" page, linked it from the three places, added the help-check test and updated the onboarding doc \u00a78.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "8/8",
+     "rounds": 1,
+     "minutes": 3.5,
+     "firstRoundPass": true
+    }
+   ],
+   "name": "World onboarding",
+   "goal": "Using World on another project is a six-step operator procedure, and no agent can be asked to do it.",
+   "stepsLanded": 6
+  },
+  {
+   "key": "row-198",
+   "title": "w-episode-report",
+   "row": 198,
+   "glyph": "hexagon",
+   "colour": "#8A5A2B",
+   "states": [
+    {
+     "id": "de79d9868fc88faead0fa40dc7fd2f8e282de07e",
+     "kind": "step",
+     "label": "#311",
+     "at": "2026-10-19T16:13:17Z",
+     "rel": "2 days ago",
+     "rank": 39,
+     "badge": 0,
+     "pr": 311,
+     "title": "Rows 198 (episode report) + 145 (long-run lane \u2192 evidence row); friction #13\u2013#15 (attended)"
+    },
+    {
+     "id": "e42f030f9fb344c16789a8f888214fbe7bee7e41",
+     "kind": "step",
+     "label": "w198",
+     "at": "2026-10-20T06:25:45Z",
+     "rel": "yesterday 06:25",
+     "rank": 57,
+     "badge": 1,
+     "pr": 323,
+     "title": "`episode report` \u2014 one-pass episode summary from World's store (through World, w198)",
+     "episode": "w198",
+     "summary": "I've added ailang-worldd episode report, its REST route, the --addr fix and the ledger change.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "8/8",
+     "rounds": 1,
+     "minutes": 16.6,
+     "firstRoundPass": true
+    }
+   ],
+   "name": "Episode report",
+   "goal": "World holds a complete, agent-independent record of an episode, but nothing summarises it.",
+   "stepsLanded": 2
+  },
+  {
+   "key": "row-145",
+   "title": "w-workspace-exec-long-run-lane",
+   "row": 145,
+   "glyph": "pentagon",
+   "colour": "#2B7A8A",
+   "states": [
+    {
+     "id": "243106a57c0dea99eef99cdb2de7bbec11ef7c6c",
+     "kind": "step",
+     "label": "#315",
+     "at": "2026-10-19T15:29:24Z",
+     "rel": "2 days ago",
+     "rank": 34,
+     "badge": 0,
+     "pr": 315,
+     "title": "Workspace-exec long-run lane \u2014 start/collect inside D7 (attended draft, 7 OPEN decisions)"
+    }
+   ],
+   "name": "Workspace exec long run lane",
+   "goal": null,
+   "stepsLanded": 1
+  },
+  {
+   "key": "row-190",
+   "title": "w-ailang-read-ranges",
+   "row": 190,
+   "glyph": "star",
+   "colour": "#7A2B5E",
+   "states": [
+    {
+     "id": "dfb9f4d2646e43b3bf0f0e9afe6bc2df98f39270",
+     "kind": "step",
+     "label": "w190",
+     "at": "2026-10-19T15:25:19Z",
+     "rel": "2 days ago",
+     "rank": 33,
+     "badge": 1,
+     "pr": 318,
+     "title": "Ailang-read ranges, ailang-delete, toolchain TMPDIR \u2014 made through World (w190)",
+     "episode": "w190",
+     "summary": "All three rows are implemented, but several required tests could not run in this sandbox (listed below); the operator's unsandboxed run is the real check.",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "5/5",
+     "rounds": 3,
+     "minutes": 34.6,
+     "firstRoundPass": false
+    }
+   ],
+   "name": "Ailang read ranges",
+   "goal": null,
+   "stepsLanded": 1
+  },
+  {
+   "key": "row-139",
+   "title": "w-interpreter-epoch-upgrade-path",
+   "row": 139,
+   "glyph": "square",
+   "colour": "#526677",
+   "states": [
+    {
+     "id": "a2730e4486b8376c8db94c572e22ef0a2d3f180e",
+     "kind": "step",
+     "label": "#308",
+     "at": "2026-10-17T17:46:19Z",
+     "rel": "4 days ago",
+     "rank": 27,
+     "badge": 0,
+     "pr": 308,
+     "title": "Tool pin \u2192 AILANG v0.54.15 (World's 4 upstream fixes) \u2014 made through World (w139t)"
+    }
+   ],
+   "name": "Interpreter epoch upgrade path",
+   "goal": "Replay supports mixed interpreters, but there is no production operation to move the interpreter pin.",
+   "stepsLanded": 1
+  },
+  {
+   "key": "row-114",
+   "title": "w-provenance-teeth-unseeded-baselined-walk",
+   "row": 114,
+   "glyph": "triangle",
+   "colour": "#526677",
+   "states": [
+    {
+     "id": "7003e3ebe85fa492806ef2acf218f422813cfcf0",
+     "kind": "step",
+     "label": "#286",
+     "at": "2026-10-16T19:40:23Z",
+     "rel": "5 days ago",
+     "rank": 2,
+     "badge": 0,
+     "pr": 286,
+     "title": "Row 114 (attended): Q3 + K5 Q4\u2013Q6 \u2014 2 of \u22653 qualifying walks (Q4, Q6); F-7 why hides edit paths"
+    },
+    {
+     "id": "47cae3f6b13227671751085e912918da8fb82374",
+     "kind": "step",
+     "label": "#293",
+     "at": "2026-10-16T20:08:05Z",
+     "rel": "5 days ago",
+     "rank": 8,
+     "badge": 0,
+     "pr": 293,
+     "title": "Row 114 (attended): Q8 PASS \u2192 3 of \u22653 qualifying walks; D-WORLD-80 OPEN (clause 5 MET?)"
+    }
+   ],
+   "name": "Provenance teeth unseeded baselined walk",
+   "goal": "Row 92 proved retrieval, not diagnosis: its four walks read answers the sprint had seeded, and every pre-World baseline is `unmeasured`.",
+   "stepsLanded": 2
+  },
+  {
+   "key": "row-185",
+   "title": "w-episode-requires-git",
+   "row": 185,
+   "glyph": "diamond",
+   "colour": "#526677",
+   "states": [
+    {
+     "id": "9e997ff4cb0ec7b34df04f9cb70a9e36c9097f39",
+     "kind": "step",
+     "label": "w185",
+     "at": "2026-10-16T19:40:39Z",
+     "rel": "5 days ago",
+     "rank": 4,
+     "badge": 1,
+     "pr": 291,
+     "title": "Session new refuses non-git episodes unless --allow-non-git \u2014 built inside World (trial w185)",
+     "episode": "w185",
+     "summary": "I've implemented row 185, but I changed two parts of the ruling, and Mark should confirm both (details under \"Where I departed from the ruling\").",
+     "agent": "claude",
+     "model": "claude-opus-5-5",
+     "graders": "3/3",
+     "rounds": 1,
+     "minutes": 5.5,
+     "firstRoundPass": true
+    }
+   ],
+   "name": "Episode requires git",
+   "goal": null,
+   "stepsLanded": 1
+  }
+ ],
+ "links": [
+  {
+   "from": "725ad5a292eb900ce0faa41fbff3121bfd4c7c8f",
+   "to": "68403eaf5233ecafc657c10c1e00cc26682c8697",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "7003e3ebe85fa492806ef2acf218f422813cfcf0",
+   "to": "dab0639f983d7b414d75a031f81db2cd8e0a22d5",
+   "colour": "#526677"
+  },
+  {
+   "from": "9e997ff4cb0ec7b34df04f9cb70a9e36c9097f39",
+   "to": "b95e9e2cf0bdadf26d4b7612ac159e8fe7f7f398",
+   "colour": "#526677"
+  },
+  {
+   "from": "fc485916a9c170457fd4594ab48b5e04542472f0",
+   "to": "4db3af15f9482ce82f08e9a30d96947b57a6e707",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "b95e9e2cf0bdadf26d4b7612ac159e8fe7f7f398",
+   "to": "fc485916a9c170457fd4594ab48b5e04542472f0",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "47cae3f6b13227671751085e912918da8fb82374",
+   "to": "605c0eba839128393768e120a9803b800f9cc046",
+   "colour": "#526677"
+  },
+  {
+   "from": "b95e9e2cf0bdadf26d4b7612ac159e8fe7f7f398",
+   "to": "47cae3f6b13227671751085e912918da8fb82374",
+   "colour": "#526677"
+  },
+  {
+   "from": "e2711dc90a6a2a915c3ab600424d485410f87fe3",
+   "to": "e0615e182e5185ba7ab3c2398a6835ca508c8aad",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "605c0eba839128393768e120a9803b800f9cc046",
+   "to": "e2711dc90a6a2a915c3ab600424d485410f87fe3",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "fd03d78268228ae8bdcb4c7929206f1c22061ac1",
+   "to": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "605c0eba839128393768e120a9803b800f9cc046",
+   "to": "fd03d78268228ae8bdcb4c7929206f1c22061ac1",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "b7666b00877a360ba34cb96cbc1e7ee248342360",
+   "to": "ee773d161024dbfc8c5c23da13733ec53fc4f58a",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+   "to": "b7666b00877a360ba34cb96cbc1e7ee248342360",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "f1b326c087cd3f1915f1aacce6f5552b7b9f614d",
+   "to": "a9c325c8b25f0b97efbb478d9a0cd439f79363d6",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+   "to": "f1b326c087cd3f1915f1aacce6f5552b7b9f614d",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "97b9299810775b24b4d3d7a11eb68804062e6d00",
+   "to": "987512d7941ddc5a1a0d9be04299906511e78c17",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+   "to": "97b9299810775b24b4d3d7a11eb68804062e6d00",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "4af2f51df3d2bd10480ba3a41adbf4055b7df5df",
+   "to": "1172cedfab11129e517c9ca84c849bd53b3e038c",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "6731d87e745e9bbc7a88bdd12b5b442d9844c2cf",
+   "to": "4af2f51df3d2bd10480ba3a41adbf4055b7df5df",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "38adaeecb17a6b9a7b073fb4233e614cda04d659",
+   "to": "cd447c7cd9a17ab37deaa93032362b08cf44cebb",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "05efc0cf0a6843e7a3b937934deb621a9e6214d1",
+   "to": "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "a2730e4486b8376c8db94c572e22ef0a2d3f180e",
+   "to": "a0c73053f10092fd511ad22fcf6b95d6a3f896aa",
+   "colour": "#526677"
+  },
+  {
+   "from": "498683c4e81f29f23a1e9885716a5a7cdbeb4595",
+   "to": "a2730e4486b8376c8db94c572e22ef0a2d3f180e",
+   "colour": "#526677"
+  },
+  {
+   "from": "c6a43dd6493ce39c4485819ebdb59f7ab8ed687c",
+   "to": "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "c8429a5532a13824e1a72b549c91a38bcd076c10",
+   "to": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "02bd141068ce6a1b21179d3a9469e2183b83c3be",
+   "to": "c8429a5532a13824e1a72b549c91a38bcd076c10",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "dfb9f4d2646e43b3bf0f0e9afe6bc2df98f39270",
+   "to": "1f369473045f0770472106c64baf1ce728b66e59",
+   "colour": "#7A2B5E"
+  },
+  {
+   "from": "243106a57c0dea99eef99cdb2de7bbec11ef7c6c",
+   "to": "7a679bfed34fc3fccfe37677c699ba02721b4ca1",
+   "colour": "#2B7A8A"
+  },
+  {
+   "from": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+   "to": "243106a57c0dea99eef99cdb2de7bbec11ef7c6c",
+   "colour": "#2B7A8A"
+  },
+  {
+   "from": "59bbded417388861f3acae45c07eb9046f3cacaa",
+   "to": "53862152280c2928a8a6c1fd78b2c362573f8450",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "78f2860ca9530dfbe5b27045e8a6c0937fc2d9dd",
+   "to": "59bbded417388861f3acae45c07eb9046f3cacaa",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "de79d9868fc88faead0fa40dc7fd2f8e282de07e",
+   "to": "93410ac3a627e90de097d6f53b50a75fcdeeb9ee",
+   "colour": "#8A5A2B"
+  },
+  {
+   "from": "1f369473045f0770472106c64baf1ce728b66e59",
+   "to": "de79d9868fc88faead0fa40dc7fd2f8e282de07e",
+   "colour": "#8A5A2B"
+  },
+  {
+   "from": "bf0002b1a35371d6984dce6827c652c885599588",
+   "to": "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "de79d9868fc88faead0fa40dc7fd2f8e282de07e",
+   "to": "bf0002b1a35371d6984dce6827c652c885599588",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "96637566d11ab0f37af16c94b8ac28b597f5d617",
+   "to": "826f2a0badb3599a17bfc48392748606c8d8dfe6",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "b889e0581e81979d0a83a6a0e4dd0456f9fa32a1",
+   "to": "96637566d11ab0f37af16c94b8ac28b597f5d617",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "ebe083b24a621565935276198660dd3a8cde6f2c",
+   "to": "9527bc546026d2169eeed3decc5307fd402f88f9",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "53862152280c2928a8a6c1fd78b2c362573f8450",
+   "to": "ebe083b24a621565935276198660dd3a8cde6f2c",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "5a8af7cd21360766d992662ddcf19a8928387c64",
+   "to": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "9527bc546026d2169eeed3decc5307fd402f88f9",
+   "to": "5a8af7cd21360766d992662ddcf19a8928387c64",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "985bee9a4d86380cd13d730ae1ed0ccd6bbc6d43",
+   "to": "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+   "to": "985bee9a4d86380cd13d730ae1ed0ccd6bbc6d43",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "1bbf57514e13f28f30cb3dc4042353d5d309452a",
+   "to": "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "c9ab49b71d5d696b4a95f5f56c4ce70bfbdab978",
+   "to": "1bbf57514e13f28f30cb3dc4042353d5d309452a",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "b0f989f9a8afb3ac5bd34b936cae1641cf421be9",
+   "to": "96d49010022b336352240fdee17a11981fe4ba0a",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "0adeb70398a1de4ff26f488eb8e384fbe866672a",
+   "to": "b0f989f9a8afb3ac5bd34b936cae1641cf421be9",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+   "to": "fe2cc96a7881dfa440121b3ae8c5aa7ea603d548",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "fd7b325fe7fcdb5204cb95debd0c5ff57d22e8c3",
+   "to": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "e42f030f9fb344c16789a8f888214fbe7bee7e41",
+   "to": "0ee1945ffba795812f06dce95998b646adfac343",
+   "colour": "#8A5A2B"
+  },
+  {
+   "from": "96d49010022b336352240fdee17a11981fe4ba0a",
+   "to": "e42f030f9fb344c16789a8f888214fbe7bee7e41",
+   "colour": "#8A5A2B"
+  },
+  {
+   "from": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+   "to": "7fb99dae21d0416b09eed95d2da1bfe04e95aa1d",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "0ee1945ffba795812f06dce95998b646adfac343",
+   "to": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+   "to": "90035557b2012895551867c0ebe2f36b853aac09",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "0ee1945ffba795812f06dce95998b646adfac343",
+   "to": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "652c341d5072c5f49fefe29f9409c93a5119a5be",
+   "to": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "90035557b2012895551867c0ebe2f36b853aac09",
+   "to": "652c341d5072c5f49fefe29f9409c93a5119a5be",
+   "colour": "#6B4F8A"
+  },
+  {
+   "from": "debb8ef81b00c98b95e1bcb6bd8c06f48f07d1af",
+   "to": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+   "to": "debb8ef81b00c98b95e1bcb6bd8c06f48f07d1af",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "49ac0d15c8c2ec5f6d84c0fdb19555b2e4e24eab",
+   "to": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+   "to": "49ac0d15c8c2ec5f6d84c0fdb19555b2e4e24eab",
+   "colour": "#8496A5"
+  },
+  {
+   "from": "150b3cf2380450b99db7f6f0a7a373099c78e274",
+   "to": "17c283243260fdf7ec1a5a23197f40a872e20282",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+   "to": "150b3cf2380450b99db7f6f0a7a373099c78e274",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "be0d47e543ff296046cc775b7e7f4a05fb29cc34",
+   "to": "afabe48be91dc5a30c4bca6eed5245de76c1fe9f",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "17c283243260fdf7ec1a5a23197f40a872e20282",
+   "to": "be0d47e543ff296046cc775b7e7f4a05fb29cc34",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "f1b8936ec2453bedb602acd1d87265687366518b",
+   "to": "d7036fba7e9cd542c8731881fd8cb7a51b824da9",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "afabe48be91dc5a30c4bca6eed5245de76c1fe9f",
+   "to": "f1b8936ec2453bedb602acd1d87265687366518b",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "0b60e442a27eb6d12628f7986e72ca424008c79f",
+   "to": "5d26a0d06dd91bc09825895c18859ed0cd141bc6",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "17c283243260fdf7ec1a5a23197f40a872e20282",
+   "to": "0b60e442a27eb6d12628f7986e72ca424008c79f",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "f5b101644372e2f5a842f0dd1acb817248961af9",
+   "to": "d7c647d806c0be8bb33f58201267d75bc448211e",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "5d26a0d06dd91bc09825895c18859ed0cd141bc6",
+   "to": "f5b101644372e2f5a842f0dd1acb817248961af9",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "f8de97db7af026fc5d8eca4cce32250d491f319c",
+   "to": "2284096eedfd784751d462f06f322106de1a39b6",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "d7c647d806c0be8bb33f58201267d75bc448211e",
+   "to": "f8de97db7af026fc5d8eca4cce32250d491f319c",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "bfc858982292c54f2f4cc8af1de01570554f6614",
+   "to": "7fa8b8ee8157f593fd352eac9da434c2c2ff4ab6",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "d7c647d806c0be8bb33f58201267d75bc448211e",
+   "to": "bfc858982292c54f2f4cc8af1de01570554f6614",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "33fdd8ea66cae1a66fd131231ba85f572ea01a24",
+   "to": "5e8bbb954bf78d64b6f9eb3ca7f92180b84be002",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "7fa8b8ee8157f593fd352eac9da434c2c2ff4ab6",
+   "to": "33fdd8ea66cae1a66fd131231ba85f572ea01a24",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "f9cfa20cb1ffd98a1c79c70cc7b703bc7ac3db63",
+   "to": "782ef02e65789a7791c94f1025e2ccce4f5fd141",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "5e8bbb954bf78d64b6f9eb3ca7f92180b84be002",
+   "to": "f9cfa20cb1ffd98a1c79c70cc7b703bc7ac3db63",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "666ea33b2a038717eac62a20458d2e70bf71710c",
+   "to": "800cca381b6c6af6a234fc1079788e5f46273124",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "2284096eedfd784751d462f06f322106de1a39b6",
+   "to": "666ea33b2a038717eac62a20458d2e70bf71710c",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "430cb6ec8130091d0bd95d0fd09d7815e2c8f7e8",
+   "to": "15442605cd56e6a45aeb62cb741dfd92c1774d49",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "782ef02e65789a7791c94f1025e2ccce4f5fd141",
+   "to": "430cb6ec8130091d0bd95d0fd09d7815e2c8f7e8",
+   "colour": "#3F7A5E"
+  },
+  {
+   "from": "8b282b0ad6b2bedbe3b2afc96ecede945f91abe4",
+   "to": "ea860b0f4ca4c7305542e99c4c720be5e0c2e80b",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "800cca381b6c6af6a234fc1079788e5f46273124",
+   "to": "8b282b0ad6b2bedbe3b2afc96ecede945f91abe4",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "c3acfcff4c1c01cedadeae6d9877156243acc149",
+   "to": "9c3c38bd94fa5f40341d8abcd97ac03e21fc19f2",
+   "colour": "#2F6690"
+  },
+  {
+   "from": "ea860b0f4ca4c7305542e99c4c720be5e0c2e80b",
+   "to": "c3acfcff4c1c01cedadeae6d9877156243acc149",
+   "colour": "#2F6690"
+  }
+ ],
+ "stack": {
+  "front": {
+   "id": "652c341d5072c5f49fefe29f9409c93a5119a5be",
+   "episode": "w189e",
+   "brane": "row-189",
+   "title": "The Use World on your repo page",
+   "row": 189,
+   "glyph": "diamond",
+   "colour": "#6B4F8A",
+   "rel": "yesterday 10:49",
+   "exact": "20 Oct 10:49 UTC",
+   "position": "6 / 6",
+   "builtOn": {
+    "id": "90035557b2012895551867c0ebe2f36b853aac09",
+    "kind": "shared",
+    "label": "9003555",
+    "at": "2026-10-20T08:31:33Z",
+    "rel": "yesterday 08:31",
+    "rank": 60,
+    "badge": 0,
+    "pr": 327
+   },
+   "mergedInto": {
+    "id": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+    "kind": "shared",
+    "label": "0ffbb9c",
+    "at": "2026-10-20T10:49:48Z",
+    "rel": "yesterday 10:49",
+    "rank": 62,
+    "badge": 0,
+    "pr": 329
+   },
+   "reads": [
+    {
+     "via": "step",
+     "fromId": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+     "label": "w189d",
+     "glyph": "diamond",
+     "colour": "#6B4F8A",
+     "files": [
+      {
+       "path": "CLAUDE.md",
+       "count": 1
+      },
+      {
+       "path": "design_docs/planned/w-world-onboarding.md",
+       "count": 1
+      },
+      {
+       "path": "docs/QUICKSTART.md",
+       "count": 2
+      },
+      {
+       "path": "cmd/ailang-worldd/plugin_help_test.go",
+       "count": 1
+      },
+      {
+       "path": "host/plugindoc/plugindoc.go",
+       "count": 1
+      },
+      {
+       "path": "cmd/ailang-worldd/main.go",
+       "count": 1
+      },
+      {
+       "path": "plugins/ailang-world/README.md",
+       "count": 1
+      },
+      {
+       "path": "plugins/ailang-world/skills/ailang-world-operator/SKILL.md",
+       "count": 1
+      },
+      {
+       "path": "plugins/ailang-world/commands/world-start.md",
+       "count": 1
+      },
+      {
+       "path": "plugins/ailang-world/skills/ailang-world/SKILL.md",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "via": "step",
+     "fromId": "e42f030f9fb344c16789a8f888214fbe7bee7e41",
+     "label": "w198",
+     "glyph": "hexagon",
+     "colour": "#8A5A2B",
+     "files": [
+      {
+       "path": "cmd/ailang-worldd/episode.go",
+       "count": 3
+      },
+      {
+       "path": "cmd/ailang-worldd/episode_report.go",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "via": "step",
+     "fromId": "5a8af7cd21360766d992662ddcf19a8928387c64",
+     "label": "w189b",
+     "glyph": "diamond",
+     "colour": "#6B4F8A",
+     "files": [
+      {
+       "path": "cmd/ailang-worldd/session_new.go",
+       "count": 2
+      },
+      {
+       "path": "cmd/ailang-worldd/session.go",
+       "count": 2
+      }
+     ]
+    },
+    {
+     "via": "commit",
+     "fromId": "157adc557095e44206d2b55e74bcd931f0c1582a",
+     "label": "157adc5",
+     "glyph": null,
+     "colour": null,
+     "files": [
+      {
+       "path": "cmd/ailang-worldd/setup.go",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "via": "step",
+     "fromId": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+     "label": "w189c",
+     "glyph": "diamond",
+     "colour": "#6B4F8A",
+     "files": [
+      {
+       "path": "cmd/ailang-worldd/profile_init.go",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "via": "step",
+     "fromId": "ebe083b24a621565935276198660dd3a8cde6f2c",
+     "label": "w189a",
+     "glyph": "diamond",
+     "colour": "#6B4F8A",
+     "files": [
+      {
+       "path": "README.md",
+       "count": 1
+      }
+     ]
+    }
+   ],
+   "readCalls": 22,
+   "readFiles": 17,
+   "task": "row-189-M6-docs-use-world-page",
+   "agent": "claude",
+   "model": "claude-opus-5-5",
+   "files": [
+    {
+     "path": "README.md",
+     "status": "M"
+    },
+    {
+     "path": "cmd/ailang-worldd/use_world_page_test.go",
+     "status": "A"
+    },
+    {
+     "path": "design_docs/planned/w-world-onboarding.md",
+     "status": "M"
+    },
+    {
+     "path": "design_docs/verification/world-dogfood/episodes.md",
+     "status": "M"
+    },
+    {
+     "path": "docs/QUICKSTART.md",
+     "status": "M"
+    },
+    {
+     "path": "docs/USE_WORLD_ON_YOUR_REPO.md",
+     "status": "A"
+    },
+    {
+     "path": "plugins/ailang-world/README.md",
+     "status": "M"
+    }
+   ],
+   "pr": 329,
+   "decisions": [
+    {
+     "actor": "you",
+     "text": "Minted \u00b7 12 h",
+     "rel": "yesterday 10:20",
+     "source": "rig mint script (TTL 43200 s)"
+    },
+    {
+     "actor": "world",
+     "text": "round 1: 8/8 graders",
+     "rel": "yesterday 10:32"
+    },
+    {
+     "actor": "you",
+     "text": "merged #329",
+     "rel": "yesterday 10:49"
+    }
+   ],
+   "checks": {
+    "graders": "8/8",
+    "rounds": 1,
+    "calls": 42,
+    "minutes": 3.5
+   },
+   "grants": [
+    {
+     "name": "Read",
+     "on": true
+    },
+    {
+     "name": "Write",
+     "on": true
+    },
+    {
+     "name": "Delete \u00d7200",
+     "on": true
+    },
+    {
+     "name": "Exec \u00d7600",
+     "on": true
+    },
+    {
+     "name": "AILANG tools",
+     "on": true
+    },
+    {
+     "name": "Network \u00b7 never",
+     "on": false,
+     "locked": true
+    }
+   ],
+   "ttl": "12 h",
+   "taskFile": "tasks/w189e.md",
+   "summary": "I've written the \"Use World on your repo\" page, linked it from the three places, added the help-check test and updated the onboarding doc \u00a78."
+  },
+  "earlier": [
+   {
+    "brane": "row-189",
+    "glyph": "diamond",
+    "colour": "#6B4F8A",
+    "title": "w-world-onboarding",
+    "cards": [
+     {
+      "id": "5a8af7cd21360766d992662ddcf19a8928387c64",
+      "kind": "step",
+      "label": "w189b",
+      "at": "2026-10-19T18:52:32Z",
+      "rel": "2 days ago",
+      "rank": 46,
+      "badge": 1,
+      "pr": 321,
+      "title": "Exec profile bound at mint, and `episode start` (through World, w189b)",
+      "episode": "w189b",
+      "summary": "I've built M2 + M3a + M3b: an episode is now bound to its exec profile when it is minted, so a new episode can use workspace-exec without restarting the daemon, and ailang-worldd episode start exists.",
+      "agent": "claude",
+      "model": "claude-opus-5-5",
+      "graders": "8/8",
+      "rounds": 2,
+      "minutes": 26.8,
+      "firstRoundPass": false
+     },
+     {
+      "id": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+      "kind": "step",
+      "label": "w189c",
+      "at": "2026-10-20T06:18:58Z",
+      "rel": "yesterday 06:18",
+      "rank": 54,
+      "badge": 1,
+      "pr": 324,
+      "title": "`profile init` \u2014 propose an exec profile from a repo (through World, w189c)",
+      "episode": "w189c",
+      "summary": "ailang-worldd profile init is built and all 9 of its tests pass.",
+      "agent": "claude",
+      "model": "claude-opus-5-5",
+      "graders": "7/8",
+      "rounds": 3,
+      "minutes": 18.4,
+      "firstRoundPass": false
+     },
+     {
+      "id": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+      "kind": "step",
+      "label": "w189d",
+      "at": "2026-10-20T08:31:33Z",
+      "rel": "yesterday 08:31",
+      "rank": 61,
+      "badge": 1,
+      "pr": 327,
+      "title": "The ailang-world plugin and its CI help-check",
+      "episode": "w189d",
+      "summary": "M5 is built. The plugin, both skills, the three print-only commands and TestPluginCommandsMatchTheCLIHelp in both CLI packages are in place, and the help-check passes on the clean tree.",
+      "agent": "claude",
+      "model": "claude-opus-5-5",
+      "graders": "7/8",
+      "rounds": 2,
+      "minutes": 6.8,
+      "firstRoundPass": false
+     }
+    ]
+   },
+   {
+    "brane": "row-156",
+    "glyph": "triangle",
+    "colour": "#3F7A5E",
+    "title": "w-exec-protected-test-paths",
+    "cards": [
+     {
+      "id": "4af9b24109b2f5cd376dbf91e32daf9774863c48",
+      "kind": "step",
+      "label": "#328",
+      "at": "2026-10-20T08:22:02Z",
+      "rel": "yesterday 08:22",
+      "rank": 58,
+      "badge": 0,
+      "pr": 328,
+      "title": "Episode profile protected set in the AILANG policy"
+     }
+    ]
+   }
+  ],
+  "later": [
+   {
+    "brane": "shared",
+    "glyph": "circle",
+    "colour": "#8496A5",
+    "title": "Shared world",
+    "cards": [
+     {
+      "id": "0ffbb9c9d386f83aaa45b98e4d4b7763a5c5b845",
+      "kind": "shared",
+      "label": "0ffbb9c",
+      "at": "2026-10-20T10:49:48Z",
+      "rel": "yesterday 10:49",
+      "rank": 62,
+      "badge": 0,
+      "pr": 329,
+      "title": "The Use World on your repo page"
+     },
+     {
+      "id": "1998f5e7a8bdf0fac6305d8f179956622e5d761a",
+      "kind": "shared",
+      "label": "1998f5e",
+      "at": "2026-10-20T12:25:50Z",
+      "rel": "yesterday 12:25",
+      "rank": 64,
+      "badge": 0,
+      "pr": 330,
+      "title": "Row 156: V25 re-measure (v0.54.15 refuses every alias) + M5e real-tool alias pin; M5c/M5d held on D-WORLD-86"
+     },
+     {
+      "id": "adffe4c197de2c2af3ed39b9c7f272b784f6f0e9",
+      "kind": "shared",
+      "label": "adffe4c",
+      "at": "2026-10-20T14:56:23Z",
+      "rel": "yesterday 14:56",
+      "rank": 67,
+      "badge": 0,
+      "pr": 331,
+      "title": "W-world-os-surface r2 \u2014 approved for build (D-WORLD-87)"
+     }
+    ]
+   },
+   {
+    "brane": "row-156",
+    "glyph": "triangle",
+    "colour": "#3F7A5E",
+    "title": "w-exec-protected-test-paths",
+    "cards": [
+     {
+      "id": "debb8ef81b00c98b95e1bcb6bd8c06f48f07d1af",
+      "kind": "step",
+      "label": "#330",
+      "at": "2026-10-20T12:25:50Z",
+      "rel": "yesterday 12:25",
+      "rank": 65,
+      "badge": 0,
+      "pr": 330,
+      "title": "Row 156: V25 re-measure (v0.54.15 refuses every alias) + M5e real-tool alias pin; M5c/M5d held on D-WORLD-86"
+     },
+     {
+      "id": "be0d47e543ff296046cc775b7e7f4a05fb29cc34",
+      "kind": "step",
+      "label": "#333",
+      "at": "2026-10-20T16:58:07Z",
+      "rel": "yesterday 16:58",
+      "rank": 71,
+      "badge": 0,
+      "pr": 333,
+      "title": "V24 measured on installed worktrees; phase bound 2937 ms"
+     },
+     {
+      "id": "bfc858982292c54f2f4cc8af1de01570554f6614",
+      "kind": "step",
+      "label": "#338",
+      "at": "2026-10-20T21:12:34Z",
+      "rel": "yesterday 21:12",
+      "rank": 81,
+      "badge": 0,
+      "pr": 338,
+      "title": "Immutable protected baseline at NewExecHandler + bounded record shape"
+     }
+    ]
+   }
+  ],
+  "rail": [
+   {
+    "id": "59bbded417388861f3acae45c07eb9046f3cacaa",
+    "kind": "step",
+    "label": "#316",
+    "at": "2026-10-19T15:29:30Z",
+    "rel": "2 days ago",
+    "rank": 37,
+    "badge": 0,
+    "pr": 316,
+    "title": "World onboarding \u2014 episode start, profile init, ailang-world plugin (attended draft, 5 OPEN decisions)"
+   },
+   {
+    "id": "ebe083b24a621565935276198660dd3a8cde6f2c",
+    "kind": "step",
+    "label": "w189a",
+    "at": "2026-10-19T17:25:18Z",
+    "rel": "2 days ago",
+    "rank": 45,
+    "badge": 1,
+    "pr": 320,
+    "title": "Session credentials in their own store \u2014 mint while the daemon serves (made through World, w189a)",
+    "episode": "w189a",
+    "summary": "Session credentials now live in their own store with their own writer lock.",
+    "agent": "claude",
+    "model": "claude-opus-5-5",
+    "graders": "5/5",
+    "rounds": 1,
+    "minutes": 37.3,
+    "firstRoundPass": true
+   },
+   {
+    "id": "5a8af7cd21360766d992662ddcf19a8928387c64",
+    "kind": "step",
+    "label": "w189b",
+    "at": "2026-10-19T18:52:32Z",
+    "rel": "2 days ago",
+    "rank": 46,
+    "badge": 1,
+    "pr": 321,
+    "title": "Exec profile bound at mint, and `episode start` (through World, w189b)",
+    "episode": "w189b",
+    "summary": "I've built M2 + M3a + M3b: an episode is now bound to its exec profile when it is minted, so a new episode can use workspace-exec without restarting the daemon, and ailang-worldd episode start exists.",
+    "agent": "claude",
+    "model": "claude-opus-5-5",
+    "graders": "8/8",
+    "rounds": 2,
+    "minutes": 26.8,
+    "firstRoundPass": false
+   },
+   {
+    "id": "60ca0b3088078efcd087ad7bf9f0f2fe95c6f46a",
+    "kind": "step",
+    "label": "w189c",
+    "at": "2026-10-20T06:18:58Z",
+    "rel": "yesterday 06:18",
+    "rank": 54,
+    "badge": 1,
+    "pr": 324,
+    "title": "`profile init` \u2014 propose an exec profile from a repo (through World, w189c)",
+    "episode": "w189c",
+    "summary": "ailang-worldd profile init is built and all 9 of its tests pass.",
+    "agent": "claude",
+    "model": "claude-opus-5-5",
+    "graders": "7/8",
+    "rounds": 3,
+    "minutes": 18.4,
+    "firstRoundPass": false
+   },
+   {
+    "id": "f36428abd9a72e5093b61cba14e716c37019f1ef",
+    "kind": "step",
+    "label": "w189d",
+    "at": "2026-10-20T08:31:33Z",
+    "rel": "yesterday 08:31",
+    "rank": 61,
+    "badge": 1,
+    "pr": 327,
+    "title": "The ailang-world plugin and its CI help-check",
+    "episode": "w189d",
+    "summary": "M5 is built. The plugin, both skills, the three print-only commands and TestPluginCommandsMatchTheCLIHelp in both CLI packages are in place, and the help-check passes on the clean tree.",
+    "agent": "claude",
+    "model": "claude-opus-5-5",
+    "graders": "7/8",
+    "rounds": 2,
+    "minutes": 6.8,
+    "firstRoundPass": false
+   },
+   {
+    "id": "652c341d5072c5f49fefe29f9409c93a5119a5be",
+    "kind": "step",
+    "label": "w189e",
+    "at": "2026-10-20T10:49:48Z",
+    "rel": "yesterday 10:49",
+    "rank": 63,
+    "badge": 1,
+    "pr": 329,
+    "title": "The Use World on your repo page",
+    "episode": "w189e",
+    "summary": "I've written the \"Use World on your repo\" page, linked it from the three places, added the help-check test and updated the onboarding doc \u00a78.",
+    "agent": "claude",
+    "model": "claude-opus-5-5",
+    "graders": "8/8",
+    "rounds": 1,
+    "minutes": 3.5,
+    "firstRoundPass": true
+   }
+  ]
+ },
+ "provenance": {
+  "title": "PR titles (GitHub), prefix and episode suffix stripped",
+  "grants/ttl/mint": "the rig's MINT_BLOCK scripts",
+  "notInData": [
+   "ran on",
+   "mutants caught",
+   "waiting/open steps (AC7)",
+   "agent views (row 151)",
+   "a one-line 'why' subtitle"
+  ],
+  "summary": "the agent's own round-1 summary from the rig episode record, first sentence",
+  "goal": "the charter row's bolded problem statement, sentence-cased",
+  "milestones": "row 188 sprint plan (M0b's \u2705 was never set in the plan; merged PRs #335\u2013#344 are the truth), M4a in review as #346"
+ }
+};

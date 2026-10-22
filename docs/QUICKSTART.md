@@ -1326,6 +1326,11 @@ and `Retry-After: 1`. Send at most 64 KiB and finish the body within 2 s.
 Open **http://127.0.0.1:7644/workbench** while your daemon is serving. The page
 is read-only; checked links open stored entries and objects.
 
+For static captures of recorded history, start `ailang-worldd serve` with
+`--workbench-still` (default off). It suppresses only the `live.js` script;
+the complete server-rendered page then never updates. Reload to refresh, as
+the footer says: “Live updates: off. Reload to refresh.”
+
 - **Live list:** the newest ten entries, newest first, plus the log position at
   render time. This tail updates even when the oldest-first timeline page is full.
 - **Footer:** with JavaScript enabled, the last verified check, the cursor checked,
@@ -1492,12 +1497,11 @@ A produced packet reads `decision packet validated: committed with its invocatio
 
 ## 12. Prepare the release demo seed (incremental tooling)
 
-`ailang-worldd demo seed --help` describes the shipped boundary: **S1 domain
-commits only; S2-S6 incomplete**. A valid prepared run records a goal, two candidate
-descriptions, the unchanged `world/logepoch.ail` source and explicitly demo-authored
-commentary, then returns exit 1 and writes **no success manifest**. This is not a
-complete demo or release capture. Inspect a partial store rather than retrying it.
-Later read/test/check, proof and pending-approval stages are separate milestones.
+`ailang-worldd demo seed --help` describes the shipped seed: it runs S1-S6 and
+writes the public success manifest only after every check passes. It records domain
+objects, read/test/check evidence, a proof and a pending approval packet. Success
+returns exit 0. Inspect a partial store before any further action; never blindly
+retry it. Release capture documentation follows in a later milestone.
 
 Run from the repository root. Create a disposable worktree explicitly; the seed
 never runs a hidden git operation. Keep the store, session, key and manifest outside
@@ -1561,12 +1565,13 @@ Then, from the repository root in the prepared shell:
   --proof-key-file "$DEMO_DIR/proof.key" --manifest "$DEMO_DIR/manifest.json"
 ```
 
-The current command intentionally ends with `S2-S6 incomplete`. No manifest is
-created and no later-stage success is claimed. An unminted run refuses without
-opening `/dev/tty` or printing credentials. Preflight checks the absent manifest,
+The seed publishes a new manifest atomically after manifest and roster validation.
+An unminted run refuses without opening `/dev/tty` or printing credentials. Preflight checks the absent manifest,
 empty public world/log, daemon/database identity, interpreter hash/version and the
 session's remaining live grants using an existing **read-only** authority view.
 Bootstrap registries and session rows are allowed. Public writes always go through
 session-authenticated REST commits with observed-head CAS; a changed head, uncertain
-commit or refusal stops the command without automatic retries. The proof key is
-reserved for the later proof stage; this milestone does not consume or expose it.
+commit or refusal stops the command without automatic retries. The proof key
+authenticates the proof stage and must also configure the daemon
+with `--proof-key-file` and both `--proof-required-identity sameRef` and
+`--proof-required-identity servesEntry`; the seed never exposes it.

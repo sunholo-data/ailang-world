@@ -5,12 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
+	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -19,7 +23,7 @@ const (
 	packetRosterInputLimit = 64 << 10
 	packetRosterReadLimit  = 1 << 20
 	packetRosterClaimLimit = 4 << 10
-	// TESTED consumes these in M5b; no test stdout is decoded in M5a.
+	// Bounds apply to decoded stdout and its named entries.
 	packetRosterStdoutLimit    = 1 << 20
 	packetRosterNamedTestLimit = 256
 	packetRosterReadTimeout    = 10 * time.Second
@@ -27,17 +31,20 @@ const (
 
 // These transport projections carry no object-grade authority. The package's
 // evidence.ail owns kind admission and constructor grades (executable drift gate).
-// M5b will adapt these internal fields to the workbench renderer.
+// Only the configured row-105 validator can supply PROVEN.
 type packetRoster struct {
 	rows        []packetEvidenceRow
 	unavailable string
 }
 type packetEvidenceRow struct {
 	kind, ref, label, producer, unavailable string
+	subject, compiler, version, verdict     string
+	passed                                  int
 }
 type packetRosterReader interface {
 	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
 	GetLogEntry(context.Context, int64) (store.LogEntry, bool, error)
+	ObjectCommits(context.Context, hashref.HashRef, int64, int) ([]int64, error)
 }
 type packetRosterPair struct {
 	Kind string `json:"kind"`
@@ -112,8 +119,8 @@ func strictRosterJSON(raw []byte, dst any) error {
 
 // packetRosterFromValidated follows only the carrying entry of an already
 // validated packet. No semantic-ID lookup can discover or substitute evidence.
-// All refusals discard the entire roster before any label can escape.
-func packetRosterFromValidated(parent context.Context, r packetRosterReader, packet coordinator.PacketResult) packetRoster {
+// Read/TESTED refusals discard the roster; proof refusals remain explicit rows.
+func packetRosterFromValidated(parent context.Context, r packetRosterReader, packet coordinator.PacketResult, grader proofValidator) packetRoster {
 	refuse := func(reason string) packetRoster { return packetRoster{unavailable: reason} }
 	if packet.Code != 0 {
 		return refuse("packet not validated")
@@ -137,7 +144,11 @@ func packetRosterFromValidated(parent context.Context, r packetRosterReader, pac
 		if o.Hash != ref || hashref.SumSHA256(o.Payload) != ref {
 			return store.Object{}, role + " hash"
 		}
-		if o.SemanticID != id || o.InterfaceHash != hashref.SumSHA256([]byte(id)) {
+		wantInterface := hashref.SumSHA256([]byte(id))
+		if id == evidence.ProofSemanticID {
+			wantInterface = evidence.InterfaceHashV1
+		}
+		if o.SemanticID != id || o.InterfaceHash != wantInterface {
 			return store.Object{}, role + " kind"
 		}
 		return o, ""
@@ -212,6 +223,9 @@ func packetRosterFromValidated(parent context.Context, r packetRosterReader, pac
 	if !broker.RecordConsistent(er) {
 		return refuse("effect inconsistent")
 	}
+	if er.ResultRef.IsZero() {
+		return refuse("effect result absent")
+	}
 	if _, reason = read(er.RequestRef, "request", broker.EffectRequestV1, packetRosterReadLimit); reason != "" {
 		return refuse(reason)
 	}
@@ -251,10 +265,246 @@ func packetRosterFromValidated(parent context.Context, r packetRosterReader, pac
 		case "authored-claim":
 			row.label = "CLAIMED"
 			row.producer = authored.Author
-		default:
-			row.unavailable = "resolution pending M5b"
+		case "test-invocation":
+			row, reason = packetTestedRow(ctx, r, read, refs[pair.Kind])
+			if reason != "" {
+				return refuse(reason)
+			}
+		case "proof-envelope":
+			row = packetProvenRow(ctx, read, refs[pair.Kind], grader)
 		}
 		rows = append(rows, row)
 	}
+	if ctx.Err() != nil {
+		return refuse("read deadline")
+	}
 	return packetRoster{rows: rows}
+}
+
+// The record wire is coordinator.RecordV2 (host/coordinator/plan.go).
+type packetTestRecord struct {
+	InvocationID   string   `json:"invocationId"`
+	EpisodeID      string   `json:"episodeId"`
+	SkillID        string   `json:"skillId"`
+	TransitionFn   string   `json:"transitionFn"`
+	Interpreter    string   `json:"interpreter"`
+	SemanticsEpoch int64    `json:"semanticsEpoch"`
+	Input          string   `json:"input"`
+	Output         string   `json:"output"`
+	Plan           string   `json:"plan"`
+	Effects        []string `json:"effects"`
+}
+type packetObjectRead func(hashref.HashRef, string, string, int) (store.Object, string)
+
+func packetTestedRow(ctx context.Context, r packetRosterReader, read packetObjectRead, ref hashref.HashRef) (packetEvidenceRow, string) {
+	row := packetEvidenceRow{kind: "test-invocation", ref: ref.String()}
+	obj, reason := read(ref, "test record", coordinator.RecordV2, packetRosterReadLimit)
+	if reason != "" {
+		return row, reason
+	}
+	var rec packetTestRecord
+	if strictRosterJSON(obj.Payload, &rec) != nil {
+		return row, "test record schema"
+	}
+	commits, err := r.ObjectCommits(ctx, ref, -1, 1)
+	if err != nil || len(commits) == 0 {
+		return row, "test carrying commit missing"
+	}
+	entry, ok, err := r.GetLogEntry(ctx, commits[0])
+	if err != nil || !ok || entry.TransitionRef != ref {
+		return row, "test carrying commit mismatch"
+	}
+	if len(rec.Effects) != 1 {
+		return row, "test effect count"
+	}
+	effectRef, err := hashref.Parse(rec.Effects[0])
+	if err != nil {
+		return row, "test effect ref"
+	}
+	obj, reason = read(effectRef, "test effect", broker.EffectRecordV1, packetRosterReadLimit)
+	if reason != "" {
+		return row, reason
+	}
+	er, err := broker.DecodeRecord(obj.Payload)
+	if err != nil || !broker.RecordConsistent(er) {
+		return row, "test effect inconsistent"
+	}
+	req, reason := read(er.RequestRef, "test request", broker.EffectRequestV1, packetRosterReadLimit)
+	if reason != "" {
+		return row, reason
+	}
+	result, reason := read(er.ResultRef, "test result", broker.EffectResultV1, packetRosterReadLimit)
+	if reason != "" {
+		return row, reason
+	}
+	// Broker requests are length-prefixed bytes, NOT JSON envelopes (requestBytes).
+	prefix := fmt.Sprintf("%d:%s%d:%s%d:", len(er.Effect), er.Effect, len(er.Scope), er.Scope, er.Cost)
+	if er.Effect != broker.EffectAilangCLI || !bytes.HasPrefix(req.Payload, []byte(prefix)) {
+		return row, "test effect not Ailang.CLI"
+	}
+	now, payload, found := strings.Cut(string(req.Payload[len(prefix):]), ":")
+	_, timeErr := strconv.ParseInt(now, 10, 64)
+	var request map[string]json.RawMessage
+	if !found || timeErr != nil || strictRosterJSON([]byte(payload), &request) != nil {
+		return row, "test request schema"
+	}
+	var op string
+	_ = json.Unmarshal(request["op"], &op)
+	if op != "test" {
+		return row, "test op"
+	}
+	// Results also carry host stamps; decode their known outcome fields separately.
+	var out map[string]json.RawMessage
+	if strictRosterJSON(result.Payload, &out) != nil || out == nil {
+		return row, "test result schema"
+	}
+	var argv []string
+	if json.Unmarshal(out["argv"], &argv) != nil || len(argv) == 0 || argv[0] != "test" {
+		return row, "test argv"
+	}
+	// The tool omits exit_code on success and sends it with ok:false on failure
+	// (measured v0.54.15; testdata/roster_cli_test_result_real.json). Present means 0.
+	var exit *int
+	var good bool
+	if raw, present := out["exit_code"]; present && (json.Unmarshal(raw, &exit) != nil || exit == nil || *exit != 0) {
+		return row, "test exit code"
+	}
+	if json.Unmarshal(out["ok"], &good) != nil || !good {
+		return row, "test not ok"
+	}
+	var stdout string
+	if json.Unmarshal(out["stdout"], &stdout) != nil {
+		return row, "test stdout schema"
+	}
+	if len(stdout) > packetRosterStdoutLimit {
+		return row, "test stdout size"
+	}
+	count, reason := packetTestReport([]byte(stdout))
+	if reason != "" {
+		return row, reason
+	}
+	row.label, row.producer, row.verdict, row.passed = "TESTED", result.Provenance, "pass", count
+	return row, ""
+}
+
+// These are the fields emitted by the real test --json report, including
+// property diagnostics. Decode strictly before projecting the required verdict.
+type packetNamedTest struct {
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	Duration  string `json:"duration"`
+	Location  string `json:"location"`
+	Error     string `json:"error,omitempty"`
+	Seed      string `json:"seed,omitempty"`
+	SkipKind  string `json:"skip_kind,omitempty"`
+	Discarded int    `json:"discarded_inputs,omitempty"`
+	Generated int    `json:"generated_inputs,omitempty"`
+	Runs      int    `json:"tests_run,omitempty"`
+}
+type packetReportWire struct {
+	Success    bool              `json:"success"`
+	Failed     int               `json:"failed_tests"`
+	Passed     int               `json:"passed_tests"`
+	Skipped    int               `json:"skipped_tests"`
+	Vacuous    int               `json:"vacuous_skips"`
+	Total      int               `json:"total_tests"`
+	Module     string            `json:"module_path"`
+	Duration   string            `json:"total_duration"`
+	Seed       string            `json:"seed"`
+	Derivation string            `json:"seed_derivation"`
+	Mode       string            `json:"seed_mode"`
+	Tests      []packetNamedTest `json:"tests"`
+	Properties []packetNamedTest `json:"properties"`
+}
+
+func packetTestReport(raw []byte) (int, string) {
+	var report map[string]json.RawMessage
+	var wire packetReportWire
+	if !utf8.Valid(raw) || strictRosterJSON(raw, &wire) != nil || strictRosterJSON(raw, &report) != nil {
+		return 0, "test report JSON"
+	}
+	if report == nil {
+		return 0, "test report null"
+	}
+	var success bool
+	if json.Unmarshal(report["success"], &success) != nil || !success {
+		return 0, "test success"
+	}
+	counts := make([]int, 4)
+	for i, key := range []string{"failed_tests", "skipped_tests", "vacuous_skips", "passed_tests"} {
+		var n *int
+		if json.Unmarshal(report[key], &n) != nil || n == nil {
+			return 0, "test report counters"
+		}
+		counts[i] = *n
+	}
+	if counts[0] != 0 {
+		return 0, "test failed"
+	}
+	if counts[1] != 0 {
+		return 0, "test skipped"
+	}
+	if counts[2] != 0 {
+		return 0, "test vacuous"
+	}
+	if counts[3] < 1 {
+		return 0, "test zero passes"
+	}
+	var named []map[string]json.RawMessage
+	for _, key := range []string{"tests", "properties"} {
+		var entries []map[string]json.RawMessage
+		_ = json.Unmarshal(report[key], &entries) // strict wire decode already checked types
+		named = append(named, entries...)
+	}
+	if len(named) == 0 || len(named) > packetRosterNamedTestLimit {
+		return 0, "test named count"
+	}
+	for _, entry := range named {
+		var name, status string
+		_ = json.Unmarshal(entry["name"], &name)
+		_ = json.Unmarshal(entry["status"], &status)
+		if name == "" {
+			return 0, "test empty name"
+		}
+		if status != "pass" {
+			return 0, "test status"
+		}
+	}
+	if counts[3] != len(named) {
+		return 0, "test passed count"
+	}
+	return len(named), ""
+}
+
+func packetProvenRow(ctx context.Context, read packetObjectRead, ref hashref.HashRef, grader proofValidator) packetEvidenceRow {
+	row := packetEvidenceRow{kind: "proof-envelope", ref: ref.String(), producer: "unavailable"}
+	refuse := func(reason string) packetEvidenceRow { row.unavailable = reason; return row }
+	obj, reason := read(ref, "proof envelope", evidence.ProofSemanticID, evidence.MaxBytes)
+	if reason != "" {
+		return refuse(reason)
+	}
+	row.producer = obj.Provenance
+	envelope, err := evidence.DecodeAuthenticatedEnvelope(obj.Payload)
+	if err != nil {
+		return refuse(gradeReasonStructuralCandidate)
+	}
+	report, _ := evidence.DecodeProofReportV1(envelope.Report) // envelope decoder already checks it
+	if _, reason = read(report.Subject, "proof subject", "world/source/ailang/v1", packetRosterReadLimit); reason != "" {
+		return refuse(reason)
+	}
+	if grader == nil {
+		return refuse(objectGradeUnavailableReason)
+	}
+	result := grader.ValidateProof(ctx, ref, report.Subject)
+	sealed, valid := result.Validated()
+	if !valid {
+		reason, _ := result.Unsupported()
+		return refuse(gradeReasonSentence(reason))
+	}
+	if _, proven := grader.Resolve(sealed).Proven(); !proven {
+		return refuse(gradeReasonNoneValidated)
+	}
+	// The subject is shown only once the MAC and Resolve have authenticated it.
+	row.label, row.subject, row.compiler, row.version = "PROVEN", report.Subject.String(), report.Compiler.String(), report.CompilerVersion
+	return row
 }
