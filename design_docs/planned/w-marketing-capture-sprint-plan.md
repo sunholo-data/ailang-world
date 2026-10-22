@@ -789,7 +789,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M6 — Still serve flag and stable complete server HTML
 
-Design M6; 25 minutes; dependency: M5c; status **pending**.
+Design M6; 25 minutes; dependency: M5c; status **completed** — built iteration 300 (executor codex gpt-6.1-sol `aeaa957d`; controller docs fix `ac1abe7f` for judge r1 N3). Judge Agent sonnet r1 PASS 93, zero blocking. Deviation: `website/docs/guides/operating-the-daemon.md` and `website/docs/reference/cli.md` also name the flag (controller-authorised, docs only). The template branch is `{{if .Still}}{{else}}…{{end}}` because the field census reads a direct bool branch.
 
 Exact executor files:
 

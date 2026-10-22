@@ -1326,6 +1326,11 @@ and `Retry-After: 1`. Send at most 64 KiB and finish the body within 2 s.
 Open **http://127.0.0.1:7644/workbench** while your daemon is serving. The page
 is read-only; checked links open stored entries and objects.
 
+For static captures of recorded history, start `ailang-worldd serve` with
+`--workbench-still` (default off). It suppresses only the `live.js` script;
+the complete server-rendered page then never updates. Reload to refresh, as
+the footer says: “Live updates: off. Reload to refresh.”
+
 - **Live list:** the newest ten entries, newest first, plus the log position at
   render time. This tail updates even when the oldest-first timeline page is full.
 - **Footer:** with JavaScript enabled, the last verified check, the cursor checked,

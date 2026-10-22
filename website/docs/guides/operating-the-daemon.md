@@ -46,6 +46,7 @@ ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
 | `--exec-max-output-bytes` | 67108864 (64 MiB) | Kill a `workspace-exec` command whose stdout or stderr passes N bytes. |
 | `--proof-key-file` | none | A file holding exactly 32 bytes: the MAC key the workbench grade validator authenticates stored proof envelopes under. Needs `--ailang-bin` and at least one `--proof-required-identity`; read once at startup and never logged. Unset, every object page reads "no canonical host projection". |
 | `--proof-required-identity` | none | An identity every validated proof must verify (repeatable; needs `--proof-key-file`). |
+| `--workbench-still` | `false` | Suppress only the workbench `live.js` script for static captures of recorded history. All server-rendered regions remain; reload to refresh. |
 
 The coding tools are served only when **both** `--workspace-root` and `--tool-ailang-bin` are
 set. With one but not the other, startup logs:
