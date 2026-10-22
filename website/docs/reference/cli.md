@@ -78,6 +78,8 @@ serve flags:
   --bind host:port     loopback listen address (default 127.0.0.1:7644);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
+  --workbench-still    suppress only the workbench live.js script for static
+                       captures of recorded history; reload to refresh (default off)
   --workspace-root <dir>
                        episode worktrees live at <dir>/<episode> (made by the
                        operator with git worktree add before session mint); it
