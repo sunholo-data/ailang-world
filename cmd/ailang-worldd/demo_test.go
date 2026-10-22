@@ -2373,6 +2373,30 @@ func TestDemoSeedEndToEnd(t *testing.T) {
 	if len(stored) != 4 || !slices.Equal(stored, declared) {
 		t.Fatalf("manifest roster must equal actual S5 producer input in order: stored=%+v declared=%+v", stored, declared)
 	}
+	// The production validator itself compares the manifest to the stored S5
+	// input: a manifest naming the goal object as CLAIMED refuses at that slot.
+	bad := m
+	bad.References = slices.Clone(m.References)
+	goal := ""
+	for _, ref := range m.References {
+		if ref.Role == "goal" {
+			goal = ref.Ref
+		}
+	}
+	for i, ref := range bad.References {
+		if ref.Role == "authored-claim" {
+			bad.References[i].Ref = goal
+		}
+	}
+	if err := demoValidateSeedRoster(demoM4bFreshReader(t, r), bad); err == nil || !strings.Contains(err.Error(), "roster slot 2: manifest/input mismatch") {
+		t.Fatalf("validator must compare the manifest to the stored roster: %v", err)
+	}
+	// And it re-hashes every roster object it reads: a read surface serving
+	// other bytes under the CLAIMED ref refuses.
+	forged := worldReader{ctx: boundedTestContext(t), c: newClient(tamperProxy(t, r.c.base, declared[2].Ref, []byte(`{"kind":"authored-claim","author":"demo-authored","text":"forged"}`)))}
+	if err := demoValidateSeedRoster(forged, m); err == nil || !strings.Contains(err.Error(), "roster authored-claim.ref unavailable or hash mismatch") {
+		t.Fatalf("validator must re-hash roster objects: %v", err)
+	}
 }
 
 func TestDemoSeedRosterKindMismatchRefuses(t *testing.T) {
@@ -2382,15 +2406,15 @@ func TestDemoSeedRosterKindMismatchRefuses(t *testing.T) {
 		if err := demoValidateSeedRoster(demoM4bFreshReader(t, r), m); err != nil {
 			t.Fatalf("positive final roster validator must accept real seed: %v", err)
 		}
-		// Commit another real approval through the same coordinator, changing only
-		// CLAIMED's ref to the genuine S1 goal object from this store.
 		var runs []demoToolRun
 		var input struct {
 			Goal       string
 			Candidates []string
 			Roster     []demoEvidenceRef
 		}
+		entries := map[string]int64{}
 		for _, w := range m.Why {
+			entries[w.Role] = w.Entry
 			if w.Role != "approval" {
 				runs = append(runs, demoToolRun{EntryIndex: w.Entry})
 				continue
@@ -2408,86 +2432,127 @@ func TestDemoSeedRosterKindMismatchRefuses(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-
-		oldPacket := ""
+		refs := map[string]string{}
 		for _, ref := range m.References {
-			if ref.Role == "goal" {
-				input.Roster[2].Ref = ref.Ref
-			}
-			if ref.Role == "packet" {
-				oldPacket = ref.Ref
-			}
+			refs[ref.Role] = ref.Ref
 		}
-		// Human.Approve requests contain real Unix seconds. Let the recorded
-		// second elapse so this deliberate second invocation has a distinct
-		// request/packet, even on a fast runner. No clock or history is rewritten.
-		old := demoRESTObject(t, r, oldPacket, coordinator.DecisionPacketV1)
-		previous, err := coordinator.DecodeDecisionPacket(old.Payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if delay := time.Until(time.Unix(previous.CreatedAt+1, 0)); delay > 0 {
-			timer := time.NewTimer(delay)
-			defer timer.Stop()
-			select {
-			case <-timer.C:
-			case <-r.ctx.Done():
-				t.Fatal(r.ctx.Err())
-			}
-		}
-		args, err := demoApprovalInput(input.Goal, input.Candidates, input.Roster)
-		if err != nil {
-			t.Fatal(err)
-		}
-		approval, _, err := demoA2ASend(boundedTestContext(t), r.c, token, "demo-kind-mismatch", "demo-approve", args)
-		if err != nil {
-			t.Fatal(err)
-		}
-		runs = append(runs, approval)
-		e, _, err := r.entry(approval.EntryIndex)
-		if err != nil {
-			t.Fatal(err)
-		}
-		rec, _, err := r.record(e)
-		if err != nil {
-			t.Fatal(err)
-		}
-		var packet wireObject
-		for _, obj := range demoRESTObjects(t, r, coordinator.DecisionPacketV1) {
-			p, err := coordinator.DecodeDecisionPacket(obj.Payload)
+		packets := map[string]bool{refs["packet"]: true}
+		lastPacket := refs["packet"]
+		// approve commits another real approval through the same coordinator with
+		// the given roster, then assembles its manifest from the real store.
+		approve := func(t *testing.T, task string, roster []demoEvidenceRef) (demoPublicManifest, string) {
+			t.Helper()
+			// Human.Approve requests contain real Unix seconds. Let the recorded
+			// second elapse so each deliberate extra invocation has a distinct
+			// request/packet, even on a fast runner. No clock or history is rewritten.
+			old := demoRESTObject(t, r, lastPacket, coordinator.DecisionPacketV1)
+			previous, err := coordinator.DecodeDecisionPacket(old.Payload)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if p.ProposalHash.String() == rec.Plan && obj.Hash != oldPacket {
-				packet = obj
+			if delay := time.Until(time.Unix(previous.CreatedAt+1, 0)); delay > 0 {
+				timer := time.NewTimer(delay)
+				defer timer.Stop()
+				select {
+				case <-timer.C:
+				case <-r.ctx.Done():
+					t.Fatal(r.ctx.Err())
+				}
+			}
+			// The raw args map, not demoApprovalInput: the slot-order arm needs an
+			// order the package law accepts but the seed's own helper refuses.
+			args := map[string]any{"goal": input.Goal, "candidates": input.Candidates, "roster": roster}
+			approval, _, err := demoA2ASend(boundedTestContext(t), r.c, token, task, "demo-approve", args)
+			if err != nil {
+				t.Fatal(err)
+			}
+			e, _, err := r.entry(approval.EntryIndex)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rec, _, err := r.record(e)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var packet wireObject
+			for _, obj := range demoRESTObjects(t, r, coordinator.DecisionPacketV1) {
+				p, err := coordinator.DecodeDecisionPacket(obj.Payload)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if p.ProposalHash.String() == rec.Plan && !packets[obj.Hash] {
+					packet = obj
+				}
+			}
+			if packet.Hash == "" {
+				t.Fatal("new real approval must carry packet")
+			}
+			packets[packet.Hash], lastPacket = true, packet.Hash
+			p, err := coordinator.DecodeDecisionPacket(packet.Payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bad, err := demoAssembleManifest(demoM4bFreshReader(t, r), demoDomainObjects(demoProofSource(t)), append(slices.Clone(runs), approval), roster, packet.Hash, p.RequestRef.String(), p.ProposalHash.String())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := demoValidateManifest(demoM4bFreshReader(t, r), bad, token); err != nil {
+				t.Fatalf("control must pass the manifest prerequisite: %v", err)
+			}
+			return bad, packet.Hash
+		}
+		page := func(t *testing.T, packet string) []byte {
+			t.Helper()
+			status, body, err := r.c.do(r.ctx, "GET", "/workbench?object="+packet, nil)
+			if err != nil || status != 200 {
+				t.Fatalf("workbench page: HTTP %d err=%v", status, err)
+			}
+			return body
+		}
+		refuse := func(t *testing.T, bad demoPublicManifest, want string) {
+			t.Helper()
+			path := filepath.Join(t.TempDir(), "manifest.json")
+			err := demoFinalizeSeed(demoM4bFreshReader(t, r), bad, token, path)
+			if err == nil || !strings.Contains(err.Error(), want) {
+				t.Fatalf("seed must refuse with %q: %v", want, err)
+			}
+			if _, err := os.Stat(path); !os.IsNotExist(err) {
+				t.Fatal("refusal must write no success manifest")
 			}
 		}
-		if packet.Hash == "" {
-			t.Fatal("new real approval must carry packet")
+
+		// CLAIMED's ref changed to the genuine S1 goal object from this store.
+		claim := slices.Clone(input.Roster)
+		claim[2].Ref = refs["goal"]
+		bad, packet := approve(t, "demo-kind-mismatch", claim)
+		if body := page(t, packet); !bytes.Contains(body, []byte("<p>evidence roster UNAVAILABLE — claim kind</p>")) {
+			t.Fatalf("workbench must refuse real wrong-kind roster: page=%s", body)
 		}
-		p, err := coordinator.DecodeDecisionPacket(packet.Payload)
+		refuse(t, bad, "roster kind: authored-claim.ref")
+
+		// TESTED's ref changed to S3's genuine ai_check invocation record: the
+		// declared kind is right, so only the packet page's refusal can catch it.
+		e, _, err := r.entry(entries["check"])
 		if err != nil {
 			t.Fatal(err)
 		}
-		bad, err := demoAssembleManifest(demoM4bFreshReader(t, r), demoDomainObjects(demoProofSource(t)), runs, input.Roster, packet.Hash, p.RequestRef.String(), p.ProposalHash.String())
-		if err != nil {
-			t.Fatal(err)
+		check := slices.Clone(input.Roster)
+		check[0].Ref = e.TransitionRef
+		bad, packet = approve(t, "demo-page-refusal", check)
+		if body := page(t, packet); !bytes.Contains(body, []byte("<p>evidence roster UNAVAILABLE — test op</p>")) {
+			t.Fatalf("workbench must refuse a check record as TESTED: page=%s", body)
 		}
-		if err := demoValidateManifest(demoM4bFreshReader(t, r), bad, token); err != nil {
-			t.Fatalf("mismatch must pass manifest prerequisite: %v", err)
+		refuse(t, bad, "roster page: evidence roster UNAVAILABLE")
+
+		// The same four genuine refs, first two slots swapped. The package law and
+		// the projection are order-free, so only the seed's slot order refuses.
+		order := slices.Clone(input.Roster)
+		order[0], order[1] = order[1], order[0]
+		bad, packet = approve(t, "demo-slot-order", order)
+		if err := demoValidateRosterPage(page(t, packet)); err != nil {
+			t.Fatalf("instrument: reordered roster must still resolve on the page: %v", err)
 		}
-		status, page, err := r.c.do(r.ctx, "GET", "/workbench?object="+packet.Hash, nil)
-		if err != nil || status != 200 || !bytes.Contains(page, []byte("<p>evidence roster UNAVAILABLE — claim kind</p>")) {
-			t.Fatalf("workbench must refuse real wrong-kind roster: HTTP %d err=%v page=%s", status, err, page)
-		}
-		path := filepath.Join(t.TempDir(), "manifest.json")
-		err = demoFinalizeSeed(demoM4bFreshReader(t, r), bad, token, path)
-		if err == nil || !strings.Contains(err.Error(), "roster kind: authored-claim.ref") {
-			t.Fatalf("seed must independently refuse roster kind: authored-claim.ref: %v", err)
-		}
-		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			t.Fatal("kind refusal must write no success manifest")
-		}
+		refuse(t, bad, "roster slot 0: manifest/input mismatch")
 	})
 }
 
@@ -2503,6 +2568,14 @@ func TestDemoPublishManifestAbsent(t *testing.T) {
 	after, err := os.ReadFile(path)
 	if err != nil || !bytes.Equal(old, after) {
 		t.Fatal("publish must preserve existing bytes")
+	}
+	// The manifest is public bytes: CreateTemp's 0600 must not leak through.
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0644 {
+		t.Fatalf("published manifest mode must be 0644, got %v", info.Mode().Perm())
 	}
 	files, err := filepath.Glob(filepath.Join(filepath.Dir(path), ".demo-manifest-*"))
 	if err != nil || len(files) != 0 {
