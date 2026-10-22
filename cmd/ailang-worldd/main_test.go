@@ -15,6 +15,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/workbench"
 )
 
 // TestMain removes the registry credential from this package's test process.
@@ -186,6 +187,46 @@ func TestClientCallIsBounded(t *testing.T) {
 	}
 	if elapsed > 10*time.Second {
 		t.Fatalf("client call took %s — it is not bounded by the injected deadline", elapsed)
+	}
+}
+
+func TestServeWorkbenchStillFlag(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"serve", "--help"}, &stdout, &stderr); code != exitOK {
+		t.Fatalf("serve help: exit %d, stderr %q", code, stderr.String())
+	}
+	if !regexp.MustCompile(`(?m)^\s+--workbench-still\b`).MatchString(stdout.String() + stderr.String()) {
+		t.Fatal("serve help lacks --workbench-still")
+	}
+	got := captureServeConfig(t)
+	for _, explicit := range []bool{false, true} {
+		stdout.Reset()
+		stderr.Reset()
+		args := []string{"serve", "--db", filepath.Join(t.TempDir(), "world.db")}
+		if explicit {
+			args = append(args, "--workbench-still")
+		}
+		if code := run(args, &stdout, &stderr); code != exitOK {
+			t.Fatalf("serve explicit=%v: exit %d, stderr %q", explicit, code, stderr.String())
+		}
+		var body bytes.Buffer
+		if err := workbench.Render(&body, workbench.Page{Still: got.WorkbenchStill}); err != nil {
+			t.Fatal(err)
+		}
+		if !explicit && strings.Count(body.String(), `<script src="/workbench/live.js" defer></script>`) != 1 {
+			t.Fatal("default configuration must emit exactly one live script")
+		}
+		if got.WorkbenchStill != explicit {
+			t.Fatalf("WorkbenchStill = %v, want %v", got.WorkbenchStill, explicit)
+		}
+		if explicit && strings.Count(body.String(), "<script") != 0 {
+			t.Fatal("explicit still configuration must emit zero scripts")
+		}
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"serve", "--db", "/x/world.db", "--workbench-still=notabool"}, &stdout, &stderr); code != exitUsage || !strings.Contains(stderr.String(), "notabool") {
+		t.Fatalf("invalid bool: exit %d, stderr %q; want usage refusal", code, stderr.String())
 	}
 }
 

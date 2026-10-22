@@ -652,6 +652,31 @@ func TestWorkbenchViewFieldsAllRender(t *testing.T) {
 	}
 }
 
+func TestWorkbenchStillDefaultLiveScript(t *testing.T) {
+	missing, err := missingWorkbenchFields(pageHTML, partialsHTML)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range missing {
+		if field == "Page.Still" {
+			t.Error("field census: Page.Still is not referenced by the template")
+		}
+	}
+	for _, still := range []bool{false, true} {
+		var body bytes.Buffer
+		if err := Render(&body, Page{Title: "still test", Still: still}); err != nil {
+			t.Fatal(err)
+		}
+		if still {
+			if got := strings.Count(body.String(), "<script"); got != 0 {
+				t.Errorf("still page script count = %d, want zero", got)
+			}
+		} else if got := strings.Count(body.String(), `<script src="/workbench/live.js" defer></script>`); got != 1 {
+			t.Errorf("default live script count = %d, want one", got)
+		}
+	}
+}
+
 func TestWorkbenchFieldCensusMutations(t *testing.T) {
 	good, err := missingWorkbenchFields(pageHTML, partialsHTML)
 	if err != nil || len(good) != 0 {

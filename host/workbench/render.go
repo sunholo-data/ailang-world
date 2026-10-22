@@ -152,6 +152,7 @@ type DecisionsView struct {
 }
 
 type Page struct {
+	Still     bool
 	Decisions DecisionsView
 	Graph     GraphView
 	Live      LiveView
@@ -199,7 +200,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 .live-list{list-style:none;padding:0}.live-list li{padding:.4rem 0;border-bottom:1px solid var(--line)}
 .fresh{animation:fresh 1.5s ease-out}@keyframes fresh{from{background:var(--okbg)}to{background:transparent}}
 </style>
-<script src="/workbench/live.js" defer></script>
+{{if .Still}}{{else}}<script src="/workbench/live.js" defer></script>{{end}}
 </head>
 <body>
 <header><h1>{{.Title}}</h1><p role="status">{{.Notice}}</p></header>

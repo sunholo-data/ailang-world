@@ -17,6 +17,7 @@ ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
+                      [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
