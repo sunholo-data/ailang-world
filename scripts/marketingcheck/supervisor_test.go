@@ -129,6 +129,19 @@ cat > "$FAKE_RECORD.stdin"
 	if got.Verdict != "DestinationExists" || readFile(t, stale) != "old PNG" {
 		t.Error("stale PNG must never satisfy a new shot")
 	}
+	// A dangling link is still an existing entry: following it would let Chrome write elsewhere.
+	dangling := filepath.Join(dir, "dangling.png")
+	if err := os.Symlink(filepath.Join(dir, "elsewhere.png"), dangling); err != nil {
+		t.Fatal(err)
+	}
+	got = runSupervisor(t, "DestinationExists", shotArgs(chrome, dangling, "light")...)
+	if _, err := os.Lstat(filepath.Join(dir, "elsewhere.png")); got.Verdict != "DestinationExists" || err == nil {
+		t.Error("dangling symlink destination must be refused before launch")
+	}
+	bad := append(shotArgs(chrome, filepath.Join(dir, "zero.png"), "light"), "--width", "0")
+	if got := runSupervisor(t, "InvalidConfiguration", bad...); got.Verdict != "InvalidConfiguration" {
+		t.Error("a non-positive viewport must be refused")
+	}
 }
 
 func TestMarketingSupervisorFakeChromeNoFile(t *testing.T) {
@@ -249,17 +262,22 @@ wait
 
 func daemonFixture(t *testing.T) (string, string, string, string) {
 	t.Helper()
+	return daemonWith(t, `trap '' TERM
+echo "$$" > "$FAKE_PIDS"
+printf ready > "$FAKE_READY"
+while :; do sleep 0.02; done
+`)
+}
+
+// daemonWith writes a fake daemon whose body may use $FAKE_PIDS and $FAKE_READY.
+func daemonWith(t *testing.T, body string) (string, string, string, string) {
+	t.Helper()
 	dir := t.TempDir()
 	pids, ready, started := filepath.Join(dir, "pids"), filepath.Join(dir, "ready"), filepath.Join(dir, "started")
 	t.Setenv("FAKE_PIDS", pids)
 	t.Setenv("FAKE_READY", ready)
 	cleanupPIDs(t, pids)
-	daemon := fakeScript(t, dir, "daemon", `trap '' TERM
-echo "$$" > "$FAKE_PIDS"
-printf ready > "$FAKE_READY"
-while :; do sleep 0.02; done
-`)
-	return daemon, pids, ready, started
+	return fakeScript(t, dir, "daemon", body), pids, ready, started
 }
 
 func TestMarketingSupervisorFakeDaemonCleanup(t *testing.T) {
@@ -304,8 +322,101 @@ func TestMarketingSupervisorFakeDaemonCleanup(t *testing.T) {
 			assertDead(t, pid, "injected-failure daemon")
 		}
 	})
-	for _, mode := range []string{"exit", "wait"} {
-		t.Run("shell-"+mode, func(t *testing.T) {
+	t.Run("term-first", func(t *testing.T) {
+		// A TERM-honouring daemon proves cleanup asks politely before it KILLs.
+		daemon, pids, ready, started := daemonWith(t, `trap 'printf term > "$FAKE_PIDS.term"; exit 0' TERM
+echo "$$" > "$FAKE_PIDS"
+printf ready > "$FAKE_READY"
+while :; do sleep 0.02; done
+`)
+		start := time.Now()
+		runSupervisor(t, "ok", "daemon", "--ready-file", ready, "--started-file", started, "--lifetime", "0.05", "--term-wait", "3", "--kill-wait", "0.3", "--", daemon)
+		if _, err := os.Stat(pids + ".term"); err != nil {
+			t.Error("daemon must receive TERM before any KILL")
+		}
+		if elapsed := time.Since(start); elapsed > 1500*time.Millisecond {
+			t.Errorf("a daemon that exits on TERM must not wait out term-wait: %s", elapsed)
+		}
+	})
+	for _, tc := range []struct{ name, body, verdict, assertion string }{
+		{"early-exit", "exit 3\n", "NonzeroExit", "daemon exiting before readiness must be NonzeroExit"},
+		{"never-ready", `echo "$$" > "$FAKE_PIDS"` + "\nwhile :; do sleep 0.02; done\n", "Timeout", "daemon readiness deadline must be Timeout"},
+		{"exits-while-ready", `printf ready > "$FAKE_READY"` + "\nsleep 0.1\n", "NonzeroExit", "daemon exiting during its lifecycle must be NonzeroExit"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			daemon, pids, ready, started := daemonWith(t, tc.body)
+			got := runSupervisor(t, tc.verdict, "daemon", "--ready-file", ready, "--started-file", started, "--startup-timeout", "0.3", "--lifetime", "5", "--term-wait", "0.15", "--kill-wait", "0.3", "--", daemon)
+			if got.Verdict != tc.verdict {
+				t.Error(tc.assertion)
+			}
+			for _, pid := range recordedPIDs(pids) {
+				assertDead(t, pid, tc.name+" daemon")
+			}
+		})
+	}
+	t.Run("stale-markers", func(t *testing.T) {
+		daemon, pids, ready, started := daemonFixture(t)
+		if err := os.WriteFile(ready, []byte("old"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		// Short lifetime/waits so a missing freshness guard reaches the assertion, not the context kill.
+		got := runSupervisor(t, "DestinationExists", "daemon", "--ready-file", ready, "--started-file", started, "--lifetime", "0.2", "--term-wait", "0.15", "--kill-wait", "0.3", "--", daemon)
+		if _, err := os.Stat(pids); got.Verdict != "DestinationExists" || err == nil {
+			t.Error("readiness markers must be fresh: a stale one must refuse before the daemon starts")
+		}
+	})
+	t.Run("invalid-config", func(t *testing.T) {
+		daemon, _, ready, started := daemonFixture(t)
+		if got := runSupervisor(t, "InvalidConfiguration", "daemon", "--ready-file", ready, "--started-file", started, "--chrome", daemon, "--", daemon); got.Verdict != "InvalidConfiguration" {
+			t.Error("a daemon shot without --out and --url must be refused")
+		}
+	})
+	t.Run("interrupted-shot", func(t *testing.T) {
+		// TERM to the supervisor during a hung shot must not wait out the 30 s shot deadline.
+		daemon, pids, ready, started := daemonFixture(t)
+		dir := t.TempDir()
+		chromePIDs := filepath.Join(dir, "chrome-pids")
+		t.Setenv("FAKE_CHROME_PIDS", chromePIDs)
+		cleanupPIDs(t, chromePIDs)
+		chrome := fakeScript(t, dir, "chrome", `echo "$$" > "$FAKE_CHROME_PIDS"
+exec sleep 60
+`)
+		cmd := pythonSupervisor(t, "daemon", "--ready-file", ready, "--started-file", started, "--term-wait", "0.15", "--kill-wait", "0.3", "--chrome", chrome, "--out", filepath.Join(dir, "shot.png"), "--url", "http://example.invalid/", "--timeout", "20", "--", daemon)
+		var stdout bytes.Buffer
+		cmd.Stdout = &stdout
+		if err := cmd.Start(); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = cmd.Process.Kill() })
+		waitFile(t, chromePIDs)
+		start := time.Now()
+		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+			t.Fatal(err)
+		}
+		err := cmd.Wait()
+		if elapsed := time.Since(start); elapsed > 2500*time.Millisecond {
+			t.Errorf("TERM during a shot must stop the supervisor within the cleanup bound: %s", elapsed)
+		}
+		var got supervisorVerdict
+		if e := json.Unmarshal(stdout.Bytes(), &got); e != nil || got.Verdict != "Interrupted" || err == nil {
+			t.Errorf("a signalled shot must report Interrupted with a non-zero exit: %+v err=%v json=%v", got, err, e)
+		}
+		for _, pid := range append(recordedPIDs(chromePIDs), recordedPIDs(pids)...) {
+			assertDead(t, pid, "interrupted shot process")
+		}
+	})
+	for _, tc := range []struct {
+		name, mode string
+		sig        syscall.Signal
+		code       int
+	}{
+		{"exit", "exit", 0, 0},
+		{"wait", "wait", syscall.SIGTERM, 143},
+		{"int", "wait", syscall.SIGINT, 130},
+		{"hup", "wait", syscall.SIGHUP, 129},
+	} {
+		mode := tc.mode
+		t.Run("shell-"+tc.name, func(t *testing.T) {
 			daemon, pids, ready, started := daemonFixture(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
 			defer cancel()
@@ -335,7 +446,7 @@ func TestMarketingSupervisorFakeDaemonCleanup(t *testing.T) {
 			waitFile(t, started)
 			start := time.Now()
 			if mode == "wait" {
-				if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+				if err := cmd.Process.Signal(tc.sig); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -345,8 +456,8 @@ func TestMarketingSupervisorFakeDaemonCleanup(t *testing.T) {
 			}
 			if mode == "wait" {
 				exitErr, ok := err.(*exec.ExitError)
-				if !ok || exitErr.ExitCode() != 143 {
-					t.Errorf("TERM trap must exit 143 after supervised cleanup: %v", err)
+				if !ok || exitErr.ExitCode() != tc.code {
+					t.Errorf("%v trap must exit %d after supervised cleanup: %v", tc.sig, tc.code, err)
 				}
 			}
 			if elapsed := time.Since(start); elapsed > 2*time.Second {

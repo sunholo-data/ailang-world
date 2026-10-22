@@ -67,7 +67,21 @@ def png_verdict(path: Path) -> dict:
     return verdict('ok')
 
 
-def shot(args: argparse.Namespace) -> dict:
+def wait_bounded(process: subprocess.Popen, timeout: float, stop: threading.Event | None) -> bool:
+    """True when the child exited; False on deadline or when a supervisor signal arrived."""
+    deadline = time.monotonic() + timeout
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0 or (stop is not None and stop.is_set()):
+            return False
+        try:
+            process.wait(timeout=min(remaining, 0.05))
+            return True
+        except subprocess.TimeoutExpired:
+            pass
+
+
+def shot(args: argparse.Namespace, stop: threading.Event | None = None) -> dict:
     path = Path(os.path.abspath(args.out))
     # Refuse all existing entries, including dangling links; never accept stale bytes.
     if os.path.lexists(path):
@@ -83,14 +97,17 @@ def shot(args: argparse.Namespace) -> dict:
                 args.url]
         process = spawn(argv, log)
         try:
-            process.communicate(timeout=args.timeout)
-        except subprocess.TimeoutExpired:
-            kill_group(process, signal.SIGKILL)
-            try:
-                process.communicate(timeout=KILL_WAIT_S)
-            except subprocess.TimeoutExpired:
-                return verdict('CleanupFailed', 'Chrome could not be reaped after KILL')
-            return verdict('Timeout', 'Chrome deadline expired, regardless of PNG')
+            # A TERM/INT/HUP to the daemon supervisor must not wait out the 30 s shot.
+            if not wait_bounded(process, args.timeout, stop):
+                kill_group(process, signal.SIGKILL)
+                try:
+                    process.communicate(timeout=KILL_WAIT_S)
+                except subprocess.TimeoutExpired:
+                    # Unreachable without an unkillable process; kept so a reap failure is loud.
+                    return verdict('CleanupFailed', 'Chrome could not be reaped after KILL')
+                if stop is not None and stop.is_set():
+                    return verdict('Interrupted', 'supervisor signalled during the shot')
+                return verdict('Timeout', 'Chrome deadline expired, regardless of PNG')
         finally:
             # Also collect descendants left behind by an exited Chrome leader.
             kill_group(process, signal.SIGKILL)
@@ -108,6 +125,7 @@ def cleanup_daemon(process: subprocess.Popen, term_wait: float, kill_wait: float
         try:
             process.communicate(timeout=kill_wait)
         except subprocess.TimeoutExpired:
+            # Unreachable without an unkillable process; tests inject this via --unit-cleanup-failure.
             return verdict('CleanupFailed', 'daemon could not be reaped after KILL')
     # The leader may exit on TERM while descendants ignore it.
     kill_group(process, signal.SIGKILL)
@@ -144,7 +162,7 @@ def daemon(args: argparse.Namespace) -> dict:
                 else:
                     Path(args.started_file).write_text(json.dumps({'pid': process.pid, 'supervisor_pid': os.getpid()}) + '\n')
                     if args.chrome:
-                        result = shot(args)
+                        result = shot(args, stop)
                     else:
                         deadline = time.monotonic() + args.lifetime
                         while not stop.is_set() and time.monotonic() < deadline:
