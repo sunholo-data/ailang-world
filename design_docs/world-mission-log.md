@@ -1487,7 +1487,7 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 
 **Next:** row 150 M5c: seed roster validation and success manifest publication. Fold in the remaining M5a r1 survivors and M4b r2's validator mutants (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.
 
-## 299 — 2026-10-22 — row 150 M5c built: the demo seed completes with a final roster check and one atomic success manifest; M5b's TESTED rule fixed to the real tool shape (PR #PRNUM; judge r1 PASS 80 → r2 PASS 85) [PRODUCT]
+## 299 — 2026-10-22 — row 150 M5c built: the demo seed completes with a final roster check and one atomic success manifest; M5b's TESTED rule fixed to the real tool shape (PR #354; judge r1 PASS 80 → r2 PASS 85) [PRODUCT]
 
 **Kind:** one milestone of row 150 (M5c). Production: `cmd/ailang-worldd/demo_seed.go`, `cmd/ailang-worldd/demo.go`, `host/daemon/workbench_packet_evidence.go`. Tests, one tool-generated fixture (`host/daemon/testdata/roster_cli_test_result_real.json`), QUICKSTART §12 and `website/docs/reference/cli.md`. No `.ail` change, no release, no design-direction change.
 
@@ -1532,7 +1532,7 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 
 **Result:** M5c built. Row 150 has 11 of 17 milestones. Plan and sprint JSON mark M5c completed.
 
-**Gate 3b:** PR #PRNUM (`sprint/world-iter299-row150-m5c`); the record rides the same PR. CI is verified on the PR head and the merge before Gate 5 reports LANDED.
+**Gate 3b:** PR #354 (`sprint/world-iter299-row150-m5c`); the record rides the same PR. CI is verified on the PR head and the merge before Gate 5 reports LANDED.
 
 **Routing evidence:** base=f4b2dfdbcf1b2e342fce961dd4740a8bf3e0f37a@2026-10-22T03:27:47Z (Gate 3 worktree).
 - Controller `claude:claude-opus-5-5` (tok: not reported).

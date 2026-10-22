@@ -1,6 +1,6 @@
 # World mission dashboard — iteration 299 (2026-10-22)
 
-- **This fire:** row 150 M5c built, PR #PRNUM. `ailang-worldd demo seed` now completes.
+- **This fire:** row 150 M5c built, PR #354. `ailang-worldd demo seed` now completes.
   - After S1–S6 it re-reads the S5 input it committed and checks every roster slot: order, ref = manifest ref, re-hash, declared kind. The packet page must show four resolved grade rows and no roster-unavailable banner.
   - Only then does it publish one success manifest atomically: temp file, fsync, `os.Link` (never overwrites), mode 0644. Exit 0 only after that.
   - Help, QUICKSTART §12 and the CLI reference now describe a complete seed.

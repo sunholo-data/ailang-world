@@ -1851,7 +1851,7 @@
       ],
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
       "completed": "2026-10-22T04:40:00Z",
-      "notes": "PR #PRNUM; iteration 299; judge sonnet r1 PASS 80 -> r2 PASS 85, zero blocking; controller fix c9fd10af (TESTED accepts the real tool success shape without exit_code)"
+      "notes": "PR #354; iteration 299; judge sonnet r1 PASS 80 -> r2 PASS 85, zero blocking; controller fix c9fd10af (TESTED accepts the real tool success shape without exit_code)"
     },
     {
       "id": "M6",
