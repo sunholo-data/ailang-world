@@ -1,0 +1,35 @@
+{
+  "probe": {
+    "role": "executor",
+    "model": "gpt-6.1-sol",
+    "label": "probe",
+    "rc": 0,
+    "seconds": 9.376,
+    "capped": false,
+    "log": "/tmp/world-mc-20261023/executor-303-probe.jsonl",
+    "usage": {
+      "reasoning_output_tokens": 0,
+      "output_tokens": 5,
+      "cached_input_tokens": 7168,
+      "input_tokens": 17392
+    }
+  },
+  "run": {
+    "role": "executor",
+    "model": "gpt-6.1-sol",
+    "label": "run",
+    "rc": 0,
+    "seconds": 234.899,
+    "capped": false,
+    "log": "/tmp/world-mc-20261023/executor-303-run.jsonl",
+    "usage": {
+      "reasoning_output_tokens": 397,
+      "output_tokens": 5670,
+      "cached_input_tokens": 534656,
+      "input_tokens": 597484
+    }
+  },
+  "supervisor_boundary_shas_unchanged": true,
+  "supervisor_head": "f615a9698370694664fbbc01431e4a2c549377cc",
+  "supervisor_tracked_diff_rc": 0
+}

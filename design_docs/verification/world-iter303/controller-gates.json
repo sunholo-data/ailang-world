@@ -1,0 +1,26 @@
+[
+  {
+    "gate": "pins",
+    "rc": 0,
+    "seconds": 0.4,
+    "log": "/tmp/world-mc-20261023/controller/pins.log"
+  },
+  {
+    "gate": "focused",
+    "rc": 0,
+    "seconds": 2.4,
+    "log": "/tmp/world-mc-20261023/controller/focused.log"
+  },
+  {
+    "gate": "ail",
+    "rc": 0,
+    "seconds": 27.4,
+    "log": "/tmp/world-mc-20261023/controller/ail.log"
+  },
+  {
+    "gate": "go",
+    "rc": 1,
+    "seconds": 448.0,
+    "log": "/tmp/world-mc-20261023/controller/go.log"
+  }
+]

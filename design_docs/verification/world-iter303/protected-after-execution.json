@@ -1,0 +1,62 @@
+[
+  {
+    "path": "design_docs/world-mission.md",
+    "sha256": "3c3a16bf49b31d7d501bed465468d030fcbf2e8ff71d5dd6f162df42bd498e79",
+    "lines": 6255
+  },
+  {
+    "path": "go.mod",
+    "sha256": "854f8a4ea30a7488e01551abd8b5f59758fe617f2c4f7ebca7786597fd5480c2",
+    "lines": 21
+  },
+  {
+    "path": "go.sum",
+    "sha256": "71d51296218222e25619fbb9ad3f9723b59854e8abbe1ae855c95bd96e263243",
+    "lines": 59
+  },
+  {
+    "path": "tools/launchd/README.md",
+    "sha256": "aeb663f2e95b4f1e168ad7a1bb687fa81ea516b4dcad78863bed7fea1b304793",
+    "lines": 48
+  },
+  {
+    "path": "tools/launchd/derive-planner-lane.sh",
+    "sha256": "a7c52f4852026dccd7e26d5cb058957ca7d8496073d43a87c9c1a4bc91837451",
+    "lines": 109
+  },
+  {
+    "path": "tools/launchd/mission-template.plist",
+    "sha256": "aaf57d459ae5917e8acdf69cee287586189469090da830dbba27729d09cd7dc0",
+    "lines": 33
+  },
+  {
+    "path": "tools/launchd/test_mission_stall.sh",
+    "sha256": "5e8c04072015274e54486f2d2df8d638d1e1c5f46fd55e07e89dc30b68daae33",
+    "lines": 221
+  },
+  {
+    "path": "tools/launchd/testdata/planner-lane/n-no-backtick-bullet.md",
+    "sha256": "833205678140b5b47079994eabd145e1c414e2d8a890a280e54b35fc17876006",
+    "lines": 12
+  },
+  {
+    "path": "world/contracts.ail",
+    "sha256": "157574f614ec0d57b2c5302534984a84dfbcbaa6591eea560b4275932ab5f071",
+    "lines": 168
+  },
+  {
+    "path": "world/logepoch.ail",
+    "sha256": "477ed4ce7ee223d032b12ebe998331de38fbe638a09b660a578f296d6ef611b5",
+    "lines": 139
+  },
+  {
+    "path": "world/transitions.ail",
+    "sha256": "3bc711b44ce0e06dc2d7630502968db8609c64d31982a07d3236e1eb79dead36",
+    "lines": 104
+  },
+  {
+    "path": "world/types.ail",
+    "sha256": "323cb6d40317e3100d8367b7904a772069798ea9a282fa08064a668f57efed6f",
+    "lines": 283
+  }
+]

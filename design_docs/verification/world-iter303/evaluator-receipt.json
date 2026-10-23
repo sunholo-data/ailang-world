@@ -1,0 +1,93 @@
+{
+  "head": "f615a9698370694664fbbc01431e4a2c549377cc",
+  "tracked_diff_rc": 0,
+  "hashes": [
+    {
+      "path": "design_docs/planned/sprint_w-marketing-capture.json",
+      "actual": "bbeb187645041d25dd58f6c91a8eb539e284669bdf586ba25f6e439658dce593",
+      "head": "bbeb187645041d25dd58f6c91a8eb539e284669bdf586ba25f6e439658dce593",
+      "equal": true
+    },
+    {
+      "path": "design_docs/planned/w-marketing-capture-sprint-plan.md",
+      "actual": "e78cc584a0ef6ac78b4385fe3d37d35ac339353c746539605ce5de4ef10ee21f",
+      "head": "e78cc584a0ef6ac78b4385fe3d37d35ac339353c746539605ce5de4ef10ee21f",
+      "equal": true
+    },
+    {
+      "path": "host/store/context_roots_test.go",
+      "actual": "86527132157d2d2e1ffd7165ac6c3fc50f5f387b8058c2af56e9c0a53320a491",
+      "head": "86527132157d2d2e1ffd7165ac6c3fc50f5f387b8058c2af56e9c0a53320a491",
+      "equal": true
+    },
+    {
+      "path": "scripts/marketingcheck/main.go",
+      "actual": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+      "head": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+      "equal": true
+    },
+    {
+      "path": "scripts/marketingcheck/png.go",
+      "actual": "ea9b43df9b5e6f70757aff1798b28a258702271864a05f823ea88a760db5145e",
+      "head": "ea9b43df9b5e6f70757aff1798b28a258702271864a05f823ea88a760db5145e",
+      "equal": true
+    },
+    {
+      "path": "scripts/marketingcheck/png_test.go",
+      "actual": "cce1893446ff39ecb8366d4705f118fe143688539aa6e26602a1e41ac81e1a2c",
+      "head": "cce1893446ff39ecb8366d4705f118fe143688539aa6e26602a1e41ac81e1a2c",
+      "equal": true
+    },
+    {
+      "path": "scripts/marketingcheck/supervisor_test.go",
+      "actual": "7cb4a1ba63ae13fb3fb0b09b9a1f25d466c1b45305da921aa3eb35c37bf9b447",
+      "head": "7cb4a1ba63ae13fb3fb0b09b9a1f25d466c1b45305da921aa3eb35c37bf9b447",
+      "equal": true
+    }
+  ],
+  "status": "?? evaluator-recovery-evidence/\n?? evaluator-recovery-report.md\n",
+  "transport": {
+    "verdict": "ok",
+    "rc": 0,
+    "fenced": true,
+    "model": "openrouter/minimax/minimax-m3",
+    "pi_rc": 0,
+    "elapsed_seconds": 446,
+    "worktree_changed_files": 2,
+    "predirty_files": 0,
+    "worktree_changed_since_start": true,
+    "base_head": "f615a9698370694664fbbc01431e4a2c549377cc",
+    "head_after": "f615a9698370694664fbbc01431e4a2c549377cc",
+    "commits_since_start": 0,
+    "tool_executions": 114,
+    "hung_tool": "",
+    "provider_errors": 0,
+    "provider_error": "",
+    "agent_end_events": 1,
+    "ndjson_bytes_filtered": 2155534,
+    "ndjson": "/tmp/world-mc-20261023/evaluator-303/run.ndjson",
+    "snapshot": "/tmp/world-mc-20261023/evaluator-303/run.ndjson.snapshot.ndjson",
+    "stderr": "/tmp/world-mc-20261023/evaluator-303/run.ndjson.stderr"
+  },
+  "run_usage": {
+    "name": "run",
+    "model": "openrouter/minimax/minimax-m3",
+    "calls": 115,
+    "tokens_in": 189639,
+    "tokens_out": 28591,
+    "cache_read": 6135424,
+    "cache_write": 0,
+    "cost_usd": 0.45932633999999994
+  },
+  "probe_usage": {
+    "name": "probe",
+    "model": "openrouter/minimax/minimax-m3",
+    "calls": 1,
+    "tokens_in": 1228,
+    "tokens_out": 17,
+    "cache_read": 128,
+    "cache_write": 0,
+    "cost_usd": 0.00039648
+  },
+  "total_cost_usd": 0.4597228199999999
+}
