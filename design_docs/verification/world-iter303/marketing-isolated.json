@@ -1,0 +1,17 @@
+[
+  {
+    "arm": "marketing-candidate",
+    "rc": 0,
+    "seconds": 17.9
+  },
+  {
+    "arm": "marketing-base",
+    "rc": 0,
+    "seconds": 8.6
+  },
+  {
+    "arm": "marketing-race",
+    "rc": 0,
+    "seconds": 35.5
+  }
+]

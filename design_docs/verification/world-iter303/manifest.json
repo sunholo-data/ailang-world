@@ -1,0 +1,117 @@
+{
+  "candidate": "f615a9698370694664fbbc01431e4a2c549377cc",
+  "base": "c73c79048daf9c3a19ea05c96e793436eb45e9c5",
+  "raw_evidence_persistent": "/Users/voightkampff/.ailang/state/world-iter303/evidence",
+  "artifacts": [
+    {
+      "path": "controller-cli-mutations.json",
+      "bytes": 3661,
+      "sha256": "bef19ff1c6f69d668c841084df684f7aaea11e05aed44cabd09f614ade3eedf8"
+    },
+    {
+      "path": "controller-gates.json",
+      "bytes": 478,
+      "sha256": "95d42bbe9f08b0a85df4e731633b1ca10b9889caa010362266f6cb7b6f615cd9"
+    },
+    {
+      "path": "controller-mutations.json",
+      "bytes": 62823,
+      "sha256": "18b01ada8e068154b6c51a4afa13a290bc2398a8021be2ed901a1de02dc4d1d2"
+    },
+    {
+      "path": "designer-recovery-audit.md",
+      "bytes": 24885,
+      "sha256": "31d5761d55090d6cdd866d026c0933ca38ae9361efea73651e9c2f82bc6b760c"
+    },
+    {
+      "path": "evaluator-receipt.json",
+      "bytes": 3279,
+      "sha256": "b931e3941c5afff78b85ba70eb93396790afd96c577779b3dad7ce565b564c3b"
+    },
+    {
+      "path": "evaluator-recovery-report.md",
+      "bytes": 14530,
+      "sha256": "20ed038917d052d8fd4171d037febbfb2bb38ea4778f805ee86e000087bedf9b"
+    },
+    {
+      "path": "executor-receipt.json",
+      "bytes": 865,
+      "sha256": "9d5bde91d4c70403fb7e344658a1f22a91919db064d8f014795502c742218917"
+    },
+    {
+      "path": "executor-recovery-report.md",
+      "bytes": 8039,
+      "sha256": "78d1e79f8fcd4ca80d06e81213aca2ed73ba81364e1e406582196e28ff705c92"
+    },
+    {
+      "path": "marketing-isolated.json",
+      "bytes": 220,
+      "sha256": "7d00e2a90c59c563f677a71b406ad9f15a77fd6130f173316027b8d9e48f6048"
+    },
+    {
+      "path": "pinned-direct.json",
+      "bytes": 192,
+      "sha256": "8ad9b7360406ef0cc74670ff335f685ed349b73bf3007d34539b964312286f5c"
+    },
+    {
+      "path": "pinned-direct.stderr.log",
+      "bytes": 393,
+      "sha256": "5e2da2cb68a33068cf48f10e529fa0f3734ab76bcadca14b70734383a92dde22"
+    },
+    {
+      "path": "planner-recovery-plan.json",
+      "bytes": 5086,
+      "sha256": "13d9626460667335679dbbdd8d7cf3676ff4cae192949922971f0ac371a0d499"
+    },
+    {
+      "path": "planner-recovery-plan.md",
+      "bytes": 5582,
+      "sha256": "47949fb030f7ec4a7411eecae29d4aebe159989e8898551211ca732b71090719"
+    },
+    {
+      "path": "pr361-before-record.json",
+      "bytes": 1038,
+      "sha256": "48ac9a4e110451d9a94ac1195220d1e8007a6924f4e5d3abc02661cbaf9a9537"
+    },
+    {
+      "path": "protected-after-execution.json",
+      "bytes": 1789,
+      "sha256": "9695939955bb1a45a18e1899909a451a19929325e070780a94e532332fbd2598"
+    },
+    {
+      "path": "protected-before.json",
+      "bytes": 1789,
+      "sha256": "9695939955bb1a45a18e1899909a451a19929325e070780a94e532332fbd2598"
+    },
+    {
+      "path": "quorum.json",
+      "bytes": 3058,
+      "sha256": "fecb07cd1edbf173f109051c432af8fd7bc91e74c6873d8b0c5cf2f53c8bbc48"
+    },
+    {
+      "path": "red-base.log",
+      "bytes": 1834,
+      "sha256": "6ae491b17bd8bbb51fa87c557ad453cf9814fb326466d7d3649b055e81c45a09"
+    },
+    {
+      "path": "red-candidate.log",
+      "bytes": 1844,
+      "sha256": "dcd034e8cfa03de633c3e39925f2a1fb918c63cf396bf3e9d83b7d7efcf64c74"
+    },
+    {
+      "path": "red-controls.json",
+      "bytes": 128,
+      "sha256": "ea2f170b8d85361433d8dcf9fad5cc57e28d2c93c1ac41867c25af21ba8ec36d"
+    },
+    {
+      "path": "review-scope-notes.md",
+      "bytes": 1343,
+      "sha256": "5454702f134ebf4f661e27aa15e60e46ba84fbe0bf31336dcb8811ec57eceadb"
+    },
+    {
+      "path": "verification-summary.md",
+      "bytes": 2002,
+      "sha256": "23d8bf63d82b9812545a840e09b99c5e97653254b7a16ad69d5e4f0221229735"
+    }
+  ]
+}

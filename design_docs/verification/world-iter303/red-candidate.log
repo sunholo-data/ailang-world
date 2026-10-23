@@ -1,0 +1,16 @@
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter303-recover-m7b
+ 5:40  up 7 days, 17:12, 4 users, load averages: 1.54 2.55 2.52
+=== RUN   TestCheckSourceUnderPinnedInterpreter
+    check_test.go:104: import-bearing module: check = {Output:→ Type checking host/capsule/main.ail...
+        → Effect checking...
+        2026/10/23 05:40:27 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md
+        Error: module loading error: failed … Passed:false}, want Passed=false with "LDR001" in the output
+--- FAIL: TestCheckSourceUnderPinnedInterpreter (1.41s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/archive	1.682s
+=== RUN   TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter
+    transitions_test.go:295: refusal stderr = "world-publish transitions: entry \"tools.echo\": publish transition registry: entry \"tools.echo\"'s source \"sha256:e0e5ae29444777e208ae9535bbd0b22d555c908f07de927b8dbdbcc7850f329f\" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...\n→ Effect checking...\n2026/10/23 05:40:27 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md\nError: module loading error: failed …\n", want the interpreter's own LDR001 module-not-found output
+--- FAIL: TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter (1.50s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/world-publish	1.950s
+FAIL

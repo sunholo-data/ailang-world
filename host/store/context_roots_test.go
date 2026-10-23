@@ -200,6 +200,10 @@ func TestProductionGoSurface(t *testing.T) {
 	allowed := map[string]bool{
 		"design_docs/verification/w-race-gate-blindspot/racecontrol/main.go": false,
 		"design_docs/verification/w-race-gate-blindspot/repro/main.go":       false,
+		// The marketing-capture verifier CLI (M7b, row 150): plan-mandated production
+		// tooling outside host/ and cmd/; the exact two-pass PNG gate for the six-shot pass.
+		"scripts/marketingcheck/main.go": false,
+		"scripts/marketingcheck/png.go":  false,
 	}
 	scanned, reproducers := 0, 0
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {

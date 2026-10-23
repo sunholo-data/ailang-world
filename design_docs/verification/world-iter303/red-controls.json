@@ -1,0 +1,12 @@
+[
+  {
+    "arm": "candidate",
+    "rc": 1,
+    "seconds": 2.4
+  },
+  {
+    "arm": "base",
+    "rc": 1,
+    "seconds": 2.8
+  }
+]

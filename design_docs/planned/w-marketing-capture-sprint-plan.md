@@ -918,7 +918,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M7b — PNG structure, decoded content and exact two-pass verifier
 
-Design M7; 28 minutes; dependency: M7a; status **pending**.
+Design M7; 28 minutes; dependency: M7a; status **completed** — built iteration 302 (executor codex gpt-6.1-sol `fa04df00` — the run completed in the first 2026-10-22 fire whose controller then crashed at gate 3; recovered and verified first-party by the iteration-302 controller: five gates green, all eight plan mutants red at their named tests with sha-identical restores; controller fix `02e12be2`: the two verifier files enter the Go-surface allow-list — `TestProductionGoSurface` reddened in the full suite, the one finding neither the focused gates nor the round-1 judge caught). Judge pi:openrouter/minimax/minimax-m3 (generator codex ≠ judge minimax) r1 PASS 95, zero blocking, one honest survivor (M7b-truncated-chunk: neutering the guard reds at a different assertion; per the panic rule, not a kill) → r2 PASS 95 on the fix delta, zero new blocking, both guard drills red (rogue file; entries removed). Carried to M7c: N1, and from M7a N4/S6/S7/R3-1 — `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` still exceeds its 10 s bound under whole-suite load (29 s measured 3/3; green isolated 4/4).
 
 Exact executor files:
 

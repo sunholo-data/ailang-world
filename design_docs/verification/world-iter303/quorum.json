@@ -1,0 +1,74 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture.md",
+  "iso_ts": "2026-10-23T03:32:39Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: You reached your Pro 5-hour limit. Max is $100/month for $300 of usage, with no 5-hour or weekly caps: https://ollama.com/settings/billing (ref: e9280e48-0ffa-4177-83c2-bb62038306aa)",
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: You reached your Pro 5-hour limit. Max is $100/month for $300 of usage, with no 5-hour or weekly caps: https://ollama.com/settings/billing (ref: f0b2290a-36d7-4f41-82b8-5f0f0831b49d)",
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.02414,
+      "tokens_in": 10930,
+      "tokens_out": 228,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The new package's authored-claim kind predicate (D3 / Approach §1) is specified as 'drift-tested against world/types.gradeOf's CLAIMED mapping', yet V28 confirms `world/types.ail` only defines `AiReview` and `ProofReceipt` for CLAIMED and C11 forbids modifying `world/*.ail`; the exact mechanism for a drift test between a new package-defined kind and a frozen kernel sum type without casting to `AiReview` or `ProofReceipt` will require careful structural alignment in M1/M5.",
+        "catch": "In M1 and M5, verify how the drift test links the new package's authored-claim predicate to `world/types.gradeOf` without touching `world/types.ail` (per C11) or reusing `AiReview` (per D3)."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Verify-and-land M7b recovery only. Existing r4 was admitted by iteration266 narrow-refinement; current candidate adds PNG verifier only, prior independently reviewed PR361. Attended capture and later milestones remain pending."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [
+      {
+        "model": "oc-glm-5-3",
+        "reason": "unreachable"
+      },
+      {
+        "model": "oc-kimi-k3",
+        "reason": "unreachable"
+      },
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.02414,
+    "total_tokens_in": 10930,
+    "total_tokens_out": 228
+  }
+}

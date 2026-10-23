@@ -1651,3 +1651,53 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row 150 **13/17 milestones built**; next M7b. Release `v1.0.0-rc.1`; 156 (held on D-WORLD-86) → 150 → 151 before v1.0.0.
 
 **Next:** row 150 M7b: PNG structure, decoded content and exact two-pass verifier (`design_docs/planned/w-marketing-capture-sprint-plan.md`). DECISIONS FOR MARK: D-WORLD-86 (OPEN; default hold). It also gates row 156's close.
+
+## 303 — 2026-10-23 — recover iteration 302's row 150 M7b PNG verifier (PR #361; fresh independent MiniMax PASS 93/100) [PRODUCT]
+
+**Kind:** verify-and-land recovery of inherited M7b; no new production or design change. The operator required all four roles through the Agent tool; all four native supervisors were spawned and launched the resolver's exact provider recipes.
+
+**Pick and why:** Gate 1 found World-owned open PR #361 on its matching worktree, ahead of origin/dev and still unmerged. Its candidate `f615a9698370694664fbbc01431e4a2c549377cc` already contained executor work, two historical MiniMax PASS95 reviews and three green CI jobs, but no iteration 302 log/STATUS/index record. Recovery outranks repeating M7b or starting M7c. The first302 fire crashed at Gate 3 (rc 1 notice https://github.com/sunholo-data/ailang-world/issues/313#issuecomment-6345079873); the subsequent attempt opened the PR and stopped before landing/recording; that latter cause is UNMEASURED. Both attempts are credited here, no invented302 completion entry.
+
+**Clause map:**
+- 1 deterministic kernel: MET.
+- 2 local-first daemon: MET.
+- 3 explicit authority: MET.
+- 4 resident-agent floor: MET.
+- 5 human surface/provenance: MET.
+- 6 protocol boundary: MET.
+- 7 controlled self-modification: MET.
+These are the ratified current states, not new measurements of the bar. D-WORLD-81 governs the remaining release order156→150→151;156 is held on unchanged OPEN D-WORLD-86, so150 is routable.
+
+**Gate 0:** armed; gh sunholo-voight-kampff; billing CLEAN; no new allowlisted directive on #313. Ledger77 rows valid, only D-WORLD-86 OPEN; no unattended resolution. Shared-store inbox triaged. Fleet harness-resolved message inbox_1792707991628_18d60a93 reports routing-models-check:bold-colon-heading at fleet2debbb0278cc08e018be2d0a1e75befcbda55454; record receipt and ack, no World harness repair. Driver self-notice controls107:4 and 2/2 watermarks fired. Weekly issue rotation not due (#313 created after Monday07:00local;24 comments at initial read).
+
+**Gates1–2:** local dev cfa6d583 was7 commits behind; read state from origin c73c79048daf9c3a19ea05c96e793436eb45e9c5 and PR361 branch, isolated worktree for this recovery; main untracked.claude/worktrees/ left alone. DevCI39784585567 and full SHA check-set3/3 success. Running authoritative skill and all 13 resources match cached fleet origin/dev individually; negative drift control fired. No CWD-relative skill copy is present in World.
+
+**Quorum-at-pick:** canonical lookup returned1 (unreviewed), so fresh text quorum ran despite historical r4 narrow-refinement admission. PROCEED degraded: Gemini 4 Argon alone present/pass; GLM 5.3 and Kimi K3 unreachable, Claude Sonnet quota absent; no absent seat counted as a vote. `--author codex:gpt-6.1-sol` reflected originalr3 author; r4's bounded controller edit was Anthropic. Both author vendors were absent from the actual voting set (only Google voted). $0.02414,10,930 input/228 output. No invented broad quorumPASS and no design rewrite.
+
+**Role execution:** designer Codex audit requires no revision; planner emitted recovery checklist/JSON; its `tools/verify_*.sh` typo was caught and corrected explicitly to actual `scripts/verify_*.sh` before execution. Executor Codex rechecked exactSHA/base, four focused gates and eight named mutants on its exclusive tree; all builds, named assertion reds, restores and originalgreen verified. No permanent production/test change. Controller additionally re-ran eight CLI mutations outside sandbox: seven assertion kills, one historical redundant-cli-reverify survivor, every build/restore/originalgreen verified. Uniform/missing drills reach direct helper assertions, not the later sibling end-to-end assertion; historical truncated-chunk/non-deterministic filesystem/redundant-guard residuals remain. See tracked role reports.
+
+**Controller verification (darwin/arm64, outside sandbox):** pinned AILANG v0.41.0/24ee108, policy-tool v0.54.15/0384450, Go 1.26.6, Z3 4.16.0. `verify_ail.sh`rc 0(27.4s):16 identities,40 named tests,496 se-tools tests. Focused PNG/census gates rc 0. Own eight-mutant rerun BUILDS+intended assertionred+SHArestore+original green 8/8;12 protected paths unchanged across stage work. Full `verify_go.sh`rc 1(448s), plainleg; full raceleg NOT_REACHED. Two unchanged-package interpreter-diagnostic tests fail identically candidate/pristine base; raw pinned output458 bytes has LDR001 at 421 after a startup deprecation warning at 138, but archive outputHead caps 400. Queue 202 owns it; no fix smuggled in. Carried M7a fake-timeout test also failed in the full run (only childPID at 8 s); isolated candidate marketing package plain rc 0(17.9s), race rc 0(35.5s), exact base test rc 0(8.6s). These controls narrow the findings; they do not make the full suite green. Full logs/receipts retained in persistent state; decision-bearing subset tracked under verification/world-iter303/.
+
+**Independent evaluation:** **PASS 93/100, zero blocking** ([actual report](verification/world-iter303/evaluator-recovery-report.md)). Exact reviewed candidate f615a9698370694664fbbc01431e4a2c549377cc, actual MiniMax M3 via canonical pi runner in its own worktree; session_protocol_ack returned acked=true before judge writes. The native Codex supervisor supplied transport only, no acceptance verdict. Eight independently re-run named mutations and four focused controls passed. Non-blocking rubric deductions: test file 804 lines and parser function 52 lines. Read [scope notes](verification/world-iter303/review-scope-notes.md) for the report's JSON-normalization wording, PNG-centered inventory and snapshot-CI scope..
+
+**Result:** M7b independently accepted for verify-and-land,14/17 row 150milestones built; M7c next. No six-shot release-capture PASS, no unattended mint/publish, no fresh-seed hash-equality claim. Overall row 150 stays IN-SPRINT.
+
+**Gate 3b:** initial exact candidate PR CI 39880506556 was3/3SUCCESS. This administrative record extends the same World PR; the controller will check the new PR head and actual merge SHA separately and report LANDED only after all three expected CI jobs are observed successful on both. Final SHA-addressed CI receipts are linked from the bookkeeping digest; no pending/skip is called success here.
+
+**Routing evidence:** base=c73c79048daf9c3a19ea05c96e793436eb45e9c5@2026-10-23T04:01:36Z (Gate4); inherited PR candidate f615a9698370694664fbbc01431e4a2c549377cc.
+- Controller codex:gpt-6.1-sol (tok:not reported); native supervisor tokens:not reported.
+- Designer recipe codex:gpt-6.1-sol declared:provider-pin; probe10,285 + audit187,409 tok,rc 0,457.9s.
+- Planner recipe codex:gpt-6.1-sol declared:planner-lane-default-pin; probe10,285 + run39,452 tok,rc 0,76.7s.
+- Executor recipe codex:gpt-6.1-sol declared:provider-pin; probe17,392 input+5 output; real597,484 input(534,656 cached)+5,670 output,rc 0,234.9s. Cached is a subset, not added again.
+- Evaluator recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin; probe 1,228 input / 17 output / 128 cache-read; run 189,639 input / 28,591 output / 6,135,424 cache-read; wrapper rc 0 / ok / fenced, 446 s, cost $0.45972282. Judge independence:cross-vendor.
+- All four native Agent spawns accepted. This harness exposes no native model-pin argument; each supervisor used the exact explicitly pinned provider CLI rather than claiming inherited model enforcement. No role omitted; no controller self-judge; no runtime fallback. Driver quota degradation is preserved verbatim in the digest routing note.
+- Metered $0.48386282 (quorum plus MiniMax run/probe); subscription stages are quota, not dollar-priced.
+
+**Ruled out:** redoing302's already-built milestone; treating r4's historical BLOCKED quorums as PASS; treating source diagnostic reds as introduced by M7b (unchanged bytes, identical base/candidate failures); counting a panic or early sibling failure as the named mutation's assertion; claiming full Go suite green from isolated checks; treating Agent supervisor inheritance as a model pin.
+
+**Carried:** inherited M7a timing/signal/cleanup controls belong to M7c; M7b truncated-chunk guard survivor and filesystem read/check races retained; parent plan's earlier residual notes preserved. New202 is a product diagnostic-output backlog row below the release work, not a human decision and not a loop-harness repair. D-WORLD-86 remains HOLD.
+
+**Retro:** no shared skill or routing-policy edit. Planner gate-path typo corrected from the real script paths; one recorded friction. Canonical quorum directory no longer contains the historical artifact, so fresh review was measured with named absences rather than relying on old filenames. Harness share 0/20 recent indexed iterations. Last three landings moved no UNMET clause; all seven clauses are already MET, so no drift alarm. Fleet routing-checker resolution recorded without local repair.
+
+**Progress:** 1.0 clauses 7/7 MET; row 15014/17 built, advanced M7b; goal unmoved.
+**Next:** row 150M7c (capture orchestration/frozen inventories/Chrome drill), then M8a/M8b;156M5c/M5d remain parked on D-WORLD-86;151 follows150.

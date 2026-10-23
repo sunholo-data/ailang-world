@@ -1,0 +1,96 @@
+[
+  {
+    "id": "derived-cli-refusal-exit",
+    "mutant_sha": "e44303dccbe55a4a31d923a473552b6b1f4b71867197ac4a0b3c39bf34c75d5e",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:775: CLI exit: want 1 stderr containing \"marketingcheck: pass-mismatch phone.png:\", got 0: marketingcheck: pass-mismatch phone.png: 55b62069279652fe9dfaff56335a01366e1193d3dc091fcb6f452bccc5048176 != 86fa4e4922e7cb59aff5df3d8de4752771f3bbe1a3c26391afb196df0e9dbe34"
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "derived-cli-success-exit",
+    "mutant_sha": "c43490e4aa45396b18dfa1adfaf5290ca58262a98b7ba1157226bd11e4eee6bf",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:767: CLI exit: want 0 stderr containing \"\", got 1: "
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "derived-cli-unknown",
+    "mutant_sha": "1bde26c31b98afa27860b8de59927eae040a5c6ac112764a745d61bd79c707da",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:801: CLI exit: want 2 stderr containing \"\", got 0: usage: marketingcheck check --pass-a DIR --pass-b DIR --manifest DEMO_MANIFEST --rectangles RECTS [--out CAPTURE_MANIFEST]"
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "derived-cli-usage",
+    "mutant_sha": "07b3155cf07fab55c5e9621f52a4ba09c037c021b873f1f643c5b115cb599861",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:801: CLI exit: want 2 stderr containing \"\", got 0: Usage of check:"
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "derived-cli-flag",
+    "mutant_sha": "a2d030fce3a61b1c55a4108997232573350d0eeb057acbfd395a69ddeded022f",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:801: CLI exit: want 2 stderr containing \"\", got 0: flag provided but not defined: -unknown"
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "derived-cli-help",
+    "mutant_sha": "b848f1dd8983131d20db915ff7c516b0b1a2ebf01c2d3f7d957050423ec380e1",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:801: CLI exit: want 0 stderr containing \"\", got 2: Usage of check:"
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "derived-cli-existing-out",
+    "mutant_sha": "39eeb01fc25f93078ff5a76fe4efca4b5db3e70b5a30861ff847942ee5c4cc0b",
+    "build_rc": 0,
+    "test_rc": 1,
+    "assertion_lines": [
+      "    png_test.go:789: CLI exit: want 1 stderr containing \"marketingcheck:\", got 0: "
+    ],
+    "result": "ASSERTION_KILLED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  },
+  {
+    "id": "redundant-cli-reverify",
+    "mutant_sha": "3230536d8ff91d0221d4235a162fd91840d2fd55cc1d04ab4fb8817fef00a5db",
+    "build_rc": 0,
+    "test_rc": 0,
+    "assertion_lines": [],
+    "result": "SURVIVED",
+    "restored_sha": "9b5cdd3a4cb25a657d684eac4067624b4ebdc5d67a4334342438cce896015c84",
+    "green_rc": 0
+  }
+]

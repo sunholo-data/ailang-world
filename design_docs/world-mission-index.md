@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 303 | 2026-10-23 | recover iteration 302's row 150 M7b PNG verifier (PR #361; fresh independent MiniMax PASS 93/100) [PRODUCT] |
 | 301 | 2026-10-22 | row 150 M7a built: the bounded capture supervisor and its fake-Chrome/fake-daemon companions (PR #360; judge r1 PASS 86 → r2 PASS 91 → r3 PASS 91) ... |
 | 300 | 2026-10-22 | row 150 M6 built: `serve --workbench-still` serves the complete workbench page without its one live script (PR #359; judge r1 PASS 93) [PRODUCT] |
 | 299 | 2026-10-22 | row 150 M5c built: the demo seed completes with a final roster check and one atomic success manifest; M5b's TESTED rule fixed to the real tool shap... |
