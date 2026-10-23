@@ -202,7 +202,7 @@
         "command": "$HOME/.pinned-ailang/ailang test --format json world/contracts.ail",
         "rc": 1,
         "seconds": 0.08,
-        "result": "FAIL \u2014 BASE FINDING (4 no_generator/vacuous skips)",
+        "result": "FAIL — BASE FINDING (4 no_generator/vacuous skips)",
         "detail": "success=false,passed=7,skipped=4,vacuous_skips=4"
       },
       {
@@ -233,7 +233,7 @@
         "command": "go build ./... && go test ./... -count=1 -timeout 600s",
         "rc": 1,
         "seconds": 279.93,
-        "result": "FAIL \u2014 BASE FINDING",
+        "result": "FAIL — BASE FINDING",
         "detail": "rc1; seven failing tests across cmd/ailang-worldd, cmd/world-publish, host/broker, host/capsule and host/ptytest. See full_suite_failures. Sandbox tty/HOME denials plus process readiness/zombie observations; no bind denial."
       },
       {
@@ -248,7 +248,7 @@
         "rc": 0,
         "seconds": 0.39,
         "result": "PASS",
-        "detail": "\u2713 0 binary blobs among 3523 tracked files"
+        "detail": "✓ 0 binary blobs among 3523 tracked files"
       }
     ],
     "protected_observation": [
@@ -391,9 +391,9 @@
   "design_defects": [
     {
       "id": "PD1",
-      "design_quote": "workbench-light.png | /workbench | 1440\u00d71100 | selected head, nonempty live list, graph and pending approval",
+      "design_quote": "workbench-light.png | /workbench | 1440×1100 | selected head, nonempty live list, graph and pending approval",
       "anchor": "design_docs/planned/w-marketing-capture.md:222",
-      "evidence": "Same design V25 (:74) reports graph/decisions below fold for 1440\u00d71100. Re-read host/workbench/render.go:184 and :208-246: one column; full timeline/inspector/live precede graph and decisions. Packet/provenance inspector similarly precedes later graph/decisions but follows timeline. A DOM-present region is not visible pixel content. The design specifies suppression-only D2 and no layout change; chosen fixed viewport has no evidenced way to meet all listed visible requirements.",
+      "evidence": "Same design V25 (:74) reports graph/decisions below fold for 1440×1100. Re-read host/workbench/render.go:184 and :208-246: one column; full timeline/inspector/live precede graph and decisions. Packet/provenance inspector similarly precedes later graph/decisions but follows timeline. A DOM-present region is not visible pixel content. The design specifies suppression-only D2 and no layout change; chosen fixed viewport has no evidenced way to meet all listed visible requirements.",
       "disposition": "Tooling may progress. C8 visible-product acceptance remains unresolved/red until controller supplies measured fitting geometry or revised layout/shot design. Do not silently enlarge dimensions, move route, compact CSS, omit rectangles or treat DOM presence as visibility. Exact-six/two-pass/hash requirements stay unchanged."
     }
   ],
@@ -1590,7 +1590,7 @@
         {
           "ac": "C5",
           "tests": "TestWorkbenchPacketRosterTestedAndProven",
-          "assertions": "Real TESTED S3 invocation: carrying commit, exactly one Ailang.CLI effect, actual request/result hashes, argv test, strict success JSON and nonempty named pass set, zero failed/skipped/vacuous; reject arbitrary prose. PROVEN follows only existing ValidateProof\u2192Resolve with actual operator key/exact source, missing/wrong key/subject refuse. Demo claim presented as PROVEN input kind must not promote. Existing two subject-grade lines preserve prior values.",
+          "assertions": "Real TESTED S3 invocation: carrying commit, exactly one Ailang.CLI effect, actual request/result hashes, argv test, strict success JSON and nonempty named pass set, zero failed/skipped/vacuous; reject arbitrary prose. PROVEN follows only existing ValidateProof→Resolve with actual operator key/exact source, missing/wrong key/subject refuse. Demo claim presented as PROVEN input kind must not promote. Existing two subject-grade lines preserve prior values.",
           "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         },
@@ -1606,7 +1606,7 @@
         {
           "criterion": "C5",
           "test": "TestWorkbenchPacketRosterTestedAndProven",
-          "assertions": "Real TESTED S3 invocation: carrying commit, exactly one Ailang.CLI effect, actual request/result hashes, argv test, strict success JSON and nonempty named pass set, zero failed/skipped/vacuous; reject arbitrary prose. PROVEN follows only existing ValidateProof\u2192Resolve with actual operator key/exact source, missing/wrong key/subject refuse. Demo claim presented as PROVEN input kind must not promote. Existing two subject-grade lines preserve prior values.",
+          "assertions": "Real TESTED S3 invocation: carrying commit, exactly one Ailang.CLI effect, actual request/result hashes, argv test, strict success JSON and nonempty named pass set, zero failed/skipped/vacuous; reject arbitrary prose. PROVEN follows only existing ValidateProof→Resolve with actual operator key/exact source, missing/wrong key/subject refuse. Demo claim presented as PROVEN input kind must not promote. Existing two subject-grade lines preserve prior values.",
           "command": "go test -run '^TestWorkbenchPacketRosterTestedAndProven$' ./host/daemon -count=1 -timeout 120s -v"
         },
         {
@@ -2068,14 +2068,14 @@
         {
           "ac": "C7",
           "tests": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
-          "assertions": "Always-on fake Chrome starts child/grandchild, writes a PNG then hangs. Short test deadline via subprocess CLI timeout parameter (unit control only); Timeout verdict despite PNG, SIGKILL process group and reap\u22645s; checked PIDs child+grandchild dead. Production deadline30s and entire pass\u2264300s.",
+          "assertions": "Always-on fake Chrome starts child/grandchild, writes a PNG then hangs. Short test deadline via subprocess CLI timeout parameter (unit control only); Timeout verdict despite PNG, SIGKILL process group and reap≤5s; checked PIDs child+grandchild dead. Production deadline30s and entire pass≤300s.",
           "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         },
         {
           "ac": "C7",
           "tests": "TestMarketingSupervisorFakeDaemonCleanup",
-          "assertions": "Always-on fake daemon ignores TERM then valid KILL/reap;\u22645s each production wait. Inject cleanup failure unit control must override earlier shot success. Shell normal/signal traps exercised, no unsupervised orphan.",
+          "assertions": "Always-on fake daemon ignores TERM then valid KILL/reap;≤5s each production wait. Inject cleanup failure unit control must override earlier shot success. Shell normal/signal traps exercised, no unsupervised orphan.",
           "command": "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         }
@@ -2096,13 +2096,13 @@
         {
           "criterion": "C7",
           "test": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup",
-          "assertions": "Always-on fake Chrome starts child/grandchild, writes a PNG then hangs. Short test deadline via subprocess CLI timeout parameter (unit control only); Timeout verdict despite PNG, SIGKILL process group and reap\u22645s; checked PIDs child+grandchild dead. Production deadline30s and entire pass\u2264300s.",
+          "assertions": "Always-on fake Chrome starts child/grandchild, writes a PNG then hangs. Short test deadline via subprocess CLI timeout parameter (unit control only); Timeout verdict despite PNG, SIGKILL process group and reap≤5s; checked PIDs child+grandchild dead. Production deadline30s and entire pass≤300s.",
           "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
         },
         {
           "criterion": "C7",
           "test": "TestMarketingSupervisorFakeDaemonCleanup",
-          "assertions": "Always-on fake daemon ignores TERM then valid KILL/reap;\u22645s each production wait. Inject cleanup failure unit control must override earlier shot success. Shell normal/signal traps exercised, no unsupervised orphan.",
+          "assertions": "Always-on fake daemon ignores TERM then valid KILL/reap;≤5s each production wait. Inject cleanup failure unit control must override earlier shot success. Shell normal/signal traps exercised, no unsupervised orphan.",
           "command": "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
         }
       ],
@@ -2195,7 +2195,7 @@
           "rc": 0,
           "seconds": 0.39,
           "result": "PASS",
-          "detail": "\u2713 0 binary blobs among 3523 tracked files"
+          "detail": "✓ 0 binary blobs among 3523 tracked files"
         }
       ],
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
@@ -2213,7 +2213,7 @@
         "scripts/marketingcheck/png.go",
         "scripts/marketingcheck/png_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestMarketingPNGStructure",
         "TestMarketingPNGContent",
@@ -2230,7 +2230,7 @@
         {
           "ac": "C8",
           "tests": "TestMarketingPNGContent",
-          "assertions": "Exact viewport dimensions, >32 RGB colors, chromatic fraction\u22651%, variance in each measured content rectangle incl packet validation+four rows, per-shot light/dark background luminance. Reject uniform PNG and separately mostly-gray colorful test. Rectangles in bounds; decoded content gate cannot accept tiny arbitrary crop as visible text proof.",
+          "assertions": "Exact viewport dimensions, >32 RGB colors, chromatic fraction≥1%, variance in each measured content rectangle incl packet validation+four rows, per-shot light/dark background luminance. Reject uniform PNG and separately mostly-gray colorful test. Rectangles in bounds; decoded content gate cannot accept tiny arbitrary crop as visible text proof.",
           "command": "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         },
@@ -2252,7 +2252,7 @@
         {
           "criterion": "C8",
           "test": "TestMarketingPNGContent",
-          "assertions": "Exact viewport dimensions, >32 RGB colors, chromatic fraction\u22651%, variance in each measured content rectangle incl packet validation+four rows, per-shot light/dark background luminance. Reject uniform PNG and separately mostly-gray colorful test. Rectangles in bounds; decoded content gate cannot accept tiny arbitrary crop as visible text proof.",
+          "assertions": "Exact viewport dimensions, >32 RGB colors, chromatic fraction≥1%, variance in each measured content rectangle incl packet validation+four rows, per-shot light/dark background luminance. Reject uniform PNG and separately mostly-gray colorful test. Rectangles in bounds; decoded content gate cannot accept tiny arbitrary crop as visible text proof.",
           "command": "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
         },
         {
@@ -2262,7 +2262,7 @@
           "command": "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
         }
       ],
-      "implementation": "Separate structural parser/limit functions from image decoder and six-set gate for non-masked mutation controls. Per-file cap makes six-shot aggregate8MiB unreachable (six\u22646MiB); test directory-total function independently with other PNGs. These are validity controls not candidate release assets. CRC fixture direct parser test required because image/png also rejects CRC. Verifier CLI check --pass-a --pass-b --manifest --rectangles; no image mutation.",
+      "implementation": "Separate structural parser/limit functions from image decoder and six-set gate for non-masked mutation controls. Per-file cap makes six-shot aggregate8MiB unreachable (six≤6MiB); test directory-total function independently with other PNGs. These are validity controls not candidate release assets. CRC fixture direct parser test required because image/png also rejects CRC. Verifier CLI check --pass-a --pass-b --manifest --rectangles; no image mutation.",
       "acceptance": [
         "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
         "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
@@ -2390,10 +2390,17 @@
           "rc": 0,
           "seconds": 0.39,
           "result": "PASS",
-          "detail": "\u2713 0 binary blobs among 3523 tracked files"
+          "detail": "✓ 0 binary blobs among 3523 tracked files"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completed": {
+        "iteration": 302,
+        "commit": "fa04df00",
+        "controller_fix": "02e12be2 (Go-surface allow-list)",
+        "judge": "pi:openrouter/minimax/minimax-m3 r1 PASS 95 (zero blocking; one honest survivor M7b-truncated-chunk, non-blocking per the panic rule) → r2 PASS 95 on the fix delta (zero new blocking; both guard drills red)",
+        "executor": "codex gpt-6.1-sol rc 0 in the first 2026-10-22 fire (crashed at gate 3 before commit/judge; recovered verify-and-land)"
+      }
     },
     {
       "id": "M7c",
@@ -2473,7 +2480,7 @@
           "command": "go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v"
         }
       ],
-      "implementation": "Full capture flags include --db --manifest --proof-key-file --ailang-bin --workspace-root --tool-ailang-bin --chrome --out --verify-twice --rectangles.\u226410s HTTP/\u226430s startup, two\u2264300s passes, progress between shots. Scratch output only. If raw equality fails outside scheme/script causes report varying element+both hashes as M7 residual; criterion remains unmet, never pixel-similarity success.",
+      "implementation": "Full capture flags include --db --manifest --proof-key-file --ailang-bin --workspace-root --tool-ailang-bin --chrome --out --verify-twice --rectangles.≤10s HTTP/≤30s startup, two≤300s passes, progress between shots. Scratch output only. If raw equality fails outside scheme/script causes report varying element+both hashes as M7 residual; criterion remains unmet, never pixel-similarity success.",
       "acceptance": [
         "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
         "go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
@@ -2578,7 +2585,7 @@
           "rc": 0,
           "seconds": 0.39,
           "result": "PASS",
-          "detail": "\u2713 0 binary blobs among 3523 tracked files"
+          "detail": "✓ 0 binary blobs among 3523 tracked files"
         }
       ],
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
