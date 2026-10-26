@@ -1,18 +1,15 @@
-# World mission dashboard — iteration 303 (2026-10-23)
+# World mission dashboard — iteration 304 (2026-10-26)
 
-- **This fire:** recover iteration 302's row 150 M7b, PR #361; PNG structure/content and exact two-pass verifier.
-- **Judge:** independent MiniMax M3 PASS 93/100, zero blocking; exact candidate f615a9698370694664fbbc01431e4a2c549377cc.
-- **Roles:** all four native Agent supervisors spawned; actual Codex designer/planner/executor, canonical pi MiniMax evaluator.
-- **Gates:** pinned verify_ail rc0; four focused checks and eight named mutants green/kill/restore outside sandbox.
-- **Local full Go:** rc1, plain leg; two unchanged diagnostic-output reds at base and candidate, plus carried fake-timeout red recovering isolated. Full race NOT_REACHED; focused marketing race rc0.
-- **CI:** initial exact PR head3/3 green; updated PR head and merge still require observed3/3 green before final LANDED report on #313.
-- **Release:** v1.0.0-rc.1 pre-release; no release or attended capture this run.
+- **This fire:** row 150 M7c re-scoped, not built. The design quorum blocked twice (r5, r6), and M7c is split into five children.
+- **Quorum:** Gemini PASS in both rounds. GLM 5.3 and Kimi K3 rejected; it was the first time both were present since r3, after the 2026-10-23 PROCEED at N−1. Disposition: SPLIT into a new as-built doc for M7c–M8.
+- **Judge:** sonnet PASS 82/100, zero blocking, on the docs-only diff; it confirms the SPLIT disposition.
+- **Roles:** designer opus (claude-opus-5-5 pin), planner opus, evaluator sonnet. Executor (claude-haiku-5-5) not spawned because the design gate was blocked. Codex over ration.
 - **Clauses:** 1–7 MET; goal unmoved. Release order D-WORLD-81: 156→150→151.
-- **Row 156:**22/24; D-WORLD-86 holds M5c/M5d.
-- **Row 150:**14/17 built; next M7c, then M8a/M8b.
-- **Next:** M7c capture orchestration/frozen inventories/Chrome drill. Release PNG capture requires attended authority per existing plan.
-- **New backlog 202:** bounded interpreter diagnostics must retain LDR001 despite startup warning (offset421 beyond400-byte cap); no fix in M7b.
-- **Parked on Mark:** D-WORLD-86. A drop alias pre-checks and rely on pin+M5e (recommended); B build defence in depth; default HOLD.
-- **Cost:** metered $0.48386282, plus Codex quota. Supervisor/controller tokens not reported.
-- **Retro:** harness share 0/20; all clauses MET, no drift alarm; fleet routing-checker resolution recorded, no local harness repair.
-- **Record/evidence:** world-mission-log.md entry 303; verification/world-iter303/.
+- **Row 156:** 22/24; D-WORLD-86 holds M5c/M5d.
+- **Row 150:** 14/17 built; M7c → M7c1/M7c2a/M7c2b/M7c3/M7c4, all pending; then M8a/M8b.
+- **Next:** author and quorum `w-marketing-capture-orchestration` (as built at HEAD, r6 objections verbatim), then build M7c1 (fully specified).
+- **Chrome:** the rig auto-updated to 156; the design now fixes the version within one run (major ≥155, same string for both passes).
+- **Flake:** `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` reds in package runs and intermittently in isolation under load.
+- **Parked on Mark:** D-WORLD-86. A: drop the alias pre-checks and rely on pin+M5e (recommended); B: build defence in depth; default HOLD.
+- **Cost:** metered $0.42 (two quorums), plus Anthropic quota.
+- **Record/evidence:** world-mission-log.md entry 304; verification/world-iter304/.

@@ -1,10 +1,10 @@
 # W-Marketing-Capture — reproducible, truthful release images
 
-**Status:** REVISED r4 (iteration 266, controller bounded revision under the narrow-refinement carve-out after r3 BLOCKED). Colour forcing (V23), server-HTML stability and script inventory (V24) and real-content two-pass capture (V25) MEASURED by the controller. Product six-shot equality on the seeded demo store remains M7 acceptance, with a named residual path if it fails (M7 fallback).
+**Status:** REVISED r4 (iteration 266, controller bounded revision under the narrow-refinement carve-out after r3 BLOCKED). Colour forcing (V23), server-HTML stability and script inventory (V24) and real-content two-pass capture (V25) MEASURED by the controller. Product six-shot equality on the seeded demo store remains M7 acceptance, with a named residual path if it fails (M7 fallback). **Iteration 304:** the quorum on a narrow §2 revision was BLOCKED twice (r5, r6: Gemini PASS, GLM/Kimi REJECT). The remaining work, M7c–M8 and the attended capture, splits into a new as-built doc (`w-marketing-capture-orchestration`). This doc remains the record of the landed M1–M7b design.
 **Target:** World v1.0.0, queue row 150 / D-WORLD-64
 **Priority:** P1 release · **Estimated:** eight executor runs, each ≤30 min, plus attended release capture
 **Created:** 2026-10-08 · **Revised:** iteration 266, 2026-10-14 · iteration 304 designer, 2026-10-26 (§2 Chrome-version rule, V29)
-**Base:** `c21f30310e04941afd3ccfb6b8748177db7b06c8` · branch `design/w-marketing-capture-r3`
+**Base:** `c21f30310e04941afd3ccfb6b8748177db7b06c8` (r4 base; iteration 304 measurements V29–V30 taken at HEAD 039bfa77) · branch `design/w-marketing-capture-r3`
 **Planner-Lane:** codex-ok for the milestones below after design quorum/freeze
 **Dependencies:** rows 148 (`38db793`+`9319e6b`), 149 (`b8b6a3f`), 26/105/172/176 and fleet PNG allowance landed; attended publish and mint for release data
 
@@ -214,7 +214,7 @@ candidates, packet/proposal/request, four evidence refs, invocation/effect refs 
 why JSON hashes. Credential, absolute paths and capture time stay in private or
 separate environment diagnostics. Capture rejects missing/mismatched manifest refs.
 
-### 2. Bounded system-Chrome capture (measured on 155 and 156) and complete shot list
+### 2. Bounded system-Chrome capture (real-content evidence on Chrome 155; instrument check only on 156) and complete shot list
 
 `scripts/capture_marketing.sh` serves the seed with proof configuration and
 `--workbench-still`, checks health/head with ≤10s requests and ≤30s startup deadline,
@@ -354,3 +354,25 @@ question is open; Mark's only residual is fresh-seed hash equality (D1). Tooling
 attended release capture remain distinct.
 
 **Quorum r5 (iteration 304)**, on the iteration-304 designer revision (§2 Chrome-version rule, V29): Gemini 4 Argon PASS; GLM 5.3 REJECT; Kimi K3 REJECT, so the round is BLOCKED. Dispositions: (1) Gemini+Kimi, V29 supervisor provenance and the stale "future work"/"design_docs only" wording: fixed (V29 names the committed M7a supervisor `38ac4167`/`98f48b20`, PR #360; header, files note and M7 row annotated). (2) Kimi, M7 fallback authority: fixed with the reviewer's verbatim text (M7 FAILS, 150(b) open, escalated to Mark; acceptance sentence replaced). (3) GLM, CLAIMED premise: a pre-existing r3/r4 premise, measured-at-HEAD in V30 (package contract `authoredClaimGradeCode` plus the projection; gradeOf stays closed), and the roster sentence now says so. (4) GLM, dependency SHAs: fixed, V31 (all three are ancestors of the base). The only open Mark residual is still D1; the M7 fallback reaches Mark only if it triggers.
+
+**Quorum r6 (iteration 304, controller record)**: this was the one permitted re-quorum after the r5 revision. Gemini 4 Argon PASS; GLM 5.3 REJECT; Kimi K3 REJECT, so the round is BLOCKED. The artifacts are `design_docs/verification/world-iter304/quorum-r5.json` and `quorum-r6.json`.
+
+Per-round surfaces:
+
+- **r5:** §2 Chrome provenance (V29), M7 fallback authority, the CLAIMED premise, dependency SHAs.
+- **r6:** three surfaces:
+  - **As-built drift.** The doc is anchored at the r4 base `c21f303` while M1a–M7b landed, and V4/V6/V14/V24 were not re-run at HEAD.
+  - **Authority.** Milestones landed before a passing full quorum.
+  - **Real-content Chrome 156 evidence.** V29 is a synthetic page only, so the §2 heading's "(measured on 155 and 156)" overstates it.
+
+Gemini passed both rounds.
+
+**Disposition: SPLIT, not a third revision.** M7c–M8 and the attended capture move to a new as-built doc anchored at HEAD `039bfa77`. That doc carries the r6 objections verbatim as its problem statement and is quorumed once. This doc keeps the reviewer-clean, landed M1–M7b design.
+
+**Controller measurement on GLM's re-verification point**, at HEAD `039bfa77`, load 10: `go test -run '^(TestWorkbenchStillAllRegions|TestServeWorkbenchStillFlag)$' ./host/daemon ./cmd/ailang-worldd -count=1 -v` gave both PASS, rc 0, 9 s. These are the landed M6 tests for the still-mode premise that V24 simulated: repeat GETs 2 s apart are byte-identical, and the still page is the default page minus exactly the live script.
+
+**Provenance on Kimi's authority point:**
+
+- r4 proceeded under the narrow-refinement carve-out (iteration 266; see the Status line).
+- The 2026-10-23 pick-time artifact `w-marketing-capture-2026-10-23T03-32-39Z` read PROCEED at N−1, with GLM and Kimi absent (unreachable) and the Sonnet seat absent (quota).
+- r5 and r6 are the first rounds since r3 in which both GLM and Kimi were present.

@@ -1009,7 +1009,7 @@ Shared rules for every child:
 
 ## M7c1 — Protected-file observation comparator (production) and its mutants
 
-Design M7 (C11); 20 minutes; dependency: M7b; status **pending**. Executor pick for iteration 304.
+Design M7 (C11); 20 minutes; dependency: M7b; status **pending**. **HELD (iteration 304):** design quorum r5/r6 BLOCKED. M7c1–M7c4 wait for the split as-built doc (`w-marketing-capture-orchestration`, next iteration) to pass quorum. This specification is the planner's input for that doc.
 
 Exact executor files (and nothing else):
 
