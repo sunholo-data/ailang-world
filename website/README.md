@@ -18,6 +18,12 @@ npm run build        # static site in website/build/
 
 The build fails on any broken internal link (`onBrokenLinks: 'throw'`).
 
+`npm run build` and `npm run deploy` first run `scripts/fetch-media.sh`, which downloads the
+homepage film and its poster from a GitHub release into `static/media/` (git-ignored) and
+refuses any file whose sha256 does not match. Video stays out of git (the tracked-binary
+gate); the built site serves it from its own origin. A new cut: upload it to a release, then
+change the URL and sha256 in that script.
+
 ## Preview locally
 
 ```bash

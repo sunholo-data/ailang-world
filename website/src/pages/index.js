@@ -68,15 +68,44 @@ function Hero() {
   );
 }
 
+// The film is fetched into static/media/ at build time (scripts/fetch-media.sh); the
+// tracked-binary gate keeps video out of git.
+function Film() {
+  const video = useBaseUrl('/media/ailang-world-intro.mp4');
+  const poster = useBaseUrl('/media/ailang-world-intro-poster.jpg');
+  return (
+    <section className={styles.film} aria-labelledby="film-title">
+      <div className={styles.filmInner}>
+        <h2 id="film-title" className={styles.filmTitle}>
+          World in six minutes
+        </h2>
+        <p className={styles.filmLead}>
+          The problem it solves, why it is more than a git worktree, how a change is proposed,
+          verified and committed, and what it looks like to the person in charge.
+        </p>
+        <video
+          className={styles.filmVideo}
+          controls
+          preload="none"
+          playsInline
+          poster={poster}
+          aria-label="AILANG World explainer film, 6 minutes 8 seconds, narrated">
+          <source src={video} type="video/mp4" />
+        </video>
+      </div>
+    </section>
+  );
+}
+
 function StatusBanner() {
   return (
     <section className={styles.statusWrap} aria-label="Project status">
       <Link to="/docs/roadmap" className={styles.status}>
-        <span className={styles.statusPill}>Pre-1.0</span>
+        <span className={styles.statusPill}>1.0 bar met</span>
         <span className={styles.statusText}>
-          <strong>5 of 7 release clauses met.</strong> The two left measure World against the
-          status quo: a non-inferiority floor for resident agents, and provenance answers timed
-          against log archaeology.
+          <strong>All 7 release clauses met; v1.0.0-rc.1 is out.</strong> Agents did no worse
+          inside World than with a shell, and provenance answered real "why" questions in under
+          a minute each.
         </span>
         <span className={styles.statusLink}>
           See the roadmap <ArrowRight size={16} />
@@ -160,7 +189,7 @@ const FEATURES = [
   {
     icon: Bot,
     title: 'Agents as residents',
-    text: 'Eight AILANG coding tools (read, write, edit, check, run, two searches and the CLI) are served over MCP and A2A. Each call runs one brokered effect and commits one log entry.',
+    text: 'Ten coding tools (read, write, edit, delete, check, run, two searches, the CLI, and a sandboxed command runner limited to an operator profile) are served over MCP and A2A. Each call runs one brokered effect and commits one log entry.',
     to: '/docs/agents',
   },
 ];
@@ -270,6 +299,7 @@ export default function Home() {
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
       <Hero />
+      <Film />
       <main>
         <StatusBanner />
         <HowItWorks />
