@@ -1,0 +1,266 @@
+=== RUN   TestMarketingPNGStructure
+=== RUN   TestMarketingPNGStructure/positive
+=== RUN   TestMarketingPNGStructure/bad-name-../a.png
+=== RUN   TestMarketingPNGStructure/bad-name-A.png
+=== RUN   TestMarketingPNGStructure/bad-name-a_b.png
+=== RUN   TestMarketingPNGStructure/bad-name-.png
+=== RUN   TestMarketingPNGStructure/bad-name-a.png_
+=== RUN   TestMarketingPNGStructure/bad-signature
+=== RUN   TestMarketingPNGStructure/ihdr-not-first
+=== RUN   TestMarketingPNGStructure/ihdr-length
+=== RUN   TestMarketingPNGStructure/bad-crc
+=== RUN   TestMarketingPNGStructure/forbidden-tEXt
+=== RUN   TestMarketingPNGStructure/forbidden-zTXt
+=== RUN   TestMarketingPNGStructure/forbidden-iTXt
+=== RUN   TestMarketingPNGStructure/forbidden-eXIf
+=== RUN   TestMarketingPNGStructure/unknown
+=== RUN   TestMarketingPNGStructure/allowed-ancillaries
+=== RUN   TestMarketingPNGStructure/multiple-iend
+=== RUN   TestMarketingPNGStructure/trailing-byte
+=== RUN   TestMarketingPNGStructure/missing-iend
+=== RUN   TestMarketingPNGStructure/truncated-header
+=== RUN   TestMarketingPNGStructure/truncated-data
+=== RUN   TestMarketingPNGStructure/at-cap
+=== RUN   TestMarketingPNGStructure/cap-plus-one
+=== RUN   TestMarketingPNGStructure/directory-unreadable
+=== RUN   TestMarketingPNGStructure/directory-cap
+--- PASS: TestMarketingPNGStructure (0.07s)
+    --- PASS: TestMarketingPNGStructure/positive (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-name-../a.png (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-name-A.png (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-name-a_b.png (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-name-.png (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-name-a.png_ (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-signature (0.00s)
+    --- PASS: TestMarketingPNGStructure/ihdr-not-first (0.00s)
+    --- PASS: TestMarketingPNGStructure/ihdr-length (0.00s)
+    --- PASS: TestMarketingPNGStructure/bad-crc (0.00s)
+    --- PASS: TestMarketingPNGStructure/forbidden-tEXt (0.00s)
+    --- PASS: TestMarketingPNGStructure/forbidden-zTXt (0.00s)
+    --- PASS: TestMarketingPNGStructure/forbidden-iTXt (0.00s)
+    --- PASS: TestMarketingPNGStructure/forbidden-eXIf (0.00s)
+    --- PASS: TestMarketingPNGStructure/unknown (0.00s)
+    --- PASS: TestMarketingPNGStructure/allowed-ancillaries (0.00s)
+    --- PASS: TestMarketingPNGStructure/multiple-iend (0.00s)
+    --- PASS: TestMarketingPNGStructure/trailing-byte (0.00s)
+    --- PASS: TestMarketingPNGStructure/missing-iend (0.00s)
+    --- PASS: TestMarketingPNGStructure/truncated-header (0.00s)
+    --- PASS: TestMarketingPNGStructure/truncated-data (0.00s)
+    --- PASS: TestMarketingPNGStructure/at-cap (0.00s)
+    --- PASS: TestMarketingPNGStructure/cap-plus-one (0.00s)
+    --- PASS: TestMarketingPNGStructure/directory-unreadable (0.00s)
+    --- PASS: TestMarketingPNGStructure/directory-cap (0.01s)
+=== RUN   TestMarketingPNGContent
+=== RUN   TestMarketingPNGContent/positive-workbench-light.png
+=== RUN   TestMarketingPNGContent/positive-workbench-dark.png
+=== RUN   TestMarketingPNGContent/positive-packet.png
+=== RUN   TestMarketingPNGContent/positive-graph.png
+=== RUN   TestMarketingPNGContent/positive-provenance.png
+=== RUN   TestMarketingPNGContent/positive-phone.png
+=== RUN   TestMarketingPNGContent/decode
+=== RUN   TestMarketingPNGContent/unknown-name
+=== RUN   TestMarketingPNGContent/dimensions
+=== RUN   TestMarketingPNGContent/uniform
+=== RUN   TestMarketingPNGContent/mostly-gray
+=== RUN   TestMarketingPNGContent/light-scheme
+=== RUN   TestMarketingPNGContent/dark-scheme
+=== RUN   TestMarketingPNGContent/blank
+=== RUN   TestMarketingPNGContent/bounds
+=== RUN   TestMarketingPNGContent/negative
+=== RUN   TestMarketingPNGContent/tiny
+=== RUN   TestMarketingPNGContent/short
+=== RUN   TestMarketingPNGContent/low-variance
+=== RUN   TestMarketingPNGContent/bounds-branches
+=== RUN   TestMarketingPNGContent/color-boundaries
+=== RUN   TestMarketingPNGContent/chromatic-boundaries
+=== RUN   TestMarketingPNGContent/scheme-boundaries
+=== RUN   TestMarketingPNGContent/variance-boundaries
+=== RUN   TestMarketingPNGContent/canonical-shots
+=== RUN   TestMarketingPNGContent/background-bounds
+=== RUN   TestMarketingPNGContent/packet-missing-validation
+=== RUN   TestMarketingPNGContent/packet-missing-roster-proven
+=== RUN   TestMarketingPNGContent/packet-missing-roster-tested
+=== RUN   TestMarketingPNGContent/packet-missing-roster-attested
+=== RUN   TestMarketingPNGContent/packet-missing-roster-claimed
+=== RUN   TestMarketingPNGContent/packet-missing-row
+=== RUN   TestMarketingPNGContent/rectangles-load
+=== RUN   TestMarketingPNGContent/rectangles-schema
+=== RUN   TestMarketingPNGContent/rectangles-unknown
+=== RUN   TestMarketingPNGContent/rectangles-missing
+=== RUN   TestMarketingPNGContent/rectangles-empty
+=== RUN   TestMarketingPNGContent/rectangles-duplicate
+=== RUN   TestMarketingPNGContent/rectangles-unnamed
+=== RUN   TestMarketingPNGContent/rectangles-packet-row
+=== RUN   TestMarketingPNGContent/rectangles-json
+=== RUN   TestMarketingPNGContent/rectangles-unreadable
+--- PASS: TestMarketingPNGContent (0.25s)
+    --- PASS: TestMarketingPNGContent/positive-workbench-light.png (0.01s)
+    --- PASS: TestMarketingPNGContent/positive-workbench-dark.png (0.01s)
+    --- PASS: TestMarketingPNGContent/positive-packet.png (0.01s)
+    --- PASS: TestMarketingPNGContent/positive-graph.png (0.01s)
+    --- PASS: TestMarketingPNGContent/positive-provenance.png (0.01s)
+    --- PASS: TestMarketingPNGContent/positive-phone.png (0.00s)
+    --- PASS: TestMarketingPNGContent/decode (0.00s)
+    --- PASS: TestMarketingPNGContent/unknown-name (0.00s)
+    --- PASS: TestMarketingPNGContent/dimensions (0.02s)
+    --- PASS: TestMarketingPNGContent/uniform (0.04s)
+    --- PASS: TestMarketingPNGContent/mostly-gray (0.02s)
+    --- PASS: TestMarketingPNGContent/light-scheme (0.01s)
+    --- PASS: TestMarketingPNGContent/dark-scheme (0.01s)
+    --- PASS: TestMarketingPNGContent/blank (0.01s)
+    --- PASS: TestMarketingPNGContent/bounds (0.01s)
+    --- PASS: TestMarketingPNGContent/negative (0.01s)
+    --- PASS: TestMarketingPNGContent/tiny (0.01s)
+    --- PASS: TestMarketingPNGContent/short (0.01s)
+    --- PASS: TestMarketingPNGContent/low-variance (0.00s)
+    --- PASS: TestMarketingPNGContent/bounds-branches (0.00s)
+    --- PASS: TestMarketingPNGContent/color-boundaries (0.00s)
+    --- PASS: TestMarketingPNGContent/chromatic-boundaries (0.00s)
+    --- PASS: TestMarketingPNGContent/scheme-boundaries (0.00s)
+    --- PASS: TestMarketingPNGContent/variance-boundaries (0.00s)
+    --- PASS: TestMarketingPNGContent/canonical-shots (0.00s)
+    --- PASS: TestMarketingPNGContent/background-bounds (0.00s)
+    --- PASS: TestMarketingPNGContent/packet-missing-validation (0.00s)
+    --- PASS: TestMarketingPNGContent/packet-missing-roster-proven (0.00s)
+    --- PASS: TestMarketingPNGContent/packet-missing-roster-tested (0.00s)
+    --- PASS: TestMarketingPNGContent/packet-missing-roster-attested (0.00s)
+    --- PASS: TestMarketingPNGContent/packet-missing-roster-claimed (0.00s)
+    --- PASS: TestMarketingPNGContent/packet-missing-row (0.01s)
+    --- PASS: TestMarketingPNGContent/rectangles-load (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-schema (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-unknown (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-missing (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-empty (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-duplicate (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-unnamed (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-packet-row (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-json (0.00s)
+    --- PASS: TestMarketingPNGContent/rectangles-unreadable (0.00s)
+=== RUN   TestMarketingTwoPassInventory
+=== RUN   TestMarketingTwoPassInventory/equal-copy-manifest
+=== RUN   TestMarketingTwoPassInventory/missing-shot
+=== RUN   TestMarketingTwoPassInventory/extra-shot
+=== RUN   TestMarketingTwoPassInventory/nonregular
+=== RUN   TestMarketingTwoPassInventory/altered-ancillary
+=== RUN   TestMarketingTwoPassInventory/altered-pixel
+=== RUN   TestMarketingTwoPassInventory/manifest-hash
+=== RUN   TestMarketingTwoPassInventory/manifest-schema
+=== RUN   TestMarketingTwoPassInventory/manifest-missing
+=== RUN   TestMarketingTwoPassInventory/manifest-extra
+=== RUN   TestMarketingTwoPassInventory/manifest-duplicate
+=== RUN   TestMarketingTwoPassInventory/manifest-unknown
+=== RUN   TestMarketingTwoPassInventory/manifest-hash-set
+=== RUN   TestMarketingTwoPassInventory/manifest-unknown-pair
+=== RUN   TestMarketingTwoPassInventory/manifest-hash-key
+=== RUN   TestMarketingTwoPassInventory/manifest-hash-extra
+=== RUN   TestMarketingTwoPassInventory/demo-no-head
+=== RUN   TestMarketingTwoPassInventory/demo-duplicate-head
+=== RUN   TestMarketingTwoPassInventory/demo-empty-head
+=== RUN   TestMarketingTwoPassInventory/demo-no-packet
+=== RUN   TestMarketingTwoPassInventory/demo-duplicate-packet
+=== RUN   TestMarketingTwoPassInventory/demo-no-approval
+=== RUN   TestMarketingTwoPassInventory/demo-duplicate-approval
+=== RUN   TestMarketingTwoPassInventory/demo-zero-approval
+=== RUN   TestMarketingTwoPassInventory/demo-no-invocation
+=== RUN   TestMarketingTwoPassInventory/demo-duplicate-invocation
+=== RUN   TestMarketingTwoPassInventory/demo-schema
+=== RUN   TestMarketingTwoPassInventory/demo-version
+=== RUN   TestMarketingTwoPassInventory/demo-load
+=== RUN   TestMarketingTwoPassInventory/cli
+=== RUN   TestMarketingTwoPassInventory/cli/success
+=== RUN   TestMarketingTwoPassInventory/cli/mismatch
+=== RUN   TestMarketingTwoPassInventory/cli/new-out
+=== RUN   TestMarketingTwoPassInventory/cli/existing-out
+=== RUN   TestMarketingTwoPassInventory/cli/unknown
+=== RUN   TestMarketingTwoPassInventory/cli/no-command
+=== RUN   TestMarketingTwoPassInventory/cli/missing-flags
+=== RUN   TestMarketingTwoPassInventory/cli/unknown-flag
+=== RUN   TestMarketingTwoPassInventory/cli/positional
+=== RUN   TestMarketingTwoPassInventory/cli/help
+--- PASS: TestMarketingTwoPassInventory (1.04s)
+    --- PASS: TestMarketingTwoPassInventory/equal-copy-manifest (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/missing-shot (0.03s)
+    --- PASS: TestMarketingTwoPassInventory/extra-shot (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/nonregular (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/altered-ancillary (0.07s)
+    --- PASS: TestMarketingTwoPassInventory/altered-pixel (0.07s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-hash (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-schema (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-missing (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-extra (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-duplicate (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-unknown (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-hash-set (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-unknown-pair (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-hash-key (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/manifest-hash-extra (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-no-head (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-duplicate-head (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-empty-head (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-no-packet (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-duplicate-packet (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-no-approval (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-duplicate-approval (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-zero-approval (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-no-invocation (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-duplicate-invocation (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-schema (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-version (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/demo-load (0.00s)
+    --- PASS: TestMarketingTwoPassInventory/cli (0.71s)
+        --- PASS: TestMarketingTwoPassInventory/cli/success (0.33s)
+        --- PASS: TestMarketingTwoPassInventory/cli/mismatch (0.07s)
+        --- PASS: TestMarketingTwoPassInventory/cli/new-out (0.07s)
+        --- PASS: TestMarketingTwoPassInventory/cli/existing-out (0.07s)
+        --- PASS: TestMarketingTwoPassInventory/cli/unknown (0.00s)
+        --- PASS: TestMarketingTwoPassInventory/cli/no-command (0.00s)
+        --- PASS: TestMarketingTwoPassInventory/cli/missing-flags (0.00s)
+        --- PASS: TestMarketingTwoPassInventory/cli/unknown-flag (0.00s)
+        --- PASS: TestMarketingTwoPassInventory/cli/positional (0.00s)
+        --- PASS: TestMarketingTwoPassInventory/cli/help (0.00s)
+=== RUN   TestMarketingSupervisorFakeChromeSuccess
+--- PASS: TestMarketingSupervisorFakeChromeSuccess (0.49s)
+=== RUN   TestMarketingSupervisorFakeChromeNoFile
+=== RUN   TestMarketingSupervisorFakeChromeNoFile/missing
+=== RUN   TestMarketingSupervisorFakeChromeNoFile/nonzero
+=== RUN   TestMarketingSupervisorFakeChromeNoFile/empty
+=== RUN   TestMarketingSupervisorFakeChromeNoFile/directory
+=== RUN   TestMarketingSupervisorFakeChromeNoFile/symlink
+--- PASS: TestMarketingSupervisorFakeChromeNoFile (1.39s)
+    --- PASS: TestMarketingSupervisorFakeChromeNoFile/missing (0.28s)
+    --- PASS: TestMarketingSupervisorFakeChromeNoFile/nonzero (0.29s)
+    --- PASS: TestMarketingSupervisorFakeChromeNoFile/empty (0.28s)
+    --- PASS: TestMarketingSupervisorFakeChromeNoFile/directory (0.26s)
+    --- PASS: TestMarketingSupervisorFakeChromeNoFile/symlink (0.28s)
+=== RUN   TestMarketingSupervisorFakeChromeTimeoutKillsGroup
+--- PASS: TestMarketingSupervisorFakeChromeTimeoutKillsGroup (8.11s)
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/escalation
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/cleanup-overrides-shot
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/term-first
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/early-exit
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/never-ready
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/exits-while-ready
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/stale-markers
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/invalid-config
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/interrupted-shot
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/shell-exit
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/shell-wait
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/shell-int
+=== RUN   TestMarketingSupervisorFakeDaemonCleanup/shell-hup
+--- PASS: TestMarketingSupervisorFakeDaemonCleanup (6.33s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/escalation (0.72s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/cleanup-overrides-shot (0.45s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/term-first (0.43s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/early-exit (0.30s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/never-ready (0.59s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/exits-while-ready (0.67s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/stale-markers (0.06s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/invalid-config (0.04s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/interrupted-shot (0.74s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/shell-exit (0.57s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/shell-wait (0.56s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/shell-int (0.47s)
+    --- PASS: TestMarketingSupervisorFakeDaemonCleanup/shell-hup (0.68s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	17.938s

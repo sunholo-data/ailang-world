@@ -1,0 +1,25 @@
+=== RUN   TestIter305TallViewportProbe
+    zz_iter305_tall_test.go:179: SEED manifest sha256=2963844513791324737cd790d766c5a0da4a55489dcbd113dc0546e76ea71801 refs=77 why=4 approval-entry=9
+    zz_iter305_tall_test.go:218: DEFAULT /workbench?from=9&entry=9 status=200 bytes=10323 script_tags=1
+    zz_iter305_tall_test.go:218: DEFAULT /workbench?object=sha256:7b5bb57c247124a8f6c66bd7a4c3f4c226c6f452d1152411cbb15fbe6335bb9d&payload=1 status=200 bytes=16702 script_tags=1
+    zz_iter305_tall_test.go:248: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 style_tags=1 equals_default_minus_tag=true html_sha256=99354da1d0a8d3b0c1b461ff0e2cbefe8b38a2f45f2b6349a91d374421a3d831
+    zz_iter305_tall_test.go:248: STILL /workbench?object=sha256:7b5bb57c247124a8f6c66bd7a4c3f4c226c6f452d1152411cbb15fbe6335bb9d&payload=1 bytes=16654 repeat_equal=true script_tags=0 style_tags=1 equals_default_minus_tag=true html_sha256=f10550b04f824401e453419331e88b1184bbd64edab02b7dbe16b49f4cb911bf
+    zz_iter305_tall_test.go:253: PACKET contains "TESTED": false
+    zz_iter305_tall_test.go:253: PACKET contains "ATTESTED": false
+    zz_iter305_tall_test.go:253: PACKET contains "CLAIMED": false
+    zz_iter305_tall_test.go:253: PACKET contains "PROVEN": false
+    zz_iter305_tall_test.go:253: PACKET contains "approvals chain: pending": false
+    zz_iter305_tall_test.go:253: PACKET contains "demo-authored": false
+    zz_iter305_tall_test.go:258: CHROME before "Google Chrome 156.0.8078.47"
+    zz_iter305_tall_test.go:280: SHOT pass-a graph-tall.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.65s bytes=252869 dims=1440x4400 chunks=[IHDR IDAT IEND] colors(sampled)=1164 corner=#faf9f5
+    zz_iter305_tall_test.go:280: SHOT pass-a provenance-tall.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.49s bytes=418054 dims=1440x4400 chunks=[IHDR IDAT IEND] colors(sampled)=923 corner=#fafafa
+    zz_iter305_tall_test.go:280: SHOT pass-b graph-tall.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.52s bytes=252869 dims=1440x4400 chunks=[IHDR IDAT IEND] colors(sampled)=1164 corner=#faf9f5
+    zz_iter305_tall_test.go:280: SHOT pass-b provenance-tall.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.55s bytes=418054 dims=1440x4400 chunks=[IHDR IDAT IEND] colors(sampled)=923 corner=#fafafa
+    zz_iter305_tall_test.go:284: CHROME after "Google Chrome 156.0.8078.47" equal=true
+    zz_iter305_tall_test.go:286: HEAD before==after true (sha256:874fc47ab61d151344748e8e22bbb2267dfaf8d9060f91c541a5ae29a7933314)
+    zz_iter305_tall_test.go:294: PAIR graph-tall.png identical=true c6f025eabf3852c14fe2121afd0868a73054ffafe1191f04946c39e511e127cb c6f025eabf3852c14fe2121afd0868a73054ffafe1191f04946c39e511e127cb
+    zz_iter305_tall_test.go:294: PAIR provenance-tall.png identical=true ec2a680ab4270a094593a9ebbdd9f2a067959481950ee43e26ce31f52a09b790 ec2a680ab4270a094593a9ebbdd9f2a067959481950ee43e26ce31f52a09b790
+    zz_iter305_tall_test.go:296: SUMMARY 2/2 shots byte-identical across two passes
+--- PASS: TestIter305TallViewportProbe (9.45s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	9.844s
