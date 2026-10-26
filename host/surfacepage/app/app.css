@@ -281,3 +281,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--you); outli
 [data-theme="slate"] .lhead:hover { background: rgba(255,255,255,0.06); }
 
 [hidden] { display: none !important; }
+
+/* ---------- After v3: the brand is the way home (it replaces the root crumb) ---------- */
+/* The padding is taken back by the margin, so at rest the brand sits exactly where the span did. */
+a.brand { color: inherit; text-decoration: none; cursor: pointer; padding: 4px 6px; margin: -4px 0 -4px -6px; border-radius: var(--r); transition: background 160ms; }
+a.brand:hover { background: rgba(255,255,255,0.06); }
+a.brand:focus-visible { outline: 2px solid var(--hCtl); outline-offset: 2px; }

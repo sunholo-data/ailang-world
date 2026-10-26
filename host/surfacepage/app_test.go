@@ -34,8 +34,18 @@ func TestSurfaceAppMatchesWorkingCopy(t *testing.T) {
 		}
 		css = strings.Replace(css, "url('fonts/"+f+"')", "url('/surface/fonts/"+f+"')", 1)
 	}
-	if css != string(AppStyle) {
-		t.Error("app.css differs from the working copy beyond its font URLs")
+	// The one departure from v3 is appended, marked: the brand as the way home (Mark, 26 Oct).
+	style := string(AppStyle)
+	cut := strings.Index(style, "\n/* ---------- After v3: the brand is the way home")
+	if cut < 0 || style[:cut] != css {
+		t.Error("app.css differs from the working copy beyond its font URLs and the brand link")
+	} else {
+		for _, rule := range []string{"a.brand { color: inherit; text-decoration: none;", "a.brand:hover { background: rgba(255,255,255,0.06); }",
+			"a.brand:focus-visible { outline: 2px solid var(--hCtl);"} {
+			if !strings.Contains(style[cut:], rule) {
+				t.Errorf("the brand link lacks %q", rule)
+			}
+		}
 	}
 	logo := read("ailang-logo.svg")
 	if !bytes.Equal(logo, AppLogo) {
@@ -57,6 +67,17 @@ func TestSurfaceAppMatchesWorkingCopy(t *testing.T) {
 		if !strings.Contains(index, part) || !strings.Contains(shell, part) {
 			t.Errorf("the shell lost the working copy's %q", part)
 		}
+	}
+	// The working copy's brand is a span; the app's is the link home, with the same children.
+	brand := `<a class="brand" id="home" href="/surface" aria-label="World: back to the timeline">` + "\n      " + `<span class="logo-tile"><svg `
+	if !strings.Contains(index, `<span class="brand">`+"\n      "+`<span class="logo-tile">`) {
+		t.Error("the working copy's brand is no longer a span")
+	}
+	if strings.Count(shell, `class="brand"`) != 1 || !strings.Contains(shell, brand) || strings.Contains(shell, `<span class="brand">`) {
+		t.Errorf("the shell's brand is not %q", brand)
+	}
+	if !strings.Contains(shell, `</svg></span>`+"\n      "+`<span class="brand-name">World</span>`+"\n    </a>") {
+		t.Error("the brand link does not hold the logo and \"World\"")
 	}
 	for _, banned := range []string{"SPIKE_DATA", "spike-data", "data.js"} {
 		if strings.Contains(string(AppScript), banned) || strings.Contains(shell, banned) {
@@ -149,7 +170,7 @@ const seams = require('./surface.js');
 const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
-assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'barHTML', 'blendXS', 'cleanTitle', 'esc', 'frontHTML',
+assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'frontHTML',
   'geometry', 'layoutGraph', 'levelXs', 'lookOf', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'shortTitle', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
 const hollow = s => { for (const w of ['undefined', 'NaN', 'null', '[object']) assert(!s.includes(w), 'rendered ' + w + ': ' + s.slice(Math.max(0, s.indexOf(w) - 80), s.indexOf(w) + 40)); };
 
@@ -280,6 +301,11 @@ assert.deepEqual(at('back', null), {home: true}); assert.deepEqual(at('world', n
 assert.match(at('nosuch').error, /no brane/); assert.match(at('onboarding@0').error, /states 1 to/); assert.match(at('a b c').error, /unknown address/);
 assert.match(at('row-189@1', null).error, /no brane/, 'without the index a name cannot resolve');
 assert.match(app.addressTarget('row-189@1', index, undefined).error, /not loaded/);
+// Crumbs: the brand is the way home, so the timeline has none and a brane has only its address.
+assert.equal(app.crumbsHTML(null), ''); assert.equal(app.crumbsHTML(undefined), '');
+assert.equal(app.crumbsHTML('row-189@6'), '<button type="button" class="crumb" aria-current="true">row-189@6</button>');
+assert(!/world|›|data-crumb/.test(app.crumbsHTML('row-189@6')), 'no root crumb in a brane');
+assert.equal(app.crumbsHTML('a<b'), '<button type="button" class="crumb" aria-current="true">a&lt;b</button>');
 // Every committed stack's own address opens it.
 for (const s of stacks) {
   const lane = seams.laneStates(index, s.front.brane), n = lane.findIndex(x => x.id === s.front.id) + 1;

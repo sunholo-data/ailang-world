@@ -287,8 +287,12 @@
     return { theme, motion };
   }
 
+  // crumbsHTML is the header's crumbs: none on the timeline (the brand is the way home), and in a
+  // brane only its address (row-189@6), current.
+  const crumbsHTML = addr => addr == null ? '' : `<button type="button" class="crumb" aria-current="true">${esc(addr)}</button>`;
+
   if (typeof module !== 'undefined') module.exports = { esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
-    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, geometry: { PL, PR, PW } };
+    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
   // ================= The page =================
@@ -715,10 +719,7 @@
   // ---------- Header ----------
   const addrOf = () => `${F.brane}@${railIdx() + 1}`;
   function renderCrumbs() {
-    const cs = [['world', st.d === 0]];
-    if (st.d === 1 && F) cs.push([addrOf(), true]);
-    $('crumbs').innerHTML = cs.map(([t, cur], k) => (k ? '<span class="crumb-sep" aria-hidden="true">›</span>' : '') +
-      `<button type="button" class="crumb" data-crumb="${k}" aria-current="${cur && k === cs.length - 1}">${esc(t)}</button>`).join('');
+    $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
     $('addr').placeholder = st.d === 0 ? 'go to a place — row-189@6 · shared@0ffbb9c' : '';
   }
   let msgT;
@@ -1007,7 +1008,13 @@
     });
   }, { passive: false });
 
-  $('crumbs').addEventListener('click', e => { const c = e.target.closest('[data-crumb]'); if (c && c.dataset.crumb === '0') out(); });
+  // The brand is the way home: in a brane it does what Esc does, on the timeline it goes to Now.
+  // A modified or middle click keeps the link's own default (/surface in a new tab or window).
+  $('home').addEventListener('click', e => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (st.d === 1) out(); else if (T) goNow();
+  });
   $('keys-btn').addEventListener('click', () => toggle('keys'));
   $('look-btn').addEventListener('click', () => toggle('look'));
   $('look').addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (!b) return; const [k, v] = b.dataset.look.split(':'); look[k] = v; saveLook(); applyLook(); renderLook(); });
@@ -1020,6 +1027,7 @@
   document.addEventListener('keydown', e => {
     if (e.target && e.target.tagName === 'INPUT') return;
     const k = e.key; let done = true;
+    if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
