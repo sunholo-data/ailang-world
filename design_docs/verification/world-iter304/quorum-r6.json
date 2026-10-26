@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture.md",
+  "iso_ts": "2026-10-26T07:44:46Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.029014,
+      "tokens_in": 12842,
+      "tokens_out": 333,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "Cross-execution state drift: the document is anchored to a dual baseline (original r4 base `c21f303` vs iteration 304 HEAD `039bfa77` where M1–M6 and M7a/M7b have already landed), requiring inline annotations to reconcile 'proposed future work' with already-committed code (V29, V30). While V29–V31 thoroughly verify the landed state, the header's `Base: c21f30310e04941afd3ccfb6b8748177db7b06c8` remains technically behind the V29/V30 measurements.",
+        "catch": "Verify during M7c execution that the baseline content rectangles measured in the V25 test-helper rehearsal are updated to match the exact coordinates of the 4-row evidence roster and pending status rendered by the landed M5 (`bcd2d7cd`) and M2/M4 (`demo_seed.go`) code.",
+        "proposed_fix": "In the header, append `(r4 base; iteration 304 measurements V29–V30 taken at HEAD 039bfa77)` to the `Base:` line so the dual-commit provenance of the verification log is explicit at the top of the document."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0664594,
+      "tokens_in": 11523,
+      "tokens_out": 11438,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The document's verification basis is split across two divergent commits without re-verification of its load-bearing premises at the state that will actually ship: rows V1–V28 were measured at/near base c21f303 at iteration 266, rows V29–V31 at HEAD 039bfa77, and the doc's own iteration-304 annotations state that M1–M6 and M7a/M7b have already landed — meaning the renderer, packet-evidence projection, and serve path that D2/D3 depend on have been modified by the doc's own milestones since V4 (grade resolution), V6 (routes/payload flag) and especially V14/V24 (exactly one script tag, no inline script, no nonce, empty varying-byte inventory) were measured. No verification row re-executes any of these at HEAD. The central still-mode determinism premise of D2 therefore rests on measurements of a pre-implementation renderer, and the doc simultaneously claims 'This revision changes design_docs only' and 'Proposed implementation paths below are future work, not files changed by this revision' while annotating that they are already changed — an internally falsified self-description that an executor or controller cannot safely act on.",
+        "catch": "Two specific verification gaps to fix before proceeding: (1) the blanket annotation 'M1–M6 ... have since been built' is asserted, not verified — only M1a (28ff4db3), M5a (bcd2d7cd), M7a (38ac4167/98f48b20) and M7b (fa04df00/02e12be2) carry SHAs; M2, M3, M4 and above all M6's --workbench-still flag have no executed row, no SHAs, and no cited C1–C6 acceptance results; (2) the §2 capture recipe's real-content byte-equality premise (V25) was measured on Chrome 155.0.8059.41, which V29 confirms is no longer installed (rig auto-updated to 156; only a synthetic data: page was measured on 156), so the product-behavior premise on the instrument that will actually be used is unmeasured and only covered by the still-pending M7/V21 gate.",
+        "proposed_fix": "Re-anchor the document as an as-built revision at HEAD 039bfa77 instead of a future-work plan frozen at c21f303: (a) update the Base/branch line and strike or correct the 'changes design_docs only' non-goal and the 'future work' framing of the milestone table, converting each M-row to landed/pending status with its commit SHA and executed acceptance evidence (test names/commands) or an explicit 'not yet verified' mark; (b) add verification rows executed at HEAD: V32 re-running the V24 probe against the real --workbench-still flag (serve the seeded or test-helper store, two GETs 2s apart on /workbench, ?object=\u003cref\u003e, ?object=\u003cref\u003e\u0026payload=1, ?from\u0026entry routes: assert 0 script tags and byte-identical HTML, plus default-mode script presence), V33 re-reading V4/V6 at HEAD (grade resolution now including the authored-claim case at workbench_packet_evidence.go:265-267, route and payload=1 behavior) to confirm the iteration-266 premises survived M2–M6; (c) replace the stale 'eight executor runs, each ≤30 min' estimate with the actual landed/pending run inventory; (d) optionally add a V34 row re-running the V25 real-content two-pass probe once on the current Chrome 156 before the attended release capture, so the §2 recipe's determinism premise is measured on the installed instrument rather than inferred from a superseded version."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.11150099999999999,
+      "tokens_in": 11427,
+      "tokens_out": 5148,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's own gating claim is falsified by its own annotations. The header asserts \"Planner-Lane: codex-ok for the milestones below after design quorum/freeze,\" yet the iteration-304 annotations record that M1a (28ff4db3), M5a (bcd2d7cd), M7a (38ac4167, PR #360) and M7b (fa04df00/02e12be2, PR #361) have already landed while every quorum round on record — r1, r2, r3, and the latest r5 (iteration 304: GLM REJECT, Kimi REJECT) — is BLOCKED, with no passing round anywhere. V30's verification is measurement of already-merged code, so quorum review has become retrospective decoration: the design is documenting a fait accompli instead of gating one. Either the \"after design quorum/freeze\" precondition was breached by those merges, or it has been silently voided; the doc annotates around this contradiction rather than resolving it. Secondary concrete gap: all real-content two-pass byte-stability evidence (V25) was measured on Chrome 155, which V29 confirms is no longer installed on the rig; the only Chrome-156 evidence is a synthetic data: page. Section 2's title \"measured on 155 and 156\" therefore overstates the instrument evidence for the only browser that can actually run M7 — V21 (the real product measurement) remains PENDING, so M7's feasibility premise currently rests on zero real-content measurements on any installed browser.",
+        "catch": "Three things to fix or verify: (1) Reconcile the Planner-Lane line with the landed M1a/M5a/M7a/M7b merges — name the authority under which code merged ahead of a passing quorum, or revert the claim that codex-ok applies only after freeze. (2) Re-measure the V25-style two-pass real-content capture on the currently installed Chrome 156.0.8078.47 before calling the capture recipe \"measured\" for the rig that will run the release; a 390x300 data: page with one prefers-color-scheme rule does not establish byte-stability of the multi-pane workbench HTML. (3) The document is labeled \"REVISED r4 (iteration 266)\" but contains and dispositions an iteration-304 r5 round — the self-identification is stale; this is an r6-candidate and should say so, with r5's dispositions clearly pending re-review, not retroactively \"fixed\" by the same party that authored the revision.",
+        "proposed_fix": "Replace the header Planner-Lane sentence with an explicit provenance statement, e.g.: \"Planner-Lane: M1a (28ff4db3), M5a (bcd2d7cd), M7a (38ac4167, PR #360), M7b (fa04df00/02e12be2, PR #361) landed under sprint-plan authority \u003cname row/decision record and date\u003e prior to design quorum; all remaining milestones (M7c, M8, and the attended V21/M7 capture) are blocked until an r6 quorum PASS. This document does not itself authorize the landed code.\" Add verification-log row V32: `git log --oneline main --grep='row 150' --merges` plus `gh pr view 360 361 --json mergedAt,reviews` documenting which gate each merge passed. Downgrade section 2's heading to \"Bounded system-Chrome capture (real-content evidence on Chrome 155; instrument check only on 156)\" and add a precondition to M7: before the attended release run, the controller re-executes the V24/V25 probe (script-stripped repeat-GET plus two Chrome passes on a test-helper store) against the rig's current Chrome and records the hashes as V33; if that probe fails, M7 does not start and the M7 fallback escalation applies immediately. Finally, relabel the document status line to \"REVISED r6-candidate (iteration 304 designer, post-r5 dispositions, BLOCKED pending r6 quorum)\" and move the r5 disposition table under Review status with each item marked \"pending re-review\" rather than \"fixed.\""
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-304 r6: designer applied r5 fixes - V29 disclosure (committed M7a supervisor), Kimi verbatim fallback/acceptance text (byte inequality = 150(b) not discharged, escalated to Mark), V30 CLAIMED measured at HEAD via world-demo authoredClaimGradeCode contract + projection, V31 dependency SHAs ancestry."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The document's verification basis is split across two divergent commits without re-verification of its load-bearing premises at the state that will actually ship: rows V1–V28 were measured at/near base c21f303 at iteration 266, rows V29–V31 at HEAD 039bfa77, and the doc's own iteration-304 annotations state that M1–M6 and M7a/M7b have already landed — meaning the renderer, packet-evidence projection, and serve path that D2/D3 depend on have been modified by the doc's own milestones since V4 (grade resolution), V6 (routes/payload flag) and especially V14/V24 (exactly one script tag, no inline script, no nonce, empty varying-byte inventory) were measured. No verification row re-executes any of these at HEAD. The central still-mode determinism premise of D2 therefore rests on measurements of a pre-implementation renderer, and the doc simultaneously claims 'This revision changes design_docs only' and 'Proposed implementation paths below are future work, not files changed by this revision' while annotating that they are already changed — an internally falsified self-description that an executor or controller cannot safely act on.",
+      "oc-kimi-k3: The doc's own gating claim is falsified by its own annotations. The header asserts \"Planner-Lane: codex-ok for the milestones below after design quorum/freeze,\" yet the iteration-304 annotations record that M1a (28ff4db3), M5a (bcd2d7cd), M7a (38ac4167, PR #360) and M7b (fa04df00/02e12be2, PR #361) have already landed while every quorum round on record — r1, r2, r3, and the latest r5 (iteration 304: GLM REJECT, Kimi REJECT) — is BLOCKED, with no passing round anywhere. V30's verification is measurement of already-merged code, so quorum review has become retrospective decoration: the design is documenting a fait accompli instead of gating one. Either the \"after design quorum/freeze\" precondition was breached by those merges, or it has been silently voided; the doc annotates around this contradiction rather than resolving it. Secondary concrete gap: all real-content two-pass byte-stability evidence (V25) was measured on Chrome 155, which V29 confirms is no longer installed on the rig; the only Chrome-156 evidence is a synthetic data: page. Section 2's title \"measured on 155 and 156\" therefore overstates the instrument evidence for the only browser that can actually run M7 — V21 (the real product measurement) remains PENDING, so M7's feasibility premise currently rests on zero real-content measurements on any installed browser."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2069744,
+    "total_tokens_in": 35792,
+    "total_tokens_out": 16919
+  }
+}

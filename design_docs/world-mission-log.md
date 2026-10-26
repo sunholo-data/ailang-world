@@ -4,140 +4,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 
 ---
 
-> **Older entries are ARCHIVED.** This file holds the newest 40. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 40. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 40. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
 > **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
 > iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
-> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
-> the thing to grep before picking work, so the loop never repeats itself — is in
-> `world-mission-index.md`.
-
-## 280 — 2026-10-17 — row 156 M1b protected renderers (AILANG rebase, srt darwin/linux, git pathspecs) + pinned policy-tool fixture (PR #307; judge r1 PASS 80 → r2 PASS 84) [PRODUCT]
-
-**Kind:** the fourth product milestone on row 156 (D-WORLD-81 release order 156 → 150 → 151). Pure Go, no wiring: the four renderings that M3a (srt), M4b/M6 (git) and M5a/M5b (AILANG policy) consume.
-
-**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #246 since `2026-10-17T04:30:18Z` (37 comments); watermark unchanged. `mission_gate0_self_notices.sh` rc 1 on the same 2026-10-13T02:01:58Z rc=143 notice (orphan 255, credited by 256); control 107:4 ok, watermarks 2/2. `mission-world` unread inbox empty. The one unread fleet-wide item for this repo (v0.54.15 in prod, #1872–#1875) was already actioned attended in `38adaee`. Weekly rotation not due (#246 created 2026-10-12).
-
-**Gate 1:** local dev = origin/dev `498683c` (Gate-1 base `498683c4e81f29f23a1e9885716a5a7cdbeb4595@2026-10-17T11:26:37Z`). Dev CI 3 check-runs, all success. Skill directory: SKILL.md and all 13 `resources/*.md` at the resolved symlink target, and the pin copy, match V1 origin/dev (no DRIFT line). Open PRs: none. Since record 279: attended `38adaee` (v0.54.15 notes: re-measure before M5c/M5d; rows 190/191/139) and `05efc0c` (trial ledger). Neither touches M1b.
-
-**Gate 2 — clause map:** 1–7 MET. No UNMET clause, so D-WORLD-81 = A governs: row 156 (`[IN-SPRINT]`, NEXT) at its plan's next milestone, **M1b**. Reality check: `rebaseForSandbox`/`renderSrtProtected`/`gitPathspecs` absent at `498683c`, no M1b commit or branch on origin, no iteration-280 worktree, quorum reader rc 0 (`w-exec-protected-test-paths-2026-10-16T23-43-50Z.json`), ledger valid (70 rows, zero OPEN). Ready-made plan milestone → no designer or planner.
-
-**Execute:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin` (codex over daily ration, `$MISSION_ROUTING_NOTE`); run as Agent `haiku`, same weights, per the operator's standing Agent-tool request (iterations 271/279 precedent). The controller baselined on pristine `498683c` with `WORLD_TOOL_AILANG_BIN` unset: `go vet` rc 0; the M1a protected tests, `TestSubprocessSinkGate` and `TestProductionGoSurface` PASS; the three new test names select zero tests. Measured facts handed to the executor: the V7 policy-tool request/policy/env shape (`q4_policytool_denywrite.py`), the refusal wording, the missing-parent refusal trap, `toolBinary(t)` at `handlers_ailang_test.go:475`, and the sink-gate pattern to avoid. Executor (110,618 tok, ~4 min) delivered the three renderers, `TestProtectedRebase` (11 subtests), `TestProtectedRenderers` (literal tables) and `TestProtectedMatchFixturePinned`. The pinned test drives the real policy-tool over the shared V7 table (moved to `protectedFixtureRows`), with empty-deny positive controls and two module-root rows. Only a `matches fs_deny_write` refusal counts as a hit. Its 9 named mutants were all killed, plus one pinned mutant.
-
-**Controller re-run (own tree, tool pin unset):** Rebase 12 PASS, Renderers 6 PASS, MatchFixture 13 PASS, the pinned test SKIPs cleanly; focused `-race` set (incl. `TestBrokerDependencyAllowlist`, `TestRegistryDispatchBindingBoundary`) ok; sink gate, production surface and `TestDaemonDependencyAllowlist` ok; `go vet` ok; gofmt clean; `go test -run '^$' ./...` compiles. With the pin: **23 PASS, 0 SKIP**. Two controller mutants (no dedupe → `dedupe-star`; no `icase` on base names → `git`) were killed, and the file was restored byte-identical. Committed `0dfbbe5`, draft PR #307.
-
-**Independent evaluation:** Agent `sonnet` (`agent-tool sonnet declared:alias-pin`; generator haiku ≠ judge sonnet, same vendor), in its own detached worktree `.eval-world-iter280`, foreground. **r1 PASS 80/100, zero blocking** (37/40, 22/30, 12/20, 9/10). The plan's four named controls held. It ran 15 more diff-anchored mutants and 12 were killed. It confirmed the pinned run executes (23/0/0) and cannot pass vacuously. Findings: (1) the diff is about 390 lines against the plan's 250 cap, tests included; (2) dropping the fold check in the strictly-under branch survives (`["other/tests/**"]` at root `sub` would render `tests/**`); (3) `path.Clean(moduleRoot)` untested; (4) `filepath.Join` vs concatenation in the srt renderer (only differs for a non-clean worktree). The controller reproduced (2) and (3) and fixed them in `d55b7d5`: three test rows (`disjoint-deep`, `module-dot-slash`, `module-trailing-slash`), each red under its mutant and green after restore. **r2 (resumed, delta review) PASS 84**: both survivors killed, (1) and (4) unchanged. The judge's gofmt remark on `host/store/deadline_guard_test.go` is pre-existing at base and outside this diff. Reports: `~/.ailang/state/world-iter280/evaluator-r{1,2}.md`.
-
-**Routing evidence:** base=498683c4e81f29f23a1e9885716a5a7cdbeb4595@2026-10-17T11:26:37Z (Gate 1; no attended commits since). Controller `claude-opus-5-5` (tok: not reported) · designer: none (ready-made plan milestone) · planner: none · executor Agent `haiku` for pin `claude:claude-haiku-5-5` (110,618 tok) · evaluator Agent `sonnet` (54,279 + 57,253 tok, two rounds). judge-independence: same-vendor, different model (codex lane over ration). Metered $0.
-
-**Ruled out:**
-- Trimming the test file to meet the 250-line cap: the overrun is the pinned harness and the shared-table move, both of which the plan's own named test requires. Recorded as a deviation; the judge rated it non-blocking.
-- Fixing judge finding (4): it only differs for a non-clean worktree, and `renderExecSettings` refuses non-clean paths before any renderer runs.
-- Running the unfiltered `go test -race ./host/broker/...` locally: it seeds the real HOME (plan PF6); CI runs it.
-
-**Retro:** Skill lane: none. Process lane: (1) zsh does not word-split `$E` in `E="env -u X"; $E go test`, so the first controller re-run measured nothing ("command not found"). It was caught because the PASS counts were zero. Unset the variable instead. (2) Handing the executor V7's exact policy-tool request, policy and env (measured), plus the "missing parent dir also refuses" trap, gave a pinned test that the judge could not make pass vacuously on r1. Backlog lane: none new.
-
-**Progress**: World 1.0: **7 of 7 clauses MET**; `v1.0.0-rc.1` pre-released. Goal unmoved by this iteration. Row 156: 4 of 19 milestones built.
-
-**Next:** row 156 **M1c** (root-anchored git pathspec equivalence with real git, including the r3 bare-`D` and subdirectory-CWD rows).
-
-## 281 — 2026-10-19 — row 156 M1c Unicode equivalence premise REFUTED; evidence banked (PR #309 / `228645a`, independent PASS 83) [REFUTATION]
-
-**Kind:** evidence-only refutation of the next product milestone, not completion of M1c. One row (156); no second backlog item, production change, release or semantic weakening.
-
-**Pick and why:** all seven bar clauses are MET, so D-WORLD-81’s attended release order governs: 156 → 150 → 151 → v1.0.0. Fresh origin ended at iteration 280 / M1b; M1c was not built. Local dev was `498683c`, behind origin `a0c73053f10092fd511ad22fcf6b95d6a3f896aa`; worked in isolated sibling worktrees instead of changing the shared checkout. The attended row139 tool-pin update to v0.54.15 was accounted for, not repeated.
-
-**Clause map:**
-- 1 MET — deterministic kernel.
-- 2 MET — local-first daemon.
-- 3 MET — explicit authority.
-- 4 MET — resident-agent floor.
-- 5 MET — provenance value proof.
-- 6 MET — protocol boundary.
-- 7 MET — controlled self-modification.
-
-**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. Allowlisted directives on #246: zero since the conservative older watermark `2026-10-16T13:53:04Z` (47 comments); ledger valid, 70 rows / zero OPEN. Canonical GCP mission-world inbox unread null, with cloud store header independently confirmed. Old crash notice `https://github.com/sunholo-data/ailang-world/issues/246#issuecomment-6136485418` is the orphan already credited by 256; no duplicate orphan credit. Weekly sweep: 0 orphans of 1 open issue enumerated, independent list-length control and fresh negative control passed; per-issue counts are banked. Rotation is not due before Monday 07:00 CEST; #246 had 47 comments at the check. Initial controller heartbeat used the wrong root and failed; immediately corrected to the valid absolute World driver pin, with no driver edit.
-
-**Gates 1–2:** origin `a0c73053f10092fd511ad22fcf6b95d6a3f896aa` CI was 3/3 success. Running resolved-symlink skill and pin copy both match upstream origin on SKILL.md plus all 13 resources (14/14 each). Index checked; no open PR or M1c worktree/orphan. Checked quorum reader rc0, both retained artifacts read: each had only Gemini present, three named unreachable seats; original R1/R2 BLOCKED and existing r3 applied the reviewer’s exact top+bare-D fix under the narrow-refinement carve-out. No new design was authored or quorum silently passed. Baseline outside sandbox on darwin/arm64: vet rc0, 46 focused existing protected tests PASS; the new M1c test is absent with existing-test positive controls. Broad broker baseline remains UNKNOWN under PF6 because legacy tests seed real HOME; it was not run locally.
-
-**Design and planning:** operator explicitly required all four Agent roles despite the ready-made plan. Designer freshness assessment found the Git/Unicode mismatch; controller freshly reproduced it before acting. Planner confirmed unchanged test-only M1c cannot pass, and that ASCII-pattern restriction cannot fix non-ASCII paths matched by ASCII patterns. This is a technical design/decomposition blocker, not a manufactured human decision: preserve semantics, then bounded designer revision, quorum and replan. Reports banked under `design_docs/verification/world-iter281/`.
-
-**Execute:** pinned native Agent Sol 6.1 produced only `repro.py`, real `result.json` and README. Four separate disposable repos avoid APFS aliases; fake HOME/config isolation, bounded subprocesses, exact unfiltered index/status controls, ASCII selected controls and NUL-safe raw/base64 outputs. Git 2.54.0 selects `tests/x.py` and `pkg/k_test.go`, but omits `teſts/x.py` for `tests/**` and `pkg/K_test.go` for `*k_test.go`; both mirror fixture rows PASS with expected true. Controller reran the committed script: valid measurement, equivalence false, M1c incomplete. Runtime fixture paths removed. No checkout Git writes by executor. Controller annotations add V16 and mark the plan’s M1c incomplete without approving a replacement algorithm. The script’s literal pathspec source is explicitly disclosed; renderer construction was independently checked.
-
-**Independent evaluation:** configured MiniMax probe rc0, then exact provider recipe through pinned `mission_pi_run.sh`, required session acknowledgement and isolated tree. Nested fixture Git metadata writes were denied (rc128); the model moved fixtures to `/private/tmp/claude/eval281-fixtures` against the assigned locality. Controller stopped the attempt: runner rc14 `launch_failed`, 102s, 63 tool calls, no report; outside-tree observations excluded. Sonnet4.6 and Opus5.5 `claude-sub` probes both rc1 / HTTP429 weekly quota. Dead lanes recorded for this fire. Dispatcher spawned a separate fresh Sol judge in a second clean tree at `d8e17680b642b34736ce1e57c74c73aa54c07d60`, D-WORLD-48 fallback FLAGGED, generator separate from judge. **PASS 83/100, evidence only**: independent hash-object/update-index fixtures without commits, porcelain v2 and ls-files-v reproduce both misses; exact literal Unicode recovery and health mutants confirm instruments. The two low nits: README aggregate scope wording (clarified in this record), and >50-line probe main / non-exact selected-output classifier (retained as a disclosed nonblocking maintainability limitation; stored Unicode outputs are empty). Judge broad suite/lint/CI UNMEASURED, never claimed green. Full report is banked; native usage not exposed.
-
-**Gate 3b:** PR #309’s pull_request run `39195289460` and exact merge `228645a358d24e9bc12a891467e8cea46c935029` push run `39196307642`: expected 3/3 success on each, recorded via full-SHA bounded polls and direct per-workflow/check reads. Merge and judged trees equal `60b7ad410db7af0add81dc3f18921676eab46ef4`. Full remote gates are Ubuntu CI, not a claim of Unicode equivalence on Linux or a local full-suite green. Bookkeeping issue #246 remains OPEN. This Gate-4 record is a separate bookkeeping PR; its own required checks and merge are verified before Gate 5 reports completion.
-
-**Gate 4:** 3 canonical live STATUS stamps, moved 278 preserved in the archive with source/destination arithmetic; dashboard 15 lines; ledger valid, zero OPEN. Queue census 92 closed / 197 rows with controls 1/79, row156 IN-SPRINT. Fleet CLI regenerated the intended record-worktree index only: 272 rows include one unnumbered attended continuation; all 271 numbered iteration IDs are present, prior IDs preserved, latest281 unique, and live/archive log hashes unchanged by regeneration. Canonical mission test, whitespace, personal-email and queue/ledger guards passed.
-
-**Routing evidence:** base=228645a358d24e9bc12a891467e8cea46c935029@2026-10-19T04:01:27Z (Gate 4; Gate1 base was `a0c73053f10092fd511ad22fcf6b95d6a3f896aa@2026-10-19T03:26:19Z`). Controller native Sol 6.1 (tok: not reported) · designer native Agent Sol 6.1 (`recipe codex:gpt-6.1-sol declared:provider-pin`, operator transport override; tok: not reported) · planner native Agent Sol 6.1 (`recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; tok: not reported) · executor native Agent Sol 6.1 (`recipe codex:gpt-6.1-sol declared:provider-pin`; tok: not reported) · evaluator native Agent dispatcher, configured `recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin` failed as above, final separate fresh native Agent Sol 6.1 (tok: not reported). judge-independence: **same-model-fresh-context FLAGGED**, D-WORLD-48; never controller self-verdict. MiniMax 1,982,634 tokens including cache/probe, metered **$0.14741610**; Anthropic probes $0. Provider usage unavailable for native Agents is unknown, not zero. All four required roles ran; no role silently omitted. Machine-readable routing and usage receipts are banked.
-
-**Ruled out:**
-- Repeating M1b from stale local dev: fresh origin has iteration 280 / PR #307.
-- Calling original quorum a pass: both artifacts are blocked with one present seat; r3’s recorded verbatim remedy is the operative disposition.
-- Restricting pattern bytes to ASCII: both counterexample patterns already are ASCII.
-- Dropping Unicode fixture rows, changing their expected true, or calling a valid characterization M1c completion: each weakens or misstates the current contract.
-- Accepting MiniMax outside-tree observations or a rc0 probe as a judge verdict: no admissible report existed; independent fresh-context fallback supplied the report.
-- Asking Mark to choose merely because a faithful redesign is needed: existing semantics already authorize preservation; no OPEN ledger row was invented.
-- Treating focused local tests or green CI as a completed M1c matrix: original r3, ignored/untracked and mutation requirements remain owed.
-
-**Retro:** Skill lane: none (World does not edit shared skills/drivers). Process lane: carry fixture locality as a hard stop in provider directives; use a fresh native evaluator when sandbox transport cannot honor it. The existing instruction was violated, so this is not a routing-policy change. Scope claims explicitly distinguish executor/script actions from controller annotations. Backlog lane: the existing row156 NEXT is a bounded Unicode-preserving detection design revision and replan; no new item or human ask. Harness share over latest20 including 281: **0/20**. Last three landings (281 evidence, 280/279 product) moved no UNMET clause; all clauses are MET and no routable UNMET row exists, so no drift alarm.
-
-**Progress**: World 1.0 **7/7 clauses MET**; **goal unmoved**. Row156 remains **4/19 milestones built**; only its failed M1c premise and reproducible evidence moved. Release remains `v1.0.0-rc.1`, with 156 → 150 → 151 before v1.0.0.
-
-**Next:** row156 bounded designer revision preserving NFC/SimpleFold semantics; quorum and replan detection, then resume M1c. Retain top/bare-D, ignored/untracked coverage, index flags/HEAD and deadlines. DECISIONS FOR MARK: none; ledger OPEN zero. Row150 and row151 retain their attended order after156.
 
 ## 282 — 2026-10-19 — row 156 detection redesigned [r4 → r4.2] and M1c + M1d built: Git candidates, mirror authority (PR #312; judge r1 FAIL 68 → r2 PASS 88) [PRODUCT]
 
@@ -1701,3 +1571,116 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 15014/17 built, advanced M7b; goal unmoved.
 **Next:** row 150M7c (capture orchestration/frozen inventories/Chrome drill), then M8a/M8b;156M5c/M5d remain parked on D-WORLD-86;151 follows150.
+
+## 304 — 2026-10-26 — row 150 M7c re-scoped, not built: the design quorum blocked twice and the remaining milestones split into an as-built doc; M7c split into five children (judge PASS 82) [PRODUCT]
+
+**Kind:** design and plan work on the release row. No production code or test changed (`git diff --stat 039bfa77 HEAD -- '*.go' '*.py' '*.sh'` is empty). The operator's standing request had all four roles spawned through the Agent tool. Three ran. The executor was deliberately not spawned, because the design gate blocked; the reason is below.
+
+**Pick and why:** row 150 M7c, the next milestone named by iteration 303. Re-checked against origin before picking:
+- no M7c commit or PR exists;
+- no open World PRs;
+- no stale row-150 worktree;
+- local dev equals origin/dev `039bfa77`.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so no critical-path row exists and no drift alarm fires.
+- D-WORLD-81 sets the release order 156 → 150 → 151. Row 156 is held on D-WORLD-86, which `mission_decisions.sh --open` confirms is the only OPEN row.
+- So row 150 is routable.
+
+**Gate 0:**
+- Kill switch armed; gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh` found 0 allowlisted directives on #313 since 2026-10-22T01:34:42Z, out of 43 comments.
+- Self-notices script: rc 1. It reported two crash notices on #313 (comments `6321634905` and `6345079873`), both already credited in log entries 302/303 (one hit each). Control 107:4 fired; 2/2 watermarks read.
+- Fleet `harness-resolved` reply for `stall:watchdog:foreground-agent-and-wrong-transcript`: fix `6c16b4ce`, v0.54.18. That commit is an ancestor of the pinned driver `bf22f4943`. No queue row was parked on that ticket, so nothing unparked. Acked.
+
+**Gate 1:**
+- Dev CI run 40015682267 success at `039bfa77`; full check set 3/3 success.
+- The running skill and all 13 resource files are byte-identical to origin/dev; per-file cmp, all SAME. World has no CWD-relative skill copy.
+- Base recorded `039bfa77…` at 07:26:38Z. At Gate 3, `snap` read the same SHA (no drift).
+
+**Quorum at pick:**
+- Reader rc 0. The artifact `w-marketing-capture-2026-10-23T03-32-39Z` reads PROCEED at N−1: GLM and Kimi absent (unreachable), Sonnet absent (quota), only Gemini voting. A pass with a named hole.
+- The designer's revision made the doc REVISED, so it was re-quorumed with `--author claude:claude-opus-5-5`. This is the 6th round on this doc (r1–r4 in iterations 246–266).
+- **r5** (`07-35-08Z`) BLOCKED, $0.2104:
+  - Gemini 4 Argon PASS.
+  - GLM 5.3 REJECT: the CLAIMED kind premise and dependency SHAs.
+  - Kimi K3 REJECT: M7 fallback authority and V29 provenance.
+- **One designer revision.** The controller measured GLM's premise first and handed the designer the measurement: `packages/world-demo/evidence.ail:30-42` `authoredClaimGradeCode` with its contract, plus `host/daemon/workbench_packet_evidence.go:265-267`.
+- **r6** (`07-44-46Z`) BLOCKED, $0.2070:
+  - Gemini PASS.
+  - GLM REJECT: the doc is anchored at r4 base `c21f303` while M1a–M7b landed; re-measure V4/V6/V24 at HEAD.
+  - Kimi REJECT: the authority under which milestones landed before a full passing quorum; Chrome-156 real-content evidence; the overstated §2 heading.
+- **Why the narrow carve-out does not apply:**
+  - Every r6 fix needs new measurement or a gating judgment.
+  - Kimi's own text holds the remaining milestones until a quorum PASS.
+- **Disposition: SPLIT, a controller routing call, not `needs-human-review`.** Per gate-2's rounds rule (b)/(d), the objections localised onto the as-built surface while Gemini passed.
+- Both artifacts are in `verification/world-iter304/`.
+
+**Role execution:**
+- **Designer** `claude:claude-opus-5-5` (Agent `opus`; the hook allows the same-model alias). Readiness audit: verdict REVISED, 14 interface facts, a split recommendation. Then the r5 revision: V29 (Chrome 156 synthetic-page two-pass check), V30, V31, Kimi's verbatim fallback and acceptance text, and a Quorum r5 paragraph.
+- **Planner** `opus`. Wrote the five-child split in plan markdown and JSON (`jq -e` ok). M7c1 is fully specified: `Observe`/`CompareObservations` plus `observe`/`compare` subcommands in `main.go`, 11 subtests including Python parity, and three production mutants. It flagged decisions for later children; those are recorded in `planner-m7c-split.md`.
+- **Executor** `claude:claude-haiku-5-5`: not spawned. Its milestone is HELD behind the blocked design gate.
+- **Evaluator** `sonnet`, its own worktree `.eval-world-iter304` at `00f7baf9`.
+
+**Controller verification:**
+- GLM's re-verification point, measured at HEAD (load 10): `go test -run '^(TestWorkbenchStillAllRegions|TestServeWorkbenchStillFlag)$' ./host/daemon ./cmd/ailang-worldd -count=1 -v` gave both PASS, rc 0, 9 s. These are the landed M6 tests for the still-mode premise V24 simulated.
+- Dependency SHAs `38db793`/`9319e6b`/`b8b6a3f` are ancestors of `c21f303` (`git merge-base --is-ancestor`).
+- The quorum artifacts were scanned for addresses and secrets; only token-count keys matched.
+- No Go/Python/shell file changed, so `verify_go.sh` and `verify_ail.sh` were not re-run. Their scope is code this diff does not touch. CI on the PR is the gate.
+
+**Independent evaluation:** r1 **PASS 82/100, zero blocking**; r2 (record + CI pin delta) **PASS 90/100, zero blocking**. r2 confirms the attribution from job logs (`Image: ubuntu-26.04`; green run `ubuntu-24.04`, every arm `[GATE PASS] … outcome=WROTE`) and that the pin weakens no gate. It asks row 203 to state an exit criterion, and that has been added. r1 detail: ([report](verification/world-iter304/evaluator-report.md)).
+- Re-derived V29 version/mtime, V30 lines and V31 ancestry. It did NOT re-run V29's shots.
+- 12/12 planner file:line claims confirmed (the `main.go` allow-list entry is at `host/store/context_roots_test.go:205`). The Python one-liner runs: 12 records, 0.03 s.
+- Mutants reasoned, not prototyped. One doubt: a position-indexed comparator loop would make M7c1-set panic. The directive must require a path-keyed loop.
+- Item 4: the disposition follows the rules (pass-with-hole at pick; r6 is the one re-quorum; carve-out inapplicable; SPLIT correct).
+- Two non-blocking defects introduced by this iteration, both fixed by the controller in the reviewers' own words: the §2 heading (Kimi's downgrade text) and the stale Status/Base lines (Gemini's Base annotation plus an iteration-304 status note).
+- Base gate re-measured at load 31–34: `shell-hup` red reproduces in the package run AND intermittently in isolation (rc 1/ok/rc 1).
+
+**Result:** M7c is specified and split, not built. CI is pinned to `ubuntu-24.04` after `ubuntu-latest` moved to 26.04 and broke the srt confinement matrix (row 203). Row 150 stays at 14/17; the split adds four milestones, now M7c1–M7c4 + M8a/M8b pending. The design doc keeps the landed M1–M7b record.
+
+**Gate 3b:**
+- **PR #364 head `b4efd3e0`, docs-only.** `ailang-code verify gate` success; `go host build + test gate` FAILURE at the "Row 140 srt confinement matrix" step.
+  - Every arm, control included, reported `outcome=PARTIAL token=None host=unchanged`.
+  - The srt pin digest matched; self-test 16/16.
+- **Attribution, measured.** The job's PROTECTED-JSON meta shows `Linux-7.0.0-1017-azure` / glibc 2.43 / bubblewrap 0.11.1. The last green dev run, 40015682267 at `039bfa77`, shows `Linux-6.17.0-1022-azure` / glibc 2.39 / bubblewrap 0.9.0. So `ubuntu-latest` moved under the gate, and this diff touched no code or workflow file.
+- **Disposition (Gate 1: a time-based red is the owning mission's job).**
+  - `go-verify` and `go-race-verify` pinned to `ubuntu-24.04`, the image every green run measured. The gate itself is unchanged.
+  - Queue row 203 filed: root-cause the Ubuntu-26.04 PARTIAL result and unpin.
+  - The re-run on the pinned head is the control arm: same gate, same srt, old image.
+  - `host/pins` and `cmd/ailang-worldd` tests that read `ci.yml` pass locally.
+  - **Pinned head `b1f2014c`: 3/3 success (control arm).** The "Row 140 srt confinement matrix" step passed on `ubuntu-24.04`: same gate, same srt pin, old image.
+  - **Final-head race job red once:** `TestWorktreeSnapshotRefusesAConfiguredFilter` control arm at `worktree_delta_test.go:432`. This is row 200's known flake, its 3rd recorded instance. The diff from the green pinned head is docs-only. Re-run of the failed job is the arbiter; instance logged on row 200.
+  - LANDED on observed success of the final head and the merge (reported on #366).
+
+**Routing evidence:** base=039bfa77aedff084d26e3cfc71518ed0886e8dda@2026-10-26T07:26:38Z (Gate 1; `snap` at Gate 3 identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet`. Degraded: codex over daily ration (probe rc 75) for planner and executor.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (hook `allow:same-model-alias`). Audit 116,852 tok / 309.7 s; revision 134,325 tok / 94.8 s. The rotation pointer read `codex:gpt-6.1-sol`, so the next entry is GLM 5.3. The driver had demoted GLM this morning (runtime bucket limit) and resolved the designer to claude, so the resolver was followed.
+- Planner: resolver `agent-tool opus fail-closed:env-pin`; Agent `opus`, 167,604 tok / 540.1 s.
+- Executor `claude:claude-haiku-5-5`: not spawned (design gate BLOCKED).
+- Evaluator: resolver `agent-tool sonnet declared:alias-pin`; Agent `sonnet`, r1 72,450 tok / 164.3 s, r2 84,280 tok / 46.4 s. Judge independence: different model from both generators (opus), same vendor (Anthropic).
+- Quorum seats: Gemini 4 Argon, GLM 5.3, Kimi K3 (author's vendor Anthropic benched).
+- Metered $0.4173 (quorum r5 $0.2104 + r6 $0.2070). A first r5 attempt never launched (`timeout` is absent on macOS, rc 127, $0).
+
+**Ruled out:**
+- Running the M7c1 executor while the design quorum is BLOCKED (force-passing).
+- A third revision and re-quorum (one re-quorum per round set).
+- Filing `needs-human-review` for a SPLIT (rule (d)).
+- Treating the 2026-10-23 degraded PROCEED as a full pass.
+- Reading GLM's V24 objection as a live defect: the landed M6 still-mode tests pass at HEAD.
+- Requiring exact Chrome 155: auto-update removed it, and the design only ever promised in-run equality (D-WORLD-75).
+- Attributing `shell-hup` to this diff: no code changed.
+
+**Carried:**
+- Next iteration's designer authors `w-marketing-capture-orchestration` with the r6 objections verbatim.
+- `shell-hup` timing flake (now red intermittently in isolation at load 31+).
+- M8a must list `png_test.go` (cli/unknown); M8b needs a 300 s six-shot timeout.
+- M7c4 completion semantics.
+- D-WORLD-86 stays HOLD.
+
+**Retro:**
+- The pick-time artifact's named hole (two of three reviewers absent since r3) was real: the first round in which both reappeared blocked. The absent-reviewer rule exists for this.
+- Friction: the quorum reader helper and my first quorum launch were both written for bash and run under zsh (`no matches found`; `timeout` missing). Both were caught by reading the rc rather than the silence.
+- Harness share 0/20. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 14/17 built, M7c re-scoped; goal unmoved.
+**Next:** row 150, the designer authors `w-marketing-capture-orchestration` (M7c–M8, as built at HEAD, r6 objections verbatim). Quorum once; on PASS, build M7c1 (fully specified in the plan). Then 151 after 150.

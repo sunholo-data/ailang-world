@@ -1,10 +1,10 @@
 # W-Marketing-Capture — reproducible, truthful release images
 
-**Status:** REVISED r4 (iteration 266, controller bounded revision under the narrow-refinement carve-out after r3 BLOCKED). Colour forcing (V23), server-HTML stability and script inventory (V24) and real-content two-pass capture (V25) MEASURED by the controller. Product six-shot equality on the seeded demo store remains M7 acceptance, with a named residual path if it fails (M7 fallback).
+**Status:** REVISED r4 (iteration 266, controller bounded revision under the narrow-refinement carve-out after r3 BLOCKED). Colour forcing (V23), server-HTML stability and script inventory (V24) and real-content two-pass capture (V25) MEASURED by the controller. Product six-shot equality on the seeded demo store remains M7 acceptance, with a named residual path if it fails (M7 fallback). **Iteration 304:** the quorum on a narrow §2 revision was BLOCKED twice (r5, r6: Gemini PASS, GLM/Kimi REJECT). The remaining work, M7c–M8 and the attended capture, splits into a new as-built doc (`w-marketing-capture-orchestration`). This doc remains the record of the landed M1–M7b design.
 **Target:** World v1.0.0, queue row 150 / D-WORLD-64
 **Priority:** P1 release · **Estimated:** eight executor runs, each ≤30 min, plus attended release capture
-**Created:** 2026-10-08 · **Revised:** iteration 266, 2026-10-14
-**Base:** `c21f30310e04941afd3ccfb6b8748177db7b06c8` · branch `design/w-marketing-capture-r3`
+**Created:** 2026-10-08 · **Revised:** iteration 266, 2026-10-14 · iteration 304 designer, 2026-10-26 (§2 Chrome-version rule, V29)
+**Base:** `c21f30310e04941afd3ccfb6b8748177db7b06c8` (r4 base; iteration 304 measurements V29–V30 taken at HEAD 039bfa77) · branch `design/w-marketing-capture-r3`
 **Planner-Lane:** codex-ok for the milestones below after design quorum/freeze
 **Dependencies:** rows 148 (`38db793`+`9319e6b`), 149 (`b8b6a3f`), 26/105/172/176 and fleet PNG allowance landed; attended publish and mint for release data
 
@@ -37,7 +37,7 @@ Mark retains ownership of whether fresh-seed equality needs a subsequent row.
 
 No new Go dependency, chromedp, kernel change, shared-driver change, forged envelope,
 fixture key, unattended mint, operator approval impersonation, or PNG post-processing.
-No remote publish/deploy effect is needed. This revision changes design_docs only.
+No remote publish/deploy effect is needed. This revision changes design_docs only. *(Iteration 304 annotation: true of r1–r4; implementation has since landed through the sprint plan. M7a `38ac4167` and M7b `fa04df00`/`02e12be2` are built, M7c is pending; see the M7 row below.)*
 
 ## Verification log — first-party at iteration 266
 
@@ -75,6 +75,9 @@ Executed results and exact controller commands are in
 | V26 | `host/daemon/workbench.go:303-304,421` | The workbench `payload` flag accepts only `0`/`1`; `payload=true` is `400 BadRequest — malformed payload flag` (measured in V24's first run). The REST `/v1/objects/{ref}?payload=true` form is a different endpoint and stays as written in S4. The provenance shot route is `?object=<ref>&payload=1`. |
 | V27 | `host/daemon/workbench_packet.go:75-78`; `host/workbench/render.go:262`; QUICKSTART §11 "Inspect a decision packet" | A validated packet renders `approvals chain: <status>` from the broker's approval record, plus ` by <decider>` only once decided; QUICKSTART documents `approvals chain: pending` until an operator decides. This is the source of packet.png's "pending" content. |
 | V28 | `world/types.ail:23-29,44-49` | Evidence kinds mapping to CLAIMED are `AiReview(HashRef, float)` and a raw `ProofReceipt`. An `ai_check` report is compiler output (`CompilerOutput` → ATTESTED), NOT an `AiReview`; the seed produces no AI review, so no real `AiReview` exists to name. |
+| V29 | Iteration 304 designer, 2026-10-26: bounded `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version` (20s Python timeout); `ls -la` of that executable; then the COMMITTED M7a supervisor `scripts/marketing_capture.py` (commit `38ac4167` "row 150 M7a: bounded capture supervisor with fake Chrome and daemon companions" plus controller fix `98f48b20`, both landed via PR #360, merge `c73c7904`; `git diff --quiet HEAD -- scripts/marketing_capture.py` rc 0, so it is not an uncommitted prototype), invoked read-only on a synthetic `data:` page: `python3 scripts/marketing_capture.py shot --chrome <that> --out <fresh> --url <synthetic data: page with a prefers-color-scheme rule> --width 390 --height 300 --scheme light\|dark`, two isolated runs per scheme, decoded with Go `image/png` | rc 0, `Google Chrome 156.0.8078.47`; executable mtime Oct 20 22:47, i.e. the rig's Chrome auto-updated after V13/V23/V25 measured 155.0.8059.41, and 155 is no longer installed. On 156 every run returned `{"verdict": "ok"}` in ≤1 s, chunks `IHDR IDAT IDAT IEND`, exact 390×300, the two passes byte-identical per scheme (light `7e96e882…`, dark `d1240c97…`), background `#f7f6f2` for `=1` and `#1f1e1b` for `=0`. This is a synthetic-page instrument check, not product evidence; real content is still V21/M7 acceptance. |
+| V30 | Iteration 304 designer at HEAD `039bfa77`: `grep -n -i claim packages/world-demo/evidence.ail`; `sed -n 255,272p host/daemon/workbench_packet_evidence.go`; `grep -n authored-claim cmd/ailang-worldd/demo_seed.go`; `grep -n 'func TestWorldDemoLegacyGradeDrift' host/coordinator/world_demo_test.go` and its case table; `git show -s --format='%h %s' 28ff4db bcd2d7c` | MEASURED, built and landed (M1a `28ff4db3`, M5a `bcd2d7cd`). evidence.ail:4 `-- Codes: 0 = refusal, 1 = CLAIMED, 2 = ATTESTED, 3 = TESTED.`; :30 `export func authoredClaimGradeCode(kind: string) -> int ! {}`; :32 `ensures { result == (if kind == "authored-claim" then 1 else 0),`. workbench_packet_evidence.go:265-267 `case "authored-claim": row.label = "CLAIMED"; row.producer = authored.Author`. demo_seed.go:275 writes semantic ID `world/demo/authored-claim/v1`, :274 author `demo-authored`, :1017 expects `<p>authored-claim: CLAIMED · producer/author: demo-authored`. The demo claim's CLAIMED resolves through the world-demo package predicate plus the projection, never by extending world/types.gradeOf, which stays closed. `TestWorldDemoLegacyGradeDrift` (world_demo_test.go:221) compares `legacyGradeCode` with gradeOf for the legacy constructors CompilerOutput, TestReport(true/false), HumanApproval, AiReview, RecordedEffect and ProofReceipt, and separately pins `authoredClaimGradeCode("authored-claim")`. |
+| V31 | Iteration 304 designer: `git show -s --format='%h %s' 38db793 9319e6b b8b6a3f`; `git merge-base --is-ancestor <sha> c21f30310e04941afd3ccfb6b8748177db7b06c8` for each (control: HEAD `039bfa77` → rc 1) | `38db7938 row 148: POST /agui/ — AG-UI 1.0 live event stream over the log (#231)`; `9319e6bf row 148 fix-2/3: load-robust AGUI test oracles (complete 408 or zero bytes; >=2 s stuck guards) (#233)`; `b8b6a3f4 row 149: live workbench — AG-UI follower, theme tokens, SVG graph, read-only decisions pane (#234)`. All three rc 0: ancestors of the design base, so the Dependencies line is satisfied. |
 
 ## High-impact decisions
 
@@ -185,7 +188,9 @@ Ailang.CLI effect/request/result, argv test, JSON success, ≥1 named passing te
 zero failed/skipped/vacuous skips; show verdict pass. ATTESTED names the real S2
 RecordedEffect; decode RecordConsistent and check request/result hashes. CLAIMED
 names a demo-authored claim through a truthful authored-claim kind added by the new
-package's kind predicates, drift-tested against world/types.gradeOf's CLAIMED mapping,
+package's kind predicates; that fourth kind's CLAIMED code is pinned by the world-demo
+package contract `authoredClaimGradeCode` (V30), not by world/types.gradeOf, which stays
+closed, and the executable drift test compares the package's legacy codes with gradeOf (V30),
 and rendered "demo-authored" in its roster row and in captions.md. S1's commentary is
 never cast as AiReview (no AI review produced it, V28); the AiReview kind is not reused
 for non-AI text. The packet projection verifies that every roster ref resolves to an
@@ -209,7 +214,7 @@ candidates, packet/proposal/request, four evidence refs, invocation/effect refs 
 why JSON hashes. Credential, absolute paths and capture time stay in private or
 separate environment diagnostics. Capture rejects missing/mismatched manifest refs.
 
-### 2. Bounded Chrome 155 capture and complete shot list
+### 2. Bounded system-Chrome capture (real-content evidence on Chrome 155; instrument check only on 156) and complete shot list
 
 `scripts/capture_marketing.sh` serves the seed with proof configuration and
 `--workbench-still`, checks health/head with ≤10s requests and ≤30s startup deadline,
@@ -229,7 +234,12 @@ before and after both passes; an unexpected mutation invalidates the result.
 Use controller-proven base flags plus screenshot, viewport, scale=1, lang=en-US;
 full argv is in revision notes. HOME stays intact, stdin is /dev/null, each shot
 uses an isolated profile and a new absolute destination, fixed Chrome/OS/fonts.
-No virtual-time assumption is needed. Every shot pins its colour scheme (V23):
+"Fixed Chrome" means fixed within one capture run, not a pinned release (V29: the rig
+auto-updated from 155 to 156): read the explicit executable's bounded `--version`
+before pass A and after pass B, require major ≥155 (V13: 154 timed out), refuse
+the run if the two strings differ, and record the string in the sibling diagnostics.
+Byte equality is promised between the two passes of one run on one frozen store
+(D-WORLD-75 scope), never across Chrome versions. No virtual-time assumption is needed. Every shot pins its colour scheme (V23):
 light shots add `--blink-settings=preferredColorScheme=1`, the dark shot
 `--blink-settings=preferredColorScheme=0`; an unpinned shot would follow the host OS
 appearance. `--force-dark-mode` is not used. M7's verifier asserts each shot's scheme
@@ -273,7 +283,7 @@ its committed-blob check runs after the controller's commit, not falsely on unst
 
 ## Files and planner milestones
 
-Proposed implementation paths below are future work, not files changed by this revision.
+Proposed implementation paths below are future work, not files changed by this revision. *(Iteration 304 annotation: they were future work at r4; M1–M6 and M7a/M7b have since been built. See the M7 row.)*
 Each milestone lands independently in one ≤30-minute codex executor run; release
 images require the separate attended run. Split again if a run cannot meet that bound.
 
@@ -285,7 +295,7 @@ images require the separate attended run. Split again if a run cannot meet that 
 | M4 | demo_seed.go integration/manifest; CLI why tests | C4: approval invocation produces exactly one anchored packet, effect budget delta and complete why set. Replace coordinator call with plain REST object: coordinator=true assertion reds. Remove effect link: named-link assertion reds. |
 | M5 | host/daemon/workbench_packet_evidence.go and tests; host/workbench render structures/template; package law drift test | C5: roster displays actual four evidence grades; existing object-grade lines stay truthful. Mutate commentary kind to PROVEN: claim cannot promote assertion reds; substitute arbitrary test text: TESTED refusal assertion reds; bad record hash: unavailable assertion. Point the CLAIMED roster ref at an object of another kind: kind-resolution assertion reds (UNAVAILABLE + seed refusal). |
 | M6 | serve flag in main.go/daemon.go, workbench Page/render flag and tests | C6: still HTML contains all regions/no script/static footer; default retains live script. Force script emission in still mode: no-script assertion reds; hide graph: required-region assertion reds; invert default flag: default-script assertion reds. |
-| M7 | scripts/capture_marketing.sh, scripts/marketing_capture.py supervisor, scripts/marketingcheck/*.go standard-library verifier and tests | C7–C9: timeout/cleanup, six files, decoded content, exact bytes and gate rules. Fake Chrome rc=0/no file, hanging child, uniform PNG, missing shot, altered byte, forbidden chunk, bad CRC, trailing byte and cap+1 each trigger their corresponding named assertion. **Fallback:** if raw-byte equality fails on content-bearing shots for a cause other than colour-scheme/script-timestamp, the design documents that as a new residual (parallel to the fresh-seed-equality residual already carved out for Mark) rather than silently loosening the acceptance bar to pixel-similarity; the varying element is named with both hashes. |
+| M7 | scripts/capture_marketing.sh, scripts/marketing_capture.py supervisor, scripts/marketingcheck/*.go standard-library verifier and tests. *Iteration 304 status: M7a built (`38ac4167`, PR #360), M7b built (`fa04df00`/`02e12be2`, PR #361), M7c pending.* | C7–C9: timeout/cleanup, six files, decoded content, exact bytes and gate rules. Fake Chrome rc=0/no file, hanging child, uniform PNG, missing shot, altered byte, forbidden chunk, bad CRC, trailing byte and cap+1 each trigger their corresponding named assertion. **Fallback:** if raw-byte equality fails on content-bearing shots for a cause other than colour-scheme/script-timestamp, M7 FAILS, 150(b) is not discharged, and the capture does not ship. The varying element is named with both hashes and the failure is escalated to Mark (charter owner) as a scope decision, exactly as the fresh-seed-equality residual is routed in D1; no residual is created by this document's own authority. |
 | M8 | docs/QUICKSTART.md reproduction; README.md; website/docs/getting-started/marketing-capture.md; captions/manifest text | C10: links resolve and recipe/help match flags. Mutate one filename or serve flag: link/runbook assertion reds. Controller later runs V15/V21, attended seed and promotes six PNGs; an unminted unattended run must refuse. |
 
 ## Acceptance criteria
@@ -295,7 +305,7 @@ M4 requires `why` coordinator=true and ok=true, ≥1 effect and exact expected l
 names; a zero-link report fails. M5 requires all four kinds with valid report refs;
 PROVEN requires the operator key and exact source subject, not a fixture badge.
 M7 requires six names in both passes, all limits, byte equality, no blank regions,
-no false-green rc=0, and bounded child cleanup. These discharge 150(a)–(c).
+no false-green rc=0, and bounded child cleanup. C1–C11 with two byte-identical passes across all six shots discharge 150(a)–(c); if the M7 fallback triggers, 150(b) remains open and the row is reported blocked, not passed.
 
 **C11 OBSERVATION:** before/after SHA256 and line count for world/*.ail, go.mod,
 go.sum, tools/launchd/* and design_docs/world-mission.md, plus a scoped diff.
@@ -342,3 +352,27 @@ milestones are specified with first-party rows. Q3: colour forcing measured (V23
 V15/V21 product measurements are M6/M7 acceptance, run on the code those milestones add. No additional human scope
 question is open; Mark's only residual is fresh-seed hash equality (D1). Tooling/tests and the
 attended release capture remain distinct.
+
+**Quorum r5 (iteration 304)**, on the iteration-304 designer revision (§2 Chrome-version rule, V29): Gemini 4 Argon PASS; GLM 5.3 REJECT; Kimi K3 REJECT, so the round is BLOCKED. Dispositions: (1) Gemini+Kimi, V29 supervisor provenance and the stale "future work"/"design_docs only" wording: fixed (V29 names the committed M7a supervisor `38ac4167`/`98f48b20`, PR #360; header, files note and M7 row annotated). (2) Kimi, M7 fallback authority: fixed with the reviewer's verbatim text (M7 FAILS, 150(b) open, escalated to Mark; acceptance sentence replaced). (3) GLM, CLAIMED premise: a pre-existing r3/r4 premise, measured-at-HEAD in V30 (package contract `authoredClaimGradeCode` plus the projection; gradeOf stays closed), and the roster sentence now says so. (4) GLM, dependency SHAs: fixed, V31 (all three are ancestors of the base). The only open Mark residual is still D1; the M7 fallback reaches Mark only if it triggers.
+
+**Quorum r6 (iteration 304, controller record)**: this was the one permitted re-quorum after the r5 revision. Gemini 4 Argon PASS; GLM 5.3 REJECT; Kimi K3 REJECT, so the round is BLOCKED. The artifacts are `design_docs/verification/world-iter304/quorum-r5.json` and `quorum-r6.json`.
+
+Per-round surfaces:
+
+- **r5:** §2 Chrome provenance (V29), M7 fallback authority, the CLAIMED premise, dependency SHAs.
+- **r6:** three surfaces:
+  - **As-built drift.** The doc is anchored at the r4 base `c21f303` while M1a–M7b landed, and V4/V6/V14/V24 were not re-run at HEAD.
+  - **Authority.** Milestones landed before a passing full quorum.
+  - **Real-content Chrome 156 evidence.** V29 is a synthetic page only, so the §2 heading's "(measured on 155 and 156)" overstates it.
+
+Gemini passed both rounds.
+
+**Disposition: SPLIT, not a third revision.** M7c–M8 and the attended capture move to a new as-built doc anchored at HEAD `039bfa77`. That doc carries the r6 objections verbatim as its problem statement and is quorumed once. This doc keeps the reviewer-clean, landed M1–M7b design.
+
+**Controller measurement on GLM's re-verification point**, at HEAD `039bfa77`, load 10: `go test -run '^(TestWorkbenchStillAllRegions|TestServeWorkbenchStillFlag)$' ./host/daemon ./cmd/ailang-worldd -count=1 -v` gave both PASS, rc 0, 9 s. These are the landed M6 tests for the still-mode premise that V24 simulated: repeat GETs 2 s apart are byte-identical, and the still page is the default page minus exactly the live script.
+
+**Provenance on Kimi's authority point:**
+
+- r4 proceeded under the narrow-refinement carve-out (iteration 266; see the Status line).
+- The 2026-10-23 pick-time artifact `w-marketing-capture-2026-10-23T03-32-39Z` read PROCEED at N−1, with GLM and Kimi absent (unreachable) and the Sonnet seat absent (quota).
+- r5 and r6 are the first rounds since r3 in which both GLM and Kimi were present.
