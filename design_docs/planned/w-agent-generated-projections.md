@@ -1,4 +1,4 @@
-# w-agent-generated-projections (queue row 151: the agent's view) — r1
+# w-agent-generated-projections (queue row 151: the agent's view) — r2
 
 **Status:** r1, **direction approved by Mark, attended 2026-10-26** (*"yes lets update it"*),
 recorded as **D-WORLD-92**. It supersedes row 151's parts of
@@ -6,6 +6,12 @@ recorded as **D-WORLD-92**. It supersedes row 151's parts of
 (AG-UI carries events and A2UI is the payload, `D-WORLD-64`) still stands. Row 151 is still a
 v1.0.0 release row. This is not quorum-reviewed: the loop's pick-time designer re-measures and
 runs the quorum as usual. Nothing here waives a gate.
+
+**r2 (attended 2026-10-26, D-WORLD-93):** adds §2a, named agents with a set output and a view
+that comes with the agent, after Mark reviewed the
+[front card mockup](https://claude.ai/artifact/UV1WBzA8Zjwn4hGdbr5go9) (private to Mark until
+shared). It adds a thumbnail to every view (§5), acceptance items 11–14 (§7), and a separate
+build row (§8). Nothing in r1 changes for an agent that isn't named.
 
 ## §0 What it is for (Mark, attended 2026-10-26)
 
@@ -51,6 +57,65 @@ shows them), to decorate, or to report progress the steps already show.
 
 **One view per purpose.** An episode can name a few views, such as `plan` and `perf`. Updating a
 view replaces what it shows; it never makes a second copy.
+
+## §2a Named agents: a set output, and a view that comes with the agent (r2)
+
+> *"we have very structured agents, for example sprint planners, executors and evaluators, that
+> should have good structure to report in these cards."* … *"we don't run every task through
+> sprint plan, executor etc. but it's nice if we do use a named agent it has a set output, much
+> like our other AI protocol platform skills, and I guess new agents used could come with their
+> own custom workbench/A2UI UIs."* (Mark, attended 2026-10-26, typos corrected.)
+
+§2 covers an agent that decides for itself to make a view. A **named agent** is different: it
+is a definition someone wrote and reuses, such as the mission loop's designer, planner, executor
+and evaluator, a quorum, or a new agent someone installs. Its report should look the same every
+time it runs, the way a skill on the platform always returns the same shape.
+
+**The rules:**
+
+1. **Most tasks use no named agent, and nothing changes for them.** Their card has §2's
+   optional view or none.
+2. **A named agent declares two things beside its prompt:**
+   - an **output schema**: the record it must produce at the end of its run;
+   - a **view template**: an A2UI composition from §3's catalog whose data model is bound to
+     that record, plus a thumbnail (§5).
+3. **The agent writes the record, World draws it.** World validates the record against the
+   schema and renders it through the template. The agent doesn't compose UI at run time, so the
+   same role reads the same way across runs and across models.
+4. **A custom UI is a custom composition, never custom code.** A template uses §3's catalog,
+   caps and rules, and nothing else: unbound content renders CLAIMED, links must resolve,
+   `choice` and `action-button` only propose. A new agent can bring its own layout; it cannot
+   bring a script, a style sheet or a URL.
+5. **Scores are attributed, never grades.** An evaluator's "PASS 81/100" is that role's
+   verdict, shown with the role's name on it. It never becomes an object's grade; `grade-badge`
+   still shows only real grades. A line is TESTED only when a recorded re-run backs it (for
+   example, the controller re-ran the executor's gate); the role's own word is CLAIMED.
+6. **The header is World's, not the agent's.** Role, model, tokens, time, worktree and receipt
+   come from the routing and session records, so an agent can't misreport who it was or what it
+   cost.
+7. **Absent stays absent.** A named agent that ends without a valid record shows "no report"
+   and the validator's reason. Nothing is filled in.
+8. **Templates are versioned with the agent.** The template ships in the agent's plugin. The
+   episode records its hash, so an old state renders with the template it ran with.
+
+**The first templates are the mission loop's roles**, built from what they already write (the
+mockup's iteration 305 card shows all five, with real data):
+
+| role | record it already writes | the view |
+|---|---|---|
+| designer | the design doc and its V-rows | revision strip; each V-row with its bound output file |
+| planner | the sprint JSON and `planner-receipt.md` | milestones and their state; next milestone's readiness; flags left for a decision |
+| executor | its report and the controller's re-runs | changes with diff thumbnails; gates; named mutants and where each went red |
+| evaluator | `evaluator-r<N>.md` | score and rubric; mutation results; each finding and what happened to it |
+| quorum | `quorum-r<N>.json` | one row per seat, one column per round, the objection in the seat's words; the disposition |
+
+The loop's driver and its shared skill are fleet-owned (D-WORLD-DRIVER-1). World adds adapters
+that read these files; any change to what the roles write is **proposed** to the fleet, never
+applied from this repo.
+
+**Where they show:** in Outputs as **Role reports**, one thumbnail each, opening as a tab named
+for the role. What happened uses the roles as its actors. A file that a report owns (the judge
+report, a quorum JSON) opens that report rather than its raw text.
 
 ## §3 The catalog
 
@@ -101,6 +166,10 @@ views per episode, and one update per view per 5 s (later ones coalesce).
   (outputs doc §3). The URL is `open=view:<name>`.
 - **A question** (`choice`): the row is marked "needs you", and the decision also appears
   wherever decisions do. When row 207 lands, the agent's state is "blocked" until it's answered.
+- **A thumbnail** (r2): every view, and every named agent's report, has a small picture in
+  Outputs drawn from its own data: a checklist's ticks, a chart's bars, a score ring, a
+  quorum's verdict grid. The template says which component the thumbnail summarises; an ad-hoc
+  view's thumbnail is its first component.
 - **No script:** `/surface/static` renders the same view server-side from the same verified
   model, and `choice` and `action-button` are shown disabled with "answer in the app".
 
@@ -138,6 +207,15 @@ views per episode, and one update per view per 5 s (later ones coalesce).
 10. **An attended episode:** a real agent, given §2's guidance, makes a plan view on a task with
     several steps and keeps it current, and makes no view on a one-line fix.
 
+11. **(r2)** A named agent's record that fails its schema is refused with the validator's
+    reason, and the card shows "no report" for that role.
+12. **(r2)** A template that uses a component outside the catalog, a script or a URL is
+    refused when the agent is installed, not when it runs.
+13. **(r2)** An old state renders with the template version recorded for it, after the
+    template has changed.
+14. **(r2)** A role's score shows attributed to the role, and no object's grade changes because
+    of it.
+
 ## §8 Order and dependencies
 
 - **Needs** row 188's N2d (the blob route, for `media` and `output-link`) and N4a (the tabbed
@@ -147,6 +225,10 @@ views per episode, and one update per view per 5 s (later ones coalesce).
   D1's version constant. On 2026-10-26 v0.9.1 is the production release and v1.0 is still a
   candidate ([google/A2UI](https://github.com/google/A2UI)). The catalog uses only components
   both have, or maps to them, so a version bump is one mapping file.
+- **Named agents (§2a) are a separate build row,** filed when Mark places it. The
+  recommendation is right after row 151 and off the 1.0 path. Row 151 builds the catalog, the
+  validator and the renderer that §2a reuses, so §2a adds the schema and template layer, the
+  loop's five adapters and the install-time check.
 - **Row 150's demo seed** may gain one agent view (D9's idea), if row 150's split rows want it.
 
 ## §9 Open questions for the pick-time design
@@ -156,6 +238,10 @@ views per episode, and one update per view per 5 s (later ones coalesce).
 3. **`choice` with free text:** allow an "other" answer, or options only?
 4. **Old versions:** keep every version (the default; they are small), or only versions at
    states someone opened?
+5. **(r2) Where a template lives:** beside the agent definition in its plugin, or in a
+   World registry of templates that agents name?
+6. **(r2) Who may install a named agent with a template:** anyone who can mint, or only an
+   approval like a grant's?
 
 ## Sources
 
