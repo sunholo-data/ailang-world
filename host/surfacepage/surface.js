@@ -1,7 +1,9 @@
-/* Server HTML owns the pages; this script adds keys, the address bar and Appearance. */
+/* Server HTML owns the static pages; this script adds keys, the address bar and Appearance.
+   The app shell (data-app) loads it for its seams only: window.WorldSurface. */
 (() => {
   "use strict";
   const SHARED = "shared";
+  const APP = "/surface", STATIC = "/surface/static";
   const LOOK_KEY = "world.appearance";
   const LOOKS = {theme: ["paper", "slate", "night", "system"], marks: ["colour", "shape"], motion: ["full", "reduced", "system"]};
   const DEFAULT_LOOK = {theme: "paper", marks: "colour", motion: "system"};
@@ -17,7 +19,7 @@
       .sort((a, b) => a.t !== b.t ? a.t - b.t : a.s.id < b.s.id ? -1 : a.s.id > b.s.id ? 1 : 0)
       .map(x => x.s);
   }
-  function stateHref(brane, id) { return "/surface?brane=" + encodeURIComponent(brane) + "&at=" + encodeURIComponent(id); }
+  function stateHref(brane, id, base) { return base + "?brane=" + encodeURIComponent(brane) + "&at=" + encodeURIComponent(id); }
   // A brane answers to its key, its title, and each hyphen-joined suffix of the title.
   function braneNames(b) {
     const names = [String(b.key || "").toLowerCase()];
@@ -28,9 +30,11 @@
     }
     return names;
   }
-  function parseAddress(text, index) {
+  // base is the page the hrefs land on: the app (the default) or the static pages.
+  function parseAddress(text, index, base) {
+    base = base || APP;
     const words = String(text == null ? "" : text).trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (words.length === 1 && (words[0] === "world" || words[0] === "back")) return {href: "/surface"};
+    if (words.length === 1 && (words[0] === "world" || words[0] === "back")) return {href: base};
     const m = words.length === 2 && words[0] === "world" ? /^([^@]+)(?:@(.*))?$/.exec(words[1]) : null;
     if (!m) return {error: "unknown address: " + ADDRESS_HELP};
     const name = m[1], at = m[2];
@@ -43,15 +47,15 @@
     if (keys.length > 1) return {error: 'ambiguous name "' + name + '": ' + keys.join(", ")};
     const key = keys[0], lane = laneStates(index, key);
     if (lane.length === 0) return {error: key + " has no states"};
-    if (at === undefined) return {href: stateHref(key, lane[lane.length - 1].id)};
+    if (at === undefined) return {href: stateHref(key, lane[lane.length - 1].id, base)};
     if (/^[0-9]+$/.test(at)) {
       const n = Number(at);
-      if (n >= 1 && n <= lane.length) return {href: stateHref(key, lane[n - 1].id)};
+      if (n >= 1 && n <= lane.length) return {href: stateHref(key, lane[n - 1].id, base)};
       if (at.length < 4) return {error: key + " has states 1 to " + lane.length + ", not " + at};
     }
     if (!/^[0-9a-f]{4,}$/.test(at)) return {error: '"@' + at + '" is neither a state number nor 4 or more hex characters'};
     const hits = lane.filter(s => String(s.id).toLowerCase().startsWith(at));
-    if (hits.length === 1) return {href: stateHref(key, hits[0].id)};
+    if (hits.length === 1) return {href: stateHref(key, hits[0].id, base)};
     if (hits.length > 1) return {error: '"' + at + '" matches ' + hits.length + " states on " + key + ": type more of the hash"};
     return {error: "no state on " + key + ' starts with "' + at + '"'};
   }
@@ -92,7 +96,7 @@
     const go = s => s && s.href ? {go: s.href} : null;
     const other = cols => (Array.isArray(cols) ? cols : []).find(c => c.brane !== model.brane && c.cards && c.cards.length > 0);
     switch (key) {
-      case "Escape": return {go: "/surface"};
+      case "Escape": return {go: STATIC};
       case "End": return go(rail[rail.length - 1]);
       case "Home": return go(rail[0]);
       case "ArrowUp": return pos > 0 ? go(rail[pos - 1]) : null;
@@ -191,7 +195,10 @@
   }
 
   if (typeof module !== "undefined") module.exports = {laneStates, parseAddress, keyAction, shouldHandle, buildModel, loadLook, saveLook, resolveLook};
+  if (typeof window !== "undefined") window.WorldSurface = {laneStates, parseAddress, keyAction, shouldHandle, buildModel, loadLook, saveLook, resolveLook};
   if (typeof document === "undefined") return;
+  // The app shell has its own keys, address bar and Appearance (app.js); it borrows the seams only.
+  if (document.documentElement && document.documentElement.getAttribute("data-app") != null) return;
 
   // Appearance first, so a stored look replaces the default as early as defer allows.
   const root = document.documentElement;
@@ -284,9 +291,9 @@
     if (bar) { if (text) bar.setAttribute("aria-invalid", "true"); else bar.removeAttribute("aria-invalid"); }
   }
   async function runAddress() {
-    let result = parseAddress(bar.value, null);
+    let result = parseAddress(bar.value, null, STATIC);
     if (!result.href) {
-      try { result = parseAddress(bar.value, await loadIndex()); } catch (error) { result = {error: "the surface index could not be read: " + error.message}; }
+      try { result = parseAddress(bar.value, await loadIndex(), STATIC); } catch (error) { result = {error: "the surface index could not be read: " + error.message}; }
     }
     if (result.href) location.assign(result.href);
     else say(result.error); // an error never navigates

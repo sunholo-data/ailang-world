@@ -1022,10 +1022,11 @@ func releaseFromVersion(version string) string {
 // by row 198, mirrored in the sketch's routes()).
 // The next registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
-// ten. GET /surface/index.json, GET /surface (the world timeline page, row 188 M2) and
-// GET /surface/surface.js (its one script, M4a) are also unversioned read routes outside the
-// frozen table, as are GET /surface/model.json and GET /surface/stack.json (the app's view
-// model, N1).
+// ten. GET /surface/index.json, GET /surface/static (the server-rendered timeline and stack
+// pages, row 188 M2/M3) and GET /surface/surface.js (their script, M4a) are also unversioned
+// read routes outside the frozen table, as are GET /surface/model.json and
+// GET /surface/stack.json (the app's view model, N1) and GET /surface with /surface/app.js,
+// /surface/app.css and /surface/ailang-logo.svg (the app, N2b).
 // The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
@@ -1045,7 +1046,11 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)
 	mux.HandleFunc("GET /surface", d.handleSurface)
+	mux.HandleFunc("GET /surface/static", d.handleSurfaceStatic)
 	mux.HandleFunc("GET /surface/surface.js", d.handleSurfaceScript)
+	mux.HandleFunc("GET /surface/app.js", d.handleSurfaceAppScript)
+	mux.HandleFunc("GET /surface/app.css", d.handleSurfaceAppStyle)
+	mux.HandleFunc("GET /surface/ailang-logo.svg", d.handleSurfaceLogo)
 	mux.HandleFunc("GET /surface/fonts/{name...}", d.handleSurfaceFont)
 	mux.HandleFunc("GET /surface/model.json", d.handleSurfaceModel)
 	mux.HandleFunc("GET /surface/stack.json", d.handleSurfaceStack)

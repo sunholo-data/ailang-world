@@ -7,13 +7,14 @@
     "design_docs/planned/w-marketing-capture.md (full V1-V28 and quorum dispositions read)",
     "CLAUDE.md; design_docs/coding-standards.md",
     "design_docs/world-mission.md row150",
-    "design_docs/planned/w-marketing-capture-sprint-plan.md"
+    "design_docs/planned/w-marketing-capture-sprint-plan.md",
+    "design_docs/planned/w-marketing-capture-orchestration.md r2 (iteration 305): governs M7c0-M8b; its §5 table overrides this plan where they disagree; quorum disposition = Gate-2 narrow-refinement carve-out (§9), not a quorum PASS (C13)"
   ],
-  "estimate": "21 executor runs, 543 minutes total; each <=30min, attended release separate",
+  "estimate": "22 executor runs, 563 minutes total; each <=30min, attended release separate (amended iteration 305 per w-marketing-capture-orchestration §5): M7c0 (20 min) added; M1a-M7b (14 runs) landed",
   "scope": "Exactly two planner artifacts. Executor implements design M1-M8 in ordered bounded splits; no release publish/mint confirmation, no PNG promotion in a milestone.",
   "environment": [
     "export AILANG_BIN=$HOME/.pinned-ailang/ailang # v0.41.0 commit24ee108",
-    "export WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.52.1/ailang # separate daemon ToolAilangBin pin",
+    "export WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang # separate daemon ToolAilangBin pin; was v0.52.1; v0.54.15 since 4b686d8e (row 139) (amended iteration 305 per w-marketing-capture-orchestration §4.2)",
     "WORLD_CHROME optional explicit executable path; never auto-discover browser; set invalid path/version is failure",
     "WORLD_MARKETING_RECTS points to controller-measured shot rectangles; real browser gate fails if it is absent when WORLD_CHROME is set",
     "Run bounded AILANG helpers and Go commands below; full suites always have -timeout"
@@ -403,7 +404,8 @@
     "PD4": "PNG structural parser unit checks prevent redundant image/png guards masking CRC kills. Aggregate8MiB test calls fleet-limit function independently with >six allowed PNGs, since six files capped1MiB each cannot exceed8MiB.",
     "PD5": "M8 docs wiring may test simulated promoted assets; real sibling capture-manifest.json and actual image link/hash checks occur only after attended release output exists. Templates are marked schemas/examples, never invented actual hashes.",
     "PD6": "Adding Page/roster structs touches view census tests: host/workbench/render_test.go:625-650 and live_test.go:123-146 enforce exported-field/type census. Include census additions when new structs land, never weaken their assertions.",
-    "PD7": "Iteration 304 planner: M7c split into M7c1 (observation comparator, C11), M7c2a (Python primitives + routes), M7c2b (shell end-to-end, fake Chrome/daemon), M7c3 (frozen inventory, real store genuine commit, test in host/daemon), M7c4 (real Chrome drill in cmd/ailang-worldd, controller-run). Designer recommended four children; M7c2 split again because one shell+Python+Go orchestration run exceeds the <=30 min / ~250-line budget for claude-haiku-5-5. Chrome rule follows design §2/V29 (major >=155, identical before/after, recorded), replacing 'require executable Chrome155 version'. Linear chain M7c1->M7c2a->M7c2b->M7c3->M7c4->M8a; M7c3 follows M7c2b only to serialise main.go edits."
+    "PD7": "Iteration 304 planner: M7c split into M7c1 (observation comparator, C11), M7c2a (Python primitives + routes), M7c2b (shell end-to-end, fake Chrome/daemon), M7c3 (frozen inventory, real store genuine commit, test in host/daemon), M7c4 (real Chrome drill in cmd/ailang-worldd, controller-run). Designer recommended four children; M7c2 split again because one shell+Python+Go orchestration run exceeds the <=30 min / ~250-line budget for claude-haiku-5-5. Chrome rule follows design §2/V29 (major >=155, identical before/after, recorded), replacing 'require executable Chrome155 version'. Linear chain M7c1->M7c2a->M7c2b->M7c3->M7c4->M8a; M7c3 follows M7c2b only to serialise main.go edits.",
+    "PD8": "Iteration 305 planner (amended iteration 305 per w-marketing-capture-orchestration §5): plan brought in line with w-marketing-capture-orchestration r2. M7c0 added (png.go Shots heights packet 3700/graph 2100/provenance 3000; png_test.go constants + TestMarketingShotGeometry + canonical list png_test.go:462), gated on R0's V-row. M7c1 un-HELD (carve-out, C13), comparator path-keyed, section made fully prescriptive and prototyped outside the repo (11/11 subtests, 3/3 mutants red on named assertions, race ok). M7c2a depends on M7c1 and M7c0 (routes carry M7c0 dims) — planner decision. M7c2b serve argv asserts --tool-ailang-bin. M7c4 local rig helper in marketing_chrome_test.go, demo_test.go untouched, completion (a)-(e). M8a adds png_test.go and png.go (doc) plus main.go (planner: the docs subcommand needs the only allowed production-Go home); threshold step DEFERRED if no R1 V-row exists at dispatch (flagged). M8b fake-Chrome gate -timeout 300s. Tool pin v0.54.15 everywhere."
   },
   "must_not_change": [
     "world/**",
@@ -544,7 +546,11 @@
         "commit": "28ff4db371056929b9ddfa0c1dd9e87f95c8cfe6",
         "iteration": 266,
         "review": "PASS 88/100, zero blocking; recorded in landed commit message",
-        "baseline_recheck": "Iteration267: TestWorldDemoEvidencePinnedManifest and TestWorldDemoLegacyGradeDrift named PASS under pinned v0.41.0"
+        "baseline_recheck": "Iteration267: TestWorldDemoEvidencePinnedManifest and TestWorldDemoLegacyGradeDrift named PASS under pinned v0.41.0",
+        "pr": 264,
+        "merge_commit": "28ff4db3",
+        "merged_utc": "2026-10-14 22:15",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
       }
     },
     {
@@ -658,7 +664,10 @@
         "reviewed_sha": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
         "evaluation": "PASS90/100, zero blocking; same-model-fresh-context FLAG",
         "ci": "PR38665538475 + merge38667006325 required2/2success",
-        "notes": "C1 discharged; E267-S1 separately queued177. Future milestones not completed."
+        "notes": "C1 discharged; E267-S1 separately queued177. Future milestones not completed.",
+        "merge_commit": "52ae7ff9",
+        "merged_utc": "2026-10-15 01:41",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
       }
     },
     {
@@ -820,7 +829,9 @@
         "merge_ci_run": 38689782525,
         "required_ci": "2/2 terminal success on exact PR and merge SHA",
         "report": "design_docs/verification/world-iter268/evaluator-r3.md",
-        "nonblocking_followup": "charter179"
+        "nonblocking_followup": "charter179",
+        "merged_utc": "2026-10-15 05:59",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
       }
     },
     {
@@ -845,7 +856,7 @@
         {
           "ac": "C2",
           "tests": "TestDemoSeedReadTestCheck",
-          "assertions": "Both real pins required. Publish existing se-tools descriptors through production publisher core in test setup; real /a2a/ dispatch for demo-read/test/check. Read bytes equal stored logepoch; test argv op=test flags json:\"\", named passes>0 and no failures/skips/vacuity; ai_check actual non-null success. Retain actual pin, argv, stdout/stderr, invocation/effect refs; budget deltas Read=1 CLI=2 and no extra calls. Prove CLI result is v0.52.1, not proof pin.",
+          "assertions": "Both real pins required. Publish existing se-tools descriptors through production publisher core in test setup; real /a2a/ dispatch for demo-read/test/check. Read bytes equal stored logepoch; test argv op=test flags json:\"\", named passes>0 and no failures/skips/vacuity; ai_check actual non-null success. Retain actual pin, argv, stdout/stderr, invocation/effect refs; budget deltas Read=1 CLI=2 and no extra calls. Prove CLI result is v0.52.1, not proof pin. (Historical, landed M2b: tool pin is v0.54.15 since 4b686d8e (amended iteration 305 per w-marketing-capture-orchestration §4.2).)",
           "command": "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         },
@@ -861,7 +872,7 @@
         {
           "criterion": "C2",
           "test": "TestDemoSeedReadTestCheck",
-          "assertions": "Both real pins required. Publish existing se-tools descriptors through production publisher core in test setup; real /a2a/ dispatch for demo-read/test/check. Read bytes equal stored logepoch; test argv op=test flags json:\"\", named passes>0 and no failures/skips/vacuity; ai_check actual non-null success. Retain actual pin, argv, stdout/stderr, invocation/effect refs; budget deltas Read=1 CLI=2 and no extra calls. Prove CLI result is v0.52.1, not proof pin.",
+          "assertions": "Both real pins required. Publish existing se-tools descriptors through production publisher core in test setup; real /a2a/ dispatch for demo-read/test/check. Read bytes equal stored logepoch; test argv op=test flags json:\"\", named passes>0 and no failures/skips/vacuity; ai_check actual non-null success. Retain actual pin, argv, stdout/stderr, invocation/effect refs; budget deltas Read=1 CLI=2 and no extra calls. Prove CLI result is v0.52.1, not proof pin. (Historical, landed M2b: tool pin is v0.54.15 since 4b686d8e (amended iteration 305 per w-marketing-capture-orchestration §4.2).)",
           "command": "go test -run '^TestDemoSeedReadTestCheck$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
         },
         {
@@ -920,7 +931,7 @@
         ],
         "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M2b/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "28 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
-        "additional": "TestDemoSeedReadTestCheck needs WORLD_TOOL_AILANG_BIN v0.52.1. Ordinary missing-pin run may SKIP; required milestone acceptance preflight must reject unset pin and require top-level PASS. Bad configured version is FAIL, never skip."
+        "additional": "TestDemoSeedReadTestCheck needs WORLD_TOOL_AILANG_BIN v0.52.1 (v0.54.15 since 4b686d8e (amended iteration 305 per w-marketing-capture-orchestration §4.2)). Ordinary missing-pin run may SKIP; required milestone acceptance preflight must reject unset pin and require top-level PASS. Bad configured version is FAIL, never skip."
       },
       "measured_baseline": [
         {
@@ -948,7 +959,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 273,
+        "merge_commit": "07d1d9fb",
+        "merged_utc": "2026-10-15 23:30",
+        "iteration": 271,
+        "judge": "sonnet FAIL 66 -> PASS 86",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M3a",
@@ -1058,7 +1077,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 275,
+        "merge_commit": "1ad27432",
+        "merged_utc": "2026-10-16 03:18",
+        "iteration": 272,
+        "judge": "sonnet PASS 82 -> 90",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M3b",
@@ -1194,7 +1221,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 277,
+        "merge_commit": "c08729b6",
+        "merged_utc": "2026-10-16 08:10",
+        "iteration": 273,
+        "judge": "sonnet PASS 88 -> 93",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M4a",
@@ -1300,7 +1335,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 283,
+        "merge_commit": "7ed11523",
+        "merged_utc": "2026-10-16 13:28",
+        "iteration": 274,
+        "judge": "sonnet PASS 91",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M4b",
@@ -1438,7 +1481,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 289,
+        "merge_commit": "acb3f54d",
+        "merged_utc": "2026-10-16 17:17",
+        "iteration": 275,
+        "judge": "sonnet FAIL 66 -> 86 -> 86",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M5a",
@@ -1564,7 +1615,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 295,
+        "merge_commit": "bcd2d7cd",
+        "merged_utc": "2026-10-16 20:24",
+        "iteration": 276,
+        "judge": "sonnet PASS 90",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M5b",
@@ -1728,7 +1787,15 @@
       ],
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
       "completed": "2026-10-22T01:05:00Z",
-      "notes": "PR #353; iterations 296-298 (296 and 297 STALL-killed during judging); judge sonnet r1 PASS 86 -> r2 PASS 90, zero blocking"
+      "notes": "PR #353; iterations 296-298 (296 and 297 STALL-killed during judging); judge sonnet r1 PASS 86 -> r2 PASS 90, zero blocking",
+      "completion_evidence": {
+        "pr": 353,
+        "merge_commit": "f4b2dfdb",
+        "merged_utc": "2026-10-22 01:21",
+        "iteration": "296-298",
+        "judge": "sonnet PASS 86 -> 90",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M5c",
@@ -1852,7 +1919,15 @@
       ],
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
       "completed": "2026-10-22T04:40:00Z",
-      "notes": "PR #354; iteration 299; judge sonnet r1 PASS 80 -> r2 PASS 85, zero blocking; controller fix c9fd10af (TESTED accepts the real tool success shape without exit_code)"
+      "notes": "PR #354; iteration 299; judge sonnet r1 PASS 80 -> r2 PASS 85, zero blocking; controller fix c9fd10af (TESTED accepts the real tool success shape without exit_code)",
+      "completion_evidence": {
+        "pr": 354,
+        "merge_commit": "ebdcd7dc",
+        "merged_utc": "2026-10-22 04:45",
+        "iteration": 299,
+        "judge": "sonnet PASS 80 -> 85",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M6",
@@ -2029,7 +2104,15 @@
           "result": "PASS"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 359,
+        "merge_commit": "47b88a99",
+        "merged_utc": "2026-10-22 08:18",
+        "iteration": 300,
+        "judge": "sonnet PASS 93",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M7a",
@@ -2199,7 +2282,15 @@
           "detail": "✓ 0 binary blobs among 3523 tracked files"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completion_evidence": {
+        "pr": 360,
+        "merge_commit": "c73c7904",
+        "merged_utc": "2026-10-22 13:10",
+        "iteration": 301,
+        "judge": "sonnet PASS 86 -> 91 -> 91",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
+      }
     },
     {
       "id": "M7b",
@@ -2401,7 +2492,106 @@
         "controller_fix": "02e12be2 (Go-surface allow-list)",
         "judge": "pi:openrouter/minimax/minimax-m3 r1 PASS 95 (zero blocking; one honest survivor M7b-truncated-chunk, non-blocking per the panic rule) → r2 PASS 95 on the fix delta (zero new blocking; both guard drills red)",
         "executor": "codex gpt-6.1-sol rc 0 in the first 2026-10-22 fire (crashed at gate 3 before commit/judge; recovered verify-and-land)"
+      },
+      "completion_evidence": {
+        "pr": 361,
+        "merge_commit": "72dda61d",
+        "merged_utc": "2026-10-23 04:23",
+        "iteration": "302/303",
+        "judge": "MiniMax PASS 93",
+        "source": "w-marketing-capture-orchestration.md §2 table (V33: gh pr view + git merge-base --is-ancestor at base 4e6e89dc); recorded by the iteration-305 planner"
       }
+    },
+    {
+      "id": "M7c0",
+      "title": "Shot geometry: tall packet/graph/provenance heights from measured bottoms",
+      "design_milestone": "M7",
+      "estimated_minutes": 20,
+      "depends_on": [
+        "M7b"
+      ],
+      "files": [
+        "scripts/marketingcheck/png.go",
+        "scripts/marketingcheck/png_test.go"
+      ],
+      "status": "pending",
+      "new_tests": [
+        "TestMarketingShotGeometry"
+      ],
+      "tests_first": [
+        {
+          "ac": "C8′",
+          "tests": "TestMarketingShotGeometry",
+          "assertions": "png_test.go constants measuredPacketBottom = 3564.56, measuredGraphBottom = 2042.14, measuredProvenanceBottom = 2881.17 with a comment citing orchestration V51 and the R0 re-confirm V-row (a Go test cannot read a V-row; the constants are the transcription). TestMarketingShotGeometry subtests packet.png/graph.png/provenance.png: Shots height EQUALS shotRuleHeight(constant) = ceil((B+40)/100)*100 and width 1440 ('packet height must equal the rule value from measuredPacketBottom', same for graph/provenance), <= 4400 (else BLOCKED, never clamp), bottom <= H-40; subtest unchanged: light/dark 1440x1100, phone 390x844. Canonical list png_test.go:462 (TestMarketingPNGContent/canonical-shots) updated to packet 1440x3700, graph 1440x2100, provenance 1440x3000. Exact code: plan §M7c0. (amended iteration 305 per w-marketing-capture-orchestration §5)",
+          "command": "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
+          "red_first": "Write TestMarketingShotGeometry and the constants first; it must red against the base heights (packet 1400) before png.go changes. Require named top-level PASS."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C8′",
+          "test": "TestMarketingShotGeometry",
+          "assertions": "png_test.go constants measuredPacketBottom = 3564.56, measuredGraphBottom = 2042.14, measuredProvenanceBottom = 2881.17 with a comment citing orchestration V51 and the R0 re-confirm V-row (a Go test cannot read a V-row; the constants are the transcription). TestMarketingShotGeometry subtests packet.png/graph.png/provenance.png: Shots height EQUALS shotRuleHeight(constant) = ceil((B+40)/100)*100 and width 1440 ('packet height must equal the rule value from measuredPacketBottom', same for graph/provenance), <= 4400 (else BLOCKED, never clamp), bottom <= H-40; subtest unchanged: light/dark 1440x1100, phone 390x844. Canonical list png_test.go:462 (TestMarketingPNGContent/canonical-shots) updated to packet 1440x3700, graph 1440x2100, provenance 1440x3000. Exact code: plan §M7c0. (amended iteration 305 per w-marketing-capture-orchestration §5)",
+          "command": "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v"
+        }
+      ],
+      "implementation": "GATED ON R0 (not a milestone id, so not in depends_on): do not dispatch before the controller's R0 re-confirm V-row exists (orchestration §5 R0, C13). png.go Shots (png.go:49-53): change only packet 1400->3700, graph 1100->2100, provenance 1400->3000 (orchestration §4.1, V51; R0 re-confirm). png_test.go: add \"math\" import, the three measured-bottom constants, shotRuleHeight, TestMarketingShotGeometry, and update the canonical list at :462. Do not touch the generic 1440x1100 workbench-light cases at png_test.go:321-337, :366, :383 or the x=1400 rectangle at :357; fixture()/fixtureSet() already size from Shots (:147, :164). If R0's max differs from V51, transcribe R0's values; any B+40>4400 is BLOCKED and escalated to Mark. (amended iteration 305 per w-marketing-capture-orchestration §5)",
+      "acceptance": [
+        "gofmt -l scripts/marketingcheck",
+        "go vet ./scripts/marketingcheck",
+        "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
+        "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test ./scripts/marketingcheck -count=1 -timeout 240s -v",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
+      ],
+      "commands": [
+        "gofmt -l scripts/marketingcheck",
+        "go vet ./scripts/marketingcheck",
+        "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
+        "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test ./scripts/marketingcheck -count=1 -timeout 240s -v",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
+      ],
+      "mutations": [
+        {
+          "mutant": "M7c0-height",
+          "mutation": "png.go Shots: {\"packet.png\", 1440, 3700, \"light\"} -> {\"packet.png\", 1440, 1400, \"light\"}",
+          "must_fail_test": "TestMarketingShotGeometry",
+          "must_fail_assertion": "packet.png: 'packet height must equal the rule value from measuredPacketBottom: got {Name:packet.png Width:1440 Height:1400 Scheme:light}, want 1440x3700' (canonical-shots also reds, but the named kill is the equality assertion, not fixture or cap checks; observed in planner scratch probe)",
+          "command": "go test -run '^TestMarketingShotGeometry$/^packet.png$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
+          "reachability": "Mutation edits PRODUCTION code only (a test edit is not a mutant), applied one at a time, restored by scratch copy + cmp (no git). Test reaches the named assertion; compile failure, panic, harness timeout, missing binary, skip and unrelated refusal do not count."
+        }
+      ],
+      "repo_gates": [
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "gofmt -l scripts/marketingcheck",
+          "go vet ./scripts/marketingcheck",
+          "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
+          "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test ./scripts/marketingcheck -count=1 -timeout 240s -v",
+          "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
+        ],
+        "may_touch": [
+          "scripts/marketingcheck/png.go",
+          "scripts/marketingcheck/png_test.go"
+        ],
+        "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c0/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
+        "timebox": "20 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
+        "additional": "Not dispatchable before R0's re-confirm V-row exists (C13). Independent of M7c1 (no shared file). Do not touch main.go, supervisor_test.go, scripts, protected paths. (amended iteration 305 per w-marketing-capture-orchestration §5)"
+      },
+      "measured_baseline": [
+        {
+          "command": "planner scratch probe (/tmp/m7c1-proto-iter305, outside repo): Shots heights 3700/2100/3000 + canonical list; go test . -count=1 -timeout 240s -v",
+          "rc": 0,
+          "seconds": 17.7,
+          "result": "PASS (all 8 package tests incl. TestMarketingShotGeometry prototype)",
+          "detail": "iteration 305 planner, load 1.67; mutant M7c0-height red on the equality assertion and on canonical-shots; restored green"
+        }
+      ],
+      "baseline_new_tests": "TestMarketingShotGeometry is absent at base; its first run must be the implementation, not an empty selection."
     },
     {
       "id": "M7c1",
@@ -2423,56 +2613,60 @@
         {
           "ac": "C11",
           "tests": "TestMarketingProtectedObservationComparator",
-          "assertions": "Each subtest builds its own fresh protectedTree(t) in t.TempDir() (world/a.ail, world/b.ail, world/sub/c.ail [not observed], go.mod, go.sum, design_docs/world-mission.md, tools/launchd/x.sh, tools/launchd/testdata/deep/y.md, README.md [not observed]). Subtests: set-coverage (exactly the 7 protected paths, sorted, Lines/SHA256 match written bytes); equal (nil); same-line-count-change (one byte flipped in world/a.ail, Lines equal before/after, wantCode observation-digest Name=world/a.ail 'same-line-count changed copy must red'); digest-equal-line-change (controlled record Lines++ same SHA256, wantCode observation-lines 'line-count mismatch must refuse'); deleted / added / duplicate (observation-set); empty (CompareObservations(nil,nil) -> observation-empty); python-parity (run the plan's exact C11 Python one-liner via python3 -I -c with cmd.Dir=root, stdout to a file, 30s ctx; reflect.DeepEqual with Observe after sorting by Path — fixture generated by the tool it models); cli (built binary: observe --root --out rc0; repeat --out rc1 O_EXCL unchanged; compare after byte flip rc1 stderr 'marketingcheck: observation-digest world/a.ail:'; compare F1 F1 rc0; compare --before only rc2; compare python-output vs observe-output rc0); repo-read-only (Observe(\"../..\") twice equal, >=10 records incl go.mod, design_docs/world-mission.md, a tools/launchd/ path; never opens a protected path for write).",
+          "assertions": "Each file-touching subtest builds its own fresh protectedTree(t) in t.TempDir() from protectedFixture (world/a.ail, world/b.ail, world/sub/c.ail [not observed], go.mod, go.sum, design_docs/world-mission.md, tools/launchd/x.sh, tools/launchd/testdata/deep/y.md, README.md [not observed]). set-coverage (Observe == the 7 sorted protectedPaths records with SHA256/Lines from the fixture bytes: 'Observe must cover exactly the C11 protected set'); equal (nil: 'unchanged copy must compare equal'); same-line-count-change (byte 0 of world/a.ail 'a'->'b'; records[5] Lines equal; wantCode observation-digest 'same-line-count changed copy must red'; Refusal.Name == world/a.ail); digest-equal-line-change (after := slices.Clone(before); after[0].Lines++; wantCode observation-lines 'line-count mismatch must refuse'); deleted (remove tools/launchd/testdata/deep/y.md; observation-set 'deleted protected copy must red'); added (world/z.ail; observation-set 'added protected copy must red'); duplicate (append(slices.Clone(before), before[0]); observation-set 'duplicate path must red'); empty (CompareObservations(nil,nil) -> observation-empty 'empty observation must not compare equal'); python-parity (python3 -I -c observationPython [the plan's C11 heredoc verbatim], cmd.Dir=root, file sinks, 30s ctx; sorted reflect.DeepEqual with Observe: 'Go observer must equal the plan's Python boundary command'); cli (go build -o bin . 60s ctx; file sinks: (i) observe --root R --out F1 rc0, 7 records; (ii) again rc1 'marketingcheck:' F1 unchanged; (iv) compare F1 F1 rc0; (vi) compare --before <pythonObserve(R)> --after F1 rc0; (v) compare --before F1 rc2; (vii) --after file '{' rc1 'marketingcheck: observation-json'; (viii) observe alone rc2; (iii) flip, observe --out F2 rc0, compare F1 F2 rc1 'marketingcheck: observation-digest world/a.ail:'); repo-read-only (Observe(\"../..\") twice, compare nil, >=10 records [12 at HEAD ff16bf65] incl go.mod, design_docs/world-mission.md, a tools/launchd/ path: 'real protected set observable without writes'). Exact code (blocks A, B, C), CLI table, assertions, gate expectations and mutant red lines: plan §M7c1 (iteration 305), which reproduces byte-for-byte the prototype built at /tmp/m7c1-proto-iter305 (receipt design_docs/verification/world-iter305/planner-receipt.md).",
           "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
-          "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
+          "red_first": "Write observation_test.go (block C) first; missing Observe/CompareObservations is development build-red, not a mutation kill. Require this named top-level PASS with 11 subtests, not rc=0 with no tests or SKIP."
         }
       ],
       "acceptance_criteria": [
         {
           "criterion": "C11",
           "test": "TestMarketingProtectedObservationComparator",
-          "assertions": "Each subtest builds its own fresh protectedTree(t) in t.TempDir() (world/a.ail, world/b.ail, world/sub/c.ail [not observed], go.mod, go.sum, design_docs/world-mission.md, tools/launchd/x.sh, tools/launchd/testdata/deep/y.md, README.md [not observed]). Subtests: set-coverage (exactly the 7 protected paths, sorted, Lines/SHA256 match written bytes); equal (nil); same-line-count-change (one byte flipped in world/a.ail, Lines equal before/after, wantCode observation-digest Name=world/a.ail 'same-line-count changed copy must red'); digest-equal-line-change (controlled record Lines++ same SHA256, wantCode observation-lines 'line-count mismatch must refuse'); deleted / added / duplicate (observation-set); empty (CompareObservations(nil,nil) -> observation-empty); python-parity (run the plan's exact C11 Python one-liner via python3 -I -c with cmd.Dir=root, stdout to a file, 30s ctx; reflect.DeepEqual with Observe after sorting by Path — fixture generated by the tool it models); cli (built binary: observe --root --out rc0; repeat --out rc1 O_EXCL unchanged; compare after byte flip rc1 stderr 'marketingcheck: observation-digest world/a.ail:'; compare F1 F1 rc0; compare --before only rc2; compare python-output vs observe-output rc0); repo-read-only (Observe(\"../..\") twice equal, >=10 records incl go.mod, design_docs/world-mission.md, a tools/launchd/ path; never opens a protected path for write).",
+          "assertions": "Each file-touching subtest builds its own fresh protectedTree(t) in t.TempDir() from protectedFixture (world/a.ail, world/b.ail, world/sub/c.ail [not observed], go.mod, go.sum, design_docs/world-mission.md, tools/launchd/x.sh, tools/launchd/testdata/deep/y.md, README.md [not observed]). set-coverage (Observe == the 7 sorted protectedPaths records with SHA256/Lines from the fixture bytes: 'Observe must cover exactly the C11 protected set'); equal (nil: 'unchanged copy must compare equal'); same-line-count-change (byte 0 of world/a.ail 'a'->'b'; records[5] Lines equal; wantCode observation-digest 'same-line-count changed copy must red'; Refusal.Name == world/a.ail); digest-equal-line-change (after := slices.Clone(before); after[0].Lines++; wantCode observation-lines 'line-count mismatch must refuse'); deleted (remove tools/launchd/testdata/deep/y.md; observation-set 'deleted protected copy must red'); added (world/z.ail; observation-set 'added protected copy must red'); duplicate (append(slices.Clone(before), before[0]); observation-set 'duplicate path must red'); empty (CompareObservations(nil,nil) -> observation-empty 'empty observation must not compare equal'); python-parity (python3 -I -c observationPython [the plan's C11 heredoc verbatim], cmd.Dir=root, file sinks, 30s ctx; sorted reflect.DeepEqual with Observe: 'Go observer must equal the plan's Python boundary command'); cli (go build -o bin . 60s ctx; file sinks: (i) observe --root R --out F1 rc0, 7 records; (ii) again rc1 'marketingcheck:' F1 unchanged; (iv) compare F1 F1 rc0; (vi) compare --before <pythonObserve(R)> --after F1 rc0; (v) compare --before F1 rc2; (vii) --after file '{' rc1 'marketingcheck: observation-json'; (viii) observe alone rc2; (iii) flip, observe --out F2 rc0, compare F1 F2 rc1 'marketingcheck: observation-digest world/a.ail:'); repo-read-only (Observe(\"../..\") twice, compare nil, >=10 records [12 at HEAD ff16bf65] incl go.mod, design_docs/world-mission.md, a tools/launchd/ path: 'real protected set observable without writes'). Exact code (blocks A, B, C), CLI table, assertions, gate expectations and mutant red lines: plan §M7c1 (iteration 305), which reproduces byte-for-byte the prototype built at /tmp/m7c1-proto-iter305 (receipt design_docs/verification/world-iter305/planner-receipt.md).",
           "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v"
         }
       ],
-      "implementation": "Add to main.go exactly: type ObservationRecord struct{Path `json:\"path\"`; SHA256 `json:\"sha256\"`; Lines int `json:\"lines\"`}; func Observe(root string) ([]ObservationRecord, error) — read-only, world/*.ail (non-recursive), go.mod, go.sum, design_docs/world-mission.md, every regular file under tools/launchd/ recursively, missing paths contribute nothing, sorted by Path, Lines = bytes.Count(raw, \"\\n\"); func CompareObservations(before, after []ObservationRecord) error — refusal codes in order observation-empty (len(before)==0), observation-set (duplicate path either side, or ONE guard `if !slices.Equal(beforePaths, afterPaths)`), then per path two SEPARATE ifs observation-digest and observation-lines (Name=path); use refuse() from png.go:22. CLI: replace the args[0] != \"check\" gate (main.go:13) with switch check|observe|compare, check body unchanged; anything else (incl. 'docs', which TestMarketingTwoPassInventory/cli/unknown expects rc2 at png_test.go:800) prints usage rc2. observe --root DIR [--out FILE] (MarshalIndent + newline; O_CREATE|O_EXCL as main.go:73); compare --before F --after F (rc0 equal; rc1 + stderr 'marketingcheck: <code> <name>: <detail>' as main.go:36; unparsable JSON = observation-json rc1; rc2 usage). Accepts the plan's Python one-liner output (same field names). No allow-list edit: code goes in already-allowed main.go.",
+      "implementation": "main.go: block A replaces original lines 1-16 (imports + usageText + run() switch on check|observe|compare, unknown/none -> usage rc2; 'docs' stays rc2 per png_test.go:800) and opens runCheck with original line 17; line 23 fs.Parse(args[1:]) -> fs.Parse(args); block B appended: ObservationRecord{Path,SHA256,Lines json path/sha256/lines}; Observe(root) read-only (os.ReadDir world + filepath.Match '*.ail'; go.mod, go.sum, design_docs/world-mission.md; filepath.WalkDir tools/launchd; keep only os.Stat regular files; missing contributes nothing; non-nil slice sorted by Path); CompareObservations: observation-empty (len(before)==0) -> ONE observation-set guard `if !slices.Equal(beforePaths, afterPaths) || len(slices.Compact(slices.Clone(beforePaths))) != len(beforePaths) {` (detail references both slices) -> loop over before with a := afterByPath[b.Path] from map[string]ObservationRecord built from after (never positional, never continue on a miss) (amended iteration 305 per w-marketing-capture-orchestration §5) -> separate ifs observation-digest then observation-lines (Name=path); runObserve (--root required, --out O_CREATE|O_EXCL 0600 as main.go:73, MarshalIndent+newline, I/O error 'marketingcheck: observation-io <root>: <err>' rc1, usage rc2, --help rc0); runCompare (--before/--after required; unreadable/unparsable 'observation-json' rc1; refusal 'marketingcheck: <code> <name>: <detail>' as main.go:36 rc1; equal rc0). Stdlib imports only (go.mod is protected). No allow-list edit: code goes in already-allowed main.go. main.go 83 -> ~297 lines; observation_test.go ~255 lines. Exact code (blocks A, B, C), CLI table, assertions, gate expectations and mutant red lines: plan §M7c1 (iteration 305), which reproduces byte-for-byte the prototype built at /tmp/m7c1-proto-iter305 (receipt design_docs/verification/world-iter305/planner-receipt.md).",
       "acceptance": [
+        "gofmt -l scripts/marketingcheck",
+        "go vet ./scripts/marketingcheck",
         "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
         "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
-        "go vet ./scripts/marketingcheck",
         "go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v",
+        "go test -run '^TestSubprocessSinkGate$' ./host/verifygate -count=1 -timeout 120s -v",
         "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
       ],
       "commands": [
+        "gofmt -l scripts/marketingcheck",
+        "go vet ./scripts/marketingcheck",
         "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
         "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
-        "go vet ./scripts/marketingcheck",
         "go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v",
+        "go test -run '^TestSubprocessSinkGate$' ./host/verifygate -count=1 -timeout 120s -v",
         "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
       ],
       "mutations": [
         {
           "mutant": "M7c-observation",
-          "mutation": "main.go CompareObservations: digest guard condition (SHA256 inequality) -> `if false {`",
+          "mutation": "main.go CompareObservations: `\t\tif b.SHA256 != a.SHA256 {` -> `\t\tif false {`",
           "must_fail_test": "TestMarketingProtectedObservationComparator",
-          "must_fail_assertion": "same-line-count-change: observation-digest 'same-line-count changed copy must red' (gets nil)",
+          "must_fail_assertion": "same-line-count-change: 'same-line-count changed copy must red: want Code=observation-digest, got <nil>' (observed in planner prototype)",
           "command": "go test -run '^TestMarketingProtectedObservationComparator$/^same-line-count-change$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
           "reachability": "Mutation edits PRODUCTION code only (a test edit is not a mutant), applied one at a time, restored by scratch copy + cmp (no git). Test reaches the named assertion; compile failure, panic, harness timeout, missing binary, skip and unrelated refusal do not count."
         },
         {
           "mutant": "M7c-line-observation",
-          "mutation": "main.go CompareObservations: line guard condition (Lines inequality) -> `if false {`",
+          "mutation": "main.go CompareObservations: `\t\tif b.Lines != a.Lines {` -> `\t\tif false {`",
           "must_fail_test": "TestMarketingProtectedObservationComparator",
-          "must_fail_assertion": "digest-equal-line-change: observation-lines 'line-count mismatch must refuse' (gets nil)",
+          "must_fail_assertion": "digest-equal-line-change: 'line-count mismatch must refuse: want Code=observation-lines, got <nil>' (observed in planner prototype)",
           "command": "go test -run '^TestMarketingProtectedObservationComparator$/^digest-equal-line-change$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
           "reachability": "Mutation edits PRODUCTION code only (a test edit is not a mutant), applied one at a time, restored by scratch copy + cmp (no git). Test reaches the named assertion; compile failure, panic, harness timeout, missing binary, skip and unrelated refusal do not count."
         },
         {
           "mutant": "M7c1-set",
-          "mutation": "main.go CompareObservations: `if !slices.Equal(beforePaths, afterPaths) {` -> `if false {`",
+          "mutation": "main.go CompareObservations: `\tif !slices.Equal(beforePaths, afterPaths) || len(slices.Compact(slices.Clone(beforePaths))) != len(beforePaths) {` -> `\tif false {`",
           "must_fail_test": "TestMarketingProtectedObservationComparator",
-          "must_fail_assertion": "deleted: observation-set 'deleted protected copy must red' (loop then reports observation-digest; wantCode reds on the code)",
+          "must_fail_assertion": "deleted: 'deleted protected copy must red: want Code=observation-set, got observation-digest tools/launchd/testdata/deep/y.md: ...' — the path-keyed lookup yields the zero record, no panic (amended iteration 305 per w-marketing-capture-orchestration §5) (observed in planner prototype)",
           "command": "go test -run '^TestMarketingProtectedObservationComparator$/^deleted$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
           "reachability": "Mutation edits PRODUCTION code only (a test edit is not a mutant), applied one at a time, restored by scratch copy + cmp (no git). Test reaches the named assertion; compile failure, panic, harness timeout, missing binary, skip and unrelated refusal do not count."
         }
@@ -2482,10 +2676,12 @@
       ],
       "executor_directive_notes": {
         "narrowest_gate_list": [
+          "gofmt -l scripts/marketingcheck",
+          "go vet ./scripts/marketingcheck",
           "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
           "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
-          "go vet ./scripts/marketingcheck",
           "go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v",
+          "go test -run '^TestSubprocessSinkGate$' ./host/verifygate -count=1 -timeout 120s -v",
           "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
         ],
         "may_touch": [
@@ -2494,7 +2690,7 @@
         ],
         "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c1/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "20 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
-        "additional": "Shared M7c rules (plan '## M7c — split'): production Go stays in scripts/marketingcheck/main.go (TestProductionGoSurface allow-list host/store/context_roots_test.go:204-206 holds only main.go and png.go; any new non-test .go there must be added in the same change); subprocess sinks are os.Create'd files (TestSubprocessSinkGate); time bounds >=10x unloaded; fixtures modelling another tool's output are generated by that tool; production deadlines are marketing_capture.py:32-36 constants; TestMarketingSupervisorFakeDaemonCleanup/shell-hup is a carried load flake (planner iter-304: exit 1 instead of 129 in a whole-package run at load 8.2; 3/3 green isolated) — report, never edit supervisor_test.go; no child marks C8/C9 product evidence met. Executor pick for iteration 304. Write the test first. Do not edit the plan's Python one-liner; the parity subtest pins Go to it."
+        "additional": "Shared M7c rules (plan '## M7c — split'): production Go stays in scripts/marketingcheck/main.go (TestProductionGoSurface allow-list host/store/context_roots_test.go:204-206 holds only main.go and png.go; any new non-test .go there must be added in the same change); subprocess sinks are os.Create'd files (TestSubprocessSinkGate); time bounds >=10x unloaded; fixtures modelling another tool's output are generated by that tool; production deadlines are marketing_capture.py:32-36 constants; TestMarketingSupervisorFakeDaemonCleanup/shell-hup is a carried load flake (planner iter-304: exit 1 instead of 129 in a whole-package run at load 8.2; 3/3 green isolated) — report, never edit supervisor_test.go; no child marks C8/C9 product evidence met. Write the test first. Do not edit the plan's Python one-liner; the parity subtest pins Go to it. Iteration 305 (amended iteration 305 per w-marketing-capture-orchestration §5): HOLD lifted under the orchestration doc's r2 Gate-2 carve-out (C13); independent of M7c0/R0. Do NOT touch png.go, png_test.go, supervisor_test.go, scripts/*.sh|*.py, host/store/context_roots_test.go, any protected path (world/*.ail, go.mod, go.sum, design_docs/world-mission.md, tools/launchd/**), the plan or design docs. Mutation procedure: cp main.go to $SNAP/main.go.orig, one-line edit, run the mutant command and require the exact red line, restore with cp + cmp, re-run green. C11 observation: run the plan heredoc to $SNAP/obs-before.json before the first edit and $SNAP/obs-after.json after the last restore; cmp must be identical."
       },
       "measured_baseline": [
         {
@@ -2541,6 +2737,51 @@
           "seconds": 6,
           "result": "PASS 3/3 isolated",
           "detail": "load 13-15; shell-hup 0.46-0.55s"
+        },
+        {
+          "command": "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 1.6,
+          "result": "PASS",
+          "detail": "iteration 305 planner at worktree HEAD ff16bf65, load 8.25; cli/unknown, cli/no-command, cli/missing-flags, cli/help PASS"
+        },
+        {
+          "command": "go vet ./scripts/marketingcheck",
+          "rc": 0,
+          "result": "PASS",
+          "detail": "iteration 305 planner, HEAD ff16bf65"
+        },
+        {
+          "command": "go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v",
+          "rc": 0,
+          "seconds": 0.32,
+          "result": "PASS",
+          "detail": "iteration 305 planner: 'Go surface: host/cmd=165 allow-listed reproducers=4'"
+        },
+        {
+          "command": "go test -run '^TestSubprocessSinkGate$' ./host/verifygate -count=1 -timeout 120s -v",
+          "rc": 0,
+          "seconds": 0.76,
+          "result": "PASS",
+          "detail": "iteration 305 planner: violations=0 filesParsed=476 startSites=23"
+        },
+        {
+          "command": "git grep -c 'func TestMarketingProtectedObservationComparator' -- '*.go' | wc -l (control: git grep -c 'func TestMarketingTwoPassInventory' -- '*.go')",
+          "rc": 0,
+          "result": "0 (absent); control scripts/marketingcheck/png_test.go:1",
+          "detail": "iteration 305 planner, HEAD ff16bf65"
+        },
+        {
+          "command": "plan C11 Python heredoc at worktree root",
+          "rc": 0,
+          "result": "12 records",
+          "detail": "iteration 305 planner, Python 3.14.5: design_docs/world-mission.md, go.mod, go.sum, 5 tools/launchd files, 4 world/*.ail; 0 symlinks under tools/launchd or world"
+        },
+        {
+          "command": "planner prototype (/tmp/m7c1-proto-iter305, outside repo): go test -run '^TestMarketingProtectedObservationComparator$' . -count=1 -timeout 120s -v; three mutants; go test -race . -count=1 -timeout 240s",
+          "rc": 0,
+          "result": "11/11 subtests PASS (0.5 s); M7c-observation, M7c-line-observation, M7c1-set each red on the named assertion and green after cp+cmp restore; race ok 32.9 s at load 1.5",
+          "detail": "prototype code is the plan's blocks A/B/C, checked byte-identical by reconstruction (receipt)"
         }
       ],
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
@@ -2551,7 +2792,8 @@
       "design_milestone": "M7",
       "estimated_minutes": 28,
       "depends_on": [
-        "M7c1"
+        "M7c1",
+        "M7c0"
       ],
       "files": [
         "scripts/marketing_capture.py",
@@ -2566,7 +2808,7 @@
         {
           "ac": "C7/C8/C9",
           "tests": "TestMarketingCapturePassFakeChrome",
-          "assertions": "routes (built CLI on demoFixture(): six rows in Shots order equal to BuildCaptureManifest routes, e.g. graph.png /workbench?from=19&entry=19, provenance.png /workbench?object=approval-invocation&payload=1); pass-six (fake Chrome fakeScript picks a fixtureSet PNG by --window-size and preferredColorScheme=0 vs other, copies to --screenshot=; verdict ok, six files, CheckPass nil, every argv pins its row's scheme — 'every shot explicitly pins correct scheme'); version (fake --version outputs 'Google Chrome 156.0.8078.47' ok with version recorded, 'Google Chrome 155.0.8059.41' ok, 'Google Chrome 154.0.1.2' ChromeVersion, 'garbage' ChromeVersion, exit 3 NonzeroExit; accepted strings copied from design V29/V13 real outputs); ready (httptest 503x2 then 200 -> ok; always 503 with --startup-timeout 1 -> Timeout; bind denial UNINFORMATIVE UNDER SANDBOX); fresh-dir (existing --out-dir -> DestinationExists).",
+          "assertions": "routes (built CLI on demoFixture(): six rows in Shots order equal to BuildCaptureManifest routes, e.g. graph.png /workbench?from=19&entry=19, provenance.png /workbench?object=approval-invocation&payload=1); pass-six (fake Chrome fakeScript picks a fixtureSet PNG by --window-size and preferredColorScheme=0 vs other, copies to --screenshot=; verdict ok, six files, CheckPass nil, every argv pins its row's scheme — 'every shot explicitly pins correct scheme'); version (fake --version outputs 'Google Chrome 156.0.8078.47' ok with version recorded, 'Google Chrome 155.0.8059.41' ok, 'Google Chrome 154.0.1.2' ChromeVersion, 'garbage' ChromeVersion, exit 3 NonzeroExit; accepted strings copied from design V29/V13 real outputs); ready (httptest 503x2 then 200 -> ok; always 503 with --startup-timeout 1 -> Timeout; bind denial UNINFORMATIVE UNDER SANDBOX); fresh-dir (existing --out-dir -> DestinationExists). (amended iteration 305 per w-marketing-capture-orchestration §5): routes subtest also asserts each row's width/height/scheme equals Shots and the literal M7c0 heights packet.png 3700, graph.png 2100, provenance.png 3000 ('routes must carry the M7c0 shot dimensions'); version subtest keeps both real strings 155.0.8059.41 and 156.0.8078.47.",
           "command": "go test -run '^TestMarketingCapturePassFakeChrome$' ./scripts/marketingcheck -count=1 -timeout 180s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         }
@@ -2575,11 +2817,11 @@
         {
           "criterion": "C7/C8/C9",
           "test": "TestMarketingCapturePassFakeChrome",
-          "assertions": "routes (built CLI on demoFixture(): six rows in Shots order equal to BuildCaptureManifest routes, e.g. graph.png /workbench?from=19&entry=19, provenance.png /workbench?object=approval-invocation&payload=1); pass-six (fake Chrome fakeScript picks a fixtureSet PNG by --window-size and preferredColorScheme=0 vs other, copies to --screenshot=; verdict ok, six files, CheckPass nil, every argv pins its row's scheme — 'every shot explicitly pins correct scheme'); version (fake --version outputs 'Google Chrome 156.0.8078.47' ok with version recorded, 'Google Chrome 155.0.8059.41' ok, 'Google Chrome 154.0.1.2' ChromeVersion, 'garbage' ChromeVersion, exit 3 NonzeroExit; accepted strings copied from design V29/V13 real outputs); ready (httptest 503x2 then 200 -> ok; always 503 with --startup-timeout 1 -> Timeout; bind denial UNINFORMATIVE UNDER SANDBOX); fresh-dir (existing --out-dir -> DestinationExists).",
+          "assertions": "routes (built CLI on demoFixture(): six rows in Shots order equal to BuildCaptureManifest routes, e.g. graph.png /workbench?from=19&entry=19, provenance.png /workbench?object=approval-invocation&payload=1); pass-six (fake Chrome fakeScript picks a fixtureSet PNG by --window-size and preferredColorScheme=0 vs other, copies to --screenshot=; verdict ok, six files, CheckPass nil, every argv pins its row's scheme — 'every shot explicitly pins correct scheme'); version (fake --version outputs 'Google Chrome 156.0.8078.47' ok with version recorded, 'Google Chrome 155.0.8059.41' ok, 'Google Chrome 154.0.1.2' ChromeVersion, 'garbage' ChromeVersion, exit 3 NonzeroExit; accepted strings copied from design V29/V13 real outputs); ready (httptest 503x2 then 200 -> ok; always 503 with --startup-timeout 1 -> Timeout; bind denial UNINFORMATIVE UNDER SANDBOX); fresh-dir (existing --out-dir -> DestinationExists). (amended iteration 305 per w-marketing-capture-orchestration §5): routes subtest also asserts each row's width/height/scheme equals Shots and the literal M7c0 heights packet.png 3700, graph.png 2100, provenance.png 3000 ('routes must carry the M7c0 shot dimensions'); version subtest keeps both real strings 155.0.8059.41 and 156.0.8078.47.",
           "command": "go test -run '^TestMarketingCapturePassFakeChrome$' ./scripts/marketingcheck -count=1 -timeout 180s -v"
         }
       ],
-      "implementation": "main.go: routes --manifest DEMO -> JSON [{name,width,height,scheme,route}] in Shots order via func ShotRoutes(d DemoManifest) ([]RouteRow, error) calling BuildCaptureManifest(d, map[string]string{}) (png.go:462) for routes and Shots (png.go:49-53) for size/scheme; never re-derive routes elsewhere (designer X6); rc1 bad-manifest, rc2 usage. marketing_capture.py: chrome-version --chrome PATH (argv [PATH,'--version'], DEVNULL stdin, temp-file output, SHOT_TIMEOUT_S; parse ^(?:Google Chrome|Chromium) (\\d+)\\.\\S+; MIN_CHROME_MAJOR = 155; verdict ok + 'version' field, else ChromeVersion/NonzeroExit/Timeout); ready --base-url URL (urlopen timeout=10 on /v1/health then /v1/head until both 200, STARTUP_TIMEOUT_S overall, --startup-timeout unit override); pass --routes FILE --base-url URL --chrome PATH --out-dir DIR (fresh DIR else DestinationExists; existing shot() per row to DIR/name; stderr 'progress: <i>/6 <name> <verdict>'; stop at first non-ok; PASS_TIMEOUT_S; stdout {verdict,detail,shots:[{name,verdict}]}). shot()/daemon unchanged.",
+      "implementation": "main.go: routes --manifest DEMO -> JSON [{name,width,height,scheme,route}] in Shots order via func ShotRoutes(d DemoManifest) ([]RouteRow, error) calling BuildCaptureManifest(d, map[string]string{}) (png.go:462) for routes and Shots (png.go:49-53) for size/scheme; never re-derive routes elsewhere (designer X6); rc1 bad-manifest, rc2 usage. marketing_capture.py: chrome-version --chrome PATH (argv [PATH,'--version'], DEVNULL stdin, temp-file output, SHOT_TIMEOUT_S; parse ^(?:Google Chrome|Chromium) (\\d+)\\.\\S+; MIN_CHROME_MAJOR = 155; verdict ok + 'version' field, else ChromeVersion/NonzeroExit/Timeout); ready --base-url URL (urlopen timeout=10 on /v1/health then /v1/head until both 200, STARTUP_TIMEOUT_S overall, --startup-timeout unit override); pass --routes FILE --base-url URL --chrome PATH --out-dir DIR (fresh DIR else DestinationExists; existing shot() per row to DIR/name; stderr 'progress: <i>/6 <name> <verdict>'; stop at first non-ok; PASS_TIMEOUT_S; stdout {verdict,detail,shots:[{name,verdict}]}). shot()/daemon unchanged. (amended iteration 305 per w-marketing-capture-orchestration §5): routes rows carry the M7c0 dimensions from Shots (packet 1440x3700, graph 1440x2100, provenance 1440x3000); depends on M7c0 as well as M7c1 (planner decision).",
       "acceptance": [
         "go test -run '^TestMarketingCapturePassFakeChrome$' ./scripts/marketingcheck -count=1 -timeout 180s -v",
         "go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
@@ -2693,7 +2935,7 @@
         {
           "ac": "C7/C8/C9",
           "tests": "TestMarketingCaptureFakeChromeSixShots",
-          "assertions": "Prebuilt marketingcheck, M7c2a fake Chrome, fake ailang-worldd (python3 http.server script recording argv, 200 on /v1/health and /v1/head at --bind; free port via net.Listen 127.0.0.1:0 then close). six-shots (rc0; pass-a/pass-b six names each, byte-equal; capture-manifest.json passes VerifyCaptureManifest; diagnostics.txt has chrome-version); serve-argv (serve, --workbench-still, both --proof-required-identity sameRef/servesEntry, no commit/session/mint/approve — 'both seed identities must be configured'); version-changed (155 then 156 via counter file -> rc1 'a Chrome version change during capture must refuse'); old-chrome (154 -> rc1 before any shot); cleanup (recorded fake daemon PID dead, assertDead supervisor_test.go:212); scheme (full-chain re-assertion). 120s per shell run.",
+          "assertions": "Prebuilt marketingcheck, M7c2a fake Chrome, fake ailang-worldd (python3 http.server script recording argv, 200 on /v1/health and /v1/head at --bind; free port via net.Listen 127.0.0.1:0 then close). six-shots (rc0; pass-a/pass-b six names each, byte-equal; capture-manifest.json passes VerifyCaptureManifest; diagnostics.txt has chrome-version); serve-argv (serve, --workbench-still, both --proof-required-identity sameRef/servesEntry, no commit/session/mint/approve — 'both seed identities must be configured'); version-changed (155 then 156 via counter file -> rc1 'a Chrome version change during capture must refuse'); old-chrome (154 -> rc1 before any shot); cleanup (recorded fake daemon PID dead, assertDead supervisor_test.go:212); scheme (full-chain re-assertion). 120s per shell run. (amended iteration 305 per w-marketing-capture-orchestration §5): serve-argv also requires '--tool-ailang-bin' followed by exactly the path passed to the shell's --tool-ailang-bin (operator input; the v0.54.15 pin is never hard-coded); `grep -cE 'v0\\.[0-9]+\\.[0-9]+' scripts/capture_marketing.sh` prints 0.",
           "command": "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v",
           "red_first": "Write assertions before implementation; missing APIs are development build-red, not a mutation kill. Require this named top-level PASS, not rc=0 with no tests or SKIP."
         }
@@ -2702,11 +2944,11 @@
         {
           "criterion": "C7/C8/C9",
           "test": "TestMarketingCaptureFakeChromeSixShots",
-          "assertions": "Prebuilt marketingcheck, M7c2a fake Chrome, fake ailang-worldd (python3 http.server script recording argv, 200 on /v1/health and /v1/head at --bind; free port via net.Listen 127.0.0.1:0 then close). six-shots (rc0; pass-a/pass-b six names each, byte-equal; capture-manifest.json passes VerifyCaptureManifest; diagnostics.txt has chrome-version); serve-argv (serve, --workbench-still, both --proof-required-identity sameRef/servesEntry, no commit/session/mint/approve — 'both seed identities must be configured'); version-changed (155 then 156 via counter file -> rc1 'a Chrome version change during capture must refuse'); old-chrome (154 -> rc1 before any shot); cleanup (recorded fake daemon PID dead, assertDead supervisor_test.go:212); scheme (full-chain re-assertion). 120s per shell run.",
+          "assertions": "Prebuilt marketingcheck, M7c2a fake Chrome, fake ailang-worldd (python3 http.server script recording argv, 200 on /v1/health and /v1/head at --bind; free port via net.Listen 127.0.0.1:0 then close). six-shots (rc0; pass-a/pass-b six names each, byte-equal; capture-manifest.json passes VerifyCaptureManifest; diagnostics.txt has chrome-version); serve-argv (serve, --workbench-still, both --proof-required-identity sameRef/servesEntry, no commit/session/mint/approve — 'both seed identities must be configured'); version-changed (155 then 156 via counter file -> rc1 'a Chrome version change during capture must refuse'); old-chrome (154 -> rc1 before any shot); cleanup (recorded fake daemon PID dead, assertDead supervisor_test.go:212); scheme (full-chain re-assertion). 120s per shell run. (amended iteration 305 per w-marketing-capture-orchestration §5): serve-argv also requires '--tool-ailang-bin' followed by exactly the path passed to the shell's --tool-ailang-bin (operator input; the v0.54.15 pin is never hard-coded); `grep -cE 'v0\\.[0-9]+\\.[0-9]+' scripts/capture_marketing.sh` prints 0.",
           "command": "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v"
         }
       ],
-      "implementation": "Keep the ten flags at capture_marketing.sh:25-34; add exactly --worldd-bin PATH, --bind 127.0.0.1:PORT (loopback only), --marketingcheck-bin PATH, all in --help (designer X2/X3). daemon mode gains --ready-url URL as the alternative to --ready-file (exactly one required). Flow: chrome-version A; marketing_capture.py daemon --ready-url http://BIND --started-file ... -- WORLDD serve --db DB --bind BIND --workbench-still --ailang-bin AILANG --workspace-root WS --tool-ailang-bin TOOL --proof-key-file KEY --proof-required-identity sameRef --proof-required-identity servesEntry (hard-coded; cmd/ailang-worldd/main.go:250-260, QUICKSTART 1576-1577); MARKETINGCHECK routes --manifest M > OUT/routes.json; pass -> OUT/pass-a; with --verify-twice pass -> OUT/pass-b (without it stop after A rc0, no check); chrome-version B; A != B -> rc1 'chrome version changed during capture'; OUT/diagnostics.txt lines 'chrome-version: <A>' and 'bind: <BIND>'; MARKETINGCHECK check ... --out OUT/capture-manifest.json; a check refusal keeps pass dirs and exits 1 (X14). Traps and --unit-daemon unchanged.",
+      "implementation": "Keep the ten flags at capture_marketing.sh:25-34; add exactly --worldd-bin PATH, --bind 127.0.0.1:PORT (loopback only), --marketingcheck-bin PATH, all in --help (designer X2/X3). daemon mode gains --ready-url URL as the alternative to --ready-file (exactly one required). Flow: chrome-version A; marketing_capture.py daemon --ready-url http://BIND --started-file ... -- WORLDD serve --db DB --bind BIND --workbench-still --ailang-bin AILANG --workspace-root WS --tool-ailang-bin TOOL --proof-key-file KEY --proof-required-identity sameRef --proof-required-identity servesEntry (hard-coded; cmd/ailang-worldd/main.go:250-260, QUICKSTART 1576-1577); MARKETINGCHECK routes --manifest M > OUT/routes.json; pass -> OUT/pass-a; with --verify-twice pass -> OUT/pass-b (without it stop after A rc0, no check); chrome-version B; A != B -> rc1 'chrome version changed during capture'; OUT/diagnostics.txt lines 'chrome-version: <A>' and 'bind: <BIND>'; MARKETINGCHECK check ... --out OUT/capture-manifest.json; a check refusal keeps pass dirs and exits 1 (X14). Traps and --unit-daemon unchanged. (amended iteration 305 per w-marketing-capture-orchestration §5): serve argv names --tool-ailang-bin TOOL from the operator's flag; no AILANG version string in the shell.",
       "acceptance": [
         "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v",
         "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
@@ -2832,7 +3074,7 @@
           "command": "go test -run '^TestMarketingCaptureInventoryMutation$' ./host/daemon -count=1 -timeout 180s -v"
         }
       ],
-      "implementation": "main.go: inventory --addr URL [--out FILE] and inventory-compare --before F --after F. Inventory = {schema 'world/demo/capture-inventory/v1', head (GET /v1/head body), entries [{entryHash, transitionRef}] from paging GET /v1/log?from=N&limit=500 from 0 until zero items (response key 'items', logEntryResponse host/daemon/handlers.go:65-73), objects [{ref, sha256 of raw GET /v1/objects/{ref}}] per distinct transitionRef}; 10s client timeout per request. There is no list-all-objects route (daemon.go:1033-1059; designer X7). func ReadInventory(base string) (Inventory, error); func CompareInventory(before, after Inventory) error with codes inventory-mutated and inventory-empty; CLI rc/stderr like check.",
+      "implementation": "main.go: inventory --addr URL [--out FILE] and inventory-compare --before F --after F. Inventory = {schema 'world/demo/capture-inventory/v1', head (GET /v1/head body), entries [{entryHash, transitionRef}] from paging GET /v1/log?from=N&limit=500 from 0 until zero items (response key 'items', logEntryResponse host/daemon/handlers.go:65-73), objects [{ref, sha256 of raw GET /v1/objects/{ref}}] per distinct transitionRef}; 10s client timeout per request. There is no list-all-objects route (daemon.go:1033-1059; designer X7). func ReadInventory(base string) (Inventory, error); func CompareInventory(before, after Inventory) error with codes inventory-mutated and inventory-empty; CLI rc/stderr like check. (amended iteration 305 per w-marketing-capture-orchestration §5): unchanged; the seeded demo store's log is contiguous (indexes 0-9, orchestration V40), so handleLogRange's stop-at-gap (handlers.go:656-657) does not truncate the real inventory.",
       "acceptance": [
         "go test -run '^TestMarketingCaptureInventoryMutation$' ./host/daemon -count=1 -timeout 180s -v",
         "go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 90s -v",
@@ -2948,7 +3190,7 @@
           "command": "go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 120s -v"
         }
       ],
-      "implementation": "capture_marketing.sh: marketingcheck inventory before pass A and after pass B plus inventory-compare (rc1 on mismatch). capture_test.go: subtest 'inventory' in TestMarketingCaptureFakeChromeSixShots; extend the fake daemon to serve /v1/log?from=&limit= ({\"items\":[...]}) and /v1/objects/{ref}. Review check (not a mutant; the guard lives in the drill test by design): a missing WORLD_MARKETING_RECTS must Fatal, never Skip.",
+      "implementation": "capture_marketing.sh: marketingcheck inventory before pass A and after pass B plus inventory-compare (rc1 on mismatch). capture_test.go: subtest 'inventory' in TestMarketingCaptureFakeChromeSixShots; extend the fake daemon to serve /v1/log?from=&limit= ({\"items\":[...]}) and /v1/objects/{ref}. Review check (not a mutant; the guard lives in the drill test by design): a missing WORLD_MARKETING_RECTS must Fatal, never Skip. (amended iteration 305 per w-marketing-capture-orchestration §5): cmd/ailang-worldd/marketing_chrome_test.go also holds a LOCAL rig helper composing newDemoApprovalRig's steps (demo_test.go:561) with the daemon handle retained, running demo seed, closing the seed daemon and returning db/manifest/pins (demoM5cRealSeed at demo_test.go:1727 returns (worldReader, demoPublicManifest, string) at :1830 and exposes neither db nor daemon; a second daemon on the same db fails the writer lock daemon.go:744-751). Reference: design_docs/verification/world-iter305/iter305-seeded-still-chrome-probe_test.go.txt (:64 rig, :139 demo seed, :143-144 close). cmd/ailang-worldd/demo_test.go is NOT edited. COMPLETE when (a) PR lands with PR CI green; (b) WORLD_CHROME unset prints SKIP and WORLD_CHROME=/nonexistent FAILs; (c) unset/unloadable WORLD_MARKETING_RECTS FAILs with Chrome set (review check); (d) TestMarketingCaptureFakeChromeSixShots/inventory passes and M7c4-inventory-wiring is killed; (e) an independent judge PASSes. Completion excludes any real-Chrome pass and never marks C8/C9 met; M8a depends on M7c4 COMPLETE, not R1.",
       "acceptance": [
         "go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "WORLD_CHROME=/nonexistent go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
@@ -2989,7 +3231,7 @@
         ],
         "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c4/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
-        "additional": "Shared M7c rules (plan '## M7c — split'): production Go stays in scripts/marketingcheck/main.go (TestProductionGoSurface allow-list host/store/context_roots_test.go:204-206 holds only main.go and png.go; any new non-test .go there must be added in the same change); subprocess sinks are os.Create'd files (TestSubprocessSinkGate); time bounds >=10x unloaded; fixtures modelling another tool's output are generated by that tool; production deadlines are marketing_capture.py:32-36 constants; TestMarketingSupervisorFakeDaemonCleanup/shell-hup is a carried load flake (planner iter-304: exit 1 instead of 129 in a whole-package run at load 8.2; 3/3 green isolated) — report, never edit supervisor_test.go; no child marks C8/C9 product evidence met. Executor acceptance is the unattended SKIP + set-but-invalid FAIL + fake companion; the real run is the controller rehearsal: WORLD_CHROME=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" WORLD_MARKETING_RECTS=<measured> go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 660s -v. Landing M7c4 never marks C8/C9 met (designer N10)."
+        "additional": "Shared M7c rules (plan '## M7c — split'): production Go stays in scripts/marketingcheck/main.go (TestProductionGoSurface allow-list host/store/context_roots_test.go:204-206 holds only main.go and png.go; any new non-test .go there must be added in the same change); subprocess sinks are os.Create'd files (TestSubprocessSinkGate); time bounds >=10x unloaded; fixtures modelling another tool's output are generated by that tool; production deadlines are marketing_capture.py:32-36 constants; TestMarketingSupervisorFakeDaemonCleanup/shell-hup is a carried load flake (planner iter-304: exit 1 instead of 129 in a whole-package run at load 8.2; 3/3 green isolated) — report, never edit supervisor_test.go; no child marks C8/C9 product evidence met. Executor acceptance is the unattended SKIP + set-but-invalid FAIL + fake companion; the real run is the controller rehearsal: WORLD_CHROME=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" WORLD_MARKETING_RECTS=<measured> go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 660s -v. Landing M7c4 never marks C8/C9 met (designer N10). (amended iteration 305 per w-marketing-capture-orchestration §5): do not edit cmd/ailang-worldd/demo_test.go; the rig helper lives in marketing_chrome_test.go. Run with AILANG_BIN=$HOME/.pinned-ailang/ailang and WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang."
       },
       "measured_baseline": [
         {
@@ -3041,7 +3283,10 @@
         "website/static/img/v1/captions.md",
         "docs/marketing-capture-manifest.schema.json",
         "cmd/ailang-worldd/demo_test.go",
-        "scripts/marketingcheck/docs_test.go"
+        "scripts/marketingcheck/docs_test.go",
+        "scripts/marketingcheck/png_test.go",
+        "scripts/marketingcheck/png.go",
+        "scripts/marketingcheck/main.go"
       ],
       "status": "pending",
       "new_tests": [
@@ -3078,7 +3323,7 @@
           "command": "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v"
         }
       ],
-      "implementation": "Ship concrete reproduction sequence and all payload construction. Captions truthful before release; release sibling capture-manifest.json is generated from attended actual bytes only, not checked-in dummy hashes. Manifest schema/example distinguished from public capture record. Docs link test fixture mode discharges wiring only; actual asset resolution deferred until promotion.",
+      "implementation": "Ship concrete reproduction sequence and all payload construction. Captions truthful before release; release sibling capture-manifest.json is generated from attended actual bytes only, not checked-in dummy hashes. Manifest schema/example distinguished from public capture record. Docs link test fixture mode discharges wiring only; actual asset resolution deferred until promotion. (amended iteration 305 per w-marketing-capture-orchestration §5): files add png_test.go (cli/unknown at png_test.go:800 passes 'docs' and expects rc2; the docs subcommand changes that, so the case moves to another unknown word) and png.go (threshold constants png.go:27-35); main.go added by the planner because the docs subcommand must live in the only allowed production-Go file (context_roots_test.go:204-206). Environment: tool pin v0.54.15 (amended iteration 305 per w-marketing-capture-orchestration §4.2). Captions say 'static capture of recorded history', disclose the tall framing (packet 1440x3700, graph 1440x2100, provenance 1440x3000) and use the narrowed provenance claim (orchestration §4.1). Threshold ownership (orchestration §5 R1 / V57): R1 measures; M8a applies the R1 V-row to png.go and moves TestMarketingPNGContent boundary literals (png_test.go:359-360, :396, :438-441, :444-455); gate go test ./scripts/marketingcheck -count=1 -timeout 240s -v green with each boundary arm still failing one step past the new value. FLAGGED: if no R1 threshold V-row exists at dispatch, the threshold step is reported DEFERRED (never invented); M8a depends on M7c4 COMPLETE, not R1.",
       "acceptance": [
         "go test -run '^TestMarketingDocsLinks$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
         "go test -run '^TestMarketingRunbookMatchesHelp$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
@@ -3127,7 +3372,10 @@
           "website/static/img/v1/captions.md",
           "docs/marketing-capture-manifest.schema.json",
           "cmd/ailang-worldd/demo_test.go",
-          "scripts/marketingcheck/docs_test.go"
+          "scripts/marketingcheck/docs_test.go",
+          "scripts/marketingcheck/png_test.go",
+          "scripts/marketingcheck/png.go",
+          "scripts/marketingcheck/main.go"
         ],
         "directive": "no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M8a/ (outside the checkout; substitute this fire iteration for <N>) after each milestone",
         "timebox": "25 minutes including focused gates/mutations; stop at 30 minutes with an honest incomplete boundary report, never a weakened gate.",
@@ -3191,13 +3439,14 @@
           "command": "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
         }
       ],
-      "implementation": "Final validation run, no new product scope. Re-run the narrow cross-boundary tests and mandatory repo gates. Use observation snapshots, never restore protected files. Report every gate rc/wall time and all unresolved product criteria. Attended capture/promotion is outside milestones.",
+      "implementation": "Final validation run, no new product scope. Re-run the narrow cross-boundary tests and mandatory repo gates. Use observation snapshots, never restore protected files. Report every gate rc/wall time and all unresolved product criteria. Attended capture/promotion is outside milestones. (amended iteration 305 per w-marketing-capture-orchestration §5): TestMarketingCaptureFakeChromeSixShots gate runs with -timeout 300s (two <=120 s shell runs); TestMarketingShotGeometry added as the M7c0 regression; Go gates run with WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang.",
       "acceptance": [
         "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
         "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
-        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v",
+        "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
         "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
         "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
         "go build ./... && go test ./... -count=1 -timeout 600s",
@@ -3209,7 +3458,8 @@
         "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
-        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v",
+        "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
         "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
         "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
         "go build ./... && go test ./... -count=1 -timeout 600s",
@@ -3238,7 +3488,8 @@
           "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
           "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
           "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
-          "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v",
+          "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
           "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
           "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
           "go build ./... && go test ./... -count=1 -timeout 600s",
@@ -3424,12 +3675,25 @@
       ]
     },
     {
+      "milestone": "M7c0",
+      "commands": [
+        "gofmt -l scripts/marketingcheck",
+        "go vet ./scripts/marketingcheck",
+        "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
+        "go test -run '^TestMarketingPNGContent$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test ./scripts/marketingcheck -count=1 -timeout 240s -v",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
+      ]
+    },
+    {
       "milestone": "M7c1",
       "commands": [
+        "gofmt -l scripts/marketingcheck",
+        "go vet ./scripts/marketingcheck",
         "go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
         "go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
-        "go vet ./scripts/marketingcheck",
         "go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v",
+        "go test -run '^TestSubprocessSinkGate$' ./host/verifygate -count=1 -timeout 120s -v",
         "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
       ]
     },
@@ -3487,7 +3751,8 @@
         "go test -run '^TestDemoSeedEndToEnd$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestDemoSeedWhyNamedLinks$' ./cmd/ailang-worldd -count=1 -timeout 120s -v",
         "go test -run '^TestWorkbenchPacketEvidenceOnlyThroughRowOneOhFive$' ./host/daemon -count=1 -timeout 45s -v",
-        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v",
+        "go test -run '^TestMarketingShotGeometry$' ./scripts/marketingcheck -count=1 -timeout 60s -v",
         "go test -run '^TestMarketingPNGStructure$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
         "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
         "go build ./... && go test ./... -count=1 -timeout 600s",
@@ -3509,7 +3774,11 @@
     "Measured shot rectangles (WORLD_MARKETING_RECTS); real system-Chrome product rehearsal (TestMarketingChromeSixShots, M7c4) under design §2/V29: bounded --version before pass A and after pass B, major >=155, identical, recorded in sibling diagnostics; set-but-invalid, <155 or changed fails. PD1 resolved iteration 266.",
     "Release seed with operator session/key, captures both passes, verifies actual refs/PNG bytes then promotes exact six images and generated website/static/img/v1/capture-manifest.json",
     "Committed-blob fleet PNG check after controller commit; no git write by executor",
-    "Report raw-byte residual with varying element and both hashes if M7 fallback applies; acceptance stays unmet"
+    "Report raw-byte residual with varying element and both hashes if M7 fallback applies; acceptance stays unmet",
+    "R0 (before M7c0): re-run iter305-region-bottoms-probe on the then-current Chrome against two independently seeded test-minted stores; record both seeds' B, per-region delta and max as a V-row; if any max differs from V51 M7c0 transcribes the new max; any B+40>4400 is BLOCKED and escalated to Mark (amended iteration 305 per w-marketing-capture-orchestration §5)",
+    "R1 (after M7c4 COMPLETE): measure content rectangles for all six shots over the M7c0 geometry (V51 method; phone via V58 scan), write WORLD_MARKETING_RECTS, run the full capture_marketing.sh -> marketing_capture.py daemon -> pass -> shot path twice on real Chrome (C14; go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 660s -v), record hashes, and record the png.go:27 provisional thresholds measured on the real renders as a V-row (M8a applies it) (amended iteration 305 per w-marketing-capture-orchestration §5)",
+    "P0 (within 24 h before A1) and P3 (release-store GET-only containment before pass A): orchestration §4.4; any failure is BLOCKED and escalated, heights never clamped (amended iteration 305 per w-marketing-capture-orchestration §5)",
+    "A1 attended release capture with tool pin v0.54.15 after P0-P2; controller verifies, promotes and commits the six PNGs; committed-blob gate after that commit (amended iteration 305 per w-marketing-capture-orchestration §5)"
   ],
   "coverage": {
     "design_milestones": [
@@ -3522,7 +3791,7 @@
       "M7",
       "M8"
     ],
-    "executor_runs": 21,
+    "executor_runs": 22,
     "criteria": [
       "C1",
       "C2",
@@ -3534,10 +3803,14 @@
       "C8",
       "C9",
       "C10",
-      "C11"
+      "C11",
+      "C8′",
+      "C12",
+      "C13",
+      "C14"
     ],
-    "planned_tests": 39,
-    "mutations": 52,
+    "planned_tests": 40,
+    "mutations": 53,
     "release_acceptance": "Unattended unit/integration tooling gates separated from attended release product validation."
   }
 }

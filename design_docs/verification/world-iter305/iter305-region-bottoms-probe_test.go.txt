@@ -1,0 +1,347 @@
+package main
+
+// Iteration-305 designer r1 measurement only; never committed as a .go file.
+// Run as cmd/ailang-worldd/zz_iter305_bottoms_test.go, then deleted.
+//
+// Same seed + still daemon as iter305-seeded-still-chrome-probe. NEW part:
+// exact full-resolution bottom edges of each shot's required region, read from
+// Chrome's own layout (getBoundingClientRect at scroll 0, device scale 1) via
+// `--dump-dom`. A MEASUREMENT-ONLY loopback proxy in front of the still daemon
+// drops the CSP header and appends ONE external script before </body>; that
+// script appends a <pre id="probe-rects"> AFTER every section, so it cannot move
+// anything above it. Screenshots for eye validation go to the still daemon
+// directly (no proxy, no injected script).
+//
+// What it measures, at HEAD, on the REAL seeded demo store (the same
+// `demo seed` S1-S6 that demoM5cRealSeed runs, V11 test mint only):
+//   1. a default-mode daemon: one GET per capture route (control: 1 script tag);
+//   2. a `WorkbenchStill: true` daemon (the real M6 flag, not a proxy strip) on
+//      the same frozen db: two GETs per route 2 s apart, 0 script tags, byte
+//      equality, and still == default minus exactly the live.js tag;
+//   3. two isolated passes of all six shots through the COMMITTED supervisor
+//      scripts/marketing_capture.py `shot` mode on the rig's installed Chrome;
+//   4. GET /v1/head before and after both passes (frozen inventory, head only).
+
+import (
+	"bytes"
+	"crypto/sha256"
+			"encoding/json"
+	"html"
+	"math"
+	"regexp"
+	"fmt"
+		"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
+)
+
+type iter305Ref struct {
+	Role  string `json:"role"`
+	Ref   string `json:"ref"`
+	Index int64  `json:"index,omitempty"`
+}
+type iter305Why struct {
+	Role  string `json:"role"`
+	Entry int64  `json:"entry"`
+}
+type iter305Manifest struct {
+	References []iter305Ref `json:"references"`
+	Why        []iter305Why `json:"why"`
+}
+
+func TestIter305RegionBottomsProbe(t *testing.T) {
+	chrome, out := os.Getenv("WORLD_CHROME"), os.Getenv("PROBE_OUT")
+	if chrome == "" || out == "" {
+		t.Skip("probe env unset")
+	}
+	t.Setenv("TMPDIR", t.TempDir())
+	interp := requireProofPin(t)
+	_, tool := cliSeBins(t)
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+
+	// --- rig: newDemoApprovalRig's body (demo_test.go:561), keeping the daemon handle.
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, ws, corpus := filepath.Join(base, "state", "world.db"), filepath.Join(base, "ws"), filepath.Join(base, "outside", "corpus")
+	for _, d := range []string{filepath.Dir(db), filepath.Join(ws, "demo", "world"), filepath.Join(corpus, "runnable")} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	source, err := os.ReadFile(filepath.Join("..", "..", demoLogepochPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(ws, "demo", demoLogepochPath), source, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writeFileT(t, filepath.Join(corpus, "manifest.json"), `{"examples":[]}`+"\n")
+	errLog := new(bytes.Buffer)
+	private := t.TempDir()
+	keyPath := filepath.Join(private, "proof.key")
+	key := freshProofKey(t)
+	if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := daemon.Config{DBPath: db, BindHost: daemon.DefaultBindHost, AilangBin: interp, WorkspaceRoot: ws,
+		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: errLog, ProofKeyFile: keyPath, ProofRequiredIdentities: []string{"sameRef", "servesEntry"}}
+	d, err := daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New: %v", err)
+	}
+	srv := httptest.NewServer(d.Handler())
+	_, body, err := newClient(srv.URL).get("/v1/health")
+	srv.Close()
+	if cerr := d.Close(); err != nil || cerr != nil {
+		t.Fatalf("health %v close %v", err, cerr)
+	}
+	var h healthInfo
+	if json.Unmarshal([]byte(body), &h) != nil || h.InterpreterRef == "" {
+		t.Fatalf("health = %s", body)
+	}
+	st, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	interpRef := hashref.MustParse(h.InterpreterRef)
+	publishSeToolsCLI(t, st, db, interpRef)
+	publishDemoApproval(t, st, db, interpRef, false)
+	now := time.Now().Unix()
+	grants := []broker.Capability{
+		{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 100},
+		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: 20},
+	}
+	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectAilangCLI} {
+		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+	}
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsFor(t, db), "demo", grants, 3600, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatal(err)
+	}
+	d, err = daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New (seed serve): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+
+	// --- seed: demoM5cRealSeed's S1-S6 invocation (demo_test.go:1734-1753).
+	session, manifest := filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
+	if err := os.WriteFile(session, []byte(tok), 0600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, stderr := demoRun(t, &demoTestRig{addr: srv.URL}, []string{"demo", "seed", "--db", db, "--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest})
+	if code != exitOK || !strings.Contains(stdout, manifest) {
+		t.Fatalf("S1-S6 seed: code=%d out=%q err=%s", code, stdout, stderr)
+	}
+	srv.Close()
+	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m iter305Manifest
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	ref := func(role string, index int64, indexed bool) string {
+		v, n := "", 0
+		for _, r := range m.References {
+			if r.Role == role && (!indexed || r.Index == index) {
+				v, n = r.Ref, n+1
+			}
+		}
+		if n != 1 {
+			t.Fatalf("manifest role %s: %d refs", role, n)
+		}
+		return v
+	}
+	var approval int64
+	for _, w := range m.Why {
+		if w.Role == "approval" {
+			approval = w.Entry
+		}
+	}
+	if approval <= 0 {
+		t.Fatal("no approval why entry")
+	}
+	packet, invocation := ref("packet", 0, false), ref("invocation", approval, true)
+	t.Logf("SEED manifest sha256=%x refs=%d why=%d approval-entry=%d", sha256.Sum256(raw), len(m.References), len(m.Why), approval)
+	// Routes exactly as scripts/marketingcheck/png.go BuildCaptureManifest derives them.
+	shots := []struct {
+		name, route string
+		w, h        int
+		scheme      string
+	}{
+		{"workbench-light.png", "/workbench", 1440, 1100, "light"},
+		{"workbench-dark.png", "/workbench", 1440, 1100, "dark"},
+		{"packet.png", "/workbench?object=" + packet, 1440, 1400, "light"},
+		{"graph.png", fmt.Sprintf("/workbench?from=%d&entry=%d", approval, approval), 1440, 1100, "light"},
+		{"provenance.png", "/workbench?object=" + invocation + "&payload=1", 1440, 1400, "light"},
+		{"phone.png", "/workbench", 390, 844, "light"},
+	}
+	routes := []string{}
+	seen := map[string]bool{}
+	for _, s := range shots {
+		if !seen[s.route] {
+			seen[s.route] = true
+			routes = append(routes, s.route)
+		}
+	}
+	get := func(base, p string) (int, []byte) {
+		resp, err := http.Get(base + p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+		return resp.StatusCode, b
+	}
+
+	// --- default-mode control.
+	d, err = daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New (default): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+	defaults := map[string][]byte{}
+	for _, p := range routes {
+		code, b := get(srv.URL, p)
+		defaults[p] = b
+		t.Logf("DEFAULT %s status=%d bytes=%d script_tags=%d", p, code, len(b), bytes.Count(b, []byte("<script")))
+	}
+	srv.Close()
+	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// --- real still flag.
+	still := cfg
+	still.WorkbenchStill = true
+	d, err = daemon.New(boundedTestContext(t), still)
+	if err != nil {
+		t.Fatalf("daemon.New (still): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+	defer func() { srv.Close(); _ = d.Close() }()
+
+	handler := d.Handler()
+	js := `(function(){function q(s){var e=document.querySelector(s);if(!e)return null;var r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right};}
+var tl=document.querySelector('section[aria-label="timeline"] article');
+var o={innerWidth:window.innerWidth,innerHeight:window.innerHeight,clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight,scrollY:window.scrollY,
+h1:q('header h1'),nav:q('nav[aria-label="world browser"]'),timelineFirst:tl?q('section[aria-label="timeline"] article'):null,timeline:q('section[aria-label="timeline"]'),inspector:q('section[aria-label="inspector"]'),packet:q('section[aria-label="decision packet"]'),payload:q('pre.payload'),graph:q('section[aria-label="world graph"]'),graphSvg:q('section[aria-label="world graph"] svg')};
+var p=document.createElement('pre');p.id='probe-rects';p.textContent=JSON.stringify(o);document.body.appendChild(p);})();`
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/probe/rects.js" {
+			w.Header().Set("Content-Type", "text/javascript")
+			io.WriteString(w, js)
+			return
+		}
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, r)
+		body := rec.Body.Bytes()
+		if r.URL.Path == "/workbench" {
+			body = bytes.Replace(body, []byte("</body>"), []byte(`<script src="/probe/rects.js" defer></script></body>`), 1)
+		}
+		for k, v := range rec.Header() {
+			if k != "Content-Length" && k != "Content-Security-Policy" {
+				w.Header()[k] = v
+			}
+		}
+		w.WriteHeader(rec.Code)
+		w.Write(body)
+	}))
+	defer proxy.Close()
+	type rect struct{ Top, Bottom, Left, Right float64 }
+	type rects struct {
+		InnerWidth, InnerHeight, ClientWidth, ScrollWidth, ScrollHeight, ScrollY float64
+		H1, Nav, TimelineFirst, Timeline, Inspector, Packet, Payload, Graph, GraphSvg *rect
+	}
+	pre := regexp.MustCompile(`(?s)<pre id="probe-rects">(.*?)</pre>`)
+	measure := func(route string, w, hgt int) rects {
+		ctx := boundedTestContext(t)
+		cmd := exec.CommandContext(ctx, chrome, "--headless=new", "--no-first-run", "--no-default-browser-check", "--disable-background-networking",
+			"--user-data-dir="+t.TempDir(), "--dump-dom", fmt.Sprintf("--window-size=%d,%d", w, hgt), "--force-device-scale-factor=1", "--lang=en-US",
+			"--blink-settings=preferredColorScheme=1", proxy.URL+route)
+		outb, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("dump-dom %s: %v", route, err)
+		}
+		m := pre.FindSubmatch(outb)
+		if m == nil {
+			t.Fatalf("no probe-rects in dump-dom of %s (%d bytes)", route, len(outb))
+		}
+		var r rects
+		if err := json.Unmarshal([]byte(html.UnescapeString(string(m[1]))), &r); err != nil {
+			t.Fatalf("rects %s: %v", route, err)
+		}
+		return r
+	}
+	b := func(r *rect) float64 {
+		if r == nil {
+			return -1
+		}
+		return r.Bottom
+	}
+	rule := func(bottom float64) int { return int(math.Ceil((bottom+40)/100) * 100) }
+	tall := []struct {
+		name, route, region string
+		pick                func(rects) float64
+	}{
+		{"packet.png", "/workbench?object=" + packet, "section[aria-label=decision packet]", func(r rects) float64 { return b(r.Packet) }},
+		{"graph.png", fmt.Sprintf("/workbench?from=%d&entry=%d", approval, approval), "section[aria-label=world graph]", func(r rects) float64 { return b(r.Graph) }},
+		{"provenance.png", "/workbench?object=" + invocation + "&payload=1", "pre.payload", func(r rects) float64 { return b(r.Payload) }},
+	}
+	sup := filepath.Join("..", "..", "scripts", "marketing_capture.py")
+	for _, s := range tall {
+		r := measure(s.route, 1440, 4400)
+		bottom := s.pick(r)
+		hgt := rule(bottom)
+		t.Logf("BOTTOM %s region=%q at 1440x4400: bottom=%.2f inner=%.0fx%.0f client=%.0f scrollW=%.0f scrollH=%.0f scrollY=%.0f inspector.bottom=%.2f -> rule height=%d blocked=%v",
+			s.name, s.region, bottom, r.InnerWidth, r.InnerHeight, r.ClientWidth, r.ScrollWidth, r.ScrollHeight, r.ScrollY, b(r.Inspector), hgt, hgt > 4400)
+		if hgt > 4400 {
+			continue
+		}
+		r2 := measure(s.route, 1440, hgt)
+		b2 := s.pick(r2)
+		t.Logf("CONFIRM %s at 1440x%d: bottom=%.2f (delta vs 4400 run %.2f) margin=%.2f inner=%.0fx%.0f client=%.0f scrollH=%.0f", s.name, hgt, b2, b2-bottom, float64(hgt)-b2, r2.InnerWidth, r2.InnerHeight, r2.ClientWidth, r2.ScrollHeight)
+		png := filepath.Join(out, s.name)
+		res, err := exec.Command("python3", sup, "shot", "--chrome", chrome, "--out", png, "--url", srv.URL+s.route, "--width", "1440", "--height", fmt.Sprint(hgt), "--scheme", "light").Output()
+		t.Logf("SHOT %s 1440x%d err=%v %s", s.name, hgt, err, strings.TrimSpace(string(res)))
+	}
+	for _, v := range []struct {
+		name string
+		w, h int
+	}{{"workbench-light.png", 1440, 1100}, {"phone.png", 390, 844}} {
+		r := measure("/workbench", v.w, v.h)
+		need := math.Max(b(r.Nav), b(r.TimelineFirst))
+		t.Logf("BOTTOM %s at %dx%d: nav.bottom=%.2f timelineFirstEntry.bottom=%.2f need=%.2f fits(<=h-40)=%v inner=%.0fx%.0f client=%.0f scrollW=%.0f h1.right=%.2f",
+			v.name, v.w, v.h, b(r.Nav), b(r.TimelineFirst), need, need <= float64(v.h-40), r.InnerWidth, r.InnerHeight, r.ClientWidth, r.ScrollWidth, func() float64 {
+				if r.H1 == nil {
+					return -1
+				}
+				return r.H1.Right
+			}())
+	}
+	_, headNow := get(srv.URL, "/v1/head")
+	t.Logf("SEED head %s", strings.TrimSpace(string(headNow)))
+}
+
