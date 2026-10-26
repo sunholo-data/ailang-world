@@ -6,7 +6,7 @@ Design: [w-marketing-capture.md](w-marketing-capture.md). Read in full, includin
 
 Reference pair requested under planned/ is absent at base; both existing files were read under design_docs/implemented/. JSON copies its top-level structure and milestone files/tests_first/acceptance/mutations shape, adding the requested explicit commands, acceptance_criteria, dependency, estimate and status="pending" fields.
 
-**17 executor runs / 445 estimated minutes.** Design M1–M8 purposes and dependency order are preserved; large stages are split below. Publish confirmation and session mint typed `y` are outside all milestones. Planner writes only this file and [sprint_w-marketing-capture.json](sprint_w-marketing-capture.json).
+**21 executor runs / 543 estimated minutes** (iteration 304: M7c 28 min split into M7c1–M7c4, 126 min; was 17 / 445). Design M1–M8 purposes and dependency order are preserved; large stages are split below. Publish confirmation and session mint typed `y` are outside all milestones. Planner writes only this file and [sprint_w-marketing-capture.json](sprint_w-marketing-capture.json).
 
 ## Environment, gate semantics and binary discovery
 
@@ -161,7 +161,11 @@ Each mutant is a temporary compiling guard/data edit and must reach its specifie
 | M6 | Still serve flag and stable complete server HTML | 25 |
 | M7a | Bounded supervisor with mandatory fake Chrome companions | 28 |
 | M7b | PNG structure, decoded content and exact two-pass verifier | 28 |
-| M7c | Capture orchestration, frozen inventories and Chrome drill | 28 |
+| M7c1 | Protected-file observation comparator (production) and its mutants | 20 |
+| M7c2a | Python capture primitives (Chrome version, HTTP readiness, six-shot pass) and Go `routes` | 28 |
+| M7c2b | Capture shell end-to-end with fake Chrome and a fake daemon | 28 |
+| M7c3 | Frozen public inventory guard (real store, genuine extra commit) | 25 |
+| M7c4 | Real Chrome drill (test written by the executor; RUN by the controller) | 25 |
 | M8a | Reproduction docs, captions and release manifest schema | 25 |
 | M8b | Final repository gates and protected-path observation | 25 |
 
@@ -984,74 +988,362 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 **no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7b/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
 
-## M7c — Capture orchestration, frozen inventories and Chrome drill
+## M7c — split (iteration 304 planner)
 
-Design M7; 28 minutes; dependency: M7b; status **pending**.
+The single 28-minute M7c (capture orchestration, frozen inventories and the Chrome drill) is **replaced by five children**: M7c1, M7c2a, M7c2b, M7c3 and M7c4. The designer audit `design_docs/verification/world-iter304/designer-m7c-readiness.md` recommended four (M7c1–M7c4). The planner split M7c2 into M7c2a and M7c2b because the orchestration work alone does not fit one ≤30-minute, ≤~250-line run for claude-haiku-5-5:
+- Python primitives: version read, HTTP readiness and the six-shot pass loop.
+- A Go `routes` subcommand.
+- Shell flag parsing and diagnostics.
+- A fake `ailang-worldd`.
 
-Exact executor files:
+M7c2a holds the browser-free Python/Go primitives. M7c2b holds only the shell chain end-to-end. Dependencies are linear: M7c1 → M7c2a → M7c2b → M7c3 → M7c4 → M8a. M7c3 depends on M7c2b only because both edit `scripts/marketingcheck/main.go`; it would otherwise be independent.
 
-- `scripts/capture_marketing.sh`
-- `scripts/marketing_capture.py`
-- `scripts/marketingcheck/main.go`
-- `scripts/marketingcheck/capture_test.go`
-- `scripts/marketingcheck/observation_test.go`
+Shared rules for every child:
+- **Interfaces at HEAD.** Verifier CLI: `check --pass-a --pass-b --manifest --rectangles [--out]`. Exit codes: 0 ok, 1 refusal, 2 usage. stderr: `marketingcheck: <code> <name>: <detail>` (`scripts/marketingcheck/main.go:13-42`). Supervisor: one JSON line `{verdict, detail[, shot_verdict]}`, exit 0 only for `ok` (`scripts/marketing_capture.py:236-237`). Production deadlines are the constants at `marketing_capture.py:32-36` (shot 30 s, pass 300 s, startup 30 s, TERM 5 s, KILL 5 s). Reuse them; never invent new production deadlines.
+- **Go-surface guard.** `TestProductionGoSurface` (`host/store/context_roots_test.go:198-245`) reds on any new non-test `.go` file under `scripts/`. Its allow-list holds only `scripts/marketingcheck/main.go` and `png.go` (lines 204-206). Every child below therefore puts production Go in `main.go`, so **no allow-list edit is needed**. If an executor nonetheless creates a new non-test `.go` file there, it must add that path to the allow-list map in the same change. That is the M7b controller-fix lesson (`02e12be2`).
+- **Subprocess sinks.** A Go test that sets `cmd.Stdout` or `cmd.Stderr` on a started subprocess uses an `os.Create`d file under `t.TempDir()`, never a bare `bytes.Buffer` (`TestSubprocessSinkGate`, `host/verifygate/subprocess_sink_gate_test.go:223`; precedent `supervisor_test.go:388`).
+- **Timing.** Every test time bound is ≥10× its unloaded time. The package runs at load 7–25 in the full suite.
+- **Foreign-format fixtures.** A fixture that models another tool's output is generated by running that tool inside the test, never typed by hand.
+- **Carried flake.** `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` has a load flake and is not owned by any child; see the planner verification file. An executor that sees it red in a whole-package run reports it as a carried base finding, and must not edit `supervisor_test.go` to make it pass.
+- **Not product evidence.** No child makes C8/C9 product evidence met. Only the controller rehearsal on real Chrome with measured rectangles can do that.
 
-Full capture flags include --db --manifest --proof-key-file --ailang-bin --workspace-root --tool-ailang-bin --chrome --out --verify-twice --rectangles.≤10s HTTP/≤30s startup, two≤300s passes, progress between shots. Scratch output only. If raw equality fails outside scheme/script causes report varying element+both hashes as M7 residual; criterion remains unmet, never pixel-similarity success.
+## M7c1 — Protected-file observation comparator (production) and its mutants
+
+Design M7 (C11); 20 minutes; dependency: M7b; status **pending**. Executor pick for iteration 304.
+
+Exact executor files (and nothing else):
+
+- `scripts/marketingcheck/main.go` (modify: add two subcommands and three functions; ~90 added lines)
+- `scripts/marketingcheck/observation_test.go` (create; ~150 lines)
+
+There is no allow-list edit, because the code goes into the already-allowed `main.go`. Do not touch `png.go`, `png_test.go`, `supervisor_test.go`, either script, or any protected path.
+
+**Interface to add to `main.go`, exactly:**
+
+```go
+type ObservationRecord struct {
+	Path   string `json:"path"`   // slash-separated, relative to the observed root
+	SHA256 string `json:"sha256"` // lowercase hex of the raw file bytes
+	Lines  int    `json:"lines"`  // bytes.Count(raw, []byte{'\n'})
+}
+
+// Observe reads (never writes) the C11 protected set under root: world/*.ail
+// (non-recursive glob), go.mod, go.sum, design_docs/world-mission.md, and every
+// regular file under tools/launchd/ (recursive). Missing paths contribute no
+// record (same as the plan's Python one-liner, which filters with is_file()).
+// Result is sorted by Path.
+func Observe(root string) ([]ObservationRecord, error)
+
+// CompareObservations is the C11 equality comparator. Refusal codes, checked in
+// this order:
+//   observation-empty  : len(before)==0 (an empty observation proves nothing)
+//   observation-set    : duplicate path on either side, or the sorted path
+//                        lists differ (ONE guard: build both sorted path slices,
+//                        then `if !slices.Equal(beforePaths, afterPaths)`)
+//   observation-digest : same path, different SHA256 (Name = path)
+//   observation-lines  : same path, different Lines   (Name = path)
+// Digest and line checks are two SEPARATE `if` statements inside one loop over
+// before's paths, so each can be neutered independently.
+func CompareObservations(before, after []ObservationRecord) error
+```
+
+Every refusal is `refuse(code, name, detail)` from `png.go:22`. The test's existing `wantCode` helper (`png_test.go:23`) matches on `Refusal.Code`.
+
+**CLI to add to `run` in `main.go`.** Replace the `args[0] != "check"` gate at `main.go:13` with a `switch args[0]` on `check`, `observe` and `compare`. Leave the `check` body unchanged. Any other first argument, or none, prints usage and returns 2. `TestMarketingTwoPassInventory/cli/unknown` (`png_test.go:800`) passes `docs` and expects 2, so do **not** add `docs`.
+- `observe --root DIR [--out FILE]`: writes `json.MarshalIndent(records, "", "  ")` plus a newline to stdout, or to an `O_CREATE|O_EXCL` `--out`, the same pattern as `main.go:73`. Returns 0, 1 on I/O error, 2 on usage.
+- `compare --before FILE --after FILE`: reads both JSON arrays of `ObservationRecord`. The arrays may come from `observe` or from the plan's Python one-liner (C11 section above), since the field names are identical. Returns 0 when equal. On refusal, prints `marketingcheck: <code> <name>: <detail>` to stderr (same format as `main.go:36`) and returns 1. Returns 2 on usage. Unparsable JSON is refusal `observation-json`, returning 1.
 
 Acceptance criteria and named assertions:
 
-- **C7/C8/C9 · `TestMarketingCaptureFakeChromeSixShots`:** Always-on binary-free companion exercises full shell/Python/Go chain with fake Chrome plus fixture daemon responses (refusal/unit control, not release data). Both six-name passes, exact argv routes/viewport/scheme, HTML required refs/no scripts, bounded startup/cleanup and manifest matching; no commit/mint/decision/background call.
-- **C8/C11 · `TestMarketingCaptureInventoryMutation`:** Read actual head/entries/objects before/after test-store capture. Inject genuine extra normal commit into disposable test store; frozen inventory equality refuses. Baseline no-write pass equal; registries/session diagnostics excluded from public inventory only if explicitly enumerated.
-- **C11 · `TestMarketingProtectedObservationComparator`:** Observe protected files by SHA256 AND newline count before/after. Mutate only a t.TempDir copied input, prove digest comparator reds even for same line count and line comparator reds independently using controlled observations. Never write/restore protected source.
-- **C7/C8/C9 · `TestMarketingChromeSixShots`:** WORLD_CHROME explicit gate; require executable Chrome155 version, both pins, measured rectangle config WORLD_MARKETING_RECTS. Real demo seed only test-minted through V11, frozen store, all six real shots in two passes, raw GET required text plus decoded pixels and exact hashes. Skip only if WORLD_CHROME unset in ordinary suite; set-but-invalid or missing rect config fails. This is test-store drill, not attended release acceptance. PD1 unresolved visibility must red and be reported, never guessed rectangles.
+- **C11 · `TestMarketingProtectedObservationComparator`** (in `observation_test.go`). It works on a `t.TempDir()` tree built by a helper `protectedTree(t) string`, which writes small files:
+  - `world/a.ail`
+  - `world/b.ail`
+  - `world/sub/c.ail` (must NOT be observed: the glob is non-recursive)
+  - `go.mod`
+  - `go.sum`
+  - `design_docs/world-mission.md`
+  - `tools/launchd/x.sh`
+  - `tools/launchd/testdata/deep/y.md`
+  - `README.md` (must NOT be observed)
 
-Exact focused and repository gate commands (environment/helper above applies):
+  Each file has 2–3 newline-terminated lines. **Every subtest builds its own fresh `protectedTree(t)`**, so no subtest depends on another subtest's writes. Subtests, each with its named assertion:
+  - `set-coverage`: `Observe(root)` returns exactly the 7 protected paths, sorted. `Lines` and `SHA256` match values the test computes from the bytes it wrote. *"Observe must cover exactly the C11 protected set"*.
+  - `equal`: `Observe` twice with no writes, then `CompareObservations` returns nil. *"unchanged copy must compare equal"*.
+  - `same-line-count-change`: flip one byte inside a line of the copied `world/a.ail` (e.g. `a`→`b`), with no newline added or removed. Re-`Observe`. Assert `wantCode(t, err, "observation-digest", "same-line-count changed copy must red")` and `Refusal.Name == "world/a.ail"`. Also assert that the before and after `Lines` for that path are equal, so the case is a genuine same-line-count change.
+  - `digest-equal-line-change`: take the `before` records, copy the slice, set `Lines++` on one record and leave its SHA256 unchanged. This is a controlled observation, a record and not a file. `wantCode(t, err, "observation-lines", "line-count mismatch must refuse")`.
+  - `deleted`: remove the copied `tools/launchd/testdata/deep/y.md` and re-`Observe`. `wantCode(…, "observation-set", "deleted protected copy must red")`.
+  - `added`: write a copied `world/z.ail` and re-`Observe`. `wantCode(…, "observation-set", "added protected copy must red")`.
+  - `duplicate`: append a copy of `before[0]` to `before`. `wantCode(…, "observation-set", "duplicate path must red")`.
+  - `empty`: `CompareObservations(nil, nil)` → `wantCode(…, "observation-empty", "empty observation must not compare equal")`.
+  - `python-parity`: run the plan's **exact** C11 Python one-liner (copy it verbatim from the "C11 observations and mutation discipline" section as a Go raw-string constant) with `exec.CommandContext(ctx, "python3", "-I", "-c", script)`. Settings:
+    - `cmd.Dir = root`
+    - stdout to an `os.Create`d file under `t.TempDir()`
+    - a 30 s context, which is ≥10× the measured 0.0x s
+
+    Unmarshal the file into `[]ObservationRecord`, sort by Path, and require `reflect.DeepEqual` with `Observe(root)`: *"Go observer must equal the plan's Python boundary command"*. The fixture is generated by the tool it models, never hand-typed. `python3` is already mandatory for this package (`supervisor_test.go:28-30`).
+  - `cli`: build the binary once with `exec.CommandContext(ctx, "go", "build", "-o", bin, ".")` (60 s context, the pattern at `png_test.go:734-741`), then check these cases. Use file sinks for stdout and stderr.
+    - (i) `observe --root R --out F1` → rc 0, and F1 parses.
+    - (ii) `observe --root R --out F1` again → rc 1, and F1 is unchanged (O_EXCL).
+    - (iii) After the same-line-count byte flip, `observe --root R --out F2`, then `compare --before F1 --after F2` → rc 1, stderr contains `marketingcheck: observation-digest world/a.ail:`.
+    - (iv) `compare --before F1 --after F1` → rc 0.
+    - (v) `compare --before F1` → rc 2.
+    - (vi) `compare --before <python one-liner output file from python-parity> --after F1` → rc 0 against an unmodified tree. This is the format-interop control.
+  - `repo-read-only`: `Observe("../..")` (the repository root, read-only) twice. It must be equal, have ≥10 records, and include `go.mod`, `design_docs/world-mission.md` and at least one `tools/launchd/` path. *"real protected set observable without writes"*. The measured count at base is 12 paths (planner verification row P7). The test never opens a protected path for writing.
+
+Exact focused gate commands:
 
 ```sh
-go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v
-go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v
-go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v
-go test -run '^TestMarketingChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 660s -v
-go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v
-go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v
-go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v
+go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 120s -v
+go test -run '^TestMarketingTwoPassInventory$' ./scripts/marketingcheck -count=1 -timeout 120s -v   # CLI dispatch regression (cli/unknown, cli/help)
+go vet ./scripts/marketingcheck                                                                     # compile fence for _test.go (go build ./... is not one)
+go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v                      # no new non-test .go file
+go test -race ./scripts/marketingcheck -count=1 -timeout 240s
 ```
 
-Mutations; each must reach this assertion:
+Mutations. Each edits PRODUCTION `main.go`, is applied one at a time, and is restored with a scratch copy and `cmp` (no git). Each must reach this assertion:
 
-| Mutant | Valid edit | Test / assertion that must red |
+| Mutant | Valid edit (production `main.go`) | Test / assertion that must red |
 |---|---|---|
-| M7c-inventory | Neuter frozen public inventory equality guard; real extra-commit control runs. | `TestMarketingCaptureInventoryMutation`: extra commit invalidates capture |
-| M7c-observation | Neuter SHA256 equality half of observation comparator; same-newline-count copied input differs. | `TestMarketingProtectedObservationComparator`: same-line-count changed copy must red |
-| M7c-line-observation | Neuter line-count equality guard in copied observation comparator; keep digest-equal instrument records with different counts | `TestMarketingProtectedObservationComparator`: line-count mismatch must refuse |
-| M7c-scheme | Drop preferredColorScheme flag from dark shot argv while fake Chrome records args and fake pixels enforce expected scheme. | `TestMarketingCaptureFakeChromeSixShots`: every shot explicitly pins correct scheme |
+| M7c-observation | In `CompareObservations`, change the digest guard's condition (e.g. `if b.SHA256 != a.SHA256 {`) to `if false {` | `TestMarketingProtectedObservationComparator/same-line-count-change`: `observation-digest` "same-line-count changed copy must red" (gets nil) |
+| M7c-line-observation | In `CompareObservations`, change the line guard's condition (e.g. `if b.Lines != a.Lines {`) to `if false {` | `TestMarketingProtectedObservationComparator/digest-equal-line-change`: `observation-lines` "line-count mismatch must refuse" (gets nil) |
+| M7c1-set | Change the set guard `if !slices.Equal(beforePaths, afterPaths) {` to `if false {` | `TestMarketingProtectedObservationComparator/deleted`: `observation-set` "deleted protected copy must red". The loop then reports `observation-digest` for the zero-value record, so `wantCode` reds on the code. |
 
-Exact mutation commands:
+Exact mutation commands (each one is run once per mutant, then once more after the restore, which must be green):
 
 ```sh
-go test -run '^TestMarketingCaptureInventoryMutation$' ./scripts/marketingcheck -count=1 -timeout 120s -v
-go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v
-go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 120s -v
+go test -run '^TestMarketingProtectedObservationComparator$/^same-line-count-change$' ./scripts/marketingcheck -count=1 -timeout 120s -v
+go test -run '^TestMarketingProtectedObservationComparator$/^digest-equal-line-change$' ./scripts/marketingcheck -count=1 -timeout 120s -v
+go test -run '^TestMarketingProtectedObservationComparator$/^deleted$' ./scripts/marketingcheck -count=1 -timeout 120s -v
 ```
 
-Base focused gates for this design milestone:
-
-- **PASS** `go test -run '^TestWorkbenchGraphWiring$' ./host/daemon -count=1 -timeout 45s -v` (0.94s).
-- **PASS** `go test -run '^TestWorkbenchDecisionsPane$' ./host/daemon -count=1 -timeout 45s -v` (0.71s).
-- **PASS** `go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 45s -v` (0.76s).
-- **SKIP (not acceptance)** `go test -run '^TestWorkbenchLiveChromeDrill$' ./host/daemon -count=1 -timeout 45s -v` (0.66s).
-
-New named tests/source modules are future implementation, absent at base; no base PASS is claimed for them.
+Base focused gate (measured iteration 304, planner): `go test ./scripts/marketingcheck -count=1 -timeout 170s -v` gave **rc 1, 18 s wall, load 8.2**. The only failure was the carried `TestMarketingSupervisorFakeDaemonCleanup/shell-hup`, which exited 1 instead of 129 in 0.53 s. That is a new failure mode, not the 29 s timing mode. `go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' …` run in isolation was 3/3 green (5–6 s at load 13–15). `TestMarketingProtectedObservationComparator` is absent at base; its first run must be its implementation, not a false-green empty selection.
 
 ### Executor directive notes
 
-Narrowest gate list: exactly the command block above, plus each listed mutation command and before/after C11 observation. May touch only the exact files listed for M7c and its scratch snapshots. Repository gates: focused affected-package gates now; full build/test, verify_ail and host races at M8b (base full test remains red; never skip its failures). TestMarketingChromeSixShots needs WORLD_CHROME; TestMarketingCaptureFakeChromeSixShots is its mandatory always-on fake-script companion. Acceptance list includes the real drill but unattended executor runs it only with explicitly supplied browser+measured rectangles; otherwise record DEFERRED/SKIP, never C8 product PASS. Controller owns measured geometry and PD1 correction; do not spend executor time inventing capture layout.
+- **Narrowest gate list:** the focused block above, the three mutation commands, and the C11 observation before and after, run with the plan's Python one-liner, never by writing protected files.
+- **Allowed edits:** the two files listed, plus scratch snapshots.
+- **Write order:** write the test first. A missing API is a build-red during development, not a kill.
+- **Reuse:** `refuse`, `Refusal` and `wantCode`. Add no new third-party import; stdlib `slices`, `sort`, `crypto/sha256`, `path/filepath` and `io/fs` suffice.
+- **Do not edit the plan's Python one-liner.** The parity subtest pins the Go observer to it. Any difference between the two is a finding to report, not something to paper over.
 
-**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c/ after each milestone**. Copy changed allowlisted files with their relative paths; include boundary command rc/wall-time, named PASS evidence, mutation ledger and observation records there. Never snapshot keys/session/output credentials into tracked assets. Maximum30min; incomplete is reported, never relabelled PASS.
+**no git write operations; snapshot changed files into $HOME/.ailang/state/world-iter<N>/snap/M7c1/ after each milestone**.
+- Copy changed allowlisted files with their relative paths.
+- Include the boundary command rc and wall time, named PASS evidence, the mutation ledger and the observation records.
+- Maximum 30 min. If incomplete, report it as incomplete, never relabelled PASS.
+
+## M7c2a — Python capture primitives (Chrome version, HTTP readiness, six-shot pass) and Go `routes`
+
+Design M7 (C7/C8/C9); 28 minutes; dependency: M7c1; status **pending**.
+
+Exact executor files:
+
+- `scripts/marketing_capture.py`: add three modes, `chrome-version`, `ready` and `pass`. Existing `shot` and `daemon` behaviour is unchanged.
+- `scripts/marketingcheck/main.go`: add a `routes` subcommand.
+- `scripts/marketingcheck/capture_test.go`: create it, holding `TestMarketingCapturePassFakeChrome`.
+
+The interfaces are prescribed; do not choose others.
+
+- **`marketingcheck routes --manifest DEMO`** prints a JSON array of `{"name","width","height","scheme","route"}` in `Shots` order. Implementation: `func ShotRoutes(d DemoManifest) ([]RouteRow, error)`. It calls `BuildCaptureManifest(d, map[string]string{})` (`png.go:462`) for the route and takes width, height and scheme from `Shots` (`png.go:49-53`). Routes are never re-derived anywhere else (designer X6). Exit codes: 1 on `bad-manifest`, 2 on usage.
+- **`marketing_capture.py chrome-version --chrome PATH`** runs `[PATH, '--version']` with stdin DEVNULL, output to a temp file, and `SHOT_TIMEOUT_S`. It parses `^(?:Google Chrome|Chromium) (\d+)\.\S+` from the stripped output. On success it prints `{"verdict":"ok","detail":"","version":"<full stripped string>"}`. Failures: `ChromeVersion` refusal for unparsable output or major `< 155` (module constant `MIN_CHROME_MAJOR = 155`, design §2 / V13), `NonzeroExit`, or `Timeout`.
+- **`marketing_capture.py ready --base-url URL`** polls `GET URL/v1/health` and then `GET URL/v1/head` with `urllib.request.urlopen(…, timeout=10)` until both return 200, with a `STARTUP_TIMEOUT_S` overall deadline. The verdict is `ok` or `Timeout`.
+- **`marketing_capture.py pass --routes FILE --base-url URL --chrome PATH --out-dir DIR`** handles the routes array from `routes`. The `DIR` must not exist; the mode creates it and refuses with `DestinationExists` otherwise. For each row it calls the existing `shot()` with `out=DIR/name`, `url=base+route`, and width, height and scheme from the row. After each shot it prints `progress: <i>/6 <name> <verdict>` to **stderr**. It stops at the first non-ok shot. The whole pass is bounded by `PASS_TIMEOUT_S`. The single stdout verdict is `{"verdict","detail","shots":[{"name","verdict"}…]}`.
+
+Acceptance criteria and named assertions, in **`TestMarketingCapturePassFakeChrome`**. All of it is binary-free, socket-free except `ready`, and always-on.
+- `routes`: build the CLI and run `routes` on `demoFixture()` (`png_test.go:198`) written by `putJSON`. Exactly six rows in `Shots` order. The routes equal `BuildCaptureManifest(demoFixture(), …)` row routes, for example `graph.png` → `/workbench?from=19&entry=19` and `provenance.png` → `/workbench?object=approval-invocation&payload=1`.
+- `pass-six`: the test writes `fixtureSet(t)` PNGs (`png_test.go:179`) to a fixture dir. The fake Chrome is a `fakeScript` (`supervisor_test.go:56`). It records argv per call, picks a fixture by `--window-size=` and by `preferredColorScheme=0` (dark) versus anything else (light), and copies it to `--screenshot=`. The `pass` verdict must be `ok`, with exactly six files. `CheckPass(dir, rects)` (`png.go:323`) must return nil. Each recorded argv carries the scheme flag matching its row: *"every shot explicitly pins correct scheme"*.
+- `version`: the fake Chrome answers `--version` with each of `Google Chrome 156.0.8078.47`, `Google Chrome 155.0.8059.41`, `Google Chrome 154.0.1.2`, `garbage` and an exit-3 case. Expected verdicts: `ok` (full string recorded), `ok`, `ChromeVersion`, `ChromeVersion`, `NonzeroExit`. The two accepted strings are the real outputs recorded at V13 and V29, copied from the design rows that recorded them.
+- `ready`: a Go `httptest.NewServer` serves 503 on `/v1/health` for the first 2 calls and 200 afterwards, and 200 on `/v1/head`. Expect `ok`. A server that always returns 503 with `--startup-timeout 1` (unit-control override, same pattern as `--term-wait`) gives `Timeout`. Record `bind: operation not permitted` as UNINFORMATIVE UNDER SANDBOX.
+- `fresh-dir`: an existing `--out-dir` gives `DestinationExists`.
+
+Focused gates:
+
+```sh
+go test -run '^TestMarketingCapturePassFakeChrome$' ./scripts/marketingcheck -count=1 -timeout 180s -v
+go test -run '^TestMarketingSupervisorFakeChromeSuccess$' ./scripts/marketingcheck -count=1 -timeout 90s -v
+go vet ./scripts/marketingcheck
+go test -race ./scripts/marketingcheck -count=1 -timeout 240s
+```
+
+| Mutant | Valid edit (production) | Test / assertion that must red |
+|---|---|---|
+| M7c-scheme | `marketing_capture.py` `shot()`: emit the `--blink-settings=preferredColorScheme=…` argument only when `args.scheme == 'light'` | `TestMarketingCapturePassFakeChrome/pass-six`: "every shot explicitly pins correct scheme". Both the argv check and `CheckPass` → `wrong-scheme workbench-dark.png` must red. |
+| M7c2a-version-floor | `MIN_CHROME_MAJOR = 154` | `TestMarketingCapturePassFakeChrome/version`: "Chrome 154 must be refused" |
+| M7c2a-routes | In `ShotRoutes`, use `"/workbench"` for every row instead of the `BuildCaptureManifest` route | `TestMarketingCapturePassFakeChrome/routes`: "routes must equal the capture-manifest routes" |
+
+Executor notes:
+- Allowed edits: only the three files.
+- No real Chrome. No real daemon.
+- `shot()` keeps its argv order (`marketing_capture.py:91-97`); only the new modes are added.
+- Snapshot to `snap/M7c2a/`.
+- Maximum 30 min.
+
+## M7c2b — Capture shell end-to-end with fake Chrome and a fake daemon
+
+Design M7 (C7/C8/C9); 28 minutes; dependency: M7c2a; status **pending**.
+
+Exact executor files:
+
+- `scripts/capture_marketing.sh`: replace the `capture refused` tail at lines 84-85 with the real flow.
+- `scripts/marketing_capture.py`: `daemon` mode gains `--ready-url URL` as an alternative to `--ready-file`, using the `ready` poll from M7c2a. Exactly one of the two is required.
+- `scripts/marketingcheck/capture_test.go`: add `TestMarketingCaptureFakeChromeSixShots`.
+
+Shell flags. Keep the ten documented flags at `capture_marketing.sh:25-34` and add exactly three (X2/X3):
+- `--worldd-bin PATH` (required; the `ailang-worldd` executable);
+- `--bind 127.0.0.1:PORT` (required; loopback only, refused otherwise);
+- `--marketingcheck-bin PATH` (required; prebuilt verifier).
+
+All three are documented in `--help`.
+
+Fixed flow, in order:
+1. `chrome-version` → A.
+2. Start `marketing_capture.py daemon --ready-url http://BIND --started-file … -- WORLDD serve --db DB --bind BIND --workbench-still --ailang-bin AILANG --workspace-root WS --tool-ailang-bin TOOL --proof-key-file KEY --proof-required-identity sameRef --proof-required-identity servesEntry`. The identities are hard-coded (designer X3/N7; `cmd/ailang-worldd/main.go:250-260`; QUICKSTART 1576-1577).
+3. `MARKETINGCHECK routes --manifest M > OUT/routes.json`.
+4. `pass` → `OUT/pass-a`.
+5. `pass` → `OUT/pass-b` (only with `--verify-twice`; without it the run stops after pass A with rc 0 and no check).
+6. `chrome-version` → B.
+7. Refuse with rc 1 and `chrome version changed during capture` if A ≠ B.
+8. Write `OUT/diagnostics.txt` with the lines `chrome-version: <A>` and `bind: <BIND>`.
+9. Run `MARKETINGCHECK check --pass-a … --pass-b … --manifest M --rectangles R --out OUT/capture-manifest.json`. A check refusal leaves `pass-a` and `pass-b` on disk and exits 1 (designer X14).
+
+The existing EXIT/INT/TERM/HUP traps stay, and `--unit-daemon` stays untouched.
+
+**`TestMarketingCaptureFakeChromeSixShots`** sets up:
+- prebuilt `marketingcheck`;
+- the M7c2a fake Chrome;
+- a fake `ailang-worldd`. This is a `python3` script that records argv to a file and serves `/v1/health` and `/v1/head` with 200 on the `--bind` address via `http.server`. The test obtains a free loopback port with `net.Listen("tcp","127.0.0.1:0")`, then closes it.
+
+Subtests:
+- `six-shots`: rc 0; `pass-a` and `pass-b` hold six names each and are byte-equal; `capture-manifest.json` passes `VerifyCaptureManifest`; `diagnostics.txt` contains the version.
+- `serve-argv`: the recorded daemon argv contains `serve`, `--workbench-still`, both `--proof-required-identity` values, and **no** `commit`, `session`, `mint` or `approve`.
+- `version-changed`: the fake Chrome answers 155 then 156 (a counter file). rc 1, with stderr naming the change.
+- `old-chrome`: 154 → rc 1 before any shot.
+- `cleanup`: after rc, the fake daemon PID (recorded) is dead (`assertDead`, `supervisor_test.go:212`).
+- `scheme`: re-asserts the M7c2a scheme argv across the full chain.
+
+Bounds: 120 s per shell run, against a ≈ few-second unloaded run.
+
+Focused gates:
+
+```sh
+go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v
+go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v   # trap regression, isolated
+bash -n scripts/capture_marketing.sh
+go test -race ./scripts/marketingcheck -count=1 -timeout 300s
+```
+
+| Mutant | Valid edit (production) | Test / assertion that must red |
+|---|---|---|
+| M7c2b-version-changed | In `capture_marketing.sh`, make the A≠B comparison never refuse | `TestMarketingCaptureFakeChromeSixShots/version-changed`: "a Chrome version change during capture must refuse" |
+| M7c-scheme (re-drill) | Same Python edit as M7c2a | `TestMarketingCaptureFakeChromeSixShots/scheme`: "every shot explicitly pins correct scheme" |
+| M7c2b-identities | Drop one `--proof-required-identity` from the serve argv in the shell | `TestMarketingCaptureFakeChromeSixShots/serve-argv`: "both seed identities must be configured" |
+
+Executor notes:
+- Rerun the shell-hup subtest in isolation after any trap change (designer N5).
+- Fake success is never C8 product evidence.
+- Snapshot to `snap/M7c2b/`.
+- Maximum 30 min. If the shell plus test exceeds ~250 lines, stop and report rather than shortcutting a subtest.
+
+## M7c3 — Frozen public inventory guard (real store, genuine extra commit)
+
+Design M7 (C8/C11); 25 minutes; dependency: M7c2b; status **pending**.
+
+Exact executor files:
+
+- `scripts/marketingcheck/main.go`: add `inventory --addr URL [--out FILE]` and `inventory-compare --before FILE --after FILE`.
+- `host/daemon/marketing_inventory_test.go`: create it in `package daemon`, so it can use the existing in-package genuine-commit seams.
+
+**Inventory definition** (designer X7: there is no list-all-objects route; `host/daemon/daemon.go:1033-1059`). The inventory is `{"schema":"world/demo/capture-inventory/v1","head":<GET /v1/head body>,"entries":[{"entryHash","transitionRef"}…],"objects":[{"ref","sha256"}…]}`:
+- `entries` comes from paging `GET /v1/log?from=N&limit=500` from 0 until a page returns zero items. `items` is the response key; `entryHash` and `transitionRef` are fields of `logEntryResponse`, `host/daemon/handlers.go:65-73`.
+- `objects` holds, for each distinct `transitionRef`, the SHA256 of the raw `GET /v1/objects/{ref}` body.
+- Each request uses a 10 s client timeout.
+
+Functions: `func ReadInventory(base string) (Inventory, error)` and `func CompareInventory(before, after Inventory) error`. The refusal code is `inventory-mutated` for a differing head, entry list or object set, and `inventory-empty` for an empty `head` or no entries. The CLI exit and stderr format match `check`.
+
+**`TestMarketingCaptureInventoryMutation`** (host/daemon) runs in this order:
+1. `d := newHandlerDaemon(t)` (`handlers_test.go:21`).
+2. `c := workbenchLiveREST(t, d, []int64{0,1,2})` (`workbench_live_test.go:74`), which makes genuine authenticated REST commits.
+3. `srv := httptest.NewServer(d.Handler())`.
+4. Build `../../scripts/marketingcheck` with `go build -o` (60 s context).
+5. `inventory --addr srv.URL --out before.json`.
+6. Again to `same.json`, then `inventory-compare` → rc 0: *"no-write capture inventory must compare equal"*.
+7. One extra genuine commit: `testCommit(c.NextWorld, 3, "workbench-live")` posted with `authHeader(t, d)` through `requestRecorderAuth`, the exact pattern at `workbench_live_test.go:77-84`.
+8. `inventory --out after.json`, then `inventory-compare --before before.json --after after.json` → rc 1, with stderr containing `marketingcheck: inventory-mutated`: *"extra commit invalidates capture"*.
+
+All subprocess sinks are files. Indexes must be contiguous: `handleLogRange` stops at the first missing index (`handlers.go:656-657`).
+
+Focused gates:
+
+```sh
+go test -run '^TestMarketingCaptureInventoryMutation$' ./host/daemon -count=1 -timeout 180s -v
+go test -run '^TestWorkbenchLiveCursorCrossesGap$' ./host/daemon -count=1 -timeout 90s -v
+go test -run '^TestProductionGoSurface$' ./host/store -count=1 -timeout 60s -v
+go vet ./scripts/marketingcheck ./host/daemon
+```
+
+| Mutant | Valid edit (production `main.go`) | Test / assertion that must red |
+|---|---|---|
+| M7c-inventory | `CompareInventory` returns nil after the empty check (neuter the equality comparison) | `TestMarketingCaptureInventoryMutation`: "extra commit invalidates capture" |
+| M7c3-paging | `ReadInventory` stops after the first page and requests `limit=1` | `TestMarketingCaptureInventoryMutation`: "after.json must list all 4 committed entries" (the executor adds this assertion on the parsed `after.json`; the head comparison alone would still red, so the count is the named kill) |
+
+Executor notes:
+- The controller may wire `inventory` before and after both passes into `capture_marketing.sh` as a one-line follow-up. That is **not** in M7c3's file list, to keep it within one run, and is recorded as a carried integration step for M7c4.
+- Snapshot to `snap/M7c3/`.
+
+## M7c4 — Real Chrome drill (test written by the executor; RUN by the controller)
+
+Design M7 (C7/C8/C9); 25 minutes; dependency: M7c3; status **pending**.
+
+Exact executor files:
+
+- `cmd/ailang-worldd/marketing_chrome_test.go`: create `TestMarketingChromeSixShots` in `package main`. That is where the V11 seams live: `testMintEnv` (`session_test.go:29`) and `demoM5cRealSeed`/`newDemoApprovalRig` (`demo_test.go:1722-1760`). This is designer X1, option (a).
+- `scripts/capture_marketing.sh`: wire `marketingcheck inventory` before pass A and after pass B, plus `inventory-compare`. This is the M7c3 carried step: one call each, refused with rc 1 on mismatch.
+- `scripts/marketingcheck/capture_test.go`: add subtest `inventory` to `TestMarketingCaptureFakeChromeSixShots`. Extend its fake daemon to also serve `/v1/log?from=&limit=` (`{"items":[…]}`) and `/v1/objects/{ref}`. The `inventory` subtest makes the fake daemon return a different `/v1/head` after pass A; rc must be 1.
+
+The test's preconditions, in order:
+- `WORLD_CHROME` unset → `t.Skip` (ordinary suite).
+- `WORLD_CHROME` set but not executable, or `chrome-version` not `ok` → `t.Fatal`.
+- Both pins are required as described in the plan environment; a missing pin → `t.Fatal`.
+- `WORLD_MARKETING_RECTS` unset or unloadable by `LoadRectangles` semantics → `t.Fatal`, never guessed rectangles.
+
+The test's run:
+1. Seed with `demoM5cRealSeed`, then stop the rig.
+2. `go build` `ailang-worldd` and `marketingcheck` into `t.TempDir()`.
+3. Run `scripts/capture_marketing.sh` with all 13 flags and `--verify-twice` on the rig's db. The outer bound is 660 s.
+4. Require rc 0, `capture-manifest.json` verified, `diagnostics.txt` with an equal pass-A/pass-B Chrome version, and an inventory-equal record.
+
+Chrome rule: design §2 / V29. A bounded `--version` runs before A and after B; the major version must be ≥155; the two strings must be identical; the string is recorded in sibling diagnostics. "Exact 155" is no longer required. The stale "PD1 unresolved visibility must red" clause is dropped, because PD1 was resolved in iteration 266 (designer N9).
+
+Executor acceptance (unattended):
+
+```sh
+go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 120s -v                 # WORLD_CHROME unset: must print SKIP (recorded, not acceptance)
+WORLD_CHROME=/nonexistent go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 120s -v   # must FAIL: set-but-invalid
+go vet ./cmd/ailang-worldd
+bash -n scripts/capture_marketing.sh
+go test -run '^TestMarketingCaptureFakeChromeSixShots$' ./scripts/marketingcheck -count=1 -timeout 300s -v
+```
+
+Controller rehearsal. This is never executor acceptance and never unattended C8 evidence. It needs measured rectangles first:
+
+```sh
+WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" WORLD_MARKETING_RECTS=<controller-measured file> \
+  go test -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -count=1 -timeout 660s -v
+```
+
+| Mutant | Valid edit (production) | Test / assertion that must red |
+|---|---|---|
+| M7c4-inventory-wiring | Remove the `inventory-compare` call from `capture_marketing.sh` | `TestMarketingCaptureFakeChromeSixShots/inventory`: "capture must compare inventories". The executor adds this subtest: the fake daemon changes `/v1/head` between calls, and rc must be 1. |
+| M7c4-rects-required | In the test's precondition helper, which lives in the test file, make a missing `WORLD_MARKETING_RECTS` a Skip | Not a production mutant. It is listed as a **review check**, not a kill. The guard lives in test code by design, because the drill is a test. |
+
+Executor notes:
+- A real run without supplied rectangles is recorded as DEFERRED/SKIP.
+- Measuring the rectangles and running the rehearsal are controller-owned (JSON `controller_owned`).
+- Landing M7c4 never marks C8/C9 met (designer N10).
+- Snapshot to `snap/M7c4/`.
 
 ## M8a — Reproduction docs, captions and release manifest schema
 
-Design M8; 25 minutes; dependency: M7c; status **pending**.
+Design M8; 25 minutes; dependency: M7c4 (the last M7c child; iteration-304 split); status **pending**.
 
 Exact executor files:
 
@@ -1145,7 +1437,7 @@ Mutations; each must reach this assertion:
 
 | Mutant | Valid edit | Test / assertion that must red |
 |---|---|---|
-| M8b-C11-redrill | Re-drill M7c line-count guard mutant on copied observations | `TestMarketingProtectedObservationComparator`: line-count mismatch must refuse |
+| M8b-C11-redrill | Re-drill M7c1 line-count guard mutant (M7c-line-observation) on copied observations | `TestMarketingProtectedObservationComparator`: line-count mismatch must refuse |
 
 Exact mutation command: `go test -run '^TestMarketingProtectedObservationComparator$' ./scripts/marketingcheck -count=1 -timeout 90s -v`.
 
