@@ -1649,6 +1649,7 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
   - The re-run on the pinned head is the control arm: same gate, same srt, old image.
   - `host/pins` and `cmd/ailang-worldd` tests that read `ci.yml` pass locally.
   - **Pinned head `b1f2014c`: 3/3 success (control arm).** The "Row 140 srt confinement matrix" step passed on `ubuntu-24.04`: same gate, same srt pin, old image.
+  - **Final-head race job red once:** `TestWorktreeSnapshotRefusesAConfiguredFilter` control arm at `worktree_delta_test.go:432`. This is row 200's known flake, its 3rd recorded instance. The diff from the green pinned head is docs-only. Re-run of the failed job is the arbiter; instance logged on row 200.
   - LANDED on observed success of the final head and the merge (reported on #366).
 
 **Routing evidence:** base=039bfa77aedff084d26e3cfc71518ed0886e8dda@2026-10-26T07:26:38Z (Gate 1; `snap` at Gate 3 identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet`. Degraded: codex over daily ration (probe rc 75) for planner and executor.
