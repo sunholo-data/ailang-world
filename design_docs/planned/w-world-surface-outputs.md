@@ -8,7 +8,7 @@ with Mark attended the same day. Builds on
 design delivers that and extends it: every file type, a tabbed front card, and a roadmap for
 work done in other programs. The sequence slots into row 188 S1
 ([sprint plan](w-world-os-surface-sprint-plan.md)) after N2b (#367): **N2d** (data) and
-**N4a** (the front card), ahead of N4's style pass. Rulings R1–R5 are in §9.
+**N4a** (the front card), ahead of N4's style pass. Rulings R1–R5 are in §9. **D-WORLD-93** (same day) adds §4.1, thumbnails.
 
 ## §0 What Mark asked (attended, 2026-10-26)
 
@@ -124,6 +124,24 @@ project gets real diffs from the first row of this table.
 - **Only paths listed in that state's outputs are served.** Anything else is a 404. The blob
   route is not a way to browse the repo (§7).
 
+### §4.1 Thumbnails (D-WORLD-93, attended 2026-10-26)
+
+Mark, on the mockup: *"can we have thumbnails where possible?"* Every output in the Outputs
+column shows a small picture when one can be made honestly, and a plain type tile when not.
+
+| kind | thumbnail | made by |
+|---|---|---|
+| image | the image itself, scaled | the blob route (N4a) |
+| text, code | the diff's shape: lines in red and green, in proportion to the real `+`/`−` counts | `file.json` (N2d) |
+| markdown | its outline: headings and line lengths | `file.json` (N2d) |
+| video | a poster frame | a deriver (row 213); until then the browser's first frame (`preload="metadata"`) |
+| HTML page | how it renders, only from a render already recorded (a grader's screenshot) | the record; the surface never renders a page to make one |
+| `.blend`, PDF, other binary | the deriver's preview (Blender's embedded thumbnail, a PDF's first page) | row 213; until then the type tile |
+| the agent's view, a named agent's report | drawn from its own data | [row 151 doc](w-agent-generated-projections.md) §5 |
+
+A thumbnail never shows what the output doesn't contain: no stock art, and no screenshot
+rendered on the fly. Clicking it opens the output's tab, the same as clicking its name.
+
 ## §5 The agent's view (A2UI) is an output
 
 - **None yet** (every state today): one quiet line at the top of Outputs, "From the agent · no
@@ -132,6 +150,8 @@ project gets real diffs from the first row of this table.
   and can be maximised, which gives a real table, chart or decision the whole card or stage.
 - **The rules are unchanged** from w-world-os-surface §3.2: the view is checked against World's
   closed catalog, and its buttons only propose. Your answer still goes through the decision path.
+- **Row 151's design** is now [`w-agent-generated-projections.md`](w-agent-generated-projections.md)
+  r1 (D-WORLD-92): its purpose, catalog, updates and where it shows.
 
 ## §6 Work in other programs (roadmap)
 
@@ -200,7 +220,7 @@ when you press "Done editing").
    `413`). The CSP is per R2. Graded by Go tests plus a browser check that an image and a video
    load under the new CSP.
 2. **N4a (Claude, the front card):** §2's three columns and the What-happened list; §3's tabs,
-   with the Esc ladder, maximise and `open=`; §4's viewers; §5's agent view as an output. Graded
+   with the Esc ladder, maximise and `open=`; §4's viewers; §5's agent view as an output; §4.1's thumbnails for images, diffs and markdown. Graded
    by the browser grader, with the real w189e diffs and a media fixture.
 3. **N4 (Mark-led style pass):** as planned, over the new card.
 4. **Roadmap rows (R4, filed PARKED post-1.x):** row 213 preview derivers (§6.1); row 214
@@ -224,6 +244,12 @@ The questions as asked:
   store in World), or show "bytes not kept". Default: not kept, until a row decides.
 
 ## §10 Sketch
+
+Built as a private interactive mockup:
+[World front card](https://claude.ai/artifact/UV1WBzA8Zjwn4hGdbr5go9) (shared at Mark's
+discretion). It has two cards: w188k (an attended episode) and iteration 305 (the loop's
+roles, D-WORLD-93).
+
 
 A static sketch of the tabbed front card, built from real data: w188k's round-3 diffs, the
 grader's timeline screenshot before and after round 3, and a video tab using the World intro
