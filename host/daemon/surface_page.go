@@ -12,7 +12,23 @@ import (
 
 // Row 188 M2: GET /surface, the world timeline, server-rendered from the
 // surface index. It is outside the frozen /v1 table, GET-only, under the
-// workbench's CSP. Its one script is GET /surface/surface.js (M4a).
+// surface's CSP. Its one script is GET /surface/surface.js (M4a).
+
+const surfaceCSP = "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+
+func setSurfaceHeaders(w http.ResponseWriter) {
+	setWorkbenchHeaders(w)
+	w.Header().Set("Content-Security-Policy", surfaceCSP)
+}
+
+func writeSurfaceError(w http.ResponseWriter, status int, class, message string) {
+	setSurfaceHeaders(w)
+	w.WriteHeader(status)
+	_ = workbenchErrorTemplate.Execute(w, struct {
+		Class   string
+		Message string
+	}{class, message})
+}
 
 const (
 	unknownSurfaceKeyMessage = "unsupported surface query parameter"
@@ -24,7 +40,7 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 	q, queryErr := url.ParseQuery(r.URL.RawQuery)
 	stackQuery := r.URL.RawQuery != ""
 	if queryErr != nil || stackQuery && (len(q) != 2 || len(q["brane"]) != 1 || len(q["at"]) != 1) {
-		writeWorkbenchError(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
+		writeSurfaceError(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
 		return
 	}
 	ctx, cancel := d.readCtx(r)
@@ -56,7 +72,7 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 			d.writeWorkbenchInternalError(w, r, renderErr)
 			return
 		}
-		setWorkbenchHeaders(w)
+		setSurfaceHeaders(w)
 		w.WriteHeader(status)
 		_, _ = w.Write(body)
 		return
@@ -78,7 +94,7 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 		d.writeWorkbenchInternalError(w, r, err)
 		return
 	}
-	setWorkbenchHeaders(w)
+	setSurfaceHeaders(w)
 	w.WriteHeader(status)
 	_, _ = w.Write(body)
 }

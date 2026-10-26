@@ -70,7 +70,7 @@ func TestSurfacePage(t *testing.T) {
 		if w.Code != status {
 			t.Fatalf("status = %d, want %d: %s", w.Code, status, body)
 		}
-		for k, v := range map[string]string{"Content-Security-Policy": workbenchCSP, "X-Content-Type-Options": "nosniff",
+		for k, v := range map[string]string{"Content-Security-Policy": surfaceCSP, "X-Content-Type-Options": "nosniff",
 			"Referrer-Policy": "no-referrer", "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store"} {
 			if got := w.Header().Get(k); got != v {
 				t.Errorf("%s = %q, want %q", k, got, v)

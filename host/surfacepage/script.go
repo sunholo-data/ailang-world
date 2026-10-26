@@ -17,7 +17,12 @@ const ScriptElement = `<script src="/surface/surface.js" defer></script>`
 // Appearance attributes. Each page parses it beside its own template.
 const chromeTemplate = `
 {{- define "chrome-style"}}
-.address { flex:0 1 480px; min-width:0; margin-left:12px; padding:3px 8px; border:1px solid var(--edge); border-radius:3px; background:transparent; color:var(--headink); font:inherit; font-size:13px; }
+@font-face { font-family: "Montserrat"; src: url(/surface/fonts/Montserrat-Variable.ttf) format("truetype"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url(/surface/fonts/IBMPlexMono-Regular.ttf) format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url(/surface/fonts/IBMPlexMono-Medium.ttf) format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
+.tick, .read-path, .file, .task-path, .source-chip, .front h1, .card span:nth-child(2), .rail a, code, time { font-family: "IBM Plex Mono", monospace; }
+
+.address { flex:0 1 480px; min-width:0; margin-left:12px; padding:3px 8px; border:1px solid var(--edge); border-radius:3px; background:transparent; color:var(--headink); font:inherit; font-family:"IBM Plex Mono",monospace; font-size:13px; }
 .address:focus { outline:2px solid var(--you); outline-offset:1px; }
 .address-note { flex:0 1 auto; min-width:0; color:#F9A697; font-size:12px; }
 .gear { margin-left:auto; padding:2px 8px; border:1px solid var(--edge); border-radius:3px; background:transparent; color:var(--headink); font:inherit; cursor:pointer; }

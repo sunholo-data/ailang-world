@@ -1046,6 +1046,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)
 	mux.HandleFunc("GET /surface", d.handleSurface)
 	mux.HandleFunc("GET /surface/surface.js", d.handleSurfaceScript)
+	mux.HandleFunc("GET /surface/fonts/{name...}", d.handleSurfaceFont)
 	mux.HandleFunc("GET /surface/model.json", d.handleSurfaceModel)
 	mux.HandleFunc("GET /surface/stack.json", d.handleSurfaceStack)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
@@ -1056,7 +1057,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
 	mux.HandleFunc("POST /mcp/", d.projection.MCP)
 	mux.HandleFunc("POST /agui/", d.handleAGUI)
-	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, mux)
+	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(mux))
 }
 
 // isProtected reports whether a request must carry a valid session credential
