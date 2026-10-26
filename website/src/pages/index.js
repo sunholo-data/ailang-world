@@ -77,11 +77,11 @@ function Film() {
     <section className={styles.film} aria-labelledby="film-title">
       <div className={styles.filmInner}>
         <h2 id="film-title" className={styles.filmTitle}>
-          World in five minutes
+          World in six minutes
         </h2>
         <p className={styles.filmLead}>
-          The problem it solves, how a change is proposed, verified and committed, and what
-          it looks like to the person in charge.
+          The problem it solves, why it is more than a git worktree, how a change is proposed,
+          verified and committed, and what it looks like to the person in charge.
         </p>
         <video
           className={styles.filmVideo}
@@ -89,7 +89,7 @@ function Film() {
           preload="none"
           playsInline
           poster={poster}
-          aria-label="AILANG World explainer film, 5 minutes 27 seconds, narrated">
+          aria-label="AILANG World explainer film, 6 minutes 8 seconds, narrated">
           <source src={video} type="video/mp4" />
         </video>
       </div>
