@@ -1,0 +1,33 @@
+=== RUN   TestIter305ViewportCandidatesProbe
+    zz_iter305_vp_test.go:179: SEED manifest sha256=df40bd93246984bcb756d7eb3280f72a04ac9d635d42a836c51f0ab78caf8446 refs=77 why=4 approval-entry=9
+    zz_iter305_vp_test.go:220: DEFAULT /workbench?object=sha256:59a909c7a24bbd08f53ae027915ddc992a7bd4dd161b6f699b52e62c8a8c3d35 status=200 bytes=18702 script_tags=1
+    zz_iter305_vp_test.go:220: DEFAULT /workbench?object=sha256:6619340943c1e6df87cc49107c5c8201d4ff6983a72819397f63119fb606b9c6&payload=1 status=200 bytes=16702 script_tags=1
+    zz_iter305_vp_test.go:220: DEFAULT /workbench?from=9&entry=9 status=200 bytes=10323 script_tags=1
+    zz_iter305_vp_test.go:250: STILL /workbench?object=sha256:59a909c7a24bbd08f53ae027915ddc992a7bd4dd161b6f699b52e62c8a8c3d35 bytes=18654 repeat_equal=true script_tags=0 style_tags=1 equals_default_minus_tag=true html_sha256=a7371e431fef6ad3d3dbd3e46289d21cc562da2cfebbc43221b3a4bdf42bbf2b
+    zz_iter305_vp_test.go:250: STILL /workbench?object=sha256:6619340943c1e6df87cc49107c5c8201d4ff6983a72819397f63119fb606b9c6&payload=1 bytes=16654 repeat_equal=true script_tags=0 style_tags=1 equals_default_minus_tag=true html_sha256=2cb68b4d04dceec7ce17bc42c526ee0d2d0f887b05260e3525cc4727d39dfc80
+    zz_iter305_vp_test.go:250: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 style_tags=1 equals_default_minus_tag=true html_sha256=4cbd25d1f5f59e8f9bd4177786860bb01d916975ba961ec13dd7f68500f89cac
+    zz_iter305_vp_test.go:255: PACKET contains "TESTED": true
+    zz_iter305_vp_test.go:255: PACKET contains "ATTESTED": true
+    zz_iter305_vp_test.go:255: PACKET contains "CLAIMED": true
+    zz_iter305_vp_test.go:255: PACKET contains "PROVEN": true
+    zz_iter305_vp_test.go:255: PACKET contains "approvals chain: pending": true
+    zz_iter305_vp_test.go:255: PACKET contains "demo-authored": true
+    zz_iter305_vp_test.go:260: CHROME before "Google Chrome 156.0.8078.47"
+    zz_iter305_vp_test.go:282: SHOT pass-a packet-textfrag.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.72s bytes=9069 dims=1440x1400 chunks=[IHDR IDAT IEND] colors(sampled)=1 corner=#faf9f5
+    zz_iter305_vp_test.go:282: SHOT pass-a packet-tall.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.55s bytes=509026 dims=1440x4400 chunks=[IHDR IDAT IEND] colors(sampled)=773 corner=#fafafa
+    zz_iter305_vp_test.go:282: SHOT pass-a provenance-frag.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.70s bytes=9069 dims=1440x1400 chunks=[IHDR IDAT IEND] colors(sampled)=1 corner=#faf9f5
+    zz_iter305_vp_test.go:282: SHOT pass-a graph-textfrag.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.48s bytes=7129 dims=1440x1100 chunks=[IHDR IDAT IEND] colors(sampled)=1 corner=#faf9f5
+    zz_iter305_vp_test.go:282: SHOT pass-b packet-textfrag.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.58s bytes=9069 dims=1440x1400 chunks=[IHDR IDAT IEND] colors(sampled)=1 corner=#faf9f5
+    zz_iter305_vp_test.go:282: SHOT pass-b packet-tall.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.60s bytes=509026 dims=1440x4400 chunks=[IHDR IDAT IEND] colors(sampled)=773 corner=#fafafa
+    zz_iter305_vp_test.go:282: SHOT pass-b provenance-frag.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.56s bytes=9069 dims=1440x1400 chunks=[IHDR IDAT IEND] colors(sampled)=1 corner=#faf9f5
+    zz_iter305_vp_test.go:282: SHOT pass-b graph-textfrag.png rc_err=<nil> verdict={"verdict": "ok", "detail": ""} wall=0.46s bytes=7129 dims=1440x1100 chunks=[IHDR IDAT IEND] colors(sampled)=1 corner=#faf9f5
+    zz_iter305_vp_test.go:286: CHROME after "Google Chrome 156.0.8078.47" equal=true
+    zz_iter305_vp_test.go:288: HEAD before==after true (sha256:439d4b1f1ee6b4fae4471a22f1e1e75cf89d2082a6224ef7ed08d2f8137bb23c)
+    zz_iter305_vp_test.go:296: PAIR packet-textfrag.png identical=true 02d092985f467f89c215122fe0b7711519bac6daf51d70975b944328420132dc 02d092985f467f89c215122fe0b7711519bac6daf51d70975b944328420132dc
+    zz_iter305_vp_test.go:296: PAIR packet-tall.png identical=true 7a3569786b916792e871dc305e4893eca38de950d31bff12e4e6e29b45eda9e4 7a3569786b916792e871dc305e4893eca38de950d31bff12e4e6e29b45eda9e4
+    zz_iter305_vp_test.go:296: PAIR provenance-frag.png identical=true 02d092985f467f89c215122fe0b7711519bac6daf51d70975b944328420132dc 02d092985f467f89c215122fe0b7711519bac6daf51d70975b944328420132dc
+    zz_iter305_vp_test.go:296: PAIR graph-textfrag.png identical=true 7f5080ff2371465f146204a476e499ad6e8f98fa7231582217813ffeafd2d644 7f5080ff2371465f146204a476e499ad6e8f98fa7231582217813ffeafd2d644
+    zz_iter305_vp_test.go:298: SUMMARY 4/4 shots byte-identical across two passes
+--- PASS: TestIter305ViewportCandidatesProbe (11.73s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	12.126s
