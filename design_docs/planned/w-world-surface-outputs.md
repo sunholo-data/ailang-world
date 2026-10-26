@@ -1,6 +1,9 @@
-# w-world-surface-outputs (row 188 follow-on: the front card's outputs, and work in other programs) — r0
+# w-world-surface-outputs (row 188 follow-on: the front card's outputs, and work in other programs) — r1
 
-**Status:** r0, drafted with Mark attended on 2026-10-26; **not yet approved.** Builds on
+**Status:** r1, **approved by Mark, attended 2026-10-26** (*"ok good yes continue"*), recorded
+as **D-WORLD-91**: R1–R3 yes; R4 yes, with §6's four rows filed **PARKED post-1.x** as rows
+213–216; R5 not kept, with the question owned by row 204 (retention and GC). r0 was drafted
+with Mark attended the same day. Builds on
 [w-world-os-surface.md](w-world-os-surface.md), whose §3.2 says "Outputs open in place". This
 design delivers that and extends it: every file type, a tabbed front card, and a roadmap for
 work done in other programs. The sequence slots into row 188 S1
@@ -200,10 +203,15 @@ when you press "Done editing").
    with the Esc ladder, maximise and `open=`; §4's viewers; §5's agent view as an output. Graded
    by the browser grader, with the real w189e diffs and a media fixture.
 3. **N4 (Mark-led style pass):** as planned, over the new card.
-4. **Roadmap rows (on R4):** preview derivers (§6.1); program exec profiles (§6.2); open in
-   the program (§6.3, after N3 and row 201); the human-edit round trip (§6.4).
+4. **Roadmap rows (R4, filed PARKED post-1.x):** row 213 preview derivers (§6.1); row 214
+   program exec profiles (§6.2); row 215 open in the program (§6.3, after N3 and row 201); row
+   216 the human-edit round trip (§6.4).
 
 ## §9 Rulings for Mark
+
+**Ruled D-WORLD-91 (attended 2026-10-26):** R1 yes, R2 yes, R3 yes; R4 yes, filed PARKED
+post-1.x as rows 213–216 rather than placed by the loop's groom; R5 not kept, owned by row 204.
+The questions as asked:
 
 - **R1, layout:** Inputs | What happened | Outputs, with Decisions and Checks merged. Default:
   yes.
