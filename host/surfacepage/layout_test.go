@@ -154,7 +154,7 @@ func TestLayoutRigFacts(t *testing.T) {
 		t.Errorf("brane-less step on %s as %s", n.Brane, n.Kind)
 	}
 	if n := node(t, tl, "f36428abd9a72e5093b61cba14e716c37019f1ef"); n.Brane != "row-189" ||
-		n.Href != "/surface?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef" {
+		n.Href != "/surface/static?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef" {
 		t.Errorf("w189d node = %+v", n)
 	}
 

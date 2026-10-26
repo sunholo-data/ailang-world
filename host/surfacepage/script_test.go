@@ -266,8 +266,9 @@ assert.deepEqual(api.laneStates(null, 'shared'), []);
 
 // ---- parseAddress.
 const lane189 = fx.lanes['row-189'], shared = fx.lanes['shared'];
-const href = (k, id) => '/surface?brane=' + k + '&at=' + id;
-const ok = (text, want, ix = index) => assert.deepEqual(api.parseAddress(text, ix), {href: want}, text);
+const STATIC = '/surface/static';
+const href = (k, id, base = '/surface') => base + '?brane=' + k + '&at=' + id;
+const ok = (text, want, ix = index, base) => assert.deepEqual(api.parseAddress(text, ix, base), {href: want}, text);
 const bad = (text, pattern, ix = index) => { const r = api.parseAddress(text, ix); assert.equal(r.href, undefined, text); assert.match(r.error, pattern, text); };
 ok('world', '/surface'); ok('  WORLD  ', '/surface'); ok('back', '/surface'); ok('world', '/surface', null);
 for (const name of ['row-189', 'w-world-onboarding', 'world-onboarding', 'onboarding', 'ONBOARDING'])
@@ -298,8 +299,13 @@ bad('world row-1@abcd', /matches 2 states/, twin);
 ok('world row-1@abcd2', href('row-1', 'abcd2222'), twin);
 ok('world a-report', href('row-1', 'abcd2222'), twin);
 bad('world row-2', /row-2 has no states/, twin);
-// Every stack's own address bar text opens that stack.
-for (const s of fx.stacks) ok(s.address, s.href);
+// Every stack's own address bar text opens that stack, on the static pages.
+for (const s of fx.stacks) ok(s.address, s.href, index, STATIC);
+assert(fx.stacks.every(s => s.href.startsWith(STATIC + '?brane=')), 'the static pages link to themselves');
+// The base is the page an address lands on: the app by default, or the static pages.
+ok('back', STATIC, null, STATIC); ok('world', STATIC, index, STATIC);
+ok('world onboarding@1', href('row-189', lane189[0], STATIC), index, STATIC);
+ok('world onboarding@1', href('row-189', lane189[0]), index, undefined);
 
 // ---- keyAction, timeline.
 const S = (id, rank) => ({id, href: '/h/' + id, rank});
@@ -328,7 +334,7 @@ assert.equal(k('ArrowUp', {view: 'timeline', lanes: []}, null), null);
 const ranked = timeline.lanes.flatMap(l => l.states).sort((a, b) => a.rank - b.rank);
 assert.deepEqual(k('End', timeline, null), {focus: ranked[ranked.length - 1].id}); assert.deepEqual(k('Home', timeline, null), {focus: ranked[0].id});
 for (const l of timeline.lanes) for (let i = 1; i < l.states.length; i++) assert.deepEqual(k('ArrowLeft', timeline, l.states[i].id), {focus: l.states[i - 1].id});
-assert.deepEqual(k('Enter', timeline, 'f36428abd9a72e5093b61cba14e716c37019f1ef'), {go: href('row-189', 'f36428abd9a72e5093b61cba14e716c37019f1ef')});
+assert.deepEqual(k('Enter', timeline, 'f36428abd9a72e5093b61cba14e716c37019f1ef'), {go: href('row-189', 'f36428abd9a72e5093b61cba14e716c37019f1ef', STATIC)});
 
 // ---- keyAction, stack.
 const C = id => ({id, href: '/h/' + id});
@@ -342,18 +348,18 @@ assert.equal(k('ArrowUp', at('b0'), null), null, 'the start of the rail');
 assert.deepEqual(k('ArrowDown', at('b2'), null), {go: '/h/l0'}, 'the end of the rail follows on');
 assert.deepEqual(k('ArrowLeft', sm, null), {go: '/h/e1'}); assert.deepEqual(k('ArrowRight', sm, null), {go: '/h/l0'});
 assert.deepEqual(k('End', sm, null), {go: '/h/b2'}); assert.deepEqual(k('Home', sm, null), {go: '/h/b0'});
-assert.deepEqual(k('Escape', sm, null), {go: '/surface'}); assert.equal(k('Enter', sm, null), null); assert.equal(k('x', sm, null), null);
+assert.deepEqual(k('Escape', sm, null), {go: STATIC}); assert.equal(k('Enter', sm, null), null); assert.equal(k('x', sm, null), null);
 const lone = {view: 'stack', brane: 'b', focus: 'b1', rail: [C('b0'), C('b1')], earlier: [{brane: 'b', cards: [C('b0')]}], later: []};
 assert.equal(k('ArrowDown', lone, null), null, 'no other column: the end of the rail stays');
 assert.equal(k('ArrowLeft', lone, null), null); assert.equal(k('ArrowRight', lone, null), null);
 assert.deepEqual(k('ArrowUp', lone, null), {go: '/h/b0'});
 // On the real pages: w189d's ↓ is w189e, and w189e (the brane's newest) follows on into the shared world.
 const real = id => fx.stacks.find(s => s.model.focus.startsWith(id)).model;
-assert.deepEqual(k('ArrowDown', real('f36428a'), null), {go: href('row-189', fx.stacks.find(s => s.model.focus.startsWith('652c341')).model.focus)});
+assert.deepEqual(k('ArrowDown', real('f36428a'), null), {go: href('row-189', fx.stacks.find(s => s.model.focus.startsWith('652c341')).model.focus, STATIC)});
 const e = real('652c341');
 assert.equal(e.rail[e.rail.length - 1].id, e.focus);
-assert.match(k('ArrowDown', e, null).go, /^\/surface\?brane=shared&at=0ffbb9c/);
-assert.match(k('ArrowLeft', e, null).go, /^\/surface\?brane=row-156&at=/);
+assert.match(k('ArrowDown', e, null).go, /^\/surface\/static\?brane=shared&at=0ffbb9c/);
+assert.match(k('ArrowLeft', e, null).go, /^\/surface\/static\?brane=row-156&at=/);
 // ---- Both views.
 for (const m of [tm, sm, null]) {
   assert.deepEqual(k('/', m, null), {ui: 'address'}); assert.deepEqual(k('?', m, null), {ui: 'keys'});
@@ -406,7 +412,7 @@ function boot(html, stored) {
     doc.fire('keydown', ev);
     return ev;
   };
-  return {doc, gone, fetched, storage, press, html: doc.documentElement};
+  return {doc, gone, fetched, storage, press, html: doc.documentElement, window: context.window};
 }
 const flush = async () => { for (let i = 0; i < 5; i++) await new Promise(r => setImmediate(r)); };
 (async () => {
@@ -430,8 +436,8 @@ const flush = async () => { for (let i = 0; i < 5; i++) await new Promise(r => s
   bar.value = 'world nosuch'; w.press('Enter'); await flush();
   assert.match(note.textContent, /no brane/); assert.equal(bar.getAttribute('aria-invalid'), 'true'); assert.equal(w.gone.length, 1, 'an error never navigates');
   bar.value = 'world onboarding@0'; w.press('Enter'); await flush(); assert.match(note.textContent, /states 1 to/); assert.equal(w.gone.length, 1);
-  bar.value = 'world onboarding'; w.press('Enter'); await flush(); assert.equal(w.gone[1], href('row-189', lane189[lane189.length - 1]));
-  bar.value = 'back'; w.press('Enter'); await flush(); assert.equal(w.gone[2], '/surface');
+  bar.value = 'world onboarding'; w.press('Enter'); await flush(); assert.equal(w.gone[1], href('row-189', lane189[lane189.length - 1], STATIC));
+  bar.value = 'back'; w.press('Enter'); await flush(); assert.equal(w.gone[2], STATIC);
   assert.deepEqual(w.fetched, ['/surface/index.json'], 'the index is fetched once');
   w.press('Escape'); assert.equal(id(), focused, 'Esc in the bar returns to the page');
   w.press('?'); const keys = w.doc.querySelector('div.panel'); assert.equal(keys.getAttribute('data-panel'), 'keys'); assert.match(keys.text(), /lane above · below/);
@@ -458,7 +464,14 @@ const flush = async () => { for (let i = 0; i < 5; i++) await new Promise(r => s
   w.press('ArrowUp'); assert.deepEqual(w.gone, [k('ArrowUp', front.model, null).go]);
   w.press('?'); assert.match(w.doc.querySelector('div.panel').text(), /back in time · toward now/);
   w.press('Escape'); assert.equal(w.gone.length, 1, 'Esc closes a panel first');
-  w.press('Escape'); assert.equal(w.gone[1], '/surface');
+  w.press('Escape'); assert.equal(w.gone[1], STATIC);
+
+  // The app shell (data-app) borrows the seams and wires nothing of its own.
+  w = boot('<!doctype html><html lang="en" data-app><body><main id="stage"></main></body></html>', JSON.stringify({theme: 'slate'}));
+  assert.equal(w.html.getAttribute('data-theme'), null, 'no look applied on the app shell');
+  assert.equal(w.press('?').defaultPrevented, false, 'no key handled on the app shell');
+  assert.equal(w.doc.querySelector('div.panel'), null);
+  assert.deepEqual(Object.keys(w.window.WorldSurface).sort(), Object.keys(api).sort(), 'the seams are on window');
   console.log('SURFACE HARNESS PASS');
 })().catch(e => { console.error(e); process.exitCode = 1; });
 `

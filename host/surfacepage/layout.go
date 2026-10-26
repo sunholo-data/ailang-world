@@ -39,6 +39,16 @@ const (
 // SharedKey is the shared world's lane key.
 const SharedKey = "shared"
 
+// StaticPath is where the server-rendered pages live since N2b moved the app
+// shell to /surface: the no-script fallback and the graders' structural
+// fixture. Their links stay on it.
+const StaticPath = "/surface/static"
+
+// staticHref is a static stack page's link.
+func staticHref(brane, id string) string {
+	return StaticPath + "?brane=" + url.QueryEscape(brane) + "&at=" + url.QueryEscape(id)
+}
+
 // Glyph shapes.
 const (
 	GlyphCircle   = "circle"
@@ -226,7 +236,7 @@ func LayoutTimeline(ix surface.Index, now time.Time) Timeline {
 		}
 		lane := &lanes[li]
 		n := Node{ID: s.ID, Kind: s.Kind, Brane: lane.Key, Rank: rank[i], X: Left + rank[i]*XStep, Y: lane.Y,
-			Href: "/surface?brane=" + url.QueryEscape(lane.Key) + "&at=" + url.QueryEscape(s.ID)}
+			Href: staticHref(lane.Key, s.ID)}
 		n.Points = Points(lane.Glyph, n.X, n.Y)
 		if s.Kind == surface.KindStep {
 			n.Badge = yours[s.ID]

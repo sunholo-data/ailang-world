@@ -78,7 +78,7 @@ a:focus-visible { outline:2px solid var(--you); outline-offset:2px }
 {{template "chrome-style"}}
 </style><script src="/surface/surface.js" defer></script></head><body>
 <header class="top"><span class="tile" aria-hidden="true">{{.Logo}}</span><span class="name">World</span>{{template "chrome-head" .Address}}</header>
-<main><a class="back" href="/surface">{{template "laneGlyph" .Lane}} {{.Lane.Title}} · World timeline</a>
+<main><a class="back" href="/surface/static">{{template "laneGlyph" .Lane}} {{.Lane.Title}} · World timeline</a>
 {{if .Reason}}<p class="reason">{{.Reason}}</p>{{else}}
 <section class="earlier">{{range .Earlier}}<div class="column" data-brane="{{.Brane}}">{{range .Cards}}{{template "card" .}}{{end}}</div>{{end}}</section>
 <article class="front" data-state="{{.Front.ID}}" data-brane="{{.Front.Brane}}">

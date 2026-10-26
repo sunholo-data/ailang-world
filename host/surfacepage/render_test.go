@@ -83,7 +83,7 @@ func TestRenderTimeline(t *testing.T) {
 		}
 		for _, n := range l.Nodes {
 			marker := `<a class="state" data-state="` + n.ID + `" data-kind="` + n.Kind + `" data-brane="` + l.Key +
-				`" href="/surface?brane=` + l.Key + `&amp;at=` + n.ID + `">`
+				`" href="/surface/static?brane=` + l.Key + `&amp;at=` + n.ID + `">`
 			if strings.Count(body, marker) != 1 {
 				t.Errorf("state %s marker missing", n.ID)
 			}
