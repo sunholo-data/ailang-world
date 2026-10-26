@@ -1684,3 +1684,119 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 14/17 built, M7c re-scoped; goal unmoved.
 **Next:** row 150, the designer authors `w-marketing-capture-orchestration` (M7c–M8, as built at HEAD, r6 objections verbatim). Quorum once; on PASS, build M7c1 (fully specified in the plan). Then 151 after 150.
+
+## 305 — 2026-10-26 — row 150: the split doc `w-marketing-capture-orchestration` written as built and routed under the narrow-refinement carve-out (quorum r1/r2 blocked); M7c1 built (PR #370; judge PASS 81) [PRODUCT]
+
+**Kind:** design, plan and one production milestone on the release row. All four roles were spawned through the Agent tool, per the operator's standing request.
+
+**Pick and why:** row 150, following iteration 304's **Next**: author the split as-built doc, quorum it, then build M7c1. Re-checked before picking:
+- no orchestration doc, commit or PR existed;
+- the only open World PRs were #365 (website film, attended) and #368 (the attended `w-world-surface-outputs` design), neither of them this loop's;
+- local dev equalled origin/dev `4e6e89dc`.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed; gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- First fire after the weekly rotation to #366. `mission_directives.sh`: 0 allowlisted directives on #366 (2 comments) and on #313 since 2026-10-22T01:34:42Z (44 comments).
+- Self-notices rc 1: newest crash `6345079873` (rc=1, 2026-10-22) is already credited (2 hits in the log). The `mission-366-last-seen` watermark was absent (DEGRADED, single watermark) and is written this iteration.
+- Inbox: `mission-world` held only this loop's own claims; nothing outranks the queue.
+- **Weekly external-issue sweep:** 0 orphans of 1 enumerated open issue (#366, the bookkeeping thread: charter 0 / log 1 / status-archive 0 / dashboard 0 / log-archive 0). `open_issues_count` 3 = 1 issue + 2 PRs. Negative control fired (0 everywhere).
+
+**Gate 1:**
+- Dev CI at `4e6e89dc`: check set 3/3 success.
+- Running skill plus all 13 resource files byte-identical to origin/dev (28 `ok` across the resolved symlink target and the pin copy).
+- Base `4e6e89dc…` recorded at 11:26:33Z; `snap` at Gate 3 was identical. origin/dev later moved to `6ec3ee39` (#365, website only), merged into the sprint branch before the record.
+
+**Role execution:**
+- **Designer** `claude:claude-opus-5-5` (resolver `recipe … declared:provider-pin`; Agent `opus`).
+  - r0: 284 lines, V32–V49. It includes landing provenance for M1a–M7b (merge SHAs; authorities D-WORLD-69 A, the iteration-266 r4 carve-out, "none owed" 267–276, "not re-run" 300/301, the single-voter PROCEED at 303), stated plainly as "no all-seats round ever passed".
+  - The as-built inventory re-ran every landed milestone's pinning tests at base (V35).
+  - V37–V40 re-measured parent V4/V6/V14/V24 at HEAD, including the real `--workbench-still` flag on the real seeded store: 4 routes repeat-equal, 0 scripts, still = default minus the tag.
+  - **V41:** Chrome 156.0.8078.47 real content, 6/6 byte-identical across two passes.
+  - **V42 (new):** packet/graph/provenance PNGs at the planned 1440×1400/1100 contain only the header and timeline; the required regions are below the fold. Controller-confirmed by viewing `packet.png`.
+  - Found stale: the plan's v0.52.1 tool pin (now v0.54.15 since `4b686d8e`), and M7c4's "seed with `demoM5cRealSeed` then stop the rig", which cannot work (no daemon handle; the writer lock).
+  - r1 revision (one, protocol-mandated): V50–V55, exact two-seed bottoms (V51: identical across seeds; heights 3700/2100/3000), position assertion P0, release-store containment P3, C14 full-path real-Chrome rehearsal.
+- **Planner** `opus` (resolver `agent-tool opus fail-closed:env-pin`).
+  - 29 amendments marked in the plan; M7c0 added.
+  - M7c1 prototyped in a scratch copy (11/11 subtests, 3 mutants red, `-race` ok) and written as exact code.
+  - Flagged, not decided: M8a vs R1 ordering; `main.go` in M8a; M7c2a depending on M7c0.
+- **Executor** `claude:claude-haiku-5-5` (resolver `recipe … declared:provider-pin`; Agent `haiku`). Built M7c1 in `.wt-world-iter305-row150-m7c1`:
+  - `main.go` 83 → 297 lines; `observation_test.go` 255 lines.
+  - Gates: gofmt/vet clean; 11/11 subtests; `-race` ok 35 s; `TestProductionGoSurface` and `TestSubprocessSinkGate` (violations 0).
+  - 3 named mutants each red at the named assertion and reverted byte-identical. M7c1-set reports `observation-digest` for the deleted path rather than panicking (path-keyed, per the iteration-304 judge).
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), own worktree `.eval-world-iter305` at `f354e5e5`.
+
+**Quorum (new doc, author `claude:claude-opus-5-5`; seats Gemini 4 Argon, GLM 5.3, Kimi K3; Anthropic benched):**
+- Reader: rc 1 for the new doc, control rc 0 for the parent.
+- **r1** `w-marketing-capture-orchestration-2026-10-26T11-47-05Z`, $0.3335, BLOCKED: Gemini PASS; GLM REJECT (light/phone "unaffected" asserted; seed and release-store invariance); Kimi REJECT ("committed supervisor" wording; two-seed bottoms; the M7c0 test could not red its mutant).
+  - The controller measured the premises first (rule 3f): light and phone meet their parent rows (phone overflows horizontally, title clipped, cosmetic).
+  - The probe DID run the committed M7a supervisor `scripts/marketing_capture.py shot`; Kimi's objection was partly refuted, though `daemon` mode and the shell were not in the path.
+  - `png_test.go:462` hardcodes the shot list (Gemini confirmed).
+  - These measurements were handed to the designer for r1.
+- **r2** `…T12-00-33Z`, $0.3266, BLOCKED: Gemini PASS (catch: tight phone rectangles); GLM REJECT (nine §3 cmd results were from the retired v0.52.1 pin; threshold-test ownership; durable artifact path; V43 wording); Kimi REJECT (C8′ claimed the layout assertion for phone, which the dump-dom instrument cannot measure).
+- **Disposition: narrow-refinement carve-out (controller r2).** Every r2 objection carried a concrete `proposed_fix` and none disputed direction (Gemini passed every round). The controller applied the fixes in the reviewers' terms:
+  - **V56:** GLM's exact command, rc 0, 9/9 PASS under v0.54.15.
+  - **V57:** `TestMarketingPNGContent` pins all provisional thresholds as boundaries at `png_test.go:359-360/396/438-441/444-455`; M8a owns the change.
+  - Durable `quorum-r1.json`/`quorum-r2.json`.
+  - Kimi's C8′ text verbatim.
+  - **V58:** a phone screenshot scan; both passes PASS, timeline-only crop and blank FAIL, desktop light FAIL as a cross-layout control. A first run picked the stateRoot underline as "entry 0" (index 7); fixed to the measured band index 9, and the superseded run is recorded.
+  - Recorded in the doc as a carve-out, never as a PASS; C13 and the header say so.
+
+**Controller verification:**
+- Spot checks before quorum: tool pin (`ailang-releases.json` tool = v0.54.15), `supportedWorkbenchQuery` refuses `from` on object routes, 1 `id=` vs 20 `aria-label=` in render.go, V42 by image.
+- Region-bottom method reviewed: a measurement-only proxy appends its script after every section, cross-checked against pixels (V52).
+- M7c1 re-run outside the executor: `go build ./...` rc 0; `go test -run '^$' ./...` compile fence rc 0 (34 pkgs); vet/gofmt clean; `go test ./scripts/marketingcheck` ok; `TestProductionGoSurface` ok; `TestSubprocessSinkGate` ok; 11 subtests PASS.
+- `verify_ail.sh` not run: no `.ail` changed (CI's `ailang-code verify gate` is the gate).
+- New artifacts scanned for addresses: 0.
+
+**Independent evaluation:** r1 **PASS 81/100** (A 50/60, B 31/40), zero blocking ([report](verification/world-iter305/evaluator-r1.md)).
+- Re-ran all gates; non-vacuity holds (reverting `main.go` fails to compile the tests).
+- About 35 diff-derived mutants, about 25 killed. No survivor is on a core comparison branch. Survivors: missing-path tolerance (low-medium); two-sided duplicate and length-only set guard; `IsRegular`; `[]` vs `null`; CLI rc/mode/newline.
+- Re-derived V56/V57/V58/V42. Carve-out conditions (a) and (b) held. It flagged that "applied in the reviewers' own words" overstated (finding 5: the V58 scan, the renumbering, the C12 wording and the M8a owner/gate are controller-authored) and that the ±4 px rule was claimed, not demonstrated.
+- Controller fix `dde9e0f5`: §9 now names exactly which content is controller-authored; Gemini's tight-rectangle text is in R1; **V58b** shift arms 2/4/5/10 px give rule (i) true/true/false/false, discriminating exactly at ±4. The 4 px overall FAIL is from (iii) only, an artifact of the synthetic shift moving the viewport-fixed scrollbar; the judge independently measured 2/5/10 → PASS/FAIL/FAIL.
+
+**Result:** the orchestration doc r2 governs M7c0–M8b; M7c1 BUILT (PR #370). Row 150 has 15 of 22 milestones built (M7c0 is new). The new V42 finding means the parent's six-shot list would have shipped three release images without their subject; M7c0 fixes that before any capture.
+
+**Gate 3b:** see the CI note appended below once PR #370's checks report.
+
+**Routing evidence:** base=4e6e89dc44c9ee9771b415b3cfdc23fadfaadff1@2026-10-26T11:26:33Z (Gate 1; `snap` at Gate 3 identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet`. Degraded: codex over daily ration (probe rc 75) for planner and executor.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer `claude:claude-opus-5-5` (Agent `opus`): r0 278,119 tok / 1,029.7 s; r1 revision 338,359 tok / 376.4 s. The revision fired because quorum r1 blocked: one doc, one protocol-mandated revision, within the diet. The r2 revision was the controller's own (carve-out), not a third designer run.
+  - The rotation pointer still reads `codex:gpt-6.1-sol` (next entry: GLM 5.3). The resolver/driver resolved the designer to the claude pin, and the resolver was followed verbatim. Pointer not advanced, since claude ran.
+- Planner `opus`: 223,882 tok / 953.6 s.
+- Executor `claude:claude-haiku-5-5` (Agent `haiku`): 53,444 tok / 98.4 s.
+- Evaluator `sonnet`: r1 89,887 tok / 392.1 s. Judge independence: different model from every generator (opus designer/planner/controller, haiku executor), same vendor (Anthropic).
+- Quorum seats: Gemini 4 Argon, GLM 5.3, Kimi K3 (author's vendor benched; reserve gpt6-1-sol unused).
+- Metered **$0.66** (quorum r1 $0.3335 + r2 $0.3266).
+
+**Ruled out:**
+- A second designer revision after r2: over the diet. The carve-out applies, so the controller revised.
+- Parking `needs-human-review` after r2: every objection was concrete and none disputed direction, which is the carve-out's exact case.
+- A third quorum round: one re-quorum per round set.
+- Kimi r1's "supervisor not in path" as stated: partly refuted by the probe source (`marketing_capture.py shot` IS the M7a supervisor).
+- URL fragments for framing: blank yet byte-identical (V43).
+- A still-only layout reorder: it breaks M6's still = default − tag invariant.
+- Allowing `from` on object routes: a workbench grammar change outside this row.
+- Building M7c0 this iteration: R0's re-confirm V-row is a precondition (C13).
+- Treating the 4 px V58b overall FAIL as a tolerance defect: it is the synthetic shift's scrollbar artifact; rule (i) itself discriminates at ±4.
+
+**Carried:**
+- R0 before M7c0.
+- Phone horizontal overflow (title clipped) and provenance horizontal clip (V52): cosmetic, renderer CSS outside row 150, residual for Mark if he wants different framing.
+- Tall framing aesthetics (packet 3700 px) are a product choice for Mark (new row if raised).
+- Planner flags: M8a vs R1 ordering (M8a reports the threshold step DEFERRED if R1's V-row is absent), `main.go` in M8a, M7c2a depending on M7c0.
+- Judge M7c1 non-blocking test gaps (missing-path tolerance, two-sided duplicate, CLI rc/mode branches).
+- `shell-hup` flake (green at load 2–4 this iteration).
+- D-WORLD-86 stays HOLD.
+
+**Retro:**
+- Rule 3f paid twice. Measuring r1's premises before the revision turned one objection into a partial refutation and two into exact fixes. Measuring the designer's region method before the quorum avoided a round on an unverified instrument.
+- The judge caught the controller overstating its own carve-out ("verbatim") — the evaluator working as designed on the controller's hands.
+- The instrument-bug-in-my-own-scan (index 7 → underline) was caught by printing the band list rather than trusting a PASS.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 15/22 built; goal unmoved.
+**Next:** row 150. Controller R0 (two-seed re-confirm of V51 on the then-current Chrome, `iter305-region-bottoms-probe`), then M7c0 (shot geometry, fully specified in the plan), then M7c2a. Then 151 after 150.

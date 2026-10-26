@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 305 | 2026-10-26 | row 150: the split doc `w-marketing-capture-orchestration` written as built and routed under the narrow-refinement carve-out (quorum r1/r2 blocked)... |
 | 304 | 2026-10-26 | row 150 M7c re-scoped, not built: the design quorum blocked twice and the remaining milestones split into an as-built doc; M7c split into five chil... |
 | 303 | 2026-10-23 | recover iteration 302's row 150 M7b PNG verifier (PR #361; fresh independent MiniMax PASS 93/100) [PRODUCT] |
 | 301 | 2026-10-22 | row 150 M7a built: the bounded capture supervisor and its fake-Chrome/fake-daemon companions (PR #360; judge r1 PASS 86 → r2 PASS 91 → r3 PASS 91) ... |
