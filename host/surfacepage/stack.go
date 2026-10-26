@@ -2,7 +2,6 @@ package surfacepage
 
 import (
 	"fmt"
-	"net/url"
 	"sort"
 	"strconv"
 	"time"
@@ -117,7 +116,7 @@ func LayoutStack(ix surface.Index, brane, at string, now time.Time) (Stack, erro
 		l := lanes[k]
 		return StackCard{
 			ID: s.ID, Brane: k, Kind: s.Kind,
-			Href:     "/surface?brane=" + url.QueryEscape(k) + "&at=" + url.QueryEscape(s.ID),
+			Href:     staticHref(k, s.ID),
 			Title:    title,
 			Relative: RelativeTime(times[s.ID], now),
 			Exact:    times[s.ID].UTC().Format("2 Jan 15:04 UTC"),

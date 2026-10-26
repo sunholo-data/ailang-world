@@ -93,12 +93,12 @@ func TestSurfacePage(t *testing.T) {
 	header := `<span class="name">World</span>`
 
 	t.Run("not built", func(t *testing.T) {
-		check(request("GET", "/surface"), 200, header, "the surface index has not been built yet", "Nothing needs you")
+		check(request("GET", "/surface/static"), 200, header, "the surface index has not been built yet", "Nothing needs you")
 	})
 	t.Run("not configured", func(t *testing.T) {
 		d.cfg.SurfaceIndex = ""
 		defer func() { d.cfg.SurfaceIndex = path }()
-		body := check(request("GET", "/surface"), 200, header, "no surface index is configured", "World serving, no index shown")
+		body := check(request("GET", "/surface/static"), 200, header, "no surface index is configured", "World serving, no index shown")
 		if strings.Contains(body, "World healthy") {
 			t.Error("an absent index reads as healthy")
 		}
@@ -130,12 +130,12 @@ func TestSurfacePage(t *testing.T) {
 
 	t.Run("fixture index", func(t *testing.T) {
 		w189d := "f36428abd9a72e5093b61cba14e716c37019f1ef"
-		body := check(request("GET", "/surface"), 200,
+		body := check(request("GET", "/surface/static"), 200,
 			header, "World healthy · checked ",
 			`<g class="lane" data-brane="shared" data-glyph="circle">`,
 			`<g class="lane" data-brane="row-189" data-glyph="triangle"><title>w-world-onboarding · row 189</title>`,
-			`<a class="state" data-state="`+w189d+`" data-kind="step" data-brane="row-189" href="/surface?brane=row-189&amp;at=`+w189d+`">`,
-			`<a class="state" data-state="90035557b2012895551867c0ebe2f36b853aac09" data-kind="shared" data-brane="shared" href="/surface?brane=shared&amp;at=90035557b2012895551867c0ebe2f36b853aac09">`,
+			`<a class="state" data-state="`+w189d+`" data-kind="step" data-brane="row-189" href="/surface/static?brane=row-189&amp;at=`+w189d+`">`,
+			`<a class="state" data-state="90035557b2012895551867c0ebe2f36b853aac09" data-kind="shared" data-brane="shared" href="/surface/static?brane=shared&amp;at=90035557b2012895551867c0ebe2f36b853aac09">`,
 			`<path class="link" data-from="0ee1945ffba795812f06dce95998b646adfac343" data-to="`+w189d+`"`,
 			`<path class="link" data-from="`+w189d+`" data-to="90035557b2012895551867c0ebe2f36b853aac09"`,
 			`<text class="badge" data-state="`+w189d+`"`,
@@ -150,25 +150,28 @@ func TestSurfacePage(t *testing.T) {
 	})
 
 	t.Run("stack", func(t *testing.T) {
-		check(request("GET", "/surface?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef"), 200, header, `class="front"`, `data-col="inputs"`)
+		check(request("GET", "/surface/static?brane=row-189&at=f36428abd9a72e5093b61cba14e716c37019f1ef"), 200, header, `class="front"`, `data-col="inputs"`,
+			`<a class="back" href="/surface/static">`, `href="/surface/static?brane=row-189&amp;at=`)
 		for _, target := range []string{
-			"/surface?brane=unknown&at=f36428abd9a72e5093b61cba14e716c37019f1ef",
-			"/surface?brane=row-189&at=missing",
-			"/surface?brane=shared&at=f36428abd9a72e5093b61cba14e716c37019f1ef",
+			"/surface/static?brane=unknown&at=f36428abd9a72e5093b61cba14e716c37019f1ef",
+			"/surface/static?brane=row-189&at=missing",
+			"/surface/static?brane=shared&at=f36428abd9a72e5093b61cba14e716c37019f1ef",
 		} {
-			check(request("GET", target), 404, header, `href="/surface"`)
+			check(request("GET", target), 404, header, `href="/surface/static"`)
 		}
-		if w := request("POST", "/surface?brane=shared&at=x"); w.Code != 405 {
+		if w := request("POST", "/surface/static?brane=shared&at=x"); w.Code != 405 {
 			t.Fatalf("stack POST = %d", w.Code)
 		}
 	})
 
 	t.Run("query", func(t *testing.T) {
-		for _, target := range []string{"/surface?x=1", "/surface?brane=row-189", "/surface?at=x", "/surface?brane=x&at=y&other=z", "/surface?brane=x&brane=y&at=z", "/surface?brane=x&at=y&at=z", "/surface?brane=%zz&at=x", "/surface?world"} {
-			w := request("GET", target)
-			check(w, 400, "unsupported surface query parameter")
-			if strings.Contains(w.Body.String(), `class="lane"`) {
-				t.Errorf("%s rendered the timeline", target)
+		for _, page := range []string{"/surface", "/surface/static"} {
+			for _, query := range []string{"?x=1", "?brane=row-189", "?at=x", "?brane=x&at=y&other=z", "?brane=x&brane=y&at=z", "?brane=x&at=y&at=z", "?brane=%zz&at=x", "?world"} {
+				w := request("GET", page+query)
+				check(w, 400, "unsupported surface query parameter")
+				if body := w.Body.String(); strings.Contains(body, `class="lane"`) || strings.Contains(body, "/surface/app.js") {
+					t.Errorf("%s%s rendered a page", page, query)
+				}
 			}
 		}
 	})
@@ -181,7 +184,7 @@ func TestSurfacePage(t *testing.T) {
 			if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
 				t.Fatal(err)
 			}
-			w := request("GET", "/surface")
+			w := request("GET", "/surface/static")
 			body := check(w, 503, header, "the configured surface index: ", "Nothing needs you")
 			if strings.Contains(body, path) || strings.Contains(body, filepath.Dir(path)) {
 				t.Errorf("%s: configured path leaked", name)
@@ -192,14 +195,16 @@ func TestSurfacePage(t *testing.T) {
 		}
 		d.cfg.SurfaceIndex = filepath.Dir(path)
 		defer func() { d.cfg.SurfaceIndex = path }()
-		if body := check(request("GET", "/surface"), 503, header); strings.Contains(body, d.cfg.SurfaceIndex) {
+		if body := check(request("GET", "/surface/static"), 503, header); strings.Contains(body, d.cfg.SurfaceIndex) {
 			t.Error("read error leaked the configured path")
 		}
 	})
 
 	t.Run("POST", func(t *testing.T) {
-		if w := request(http.MethodPost, "/surface"); w.Code != 405 {
-			t.Fatalf("POST = %d", w.Code)
+		for _, target := range []string{"/surface", "/surface/static"} {
+			if w := request(http.MethodPost, target); w.Code != 405 {
+				t.Fatalf("POST %s = %d", target, w.Code)
+			}
 		}
 	})
 }
