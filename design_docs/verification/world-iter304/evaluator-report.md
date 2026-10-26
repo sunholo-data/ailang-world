@@ -56,3 +56,55 @@ Rules read in `gate-2-pick.md` (QUORUM-AT-PICK, NARROW-REFINEMENT CARVE-OUT, the
 
 ## Score
 Accuracy 90 (the measurements reproduce), planner precision 85, introduced heading overstatement and unrefreshed header -8, base-test flake characterisation -5, unrun mutants -5. Total 82.
+
+# Round 2 (iteration 304, delta 00f7baf9..b1f2014c)
+
+**VERDICT: PASS (90/100).** No blocking findings.
+
+## Round-1 findings
+- Heading closed. `design_docs/planned/w-marketing-capture.md:217` now reads "real-content evidence on Chrome 155; instrument check only on 156".
+- Base line closed. It now carries "(r4 base; iteration 304 measurements V29-V30 taken at HEAD 039bfa77)". The Status line has the iteration-304 note.
+- Side effect, NON-BLOCKING. The doc now lists "Real-content Chrome 156 evidence" as an open item (line 366), which is honest.
+
+## Change list
+`git diff --stat 00f7baf9 HEAD` shows 12 files. The coordinator's list omits none that I could see, but it does not name these:
+- The one-line edit to the plan, `w-marketing-capture-sprint-plan.md`; this is the M7c1 HELD note.
+- `world-mission-log-archive.md`, +75 lines. The coordinator wrote "log rotation", which covers it.
+- The copies of my round-1 report and the quorum JSONs.
+
+## (a) Attribution: sound
+- Failing job 121459833752, PR #364 head b4efd3e0:
+  - `Image: ubuntu-26.04`
+  - `"platform":"Linux-7.0.0-1017-azure-x86_64-with-glibc2.43"`
+  - `bubblewrap 0.11.1`
+  - `[GATE FAIL] NONE/control|modify|new-nested|new-root outcome=PARTIAL token=None`
+- Green run 40015682267 (job 120627019903): `Image: ubuntu-24.04`, Linux-6.17.0-1022 / glibc 2.39 / bubblewrap 0.9.0, and every arm `[GATE PASS] ... outcome=WROTE token=WORLD-PROBE-WROTE`.
+- The failing commit b4efd3e0 is docs-only, and the control arm itself reads PARTIAL. That points at the runner environment, not the change. The log evidence does not show whether the kernel, glibc or bubblewrap is the actual cause.
+
+## (b) Gate weakening: none
+- The diff is 10 changed lines, only the two `runs-on:` values plus comments.
+- The step `Row 140 srt confinement matrix (linux bubblewrap)` (ci.yml:198) is untouched. There is no `continue-on-error` in the diff, so it still runs and must pass.
+- Side effect: the `ailang-code verify gate` job remains on `ubuntu-latest`. It passed on 26.04. NON-BLOCKING: it will not catch confinement drift on 24.04.
+
+## (c) Pin vs root-cause: pin is reasonable
+- It restores a measured-green environment and keeps the gate strict. Root-causing needs a Linux 26.04 host, and the rig is macOS.
+- Row 203 tracks the unpin.
+- NON-BLOCKING risks:
+  - ubuntu-24.04 will eventually be retired.
+  - The CI comment says "unpin under row 203". Row 203 should carry a concrete exit criterion (an srt release that passes on bubblewrap 0.11.1).
+
+## (d) Record: accurate
+- `mission_decisions.sh --check --file design_docs/world-mission.md` printed "decision ledger valid: 77 rows", rc 0.
+- STATUS stamps: 3 lines match `^## STATUS YYYY-MM-DD — ITERATION N: \S` (the 4th `## STATUS` is the "(rotation rule)" heading). The 304 stamp is single-line.
+- Charter line count is 6258 against 6257 at 00f7baf9, so +1.
+- ITERATION 300 is present in the status archive (`world-mission-status-archive.md:609`, `## STATUS 2026-10-22 — ITERATION 300:`); it was rotated out of the charter. Confirmed.
+- Rows 150, 202 and 203 are intact (lines 6179, 6258 and 6257).
+
+## (e) PR CI on b1f2014c, read once
+- `ailang-code verify gate`: success.
+- `go host build + test gate`: in_progress.
+- `go race gate`: in_progress.
+- The coordinator's polling decides the final result.
+
+## Score
+90: the attribution is verified from logs, the pin is minimal, and the gates are intact. Deductions: the CI result is pending (-5), and the row 203 exit criterion is unstated (-5).

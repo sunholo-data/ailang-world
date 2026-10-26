@@ -1628,7 +1628,7 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 - The quorum artifacts were scanned for addresses and secrets; only token-count keys matched.
 - No Go/Python/shell file changed, so `verify_go.sh` and `verify_ail.sh` were not re-run. Their scope is code this diff does not touch. CI on the PR is the gate.
 
-**Independent evaluation:** **PASS 82/100, zero blocking** ([report](verification/world-iter304/evaluator-report.md)).
+**Independent evaluation:** r1 **PASS 82/100, zero blocking**; r2 (record + CI pin delta) **PASS 90/100, zero blocking**. r2 confirms the attribution from job logs (`Image: ubuntu-26.04`; green run `ubuntu-24.04`, every arm `[GATE PASS] … outcome=WROTE`) and that the pin weakens no gate. It asks row 203 to state an exit criterion, and that has been added. r1 detail: ([report](verification/world-iter304/evaluator-report.md)).
 - Re-derived V29 version/mtime, V30 lines and V31 ancestry. It did NOT re-run V29's shots.
 - 12/12 planner file:line claims confirmed (the `main.go` allow-list entry is at `host/store/context_roots_test.go:205`). The Python one-liner runs: 12 records, 0.03 s.
 - Mutants reasoned, not prototyped. One doubt: a position-indexed comparator loop would make M7c1-set panic. The directive must require a path-keyed loop.
@@ -1648,14 +1648,15 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
   - Queue row 203 filed: root-cause the Ubuntu-26.04 PARTIAL result and unpin.
   - The re-run on the pinned head is the control arm: same gate, same srt, old image.
   - `host/pins` and `cmd/ailang-worldd` tests that read `ci.yml` pass locally.
-  - LANDED only on observed success of the pinned head and the merge.
+  - **Pinned head `b1f2014c`: 3/3 success (control arm).** The "Row 140 srt confinement matrix" step passed on `ubuntu-24.04`: same gate, same srt pin, old image.
+  - LANDED on observed success of the final head and the merge (reported on #366).
 
 **Routing evidence:** base=039bfa77aedff084d26e3cfc71518ed0886e8dda@2026-10-26T07:26:38Z (Gate 1; `snap` at Gate 3 identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet`. Degraded: codex over daily ration (probe rc 75) for planner and executor.
 - Controller `claude:claude-opus-5-5` (tok: not reported).
 - Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (hook `allow:same-model-alias`). Audit 116,852 tok / 309.7 s; revision 134,325 tok / 94.8 s. The rotation pointer read `codex:gpt-6.1-sol`, so the next entry is GLM 5.3. The driver had demoted GLM this morning (runtime bucket limit) and resolved the designer to claude, so the resolver was followed.
 - Planner: resolver `agent-tool opus fail-closed:env-pin`; Agent `opus`, 167,604 tok / 540.1 s.
 - Executor `claude:claude-haiku-5-5`: not spawned (design gate BLOCKED).
-- Evaluator: resolver `agent-tool sonnet declared:alias-pin`; Agent `sonnet`, 72,450 tok / 164.3 s. Judge independence: different model from both generators (opus), same vendor (Anthropic).
+- Evaluator: resolver `agent-tool sonnet declared:alias-pin`; Agent `sonnet`, r1 72,450 tok / 164.3 s, r2 84,280 tok / 46.4 s. Judge independence: different model from both generators (opus), same vendor (Anthropic).
 - Quorum seats: Gemini 4 Argon, GLM 5.3, Kimi K3 (author's vendor Anthropic benched).
 - Metered $0.4173 (quorum r5 $0.2104 + r6 $0.2070). A first r5 attempt never launched (`timeout` is absent on macOS, rc 127, $0).
 
