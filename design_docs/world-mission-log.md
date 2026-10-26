@@ -1760,7 +1760,9 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Result:** the orchestration doc r2 governs M7c0–M8b; M7c1 BUILT (PR #370). Row 150 has 15 of 22 milestones built (M7c0 is new). The new V42 finding means the parent's six-shot list would have shipped three release images without their subject; M7c0 fixes that before any capture.
 
-**Gate 3b:** see the CI note appended below once PR #370's checks report.
+**Judge r2 (delta `dde9e0f5` + merge `f200b9d2` + record `bb79d7f4`):** **PASS 92/100**, zero blocking. Finding 5 closed (shift arms re-run independently: rule (i) true/true/false/false). Record accurate (quorum costs $0.3334/$0.3266 vs logged $0.3335/$0.3266; no implied PASS). Rotation lossless (archive `ITERATION 301` = 1, charter 6258 → 6258, rows 150/203 present, ledger valid 77 rows). Merge brought `website/**` only. Non-blocking: R1's ">4 px fails" sentence is enforced through the ±4 px tolerance, not by rectangle tightness alone. r2 is appended to the report.
+
+**Gate 3b:** PR #370 head `bb79d7f4`: check set 3/3 success (`go host build + test gate`, `go race gate`, `ailang-code verify gate`; bounded poll pinned to the full SHA). This commit (docs-only: log, judge report copy) is re-polled before merge, and the merge commit after it; the outcome is reported on #366.
 
 **Routing evidence:** base=4e6e89dc44c9ee9771b415b3cfdc23fadfaadff1@2026-10-26T11:26:33Z (Gate 1; `snap` at Gate 3 identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet`. Degraded: codex over daily ration (probe rc 75) for planner and executor.
 - Controller `claude:claude-opus-5-5` (tok: not reported).

@@ -59,3 +59,22 @@ NON-BLOCKING
 4. main.go Observe: IsRegular on a directory named *.ail diverges from Python (error vs skip) and is untested. LOW.
 5. w-marketing-capture-orchestration.md section 9 r2 table row 5/6: V58 scan and "reviewers' own words" overstate verbatim application; Gemini fix only referenced, not restated in R1; V58 has no >4 px shift arm (my shift arms show it works).
 6. V58 (iii) reference is pass-a, not a stored V50 image.
+
+# Round 2 (post-r1 delta, bb79d7f4)
+Delta score: 92/100. Verdict: PASS. No BLOCKING findings.
+
+(a) Finding 5 closed honestly. Re-built v58-mkshift-main.go.txt + the r1 phonescan in /tmp/ev305 (outside the repo) and ran pass-a phone.png shifted 2/4/5/10 px: rule (i) true/true/false/false; verdicts PASS/FAIL/FAIL/FAIL; the 4 px FAIL is (iii) only (shifted scrollbar), exactly as V58b records, and matches v58-shift-output.txt. Section 9 now names the controller-authored content (V58 scan, V56->V58 renumber, C12 wording, M8a owner/gate) and cites finding 5; Gemini's tight-rectangle sentence is in the R1 phone bullet; V58b states V50 reference = pass-a phone.png (sha 999125ff...). Finding 6 is closed by disclosure, not by a stored independent image (acceptable).
+ NB-1: the R1 sentence says tight rectangles make a >4 px shift "drop a text band out"; the scan's real mechanism is a +/-4 px tolerance on rectangle coordinates (plus (iii)). Wording, not substance.
+ NB-2: "discriminating exactly at +/-4" holds for rule (i) only; the overall verdict at 4 px is FAIL via (iii). The doc says so.
+
+(b) Record accuracy. Checked against evidence: quorum artifacts exist (r1 11-47-05Z, r2 12-00-33Z), reviewer costs sum to 0.3334 and 0.3266 (log $0.3335/$0.3266, total $0.66: ok); verdicts Gemini pass / GLM, Kimi reject / synthesis blocked both rounds; my score (81, A 50/B 31, zero blocking), mutant counts (~35/~25), survivors, and finding 5 are reported accurately; the repo copy of evaluator-r1.md is byte-identical to my r1 report (it will lack this Round 2 section, as intended); roles/resolvers match the dispatch; PR #370 is real (OPEN; the verify gate SUCCESS, the Go job still running when I looked); row 150 15/22 arithmetic is consistent (14/17 -> M7c split + M7c0 + M7c1). Every quorum statement says BLOCKED / carve-out, "not a PASS"; no implied quorum PASS in STATUS, log, dashboard, or index. (The quorum JSONs carry controller_in_session "pass" notes; the record does not cite them as a verdict.)
+ NB-3: per-role token counts and durations (opus 278,119/338,359/223,882; haiku 53,444; sonnet 89,887) are not independently verifiable from artifacts I can read; the sonnet figure is plausible. Not flagged as false.
+ NB-4: log says "M7c1 BUILT (PR #370)" while Gate 3b CI is pending and PR open; wording says BUILT not LANDED and defers CI to a note, so acceptable.
+ NB-5: M7c1 survivors 1-4 are carried honestly ("Carried" and row 150 text).
+
+(c) Rotation lossless. The removed STATUS 301 line appears once, byte-identical, at the top of world-mission-status-archive.md (grep -c "ITERATION 301" = 1). world-mission.md is 6258 lines at f200b9d2 and at bb79d7f4 (+2 stamp/blank, -2 rotated/blank). Rows 150 (line 6179) and 203 (6257) exist; the row 150 edit only appends the iteration-305 text. mission_decisions.sh --check --file design_docs/world-mission.md -> "decision ledger valid: 77 rows", rc 0.
+
+(d) Merge f200b9d2 (origin/dev 6ec3ee39, PR #365): diff against first parent has no non-website path; base 4e6e89dc..6ec3ee39 non-website paths: none. Website only.
+
+Complete-list check of the delta: the coordinator's list matches git diff --stat f354e5e5 bb79d7f4 (15 files): the 3 doc/V58b files, the mission record files (world-mission.md, -log, -index, -dashboard, -status-archive), the evaluator-r1.md copy, and website/**. status-archive.md was named only implicitly via "301 rotated"; no omissions of substance.
+Worktree status --porcelain: clean at bb79d7f4.
