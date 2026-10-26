@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture-orchestration.md",
+  "iso_ts": "2026-10-26T12:00:33Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.046242000000000005,
+      "tokens_in": 21821,
+      "tokens_out": 260,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The phone shot (390x844) cannot be measured via the V51 Chrome `--dump-dom` proxy instrument because headless `--dump-dom` forces a minimum `innerWidth` of 500px, leaving the phone shot's position assertion weaker (relying on R1 screenshot-measured pixel rectangles and content variance rather than layout-tree bounding boxes).",
+        "catch": "Ensure that during R1, the pixel-measured rectangle coordinates for `phone.png` recorded into `WORLD_MARKETING_RECTS` tightly bound the header and first timeline entry so that any vertical shift in A1/P0 will violate the content-variance check or bounds check.",
+        "proposed_fix": "In §5 (R1, rehearsal), explicitly specify that the `phone.png` screenshot-measured rectangles in `WORLD_MARKETING_RECTS` must be tight enough around the header and first timeline entry text bands that a \u003e4px vertical layout shift drops the text band out of the rectangle and triggers a content-gate failure."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1394612,
+      "tokens_in": 19576,
+      "tokens_out": 25467,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The §3 inventory — the table offered as the answer to GLM r6(a), carrying §1.4's claim 'Those tests were run at this base (V35)' — does not hold at the base's own tool pin for 9 of the 16 cmd/ailang-worldd tests. V35 records a first run under the plan's retired v0.52.1 pin (9 PASS / 7 FAIL, every failure 'want release AILANG v0.54.15') and a re-run of only those 7 failures under v0.54.15 ('7/7 PASS'); §3's own annotations confirm the split — exactly M2b×2 + M4a×1 + M4b×2 + M5c×2 = 7 tests are marked '(v0.54.15)', while M2a's three tests, M3a's two, M3b's three and M6's TestServeWorkbenchStillFlag are unmarked, meaning their PASS was produced by the v0.52.1 binary even though V36 proves the workspace at base pins v0.54.15. Tests that consume tool-produced output (TestDemoSeedAuthenticatedCommits, TestDemoSeedHelpPreparation) can be version-sensitive — the suite's own M2b failures prove version sensitivity is real — so those nine 'results at base' were measured at a state that will not ship. That is precisely the defect GLM r6 rejected the parent for, reproduced inside the evidence presented as its cure, and §3's 'Not re-verified at base' list omits it.",
+        "catch": "R1 (§5) has the controller rewrite png.go:27's provisional content thresholds, but no V-row checks whether the landed M7b pinning tests (TestMarketingPNGContent, TestMarketingTwoPassInventory) hard-code the provisional values — the exact coupling class V54 was run to detect for M7c0's shot heights; if they pin them, R1 reds the landed suite mid-sequence with no assigned disposition. Secondary: §4.1 says the blank fragment shots 'show why the M7b nonblank/content gate is load-bearing' while §4.4 says 'V43 showed blank frames pass both' — V43's observed column records only supervisor verdict ok and 1 sampled colour, not that the content gate was exercised and passed, so P0's executors get contradictory guidance on whether the content gate catches blanks. Also §9 cites this document's blocking round artifact at volatile /tmp/world-iter305-quorum-r1.json while every parent-round artifact is stored durably.",
+        "proposed_fix": "Before re-quorum: (1) add V56 re-running the nine unmarked tests under the shipping pin — WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang go test -count=1 -v -run '^(TestDemoSeedAuthenticatedCommits|TestDemoSeedPreflightRefusals|TestDemoSeedHelpPreparation|TestDemoProofHTTPProducerRoundTrip|TestDemoProofSourceHashRefusal|TestDemoProofWrongKeyCannotProve|TestDemoProofNoVerifiedSetRefuses|TestDemoProofUncertainCommitStops|TestServeWorkbenchStillFlag)$' ./cmd/ailang-worldd — recording rc and 9/9 PASS; until that row exists, annotate each unmarked §3 row with the pin its PASS was actually measured under and weaken §1.4's 'run at this base (V35)' to 'run at this commit; nine cmd tests under the superseded v0.52.1 pin, re-verified by V56', adding those nine to the Not-re-verified-at-base list. (2) add V57 reading TestMarketingPNGContent and TestMarketingTwoPassInventory in scripts/marketingcheck/png_test.go for hard-coded provisional png.go:27 thresholds; if pinned, amend §5 R1 to name the test update, its owner and its gate, mirroring the V54/png_test.go:800 treatment M8a already receives. (3) copy /tmp/world-iter305-quorum-r1.json to design_docs/verification/world-iter305/quorum-r1.json and cite the durable path in §9. (4) reword §4.4 to state that V43's fragment images passed the supervisor's structural verdict only and the M7b content gate was never run on them, and delete §4.1's implication that the current gate catches blanks, so P0's justification rests on what V43 actually observed."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.14091599999999999,
+      "tokens_in": 19212,
+      "tokens_out": 5552,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The acceptance section is internally falsified for one of the six shots, and the doc's own load-bearing lesson makes that fatal. V43 established the core premise of this revision: byte-identical + nonblank captures pass even when the image shows nothing required (1 sampled colour, 9,069 B, byte-identical across passes). The entire C8'/P0 position-assertion machinery exists because of that finding. Yet §4.4 P0 exempts phone from the position assertion ('Phone is the exception... This gap is disclosed and has not been closed') because V51 measured that the dump-dom instrument cannot lay out at 390 px (innerWidth 500), while C8' nonetheless asserts 'For all six shots... the P0 position assertion (±2 px of the R1 baseline, bottom ≤ H − 40) holds.' As written, C8' is unsatisfiable-by-design for phone — the acceptance criterion claims a property the document itself proves cannot be measured. The promised fallback ('measured in the screenshot itself,' R1) names no method, has no probe, and has no executed V-row demonstrating it produces stable pixel rectangles; the only phone evidence anywhere is V50, a single controller visual inspection of one pass-A PNG, on the shot that also carries a known rendering defect (horizontal overflow, title clipped to 'AILANG World Workbenc'). So the least-instrumented, known-defective shot is discharged on the weakest evidence while the headline acceptance criterion overclaims uniform coverage — the same genus of self-contradiction (claim vs. own annotation) that the r6 reviewers correctly rejected the parent for.",
+        "catch": "Two specific things: (1) Reconcile C8' and C12 with the P0 phone exception — either strike 'all six' / 'every' from C8' and write the phone carve-out into the acceptance text (mirroring §4.4), or define a phone position check that is actually executable. (2) Before dispatching R1 as written, execute and log whatever 'measured in the screenshot itself' means for phone (e.g., a colour-boundary/feature scan on the V41 phone.png against a stored reference rectangle) as a new V-row; today that method is asserted, not demonstrated, and R1's phone step cannot otherwise be performed or judged.",
+        "proposed_fix": "Rewrite C8' as: 'For the five 1440 px shots, every required region lies inside its image at the M7c0 geometry and the P0 position assertion (±2 px of the R1 baseline, bottom ≤ H − 40) holds. For phone, whose 390 px layout the dump-dom instrument cannot measure (V51), the check is: (i) phone header and first-timeline-entry rectangles extracted from the capture-day PNG by the V56 scan, matching the R1 phone baseline within ±4 px; (ii) the M7b content-variance gate inside those rectangles; (iii) the disclosed overflow defect unchanged versus the V50 reference image (title clip and horizontal-scrollbar geometry identical within ±2 px). C8' makes no claim that the P0 layout assertion applies to phone.' Make the matching edit to C12 ('P3 holds on the release store' retains the same phone carve-out). Add and execute V56: run the phone-rectangle extraction scan on both passes of the V41 phone.png and on a deliberately wrong crop (e.g., timeline-only), recording that identical rectangles are recovered on the two passes and that the wrong crop fails (i)/(ii); attach raw output. Then amend §5 R1's phone bullet to: 'phone: the header and the first timeline entry, extracted with the V56 scan from the R1 PNG (baseline stored with WORLD_MARKETING_RECTS), because the dump-dom instrument cannot open a 390 px window (V51).'"
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller iteration 305 r1: verified region-bottom method (measurement-only proxy appends script after all sections; pixel cross-check V52), light/phone inspected (V50), probe drives committed marketing_capture.py shot (V55), png_test.go:462 hardcode (V54). Pass."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The §3 inventory — the table offered as the answer to GLM r6(a), carrying §1.4's claim 'Those tests were run at this base (V35)' — does not hold at the base's own tool pin for 9 of the 16 cmd/ailang-worldd tests. V35 records a first run under the plan's retired v0.52.1 pin (9 PASS / 7 FAIL, every failure 'want release AILANG v0.54.15') and a re-run of only those 7 failures under v0.54.15 ('7/7 PASS'); §3's own annotations confirm the split — exactly M2b×2 + M4a×1 + M4b×2 + M5c×2 = 7 tests are marked '(v0.54.15)', while M2a's three tests, M3a's two, M3b's three and M6's TestServeWorkbenchStillFlag are unmarked, meaning their PASS was produced by the v0.52.1 binary even though V36 proves the workspace at base pins v0.54.15. Tests that consume tool-produced output (TestDemoSeedAuthenticatedCommits, TestDemoSeedHelpPreparation) can be version-sensitive — the suite's own M2b failures prove version sensitivity is real — so those nine 'results at base' were measured at a state that will not ship. That is precisely the defect GLM r6 rejected the parent for, reproduced inside the evidence presented as its cure, and §3's 'Not re-verified at base' list omits it.",
+      "oc-kimi-k3: The acceptance section is internally falsified for one of the six shots, and the doc's own load-bearing lesson makes that fatal. V43 established the core premise of this revision: byte-identical + nonblank captures pass even when the image shows nothing required (1 sampled colour, 9,069 B, byte-identical across passes). The entire C8'/P0 position-assertion machinery exists because of that finding. Yet §4.4 P0 exempts phone from the position assertion ('Phone is the exception... This gap is disclosed and has not been closed') because V51 measured that the dump-dom instrument cannot lay out at 390 px (innerWidth 500), while C8' nonetheless asserts 'For all six shots... the P0 position assertion (±2 px of the R1 baseline, bottom ≤ H − 40) holds.' As written, C8' is unsatisfiable-by-design for phone — the acceptance criterion claims a property the document itself proves cannot be measured. The promised fallback ('measured in the screenshot itself,' R1) names no method, has no probe, and has no executed V-row demonstrating it produces stable pixel rectangles; the only phone evidence anywhere is V50, a single controller visual inspection of one pass-A PNG, on the shot that also carries a known rendering defect (horizontal overflow, title clipped to 'AILANG World Workbenc'). So the least-instrumented, known-defective shot is discharged on the weakest evidence while the headline acceptance criterion overclaims uniform coverage — the same genus of self-contradiction (claim vs. own annotation) that the r6 reviewers correctly rejected the parent for."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3266192,
+    "total_tokens_in": 60609,
+    "total_tokens_out": 31279
+  }
+}
