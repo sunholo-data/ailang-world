@@ -1,9 +1,10 @@
 # w-world-os-from-boot (roadmap notes: World as the thing you boot into) — r0
 
 **Status:** r0, **exploration notes, not a plan.** Recorded at Mark's request, attended
-2026-10-26 (*"yes please record this in roadmap potential notes"*). There is no queue row, no
-ruling is asked for, and the loop does not pick this up. It is a direction for after 1.x. The
-candidate rows in §4 and §7 are filed only if Mark asks.
+2026-10-26 (*"yes please record this in roadmap potential notes"*). No ruling is asked for; it
+is a direction for after 1.x. Mark then asked for the gaps to go on the roadmap (*"yep good
+write them up and put in to roadmap"*). They are queue rows **204–212**, all **PARKED
+post-1.x**, so the loop does not pick them up until Mark un-parks one. The mapping is in §10.
 
 ## §0 What Mark asked (attended, 2026-10-26)
 
@@ -170,6 +171,27 @@ It needs N3 (Tauri) first, and Mark's go-ahead. It is not on the 1.x path.
    viewable?
 5. Shipping on Omarchy: does World want to depend on their packaging, or only offer an
    installer?
+
+## §10 Where each gap lives on the roadmap
+
+| gap | row | status |
+|---|---|---|
+| long-running and interactive exec | 145 | design ruled (D-WORLD-84); an evidence row after v1.0.0 |
+| agent-made UI (part of the agent's view) | 151 | v1.0.0 release row |
+| the full-screen app (Tauri shell) | 188 N3 | in sprint, after N2c |
+| approvals by key | 201 | NEXT after row 188's style pass |
+| GUI programs, human edits as steps, kept output bytes | [outputs doc](w-world-surface-outputs.md) §6, R5 (#368) | designed, awaiting rulings |
+| operator sessions as episodes | 196 | GATED (delegated minting, fleet driver) |
+| forge and package-docs network | 146, 162 | PARKED post-1.0 |
+| retention and GC | **204** | PARKED post-1.x |
+| shared build cache | **205** | PARKED post-1.x |
+| live agent tab (see and type) | **206** | PARKED post-1.x |
+| agent states from World's records | **207** | PARKED post-1.x |
+| network as a human effect | **208** | PARKED post-1.x (design first) |
+| system config as a World object; toolchain check | **209** | PARKED post-1.x |
+| devices, GPU, audio | **210** | PARKED post-1.x (design first) |
+| the NixOS boot image spike (§8) | **211** | PARKED post-1.x, needs 188 N3 |
+| an Omarchy package | **212** | PARKED post-1.x, needs 188 N3 and 209 |
 
 ## Sources (fetched 2026-10-26)
 
