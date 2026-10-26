@@ -1636,9 +1636,19 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 - Two non-blocking defects introduced by this iteration, both fixed by the controller in the reviewers' own words: the §2 heading (Kimi's downgrade text) and the stale Status/Base lines (Gemini's Base annotation plus an iteration-304 status note).
 - Base gate re-measured at load 31–34: `shell-hup` red reproduces in the package run AND intermittently in isolation (rc 1/ok/rc 1).
 
-**Result:** M7c is specified and split, not built. Row 150 stays at 14/17; the split adds four milestones, now M7c1–M7c4 + M8a/M8b pending. The design doc keeps the landed M1–M7b record.
+**Result:** M7c is specified and split, not built. CI is pinned to `ubuntu-24.04` after `ubuntu-latest` moved to 26.04 and broke the srt confinement matrix (row 203). Row 150 stays at 14/17; the split adds four milestones, now M7c1–M7c4 + M8a/M8b pending. The design doc keeps the landed M1–M7b record.
 
-**Gate 3b:** the record PR's head and merge CI are governed by the bookkeeping report; LANDED only on observed success.
+**Gate 3b:**
+- **PR #364 head `b4efd3e0`, docs-only.** `ailang-code verify gate` success; `go host build + test gate` FAILURE at the "Row 140 srt confinement matrix" step.
+  - Every arm, control included, reported `outcome=PARTIAL token=None host=unchanged`.
+  - The srt pin digest matched; self-test 16/16.
+- **Attribution, measured.** The job's PROTECTED-JSON meta shows `Linux-7.0.0-1017-azure` / glibc 2.43 / bubblewrap 0.11.1. The last green dev run, 40015682267 at `039bfa77`, shows `Linux-6.17.0-1022-azure` / glibc 2.39 / bubblewrap 0.9.0. So `ubuntu-latest` moved under the gate, and this diff touched no code or workflow file.
+- **Disposition (Gate 1: a time-based red is the owning mission's job).**
+  - `go-verify` and `go-race-verify` pinned to `ubuntu-24.04`, the image every green run measured. The gate itself is unchanged.
+  - Queue row 203 filed: root-cause the Ubuntu-26.04 PARTIAL result and unpin.
+  - The re-run on the pinned head is the control arm: same gate, same srt, old image.
+  - `host/pins` and `cmd/ailang-worldd` tests that read `ci.yml` pass locally.
+  - LANDED only on observed success of the pinned head and the merge.
 
 **Routing evidence:** base=039bfa77aedff084d26e3cfc71518ed0886e8dda@2026-10-26T07:26:38Z (Gate 1; `snap` at Gate 3 identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet`. Degraded: codex over daily ration (probe rc 75) for planner and executor.
 - Controller `claude:claude-opus-5-5` (tok: not reported).

@@ -115,7 +115,10 @@ jobs:
 
   go-verify:
     name: go host build + test gate
-    runs-on: ubuntu-latest
+    # Pinned 2026-10-26 (World iteration 304): ubuntu-latest moved to Linux 7.0 / glibc 2.43 /
+    # bubblewrap 0.11.1, where srt 0.0.78 returns PARTIAL token=None on every confinement arm,
+    # control included. 24.04 is the image every green run measured. Unpin under queue row 203.
+    runs-on: ubuntu-24.04
     env:
       GOTOOLCHAIN: go1.26.6
     steps:
@@ -413,7 +416,10 @@ jobs:
   # inside the go-verify job, so it runs here in parallel with a measured, still-loud bound.
   go-race-verify:
     name: go race gate (go test -race, own job)
-    runs-on: ubuntu-latest
+    # Pinned 2026-10-26 (World iteration 304): ubuntu-latest moved to Linux 7.0 / glibc 2.43 /
+    # bubblewrap 0.11.1, where srt 0.0.78 returns PARTIAL token=None on every confinement arm,
+    # control included. 24.04 is the image every green run measured. Unpin under queue row 203.
+    runs-on: ubuntu-24.04
     env:
       GOTOOLCHAIN: go1.26.6
     steps:

@@ -9,6 +9,7 @@
 - **Row 150:** 14/17 built; M7c → M7c1/M7c2a/M7c2b/M7c3/M7c4, all pending; then M8a/M8b.
 - **Next:** author and quorum `w-marketing-capture-orchestration` (as built at HEAD, r6 objections verbatim), then build M7c1 (fully specified).
 - **Chrome:** the rig auto-updated to 156; the design now fixes the version within one run (major ≥155, same string for both passes).
+- **CI:** `ubuntu-latest` moved to 26.04 (bubblewrap 0.11.1), and the srt confinement matrix went PARTIAL on every arm. The Go jobs are pinned to `ubuntu-24.04`; row 203 covers root-causing and unpinning.
 - **Flake:** `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` reds in package runs and intermittently in isolation under load.
 - **Parked on Mark:** D-WORLD-86. A: drop the alias pre-checks and rely on pin+M5e (recommended); B: build defence in depth; default HOLD.
 - **Cost:** metered $0.42 (two quorums), plus Anthropic quota.
