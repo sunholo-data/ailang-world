@@ -1,0 +1,299 @@
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/real-attested-and-authored-claimed
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-boundary
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-cap-plus-one
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-boundary
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-cap-plus-one
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/read-boundary
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/read-cap-plus-one
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/result-boundary
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/result-cap-plus-one
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/request-boundary
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/request-cap-plus-one
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/no-roster-for-nonpacket
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/unrelated-input-ignored
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/carrying-entry-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/carrying-entry-read-error
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/carrying-entry-deadline
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/object-read-error
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/candidate-empty
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/effect-denied-no-result
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/effect-failed-no-result
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/effect-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/request-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/result-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-schema
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-input-ref
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-boundary
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-cap-plus-one
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/request-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/result-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/object-ref-mismatch
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/count
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/duplicate-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/duplicate-pair
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/count-extra
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/goal-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/candidates-duplicate
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/pair-ref-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/pair-kind-missing
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/unknown-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/caller-grade
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-key-case
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/pair-key-case
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-key-case
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/unknown-key
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/schema
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/ref-syntax
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-other-declared-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-payload-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-author
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-producer
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-text-empty
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-trailing-json
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-shape
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-consistency
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-decode
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/effect-kind
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/record-hash
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/request-hash
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/result-hash
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/claim-hash
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-hash
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/carrying-record-hash
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-semantic-id
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/input-interface
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/duplicate-json-key
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/shared-deadline-overflow
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/parent-deadline
+=== RUN   TestWorkbenchPacketRosterAnchoredBounds/deadline
+--- PASS: TestWorkbenchPacketRosterAnchoredBounds (28.53s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/real-attested-and-authored-claimed (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-boundary (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-cap-plus-one (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-boundary (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-cap-plus-one (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/read-boundary (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/read-cap-plus-one (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/result-boundary (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/result-cap-plus-one (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/request-boundary (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/request-cap-plus-one (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/no-roster-for-nonpacket (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/unrelated-input-ignored (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/carrying-entry-missing (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/carrying-entry-read-error (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/carrying-entry-deadline (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/object-read-error (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/candidate-empty (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/effect-denied-no-result (0.30s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/effect-failed-no-result (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-missing (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-missing (0.23s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/effect-missing (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/request-missing (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/result-missing (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-missing (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-schema (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-input-ref (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-boundary (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-cap-plus-one (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-kind (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/request-kind (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/result-kind (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/object-ref-mismatch (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/count (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/duplicate-kind (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/duplicate-pair (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/count-extra (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/goal-missing (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/candidates-duplicate (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/pair-ref-missing (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/pair-kind-missing (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/unknown-kind (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/caller-grade (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-key-case (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/pair-key-case (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-key-case (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/unknown-key (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/schema (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/ref-syntax (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-other-declared-kind (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-payload-kind (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-author (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-producer (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-text-empty (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-trailing-json (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-shape (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-consistency (0.27s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-decode (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/effect-kind (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/record-hash (0.24s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/request-hash (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/result-hash (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/claim-hash (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-hash (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/carrying-record-hash (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-semantic-id (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/input-interface (0.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/duplicate-json-key (0.25s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/shared-deadline-overflow (10.26s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/parent-deadline (0.31s)
+    --- PASS: TestWorkbenchPacketRosterAnchoredBounds/deadline (0.27s)
+=== RUN   TestWorkbenchPacketRosterTestedAndProven
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/four-real-rows
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/carrying-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/carrying-mismatch
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/effect-count
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/effect-not-cli
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/op-not-test
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/exit-code
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/not-ok
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/argv
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/prose
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/null
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/success-false
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/failed
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/skipped
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/vacuous
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/passed-zero
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/passed-mismatch
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/named-over-cap
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/named-empty
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/non-pass
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/empty-name
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/missing-counter
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/named-schema
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/vacuous-real
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/real-tool-success-shape
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/exit-code-absent-not-ok
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/exit-code-null
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/no-grader
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/wrong-key
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/edited-subject
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/subject-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/promote-claim
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/result-provenance
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/tool-mismatch
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-failed
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-incomplete
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/stdout-over-cap
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/subject-mismatch
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/remac-edited-subject
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/record-schema
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/effect-ref
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/effect-inconsistent
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/request-schema
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/result-schema
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/stdout-schema
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-schema
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/resolve-refused
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-deadline
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-record-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-record-hash
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-record-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-record-size
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-effect-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-effect-hash
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-effect-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-effect-size
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-request-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-request-hash
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-request-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-request-size
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-result-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-result-hash
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-result-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/test-result-size
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-envelope-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-envelope-hash
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-envelope-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-envelope-size
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-subject-missing
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-subject-hash
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-subject-kind
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/proof-subject-size
+=== RUN   TestWorkbenchPacketRosterTestedAndProven/named-boundary
+--- PASS: TestWorkbenchPacketRosterTestedAndProven (45.60s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/four-real-rows (0.65s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/carrying-missing (0.49s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/carrying-mismatch (0.49s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/effect-count (0.49s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/effect-not-cli (0.49s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/op-not-test (0.49s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/exit-code (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/not-ok (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/argv (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/prose (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/null (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/success-false (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/failed (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/skipped (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/vacuous (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/passed-zero (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/passed-mismatch (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/named-over-cap (0.71s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/named-empty (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/non-pass (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/empty-name (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/missing-counter (0.51s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/named-schema (0.51s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/vacuous-real (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/real-tool-success-shape (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/exit-code-absent-not-ok (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/exit-code-null (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/no-grader (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/wrong-key (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/edited-subject (0.49s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/subject-kind (0.51s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/promote-claim (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/result-provenance (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/tool-mismatch (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-failed (0.58s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-incomplete (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/stdout-over-cap (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/subject-mismatch (0.44s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/remac-edited-subject (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/record-schema (0.44s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/effect-ref (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/effect-inconsistent (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/request-schema (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/result-schema (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/stdout-schema (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-schema (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/resolve-refused (0.50s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-deadline (10.51s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-record-missing (0.52s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-record-hash (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-record-kind (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-record-size (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-effect-missing (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-effect-hash (0.69s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-effect-kind (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-effect-size (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-request-missing (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-request-hash (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-request-kind (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-request-size (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-result-missing (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-result-hash (0.48s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-result-kind (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/test-result-size (0.45s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-envelope-missing (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-envelope-hash (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-envelope-kind (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-envelope-size (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-subject-missing (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-subject-hash (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-subject-kind (0.46s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/proof-subject-size (0.47s)
+    --- PASS: TestWorkbenchPacketRosterTestedAndProven/named-boundary (0.47s)
+=== RUN   TestWorkbenchStillAllRegions
+    workbench_still_test.go:109: repeat GETs byte-identical on all three routes after 2.008449208s (real sleep)
+--- PASS: TestWorkbenchStillAllRegions (2.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	76.518s

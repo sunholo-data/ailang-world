@@ -5,8 +5,10 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
+    "prebuild": "sh scripts/fetch-media.sh",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
+    "predeploy": "sh scripts/fetch-media.sh",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",

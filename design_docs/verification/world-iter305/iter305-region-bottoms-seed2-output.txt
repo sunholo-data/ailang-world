@@ -1,0 +1,21 @@
+=== RUN   TestIter305RegionBottomsProbe
+    zz_iter305_bottoms_test.go:187: SEED manifest sha256=6a9971dccf56594d0a32f0ccc45c53d5146583221d0f13a2290a6636454a9f06 refs=77 why=4 approval-entry=9
+    zz_iter305_bottoms_test.go:229: DEFAULT /workbench status=200 bytes=19245 script_tags=1
+    zz_iter305_bottoms_test.go:229: DEFAULT /workbench?object=sha256:53f9406da9b891104992d82f6b2450c218dfcf7622b642a942eb71ae70a13268 status=200 bytes=18702 script_tags=1
+    zz_iter305_bottoms_test.go:229: DEFAULT /workbench?from=9&entry=9 status=200 bytes=10323 script_tags=1
+    zz_iter305_bottoms_test.go:229: DEFAULT /workbench?object=sha256:b70a4dd192e3cad7e8f025f6ab69111916f3c8b00d088d7403f6d69d6c8e5844&payload=1 status=200 bytes=16702 script_tags=1
+    zz_iter305_bottoms_test.go:318: BOTTOM packet.png region="section[aria-label=decision packet]" at 1440x4400: bottom=3564.56 inner=1440x4313 client=1425 scrollW=1425 scrollH=5242 scrollY=0 inspector.bottom=3581.56 -> rule height=3700 blocked=false
+    zz_iter305_bottoms_test.go:325: CONFIRM packet.png at 1440x3700: bottom=3564.56 (delta vs 4400 run 0.00) margin=135.44 inner=1440x3613 client=1425 scrollH=5242
+    zz_iter305_bottoms_test.go:328: SHOT packet.png 1440x3700 err=<nil> {"verdict": "ok", "detail": ""}
+    zz_iter305_bottoms_test.go:318: BOTTOM graph.png region="section[aria-label=world graph]" at 1440x4400: bottom=2042.14 inner=1440x4313 client=1440 scrollW=1440 scrollH=4313 scrollY=0 inspector.bottom=1092.55 -> rule height=2100 blocked=false
+    zz_iter305_bottoms_test.go:325: CONFIRM graph.png at 1440x2100: bottom=2042.14 (delta vs 4400 run 0.00) margin=57.86 inner=1440x2013 client=1425 scrollH=2551
+    zz_iter305_bottoms_test.go:328: SHOT graph.png 1440x2100 err=<nil> {"verdict": "ok", "detail": ""}
+    zz_iter305_bottoms_test.go:318: BOTTOM provenance.png region="pre.payload" at 1440x4400: bottom=2881.17 inner=1440x4313 client=1425 scrollW=3715 scrollH=4666 scrollY=0 inspector.bottom=2911.17 -> rule height=3000 blocked=false
+    zz_iter305_bottoms_test.go:325: CONFIRM provenance.png at 1440x3000: bottom=2881.17 (delta vs 4400 run 0.00) margin=118.83 inner=1440x2913 client=1425 scrollH=4666
+    zz_iter305_bottoms_test.go:328: SHOT provenance.png 1440x3000 err=<nil> {"verdict": "ok", "detail": ""}
+    zz_iter305_bottoms_test.go:336: BOTTOM workbench-light.png at 1440x1100: nav.bottom=322.27 timelineFirstEntry.bottom=613.05 need=613.05 fits(<=h-40)=true inner=1440x1013 client=1425 scrollW=1425 h1.right=1401.00
+    zz_iter305_bottoms_test.go:336: BOTTOM phone.png at 390x844: nav.bottom=322.27 timelineFirstEntry.bottom=613.05 need=613.05 fits(<=h-40)=true inner=500x757 client=485 scrollW=701 h1.right=461.00
+    zz_iter305_bottoms_test.go:345: SEED head sha256:72490ae4ccb29b90ad3d680c5ed269812586a82e20c8ab87f10cade41ab2c048
+--- PASS: TestIter305RegionBottomsProbe (10.98s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	11.256s

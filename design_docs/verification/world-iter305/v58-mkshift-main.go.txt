@@ -1,0 +1,27 @@
+// V58 shift arms (controller, after judge r1 finding 5): phone.png shifted down by N px
+// (top filled with the page background), to exercise the ±4 px position rule directly.
+package main
+
+import (
+	"image"
+	"image/draw"
+	"image/png"
+	"os"
+	"strconv"
+)
+
+func main() {
+	f, _ := os.Open(os.Args[1])
+	src, err := png.Decode(f)
+	if err != nil {
+		panic(err)
+	}
+	n, _ := strconv.Atoi(os.Args[2])
+	b := src.Bounds()
+	w := image.NewNRGBA(b)
+	draw.Draw(w, b, &image.Uniform{src.At(5, 5)}, image.Point{}, draw.Src)
+	draw.Draw(w, image.Rect(0, n, b.Dx(), b.Dy()), src, image.Pt(0, 0), draw.Src)
+	o, _ := os.Create(os.Args[3])
+	png.Encode(o, w)
+	o.Close()
+}

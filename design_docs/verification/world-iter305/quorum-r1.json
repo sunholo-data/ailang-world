@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture-orchestration.md",
+  "iso_ts": "2026-10-26T11:47:05Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.03469,
+      "tokens_in": 15875,
+      "tokens_out": 294,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "M7c0's exact input heights (packet, graph, provenance) and the final png.go content thresholds are deferred to controller steps R0 and R1 rather than pre-measured as exact integers in V43 (which only reports approximate 2.2x-downscaled readings: ~3600, ~2100, ~3000), leaving M7c0's acceptance assertion dependent on a post-quorum controller verification row.",
+        "catch": "Ensure controller step R0 records exact unscaled pixel bounding-box coordinates for the bottom edge of each required region before dispatching M7c0, and verify that updating Shots heights in scripts/marketingcheck/png.go does not break any existing M7b synthetic fixture dimension assertions in png_test.go.",
+        "proposed_fix": "In §5 (M7c0 row), explicitly specify that any existing synthetic PNG test helpers in scripts/marketingcheck/png_test.go that hardcode 1400 or 1100 for packet, graph, or provenance must be updated or parameterized to read from Shots so M7b's existing test suite continues to pass when M7c0 updates Shots."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.09614700000000001,
+      "tokens_in": 14195,
+      "tokens_out": 17335,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§4.1's scoping premise — 'The light/dark/phone shots are unaffected' — is asserted, not measured. V42 read only four of the six V41 images (workbench-dark, packet, graph, provenance); workbench-light.png and phone.png were never inspected against the parent §2 required-content rows, and V41's byte-identical hashes cannot substitute for inspection because the doc's own V43 proves blank output passes two-pass byte-equality. Dark is the only 'unaffected' shot with inspection evidence; light is inferable only by layout symmetry; phone (390x844, a different responsive layout) is not inferable at all. If phone.png lacks its required content, no downstream gate catches it — M7c0 amends exactly three shots, the M7b content gate is nonblank/threshold-only (V43 showed why that is insufficient), and R1's rectangles are specified only for the packet regions — so a non-conforming image could commit at A1 silently: the same defect class as V42, but at the release boundary rather than in a probe. Compounding this, the geometry that must contain the required regions is measured exclusively on test-minted stores (R0, R1, and P0 which is explicitly 'never the release store') while the images that actually ship come from the attended release store, and §8/V43 record fresh seeds producing different stores — the layout-invariance premise across mints is never stated, verified, or re-checked at A1.",
+        "catch": "Before M7c0's V-row exists, verify: (1) inspect pass-a and pass-b of workbench-light.png and phone.png from the V41 output using the same method as V42, recording per-shot verdicts against the parent §2 required-content rows; (2) whether the attended descriptor publish and session mint leave the release store's captured log structurally identical to the seeded test store (same 10 entries, same section order, same section positions) — nothing in the doc checks that heights measured on one store hold on the store that ships; (3) minor: the render.go:219/:229/:248/:260 line cites in §4.1 appear in no V-row (V39 only greps script/style/nonce lines).",
+        "proposed_fix": "Add verification row V50 before any M7c0 work: 'V50 | Read pass-a/{workbench-light,phone}.png and pass-b/{workbench-light,phone}.png from the V41 probe output (same inspection as V42) | per-shot verdict against parent §2 required-content rows.' Amend §4.1 to cite V50 for light and phone instead of asserting 'unaffected'; if phone.png is missing required content at 844 px, extend the §4.1 height rule and M7c0's Shots amendment to the phone shot, or route the framing choice to Mark per the §8 disposition. Amend C8′ and R1 so rectangle measurement covers all six shots rather than only the packet regions, making 'unaffected' a checked property at each capture. Add one sentence to §4.4 establishing the release-store premise: either a V-row verifying the attended mint leaves the captured log structurally identical to the seeded test store, or a release-store containment measurement before pass A of A1 (GET-only still probe on the frozen release store, rectangles re-verified, every required bottom edge \u003c= shot height - 40); and define the case where a measured bottom edge + 40 exceeds the 4,400 px cap as blocked-and-escalated to Mark, never silently clamped."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.202623,
+      "tokens_in": 13961,
+      "tokens_out": 10716,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§1.4's disposition of GLM(d)/Kimi(2) — the quorum's central objection — claims the Chrome-156 two-pass byte-stability evidence was produced 'through the committed supervisor,' but the cited row V41 records only direct 'python3 scripts/marketing_capture.py shot' invocations driven by the throwaway iter305 probe test; the committed supervisor (M7a, scripts/marketingcheck/supervisor_test.go, the bounded-supervisor milestone) is nowhere in the command path. The sentence that retires the reviewers' top objection is therefore falsified by the document's own verification log, and the actual release capture path (six shots driven under the supervisor's process-group management per M7c2b/M7c4) has zero determinism evidence on Chrome 156 — only the raw Python shot path does. In a document whose entire legitimacy rests on 'every row measured at this base,' this is a premise-verification failure on the single most load-bearing claim, and it recreates exactly the r6 pattern (claiming more instrument coverage than the log shows) that got the parent blocked.",
+        "catch": "Three things: (1) Re-measure or correct the §1.4/V41 'through the committed supervisor' claim — run the same six-shot two-pass through scripts/marketingcheck's supervisor on Chrome 156 at base 4e6e89dc and record it as V50, or strike the phrase and add an explicit transfer argument (the supervisor's spawned argv is inspectable and must be shown byte-for-byte identical to the probe's invocation). (2) Verify seed-invariance of layout: M7c0 bakes fixed pixel heights into png.go and A1 captures a fresh demo seed, yet required-region bottom edges were measured once, approximately, from a 2.2x-downscaled reading on one seed (V43); R0 must measure bottoms on \u003e=2 independently seeded stores and record the delta as a V-row, and P0's content gate must include a position assertion (expected-region signature at expected coordinates), because byte-equality and nonblank/variance gates cannot detect a busy-but-wrong crop on a differently-laid-out release seed (V43's own blank-but-byte-identical fragment shots prove equality alone is insufficient). (3) M7c0's spec is internally inconsistent: the described test ('a fixture of that size passes structure + cap checks') would still pass when the M7c0-height mutant restores packet to 1400; the doc must state where the measured-bottom constants live (a Go test cannot read design_docs V-rows) and which assertion compares Shots heights against them so the specified mutant actually reds.",
+        "proposed_fix": "Replace the §1.4 GLM(d)/Kimi(2) row with: 'Done: V41. All six shots are byte-identical across two isolated passes on Chrome 156.0.8078.47, on the real seeded store, driven directly through scripts/marketing_capture.py shot inside the iter305 probe; the committed supervisor was not in the probe path. V50 re-runs the identical six-shot two-pass under scripts/marketingcheck's supervisor on Chrome 156.0.8078.47.' Then execute V50 at base 4e6e89dc and append it to §10 with the command and all 12 SHA256s; if V50 cannot run pre-quorum, downgrade the §1.4 claim to 'raw shot path only; supervisor-path determinism is gated at R1 before any release capture' and bind that gate into §7/C12 text. Add to §5/R0: 'Region bottom edges are measured on two independently seeded stores; the per-region delta is recorded in the V-row, and the §4.1 height rule takes the max across seeds,' and add to §4.4 P0 a position assertion (expected region signature at expected coordinates) so a seed-dependent crop cannot pass the content gate silently. Amend §5 M7c0 to: 'TestMarketingShotGeometry asserts the packet/graph/provenance heights equal the §4.1-rule values computed from the R0-recorded bottoms, transcribed as named constants into png_test.go (comment cites the R0 V-row); mutant M7c0-height reds on that height-equality assertion, not on the fixture cap checks.'"
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller iteration 305: spot-checked V36 tool pin (ailang-releases.json v0.54.15 tool), V38 object-route grammar (workbench.go supportedWorkbenchQuery refuses from), V48 anchors (1 id / 20 aria-label), and V42 by viewing packet.png (header+timeline only, no roster). Doc answers r6 objections; pass."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: §4.1's scoping premise — 'The light/dark/phone shots are unaffected' — is asserted, not measured. V42 read only four of the six V41 images (workbench-dark, packet, graph, provenance); workbench-light.png and phone.png were never inspected against the parent §2 required-content rows, and V41's byte-identical hashes cannot substitute for inspection because the doc's own V43 proves blank output passes two-pass byte-equality. Dark is the only 'unaffected' shot with inspection evidence; light is inferable only by layout symmetry; phone (390x844, a different responsive layout) is not inferable at all. If phone.png lacks its required content, no downstream gate catches it — M7c0 amends exactly three shots, the M7b content gate is nonblank/threshold-only (V43 showed why that is insufficient), and R1's rectangles are specified only for the packet regions — so a non-conforming image could commit at A1 silently: the same defect class as V42, but at the release boundary rather than in a probe. Compounding this, the geometry that must contain the required regions is measured exclusively on test-minted stores (R0, R1, and P0 which is explicitly 'never the release store') while the images that actually ship come from the attended release store, and §8/V43 record fresh seeds producing different stores — the layout-invariance premise across mints is never stated, verified, or re-checked at A1.",
+      "oc-kimi-k3: §1.4's disposition of GLM(d)/Kimi(2) — the quorum's central objection — claims the Chrome-156 two-pass byte-stability evidence was produced 'through the committed supervisor,' but the cited row V41 records only direct 'python3 scripts/marketing_capture.py shot' invocations driven by the throwaway iter305 probe test; the committed supervisor (M7a, scripts/marketingcheck/supervisor_test.go, the bounded-supervisor milestone) is nowhere in the command path. The sentence that retires the reviewers' top objection is therefore falsified by the document's own verification log, and the actual release capture path (six shots driven under the supervisor's process-group management per M7c2b/M7c4) has zero determinism evidence on Chrome 156 — only the raw Python shot path does. In a document whose entire legitimacy rests on 'every row measured at this base,' this is a premise-verification failure on the single most load-bearing claim, and it recreates exactly the r6 pattern (claiming more instrument coverage than the log shows) that got the parent blocked."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.33346,
+    "total_tokens_in": 44031,
+    "total_tokens_out": 28345
+  }
+}

@@ -1,0 +1,18 @@
+=== RUN   TestWorkbenchStillDefaultLiveScript
+--- PASS: TestWorkbenchStillDefaultLiveScript (0.00s)
+=== RUN   TestRenderPacketEvidenceFourRows
+=== RUN   TestRenderPacketEvidenceFourRows/four-rows
+=== RUN   TestRenderPacketEvidenceFourRows/escaped
+=== RUN   TestRenderPacketEvidenceFourRows/unavailable-row
+=== RUN   TestRenderPacketEvidenceFourRows/refused-packet
+=== RUN   TestRenderPacketEvidenceFourRows/non-packet
+=== RUN   TestRenderPacketEvidenceFourRows/roster-unavailable
+--- PASS: TestRenderPacketEvidenceFourRows (0.00s)
+    --- PASS: TestRenderPacketEvidenceFourRows/four-rows (0.00s)
+    --- PASS: TestRenderPacketEvidenceFourRows/escaped (0.00s)
+    --- PASS: TestRenderPacketEvidenceFourRows/unavailable-row (0.00s)
+    --- PASS: TestRenderPacketEvidenceFourRows/refused-packet (0.00s)
+    --- PASS: TestRenderPacketEvidenceFourRows/non-packet (0.00s)
+    --- PASS: TestRenderPacketEvidenceFourRows/roster-unavailable (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/workbench	0.266s

@@ -1,0 +1,195 @@
+// Iteration-305 controller V58: phone.png rectangle extraction scan (Kimi r2 fix).
+// Text bands = maximal runs of rows containing >=1 "ink" pixel (luma < 110) in x<370
+// (the right 20 px hold the clipped title/scrollbar). Header rect = band 0 (h1).
+// First-entry rect = union of the 6 bands starting at the band whose top is the
+// 3rd band after the "Timeline" heading layout slot: here identified by index from
+// the baseline band list (a position signature). Content gate mirrors MinRectStdDev=4.0.
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/png"
+	"math"
+	"os"
+)
+
+type Rect struct{ X0, Y0, X1, Y1 int }
+
+func luma(im image.Image, x, y int) float64 {
+	r, g, b, _ := im.At(x, y).RGBA()
+	return 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(b>>8)
+}
+
+func bands(im image.Image) []Rect {
+	bd := im.Bounds()
+	var out []Rect
+	in := false
+	var cur Rect
+	for y := bd.Min.Y; y < bd.Max.Y-20; y++ { // exclude bottom scrollbar strip
+		x0, x1 := -1, -1
+		for x := bd.Min.X; x < bd.Min.X+370 && x < bd.Max.X; x++ {
+			if luma(im, x, y) < 110 {
+				if x0 < 0 {
+					x0 = x
+				}
+				x1 = x
+			}
+		}
+		if x0 >= 0 {
+			if !in {
+				cur = Rect{x0, y, x1 + 1, y + 1}
+				in = true
+			} else {
+				cur.X0 = min(cur.X0, x0)
+				cur.X1 = max(cur.X1, x1+1)
+				cur.Y1 = y + 1
+			}
+		} else if in {
+			out = append(out, cur)
+			in = false
+		}
+	}
+	if in {
+		out = append(out, cur)
+	}
+	return out
+}
+
+func stddev(im image.Image, r Rect) float64 {
+	var s, ss, n float64
+	for y := r.Y0; y < r.Y1; y++ {
+		for x := r.X0; x < r.X1; x++ {
+			v := luma(im, x, y)
+			s += v
+			ss += v * v
+			n++
+		}
+	}
+	if n == 0 {
+		return 0
+	}
+	m := s / n
+	return math.Sqrt(ss/n - m*m)
+}
+
+// scrollbar: bottom strip rows where a gray thumb (luma 120..200) spans >= 100 px.
+func scrollbar(im image.Image) Rect {
+	bd := im.Bounds()
+	r := Rect{-1, -1, -1, -1}
+	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+		x0, x1 := -1, -1
+		for x := 0; x < bd.Max.X; x++ {
+			if l := luma(im, x, y); l >= 120 && l <= 200 {
+				if x0 < 0 {
+					x0 = x
+				}
+				x1 = x
+			}
+		}
+		if x0 >= 0 && x1-x0 >= 100 {
+			if r.Y0 < 0 {
+				r = Rect{x0, y, x1 + 1, y + 1}
+			} else {
+				r.Y1 = y + 1
+			}
+		}
+	}
+	return r
+}
+
+// title clip: rightmost ink column of the h1 band over the full width.
+func titleRight(im image.Image, h Rect) int {
+	right := -1
+	for y := h.Y0; y < h.Y1; y++ {
+		for x := 0; x < im.Bounds().Max.X; x++ {
+			if luma(im, x, y) < 110 && x > right {
+				right = x
+			}
+		}
+	}
+	return right
+}
+
+type Report struct {
+	File       string  `json:"file"`
+	Bands      []Rect  `json:"bands"`
+	Header     Rect    `json:"header"`
+	FirstEntry Rect    `json:"first_entry"`
+	HeaderSD   float64 `json:"header_sd"`
+	EntrySD    float64 `json:"entry_sd"`
+	Scrollbar  Rect    `json:"scrollbar"`
+	TitleRight int     `json:"title_right"`
+}
+
+// entryStart is the index of the "entry 0" heading band in the baseline layout:
+// h1, workbench, link-underline, world, revision, log head, stateRoot, underline, Timeline, entry 0 → index 9 (measured band list).
+const entryStart = 9
+
+func scan(path string) (Report, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return Report{}, err
+	}
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		return Report{}, err
+	}
+	b := bands(im)
+	rep := Report{File: path, Bands: b, Scrollbar: scrollbar(im)}
+	if len(b) > 0 {
+		rep.Header = b[0]
+		rep.HeaderSD = stddev(im, b[0])
+		rep.TitleRight = titleRight(im, b[0])
+	}
+	if len(b) >= entryStart+6 {
+		u := b[entryStart]
+		for _, r := range b[entryStart : entryStart+6] {
+			u = Rect{min(u.X0, r.X0), min(u.Y0, r.Y0), max(u.X1, r.X1), max(u.Y1, r.Y1)}
+		}
+		rep.FirstEntry = u
+		rep.EntrySD = stddev(im, u)
+	}
+	return rep, nil
+}
+
+func near(a, b Rect, tol int) bool {
+	d := func(x, y int) bool { return x-y <= tol && y-x <= tol }
+	return d(a.X0, b.X0) && d(a.Y0, b.Y0) && d(a.X1, b.X1) && d(a.Y1, b.Y1)
+}
+
+func main() {
+	// usage: phonescan <baseline.png> <candidate.png>...
+	base, err := scan(os.Args[1])
+	if err != nil {
+		fmt.Println("INSTRUMENT FAILURE", err)
+		os.Exit(2)
+	}
+	if len(base.Bands) < entryStart+6 {
+		fmt.Println("INSTRUMENT FAILURE: baseline has", len(base.Bands), "bands")
+		os.Exit(2)
+	}
+	j, _ := json.Marshal(base)
+	fmt.Println("BASELINE", string(j))
+	fail := 0
+	for _, p := range os.Args[2:] {
+		c, err := scan(p)
+		if err != nil {
+			fmt.Println("INSTRUMENT FAILURE", p, err)
+			os.Exit(2)
+		}
+		i := near(c.Header, base.Header, 4) && near(c.FirstEntry, base.FirstEntry, 4)
+		ii := c.HeaderSD >= 4.0 && c.EntrySD >= 4.0
+		iii := near(c.Scrollbar, base.Scrollbar, 2) && c.TitleRight-base.TitleRight <= 2 && base.TitleRight-c.TitleRight <= 2
+		v := "PASS"
+		if !(i && ii && iii) {
+			v = "FAIL"
+			fail++
+		}
+		fmt.Printf("CANDIDATE %s bands=%d header=%v entry=%v sd=%.1f/%.1f scrollbar=%v titleRight=%d (i)=%v (ii)=%v (iii)=%v -> %s\n",
+			p, len(c.Bands), c.Header, c.FirstEntry, c.HeaderSD, c.EntrySD, c.Scrollbar, c.TitleRight, i, ii, iii, v)
+	}
+	fmt.Println("FAILS", fail)
+}

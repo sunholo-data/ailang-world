@@ -1,0 +1,384 @@
+=== RUN   TestDemoSeedReadTestCheck
+--- PASS: TestDemoSeedReadTestCheck (4.26s)
+=== RUN   TestDemoSeedRejectsToolReportRefusals
+=== RUN   TestDemoSeedRejectsToolReportRefusals/null-report-unit-control
+=== RUN   TestDemoSeedRejectsToolReportRefusals/real-refusal-arms
+    demo_test.go:769: bad/malformed.ail: exit=1 validator=test report success=false is refused
+    demo_test.go:769: bad/nogen.ail: exit=1 validator=test report success=false is refused
+--- PASS: TestDemoSeedRejectsToolReportRefusals (3.97s)
+    --- PASS: TestDemoSeedRejectsToolReportRefusals/null-report-unit-control (0.00s)
+    --- PASS: TestDemoSeedRejectsToolReportRefusals/real-refusal-arms (3.97s)
+=== RUN   TestDemoSeedApprovalPacket
+=== RUN   TestDemoSeedApprovalPacket/single-approval
+=== RUN   TestDemoSeedApprovalPacket/single-approval/no-decision-verb-packet-stays-pending
+=== RUN   TestDemoSeedApprovalPacket/single-approval/seed-invokes-s5-once
+=== RUN   TestDemoSeedApprovalPacket/no-human-budget
+=== RUN   TestDemoSeedApprovalPacket/extra-effect-refused
+    demo_test.go:1418: coordinator refusal: ailang-worldd: capsule template ailang-check: ready
+        ailang-worldd: capsule template ailang-cli: ready
+        ailang-worldd: capsule template ailang-delete: ready
+        ailang-worldd: capsule template ailang-edit: ready
+        ailang-worldd: capsule template ailang-read: ready
+        ailang-worldd: capsule template ailang-run: ready
+        ailang-worldd: capsule template ailang-write: ready
+        ailang-worldd: capsule template builtins-search: ready
+        ailang-worldd: capsule template demo-approve: ready
+        ailang-worldd: capsule template examples-search: ready
+        ailang-worldd: capsule template workspace-exec: ready
+        ailang-worldd: a2a refusal: tasks/send a2a:demo:demo-approval: "coordinator: effect plan violates L1: 2 effects; a v1 plan carries at most 1"
+--- PASS: TestDemoSeedApprovalPacket (12.68s)
+    --- PASS: TestDemoSeedApprovalPacket/single-approval (4.43s)
+        --- PASS: TestDemoSeedApprovalPacket/single-approval/no-decision-verb-packet-stays-pending (0.00s)
+        --- PASS: TestDemoSeedApprovalPacket/single-approval/seed-invokes-s5-once (0.00s)
+    --- PASS: TestDemoSeedApprovalPacket/no-human-budget (3.67s)
+    --- PASS: TestDemoSeedApprovalPacket/extra-effect-refused (4.55s)
+=== RUN   TestDemoSeedWhyNamedLinks
+=== RUN   TestDemoSeedWhyNamedLinks/controls
+=== RUN   TestDemoSeedWhyNamedLinks/controls/accepted-report
+=== RUN   TestDemoSeedWhyNamedLinks/controls/approval-stimulus
+=== RUN   TestDemoSeedWhyNamedLinks/controls/coordinator
+=== RUN   TestDemoSeedWhyNamedLinks/controls/ok
+=== RUN   TestDemoSeedWhyNamedLinks/controls/zero-links
+=== RUN   TestDemoSeedWhyNamedLinks/controls/effect-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/world-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/entry-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/record-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/input-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/plan-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/output-absent
+=== RUN   TestDemoSeedWhyNamedLinks/controls/effect-false
+=== RUN   TestDemoSeedWhyNamedLinks/controls/plain-rest
+=== RUN   TestDemoSeedWhyNamedLinks/real-stack
+--- PASS: TestDemoSeedWhyNamedLinks (4.85s)
+    --- PASS: TestDemoSeedWhyNamedLinks/controls (0.02s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/accepted-report (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/approval-stimulus (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/coordinator (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/ok (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/zero-links (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/effect-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/world-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/entry-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/record-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/input-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/plan-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/output-absent (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/effect-false (0.00s)
+        --- PASS: TestDemoSeedWhyNamedLinks/controls/plain-rest (0.00s)
+    --- PASS: TestDemoSeedWhyNamedLinks/real-stack (4.84s)
+=== RUN   TestDemoSeedManifestReferences
+=== RUN   TestDemoSeedManifestReferences/controls
+=== RUN   TestDemoSeedManifestReferences/controls/completeness
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-frozen-head-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-frozen-head-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-goal-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-goal-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-candidate-a-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-candidate-a-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-candidate-b-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-candidate-b-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-source-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-source-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-claim-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-claim-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-test-invocation-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-test-invocation-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-recorded-effect-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-recorded-effect-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-authored-claim-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-authored-claim-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-proof-envelope-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-proof-envelope-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-packet-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-packet-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-request-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-request-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-proposal-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-proposal-0
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-invocation-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-invocation-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-transition-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-transition-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-world-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-world-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-record-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-record-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-input-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-input-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-plan-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-plan-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-output-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-output-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-1
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-invocation-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-invocation-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-transition-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-transition-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-world-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-world-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-record-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-record-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-input-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-input-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-plan-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-plan-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-output-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-output-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-2
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-invocation-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-invocation-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-transition-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-transition-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-world-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-world-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-record-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-record-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-input-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-input-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-plan-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-plan-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-output-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-output-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-3
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-invocation-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-invocation-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-transition-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-transition-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-world-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-world-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-record-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-record-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-input-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-input-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-plan-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-plan-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-output-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-output-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-4
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-read-extra-false
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-read-extra-true
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-test-extra-false
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-test-extra-true
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-check-extra-false
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-check-extra-true
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-approval-extra-false
+=== RUN   TestDemoSeedManifestReferences/controls/completeness/why-approval-extra-true
+=== RUN   TestDemoSeedManifestReferences/controls/stray-extra-ref
+=== RUN   TestDemoSeedManifestReferences/controls/why-count-extra
+=== RUN   TestDemoSeedManifestReferences/controls/why-count-fewer
+=== RUN   TestDemoSeedManifestReferences/controls/duplicate-why-entry
+=== RUN   TestDemoSeedManifestReferences/controls/absent-ref
+=== RUN   TestDemoSeedManifestReferences/controls/mismatched-content
+=== RUN   TestDemoSeedManifestReferences/controls/absent-object
+=== RUN   TestDemoSeedManifestReferences/controls/absent-world
+=== RUN   TestDemoSeedManifestReferences/controls/absent-entry
+=== RUN   TestDemoSeedManifestReferences/controls/absent-pin
+=== RUN   TestDemoSeedManifestReferences/controls/absent-unknown
+=== RUN   TestDemoSeedManifestReferences/controls/schema-schema
+=== RUN   TestDemoSeedManifestReferences/controls/schema-version
+=== RUN   TestDemoSeedManifestReferences/controls/schema-proof
+=== RUN   TestDemoSeedManifestReferences/controls/schema-tool
+=== RUN   TestDemoSeedManifestReferences/controls/role
+=== RUN   TestDemoSeedManifestReferences/controls/why-hash
+=== RUN   TestDemoSeedManifestReferences/controls/session-token
+=== RUN   TestDemoSeedManifestReferences/controls/absolute-path
+=== RUN   TestDemoSeedManifestReferences/controls/timestamp
+=== RUN   TestDemoSeedManifestReferences/controls/key-material
+=== RUN   TestDemoSeedManifestReferences/real-stack
+--- PASS: TestDemoSeedManifestReferences (6.49s)
+    --- PASS: TestDemoSeedManifestReferences/controls (1.93s)
+        --- PASS: TestDemoSeedManifestReferences/controls/completeness (1.80s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-frozen-head-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-frozen-head-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-goal-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-goal-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-candidate-a-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-candidate-a-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-candidate-b-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-candidate-b-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-source-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-source-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-claim-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-claim-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-test-invocation-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-test-invocation-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-recorded-effect-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-recorded-effect-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-authored-claim-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-authored-claim-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-proof-envelope-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-proof-envelope-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-packet-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-packet-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-request-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-request-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-proposal-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-proposal-0 (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-invocation-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-invocation-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-transition-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-transition-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-world-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-world-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-record-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-record-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-input-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-input-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-plan-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-plan-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-output-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-output-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-1 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-invocation-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-invocation-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-transition-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-transition-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-world-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-world-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-record-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-record-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-input-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-input-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-plan-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-plan-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-output-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-output-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-2 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-invocation-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-invocation-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-transition-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-transition-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-world-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-world-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-record-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-record-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-input-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-input-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-plan-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-plan-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-output-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-output-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-3 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-invocation-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-invocation-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-transition-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-transition-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-interpreter-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-interpreter-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-world-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-world-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-record-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-record-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-input-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-input-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-plan-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-plan-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-output-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-output-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-request-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-request-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/missing-effect-result-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/extra-effect-result-4 (0.02s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-read-extra-false (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-read-extra-true (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-test-extra-false (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-test-extra-true (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-check-extra-false (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-check-extra-true (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-approval-extra-false (0.01s)
+            --- PASS: TestDemoSeedManifestReferences/controls/completeness/why-approval-extra-true (0.02s)
+        --- PASS: TestDemoSeedManifestReferences/controls/stray-extra-ref (0.02s)
+        --- PASS: TestDemoSeedManifestReferences/controls/why-count-extra (0.02s)
+        --- PASS: TestDemoSeedManifestReferences/controls/why-count-fewer (0.01s)
+        --- PASS: TestDemoSeedManifestReferences/controls/duplicate-why-entry (0.01s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absent-ref (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/mismatched-content (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absent-object (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absent-world (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absent-entry (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absent-pin (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absent-unknown (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/schema-schema (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/schema-version (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/schema-proof (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/schema-tool (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/role (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/why-hash (0.01s)
+        --- PASS: TestDemoSeedManifestReferences/controls/session-token (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/absolute-path (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/timestamp (0.00s)
+        --- PASS: TestDemoSeedManifestReferences/controls/key-material (0.00s)
+    --- PASS: TestDemoSeedManifestReferences/real-stack (4.56s)
+=== RUN   TestDemoSeedEndToEnd
+--- PASS: TestDemoSeedEndToEnd (4.67s)
+=== RUN   TestDemoSeedRosterKindMismatchRefuses
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/TESTED
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/ATTESTED
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/CLAIMED
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/PROVEN
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/verdict_pass
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/demo-authored
+=== RUN   TestDemoSeedRosterKindMismatchRefuses/real-store
+--- PASS: TestDemoSeedRosterKindMismatchRefuses (7.10s)
+    --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner (0.00s)
+        --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/TESTED (0.00s)
+        --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/ATTESTED (0.00s)
+        --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/CLAIMED (0.00s)
+        --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/PROVEN (0.00s)
+        --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/verdict_pass (0.00s)
+        --- PASS: TestDemoSeedRosterKindMismatchRefuses/unavailable-banner/demo-authored (0.00s)
+    --- PASS: TestDemoSeedRosterKindMismatchRefuses/real-store (7.10s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	44.285s

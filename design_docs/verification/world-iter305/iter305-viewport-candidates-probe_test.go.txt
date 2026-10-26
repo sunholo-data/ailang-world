@@ -1,0 +1,335 @@
+package main
+
+// Iteration-305 designer measurement only; never committed as a .go file.
+// Run as cmd/ailang-worldd/zz_iter305_vp_test.go, then deleted. Same seed and
+// still daemon as iter305-seeded-still-chrome-probe; only the shot list differs:
+// candidate framings that might bring each required region into the viewport.
+//
+// What it measures, at HEAD, on the REAL seeded demo store (the same
+// `demo seed` S1-S6 that demoM5cRealSeed runs, V11 test mint only):
+//   1. a default-mode daemon: one GET per capture route (control: 1 script tag);
+//   2. a `WorkbenchStill: true` daemon (the real M6 flag, not a proxy strip) on
+//      the same frozen db: two GETs per route 2 s apart, 0 script tags, byte
+//      equality, and still == default minus exactly the live.js tag;
+//   3. two isolated passes of all six shots through the COMMITTED supervisor
+//      scripts/marketing_capture.py `shot` mode on the rig's installed Chrome;
+//   4. GET /v1/head before and after both passes (frozen inventory, head only).
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"image/png"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
+)
+
+type iter305RefVP struct {
+	Role  string `json:"role"`
+	Ref   string `json:"ref"`
+	Index int64  `json:"index,omitempty"`
+}
+type iter305WhyVP struct {
+	Role  string `json:"role"`
+	Entry int64  `json:"entry"`
+}
+type iter305ManifestVP struct {
+	References []iter305RefVP `json:"references"`
+	Why        []iter305WhyVP `json:"why"`
+}
+
+func TestIter305ViewportCandidatesProbe(t *testing.T) {
+	chrome, out := os.Getenv("WORLD_CHROME"), os.Getenv("PROBE_OUT")
+	if chrome == "" || out == "" {
+		t.Skip("probe env unset")
+	}
+	t.Setenv("TMPDIR", t.TempDir())
+	interp := requireProofPin(t)
+	_, tool := cliSeBins(t)
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+
+	// --- rig: newDemoApprovalRig's body (demo_test.go:561), keeping the daemon handle.
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, ws, corpus := filepath.Join(base, "state", "world.db"), filepath.Join(base, "ws"), filepath.Join(base, "outside", "corpus")
+	for _, d := range []string{filepath.Dir(db), filepath.Join(ws, "demo", "world"), filepath.Join(corpus, "runnable")} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	source, err := os.ReadFile(filepath.Join("..", "..", demoLogepochPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(ws, "demo", demoLogepochPath), source, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writeFileT(t, filepath.Join(corpus, "manifest.json"), `{"examples":[]}`+"\n")
+	errLog := new(bytes.Buffer)
+	private := t.TempDir()
+	keyPath := filepath.Join(private, "proof.key")
+	key := freshProofKey(t)
+	if err := os.WriteFile(keyPath, key[:], 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := daemon.Config{DBPath: db, BindHost: daemon.DefaultBindHost, AilangBin: interp, WorkspaceRoot: ws,
+		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: errLog, ProofKeyFile: keyPath, ProofRequiredIdentities: []string{"sameRef", "servesEntry"}}
+	d, err := daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New: %v", err)
+	}
+	srv := httptest.NewServer(d.Handler())
+	_, body, err := newClient(srv.URL).get("/v1/health")
+	srv.Close()
+	if cerr := d.Close(); err != nil || cerr != nil {
+		t.Fatalf("health %v close %v", err, cerr)
+	}
+	var h healthInfo
+	if json.Unmarshal([]byte(body), &h) != nil || h.InterpreterRef == "" {
+		t.Fatalf("health = %s", body)
+	}
+	st, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	interpRef := hashref.MustParse(h.InterpreterRef)
+	publishSeToolsCLI(t, st, db, interpRef)
+	publishDemoApproval(t, st, db, interpRef, false)
+	now := time.Now().Unix()
+	grants := []broker.Capability{
+		{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 100},
+		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: 20},
+	}
+	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectAilangCLI} {
+		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+	}
+	tok, _, _, err := authority.Mint(boundedTestContext(t), credsFor(t, db), "demo", grants, 3600, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatal(err)
+	}
+	d, err = daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New (seed serve): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+
+	// --- seed: demoM5cRealSeed's S1-S6 invocation (demo_test.go:1734-1753).
+	session, manifest := filepath.Join(private, "session"), filepath.Join(private, "manifest.json")
+	if err := os.WriteFile(session, []byte(tok), 0600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, stderr := demoRun(t, &demoTestRig{addr: srv.URL}, []string{"demo", "seed", "--db", db, "--session", session, "--ailang-bin", interp, "--proof-key-file", keyPath, "--manifest", manifest})
+	if code != exitOK || !strings.Contains(stdout, manifest) {
+		t.Fatalf("S1-S6 seed: code=%d out=%q err=%s", code, stdout, stderr)
+	}
+	srv.Close()
+	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m iter305ManifestVP
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	ref := func(role string, index int64, indexed bool) string {
+		v, n := "", 0
+		for _, r := range m.References {
+			if r.Role == role && (!indexed || r.Index == index) {
+				v, n = r.Ref, n+1
+			}
+		}
+		if n != 1 {
+			t.Fatalf("manifest role %s: %d refs", role, n)
+		}
+		return v
+	}
+	var approval int64
+	for _, w := range m.Why {
+		if w.Role == "approval" {
+			approval = w.Entry
+		}
+	}
+	if approval <= 0 {
+		t.Fatal("no approval why entry")
+	}
+	packet, invocation := ref("packet", 0, false), ref("invocation", approval, true)
+	t.Logf("SEED manifest sha256=%x refs=%d why=%d approval-entry=%d", sha256.Sum256(raw), len(m.References), len(m.Why), approval)
+	// Routes exactly as scripts/marketingcheck/png.go BuildCaptureManifest derives them.
+	shots := []struct {
+		name, route string
+		w, h        int
+		scheme      string
+	}{
+		{"packet-textfrag.png", "/workbench?object=" + packet + "#:~:text=approvals%20chain", 1440, 1400, "light"},
+		{"packet-tall.png", "/workbench?object=" + packet, 1440, 4400, "light"},
+		{"provenance-frag.png", "/workbench?object=" + invocation + "&payload=1#payload-label", 1440, 1400, "light"},
+		{"graph-textfrag.png", fmt.Sprintf("/workbench?from=%d&entry=%d", approval, approval) + "#:~:text=World%20graph", 1440, 1100, "light"},
+	}
+	routes := []string{}
+	seen := map[string]bool{}
+	for _, s := range shots {
+		r := strings.SplitN(s.route, "#", 2)[0]
+		if !seen[r] {
+			seen[r] = true
+			routes = append(routes, r)
+		}
+	}
+	get := func(base, p string) (int, []byte) {
+		resp, err := http.Get(base + p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+		return resp.StatusCode, b
+	}
+
+	// --- default-mode control.
+	d, err = daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New (default): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+	defaults := map[string][]byte{}
+	for _, p := range routes {
+		code, b := get(srv.URL, p)
+		defaults[p] = b
+		t.Logf("DEFAULT %s status=%d bytes=%d script_tags=%d", p, code, len(b), bytes.Count(b, []byte("<script")))
+	}
+	srv.Close()
+	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// --- real still flag.
+	still := cfg
+	still.WorkbenchStill = true
+	d, err = daemon.New(boundedTestContext(t), still)
+	if err != nil {
+		t.Fatalf("daemon.New (still): %v", err)
+	}
+	srv = httptest.NewServer(d.Handler())
+	defer func() { srv.Close(); _ = d.Close() }()
+	_, headBefore := get(srv.URL, "/v1/head")
+	first := map[string][]byte{}
+	for _, p := range routes {
+		code, b := get(srv.URL, p)
+		first[p] = b
+		if code != 200 {
+			t.Errorf("STILL %s status %d", p, code)
+		}
+	}
+	time.Sleep(2 * time.Second)
+	tag := []byte(`<script src="/workbench/live.js" defer></script>`)
+	for _, p := range routes {
+		_, b := get(srv.URL, p)
+		minus := bytes.Replace(defaults[p], tag, nil, 1)
+		t.Logf("STILL %s bytes=%d repeat_equal=%v script_tags=%d style_tags=%d equals_default_minus_tag=%v html_sha256=%x",
+			p, len(b), bytes.Equal(first[p], b), bytes.Count(b, []byte("<script")), bytes.Count(b, []byte("<style")), bytes.Equal(b, minus), sha256.Sum256(b))
+	}
+	pk := first["/workbench?object="+packet]
+	for _, want := range []string{"TESTED", "ATTESTED", "CLAIMED", "PROVEN", "approvals chain: pending", "demo-authored"} {
+		t.Logf("PACKET contains %q: %v", want, bytes.Contains(pk, []byte(want)))
+	}
+
+	// --- two isolated Chrome passes through the committed supervisor.
+	version, _ := exec.Command(chrome, "--version").Output()
+	t.Logf("CHROME before %q", strings.TrimSpace(string(version)))
+	sup := filepath.Join("..", "..", "scripts", "marketing_capture.py")
+	sums := map[string][2]string{}
+	for pass, dir := range []string{"pass-a", "pass-b"} {
+		dst := filepath.Join(out, dir)
+		if err := os.MkdirAll(dst, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		for _, s := range shots {
+			pngPath := filepath.Join(dst, s.name)
+			start := time.Now()
+			cmd := exec.Command("python3", sup, "shot", "--chrome", chrome, "--out", pngPath, "--url", srv.URL+s.route,
+				"--width", fmt.Sprint(s.w), "--height", fmt.Sprint(s.h), "--scheme", s.scheme)
+			res, err := cmd.Output()
+			b, rerr := os.ReadFile(pngPath)
+			sum := "NOFILE"
+			if rerr == nil {
+				sum = fmt.Sprintf("%x", sha256.Sum256(b))
+			}
+			v := sums[s.name]
+			v[pass] = sum
+			sums[s.name] = v
+			t.Logf("SHOT %s %s rc_err=%v verdict=%s wall=%.2fs %s", dir, s.name, err, strings.TrimSpace(string(res)), time.Since(start).Seconds(), pngInfoVP(b, rerr))
+		}
+	}
+	version2, _ := exec.Command(chrome, "--version").Output()
+	t.Logf("CHROME after %q equal=%v", strings.TrimSpace(string(version2)), bytes.Equal(version, version2))
+	_, headAfter := get(srv.URL, "/v1/head")
+	t.Logf("HEAD before==after %v (%s)", bytes.Equal(headBefore, headAfter), strings.TrimSpace(string(headAfter)))
+	same := 0
+	for _, s := range shots {
+		v := sums[s.name]
+		eq := v[0] == v[1] && v[0] != "NOFILE"
+		if eq {
+			same++
+		}
+		t.Logf("PAIR %s identical=%v %s %s", s.name, eq, v[0], v[1])
+	}
+	t.Logf("SUMMARY %d/4 shots byte-identical across two passes", same)
+}
+
+func pngInfoVP(b []byte, err error) string {
+	if err != nil {
+		return "nofile"
+	}
+	var chunks []string
+	for i := 8; i+8 <= len(b); {
+		n := int(binary.BigEndian.Uint32(b[i:]))
+		chunks = append(chunks, string(b[i+4:i+8]))
+		i += 12 + n
+	}
+	img, derr := png.Decode(bytes.NewReader(b))
+	if derr != nil {
+		return fmt.Sprintf("bytes=%d decode_err=%v", len(b), derr)
+	}
+	bounds := img.Bounds()
+	colors := map[uint32]bool{}
+	for y := bounds.Min.Y; y < bounds.Max.Y; y += 2 {
+		for x := bounds.Min.X; x < bounds.Max.X; x += 2 {
+			r, g, bl, _ := img.At(x, y).RGBA()
+			colors[(r>>8)<<16|(g>>8)<<8|bl>>8] = true
+		}
+	}
+	r, g, bl, _ := img.At(bounds.Max.X-3, bounds.Max.Y-3).RGBA()
+	return fmt.Sprintf("bytes=%d dims=%dx%d chunks=%v colors(sampled)=%d corner=#%02x%02x%02x", len(b), bounds.Dx(), bounds.Dy(), dedupeVP(chunks), len(colors), r>>8, g>>8, bl>>8)
+}
+
+func dedupeVP(c []string) []string {
+	var out []string
+	for i, s := range c {
+		if i == 0 || c[i-1] != s {
+			out = append(out, s)
+		}
+	}
+	return out
+}
