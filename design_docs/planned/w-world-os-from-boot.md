@@ -180,7 +180,8 @@ It needs N3 (Tauri) first, and Mark's go-ahead. It is not on the 1.x path.
 | agent-made UI (part of the agent's view) | 151 | v1.0.0 release row |
 | the full-screen app (Tauri shell) | 188 N3 | in sprint, after N2c |
 | approvals by key | 201 | NEXT after row 188's style pass |
-| GUI programs, human edits as steps, kept output bytes | [outputs doc](w-world-surface-outputs.md) §6, R5 (#368) | designed, awaiting rulings |
+| previews, program profiles, open in the program, human edits as steps | **213–216** ([outputs doc](w-world-surface-outputs.md) §6) | PARKED post-1.x (D-WORLD-91 R4) |
+| kept output bytes | outputs doc R5 → row 204 | not kept until row 204 decides (D-WORLD-91) |
 | operator sessions as episodes | 196 | GATED (delegated minting, fleet driver) |
 | forge and package-docs network | 146, 162 | PARKED post-1.0 |
 | retention and GC | **204** | PARKED post-1.x |
