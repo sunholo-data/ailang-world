@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-capture.md",
+  "iso_ts": "2026-10-26T07:35:08Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.025158000000000003,
+      "tokens_in": 11444,
+      "tokens_out": 227,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "V29 invokes an existing script (`python3 scripts/marketing_capture.py shot ...`) to measure Chrome 156 behavior, while Milestone M7 lists `scripts/marketing_capture.py` under \"Proposed implementation paths below are future work, not files changed by this revision,\" leaving it slightly ambiguous whether M7 creates the script from scratch or extends an existing prototype/probe script.",
+        "catch": "Clarify in the M7 milestone description and V29 whether `scripts/marketing_capture.py` already exists in the tree or if V29 ran a local scratch/prototype version that M7 will formalize and commit.",
+        "proposed_fix": "In V29 and the M7 row, clarify the status of `scripts/marketing_capture.py` (e.g., update M7 to state whether it commits or extends the supervisor script used in V29)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.10006220000000002,
+      "tokens_in": 10247,
+      "tokens_out": 19481,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design's four-grade evidence roster is unsatisfiable as written unless an unverified premise about existing machinery holds: that a package can add a new 'authored-claim' evidence kind which resolves to CLAIMED under world/types.gradeOf. The doc's own V28 reads gradeOf's CLAIMED mapping as exactly {AiReview(HashRef, float), raw ProofReceipt}, and no V-row shows that mapping — or the projection's kind-resolution path — is extensible by packages (V7 verifies packages only for registered transitions, not kinds). The doc simultaneously forbids both verified CLAIMED paths (AiReview: 'no AI review produced it, V28'; ProofReceipt: fabricated receipt, excluded by the problem statement), forbids editing world/ ('No new world/ exports'), and makes a CLAIMED row load-bearing: Goals retain 'all four evidence grades', packet.png requires a 'four-grade evidence roster', the roster enforces 'exactly four unique kinds', and C5 requires all four. The drift tests are scoped to 'the three legacy kinds', so they cannot validate the new kind's CLAIMED resolution at all; if gradeOf's mapping is closed, the drift test fails by construction and, unlike the capture path (M7 fallback), no named contingency exists for this failure — D3, M1, M5, C5 and packet.png would need redesign, not measurement. The doc applied a simulate-then-measure standard to its other invented mechanism (D2 was simulated and measured as V24/V25 before being relied on); the authored-claim kind got no equivalent probe.",
+        "catch": "Before M1 lands, verify whether world/types.gradeOf (and the real packet-projection kind-resolution path) admits a package-defined evidence kind mapping to CLAIMED — V28's closed enumeration suggests it may not, and the current drift-test wording ('the three legacy kinds') would leave the load-bearing fourth kind unexercised or red by construction. Secondarily, the Dependencies header cites rows 148 (38db793+9319e6b) and 149 (b8b6a3f) with no V-row confirming those commits exist, are ancestors of base c21f303, or what they deliver — breaking the V2 git-show pattern applied to every other prerequisite SHA (0390aa5/9d16a07/d36b148/8511bad/2d14dbd).",
+        "proposed_fix": "Add a controller verification row (V30) in the V24 style: a scratch, never-committed probe defining a minimal package kind predicate against a disposable store, measuring whether gradeOf / the actual projection resolves the new kind to CLAIMED, with exact commands and output recorded in the iteration revision notes. If it resolves: keep D3 and rewrite the roster-paragraph drift-test sentence so M1/M5 explicitly exercise the new kind's CLAIMED resolution, not only the three legacy kinds. If it does not resolve: revise D3 so the demo-authored claim renders as a projection-local, honestly-labeled 'demo-authored' row that explicitly disclaims a kernel CLAIMED grade; change 'exactly four unique kinds' to 'three kernel-resolved kinds plus one labeled demo-authored row'; update packet.png's required-content cell and C5's mutation list to match; and record the absent CLAIMED grade as a second named residual for Mark alongside fresh-seed hash equality. In the same revision, add a row (`git show -s --format='%h %s' 38db793 9319e6b b8b6a3f` plus an ancestry check against c21f303, plus one line naming what rows 148/149 deliver) so every dependency SHA in the header is measured like the rest."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.085155,
+      "tokens_in": 10180,
+      "tokens_out": 3641,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The M7 fallback creates an unauthorized escape from the chartered acceptance it claims to discharge. The doc's Goals commit to umbrella 150(b) 'two byte-identical captures', and the Acceptance section states 'These discharge 150(a)–(c)' — yet the M7 fallback pre-commits that if raw-byte equality fails for any cause other than colour-scheme/script-timestamp, the outcome is 'documented as a new residual' with the varying element named, and the milestone presumably still lands. Unlike the fresh-seed-equality residual (D1), which is explicitly routed to Mark as charter owner, this fallback names no authority who may accept the substitution of a 'residual' for the umbrella's literal acceptance criterion. A design cannot simultaneously claim C7–C9 discharge 150(b) and carry a fallback in which 150(b) is not met but the work proceeds. As written, approval of this doc silently amortizes a charter-scope decision that the doc itself elsewhere (D1) insists belongs to Mark, not to the design.",
+        "catch": "Two things: (1) The M7 fallback clause must state explicitly that byte-inequality means 150(b) is NOT discharged and the row is blocked/escalated to the charter owner, and the sentence 'These discharge 150(a)–(c)' must be made conditional on the fallback not triggering. (2) V29's log records running `python3 scripts/marketing_capture.py shot ...` at iteration 304, but the Files table lists scripts/marketing_capture.py as future work created in M7 and the revision header says 'This revision changes design_docs only.' Unlike V24 (explicitly annotated 'never committed'), V29 does not disclose whether this was an uncommitted prototype — either the verification row cites a file that did not exist as recorded, or an implementation artifact already exists and the milestone table/doc claim is stale. Verify which and annotate.",
+        "proposed_fix": "Replace the M7 fallback clause with: 'Fallback: if raw-byte equality fails on content-bearing shots for a cause other than colour-scheme/script-timestamp, M7 FAILS, 150(b) is not discharged, and the capture does not ship. The varying element is named with both hashes and the failure is escalated to Mark (charter owner) as a scope decision, exactly as the fresh-seed-equality residual is routed in D1; no residual is created by this document's own authority.' In the Acceptance criteria section, replace 'These discharge 150(a)–(c).' with 'C1–C11 with two byte-identical passes across all six shots discharge 150(a)–(c); if the M7 fallback triggers, 150(b) remains open and the row is reported blocked, not passed.' In V29, add the same disclosure convention used in V24, e.g. 'probe script prototype at scripts/marketing_capture.py in a scratch worktree, never committed; M7 re-implements it as the committed artifact' — or, if the file was actually committed, correct the M7 row and the 'design_docs only' header claim."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-304: narrow designer revision of section 2 only (Chrome version fixed within one run, major \u003e=155, same version both passes, recorded in diagnostics; V29 measured 156 two-pass byte-identical on a synthetic page). Byte-equality bar unchanged."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The design's four-grade evidence roster is unsatisfiable as written unless an unverified premise about existing machinery holds: that a package can add a new 'authored-claim' evidence kind which resolves to CLAIMED under world/types.gradeOf. The doc's own V28 reads gradeOf's CLAIMED mapping as exactly {AiReview(HashRef, float), raw ProofReceipt}, and no V-row shows that mapping — or the projection's kind-resolution path — is extensible by packages (V7 verifies packages only for registered transitions, not kinds). The doc simultaneously forbids both verified CLAIMED paths (AiReview: 'no AI review produced it, V28'; ProofReceipt: fabricated receipt, excluded by the problem statement), forbids editing world/ ('No new world/ exports'), and makes a CLAIMED row load-bearing: Goals retain 'all four evidence grades', packet.png requires a 'four-grade evidence roster', the roster enforces 'exactly four unique kinds', and C5 requires all four. The drift tests are scoped to 'the three legacy kinds', so they cannot validate the new kind's CLAIMED resolution at all; if gradeOf's mapping is closed, the drift test fails by construction and, unlike the capture path (M7 fallback), no named contingency exists for this failure — D3, M1, M5, C5 and packet.png would need redesign, not measurement. The doc applied a simulate-then-measure standard to its other invented mechanism (D2 was simulated and measured as V24/V25 before being relied on); the authored-claim kind got no equivalent probe.",
+      "oc-kimi-k3: The M7 fallback creates an unauthorized escape from the chartered acceptance it claims to discharge. The doc's Goals commit to umbrella 150(b) 'two byte-identical captures', and the Acceptance section states 'These discharge 150(a)–(c)' — yet the M7 fallback pre-commits that if raw-byte equality fails for any cause other than colour-scheme/script-timestamp, the outcome is 'documented as a new residual' with the varying element named, and the milestone presumably still lands. Unlike the fresh-seed-equality residual (D1), which is explicitly routed to Mark as charter owner, this fallback names no authority who may accept the substitution of a 'residual' for the umbrella's literal acceptance criterion. A design cannot simultaneously claim C7–C9 discharge 150(b) and carry a fallback in which 150(b) is not met but the work proceeds. As written, approval of this doc silently amortizes a charter-scope decision that the doc itself elsewhere (D1) insists belongs to Mark, not to the design."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.21037520000000004,
+    "total_tokens_in": 31871,
+    "total_tokens_out": 23349
+  }
+}
