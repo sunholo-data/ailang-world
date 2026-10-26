@@ -132,6 +132,8 @@ project gets real diffs from the first row of this table.
   and can be maximised, which gives a real table, chart or decision the whole card or stage.
 - **The rules are unchanged** from w-world-os-surface §3.2: the view is checked against World's
   closed catalog, and its buttons only propose. Your answer still goes through the decision path.
+- **Row 151's design** is now [`w-agent-generated-projections.md`](w-agent-generated-projections.md)
+  r1 (D-WORLD-92): its purpose, catalog, updates and where it shows.
 
 ## §6 Work in other programs (roadmap)
 
