@@ -68,22 +68,23 @@ A2A:
 - the result is in `artifacts[0].parts[0].data`
 - the task id is an idempotency key: resending a committed task id returns the committed result without running again
 
-## 3. The eight tools
+## 3. The AILANG tools
 
 Every tool: one effect at scope `worktree`, cost 1 call; unknown argument keys are refused; paths are relative, non-empty, with no `..` segment and no leading `-`.
 
 | Tool | Arguments (`?` = optional) | Effect (grant) | Returns (plus `world`) |
 |---|---|---|---|
-| `ailang-read` | `path` | Workspace.Read | `ok`, `content` |
+| `ailang-read` | `path`, `offset?` (1-based first line), `limit?` (line count, at most 2000) | Workspace.Read | `ok`, `content`; a ranged read adds `total_lines`, `offset`, `limit` |
 | `ailang-write` | `path`, `content` (full file) | Workspace.Write | `ok` |
 | `ailang-edit` | `path`, `old_text` (must occur exactly once), `new_text` | Workspace.Write | `ok` |
+| `ailang-delete` | `path` (one file; never a directory) | Workspace.Delete | `ok` |
 | `ailang-check` | `path` | Ailang.Check | `ok`, `passed`, `error_count`, `errors[{code, message, file}]` |
 | `ailang-run` | `path`, `args_json?` (a string holding JSON) | Ailang.Run | `admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr` |
 | `builtins-search` | `query?`, `module?` | Ailang.Discover | `count`, `matches[{name, module, effect}]` (max 10 with a query) |
 | `examples-search` | `query` | Ailang.Discover | `ok`, `argv`, `exit_code`, `stdout`, `stderr` |
 | `ailang-cli` | `op`, `path?`, `module?`, `query?`, `package?`, `flags?` (object of strings) | Ailang.CLI | `ok`, `argv`, `exit_code`, `stdout`, `stderr` |
 
-Handler-backed results (read, write, edit, examples-search, ailang-cli) also carry `tool` (tool binary ref) and `policy_digest`.
+Handler-backed results (read, write, edit, delete, examples-search, ailang-cli) also carry `tool` (tool binary ref) and `policy_digest`. An `ailang-run` or `ailang-cli` call that changed the worktree also carries `worktree_delta`.
 
 `ailang-cli` ops: agent_prompt, ai_check, axioms, builtins_list, builtins_show, check, devtools_prompt, docs_search, examples_list, examples_search, examples_show, examples_tags, fmt, iface, pkg_docs, policy_check, prompt, test, tree, version.
 - fields: check/ai_check/fmt/tree/policy_check take `path`; iface/pkg_docs take `module` (e.g. "std/io"); docs_search/examples_search take `query`; examples_show/builtins_show take `module` holding a name; test takes `path?`, `package?`
@@ -162,6 +163,6 @@ Read routes (open in this version; send your bearer header anyway):
 
 An MCP result carries no log entry index. With a shell and the `ailang-worldd` CLI, `ailang-worldd log tail` lists recent entries, `ailang-worldd why <index|head|->` walks one (piping `ailang-worldd call ... --json-out` into `why -` finds the entry that committed that output), and `ailang-worldd provenance --episode <ep>` prints the `World-Provenance` trailer for a PR made through World (label such PRs `ailang-world`).
 
-The invocation record (`world/invocation-record/v2`) names `skillId`, `input` (your arguments), `output` (your result), `plan` and `effects` (effect record refs). An effect record (`world/effect-record/v1`) has `effect`, `scope`, `cost`, `budgetBefore`, `budgetAfter`, `allowed`, `failed`, `denial`, `requestRef`, `resultRef`. MCP and A2A calls are both logged with `writtenBy: "coordinator:a2a"`.
+The invocation record (`world/invocation-record/v2`) names `skillId`, `input` (your arguments), `output` (your result), `plan` and `effects` (effect record refs). An effect record (`world/effect-record/v1`) has `effect`, `scope`, `cost`, `budgetBefore`, `budgetAfter`, `allowed`, `failed`, `denial`, `requestRef`, `resultRef`. MCP calls are logged with `writtenBy: "coordinator:mcp"` and invocation id `mcp:<episode>:<task>`; A2A calls with `coordinator:a2a` and `a2a:<episode>:<task>`.
 
 Retries: MCP calls are at-least-once (each `tools/call` runs again and is recorded again); A2A task ids are idempotent within the session. If a response is lost, page the log before resending.
