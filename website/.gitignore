@@ -4,3 +4,4 @@ build/
 .cache-loader/
 npm-debug.log*
 .DS_Store
+static/media/
