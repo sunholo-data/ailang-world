@@ -16,6 +16,7 @@ import (
 )
 
 const usageText = "usage: marketingcheck check --pass-a DIR --pass-b DIR --manifest DEMO_MANIFEST --rectangles RECTS [--out CAPTURE_MANIFEST]\n" +
+	"       marketingcheck routes --manifest DEMO\n" +
 	"       marketingcheck observe --root DIR [--out FILE]\n" +
 	"       marketingcheck compare --before FILE --after FILE"
 
@@ -28,6 +29,8 @@ func run(args []string) int {
 	switch args[0] {
 	case "check":
 		return runCheck(args[1:])
+	case "routes":
+		return runRoutes(args[1:])
 	case "observe":
 		return runObserve(args[1:])
 	case "compare":
@@ -36,6 +39,61 @@ func run(args []string) int {
 	fmt.Fprintln(os.Stderr, usageText)
 	return 2
 }
+
+// RouteRow carries the capture route and the authoritative shot geometry and scheme.
+type RouteRow struct {
+	Name   string `json:"name"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	Scheme string `json:"scheme"`
+	Route  string `json:"route"`
+}
+
+func ShotRoutes(d DemoManifest) ([]RouteRow, error) {
+	m, err := BuildCaptureManifest(d, map[string]string{})
+	if err != nil {
+		return nil, err
+	}
+	rows := make([]RouteRow, 0, len(Shots))
+	for i, s := range Shots {
+		rows = append(rows, RouteRow{s.Name, s.Width, s.Height, s.Scheme, m.Shots[i].Route})
+	}
+	return rows, nil
+}
+
+func runRoutes(args []string) int {
+	fs := flag.NewFlagSet("routes", flag.ContinueOnError)
+	demo := fs.String("manifest", "", "public demo manifest JSON")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return 0
+		}
+		return 2
+	}
+	if fs.NArg() != 0 || *demo == "" {
+		fs.Usage()
+		return 2
+	}
+	d, err := LoadDemoManifest(*demo)
+	var rows []RouteRow
+	if err == nil {
+		rows, err = ShotRoutes(d)
+	}
+	if err == nil {
+		err = json.NewEncoder(os.Stdout).Encode(rows)
+	}
+	if err != nil {
+		var r *Refusal
+		if errors.As(err, &r) {
+			fmt.Fprintf(os.Stderr, "marketingcheck: %s %s: %s\n", r.Code, r.Name, r.Detail)
+		} else {
+			fmt.Fprintf(os.Stderr, "marketingcheck: bad-manifest output: %s\n", err)
+		}
+		return 1
+	}
+	return 0
+}
+
 func runCheck(args []string) int {
 	fs := flag.NewFlagSet("check", flag.ContinueOnError)
 	a := fs.String("pass-a", "", "first six-shot directory")
