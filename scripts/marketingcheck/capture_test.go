@@ -228,6 +228,30 @@ printf '%s\n' "$CAPTURE_VERSION"
 		runCapture(t, "Timeout", "readiness deadline refuses unavailable server", "ready", "--base-url", unready.URL, "--startup-timeout", "1")
 	})
 
+	t.Run("stop-first", func(t *testing.T) {
+		dir := t.TempDir()
+		calls := filepath.Join(dir, "calls")
+		t.Setenv("CAPTURE_CALLS", calls)
+		// graph.png (the fourth row) fails; nothing after it may be attempted.
+		chrome := fakeScript(t, dir, "chrome", `echo x >> "$CAPTURE_CALLS"
+case " $* " in *" --window-size=1440,2100 "*) exit 5 ;; esac
+`+screenshotPath+writePNG)
+		rows, err := ShotRoutes(demoFixture())
+		pngOK(t, err)
+		routes := putJSON(t, dir, "routes.json", rows)
+		outDir := filepath.Join(dir, "pass")
+		got, se := runCapture(t, "NonzeroExit", "pass stops at the first non-ok shot", "pass", "--routes", routes,
+			"--base-url", "http://example.invalid", "--chrome", chrome, "--out-dir", outDir)
+		entries, err := os.ReadDir(outDir)
+		pngOK(t, err)
+		if len(got.Shots) != 4 || got.Shots[3].Name != "graph.png" || got.Shots[3].Verdict != "NonzeroExit" ||
+			strings.Count(readFile(t, calls), "\n") != 4 || len(entries) != 3 ||
+			!strings.HasSuffix(se, "progress: 4/6 graph.png NonzeroExit\n") {
+			t.Errorf("pass stops at the first non-ok shot: shots=%+v calls=%q files=%d stderr=%q",
+				got.Shots, readFile(t, calls), len(entries), se)
+		}
+	})
+
 	t.Run("fresh-dir", func(t *testing.T) {
 		dir := t.TempDir()
 		rows, err := ShotRoutes(demoFixture())
