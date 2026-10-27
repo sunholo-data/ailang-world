@@ -1,17 +1,17 @@
-# World mission dashboard — iteration 305 (2026-10-26)
+# World mission dashboard — iteration 306 (2026-10-27)
 
-- **This fire:** row 150. The split doc `w-marketing-capture-orchestration` is written as built at `4e6e89dc`, and M7c1 (protected-file observation comparator) is BUILT in PR #370.
-- **Quorum on the new doc:** r1 and r2 both BLOCKED. Gemini passed both rounds; GLM 5.3 and Kimi K3 rejected with concrete fixes. r2 was applied under the narrow-refinement carve-out, which is recorded as a carve-out, not a PASS.
-- **New finding (V42):** at the planned viewports, packet, graph and provenance contain only header and timeline, with their subject below the fold. The new milestone M7c0 sets exact two-seed heights of 3700/2100/3000 (V51).
-- **Chrome 156:** real seeded content, two passes, 6/6 byte-identical (V41).
-- **Judge:** sonnet PASS 81/100, zero blocking. Finding 5 (the controller overstated "verbatim") is fixed in `dde9e0f5`.
-- **Roles (Agent tool):** designer opus (claude-opus-5-5 pin; r0 plus one revision), planner opus, executor haiku (claude-haiku-5-5 pin), evaluator sonnet. Codex is over ration.
+- **This fire:** row 150. R0 re-confirmed the shot bottoms (V59), and M7c0 (tall shot geometry) is BUILT in PR #373.
+- **R0:** the rig's Chrome moved from 156.0.8078.47 to .48. Two fresh seeds gave exactly the V51 bottoms (packet 3564.56, graph 2042.14, provenance 2881.17; delta 0.00). A third seed, run by the judge, matched.
+- **M7c0:** `Shots` heights are now packet 3700, graph 2100, provenance 3000, pinned by `TestMarketingShotGeometry`. The packet image now contains the validated packet and all four roster rows.
+- **Judge:** sonnet PASS 96/100, zero blocking; 11/11 of its own `png.go` mutants killed.
+- **Roles (Agent tool):** executor codex gpt-6.1-sol through an Agent supervisor running the pinned recipe; evaluator sonnet. Designer and planner were not needed (the doc and the prescriptive plan exist).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81) is 156→150→151.
+- **Attended rulings acknowledged:** D-WORLD-91/92/93 (rows 188/151), provenance `attended`. Row 151 now builds on D-WORLD-92/93.
 - **Row 156:** 22/24; D-WORLD-86 holds M5c/M5d.
-- **Row 150:** 15/22 built. Pending: M7c0, M7c2a, M7c2b, M7c3, M7c4, M8a, M8b. Controller steps: R0, R1, P0, P3. Attended: A1.
-- **Next:** controller R0 (two-seed re-confirm of V51), then M7c0, then M7c2a.
+- **Row 150:** 16/22 built. Pending: M7c2a, M7c2b, M7c3, M7c4, M8a, M8b. Controller steps: R1, P0, P3. Attended: A1.
+- **Next:** M7c2a, then M7c2b.
+- **New carried note:** `-race` on `scripts/marketingcheck` reds about 1 run in 100 in a supervisor test (EPERM). The hypothesis is that `kill_group` catches only `ProcessLookupError`. It is M7a code and not fixed yet.
 - **Cosmetic residuals (Mark, if wanted):** the phone title is clipped with horizontal overflow, the provenance payload clips horizontally, and the tall image proportions are unusual.
-- **CI:** Go jobs pinned to `ubuntu-24.04` (row 203). Row 200's filter-control flake is carried.
 - **Parked on Mark:** D-WORLD-86. A: drop the alias pre-checks and rely on pin+M5e (recommended); B: defence in depth. Default is HOLD.
-- **Cost:** metered $0.66 (two quorums), plus Anthropic quota.
-- **Record/evidence:** world-mission-log.md entry 305; verification/world-iter305/.
+- **Cost:** metered $0.00; codex and Anthropic quota only.
+- **Record/evidence:** world-mission-log.md entry 306; verification/world-iter306/.

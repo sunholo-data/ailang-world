@@ -1802,3 +1802,100 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 15/22 built; goal unmoved.
 **Next:** row 150. Controller R0 (two-seed re-confirm of V51 on the then-current Chrome, `iter305-region-bottoms-probe`), then M7c0 (shot geometry, fully specified in the plan), then M7c2a. Then 151 after 150.
+
+## 306 — 2026-10-27 — row 150: R0 re-confirmed the V51 shot bottoms on Chrome 156.0.8078.48 (V59) and M7c0 built the tall shot geometry (PR #373; judge PASS 96) [PRODUCT]
+
+**Kind:** one controller measurement step (R0) and one production milestone (M7c0) on the release row. Roles were spawned through the Agent tool, per the operator's standing request, where the hook allows it (see Routing evidence).
+
+**Pick and why:** row 150, following iteration 305's **Next** (R0, then M7c0). Re-checked before picking:
+- no M7c0 commit, branch or PR existed; no open PR from this account (`gh pr list --author @me` empty);
+- local dev equalled origin/dev `eacd90e7`;
+- the queue order is unchanged by the three attended rulings since iteration 305 (below).
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-26T09:00:27Z` (3 comments, all this account's).
+- Attended ledger channel: D-WORLD-91, D-WORLD-92 and D-WORLD-93 were RESOLVED in attended sessions on 2026-10-26 (rows 188 and 151). `mission_ledger_provenance.sh` returned `attended` for all three (flip SHAs `12dc4c09`, `78d090bf`, `3838759c`). Acknowledged here; none changes row 150 or the 156 → 150 → 151 order. Ledger valid, 80 rows.
+- Self-notices rc 1: newest crash `6345079873` (rc=1, 2026-10-22) is already credited (iteration 305's entry). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages; nothing outranks the queue.
+- Weekly external-issue sweep: not due (iteration 305 ran it after the 2026-10-26 rotation).
+- **Unattributed residue, recorded, not adopted:** `ailang-world/.wt-world-iter306-r0` (detached at `eacd90e7`, created 2026-10-26 16:36) holds one untracked file, a copy of the iteration-305 bottoms probe, and `~/.ailang/state/world-iter306/r0-seed{1,1b,2}` (seed1/seed1b empty, seed2 three PNGs). No slot verdict exists between the 13:22 fire and this one, no claim message and no log entry, so it was not a driver fire. Most likely an attended or ad hoc session began R0 and stopped. Left untouched; this iteration re-ran R0 from scratch into fresh paths (`r0b-seed{1,2}`).
+
+**Gate 1:**
+- Dev CI at `eacd90e7`: check set 3/3 success.
+- Running skill plus all resource files byte-identical to origin/dev (28 files compared across the resolved symlink target and the pin copy; no DRIFT line).
+- Base `eacd90e7…` recorded at Gate 1 and again at Gate 4 (unchanged).
+
+**R0 (controller, doc §5; C13):**
+- Chrome on the rig is now **156.0.8078.48** (V51 measured .47), so R0 was a real re-confirm, not a formality.
+- `iter305-region-bottoms-probe` copied unchanged into the sprint worktree, run twice on two independent `demo seed` stores (pins v0.41.0 and v0.54.15), output paths deleted and re-created before each run, probe file deleted afterwards. rc 0 / rc 0, 11.15 s / 16.65 s.
+- Seeds differ (heads `8c4b8aff…`, `a90ced43…`; manifests `0a1ef461…`, `d2fa161c…`). Both give packet B 3564.56, graph 2042.14, provenance 2881.17: **delta 0.00 against V51**, no shot blocked, every `supervisor shot` verdict ok.
+- Controller viewed the bottom 900 px of seed 1's 3700-px `packet.png`: the validated sentence, `approvals chain: pending` and all four roster rows are in the image.
+- Recorded as **V59** in `w-marketing-capture-orchestration.md` §10 (`adb5d24e`), outputs in `verification/world-iter306/`.
+
+**Role execution:**
+- **Designer:** not run. The governing doc (`w-marketing-capture-orchestration` r2) exists, and M7c0 needed no design change because R0 confirmed V51. Rotation pointer unchanged (`codex:gpt-6.1-sol`).
+- **Planner:** not run. The sprint plan's M7c0 section is prescriptive (exact code, gates and mutant), amended in iteration 305.
+- **Executor** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`). Spawned as an Agent-tool supervisor (`MISSION-ROLE: executor`, no model alias) that ran the controller's bounded codex wrapper verbatim; the spawn-pin hook accepted it. Probe rc 0 (`model: gpt-6.1-sol`). Run rc 0 in 262 s, worktree `.wt-world-iter306-row150-m7c0`:
+  - `png.go`: three `Shots` heights only (packet 3700, graph 2100, provenance 3000).
+  - `png_test.go`: `math` import, canonical list, the three measured-bottom constants (citing V51 and V59), `shotRuleHeight`, `TestMarketingShotGeometry`.
+  - Its `-race` red was a sandbox Go-cache denial (`link: cannot open file …/go-build/…`), labelled UNINFORMATIVE UNDER SANDBOX as directed. M7c0-height red on the named assertion; restored, `cmp` identical.
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), Agent tool, foreground, own worktree `.eval-world-iter306` at `5eb7be62`.
+
+**Controller verification (outside the sandbox):**
+- Diff read in full: exactly the plan's two files; nothing in the do-not-touch list changed.
+- Gate list baselined on the pristine tree first: gofmt clean, vet rc 0, `TestMarketingPNGContent` rc 0, package rc 0 (20 s), `-race` rc 0 (36 s).
+- After: gofmt clean; vet rc 0; `go build ./...` rc 0; compile fence `go test -run '^$' ./...` rc 0 (34 packages); `TestMarketingShotGeometry` 4/4 PASS; `TestMarketingPNGContent` PASS incl. `canonical-shots` and `positive-packet.png/-graph.png/-provenance.png`; package rc 0 (19 s); `-race` rc 0 (51 s, load 8–12).
+- Mutant M7c0-height re-run by the controller: `png_test.go:834: packet height must equal the rule value from measuredPacketBottom: got {Name:packet.png Width:1440 Height:1400 Scheme:light}, want 1440x3700`; restored, `cmp` identical.
+- C11 protected-file observation: `marketingcheck observe` before the executor (12 records) and after; `marketingcheck compare` rc 0.
+- `.ail` untouched, so `verify_ail.sh` not run (CI's `ailang-code verify gate` covers it). `check_no_personal_email.sh` rc 0.
+
+**Independent evaluation:** r1 **PASS 96/100**, zero blocking ([report](verification/world-iter306/evaluator-r1.md)).
+- Scope confirmed from `git diff eacd90e7..5eb7be62 --stat`: the five listed files and nothing else.
+- Non-vacuity against the milestone's own production diff: reverting `png.go` alone reds the three geometry subtests and `canonical-shots`. 11/11 of its own `png.go` mutants killed (heights ±100, width, light/dark/phone dimensions, schemes; graph scheme killed only by `canonical-shots`).
+- V59 re-derived from the two output files: every number matches. PNG sizes and the controller's image view are attested, not checkable (PNGs are not committed).
+- **Independent instrument check:** it re-ran the probe on a third fresh seed (head `278bfef6…`): rc 0, identical bottoms, delta 0.00.
+- Non-blocking: the `want > 4400` and `bottom > H−40` branches are not exercised by the current constants (a `shotRuleHeight` boundary test would pin the rule itself); one ~140-char comment line; the plan still said "pending" (fixed in `95bb53cb`).
+- Its `-race` runs: 2 of 3 red in different supervisor tests (`TestMarketingSupervisorFakeDaemonCleanup/interrupted-shot` `[Errno 1] Operation not permitted`; `TestMarketingSupervisorFakeChromeTimeoutKillsGroup`), the first also once with `png.go` reverted to base.
+- **Controller reproduction of that finding (rule: reproduce before dismissing):** `-race` interrupted-shot alone, 100 runs at load ~11: 1 red, 99 green. `kill_group` in `scripts/marketing_capture.py:44-48` catches only `ProcessLookupError`, and Errno 1 is EPERM, which fits macOS `killpg` returning EPERM for a group of zombies. **Hypothesis, not confirmed** (the controller did not capture the failing message itself). M7a's file, outside this milestone; carried on row 150.
+
+**Bookkeeping:** sprint JSON M7c0 → completed (iteration 306) and M7c1 → completed (iteration 305, PR #370 merge `120e4149`, which iteration 305 had left `pending`); plan M7c0 status → BUILT.
+
+**Result:** R0 done (V59) and M7c0 BUILT (PR #373). Row 150 is 16 of 22 milestones built. The three tall release shots now contain their required content at their committed geometry.
+
+**Gate 3b:** PR #373 head `95bb53cb` polled pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA); the record commit and the merge commit are polled the same way. Outcome reported on #366.
+
+**Routing evidence:** base=eacd90e7d412ecb0a7363254549a6c3a0c71a589@2026-10-27T08:31:13Z (Gate 4; Gate 1 base identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=codex:gpt-6.1-sol executor=codex:gpt-6.1-sol evaluator=sonnet`; `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (doc exists; no design change). Planner: not spawned (prescriptive plan exists). Neither is a routing failure; the routing table spawns them only when the doc or plan is missing.
+- Executor `codex:gpt-6.1-sol`: probe 9,086 tok; run 69,299 tok, rc 0, 262 s. Agent-tool supervisor (transport only, no verdict): 28,583 tok / 297 s.
+- Evaluator `sonnet` (Agent): 61,972 tok / 294 s. Judge independence: cross-vendor (OpenAI executor, Anthropic Sonnet judge), and a different model from the Opus controller that ran R0.
+- No quorum this iteration (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Adopting the `.wt-world-iter306-r0` residue as R0 evidence: its seed1 directories are empty and nothing records how it ran. R0 was re-run into fresh paths instead.
+- Transcribing new constants: R0's max equals V51 exactly, so M7c0 keeps 3564.56 / 2042.14 / 2881.17 and cites V59.
+- Spawning a designer or planner to satisfy the operator's request mechanically: the routing table spawns them only when a doc or plan is missing, and both exist.
+- Treating the judge's `-race` reds as caused by M7c0: they are supervisor tests that do not read `Shots`, the judge saw one with `png.go` reverted, and both of the controller's `-race` package runs (pristine base 36 s, after the change 51 s) were green.
+- Fixing `kill_group` here: M7a's file, outside M7c0's two-file scope; the mechanism is a hypothesis.
+- Adding the judge's `shotRuleHeight` boundary test now: non-blocking, and M7c0's file list is closed; noted on the row for whoever next touches `png_test.go` (M8a).
+
+**Carried:**
+- M7c2a next (Python `chrome-version`/`ready`/`pass` modes plus Go `routes`; its `routes` rows carry the M7c0 dimensions), then M7c2b → M7c3 → M7c4 → R1 → M8a → M8b, then attended A1.
+- New: the 1-in-~100 `-race` supervisor red and its `kill_group` EPERM hypothesis.
+- Judge M7c0 non-blocking: rule-boundary test; long comment line.
+- Everything iteration 305 carried (phone/provenance cosmetic clips, tall framing for Mark, planner flags, M7c1 test gaps, `shell-hup` flake). D-WORLD-86 stays HOLD.
+
+**Retro:**
+- The R0 step was worth its 30 s: Chrome had moved a patch version since V51, and a precondition written as "re-confirm on the then-current Chrome" is only honest if it is actually run.
+- Reproducing the judge's non-blocking `-race` finding turned "environmental flake" into a rate (1/100) and a specific, checkable mechanism, rather than another undated "flaky" note.
+- An Agent-tool executor supervisor with no model alias passed the spawn-pin hook and ran the pinned codex lane. That satisfies both the operator's Agent-tool request and the provider pin without a denied spawn.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 16/22 built; goal unmoved.
+**Next:** row 150 M7c2a (fully specified in the plan), then M7c2b. Then 151 after 150.

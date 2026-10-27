@@ -1017,7 +1017,7 @@ Shared rules for every child:
 
 ## M7c0 — Shot geometry (new, iteration 305)
 
-(added iteration 305 per w-marketing-capture-orchestration §4.1/§5). Design M7 (C8′); 20 minutes; dependency: M7b (landed) and **R0's re-confirm V-row** (controller, doc §5 R0, C13; not a milestone id, so the JSON records it in `implementation`). It does not depend on M7c1; the two share no file, and their relative order is free. Status **pending**: do not dispatch it before the R0 V-row exists. If R0's max differs from V51, transcribe R0's values and cite its row. If any B + 40 > 4,400, the shot is BLOCKED and escalated to Mark; M7c0 does not run and the height is never clamped.
+(added iteration 305 per w-marketing-capture-orchestration §4.1/§5). Design M7 (C8′); 20 minutes; dependency: M7b (landed) and **R0's re-confirm V-row** (controller, doc §5 R0, C13; not a milestone id, so the JSON records it in `implementation`). It does not depend on M7c1; the two share no file, and their relative order is free. Status **BUILT iteration 306** (commit `5eb7be62`; R0 V-row V59 at `adb5d24e`; judge sonnet r1 PASS 96, zero blocking). Was: pending, not to be dispatched before the R0 V-row exists. If R0's max differs from V51, transcribe R0's values and cite its row. If any B + 40 > 4,400, the shot is BLOCKED and escalated to Mark; M7c0 does not run and the height is never clamped.
 
 Why: at HEAD the packet, graph and provenance shots do not contain their required region at 1440×1400/1100 (doc V42). The heights come from the doc's rule H = ⌈(B + 40)/100⌉ × 100, where B is the maximum across two seeds of the region's `getBoundingClientRect().bottom` (doc V51: packet 3564.56 → 3700, graph 2042.14 → 2100, provenance 2881.17 → 3000).
 

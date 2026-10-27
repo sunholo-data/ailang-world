@@ -48,8 +48,8 @@ type Shot struct {
 
 var Shots = []Shot{
 	{"workbench-light.png", 1440, 1100, "light"}, {"workbench-dark.png", 1440, 1100, "dark"},
-	{"packet.png", 1440, 1400, "light"}, {"graph.png", 1440, 1100, "light"},
-	{"provenance.png", 1440, 1400, "light"}, {"phone.png", 390, 844, "light"},
+	{"packet.png", 1440, 3700, "light"}, {"graph.png", 1440, 2100, "light"},
+	{"provenance.png", 1440, 3000, "light"}, {"phone.png", 390, 844, "light"},
 }
 
 func shotByName(name string) (Shot, bool) {

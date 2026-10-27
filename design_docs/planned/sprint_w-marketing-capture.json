@@ -2514,7 +2514,7 @@
         "scripts/marketingcheck/png.go",
         "scripts/marketingcheck/png_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestMarketingShotGeometry"
       ],
@@ -2591,7 +2591,14 @@
           "detail": "iteration 305 planner, load 1.67; mutant M7c0-height red on the equality assertion and on canonical-shots; restored green"
         }
       ],
-      "baseline_new_tests": "TestMarketingShotGeometry is absent at base; its first run must be the implementation, not an empty selection."
+      "baseline_new_tests": "TestMarketingShotGeometry is absent at base; its first run must be the implementation, not an empty selection.",
+      "completed": {
+        "iteration": 306,
+        "commit": "5eb7be62",
+        "r0": "V59 (adb5d24e): V51 bottoms identical on two fresh seeds, Chrome 156.0.8078.48",
+        "judge": "sonnet r1 PASS 96 (zero blocking; 11/11 own png.go mutants killed; independent fresh-seed probe identical)",
+        "executor": "codex gpt-6.1-sol rc 0, 262 s"
+      }
     },
     {
       "id": "M7c1",
@@ -2605,7 +2612,7 @@
         "scripts/marketingcheck/main.go",
         "scripts/marketingcheck/observation_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
       "new_tests": [
         "TestMarketingProtectedObservationComparator"
       ],
@@ -2784,7 +2791,15 @@
           "detail": "prototype code is the plan's blocks A/B/C, checked byte-identical by reconstruction (receipt)"
         }
       ],
-      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
+      "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation.",
+      "completed": {
+        "iteration": 305,
+        "pr": 370,
+        "merge_commit": "120e4149",
+        "judge": "sonnet r1 PASS 81 (zero blocking)",
+        "executor": "claude haiku-5-5",
+        "note": "status recorded iteration 306; iteration 305 left it pending"
+      }
     },
     {
       "id": "M7c2a",
