@@ -116,11 +116,14 @@ set -- "$@" $WORLD_GRANTS
 set +f
 printf '\nMinting %s on %s. episode start asks y/N on this terminal: read what it grants, then type your answer.\n\n' \
   "$ep" "$REPO_DIR"
-"$WORLDD" "$@"
+# The y/N goes to the terminal itself; its messages are kept so a refusal outlives the popup.
+mint_err=$HERDR_PLUGIN_STATE_DIR/last-mint.err
+"$WORLDD" "$@" 2>"$mint_err"
 code=$?
+cat "$mint_err" >&2
 if [ "$code" -ne 0 ]; then
   world_die "episode start did not mint $ep (exit $code)." \
-    "you answered no, or it refused with the message above." \
+    "you answered no, or it refused with the message above (kept in $mint_err)." \
     "fix what it names, then run New World agent again"
 fi
 if [ ! -f "$sess" ]; then

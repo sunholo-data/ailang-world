@@ -124,6 +124,8 @@ The panel never prints a token.
 
 ## New World agent
 
+The host prompt takes `1` (claude), `2` (codex) or `3` (pi), or the name; Enter repeats the host you chose last. A popup closes with its output, so the last error is kept in `$HERDR_PLUGIN_STATE_DIR/last-error.txt` and the mint's own messages in `last-mint.err`.
+
 The popup reads one answer per line: the host, the episode id, and only when a check fails,
 `f`/`p`/`q`. It can also be run by hand:
 `bin/world-agent-popup [--workspace <label>] [--pane <id>]`.
