@@ -1899,3 +1899,95 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 16/22 built; goal unmoved.
 **Next:** row 150 M7c2a (fully specified in the plan), then M7c2b. Then 151 after 150.
+
+## 307 — 2026-10-27 — row 150: M7c2a built the capture primitives (Chrome-version floor, HTTP readiness, six-shot pass, `marketingcheck routes`); judge PASS 88; `kill_group` EPERM confirmed as a macOS production defect [PRODUCT]
+
+**Kind:** one production milestone (M7c2a) on the release row, plus a controller test-only fix closing the judge's most load-bearing surviving mutant. Roles were spawned through the Agent tool, per the operator's standing request, where the routing table and the spawn-pin hook allow it (see Routing evidence).
+
+**Pick and why:** row 150 M7c2a, following iteration 306's **Next**. Re-checked before picking:
+- no M7c2a commit (`git log origin/dev --grep=M7c2` returns only the iteration-304 split commit), branch, worktree or PR existed; no open PR from this account;
+- local dev equalled origin/dev `e694d23e` at Gate 1;
+- the three attended rulings since iteration 306 (below) are attended-track rows and do not change the release order.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-26T13:21:41Z` (4 comments, all this account's), and 0 on #313 since the mission-scoped watermark `2026-10-22T01:34:42Z` (the Repo Profile's older-of-two rule).
+- Attended ledger channel: D-WORLD-95, D-WORLD-96 and D-WORLD-97 were RESOLVED in attended sessions on 2026-10-27 (the all-agent-work roadmap: rows 206/207 un-parked after 222, rows 219/217/218 before row 188's N2d, the session-allowance bounds, and machine-wide confinement gated on the scorecard). `mission_ledger_provenance.sh` returned `attended` for all three (flip SHAs `35345ed6`, `f06e239e`, `ce086b36`). Acknowledged here; all three are attended-track rows ("not a v1.0.0 release row"), so none changes row 150 or the 156 → 150 → 151 order. Ledger valid, 84 rows.
+- Self-notices rc 1: newest crash `6345079873` (rc=1, 2026-10-22) is already credited (iteration 305's entry). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages; nothing outranks the queue. This iteration's claim was sent and read back.
+- Weekly external-issue sweep: not due (iteration 305 ran it after the 2026-10-26 rotation).
+- Residue: `ailang-world/.wt-world-iter306-r0` (iteration 306 recorded it as unattributed) still holds only `cmd/ailang-worldd/zz_iter305_bottoms_test.go`; left untouched again.
+
+**Gate 1:**
+- Dev CI at `e694d23e`: check set 3/3 success.
+- Running skill plus all resource files byte-identical to origin/dev (14 files at each of the resolved symlink target and the pin copy, which are different inodes; no DRIFT line).
+- Base `e694d23e…` recorded at Gate 1. At Gate 4 the shared ref read `eaa2a251…` (attended PR #379, row 223c herdr plugin, 13 files under `integrations/herdr/` and `design_docs/`). Intersection with this branch's files: empty, against a 13-file control. Benign drift: the branch is rebased onto it before the PR.
+
+**Baseline (controller, pristine detached worktree `.base-world-iter307` at the base, `AILANG_BIN` exported, load ~5):**
+- gofmt clean, vet rc 0, `TestMarketingCapturePassFakeChrome` absent ("no tests to run"), `TestMarketingSupervisorFakeChromeSuccess` PASS, package rc 0 (19 s), `TestProductionGoSurface` rc 0.
+- `-race ./scripts/marketingcheck`: **red 1 of 4** at base. The red was `TestMarketingSupervisorFakeChromeTimeoutKillsGroup` → `SupervisorError [Errno 1] Operation not permitted`. This is iteration 306's carried note, now measured on a pristine tree.
+- **Mechanism confirmed outside the suite** (rule 5, data before conclusions): a standalone Python repro (`verification/world-iter307/killpg-eperm-repro.py.txt`) creates a new session with nested `sleep` children, sends `SIGKILL` to the group, reaps the leader and calls `killpg` again three times. Over 200 trials it raised `PermissionError` on 5 of 600 calls and ESRCH on the rest. A first shape with no nested children gave 40/40 ESRCH, which is the negative control. `kill_group` (`scripts/marketing_capture.py:43-48`) catches only `ProcessLookupError`, so EPERM escapes to `main()`'s `OSError` catch as `SupervisorError`. A real six-shot pass on macOS Chrome, which leaves many children, can therefore fail on a good shot. Linux CI is unaffected.
+
+**Role execution:**
+- **Designer:** not run. The governing doc (`w-marketing-capture-orchestration` r2) exists and M7c2a needed no design change. Rotation pointer unchanged (`codex:gpt-6.1-sol`).
+- **Planner:** not run. The plan's M7c2a section is prescriptive (interfaces, verdicts, subtests, assertion messages and three named mutants).
+- **Executor** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`). It was spawned as an Agent-tool supervisor (`MISSION-ROLE: executor`, no model alias) that ran the controller's bounded codex wrapper verbatim; the spawn-pin hook accepted it. Probe rc 0 (`model: gpt-6.1-sol`). Run rc 0 in 568 s, worktree `.wt-world-iter307-row150-m7c2a`. Directive `/tmp/codex_directive_iter307.txt`. It told the executor about the base `-race` red so it would be reported rather than "fixed", and it froze `kill_group`.
+  - `marketing_capture.py`: modes `chrome-version`, `ready` and `pass`, plus `MIN_CHROME_MAJOR = 155`. `shot()`/`daemon()` are unchanged. `main()`'s viewport check now applies only to `shot`/`daemon`.
+  - `main.go`: `routes`, `RouteRow`, `ShotRoutes` and a usage line.
+  - `capture_test.go`: `TestMarketingCapturePassFakeChrome` with the routes, pass-six, version, ready and fresh-dir subtests.
+  - The three named mutants each red their named subtest, then were cmp-restored. The `ready` subtest was labelled UNINFORMATIVE UNDER SANDBOX, as directed (httptest bind denied). Deviation: the snapshots carry `.txt` suffixes so Go's package scan does not see them. Accepted; `snap/` is not committed.
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), Agent tool, foreground, own detached worktree `.eval-world-iter307` at `bbf7eb84`.
+
+**Controller verification (outside the sandbox, load 3.6–8.8):**
+- Diff read in full: exactly the plan's three files; nothing in the do-not-touch list changed; snapshots `cmp`-identical to the tree.
+- After the change: gofmt clean; vet rc 0; `go build ./...` rc 0; compile fence `go test -run '^$' ./...` rc 0 (34 packages); `TestMarketingCapturePassFakeChrome` 5/5 PASS, including `ready` (1.46 s); `TestMarketingSupervisorFakeChromeSuccess` PASS; `TestProductionGoSurface` and `TestProductionContextRoots` rc 0; `TestSubprocessSinkGate` PASS (`-v` confirms it ran); package rc 0 (19 s).
+- `-race` package: rc 0 twice (53 s, 52 s). After the controller test it was rc 1 once, on `TestMarketingSupervisorFakeChromeTimeoutKillsGroup` with the identical EPERM message. That is the base defect: the test and `shot()` are byte-identical to base.
+- C11 protected-file observation: `marketingcheck observe` before the executor (12 records) and after; `marketingcheck compare` rc 0.
+- `.ail` untouched, so `verify_ail.sh` was not run (CI's `ailang-code verify gate` covers it). No local `verify_go.sh`: the diff is confined to `scripts/marketingcheck`, adds no context root, and CI runs the full Go and race gates.
+
+**Independent evaluation:** r1 **PASS 88/100**, zero blocking ([report](verification/world-iter307/evaluator-r1.md)).
+- Rubric: conformance 28/30, tests and gates 25/25, correctness 18/20, non-vacuity 10/15, hygiene 7/10.
+- Gates: everything green, including one `-race` run (50.7 s).
+- Plan mutants: 3/3 killed. Diff-anchored mutants: 13 of 26 survived (one more UNMEASURED). The survivors are mostly `pass` refusal and bound branches: stop at first non-ok, six rows, basename, dimensions, scheme, the deadline guards, the base-URL `rstrip`, and the per-shot `OSError` catch. The others are `ready`'s non-200 check, the `Chromium` alternative, `chrome-version`'s `Timeout`, and `runRoutes`'s `ErrHelp`.
+- Non-blocking: `pass` makes `--out-dir` before it validates the routes file. The judge reproduced this with `--routes /nonexistent`: the empty directory is left behind, so a retry gets `DestinationExists`.
+- **Controller reproduction (reproduce before acting):** `if result['verdict'] != 'ok':` → `if False:` stays green (`ok`). That is the behaviour M7c2b's shell relies on, so the controller added subtest **`stop-first`** (`a6646040`, test-only). Its fake Chrome exits 5 on the 1440×2100 viewport. The pass must then give `NonzeroExit` with four shots reported, four Chrome calls, three files, and the last progress line `4/6 graph.png NonzeroExit`. Under the mutant it reds: verdict `ok`, six calls, five files. Restored, `cmp` identical, 6/6 subtests green.
+- Controller's own non-blocking review notes: `chrome_version`'s timeout path calls `process.wait(timeout=KILL_WAIT_S)` without the `TimeoutExpired` catch that `shot()` has (reachable only with an unkillable process), and `ready` polls every 10 ms.
+
+**Bookkeeping:** sprint JSON M7c2a → completed (iteration 307); plan M7c2a status → BUILT; charter row 150 updated (M7c2a, the EPERM confirmation, proposed M7a-fix, Next); CURRENT GOAL next line updated; STATUS 304 rotated to the archive (line counts asserted; the charter keeps 3 stamps).
+
+**Result:** M7c2a BUILT. Row 150 is 17 of 22 milestones built. The capture now has a Chrome floor, HTTP readiness and a bounded six-shot pass driven by `routes` rows that carry the M7c0 heights.
+
+**Gate 3b:** the PR head and then the merge commit are each polled pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). Outcome reported on #366.
+
+**Routing evidence:** base=e694d23e8eb39673e5cf21dc569bab4ae933ba49@2026-10-27T12:01:28Z (Gate 1); Gate 4 read eaa2a25179140f7a0e54e0ed0559804a74005879@2026-10-27T12:36:31Z (benign drift, attended #379, no shared file). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=codex:gpt-6.1-sol executor=codex:gpt-6.1-sol evaluator=sonnet`; `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (the doc exists and needs no change). Planner: not spawned (a prescriptive plan exists). Neither is a routing failure: the routing table spawns them only when the doc or plan is missing.
+- Executor `codex:gpt-6.1-sol`: probe 17,397 tok; run 91,203 tok, rc 0, 568 s. Agent-tool supervisor (transport only, no verdict): 31,302 tok / 615 s.
+- Evaluator `sonnet` (Agent): 57,664 tok / 405 s. Judge independence: cross-vendor (OpenAI executor, Anthropic Sonnet judge), and a different model from the Opus controller that wrote the `stop-first` test. That test was not separately judged. It is test-only and mutation-proven.
+- No quorum this iteration (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Fixing `kill_group` inside M7c2a: the plan freezes `shot`/`daemon` behaviour and M7c2a's file list is closed. The fix is proposed as its own milestone (M7a-fix), now that the mechanism is confirmed.
+- Calling the `-race` red "load": a standalone repro with no Go, no race detector and no test harness raised the same `PermissionError`, so it is a real macOS behaviour that load only makes more frequent.
+- Treating the head's `-race` red as caused by M7c2a: `TestMarketingSupervisorFakeChromeTimeoutKillsGroup` and `shot()` are byte-identical to base, and the base was red the same way.
+- Closing all 13 surviving mutants here: only the stop-at-first-non-ok branch is load-bearing for M7c2b. The others are refusal paths; they are carried to M7c2b, which owns the shell that calls `pass`.
+- Running a local full `verify_go.sh`: CI is the arbiter, and the diff does not reach a gate only the full suite sees (`TestProductionGoSurface`, context roots and the sink gate were run directly).
+
+**Carried:**
+- **M7a-fix** next: `kill_group` treats `PermissionError` like `ProcessLookupError`, with a unit row that fakes `os.killpg` and the repro as a stress row. It must land before M7c4's real-Chrome drill.
+- Then M7c2b → M7c3 → M7c4 → R1 → M8a → M8b → attended A1.
+- For M7c2b: `pass` creates `--out-dir` before validating routes; the untested `pass`, `ready` and `chrome-version` refusal branches; `chrome_version`'s uncaught `TimeoutExpired`.
+- Everything iteration 306 carried (rule-boundary test, phone/provenance cosmetic clips, tall framing for Mark, `shell-hup` flake). D-WORLD-86 stays HOLD.
+
+**Retro:**
+- Baselining `-race` four times on a pristine tree turned "1 in 100, hypothesis" into "1 in 4 on this package, mechanism reproduced in 600 calls". The difference matters: the same EPERM would hit the attended real-Chrome capture on Mark's Mac.
+- The judge's diff-anchored drill found the one behaviour the next milestone depends on (stop at first non-ok) unguarded. The plan's mutant table named only three mutants, so 3/3 killed was true and not sufficient: rule 3n held again.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 17/22 built; goal unmoved.
+**Next:** row 150 M7a-fix (`kill_group` EPERM), then M7c2b. Then 151 after 150.
