@@ -1805,9 +1805,122 @@ Executor notes:
 - Snapshot to `snap/M7c2a/`.
 - Maximum 30 min.
 
+## M7a-fix — kill_group tolerates macOS killpg EPERM
+
+Design M7 (C7/C8/C9; orchestration r2 §5, prerequisite repair before M7c2b/M7c4); 28 minutes; dependency: M7c2a; status **BUILT** (iteration 308, `31211dbf` + controller test-only bound `7475ec3c`; judge sonnet r1 PASS 88, zero blocking) (amended iteration 308: M7a-fix).
+
+Exact executor files:
+
+- `scripts/marketing_capture.py`: change only `kill_group`'s exception tuple and add the one-line macOS comment below.
+- `scripts/marketingcheck/supervisor_test.go`: add `TestMarketingKillGroupTolerance` and opt-in `TestMarketingKillGroupStress` here. No new files. Keep `TestMarketingSupervisorFakeChromeTimeoutKillsGroup` and `TestMarketingSupervisorFakeDaemonCleanup` byte-for-byte unchanged.
+
+### Facts this section relies on (iteration 308, read-only checks)
+
+- **F0 — base:** `git rev-parse --short=8 HEAD` printed `0363b3ae`. These are source/import observations, not process-signalling gate verdicts.
+- **F1 — narrow catch and ownership boundary:** `sed -n '52,63p' scripts/marketing_capture.py` printed `os.killpg(process.pid, sig)`, `except ProcessLookupError: pass`, and `spawn` using `start_new_session=True`, inherited environment and DEVNULL input. No user/group override is passed to `Popen`; this does not establish the credentials of every descendant.
+- **F2 — callers and refusal path:** `rg -n 'kill_group' scripts/marketing_capture.py` printed definition 52 and calls 111,122,129,133,140,200,204. `sed -n '109,141p' scripts/marketing_capture.py` showed shot deadline/finally KILL and daemon TERM/KILL/final KILL; `sed -n '195,212p' scripts/marketing_capture.py` showed version deadline/finally KILL. `sed -n '263,276p' scripts/marketing_capture.py` and `sed -n '340,353p' scripts/marketing_capture.py` printed the per-shot `capture_pass` and generic `main` OSError-to-`SupervisorError` handlers, respectively, plus the `if __name__ == '__main__': raise SystemExit(main())` guard. Thus an escaping EPERM can turn cleanup into a refusal, including within a six-shot pass.
+- **F3 — safe import:** `python3 -B -c 'import importlib.util; s=importlib.util.spec_from_file_location("marketing_capture", "scripts/marketing_capture.py"); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.__name__, callable(m.kill_group), callable(m.main))'` printed `marketing_capture True True` with no CLI execution. Use this non-`__main__` import route; `-B` avoids repository bytecode writes.
+- **F4 — Go/Python house style:** `sed -n '25,38p' scripts/marketingcheck/supervisor_test.go` printed `exec.LookPath("python3")`, fatal `"python3 is mandatory: "`, a 30-second context and the script-relative `../marketing_capture.py` argv. For inline Python use a new bounded command in the same test file, not this CLI helper unchanged.
+- **F5 — justified no-op kill assertion:** `sed -n '160,285p' scripts/marketingcheck/supervisor_test.go` printed the PID recording/cleanup helpers, non-fatal `assertDead` with `"%s must be dead after bounded cleanup (pid %d)"`, and the timeout fixture's nested waiting shells with a 60-second grandchild. It checks `assertDead(t, ids[1], "grandchild")` before the child. `sed -n '39,54p' scripts/marketingcheck/supervisor_test.go` printed `runSupervisor`'s non-fatal `t.Errorf` for a mismatched verdict/exit status. `sed -n '285,435p' scripts/marketingcheck/supervisor_test.go` showed the daemon suite, including `interrupted-shot`. With no group kill, the fake descendants outlive the 8-second shot deadline and 5-second reap; the timeout test's non-fatal verdict checks allow it to reach the grandchild assertion. This is source-based reachability, not a claimed executed mutant kill.
+- **F6 — new rows absent, positive control present:** `rg -n 'TestMarketingKillGroup|TestMarketingSupervisorFakeChromeTimeoutKillsGroup|TestMarketingSupervisorFakeDaemonCleanup' scripts/marketingcheck/supervisor_test.go` printed only the existing tests at 224 and 285; the new rows have no match. Do not count an empty focused selection as a base PASS.
+- **F7 — repro and historical evidence:** `cat design_docs/verification/world-iter307/killpg-eperm-repro.py.txt` printed the new-session `/bin/sh -c '(sleep 60 & wait) & (sleep 60 & wait) & wait'`, 0.02-second settling sleep, raw group KILL, leader `communicate(timeout=5)` and three post-reap raw kills counting ESRCH/EPERM. The file contains the repro program, not its measured counts. `sed -n '1,80p' design_docs/verification/world-iter306/evaluator-r1.md` printed a historical race red on `FakeDaemonCleanup/interrupted-shot` with `[Errno 1] Operation not permitted` and another on `FakeChromeTimeoutKillsGroup`. The controller additionally reports iteration-307 5/600 raw EPERM (nested shape), 40/40 ESRCH (no nested children), pristine-base race red 1/4, and iteration-306 interrupted-shot about 1/100. Those frequencies are controller-provided history, not independently remeasured by this sandboxed planner; use 0.25 only as a conditional acceptance calculation, not an established stationary rate. The executor REPORTS a base `-race` red and must not fix unrelated code. Controller-reported pristine gofmt/vet/py_compile rc 0 are also historical inputs, not fresh planner gate verdicts.
+- **F8 — the man pages do NOT support the proposed ANY-member permission premise:** `MANPAGER=cat PAGER=cat man 2 kill` printed group EPERM when "any members of the group could not be signaled"; `MANPAGER=cat PAGER=cat man 2 killpg` printed EPERM when "one or more of the target processes has an effective user ID different" and describes same-effective-UID permission. Both list EINVAL for an invalid signal and ESRCH for no matching group. Neither supports inferring "EPERM means NO signallable member remains". Do not claim that theorem or infer death from EPERM. The prescribed tolerance below is a bounded workaround for the controller-observed macOS post-reap case in capture-owned sessions; it does not certify arbitrary groups or credential-changing descendants. Preserve the existing death checks and require the controller's outside-sandbox drill. A genuinely denied live member would remain a limitation of swallowing PermissionError; do not disguise that limit as a proof or widen this repair into a new process policy.
+- **F9 — arithmetic:** `python3 -B -c 'print("0.75**25 =", 0.75**25, "; probability of at least one red =", 1-0.75**25)'` printed `0.0007525434581650003` and `0.999247456541835`.
+- **F10 — base exception probe (no real signals):** the exact read-only command below printed `eperm PermissionError errno=1 same=True calls=[(424242, <Signals.SIGKILL: 9>)]`, `esrch swallowed calls=[(424242, <Signals.SIGKILL: 9>)]`, and `einval OSError errno=22 same=True calls=[(424242, <Signals.SIGKILL: 9>)]`. This checks import and exception semantics only; it is not a process-cleanup gate.
+
+```sh
+python3 -B - <<'PY_PROBE'
+import errno, importlib.util, signal, types
+s = importlib.util.spec_from_file_location('marketing_capture', 'scripts/marketing_capture.py')
+m = importlib.util.module_from_spec(s)
+s.loader.exec_module(m)
+original = m.os.killpg
+try:
+    for name, error in [('eperm', PermissionError(errno.EPERM, 'injected')), ('esrch', ProcessLookupError(errno.ESRCH, 'injected')), ('einval', OSError(errno.EINVAL, 'injected'))]:
+        calls = []
+        def fake(pid, sig):
+            calls.append((pid, sig))
+            raise error
+        m.os.killpg = fake
+        try:
+            m.kill_group(types.SimpleNamespace(pid=424242), signal.SIGKILL)
+            result = 'swallowed'
+        except OSError as caught:
+            result = f'{type(caught).__name__} errno={caught.errno} same={caught is error}'
+        print(name, result, 'calls=' + repr(calls))
+finally:
+    m.os.killpg = original
+PY_PROBE
+```
+
+### Interface (prescribed)
+
+Keep `def kill_group(process: subprocess.Popen, sig: int) -> None`, the `os.killpg(process.pid, sig)` call and the existing docstring. Replace the handler only with:
+
+```python
+    except (ProcessLookupError, PermissionError):
+        # macOS may report EPERM for dead descendants after the leader is reaped.
+        pass
+```
+
+Catch exactly these two exception classes. All other OSError instances, including EINVAL, must propagate unchanged; never catch `OSError`. No other behaviour of `shot`, `daemon`, `cleanup_daemon`, `chrome_version`, `ready` or `pass` changes. Do not add retries, platform branches, PID probing or deadline changes. The man-page caveat F8 is deliberate: tolerate the observed macOS case without claiming permission errors prove process death.
+
+### Acceptance criteria and named assertions
+
+- **UNIT — `TestMarketingKillGroupTolerance` (always-on CI):** write before the production edit. Resolve mandatory Python with `exec.LookPath("python3")` as in F4, then use a 30-second `exec.CommandContext` running `python3 -B -c INLINE PROGRAM_PATH`; pass the absolute script path resolved from `../marketing_capture.py`. Import with F3's `importlib` spec name `marketing_capture` (never `__main__`, never `runpy` executing main). Adapt F10 into a single inline program that monkeypatches `marketing_capture.os.killpg`, in turn, with `PermissionError(errno.EPERM, 'injected')`, `ProcessLookupError(errno.ESRCH, 'injected')`, and `OSError(errno.EINVAL, 'injected')`. Call `kill_group(types.SimpleNamespace(pid=424242), signal.SIGKILL)` once per case; restore the real function in `finally`. The fake records `(pid, sig)` before raising. Catch outcomes outside `kill_group` so a bad outcome still emits its row and does not abort later cases. Print exactly one JSON line per case containing case name, call list, swallowed/propagated outcome, exception type/errno and whether the propagated exception is the injected instance. Go must require a successful Python exit and exactly three distinct expected rows: *"inline kill_group probe must emit all three cases"*. Use synchronous output capture with the context bound; any asynchronously started process needs file sinks.
+  - `eperm-swallowed`: first require exactly `[[424242, int(signal.SIGKILL)]]` in calls: *"kill_group must call killpg once with the expected pid and signal"*. Then require swallowed: *"kill_group must swallow PermissionError EPERM"*.
+  - `esrch-swallowed`: the same call assertion, then swallowed: *"kill_group must swallow ProcessLookupError ESRCH"*.
+  - `einval-propagates`: the same call assertion, then require propagation of the identical injected OSError with errno EINVAL: *"kill_group must propagate other OSError EINVAL unchanged"*. Never accept an unrelated exception, an empty call list or missing output as success.
+  - Baseline red-first: only EPERM is expected to violate the unit contract at base (F10); after the change require all three named subtests to PASS. Discovery failures/compilation errors are development failures, not mutation kills.
+- **STRESS — `TestMarketingKillGroupStress` (opt-in only):** unless `WORLD_KILLPG_STRESS=1`, `t.Skip("opt-in: set WORLD_KILLPG_STRESS=1; real process signalling must run outside the sandbox to probe macOS EPERM")`. In the same Go file drive real Python with F3's import, no monkeypatch, and the F7 nested-shell session shape. Choose **200 trials** with a 0.02-second settle per trial (4 seconds deliberate sleep), targeting <30 seconds total; use a 25-second Python wall deadline and a 35-second Go command context. **Amended iteration 308 (controller, measured):** outside the sandbox at load 6–8, 200 trials took ~31–37 s, so the 25 s bound cut every run at ~160 trials (3 of 3 runs rc 1). N stays 200; the bounds became a 60-second Python wall, a 70-second Go context and a 60-second wall target (`7475ec3c`). The <30-second target is missed on this rig and reported as such. If all 200 cannot finish inside the Python bound, fail with completed-trial counts; do not silently reduce N or accept partial work. On the controller's macOS host record actual wall time and report if the <30-second target is missed.
+  - Each trial starts the new session, sends the initial real raw SIGKILL, and reaps the leader with a ≤5-second wait capped by the remaining wall budget. Perform three alternating pairs of post-reap calls on that same group: raw `os.killpg(pid, SIGKILL)` followed by the imported **real `kill_group(process, SIGKILL)`**. Count raw EPERM separately from ESRCH and successful calls; count wrapper calls and every wrapper exception separately. This yields **600 raw controls and 600 wrapper calls** on a complete run. The initial kill and exceptional-cleanup kills are not controls. Unexpected raw errors/setup/reap failures must fail, not be tallied as EPERM or discarded. Use `try/finally` to KILL/reap every started session on any exit, with bounded cleanup; retain logs via file sinks and do not orphan 60-second sleeps on assertion failure.
+  - Always log trial count, wrapper-call count, raw EPERM count, wrapper exceptions and wall time. Assertions: *"stress must complete 200 trials and 600 wrapped post-reap kills"* and *"real kill_group must raise nothing after leader reap"*. Log the raw control count even on failure. If raw EPERM is zero, print **"UNINFORMATIVE: raw EPERM count is 0; EPERM not provoked on this host; this run is not evidence the fix works"**. A green Go exit in that case only checks completion; it is not macOS EPERM acceptance. Positive raw EPERM is an observational control in the same run, not proof that each following wrapper call encountered EPERM; the deterministic UNIT row is the primary guard. The controller runs this outside the sandbox on macOS.
+- **REGRESSION — unchanged existing rows:** require `TestMarketingSupervisorFakeChromeTimeoutKillsGroup` and `TestMarketingSupervisorFakeDaemonCleanup` to execute and PASS. Their process-death checks remain meaningful independent acceptance, not assumptions derived from a swallowed EPERM (F5/F8).
+
+Focused gates (new UNIT and both unchanged regressions require their exact named top-level PASS; exit 0 with no tests/SKIP is not acceptance):
+
+```sh
+go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v
+go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v
+go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v
+go vet ./scripts/marketingcheck
+gofmt -l scripts/marketingcheck
+python3 -m py_compile scripts/marketing_capture.py
+go test -race ./scripts/marketingcheck -count=1 -timeout 240s
+WORLD_KILLPG_STRESS=1 go test -run '^TestMarketingKillGroupStress$' ./scripts/marketingcheck -count=1 -timeout 120s -v   # controller, macOS, outside sandbox
+```
+
+Require gofmt output empty and vet/compile rc 0. Remove only newly generated Python bytecode after the compile gate so the final changed-file boundary stays exactly the two source files. First record an unchanged-base race run; REPORT any known base red with the exact test/assertion and inherited failure details, never alter unrelated behaviour to obtain green. The planner ran no signalling/socket gate and makes no fresh sandbox gate claim. Any result from inside a sandbox that touches process signalling or sockets is **UNINFORMATIVE UNDER SANDBOX**, regardless of apparent PASS or FAIL; the controller re-runs outside.
+
+Controller post-fix flake acceptance, outside the sandbox on macOS, on an unmutated tree and a quiet rig: require **25 consecutive** green runs of the same package race gate (each with its own 240-second timeout); stop/report the first red, preserve outputs, and do not cherry-pick runs. This controller campaign is separate from the executor's 30-minute budget:
+
+```sh
+for trial in $(seq 1 25); do
+  printf 'M7a-fix macOS race trial %s/25\n' "$trial"
+  go test -race ./scripts/marketingcheck -count=1 -timeout 240s || break
+done
+```
+
+A loop exit code is not acceptance: count 25 successful labelled outputs and fail the campaign if it broke early. Under the controller-reported unfixed red probability 0.25 and independent trials, P(25 greens | unfixed) = 0.75^25 ≈ **0.00075254** (0.0753%), so an unfixed tree would red at least once with probability ≈ **99.9247%** (F9). Four greens would give 0.75^4 ≈0.3164 and are too weak. Rates may vary and timing failures may correlate; passes alone cannot prove a flake absent. UNIT's forced EPERM/EINVAL outcomes are the primary guard; do not portray this conditional arithmetic or a zero-EPERM stress run as proof.
+
+| Mutant | Valid edit (`scripts/marketing_capture.py` only) | Named test / assertion that must red |
+|---|---|---|
+| M7a-fix-eperm | Revert the handler to `except ProcessLookupError:` | `TestMarketingKillGroupTolerance/eperm-swallowed`: "kill_group must swallow PermissionError EPERM". |
+| M7a-fix-broad | Widen the handler to `except OSError:` | `TestMarketingKillGroupTolerance/einval-propagates`: "kill_group must propagate other OSError EINVAL unchanged". |
+| M7a-fix-noop | Replace `kill_group`'s body with `pass` | `TestMarketingKillGroupTolerance/eperm-swallowed`: "kill_group must call killpg once with the expected pid and signal" (also required independently by the other two subtests). Additionally run the unchanged `TestMarketingSupervisorFakeChromeTimeoutKillsGroup`: "grandchild must be dead after bounded cleanup (pid %d)" must red; F5 justifies this specific assertion. Do not substitute an earlier verdict error or harness timeout for this kill. |
+
+Apply one production mutant at a time, with the tests untouched. Each command is the corresponding focused gate above; run UNIT for all mutants and the existing timeout gate additionally for no-op. Reach the named assertion; compile failure, panic, harness timeout, missing Python, SKIP and unrelated refusal do not count. Restore the fixed source by scratch copy and `cmp` (no git), then re-run green. Report process-based kills as UNINFORMATIVE UNDER SANDBOX until the controller repeats them outside. Do not claim these planned mutant kills were already executed by the planner.
+
+Executor notes:
+- Exactly the two executor files above; no new source files and no changes to the two existing regression rows. No real Chrome, no real daemon.
+- No git write operations of any kind; the controller commits.
+- Snapshot changed files to `snap/M7a-fix/` **in this worktree**, preserving relative paths. This iteration-308 instruction overrides the older external-snapshot note for this milestone only; do not run recursive Go package sweeps over snapshot copies.
+- Report every sandbox process-signalling/socket result as **UNINFORMATIVE UNDER SANDBOX**; controller re-runs outside. A historical base race red is a report, not authority to repair other files.
+- Maximum 30 min (28 estimated, including focused gates/mutations). The controller owns stress evidence and the 25-run race campaign. Stop with an honest incomplete report if the executor bound expires.
+
 ## M7c2b — Capture shell end-to-end with fake Chrome and a fake daemon
 
-Design M7 (C7/C8/C9); 28 minutes; dependency: M7c2a; status **pending**.
+Design M7 (C7/C8/C9); 28 minutes; dependency: M7c2a and M7a-fix (amended iteration 308: M7a-fix); status **pending**.
 
 Exact executor files:
 
@@ -1919,7 +2032,7 @@ Executor notes:
 
 ## M7c4 — Real Chrome drill (test written by the executor; RUN by the controller)
 
-Design M7 (C7/C8/C9); 25 minutes; dependency: M7c3; status **pending**.
+Design M7 (C7/C8/C9); 25 minutes; dependency: M7c3 and M7a-fix (amended iteration 308: M7a-fix); status **pending**.
 
 Exact executor files:
 
@@ -2113,4 +2226,4 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## Final disposition
 
-Unattended implementation and test gates can be completed without release confirmations. Release C8 pixels/byte equality, actual image/manifest promotion and C10 actual asset resolution remain controller-owned attended-release checks. PD1 and any M7 fallback residual must appear in the boundary report; no claim of full showcase completion or clause movement follows from tool/test success. JSON statuses (amended iteration 305 per w-marketing-capture-orchestration §5): M1a–M7b `completed` (PRs #264, #266, #267, #273, #275, #277, #283, #289, #295, #353, #354, #359, #360, #361; orchestration §2, V33); M7c0–M8b `pending`. C8′, C12, C13 and C14 (orchestration §7) are met only by the controller/attended steps R0, R1, P0, P3 and A1, never by an executor milestone.
+Unattended implementation and test gates can be completed without release confirmations. Release C8 pixels/byte equality, actual image/manifest promotion and C10 actual asset resolution remain controller-owned attended-release checks. PD1 and any M7 fallback residual must appear in the boundary report; no claim of full showcase completion or clause movement follows from tool/test success. JSON statuses (amended iteration 305 per w-marketing-capture-orchestration §5): M1a–M7b `completed` (PRs #264, #266, #267, #273, #275, #277, #283, #289, #295, #353, #354, #359, #360, #361; orchestration §2, V33); M7c0–M8b `pending` as of iteration 305; M7c0, M7c1, M7c2a and M7a-fix have since been built (see each section) (amended iteration 308: M7a-fix). C8′, C12, C13 and C14 (orchestration §7) are met only by the controller/attended steps R0, R1, P0, P3 and A1, never by an executor milestone.

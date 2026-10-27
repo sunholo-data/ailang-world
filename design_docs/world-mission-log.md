@@ -1991,3 +1991,100 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 17/22 built; goal unmoved.
 **Next:** row 150 M7a-fix (`kill_group` EPERM), then M7c2b. Then 151 after 150.
+
+## 308 — 2026-10-27 — row 150: M7a-fix built — `kill_group` tolerates macOS `killpg` EPERM, so a good shot no longer ends as `SupervisorError`; judge PASS 88 [PRODUCT]
+
+**Kind:** one production milestone (M7a-fix) on the release row: a planner amendment, an executor build, a controller test-only bound fix and an independent judge. All four routing-table roles that were needed were spawned through the Agent tool, per the operator's standing request (see Routing evidence).
+
+**Pick and why:** row 150 M7a-fix, following iteration 307's **Next**. Re-checked before picking:
+- no M7a-fix commit, branch, worktree or PR existed (`git log origin/dev --grep` for `M7a-fix`/`kill_group` returns only iteration 307's record commit; PR search for `kill_group` returns only #380, merged);
+- local dev equalled origin/dev `0363b3ae` at Gate 1 (fast-forwarded two attended commits first);
+- the only open PR from this account (#389 `fix/trial-world-context`) is an attended trial fix, not this mission's loop work; left alone.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (both watermarks agree; 5 comments, all this account's), and 0 on #313 since `2026-10-22T01:34:42Z`.
+- Attended ledger channel: D-WORLD-98 (row 219's rulings R1–R4, the home service) was filed and RESOLVED in an attended session after iteration 307. `mission_ledger_provenance.sh` → `attended` (flip `920cb0d7`, creation `9a68ad8e`). Acknowledged here. It is an attended-track row and does not change row 150 or the 156 → 150 → 151 order. Ledger valid, 85 rows. Also new since 307 (attended, docs-only): row 228 `w-agent-search-and-read-cap` filed NEXT on the attended track (#388), README status refresh (#387).
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (iteration 305's entry; grep count 1). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages; nothing outranks the queue. This iteration's claim was sent and read back.
+- Weekly external-issue sweep: not due (run after the 2026-10-26 rotation). #366 was created after that boundary, so no thread rotation.
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Dev CI at `0363b3ae`: check set 3/3 success.
+- Running skill plus all 13 resource files byte-identical to origin/dev (per-file `cmp`, resolved symlink target; no DIFF line).
+- Base `0363b3ae…` recorded at Gate 1; the Gate-3 `snap` read the same SHA.
+
+**Baseline (controller, pristine detached worktree `.base-world-iter308` at the base, `AILANG_BIN` = pinned v0.41.0, load ~6):**
+- gofmt clean, vet rc 0, `py_compile` rc 0, `scripts/marketingcheck` package rc 0 (24.6 s).
+- `-race ./scripts/marketingcheck`: **red 1 of 3** at base — `TestMarketingSupervisorFakeDaemonCleanup` → `normal shell cleanup: exit status 1 {"verdict": "SupervisorError", "detail": "[Errno 1] Operation not permitted"}`. The defect being fixed, on a third test.
+- Instrument note: this rig has no `timeout` binary; a first worktree-creation call wrapped in `timeout` failed rc 127 without touching git, and was re-run without it.
+
+**Role execution:**
+- **Designer:** not run. `w-marketing-capture-orchestration` r2 governs and M7a-fix needs no design change.
+- **Planner** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; `derive-planner-lane.sh` gave the same line). It was spawned as an Agent-tool supervisor (`MISSION-ROLE: planner`, no model alias) that ran the controller's bounded codex wrapper (`/tmp/codex_run_iter308.sh`) in a detached sibling worktree `.planner-wt-world-iter308` at `0363b3ae`. Probe rc 0; run rc 0 in 469 s. It added `## M7a-fix` to the plan and a `M7a-fix` JSON milestone ahead of M7c2b, made M7c2b and M7c4 depend on it, and recorded facts F0–F10 with commands. **It refuted part of the controller's directive:** I had written that EPERM from `killpg` on our own group means "no signallable member remains". Its F8 quotes `man 2 kill`: for a group, EPERM is returned "if **any** members of the group could not be signaled". **Controller re-check:** I read both man pages myself and they say exactly that. So EPERM does not prove death; the plan scopes the fix as a bounded workaround for the observed post-reap case and keeps the existing death assertions as the guard. Artifacts committed as `97736493`.
+- **Executor** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`), Agent-tool supervisor (`MISSION-ROLE: executor`, no alias) running the same wrapper in `.wt-world-iter308-row150-m7afix`. Probe rc 0; run rc 0 in 515 s. Directive `/tmp/codex_directive_iter308.txt`.
+  - `marketing_capture.py`: `kill_group` catches `(ProcessLookupError, PermissionError)` plus a one-line comment; nothing else changes.
+  - `supervisor_test.go` (+237 lines, purely additive): `TestMarketingKillGroupTolerance` (always-on; inline Python imports the module via `importlib`, fakes `os.killpg` to raise EPERM, ESRCH and EINVAL, and asserts the call `(424242, SIGKILL)` and the outcome) and `TestMarketingKillGroupStress` (opt-in `WORLD_KILLPG_STRESS=1`; 200 trials of the iteration-307 repro through the real `kill_group`; raw `killpg` EPERM counted as the positive control; prints UNINFORMATIVE when that count is 0).
+  - Red-first: only `eperm-swallowed` red at base, as planned. In-sandbox: 3/3 plan mutants red at their named assertions. In-sandbox `-race` was blocked by a socket-bind denial (correctly labelled UNINFORMATIVE). It reported one restored-tree timeout-test red, `fake must record child and grandchild: [81876]`, green on rerun (load 9).
+  - Committed by the controller as `31211dbf`.
+- **Controller test-only fix `7475ec3c`:** outside the sandbox the opt-in stress row was **rc 1 on 3 of 3 runs**. Its 25 s Python wall cut every run at ~160 of 200 trials (raw ESRCH 461–480 against 600 expected calls). The plan forbids silently reducing N, so the bounds were raised instead (Python wall 60 s, Go context 70 s, wall target 60 s). After the fix: 3 of 3 rc 0, 200 trials and 600 calls each, raw EPERM 7, 3, 7, wrapper exceptions 0, ~33 s. The plan's stress paragraph records the amendment.
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), Agent tool, foreground, own detached worktree `.eval-world-iter308` at `7475ec3c`.
+
+**Controller verification (outside the sandbox, `AILANG_BIN` pinned, load 5–8):**
+- Diff read in full: exactly the plan's two files; the two existing regression tests byte-unchanged (diff purely additive); snapshots `cmp`-identical to the committed tree.
+- gofmt clean; vet rc 0; Python parse rc 0; compile fence `go test -run '^$' ./...` rc 0 (34 packages); `TestSubprocessSinkGate` PASS; `TestProductionGoSurface` and `TestProductionContextRoots` PASS; `TestMarketingKillGroupTolerance` 3/3 PASS; the stress row SKIPs without the opt-in, with the plan's message.
+- **Mutant reproduction (controller):** M7a-fix-eperm → `kill_group must swallow PermissionError EPERM` (only `eperm-swallowed` red). The same mutant against the stress row: at the 25 s bound 2 of 2 red (6 and 6 wrapper exceptions; "real kill_group must raise nothing after leader reap"); at the 60 s bound 1 red, 1 UNINFORMATIVE (raw EPERM 0, line printed), and 1 green with raw EPERM 1 but no wrapper exception. So the stress row is a probabilistic observation, as the plan states; the unit row is the deterministic guard. Restored, `cmp` identical to HEAD.
+- C11 protected-file observation: `marketingcheck observe` before the executor (12 records) and after; `marketingcheck compare` rc 0.
+- `.ail` untouched, so `verify_ail.sh` was not run (CI's `ailang-code verify gate` covers it).
+- **Race campaign, 25 runs (plan acceptance).** Campaign 1 (stop at the first red, as planned) ran while the judge was also loading the rig (load to ~37): 3 green, then trial 4 red on `TestMarketingSupervisorFakeChromeTimeoutKillsGroup` → `fake must record child and grandchild: []`. That is the unchanged fixture recording no PIDs before its 8 s deadline, the same class the executor saw. It has no `SupervisorError`/`Errno 1` and does not touch the changed line. **The plan's acceptance as written (25 consecutive greens) was therefore not met by campaign 1.** Campaign 2, run after the judge finished, ran all 25 and classified each red: **25 of 25 green** at load 2.5–7 (0 EPERM-class reds, 0 other), about 60 s per run. That meets the plan's criterion: if the fixed tree still red at the base rate of 0.25 per run, P(25 greens) ≈ 0.00075. The caveat stands that a timing flake cannot be proven absent by passes alone; the unit row is the primary guard. Log: `verification/world-iter308/controller-verification.md`.
+
+**Independent evaluation:** r1 **PASS 88/100**, zero blocking ([report](verification/world-iter308/evaluator-r1.md)).
+- Rubric: conformance 26/30, tests and gates 24/25, mutation/non-vacuity 18/20, premise and risk 10/10, hygiene 10/15.
+- Gates all green outside a sandbox. Stress twice green (raw EPERM 15 and 54, wrapper exceptions 0, 32.4 s and 37.3 s).
+- Plan mutants 3/3 killed at the named assertions; the stress row killed the eperm mutant 2/2 (100 and 124 wrapper PermissionErrors). Its own diff-anchored mutants (dropped call-recording, the line-count guard, `except PermissionError` only, a re-wrapping handler, 100 trials) were all killed. One survivor is by design: replacing the stress row's raw control with `pass` gives raw EPERM 0 and a green with only the UNINFORMATIVE line.
+- **Controlled comparison (judge):** `-race` of `FakeDaemonCleanup/(shell-wait|interrupted-shot)` × 12: fixed 0/12 red; base 2/12 red, both "terminated trap must exit 143 after supervised cleanup" (the EPERM signature).
+- Non-blocking: one `-race` package run red at load 40+ on `shell wait daemon must be dead after bounded cleanup` (217 s of 240 s; run 2 green in 60 s), a death-check timing failure in an unchanged test; the 60 s bound has no margin at load ~40; the stress row is an observation when raw EPERM is 0 (plan-sanctioned); minor redundant checks; the plan text had not been amended for the bound (now amended).
+- Premise (judge, from the man pages): swallowing EPERM is reasonable for same-uid sessions. Residual risk: a setuid or credential-changing descendant left alive, which only the fake-fixture death checks would catch. No current caller has one.
+
+**Bookkeeping:** sprint JSON M7a-fix → completed (iteration 308); plan M7a-fix status → BUILT and the stress-bound amendment recorded; charter row 150 updated (M7a-fix built, Next); CURRENT GOAL next line updated; STATUS 305 rotated to the archive (line counts asserted; the charter keeps 3 stamps).
+
+**Result:** M7a-fix BUILT. A macOS `killpg` EPERM after the leader is reaped no longer turns a good shot or a clean daemon stop into `SupervisorError`. Row 150 is 18 of 23 milestones built (M7a-fix added this iteration).
+
+**Gate 3b:** the PR head and then the merge commit are each polled pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). Outcome reported on #366.
+
+**Routing evidence:** base=0363b3ae3386c902f5f55c6ef3075c9c1e18f2b3@2026-10-27T16:01:48Z (Gate 1; Gate-3 `snap` identical). Driver banner: `controller=claude:claude-opus-5-5 … roles: designer=claude:claude-opus-5-5 planner=codex:gpt-6.1-sol executor=codex:gpt-6.1-sol evaluator=sonnet`; `MISSION_OVER_RATION` empty; codex 10080m window 11.0% used of 28.1% allowed.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (doc r2 governs; no design change). Not a routing failure: the table spawns a designer only when a doc is missing or needs revision.
+- Planner `codex:gpt-6.1-sol`: probe 10,229 tok; run 101,563 tok, rc 0, 469 s. Agent-tool supervisor (transport only, no verdict): 28,495 tok / 503 s.
+- Executor `codex:gpt-6.1-sol`: probe 9,086 tok; run 72,714 tok, rc 0, 515 s. Agent-tool supervisor (transport only): 37,193 tok / 574 s.
+- Evaluator `sonnet` (Agent): 63,063 tok / 833 s. Judge independence: cross-vendor (OpenAI planner and executor, Anthropic Sonnet judge), and a different model from the Opus controller that wrote `7475ec3c`. The judge evaluated the final tree including that commit.
+- No quorum this iteration (no new or revised design doc; a plan amendment only).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Asserting "EPERM ⇒ no live member": the planner's F8 and my own reading of `man 2 kill`/`killpg` refute it; recorded as a scoped workaround instead.
+- Reducing the stress row to 100 trials to fit 25 s: the plan forbids a silent N reduction, and 100 trials would roughly halve the raw-EPERM control count per run.
+- Attributing campaign 1's trial-4 red to M7a-fix: its message is the fixture's own PID-recording assertion (empty list) at load ~37, with no EPERM signature; the changed line runs only after the fake has started.
+- Calling the 25-run campaign met: campaign 1 stopped at a red, so the literal criterion failed; campaign 2's classified result is what is recorded.
+- Closing the judge's load-only timing survivors here: they are in unchanged M7a tests and belong with the carried `shell-hup`/`shell-wait` flake notes.
+
+**Carried:**
+- M7c2b next (unblocked: its new dependency M7a-fix is built), then M7c3 → M7c4 → R1 → M8a → M8b → attended A1.
+- For M7c2b (from 307): `pass` creates `--out-dir` before validating routes; untested `pass`/`ready`/`chrome-version` refusal branches; `chrome_version`'s uncaught `TimeoutExpired`.
+- New: M7a's fake-Chrome/daemon fixtures are load-sensitive (`fake must record child and grandchild: []`/`[81876]` at load 9–37; `shell wait daemon must be dead` at load 40+). These are separate from EPERM and are the next flake source on this rig.
+- Residual (judge): swallowing EPERM would hide a live, differently-credentialed descendant; no current caller has one.
+- Everything iteration 307 carried. D-WORLD-86 stays HOLD.
+
+**Retro:**
+- The planner's man-page check corrected a premise the controller had stated as fact in its own directive. This is why the planner directive demanded a command per codebase claim, even for things "everyone knows".
+- An opt-in stress row sized inside a sandbox (where it never runs) was mis-sized for the real host. Running every planned acceptance command outside the sandbox before the judge caught it while it was still cheap.
+- Running the race campaign concurrently with the judge confounded the campaign with load. Lesson: run load-sensitive acceptance campaigns when no other role is running, or classify reds from the start.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 18/23 built; goal unmoved.
+**Next:** row 150 M7c2b, then M7c3. Then 151 after 150.

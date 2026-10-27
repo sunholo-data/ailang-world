@@ -10,7 +10,7 @@
     "design_docs/planned/w-marketing-capture-sprint-plan.md",
     "design_docs/planned/w-marketing-capture-orchestration.md r2 (iteration 305): governs M7c0-M8b; its §5 table overrides this plan where they disagree; quorum disposition = Gate-2 narrow-refinement carve-out (§9), not a quorum PASS (C13)"
   ],
-  "estimate": "22 executor runs, 563 minutes total; each <=30min, attended release separate (amended iteration 305 per w-marketing-capture-orchestration §5): M7c0 (20 min) added; M1a-M7b (14 runs) landed",
+  "estimate": "23 executor runs, 591 minutes total; each <=30min, attended release separate (amended iteration 308: M7a-fix): M7a-fix (28 min) added before M7c2b and M7c4; previously 22 executor runs, 563 minutes total; each <=30min, attended release separate (amended iteration 305 per w-marketing-capture-orchestration §5): M7c0 (20 min) added; M1a-M7b (14 runs) landed",
   "scope": "Exactly two planner artifacts. Executor implements design M1-M8 in ordered bounded splits; no release publish/mint confirmation, no PNG promotion in a milestone.",
   "environment": [
     "export AILANG_BIN=$HOME/.pinned-ailang/ailang # v0.41.0 commit24ee108",
@@ -2931,12 +2931,145 @@
       "baseline_new_tests": "Not present at base; planned commands must discover their exact test and PASS after implementation."
     },
     {
+      "id": "M7a-fix",
+      "title": "kill_group tolerates macOS killpg EPERM (amended iteration 308: M7a-fix)",
+      "design_milestone": "M7",
+      "estimated_minutes": 28,
+      "depends_on": [
+        "M7c2a"
+      ],
+      "files": [
+        "scripts/marketing_capture.py",
+        "scripts/marketingcheck/supervisor_test.go"
+      ],
+      "status": "completed",
+      "completed": {"iteration": 308, "commit": "31211dbf", "controller_fix": "7475ec3c (test-only: stress-row wall bound 25 s -> 60 s, Go context 35 s -> 70 s; N stays 200; 3 of 3 runs at 25 s were cut at ~160 trials outside the sandbox)", "judge": "sonnet r1 PASS 88 (zero blocking; 3/3 plan mutants killed at the named assertions; the stress row killed the eperm mutant 2/2 in the judge run)", "executor": "codex gpt-6.1-sol rc 0, 515 s", "planner": "codex gpt-6.1-sol rc 0, 469 s"},
+      "new_tests": [
+        "TestMarketingKillGroupTolerance",
+        "TestMarketingKillGroupStress"
+      ],
+      "tests_first": [
+        {
+          "ac": "C7/C8/C9 UNIT",
+          "tests": "TestMarketingKillGroupTolerance",
+          "assertions": "Always-on CI Go test driving mandatory real python3 resolved with exec.LookPath (fatal if missing). Use a 30-second exec.CommandContext, python3 -B -c inline program, absolute path resolved from ../marketing_capture.py, importlib.util.spec_from_file_location name marketing_capture (never __main__/runpy executing main). Monkeypatch module os.killpg in turn with PermissionError(errno.EPERM), ProcessLookupError(errno.ESRCH), OSError(errno.EINVAL); stand-in types.SimpleNamespace(pid=424242), signal.SIGKILL; record calls before raising, restore original in finally. Catch outside kill_group to emit exactly one JSON line per case even on incorrect outcomes. Require successful exit and exactly three distinct rows: \"inline kill_group probe must emit all three cases\". Go subtests eperm-swallowed, esrch-swallowed, einval-propagates each FIRST require exactly one call with expected pid/signal: \"kill_group must call killpg once with the expected pid and signal\". Then respectively: \"kill_group must swallow PermissionError EPERM\"; \"kill_group must swallow ProcessLookupError ESRCH\"; \"kill_group must propagate other OSError EINVAL unchanged\" (same exception instance, errno EINVAL). Check exception type, errno and identity, not merely a nonzero child exit. Use synchronous bounded output or file sinks for asynchronously started processes.",
+          "command": "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "red_first": "Write test before production catch edit; baseline EPERM must red, ESRCH/EINVAL controls pass. Planner read-only F10 probe observed these outcomes; missing new test/empty selection is not PASS or a mutation kill."
+        },
+        {
+          "ac": "C7/C8/C9 STRESS (controller opt-in)",
+          "tests": "TestMarketingKillGroupStress",
+          "assertions": "Opt-in WORLD_KILLPG_STRESS=1 only; otherwise t.Skip(\"opt-in: set WORLD_KILLPG_STRESS=1; real process signalling must run outside the sandbox to probe macOS EPERM\"). Real Python, safe import as UNIT, no monkeypatch. 200 new-session /bin/sh -c \"(sleep 60 & wait) & (sleep 60 & wait) & wait\" trials; 0.02s settle (4s deliberate sleeps), initial raw group SIGKILL and leader reap <=5s capped by remaining budget, then three alternating raw os.killpg / real imported kill_group SIGKILL pairs on the same group. Complete totals 600 raw controls and 600 wrapper calls. Count raw EPERM, ESRCH, success separately; setup/initial/cleanup kills are not controls, unexpected raw errors fail. Count wrapper exceptions, always print raw EPERM including on failure. Assertions: \"stress must complete 200 trials and 600 wrapped post-reap kills\"; \"real kill_group must raise nothing after leader reap\". If raw EPERM count=0 log \"UNINFORMATIVE: raw EPERM count is 0; EPERM not provoked on this host; this run is not evidence the fix works\" even with green Go exit. Positive raw count is observational, not proof each wrapper met EPERM. 25-second Python wall deadline, 35-second Go context, <30s target; fail partial completion, record wall time and report target misses. try/finally bounded raw KILL/reap on every started session, file sinks for subprocess logs, no orphan 60s sleeps. Controller runs outside sandbox on macOS; UNIT remains primary guard.",
+          "command": "WORLD_KILLPG_STRESS=1 go test -run '^TestMarketingKillGroupStress$' ./scripts/marketingcheck -count=1 -timeout 120s -v # controller, macOS, outside sandbox",
+          "red_first": "Opt-in observed process control, not deterministic red-first proof. Zero raw EPERM is UNINFORMATIVE, never evidence the fix works."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "criterion": "C7/C8/C9 UNIT",
+          "test": "TestMarketingKillGroupTolerance",
+          "assertions": "Always-on CI Go test driving mandatory real python3 resolved with exec.LookPath (fatal if missing). Use a 30-second exec.CommandContext, python3 -B -c inline program, absolute path resolved from ../marketing_capture.py, importlib.util.spec_from_file_location name marketing_capture (never __main__/runpy executing main). Monkeypatch module os.killpg in turn with PermissionError(errno.EPERM), ProcessLookupError(errno.ESRCH), OSError(errno.EINVAL); stand-in types.SimpleNamespace(pid=424242), signal.SIGKILL; record calls before raising, restore original in finally. Catch outside kill_group to emit exactly one JSON line per case even on incorrect outcomes. Require successful exit and exactly three distinct rows: \"inline kill_group probe must emit all three cases\". Go subtests eperm-swallowed, esrch-swallowed, einval-propagates each FIRST require exactly one call with expected pid/signal: \"kill_group must call killpg once with the expected pid and signal\". Then respectively: \"kill_group must swallow PermissionError EPERM\"; \"kill_group must swallow ProcessLookupError ESRCH\"; \"kill_group must propagate other OSError EINVAL unchanged\" (same exception instance, errno EINVAL). Check exception type, errno and identity, not merely a nonzero child exit. Use synchronous bounded output or file sinks for asynchronously started processes.",
+          "command": "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v"
+        },
+        {
+          "criterion": "C7/C8/C9 STRESS (controller opt-in)",
+          "test": "TestMarketingKillGroupStress",
+          "assertions": "Opt-in WORLD_KILLPG_STRESS=1 only; otherwise t.Skip(\"opt-in: set WORLD_KILLPG_STRESS=1; real process signalling must run outside the sandbox to probe macOS EPERM\"). Real Python, safe import as UNIT, no monkeypatch. 200 new-session /bin/sh -c \"(sleep 60 & wait) & (sleep 60 & wait) & wait\" trials; 0.02s settle (4s deliberate sleeps), initial raw group SIGKILL and leader reap <=5s capped by remaining budget, then three alternating raw os.killpg / real imported kill_group SIGKILL pairs on the same group. Complete totals 600 raw controls and 600 wrapper calls. Count raw EPERM, ESRCH, success separately; setup/initial/cleanup kills are not controls, unexpected raw errors fail. Count wrapper exceptions, always print raw EPERM including on failure. Assertions: \"stress must complete 200 trials and 600 wrapped post-reap kills\"; \"real kill_group must raise nothing after leader reap\". If raw EPERM count=0 log \"UNINFORMATIVE: raw EPERM count is 0; EPERM not provoked on this host; this run is not evidence the fix works\" even with green Go exit. Positive raw count is observational, not proof each wrapper met EPERM. 25-second Python wall deadline, 35-second Go context, <30s target; fail partial completion, record wall time and report target misses. try/finally bounded raw KILL/reap on every started session, file sinks for subprocess logs, no orphan 60s sleeps. Controller runs outside sandbox on macOS; UNIT remains primary guard.",
+          "command": "WORLD_KILLPG_STRESS=1 go test -run '^TestMarketingKillGroupStress$' ./scripts/marketingcheck -count=1 -timeout 120s -v # controller, macOS, outside sandbox"
+        },
+        {
+          "criterion": "C7/C8/C9 unchanged regressions",
+          "test": "TestMarketingSupervisorFakeChromeTimeoutKillsGroup; TestMarketingSupervisorFakeDaemonCleanup",
+          "assertions": "Keep TestMarketingSupervisorFakeChromeTimeoutKillsGroup and TestMarketingSupervisorFakeDaemonCleanup byte-for-byte unchanged; require named PASS outside sandbox. The no-op mutant must additionally reach the existing grandchild death assertion, not just an earlier verdict error.",
+          "command": "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v; go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v"
+        },
+        {
+          "criterion": "Controller macOS race campaign",
+          "test": "scripts/marketingcheck -race, 25 consecutive runs",
+          "assertions": "Controller only, outside sandbox on macOS, quiet rig, fixed unmutated tree: require 25 consecutive green runs of go test -race ./scripts/marketingcheck -count=1 -timeout 240s; stop/report first red, preserve each labelled output, no cherry-picking. Run: for trial in $(seq 1 25); do printf \"M7a-fix macOS race trial %s/25\\n\" \"$trial\"; go test -race ./scripts/marketingcheck -count=1 -timeout 240s || break; done. Loop rc alone is not acceptance; require 25 successful labelled outputs. Conditional on controller-reported p_red=0.25 and independence: P(25 greens|unfixed)=0.75^25=0.0007525434581650003 (0.0753%); at least one red=99.9247456541835%. Four greens=0.31640625 is too weak. Timing rates may change/correlate; passes cannot prove absence, UNIT forced exceptions are primary. Campaign is outside executor 30-minute budget.",
+          "command": "go test -race ./scripts/marketingcheck -count=1 -timeout 240s # controller repeats 25 times outside sandbox"
+        }
+      ],
+      "implementation": "Only kill_group exception handler becomes except (ProcessLookupError, PermissionError): pass, with one-line comment \"# macOS may report EPERM for dead descendants after the leader is reaped.\" Preserve signature, docstring and os.killpg(process.pid, sig). All other OSError including EINVAL propagate unchanged; never catch OSError. No other behaviour of shot, daemon, cleanup_daemon, chrome_version, ready or pass changes; no retries, platform branches, PID probes or deadline edits. Add tests only in supervisor_test.go, no new source files. (amended iteration 308: M7a-fix) Facts and exact read-only verification commands: Markdown section F0-F10. IMPORTANT F8: local man 2 kill says group EPERM if any members could not be signaled; man 2 killpg says one or more target processes has a different effective UID. They do NOT support \"EPERM means no signallable member remains\". Do not assert that theorem, infer death from EPERM, or claim every descendant retains credentials; scope this prescribed tolerance to controller-observed macOS capture-session cleanup. A genuinely denied live member remains a limitation; unchanged death assertions and outside-sandbox control remain required.",
+      "acceptance": [
+        "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go vet ./scripts/marketingcheck",
+        "gofmt -l scripts/marketingcheck",
+        "python3 -m py_compile scripts/marketing_capture.py",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s",
+        "WORLD_KILLPG_STRESS=1 go test -run '^TestMarketingKillGroupStress$' ./scripts/marketingcheck -count=1 -timeout 120s -v # controller, macOS, outside sandbox"
+      ],
+      "commands": [
+        "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+        "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+        "go vet ./scripts/marketingcheck",
+        "gofmt -l scripts/marketingcheck",
+        "python3 -m py_compile scripts/marketing_capture.py",
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s",
+        "WORLD_KILLPG_STRESS=1 go test -run '^TestMarketingKillGroupStress$' ./scripts/marketingcheck -count=1 -timeout 120s -v # controller, macOS, outside sandbox"
+      ],
+      "mutations": [
+        {
+          "mutant": "M7a-fix-eperm",
+          "mutation": "kill_group: revert handler to except ProcessLookupError:",
+          "must_fail_test": "TestMarketingKillGroupTolerance/eperm-swallowed",
+          "must_fail_assertion": "kill_group must swallow PermissionError EPERM",
+          "command": "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "PRODUCTION marketing_capture.py only, one mutant at a time; tests untouched. Named assertion must fail; compilation failure, panic, harness timeout, missing Python, SKIP, unrelated refusal do not count. Restore fixed source by scratch copy + cmp (no git), re-run green. Process-based mutant results inside sandbox are UNINFORMATIVE UNDER SANDBOX; controller repeats outside."
+        },
+        {
+          "mutant": "M7a-fix-broad",
+          "mutation": "kill_group: widen handler to except OSError:",
+          "must_fail_test": "TestMarketingKillGroupTolerance/einval-propagates",
+          "must_fail_assertion": "kill_group must propagate other OSError EINVAL unchanged",
+          "command": "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "PRODUCTION marketing_capture.py only, one mutant at a time; tests untouched. Named assertion must fail; compilation failure, panic, harness timeout, missing Python, SKIP, unrelated refusal do not count. Restore fixed source by scratch copy + cmp (no git), re-run green. Process-based mutant results inside sandbox are UNINFORMATIVE UNDER SANDBOX; controller repeats outside."
+        },
+        {
+          "mutant": "M7a-fix-noop",
+          "mutation": "Replace kill_group's body with pass",
+          "must_fail_test": "TestMarketingKillGroupTolerance/eperm-swallowed",
+          "must_fail_assertion": "kill_group must call killpg once with the expected pid and signal",
+          "command": "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "reachability": "PRODUCTION marketing_capture.py only, one mutant at a time; tests untouched. Named assertion must fail; compilation failure, panic, harness timeout, missing Python, SKIP, unrelated refusal do not count. Restore fixed source by scratch copy + cmp (no git), re-run green. Process-based mutant results inside sandbox are UNINFORMATIVE UNDER SANDBOX; controller repeats outside. Also run go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v: require TestMarketingSupervisorFakeChromeTimeoutKillsGroup to red at \"grandchild must be dead after bounded cleanup (pid %d)\". F5 in the Markdown section source-verifies grandchild-first assertDead, non-fatal verdict checks, 8s deadline/5s reap and a 60s descendant; this is justified reachability, not an already-executed mutant claim."
+        }
+      ],
+      "repo_gates": [
+        "go test -race ./scripts/marketingcheck -count=1 -timeout 240s"
+      ],
+      "executor_directive_notes": {
+        "narrowest_gate_list": [
+          "go test -run '^TestMarketingKillGroupTolerance$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingSupervisorFakeChromeTimeoutKillsGroup$' ./scripts/marketingcheck -count=1 -timeout 90s -v",
+          "go test -run '^TestMarketingSupervisorFakeDaemonCleanup$' ./scripts/marketingcheck -count=1 -timeout 120s -v",
+          "go vet ./scripts/marketingcheck",
+          "gofmt -l scripts/marketingcheck",
+          "python3 -m py_compile scripts/marketing_capture.py",
+          "go test -race ./scripts/marketingcheck -count=1 -timeout 240s",
+          "WORLD_KILLPG_STRESS=1 go test -run '^TestMarketingKillGroupStress$' ./scripts/marketingcheck -count=1 -timeout 120s -v # controller, macOS, outside sandbox"
+        ],
+        "may_touch": [
+          "scripts/marketing_capture.py",
+          "scripts/marketingcheck/supervisor_test.go"
+        ],
+        "directive": "Exactly two source files, no new files; keep both existing regression tests byte-for-byte unchanged. No real Chrome, no real daemon. No git write operations of any kind; controller commits. Snapshot changed files to snap/M7a-fix/ IN THIS WORKTREE, preserving relative paths; user iteration-308 instruction overrides older external-snapshot note for this milestone only. Do not run recursive Go sweeps over snapshot copies. (amended iteration 308: M7a-fix)",
+        "timebox": "28 estimated minutes including focused gates/mutations; maximum 30 minutes. Stop/report incomplete at bound, never weaken gates. Controller stress and 25-run race campaign are outside executor budget.",
+        "additional": "Any sandbox result touching process signalling or sockets is UNINFORMATIVE UNDER SANDBOX, regardless of apparent PASS/FAIL; controller re-runs outside. First record unchanged-base race result; REPORT a base -race red with exact test/assertion, do not repair unrelated code. No fresh signalling gate run by planner. Require exact top-level UNIT/regression PASS (not empty selection/SKIP), empty gofmt output, vet/py_compile rc0. Remove only newly generated bytecode after compile so final source boundary is two files. Controller only, outside sandbox on macOS, quiet rig, fixed unmutated tree: require 25 consecutive green runs of go test -race ./scripts/marketingcheck -count=1 -timeout 240s; stop/report first red, preserve each labelled output, no cherry-picking. Run: for trial in $(seq 1 25); do printf \"M7a-fix macOS race trial %s/25\\n\" \"$trial\"; go test -race ./scripts/marketingcheck -count=1 -timeout 240s || break; done. Loop rc alone is not acceptance; require 25 successful labelled outputs. Conditional on controller-reported p_red=0.25 and independence: P(25 greens|unfixed)=0.75^25=0.0007525434581650003 (0.0753%); at least one red=99.9247456541835%. Four greens=0.31640625 is too weak. Timing rates may change/correlate; passes cannot prove absence, UNIT forced exceptions are primary. Campaign is outside executor 30-minute budget."
+      },
+      "measured_baseline": [],
+      "baseline_new_tests": "New Go rows absent at 0363b3ae; rg positive-control command and read-only Python import/monkeypatch probe in Markdown F3/F6/F10. No new-test gate was run as an empty selection. Controller-reported pristine gofmt/vet/py_compile green and 1/4 race red, 5/600 raw EPERM / 40/40 negative-control ESRCH are historical inputs, not independently remeasured planner gates; tracked repro contains code, not measured counts. Iteration-306 evaluator receipt independently read for historical Errno 1 race failures. Local man-page contradiction recorded in F8."
+    },
+    {
       "id": "M7c2b",
       "title": "Capture shell end-to-end with fake Chrome and a fake daemon",
       "design_milestone": "M7",
       "estimated_minutes": 28,
       "depends_on": [
-        "M7c2a"
+        "M7c2a",
+        "M7a-fix"
       ],
       "files": [
         "scripts/capture_marketing.sh",
@@ -3178,7 +3311,8 @@
       "design_milestone": "M7",
       "estimated_minutes": 25,
       "depends_on": [
-        "M7c3"
+        "M7c3",
+        "M7a-fix"
       ],
       "files": [
         "cmd/ailang-worldd/marketing_chrome_test.go",

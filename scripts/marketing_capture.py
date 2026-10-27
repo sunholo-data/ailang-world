@@ -53,7 +53,8 @@ def kill_group(process: subprocess.Popen, sig: int) -> None:
     """The session leader's PID is also its process-group ID, even after exit."""
     try:
         os.killpg(process.pid, sig)
-    except ProcessLookupError:
+    except (ProcessLookupError, PermissionError):
+        # macOS may report EPERM for dead descendants after the leader is reaped.
         pass
 
 
