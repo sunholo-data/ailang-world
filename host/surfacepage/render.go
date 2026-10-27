@@ -20,6 +20,9 @@ var logoSVG string
 
 // Now is the now edge's input, measured by the daemon per request.
 type Now struct {
+	Live            *LiveCursor
+	LiveUnavailable string
+
 	At       time.Time // when the daemon checked
 	Healthy  bool      // the daemon is serving and the index validated
 	Revision string    // the daemon's vcs.revision; "" when unstamped

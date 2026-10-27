@@ -134,6 +134,7 @@ func TestSurfaceAppPure(t *testing.T) {
 	dir := t.TempDir()
 	files := map[string][]byte{"app.js": AppScript, "surface.js": Script, "harness.js": []byte(appHarness)}
 	for name, src := range map[string]string{
+		"golden":      filepath.Join("..", "agui", "testdata", "stream_fixture.golden"),
 		"model.json":  filepath.Join("testdata", "model-rig.golden.json"),
 		"stacks.json": filepath.Join("testdata", "stack-rig.golden.json"),
 		"index.json":  filepath.Join("..", "surface", "testdata", "index-rig.json"),
@@ -170,8 +171,47 @@ const seams = require('./surface.js');
 const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
-assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'frontHTML',
-  'geometry', 'layoutGraph', 'levelXs', 'lookOf', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'shortTitle', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'frontHTML',
+  'geometry', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'nextBackoff', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'shortTitle', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+
+const bytes = fs.readFileSync('golden');
+const expected = bytes.toString().split('\n\n').slice(0,-1).flatMap(f => f.split('\n').filter(l => l.startsWith('data: ')).map(l => JSON.parse(l.slice(6))));
+assert(expected.length > 0);
+function chunked(size) {
+ const decoder = new TextDecoder(); let tail = '', events = [];
+ for (let i = 0; i < bytes.length;) {
+   const n = size(); const p = app.splitFrames(tail, decoder.decode(bytes.subarray(i, i+n), {stream:true}));
+   i += n; tail = p.tail; events.push(...p.events);
+ }
+ const p = app.splitFrames(tail, decoder.decode()); events.push(...p.events);
+ assert.equal(p.tail, ''); return events;
+}
+let seed = 188;
+for (const size of [() => bytes.length, () => 1, () => {seed = (seed * 1664525 + 1013904223) >>> 0; return 1 + seed % 47;}]) assert.deepEqual(chunked(size), expected);
+let cursor = {lastIndex:-1};
+for (const e of expected) {
+ if (e.type === 'STATE_SNAPSHOT') cursor = {...e.snapshot};
+ if (e.type === 'STATE_DELTA') app.applyDelta(cursor, e.delta);
+}
+assert.equal(cursor.lastIndex, 6);
+assert.equal(cursor.logHead, 'sha256:' + '0'.repeat(63) + '7');
+assert.equal(typeof cursor.logHead, 'string');
+assert.throws(() => app.applyDelta({}, [{op:'replace',path:'/other',value:1}]));
+assert.throws(() => app.applyDelta({}, [{op:'add',path:'/lastIndex',value:1}]));
+let back = 0;
+for (const want of [1,2,4,8,16,30,30]) {back = app.nextBackoff(null,back); assert.equal(back,want);}
+assert.equal(app.nextBackoff('4',0),4);
+assert.deepEqual(app.liveRequest(1234,7), {threadId:'surface',runId:'surface-7',messages:[],state:{schema:'world/agui-state/v1',lastIndex:1234}});
+for (const [s,want] of [
+ [{mode:'live',cursor:1234,checked:'14:05',count:0},'Live · up to entry 1234 · checked 14:05'],
+ [{mode:'live',count:3},'Live · 3 new entries · refreshing'],
+ [{mode:'live',count:1},'Live · 1 new entry · refreshing'],
+ [{mode:'paused',reason:'stream limit',wait:4},'Paused: stream limit · retrying in 4 s'],
+ [{mode:'hidden'},'Paused while the tab is hidden'],
+ [{mode:'unavailable',reason:'the log could not be read'},'Live updates unavailable: the log could not be read'],
+ [{mode:'stopped',reason:'unknown cursor'},'Live stopped: unknown cursor']
+]) assert.equal(app.liveStatus(s),want);
+
 const hollow = s => { for (const w of ['undefined', 'NaN', 'null', '[object']) assert(!s.includes(w), 'rendered ' + w + ': ' + s.slice(Math.max(0, s.indexOf(w) - 80), s.indexOf(w) + 40)); };
 
 // ---- adaptModel: every state of model.json, on its lane, with the links as edges.
