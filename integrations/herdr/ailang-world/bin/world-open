@@ -21,4 +21,4 @@ INV_WORKSPACE=
 if world_current; then
   printf '%s\n%s\n' "$INV_PANE" "$INV_WORKSPACE" >"$hand"
 fi
-world_herdr plugin pane open "$1"
+world_herdr plugin pane open --plugin ailang-world --entrypoint "$1" --focus

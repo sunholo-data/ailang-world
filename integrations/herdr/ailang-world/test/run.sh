@@ -360,8 +360,8 @@ with open(sys.argv[1], 'rb') as f:
     m = tomllib.load(f)
 errs = []
 top = {'id', 'name', 'version', 'min_herdr_version', 'platforms'}
-tables = {'actions': {'id', 'title', 'contexts', 'command'}, 'events': {'on', 'command'},
-          'startup': {'command'}, 'panes': {'id', 'placement', 'command'}}
+tables = {'actions': {'id', 'title', 'contexts', 'command'}, 'events': {'id', 'on', 'command'},
+          'startup': {'command'}, 'panes': {'id', 'title', 'placement', 'command'}}
 for k in top:
     if not m.get(k):
         errs.append('missing ' + k)
@@ -452,7 +452,7 @@ check "11 World is not called" [ ! -s "$T/worldd.log" ]
 setup open
 : >"$T/answers"
 run world-open "$T/answers" world-agent-popup
-printf 'pane current\nworkspace list\nplugin pane open world-agent-popup\n' >"$T/want"
+printf 'pane current\nworkspace list\nplugin pane open --plugin ailang-world --entrypoint world-agent-popup --focus\n' >"$T/want"
 same "12 world-open asks herdr where, then opens the popup" "$T/want" "$T/herdr.log"
 check "12 the hand-off names the pane and workspace" [ "$(cat "$T/state/invoker")" = "$(printf 'p-cur\nmyrepo')" ]
 : >"$T/herdr.log"

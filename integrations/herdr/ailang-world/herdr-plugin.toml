@@ -24,19 +24,23 @@ command = ["bin/world-config-init"]
 
 [[panes]]
 id = "world-agent-popup"
+title = "New World agent"
 placement = "popup"
 command = ["bin/world-agent-popup"]
 
 [[panes]]
 id = "plain-agent-popup"
+title = "New plain agent"
 placement = "popup"
 command = ["bin/plain-agent-popup"]
 
 [[events]]
+id = "pane-closed"
 on = "pane.closed"
 command = ["bin/world-event", "pane.closed"]
 
 [[events]]
+id = "pane-exited"
 on = "pane.exited"
 command = ["bin/world-event", "pane.exited"]
 
