@@ -1,0 +1,13 @@
+import os, signal, subprocess, time, collections, sys
+res = collections.Counter()
+for i in range(int(sys.argv[1])):
+    p = subprocess.Popen(['/bin/sh','-c','(sleep 60 & wait) & (sleep 60 & wait) & wait'], start_new_session=True)
+    time.sleep(0.02)
+    os.killpg(p.pid, signal.SIGKILL)
+    p.communicate(timeout=5)
+    for k in range(3):
+        try:
+            os.killpg(p.pid, signal.SIGKILL); res[f'ok{k}'] += 1
+        except ProcessLookupError: res[f'ESRCH{k}'] += 1
+        except PermissionError: res[f'EPERM{k}'] += 1
+print(dict(res))

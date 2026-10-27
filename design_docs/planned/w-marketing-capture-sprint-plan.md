@@ -1761,7 +1761,7 @@ Run the plan's Python heredoc (section "C11 observations and mutation discipline
 
 ## M7c2a — Python capture primitives (Chrome version, HTTP readiness, six-shot pass) and Go `routes`
 
-Design M7 (C7/C8/C9); 28 minutes; dependency: M7c1 **and M7c0** (amended iteration 305 per w-marketing-capture-orchestration §5); status **pending**.
+Design M7 (C7/C8/C9); 28 minutes; dependency: M7c1 **and M7c0** (amended iteration 305 per w-marketing-capture-orchestration §5); status **BUILT** (iteration 307, `bbf7eb84` + controller test `a6646040`; judge r1 PASS 88).
 
 Exact executor files:
 
