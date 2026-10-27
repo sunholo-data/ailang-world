@@ -15,6 +15,20 @@ const worldToolMap = `Your only file and shell access is World's MCP tools:
 
 const worldBoundary = "Out of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
 
+// hostsWorlddPath is the ailang-worldd the generated scripts call: the binary
+// running hosts init, symlinks resolved, so they work whether or not it is on
+// the agent's PATH (a bare name read "daemon down" when it was not).
+var hostsWorlddPath = func() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return "ailang-worldd"
+	}
+	if real, err := filepath.EvalSymlinks(exe); err == nil {
+		return real
+	}
+	return exe
+}
+
 func hostDirectories(dir string) []string {
 	out := []string{dir}
 	for _, rel := range []string{"bin", "codex", "state", "claude-plugin", "claude-plugin/.claude-plugin", "claude-plugin/hooks", "pi"} {
@@ -32,6 +46,7 @@ func addAwarenessFiles(files map[string][]byte, dir, addr string) {
 	status := filepath.Join(dir, "bin", "world-statusline")
 	plugin := filepath.Join(dir, "claude-plugin")
 	home, _ := os.UserHomeDir()
+	worldd := hostsWorlddPath()
 	var settings map[string]any
 	_ = json.Unmarshal(files["claude-world.settings.json"], &settings)
 	settings["statusLine"] = map[string]any{"type": "command", "command": shellQuote(status), "refreshInterval": 60}
@@ -63,11 +78,12 @@ func addAwarenessFiles(files map[string][]byte, dir, addr string) {
 	if b, err := os.ReadFile(filepath.Join(home, ".claude", "settings.json")); err == nil && json.Unmarshal(b, &user) == nil {
 		userCommand = user.StatusLine.Command
 	}
-	files["bin/world-context"] = []byte("#!/bin/sh\n" + "addr=" + shellQuote(addr) + "\n" + `data=$(ailang-worldd --addr "$addr" whoami --json 2>/dev/null)
+	files["bin/world-context"] = []byte("#!/bin/sh\n" + "addr=" + shellQuote(addr) + "\nworldd=" + shellQuote(worldd) + "\n" + `data=$("$worldd" --addr "$addr" whoami --json 2>/dev/null)
 code=$?
 if [ "$code" -ne 0 ]; then
   case $code in
     11) printf '%s\n' 'World context unavailable: session invalid or expired; ask the operator to mint a new session.' ;;
+    126|127) printf 'World context unavailable: no ailang-worldd at %s; run hosts init --replace with the ailang-worldd you use.\n' "$worldd" ;;
     *) printf '%s\n' 'World context unavailable: daemon down; run ailang-worldd doctor and start World.' ;;
   esac
   exit 0
@@ -83,7 +99,7 @@ cat <<'WORLD_TOOLS'
 printf '%s' "$data" | jq -r '"Grants left: " + ([.grants[] | "\(.effect) \(.left)/\(.budget)"] | join(", "))'
 printf 'Every call is recorded. See it: %s/surface  ·  explain an entry: ailang-worldd why <entry>\n' "$addr"
 printf '%s\n' ` + shellQuote(worldBoundary) + "\n")
-	files["bin/world-statusline"] = []byte("#!/bin/sh\numask 077\naddr=" + shellQuote(addr) + "\nstate=" + shellQuote(filepath.Join(dir, "state")) + "\nuser_command=" + shellQuote(userCommand) + "\n" + `input=$(cat; printf '.')
+	files["bin/world-statusline"] = []byte("#!/bin/sh\numask 077\naddr=" + shellQuote(addr) + "\nstate=" + shellQuote(filepath.Join(dir, "state")) + "\nuser_command=" + shellQuote(userCommand) + "\nworldd=" + shellQuote(worldd) + "\n" + `input=$(cat; printf '.')
 input=${input%.}
 # A new opaque cache filename per credential; neither token nor its hash is stored.
 # cksum is a non-secret cache discriminator, not credential authority.
@@ -98,9 +114,9 @@ if [ -f "$cache" ] && [ ! -L "$cache" ]; then
   [ "$((now-at))" -lt 30 ] && [ "$now" -ge "$at" ] || data=
 fi
 if [ -z "$data" ]; then
-  response=$(ailang-worldd --addr "$addr" whoami --json 2>/dev/null)
+  response=$("$worldd" --addr "$addr" whoami --json 2>/dev/null)
   code=$?
-  case $code in 0) health=ok ;; 11) health=expired ;; *) health=down ;; esac
+  case $code in 0) health=ok ;; 11) health=expired ;; 126|127) health=no-cli ;; *) health=down ;; esac
   # Whitelist only display fields: never persist an arbitrary CLI response.
   [ -n "$response" ] || response='{}'
   data=$(printf '%s' "$response" | jq -c --arg health "$health" --argjson now "$now" '{episode:(.episode // "?"),secondsLeft:(.secondsLeft // 0),cachedAt:$now,health:$health}' 2>/dev/null)
@@ -147,7 +163,7 @@ printf '\n'
 export default function (pi: any) {
   pi.on("session_start", async (_event: any, ctx: any) => {
     const data: any = await new Promise(resolve => {
-      execFile("ailang-worldd", ["--addr", ` + jsString(addr) + `, "whoami", "--json"],
+      execFile(` + jsString(worldd) + `, ["--addr", ` + jsString(addr) + `, "whoami", "--json"],
         { timeout: 5000, maxBuffer: 1048576 }, (error, stdout) => {
           try { resolve(error ? null : JSON.parse(stdout)); } catch { resolve(null); }
         });

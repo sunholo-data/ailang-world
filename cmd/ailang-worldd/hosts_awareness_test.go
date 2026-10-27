@@ -25,6 +25,10 @@ func TestWorldContextAndStatusline(t *testing.T) {
 	dir, bin := hostsLauncherFixture(t)
 	// hostsLauncherFixture supplies a different HOME; generate again with our settings.
 	t.Setenv("HOME", home)
+	// The scripts call the ailang-worldd that ran hosts init; here, the fake below.
+	prev := hostsWorlddPath
+	hostsWorlddPath = func() string { return filepath.Join(bin, "ailang-worldd") }
+	t.Cleanup(func() { hostsWorlddPath = prev })
 	if code, out := hostsInitTest(t, dir, "--replace"); code != 0 {
 		t.Fatalf("%d: %s", code, out)
 	}
@@ -94,5 +98,40 @@ func TestWorldContextAndStatusline(t *testing.T) {
 		if got := invoke("world-statusline", "0"); strings.Contains(got, "│") || !strings.Contains(got, "World · w223d") {
 			t.Fatal(got)
 		}
+	}
+}
+
+// TestHostsAwarenessCallsTheInitBinary pins the 27 Oct live failure: the
+// scripts called a bare ailang-worldd, which was not on the agent's PATH, and
+// world-context said "daemon down". They call the binary that ran hosts init,
+// and a missing one is named as missing.
+func TestHostsAwarenessCallsTheInitBinary(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	writeTestPiAdapter(t, defaultPiMCPAdapter())
+	missing := filepath.Join(t.TempDir(), "gone", "ailang-worldd")
+	prev := hostsWorlddPath
+	hostsWorlddPath = func() string { return missing }
+	t.Cleanup(func() { hostsWorlddPath = prev })
+	dir := filepath.Join(t.TempDir(), "hosts")
+	if code, out := hostsInitTest(t, dir); code != 0 {
+		t.Fatalf("%d: %s", code, out)
+	}
+	for _, name := range []string{"bin/world-context", "bin/world-statusline", "pi/world-status.ts"} {
+		b, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(b), missing) || strings.Contains(string(b), "$(ailang-worldd ") || strings.Contains(string(b), `execFile("ailang-worldd"`) {
+			t.Fatalf("%s does not call the init binary %s:\n%s", name, missing, b)
+		}
+	}
+	ctx, cancel := budgetContext(5 * time.Second)
+	defer cancel()
+	out, err := toolprobe.OutputEnv(ctx, filepath.Join(dir, "bin", "world-context"), "", []string{"PATH=" + os.Getenv("PATH"), "WORLD_SESSION=x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "no ailang-worldd at " + missing; !strings.Contains(string(out), want) || strings.Contains(string(out), "daemon down") {
+		t.Fatalf("want %q, got %s", want, out)
 	}
 }
