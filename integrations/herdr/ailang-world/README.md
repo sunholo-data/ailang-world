@@ -19,7 +19,7 @@ The plugin uses only `ailang-worldd hosts init`'s launchers, `doctor --quick --j
 ## Install
 
 1. Write World's launchers once: `ailang-worldd hosts init --addr http://127.0.0.1:47330`.
-2. Make the commands executable: `chmod 755 bin/* test/run.sh`.
+2. The commands are executable in git (mode 755); if a copy lost that, `chmod 755 bin/* test/run.sh`.
 3. Link the plugin into herdr (the operator does this, after review):
    `herdr plugin link /path/to/ailang-world/integrations/herdr/ailang-world`.
 4. Write the config: run the **World: write config** action, or
@@ -38,10 +38,11 @@ The plugin uses only `ailang-worldd hosts init`'s launchers, `doctor --quick --j
 
    ```toml
    [ui.sidebar.agents]
-   rows = ["$episode $world $session"]
+   rows = [["state_icon", "machine", "workspace", "tab"], ["agent"], ["$episode", "$world", "$session"]]
    ```
 
-   Check the `rows` shape against `herdr --default-config` before you add it.
+   `rows` is a list of rows, each a list of tokens (herdr 0.9.3's `herdr --default-config`);
+   the first two rows are herdr's defaults, and the third adds the plugin's tokens.
 
 ## New World agent
 
