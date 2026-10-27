@@ -2816,7 +2816,7 @@
         "scripts/marketingcheck/capture_test.go"
       ],
       "status": "completed",
-      "completed": {"iteration": 307, "commit": "bbf7eb84", "controller_fix": "a6646040 (test-only: stop-first subtest pins 'pass stops at the first non-ok shot', judge r1 survivor)", "judge": "sonnet r1 PASS 88 (zero blocking; 3/3 plan mutants killed; 13 of 26 diff-anchored mutants survived, mostly pass refusal branches)", "executor": "codex gpt-6.1-sol rc 0, 568 s"},
+      "completed": {"iteration": 307, "commit": "ceeb27fd", "controller_fix": "82f1e253 (test-only: stop-first subtest pins 'pass stops at the first non-ok shot', judge r1 survivor)", "judge": "sonnet r1 PASS 88 (zero blocking; 3/3 plan mutants killed; 13 of 26 diff-anchored mutants survived, mostly pass refusal branches)", "executor": "codex gpt-6.1-sol rc 0, 568 s"},
       "new_tests": [
         "TestMarketingCapturePassFakeChrome"
       ],
