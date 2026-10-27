@@ -49,9 +49,17 @@ it. Today World runs well-specified headless tasks (w188a–w188l; measured Code
 | 7 | 7 | **222 w-attended-session-as-episode** | an interactive Claude Code or Codex session becomes an episode. The plugin's `/world-start` asks Mark to approve a mint (a typed `!` command, or row 201's key), the session's own file and shell tools are switched off in favour of World's, and `episode finish` closes it. | an attended session like this one runs end to end through World |
 | 8 | 3, 7 | **206 w-world-live-agent-tab** and **207 w-world-agent-states** (existing, PARKED) | watch and talk to a running agent from the app; know at a glance which agent is working, blocked or done. | their own |
 | 2b | 1, 2 | **223 w-agent-host-adapters** (r1; design [r0](w-agent-host-adapters.md)) | the agents Mark already runs get into World with no flags: a Claude Code profile installed once machine-wide (the plugin, World's MCP server, its own file and shell tools denied, a session-start hook that attaches a session); a Codex `world` profile; a **herdr plugin** that starts each agent pane as an episode and labels the pane with it; Claude Desktop and IDE agents through World's MCP server. The app shows each agent's level (§5). | launching Claude Code, Codex or a herdr agent pane needs no World flags, and each shows in the app as **confined**; Claude Desktop shows as **observed** |
+| 2c | 3, 6 | **226 w-world-value-scorecard** (r2) | per episode and over time: provenance coverage, unclear errors, fallbacks, checks the agent could run, paired World-vs-shell outcome, time and cost, operator minutes | every episode has a scorecard; the app shows the last 10 |
+| 2d | 6 | **227 w-world-error-clarity** (r2) | every World error says what failed, why, and the next step as a command; `preflight` before a launch; row 202 folds in | each measured failure reproduces with its three-part message; no "no named cause" friction over 10 episodes |
 | 6b | 1 | **224 w-standing-session-allowances** (r1) | Mark approves a preset once with his key: bounded sessions a day, fixed grants, TTL, repos, an expiry. Host adapters draw sessions from it without a prompt; each draw is recorded against the approval; it is revocable at any time. Bounds are D-WORLD-96. | a week of launches with no per-session prompt, every session traceable to its allowance and the approval |
 | 6c | 4, 7 | **225 w-world-run-wrapper** (r1) | `ailang-worldd run --preset <p> -- <agent> …`: any CLI agent with no adapter runs under World's sandbox, with the episode worktree as its only write root and no network but the daemon and the model API. Its writes land as worktree changes: effect-level provenance, not typed calls. | an agent with no adapter (pi) runs an episode through the wrapper, and its writes outside the worktree are refused |
 | 9 | (the loop) | **196 w-loop-executors-through-world** (existing, GATED) | the mission loop's executors work through a pinned World. It is still gated on Mark's delegated-minting ruling and a fleet driver change. | its own |
+
+**World is a new dependency** (Mark, attended 2026-10-27: *"we are adding another dependency of
+course, so need it either transparent or clear for errors"*). Every World pane either behaves
+like a plain one or fails with a message that says what failed, why, and the command that fixes
+it. When World is down, the herdr plugin offers a plain pane labelled `world: fallback`,
+recorded as friction, so work never stops and the fallback is never hidden.
 
 **What doesn't change:**
 - **A mint stays Mark's act** (typed `y`, or row 201's key). The roadmap makes it short, not
@@ -65,9 +73,10 @@ it. Today World runs well-specified headless tasks (w188a–w188l; measured Code
 1. **Now:** finish row 188's N2c (w188l, running). Then swap the trial rig's daemon to a current
    build with `--surface-index`, so the app shows the next episodes. That swap is an interim
    step until row 219.
-2. **219 → 217 → 223 → 218.** These change how every later episode runs, so they pay back
-   first. Each is an attended episode of its own, run through the rig as today, and from 217
-   on with presets. 223 is where the herdr plugin lands.
+2. **223a + 227 → 223b → 226,** then **219 → 217 → 218.** 223a builds the launchers and
+   `preflight` (the first part of 227); 223b is the herdr plugin, so Mark can run his real work
+   through World from herdr, with paired plain arms; 226 turns that into a scorecard. Each is an
+   attended episode of its own, run through the rig as today.
 3. **Back to row 188** (N2d, N4a, N3, N4, N5), now run through 217 and 218, with **220** beside
    N2d, since both are data work for the app.
 4. **221 with 199**, then **201** (already NEXT after row 188's style pass), then **224**

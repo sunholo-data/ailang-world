@@ -1,4 +1,4 @@
-# w-agent-host-adapters (queue row 223): Claude Code, Codex, pi and herdr into World with no flags — r0
+# w-agent-host-adapters (queue row 223): Claude Code, Codex, pi and herdr into World with no flags — r1
 
 **Status:** r0, written attended 2026-10-27 after Mark's *"let's start some work strands to do
 this, yes. A herdr plugin is a good idea"* (roadmap
@@ -6,6 +6,10 @@ this, yes. A herdr plugin is a good idea"* (roadmap
 about a host below was checked on this Mac on 2026-10-27 or taken from the host's official
 docs, which are listed in Sources. It is not quorum-reviewed: the pick-time designer
 re-measures and runs the quorum as usual. **D-WORLD-97** (OPEN) is the one ruling it needs.
+
+**r1 (attended 2026-10-27):** World becomes a dependency of every agent Mark runs through
+it, so it must be *"either transparent or clear for errors"* (Mark). §2.5 adds `preflight`, the
+fallback and live state. §3 splits stage A into 223a and 223b.
 
 ## §0 What "in World" means for a host
 
@@ -97,11 +101,30 @@ The now card's Running list and each episode's front card show the host, the age
 (confined or observed) and the herdr pane when there is one. Observed sessions use a different,
 dashed mark and are never counted as confined.
 
+### §2.5 Transparent or clear: preflight, fallback, live state (r1)
+
+- **`ailang-worldd preflight --session <file> --host <claude|codex|pi>`** checks, in order:
+  1. the daemon answers, and its build is the expected one;
+  2. the session is valid, with its time and budget left;
+  3. the host binary and the launch config, by digest;
+  4. the exec tools the profile names, resolved now (friction 23).
+
+  On success it prints one line. On failure it prints **what failed, why, and the next step as a
+  command**, with its own exit code per class. It never prints "HTTP 0" or a bare exit code.
+- **Fallback:** when preflight fails, the plugin shows the message and offers:
+  - fix it (the printed command);
+  - or open a **plain pane** labelled `world: fallback`. The fallback is written as a friction
+    entry with the preflight message, and counted by the scorecard (row 226). Work never stops,
+    and a fallback is never hidden.
+- **Live state:** each World pane's sidebar row shows `world: ok`, `session: 1 h left`, or
+  `world: down`, refreshed by a light `preflight --quick`. An agent never finds out first.
+
 ## §3 Rollout (nothing machine-wide until everything is in World)
 
 | stage | what | needs | changes for Mark |
 |---|---|---|---|
-| **A** | §2.2's launch configs and §2.3's plugin, with the typed mint in a herdr popup | today's daemon; can start now | "New World agent" in herdr: one popup and `y`, then a confined Claude, Codex or pi pane, labelled |
+| **A1 (223a)** | §2.2's launchers, `ailang-worldd hosts init`, and §2.5's `preflight` with three-part errors (the first part of row 227) | today's daemon; can start now | nothing visible yet; `preflight` names this week's three failures clearly |
+| **A2 (223b)** | §2.3's herdr plugin: "New World agent" (typed mint in a popup, preflight, a confined pane, labelled) and "New plain agent" (the paired arm); the fallback and live state of §2.5 | 223a | run real work through World from herdr, with plain arms to compare |
 | **B** | the popup uses presets | row 217 | the mint is one short line |
 | **C** | no popup | rows 201 / 224 | no prompt under an allowance |
 | **D** | machine-wide: Claude Code managed settings and `managed-mcp.json`, Codex `requirements.toml` | the loop through World (row 196) and attended sessions (row 222); **D-WORLD-97** | every Claude Code or Codex launch on the Mac is confined, whatever starts it |
@@ -117,6 +140,9 @@ dashed mark and are never counted as confined.
 4. The pane shows its episode and level in herdr's sidebar. Closing it offers `episode finish`.
    An open World decision marks the pane blocked and shows a notification.
 5. Claude Desktop with World's server appears as observed. Nothing in the app calls it confined.
+7. **(r1)** With the daemon stopped, an expired session, or a moved exec binary, `preflight`
+   prints the three-part message for that case and exits with its class code. The plugin then
+   offers the fallback, and choosing it writes a friction entry.
 6. Stage A changes nothing machine-wide: an ordinary `claude` or `codex` launch outside the
    plugin behaves exactly as before. The test: the mission loop's next iteration is unaffected.
 
