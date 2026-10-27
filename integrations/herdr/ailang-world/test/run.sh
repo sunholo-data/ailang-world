@@ -490,14 +490,15 @@ refute "10 nothing is piped into ailang-worldd" grep -nE '\|[[:space:]]*"?\$\{?W
 refute "10 no script, expect or unbuffer" grep -nE '(^|[;&|(`]|\$\()[[:space:]]*(script|expect|unbuffer)([[:space:]]|$)' "$@"
 refute "10 the plugin never touches /dev/tty" grep -n '/dev/tty' "$@"
 # The popup's one ailang-worldd command line is the mint, with no pipe or redirection.
+# The mint inherits stdin and stdout; only stderr may be kept (to last-mint.err), never stdin.
 mint_line_plain() {
   [ "$(grep -cE '^[[:space:]]*"\$WORLDD"' "$BIN/world-agent-popup")" -eq 1 ] &&
-    grep -qxE '[[:space:]]*"\$WORLDD" "\$@"' "$BIN/world-agent-popup"
+    grep -qxE '[[:space:]]*"\$WORLDD" "\$@"( 2>"\$mint_err")?' "$BIN/world-agent-popup"
 }
 lib_runs_only_doctor() {
   [ -z "$(grep -F '"$WORLDD"' "$PLUGIN/lib/world.sh" | grep -v doctor | grep -vF -- '-x "$WORLDD"')" ]
 }
-check "10 the popup runs ailang-worldd once, with no redirection" mint_line_plain
+check "10 the popup runs ailang-worldd once, stdin and stdout inherited (stderr kept)" mint_line_plain
 check "10 lib runs ailang-worldd only for doctor" lib_runs_only_doctor
 
 # ---------------------------------------------------------------- 11. New plain agent
@@ -918,6 +919,28 @@ for s in world-keys world-panel world-open-panel world-open; do
 done
 only_keys_name_herdr_config() { [ -z "$(grep -lF '.config/herdr' "$BIN"/* "$PLUGIN"/lib/*.sh | grep -v '/bin/world-keys$')" ]; }
 check "24 only bin/world-keys names herdr's config directory" only_keys_name_herdr_config
+
+# ---------------------------------------------------------------- 25. the host menu: 1/2/3, Enter repeats the last
+setup menu
+printf '2\nep25\ny\n' >"$T/answers"
+run world-agent-popup "$T/answers" --workspace myrepo --pane p-1
+check "25 answering 2 starts codex" has "$T/herdr.log" "/bin/codex-world'"
+check "25 the menu shows the numbers" has "$T/out" "[1] claude  [2] codex  [3] pi"
+check "25 the host is remembered" [ "$(cat "$T/state/last-host")" = codex ]
+: >"$T/herdr.log"
+printf '\nep25b\ny\n' >"$T/answers"
+run world-agent-popup "$T/answers" --workspace myrepo --pane p-1
+check "25 Enter repeats the last host (codex)" has "$T/herdr.log" "/bin/codex-world'"
+: >"$T/herdr.log"
+printf '3\nep25c\ny\n' >"$T/answers"
+run world-agent-popup "$T/answers" --workspace myrepo --pane p-1
+check "25 answering 3 starts pi" has "$T/herdr.log" "/bin/pi-world'"
+: >"$T/herdr.log"
+printf '9\nep25d\n' >"$T/answers"
+run world-agent-popup "$T/answers" --workspace myrepo --pane p-1
+check "25 an unknown answer is refused" [ "$CODE" -ne 0 ]
+refute "25 an unknown answer starts nothing" has "$T/herdr.log" "pane split"
+check "25 the refusal is kept in last-error.txt" has "$T/state/last-error.txt" '"9" is not a host this plugin starts.'
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

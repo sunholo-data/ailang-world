@@ -8,6 +8,11 @@
 # world_error WHAT WHY NEXT: the three-part message, on stderr.
 world_error() {
   printf 'ailang-world: %s\n  why: %s\n  next: %s\n' "$1" "$2" "$3" >&2
+  # Popups close with their output; the last error stays readable here.
+  if [ -n "${HERDR_PLUGIN_STATE_DIR:-}" ] && [ -d "$HERDR_PLUGIN_STATE_DIR" ]; then
+    printf '%s\nailang-world: %s\n  why: %s\n  next: %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$1" "$2" "$3" \
+      >"$HERDR_PLUGIN_STATE_DIR/last-error.txt" 2>/dev/null || :
+  fi
 }
 
 # world_die WHAT WHY NEXT: the three-part message, then exit 2.
@@ -261,16 +266,26 @@ world_model() {
   set +f
 }
 
-# world_ask_host: HOST, read from stdin.
+# world_ask_host: HOST, read from stdin: 1/2/3 or the name; Enter repeats the last host (claude at first).
 world_ask_host() {
-  printf 'Host [claude/codex/pi]: '
+  _last=$HERDR_PLUGIN_STATE_DIR/last-host
+  _def=claude
+  if [ -f "$_last" ]; then
+    case $(sed -n 1p "$_last") in claude | codex | pi) _def=$(sed -n 1p "$_last") ;; esac
+  fi
+  printf 'Host: [1] claude  [2] codex  [3] pi  (Enter: %s): ' "$_def"
   IFS= read -r HOST || HOST=
   case $HOST in
+    '') HOST=$_def ;;
+    1) HOST=claude ;;
+    2) HOST=codex ;;
+    3) HOST=pi ;;
     claude | codex | pi) ;;
     *) world_die "\"$HOST\" is not a host this plugin starts." \
       "World has launchers for claude, codex and pi (ailang-worldd hosts init)." \
-      "run the action again and answer claude, codex or pi" ;;
+      "run the action again and answer 1, 2 or 3 (or claude, codex or pi)" ;;
   esac
+  printf '%s\n' "$HOST" >"$_last" 2>/dev/null || :
 }
 
 # world_doctor ARGS...: doctor's quick JSON pass. Sets DOC_OUT and DOC_CODE.
