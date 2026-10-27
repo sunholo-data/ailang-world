@@ -177,6 +177,41 @@ Known gap: a profiled test command runs whatever test files are in the worktree,
 can edit those files. Protected test paths are queue row 156, a blocker for `v1.0.0` (see
 [Residuals](residuals.md)).
 
+## Host launches: confined, observed and fallback
+
+The launchers `ailang-worldd hosts init` writes (rows 223a and 223d) start an agent with
+World's tools as its only file and shell access. See
+[Run your agents through World](../guides/agents-through-world.md).
+
+| Level | What it means |
+|---|---|
+| **Confined** | World's tools are the agent's only file and shell access, so every effect is a World entry. |
+| **Observed** | World sees the agent's MCP calls, not its built-in tools. |
+| **Fallback** | herdr's plain pane after a failed World check, labelled `world: fallback`: not confined, and never labelled so. |
+
+Off-machine actions are never controlled: what a cloud service does on its own servers is
+outside World.
+
+What each launch turns off:
+
+| Host | Launch settings |
+|---|---|
+| Claude Code | `--strict-mcp-config` with only World's MCP server; `Bash`, `Edit`, `Write`, `Read`, `Glob`, `Grep`, `NotebookEdit`, `WebFetch` and `WebSearch` denied; bypass-permissions mode disabled. |
+| Codex | `CODEX_HOME` set to the launch settings' `codex/` directory, whose `config.toml` sets `sandbox_mode = "read-only"`, `approval_policy = "never"`, `web_search = "disabled"`, `shell_tool = false`, `unified_exec = false`, and World's MCP server `required`. |
+| pi | `--no-builtin-tools --no-extensions`, then `-e pi-mcp-adapter` with World's MCP config. pi has no built-in MCP, so the adapter is how World's tools reach it. |
+
+- **Codex.** Code mode still exposes `apply_patch` as a nested tool. With
+  `approval_policy = "never"`, the read-only sandbox refuses it rather than asking you. A live
+  probe of this is pending. `doctor --host codex` warns when `approval_policy = "never"` is
+  missing from the launch config.
+- **pi.** Before #381, `pi-world` started pi with no tools at all. A launch directory written
+  since then loads `pi-mcp-adapter`, and a missing adapter makes `pi-world` refuse with the fix:
+  `pi install npm:pi-mcp-adapter, then ailang-worldd hosts init --replace`.
+- **Drift.** `doctor --host` compares every launch file with the digests in `hosts.json`. A file
+  that differs is a warning, because that launch would be observed, not confined.
+
+Confinement is per launch. A host started any other way on the same machine is not confined.
+
 ## Not covered by the broker
 
 The **inner** file operations of a program run by `ailang-run`, and of a `workspace-exec`

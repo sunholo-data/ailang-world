@@ -8,7 +8,8 @@ description: Every ailang-worldd and world-publish command and flag, taken from 
 
 Two programs, both built from this repository. Help text below is the binaries' own output,
 brought up to date with the help strings in `cmd/ailang-worldd` and `cmd/world-publish` on
-2026-10-16 (`v1.0.0-rc.1`). Sample outputs show placeholder paths.
+2026-10-16 (`v1.0.0-rc.1`). The usage block, `doctor`, `hosts init`, `whoami` and `episode`
+were brought up to date on 2026-10-27 (rows 223a–223d). Sample outputs show placeholder paths.
 
 ## `ailang-worldd`
 
@@ -16,15 +17,17 @@ brought up to date with the help strings in `cmd/ailang-worldd` and `cmd/world-p
 ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
-  ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
+  ailang-worldd [--addr <url>] whoami [--json] [--session <file>]
+  ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace]
+  ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
-                      [--examples-dir <dir>]
+                      [--examples-dir <dir>] [--surface-index <file>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
                       [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
                       [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
-                      [--exec-profile <file> ... --exec-sandbox <dir>]
+                      [--exec-profile <file> ... --exec-sandbox <dir>] [--exec-profiles-dir <dir>]
                       [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
                       [--exec-max-output-bytes N]
                       [--proof-key-file <file> --proof-required-identity NAME ...]
@@ -50,14 +53,24 @@ Usage:
                     [--workspace-root <dir>] [--from-dir <dir>] [--replace]
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
-                    [--examples-dir <dir>] [--online]
-  ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+                    [--examples-dir <dir>] [--surface-index <file>] [--online]
+  ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
+                    [--task <file>] [--agent claude|codex] [--model <m>] [--ttl N]
+                    [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
+                    [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
+                    [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
+  ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
+  ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
+  ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
+                    [--rig <dir> --addr <url> [--project ailang-world]]
+  ailang-worldd surface-index --validate <file>
+  ailang-worldd session new <episode> [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
                     [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
-                    [--allow-non-git]
-  ailang-worldd session list [--db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
-  ailang-worldd session revoke --db <path> <credential_id-hash> | --episode <ep>
-  ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
+                    [--allow-non-git] [--profile <project>] [--exec-profiles-dir <dir>]
+  ailang-worldd session list [--db <path>] [--credentials-db <path>] [--workspace-root <dir>] [--episode <ep>] [--json]
+  ailang-worldd session revoke --db <path> [--credentials-db <path>] <credential_id-hash> | --episode <ep>
+  ailang-worldd session mint --db <path> [--credentials-db <path>] --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
   ailang-worldd [--addr <url>] demo seed --db PATH --session FILE --ailang-bin PIN
                     --proof-key-file KEY --manifest FILE [--addr URL]
@@ -70,11 +83,19 @@ the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
 else $WORLD_SESSION. The token is never printed.
 
 Global client flag:
-  --addr <url>   base URL of the daemon (default http://127.0.0.1:7644).
+  --addr <url>   base URL of the daemon (default http://127.0.0.1:7644);
+                 a bare host:port means http://host:port.
                  Applies to client verbs only; it is NOT a 'serve' flag.
 
 serve flags:
   --db <path>          world store database (required)
+  --credentials-db <path>
+                       session credentials store (default credentials.db
+                       beside --db). serve reads it read-only per request and
+                       never holds its lock, so session new/mint/revoke work
+                       while it runs; a schema-4 --db has its credentials
+                       moved there once at startup. It must not lie under
+                       --workspace-root
   --bind host:port     loopback listen address (default 127.0.0.1:7644);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
@@ -92,7 +113,7 @@ serve flags:
                        only when both this and --workspace-root are set.
                        Workspace.Exec (workspace-exec) is bound with them; it
                        refuses every call "no exec profile configured" unless
-                       --exec-profile is given
+                       --exec-profile or --exec-profiles-dir is in effect
   --examples-dir <dir> AILANG examples corpus examples-search reads (passed
                        to the tool as AILANG_EXAMPLES; World never falls back
                        to a corpus in the binary). Default: ~/.ailang/examples
@@ -138,19 +159,38 @@ serve flags:
                        outside --workspace-root and the state dir. Each
                        profile must pass the startup probe (seven arms,
                        arm1-write-inside … arm7-toolchain) or serve refuses
+  --exec-profiles-dir <dir>
+                       a directory of exec profiles, one <project>.json each
+                       (default ~/.ailang-world-exec/profiles when
+                       --exec-sandbox is given without --exec-profile).
+                       Every <project>.json is loaded and probed at startup;
+                       *.proposed.json is skipped until renamed. Unlike
+                       --exec-profile, a profile here that fails to load or
+                       probe is LEFT OUT — named on stderr and in /v1/health —
+                       and every other profile still serves; an episode bound
+                       to it refuses with the reason. An episode minted with
+                       episode start / session new --profile PROJECT runs
+                       under that profile from its first call, no restart
   --exec-episode-project EP=PROJECT
                        run episode EP's workspace-exec under the profile
                        whose project is PROJECT (repeatable; optional with
-                       one profile, which every episode then uses)
+                       one profile, which every episode then uses). Only for
+                       sessions minted without --profile: a credential's own
+                       binding comes first
   --exec-sandbox <dir> the node_modules holding @anthropic-ai/sandbox-runtime
                        0.0.78 (its dist/cli.js must hash to the pin);
                        World archives the whole tree and re-verifies it
-                       before every call. Required with --exec-profile
+                       before every call. Required with --exec-profile and
+                       --exec-profiles-dir
   --exec-node <path>   the node (>= 20.11) that runs srt and the probe
                        client (default: node on PATH, resolved once)
   --exec-max-output-bytes N
                        kill a workspace-exec command whose stdout or stderr
                        passes N bytes (default 67108864, 64 MiB)
+  --surface-index <file>
+                       generated index served at GET /surface/index.json;
+                       optional, may be built later, must be outside
+                       --workspace-root (including symlink targets)
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof
@@ -174,7 +214,8 @@ Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
 lines of the usage above.
 
 `--addr` is refused with the `session` verbs, `setup`, and `serve`, because they act on files
-directly, not on a running daemon.
+directly, not on a running daemon. The global `--addr` is also refused with `episode start` and
+`surface-index`, which take their own `--addr` after the verb.
 
 Every invocation refuses to start (exit 2) if `AILANG_REGISTRY_API_KEY` is set in its
 environment, except a help request (`--help`, `-h` or `help <verb>`), which is answered from the
@@ -419,7 +460,7 @@ usage: ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>
 Prints the trailer that a pull request or commit made through World carries:
 
 ```text
-World-Provenance: store=/Users/you/.ailang/world/world.db episode=ep1 entries=1-4
+World-Provenance: store=<home>/.ailang/world/world.db episode=ep1 entries=1-4
 ```
 
 `store` is the daemon's database path from `/v1/health`; `entries` are the episode's first and
@@ -471,10 +512,10 @@ ailang-worldd setup
 ```
 
 ```text
-✓ interpreter AILANG v0.41.0 installed /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
-✓ tool        AILANG v0.54.15 installed /Users/you/.pinned-ailang-tools/v0.54.15/ailang (sha256 d821dad0d6e9…)
-✓ store directory /Users/you/.ailang/world
-✓ workspace root  /Users/you/.ailang/world-ws
+✓ interpreter AILANG v0.41.0 installed <home>/.pinned-ailang/ailang (sha256 1a67b0146858…)
+✓ tool        AILANG v0.54.15 installed <home>/.pinned-ailang-tools/v0.54.15/ailang (sha256 d821dad0d6e9…)
+✓ store directory <home>/.ailang/world
+✓ workspace root  <home>/.ailang/world-ws
 
 next (the attended steps; docs/QUICKSTART.md §9 has the full walk):
 …
@@ -502,6 +543,8 @@ is installed. Release signatures (`.sig`/`.pem`) are not checked.
 
 ```text
 usage: ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
+           [--session <file>] [--host <claude|codex|pi>] [--hosts-dir <dir>]
+           [--profile <exec profile json>] [--json] [--quick] [--credentials-db <path>]
            [--interpreter-dir <dir>] [--tools-dir <dir>] [--examples-dir <dir>] [--online]
 
 Checks this machine for everything World needs, read-only, and prints one
@@ -524,35 +567,189 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
 
 Defaults: --db ~/.ailang/world/world.db, --workspace-root ~/.ailang/world-ws,
 the pin directories of 'setup', --examples-dir ~/.ailang/examples.
-Exit: 0 no ✗; 1 at least one ✗ (or a usage error).
+--session checks the private token file and reads credentials read-only.
+--host runs the host's --version (the only exec doctor does), with a 5 s
+timeout and an empty environment except PATH and HOME, and verifies launch digests.
+--profile resolves commands through its path and checks startup exec tool paths.
+--quick checks only daemon, session and host; healthy checks finish under 2 s.
+--json prints JSON lines plus {"failed": n}.
+Exit: 0 no ✗; daemon 10, session 11, host 12, exec 13, otherwise 1.
+The first failing dependency class wins in daemon, session, host, exec order.
 ```
 
+The daemon check fails when the daemon serves a store other than `--db`, so pass the store World
+serves. `--hosts-dir` defaults to `~/.ailang-world/hosts`, where `hosts init` writes. With
+`--host pi`, doctor also checks that the `pi-mcp-adapter` recorded in `hosts.json` is still there
+and unchanged. Without `--credentials-db`, the session check reads the credentials store the
+daemon reports in `/v1/health`. Every ✗ line has a fix: what failed, why, and the command to run
+next.
+
+| Exit | Class | Checks | Example fix |
+|---|---|---|---|
+| 10 | daemon | nothing at `--addr`, a foreign listener, or another store | `start World: ailang-worldd serve --db <db> …` |
+| 11 | session | the file is missing or not 0600; the session is expired, revoked or unknown | `start a new session: ailang-worldd session new <episode> … (or episode start)` |
+| 12 | host | not on `PATH`, `--version` fails, or pi's adapter is missing or changed | `pi install npm:pi-mcp-adapter, then ailang-worldd hosts init --replace` |
+| 13 | exec | a profile tool is missing, or moved since the daemon started | `restart World so it resolves the tools again` |
+| 1 | other | any other ✗, or a usage error | the line's own fix |
+
+A launch file whose digest differs from `hosts.json` is a host **warning** (`!`), not a ✗: that
+launch would be observed, not confined, and the fix is
+`ailang-worldd hosts init --out-dir <dir> --replace`. The exit stays 0.
+
 ```bash
-ailang-worldd doctor --online
+ailang-worldd --addr http://127.0.0.1:47330 doctor --quick --db <db> --session <session file> --host claude
 ```
 
 ```text
-✓ api key    AILANG_REGISTRY_API_KEY is unset
-! tty        no controlling terminal (open /dev/tty: device not configured): world-publish and session new/mint will refuse here
-             fix: run the attended steps yourself from a terminal window (an IDE terminal pane works); an agent cannot run them
-✓ pins       interpreter AILANG v0.41.0 at /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
-✓ pins       tool AILANG v0.54.15 at /Users/you/.pinned-ailang-tools/v0.54.15/ailang (sha256 d821dad0d6e9…)
-! daemon     nothing answers at http://127.0.0.1:7644
-             fix: ailang-worldd serve --db … (when you need it running)
-! store      /Users/you/.ailang/world/world.db does not exist yet (doctor never creates it)
-             fix: world-publish transitions --store /Users/you/.ailang/world/world.db … creates it (the attended publish)
-! examples   no examples corpus (~/.ailang/examples is absent): examples-search will refuse
-             fix: pass serve --examples-dir <dir>
-✓ workspace  /Users/you/.ailang/world-ws: 0 episode worktree(s)
-✓ online     interpreter AILANG v0.41.0: release .sha256 reachable and matches the pin
-✓ online     tool AILANG v0.54.15: release .sha256 reachable and matches the pin
+✓ daemon     ailang-worldd 0.1.0 at http://127.0.0.1:47330, store <db>, interpreter AILANG v0.41.0
+✓ session    ep1: 1 h 42 m left; grants …
+✓ host       claude at <path>: <claude --version>
+✓ host       launch files match hosts.json in ~/.ailang-world/hosts
 no check failed
 ```
+
+`--json` prints one object per check, `{"check", "mark", "detail", "fix", "class"}` with `mark`
+`ok`, `warn` or `fail`, then `{"failed": n}`.
 
 doctor creates nothing: the writer lock is probed with a shared, non-blocking lock on the lock
 file opened read-only, and the store is read through a read-only handle, so it runs safely
 beside a live daemon. With `AILANG_REGISTRY_API_KEY` set, doctor (like every verb) refuses with
 exit 2 and names the variable — that refusal is the finding.
+
+### `hosts init`
+
+```text
+usage: ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace] [--pi-mcp-adapter <dir>]
+
+Write private World launch settings (directories 0700, configs 0600, launchers 0700).
+Files: claude-world.settings.json, claude-world.mcp.json, codex/config.toml,
+codex/auth.json (symlink only, when ~/.codex/auth.json exists), pi-world-mcp.json,
+bin/claude-world, bin/codex-world, bin/pi-world, hosts.json;
+bin/world-context, bin/world-statusline, claude-plugin/, codex/AGENTS.md,
+codex/hooks.json, pi/world-status.ts. Runtime status caches live under state/.
+Changed files refuse unless --replace; unchanged bytes are a no-op.
+Defaults: --out-dir ~/.ailang-world/hosts; --addr http://127.0.0.1:47330.
+--pi-mcp-adapter defaults to ~/.pi/agent/npm/node_modules/pi-mcp-adapter;
+its package.json must name pi.extensions. Missing adapters produce a refusing launcher.
+```
+
+Rows 223a and 223d. `hosts init` takes its own `--addr` (the URL the launchers use), not the
+global one. It checks every destination before it writes any file, and refuses a symlinked or
+non-directory output directory. `hosts.json` records each file's sha256 and the adapter's
+`package.json` digest, which `doctor --host` checks. It prints
+`World hosts ready in <dir>`, and `! Codex will ask you to log in: ~/.codex/auth.json does not
+exist.` when there is nothing to link. A refusal is `ailang-worldd hosts init: <path> differs;
+use --replace` (exit 1).
+
+Each launcher refuses (exit 3) when `WORLD_SESSION` is unset, saying what, why and next. How to
+use them: [Run your agents through World](../guides/agents-through-world.md).
+
+### `whoami`
+
+```text
+usage: ailang-worldd [--addr <url>] whoami [--json] [--session <file>]
+Session comes from WORLD_SESSION or a private file, never an argv token.
+```
+
+Row 223d. Calls [`GET /v1/session/self`](http-api.md) and prints the session's episode,
+worktree, time left, daemon, surface link and grants left:
+
+```text
+World · ep1
+worktree: <workspace-root>/ep1
+session: 1h42m left
+daemon: http://127.0.0.1:47330
+surface: http://127.0.0.1:47330/surface
+  Workspace.Read worktree: 48/50 left
+```
+
+`--json` prints the route's body. A failure prints `what:`, `why:` and `next:` lines on stderr.
+Exit codes: 0 ok; 1 usage; 10 the daemon didn't answer or answered badly; 11 the session is
+missing, malformed, invalid or expired.
+
+### `episode start`
+
+```text
+usage: ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
+           [--task <file>] [--agent claude|codex] [--model <m>] [--ttl 3600]
+           [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
+           [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
+           [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
+       ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s]
+           (a client verb: see 'ailang-worldd episode report --help')
+
+ATTENDED, like session new: start one World episode on a repo and print the
+launch line for its agent. In order:
+  1. validate everything (the episode, --repo, --profile, --task, and that the
+     session and MCP config files do not exist yet), then GET /v1/health on
+     --addr: refused unless the daemon is this binary's build (the same
+     executable sha256, or else the same clean vcs revision),
+     serves the tool binary this build pins, reads the credentials store this
+     mint writes and, with --profile, has loaded that profile with the digest
+     the file has now. No daemon serving: refused, printing the serve line to
+     run (episode start never starts or restarts a daemon);
+  2. session new's own path, unchanged: the /dev/tty fence, a y/N naming the
+     worktree (on --branch, default world/<episode>), every grant and the
+     profile's project and digest, then the worktree and the mint;
+  3. the token is written once to <sessions-dir>/<episode>.session (0600; the
+     directory 0700); an existing file is refused before the terminal opens;
+  4. for claude, a private 0600 MCP config <sessions-dir>/<episode>.mcp.json,
+     then the launch line: the bare claude argv (no native tools, only World's
+     MCP tools the grants cover), or for codex the WORLD_SESSION form.
+It never runs the agent, commits, pushes or opens a PR. The token is never
+printed; it lives only in the .session file and the .mcp.json (delete the
+.mcp.json after the run).
+
+  --repo <dir>          the git repository the worktree is added from
+  --branch <name>       the worktree's new branch (default world/<episode>)
+  --profile <project>   bind the session to <exec-profiles-dir>/<project>.json
+                        (as session new --profile) and grant Workspace.Exec
+  --task <file>         the task file to hand the agent (its path is printed)
+  --agent claude|codex  the launch line to print (default claude)
+  --model <m>           passed to the agent in the launch line
+  --ttl N               session lifetime in seconds (default 3600)
+  --preset, --grant, --budget
+                        exactly as session new. Default (neither --preset nor
+                        --grant): the se-tools preset without Workspace.Exec,
+                        plus Workspace.Exec with --profile, each --budget calls
+  --db, --credentials-db, --workspace-root
+                        exactly as session new
+  --sessions-dir <dir>  default ~/.ailang/world/sessions
+  --exec-profiles-dir <dir>
+                        where --profile looks (default ~/.ailang-world-exec/profiles)
+  --addr host:port      the serving daemon (default 127.0.0.1:47330; loopback only)
+```
+
+Row 189. The launchers from `hosts init` read the `.session` file through `WORLD_SESSION`; there
+is no pi launch line, so for `pi-world` mint with `--agent codex`.
+
+### `episode report`
+
+```text
+usage: ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
+
+Summarises one episode from World's own store, in one request
+(GET /v1/episodes/<episode>/report): total calls, calls by tool, effect
+decisions by effect (allowed / failed / denied:<why>), budget per grant
+(minted, used, left), plan refusals (refused before any effect) and handler
+refusals (the effect was allowed and ran, but the handler answered ok:false),
+the files read (successful ailang-read calls; --json lists them), the first
+and last entries and their times.
+
+  --json        print the route's JSON (one object; with --follow one compact
+                line per change)
+  --follow      re-print when the episode changes, until Ctrl-C; the store
+                head is polled every --interval and the report is fetched
+                only when it moved. A daemon restart is retried with backoff
+  --interval D  poll interval with --follow (default 2s)
+  --addr <url>  the daemon (default: the global --addr, http://127.0.0.1:7644);
+                a bare host:port is accepted
+
+Exit 1 when the episode has no committed call (without --follow).
+```
+
+Row 198. The route is
+[`GET /v1/episodes/{episode}/report`](http-api.md).
 
 ### `session new`
 

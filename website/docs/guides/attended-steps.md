@@ -1,6 +1,6 @@
 ---
 title: Attended steps
-sidebar_position: 2
+sidebar_position: 3
 description: Which operations need a human at a real terminal, why, how the TTY fence works, and how to run them from an IDE or agent harness.
 ---
 

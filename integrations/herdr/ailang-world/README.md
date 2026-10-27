@@ -3,6 +3,8 @@
 Row 223b ([`w-agent-host-adapters`](../../../design_docs/planned/w-agent-host-adapters.md) §2.3,
 §2.5, stage A2). For herdr 0.9.3. POSIX `sh` and `jq`.
 
+Website guide: [Run your agents through World](../../../website/docs/guides/agents-through-world.md).
+
 - **New World agent:** you pick the host and the episode, doctor checks World, you type the
   mint's `y`, doctor checks the session and the host, and a **confined** agent starts in a new
   pane beside yours.

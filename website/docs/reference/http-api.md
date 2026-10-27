@@ -23,6 +23,7 @@ gets `405 Method Not Allowed` from the router.
 | `POST` | `/v1/commit` | **session** | Commit a world transition (the only REST mutation) |
 | `GET` | `/v1/receipts/{id}` | none | Receipt of a `rest:` commit |
 | `GET` | `/v1/episodes/{episode}/report` | none | One episode's summary: calls by tool, effects, budgets, refusals |
+| `GET` | `/v1/session/self` | **session** | The calling session's episode, time left and grants |
 | `GET` | `/workbench` | none | Read-only HTML operator renderer |
 | `GET` | `/workbench/live.js` | none | The workbench's embedded same-origin live client script |
 | `GET` | `/.well-known/agent.json` | **session** | Session-scoped A2A agent card |
@@ -30,12 +31,13 @@ gets `405 Method Not Allowed` from the router.
 | `POST` | `/mcp/` | **session** | MCP Streamable HTTP (`initialize`, `ping`, `tools/list`, `tools/call`) |
 | `POST` | `/agui/` | none | Read-only AG-UI 1.0 SSE run of the world's live state, bounded to 18 s; resume with standard state or `Last-Event-ID` (QUICKSTART, "Watch the world live") |
 
-The eleven `/v1` routes are the frozen v1 machine table, pinned against a checked sketch by a test.
-`/workbench`, `/workbench/live.js`, the agent card, `/a2a/`, `/mcp/` and `/agui/` are additive.
+The other eleven `/v1` routes are the frozen v1 machine table, pinned against a checked sketch
+by a test. `/v1/session/self` (row 223d), `/workbench`, `/workbench/live.js`, the agent card,
+`/a2a/`, `/mcp/` and `/agui/` are additive.
 
 **Auth** means `Authorization: Bearer <64-hex-credential>` holding a live session (see
 [Sessions and episodes](../concepts/sessions-and-episodes.md)). The `GET /v1/*` routes are not
-authenticated today.
+authenticated today, except `GET /v1/session/self`.
 
 ## Conventions
 
@@ -219,6 +221,44 @@ answered `ok:false`; a handler refusal's effect was allowed and ran, but its res
 `budgetAfter`, `used` the cost of the allowed records. Times are the coordinator's logical clock
 (UTC). An episode with no committed call is `404 NotFound`. Unauthenticated like the other GET
 routes (residual R1, row 199).
+
+## `GET /v1/session/self`
+
+**Requires a session.** What the caller's own session may do: its episode, worktree, time left
+and grants. `ailang-worldd whoami` calls it, and so does the context block every World launch
+starts with (see [Run your agents through World](../guides/agents-through-world.md)).
+
+```bash
+curl -s -H "Authorization: Bearer $WORLD_SESSION" http://127.0.0.1:47330/v1/session/self
+```
+
+```json
+{"episode":"ep1","worktree":"<workspace-root>/ep1","expiresAt":1793000000,"secondsLeft":6120,
+ "grants":[{"effect":"Workspace.Read","scope":"worktree","budget":50,"used":2,"left":48}],
+ "entries":{"first":12,"last":40},
+ "addr":"http://127.0.0.1:47330","surface":"http://127.0.0.1:47330/surface"}
+```
+
+- `expiresAt` is Unix seconds; `secondsLeft` is never below 0.
+- `grants` has one row per granted (effect, scope): `used` is what the episode has spent,
+  `left` is `budget − used`, never below 0. Budgets persist per episode, across sessions.
+- `entries` is the episode's first and last log entry. It is absent when the episode has no
+  committed call yet.
+- `worktree` is `<workspace-root>/<episode>`, or empty when `serve` has no `--workspace-root`.
+- `addr` is `http://` plus the request's `Host`; `surface` is `addr` plus `/surface`.
+
+Every session denial is `401`, malformed headers included (other routes answer a malformed
+header with `400`). The body is the REST error envelope:
+
+| Class | Message |
+|---|---|
+| `SessionAbsent` | `a session credential is required: no Authorization Bearer header was present` |
+| `InvalidSession` | `malformed Authorization header: expected a Bearer <64-hex-credential>` |
+| `SessionUnknown` | `unknown session credential: no session matches this token` |
+| `SessionExpired` | `session credential has expired` |
+
+A credential lookup or read past the 10 s read deadline is `503 Timeout`; a store failure is
+`500 Internal`.
 
 ## `GET /workbench`
 
