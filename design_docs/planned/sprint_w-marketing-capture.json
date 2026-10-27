@@ -2942,8 +2942,8 @@
         "scripts/marketing_capture.py",
         "scripts/marketingcheck/supervisor_test.go"
       ],
-      "status": "pending",
-      "completed": null,
+      "status": "completed",
+      "completed": {"iteration": 308, "commit": "31211dbf", "controller_fix": "7475ec3c (test-only: stress-row wall bound 25 s -> 60 s, Go context 35 s -> 70 s; N stays 200; 3 of 3 runs at 25 s were cut at ~160 trials outside the sandbox)", "judge": "sonnet r1 PASS 88 (zero blocking; 3/3 plan mutants killed at the named assertions; the stress row killed the eperm mutant 2/2 in the judge run)", "executor": "codex gpt-6.1-sol rc 0, 515 s", "planner": "codex gpt-6.1-sol rc 0, 469 s"},
       "new_tests": [
         "TestMarketingKillGroupTolerance",
         "TestMarketingKillGroupStress"
