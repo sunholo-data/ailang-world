@@ -32,7 +32,7 @@ w188k, w188l and this week's attended work:
   that binary was built.
 
 **Friction 33** (added with this doc's PR) is the CLI-only swap of §0's fifth bullet; the
-pick-time designer reads any entry 33 added since and folds it in.
+pick-time designer folds it in.
 
 **Exit criterion (row 219):** the daemon survives a reboot and a `brew upgrade` with no manual
 step, and an upgrade lands with one command.
