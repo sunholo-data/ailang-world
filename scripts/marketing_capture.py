@@ -16,9 +16,9 @@ Examples (destinations/readiness markers must be fresh):
   marketingcheck routes --manifest demo.json > /tmp/routes.json
   python3 scripts/marketing_capture.py pass --routes /tmp/routes.json \
       --base-url http://127.0.0.1:7644 --chrome /path/to/chrome --out-dir /tmp/new-pass
-The daemon must publish ready-file; started-file then contains its PID. Signal the
+The daemon must publish ready-file or serve ready-url; started-file then contains its PID. Signal the
 supervisor with TERM/INT/HUP to stop it. File readiness is the M7a primitive; HTTP
-readiness is also available as a standalone mode. No World mutations occur here.
+readiness is also available for daemon and as a standalone mode. No World mutations occur here.
 """
 from __future__ import annotations
 
@@ -146,7 +146,7 @@ def daemon(args: argparse.Namespace) -> dict:
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
     if not command:
         return verdict('InvalidConfiguration', 'daemon requires -- COMMAND [ARG ...]')
-    if os.path.lexists(args.ready_file) or os.path.lexists(args.started_file):
+    if (args.ready_file and os.path.lexists(args.ready_file)) or os.path.lexists(args.started_file):
         return verdict('DestinationExists', 'readiness markers must be fresh')
     stop = threading.Event()
     previous = {}
@@ -158,18 +158,23 @@ def daemon(args: argparse.Namespace) -> dict:
         with tempfile.TemporaryFile() as log:
             process = spawn(command, log)
             try:
-                deadline = time.monotonic() + args.startup_timeout
-                while not Path(args.ready_file).is_file():
-                    if stop.is_set():
-                        break
-                    if process.poll() is not None:
-                        result = verdict('NonzeroExit', 'daemon exited before readiness')
-                        break
-                    if time.monotonic() >= deadline:
-                        result = verdict('Timeout', 'daemon readiness deadline expired')
-                        break
-                    stop.wait(0.01)
+                if args.ready_url:
+                    result = ready(argparse.Namespace(base_url=args.ready_url,
+                                                      startup_timeout=args.startup_timeout),
+                                   stop, process)
                 else:
+                    deadline = time.monotonic() + args.startup_timeout
+                    while not Path(args.ready_file).is_file():
+                        if stop.is_set():
+                            break
+                        if process.poll() is not None:
+                            result = verdict('NonzeroExit', 'daemon exited before readiness')
+                            break
+                        if time.monotonic() >= deadline:
+                            result = verdict('Timeout', 'daemon readiness deadline expired')
+                            break
+                        stop.wait(0.01)
+                if result['verdict'] == 'ok' and not stop.is_set():
                     Path(args.started_file).write_text(json.dumps({'pid': process.pid, 'supervisor_pid': os.getpid()}) + '\n')
                     if args.chrome:
                         result = shot(args, stop)
@@ -213,12 +218,13 @@ def chrome_version(args: argparse.Namespace) -> dict:
     return verdict('ok', version=version)
 
 
-def ready(args: argparse.Namespace) -> dict:
+def ready(args: argparse.Namespace, stop: threading.Event | None = None,
+          process: subprocess.Popen | None = None) -> dict:
     deadline = time.monotonic() + args.startup_timeout
     healthy = threading.Event()
 
     def poll() -> None:
-        while time.monotonic() < deadline:
+        while time.monotonic() < deadline and not (stop and stop.is_set()):
             try:
                 for route in ('/v1/health', '/v1/head'):
                     with urllib.request.urlopen(args.base_url.rstrip('/') + route,
@@ -235,8 +241,13 @@ def ready(args: argparse.Namespace) -> dict:
 
     # A slow request must not extend the overall startup deadline (including overrides).
     threading.Thread(target=poll, daemon=True).start()
-    if healthy.wait(max(0, deadline - time.monotonic())):
-        return verdict('ok')
+    while time.monotonic() < deadline:
+        if stop is not None and stop.is_set():
+            return verdict('Interrupted', 'supervisor signalled during readiness')
+        if process is not None and process.poll() is not None:
+            return verdict('NonzeroExit', 'daemon exited before readiness')
+        if healthy.wait(min(0.01, max(0, deadline - time.monotonic()))):
+            return verdict('ok')
     return verdict('Timeout', 'HTTP readiness deadline expired')
 
 
@@ -312,8 +323,10 @@ def main() -> int:
                'See module docstring for runnable examples.')
     sub = parser.add_subparsers(dest='mode', required=True)
     shot_flags(sub.add_parser('shot', help='one new screenshot'), required=True)
-    lifecycle = sub.add_parser('daemon', help='start, await file readiness, and clean up on signals')
-    lifecycle.add_argument('--ready-file', required=True, help='fresh marker written by daemon')
+    lifecycle = sub.add_parser('daemon', help='start, await file or HTTP readiness, and clean up on signals')
+    source = lifecycle.add_mutually_exclusive_group(required=True)
+    source.add_argument('--ready-file', help='fresh marker written by daemon')
+    source.add_argument('--ready-url', help='HTTP base URL; health then head must each return 200')
     lifecycle.add_argument('--started-file', required=True, help='fresh supervisor readiness JSON/PID')
     lifecycle.add_argument('--startup-timeout', type=positive, default=STARTUP_TIMEOUT_S)
     lifecycle.add_argument('--lifetime', type=positive, default=PASS_TIMEOUT_S,

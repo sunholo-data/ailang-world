@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -120,25 +122,7 @@ func TestMarketingCapturePassFakeChrome(t *testing.T) {
 		fixtures := writeSet(t, bs)
 		t.Setenv("CAPTURE_FIXTURES", fixtures)
 		t.Setenv("CAPTURE_RECORD", dir)
-		chrome := fakeScript(t, dir, "chrome", `scheme=light
-for arg do
- case "$arg" in
- --screenshot=*) png=${arg#--screenshot=} ;;
- --window-size=*) size=${arg#--window-size=} ;;
- --blink-settings=preferredColorScheme=0) scheme=dark ;;
- esac
-done
-printf '%s\n' "$@" > "$CAPTURE_RECORD/$(basename "$png").args"
-case "$size" in
- 1440,1100) fixture=workbench-$scheme.png ;;
- 1440,3700) fixture=packet.png ;;
- 1440,2100) fixture=graph.png ;;
- 1440,3000) fixture=provenance.png ;;
- 390,844) fixture=phone.png ;;
- *) exit 4 ;;
-esac
-cp "$CAPTURE_FIXTURES/$fixture" "$png"
-`)
+		chrome := fakeCaptureChrome(t, dir)
 		rows, err := ShotRoutes(demoFixture())
 		pngOK(t, err)
 		routes := putJSON(t, dir, "routes.json", rows)
@@ -157,7 +141,7 @@ cp "$CAPTURE_FIXTURES/$fixture" "$png"
 			if got.Shots[i].Name != row.Name || got.Shots[i].Verdict != "ok" {
 				t.Errorf("pass reports each shot in routes order: %+v", got.Shots[i])
 			}
-			argv := strings.Split(strings.TrimSpace(readFile(t, filepath.Join(dir, row.Name+".args"))), "\n")
+			argv := strings.Split(strings.TrimSpace(readFile(t, filepath.Join(dir, "pass-"+row.Name+".args"))), "\n")
 			scheme := "1"
 			if row.Scheme == "dark" {
 				scheme = "0"
@@ -260,5 +244,191 @@ case " $* " in *" --window-size=1440,2100 "*) exit 5 ;; esac
 		chrome := fakeScript(t, dir, "chrome", "exit 9\n")
 		runCapture(t, "DestinationExists", "pass destination must be fresh", "pass", "--routes", routes,
 			"--base-url", "http://example.invalid", "--chrome", chrome, "--out-dir", dir)
+	})
+}
+
+func fakeCaptureChrome(t *testing.T, dir string) string {
+	return fakeScript(t, dir, "chrome", `if [ "${1:-}" = --version ]; then
+ if [ "${CAPTURE_CHANGE:-}" = yes ] && [ -f "$CAPTURE_RECORD/version" ]; then
+  echo "Google Chrome 156.0.8078.47"
+ else
+  echo "${CAPTURE_VERSION:-Google Chrome 155.0.8059.41}"
+ fi
+ touch "$CAPTURE_RECORD/version"
+ exit 0
+fi
+scheme=light
+for arg do
+ case "$arg" in
+ --screenshot=*) png=${arg#--screenshot=} ;;
+ --window-size=*) size=${arg#--window-size=} ;;
+ --blink-settings=preferredColorScheme=0) scheme=dark ;;
+ esac
+done
+printf '%s\n' "$@" > "$CAPTURE_RECORD/$(basename "$(dirname "$png")")-$(basename "$png").args"
+case "$size" in
+ 1440,1100) fixture=workbench-$scheme.png ;;
+ 1440,3700) fixture=packet.png ;;
+ 1440,2100) fixture=graph.png ;;
+ 1440,3000) fixture=provenance.png ;;
+ 390,844) fixture=phone.png ;;
+ *) exit 4 ;;
+esac
+cp "$CAPTURE_FIXTURES/$fixture" "$png"
+`)
+}
+
+func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "marketingcheck")
+	if rc, _, se := runCaptureCommand(t, "go", "build", "-o", bin, "."); rc != 0 {
+		t.Fatal(se)
+	}
+	bs, rects := fixtureSet(t)
+	fixtures := writeSet(t, bs)
+	manifest := putJSON(t, dir, "demo.json", demoFixture())
+	rectangles := putJSON(t, dir, "rectangles.json", rects)
+	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused"} {
+		t.Run(name, func(t *testing.T) {
+			d := t.TempDir()
+			t.Setenv("CAPTURE_FIXTURES", fixtures)
+			t.Setenv("CAPTURE_RECORD", d)
+			if name == "version-changed" {
+				t.Setenv("CAPTURE_CHANGE", "yes")
+			}
+			if name == "old-chrome" {
+				t.Setenv("CAPTURE_VERSION", "Google Chrome 154.0.1.2")
+			}
+			bind := "127.0.0.1:1"
+			if name == "bind-refused" {
+				bind = "0.0.0.0:1"
+			} else if name != "old-chrome" {
+				listener, err := net.Listen("tcp", "127.0.0.1:0")
+				pngOK(t, err)
+				bind = listener.Addr().String()
+				pngOK(t, listener.Close())
+			}
+			worldd := filepath.Join(d, "worldd")
+			pngOK(t, os.WriteFile(worldd, []byte(`#!/usr/bin/env python3
+import http.server, json, os, pathlib, sys
+root = pathlib.Path(__file__).parent
+(root / 'argv').write_text(json.dumps(sys.argv[1:]) + '\n')
+(root / 'pid').write_text(str(os.getpid()))
+host, port = sys.argv[sys.argv.index('--bind') + 1].split(':')
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200 if self.path in ('/v1/health', '/v1/head') else 404)
+        self.end_headers()
+        self.wfile.write(b'{}')
+http.server.HTTPServer((host, int(port)), Handler).serve_forever()
+`), 0700))
+			out := filepath.Join(d, "out")
+			tool := filepath.Join(d, "operator tool")
+			args := []string{"../capture_marketing.sh", "--db", filepath.Join(d, "db"), "--manifest", manifest,
+				"--proof-key-file", filepath.Join(d, "key"), "--ailang-bin", filepath.Join(d, "ailang"),
+				"--workspace-root", d, "--tool-ailang-bin", tool, "--chrome", fakeCaptureChrome(t, d),
+				"--out", out, "--rectangles", rectangles, "--worldd-bin", worldd, "--bind", bind, "--marketingcheck-bin", bin, "--verify-twice"}
+			rc, _, se := runCaptureCommand(t, "bash", args...)
+			if name == "bind-refused" {
+				_, err := os.Stat(filepath.Join(d, "argv"))
+				if rc == 0 || !os.IsNotExist(err) || !strings.Contains(se, bind) {
+					t.Fatalf("non-loopback bind must refuse before daemon starts: rc=%d stderr=%q argv stat=%v", rc, se, err)
+				}
+				return
+			}
+			if name == "old-chrome" {
+				shots, _ := filepath.Glob(filepath.Join(d, "*.args"))
+				_, err := os.Stat(filepath.Join(d, "argv"))
+				if rc != 1 || len(shots) != 0 || !os.IsNotExist(err) || !strings.Contains(se, "chrome-version A") {
+					t.Fatalf("old Chrome must refuse before any shot: rc=%d stderr=%q", rc, se)
+				}
+				return
+			}
+			if name == "version-changed" {
+				if rc != 1 || !strings.Contains(se, "chrome version changed during capture") {
+					t.Fatalf("a Chrome version change during capture must refuse: rc=%d stderr=%q", rc, se)
+				}
+				return
+			}
+			if name == "serve-argv" {
+				var argv []string
+				pngOK(t, json.Unmarshal([]byte(readFile(t, filepath.Join(d, "argv"))), &argv))
+				paired := func(flag, value string) bool {
+					for i := 0; i+1 < len(argv); i++ {
+						if argv[i] == flag && argv[i+1] == value {
+							return true
+						}
+					}
+					return false
+				}
+				if !paired("--proof-required-identity", "sameRef") || !paired("--proof-required-identity", "servesEntry") {
+					t.Errorf("both seed identities must be configured: %q", argv)
+				}
+				if len(argv) == 0 || argv[0] != "serve" || !slices.Contains(argv, "--workbench-still") || !paired("--tool-ailang-bin", tool) {
+					t.Errorf("serve must forward frozen configuration and operator tool path: %q", argv)
+				}
+				for _, forbidden := range []string{"commit", "session", "mint", "approve"} {
+					if slices.Contains(argv, forbidden) {
+						t.Errorf("capture must not mutate: %q", argv)
+					}
+				}
+			}
+			if name == "scheme" {
+				for _, pass := range []string{"pass-a", "pass-b"} {
+					for _, shot := range Shots {
+						argv := strings.Split(strings.TrimSpace(readFile(t, filepath.Join(d, pass+"-"+shot.Name+".args"))), "\n")
+						scheme := "1"
+						if shot.Scheme == "dark" {
+							scheme = "0"
+						}
+						if !slices.Contains(argv, "--blink-settings=preferredColorScheme="+scheme) {
+							t.Errorf("every shot explicitly pins correct scheme: %s/%s argv=%q", pass, shot.Name, argv)
+						}
+					}
+				}
+			}
+			if name == "cleanup" {
+				var pid int
+				_, err := fmt.Sscan(readFile(t, filepath.Join(d, "pid")), &pid)
+				pngOK(t, err)
+				assertDead(t, pid, "fake worldd after capture")
+			}
+			if rc != 0 {
+				t.Fatalf("capture must succeed: rc=%d stderr=%q", rc, se)
+			}
+			if name == "six-shots" {
+				for _, pass := range []string{"pass-a", "pass-b"} {
+					entries, err := os.ReadDir(filepath.Join(out, pass))
+					pngOK(t, err)
+					if len(entries) != 6 {
+						t.Fatalf("each pass must contain six names: %v", entries)
+					}
+				}
+				for _, shot := range Shots {
+					if !bytes.Equal([]byte(readFile(t, filepath.Join(out, "pass-a", shot.Name))), []byte(readFile(t, filepath.Join(out, "pass-b", shot.Name)))) {
+						t.Errorf("passes must be byte-equal: %s", shot.Name)
+					}
+				}
+				hashes, err := CheckPass(filepath.Join(out, "pass-a"), rects)
+				pngOK(t, err)
+				var capture CaptureManifest
+				pngOK(t, json.Unmarshal([]byte(readFile(t, filepath.Join(out, "capture-manifest.json"))), &capture))
+				pngOK(t, VerifyCaptureManifest(capture, hashes))
+				diagnostics := readFile(t, filepath.Join(out, "diagnostics.txt"))
+				if !strings.Contains(diagnostics, "chrome-version: Google Chrome 155.0.8059.41\n") || !strings.Contains(diagnostics, "bind: "+bind+"\n") {
+					t.Errorf("diagnostics must record version and bind: %q", diagnostics)
+				}
+			}
+		})
+	}
+	t.Run("daemon-readiness-config", func(t *testing.T) {
+		for _, flags := range [][]string{nil, {"--ready-file", filepath.Join(dir, "ready"), "--ready-url", "http://127.0.0.1:1"}} {
+			args := append([]string{"../marketing_capture.py", "daemon", "--started-file", filepath.Join(dir, "started")}, flags...)
+			args = append(args, "--", "does-not-exist")
+			rc, _, se := runCaptureCommand(t, "python3", args...)
+			if rc != 2 || !strings.Contains(se, "--ready") {
+				t.Errorf("exactly one readiness source required: rc=%d stderr=%q", rc, se)
+			}
+		}
 	})
 }
