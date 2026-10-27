@@ -202,7 +202,11 @@ What each launch turns off:
 
 - **Codex.** Code mode still exposes `apply_patch` as a nested tool. With
   `approval_policy = "never"`, the read-only sandbox refuses it rather than asking you. A live
-  probe of this is pending. `doctor --host codex` warns when `approval_policy = "never"` is
+  probe on 27 Oct 2026 (Codex 0.164, `gpt-6.1-sol`) confirmed it. Through `codex-world`, the
+  agent declined, citing World's instructions. With those instructions removed, it called
+  `apply_patch` and got `patch rejected: writing is blocked by read-only sandbox; rejected by
+  user approval settings`, and no file was written. A control with only the sandbox made
+  writable created the file. `doctor --host codex` warns when `approval_policy = "never"` is
   missing from the launch config.
 - **pi.** Before #381, `pi-world` started pi with no tools at all. A launch directory written
   since then loads `pi-mcp-adapter`, and a missing adapter makes `pi-world` refuse with the fix:
