@@ -1,9 +1,9 @@
 # w-all-agent-work-through-world: the roadmap to running every agent task through World
 
 **Status:** goal and roadmap, **set by Mark, attended 2026-10-26**, recorded as **D-WORLD-94**
-(the goal and rows 217–222) and **D-WORLD-95** (OPEN: un-parking rows 206 and 207, and where
+(the goal and rows 217–222) and **D-WORLD-95** (RESOLVED 2026-10-27, defaults: un-parking rows 206 and 207, and where
 the sequence sits beside row 188). **r1 (attended 2026-10-27):** adds §5, the agents you
-already use, and rows 223–225, with **D-WORLD-96** (OPEN: the standing allowance's bounds). This is a roadmap, not a build design: each row gets its own
+already use, and rows 223–225, with **D-WORLD-96** (RESOLVED 2026-10-27, defaults: the standing allowance's bounds). This is a roadmap, not a build design: each row gets its own
 design at pick time, and nothing here waives a gate.
 
 ## §0 What Mark said
@@ -129,13 +129,13 @@ run shows in the World app with its level.
 
 - **D-WORLD-94 (resolved, attended 2026-10-26):** the goal above, and rows 217–222 filed NEXT
   in §3's order.
-- **D-WORLD-95 (OPEN):**
+- **D-WORLD-95 (RESOLVED 2026-10-27: defaults, R1 yes and R2 yes):**
   - **R1:** un-park rows 206 and 207 into this sequence after 222. They are PARKED post-1.x
     today, and the goal needs them. Default: yes.
   - **R2:** run 219, 217 and 218 before row 188's N2d. Default: yes; the alternative is after
     N4a.
 
-- **D-WORLD-96 (OPEN, r1): the standing allowance's bounds (row 224).** Default:
+- **D-WORLD-96 (RESOLVED 2026-10-27: defaults; r1): the standing allowance's bounds (row 224).** Default:
   - per preset, at most 10 sessions a day, with the preset's grants and a 12 h TTL;
   - the repos listed in the preset;
   - the approval lasts 30 days, revocable at any time from the app or the CLI;

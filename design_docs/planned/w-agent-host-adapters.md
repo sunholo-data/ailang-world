@@ -5,7 +5,7 @@ this, yes. A herdr plugin is a good idea"* (roadmap
 [`w-all-agent-work-through-world`](w-all-agent-work-through-world.md) §5, D-WORLD-94). Each fact
 about a host below was checked on this Mac on 2026-10-27 or taken from the host's official
 docs, which are listed in Sources. It is not quorum-reviewed: the pick-time designer
-re-measures and runs the quorum as usual. **D-WORLD-97** (OPEN) is the one ruling it needs.
+re-measures and runs the quorum as usual. **D-WORLD-97** (RESOLVED 2026-10-27, defaults: stages A-C per launch; machine-wide only on the scorecard, row 219 and rows 196/222) is the one ruling it needs.
 
 **r1 (attended 2026-10-27):** World becomes a dependency of every agent Mark runs through
 it, so it must be *"either transparent or clear for errors"* (Mark). §2.5 adds `preflight`, the
