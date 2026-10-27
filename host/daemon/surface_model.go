@@ -79,6 +79,16 @@ func (d *Daemon) handleSurfaceModel(w http.ResponseWriter, r *http.Request) {
 	build := CurrentBuild()
 	now := surfacepage.Now{At: time.Now().UTC(), Healthy: true, Revision: build.VCSRevision, Modified: build.VCSModified}
 	now.Sessions, now.SessionsUnavailable = d.liveSessions(ctx, r, now.At)
+	latest, err := d.reads.LogEntriesLatest(ctx, 1)
+	if err != nil {
+		now.LiveUnavailable = "the log could not be read"
+	} else {
+		now.Live = &surfacepage.LiveCursor{LastIndex: -1}
+		if len(latest) > 0 {
+			head := latest[0].EntryHash.String()
+			now.Live.LastIndex, now.Live.LogHead = latest[0].Header.EntryIndex, &head
+		}
+	}
 	d.writeSurfaceJSON(w, r, http.StatusOK, schema, surfacepage.BuildModel(ix, now))
 }
 

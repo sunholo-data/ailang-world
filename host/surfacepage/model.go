@@ -40,6 +40,9 @@ type Model struct {
 
 // NowEdge is the daemon's live facts and Today.
 type NowEdge struct {
+	Live            *LiveCursor `json:"live,omitempty"`
+	LiveUnavailable string      `json:"liveUnavailable,omitempty"`
+
 	Health  string `json:"health"`
 	Checked string `json:"checked"` // HH:MM UTC
 	Daemon  string `json:"daemon"`  // the build's 7-character revision, or "unstamped"
@@ -51,6 +54,12 @@ type NowEdge struct {
 	// NeedsYou is empty in S1: nothing the daemon reads records a wait on you.
 	NeedsYou []string `json:"needsYou"`
 	Today    Today    `json:"today"`
+}
+
+// LiveCursor is the newest log entry read with the model.
+type LiveCursor struct {
+	LastIndex int64   `json:"lastIndex"`
+	LogHead   *string `json:"logHead"`
 }
 
 // ModelSession is one live session.
@@ -219,7 +228,7 @@ func (b *modelBuilder) state(s surface.State, n Node) ModelState {
 func BuildModel(ix surface.Index, now Now) Model {
 	b := newModelBuilder(ix, now.At)
 	m := Model{Schema: ModelSchema, Now: b.now.Format(time.RFC3339), Lanes: []ModelLane{}, Links: []ModelLink{}}
-	m.NowEdge = NowEdge{Health: "World healthy", Checked: b.now.Format("15:04"), Daemon: "unstamped",
+	m.NowEdge = NowEdge{Live: now.Live, LiveUnavailable: now.LiveUnavailable, Health: "World healthy", Checked: b.now.Format("15:04"), Daemon: "unstamped",
 		Sessions: []ModelSession{}, SessionsUnavailable: now.SessionsUnavailable, NeedsYou: []string{}, Today: b.today()}
 	if now.Revision != "" {
 		m.NowEdge.Daemon, m.NowEdge.Clean = short(now.Revision), !now.Modified

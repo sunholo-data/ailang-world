@@ -1,6 +1,6 @@
 // World: the surface app (row 188 N2b). The approved v3 working copy, ported onto live data: it
 // renders GET /surface/model.json and GET /surface/stack.json (N1's world/surface-model/v1 and
-// world/surface-stack/v1) and nothing else. A field the records do not hold stays absent and
+// world/surface-stack/v1), following POST /agui/ from the model's cursor. A field the records do not hold stays absent and
 // shows as an honest gap. The data adapters, the layout maths and the brane card are pure and
 // exported for node, as /surface/surface.js's seams are; the address grammar and the stored
 // look are those seams (window.WorldSurface).
@@ -291,7 +291,40 @@
   // brane only its address (row-189@6), current.
   const crumbsHTML = addr => addr == null ? '' : `<button type="button" class="crumb" aria-current="true">${esc(addr)}</button>`;
 
-  if (typeof module !== 'undefined') module.exports = { esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  function splitFrames(tail, chunk) {
+    const frames = (tail + chunk).split("\n\n");
+    const rest = frames.pop();
+    const events = frames.flatMap(frame => frame.split("\n")
+      .filter(line => line.startsWith("data: ")).map(line => JSON.parse(line.slice(6))));
+    return {events, tail: rest};
+  }
+  function applyDelta(state, delta) {
+    for (const op of delta) {
+      if (op.op !== "replace") throw new Error("unsupported state delta");
+      if (op.path === "/lastIndex") state.lastIndex = op.value;
+      else if (op.path === "/logHead") state.logHead = op.value;
+      else throw new Error("unknown state path");
+    }
+    return state;
+  }
+  function nextBackoff(retryAfter, previous = 0) {
+    const parsed = Number(retryAfter);
+    const first = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+    return Math.min(30, previous > 0 ? previous * 2 : first);
+  }
+  function liveRequest(cursor, run) {
+    return {threadId: 'surface', runId: 'surface-' + run, messages: [], state: {schema: 'world/agui-state/v1', lastIndex: cursor}};
+  }
+  function liveStatus(s) {
+    if (s.mode === 'unavailable') return 'Live updates unavailable: ' + s.reason;
+    if (s.mode === 'stopped') return 'Live stopped: ' + s.reason;
+    if (s.mode === 'hidden') return 'Paused while the tab is hidden';
+    if (s.mode === 'paused') return 'Paused: ' + s.reason + ' · retrying in ' + s.wait + ' s';
+    if (s.count) return 'Live · ' + s.count + ' new entr' + (s.count === 1 ? 'y' : 'ies') + ' · refreshing';
+    return 'Live · up to entry ' + s.cursor + ' · checked ' + s.checked;
+  }
+
+  if (typeof module !== 'undefined') module.exports = { splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
@@ -398,7 +431,7 @@
       <span class="prog">${steps} steps landed${last ? ' · last ' + esc(last.rel) : ''}</span></button>`;
   }
 
-  function renderTimeline() {
+  function renderTimeline(keepView = false) {
     let h = '';
     ROWS.forEach((key, k) => {
       const y = LY[key], tall = key === 'other' ? 72 : 98;
@@ -439,7 +472,7 @@
     $('plot').addEventListener('scroll', e => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
     renderMini();
     relayout();
-    goNow(false);
+    if (!keepView) goNow(false);
   }
 
   function nowCard() {
@@ -459,6 +492,7 @@
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${DOW[now.getUTCDay()]} ${dayOf(D.now)} · ${hm(D.now)}</div></div>
       <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
+      <div class="nl sub" data-live>${esc(liveStatus(live))}</div>
       ${today}
       ${running}
       <div class="nsec"><div class="nh" style="color:${needs.length ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${needs.length}</div>
@@ -610,8 +644,8 @@
   const atNow = () => Math.abs(view.L - clampL(maxL())) < 1;
   let anim = 0;
   const ease = t => 1 - Math.pow(1 - t, 3);
-  function applyView() {
-    view.L = clampL(view.L);
+  function applyView(keepPosition = false) {
+    if (!keepPosition) view.L = clampL(view.L);
     $('world').style.transform = `translateX(${-view.L}px)`;
     const fL = fAt(view.L), fR = fAt(view.L + PW), mw = $('mwin');
     if (mw) { const a = MX(fL), b = MX(fR); mw.style.left = a + 'px'; mw.style.width = Math.max(8, b - a) + 'px'; }
@@ -747,6 +781,134 @@
     setView('timeline');
     return true;
   }
+
+  const live = {mode: 'unavailable', reason: 'the log could not be read', count: 0};
+  let liveActive = null, liveRetry = null, liveRefresh = null, refreshing = false, queued = false, backoff = 0, liveRun = 0;
+  const liveVisible = () => document.visibilityState !== 'hidden';
+  function livePaint() {
+    const el = document.querySelector('[data-live]');
+    if (el) el.textContent = liveStatus(live);
+  }
+  function livePause(reason, retryAfter) {
+    if (live.mode === 'stopped') return;
+    if (liveRetry) clearTimeout(liveRetry);
+    if (liveActive) liveActive.abort();
+    backoff = nextBackoff(retryAfter, backoff);
+    Object.assign(live, {mode: liveVisible() ? 'paused' : 'hidden', reason, wait: backoff});
+    livePaint();
+    if (liveVisible()) liveRetry = setTimeout(() => { liveRetry = null; if (live.count) queueRefresh(); liveFollow(); }, backoff * 1000);
+  }
+  function queueRefresh() {
+    if (refreshing) { queued = true; return; }
+    if (liveRefresh) return;
+    liveRefresh = setTimeout(refreshLive, 300);
+  }
+  async function refreshLive() {
+    liveRefresh = null;
+    refreshing = true;
+    const count = live.count;
+    try {
+      const selection = st.d === 1 && F ? {brane: F.brane, at: F.id, seq: openSeq} : null;
+      const model = await getJSON('/surface/model.json');
+      if (!model.ok || !model.body || !Array.isArray(model.body.lanes)) throw new Error('refresh failed (HTTP ' + model.status + ')');
+      const stack = selection ? await getJSON(stackPath(selection.brane, selection.at)) : null;
+      if (stack && (!stack.ok || !stack.body || !stack.body.front)) throw new Error('refresh failed (HTTP ' + stack.status + ')');
+      // Fetch everything before touching the old render. Navigation during the fetch wins.
+      const active = document.activeElement, activeId = active && active.id;
+      const activeKey = active && ['data-id', 'data-state', 'data-go', 'data-rail', 'data-lane'].find(k => active.hasAttribute(k));
+      const activeValue = activeKey && active.getAttribute(activeKey);
+      const focus = st.focus, u = view.u, L = view.L, depth = st.d;
+      const railTop = $('rail') ? $('rail').scrollTop : 0, address = $('addr').value;
+      setModel(model.body);
+      const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
+      st.focus = N[focus] ? focus : newest ? newest.id : SH[NS - 1] || null;
+      view.u = u; view.L = L;
+      renderTimeline(true);
+      applyView(true);
+      if (stack && selection.seq === openSeq && depth === 1) { setStack(stack.body); renderBrane(false); $('rail').scrollTop = railTop; }
+      st.d = depth;
+      setView(depth === 1 ? 'brane' : 'timeline');
+      $('addr').value = address;
+      if (active && active.isConnected) active.focus({preventScroll: true});
+      else {
+        const replacement = activeId ? $(activeId) : activeKey ? Array.from(document.querySelectorAll('[' + activeKey + ']')).find(e => e.getAttribute(activeKey) === activeValue && e.tabIndex >= 0) : null;
+        if (replacement) replacement.focus({preventScroll: true});
+      }
+      const cursor = model.body.nowEdge && model.body.nowEdge.live;
+      if (cursor) live.cursor = Math.max(live.cursor, cursor.lastIndex);
+      live.count = Math.max(0, live.count - count);
+      live.checked = hm(new Date());
+      indexP = null;
+    } catch (e) {
+      queued = false;
+      livePause(/^refresh failed/.test(e.message) ? e.message : 'refresh failed (HTTP 0)');
+    } finally {
+      refreshing = false;
+      if (queued) { queued = false; queueRefresh(); }
+      livePaint();
+    }
+  }
+  async function liveFollow() {
+    if (!liveVisible() || liveActive || liveRetry || live.mode === 'stopped' || live.mode === 'unavailable') return;
+    const controller = new AbortController(); liveActive = controller;
+    let terminal = false, failure = null, retryAfter;
+    try {
+      const response = await fetch('/agui/', {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(liveRequest(live.cursor, liveRun++)), signal: controller.signal});
+      if (response.status === 404) { live.mode = 'stopped'; live.reason = 'unknown cursor'; livePaint(); return; }
+      if (!response.ok) {
+        retryAfter = response.headers.get('Retry-After');
+        throw new Error(response.status === 503 ? 'stream limit' : 'stream HTTP ' + response.status);
+      }
+      live.mode = 'live'; livePaint();
+      const reader = response.body.getReader(), decoder = new TextDecoder();
+      let tail = '';
+      while (!controller.signal.aborted) {
+        const chunk = await reader.read();
+        if (controller.signal.aborted) break;
+        const parsed = splitFrames(tail, decoder.decode(chunk.value || new Uint8Array(), {stream: !chunk.done}));
+        tail = parsed.tail;
+        for (const event of parsed.events) {
+          if (event.type === 'STATE_DELTA') {
+            const next = applyDelta({lastIndex: live.cursor}, event.delta);
+            live.cursor = Math.max(live.cursor, next.lastIndex);
+          } else if (event.type === 'CUSTOM' && event.name === 'world.entry.committed') {
+            live.count++; queueRefresh();
+          } else if (event.type === 'RUN_FINISHED') {
+            live.cursor = Math.max(live.cursor, event.result.lastIndex);
+            live.checked = hm(new Date()); terminal = true;
+          } else if (event.type === 'RUN_ERROR') throw new Error(event.code || 'stream error');
+        }
+        livePaint();
+        if (terminal || chunk.done) break;
+      }
+      if (!terminal && !controller.signal.aborted) throw new Error('connection ended');
+    } catch (e) { if (!controller.signal.aborted) failure = e.message; }
+    finally { controller.abort(); liveActive = null; }
+    if (!liveVisible()) return;
+    if (failure) livePause(failure, retryAfter);
+    else if (terminal) { backoff = 0; liveFollow(); }
+    else if (live.mode === 'live') liveFollow();
+  }
+  function startLive() {
+    const ne = D.nowEdge || {};
+    if (!ne.live) {
+      Object.assign(live, {mode: 'unavailable', reason: ne.liveUnavailable || 'the log could not be read'});
+    } else {
+      Object.assign(live, {mode: liveVisible() ? 'live' : 'hidden', cursor: ne.live.lastIndex, checked: hm(new Date())});
+      liveFollow();
+    }
+    livePaint();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (live.mode === 'unavailable' || live.mode === 'stopped') return;
+    if (!liveVisible()) {
+      if (liveActive) liveActive.abort();
+      if (liveRetry) clearTimeout(liveRetry);
+      liveRetry = null; live.mode = 'hidden'; livePaint();
+    } else { live.mode = 'live'; livePaint(); if (live.count) queueRefresh(); liveFollow(); }
+  });
+
   let indexP = null;
   function loadIndex() {
     if (!indexP) {
@@ -1070,6 +1232,7 @@
     renderCrumbs(); fit();
     const q = parseAppQuery(location.search);
     const ok = await loadModel();
+    if (ok) startLive();
     if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
     document.documentElement.dataset.ready = '1';
     $('root').focus({ preventScroll: true });
