@@ -1,0 +1,283 @@
+#!/bin/sh
+# world-panel: the World panel, a pane (bin/world-open-panel opens it split).
+#   usage: world-panel [--once | --keys] [--workspace <label>]
+# One frame: World's state, this workspace's open agent panes (World, plain and
+# fallback) with each World pane's session, calls and lowest budget, the
+# selected episode's last entries and its surface link, and the keys. It is
+# redrawn every 5 s and on a key.
+#   --once  print one frame and exit
+#   --keys  read keys one per line from stdin (the tests use this)
+# Sessions are read only by path (doctor --session); no token is ever read or printed.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+
+usage="usage: world-panel [--once | --keys] [--workspace <label>]"
+mode=tty
+arg_ws=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --once) mode=once; shift ;;
+    --keys) mode=keys; shift ;;
+    --workspace)
+      [ $# -ge 2 ] || world_die "--workspace needs a value." "$usage" "pass --workspace <label>"
+      arg_ws=$2
+      shift 2
+      ;;
+    *) world_die "unknown argument $1." "$usage" "run it with --once, --keys or --workspace only" ;;
+  esac
+done
+# With no terminal there is nothing to read single keys from.
+[ "$mode" != tty ] || [ -t 0 ] || mode=keys
+
+# The workspace, and its repo from WORLD_REPOS (a missing entry is shown, not fatal).
+if [ -n "$arg_ws" ]; then
+  WS=$arg_ws
+elif world_current_workspace; then
+  WS=$INV_WORKSPACE
+else
+  WS=
+fi
+REPO_DIR=
+repo_note=
+if [ -z "$WS" ]; then
+  repo_note="herdr did not say which workspace this is: run world-panel --workspace <label>"
+elif repo_note=$( (world_repo "$WS") 2>&1 >/dev/null); then
+  world_repo "$WS"
+  repo_note=
+else
+  repo_note=$(printf '%s\n' "$repo_note" | sed -n '1s/^ailang-world: //p')
+fi
+
+case $WORLD_ADDR in
+  http://* | https://*) base=$WORLD_ADDR ;;
+  *) base=http://$WORLD_ADDR ;;
+esac
+# A surface place is /surface?brane=<lane key>&at=<state id>. A brane is a
+# charter row's lane, not an episode, so an episode's link is the surface itself.
+SURFACE=${base%/}/surface
+
+SEL=1
+MSG=
+
+# rows: one TSV line per open pane of this repo: level, pane, episode, host.
+rows() {
+  [ -n "$REPO_DIR" ] || return 0
+  _p=$HERDR_PLUGIN_STATE_DIR/panes.jsonl
+  _a=$HERDR_PLUGIN_STATE_DIR/arms.jsonl
+  if [ -f "$_p" ]; then
+    jq -r --arg repo "$REPO_DIR" 'select(.ended == null and .repo == $repo)
+      | ["confined", (.pane // "" | tostring), (.episode // "-"), (.host // "-")] | @tsv' "$_p" 2>/dev/null
+  fi
+  if [ -f "$_a" ]; then
+    jq -r --arg repo "$REPO_DIR" 'select(.ended == null and .repo == $repo)
+      | [(if .world == "fallback" then "fallback" else "plain" end), (.pane // "" | tostring),
+         (.pair_of // .episode // "-"), (.host // "-")] | @tsv' "$_a" 2>/dev/null
+  fi
+}
+
+# selected: S_LEVEL, S_PANE, S_EP, S_HOST of row SEL (empty when none).
+selected() {
+  S_LEVEL=
+  S_PANE=
+  S_EP=
+  S_HOST=
+  _line=$(printf '%s\n' "$ROWS" | sed -n "${SEL}p")
+  [ -n "$_line" ] || return 1
+  _tab=$(printf '\t')
+  IFS=$_tab read -r S_LEVEL S_PANE S_EP S_HOST <<EOF
+$_line
+EOF
+}
+
+# report EP: CALLS and LOWEST from episode report --json.
+report() {
+  CALLS=-
+  LOWEST=-
+  _rep=$("$WORLDD" --addr "$WORLD_ADDR" episode report "$1" --json </dev/null 2>/dev/null) || return 0
+  CALLS=$(printf '%s' "$_rep" | jq -r '.total_calls // "-" | tostring' 2>/dev/null)
+  LOWEST=$(printf '%s' "$_rep" | jq -r '(.budgets // []) | if length == 0 then "-"
+    else (min_by(.left) | "\(.left) \(.effect)") end' 2>/dev/null)
+  [ -n "$CALLS" ] || CALLS=-
+  [ -n "$LOWEST" ] || LOWEST=-
+}
+
+FMT='%s %-10s %-14s %-7s %-9s %-11s %-12s %6s  %s\n'
+
+frame() {
+  ROWS=$(rows)
+  NROWS=$(printf '%s\n' "$ROWS" | sed '/^$/d' | wc -l | tr -d ' ')
+  [ "$SEL" -le "$NROWS" ] || SEL=$NROWS
+  [ "$SEL" -ge 1 ] || SEL=1
+  world_doctor
+  if world_doctor_problem; then up=down; else up=ok; fi
+  if world_watch_running; then
+    watch="watcher running${WATCH_PID:+ (pid $WATCH_PID)}"
+  else
+    watch="watcher stopped (it starts with the next World panel or New World agent)"
+  fi
+  [ "$mode" != tty ] || printf '\033[H\033[2J'
+  printf 'World %s · %s · workspace %s' "$up" "$WORLD_ADDR" "${WS:-?}"
+  [ -z "$REPO_DIR" ] || printf ' → %s' "$REPO_DIR"
+  printf ' · %s\n' "$watch"
+  [ "$up" = ok ] || printf '  World: %s. Fix: %s\n' "$PROB_DETAIL" "$PROB_FIX"
+  [ -z "$repo_note" ] || printf '  %s\n' "$repo_note"
+  printf '%s\n' '------------------------------------------------------------------------------------------'
+  # shellcheck disable=SC2059
+  printf "$FMT" ' ' PANE EPISODE HOST LEVEL WORLD SESSION CALLS 'LOWEST BUDGET LEFT'
+  if [ "$NROWS" -eq 0 ]; then
+    printf '  no open agent panes for this workspace: n starts a World agent, l a plain one\n'
+  fi
+  _i=0
+  _tab=$(printf '\t')
+  while IFS=$_tab read -r lvl pane ep host; do
+    [ -n "$lvl" ] || continue
+    _i=$((_i + 1))
+    mark=' '
+    [ "$_i" -ne "$SEL" ] || mark='>'
+    if [ "$lvl" = confined ]; then
+      world_check_pane "$ep" "$host"
+      report "$ep"
+      # shellcheck disable=SC2059
+      printf "$FMT" "$mark" "$pane" "$ep" "$host" "$lvl" "$PANE_STATE" "$PANE_LEFT" "$CALLS" "$LOWEST"
+    else
+      # shellcheck disable=SC2059
+      printf "$FMT" "$mark" "$pane" "$ep" "$host" "$lvl" - - - 'not in World'
+    fi
+  done <<EOF
+$ROWS
+EOF
+  printf '%s\n' '------------------------------------------------------------------------------------------'
+  if selected; then
+    if [ "$S_LEVEL" = confined ]; then
+      printf '%s: last entries (provenance --episode %s)\n' "$S_EP" "$S_EP"
+      _prov=$("$WORLDD" --addr "$WORLD_ADDR" provenance --episode "$S_EP" </dev/null 2>&1)
+      printf '%s\n' "$_prov" | sed '/^[[:space:]]*$/d' | tail -n 5 | while IFS= read -r l; do
+        printf '  %s\n' "$l"
+        _last=$(printf '%s' "$l" | sed -n 's/.* entries=[0-9][0-9]*-\([0-9][0-9]*\).*/\1/p')
+        [ -z "$_last" ] || printf '  last entry: #%s (w, then %s, prints its why chain)\n' "$_last" "$_last"
+      done
+      printf 'surface: %s\n' "$SURFACE"
+    else
+      printf '%s pane %s: not confined, so World has no entries for it.\n' "$S_LEVEL" "$S_PANE"
+    fi
+  fi
+  [ -z "$MSG" ] || printf '%s\n' "$MSG"
+  MSG=
+  printf 'j/k select · n new World agent · l new plain agent · o open surface · w why <entry> · r revoke session · q quit\n'
+}
+
+# say TEXT: in the panel, on the next frame; in --keys mode, now.
+say() {
+  if [ "$mode" = tty ]; then MSG=$1; else printf '%s\n' "$1"; fi
+}
+
+# ask_line PROMPT: one line, typed normally (the terminal leaves single-key mode).
+ask_line() {
+  printf '%s' "$1"
+  [ "$mode" != tty ] || stty "$saved" 2>/dev/null
+  IFS= read -r LINE || LINE=
+  [ "$mode" != tty ] || stty -icanon -echo min 0 time 50 2>/dev/null
+}
+
+open_url() {
+  if [ "$mode" != tty ]; then
+    say "surface: $SURFACE (not opened: no terminal)"
+  elif [ "$(uname -s)" = Darwin ] && command -v open >/dev/null 2>&1; then
+    open "$SURFACE" >/dev/null 2>&1 </dev/null
+    say "Opened $SURFACE"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$SURFACE" >/dev/null 2>&1 </dev/null &
+    say "Opened $SURFACE"
+  else
+    say "surface: $SURFACE (no open or xdg-open here: open it in a browser)"
+  fi
+}
+
+why() {
+  ask_line 'Entry index: '
+  case $LINE in
+    '' | *[!0-9]*) say "\"$LINE\" is not an entry index: w takes a number, such as the last entry shown."; return 0 ;;
+  esac
+  if [ "$mode" = tty ] && command -v less >/dev/null 2>&1; then
+    stty "$saved" 2>/dev/null
+    "$WORLDD" --addr "$WORLD_ADDR" why "$LINE" </dev/null 2>&1 | less -R
+    stty -icanon -echo min 0 time 50 2>/dev/null
+  else
+    "$WORLDD" --addr "$WORLD_ADDR" why "$LINE" </dev/null 2>&1
+  fi
+}
+
+revoke() {
+  if ! selected || [ "$S_LEVEL" != confined ]; then
+    say "No World pane is selected: only a World episode has a session to revoke."
+    return 0
+  fi
+  ask_line "Revoke episode $S_EP's session (pane $S_PANE)? Its agent loses World at once; the worktree stays. [y/N] "
+  case $LINE in
+    [yY] | [yY][eE][sS]) ;;
+    *) say "Not revoked: $S_EP's session is unchanged."; return 0 ;;
+  esac
+  if _out=$("$WORLDD" session revoke --db "$WORLD_DB" --episode "$S_EP" </dev/null 2>&1); then
+    say "Revoked $S_EP's session.${_out:+ $_out}"
+  else
+    say "ailang-world: session revoke did not revoke $S_EP: ${_out:-no message}. Next: run $WORLDD session revoke --db $WORLD_DB --episode $S_EP"
+  fi
+}
+
+invoke() { # ACTION TITLE
+  if world_herdr plugin action invoke "$1" --plugin ailang-world >/dev/null; then
+    say "Asked herdr for $2."
+  else
+    say "ailang-world: herdr did not run $2 ($HERDR_BIN_PATH plugin action invoke $1 --plugin ailang-world failed)."
+  fi
+}
+
+# key K: one key's action. Returns 1 on q.
+key() {
+  case $1 in
+    j | down) SEL=$((SEL + 1)) ;;
+    k | up) [ "$SEL" -le 1 ] || SEL=$((SEL - 1)) ;;
+    n) invoke world-agent "New World agent" ;;
+    l) invoke plain-agent "New plain agent" ;;
+    o) open_url ;;
+    w) why ;;
+    r) revoke ;;
+    q) return 1 ;;
+    *) ;;
+  esac
+  return 0
+}
+
+case $mode in
+  once) frame ;;
+  keys)
+    frame
+    while IFS= read -r k; do
+      key "$k" || exit 0
+      frame
+    done
+    exit 0
+    ;;
+  tty)
+    saved=$(stty -g)
+    trap 'stty "$saved" 2>/dev/null' EXIT
+    trap 'exit 130' INT TERM HUP
+    stty -icanon -echo min 0 time 50
+    esc=$(printf '\033')
+    while :; do
+      frame
+      # One key, or nothing after 5 s: either way, a new frame.
+      k=$(dd bs=1 count=1 2>/dev/null)
+      if [ "$k" = "$esc" ]; then
+        case $(dd bs=2 count=1 2>/dev/null) in
+          '[A') k=up ;;
+          '[B') k=down ;;
+          *) k= ;;
+        esac
+      fi
+      key "$k" || exit 0
+    done
+    ;;
+esac

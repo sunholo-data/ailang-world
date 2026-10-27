@@ -42,6 +42,15 @@ world_need_config() {
   : "${WORLD_PROFILE:=}" "${WORLD_GRANTS:=}" "${WORLD_MODELS:=}"
 }
 
+# world_need_herdr: HERDR_BIN_PATH names an executable, or refuse.
+world_need_herdr() {
+  if [ -z "${HERDR_BIN_PATH:-}" ] || [ ! -x "$HERDR_BIN_PATH" ]; then
+    world_die "HERDR_BIN_PATH does not name the herdr binary." \
+      "the plugin calls herdr only through it, and herdr sets it for plugin commands." \
+      "run this from herdr (the plugin's actions, events and startup do)"
+  fi
+}
+
 # world_init: the config first, then the state directory, herdr and jq.
 world_init() {
   world_need_config
@@ -52,11 +61,7 @@ world_init() {
   fi
   mkdir -p "$HERDR_PLUGIN_STATE_DIR" || world_die "cannot create $HERDR_PLUGIN_STATE_DIR." \
     "the plugin records its panes there." "check that directory's parent and permissions"
-  if [ -z "${HERDR_BIN_PATH:-}" ] || [ ! -x "$HERDR_BIN_PATH" ]; then
-    world_die "HERDR_BIN_PATH does not name the herdr binary." \
-      "the plugin calls herdr only through it, and herdr sets it for plugin commands." \
-      "run this from herdr (the plugin's actions, events and startup do)"
-  fi
+  world_need_herdr
   if ! command -v jq >/dev/null 2>&1; then
     world_die "jq is not on PATH." \
       "the plugin reads herdr's and doctor's JSON with jq." \
@@ -102,21 +107,85 @@ world_exit_pause() {
   return "$1"
 }
 
-# world_current: INV_PANE and INV_WORKSPACE from herdr's current pane, where
-# still unset. Returns 1 when herdr does not say.
+# world_ws_label ID: INV_WORKSPACE, the label herdr's workspace list gives ID.
+world_ws_label() {
+  _list=$(world_herdr workspace list) || return 1
+  INV_WORKSPACE=$(printf '%s' "$_list" | jq -r --arg id "$1" \
+    'first(.. | objects | select(has("workspace_id") and (.workspace_id | tostring) == $id) | (.label // .name // empty)) // empty' 2>/dev/null)
+  [ -n "$INV_WORKSPACE" ]
+}
+
+# world_current: INV_PANE and INV_WORKSPACE where still unset: from herdr's
+# HERDR_PANE_ID and HERDR_WORKSPACE_ID (the invoking context), else from
+# `pane current`. Returns 1 when herdr does not say.
 world_current() {
-  _cur=$(world_herdr pane current) || return 1
-  if [ -z "$INV_PANE" ]; then
-    INV_PANE=$(printf '%s' "$_cur" | jq -r 'first(.. | objects | select(has("pane_id")) | .pane_id | tostring) // empty' 2>/dev/null)
+  [ -n "$INV_PANE" ] || INV_PANE=${HERDR_PANE_ID:-}
+  _wsid=${HERDR_WORKSPACE_ID:-}
+  if [ -z "$INV_PANE" ] || { [ -z "$INV_WORKSPACE" ] && [ -z "$_wsid" ]; }; then
+    _cur=$(world_herdr pane current) || return 1
+    if [ -z "$INV_PANE" ]; then
+      INV_PANE=$(printf '%s' "$_cur" | jq -r 'first(.. | objects | select(has("pane_id")) | .pane_id | tostring) // empty' 2>/dev/null)
+    fi
+    if [ -z "$_wsid" ]; then
+      _wsid=$(printf '%s' "$_cur" | jq -r 'first(.. | objects | select(has("workspace_id")) | .workspace_id | tostring) // empty' 2>/dev/null)
+    fi
   fi
   if [ -z "$INV_WORKSPACE" ]; then
-    _wsid=$(printf '%s' "$_cur" | jq -r 'first(.. | objects | select(has("workspace_id")) | .workspace_id | tostring) // empty' 2>/dev/null)
     [ -n "$_wsid" ] || return 1
-    _list=$(world_herdr workspace list) || return 1
-    INV_WORKSPACE=$(printf '%s' "$_list" | jq -r --arg id "$_wsid" \
-      'first(.. | objects | select(has("workspace_id") and (.workspace_id | tostring) == $id) | (.label // .name // empty)) // empty' 2>/dev/null)
+    world_ws_label "$_wsid" || return 1
   fi
   [ -n "$INV_PANE" ] && [ -n "$INV_WORKSPACE" ]
+}
+
+# world_current_workspace: INV_WORKSPACE only, from HERDR_WORKSPACE_ID, else
+# from `pane current`. Returns 1 when herdr does not say.
+world_current_workspace() {
+  INV_WORKSPACE=
+  _wsid=${HERDR_WORKSPACE_ID:-}
+  if [ -z "$_wsid" ]; then
+    _cur=$(world_herdr pane current) || return 1
+    _wsid=$(printf '%s' "$_cur" | jq -r 'first(.. | objects | select(has("workspace_id")) | .workspace_id | tostring) // empty' 2>/dev/null)
+  fi
+  [ -n "$_wsid" ] && world_ws_label "$_wsid"
+}
+
+# world_watch_running: whether bin/world-watch holds its lock. Sets WATCH_PID.
+# A lock with no pid yet is a watcher starting up: running.
+world_watch_running() {
+  WATCH_PID=
+  _lock=$HERDR_PLUGIN_STATE_DIR/world-watch.lock
+  [ -d "$_lock" ] || return 1
+  WATCH_PID=$(cat "$_lock/pid" 2>/dev/null || :)
+  [ -n "$WATCH_PID" ] || return 0
+  kill -0 "$WATCH_PID" 2>/dev/null
+}
+
+# world_watch_ensure: start bin/world-watch, detached, unless it is running.
+# herdr runs [[startup]] only when it starts, so after `plugin link` nothing
+# else would label the panes. The watcher's lock keeps it to one instance.
+world_watch_ensure() {
+  world_watch_running && return 0
+  nohup "$ROOT/bin/world-watch" </dev/null >/dev/null 2>>"$HERDR_PLUGIN_STATE_DIR/world-watch.err" &
+  printf 'ailang-world: started world-watch (pid %s): it labels World panes every 60 s.\n' "$!" >&2
+}
+
+# world_check_pane EP HOST: doctor checks EP's session (by its file's path)
+# and HOST's launch config. Sets PANE_STATE (ok, down, expired, host-drift)
+# and PANE_LEFT ("<h>h<m>m left", expired or unknown); PROB_* and LEFT_MIN
+# stay as doctor's last pass left them.
+world_check_pane() {
+  world_doctor --session "$WORLD_SESSIONS/$1.session" --host "$2" --hosts-dir "$WORLD_HOSTS"
+  case $DOC_CODE in
+    0) PANE_STATE=ok ;;
+    11) PANE_STATE=expired ;;
+    12) PANE_STATE=host-drift ;;
+    *) PANE_STATE=down ;;
+  esac
+  # A host warning exits 0, but that launch config would be observed.
+  if world_doctor_problem && [ "$PANE_STATE" = ok ]; then PANE_STATE=host-drift; fi
+  PANE_LEFT=unknown
+  if world_session_left; then PANE_LEFT=$LEFT; fi
+  [ "$PANE_STATE" != expired ] || PANE_LEFT=expired
 }
 
 # world_invoker PANE WORKSPACE: the pane the action was invoked from and its

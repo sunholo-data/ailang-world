@@ -1,0 +1,338 @@
+#!/bin/sh
+# world-keys [--apply | --uninstall | --check]: herdr key bindings for the
+# plugin's actions. A herdr manifest cannot declare keys; they live only in
+# herdr's own config: $HERDR_CONFIG_FILE, else ~/.config/herdr/config.toml.
+#   --check      print the config path, the block and any conflicts; change nothing
+#   --apply      (the default) show the block, ask y/N, then add or replace it
+#   --uninstall  show the block, ask y/N, then remove it
+# This is the only command in the plugin that writes herdr's config, and only
+# after you type y. It never touches a line outside its two marker lines, and
+# writes nothing else under ~/.config/herdr but its temporary file beside the
+# config. The keys default to prefix+shift+a/l/o; WORLD_KEYS in world.env
+# (agent=… plain=… panel=…) overrides them.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+tmp=
+trap 'c=$?; [ -z "$tmp" ] || rm -f "$tmp"; world_exit_pause "$c"; exit "$c"' EXIT
+trap 'exit 130' INT TERM HUP
+
+usage="usage: world-keys [--apply | --uninstall | --check]"
+mode=apply
+if [ $# -gt 1 ]; then
+  world_die "too many arguments." "$usage" "run it with one of --apply, --uninstall or --check"
+fi
+case ${1:---apply} in
+  --apply) mode=apply ;;
+  --uninstall) mode=uninstall ;;
+  --check) mode=check ;;
+  *) world_die "unknown argument $1." "$usage" "run it with one of --apply, --uninstall or --check" ;;
+esac
+
+BEGIN='# >>> ailang-world key bindings (bin/world-keys) >>>'
+END='# <<< ailang-world key bindings <<<'
+DEFAULTS='prefix+shift+r prefix+shift+n prefix+shift+g prefix+shift+w prefix+shift+d prefix+shift+t prefix+shift+x prefix+shift+p'
+
+# 1. Which file.
+cfg=${HERDR_CONFIG_FILE:-}
+if [ -z "$cfg" ]; then
+  [ -n "${HOME:-}" ] || world_die "neither HERDR_CONFIG_FILE nor HOME is set." \
+    "herdr's config is \$HERDR_CONFIG_FILE, else ~/.config/herdr/config.toml." \
+    "set HERDR_CONFIG_FILE to herdr's config file, then run again"
+  cfg=$HOME/.config/herdr/config.toml
+fi
+if [ -L "$cfg" ]; then
+  world_die "$cfg is a symbolic link." \
+    "world-keys replaces the file it edits, which would turn the link into a plain file." \
+    "run it with HERDR_CONFIG_FILE set to the link's target, so the link stays"
+fi
+if [ -e "$cfg" ] && [ ! -f "$cfg" ]; then
+  world_die "$cfg is not a regular file." "herdr's config is one TOML file." \
+    "point HERDR_CONFIG_FILE at herdr's config file, then run again"
+fi
+cfg_dir=$(dirname -- "$cfg")
+cfg_base=$(basename -- "$cfg")
+
+# 2. Which keys: the defaults, or WORLD_KEYS from world.env (or the environment).
+env_file=world.env
+wk=${WORLD_KEYS:-}
+if [ -n "${HERDR_PLUGIN_CONFIG_DIR:-}" ]; then
+  env_file=$HERDR_PLUGIN_CONFIG_DIR/world.env
+  if [ -f "$env_file" ]; then
+    # shellcheck disable=SC1090
+    wk=$(. "$env_file" >/dev/null 2>&1; printf '%s' "${WORLD_KEYS:-}")
+  fi
+fi
+next_keys="pick another key: set the optional WORLD_KEYS=\"agent=… plain=… panel=…\" in $env_file, then run World: install key bindings again"
+k_agent=prefix+shift+a
+k_plain=prefix+shift+l
+k_panel=prefix+shift+o
+set -f
+for w in $wk; do
+  case $w in
+    agent=?*) k_agent=${w#agent=} ;;
+    plain=?*) k_plain=${w#plain=} ;;
+    panel=?*) k_panel=${w#panel=} ;;
+    *) set +f
+      world_die "WORLD_KEYS has \"$w\", which is not agent=<key>, plain=<key> or panel=<key>." \
+        "WORLD_KEYS names the keys for New World agent, New plain agent and the World panel." \
+        "fix WORLD_KEYS in $env_file, e.g. WORLD_KEYS=\"agent=prefix+shift+a plain=prefix+shift+l panel=prefix+shift+o\"" ;;
+  esac
+done
+set +f
+for k in "$k_agent" "$k_plain" "$k_panel"; do
+  if ! printf '%s' "$k" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9+_.,/;:-]*$'; then
+    world_die "\"$k\" is not a key world-keys can write." \
+      "a key is written into herdr's TOML as is, so it may hold only letters, digits and + _ . , / ; : -." \
+      "fix WORLD_KEYS in $env_file (herdr's form: prefix+shift+a)"
+  fi
+done
+lc() { printf '%s' "$1" | tr 'A-Z' 'a-z'; }
+if [ "$(lc "$k_agent")" = "$(lc "$k_plain")" ] || [ "$(lc "$k_agent")" = "$(lc "$k_panel")" ] ||
+  [ "$(lc "$k_plain")" = "$(lc "$k_panel")" ]; then
+  world_die "WORLD_KEYS gives two actions the same key ($k_agent, $k_plain, $k_panel)." \
+    "one key runs one action." "$next_keys"
+fi
+
+entry() { # KEY ACTION DESCRIPTION
+  printf '[[keys.command]]\nkey = "%s"\ntype = "plugin_action"\ncommand = "ailang-world.%s"\ndescription = "%s"\n' "$1" "$2" "$3"
+}
+BLOCK=$(
+  printf '%s\n' "$BEGIN"
+  entry "$k_agent" world-agent "New World agent"
+  printf '\n'
+  entry "$k_plain" plain-agent "New plain agent"
+  printf '\n'
+  entry "$k_panel" world-panel "World panel"
+  printf '%s' "$END"
+)
+
+# 3. The markers must pair up: zero or one block.
+nb=0
+ne=0
+if [ -f "$cfg" ]; then
+  nb=$(grep -cxF -- "$BEGIN" "$cfg" || :)
+  ne=$(grep -cxF -- "$END" "$cfg" || :)
+fi
+markers_ok() {
+  [ "$nb" -eq "$ne" ] && [ "$nb" -le 1 ] || return 1
+  [ "$nb" -eq 0 ] && return 0
+  [ "$(grep -nxF -- "$BEGIN" "$cfg" | cut -d: -f1)" -lt "$(grep -nxF -- "$END" "$cfg" | cut -d: -f1)" ]
+}
+if ! markers_ok; then
+  world_die "$cfg has $nb begin and $ne end ailang-world marker lines, out of order or more than one block." \
+    "world-keys edits only between one pair of markers, so it cannot tell which lines are its own." \
+    "edit $cfg by hand: keep at most one block, from \"$BEGIN\" to \"$END\""
+fi
+present=
+[ "$nb" -eq 0 ] || present=1
+
+# outside: the config without the block.
+outside() {
+  [ -f "$cfg" ] || return 0
+  awk -v b="$BEGIN" -v e="$END" '$0 == b { skip = 1; next } skip && $0 == e { skip = 0; next } !skip' "$cfg"
+}
+# build OUT: the config with the block added at the end, or replacing the old one.
+build() {
+  if [ -n "$present" ]; then
+    BLK=$BLOCK awk -v b="$BEGIN" -v e="$END" 'BEGIN { blk = ENVIRON["BLK"] }
+      $0 == b { print blk; skip = 1; next } skip && $0 == e { skip = 0; next } !skip' "$cfg" >"$1"
+  else
+    {
+      if [ -f "$cfg" ]; then
+        cat "$cfg"
+        [ -z "$(tail -c 1 "$cfg")" ] || printf '\n'
+      fi
+      printf '%s\n' "$BLOCK"
+    } >"$1"
+  fi
+}
+
+# 4. Conflicts: a key herdr binds by default, or one bound outside the block.
+conflicts=0
+conflict() { # KEY WHAT
+  _k=$(lc "$1")
+  for _d in $DEFAULTS; do
+    if [ "$_k" = "$_d" ]; then
+      world_error "$1 ($2) is one of herdr's default keys." \
+        "herdr already binds it to one of its own commands; a second binding would take it away." "$next_keys"
+      conflicts=$((conflicts + 1))
+      return 0
+    fi
+  done
+  if outside | grep -v '^[[:space:]]*#' | tr 'A-Z' 'a-z' | grep -qF -e "\"$_k\"" -e "'$_k'"; then
+    world_error "$1 ($2) is already bound in $cfg, outside the ailang-world block." \
+      "herdr would run only one of the two bindings, and world-keys never edits a line outside its block." "$next_keys"
+    conflicts=$((conflicts + 1))
+  fi
+}
+
+# toml_check FILE: python3's tomllib loads FILE. Sets TOML_ERR on failure.
+toml_check() {
+  TOML_ERR=$(python3 -I -c 'import sys,tomllib; tomllib.load(open(sys.argv[1],"rb"))' "$1" 2>&1) && return 0
+  TOML_ERR=$(printf '%s\n' "$TOML_ERR" | sed '/^[[:space:]]*$/d' | tail -n 1)
+  return 1
+}
+need_python() {
+  if ! command -v python3 >/dev/null 2>&1 || ! python3 -I -c 'import tomllib' >/dev/null 2>&1; then
+    world_die "python3 with tomllib (3.11 or later) is not on PATH." \
+      "world-keys checks that herdr's config is still valid TOML before it replaces it, and never writes one it could not check." \
+      "install python3 3.11 or later (brew install python), then run again"
+  fi
+}
+original_valid() {
+  [ -f "$cfg" ] || return 0
+  if ! toml_check "$cfg"; then
+    world_die "$cfg is not valid TOML now, before any change: $TOML_ERR" \
+      "world-keys only edits a config herdr can load, so it can check its own result." \
+      "fix $cfg (the error names the line), then run again"
+  fi
+}
+
+show_block() {
+  printf 'herdr config: %s%s\n' "$cfg" "$([ -f "$cfg" ] || printf ' (does not exist yet: it would hold just the block)')"
+  if [ -n "$present" ]; then
+    printf 'It has an ailang-world block; this block would replace it:\n\n'
+  else
+    printf 'This block would be added at its end:\n\n'
+  fi
+  printf '%s\n\n' "$BLOCK"
+}
+
+keys_report() {
+  printf '  %-18s New World agent\n  %-18s New plain agent\n  %-18s World panel\n' "$k_agent" "$k_plain" "$k_panel"
+}
+
+# ask PROMPT: one line from stdin; returns 0 only for y.
+ask() {
+  printf '%s [y/N] ' "$1"
+  IFS= read -r _ans || _ans=
+  printf '\n'
+  case $_ans in
+    [yY] | [yY][eE][sS]) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# replace_with BUILDER: write the new config beside the old one, check it, then move it in.
+replace_with() {
+  mkdir -p "$cfg_dir" || world_die "cannot create $cfg_dir." "herdr's config lives there." \
+    "check $cfg_dir's parent and permissions"
+  tmp=$cfg_dir/.$cfg_base.world-keys.$$
+  rm -f "$tmp"
+  if [ -f "$cfg" ]; then
+    # A copy first, so the new file keeps the config's mode; then its content.
+    cp -p "$cfg" "$tmp" || world_die "cannot write $tmp." "world-keys writes the new config beside the old one first." \
+      "check $cfg_dir's permissions; $cfg is unchanged"
+  fi
+  if ! "$1" "$tmp"; then
+    world_die "cannot write $tmp." "world-keys writes the new config beside the old one first." \
+      "check $cfg_dir's permissions; $cfg is unchanged"
+  fi
+  if ! toml_check "$tmp"; then
+    world_die "the new $cfg would not be valid TOML: $TOML_ERR" \
+      "herdr could not load it, so world-keys left $cfg unchanged and removed its draft." \
+      "fix what clashes in $cfg (for example a keys.command value that is not a list of tables), then run again"
+  fi
+  mv -f "$tmp" "$cfg" || world_die "cannot move $tmp to $cfg." \
+    "world-keys replaces the config in one step." "check $cfg_dir's permissions; $cfg is unchanged"
+  tmp=
+}
+
+reload() {
+  if ! _out=$(world_herdr server reload-config 2>&1); then
+    world_error "herdr did not reload its config: ${_out:-no message}" \
+      "$cfg is written, but herdr keeps the old bindings until it reloads." \
+      "run herdr server reload-config, or restart herdr"
+    exit 1
+  fi
+}
+
+remove_block() { # OUT
+  awk -v b="$BEGIN" -v e="$END" '$0 == b { skip = 1; next } skip && $0 == e { skip = 0; next } !skip' "$cfg" >"$1"
+}
+
+case $mode in
+  check)
+    show_block
+    conflict "$k_agent" "New World agent"
+    conflict "$k_plain" "New plain agent"
+    conflict "$k_panel" "World panel"
+    [ "$conflicts" -eq 0 ] || exit 2
+    printf 'Conflicts: none.\n'
+    need_python
+    original_valid
+    draft=$(mktemp "${TMPDIR:-/tmp}/world-keys-check.XXXXXX") || exit 2
+    build "$draft"
+    if ! toml_check "$draft"; then
+      rm -f "$draft"
+      world_die "the new $cfg would not be valid TOML: $TOML_ERR" \
+        "herdr could not load it, so --apply would refuse and leave $cfg unchanged." \
+        "fix what clashes in $cfg (for example a keys.command value that is not a list of tables), then run again"
+    fi
+    rm -f "$draft"
+    printf 'The result is valid TOML. Nothing was changed; --apply asks before it writes.\n'
+    ;;
+  apply)
+    show_block
+    conflict "$k_agent" "New World agent"
+    conflict "$k_plain" "New plain agent"
+    conflict "$k_panel" "World panel"
+    [ "$conflicts" -eq 0 ] || exit 2
+    world_need_herdr
+    need_python
+    original_valid
+    if [ -z "${HERDR_PLUGIN_STATE_DIR:-}" ]; then
+      world_die "HERDR_PLUGIN_STATE_DIR is not set." \
+        "world-keys keeps a one-time backup of your herdr config there." \
+        "run it from herdr's \"World: install key bindings\" action"
+    fi
+    if ! ask "Add these key bindings to $cfg?"; then
+      printf 'No change: %s was not written, and no backup was made.\n' "$cfg"
+      exit 0
+    fi
+    backup=$HERDR_PLUGIN_STATE_DIR/herdr-config.original.toml
+    if [ -e "$backup" ]; then
+      bnote="kept from the first time: $backup"
+    else
+      mkdir -p "$HERDR_PLUGIN_STATE_DIR" || world_die "cannot create $HERDR_PLUGIN_STATE_DIR." \
+        "world-keys keeps a one-time backup there." "check that directory's parent; $cfg is unchanged"
+      btmp=$backup.tmp.$$
+      if [ -f "$cfg" ]; then
+        (umask 077 && cp "$cfg" "$btmp")
+      else
+        (umask 077 && : >"$btmp")
+      fi && mv "$btmp" "$backup" || {
+        rm -f "$btmp"
+        world_die "cannot write the backup $backup." \
+          "world-keys never edits herdr's config without a backup of the original." \
+          "check $HERDR_PLUGIN_STATE_DIR's permissions; $cfg is unchanged"
+      }
+      bnote="written now: $backup"
+      [ -f "$cfg" ] || bnote="$bnote (empty: there was no config)"
+    fi
+    replace_with build
+    reload
+    printf '✓ Key bindings in %s; herdr reloaded its config.\n' "$cfg"
+    keys_report
+    printf 'The original config: %s\nRemove them with bin/world-keys --uninstall.\n' "$bnote"
+    ;;
+  uninstall)
+    if [ -z "$present" ]; then
+      printf 'No ailang-world key bindings in %s: nothing to remove, nothing changed.\n' "$cfg"
+      exit 0
+    fi
+    world_need_herdr
+    need_python
+    printf 'herdr config: %s\nThis block would be removed (and nothing else):\n\n' "$cfg"
+    awk -v b="$BEGIN" -v e="$END" '$0 == b { on = 1 } on { print } on && $0 == e { on = 0 }' "$cfg"
+    printf '\n'
+    if ! ask "Remove the ailang-world key bindings from $cfg?"; then
+      printf 'No change: %s was not written.\n' "$cfg"
+      exit 0
+    fi
+    replace_with remove_block
+    reload
+    printf '✓ Removed the ailang-world key bindings from %s; herdr reloaded its config.\n' "$cfg"
+    ;;
+esac

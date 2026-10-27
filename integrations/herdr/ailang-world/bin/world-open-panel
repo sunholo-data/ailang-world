@@ -1,0 +1,15 @@
+#!/bin/sh
+# world-open-panel: the "World panel" action. Starts bin/world-watch when it
+# isn't running, then opens the World panel (bin/world-panel) split beside the
+# invoking pane, focused.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+
+if [ $# -gt 0 ]; then
+  world_die "unknown argument $1." "usage: world-open-panel (no arguments)" \
+    "fix the action's command in herdr-plugin.toml"
+fi
+world_watch_ensure
+world_herdr plugin pane open --plugin ailang-world --entrypoint world-panel --placement split --focus
