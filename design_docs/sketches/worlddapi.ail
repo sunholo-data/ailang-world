@@ -71,6 +71,7 @@ export type Route = { method: string, path: string }
 export func routes() -> list[Route] ! {} {
   [
     { method: "GET", path: "/v1/health" },
+    { method: "GET", path: "/v1/session/self" },
     { method: "GET", path: "/v1/head" },
     { method: "GET", path: "/v1/worlds/{ref}" },
     { method: "GET", path: "/v1/objects/{ref}" },

@@ -22,6 +22,16 @@ from the binary, that is a defect.*
 
 ## Run your agents through World
 
+World launchers now tell Claude Code, Codex and pi their episode, worktree, session
+lifetime, remaining grants and tool map. Claude adds a World status segment while
+keeping your user status command; pi adds a footer. Refresh generated files with
+`ailang-worldd hosts init --replace`. Inspect your own session with
+`ailang-worldd --addr http://127.0.0.1:47330 whoami --json` using `WORLD_SESSION`
+or `whoami --session <file>`; never put a token in argv. This calls the authenticated
+`GET /v1/session/self` endpoint. It reports only the caller's session, with no token
+or credential hash; exit 10 means daemon unavailable and 11 means session invalid.
+
+
 With World serving and an approved episode session (see the attended steps below),
 generate private launch settings once:
 
@@ -33,7 +43,7 @@ ailang-worldd --addr http://127.0.0.1:47330 doctor --db /path/to/world.db \
 ~/.ailang-world/hosts/bin/claude-world
 # Or choose one of:
 ~/.ailang-world/hosts/bin/codex-world
-~/.ailang-world/hosts/bin/pi-world
+~/.ailang-world/hosts/bin/pi-world # requires pi install npm:pi-mcp-adapter before hosts init
 ```
 
 Use `--host codex` or `--host pi` for the corresponding doctor check. Drop

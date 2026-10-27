@@ -176,6 +176,9 @@ func runDoctor(addr string, args []string, stdout, stderr io.Writer) int {
 	}
 	if *host != "" {
 		doctorHost(r, *host, *hostsDir)
+		if *host == "pi" {
+			doctorPiAdapter(r, *hostsDir)
+		}
 	}
 	if !*quick {
 		profileFile := *profile

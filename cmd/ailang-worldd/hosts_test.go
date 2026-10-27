@@ -41,10 +41,16 @@ func TestHostsInitWritesEveryFile(t *testing.T) {
 	files := hostFiles(dir, "http://127.0.0.1:47330")
 	// Independent wire-format assertions protect the measured host flags.
 	wantSettings := "{\"permissions\":{\"deny\":[\"Bash\",\"Edit\",\"Write\",\"Read\",\"Glob\",\"Grep\",\"NotebookEdit\",\"WebFetch\",\"WebSearch\"],\"disableBypassPermissionsMode\":\"disable\"}}\n"
-	if string(files["claude-world.settings.json"]) != wantSettings {
+	var settings map[string]any
+	if json.Unmarshal(files["claude-world.settings.json"], &settings) != nil {
+		t.Fatal("invalid settings")
+	}
+	delete(settings, "statusLine")
+	settingsBytes, _ := json.Marshal(settings)
+	if string(settingsBytes)+"\n" != wantSettings {
 		t.Fatal("settings bytes differ")
 	}
-	wantCodex := "sandbox_mode = \"read-only\"\nweb_search = \"disabled\"\n[features]\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = \"http://127.0.0.1:47330/mcp/\"\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n"
+	wantCodex := "sandbox_mode = \"read-only\"\napproval_policy = \"never\"\nweb_search = \"disabled\"\n[features]\nhooks = true\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = \"http://127.0.0.1:47330/mcp/\"\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n"
 	if string(files["codex/config.toml"]) != wantCodex {
 		t.Fatal("Codex bytes differ")
 	}
@@ -108,8 +114,8 @@ func TestHostsInitWritesEveryFile(t *testing.T) {
 		}
 		return nil
 	})
-	if entries != 9 {
-		t.Fatalf("wrote %d files, want 9 including symlink", entries)
+	if entries != len(files)+2 {
+		t.Fatalf("wrote %d files, want %d including manifest and symlink", entries, len(files)+2)
 	}
 	if err := os.Remove(auth); err != nil {
 		t.Fatal(err)
@@ -162,6 +168,7 @@ func TestHostsInitRefusesChangedFileWithoutReplace(t *testing.T) {
 func hostsLauncherFixture(t *testing.T) (string, string) {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
+	writeTestPiAdapter(t, defaultPiMCPAdapter())
 	root := t.TempDir()
 	dir := filepath.Join(root, "host's configs")
 	if code, out := hostsInitTest(t, dir); code != 0 {
@@ -218,16 +225,101 @@ func TestHostsLaunchersExecHost(t *testing.T) {
 		want := []string{""}
 		switch host {
 		case "claude":
-			want = append(want, "--settings", filepath.Join(dir, "claude-world.settings.json"), "--strict-mcp-config", "--mcp-config", filepath.Join(dir, "claude-world.mcp.json"))
+			want = append(want, "--plugin-dir", filepath.Join(dir, "claude-plugin"), "--settings", filepath.Join(dir, "claude-world.settings.json"), "--strict-mcp-config", "--mcp-config", filepath.Join(dir, "claude-world.mcp.json"))
 		case "codex":
 			want[0] = filepath.Join(dir, "codex")
+			want = append(want, "-c", "developer_instructions=\"World context unavailable: daemon down; run ailang-worldd doctor and start World.\"")
 		case "pi":
-			want = append(want, "--no-builtin-tools", "--no-extensions", "--mcp-config", filepath.Join(dir, "pi-world-mcp.json"))
+			want = append(want, "-e", filepath.Join(dir, "pi", "world-status.ts"), "--append-system-prompt", "World context unavailable: daemon down; run ailang-worldd doctor and start World.", "--no-builtin-tools", "--no-extensions", "-e", defaultPiMCPAdapter(), "--mcp-config", filepath.Join(dir, "pi-world-mcp.json"))
 		}
 		want = append(want, "a b", "--flag")
 		got := strings.Split(strings.TrimSuffix(string(out), "\n"), "\n")
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("%s argv/env: %#v, want %#v", host, got, want)
 		}
+	}
+}
+
+func writeTestPiAdapter(t *testing.T, dir string) {
+	t.Helper()
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{"pi":{"extensions":["./index.ts"]}}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPiAdapterManifestAndDoctor(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	adapter := filepath.Join(t.TempDir(), "adapter with 'quote")
+	writeTestPiAdapter(t, adapter)
+	dir := filepath.Join(t.TempDir(), "hosts")
+	if code, out := hostsInitTest(t, dir, "--pi-mcp-adapter", adapter); code != 0 {
+		t.Fatalf("%d: %s", code, out)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, "hosts.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest hostsManifest
+	if err := json.Unmarshal(b, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	pkg, _ := os.ReadFile(filepath.Join(adapter, "package.json"))
+	if manifest.PiMCPAdapter != adapter || manifest.PiMCPAdapterSHA256 != "sha256:"+fmtHash(pkg) {
+		t.Fatalf("adapter manifest: %+v", manifest)
+	}
+	var out bytes.Buffer
+	r := &doctorReport{w: &out}
+	doctorPiAdapter(r, dir)
+	if r.fails != 0 {
+		t.Fatal(out.String())
+	}
+	for _, changed := range []bool{true, false} {
+		if changed {
+			if err := os.WriteFile(filepath.Join(adapter, "package.json"), append(pkg, '\n'), 0600); err != nil {
+				t.Fatal(err)
+			}
+		} else if err := os.Remove(filepath.Join(adapter, "package.json")); err != nil {
+			t.Fatal(err)
+		}
+		out.Reset()
+		r = &doctorReport{w: &out}
+		doctorPiAdapter(r, dir)
+		if r.classCode != 12 || r.fails != 1 || !strings.Contains(out.String(), piAdapterFix) {
+			t.Fatalf("changed=%v: class %d: %s", changed, r.classCode, out.String())
+		}
+	}
+}
+
+func TestPiLauncherRefusesMissingAdapter(t *testing.T) {
+	for _, installed := range []bool{false, true} {
+		t.Run(map[bool]string{false: "missing at init", true: "removed after init"}[installed], func(t *testing.T) {
+			dir, bin := hostsLauncherFixture(t)
+			adapter := defaultPiMCPAdapter()
+			if !installed {
+				if err := os.Remove(filepath.Join(adapter, "package.json")); err != nil {
+					t.Fatal(err)
+				}
+				if code, out := hostsInitTest(t, dir, "--replace"); code != 0 {
+					t.Fatalf("%d: %s", code, out)
+				}
+			} else if err := os.Remove(filepath.Join(adapter, "package.json")); err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := budgetContext(5 * time.Second)
+			defer cancel()
+			_, err := toolprobe.OutputEnv(ctx, filepath.Join(dir, "bin", "pi-world"), "", []string{"PATH=" + bin + ":/usr/bin:/bin", "WORLD_SESSION=test-session"})
+			var exit *exec.ExitError
+			if !errors.As(err, &exit) || exit.ExitCode() != 3 {
+				t.Fatalf("launcher: %v", err)
+			}
+			for _, want := range []string{piAdapterWhat(adapter), "why: " + piAdapterWhy, "next: " + piAdapterFix} {
+				if !strings.Contains(string(exit.Stderr), want) {
+					t.Errorf("missing %q: %s", want, exit.Stderr)
+				}
+			}
+		})
 	}
 }
