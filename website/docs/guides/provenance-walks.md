@@ -1,6 +1,6 @@
 ---
 title: Provenance walks
-sidebar_position: 3
+sidebar_position: 4
 description: Answer "why did this happen" by walking World's log, records and objects through the read API, instead of searching logs.
 ---
 

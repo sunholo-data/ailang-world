@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-sidebar_position: 4
+sidebar_position: 5
 description: Real errors operators have hit running World, what each one means, and what to do.
 ---
 
@@ -214,3 +214,81 @@ Both read a non-TTY stdin as extra prompt input and wait for EOF. Give them `</d
 
 pi-mcp-adapter registers direct tools from its cache (`~/.pi/agent/mcp-cache.json`). Run one
 interactive `pi --mcp-config …` session first to write it.
+
+## Agent launches and herdr
+
+See [Run your agents through World](agents-through-world.md) for the setup these refer to.
+
+### `doctor` exits 10: daemon
+
+```text
+✗ daemon     nothing is listening at http://127.0.0.1:47330
+             fix: start World: ailang-worldd serve --db <db> …
+```
+
+Start World, or pass the `--addr` it serves on. The same class covers a listener that isn't
+`ailang-worldd` (stop it, or serve on another `--bind` and pass `--addr`) and a daemon serving
+another store than `--db` (pass the store it names with `--db`).
+
+### `doctor` exits 11: session
+
+The session file is missing, not mode 0600, expired, revoked or unknown, or the credentials
+store can't be read. The fix line names the step: `chmod 0600 <file>`, or a new session with
+`ailang-worldd episode start …` (or `session new`). When the store is the problem, pass `--db`
+and `--credentials-db` naming the store that minted the session.
+
+### `doctor` exits 12: host
+
+The host is missing from `PATH`, its `--version` failed or timed out, or, for pi, the
+`pi-mcp-adapter` recorded in `hosts.json` is missing or changed. Install or repair the host. For
+pi: `pi install npm:pi-mcp-adapter, then ailang-worldd hosts init --replace`.
+
+A host **warning** exits 0 but matters: `launch config missing or digest differs; launch would
+be observed, not confined`. Rewrite the launch files with
+`ailang-worldd hosts init --out-dir <dir> --replace`.
+
+### `doctor` exits 13: exec
+
+An exec profile's tool is missing from the profile's path (`install <name> in the profile path,
+then restart World`), or it moved since the daemon resolved it at startup (`restart World so it
+resolves the tools again`). This check runs without `--quick` only.
+
+### `<host>-world: no World session (WORLD_SESSION is unset).`
+
+The launcher needs a session you approved. Start one with `ailang-worldd episode start …`, then
+run `WORLD_SESSION="$(cat <session file>)" claude-world` (or `codex-world`, `pi-world`).
+
+### The pane says `world: fallback`
+
+A World check failed in New World agent and you chose `[p]`. The pane runs the host plainly in
+the repo: it is **not confined**, and World records none of its work. The failed check, its
+detail and its fix are in the plugin's state directory, in `fallbacks.jsonl`. Run the fix, then
+start a new World agent; close the fallback pane when you're done with it.
+
+### pi-world starts with no tools
+
+`pi-world` launchers written before #381 started pi with no tools at all: pi has no built-in
+MCP, and those launchers loaded no MCP extension. Install the adapter and rewrite
+the launchers:
+
+```bash
+pi install npm:pi-mcp-adapter
+ailang-worldd hosts init --replace
+```
+
+A current launcher refuses instead, with
+`pi can't reach World: no pi-mcp-adapter at <dir>` and the same fix.
+
+### `World context unavailable: …` at the start of a session
+
+The context block couldn't reach World. `session invalid or expired` means a new session is
+needed; `daemon down` means World isn't answering at the launch's address: run `ailang-worldd
+doctor`. The block and Claude's status line call the `ailang-worldd` that ran `hosts init`, by its full
+path (after #382), and `jq`, which must be on the agent's `PATH`. If that binary has moved, the
+block says `no ailang-worldd at <path>`: run `hosts init --replace` with the one you use.
+
+### Claude's `/remote-control` fails in a herdr pane: "Claude.ai login was rejected"
+
+When herdr's server environment carries `CLAUDE_CODE_OAUTH_TOKEN`, every pane inherits it, and
+Claude's `/remote-control` fails with that message. This isn't World's doing: it happens in
+plain panes too. Start herdr's server from an environment without that variable.

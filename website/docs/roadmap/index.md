@@ -120,6 +120,37 @@ The standing value evidence beyond the bar is the mission loop that builds this 
 migrating onto World, measured on incident classes eliminated and human attention per
 workstream against the July 2026 markdown-and-scheduler baseline.
 
+## All agent work through World
+
+The project owner's goal (D-WORLD-94, 2026-10-26): every agent task runs through World,
+headless or interactive, on any repo, with nothing used alongside it. The roadmap is
+[`w-all-agent-work-through-world.md`](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/planned/w-all-agent-work-through-world.md),
+rows 217–227, in this order (its §3):
+
+| Row | Item | State |
+|---|---|---|
+| 223 | Agent host adapters: `hosts init` launchers and `doctor` classes (223a), the herdr plugin (223b), key bindings and the World panel (223c), session context and `whoami` (223d) | 223a–223c landed; 223d merging |
+| 227 | Error clarity: every failure says what, why and the next command | in part, with 223a |
+| 226 | Value scorecard per episode | planned |
+| 219 | World as a supervised user service | planned |
+| 217 | One-command episode start from a preset | planned |
+| 218 | `episode finish`: checks, commit, PR | planned |
+| 220 | The surface index follows merges and running episodes | planned |
+| 221 | Confined dev tools in exec profiles, with row 199 | planned |
+| 224 | Standing session allowances | planned |
+| 225 | `ailang-worldd run`: a wrapper for agents with no adapter | planned |
+| 222 | An attended session as an episode | planned |
+
+Rows 206 and 207 (the live agent tab and agent states) follow 222, then 196 (the mission loop's
+executors) when its ruling exists. To use what has landed, see
+[Run your agents through World](../guides/agents-through-world.md).
+
+| Ruling | Resolved 2026-10-27 as |
+|---|---|
+| D-WORLD-95 | Rows 206 and 207 are un-parked, after row 222. Rows 219, 217 and 218 come before row 188's N2d. |
+| D-WORLD-96 | Standing allowances (row 224): at most 10 sessions a day, 12 h each, approved for 30 days, revocable, never for the mission loop. |
+| D-WORLD-97 | Confinement stays per launch. It goes machine-wide only when the scorecard (row 226) holds over 10 episodes with zero unclear errors, the daemon is a supervised service (219), and the loop and attended sessions run in World (196, 222). |
+
 ## Following along
 
 Every mission iteration reports on the project's weekly

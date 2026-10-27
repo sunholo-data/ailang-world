@@ -26,6 +26,14 @@ every tool effect going through World's broker:
 Unknown argument keys are refused, never ignored. Every call, including a refused one, commits
 one World log entry.
 
+## Prefer the launchers
+
+To run Claude Code, Codex or pi on your own work, you don't need the manual setup below.
+`ailang-worldd hosts init` writes launchers (`claude-world`, `codex-world`, `pi-world`) that
+start each agent confined to World's tools, and the herdr plugin starts them in panes. See
+[Run your agents through World](../guides/agents-through-world.md). This page stays the
+step-by-step walk of what those launchers do for you.
+
 `workspace-exec` runs one command from an operator exec profile (`serve --exec-profile`),
 sandboxed by srt. This page configures no profile, so it answers every call
 `{"ok":false,"refused":"no exec profile configured: …"}`; `docs/QUICKSTART.md` §10 turns it on.
