@@ -1,0 +1,77 @@
+#!/bin/sh
+# world-config-init [--config-dir <dir>]: write world.env once, from defaults,
+# print it, and ask you to edit it. It never overwrites an existing file.
+# <dir> defaults to $HERDR_PLUGIN_CONFIG_DIR (herdr sets it for the action).
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+
+dir=${HERDR_PLUGIN_CONFIG_DIR:-}
+if [ "${1:-}" = --config-dir ]; then
+  [ $# -ge 2 ] || world_die "--config-dir needs a directory." \
+    "usage: world-config-init [--config-dir <dir>]" "pass --config-dir <dir>"
+  dir=$2
+elif [ $# -gt 0 ]; then
+  world_die "unknown argument $1." "usage: world-config-init [--config-dir <dir>]" \
+    "run it with no argument from herdr, or with --config-dir <dir>"
+fi
+if [ -z "$dir" ]; then
+  world_die "no config directory: HERDR_PLUGIN_CONFIG_DIR is not set." \
+    "world.env lives in the plugin's herdr config directory." \
+    "run herdr's \"World: write config\" action, or pass --config-dir <dir>"
+fi
+env_file=$dir/world.env
+if [ -e "$env_file" ]; then
+  world_die "$env_file already exists." \
+    "world-config-init writes it once and never overwrites your edits." \
+    "edit $env_file, or move it aside and run world-config-init again"
+fi
+
+worldd=$(command -v ailang-worldd 2>/dev/null || :)
+[ -n "$worldd" ] || worldd='$HOME/go/bin/ailang-worldd'
+
+mkdir -p "$dir" || world_die "cannot create $dir." "world.env is written there." "check $dir's parent and permissions"
+tmp=$env_file.tmp.$$
+(
+  umask 077
+  cat >"$tmp" <<EOF
+# ailang-world herdr plugin config: sourced by sh. Written by world-config-init.
+# Edit every value below; nothing here is a secret (sessions stay in their files).
+
+# The ailang-worldd binary, and the daemon it talks to.
+WORLDD="$worldd"
+WORLD_ADDR="http://127.0.0.1:47330"
+# World's store, workspace root and session directory (episode start's --db,
+# --workspace-root and --sessions-dir).
+WORLD_DB="\$HOME/.ailang/world/world.db"
+WORLD_WS="\$HOME/.ailang/world-ws"
+WORLD_SESSIONS="\$HOME/.ailang/world/sessions"
+# Where ailang-worldd hosts init wrote the launchers (bin/claude-world, ...).
+WORLD_HOSTS="\$HOME/.ailang-world/hosts"
+
+# The default exec profile (episode start --profile; empty for none), the
+# session lifetime in seconds, and the grants: one --grant per se-tools effect,
+# scope worktree. Check the budgets against your rig's mint.
+WORLD_PROFILE=""
+WORLD_TTL="3600"
+WORLD_GRANTS="--grant Workspace.Read=worktree:200 --grant Workspace.Write=worktree:200 --grant Workspace.Delete=worktree:50 --grant Ailang.Check=worktree:100 --grant Ailang.Run=worktree:50 --grant Ailang.RunEnv=worktree:50 --grant Ailang.RunNet=worktree:50 --grant Ailang.Discover=worktree:100 --grant Ailang.CLI=worktree:100 --grant Workspace.Exec=worktree:100"
+
+# One line per herdr workspace: <workspace label>=<repo path>[:<exec profile>].
+# A workspace with no line here gets no World agent.
+WORLD_REPOS="
+ailang-world=\$HOME/dev/ailang-world:ailang-world
+"
+
+# The model episode start names for each host (empty: the host's default).
+WORLD_MODELS="claude=claude-opus-5-5 codex=gpt-6.1-sol pi="
+EOF
+) && mv "$tmp" "$env_file" || {
+  rm -f "$tmp"
+  world_die "cannot write $env_file." "world.env is written there." "check $dir's permissions"
+}
+
+cat "$env_file"
+printf '\nWrote %s (0600). Edit it now: WORLD_REPOS for your herdr workspaces, every path, and the grant budgets.\n' "$env_file"
+if [ -n "${HERDR_BIN_PATH:-}" ] && [ -x "$HERDR_BIN_PATH" ]; then
+  world_notify "ailang-world" "Wrote $env_file. Edit it: WORLD_REPOS, the paths and the grant budgets."
+fi

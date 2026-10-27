@@ -52,6 +52,8 @@ a symlink to your existing ~/.codex/auth.json, never a copied credential. If tha
 file is absent, Codex asks you to log in. Each launcher refuses an unset
 WORLD_SESSION with instructions to start an approved session.
 
+In herdr, the plugin in `integrations/herdr/ailang-world/` (its README) does these steps from a popup: you type the mint's `y`, and it starts the confined pane, or a labelled plain fallback when World is down.
+
 ## 0. Attended steps (the only commands a person must run)
 
 An agent or a script can run everything else in this guide. These two steps each read a line

@@ -1,0 +1,84 @@
+#!/bin/sh
+# world-watch: startup. Every 60 s, for each open World pane in panes.jsonl,
+# doctor checks its session and host, and the pane's tokens show the result:
+#   world=ok|down|expired|host-drift   session=<h>h<m>m left
+# A session under 60 minutes, or a failed check, shows one notification per
+# pane per state change, with the fix. One instance: a lock in the state dir.
+# WORLD_WATCH_ONCE=1 runs one pass; WORLD_WATCH_INTERVAL overrides the 60 s.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+
+lock=$HERDR_PLUGIN_STATE_DIR/world-watch.lock
+if ! mkdir "$lock" 2>/dev/null; then
+  pid=$(cat "$lock/pid" 2>/dev/null || :)
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    printf 'world-watch: already running (pid %s)\n' "$pid"
+    exit 0
+  fi
+  rm -rf "$lock"
+  mkdir "$lock" || world_die "cannot take the lock $lock." \
+    "another world-watch took it at the same moment, or the state dir is not writable." \
+    "nothing to do if one is running; otherwise check $HERDR_PLUGIN_STATE_DIR"
+fi
+printf '%s\n' "$$" >"$lock/pid"
+trap 'rm -rf "$lock"' EXIT
+trap 'exit 0' INT TERM HUP
+mkdir -p "$HERDR_PLUGIN_STATE_DIR/watch"
+
+# watch_pane PANE EP HOST
+watch_pane() {
+  world_doctor --session "$WORLD_SESSIONS/$2.session" --host "$3" --hosts-dir "$WORLD_HOSTS"
+  case $DOC_CODE in
+    0) state=ok ;;
+    11) state=expired ;;
+    12) state=host-drift ;;
+    *) state=down ;;
+  esac
+  # A host warning exits 0, but that launch config would be observed.
+  if world_doctor_problem && [ "$state" = ok ]; then state=host-drift; fi
+  left=unknown
+  if world_session_left; then left=$LEFT; fi
+  [ "$state" != expired ] || left=expired
+  world_herdr pane report-metadata "$1" --source ailang-world --token "episode=$2" --token level=confined \
+    --token "world=$state" --token "session=$left" >/dev/null ||
+    printf 'world-watch: herdr could not label pane %s\n' "$1" >&2
+  key=$state
+  if [ "$state" = ok ] && [ -n "$LEFT_MIN" ] && [ "$LEFT_MIN" -lt 60 ]; then key=low; fi
+  mark=$HERDR_PLUGIN_STATE_DIR/watch/$(world_safe "$1")
+  last=$(cat "$mark" 2>/dev/null || :)
+  [ "$key" != "$last" ] || return 0
+  printf '%s\n' "$key" >"$mark"
+  case $key in
+    ok) ;;
+    low) world_notify "ailang-world: $2" \
+      "Episode $2's session has $left. Fix: finish soon; more time needs a new episode start, with your y." ;;
+    *) world_notify "ailang-world: $2" "Episode $2: world $state: $PROB_DETAIL. Fix: $PROB_FIX" ;;
+  esac
+}
+
+watch_pass() {
+  panes=$HERDR_PLUGIN_STATE_DIR/panes.jsonl
+  [ -f "$panes" ] || return 0
+  open=$HERDR_PLUGIN_STATE_DIR/watch/open.$$
+  if ! jq -r 'select(.ended == null) | [(.pane // "" | tostring), (.episode // ""), (.host // "")] | @tsv' "$panes" >"$open" 2>/dev/null; then
+    world_error "cannot read $panes." "world-watch reads the open World panes from it." \
+      "check it holds one JSON object per line"
+    rm -f "$open"
+    return 0
+  fi
+  tab=$(printf '\t')
+  while IFS=$tab read -r pane ep host; do
+    [ -n "$pane" ] && [ -n "$ep" ] && [ -n "$host" ] || continue
+    watch_pane "$pane" "$ep" "$host"
+  done <"$open"
+  rm -f "$open"
+}
+
+interval=${WORLD_WATCH_INTERVAL:-60}
+while :; do
+  watch_pass
+  [ -z "${WORLD_WATCH_ONCE:-}" ] || break
+  sleep "$interval"
+done

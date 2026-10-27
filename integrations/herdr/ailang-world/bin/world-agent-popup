@@ -1,0 +1,162 @@
+#!/bin/sh
+# world-agent-popup: the "New World agent" popup.
+#   usage: world-agent-popup [--workspace <label>] [--pane <id>]
+# Reads one answer per line on stdin: the host, the episode id (empty takes the
+# default) and, only when a check fails, f/p/q. episode start inherits this
+# popup's stdin, stdout and stderr and asks its own y/N on the terminal: you
+# type it. Then doctor checks the session and the host, and a confined agent
+# starts in a new pane, from an empty directory, reading its session file.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+trap 'c=$?; world_exit_pause "$c"; exit "$c"' EXIT
+
+usage="usage: world-agent-popup [--workspace <label>] [--pane <id>]"
+arg_ws=
+arg_pane=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --workspace | --pane)
+      [ $# -ge 2 ] || world_die "$1 needs a value." "$usage" "pass $1 <value>"
+      if [ "$1" = --workspace ]; then arg_ws=$2; else arg_pane=$2; fi
+      shift 2
+      ;;
+    *) world_die "unknown argument $1." "$usage" "run it with --workspace and --pane only" ;;
+  esac
+done
+
+world_invoker "$arg_pane" "$arg_ws"
+world_repo "$INV_WORKSPACE"
+
+# 1. Ask.
+printf 'New World agent: workspace %s, repo %s\n' "$INV_WORKSPACE" "$REPO_DIR"
+world_ask_host
+default_ep=h$(date +%y%m%d%H%M)
+printf 'Episode id [%s]: ' "$default_ep"
+IFS= read -r ep || ep=
+[ -n "$ep" ] || ep=$default_ep
+if ! world_valid_episode "$ep"; then
+  world_die "\"$ep\" is not a valid episode id." \
+    "World's episode ids match ^[a-z0-9][a-z0-9-]{0,63}\$." \
+    "run the action again and take the default, or use lowercase letters, digits and dashes"
+fi
+sess=$WORLD_SESSIONS/$ep.session
+
+# world_offer PHASE: show the failed check, then [f]/[p]/[q]. Returns on p.
+world_offer() {
+  printf '\n✗ World check failed: %s\n  what: %s\n  fix:  %s\n' "$PROB_CHECK" "$PROB_DETAIL" "$PROB_FIX"
+  if [ "$1" = after ]; then
+    printf '  note: episode %s is minted; its worktree and session remain.\n' "$ep"
+  fi
+  while :; do
+    printf '[f] show the fix again (runs nothing)  [p] open a plain pane instead (not confined)  [q] quit: '
+    if ! IFS= read -r choice; then
+      printf '\n'
+      choice=q
+    fi
+    case $choice in
+      f | F) printf '  fix: %s\n' "$PROB_FIX" ;;
+      p | P) return 0 ;;
+      q | Q)
+        if [ "$1" = after ]; then
+          printf 'Quit: no pane was started. Episode %s is minted: finish it from the CLI, or revoke it with\n  %s session revoke --db %s --episode %s\n' \
+            "$ep" "$WORLDD" "$WORLD_DB" "$ep"
+        else
+          printf 'Quit: nothing was minted and no pane was started.\n'
+        fi
+        exit 0
+        ;;
+      *) ;;
+    esac
+  done
+}
+
+# world_fallback PHASE: a plain pane in the repo, labelled and recorded as a fallback.
+world_fallback() {
+  world_open_plain "$INV_PANE" "$REPO_DIR" "$HOST" fallback ""
+  jq -nc --arg at "$(world_now)" --arg pane "$NEW_PANE" --arg episode "$ep" --arg host "$HOST" \
+    --arg repo "$REPO_DIR" --arg phase "$1" --arg check "$PROB_CHECK" --arg detail "$PROB_DETAIL" \
+    --arg fix "$PROB_FIX" \
+    '{at: $at, pane: $pane, episode: $episode, host: $host, repo: $repo, phase: $phase,
+      check: $check, detail: $detail, fix: $fix}' >>"$HERDR_PLUGIN_STATE_DIR/fallbacks.jsonl"
+  world_notify "ailang-world" "World unavailable: $PROB_DETAIL. Opened a plain pane (not confined)."
+  printf 'Opened plain pane %s in %s, labelled world: fallback.\nIt is NOT confined: %s has its own file and shell tools there.\n' \
+    "$NEW_PANE" "$REPO_DIR" "$HOST"
+}
+
+# 2. Is World serving?
+printf 'Checking World at %s ...\n' "$WORLD_ADDR"
+world_doctor
+if world_doctor_problem; then
+  world_offer before
+  world_fallback before-mint
+  exit 0
+fi
+printf '✓ World answers.\n'
+
+# 3. The mint. You read the y/N and type it; this popup never answers it.
+mint_agent=$HOST
+if [ "$HOST" = pi ]; then
+  # episode start prints launch lines for claude or codex only; the codex one is
+  # the WORLD_SESSION form. The pane below still runs pi-world.
+  mint_agent=codex
+  printf 'note: episode start has no pi launch line; minting with --agent codex. The pane runs pi-world.\n'
+fi
+world_model "$HOST"
+set -- episode start "$ep" --repo "$REPO_DIR"
+[ -z "$REPO_PROFILE" ] || set -- "$@" --profile "$REPO_PROFILE"
+set -- "$@" --agent "$mint_agent"
+[ -z "$MODEL" ] || set -- "$@" --model "$MODEL"
+set -- "$@" --ttl "$WORLD_TTL" --db "$WORLD_DB" --workspace-root "$WORLD_WS" \
+  --sessions-dir "$WORLD_SESSIONS" --addr "$WORLD_ADDR"
+# WORLD_GRANTS is split into words on purpose: --grant EFFECT=SCOPE:BUDGET pairs.
+set -f
+set -- "$@" $WORLD_GRANTS
+set +f
+printf '\nMinting %s on %s. episode start asks y/N on this terminal: read what it grants, then type your answer.\n\n' \
+  "$ep" "$REPO_DIR"
+"$WORLDD" "$@"
+code=$?
+if [ "$code" -ne 0 ]; then
+  world_die "episode start did not mint $ep (exit $code)." \
+    "you answered no, or it refused with the message above." \
+    "fix what it names, then run New World agent again"
+fi
+if [ ! -f "$sess" ]; then
+  world_die "episode start succeeded but wrote no session file at $sess." \
+    "WORLD_SESSIONS in $WORLD_ENV must be the --sessions-dir episode start writes to." \
+    "check WORLD_SESSIONS, then run New World agent again with a new episode id"
+fi
+
+# 4. Is the session valid, and is the host's launch config the one hosts init wrote?
+printf '\nChecking the session and %s ...\n' "$HOST"
+world_doctor --session "$sess" --host "$HOST" --hosts-dir "$WORLD_HOSTS"
+if world_doctor_problem; then
+  world_offer after
+  world_fallback after-mint
+  exit 0
+fi
+world_session_left || LEFT=unknown
+
+# 5. The agent: an empty directory, the session read from its file, the launcher.
+empty=$HERDR_PLUGIN_STATE_DIR/empty/$ep
+mkdir -p "$empty" && chmod 700 "$empty" ||
+  world_die "cannot create $empty." "agents start from an empty directory, never the worktree." \
+    "check $HERDR_PLUGIN_STATE_DIR is writable"
+if [ -n "$(ls -A "$empty")" ]; then
+  world_die "$empty is not empty." "agents start from an empty directory, never the worktree." \
+    "remove what is in it, then run New World agent again"
+fi
+world_split "$INV_PANE" "$empty"
+launch="WORLD_SESSION=\"\$(cat $(world_squote "$sess"))\" exec $(world_squote "$WORLD_HOSTS/bin/$HOST-world")"
+world_herdr pane run "$NEW_PANE" "$launch" >/dev/null
+world_herdr pane rename "$NEW_PANE" "$ep · $HOST" >/dev/null
+world_herdr pane report-metadata "$NEW_PANE" --source ailang-world --token "episode=$ep" \
+  --token level=confined --token world=ok --token "session=$LEFT" >/dev/null
+jq -nc --arg pane "$NEW_PANE" --arg episode "$ep" --arg host "$HOST" --arg repo "$REPO_DIR" \
+  --arg started "$(world_now)" \
+  '{pane: $pane, episode: $episode, host: $host, repo: $repo, started: $started, level: "confined"}' \
+  >>"$HERDR_PLUGIN_STATE_DIR/panes.jsonl"
+printf '\n✓ %s · %s started in pane %s: confined, session %s.\n  worktree: %s/%s\n' \
+  "$ep" "$HOST" "$NEW_PANE" "$LEFT" "$WORLD_WS" "$ep"

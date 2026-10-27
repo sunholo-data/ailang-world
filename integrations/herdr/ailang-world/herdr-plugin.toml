@@ -1,0 +1,44 @@
+id = "ailang-world"
+name = "AILANG World"
+version = "0.1.0"
+min_herdr_version = "0.9.3"
+platforms = ["macos", "linux"]
+
+[[actions]]
+id = "world-agent"
+title = "New World agent"
+contexts = ["workspace", "pane"]
+command = ["bin/world-open", "world-agent-popup"]
+
+[[actions]]
+id = "plain-agent"
+title = "New plain agent"
+contexts = ["workspace", "pane"]
+command = ["bin/world-open", "plain-agent-popup"]
+
+[[actions]]
+id = "world-config"
+title = "World: write config"
+contexts = ["workspace", "pane"]
+command = ["bin/world-config-init"]
+
+[[panes]]
+id = "world-agent-popup"
+placement = "popup"
+command = ["bin/world-agent-popup"]
+
+[[panes]]
+id = "plain-agent-popup"
+placement = "popup"
+command = ["bin/plain-agent-popup"]
+
+[[events]]
+on = "pane.closed"
+command = ["bin/world-event", "pane.closed"]
+
+[[events]]
+on = "pane.exited"
+command = ["bin/world-event", "pane.exited"]
+
+[[startup]]
+command = ["bin/world-watch"]

@@ -1,0 +1,40 @@
+#!/bin/sh
+# plain-agent-popup: the "New plain agent" popup, the comparison arm.
+#   usage: plain-agent-popup [--workspace <label>] [--pane <id>]
+# Reads the host, then the episode it pairs with (empty for none), one line
+# each on stdin. Starts the host plainly in the repo directory: not confined.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+trap 'c=$?; world_exit_pause "$c"; exit "$c"' EXIT
+
+usage="usage: plain-agent-popup [--workspace <label>] [--pane <id>]"
+arg_ws=
+arg_pane=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --workspace | --pane)
+      [ $# -ge 2 ] || world_die "$1 needs a value." "$usage" "pass $1 <value>"
+      if [ "$1" = --workspace ]; then arg_ws=$2; else arg_pane=$2; fi
+      shift 2
+      ;;
+    *) world_die "unknown argument $1." "$usage" "run it with --workspace and --pane only" ;;
+  esac
+done
+
+world_invoker "$arg_pane" "$arg_ws"
+world_repo "$INV_WORKSPACE"
+
+printf 'New plain agent (not confined): workspace %s, repo %s\n' "$INV_WORKSPACE" "$REPO_DIR"
+world_ask_host
+printf 'Pair with episode (empty for none): '
+IFS= read -r pair || pair=
+if [ -n "$pair" ] && ! world_valid_episode "$pair"; then
+  world_die "\"$pair\" is not an episode id." \
+    "pair_of names the World episode this plain arm is compared with." \
+    "run the action again and give that episode's id, or leave it empty"
+fi
+world_open_plain "$INV_PANE" "$REPO_DIR" "$HOST" plain "$pair"
+printf '✓ plain %s started in pane %s, in %s%s. It is not confined.\n' \
+  "$HOST" "$NEW_PANE" "$REPO_DIR" "${pair:+, paired with $pair}"
