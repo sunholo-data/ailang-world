@@ -1920,7 +1920,9 @@ Executor notes:
 
 ## M7c2b — Capture shell end-to-end with fake Chrome and a fake daemon
 
-Design M7 (C7/C8/C9); 28 minutes; dependency: M7c2a and M7a-fix (amended iteration 308: M7a-fix); status **pending**.
+Design M7 (C7/C8/C9); 28 minutes; dependency: M7c2a and M7a-fix (amended iteration 308: M7a-fix); status **BUILT (iteration 309)**.
+
+**Controller amendments (iteration 309).** A1: the supervisor stops the daemon after `--lifetime` (default PASS_TIMEOUT_S = 300 s) and still returns ok, while the flow after readiness can include two passes, so the shell passes `--lifetime` derived from the production constants (2×SHOT_TIMEOUT_S + 2×PASS_TIMEOUT_S = 660 s; the judge notes version A runs before the daemon window, so 630 s would suffice and 660 s is conservative). A2: a `bind-refused` subtest (a non-loopback `--bind` refuses before the daemon starts). The controller also added `single-pass` and `daemon-exits` subtests (test-only) to close two survivors of its own mutation drill.
 
 Exact executor files:
 

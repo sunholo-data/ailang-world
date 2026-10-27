@@ -3076,7 +3076,8 @@
         "scripts/marketing_capture.py",
         "scripts/marketingcheck/capture_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
+      "completed": {"iteration": 309, "commit": "5e20341f", "controller_fix": "76216725 (test-only: single-pass and daemon-exits subtests close two controller-drill survivors: run continues without --verify-twice; ready() ignores daemon exit)", "judge": "sonnet r1 PASS 83 (zero blocking; 3/3 plan mutants killed at the named assertions; 11 of 21 judge mutants killed)", "executor": "codex gpt-6.1-sol rc 0, 287 s (loopback binds denied in sandbox; controller re-ran every gate outside)", "amendments": "A1 daemon --lifetime = 2*SHOT_TIMEOUT_S + 2*PASS_TIMEOUT_S = 660 s from the production constants; A2 bind-refused subtest (controller, iteration 309)"},
       "new_tests": [
         "TestMarketingCaptureFakeChromeSixShots"
       ],

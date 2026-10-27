@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 309 | 2026-10-27 | row 150: M7c2b built — the capture shell runs end to end against fake Chrome and a fake daemon; judge PASS 83 [PRODUCT] |
 | 308 | 2026-10-27 | row 150: M7a-fix built — `kill_group` tolerates macOS `killpg` EPERM, so a good shot no longer ends as `SupervisorError`; judge PASS 88 [PRODUCT] |
 | 307 | 2026-10-27 | row 150: M7c2a built the capture primitives (Chrome-version floor, HTTP readiness, six-shot pass, `marketingcheck routes`); judge PASS 88; `kill_gr... |
 | 306 | 2026-10-27 | row 150: R0 re-confirmed the V51 shot bottoms on Chrome 156.0.8078.48 (V59) and M7c0 built the tall shot geometry (PR #373; judge PASS 96) [PRODUCT] |
