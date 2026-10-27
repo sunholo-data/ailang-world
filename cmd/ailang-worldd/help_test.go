@@ -10,7 +10,7 @@ import (
 var everyVerb = [][]string{
 	{"serve"}, {"health"}, {"head"}, {"world", "get"}, {"object", "get"}, {"object", "find"},
 	{"log", "get"}, {"log", "range"}, {"log", "tail"}, {"registry", "get"}, {"commit"},
-	{"tools", "list"}, {"call"}, {"why"}, {"provenance"}, {"setup"}, {"doctor"},
+	{"tools", "list"}, {"call"}, {"why"}, {"provenance"}, {"setup"}, {"doctor"}, {"hosts", "init"},
 	{"session"}, {"session", "new"}, {"session", "list"}, {"session", "revoke"}, {"session", "mint"},
 }
 

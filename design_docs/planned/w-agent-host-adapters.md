@@ -123,7 +123,7 @@ dashed mark and are never counted as confined.
 
 | stage | what | needs | changes for Mark |
 |---|---|---|---|
-| **A1 (223a)** | §2.2's launchers, `ailang-worldd hosts init`, and §2.5's `preflight` with three-part errors (the first part of row 227) | today's daemon; can start now | nothing visible yet; `preflight` names this week's three failures clearly |
+| **A1 (223a) — built** | §2.2's launchers and `ailang-worldd hosts init`; §2.5's preflight checks are built into the existing read-only `doctor` (`--session`, `--host`, `--hosts-dir`, `--profile`, `--json`, `--quick`), with three-part errors and class exit codes | today's daemon | per-launch settings only; doctor names stopped daemons, expired sessions and moved exec tools; `/v1/health.exec_tools` reports startup paths |
 | **A2 (223b)** | §2.3's herdr plugin: "New World agent" (typed mint in a popup, preflight, a confined pane, labelled) and "New plain agent" (the paired arm); the fallback and live state of §2.5 | 223a | run real work through World from herdr, with plain arms to compare |
 | **B** | the popup uses presets | row 217 | the mint is one short line |
 | **C** | no popup | rows 201 / 224 | no prompt under an allowance |

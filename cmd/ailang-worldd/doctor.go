@@ -12,7 +12,8 @@ package main
 // free) and the store is read through store.OpenReadOnly, which takes no lock
 // and applies no schema. MUT-DOCTOR-OPENS-STORE (store.Open in place of
 // either) is killed by TestDoctorLockProbeCreatesNothing. Pins are hashed,
-// never executed.
+// never executed. An optional host --version uses the driven, scrubbed
+// toolprobe site; no other check executes a tool.
 
 import (
 	"context"
@@ -36,6 +37,8 @@ import (
 )
 
 const doctorHelp = `usage: ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
+           [--session <file>] [--host <claude|codex|pi>] [--hosts-dir <dir>]
+           [--profile <exec profile json>] [--json] [--quick] [--credentials-db <path>]
            [--interpreter-dir <dir>] [--tools-dir <dir>] [--examples-dir <dir>] [--online]
 
 Checks this machine for everything World needs, read-only, and prints one
@@ -58,7 +61,14 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
 
 Defaults: --db ~/.ailang/world/world.db, --workspace-root ~/.ailang/world-ws,
 the pin directories of 'setup', --examples-dir ~/.ailang/examples.
-Exit: 0 no ✗; 1 at least one ✗ (or a usage error).
+--session checks the private token file and reads credentials read-only.
+--host runs the host's --version (the only exec doctor does), with a 5 s
+timeout and an empty environment except PATH and HOME, and verifies launch digests.
+--profile resolves commands through its path and checks startup exec tool paths.
+--quick checks only daemon, session and host; healthy checks finish under 2 s.
+--json prints JSON lines plus {"failed": n}.
+Exit: 0 no ✗; daemon 10, session 11, host 12, exec 13, otherwise 1.
+The first failing dependency class wins in daemon, session, host, exec order.
 `
 
 // doctorStoreBudget bounds doctor's read-only store reads.
@@ -97,14 +107,30 @@ const (
 )
 
 type doctorReport struct {
-	w     io.Writer
-	fails int
+	w             io.Writer
+	fails         int
+	asJSON        bool
+	classCode     int
+	execTools     map[string]string
+	credentialsDB string
 }
 
 func (r *doctorReport) add(mark doctorMark, name, detail, fix string) {
-	fmt.Fprintf(r.w, "%s %-10s %s\n", mark, name, detail)
-	if fix != "" {
-		fmt.Fprintf(r.w, "  %-10s fix: %s\n", "", fix)
+	if mark == markFail && fix == "" {
+		fix = "inspect the named path and correct its permissions or configuration, then run doctor again"
+	}
+	class, code := doctorClass(name)
+	if mark == markFail && (r.classCode == 0 || code >= 10 && (r.classCode < 10 || code < r.classCode)) {
+		r.classCode = code
+	}
+	if r.asJSON {
+		label := map[doctorMark]string{markOK: "ok", markWarn: "warn", markFail: "fail"}[mark]
+		_ = json.NewEncoder(r.w).Encode(map[string]any{"check": name, "mark": label, "detail": detail, "fix": fix, "class": class})
+	} else {
+		fmt.Fprintf(r.w, "%s %-10s %s\n", mark, name, detail)
+		if fix != "" {
+			fmt.Fprintf(r.w, "  %-10s fix: %s\n", "", fix)
+		}
 	}
 	if mark == markFail {
 		r.fails++
@@ -121,6 +147,13 @@ func runDoctor(addr string, args []string, stdout, stderr io.Writer) int {
 	interpDir := fs.String("interpreter-dir", def.interpDir, "interpreter pin directory")
 	toolsDir := fs.String("tools-dir", def.toolsDir, "tool pin parent directory")
 	examplesDir := fs.String("examples-dir", "", "examples corpus (default ~/.ailang/examples)")
+	session := fs.String("session", "", "session token file (0600)")
+	host := fs.String("host", "", "claude, codex or pi")
+	hostsDir := fs.String("hosts-dir", defaultHostsDir(), "launch settings directory")
+	profile := fs.String("profile", "", "exec profile JSON")
+	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
+	asJSON := fs.Bool("json", false, "one JSON object per check")
+	quick := fs.Bool("quick", false, "only daemon, session and host")
 	online := fs.Bool("online", false, "check the release .sha256 of both pins")
 	if code, done := parseVerbFlags(fs, args, doctorHelp, stdout, stderr); done {
 		return code
@@ -129,27 +162,54 @@ func runDoctor(addr string, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "ailang-worldd doctor: unexpected argument %q\n", fs.Arg(0))
 		return exitUsage
 	}
-	r := &doctorReport{w: stdout}
+	r := &doctorReport{w: stdout, asJSON: *asJSON}
 
-	// API key: by construction. run() refused before reaching here if the
-	// variable were set, so the guard stays exemption-free (§3.6, V8).
-	r.add(markOK, "api key", "AILANG_REGISTRY_API_KEY is unset", "")
-
-	doctorTTY(r, observeTTY())
-	roles := doctorPins(r, *interpDir, *toolsDir)
+	// Named dependency classes always precede the slower machine inventory.
 	healthDB := doctorDaemon(r, addr, *db)
-	doctorStore(r, *db, healthDB)
-	doctorExamples(r, resolveExamplesDefault(*examplesDir, os.UserHomeDir))
-	doctorWorkspace(r, *wsRoot, *db)
-	if *online {
-		doctorOnline(r, roles)
+	project := ""
+	if *session != "" {
+		creds := *credsDB
+		if creds == "" {
+			creds = r.credentialsDB
+		}
+		project = doctorSession(r, *db, creds, *session, time.Now())
 	}
-
-	if r.fails > 0 {
+	if *host != "" {
+		doctorHost(r, *host, *hostsDir)
+	}
+	if !*quick {
+		profileFile := *profile
+		if profileFile == "" {
+			if project == "" {
+				cwd, _ := os.Getwd()
+				project = filepath.Base(cwd)
+			}
+			candidate := filepath.Join(defaultExecProfilesDir(), project+".json")
+			if _, err := os.Stat(candidate); err == nil {
+				profileFile = candidate
+			}
+		}
+		doctorExecTools(r, profileFile, r.execTools)
+		r.add(markOK, "api key", "AILANG_REGISTRY_API_KEY is unset", "")
+		doctorTTY(r, observeTTY())
+		roles := doctorPins(r, *interpDir, *toolsDir)
+		doctorStore(r, *db, healthDB)
+		doctorExamples(r, resolveExamplesDefault(*examplesDir, os.UserHomeDir))
+		doctorWorkspace(r, *wsRoot, *db)
+		if *online {
+			doctorOnline(r, roles)
+		}
+	}
+	if r.asJSON {
+		_ = json.NewEncoder(stdout).Encode(map[string]int{"failed": r.fails})
+	} else if r.fails > 0 {
 		fmt.Fprintf(stdout, "%d check(s) failed\n", r.fails)
-		return exitUsage
+	} else {
+		fmt.Fprintln(stdout, "no check failed")
 	}
-	fmt.Fprintln(stdout, "no check failed")
+	if r.fails > 0 {
+		return r.classCode
+	}
 	return exitOK
 }
 
@@ -229,26 +289,29 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
 	c.timeout = doctorProbeTimeout
 	status, body, err := c.do(ctx, http.MethodGet, "/v1/health", nil)
 	if err != nil {
-		r.add(markWarn, "daemon", "nothing answers at "+addr, "ailang-worldd serve --db … (when you need it running)")
+		r.add(markFail, "daemon", "nothing is listening at "+addr, "start World: ailang-worldd serve --db "+shellQuote(db)+" …")
 		return ""
 	}
 	var h struct {
-		Status             string `json:"status"`
-		DaemonVersion      string `json:"daemon_version"`
-		DBPath             string `json:"db_path"`
-		InterpreterVersion string `json:"interpreter_version"`
+		Status             string            `json:"status"`
+		DaemonVersion      string            `json:"daemon_version"`
+		DBPath             string            `json:"db_path"`
+		InterpreterVersion string            `json:"interpreter_version"`
+		ExecTools          map[string]string `json:"exec_tools"`
+		CredentialsDB      string            `json:"credentials_db"`
 	}
 	if status != http.StatusOK || json.Unmarshal(body, &h) != nil || h.DaemonVersion == "" {
 		r.add(markFail, "daemon", fmt.Sprintf("something that is not ailang-worldd answers at %s (HTTP %d)", addr, status),
 			"stop it, or serve on another --bind and pass --addr")
 		return ""
 	}
+	r.execTools, r.credentialsDB = h.ExecTools, h.CredentialsDB
 	detail := fmt.Sprintf("ailang-worldd %s at %s, store %s", h.DaemonVersion, addr, h.DBPath)
 	if h.InterpreterVersion != "" {
 		detail += ", interpreter " + firstLine(h.InterpreterVersion)
 	}
 	if !sameStorePath(h.DBPath, db) {
-		r.add(markWarn, "daemon", detail, "it serves a different store than --db "+db)
+		r.add(markFail, "daemon", detail+"; doctor --db "+db+" differs", "pass --db "+shellQuote(h.DBPath)+" to inspect the running store, or restart World with --db "+shellQuote(db))
 		return h.DBPath
 	}
 	r.add(markOK, "daemon", detail, "")

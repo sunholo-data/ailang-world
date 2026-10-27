@@ -147,6 +147,7 @@ type ailangBuild struct {
 // workspaceExec is the verified exec profiles and the archived sandbox that
 // runs them (row 140 §4.6).
 type workspaceExec struct {
+	tools map[string]string // immutable real paths captured at startup (row 223a)
 	// profile is the episode default: the only profile, when exactly one is
 	// configured (nil with several, or beside a left-out one).
 	profile *broker.ExecProfile
@@ -258,6 +259,7 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
 	w.exec = &workspaceExec{profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
 		sources: st.Sources, excluded: st.Excluded, excludedWhy: map[string]string{},
 		sandbox: st.Sandbox, maxOutputBytes: st.MaxOutputBytes, operatorHome: st.OperatorHome}
+	w.exec.tools = captureExecTools(w.exec)
 	// Row 189 M2: a left-out directory profile does not stop the daemon; it
 	// is named here and in /v1/health, and a mint or an exec naming it
 	// refuses with the reason.
@@ -736,4 +738,43 @@ func (v verifiedTool) Execute(ctx context.Context, req broker.EffectRequest, pay
 		return nil, err
 	}
 	return v.h.Execute(ctx, req, payload)
+}
+
+// healthExecTools reports immutable startup resolutions, never fresh lookups.
+// This host boundary cannot be an AILANG package: it observes process launch paths.
+func (w *workspaceTools) healthExecTools() map[string]string {
+	tools := map[string]string{}
+	if w != nil && w.exec != nil {
+		for name, path := range w.exec.tools {
+			tools[name] = path
+		}
+	}
+	return tools
+}
+
+func captureExecTools(e *workspaceExec) map[string]string {
+	tools := map[string]string{}
+	for _, project := range sortedProjects(e.byProject) {
+		p := e.byProject[project]
+		ids := make([]string, 0, len(p.Commands))
+		for id := range p.Commands {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+		for _, id := range ids {
+			command := p.Commands[id]
+			if len(command.Argv) == 0 {
+				continue
+			}
+			path := command.Argv0
+			if real, err := filepath.EvalSymlinks(path); err == nil {
+				path = real
+			}
+			tools[command.Argv[0]] = path
+		}
+	}
+	if e.sandbox != nil {
+		tools["node"] = e.sandbox.Node
+	}
+	return tools
 }
