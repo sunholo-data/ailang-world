@@ -2,7 +2,8 @@
 
 **Status:** goal and roadmap, **set by Mark, attended 2026-10-26**, recorded as **D-WORLD-94**
 (the goal and rows 217–222) and **D-WORLD-95** (OPEN: un-parking rows 206 and 207, and where
-the sequence sits beside row 188). This is a roadmap, not a build design: each row gets its own
+the sequence sits beside row 188). **r1 (attended 2026-10-27):** adds §5, the agents you
+already use, and rows 223–225, with **D-WORLD-96** (OPEN: the standing allowance's bounds). This is a roadmap, not a build design: each row gets its own
 design at pick time, and nothing here waives a gate.
 
 ## §0 What Mark said
@@ -47,6 +48,9 @@ it. Today World runs well-specified headless tasks (w188a–w188l; measured Code
 | 6 | 1 | **201 w-world-approvals-by-key** (existing, NEXT) | approve a mint or an outward effect with a passkey or SSH key, from the app or a phone, instead of typing at a terminal. | its own |
 | 7 | 7 | **222 w-attended-session-as-episode** | an interactive Claude Code or Codex session becomes an episode. The plugin's `/world-start` asks Mark to approve a mint (a typed `!` command, or row 201's key), the session's own file and shell tools are switched off in favour of World's, and `episode finish` closes it. | an attended session like this one runs end to end through World |
 | 8 | 3, 7 | **206 w-world-live-agent-tab** and **207 w-world-agent-states** (existing, PARKED) | watch and talk to a running agent from the app; know at a glance which agent is working, blocked or done. | their own |
+| 2b | 1, 2 | **223 w-agent-host-adapters** (r1) | the agents Mark already runs get into World with no flags: a Claude Code profile installed once machine-wide (the plugin, World's MCP server, its own file and shell tools denied, a session-start hook that attaches a session); a Codex `world` profile; a **herdr plugin** that starts each agent pane as an episode and labels the pane with it; Claude Desktop and IDE agents through World's MCP server. The app shows each agent's level (§5). | launching Claude Code, Codex or a herdr agent pane needs no World flags, and each shows in the app as **confined**; Claude Desktop shows as **observed** |
+| 6b | 1 | **224 w-standing-session-allowances** (r1) | Mark approves a preset once with his key: bounded sessions a day, fixed grants, TTL, repos, an expiry. Host adapters draw sessions from it without a prompt; each draw is recorded against the approval; it is revocable at any time. Bounds are D-WORLD-96. | a week of launches with no per-session prompt, every session traceable to its allowance and the approval |
+| 6c | 4, 7 | **225 w-world-run-wrapper** (r1) | `ailang-worldd run --preset <p> -- <agent> …`: any CLI agent with no adapter runs under World's sandbox, with the episode worktree as its only write root and no network but the daemon and the model API. Its writes land as worktree changes: effect-level provenance, not typed calls. | an agent with no adapter (pi) runs an episode through the wrapper, and its writes outside the worktree are refused |
 | 9 | (the loop) | **196 w-loop-executors-through-world** (existing, GATED) | the mission loop's executors work through a pinned World. It is still gated on Mark's delegated-minting ruling and a fleet driver change. | its own |
 
 **What doesn't change:**
@@ -61,18 +65,56 @@ it. Today World runs well-specified headless tasks (w188a–w188l; measured Code
 1. **Now:** finish row 188's N2c (w188l, running). Then swap the trial rig's daemon to a current
    build with `--surface-index`, so the app shows the next episodes. That swap is an interim
    step until row 219.
-2. **219 → 217 → 218.** These change how every later episode runs, so they pay back first.
-   Each is an attended episode of its own, run through the rig as today, and from 217 on with
-   presets.
+2. **219 → 217 → 223 → 218.** These change how every later episode runs, so they pay back
+   first. Each is an attended episode of its own, run through the rig as today, and from 217
+   on with presets. 223 is where the herdr plugin lands.
 3. **Back to row 188** (N2d, N4a, N3, N4, N5), now run through 217 and 218, with **220** beside
    N2d, since both are data work for the app.
-4. **221 with 199**, then **201** (already NEXT after row 188's style pass), then **222**.
+4. **221 with 199**, then **201** (already NEXT after row 188's style pass), then **224**
+   (the allowance, which needs 201's keys), **225**, then **222**.
 5. **206 and 207,** if D-WORLD-95 un-parks them. Then **196**, when its ruling and the fleet
    change exist.
 
 **Done when** a week of Mark's agent work, across his repos and both headless and interactive,
 shows in World with no task run outside it. Each task that is run outside World is a friction
 entry that names the missing piece.
+
+## §5 The agents Mark already uses (r1, attended 2026-10-27)
+
+> *"When using AILANG World as an OS, will it be possible to launch IDEs, Claude Desktop, OpenAI
+> Codex, herdr etc and have those within AILANG World when they run agents? Either
+> automatically, or with a quick setting? I'm looking for user friction."* … *"Let's start some
+> work strands to do this, yes. A herdr plugin is a good idea, but yes, the full experience in
+> AILANG World OS gives us full control, yes?"* (Mark, attended 2026-10-27, typos corrected.)
+
+**Two levels, shown per agent in the app:**
+- **Confined:** the agent's only way to touch files, the shell and the network is World's
+  tools, under a session Mark authorised. World is the boundary, and provenance is typed calls.
+- **Observed:** the host keeps its own tools; World sees only what goes through it. It must
+  never be mistaken for confined.
+
+| host | on macOS today (row 223) | in World OS (rows 209–211) |
+|---|---|---|
+| Claude Code (CLI, IDE extensions, herdr panes) | confined, through a machine-wide profile | confined |
+| Codex CLI | confined, through a `world` profile (w188l's exact flags) | confined |
+| herdr | inherits its panes' agents; the plugin makes each pane an episode | confined |
+| any CLI agent without an adapter | confined at the effect level through row 225's wrapper | confined |
+| Claude Desktop, Cursor and other IDE agents | observed, through World's MCP server | **confined at the effect level** |
+
+**World OS gives full control of every effect on the machine:** the filesystem, processes and
+network are World's, so any program runs confined, and its writes land in an episode's
+worktree as recorded changes. **Two limits stay:**
+1. **Provenance is coarser for programs that don't speak World.** World sees their file writes,
+   processes and network flows, not their intent. Typed, explainable calls (`why`) come only
+   from agents that use World's tools.
+2. **Off-machine actions aren't World's.** What a cloud service does on its own servers, such as
+   a hosted connector editing a Drive file, happens outside the machine. World controls the
+   request leaving the machine (network as a granted effect, row 208), not the action at the
+   other end.
+
+**Friction, the target:** you open Claude Code, Codex or a herdr pane as today. The first launch
+of the day asks for one tap (row 201), or nothing under a standing allowance (row 224). Every
+run shows in the World app with its level.
 
 ## §4 Rulings
 
@@ -83,6 +125,13 @@ entry that names the missing piece.
     today, and the goal needs them. Default: yes.
   - **R2:** run 219, 217 and 218 before row 188's N2d. Default: yes; the alternative is after
     N4a.
+
+- **D-WORLD-96 (OPEN, r1): the standing allowance's bounds (row 224).** Default:
+  - per preset, at most 10 sessions a day, with the preset's grants and a 12 h TTL;
+  - the repos listed in the preset;
+  - the approval lasts 30 days, revocable at any time from the app or the CLI;
+  - going over the bounds asks for a tap;
+  - the mission loop (row 196) is excluded unless ruled separately.
 
 ## Sources
 
