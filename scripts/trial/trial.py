@@ -174,8 +174,50 @@ def trial_allowed_tools(served: tuple = ()) -> tuple:
     return tuple(arms.world_allowed_tools()) + (EXEC_ALLOWED,) + extra
 
 
+# The context a World launch starts with: the same text `hosts init` writes into bin/world-context
+# (cmd/ailang-worldd/hosts_awareness.go worldToolMap and worldBoundary; test_trial pins the copy).
+# Friction #37: a trial Codex arm saw only "sandbox read-only, approvals never" and stopped,
+# reading it as "cannot edit"; the codex-world launcher's agents had this block, the trial's did not.
+WORLD_TOOL_MAP = """Your only file and shell access is World's MCP tools:
+  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)
+  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)
+  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search
+"""
+WORLD_BOUNDARY = "Out of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
+WORLD_HOST_SANDBOX = ("Your host's own file and shell tools are switched off or read-only on purpose; "
+                      "World's tools above are how you read, write and run checks, and they are not governed by that sandbox.")
+
+
+def world_context(addr: str, token: str, timeout: float = 5.0) -> str:
+    """The launch context for one session, from ``GET /v1/session/self`` (row 223d). The token goes in
+    the Authorization header only; the text carries none. When the daemon predates the route, the
+    episode line is left out and the rest still says how to work."""
+    import urllib.request
+    base = addr if addr.startswith('http') else 'http://' + addr
+    me = None
+    try:
+        req = urllib.request.Request(base.rstrip('/') + '/v1/session/self', headers={'Authorization': 'Bearer ' + token})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            me = json.loads(r.read().decode('utf-8'))
+    except (OSError, ValueError):
+        me = None
+    lines = ['You are working inside AILANG World (confined).']
+    if isinstance(me, dict) and me.get('episode'):
+        left = int(me.get('secondsLeft') or 0)
+        lines.append(f"Episode {me['episode']} · worktree {me.get('worktree', '?')} · session {left // 3600}h{left // 60 % 60}m left · daemon {me.get('addr', base)}")
+    out = '\n'.join(lines) + '\n' + WORLD_TOOL_MAP
+    if isinstance(me, dict) and me.get('grants'):
+        out += 'Grants left: ' + ', '.join(f"{g.get('effect')} {g.get('left')}/{g.get('budget')}" for g in me['grants']) + '\n'
+    out += f"Every call is recorded. See it: {base.rstrip('/')}/surface  ·  explain an entry: ailang-worldd why <entry>\n"
+    out += WORLD_HOST_SANDBOX + '\n' + WORLD_BOUNDARY
+    if token and token in out:
+        raise TrialError('world_context: the context would carry the session token')
+    return out
+
+
 def build_trial_argv(agent: str, *, model: str, prompt_text: str, cwd: str, mcp_config_path: str | None,
-                     addr: str, max_budget_usd: float | None = None, served_tools: tuple = ()) -> list:
+                     addr: str, max_budget_usd: float | None = None, served_tools: tuple = (),
+                     context: str | None = None) -> list:
     """``arms.build_argv`` for the World arm, with the Claude ``--allowedTools`` widened by
     ``mcp__world__workspace-exec``. codex has no per-tool allowlist on the ``world`` server (the
     overrides set url, bearer env var, required and approval mode only): it sees every tool the
@@ -185,6 +227,11 @@ def build_trial_argv(agent: str, *, model: str, prompt_text: str, cwd: str, mcp_
     if agent == 'claude':
         i = argv.index('--allowedTools')
         argv[i + 1] = ','.join(trial_allowed_tools(tuple(served_tools)))
+        if context:
+            argv += ['--append-system-prompt', context]
+    elif context:
+        # codex: a TOML basic string (JSON's escaping is valid TOML), before the prompt, which is last.
+        argv[-1:-1] = ['-c', 'developer_instructions=' + json.dumps(context, ensure_ascii=True)]
     return argv
 
 
@@ -229,9 +276,12 @@ def run_trial_agent(e: dict, *, prompt_text: str, private_dir: str, void_dir: st
                 os.unlink(stale)
                 row['replaced_episode_start_mcp_config'] = True
             mcp_path = run_task.write_private_mcp_config(private_dir, ep, token, addr)
+        context = world_context(addr, token)
+        row['world_context_sha256'] = 'sha256:' + hashlib.sha256(context.encode('utf-8')).hexdigest()
         argv = build_trial_argv(agent, model=e['model'], prompt_text=prompt_text, cwd=void_dir,
                                 mcp_config_path=mcp_path, addr=addr, max_budget_usd=max_budget_usd,
-                                served_tools=tuple((row.get('preflight') or {}).get('tools') or ()))
+                                served_tools=tuple((row.get('preflight') or {}).get('tools') or ()),
+                                context=context)
         row['argv'] = arms.redact_argv(argv, prompt_text, (token,))
         env = run_task.agent_env(agent, 'world', private_dir=private_dir, tool_bin=None, token=token)
         row.update(run_task.spawn(argv, cwd=void_dir, env=env, transcript_path=transcript_path,

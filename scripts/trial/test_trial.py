@@ -237,6 +237,54 @@ class Argv(unittest.TestCase):
         self.assertIn('shell_tool', argv)
         self.assertIn(f'mcp_servers.world.bearer_token_env_var={arms.TOKEN_ENV}', argv)
 
+    def test_world_context_reaches_codex_and_claude(self):
+        """Friction #37: the trial's World arm starts with the same context block as codex-world."""
+        ctx = 'You are working inside AILANG World (confined).\n' + trial.WORLD_TOOL_MAP + trial.WORLD_BOUNDARY
+        codex = trial.build_trial_argv('codex', model='m', prompt_text='P', cwd='/v', mcp_config_path=None,
+                                       addr='127.0.0.1:7644', context=ctx)
+        self.assertEqual(codex[-1], 'P')  # the prompt stays last
+        i = codex.index('developer_instructions=' + json.dumps(ctx, ensure_ascii=True))
+        self.assertEqual(codex[i - 1], '-c')
+        claude = trial.build_trial_argv('claude', model='m', prompt_text='P', cwd='/v', mcp_config_path='/p/x.mcp.json',
+                                        addr='127.0.0.1:7644', context=ctx)
+        self.assertEqual(claude[claude.index('--append-system-prompt') + 1], ctx)
+        bare = trial.build_trial_argv('codex', model='m', prompt_text='P', cwd='/v', mcp_config_path=None, addr='127.0.0.1:7644')
+        self.assertFalse([a for a in bare if a.startswith('developer_instructions=')])  # control: no context, no flag
+
+    def test_world_context_text_matches_hosts_init(self):
+        """The copy of hosts init's tool map and boundary cannot drift from the Go constants."""
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        go = open(os.path.join(root, 'cmd', 'ailang-worldd', 'hosts_awareness.go')).read()
+        tool_map = go.split('const worldToolMap = `', 1)[1].split('`', 1)[0]
+        boundary = go.split('const worldBoundary = "', 1)[1].split('"\n', 1)[0]
+        self.assertEqual(trial.WORLD_TOOL_MAP, tool_map)
+        self.assertEqual(trial.WORLD_BOUNDARY, boundary)
+
+    def test_world_context_from_session_self_and_without_it(self):
+        import http.server, threading
+        token = 'a' * 64
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                ok = self.path == '/v1/session/self' and self.headers.get('Authorization') == 'Bearer ' + token
+                body = json.dumps({'episode': 'ep9', 'worktree': '/ws/ep9', 'secondsLeft': 3661, 'addr': 'http://x',
+                                   'grants': [{'effect': 'Workspace.Write', 'left': 9, 'budget': 10}]}).encode()
+                self.send_response(200 if ok else 401); self.end_headers(); self.wfile.write(body if ok else b'{}')
+            def log_message(self, *a): pass
+        srv = http.server.HTTPServer(('127.0.0.1', 0), H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            addr = f'127.0.0.1:{srv.server_port}'
+            ctx = trial.world_context(addr, token)
+            self.assertIn('Episode ep9 · worktree /ws/ep9 · session 1h1m left', ctx)
+            self.assertIn('Grants left: Workspace.Write 9/10', ctx)
+            self.assertIn(trial.WORLD_HOST_SANDBOX, ctx)
+            self.assertNotIn(token, ctx)
+            bare = trial.world_context(addr, 'b' * 64)  # a 401: no episode line, the rest still says how to work
+            self.assertNotIn('Episode ', bare)
+            self.assertIn(trial.WORLD_TOOL_MAP, bare)
+        finally:
+            srv.shutdown()
+
     def test_prompt_is_task_verbatim_plus_note(self):
         p = trial.build_prompt('Fix #67.\n', ['quick-check'])
         self.assertTrue(p.startswith('Fix #67.\n'))
