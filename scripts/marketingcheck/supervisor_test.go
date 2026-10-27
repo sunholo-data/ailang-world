@@ -130,13 +130,13 @@ func TestMarketingKillGroupStress(t *testing.T) {
 	}
 	const probe = `import errno, importlib.util, json, os, signal, subprocess, sys, time
 started = time.monotonic()
-deadline = started + 25
+deadline = started + 60  # 200 trials took ~31 s at load 6-8 (iteration 308); 25 s cut them at ~160
 result = dict(trials=0, wrapper_calls=0, raw_calls=0, raw_eperm=0,
               raw_esrch=0, raw_success=0, wrapper_exceptions=[], errors=[])
 def remaining():
     budget = deadline - time.monotonic()
     if budget <= 0:
-        raise TimeoutError("25-second stress wall deadline exceeded")
+        raise TimeoutError("60-second stress wall deadline exceeded")
     return budget
 try:
     spec = importlib.util.spec_from_file_location("marketing_capture", sys.argv[1])
@@ -198,8 +198,8 @@ except Exception as error:
 finally:
     result["wrapper_exception_count"] = len(result["wrapper_exceptions"])
     result["wall_seconds"] = time.monotonic() - started
-    if result["wall_seconds"] > 25:
-        result["errors"].append("25-second stress wall deadline exceeded")
+    if result["wall_seconds"] > 60:
+        result["errors"].append("60-second stress wall deadline exceeded")
     print(json.dumps(result), flush=True)
     if result["raw_eperm"] == 0:
         print("UNINFORMATIVE: raw EPERM count is 0; EPERM not provoked on this host; this run is not evidence the fix works",
@@ -220,7 +220,7 @@ sys.exit(0 if result["trials"] == 200 and result["wrapper_calls"] == 600
 		t.Fatal(err)
 	}
 	defer log.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, py, "-B", "-c", probe, path)
 	cmd.Stdout, cmd.Stderr = output, log
@@ -254,8 +254,8 @@ sys.exit(0 if result["trials"] == 200 and result["wrapper_calls"] == 600
 	if err != nil || len(result.Errors) != 0 {
 		t.Errorf("stress setup, raw controls and cleanup must succeed: %v: %s", err, out)
 	}
-	if result.WallSeconds >= 30 {
-		t.Errorf("stress must finish within the 30-second wall target: %.3fs", result.WallSeconds)
+	if result.WallSeconds >= 60 {
+		t.Errorf("stress must finish within the 60-second wall target: %.3fs", result.WallSeconds)
 	}
 }
 
