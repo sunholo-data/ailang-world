@@ -1033,6 +1033,7 @@ func releaseFromVersion(version string) string {
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /v1/session/self", d.handleSessionSelf)
 	mux.HandleFunc("GET /v1/health", d.handleHealth)
 	mux.HandleFunc("GET /v1/head", d.handleHead)
 	mux.HandleFunc("GET /v1/worlds/{ref}", d.handleWorld)

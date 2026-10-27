@@ -76,6 +76,7 @@ const (
 var usage = `ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
+  ailang-worldd [--addr <url>] whoami [--json] [--session <file>]
   ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace]
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workbench-still]
@@ -385,6 +386,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 	case "provenance":
 		return runProvenance(*addr, rest[1:], stdout, stderr)
 
+	case "whoami":
+		return runWhoami(*addr, rest[1:], stdout, stderr)
+
 	case "hosts":
 		return runHosts(rest[1:], stdout, stderr)
 
@@ -614,7 +618,7 @@ func serveResult(err error, stderr io.Writer) int {
 var ownHelpVerbs = map[string]bool{
 	"tools": true, "call": true, "why": true, "provenance": true,
 	"setup": true, "doctor": true, "session": true, "episode": true,
-	"profile": true, "surface-index": true, "hosts": true,
+	"profile": true, "surface-index": true, "hosts": true, "whoami": true,
 }
 
 // genericVerbHelp answers `<verb> ... --help` for the verbs that have no help

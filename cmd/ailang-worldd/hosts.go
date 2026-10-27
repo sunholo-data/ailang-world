@@ -13,20 +13,26 @@ import (
 	"strings"
 )
 
-const hostsHelp = `usage: ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace]
+const hostsHelp = `usage: ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace] [--pi-mcp-adapter <dir>]
 
 Write private World launch settings (directories 0700, configs 0600, launchers 0700).
 Files: claude-world.settings.json, claude-world.mcp.json, codex/config.toml,
 codex/auth.json (symlink only, when ~/.codex/auth.json exists), pi-world-mcp.json,
-bin/claude-world, bin/codex-world, bin/pi-world, hosts.json.
+bin/claude-world, bin/codex-world, bin/pi-world, hosts.json;
+bin/world-context, bin/world-statusline, claude-plugin/, codex/AGENTS.md,
+codex/hooks.json, pi/world-status.ts. Runtime status caches live under state/.
 Changed files refuse unless --replace; unchanged bytes are a no-op.
 Defaults: --out-dir ~/.ailang-world/hosts; --addr http://127.0.0.1:47330.
+--pi-mcp-adapter defaults to ~/.pi/agent/npm/node_modules/pi-mcp-adapter;
+its package.json must name pi.extensions. Missing adapters produce a refusing launcher.
 `
 
 type hostsManifest struct {
-	Schema string            `json:"schema"`
-	Addr   string            `json:"addr"`
-	Files  map[string]string `json:"files"`
+	Schema             string            `json:"schema"`
+	Addr               string            `json:"addr"`
+	Files              map[string]string `json:"files"`
+	PiMCPAdapter       string            `json:"pi_mcp_adapter"`
+	PiMCPAdapterSHA256 string            `json:"pi_mcp_adapter_sha256"`
 }
 
 func defaultHostsDir() string {
@@ -34,7 +40,11 @@ func defaultHostsDir() string {
 	return filepath.Join(h, ".ailang-world", "hosts")
 }
 
-func hostFiles(dir, addr string) map[string][]byte {
+func hostFiles(dir, addr string, adapters ...string) map[string][]byte {
+	adapter := defaultPiMCPAdapter()
+	if len(adapters) > 0 {
+		adapter = adapters[0]
+	}
 	mcp := strings.TrimRight(addr, "/") + "/mcp/"
 	files := map[string][]byte{}
 	putJSON := func(name string, v any) { b, _ := json.Marshal(v); files[name] = append(b, '\n') }
@@ -43,17 +53,25 @@ func hostFiles(dir, addr string) map[string][]byte {
 		"disableBypassPermissionsMode": "disable"}})
 	putJSON("claude-world.mcp.json", map[string]any{"mcpServers": map[string]any{"world": map[string]any{
 		"type": "http", "url": mcp, "headers": map[string]string{"Authorization": "Bearer ${WORLD_SESSION}"}}}})
-	files["codex/config.toml"] = []byte(fmt.Sprintf("sandbox_mode = \"read-only\"\nweb_search = \"disabled\"\n[features]\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = %q\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n", mcp))
+	files["codex/config.toml"] = []byte(fmt.Sprintf("sandbox_mode = \"read-only\"\napproval_policy = \"never\"\nweb_search = \"disabled\"\n[features]\nhooks = true\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = %q\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n", mcp))
 	putJSON("pi-world-mcp.json", map[string]any{"mcpServers": map[string]any{"world": map[string]any{
 		"url": mcp, "auth": "bearer", "bearerTokenEnv": "WORLD_SESSION", "lifecycle": "eager"}}})
 	commands := map[string]string{
 		"claude": "claude --settings " + shellQuote(filepath.Join(dir, "claude-world.settings.json")) + " --strict-mcp-config --mcp-config " + shellQuote(filepath.Join(dir, "claude-world.mcp.json")),
 		"codex":  "env CODEX_HOME=" + shellQuote(filepath.Join(dir, "codex")) + " codex",
-		"pi":     "pi --no-builtin-tools --no-extensions --mcp-config " + shellQuote(filepath.Join(dir, "pi-world-mcp.json")),
+		"pi":     "pi --no-builtin-tools --no-extensions -e " + shellQuote(adapter) + " --mcp-config " + shellQuote(filepath.Join(dir, "pi-world-mcp.json")),
 	}
 	for host, command := range commands {
 		files["bin/"+host+"-world"] = []byte("#!/bin/sh\nif [ -z \"${WORLD_SESSION:-}\" ]; then\n  cat >&2 <<'WORLD_ERROR'\n" + host + "-world: no World session (WORLD_SESSION is unset).\n  why: World agents need a session you approved.\n  next: start one with `ailang-worldd episode start …`, then export WORLD_SESSION=\"$(cat <session file>)\"\nWORLD_ERROR\n  exit 3\nfi\nexec " + command + " \"$@\"\n")
 	}
+	guard := ""
+	if _, err := piMCPAdapterDigest(adapter); err != nil {
+		guard = "cat >&2 <<'WORLD_ADAPTER_ERROR'\n" + piAdapterWhat(adapter) + "\n  why: " + piAdapterWhy + "\n  next: " + piAdapterFix + "\nWORLD_ADAPTER_ERROR\nexit 3\n"
+	} else {
+		guard = "if [ ! -f " + shellQuote(filepath.Join(adapter, "package.json")) + " ]; then\ncat >&2 <<'WORLD_ADAPTER_ERROR'\n" + piAdapterWhat(adapter) + "\n  why: " + piAdapterWhy + "\n  next: " + piAdapterFix + "\nWORLD_ADAPTER_ERROR\nexit 3\nfi\n"
+	}
+	files["bin/pi-world"] = []byte(strings.Replace(string(files["bin/pi-world"]), "exec pi ", guard+"exec pi ", 1))
+	addAwarenessFiles(files, dir, addr)
 	return files
 }
 
@@ -74,6 +92,7 @@ func runHosts(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	out := fs.String("out-dir", defaultHostsDir(), "output directory")
 	addr := fs.String("addr", "http://127.0.0.1:47330", "World URL")
+	adapterFlag := fs.String("pi-mcp-adapter", defaultPiMCPAdapter(), "pi MCP extension directory")
 	replace := fs.Bool("replace", false, "replace changed files")
 	if code, done := parseVerbFlags(fs, args[1:], hostsHelp, stdout, stderr); done {
 		return code
@@ -87,8 +106,14 @@ func runHosts(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return exitUsage
 	}
-	files := hostFiles(dir, *addr)
-	manifest := hostsManifest{"world/hosts/v1", *addr, map[string]string{}}
+	adapter, err := filepath.Abs(*adapterFlag)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return exitUsage
+	}
+	digest, _ := piMCPAdapterDigest(adapter)
+	files := hostFiles(dir, *addr, adapter)
+	manifest := hostsManifest{Schema: "world/hosts/v1", Addr: *addr, Files: map[string]string{}, PiMCPAdapter: adapter, PiMCPAdapterSHA256: digest}
 	for name, b := range files {
 		manifest.Files[name] = fmt.Sprintf("sha256:%x", sha256.Sum256(b))
 	}
@@ -101,7 +126,7 @@ func runHosts(args []string, stdout, stderr io.Writer) int {
 	sort.Strings(names)
 	fail := func(err error) int { fmt.Fprintf(stderr, "ailang-worldd hosts init: %v\n", err); return exitUsage }
 	// Refuse redirected output directories before inspecting any destination.
-	for _, d := range []string{dir, filepath.Join(dir, "codex"), filepath.Join(dir, "bin")} {
+	for _, d := range hostDirectories(dir) {
 		info, e := os.Lstat(d)
 		if e == nil && (!info.IsDir() || info.Mode()&os.ModeSymlink != 0) {
 			return fail(fmt.Errorf("%s is not a real directory", d))
@@ -145,7 +170,7 @@ func runHosts(args []string, stdout, stderr io.Writer) int {
 			}
 		}
 	}
-	for _, d := range []string{dir, filepath.Join(dir, "codex"), filepath.Join(dir, "bin")} {
+	for _, d := range hostDirectories(dir) {
 		if e := os.MkdirAll(d, 0700); e != nil {
 			return fail(e)
 		}

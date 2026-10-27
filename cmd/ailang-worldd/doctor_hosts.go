@@ -137,6 +137,13 @@ func doctorHost(r *doctorReport, host, dir string) {
 	}
 	sort.Strings(names)
 	drift := false
+	if host == "codex" {
+		config, _ := os.ReadFile(filepath.Join(dir, "codex", "config.toml"))
+		if !strings.Contains(string(config), "approval_policy = \"never\"\n") {
+			drift = true
+			r.add(markWarn, "host", "codex/config.toml: approval_policy = \"never\" is missing; launch config drift", fix)
+		}
+	}
 	for _, name := range names {
 		b, e := os.ReadFile(filepath.Join(dir, name))
 		sum := fmt.Sprintf("sha256:%x", sha256.Sum256(b))

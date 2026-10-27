@@ -126,9 +126,16 @@ dashed mark and are never counted as confined.
 | **A1 (223a) — built** | §2.2's launchers and `ailang-worldd hosts init`; §2.5's preflight checks are built into the existing read-only `doctor` (`--session`, `--host`, `--hosts-dir`, `--profile`, `--json`, `--quick`), with three-part errors and class exit codes | today's daemon | per-launch settings only; doctor names stopped daemons, expired sessions and moved exec tools; `/v1/health.exec_tools` reports startup paths |
 | **A2 (223b) — built** (`integrations/herdr/ailang-world/`) | §2.3's herdr plugin: "New World agent" (typed mint in a popup, preflight, a confined pane, labelled) and "New plain agent" (the paired arm); the fallback and live state of §2.5 | 223a | run real work through World from herdr, with plain arms to compare |
 | **A2+ (223c) — built** | the plugin's key bindings (`bin/world-keys`: shown, then written to herdr's config only after a typed `y`) and a World panel (`bin/world-panel`: panes, sessions, calls, budgets, entries; start, inspect, revoke) | 223b | keys for the agents and the panel; World's state for a workspace in one pane |
+| **A2++ (223d)** | session self endpoint and whoami; generated context, Claude plugin/status line, Codex instructions/hooks and pi footer | 223a | agents know their episode, worktree, grants, lifetime and World tools at launch |
 | **B** | the popup uses presets | row 217 | the mint is one short line |
 | **C** | no popup | rows 201 / 224 | no prompt under an allowance |
 | **D** | machine-wide: Claude Code managed settings and `managed-mcp.json`, Codex `requirements.toml` | the loop through World (row 196) and attended sessions (row 222); **D-WORLD-97** | every Claude Code or Codex launch on the Mac is confined, whatever starts it |
+
+223d is a host-boundary read projection and launcher integration, not an AILANG package:
+it reads the daemon-owned credential binding and durable spend ledger and generates host
+configuration. No new semantic law or listener is introduced. The installed pi extension
+docs and MCP adapter are outside the episode worktree; whether `--no-extensions` suppresses
+that adapter still needs the operator’s installed-docs check before pi is certified.
 
 ## §4 Acceptance
 
