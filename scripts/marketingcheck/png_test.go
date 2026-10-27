@@ -12,6 +12,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -459,7 +460,7 @@ func TestMarketingPNGContent(t *testing.T) {
 	})
 
 	t.Run("canonical-shots", func(t *testing.T) {
-		expected := []Shot{{"workbench-light.png", 1440, 1100, "light"}, {"workbench-dark.png", 1440, 1100, "dark"}, {"packet.png", 1440, 1400, "light"}, {"graph.png", 1440, 1100, "light"}, {"provenance.png", 1440, 1400, "light"}, {"phone.png", 390, 844, "light"}}
+		expected := []Shot{{"workbench-light.png", 1440, 1100, "light"}, {"workbench-dark.png", 1440, 1100, "dark"}, {"packet.png", 1440, 3700, "light"}, {"graph.png", 1440, 2100, "light"}, {"provenance.png", 1440, 3000, "light"}, {"phone.png", 390, 844, "light"}}
 		if len(Shots) != len(expected) {
 			t.Fatal("six canonical shots required")
 		}
@@ -799,6 +800,52 @@ func TestMarketingTwoPassInventory(t *testing.T) {
 			rc   int
 		}{{"unknown", []string{"docs"}, 2}, {"no-command", nil, 2}, {"missing-flags", []string{"check"}, 2}, {"unknown-flag", []string{"check", "--unknown"}, 2}, {"positional", append(append([]string(nil), args...), "extra"), 2}, {"help", []string{"check", "--help"}, 0}} {
 			t.Run(tc.name, func(t *testing.T) { invoke(t, tc.args, tc.rc, "") })
+		}
+	})
+}
+
+// Measured bottom edge (CSS px, device scale 1, getBoundingClientRect().bottom at
+// scroll 0) of each tall shot's last required region, max across two independently
+// seeded stores. Source: w-marketing-capture-orchestration §10 V51 (iteration 305)
+// and the R0 re-confirm V-row V59 (iteration 306, two fresh seeds on Chrome 156.0.8078.48, delta 0.00). A Go test cannot read a
+// V-row; these constants are the transcription.
+const (
+	measuredPacketBottom     = 3564.56 // section[aria-label="decision packet"]
+	measuredGraphBottom      = 2042.14 // section[aria-label="world graph"]
+	measuredProvenanceBottom = 2881.17 // pre.payload
+)
+
+func shotRuleHeight(bottom float64) int { return int(math.Ceil((bottom+40)/100)) * 100 }
+
+func TestMarketingShotGeometry(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		bottom    float64
+		assertion string
+	}{
+		{"packet.png", measuredPacketBottom, "packet height must equal the rule value from measuredPacketBottom"},
+		{"graph.png", measuredGraphBottom, "graph height must equal the rule value from measuredGraphBottom"},
+		{"provenance.png", measuredProvenanceBottom, "provenance height must equal the rule value from measuredProvenanceBottom"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s, ok := shotByName(tc.name)
+			want := shotRuleHeight(tc.bottom)
+			if !ok || s.Width != 1440 || s.Height != want {
+				t.Fatalf("%s: got %+v, want 1440x%d", tc.assertion, s, want)
+			}
+			if want > 4400 {
+				t.Fatalf("%s needs %d px > 4,400: BLOCKED, escalate; never clamp", tc.name, want)
+			}
+			if tc.bottom > float64(s.Height-40) {
+				t.Fatalf("%s: required bottom %.2f must be <= H-40 = %d", tc.name, tc.bottom, s.Height-40)
+			}
+		})
+	}
+	t.Run("unchanged", func(t *testing.T) {
+		for _, want := range []Shot{{"workbench-light.png", 1440, 1100, "light"}, {"workbench-dark.png", 1440, 1100, "dark"}, {"phone.png", 390, 844, "light"}} {
+			if got, ok := shotByName(want.Name); !ok || got != want {
+				t.Fatalf("light, dark and phone geometry must stay unchanged: got %+v want %+v", got, want)
+			}
 		}
 	})
 }
