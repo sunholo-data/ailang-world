@@ -2088,3 +2088,111 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 18/23 built; goal unmoved.
 **Next:** row 150 M7c2b, then M7c3. Then 151 after 150.
+
+## 309 — 2026-10-27 — row 150: M7c2b built — the capture shell runs end to end against fake Chrome and a fake daemon; judge PASS 83 [PRODUCT]
+
+**Kind:** one production milestone (M7c2b) on the release row: an executor build, a controller mutation drill with a test-only survivor fix, and an independent judge. The executor and evaluator roles were spawned through the Agent tool, per the operator's standing request (see Routing evidence).
+
+**Pick and why:** row 150 M7c2b, following iteration 308's **Next**. Re-checked before picking:
+- no M7c2b commit, branch, worktree or PR existed (`git log origin/dev --grep M7c2b` returns only plan and record commits; the PR search returns only #364 and #391, both merged; no `m7c2b` worktree);
+- local dev equalled origin/dev `a96820c5` at Gate 1 (nothing to fast-forward);
+- the two open PRs from this account are attended-track work, not this loop's: #390 (`trial/row219a-home-service-m0-m1`, row 219) and #389 (`fix/trial-world-context`). Left alone.
+- Plan premises checked at HEAD: the shell still ended in the `capture refused` tail; `daemon` had only `--ready-file`; `serve` defines every flag the flow passes (`cmd/ailang-worldd/main.go:456-517`); the M7c2a fake Chrome and fixture helpers exist in `capture_test.go`.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (6 comments, all this account's). No ledger row changed since iteration 308 (HEAD was 308's own merge); ledger valid, 85 rows.
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (log grep count 6). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages; nothing outranks the queue. This iteration's claim was sent and read back.
+- Weekly external-issue sweep: not due (run after the 2026-10-26 rotation). No thread rotation.
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Dev CI at `a96820c5`: check set 3/3 success.
+- Running skill plus all 13 resource files byte-identical to origin/dev (per-file `cmp` against the resolved symlink target; no DIFF line).
+- Base `a96820c5…` recorded at Gate 1; the Gate-3 `snap` read the same SHA.
+
+**Baseline (controller, pristine sprint worktree at the base before the executor ran, `AILANG_BIN` = pinned v0.41.0, load ~6):** gofmt clean, vet rc 0, Python parse rc 0, `bash -n` rc 0, version grep 0 (control on the orchestration doc 23), compile fence rc 0 (34 packages), `TestMarketingSupervisorFakeDaemonCleanup` rc 0, package rc 0, `-race` package rc 0. Every gate in the directive was green at base before it was sent.
+
+**Role execution:**
+- **Designer and planner:** not run. `w-marketing-capture-orchestration` r2 governs and the plan's M7c2b section is prescriptive.
+- **Executor** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`). It was spawned as an Agent-tool supervisor (`MISSION-ROLE: executor`, no model alias) that ran the controller's bounded wrapper (`/tmp/codex_run_iter309.sh`, cap 2400 s) in `.wt-world-iter309-row150-m7c2b`. Probe rc 0; run rc 0 in 287 s. Directive `/tmp/codex_directive_iter309.txt` (8,327 B) carried two controller amendments:
+  - **A1:** the supervisor stops the daemon after `--lifetime` (default 300 s) and still returns ok, while the flow after readiness can include two 300 s passes. So the shell passes `--lifetime` derived from the production constants (2×SHOT + 2×PASS = 660 s). It reads them from `marketing_capture.py` via `runpy`, so the shell invents no number.
+  - **A2:** a `bind-refused` subtest.
+  - What it built:
+    - `capture_marketing.sh` (+54/−3): the nine-step flow and three flags. Traps, `shot` and `--unit-daemon` are unchanged.
+    - `marketing_capture.py` (+33/−20): a required mutually exclusive `--ready-file`/`--ready-url`, and `ready()` gains signal and process-exit stops.
+    - `capture_test.go` (+190/−20): `TestMarketingCaptureFakeChromeSixShots` with eight subtests. The M7c2a fake Chrome is extracted into `fakeCaptureChrome`, which adds a `--version` mode.
+  - Its sandbox denied loopback binds (probe `PermissionError`), so five subtests, the package run and three of four mutants were correctly labelled UNINFORMATIVE. Its A2 mutant was killed in-sandbox.
+  - It added an untracked `snap/M7c2b/go.mod` to keep snapshot `.go` copies out of package discovery. The controller moved the snapshot to `/tmp/world-iter309/exec-snap/`, removed it from the tree, and confirmed the snapshot was `cmp`-identical to the tree.
+  - Committed by the controller as `5e20341f`.
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), Agent tool, foreground, own detached worktree `.eval-world-iter309` at `76216725`. The first `mission-worktree.sh add` for it failed `failed:worktree_add_rc_255`. The likely cause: the controller had pre-created the branch with `git branch -f`, and the helper adds the branch itself. After `git worktree prune` the retry was ready with a clean tree.
+
+**Controller verification (outside the sandbox, `AILANG_BIN` pinned, load 2–6):**
+- Diff read in full, against the plan. Every write in the new flow is under `--out`; nothing under `$HOME` or `~/.ailang/state` (false-green 5).
+- **Red-first:** the new test file against base production files reds 7 of 8 executor subtests. `daemon-readiness-config` passes at base, because base already rejected the wrong flag shapes with usage rc 2, so it got its own mutants.
+- **Mutation drill**, one mutant at a time with anchors asserted unique, each restored and byte-compared:
+  - The plan's 3 named mutants were killed at the named assertions: version-changed → `a Chrome version change during capture must refuse`; scheme → `every shot explicitly pins correct scheme`; identities → `both seed identities must be configured`.
+  - 8 of 12 further diff-anchored mutants were killed: A2 drop-loopback, drop diagnostics, drop check, old Chrome continues, no TERM in cleanup, readiness group not required, readiness group not exclusive, `--ready-url` ignored.
+  - 4 survived: the run continues without `--verify-twice`; A1's `--lifetime` dropped; `ready()` ignores a daemon exit; a started file written despite a stop.
+- **Controller test-only fix `76216725`:** two subtests close the two load-bearing survivors.
+  - `single-pass`: without `--verify-twice`, rc 0 with no pass-b, check or diagnostics (plan step 5).
+  - `daemon-exits`: a daemon exiting before HTTP readiness refuses as `NonzeroExit` before any pass.
+  - Both were killed under their mutants (`unexpected=[pass-b capture-manifest.json diagnostics.txt]`; verdict `Interrupted` after 29.5 s). The tree was `shasum`-identical after restoring.
+- **Final tree `76216725`:** gofmt clean, vet rc 0, parse rc 0, `bash -n` rc 0, version grep 0, compile fence rc 0 (34), `FakeDaemonCleanup` rc 0, package rc 0 (31.5 s), `-race` package rc 0 (102 s), `TestSubprocessSinkGate`, `TestProductionGoSurface` and `TestProductionContextRoots` ok.
+- `.ail` untouched, so `verify_ail.sh` was not run (CI's `ailang-code verify gate` covers it).
+- Log: `verification/world-iter309/controller-verification.md`.
+
+**Independent evaluation:** r1 **PASS 83/100**, zero blocking ([report](verification/world-iter309/evaluator-r1.md)).
+- Rubric: conformance 27/30, tests and gates 23/25, mutation/non-vacuity 14/20, premise and risk 9/10, hygiene 10/15.
+- All gates green; no load flakes seen. Red-first 9 of 10 at base.
+- Plan mutants 3/3 killed at the named assertions. Of its own mutants, 11 were killed and 10 survived.
+- Premises: A1 is correct and sufficient. The lifetime clock starts after readiness, so 600 s is the need, and 660 s also bounds an orphaned supervisor if the shell is SIGKILLed. A2 is sound. The traps cover every exit path except SIGKILL of the shell.
+- Non-blocking findings:
+  1. A1 untested.
+  2. `ready()`'s stop/Interrupted branch untested.
+  3. Missing/unknown-flag and port-range refusals have no subtest, and shell usage errors exit 1, not 2.
+  4. The `kill -0` readiness shortcut is unguarded.
+  5. The diff is 308 lines against the ~250-line stop rule, mostly test.
+  6. Cosmetic: help-line spacing, and the lifetime comment counts version A.
+- **Controller reproduced 3 and 6** (`--db x` rc 1 "missing --manifest"; `--bogus` rc 1; help line printed). Findings 1 and 2 agree with the controller's own surviving mutants.
+
+**Bookkeeping:** sprint JSON M7c2b → completed (iteration 309); plan M7c2b status → BUILT with the amendments recorded; charter row 150 updated (M7c2b built, Next); CURRENT GOAL next line updated; STATUS 306 rotated to the archive (charter line count asserted, archive gained the stamp; the charter keeps 3 stamps).
+
+**Result:** M7c2b BUILT. The release-image capture is now one command that starts the frozen demo daemon, takes two six-shot passes, refuses if Chrome changed mid-run, and verifies the passes, with the daemon stopped on every exit path. It is proven against fakes only; the real-Chrome drill is M7c4. Row 150 is 19 of 23 milestones built.
+
+**Gate 3b:** the PR head and then the merge commit are each polled, pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). The outcome is reported on #366.
+
+**Routing evidence:** base=a96820c58c678b262371bedbb8023e7b6eda6864@2026-10-27T20:38:14Z (Gate 4 record; Gate 1 read the same SHA at 20:01:51Z, and the Gate-3 `snap` was identical). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=codex:gpt-6.1-sol`, `EXECUTOR=codex:gpt-6.1-sol`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer and planner: not spawned (doc r2 and a prescriptive plan govern). This is not a routing failure.
+- Executor `codex:gpt-6.1-sol`: probe 10,229 tok; run 78,057 tok, rc 0, 287 s. Agent-tool supervisor (transport only, no verdict): 33,357 tok / 339 s.
+- Evaluator `sonnet` (Agent): 62,165 tok / 772 s. Judge independence: cross-vendor (OpenAI executor, Anthropic Sonnet judge), and a different model from the Opus controller that wrote `76216725`. The judge evaluated the final tree including that commit. Its directive named no controller finding or method.
+- No quorum this iteration (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Banking the executor's in-sandbox gate results: loopback binds were denied, so five subtests and three mutants had no verdict until the controller ran them outside.
+- Treating `daemon-readiness-config` as a red-first test: it passes at base. Its value is measured by its two mutants instead.
+- Letting the daemon run on its default 300 s lifetime: a slow pass A could stop the daemon mid pass B. The judge confirmed A1 and noted 630 s would suffice; 660 s stays, as the conservative derivation.
+- Keeping the executor's `snap/M7c2b/go.mod` in the tree: it is evidence scaffolding, not product, and it would add a nested module to the repo.
+- Rotating the log this iteration: it holds 25 entries and the rule triggers past ~40. An accidental `rotate-log --keep 20` was undone (log restored from HEAD plus this entry, archive and index reverted) and the index regenerated with `--index-only`. That run used a temporary registry whose `workdir` is this worktree, because `world.toml`'s `workdir` is the main checkout and the default registry would have written there.
+- Adding subtests for every judge survivor here: A1's lifetime and the pre-readiness stop branch need a slow-pass or signal-timing fixture. They are carried rather than bolted on past the plan's size bound.
+
+**Carried:**
+- M7c3 next (frozen public inventory guard), then M7c4 → R1 → M8a → M8b → attended A1.
+- New (judge): A1 lifetime untested; `ready()` stop/Interrupted and the `not stop` started-file guard untested; missing/unknown-flag and port-range refusals untested, and shell usage errors exit 1, not 2; `kill -0` readiness shortcut unguarded; cosmetic help spacing and the lifetime comment.
+- Still carried from 307: `pass` creates `--out-dir` before validating routes; untested `pass`/`ready`/`chrome-version` refusal branches; `chrome_version`'s uncaught `TimeoutExpired`.
+- Everything iteration 308 carried (load-sensitive M7a fixtures; the EPERM residual). D-WORLD-86 stays HOLD.
+
+**Retro:**
+- The executor's sandbox could not bind loopback, so the milestone's whole acceptance surface was invisible to it. Running the full drill outside the sandbox before the judge found and closed two survivors while it was cheap. That is now the third consecutive row-150 milestone where the controller's out-of-sandbox drill changed the tree before judging.
+- Pre-creating a branch for a helper that creates its own branch cost one failed worktree add. Let the helper own the branch.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 19/23 built; goal unmoved.
+**Next:** row 150 M7c3, then M7c4. Then 151 after 150.
