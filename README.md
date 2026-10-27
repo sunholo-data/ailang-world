@@ -116,7 +116,7 @@ executed. Mission-loop machinery is shared infrastructure from the
 
 ## Status — honest, not promotional
 
-**Phase: the 1.0 release candidate (`v1.0.0-rc.1`).** As of 2026-10-16, all seven clauses of
+**Phase: the 1.0 release candidate (`v1.0.0-rc.1`).** As of 2026-10-27, all seven clauses of
 the [ratified 1.0 bar](design_docs/world-mission.md) are met, including the two that measure
 World against the status quo (clause 4 by D-WORLD-77, clause 5 by D-WORLD-80). `v1.0.0-rc.1` is
 the current GitHub pre-release; per D-WORLD-81, `v1.0.0` follows once rows 156 (protected test
@@ -177,13 +177,29 @@ paths), 150 (marketing capture) and 151 (agent-generated projections) land.
 rows 135 (`ailang-run` stdin, argv and per-call capabilities), 138 (the developer CLI), 140
 (`workspace-exec`), 93 (the floor) and 114 (the provenance walks).
 
-**In progress**, toward `v1.0.0` (D-WORLD-81):
+**In progress**, on two tracks:
 
-- **Row 139** — the interpreter epoch upgrade path. M1/M2 landed: the release manifest
+- **The mission loop, toward `v1.0.0` (D-WORLD-81)** — rows **150** (marketing capture) and
+  **156** (protected test paths, so an agent cannot edit the tests that judge it through
+  `workspace-exec`) are in sprint, with 156's remaining milestones held on D-WORLD-86, a ruling
+  open for the owner; row 151 (agent-generated projections) follows. Row 139, the
+  interpreter epoch upgrade path, has M1/M2 landed: the release manifest
   `pins/ailang-releases.json` and `world-publish epoch nominate`.
-- **Row 156** (next) — protected test paths, so an agent cannot edit the tests that judge it
-  through `workspace-exec`.
-- **Rows 150 and 151** — marketing capture and agent-generated projections.
+- **The attended track: all agent work through World** (D-WORLD-94, set by the owner
+  2026-10-26) — every agent task, headless or interactive, on any repo, runs through World as
+  the normal way, not the trial rig. The roadmap is
+  [w-all-agent-work-through-world](design_docs/planned/w-all-agent-work-through-world.md); the
+  guide is [Run your agents through World](https://www.sunholo.com/ailang-world/docs/guides/agents-through-world).
+  - **Landed 27 Oct, rows 223a–223d**, each built through World: launchers and `hosts init` for
+    Claude Code, Codex and pi, with `doctor` checking the daemon, session and host before a
+    launch and naming the fix (223a, PR #375); the herdr plugin, which starts a confined agent
+    pane after the owner's typed `y`, or a labelled plain fallback when World is down (223b,
+    #377), with key bindings and a World panel (223c, #379); and in-agent awareness, so each
+    agent knows its episode, worktree, grants and session lifetime at launch (223d, #381).
+  - **Next,** in the roadmap's order: row 226 (a per-episode value scorecard), then 219 (World as
+    a supervised user service with a home store and a one-command upgrade; design:
+    [w-worldd-home-service](design_docs/planned/w-worldd-home-service.md), #386), then 217
+    (one-command episodes) and 218 (`episode finish`, start to merged PR).
 
 **Work made through World.** The first real change made by an agent working only through World's
 tools is [sunholo-data/daneel#325](https://github.com/sunholo-data/daneel/pull/325) (merged
