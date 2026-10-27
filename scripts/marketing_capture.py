@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded capture subprocesses; six-shot orchestration belongs to M7c.
+"""Bounded capture subprocesses and six-shot capture primitives.
 
 HOME must stay intact: relocated HOME prevents macOS Chrome from loading URLs
 (see host/daemon/workbench_live_chrome_test.go). Profiles isolate each shot instead.
@@ -11,9 +11,14 @@ Examples (destinations/readiness markers must be fresh):
       --out /tmp/new-shot.png --url http://127.0.0.1:7644/workbench --scheme light
   python3 scripts/marketing_capture.py daemon --ready-file /tmp/daemon.ready \
       --started-file /tmp/supervisor.ready -- /path/to/daemon
+  python3 scripts/marketing_capture.py chrome-version --chrome /path/to/chrome
+  python3 scripts/marketing_capture.py ready --base-url http://127.0.0.1:7644
+  marketingcheck routes --manifest demo.json > /tmp/routes.json
+  python3 scripts/marketing_capture.py pass --routes /tmp/routes.json \
+      --base-url http://127.0.0.1:7644 --chrome /path/to/chrome --out-dir /tmp/new-pass
 The daemon must publish ready-file; started-file then contains its PID. Signal the
 supervisor with TERM/INT/HUP to stop it. File readiness is the M7a primitive; HTTP
-readiness and capture configuration are M7c. No World mutations occur here.
+readiness is also available as a standalone mode. No World mutations occur here.
 """
 from __future__ import annotations
 
@@ -22,18 +27,22 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import threading
 import time
+import urllib.request
 
 SHOT_TIMEOUT_S = 30.0
 PASS_TIMEOUT_S = 300.0  # M7c must budget startup, six shots and cleanup within this.
 STARTUP_TIMEOUT_S = 30.0
 TERM_WAIT_S = 5.0
 KILL_WAIT_S = 5.0
+MIN_CHROME_MAJOR = 155
 
 
 def verdict(name: str, detail: str = '', **fields: str) -> dict:
@@ -183,6 +192,96 @@ def daemon(args: argparse.Namespace) -> dict:
     return result
 
 
+def chrome_version(args: argparse.Namespace) -> dict:
+    with tempfile.TemporaryFile() as log:
+        process = spawn([args.chrome, '--version'], log)
+        try:
+            if not wait_bounded(process, SHOT_TIMEOUT_S, None):
+                kill_group(process, signal.SIGKILL)
+                process.wait(timeout=KILL_WAIT_S)
+                return verdict('Timeout', 'Chrome version deadline expired')
+        finally:
+            kill_group(process, signal.SIGKILL)
+        if process.returncode != 0:
+            return verdict('NonzeroExit', f'Chrome exit {process.returncode}')
+        log.seek(0)
+        version = log.read().decode('utf-8', errors='replace').strip()
+    match = re.match(r'^(?:Google Chrome|Chromium) (\d+)\.\S+', version)
+    if match is None or int(match[1]) < MIN_CHROME_MAJOR:
+        return verdict('ChromeVersion', version)
+    return verdict('ok', version=version)
+
+
+def ready(args: argparse.Namespace) -> dict:
+    deadline = time.monotonic() + args.startup_timeout
+    healthy = threading.Event()
+
+    def poll() -> None:
+        while time.monotonic() < deadline:
+            try:
+                for route in ('/v1/health', '/v1/head'):
+                    with urllib.request.urlopen(args.base_url.rstrip('/') + route,
+                                                timeout=10) as response:
+                        if response.status != 200:
+                            break
+                else:
+                    if time.monotonic() < deadline:
+                        healthy.set()
+                    return
+            except OSError:
+                pass
+            time.sleep(0.01)
+
+    # A slow request must not extend the overall startup deadline (including overrides).
+    threading.Thread(target=poll, daemon=True).start()
+    if healthy.wait(max(0, deadline - time.monotonic())):
+        return verdict('ok')
+    return verdict('Timeout', 'HTTP readiness deadline expired')
+
+
+def capture_pass(args: argparse.Namespace) -> dict:
+    deadline = time.monotonic() + PASS_TIMEOUT_S
+    shots = []
+    destination = Path(args.out_dir)
+    try:
+        destination.mkdir()
+    except FileExistsError:
+        return verdict('DestinationExists', str(destination), shots=shots)
+    except OSError as error:
+        return verdict('SupervisorError', str(error), shots=shots)
+    try:
+        rows = json.loads(Path(args.routes).read_text())
+        if not isinstance(rows, list) or len(rows) != 6:
+            return verdict('InvalidConfiguration', 'routes must contain six rows', shots=shots)
+        for i, row in enumerate(rows, 1):
+            name = row['name']
+            if (not isinstance(name, str) or Path(name).name != name or
+                    row['width'] <= 0 or row['height'] <= 0 or
+                    row['scheme'] not in ('light', 'dark')):
+                return verdict('InvalidConfiguration', 'invalid shot route', shots=shots)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return verdict('Timeout', 'pass deadline expired', shots=shots)
+            shot_args = argparse.Namespace(
+                chrome=args.chrome, out=str(destination / name),
+                url=args.base_url.rstrip('/') + row['route'], width=row['width'],
+                height=row['height'], scheme=row['scheme'],
+                timeout=min(SHOT_TIMEOUT_S, remaining))
+            try:
+                result = shot(shot_args)
+            except OSError as error:
+                result = verdict('SupervisorError', str(error))
+            shots.append(dict(name=name, verdict=result['verdict']))
+            print(f'progress: {i}/6 {name} {result["verdict"]}', file=sys.stderr, flush=True)
+            if result['verdict'] != 'ok':
+                return dict(result, shots=shots)
+        if time.monotonic() >= deadline:
+            return verdict('Timeout', 'pass deadline expired', shots=shots)
+        return verdict('ok', shots=shots)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        return verdict('InvalidConfiguration', str(error), shots=shots)
+
+
 def positive(value: str) -> float:
     number = float(value)
     if not math.isfinite(number) or number <= 0:
@@ -225,12 +324,25 @@ def main() -> int:
     lifecycle.add_argument('--unit-cleanup-failure', action='store_true', help=argparse.SUPPRESS)
     shot_flags(lifecycle, required=False)
     lifecycle.add_argument('command', nargs=argparse.REMAINDER, help='-- COMMAND [ARG ...]')
+    version = sub.add_parser('chrome-version', help='require Chrome/Chromium major >= 155')
+    version.add_argument('--chrome', required=True, help='explicit Chrome executable')
+    readiness = sub.add_parser('ready', help='await HTTP health and head readiness')
+    readiness.add_argument('--base-url', required=True)
+    readiness.add_argument('--startup-timeout', type=positive, default=STARTUP_TIMEOUT_S,
+                           help='startup deadline seconds (default 30; shorter values are unit control)')
+    capture = sub.add_parser('pass', help='capture six routes into a new directory')
+    capture.add_argument('--routes', required=True, help='JSON from marketingcheck routes')
+    capture.add_argument('--base-url', required=True)
+    capture.add_argument('--chrome', required=True, help='explicit Chrome executable')
+    capture.add_argument('--out-dir', required=True, help='new six-shot directory')
     args = parser.parse_args()
-    if args.width <= 0 or args.height <= 0 or (args.chrome and (not args.out or not args.url)):
+    if args.mode in ('shot', 'daemon') and (
+            args.width <= 0 or args.height <= 0 or (args.chrome and (not args.out or not args.url))):
         result = verdict('InvalidConfiguration', 'positive viewport and complete shot flags required')
     else:
         try:
-            result = shot(args) if args.mode == 'shot' else daemon(args)
+            result = {'shot': shot, 'daemon': daemon, 'chrome-version': chrome_version,
+                      'ready': ready, 'pass': capture_pass}[args.mode](args)
         except OSError as error:
             result = verdict('SupervisorError', str(error))
     print(json.dumps(result), flush=True)
