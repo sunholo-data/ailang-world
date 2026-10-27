@@ -22,6 +22,243 @@ type supervisorVerdict struct {
 	ShotVerdict string `json:"shot_verdict"`
 }
 
+func TestMarketingKillGroupTolerance(t *testing.T) {
+	py, err := exec.LookPath("python3")
+	if err != nil {
+		t.Fatal("python3 is mandatory: ", err)
+	}
+	path, err := filepath.Abs("../marketing_capture.py")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	const probe = `import errno, importlib.util, json, signal, sys, types
+spec = importlib.util.spec_from_file_location("marketing_capture", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+original = module.os.killpg
+try:
+    for name, error in [
+        ("eperm-swallowed", PermissionError(errno.EPERM, "injected")),
+        ("esrch-swallowed", ProcessLookupError(errno.ESRCH, "injected")),
+        ("einval-propagates", OSError(errno.EINVAL, "injected")),
+    ]:
+        calls = []
+        def fake(pid, sig):
+            calls.append((pid, int(sig)))
+            raise error
+        module.os.killpg = fake
+        row = dict(case=name, calls=calls, outcome="swallowed", type="", errno=None, same=False)
+        try:
+            module.kill_group(types.SimpleNamespace(pid=424242), signal.SIGKILL)
+        except Exception as caught:
+            row.update(outcome="propagated", type=type(caught).__name__,
+                       errno=getattr(caught, "errno", None), same=caught is error)
+        print(json.dumps(row))
+finally:
+    module.os.killpg = original
+`
+	out, err := exec.CommandContext(ctx, py, "-B", "-c", probe, path).CombinedOutput()
+	if err != nil {
+		t.Fatalf("inline kill_group probe must emit all three cases: %v\n%s", err, out)
+	}
+	type result struct {
+		Case    string  `json:"case"`
+		Calls   [][]int `json:"calls"`
+		Outcome string  `json:"outcome"`
+		Type    string  `json:"type"`
+		Errno   *int    `json:"errno"`
+		Same    bool    `json:"same"`
+	}
+	names := []string{"eperm-swallowed", "esrch-swallowed", "einval-propagates"}
+	rows := make(map[string]result)
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(lines) != len(names) {
+		t.Fatalf("inline kill_group probe must emit all three cases: %s", out)
+	}
+	for _, line := range lines {
+		var row result
+		if err := json.Unmarshal([]byte(line), &row); err != nil {
+			t.Fatalf("inline kill_group probe must emit all three cases: %v: %s", err, out)
+		}
+		if _, duplicate := rows[row.Case]; duplicate {
+			t.Fatalf("inline kill_group probe must emit all three cases: duplicate %q", row.Case)
+		}
+		rows[row.Case] = row
+	}
+	for _, name := range names {
+		if _, ok := rows[name]; !ok {
+			t.Fatalf("inline kill_group probe must emit all three cases: missing %q", name)
+		}
+	}
+	for _, name := range names {
+		t.Run(name, func(t *testing.T) {
+			row := rows[name]
+			if !reflect.DeepEqual(row.Calls, [][]int{{424242, int(syscall.SIGKILL)}}) {
+				t.Fatalf("kill_group must call killpg once with the expected pid and signal: %+v", row)
+			}
+			switch name {
+			case "eperm-swallowed":
+				if row.Outcome != "swallowed" || row.Type != "" || row.Errno != nil || row.Same {
+					t.Errorf("kill_group must swallow PermissionError EPERM: %+v", row)
+				}
+			case "esrch-swallowed":
+				if row.Outcome != "swallowed" || row.Type != "" || row.Errno != nil || row.Same {
+					t.Errorf("kill_group must swallow ProcessLookupError ESRCH: %+v", row)
+				}
+			case "einval-propagates":
+				if row.Outcome != "propagated" || row.Type != "OSError" || row.Errno == nil || *row.Errno != int(syscall.EINVAL) || !row.Same {
+					t.Errorf("kill_group must propagate other OSError EINVAL unchanged: %+v", row)
+				}
+			}
+		})
+	}
+}
+
+func TestMarketingKillGroupStress(t *testing.T) {
+	if os.Getenv("WORLD_KILLPG_STRESS") != "1" {
+		t.Skip("opt-in: set WORLD_KILLPG_STRESS=1; real process signalling must run outside the sandbox to probe macOS EPERM")
+	}
+	py, err := exec.LookPath("python3")
+	if err != nil {
+		t.Fatal("python3 is mandatory: ", err)
+	}
+	path, err := filepath.Abs("../marketing_capture.py")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const probe = `import errno, importlib.util, json, os, signal, subprocess, sys, time
+started = time.monotonic()
+deadline = started + 25
+result = dict(trials=0, wrapper_calls=0, raw_calls=0, raw_eperm=0,
+              raw_esrch=0, raw_success=0, wrapper_exceptions=[], errors=[])
+def remaining():
+    budget = deadline - time.monotonic()
+    if budget <= 0:
+        raise TimeoutError("25-second stress wall deadline exceeded")
+    return budget
+try:
+    spec = importlib.util.spec_from_file_location("marketing_capture", sys.argv[1])
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for trial in range(200):
+        remaining()
+        process = None
+        try:
+            process = subprocess.Popen(
+                ["/bin/sh", "-c", "(sleep 60 & wait) & (sleep 60 & wait) & wait"],
+                start_new_session=True, stdin=subprocess.DEVNULL,
+                stdout=sys.stderr, stderr=sys.stderr)
+            if remaining() < 0.02:
+                raise TimeoutError("insufficient budget for settling sleep")
+            time.sleep(0.02)
+            remaining()
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=min(5, remaining()))
+            for pair in range(3):
+                remaining()
+                result["raw_calls"] += 1
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except OSError as error:
+                    if error.errno == errno.EPERM:
+                        result["raw_eperm"] += 1
+                    elif error.errno == errno.ESRCH:
+                        result["raw_esrch"] += 1
+                    else:
+                        raise
+                else:
+                    result["raw_success"] += 1
+                remaining()
+                result["wrapper_calls"] += 1
+                try:
+                    module.kill_group(process, signal.SIGKILL)
+                except Exception as error:
+                    result["wrapper_exceptions"].append(dict(
+                        trial=trial, pair=pair, type=type(error).__name__,
+                        errno=getattr(error, "errno", None), detail=str(error)))
+            result["trials"] += 1
+        finally:
+            if process is not None:
+                # These cleanup calls are never counted as post-reap controls.
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except OSError as error:
+                    if error.errno not in (errno.ESRCH, errno.EPERM):
+                        result["errors"].append("cleanup killpg: " + repr(error))
+                try:
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait(timeout=max(0.001, min(5, deadline - time.monotonic())))
+                except Exception as error:
+                    result["errors"].append("cleanup reap: " + repr(error))
+except Exception as error:
+    result["errors"].append(repr(error))
+finally:
+    result["wrapper_exception_count"] = len(result["wrapper_exceptions"])
+    result["wall_seconds"] = time.monotonic() - started
+    if result["wall_seconds"] > 25:
+        result["errors"].append("25-second stress wall deadline exceeded")
+    print(json.dumps(result), flush=True)
+    if result["raw_eperm"] == 0:
+        print("UNINFORMATIVE: raw EPERM count is 0; EPERM not provoked on this host; this run is not evidence the fix works",
+              file=sys.stderr, flush=True)
+sys.exit(0 if result["trials"] == 200 and result["wrapper_calls"] == 600
+         and result["raw_calls"] == 600 and not result["wrapper_exceptions"]
+         and not result["errors"] else 1)
+`
+	dir := t.TempDir()
+	outputPath, logPath := filepath.Join(dir, "summary.json"), filepath.Join(dir, "stress.log")
+	output, err := os.Create(outputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer output.Close()
+	log, err := os.Create(logPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer log.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, py, "-B", "-c", probe, path)
+	cmd.Stdout, cmd.Stderr = output, log
+	err = cmd.Run()
+	out := readFile(t, outputPath)
+	t.Logf("stress summary: %s; Python exit: %v", strings.TrimSpace(out), err)
+	if logs := readFile(t, logPath); logs != "" {
+		t.Log(logs)
+	}
+	var result struct {
+		Trials                int               `json:"trials"`
+		WrapperCalls          int               `json:"wrapper_calls"`
+		RawCalls              int               `json:"raw_calls"`
+		RawEPERM              int               `json:"raw_eperm"`
+		RawESRCH              int               `json:"raw_esrch"`
+		RawSuccess            int               `json:"raw_success"`
+		WrapperExceptionCount int               `json:"wrapper_exception_count"`
+		WrapperExceptions     []json.RawMessage `json:"wrapper_exceptions"`
+		Errors                []string          `json:"errors"`
+		WallSeconds           float64           `json:"wall_seconds"`
+	}
+	if e := json.Unmarshal([]byte(out), &result); e != nil {
+		t.Fatalf("stress must complete 200 trials and 600 wrapped post-reap kills: invalid summary: %v; Python exit: %v", e, err)
+	}
+	if result.Trials != 200 || result.WrapperCalls != 600 || result.RawCalls != 600 || result.RawEPERM+result.RawESRCH+result.RawSuccess != 600 {
+		t.Errorf("stress must complete 200 trials and 600 wrapped post-reap kills: %s", out)
+	}
+	if result.WrapperExceptionCount != 0 || len(result.WrapperExceptions) != 0 {
+		t.Errorf("real kill_group must raise nothing after leader reap: %s", out)
+	}
+	if err != nil || len(result.Errors) != 0 {
+		t.Errorf("stress setup, raw controls and cleanup must succeed: %v: %s", err, out)
+	}
+	if result.WallSeconds >= 30 {
+		t.Errorf("stress must finish within the 30-second wall target: %.3fs", result.WallSeconds)
+	}
+}
+
 func pythonSupervisor(t *testing.T, args ...string) *exec.Cmd {
 	t.Helper()
 	py, err := exec.LookPath("python3")
