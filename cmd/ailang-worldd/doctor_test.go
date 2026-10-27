@@ -196,7 +196,7 @@ func TestDoctorTTYReasons(t *testing.T) {
 // AC4.3: a flipped pin byte is ✗ with both digests, and doctor exits 1.
 func TestDoctorFlippedPinByte(t *testing.T) {
 	f := doctorFixture(t)
-	addr := deadAddr(t)
+	addr := healthyDoctorAddr(t, filepath.Join(f.home, ".ailang", "world", "world.db"))
 	code, out, _ := runDoctorCLI(t, addr)
 	if code != exitOK || strings.Contains(out, "✗") {
 		t.Fatalf("control: a fresh setup should leave no ✗ (rc %d):\n%s", code, out)
@@ -251,11 +251,11 @@ func TestDoctorDaemonVsForeignListener(t *testing.T) {
 		t.Fatalf("worldd not recognised (rc %d):\n%s", code, out)
 	}
 	code, out, _ = runDoctorCLI(t, foreign.URL)
-	if code != exitUsage || !strings.Contains(out, "✗ daemon     something that is not ailang-worldd answers at "+foreign.URL) {
+	if code != 10 || !strings.Contains(out, "✗ daemon     something that is not ailang-worldd answers at "+foreign.URL) {
 		t.Fatalf("foreign listener not flagged (rc %d):\n%s", code, out)
 	}
 	_, out, _ = runDoctorCLI(t, deadAddr(t))
-	if !strings.Contains(out, "! daemon     nothing answers at") {
+	if !strings.Contains(out, "✗ daemon     nothing is listening at") {
 		t.Fatalf("an empty port not reported:\n%s", out)
 	}
 }

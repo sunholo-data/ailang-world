@@ -592,8 +592,10 @@ func (r IntegrityReport) Lines() []string {
 // HealthResponse is the GET /v1/health body: daemon version, db path and the
 // archived-interpreter HashRef + verbatim `ailang --version` recorded in the
 // archive manifest (frozen route table, Decision 3).
+// TestFrozenV1RouteTableMatchesMux and TestDaemonDependencyAllowlist: additive health data only.
 type HealthResponse struct {
-	Status string `json:"status"`
+	ExecTools map[string]string `json:"exec_tools"`
+	Status    string            `json:"status"`
 	// DaemonVersion is this package's Version.
 	DaemonVersion string `json:"daemon_version"`
 	// DBPath is the configured store database path.
@@ -1093,6 +1095,7 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		body.ToolRef = d.workspace.binRef.String()
 	}
 	body.ExecProfiles, body.ExecProfilesExcluded = d.workspace.healthProfiles()
+	body.ExecTools = d.workspace.healthExecTools()
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		// The status line is already written; there is nothing left to say to

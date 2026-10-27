@@ -80,6 +80,8 @@ func ownVerbHelp(rest []string) (string, bool) {
 		return provenanceHelp, true
 	case "setup":
 		return setupHelp, true
+	case "hosts":
+		return hostsHelp, true
 	case "doctor":
 		return doctorHelp, true
 	case "log":

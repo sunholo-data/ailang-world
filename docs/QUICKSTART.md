@@ -20,6 +20,38 @@ from the binary, that is a defect.*
 > docs and in `serve --help` means the subsection. The heading texts are bound by tests, so
 > they keep their numbers.
 
+## Run your agents through World
+
+With World serving and an approved episode session (see the attended steps below),
+generate private launch settings once:
+
+```bash
+ailang-worldd hosts init --addr http://127.0.0.1:47330
+export WORLD_SESSION="$(cat /path/to/private/episode.session)"
+ailang-worldd --addr http://127.0.0.1:47330 doctor --db /path/to/world.db \
+  --session /path/to/private/episode.session --host claude --quick
+~/.ailang-world/hosts/bin/claude-world
+# Or choose one of:
+~/.ailang-world/hosts/bin/codex-world
+~/.ailang-world/hosts/bin/pi-world
+```
+
+Use `--host codex` or `--host pi` for the corresponding doctor check. Drop
+`--quick` to include the machine inventory and exec tools; `--profile <file.json>`
+selects an exec profile explicitly. `--json` prints one object per check and a
+failure count. Doctor returns daemon 10, session 11, host 12 or exec 13 for a
+failed dependency, with a named cause and a command or exact action to fix it.
+The quick pass reads daemon health, session expiry and launch digests. Its only
+subprocess is the host's `--version`, with only PATH and HOME and a 5 s timeout.
+
+Settings live under `~/.ailang-world/hosts` (override with `hosts init --out-dir`
+and `doctor --hosts-dir`). Changed files refuse until `hosts init --replace`;
+unchanged files are left alone. Directories and launchers are 0700, configs 0600.
+Codex uses its own CODEX_HOME there and only World's MCP server; its auth.json is
+a symlink to your existing ~/.codex/auth.json, never a copied credential. If that
+file is absent, Codex asks you to log in. Each launcher refuses an unset
+WORLD_SESSION with instructions to start an approved session.
+
 ## 0. Attended steps (the only commands a person must run)
 
 An agent or a script can run everything else in this guide. These two steps each read a line

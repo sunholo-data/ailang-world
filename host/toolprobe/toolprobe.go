@@ -32,11 +32,17 @@ const (
 // exec.Cmd.Output does: a non-zero exit is an *exec.ExitError carrying the
 // child's stderr.
 func Output(ctx context.Context, bin, dir string, args ...string) ([]byte, error) {
+	return OutputEnv(ctx, bin, dir, os.Environ(), args...)
+}
+
+// OutputEnv shares the AC10 driven subprocess site and always scrubs credentials.
+// Doctor supplies only PATH and HOME; launcher tests supply their explicit fixture env.
+func OutputEnv(ctx context.Context, bin, dir string, env []string, args ...string) ([]byte, error) {
 	runCtx, cancel := context.WithTimeout(ctx, Timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, bin, args...)
 	cmd.Dir = dir
-	cmd.Env = childenv.Scrubbed(os.Environ())
+	cmd.Env = childenv.Scrubbed(env)
 	cmd.Stdin = nil
 	cmd.WaitDelay = waitDelay
 	return cmd.Output()
