@@ -1,0 +1,24 @@
+#!/bin/sh
+# world-open <popup>: an action. Notes the pane the action was invoked from and
+# its workspace (bin/*-popup reads that hand-off once), then opens the popup.
+#   <popup>: world-agent-popup or plain-agent-popup ([[panes]] ids in herdr-plugin.toml)
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+
+case ${1:-} in
+  world-agent-popup | plain-agent-popup) ;;
+  *) world_die "unknown popup \"${1:-}\"." \
+    "world-open opens world-agent-popup or plain-agent-popup." \
+    "fix the action's command in herdr-plugin.toml" ;;
+esac
+hand=$HERDR_PLUGIN_STATE_DIR/invoker
+rm -f "$hand"
+INV_PANE=
+INV_WORKSPACE=
+# Without a hand-off the popup asks herdr itself.
+if world_current; then
+  printf '%s\n%s\n' "$INV_PANE" "$INV_WORKSPACE" >"$hand"
+fi
+world_herdr plugin pane open "$1"

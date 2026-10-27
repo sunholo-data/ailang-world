@@ -1,0 +1,34 @@
+#!/bin/sh
+# world-event <pane.closed|pane.exited>: an event. Marks the pane ended in
+# panes.jsonl and arms.jsonl, and for a World pane says what remains.
+set -u
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+. "$ROOT/lib/world.sh"
+world_init
+
+event=${1:-}
+case $event in
+  pane.closed | pane.exited) ;;
+  *) world_die "unknown event \"$event\"." \
+    "world-event handles pane.closed and pane.exited." \
+    "fix the event's command in herdr-plugin.toml" ;;
+esac
+json=${HERDR_PLUGIN_EVENT_JSON:-}
+pane=$(printf '%s' "$json" | jq -r 'first(.. | objects | select(has("pane_id")) | .pane_id | tostring) // empty' 2>/dev/null)
+if [ -z "$pane" ]; then
+  world_die "$event came with no pane id." \
+    "HERDR_PLUGIN_EVENT_JSON held no pane_id." \
+    "nothing was marked; check herdr's version (0.9.3 or later)"
+fi
+
+panes=$HERDR_PLUGIN_STATE_DIR/panes.jsonl
+ep=
+if [ -f "$panes" ]; then
+  ep=$(jq -r --arg p "$pane" 'select((.pane | tostring) == $p and .ended == null) | .episode' "$panes" 2>/dev/null | sed -n 1p)
+fi
+world_mark_ended "$panes" "$pane"
+world_mark_ended "$HERDR_PLUGIN_STATE_DIR/arms.jsonl" "$pane"
+rm -f "$HERDR_PLUGIN_STATE_DIR/watch/$(world_safe "$pane")"
+if [ -n "$ep" ]; then
+  world_notify "ailang-world" "Episode $ep's pane closed. Its worktree and session remain; finish it from the CLI (row 218 will make this one step)"
+fi
