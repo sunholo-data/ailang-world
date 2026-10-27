@@ -288,7 +288,7 @@ func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
 	fixtures := writeSet(t, bs)
 	manifest := putJSON(t, dir, "demo.json", demoFixture())
 	rectangles := putJSON(t, dir, "rectangles.json", rects)
-	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused"} {
+	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused", "single-pass", "daemon-exits"} {
 		t.Run(name, func(t *testing.T) {
 			d := t.TempDir()
 			t.Setenv("CAPTURE_FIXTURES", fixtures)
@@ -298,6 +298,9 @@ func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
 			}
 			if name == "old-chrome" {
 				t.Setenv("CAPTURE_VERSION", "Google Chrome 154.0.1.2")
+			}
+			if name == "daemon-exits" {
+				t.Setenv("CAPTURE_DAEMON_EXIT", "yes")
 			}
 			bind := "127.0.0.1:1"
 			if name == "bind-refused" {
@@ -314,6 +317,8 @@ import http.server, json, os, pathlib, sys
 root = pathlib.Path(__file__).parent
 (root / 'argv').write_text(json.dumps(sys.argv[1:]) + '\n')
 (root / 'pid').write_text(str(os.getpid()))
+if os.environ.get('CAPTURE_DAEMON_EXIT'):
+    sys.exit(3)
 host, port = sys.argv[sys.argv.index('--bind') + 1].split(':')
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -328,7 +333,33 @@ http.server.HTTPServer((host, int(port)), Handler).serve_forever()
 				"--proof-key-file", filepath.Join(d, "key"), "--ailang-bin", filepath.Join(d, "ailang"),
 				"--workspace-root", d, "--tool-ailang-bin", tool, "--chrome", fakeCaptureChrome(t, d),
 				"--out", out, "--rectangles", rectangles, "--worldd-bin", worldd, "--bind", bind, "--marketingcheck-bin", bin, "--verify-twice"}
+			if name == "single-pass" {
+				args = args[:len(args)-1] // no --verify-twice
+			}
 			rc, _, se := runCaptureCommand(t, "bash", args...)
+			if name == "daemon-exits" {
+				var v captureVerdict
+				pngOK(t, json.Unmarshal([]byte(readFile(t, filepath.Join(out, "daemon-verdict.json"))), &v))
+				_, err := os.Stat(filepath.Join(out, "pass-a"))
+				if rc != 1 || v.Verdict != "NonzeroExit" || !os.IsNotExist(err) {
+					t.Fatalf("a daemon that exits before HTTP readiness must refuse as NonzeroExit before any pass: rc=%d verdict=%+v pass-a stat=%v stderr=%q", rc, v, err, se)
+				}
+				return
+			}
+			if name == "single-pass" {
+				entries, err := os.ReadDir(filepath.Join(out, "pass-a"))
+				pngOK(t, err)
+				var absent []string
+				for _, f := range []string{"pass-b", "capture-manifest.json", "diagnostics.txt"} {
+					if _, err := os.Stat(filepath.Join(out, f)); !os.IsNotExist(err) {
+						absent = append(absent, f)
+					}
+				}
+				if rc != 0 || len(entries) != 6 || len(absent) != 0 {
+					t.Fatalf("without --verify-twice the run stops after pass A with rc 0 and no check: rc=%d pass-a=%d unexpected=%v stderr=%q", rc, len(entries), absent, se)
+				}
+				return
+			}
 			if name == "bind-refused" {
 				_, err := os.Stat(filepath.Join(d, "argv"))
 				if rc == 0 || !os.IsNotExist(err) || !strings.Contains(se, bind) {
