@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap">
 <link rel="icon" type="image/svg+xml" href="/ailang-world/img/ailang-logo.svg"><link rel="stylesheet" href="/ailang-world/assets/css/styles.bd05f0e6.css">
-<script src="/ailang-world/assets/js/runtime~main.d7b187b6.js" defer="defer"></script>
-<script src="/ailang-world/assets/js/main.0994efac.js" defer="defer"></script>
+<script src="/ailang-world/assets/js/runtime~main.7cdf1d72.js" defer="defer"></script>
+<script src="/ailang-world/assets/js/main.812d4729.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -96,7 +96,10 @@ outside World.</p>
 <ul>
 <li class=""><strong>Codex.</strong> Code mode still exposes <code>apply_patch</code> as a nested tool. With
 <code>approval_policy = &quot;never&quot;</code>, the read-only sandbox refuses it rather than asking you. A live
-probe of this is pending. <code>doctor --host codex</code> warns when <code>approval_policy = &quot;never&quot;</code> is
+probe on 27 Oct 2026 (Codex 0.164, <code>gpt-6.1-sol</code>) confirmed it. Through <code>codex-world</code>, the
+agent declined, citing World&#x27;s instructions. With those instructions removed, it called
+<code>apply_patch</code> and got <code>patch rejected: writing is blocked by read-only sandbox; rejected by user approval settings</code>, and no file was written. A control with only the sandbox made
+writable created the file. <code>doctor --host codex</code> warns when <code>approval_policy = &quot;never&quot;</code> is
 missing from the launch config.</li>
 <li class=""><strong>pi.</strong> Before #381, <code>pi-world</code> started pi with no tools at all. A launch directory written
 since then loads <code>pi-mcp-adapter</code>, and a missing adapter makes <code>pi-world</code> refuse with the fix:
