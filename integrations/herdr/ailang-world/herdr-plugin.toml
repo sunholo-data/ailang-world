@@ -22,6 +22,31 @@ title = "World: write config"
 contexts = ["workspace", "pane"]
 command = ["bin/world-config-init"]
 
+[[actions]]
+id = "world-keys"
+title = "World: install key bindings"
+description = "Shows the key bindings, then adds them to herdr's config only after you type y"
+contexts = ["workspace", "pane"]
+command = ["bin/world-open", "world-keys-popup"]
+
+[[actions]]
+id = "world-panel"
+title = "World panel"
+contexts = ["workspace", "pane"]
+command = ["bin/world-open-panel"]
+
+[[panes]]
+id = "world-keys-popup"
+title = "World key bindings"
+placement = "popup"
+command = ["bin/world-keys"]
+
+[[panes]]
+id = "world-panel"
+title = "World"
+placement = "overlay"
+command = ["bin/world-panel"]
+
 [[panes]]
 id = "world-agent-popup"
 title = "New World agent"

@@ -1,24 +1,30 @@
 #!/bin/sh
 # world-open <popup>: an action. Notes the pane the action was invoked from and
-# its workspace (bin/*-popup reads that hand-off once), then opens the popup.
-#   <popup>: world-agent-popup or plain-agent-popup ([[panes]] ids in herdr-plugin.toml)
+# its workspace (bin/*-popup reads that hand-off once), starts bin/world-watch
+# when it isn't running, then opens the popup.
+#   <popup>: world-agent-popup, plain-agent-popup or world-keys-popup
+#   ([[panes]] ids in herdr-plugin.toml). The key-bindings popup needs no
+#   world.env, so it gets neither the hand-off nor the watcher.
 set -u
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 . "$ROOT/lib/world.sh"
-world_init
 
 case ${1:-} in
-  world-agent-popup | plain-agent-popup) ;;
+  world-agent-popup | plain-agent-popup)
+    world_init
+    hand=$HERDR_PLUGIN_STATE_DIR/invoker
+    rm -f "$hand"
+    INV_PANE=
+    INV_WORKSPACE=
+    # Without a hand-off the popup asks herdr itself.
+    if world_current; then
+      printf '%s\n%s\n' "$INV_PANE" "$INV_WORKSPACE" >"$hand"
+    fi
+    world_watch_ensure
+    ;;
+  world-keys-popup) world_need_herdr ;;
   *) world_die "unknown popup \"${1:-}\"." \
-    "world-open opens world-agent-popup or plain-agent-popup." \
+    "world-open opens world-agent-popup, plain-agent-popup or world-keys-popup." \
     "fix the action's command in herdr-plugin.toml" ;;
 esac
-hand=$HERDR_PLUGIN_STATE_DIR/invoker
-rm -f "$hand"
-INV_PANE=
-INV_WORKSPACE=
-# Without a hand-off the popup asks herdr itself.
-if world_current; then
-  printf '%s\n%s\n' "$INV_PANE" "$INV_WORKSPACE" >"$hand"
-fi
 world_herdr plugin pane open --plugin ailang-world --entrypoint "$1" --focus

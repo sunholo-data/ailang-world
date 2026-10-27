@@ -29,18 +29,9 @@ mkdir -p "$HERDR_PLUGIN_STATE_DIR/watch"
 
 # watch_pane PANE EP HOST
 watch_pane() {
-  world_doctor --session "$WORLD_SESSIONS/$2.session" --host "$3" --hosts-dir "$WORLD_HOSTS"
-  case $DOC_CODE in
-    0) state=ok ;;
-    11) state=expired ;;
-    12) state=host-drift ;;
-    *) state=down ;;
-  esac
-  # A host warning exits 0, but that launch config would be observed.
-  if world_doctor_problem && [ "$state" = ok ]; then state=host-drift; fi
-  left=unknown
-  if world_session_left; then left=$LEFT; fi
-  [ "$state" != expired ] || left=expired
+  world_check_pane "$2" "$3"
+  state=$PANE_STATE
+  left=$PANE_LEFT
   world_herdr pane report-metadata "$1" --source ailang-world --token "episode=$2" --token level=confined \
     --token "world=$state" --token "session=$left" >/dev/null ||
     printf 'world-watch: herdr could not label pane %s\n' "$1" >&2

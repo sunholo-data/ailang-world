@@ -64,6 +64,10 @@ ailang-world=\$HOME/dev/ailang-world:ailang-world
 
 # The model episode start names for each host (empty: the host's default).
 WORLD_MODELS="claude=claude-opus-5-5 codex=gpt-6.1-sol pi="
+
+# Optional: the keys "World: install key bindings" (bin/world-keys) adds to
+# herdr's config, for New World agent, New plain agent and the World panel.
+# WORLD_KEYS="agent=prefix+shift+a plain=prefix+shift+l panel=prefix+shift+o"
 EOF
 ) && mv "$tmp" "$env_file" || {
   rm -f "$tmp"
