@@ -418,6 +418,8 @@ stores with the same history. So:
 
 ## §10 Milestones
 
+M0/M1 built in episode `w219a` (Go implementation and fake-supervisor tests; real macOS installation remains attended).
+
 | M | what | gate |
 |---|---|---|
 | **M0** | eager build identity (P1); `ailang-worldd version [--json]`; health's `started_at`, `supervisor`, `active` | Go tests; the AC15 swap-before-first-health test |

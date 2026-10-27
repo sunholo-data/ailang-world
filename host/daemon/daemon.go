@@ -393,6 +393,8 @@ func (e *StartupError) Unwrap() error { return e.Err }
 // and the HTTP server is built with its D7 timeouts. Listen/Serve/Shutdown/Close
 // drive the rest of the lifecycle.
 type Daemon struct {
+	startedAt int64
+	activity  activityTracker
 	cfg       Config
 	store     *store.Store
 	bootstrap func(context.Context, *store.Store, string) (registry.Registry, hashref.HashRef, error)
@@ -594,8 +596,11 @@ func (r IntegrityReport) Lines() []string {
 // archive manifest (frozen route table, Decision 3).
 // TestFrozenV1RouteTableMatchesMux and TestDaemonDependencyAllowlist: additive health data only.
 type HealthResponse struct {
-	ExecTools map[string]string `json:"exec_tools"`
-	Status    string            `json:"status"`
+	StartedAt  int64             `json:"started_at"`
+	Supervisor string            `json:"supervisor"`
+	Active     HealthActive      `json:"active"`
+	ExecTools  map[string]string `json:"exec_tools"`
+	Status     string            `json:"status"`
 	// DaemonVersion is this package's Version.
 	DaemonVersion string `json:"daemon_version"`
 	// DBPath is the configured store database path.
@@ -671,6 +676,7 @@ func resolveErrorLog(w io.Writer) io.Writer {
 // ctx is threaded to bootstrap reads; it does not bound every startup operation.
 // Pass the caller's intended bootstrap-read ctx; this API supplies no default timeout.
 func New(ctx context.Context, cfg Config) (*Daemon, error) {
+	_ = CurrentBuild()
 	if !isLoopbackHost(cfg.BindHost) {
 		return nil, &StartupError{
 			Stage: StageBindPolicy,
@@ -764,7 +770,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
+		startedAt: time.Now().Unix(),
+		cfg:       cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
@@ -772,6 +779,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
 	}
+	d.resolver = activityResolver{inner: d.resolver, activity: &d.activity}
+
 	d.human = serializedHandler{mu: &d.humanMu, h: broker.NewHumanHandler(s)}
 	workspace.bindingFor = d.episodeBinding
 	release := unpinnedRelease
@@ -1065,7 +1074,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
 	mux.HandleFunc("POST /mcp/", d.projection.MCP)
 	mux.HandleFunc("POST /agui/", d.handleAGUI)
-	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(mux))
+	return trackActivityRequests(NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(mux)))
 }
 
 // isProtected reports whether a request must carry a valid session credential
@@ -1090,7 +1099,8 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		InterpreterVersion: d.interpreterVersion,
 		DegradedEpisodes:   d.workspace.degradedEpisodes(),
 		Build:              CurrentBuild(),
-		CredentialsDB:      d.credentialsPath,
+		StartedAt:          d.startedAt, Supervisor: serviceSupervisor(), Active: d.activity.snapshot(time.Now().Unix()),
+		CredentialsDB: d.credentialsPath,
 	}
 	if d.workspace.bin != "" {
 		body.ToolRef = d.workspace.binRef.String()
@@ -1234,6 +1244,7 @@ func startBounded(ctx context.Context, cfg Config, budget time.Duration, constru
 }
 
 func Run(ctx context.Context, cfg Config, announce io.Writer) error {
+	_ = CurrentBuild() // Freeze executable bytes before any listener accepts.
 	d, err := startBounded(ctx, cfg, 9*time.Second, New)
 	if err != nil {
 		return err

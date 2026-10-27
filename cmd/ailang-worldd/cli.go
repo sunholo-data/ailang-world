@@ -84,7 +84,7 @@ func (c *client) doRequest(ctx context.Context, method, path string, body io.Rea
 }
 
 // budgetContext is the one context root of the row-138 client verbs (tools,
-// call, why, provenance): a whole-command budget under which every request
+// call, why, provenance) and service control subprocesses: a whole-command budget under which every request
 // still gets the client's own per-request deadline. Those verbs make no Store
 // call; they only speak HTTP to the loopback daemon.
 func budgetContext(d time.Duration) (context.Context, context.CancelFunc) {
