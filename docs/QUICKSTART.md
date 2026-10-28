@@ -1146,6 +1146,11 @@ control.
 6. `arm6-network`: World opens its own live `127.0.0.1` listener, and an unsandboxed connect is
    accepted first. A raw connect and a connect through srt's proxy must not reach it, and a port
    the child binds must be unreachable from the host.
+   A reach counts only when the listener answers World's hello with the child's one-time nonce. A
+   port another host process holds is retried on a fresh port, up to 3 attempts. `reverse leg:
+   inconclusive after 3 attempts` means something on the host kept taking the chosen ports: retry,
+   or find that process. `reverse leg: a listener on … answered nothing to World's hello` means a
+   process that never answers held the port, and World cannot tell it from the child: find it.
 7. `arm7-toolchain`: the profile's `probe` exits 0.
 8. `arm8-protected-write` (protected profiles only): directory writes are refused. Base-name
    writes are refused on darwin; on Linux they succeed and must be detected by the integrity

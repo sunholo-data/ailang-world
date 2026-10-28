@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -662,6 +663,76 @@ func TestExecProbeReverseLegSilentHolderRefusesSticky(t *testing.T) {
 				strings.Contains(why, revReachedText) || p.calls.Load() != row.calls {
 				t.Fatalf("Why = %q, picker calls %d; want the sticky silent refusal on attempt %d, calls %d", why, p.calls.Load(), row.at+1, row.calls)
 			}
+		})
+	}
+}
+
+// T4 (design §7): a collision on attempt 1 must not mask a real reach on
+// attempt 2. The pass-through shim runs World's real node client
+// unsandboxed: attempt 1's child gets EADDRINUSE under an http-400 holder
+// (INCONCLUSIVE); attempt 2's child binds and answers the nonce.
+func TestExecProbeReverseLegRealReachSurvivesAForeignAttempt(t *testing.T) {
+	f := newProbeFixture(t, shimSrtTree(t, "passthrough"), nil, "", []any{"sh", "-c", "exit 0"})
+	pp := f.arm8Prober(t) // client = World's node
+	p := newRevPicker(t, "http-400", "free", "free")
+	pp.pickPort = p.pick
+	why := runReverseLeg(t, pp)
+	want := fmt.Sprintf("reverse leg: %s on 127.0.0.1:%d", revReachedText, p.port(t, 1))
+	if why != want || p.calls.Load() != 2 {
+		t.Fatalf("Why = %q, picker calls %d; want %q and 2", why, p.calls.Load(), want)
+	}
+}
+
+// revStandIn is a node srt stand-in for T6: a run whose argv carries
+// `listen` never runs the child; it prints the Linux-correct tokens, and
+// when the argv also carries `proxy` (attempt 1 = Run C, as srt's own mux
+// would) it first plants a holder of shape MODE on the listen port.
+// Every other run passes through, unsandboxed.
+const revStandIn = `const {spawnSync}=require('child_process');const os=require('os');const net=require('net');
+const a=process.argv.slice(2);
+if(a[0]!=='--settings'||a[2]!=='--'){console.error('STANDIN: bad launch '+JSON.stringify(a));process.exit(99)}
+const argv=a.slice(3);const li=argv.indexOf('listen');
+if(li<0){const r=spawnSync(argv[0],argv.slice(1),{stdio:'inherit'});if(r.error){console.error('STANDIN: '+r.error.code);process.exit(127)}
+process.exit(r.status===null?128+os.constants.signals[r.signal]:r.status)}
+const mode=MODE;const q=argv[li+1].split(':');const port=+q[0],ms=+q[1];
+const say=s=>process.stdout.write(s+'\n');
+const report=()=>{if(argv.includes('proxy'))say('WORLD-PROBE-REFUSED ECONNREFUSED');say('WORLD-PROBE-BOUND')};
+const done=srv=>setTimeout(()=>{if(srv)srv.close();process.exit(0)},ms);
+if(mode==='control'||!argv.includes('proxy')){report();done(null)}
+else{const srv=net.createServer(mode==='chatty'?c=>{c.once('data',()=>c.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'))}:c=>{});
+srv.on('error',e=>{console.error('STANDIN: holder '+e.code);process.exit(98)});
+srv.listen(port,'127.0.0.1',()=>{report();done(srv)})}
+`
+
+// T6 (design §7): the CI flake, reproduced through ProbeExecProfiles.
+// chatty is RED at base (P0); silent is the sticky refusal; control has no holder.
+func TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse(t *testing.T) {
+	for _, mode := range []string{"chatty", "silent", "control"} {
+		t.Run(mode, func(t *testing.T) {
+			cli := strings.Replace(revStandIn, "MODE", strconv.Quote(mode), 1)
+			f := newProbeFixture(t, fakeSrtTree(t, "0.0.0-test", cli), nil, "", []any{"sh", "-c", "echo toolchain-ok"})
+			err := f.probe(t, "")
+			var why string
+			var perr *ExecProbeError
+			if errors.As(err, &perr) {
+				for _, fl := range perr.Failed {
+					if fl.Arm == ExecProbeArmNetwork {
+						why = fl.Why
+					}
+				}
+			}
+			t.Logf("%s: arm 6 = %q", mode, why)
+			switch mode {
+			case "chatty", "control":
+				if strings.Contains(why, "reverse leg") {
+					t.Errorf("%s: arm 6 reports a reverse leg: %s", mode, why)
+				}
+			case "silent":
+				if !strings.Contains(why, "reverse leg: a listener on 127.0.0.1:") || !strings.Contains(why, "answered nothing to World's hello") || strings.Contains(why, revReachedText) {
+					t.Errorf("silent: arm 6 must carry the silent refusal, not the reached text: %s", why)
+				}
+			}
+			f.assertProbeCleaned(t)
 		})
 	}
 }
