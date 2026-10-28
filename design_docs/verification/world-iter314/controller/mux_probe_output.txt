@@ -1,0 +1,10 @@
+# Controller measurement, iteration 314 (2026-10-28), darwin, node v26.12.1
+# srt: pinned @anthropic-ai/sandbox-runtime 0.0.78 at ~/.ailang/state/mission-world-iter241/srt/node_modules
+#      dist/cli.js sha256 prefix 3c3092bd26b3 (= World's ExecSandboxCLISHA256)
+# command: perl -e 'alarm 60; exec @ARGV' node mux_probe.mjs <srt package dir>
+HELLO  : close after 3ms bytes=28 first="HTTP/1.1 400 Bad Request"
+HELLO  : close after 0ms bytes=28 first="HTTP/1.1 400 Bad Request"
+HELLO  : close after 1ms bytes=28 first="HTTP/1.1 400 Bad Request"
+SILENT : deadline after 1500ms bytes=0 first=""
+SILENT : deadline after 1502ms bytes=0 first=""
+rc=0

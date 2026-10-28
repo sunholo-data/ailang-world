@@ -1,0 +1,77 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter314-arm6/design_docs/planned/w-exec-probe-reverse-leg-port-race.md",
+  "iso_ts": "2026-10-28T16:32:14Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0891202,
+      "tokens_in": 10763,
+      "tokens_out": 16830,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The headline availability guarantee — that a host process holding the reverse port no longer refuses startup — rests on unmeasured arithmetic: §4.3 asserts 'each extra attempt costs one srt start plus the 1 s listen' but no verification row measures an srt start's wall cost (V17 measures only today's whole-probe 2.47 s). If a collision's retries push the leg past the 9 s startup clamp (V16), the run yields no token (exec_probe.go:278-283) and the leg refuses as NO-TOKEN ('no token from the child's listener') — so in exactly the collision scenario this item exists to fix, startup can still be refused, misattributed to a missing client, and the new S7 inconclusive operator text never fires. Fail-closed holds, but the claim that retries fit the budget is inferred, not measured.",
+        "catch": "Verify retry headroom against the 9 s clamp (measure one listen-only srt attempt via timestamp deltas around V17's TIMING line in the attempt-1 CI log, or a local scratch timing). Two secondary spec gaps: (a) picker failure on attempts 2–3 is unspecified — §4.2 only covers attempt 1; (b) R1's '~20 dials in an attempt' is only consistent with a pollLoopback that classifies connected dials concurrently — if the 500 ms read blocks inline at 50 ms cadence, an attempt against a silent foreign listener classifies ~2 dials, not ~20; pin down whether reads run per-dial.",
+        "proposed_fix": "Add V22 measuring one reverse-leg retry's wall cost (CI-log timestamp deltas around 'TIMING the startup probe took 2.466536014s', or a local scratch timing of a single listen-only probe run), and state the worst-case 3-attempt probe duration in §4.3 (expected ≈2.5 s + 2×(srt start ≈0.4 s + 1 s) ≈ 5.5 s \u003c 9 s). Add one sentence to §4.2: 'If the picker fails on attempts 2–3, the leg refuses with the same no-free-port text as attempt 1.' Optionally make budget exhaustion mid-retry distinguishable: a no-token run after a prior INCONCLUSIVE reports the inconclusive exhaustion text, with a T3 row 'budget-spent-mid-retry' (foreign attempt 1, no-token attempt 2) asserting that text; MUT-PROBE-RC-ONLY stays killed because a genuinely missing client on attempt 1 still names itself (T5 unchanged)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.173505,
+      "tokens_in": 10650,
+      "tokens_out": 9437,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The conflict-surface analysis (§9) asserts 'arms 1–5, 7 and 8 are untouched' and that the edit is 'confined to' four spots, but it never enumerates the call sites of the two helpers whose signatures and semantics it changes: pollLoopback (gains a `want` parameter, a 500 ms blocking read phase, and a new reverseSeen return type) and freeLoopbackPort (now routed through the overridable execProber.pickPort seam). The verification log greps for reverse-leg *text* (V14) and for .ail involvement (V15), but contains no caller census for `pollLoopback` or `freeLoopbackPort`. If any other code path — e.g., probeProtected (arm 8), the raw/proxy legs, or code outside host/broker — calls either function, the 'untouched' claim is false and the new blocking read could alter another arm's timing or judgment unreviewed. As written, the non-interference premise that justifies scoping the diff to §9 is asserted, not verified, which fails gate 2.",
+        "catch": "Add a caller census for both edited helpers: `grep -rn 'pollLoopback\\|freeLoopbackPort' host/ cmd/ world/` and state, per call site, whether it is updated in this item or provably unaffected (and why). V2 and V14 already show the doc greps precisely when it wants to — this one grep is conspicuously absent while §9 leans on it. Secondary, worth one line while you are in there: the per-attempt collision probability and attempt independence that make `execProbeReverseAttempts = 3` sufficient are unmeasured on Linux (V12 is darwin-only and measures Go's next-bind, not srt's mux bind inside a live Run C window), so state explicitly why 3 is enough or price the exhaustion-to-refusal conversion as a residual alongside R1–R3.",
+        "proposed_fix": "Add a §9 paragraph plus verification-log row: 'Caller census. V22: `grep -rn \"pollLoopback\\\\|freeLoopbackPort\" host/ cmd/ world/` returns N call sites: \u003clist each with file:line\u003e. Sites \u003cx..y\u003e are inside the reverseLeg path this item rewrites. Sites \u003cz..\u003e (if any) are unaffected because \u003creason per site — e.g., they pass `want == \"\"` and the read phase is skipped when want is empty, or they call freeLoopbackPort directly and bypass pickPort, so the seam cannot change their port selection\u003e. Arms 1–5, 7 and 8 do not call either helper (zero grep hits in their code paths), which is what \"untouched\" means here.' If the census finds any additional caller, either widen the diff scope in §9/§10 or justify exclusion; if it confirms the reverse leg is the sole caller, the claim becomes verified rather than asserted. Also add one residual line to §5: 'R4, collision-rate assumption: 3 attempts suffice only if per-attempt collisions are near-independent; the per-srt-start mux bind(0) argument (V7) supports independence by reading, but no Linux measurement of the in-window collision rate exists. If exhaustion refusals appear in CI, this assumption is the first thing to re-measure.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.051588,
+      "tokens_in": 11622,
+      "tokens_out": 255,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "Residual R1 (a slow intermittent breach where the child's listener accepts connections but consistently takes \u003e500ms to write the nonce on attempt 1, then does not bind on attempt 2) relies on classifying a connected dial that times out on read as 'foreign' (retry) rather than a refusal or longer wait, though this requires a pathological dual condition and is explicitly priced in §5.",
+        "catch": "In `pollLoopback`, ensure that if a dial connects and sets a 500ms read deadline right before `stop()` is called (when Run C exits), the goroutine waits for the in-flight read to complete before returning `reverseSeen` rather than racing or aborting the read.",
+        "proposed_fix": "Verify in the `pollLoopback` implementation that `stop()` waits on the polling goroutine's completion channel after any in-flight `conn.Read` (bounded by the 500ms deadline) finishes, so a nonce written just before child exit is never dropped."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read §1-§4: option A is the only option that classifies a reach; a real reach still refuses on first attempt; foreign reach is inconclusive and never passes; bounded 3 attempts with a distinct refusal. Premises V5/V6 re-verified by controller."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The conflict-surface analysis (§9) asserts 'arms 1–5, 7 and 8 are untouched' and that the edit is 'confined to' four spots, but it never enumerates the call sites of the two helpers whose signatures and semantics it changes: pollLoopback (gains a `want` parameter, a 500 ms blocking read phase, and a new reverseSeen return type) and freeLoopbackPort (now routed through the overridable execProber.pickPort seam). The verification log greps for reverse-leg *text* (V14) and for .ail involvement (V15), but contains no caller census for `pollLoopback` or `freeLoopbackPort`. If any other code path — e.g., probeProtected (arm 8), the raw/proxy legs, or code outside host/broker — calls either function, the 'untouched' claim is false and the new blocking read could alter another arm's timing or judgment unreviewed. As written, the non-interference premise that justifies scoping the diff to §9 is asserted, not verified, which fails gate 2."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.3142132,
+    "total_tokens_in": 33035,
+    "total_tokens_out": 26522
+  }
+}

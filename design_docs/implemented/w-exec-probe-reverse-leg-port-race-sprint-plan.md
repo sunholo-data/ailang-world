@@ -1,6 +1,6 @@
 # Sprint plan — `w-exec-probe-reverse-leg-port-race` (iteration 314, clause 3, availability defect)
 
-**Design doc:** [`design_docs/planned/w-exec-probe-reverse-leg-port-race.md`](w-exec-probe-reverse-leg-port-race.md)
+**Design doc:** [`design_docs/implemented/w-exec-probe-reverse-leg-port-race.md`](w-exec-probe-reverse-leg-port-race.md)
 (r3; quorum-cleared through the narrow-refinement carve-out after rounds 1 and 2, §13)
 **Sprint base:** worktree `/Users/voightkampff/dev/sunholo-data/.wt-world-iter314-arm6`, branch
 `sprint/world-iter314-arm6-reverse-leg`, HEAD `e4dbac36`, clean tree. Its Go tree is the design's

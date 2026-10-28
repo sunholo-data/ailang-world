@@ -4,8 +4,8 @@
   "row": "controller-filed (red CI run 40699055042 attempt 1 on origin/dev 2769cff9; no queue row)",
   "clause": "clause-3",
   "authority": [
-    "design_docs/planned/w-exec-probe-reverse-leg-port-race.md r3 (quorum-cleared via the narrow-refinement carve-out, §13)",
-    "design_docs/planned/w-exec-probe-reverse-leg-port-race-sprint-plan.md"
+    "design_docs/implemented/w-exec-probe-reverse-leg-port-race.md r3 (quorum-cleared via the narrow-refinement carve-out, §13)",
+    "design_docs/implemented/w-exec-probe-reverse-leg-port-race-sprint-plan.md"
   ],
   "estimate": "0.75 day",
   "scope": "3 milestones, each independently green. Files: host/broker/exec_probe.go, host/broker/exec_probe_test.go, docs/QUICKSTART.md (§10 arm 6 prose), .github/workflows/ci.yml (step 8 tests= list). No .ail file. No git writes by the executor; the controller commits.",
@@ -228,7 +228,10 @@
           "edit": "classifyReverseDial: string(buf) == want+\"\\n\" -> string(buf) == want+\"X\\n\"",
           "must_fail_test": "TestExecProbePassThroughShimFailsEveryConfinementArm (lacks 'reverse leg: the host reached')"
         }
-      ]
+      ],
+      "status": "completed",
+      "iteration": 314,
+      "commit": "2f2ba233"
     },
     {
       "id": "M2",
@@ -340,7 +343,10 @@
           "edit": "revSilent format -> reached text",
           "must_fail_test": "TestExecProbeReverseLegSilentHolderRefusesSticky"
         }
-      ]
+      ],
+      "status": "completed",
+      "iteration": 314,
+      "commit": "5856a606"
     },
     {
       "id": "M3",
@@ -409,7 +415,10 @@
           "must_fail_test": "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent"
         }
       ],
-      "closing": "AC-MUT in full: each of M1–M21 alone vs go test ./host/broker -run '^TestExecProbe' -count=1 -v; every design-named killer is in the red set; record the full red set; the unmutated control red set is empty"
+      "closing": "AC-MUT in full: each of M1–M21 alone vs go test ./host/broker -run '^TestExecProbe' -count=1 -v; every design-named killer is in the red set; record the full red set; the unmutated control red set is empty",
+      "status": "completed",
+      "iteration": 314,
+      "commit": "d7bba842"
     }
   ],
   "mutation_revert": "Before each mutant: cp host/broker/exec_probe.go /tmp/w314-mut/exec_probe.go.snap; shasum -a 256 host/broker/exec_probe.go host/broker/exec_probe_test.go > /tmp/w314-mut/pre.sha. After: cp the snap back; shasum -a 256 -c /tmp/w314-mut/pre.sha must say OK for both. A mutant that fails to compile is a protocol error, never a kill.",
@@ -423,5 +432,15 @@
     "D7 cosmetic: AC-CI cites ci.yml:254-257; guard loop is :254-256.",
     "D8 sizing: design +95/-20 prod, +260 test; plan estimates about +125/-30 and +360, hence 3 milestones."
   ],
-  "out_of_scope": "R2 cross-profile reach on a live counted listener (successor w-exec-probe-cross-profile-poll); narrowing refusal codes; raw/proxy leg accept counting; any srt change; the step-8 guard's top-level-only PASS check (TestExecSrtReplayIsByteEqual parent PASS with skipped subtests)."
+  "out_of_scope": "R2 cross-profile reach on a live counted listener (successor w-exec-probe-cross-profile-poll); narrowing refusal codes; raw/proxy leg accept counting; any srt change; the step-8 guard's top-level-only PASS check (TestExecSrtReplayIsByteEqual parent PASS with skipped subtests).",
+  "status": "completed",
+  "pr": 403,
+  "evaluation": {
+    "judge": "sonnet (Agent tool)",
+    "round": 1,
+    "verdict": "PASS",
+    "score": 92,
+    "blocking": 0,
+    "report": "design_docs/verification/world-iter314/evaluator-r1.md"
+  }
 }

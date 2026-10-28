@@ -1,0 +1,78 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter314-arm6/design_docs/planned/w-exec-probe-reverse-leg-port-race.md",
+  "iso_ts": "2026-10-28T16:37:10Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.084677,
+      "tokens_in": 11741,
+      "tokens_out": 15509,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The acceptance story has a silent-vacuity hole on the exact runner where the defect was observed. §7/AC-CI asserts that T1, T2, T3 and T5 'never skip', but that premise is asserted, not measured: it rests on an unlogged reading that an 'arm8Fixture-style' /bin/sh client can drive the probe with no node and no pinned srt. Every fixture observation in the log (V10, V11, V13) was made on a machine with node present, and the only fixture-skip evidence in the log (TestExecProbeArm8's real-srt SKIP) shows the existing arm-8 machinery does gate on environment. Because AC-CI adds only T4 and T6 to step 8's tests= list, and an unlisted SKIP neither fails 'go test' nor trips the grep-q PASS guard (V5), any hidden node/srt dependence in the sh fixtures would let the killers for M1–M14 evaporate on the Linux CI runner while every acceptance gate stays green — which falsifies S6's no-vacuous-green-path claim for the test suite (the doc guards against node-less SKIPs for T4/T6, proving the author treats node-absence as a live CI condition, yet leaves four of the six new tests unguarded under that same condition).",
+        "catch": "Before implementation, verify that a /bin/sh-client plus fake-srt fixture actually exercises probe()/reverseLeg with node entirely absent (PATH without node, WORLD_EXEC_SRT_NODE_MODULES unset) and prints zero '--- SKIP' lines; also add the missing file:line citation for ExecProbeConfig.Client, the 'test-steerable probe input' precedent §4.2 relies on, which currently has no verification row.",
+        "proposed_fix": "Amend §7/AC-CI and §10 as follows: (1) extend the ci.yml edit so step 8's tests= list carries all six tests T1–T6 — the ci.yml:254-257 guard then converts 'never skips' from an assumption into a checked gate, and costs nothing if the claim is true; a false skip fails CI instead of passing silently. (2) Add verification row V23: run one arm8Fixture-style sh-client probe test (e.g. TestExecProbeArm8Wired, or a scratch zz_iter314_* test in the V11 pattern) under 'env -i HOME=$HOME PATH=/usr/bin:/bin WORLD_EXEC_SRT_NODE_MODULES=/nonexistent go test ./host/broker -run \u003cfixture\u003e -count=1 -v' and record '--- PASS' with zero '--- SKIP' lines, plus the ExecProbeConfig.Client file:line. (3) If the fixture turns out to require node, reclassify T2/T3/T5 as node-needing and list them in tests= anyway; either way no SKIP on the Linux runner can pass silently and the mutation matrix M1–M14 stays enforced in CI."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.231753,
+      "tokens_in": 11586,
+      "tokens_out": 13133,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's central safety guarantee contradicts its own design. §3 claims option (A) is 'exactly as sensitive to a real breach as it is today' and §4.3 claims a connected dial has two possible outcomes, 'REACHED (refuse) or INCONCLUSIVE (retry, then refuse). Neither is PASS.' Both are false as written: under the new judgeReverse, a connected dial that yields no nonce line is INCONCLUSIVE and the retry is explicitly designed to PASS (T2 wants why==\"\" on attempt 2). R1 quietly concedes the consequence: today ANY connected dial is a refusal, so a breaching-but-silent listener is always caught; under (A), a breach that answers too slowly through one attempt and is unreachable in the next passes. That is a real, if narrow, weakening of the security property P20/row-140 §4.6 that this probe exists for — and it is gated only by a 500 ms read deadline whose margin was measured on idle darwin without a sandbox (V13), i.e. never in the Linux/CI conditions the item targets. Worse, the doc's own deferred tightening in §5-R1 ('a later tightening could refuse any attempt whose foreign reaches timed out mid-read') would reintroduce the exact CI failure being fixed: srt's mux, the binder §1 and V7 name as the prime suspect, is a silent-until-spoken-to listener — V11's stand-in reproduction depends on precisely that property — so 'refuse on silent reads' = refuse on every mux collision = today's bug restored. The doc never connects its §5 fix to its §1 root cause.",
+        "catch": "Resolve the contradiction between the headline invariant and the mechanism before implementation: (1) §3's 'exactly as sensitive' and §4.3's 'retry, then refuse ... Neither is PASS' do not survive R1 — either close R1 in this item or rewrite those sentences to state the true, weaker invariant and get explicit sign-off that P20 is narrowed. (2) Verify, with one Linux measurement the verification log lacks, whether srt's 0.0.78 mux (HTTP+SOCKS, V7) emits an error response or closes when sent garbage bytes on connect. That single fact decides whether a 'silent holder' class (foreign but never pass-eligible) is implementable without reintroducing run 40699055042's flake. Also note the retry path emits nothing when the leg passes after inconclusive attempts, which sits uneasily with the mission's no-silent-fallback axiom.",
+        "proposed_fix": "Make the discriminator part of this item, not a successor: in pollLoopback, on each connected dial first write a fixed short invalid handshake (e.g. 'WORLD-PROBE-HELLO\\n'), then read with the existing 500 ms deadline. Classify: nonce line → child; any other bytes or immediate EOF → foreign (retryable); zero bytes after the hello → 'silent holder'. Change judgeReverse so a silent holder in ANY attempt (including a later clean one... i.e. make it sticky across the leg) refuses with a distinct message, restoring today's 'one connected dial refuses' guarantee for silent listeners while still retrying chatty foreign holders like the mux. Gate this on a new Verification Log row: an installed-srt (sha256-pinned, per V7) Linux measurement of mux behaviour on garbage input — answer/close → the discriminator works and the strong invariant stands untouched; silent too → the discriminator is impossible, in which case delete §3's 'exactly as sensitive' sentence, fix §4.3's 'Neither is PASS' parenthetical to 'retry, then pass-or-refuse', add an explicit acceptance row stating that P20 is narrowed to 'a nonce-answering reach always refuses', and have the w-workspace-exec-toolchain-effect.md §4.6 wording amended in the same item rather than asserted-compatible as §9 currently does."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.056332,
+      "tokens_in": 12648,
+      "tokens_out": 287,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §4.2, pollLoopback adds a 500 ms read deadline per connected dial inside the 50 ms ticker loop. If a foreign listener accepts a connection and stalls without closing or sending a newline, a synchronous read in the poll loop will block the goroutine for 500 ms per dial (reducing the 1 s window to ~2 dials), or require poll.Stop() to wait up to 500 ms for the in-flight read to finish.",
+        "catch": "Ensure that when pollLoopback transitions from a bare DialTimeout to DialTimeout + SetReadDeadline(500ms) + Read, the cleanup on stop() either closes the active net.Conn or bounds the join wait so a silent foreign listener does not add 500 ms of teardown latency to every collided attempt.",
+        "proposed_fix": "In §4.2 under pollLoopback, specify that the poll loop closes the connection on context/stop cancellation (or runs the read with the stop channel closing the conn) so stopping the poller after Run C exits does not block for the remainder of the 500 ms read deadline when connected to a silent listener."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 applies oc-kimi-k3's r1 proposed_fix verbatim; caller census measured by controller first (6 lines, sole callers in reverse leg, control runBounded=9)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The acceptance story has a silent-vacuity hole on the exact runner where the defect was observed. §7/AC-CI asserts that T1, T2, T3 and T5 'never skip', but that premise is asserted, not measured: it rests on an unlogged reading that an 'arm8Fixture-style' /bin/sh client can drive the probe with no node and no pinned srt. Every fixture observation in the log (V10, V11, V13) was made on a machine with node present, and the only fixture-skip evidence in the log (TestExecProbeArm8's real-srt SKIP) shows the existing arm-8 machinery does gate on environment. Because AC-CI adds only T4 and T6 to step 8's tests= list, and an unlisted SKIP neither fails 'go test' nor trips the grep-q PASS guard (V5), any hidden node/srt dependence in the sh fixtures would let the killers for M1–M14 evaporate on the Linux CI runner while every acceptance gate stays green — which falsifies S6's no-vacuous-green-path claim for the test suite (the doc guards against node-less SKIPs for T4/T6, proving the author treats node-absence as a live CI condition, yet leaves four of the six new tests unguarded under that same condition).",
+      "oc-kimi-k3: The doc's central safety guarantee contradicts its own design. §3 claims option (A) is 'exactly as sensitive to a real breach as it is today' and §4.3 claims a connected dial has two possible outcomes, 'REACHED (refuse) or INCONCLUSIVE (retry, then refuse). Neither is PASS.' Both are false as written: under the new judgeReverse, a connected dial that yields no nonce line is INCONCLUSIVE and the retry is explicitly designed to PASS (T2 wants why==\"\" on attempt 2). R1 quietly concedes the consequence: today ANY connected dial is a refusal, so a breaching-but-silent listener is always caught; under (A), a breach that answers too slowly through one attempt and is unreachable in the next passes. That is a real, if narrow, weakening of the security property P20/row-140 §4.6 that this probe exists for — and it is gated only by a 500 ms read deadline whose margin was measured on idle darwin without a sandbox (V13), i.e. never in the Linux/CI conditions the item targets. Worse, the doc's own deferred tightening in §5-R1 ('a later tightening could refuse any attempt whose foreign reaches timed out mid-read') would reintroduce the exact CI failure being fixed: srt's mux, the binder §1 and V7 name as the prime suspect, is a silent-until-spoken-to listener — V11's stand-in reproduction depends on precisely that property — so 'refuse on silent reads' = refuse on every mux collision = today's bug restored. The doc never connects its §5 fix to its §1 root cause."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.372762,
+    "total_tokens_in": 35975,
+    "total_tokens_out": 28929
+  }
+}

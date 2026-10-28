@@ -1,6 +1,6 @@
 # w-exec-probe-reverse-leg-port-race — arm 6's reverse leg counts ANY listener on its port as the child's, so a port another host process takes refuses startup
 
-- **Status**: Planned
+- **Status**: Implemented (iteration 314: M1 `2f2ba233`, M2 `5856a606`, M3 `d7bba842`, PR #403; judge sonnet PASS 92)
 - **Item**: iteration 314, controller-filed from the red CI run on `origin/dev` `2769cff9`
   (run 40699055042 attempt 1, job 122853572046, step 8). Clause 3 (the Workspace.Exec effect's
   fail-closed startup probe), as an availability defect.
