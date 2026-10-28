@@ -1,0 +1,48 @@
+{
+  "schema": "world/demo/capture-manifest/v1",
+  "frozen-head": "sha256:0afad8bd2ef4ae41b1331144417259198abb45715c2ab06a046b237b2624d44e",
+  "shots": [
+    {
+      "name": "workbench-light.png",
+      "sha256": "8c3c7493bb37a4f18561bb18307a3b9bd20826d3ec9b446280e817a171ed2594",
+      "width": 1440,
+      "height": 1100,
+      "route": "/workbench"
+    },
+    {
+      "name": "workbench-dark.png",
+      "sha256": "25a260b8e3cedab06661e6afdc3e3abff623931aca49886a0313b01ebe13c44a",
+      "width": 1440,
+      "height": 1100,
+      "route": "/workbench"
+    },
+    {
+      "name": "packet.png",
+      "sha256": "bc7318a0c4ccee5a9ccca46f3ab1374807c0c78f5ef598c0a82c603f34032bb1",
+      "width": 1440,
+      "height": 3700,
+      "route": "/workbench?object=sha256:a78861132c6315945b64cbf377750b55b61217f06e1cbf83a9b0b6ab83b08757"
+    },
+    {
+      "name": "graph.png",
+      "sha256": "4eaa4756870aa99aceaffbce50bea8f4b49288305cf8f405d337fe6262978874",
+      "width": 1440,
+      "height": 2100,
+      "route": "/workbench?from=9\u0026entry=9"
+    },
+    {
+      "name": "provenance.png",
+      "sha256": "0f67458b496a7e9c2b9fd8d89d3608451cbf6ddef926c59dc3ff9d75b929f187",
+      "width": 1440,
+      "height": 3000,
+      "route": "/workbench?object=sha256:f3b4ecaecbf0ad5e3d2373da0f929bbf63c62f2aa56cede9eb22953a0a27ff6b\u0026payload=1"
+    },
+    {
+      "name": "phone.png",
+      "sha256": "94b14d0f403130ac812a5cbebd22919d6d68a0548dbd0078f735b7008ae8cd1c",
+      "width": 390,
+      "height": 844,
+      "route": "/workbench"
+    }
+  ]
+}

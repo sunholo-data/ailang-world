@@ -1003,7 +1003,7 @@ M7c2a holds the browser-free Python/Go primitives. M7c2b holds only the shell ch
 - **New M7c0** (shot geometry) depends only on R0 and shares no file with M7c1, so either can go first.
 - **M7c2a depends on M7c1 and M7c0** (planner decision): its `routes` rows carry the M7c0 dimensions.
 - **Chain:** M7c1 ∥ (R0 → M7c0) → M7c2a → M7c2b → M7c3 → M7c4 → M8a → M8b.
-- **Controller steps:** R1 (all-six rectangles, full-path C14, threshold V-row) follows M7c4. P0/P3 and A1 are attended-release steps (doc §4.4, §5), never executor milestones.
+- **Controller steps:** R1 (all-six rectangles, full-path C14, threshold V-row) follows M7c4. **R1 measured in iteration 312** (orchestration V60–V63): the baseline is `verification/world-iter312/r1-rects.json`; M8a keeps all eight thresholds (V62); two criteria are open before P0: phone C8′(iii) (V63 c) and P0's every-edge ±2 px for wrapping packet paragraphs (V60). P0/P3 and A1 are attended-release steps (doc §4.4, §5), never executor milestones.
 - **Tool pin** for every pending milestone and the attended capture: `$HOME/.pinned-ailang-tools/v0.54.15/ailang` (doc §4.2).
 
 Shared rules for every child:

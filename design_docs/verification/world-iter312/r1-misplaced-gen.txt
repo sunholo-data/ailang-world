@@ -1,0 +1,14 @@
+workbench-light.png header: (0,114,1425,209) -> (0,114,64,16) sd=0.00 /tmp/world-iter312/misplaced/workbench-light.png--header.json
+workbench-light.png timeline-first: (89,423,1247,191) -> (88,412,64,16) sd=0.00 /tmp/world-iter312/misplaced/workbench-light.png--timeline-first.json
+workbench-dark.png header: (0,114,1425,209) -> (0,114,64,16) sd=0.00 /tmp/world-iter312/misplaced/workbench-dark.png--header.json
+workbench-dark.png timeline-first: (89,423,1247,191) -> (88,412,64,16) sd=0.00 /tmp/world-iter312/misplaced/workbench-dark.png--timeline-first.json
+packet.png validation: (106,2859,1213,49) -> (106,2848,64,16) sd=0.00 /tmp/world-iter312/misplaced/packet.png--validation.json
+packet.png approvals-chain: (106,3147,1213,25) -> (102,3140,64,16) sd=0.00 /tmp/world-iter312/misplaced/packet.png--approvals-chain.json
+packet.png roster-tested: (106,3267,1213,49) -> (106,3256,64,16) sd=0.00 /tmp/world-iter312/misplaced/packet.png--roster-tested.json
+packet.png roster-attested: (106,3331,1213,25) -> (106,3320,64,16) sd=0.00 /tmp/world-iter312/misplaced/packet.png--roster-attested.json
+packet.png roster-claimed: (106,3371,1213,49) -> (106,3360,64,16) sd=0.00 /tmp/world-iter312/misplaced/packet.png--roster-claimed.json
+packet.png roster-proven: (106,3435,1213,97) -> (106,3424,64,16) sd=0.00 /tmp/world-iter312/misplaced/packet.png--roster-proven.json
+graph.png graph-svg: (89,1746,1247,274) -> (88,1746,64,16) sd=0.00 /tmp/world-iter312/misplaced/graph.png--graph-svg.json
+provenance.png payload: (89,2822,1336,60) -> (88,2810,64,16) sd=0.00 /tmp/world-iter312/misplaced/provenance.png--payload.json
+phone.png header: (25,45,345,23) -> (24,28,64,16) sd=0.00 /tmp/world-iter312/misplaced/phone.png--header.json
+phone.png timeline-first: (41,428,323,182) -> (40,412,64,16) sd=0.00 /tmp/world-iter312/misplaced/phone.png--timeline-first.json
