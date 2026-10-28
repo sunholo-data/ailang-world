@@ -288,13 +288,18 @@ func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
 	fixtures := writeSet(t, bs)
 	manifest := putJSON(t, dir, "demo.json", demoFixture())
 	rectangles := putJSON(t, dir, "rectangles.json", rects)
-	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused", "single-pass", "daemon-exits", "inventory"} {
+	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused", "single-pass", "daemon-exits", "inventory", "inventory-pass-b", "inventory-single-pass"} {
 		t.Run(name, func(t *testing.T) {
 			d := t.TempDir()
 			t.Setenv("CAPTURE_FIXTURES", fixtures)
 			t.Setenv("CAPTURE_RECORD", d)
-			if name == "inventory" {
-				t.Setenv("CAPTURE_HEAD_CHANGE", "yes")
+			// The fake daemon's head changes once a shot of the named pass has run, so
+			// each inventory must bracket both passes, in both modes.
+			switch name {
+			case "inventory", "inventory-single-pass":
+				t.Setenv("CAPTURE_HEAD_CHANGE", "pass-a")
+			case "inventory-pass-b":
+				t.Setenv("CAPTURE_HEAD_CHANGE", "pass-b")
 			}
 			if name == "version-changed" {
 				t.Setenv("CAPTURE_CHANGE", "yes")
@@ -326,20 +331,17 @@ host, port = sys.argv[sys.argv.index('--bind') + 1].split(':')
 log = [{'entryHash': 'entry-0', 'transitionRef': 'ref-0'},
        {'entryHash': 'entry-1', 'transitionRef': 'ref-1'}]
 objects = {'/v1/objects/ref-0': b'object zero', '/v1/objects/ref-1': b'object one'}
-inventory_read = False
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        global inventory_read
         url = urllib.parse.urlsplit(self.path)
         status, body = 200, b'{}'
         if url.path == '/v1/head':
-            body = b'changed-head' if inventory_read and os.environ.get('CAPTURE_HEAD_CHANGE') else b'fixed-head'
+            change = os.environ.get('CAPTURE_HEAD_CHANGE')
+            body = b'changed-head' if change and any(root.glob(change + '-*.args')) else b'fixed-head'
         elif url.path == '/v1/log':
             query = urllib.parse.parse_qs(url.query)
             start, limit = int(query['from'][0]), int(query['limit'][0])
             body = json.dumps({'items': log[start:start + limit]}).encode()
-            if start == 0:
-                inventory_read = True
         elif url.path in objects:
             body = objects[url.path]
         elif url.path != '/v1/health':
@@ -355,11 +357,11 @@ http.server.HTTPServer((host, int(port)), Handler).serve_forever()
 				"--proof-key-file", filepath.Join(d, "key"), "--ailang-bin", filepath.Join(d, "ailang"),
 				"--workspace-root", d, "--tool-ailang-bin", tool, "--chrome", fakeCaptureChrome(t, d),
 				"--out", out, "--rectangles", rectangles, "--worldd-bin", worldd, "--bind", bind, "--marketingcheck-bin", bin, "--verify-twice"}
-			if name == "single-pass" {
+			if name == "single-pass" || name == "inventory-single-pass" {
 				args = args[:len(args)-1] // no --verify-twice
 			}
 			rc, _, se := runCaptureCommand(t, "bash", args...)
-			if name == "inventory" {
+			if strings.HasPrefix(name, "inventory") {
 				if rc != 1 || !strings.Contains(se, "inventory-mutated") {
 					t.Fatalf("capture must compare inventories: rc=%d stderr=%q", rc, se)
 				}
