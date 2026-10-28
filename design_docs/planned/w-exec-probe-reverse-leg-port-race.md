@@ -4,8 +4,8 @@
 - **Item**: iteration 314, controller-filed from the red CI run on `origin/dev` `2769cff9`
   (run 40699055042 attempt 1, job 122853572046, step 8). Clause 3 (the Workspace.Exec effect's
   fail-closed startup probe), as an availability defect.
-- **Estimated**: ~0.5 day. About +75/−20 LOC in `host/broker/exec_probe.go`, about +190 LOC of
-  tests, a 3-line QUICKSTART prose edit and a 1-line CI test-list edit (§10).
+- **Estimated**: ~0.5–0.75 day [r3]. About +95/−20 LOC in `host/broker/exec_probe.go`, about
+  +260 LOC of tests, a 3-line QUICKSTART prose edit and a 1-line CI test-list edit (§10).
 - **Measurement base**: `2769cff9` (worktree `sprint/world-iter314-arm6-reverse-leg`, clean
   tree), 2026-10-28.
 - **Instruments**: local `go1.26.6 darwin/arm64` and node v26.12.1 (`/opt/homebrew/bin/node`).
@@ -16,8 +16,9 @@
   them was re-run on Linux in this session.
 - **Files touched**: `host/broker/exec_probe.go` (the probe script's `listen` op, `pollLoopback`,
   a new `reverseLeg` and `judgeReverse`, and an unexported port-picker seam);
-  `host/broker/exec_probe_test.go` (six new tests); `docs/QUICKSTART.md` §10 arm 6 prose (S7);
-  `.github/workflows/ci.yml` step 8 test list (two node-needing tests added, so a SKIP fails CI).
+  `host/broker/exec_probe_test.go` (seven new tests, T1–T7 [r3]); `docs/QUICKSTART.md` §10 arm 6
+  prose (S7); `.github/workflows/ci.yml` step 8 test list (all seven new tests added, so any SKIP
+  fails CI [r3]).
   **No `.ail` file is touched** (V15). `host/daemon` is unchanged: the failing daemon test was
   the victim, and no daemon test asserts reverse-leg text (V14).
 
@@ -77,6 +78,17 @@ ECONNREFUSED` / `WORLD-PROBE-BOUND` **without running the child**. With that sta
 bind, never reported a reverse leg (0 of 3). The listener reached was provably not the child's,
 because the child never ran. This is the CI signature, produced on demand without srt timing.
 
+**[r3] The reproduction now uses a CHATTY stand-in.** V11's stand-in was a *silent* listener,
+`net.createServer(c=>{})`. Under the r3 design (§4.2) a holder that stays silent after World's
+hello is a **silent holder**, and a silent holder refuses by design. So V11's shape no longer
+reproduces the *flake*; it now becomes the sticky-refusal test (T6 `silent` row, T7). srt's mux
+is not silent once spoken to. Sent `WORLD-PROBE-HELLO\n`, it answers `HTTP/1.1 400 Bad Request`
+and closes (V23). The deterministic reproduction of the CI flake therefore uses a chatty
+stand-in shaped like the mux: it says nothing until it receives bytes, then answers HTTP 400 and
+closes. At base that stand-in also produced `reverse leg: the host reached the listener the child
+bound on 127.0.0.1:<port>`, **3 of 3 times on darwin** (V25), because today's poll never speaks
+first.
+
 **A sibling hazard, not fixed here (R2).** `ProbeExecProfilesEach` probes profiles concurrently
 (V19). Profile X's poll can land on profile Y's *live counted* listener if Y binds it after X
 picked `revPort`. In that case X's reach is foreign, which this fix handles, but Y's accept count
@@ -89,15 +101,29 @@ The property that must not weaken is V46/P20: **a listener the child binds is un
 the host**, so a real reach must always refuse. The bug is that "something answered on the port"
 is being used as a stand-in for "the child's listener answered".
 
-**(A) Child identity on accept, plus a bounded retry on a fresh port. CHOSEN.** The probe
-client's listener writes `WORLD-PROBE-NONCE <nonce>\n` on accept, with a fresh 128-bit nonce for
-each attempt passed through argv. A dial counts as a **real reach** only if it reads exactly that
-line. A dial that connects and reads anything else, including nothing, is a **foreign reach**.
-A foreign reach makes the attempt INCONCLUSIVE. It never makes the attempt pass, and it never
-counts as a reach. An inconclusive attempt is retried on a fresh port, up to 3 attempts in all.
-If every attempt is inconclusive, the leg refuses with a **distinct** message. One verified reach
-on any attempt refuses immediately, so the leg is exactly as sensitive to a real breach as it is
-today.
+**(A) Child identity on accept, a hello discriminator, and a bounded retry on a fresh port.
+CHOSEN [r3].** The probe client's listener writes `WORLD-PROBE-NONCE <nonce>\n` on accept, with a
+fresh 128-bit nonce for each attempt passed through argv. On every connected dial the host first
+writes the fixed hello `WORLD-PROBE-HELLO\n`, then reads with a 500 ms deadline. A dial is
+classified as one of three things:
+- **child**: it read exactly the nonce line. This is a real reach and refuses.
+- **foreign**: it read any other bytes, or got an immediate clean EOF. This is retryable.
+- **silent holder**: it read zero bytes after the hello, either at the deadline or on a reset.
+  This refuses, and the refusal is **sticky across the leg**: one silent holder on any attempt
+  refuses the leg with a distinct message, whatever a later attempt would show.
+
+An attempt with a foreign dial and no child or silent dial is INCONCLUSIVE. It is retried on a
+fresh port, up to 3 attempts in all. If every attempt is inconclusive, the leg refuses with a
+second distinct message.
+
+**Sensitivity [r3].** Today any connected dial refuses. After r3, the only connected dials that
+do not refuse are those whose peer *actively answered the hello* with non-nonce bytes or a clean
+close. World's own probe client never answers that way: its listener writes the nonce on
+accept, or, if that answer is slow or lost, the dial is silent and refuses. The probe client is
+World's verified node running a fixed script (row 140 §4.6). So for a listener the child binds,
+the leg is **exactly as sensitive to a real breach as it is today**. Retrying applies only to
+listeners that prove they are not the child by answering the hello: srt's mux answers HTTP 400
+(V23).
 
 **(B) Bounded retry, no identity.** This treats every reach as suspect and retries, refusing only
 if all 3 attempts reach. It gets three things wrong:
@@ -141,58 +167,83 @@ The `listen` op takes `<port>:<ms>:<nonce>`, and its server ends each accepted c
 the nonce line:
 
 ```js
-function listen(port,ms,nonce){return new Promise(r=>{const v=net.createServer(c=>c.end('WORLD-PROBE-NONCE '+nonce+'\n'));
+function listen(port,ms,nonce){return new Promise(r=>{const v=net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')});
 // …error/listen/BOUND/close unchanged…
 else if(op==='listen'){const q=x.split(':');t=await listen(q[0],q[1],q[2])}
 ```
 
 The nonce comes from the existing `randomHex(16)` (crypto/rand, exec_probe.go:311). It is fresh
 for every attempt, so a listener left over from attempt *n* cannot answer for attempt *n+1*.
+`c.resume()` [r3] drains the host's hello, so unread input cannot turn the child's close into a
+reset. A hello-then-nonce exchange against a node listener of exactly this shape returned the
+nonce 500/500 times, the slowest under 1 ms on darwin (V26).
 
 ### 4.2 The host side
 
-- **`pollLoopback(port, want string) func() reverseSeen`.** On each connected dial it sets a
-  500 ms read deadline and reads at most `len(want)+1` bytes up to `\n`. If the line equals
-  `want+"\n"` it sets `seen.child`; otherwise it sets `seen.foreign`. Dial cadence and timeout
-  are unchanged (50 ms, 200 ms). Measured: a node listener of exactly this shape answered
-  500/500 dials, with the slowest under 1 ms on darwin (V13).
-- **`judgeReverse(tok string, seen reverseSeen) revVerdict`** is pure. It is the whole decision,
-  applied in this order:
+- **`pollLoopback(port, want string) func() reverseSeen` [r3].** On each connected dial it first
+  writes `WORLD-PROBE-HELLO\n`, then sets a 500 ms read deadline and reads at most
+  `len(want)+1` bytes up to `\n`. It classifies the dial as follows:
+  - the line equals `want+"\n"`: set `seen.child`;
+  - ≥1 byte that is not that line, or a clean EOF with zero bytes: set `seen.foreign`;
+  - zero bytes at the deadline, or a reset with zero bytes: set `seen.silent`.
+
+  The reset case follows the reviewer's "zero bytes after the hello" branch. It also covers a
+  child listener closing with a dial still queued in its backlog, which can arrive as a reset.
+  Such a dial therefore refuses; it is never retried. Dial cadence and timeout are unchanged
+  (50 ms, 200 ms). Measured: the plain nonce read answered 500/500 dials, the slowest under 1 ms
+  (V13), and so did the hello-then-nonce exchange (V26), both on darwin. srt's mux, sent the
+  hello, answered `HTTP/1.1 400 Bad Request` and closed within 0–3 ms, 3 of 3 times. Sent
+  nothing, it stayed silent past 1.5 s, 2 of 2 times (V23, darwin).
+- **`judgeReverse(tok string, seen reverseSeen) revVerdict`** is pure. It is the whole decision
+  for one attempt, applied in this order:
 
 | # | Condition | Verdict | Why |
 |---|---|---|---|
 | 1 | `seen.child` | **REACHED**: refuse with today's text, `reverse leg: the host reached the listener the child bound on 127.0.0.1:<port>` | Only the child knows the nonce, so a real reach always wins, whatever else happened |
 | 2 | token neither `WORLD-PROBE-BOUND` nor `WORLD-PROBE-REFUSED …` | **NO-TOKEN**: refuse with today's text, `reverse leg: no token from the child's listener …`. **Not retried** | MUT-PROBE-RC-ONLY: a missing client must keep naming itself |
-| 3 | `seen.foreign`, **or** token `WORLD-PROBE-REFUSED EADDRINUSE` | **INCONCLUSIVE**: retry on a fresh port | Something World did not plant holds the port. Seen from the child's side, that is EADDRINUSE |
-| 4 | otherwise (BOUND or REFUSED, zero dials connected) | **PASS** | |
+| 3 | `seen.silent` [r3] | **SILENT**: refuse, **sticky**: `reverse leg: a listener on 127.0.0.1:<port> accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses`. **Not retried** | A silent peer could be the child's listener answering slowly. Refusing keeps today's "one connected dial refuses" guarantee for every listener that does not prove it is foreign |
+| 4 | `seen.foreign`, **or** token `WORLD-PROBE-REFUSED EADDRINUSE` | **INCONCLUSIVE**: retry on a fresh port | Something World did not plant holds the port and answered the hello as nothing the child would say. Seen from the child's side, that is EADDRINUSE |
+| 5 | otherwise (BOUND or REFUSED, zero dials connected) | **PASS** | |
 
 - **`(pp *execProber) reverseLeg(ctx, proxyPort) (first execProbeRun, why string)`.** Attempt 1
   is Run C exactly as today (`proxy`, then `listen`), so the happy path spawns no extra process
   and the proxy leg is still judged on `first.token(0)`. Attempts 2 and 3 run `listen` alone,
-  without the trampoline and under the same settings. `execProbeReverseAttempts = 3`. When every
-  attempt is inconclusive, the leg refuses with:
+  without the trampoline and under the same settings. `execProbeReverseAttempts = 3`. REACHED,
+  NO-TOKEN and SILENT end the leg at once, on whichever attempt they occur. That makes the silent
+  refusal sticky: no later attempt can run to overturn it [r3]. When every attempt is
+  inconclusive, the leg refuses with:
   `reverse leg: inconclusive after 3 attempts: a listener the child did not bind held each port
   (127.0.0.1:<p1> …, …)`, which lists each port and whether the attempt saw a foreign reach or
   EADDRINUSE. If the picker fails on attempt 1, Run C still runs with `proxy` alone, so the
   proxy leg is judged, and the reverse leg refuses with today's `no free port` text.
 - **Seam.** An unexported field `ExecProbeConfig.reversePort func() (int, error)` (nil means
   `freeLoopbackPort`) is copied into `execProber.pickPort`. `ExecProbeConfig.Client` already
-  sets the precedent of a test-steerable probe input. Package tests are the only code that can
-  set an unexported field.
+  sets the precedent of a test-steerable probe input (`host/broker/exec_probe.go:104-106`:
+  "Client is the probe client run inside the sandbox; "" = Sandbox.Node … Tests point it at a
+  missing path.", V24). Package tests are the only code that can set an unexported field.
 
 ### 4.3 Why a real breach is still refused, on both platforms
 
-**Invariant: an attempt passes only when *zero* dials connected and the child gave a sandbox
-token.** A connected dial has two possible outcomes, REACHED (refuse) or INCONCLUSIVE (retry,
-then refuse). Neither is PASS. So a foreign listener can delay the leg or refuse it, as one does
-today, but it **can never make it pass**. And because only a nonce match refuses as REACHED, a
+**Invariant [r3]: an attempt passes only when *zero* dials connected and the child gave a sandbox
+token.** A connected dial has three possible outcomes:
+- **child** (the nonce): REACHED, refuse.
+- **silent** (zero bytes after the hello): SILENT, refuse, sticky for the leg.
+- **foreign** (it answered the hello with non-nonce bytes or a clean close): INCONCLUSIVE.
+  World retries on a fresh port. The leg can then pass, but only on a *later* attempt in which
+  no dial connected at all; otherwise it refuses.
+
+No connected dial ever makes *its own* attempt pass. A foreign listener can delay the leg, or
+refuse it through exhaustion, but it cannot make the attempt it answered pass. The listener of
+World's probe client can only ever produce child or silent, never foreign (§3, sensitivity), so a
+listener the child binds always refuses. Because only a nonce match refuses as REACHED, a
 hostile local process that learns the nonce from `ps` and echoes it can only cause a *refusal*.
 That is fail-closed, so the nonce does not need to be secret.
 
 | Platform and state | Child token | Host sees | Verdict |
 |---|---|---|---|
 | Linux, correct (own netns) | BOUND | nothing | PASS, 1 attempt |
-| Linux, correct, port collided (the CI case) | BOUND | foreign | INCONCLUSIVE, then a fresh port, then PASS |
+| Linux, correct, port collided with srt's mux or another chatty holder (the CI case) | BOUND | foreign (HTTP 400, V23) | INCONCLUSIVE, then a fresh port, then PASS |
+| any platform, port collided with a holder that stays silent after the hello [r3] | any | silent | **REFUSED, silent** (sticky; distinct text). This is today's outcome for this case, now named |
 | Linux, shared netns (breach) | BOUND (host loopback) | nonce | **REFUSED, reached.** The raw and proxy legs also refuse on their own |
 | Linux, breach, port collided | REFUSED EADDRINUSE | foreign | INCONCLUSIVE, then a fresh port, then nonce, then **REFUSED, reached** |
 | macOS, correct (Seatbelt) | REFUSED EPERM | nothing | PASS, 1 attempt |
@@ -208,12 +259,17 @@ NO-TOKEN and so a refusal. Exhausting the budget therefore fails closed.
 
 ## 5. Residuals (named and priced)
 
-- **R1, a slow intermittent breach.** Suppose the child's listener is reachable but none of its
-  ~20 dials in an attempt reads the nonce within 500 ms, so the attempt is classed foreign, and
-  a later attempt is clean. Then the leg passes. This needs a breach that is both intermittent
-  and slow to answer. A steady breach is reached on every attempt and refuses, as REACHED or at
-  worst INCONCLUSIVE. The measured answer time is under 1 ms (V13). Accepted. A later tightening
-  could refuse any attempt whose foreign reaches timed out mid-read.
+- **R1, a slow intermittent breach. CLOSED in r3.** r1 classed a reachable child listener that
+  did not produce the nonce within 500 ms as *foreign*, so a slow breach followed by a clean
+  attempt passed. r1's deferred tightening ("refuse any attempt whose foreign reaches timed out
+  mid-read") would have *restored the CI flake*: srt's mux is silent until spoken to (V23, and
+  V11's silent stand-in shows the same), so refusing on silence would refuse every mux
+  collision. r3 removes the dilemma with the hello. The mux answers the hello with HTTP 400 and
+  is retried. A slow or silent peer, which includes a slow child, refuses as SILENT on whichever
+  attempt it occurs, and no later attempt can overturn that. The price is availability: a
+  collision with a foreign holder that stays silent after the hello still refuses startup, as
+  every collision does today, but now with a text that names it. srt's mux, the only in-window
+  binder identified (V7), is not such a holder (V23).
 - **R2, a cross-profile reach on a live listener** (§2). Not fixed here; it is a successor.
 - **R3, EADDRINUSE becomes retry instead of pass.** Today `REFUSED EADDRINUSE` with no reach
   passes. The new design retries it. This is strictly stricter. A host where something always
@@ -222,76 +278,127 @@ NO-TOKEN and so a refusal. Exhausting the budget therefore fails closed.
   near-independent. The per-srt-start mux `bind(0)` argument (V7) supports independence by
   reading, but no Linux measurement of the in-window collision rate exists. If exhaustion
   refusals appear in CI, this assumption is the first thing to re-measure.
+- **Scope of V23 [r3].** The mux's answer to the hello was measured on **darwin only**. The
+  claim that Linux behaves the same rests on source reading. `mux-proxy.js` peeks the first
+  byte, and any byte that is not 0x04/0x05 is piped to the HTTP backend, whose `clientError`
+  handler writes the 400. Only the backend's *transport* branches on Windows; it is a Unix
+  socket elsewhere. If Linux CI ever shows `reverse leg: a listener … answered nothing to World's
+  hello`, this is the assumption to re-measure.
 
 ## 6. Mutation table
 
 Each mutant is applied alone. The killer is the named test, read as counted `--- FAIL:` lines.
+A holder is **chatty** if it reads bytes and answers (`HTTP/1.1 400 Bad Request` then close,
+srt's mux shape, V23). It is **silent** if it accepts and never writes.
 
 | ID | Mutant | Killer, and the assertion that fires |
 |---|---|---|
-| M1 MUT-REV-FOREIGN-IS-REACH | a connected dial counts as REACHED whatever it read (today's behaviour) | T1 row (BOUND, foreign) wants INCONCLUSIVE. T2: Why is non-empty `reverse leg: the host reached …`, the CI signature. T6: arm 6's Why contains `reverse leg` |
+| M1 MUT-REV-FOREIGN-IS-REACH | a connected dial counts as REACHED whatever it read (today's behaviour) | T1 row (BOUND, foreign) wants INCONCLUSIVE. T2: Why is non-empty `reverse leg: the host reached …`, the CI signature. T6 `chatty` row: arm 6's Why contains `reverse leg` |
 | M2 MUT-REV-NO-RETRY | the first INCONCLUSIVE refuses | T2: Why is `reverse leg: inconclusive after 1 …` instead of a pass, and picker calls are 1, not 2 |
-| M3 MUT-REV-ANY-BYTES | any non-empty read is the nonce | T2 rows `forged-nonce` and `garbage` refuse as reached |
+| M3 MUT-REV-ANY-BYTES | any non-empty read is the nonce | T2 rows `forged-nonce`, `garbage` and `http-400` refuse as reached |
 | M4 MUT-REV-PREFIX-NONCE | only the `WORLD-PROBE-NONCE ` prefix is compared | T2 row `forged-nonce` refuses as reached |
 | M5 MUT-REV-EXHAUST-PASSES | exhaustion returns `""` | T3: wants a non-empty Why |
 | M6 MUT-REV-UNBOUNDED | no attempt bound (loop until pass) | T3: picker calls are not exactly 3 (it hangs to the test's 60 s context and reds there) |
 | M7 MUT-REV-EXHAUST-AS-REACH | exhaustion reuses the reached text | T3: Why must NOT contain `the host reached the listener the child bound` |
 | M8 MUT-REV-EADDRINUSE-PASSES | `REFUSED EADDRINUSE` with no reach passes (today's behaviour) | T1 row (EADDRINUSE, none). T3 row `child-eaddrinuse` passes instead of refusing |
-| M9 MUT-REV-NEVER-REAL | the nonce is never matched (comparison inverted, or the script stops writing it) | T4: Why is the inconclusive text, not reached on port 2. **P1**, the existing positive control, loses its `reverse leg: the host reached` substring |
-| M10 MUT-REV-SAME-PORT | a retry reuses the attempt-1 port | T4: the foreign holder is still there, so exhaustion text replaces the reached text on port 2 |
+| M9 MUT-REV-NEVER-REAL | the nonce is never matched (comparison inverted, or the script stops writing it) | T4: Why is not the reached text on port 2 (it becomes the inconclusive or silent text). **P1**, the existing positive control, loses its `reverse leg: the host reached` substring |
+| M10 MUT-REV-SAME-PORT | a retry reuses the attempt-1 port | T4: the chatty holder is still there, so exhaustion text replaces the reached text on port 2 |
 | M11 MUT-REV-FOREIGN-DOMINATES | (child and foreign) is judged INCONCLUSIVE | T1 row (BOUND, child+foreign) wants REACHED |
 | M12 MUT-REV-NOTOKEN-RETRIED | NO-TOKEN is judged INCONCLUSIVE | T1 row ("", none) wants NO-TOKEN. T5: picker calls are 3, not 1, and the Why lacks `no token` |
 | M13 MUT-REV-ALWAYS-RETRY | every attempt runs even after a PASS | T5 clean row: picker calls are 3, not 1 |
-| M14 MUT-REV-SEAM-ONLY | `probe()` keeps the old inline leg and only the seam path is fixed | T6: through `ProbeExecProfiles`, arm 6's Why contains `reverse leg` |
+| M14 MUT-REV-SEAM-ONLY | `probe()` keeps the old inline leg and only the seam path is fixed | T6 `chatty` row: through `ProbeExecProfiles`, arm 6's Why contains `reverse leg` |
+| M15 MUT-REV-HELLO-DROPPED [r3] | `pollLoopback` never writes the hello | T2 row `http-400`: the holder stays silent, so the leg refuses SILENT instead of passing. T6 `chatty` row: arm 6's Why contains `reverse leg` |
+| M16 MUT-REV-SILENT-RETRIED [r3] | SILENT is judged INCONCLUSIVE (retry) | T1 row (BOUND, silent) wants SILENT. T7 row `silent-attempt-1`: it passes on attempt 2 instead of refusing, with picker calls 2, not 1 |
+| M17 MUT-REV-SILENT-NOT-STICKY [r3] | a silent attempt is forgotten when a later attempt is clean (for example SILENT records only "retry", and a later PASS returns `""`) | T7 row `silent-after-chatty`: wants the silent text naming port 2 and picker calls 2. The mutant passes on attempt 3 |
+| M18 MUT-REV-EOF-IS-SILENT [r3] | a clean zero-byte EOF is classed silent | T2 row `clean-close` refuses SILENT instead of passing |
+| M19 MUT-REV-RESET-IS-FOREIGN [r3] | a zero-byte reset is classed foreign | T7 row `reset-holder` (SO_LINGER 0 close) passes on attempt 2 instead of refusing SILENT |
+| M20 MUT-REV-SILENT-AS-REACH-TEXT [r3] | SILENT reuses the reached text | T7: Why must NOT contain `the host reached the listener the child bound`, and must contain `answered nothing to World's hello`. T6 `silent` row: the same |
+| M21 MUT-REV-SILENT-DOMINATES-CHILD [r3] | (child and silent) is judged SILENT | T1 row (BOUND, child+silent) wants REACHED |
 
 ## 7. Acceptance criteria
 
 Every `-run` verdict is read from counted `--- PASS:` / `--- FAIL:` / `--- SKIP:` lines, never
 from rc alone, because a `-run` that matches nothing is rc 0.
 
-- **T1 `TestExecProbeReverseLegJudge`** (pure table, no I/O). It holds the 10 rows of §4.2's
-  order: (BOUND, none) → PASS; (REFUSED EPERM, none) → PASS; (BOUND, foreign) → INCONCLUSIVE;
-  (REFUSED EPERM, foreign) → INCONCLUSIVE; (REFUSED EADDRINUSE, none) → INCONCLUSIVE;
-  (BOUND, child) → REACHED; (BOUND, child+foreign) → REACHED; ("", child) → REACHED;
-  ("", none) → NO-TOKEN; ("", foreign) → NO-TOKEN. **Kills** M1, M8, M11, M12.
-- **T2 `TestExecProbeReverseLegForeignListenerRetries`** (an `arm8Fixture`-style `/bin/sh`
-  client and srt, so it never skips). Rows are {`linux-bound`, `darwin-eperm`} × {`silent`,
-  `forged-nonce` (a wrong 32-hex nonce in the right format), `garbage`}. The picker returns, on
-  attempt 1, a port held by a test-owned listener of that behaviour, and on attempt 2 a free
-  port. Each row wants `why == ""` and exactly 2 picker calls. **Kills** M1, M2, M3, M4.
+**Test table [r3]:**
+
+| Test | Needs node? | Kills |
+|---|---|---|
+| T1 `TestExecProbeReverseLegJudge` | no (pure) | M1, M8, M11, M12, M16, M21 |
+| T2 `TestExecProbeReverseLegChattyForeignHolderIsRetried` | no (`/bin/sh` fixture, V24) | M1, M2, M3, M4, M15, M18 |
+| T3 `TestExecProbeReverseLegExhaustionRefusesDistinctly` | no (`/bin/sh` fixture) | M5, M6, M7, M8 |
+| T4 `TestExecProbeReverseLegRealReachSurvivesAForeignAttempt` | yes | M9, M10 |
+| T5 `TestExecProbeReverseLegNoTokenIsNotRetried` | no (`/bin/sh` fixture) | M12, M13 |
+| T6 `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse` | yes (node-run srt stand-in) | M1, M14, M15, M20 |
+| T7 `TestExecProbeReverseLegSilentHolderRefusesSticky` | no (`/bin/sh` fixture) | M16, M17, M19, M20 |
+| P1 `TestExecProbePassThroughShimFailsEveryConfinementArm` (existing, unchanged) | yes | M9 |
+
+- **T1 `TestExecProbeReverseLegJudge`** (pure table, no I/O). It holds §4.2's order in 14 rows:
+  - (BOUND, none) → PASS; (REFUSED EPERM, none) → PASS.
+  - (BOUND, foreign) → INCONCLUSIVE; (REFUSED EPERM, foreign) → INCONCLUSIVE;
+    (REFUSED EADDRINUSE, none) → INCONCLUSIVE.
+  - (BOUND, child) → REACHED; (BOUND, child+foreign) → REACHED; (BOUND, child+silent) →
+    REACHED; ("", child) → REACHED.
+  - (BOUND, silent) → SILENT; (BOUND, silent+foreign) → SILENT; (REFUSED EPERM, silent) →
+    SILENT.
+  - ("", none) → NO-TOKEN; ("", foreign) → NO-TOKEN.
+- **T2 `TestExecProbeReverseLegChattyForeignHolderIsRetried`** [r3] (an `arm8Fixture`-style
+  `/bin/sh` client and srt; it runs with node absent, V24). Rows are {`linux-bound`,
+  `darwin-eperm`} × {`http-400` (reads the hello, answers `HTTP/1.1 400 Bad Request`, closes:
+  the mux shape), `forged-nonce` (a wrong 32-hex nonce in the right format), `garbage`,
+  `clean-close` (accepts, closes with zero bytes)}. The picker returns, on attempt 1, a port held
+  by a test-owned Go listener of that behaviour, and on attempt 2 a free port. Each row wants
+  `why == ""` and exactly 2 picker calls.
 - **T3 `TestExecProbeReverseLegExhaustionRefusesDistinctly`** (`/bin/sh` fixture). Rows:
-  `foreign-every-time` (BOUND, with every port held) and `child-eaddrinuse` (free ports, the
-  client prints `WORLD-PROBE-REFUSED EADDRINUSE`). Each row wants the Why to start with
-  `reverse leg: inconclusive after 3 attempts`, to NOT contain `the host reached the listener
-  the child bound`, and exactly 3 picker calls. **Kills** M5, M6, M7, M8.
+  `chatty-every-time` (BOUND, every port held by an `http-400` holder) and `child-eaddrinuse`
+  (free ports, the client prints `WORLD-PROBE-REFUSED EADDRINUSE`). Each row wants the Why to
+  start with `reverse leg: inconclusive after 3 attempts`, to NOT contain `the host reached the
+  listener the child bound`, and exactly 3 picker calls.
 - **T4 `TestExecProbeReverseLegRealReachSurvivesAForeignAttempt`** (needs node; `probeNode`
-  skips by name; the pass-through shim with World's real node client). The picker gives a
-  foreign-held port on attempt 1 and a free port on attempt 2. Attempt 1: the unsandboxed child
-  gets EADDRINUSE and the host reads no nonce, so the attempt is INCONCLUSIVE. Attempt 2: the
-  child binds and writes the nonce. The test wants Why ==
+  skips by name; the pass-through shim with World's real node client). The picker gives an
+  `http-400`-held port on attempt 1 and a free port on attempt 2. Attempt 1: the unsandboxed
+  child gets EADDRINUSE and the holder answers the hello with 400, so the attempt is
+  INCONCLUSIVE. Attempt 2: the child binds and writes the nonce. The test wants Why ==
   `reverse leg: the host reached the listener the child bound on 127.0.0.1:<attempt-2 port>`.
-  **Kills** M9, M10. This is the "a real reach still refuses" proof: a collision on attempt 1
-  does not mask a breach on attempt 2.
+  This is the "a real reach still refuses" proof: a collision on attempt 1 does not mask a
+  breach on attempt 2.
 - **T5 `TestExecProbeReverseLegNoTokenIsNotRetried`** (`/bin/sh` fixture). Row `silent-client`
   (no listen token) wants a Why containing `reverse leg: no token from the child's listener` and
-  1 picker call. Row `clean` (BOUND, free port) wants `""` and 1 picker call. **Kills** M12, M13.
-- **T6 `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse`** (needs node; this is the
-  production entry point `ProbeExecProfiles`, and V11's stand-in made permanent). An srt
-  stand-in binds a silent listener on the `listen` port only when the argv also carries `proxy`,
-  that is, on attempt 1 = Run C, as srt's own mux would. It prints the Linux-correct tokens
-  without running the child, and passes every other run through. The test wants arm 6's Why to
-  contain no `reverse leg` text. Its paired control row, the stand-in without the bind, wants the
-  same. **Base: RED.** This exact stimulus reported the reverse leg 3 of 3 times at `2769cff9`
-  (V11), so the stimulus is not timing-dependent: the listener holds the port for the whole run
-  and the poll dials every 50 ms. **Kills** M1, M14.
+  1 picker call. Row `clean` (BOUND, free port) wants `""` and 1 picker call.
+- **T6 `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse`** (needs node; the production
+  entry point `ProbeExecProfiles`). An srt stand-in binds a holder on the `listen` port only when
+  the argv also carries `proxy`, that is, on attempt 1 = Run C, as srt's own mux would. It prints
+  the Linux-correct tokens without running the child, and passes every other run through. Rows:
+  - `chatty` [r3]: the holder answers any bytes with HTTP 400, then closes. This is the
+    deterministic **flake reproduction**. It wants arm 6's Why to contain no `reverse leg` text.
+    **Base: RED, 3 of 3** at `2769cff9` (V25).
+  - `silent` (V11's stand-in, kept): it wants arm 6's Why to contain `reverse leg: a listener on
+    127.0.0.1:` and `answered nothing to World's hello`. This is the sticky refusal through the
+    production entry point.
+  - `control` (no holder): it wants no `reverse leg` text.
+
+  Neither stimulus is timing-dependent: the holder keeps the port for the whole run, and the
+  poll dials every 50 ms.
+- **T7 `TestExecProbeReverseLegSilentHolderRefusesSticky`** [r3] (`/bin/sh` fixture). Rows:
+  - `silent-attempt-1`: a silent holder, then free ports. It wants the Why to start with
+    `reverse leg: a listener on 127.0.0.1:<p1> accepted the host's dial and answered nothing`,
+    no reached text, and 1 picker call.
+  - `silent-after-chatty`: `http-400` on attempt 1, silent on attempt 2, free on attempt 3. It
+    wants the silent text naming `<p2>` and 2 picker calls.
+  - `reset-holder`: accepts, then closes with SO_LINGER 0, so it resets with zero bytes. It
+    wants the silent text and 1 picker call.
 - **P1, the positive control, unchanged and green:** `TestExecProbePassThroughShimFailsEveryConfinementArm`
   keeps asserting `reverse leg: the host reached` (exec_probe_test.go:197). It passes now only
   through the nonce path, because the pass-through child binds host loopback and answers with
-  its nonce. **Kills** M9. `TestExecProbeMissingClientFailsTheRefusalArms` stays green unchanged
-  (arm 6 is still refused with no token).
-- **AC-CI.** T4 and T6 are added to step 8's `tests=` list in `ci.yml`. That step fails unless
-  each listed test prints `--- PASS:` (ci.yml:254-257, V5). A node-less SKIP therefore cannot
-  pass silently on Linux (S6). T1, T2, T3 and T5 never skip.
+  its nonce. `TestExecProbeMissingClientFailsTheRefusalArms` stays green unchanged (arm 6 is
+  still refused with no token).
+- **AC-CI [r3].** **All seven** new tests, T1–T7, are added to step 8's `tests=` list in
+  `ci.yml`. That step fails unless each listed test prints `--- PASS:` (ci.yml:254-257, V5).
+  "Never skips" is therefore a checked gate, not an assumption. Any SKIP on the Linux runner,
+  whether from absent node or a hidden environment dependence, fails CI, and M1–M21 stay
+  enforced there (S6). V24 measured the `/bin/sh` fixture machinery that T2, T3, T5 and T7
+  reuse. With node absent from `PATH` and `WORLD_EXEC_SRT_NODE_MODULES=/nonexistent`, it printed
+  5 `--- PASS` lines and 0 `--- SKIP` lines. T4 and T6 are node-needing and listed anyway.
 - **AC-REAL.** `TestExecSrtStartupProbePasses`, plus step 8 in full on Linux CI with real srt,
   stays green. That covers the Linux correct path: BOUND, no reach, PASS on 1 attempt.
 - **AC-STABLE.** `go test ./host/broker -run '^TestExecProbeReverseLeg|^TestExecProbeForeignListener' -count=20 -v`
@@ -299,12 +406,14 @@ from rc alone, because a `-run` that matches nothing is rc 0.
   claim: no stimulus here is timing-dependent.
 - **AC-GATE.** `go build ./... && go test ./...` is green, and so is `./scripts/verify_ail.sh`.
   The latter is a no-op for this item, since no `.ail` changes, but CI runs it.
-- **AC-MUT.** Each of M1–M14 is applied alone and reds exactly its named killer. The tree is
+- **AC-MUT.** Each of M1–M21 is applied alone and reds exactly its named killer. The tree is
   restored byte-identical (sha256 of both Go files before and after).
 
-**What this cannot see.** None of these tests reproduces the *CI* binder (srt's mux) in action.
-They reproduce the class: a non-child listener on the reverse port. The CI instance's actual
-binder stays unproven (§1). The fix does not depend on it.
+**What this cannot see.** None of these tests runs the *CI* binder, srt's real mux, inside a
+probe. They reproduce the class with a stand-in shaped like the mux as V23 measured it (chatty
+on input, silent otherwise). The mux measurement itself is darwin-only (§5). The CI instance's
+actual binder stays unproven (§1). The fix does not depend on it for safety: an unidentified
+silent binder refuses, as today.
 
 ## 8. Coding standards
 
@@ -315,15 +424,19 @@ binder stays unproven (§1). The fix does not depend on it.
   fail-closed startup probe of the brokered `Workspace.Exec` effect, which row 140 placed in the
   host. It adds no kernel surface and no new capability. Moving the probe out is not in scope.
 - **S6, honest gates.** Every load-bearing claim is discharged by a named mutant and its single
-  firing assertion (§6). The reproduction (T6) is red at base by measurement (V11), with a
-  paired control. The node-needing tests are added to the CI list that fails on a missing
-  `--- PASS`. INCONCLUSIVE can never pass, so the leg has no vacuous-green path.
-- **S7, usage docs.** The probe's operator-facing text gains a new refusal,
-  `reverse leg: inconclusive …`. QUICKSTART §10's arm 6 line (docs/QUICKSTART.md:1146-1148,
+  firing assertion (§6). The flake reproduction (T6 `chatty`) is red at base by measurement
+  (V25), with a paired control. **All seven** new tests are in the CI list that fails on a
+  missing `--- PASS` [r3], so no SKIP, node-related or not, passes silently. A connected dial
+  never makes its own attempt pass. Silent and nonce dials refuse, and only a dial that answered
+  the hello as foreign is retried (§4.3), so the leg has no vacuous-green path.
+- **S7, usage docs.** The probe's operator-facing text gains two new refusals,
+  `reverse leg: inconclusive …` and [r3] `reverse leg: a listener on … answered nothing to
+  World's hello …`. QUICKSTART §10's arm 6 line (docs/QUICKSTART.md:1146-1148,
   V21) gains one sentence. It says a reach counts only when the child's listener answers with
   World's nonce, that a port another host process holds is retried on a fresh port up to 3
-  times, and what the inconclusive refusal means: something on the host keeps taking the chosen
-  ports, so retry, or find the process. The §10 refusal table's 51-row census is unchanged,
+  times, and what the two refusals mean. Inconclusive means something on the host keeps taking
+  the chosen ports, so retry, or find the process. Silent [r3] means a process that never answers
+  held the port, and it cannot be told apart from the child, so find the process. The §10 refusal table's 51-row census is unchanged,
   because the arm's name is unchanged.
 - **S1, S4, S5:** not applicable, since there is no `.ail` (V15).
 
@@ -355,18 +468,19 @@ line for line.
 
 The row 140 design doc's §4.6 wording
 ("a listener the child binds must be unreachable from the host") stays true and needs no
-amendment.
+amendment. [r3] The reviewer's fix branched on whether srt's mux answers garbage input. It does,
+with HTTP 400 (V23), so the strong branch holds. P20 is not narrowed, and §4.6 is not amended.
 
 ## 10. Sizing
 
 | File | Change | LOC (est.) |
 |---|---|---|
-| `host/broker/exec_probe.go` | the script's listen op (+nonce); `pollLoopback` reads and classifies; `judgeReverse` (pure); `reverseLeg` (attempt loop, distinct message); seam field; `probe()` calls `reverseLeg` | +75 / −20 |
-| `host/broker/exec_probe_test.go` | T1–T6; a foreign-listener helper (silent / forged / garbage); a counting picker | +190 |
-| `docs/QUICKSTART.md` | §10 arm 6 sentence | +3 |
-| `.github/workflows/ci.yml` | step 8 `tests=` gains T4 and T6 | +1 / −1 |
+| `host/broker/exec_probe.go` | the script's listen op (+nonce, +`c.resume()`); `pollLoopback` writes the hello, reads, and classifies child / foreign / silent [r3]; `judgeReverse` (pure, 5 verdicts); `reverseLeg` (attempt loop, sticky silent, two distinct messages); seam field; `probe()` calls `reverseLeg` | +95 / −20 |
+| `host/broker/exec_probe_test.go` | T1–T7; a holder helper (http-400 / forged / garbage / clean-close / silent / reset); a counting picker; T6's node stand-in in two shapes | +260 |
+| `docs/QUICKSTART.md` | §10 arm 6 sentences | +3 |
+| `.github/workflows/ci.yml` | step 8 `tests=` gains all seven, T1–T7 [r3] | +1 / −1 |
 
-About 0.5 executor day, including the mutation pass.
+About 0.5–0.75 executor day, including the 21-mutant pass.
 
 ## 11. What this item is NOT doing
 
@@ -383,9 +497,11 @@ About 0.5 executor day, including the mutation pass.
 
 ## 12. Verification Log
 
-All commands were run from the worktree at `2769cff9` unless a row says otherwise. Scratch test
-files (V11–V13) were created under `host/broker/zz_iter314_*_test.go`, run, and **deleted**.
-`git status --porcelain` was empty afterwards.
+All commands were run from the worktree at `2769cff9` unless a row says otherwise. The r3 rows
+V23–V26 ran at `b225976a`, whose Go tree is byte-identical to `2769cff9`; that commit changed
+only this doc. Scratch test files (V11–V13, V25, V26) were created under
+`host/broker/zz_iter314_*_test.go`, run, and **deleted**. `git status --porcelain` showed no Go
+change afterwards.
 
 | # | Claim | Command | Observed |
 |---|---|---|---|
@@ -399,7 +515,7 @@ files (V11–V13) were created under `host/broker/zz_iter314_*_test.go`, run, an
 | V8 | Go's dialer retries a TCP self-connect | `grep -n selfConnect "$(go env GOROOT)/src/net/tcpsock_posix.go"` (go1.26.6) | `:111 for i := 0; i < 2 && … (selfConnect(fd, err) \|\| spuriousENOTAVAIL(err)); i++ {`; `:124 func selfConnect` |
 | V9 | M0: Linux binds in its own netns and is unreachable; macOS refuses | `sed -n 80,81p …/out/linux-0.0.78-run3-both-modes.txt`; `sed -n 38,39p …/out/macos-0.0.78.txt`; `sed -n 604-622p …/m0_matrix.py` | Linux `observed 'WORLD-PROBE-BOUND'` / `'WORLD-PROBE-BOUND 38327; host reached=False'`; macOS `'WORLD-PROBE-REFUSED EPERM'` / `'…; host reached=None'`; M0 used `listen(0)` plus one host connect after BOUND |
 | V10 | The existing probe tests are green locally, and the real-srt tests skip by name | `go test ./host/broker -run 'TestExecProbe' -count=1 -v` | `--- PASS` for ArmNames, PassThroughShim… (1.98s), NoopShim…, ZeroShim…, FailingToolchain…, MissingClient…, Arm8Wired, Arm8FailsUnsandboxed (2 linux rows SKIP by design), Arm8Absent, ProtectedSample; `SKIP TestExecProbeArm8: real srt absent: WORLD_EXEC_SRT_NODE_MODULES is unset …` |
-| V11 | **Deterministic reproduction at base**: a non-child listener on the reverse port produces the CI signature | A scratch test: `newProbeFixture` + `fakeSrtTree` with a node stand-in that, when the argv has `listen`, binds `net.createServer(c=>{})` on that port and prints `WORLD-PROBE-REFUSED ECONNREFUSED` / `WORLD-PROBE-BOUND` without running the child (else pass-through); a control row without the bind. `go test ./host/broker -run TestScratchIter314 -count=3 -v` | arm row `REVERSE-LEG-REACHED=true` 3/3; control `false` 3/3. Arm 6 Why: `… reverse leg: the host reached the listener the child bound on 127.0.0.1:60489` |
+| V11 | **Deterministic reproduction at base**: a non-child listener on the reverse port produces the CI signature | A scratch test: `newProbeFixture` + `fakeSrtTree` with a node stand-in that, when the argv has `listen`, binds `net.createServer(c=>{})` on that port and prints `WORLD-PROBE-REFUSED ECONNREFUSED` / `WORLD-PROBE-BOUND` without running the child (else pass-through); a control row without the bind. `go test ./host/broker -run TestScratchIter314 -count=3 -v` | arm row `REVERSE-LEG-REACHED=true` 3/3; control `false` 3/3. Arm 6 Why: `… reverse leg: the host reached the listener the child bound on 127.0.0.1:60489`. **[r3] reclassified:** this *silent* stand-in becomes the sticky-refusal stimulus (T6 `silent`, T7); the flake reproduction is V25's chatty stand-in |
 | V12 | (Instrument context only, darwin, not Linux evidence) an immediate `bind(0)` rarely returns the just-freed port | A scratch loop of 20,000 × (`freeLoopbackPort`; `net.Listen("127.0.0.1:0")`; compare); `sysctl net.inet.ip.portrange.first net.inet.ip.portrange.last` | `NEXT-BIND-SAME-PORT 0 of 20000`; range `49152`–`65535` |
 | V13 | A nonce line from a node listener is read promptly | A scratch test: a node `net.createServer(c=>c.end('WORLD-PROBE-NONCE abc123\n'))`; 500 × (DialTimeout 200 ms, 500 ms read deadline, `ReadString('\n')`) | `NONCE-READ ok=500/500 max=648µs` |
 | V14 | No daemon test asserts reverse-leg text | `grep -rn "reached the listener\|reverse leg" host cmd docs \| grep -v '^host/broker/exec_probe.go:'` | only `host/broker/exec_probe_test.go:189` (comment) and `:197` (assertion), which double as the known-positive control |
@@ -411,6 +527,10 @@ files (V11–V13) were created under `host/broker/zz_iter314_*_test.go`, run, an
 | V20 | `exec_startup_test.go:499` is a log, not an assertion | `sed -n 499p host/daemon/exec_startup_test.go` | `t.Logf("%s: %v", id, err)` |
 | V21 | QUICKSTART's arm 6 prose (the S7 edit site) | `sed -n 1140,1160p docs/QUICKSTART.md` | `:1146-1148` "`arm6-network`: World opens its own live `127.0.0.1` listener … a port the child binds must be unreachable from the host." |
 | V22 | **[r2]** Caller census: the reverse leg is the only caller of `pollLoopback` and `freeLoopbackPort`. Run at worktree HEAD `72eba94b` | `grep -rn 'pollLoopback\|freeLoopbackPort' --include='*.go' .`; control `grep -rn 'func runBounded\|\.runBounded(' --include='*.go' host \| wc -l`; `ls -d host cmd world` | Exactly 6 lines, all in `host/broker/exec_probe.go`: `:455 revPort, err := freeLoopbackPort()`, `:460 poll := pollLoopback(revPort)`, `:551 // freeLoopbackPort is a port nothing listens on …`, `:552 func freeLoopbackPort() (int, error) {`, `:561 // pollLoopback dials 127.0.0.1:port every 50 ms …`, `:563 func pollLoopback(port int) func() bool {`. Control `9`. `cmd host world` all exist. This is identical to the controller's census (VERIFIED BY CONTROLLER) |
+| V23 | **[r3]** srt 0.0.78's mux answers a non-SOCKS hello with HTTP 400 and closes, but stays silent if sent nothing. **Scope: darwin only**; Linux rests on source reading, since the mux path is the same on every non-Windows platform | VERIFIED BY CONTROLLER (darwin, node v26.12.1), then re-run first-party: `shasum -a 256 $S/dist/cli.js \| cut -c1-12` and `perl -e 'alarm 60; exec @ARGV' node /tmp/w314/muxprobe/probe.mjs $S`, with `S=~/.ailang/state/mission-world-iter241/srt/node_modules/@anthropic-ai/sandbox-runtime`. The script (sha256 prefix `28c3311502f8`) imports `createMuxProxyServer` + `createHttpProxyServer` from `$S`, listens the mux on `127.0.0.1:0`, and dials it 3× sending `WORLD-PROBE-HELLO\n` and 2× sending nothing (1500 ms wait). Source: `sed -n 76,100p $S/dist/sandbox/mux-proxy.js`; `grep -n '0x04\|0x05\|DEFAULT_FIRST_BYTE' …/mux-proxy.js`; `grep -n clientError -A10 $S/dist/sandbox/http-proxy.js` | `3c3092bd26b3` (= pin). Controller: `HELLO` 3/3 `close after 0-3ms bytes=28 first="HTTP/1.1 400 Bad Request"`; `SILENT` 2/2 `deadline after 1500ms bytes=0`. First-party re-run: `HELLO  : close after 3ms / 1ms / 0ms bytes=28 first="HTTP/1.1 400 Bad Request"`; `SILENT : deadline after 1500ms bytes=0` ×2; rc 0. Source: `SOCKS_FIRST_BYTES = new Set([0x04, 0x05])`, `DEFAULT_FIRST_BYTE_TIMEOUT_MS = 10000`, `client.once('readable', … peek … SOCKS_FIRST_BYTES.has(peek[0]) ? handleSocksConnection : dispatchHttp)`; `server.on('clientError', …)` writes the 400 when `socket.writable` ("Destroy only after the flush"). `W` = 0x57 is not 0x04/0x05 |
+| V24 | **[r3, glm]** The `arm8Fixture`-style `/bin/sh` client + fake-srt probe path runs with **node absent** and no real srt: 0 SKIP. The `ExecProbeConfig.Client` precedent, file:line | `env -i HOME=$HOME PATH=/usr/bin:/bin sh -c 'command -v node; command -v go'` (control: node absent); `ls /usr/bin/node /bin/node`; then `env -i HOME=$HOME PATH=/usr/bin:/bin WORLD_EXEC_SRT_NODE_MODULES=/nonexistent /opt/homebrew/bin/go test ./host/broker -run '^TestExecProbeArm8FailsUnsandboxed$/^(pass-through\|missing-client\|forged-token\|darwin-refuses-all)$' -count=1 -v`, then count `--- PASS` / `--- SKIP`. `grep -n 'Client  *string' host/broker/exec_probe.go`; `grep -n 'func arm8Fixture\|t.Setenv(execNodeEnv' host/broker/exec_probe_test.go` | node: not found (rc 1), and `ls` says *No such file or directory* for both paths. Test: rc 0, `PASS=5 SKIP=0` (the parent and 4 subtests, each driving `pp.run` through the sh srt shim). `Client string` at `host/broker/exec_probe.go:106`, with its doc at `:104-105` ("… Tests point it at a missing path."). `arm8Fixture` at `exec_probe_test.go:256` sets `execNodeEnv` to `/bin/sh` at `:258`. Deviation from the reviewer's verbatim command: `go` is invoked by absolute path because `PATH=/usr/bin:/bin` has no `go` on this machine. An earlier run of the whole `TestExecProbeArm8FailsUnsandboxed` + `TestExecProbeArm8Absent` under the same `env -i` showed `PASS=12 SKIP=2`. The 2 SKIPs are the **host-GOOS-gated** `linux-ebusy-passes` / `linux-exdev-passes` rows (`exec_probe_test.go:352-353`), not an environment skip, so the counted run excludes them |
+| V25 | **[r3]** Flake reproduction at base with a **chatty** (mux-shaped) stand-in | A scratch test: like V11, but the stand-in's holder is `net.createServer(c=>{c.once('data',()=>c.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'))})`. `perl -e 'alarm 300; exec @ARGV' go test ./host/broker -run TestScratchR3 -count=3 -v` | `CHATTY-BASE REVERSE-LEG-REACHED=true reverse leg: the host reached the listener the child bound on 127.0.0.1:53132` (then `:53659`, `:54186`): 3/3 |
+| V26 | **[r3]** Hello-then-nonce against a node listener of §4.1's shape | Same scratch run: node `net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE abc123\n')})`; 500 × (DialTimeout 200 ms, write `WORLD-PROBE-HELLO\n`, 500 ms read deadline, `ReadString('\n')`) | `HELLO-NONCE ok=500 other=0`, max `495µs` / `612µs` / `515µs` over the 3 runs |
 
 ## 13. Quorum log
 
@@ -438,6 +558,57 @@ files (V11–V13) were created under `host/broker/zz_iter314_*_test.go`, run, an
   - this log.
 
   Nothing else changed.
+
+**Round 2** (2026-10-28; artifact
+`~/.ailang/state/mission-quorum-world/w-exec-probe-reverse-leg-port-race-2026-10-28T16-37-10Z.json`):
+**BLOCKED**.
+
+| Reviewer | Verdict |
+|---|---|
+| `gemini-4-argon` | PASS |
+| `oc-glm-5-3` | REJECT |
+| `oc-kimi-k3` | REJECT |
+| `gpt6-1-sol` | absent (429) |
+
+- **`oc-kimi-k3`: the doc's central safety claim contradicts its design.** **REAL.**
+  - §3's "exactly as sensitive" and §4.3's "Neither is PASS" were false as written: a
+    connected, non-nonce dial was INCONCLUSIVE, and a later attempt could PASS. R1 conceded a
+    slow-breach weakening.
+  - R1's deferred tightening would have restored the flake, because the mux is silent until
+    spoken to.
+  - Proposed fix: write a hello on every dial and classify child / foreign / silent holder,
+    with a silent holder refusing stickily. This was gated on measuring whether the mux answers
+    garbage input.
+  - **Controller measurement (V23, darwin, pinned srt):** hello → `HTTP/1.1 400`, then close,
+    3/3; nothing sent → silent past 1.5 s, 2/2. Source reading agrees. The reviewer's first
+    branch therefore applies: "answer/close → the discriminator works and the strong invariant
+    stands untouched".
+- **`oc-glm-5-3`: "T1, T2, T3, T5 never skip" was asserted, not measured.** **REAL.** Only T4
+  and T6 were CI-guarded, so a hidden node or srt dependence in the sh fixtures could have
+  dropped the M1–M14 killers on Linux while every gate stayed green. The `ExecProbeConfig.Client`
+  precedent also had no file:line.
+- **Carve-out r3: reviewers' verbatim fixes applied.**
+  - **kimi:**
+    - §3 (A) rewritten around the hello discriminator. "Exactly as sensitive" is kept and is
+      now true, with its premise stated.
+    - §4.1 adds `c.resume()`. §4.2 adds the hello, the three-way classification and the sticky
+      SILENT verdict. A zero-byte reset counts as silent, under the reviewer's "zero bytes after
+      the hello" branch.
+    - §4.3's invariant replaces "Neither is PASS" with the exact three-outcome statement.
+    - R1 is closed, the deferred-tightening note is replaced, and the V23 scope is stated
+      (darwin-only).
+    - §2 and V11 reclassify the silent stand-in. The flake reproduction is now V25's chatty
+      stand-in.
+    - Tests: T2 becomes the chatty-holder retry test, T6 gains `chatty` and `silent` rows, and
+      T7 (sticky silent refusal) is new. Mutants M15–M21 are added.
+    - Rows V23, V25 and V26.
+  - **glm:**
+    - AC-CI lists all seven new tests in step 8's `tests=` list.
+    - V24 records the node-less run (0 SKIP) and the `Client` file:line. The `go` binary was
+      invoked by absolute path, because `PATH=/usr/bin:/bin` has no `go` on this machine.
+  - **Not applied (outside both proposed fixes):** kimi's catch also observed that a leg that
+    passes after inconclusive attempts emits nothing ("no-silent-fallback"). Neither proposed
+    fix asked for a change there, so none was made.
 
 ## Related
 
