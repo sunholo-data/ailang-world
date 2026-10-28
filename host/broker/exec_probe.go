@@ -29,6 +29,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -61,7 +62,8 @@ const ExecProbeArmProtectedWrite = "arm8-protected-write"
 // <it> -- op arg …`): one token line per op. write/read try the path;
 // connect dials 127.0.0.1:<port>; proxy sends an HTTP CONNECT for it through
 // srt's proxy environment (a direct dial when there is none, as curl would);
-// listen binds 127.0.0.1:<port> for <ms> (arg "<port>:<ms>").
+// listen binds 127.0.0.1:<port> for <ms> (arg "<port>:<ms>:<nonce>"), and
+// answers every accept with "WORLD-PROBE-NONCE <nonce>".
 const execProbeScript = `const fs=require('fs'),net=require('net');
 const say=s=>process.stdout.write(s+'\n');const code=e=>(e&&e.code)||'EUNKNOWN';
 function connect(port){return new Promise(r=>{const s=net.connect(+port,'127.0.0.1');
@@ -77,14 +79,14 @@ s.write(h+'\r\n')});let b='';
 s.on('data',d=>{b+=d;const i=b.indexOf('\r\n');if(i<0)return;clearTimeout(t);s.destroy();const st=b.slice(0,i).split(' ')[1]||'';
 r(st==='200'?'WORLD-PROBE-CONNECTED':'WORLD-PROBE-REFUSED HTTP-'+st)});
 s.on('error',e=>{clearTimeout(t);r('WORLD-PROBE-REFUSED '+code(e))});s.on('close',()=>{clearTimeout(t);r('WORLD-PROBE-REFUSED ECLOSED')})})}
-function listen(port,ms){return new Promise(r=>{const v=net.createServer(c=>c.destroy());
+function listen(port,ms,nonce){return new Promise(r=>{const v=net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')});
 v.on('error',e=>r('WORLD-PROBE-REFUSED '+code(e)));
 v.listen(+port,'127.0.0.1',()=>{say('WORLD-PROBE-BOUND');setTimeout(()=>{v.close();r(null)},+ms)})})}
 (async()=>{const a=process.argv.slice(1);for(let i=0;i<a.length;i+=2){const op=a[i],x=a[i+1];let t;try{
 if(op==='write'){try{fs.writeFileSync(x,'WORLD-PROBE');t='WORLD-PROBE-WROTE'}catch(e){t='WORLD-PROBE-REFUSED '+code(e)}}
 else if(op==='read'){try{fs.readFileSync(x);t='WORLD-PROBE-READ'}catch(e){t='WORLD-PROBE-REFUSED '+code(e)}}
 else if(op==='connect')t=await connect(x);else if(op==='proxy')t=await proxy(x);
-else if(op==='listen'){const q=x.split(':');t=await listen(q[0],q[1])}else t='WORLD-PROBE-ERROR EBADOP'}
+else if(op==='listen'){const q=x.split(':');t=await listen(q[0],q[1],q[2])}else t='WORLD-PROBE-ERROR EBADOP'}
 catch(e){t='WORLD-PROBE-ERROR '+code(e)}if(t)say(t)}})();
 `
 
@@ -95,6 +97,48 @@ const execProbeRunBudget = 8 * time.Second
 // execProbeListenMS is how long the reverse leg's child holds its listener.
 const execProbeListenMS = 1000
 
+// execProbeReverseAttempts bounds the reverse leg's fresh-port retries.
+const execProbeReverseAttempts = 3
+
+// execProbeHello is what the reverse leg's poll writes on every connected
+// dial: the child's listener answers it with its nonce; srt's mux answers
+// HTTP 400 (design V23); a listener that answers nothing is "silent".
+const execProbeHello = "WORLD-PROBE-HELLO\n"
+
+// execProbeHelloWait bounds the read of the answer to the hello.
+const execProbeHelloWait = 500 * time.Millisecond
+
+// reverseSeen is what one reverse-leg attempt's dials observed.
+type reverseSeen struct{ child, foreign, silent bool }
+
+// revVerdict is judgeReverse's verdict on one attempt.
+type revVerdict int
+
+const (
+	revPass revVerdict = iota
+	revReached
+	revNoToken
+	revSilent
+	revInconclusive
+)
+
+// judgeReverse is the reverse leg's whole decision for one attempt, in the
+// design's §4.2 order: a nonce always wins; a missing token names itself; a
+// silent peer refuses; a foreign answer or the child's EADDRINUSE retries.
+func judgeReverse(tok string, seen reverseSeen) revVerdict {
+	switch {
+	case seen.child:
+		return revReached
+	case tok != "WORLD-PROBE-BOUND" && !strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "):
+		return revNoToken
+	case seen.silent:
+		return revSilent
+	case seen.foreign || tok == "WORLD-PROBE-REFUSED EADDRINUSE":
+		return revInconclusive
+	}
+	return revPass
+}
+
 // ExecProbeConfig is the stack the probe checks.
 type ExecProbeConfig struct {
 	Sandbox *ExecSandbox
@@ -104,6 +148,9 @@ type ExecProbeConfig struct {
 	// Client is the probe client run inside the sandbox; "" = Sandbox.Node,
 	// World's own verified node (§4.6). Tests point it at a missing path.
 	Client string
+	// reversePort picks each reverse-leg attempt's port; nil = freeLoopbackPort.
+	// Package tests steer it, as they steer Client.
+	reversePort func() (int, error)
 }
 
 // ExecProbeArmFailure is one failed arm and what it observed.
@@ -298,10 +345,11 @@ func (pp *execProber) run(ctx context.Context, argv []string, trampoline bool, b
 
 // execProber is one profile's probe: a scratch episode and its handler.
 type execProber struct {
-	h      *ExecHandler
-	cwd    string
-	client string
-	failed []ExecProbeArmFailure
+	h        *ExecHandler
+	cwd      string
+	client   string
+	pickPort func() (int, error)
+	failed   []ExecProbeArmFailure
 }
 
 func (pp *execProber) fail(arm, format string, args ...any) {
@@ -354,7 +402,7 @@ func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEn
 	if client == "" {
 		client = cfg.Sandbox.Node
 	}
-	pp := &execProber{h: h, cwd: cwd, client: client}
+	pp := &execProber{h: h, cwd: cwd, client: client, pickPort: cfg.reversePort}
 	pp.probe(ctx, env, worktree, sibling, id)
 	pp.probeProtected(ctx, hostGOOS())
 	if len(pp.failed) > 0 {
@@ -452,21 +500,15 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, si
 	// Run C, WITHOUT the trampoline so srt's proxy environment reaches the
 	// client: arm 6's proxy leg, then the reverse leg (a listener the child
 	// binds must be unreachable from the host, V46) while World dials it.
-	revPort, err := freeLoopbackPort()
-	if err != nil {
-		pp.fail(ExecProbeArmNetwork, "reverse leg: no free port: %v", err)
-		revPort = 0
-	}
-	poll := pollLoopback(revPort)
-	c := pp.run(ctx, []string{pp.client, "-e", execProbeScript, "--", "proxy", strconv.Itoa(net6.port),
-		"listen", fmt.Sprintf("%d:%d", revPort, execProbeListenMS)}, false, execProbeRunBudget)
-	reached := poll()
+	// reverseLeg retries a port another host process holds (w-exec-probe-
+	// reverse-leg-port-race): only the child's nonce counts as a reach.
+	c, revWhy := pp.reverseLeg(ctx, net6.port)
 	time.Sleep(200 * time.Millisecond)
 	acceptsC := net6.accepts.Load()
 	// Every leg is judged and every failing one named: one leg must never
 	// hide another (the reverse leg would otherwise mask a vacuous connect).
 	var legs []string
-	raw, proxy, rev := a.token(6), c.token(0), c.token(1)
+	raw, proxy := a.token(6), c.token(0)
 	if netCtl != nil {
 		legs = append(legs, fmt.Sprintf("control: World's live listener did not accept an unsandboxed connect: %v", netCtl))
 	}
@@ -478,10 +520,8 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, si
 		legs = append(legs, fmt.Sprintf("a connect through srt's proxy environment: token %q, accepts %d (want a refusal and still 1; %s)",
 			proxy, acceptsC, c.describe()))
 	}
-	if rev != "WORLD-PROBE-BOUND" && !strings.HasPrefix(rev, "WORLD-PROBE-REFUSED ") {
-		legs = append(legs, fmt.Sprintf("reverse leg: no token from the child's listener (%q; %s)", rev, c.describe()))
-	} else if reached {
-		legs = append(legs, fmt.Sprintf("reverse leg: the host reached the listener the child bound on 127.0.0.1:%d", revPort))
+	if revWhy != "" {
+		legs = append(legs, revWhy)
 	}
 	if len(legs) > 0 {
 		pp.fail(ExecProbeArmNetwork, "%s", strings.Join(legs, "; "))
@@ -493,6 +533,60 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, si
 	if d.err != nil {
 		pp.fail(ExecProbeArmToolchain, "probe %q: %s; stdout %q", strings.Join(probe.Argv, " "), d.describe(), headOf(d.stdout, 240))
 	}
+}
+
+// reverseLeg is arm 6's reverse leg (design §4.2): up to
+// execProbeReverseAttempts attempts, each on a fresh port with a fresh
+// nonce. Attempt 1 is Run C (proxy, then listen), so first carries the
+// proxy leg's token at index 0. why is "" when the leg passes.
+func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first execProbeRun, why string) {
+	pick := pp.pickPort
+	if pick == nil {
+		pick = freeLoopbackPort
+	}
+	proxyArgv := []string{pp.client, "-e", execProbeScript, "--", "proxy", strconv.Itoa(proxyPort)}
+	var tried []string
+	for attempt := 1; attempt <= execProbeReverseAttempts; attempt++ {
+		port, err := pick()
+		var nonce string
+		if err == nil {
+			nonce, err = randomHex(16)
+		}
+		if err != nil {
+			if attempt == 1 { // the proxy leg is still judged
+				first = pp.run(ctx, proxyArgv, false, execProbeRunBudget)
+			}
+			return first, fmt.Sprintf("reverse leg: no free port: %v", err)
+		}
+		argv := []string{pp.client, "-e", execProbeScript, "--"}
+		if attempt == 1 {
+			argv = slices.Clone(proxyArgv)
+		}
+		argv = append(argv, "listen", fmt.Sprintf("%d:%d:%s", port, execProbeListenMS, nonce))
+		poll := pollLoopback(port, "WORLD-PROBE-NONCE "+nonce)
+		r := pp.run(ctx, argv, false, execProbeRunBudget)
+		seen := poll()
+		tok := r.token(0)
+		if attempt == 1 {
+			first, tok = r, r.token(1)
+		}
+		switch judgeReverse(tok, seen) {
+		case revPass:
+			return first, ""
+		case revReached:
+			return first, fmt.Sprintf("reverse leg: the host reached the listener the child bound on 127.0.0.1:%d", port)
+		case revNoToken:
+			return first, fmt.Sprintf("reverse leg: no token from the child's listener (%q; %s)", tok, r.describe())
+		case revSilent:
+			return first, fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses", port)
+		}
+		what := "foreign reach"
+		if !seen.foreign {
+			what = "child EADDRINUSE"
+		}
+		tried = append(tried, fmt.Sprintf("127.0.0.1:%d %s", port, what))
+	}
+	return first, fmt.Sprintf("reverse leg: inconclusive after %d attempts: a listener the child did not bind held each port (%s)", len(tried), strings.Join(tried, ", "))
 }
 
 // probeListener is arm 6's World-owned live listener with an accept count.
@@ -558,10 +652,47 @@ func freeLoopbackPort() (int, error) {
 	return port, ln.Close()
 }
 
-// pollLoopback dials 127.0.0.1:port every 50 ms until stopped; the returned
-// stop function reports whether any dial connected.
-func pollLoopback(port int) func() bool {
-	var reached atomic.Bool
+// classifyReverseDial writes World's hello on a connected dial, then reads
+// at most len(want)+1 bytes up to '\n' within execProbeHelloWait. The line
+// want+"\n" is the child; any other bytes, or a clean EOF after a written
+// hello, is foreign; zero bytes otherwise (deadline, reset, a failed hello
+// write) is silent.
+func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))
+	_, werr := io.WriteString(c, execProbeHello)
+	buf := make([]byte, 0, len(want)+1)
+	one := make([]byte, 1)
+	var rerr error
+	for len(buf) < len(want)+1 {
+		var n int
+		n, rerr = c.Read(one)
+		if n == 1 {
+			buf = append(buf, one[0])
+			if one[0] == '\n' {
+				break
+			}
+		}
+		if rerr != nil {
+			break
+		}
+	}
+	switch {
+	case string(buf) == want+"\n":
+		return true, false
+	case len(buf) > 0:
+		return false, true
+	case werr == nil && errors.Is(rerr, io.EOF):
+		return false, true
+	}
+	return false, false // silent
+}
+
+// pollLoopback dials 127.0.0.1:port every 50 ms until stopped and
+// classifies every connected dial (classifyReverseDial); the returned stop
+// function reports what the dials saw. It dials once before it first checks
+// for stop, so an attempt always observes at least one dial.
+func pollLoopback(port int, want string) func() reverseSeen {
+	var child, foreign, silent atomic.Bool
 	done := make(chan struct{})
 	finished := make(chan struct{})
 	go func() {
@@ -572,7 +703,14 @@ func pollLoopback(port int) func() bool {
 		addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
 		for {
 			if c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond); err == nil {
-				reached.Store(true)
+				switch isChild, isForeign := classifyReverseDial(c, want); {
+				case isChild:
+					child.Store(true)
+				case isForeign:
+					foreign.Store(true)
+				default:
+					silent.Store(true)
+				}
 				_ = c.Close()
 			}
 			select {
@@ -582,10 +720,10 @@ func pollLoopback(port int) func() bool {
 			}
 		}
 	}()
-	return func() bool {
+	return func() reverseSeen {
 		close(done)
 		<-finished
-		return reached.Load()
+		return reverseSeen{child: child.Load(), foreign: foreign.Load(), silent: silent.Load()}
 	}
 }
 

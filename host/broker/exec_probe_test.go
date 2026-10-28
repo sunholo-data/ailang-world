@@ -415,3 +415,34 @@ func TestExecProbeProtectedSample(t *testing.T) {
 		t.Fatal("unsupported construction must return explicit error")
 	}
 }
+
+// T1 (design §7): the reverse leg's whole decision for one attempt, §4.2's order.
+func TestExecProbeReverseLegJudge(t *testing.T) {
+	const bound, eperm, inuse = "WORLD-PROBE-BOUND", "WORLD-PROBE-REFUSED EPERM", "WORLD-PROBE-REFUSED EADDRINUSE"
+	child, foreign, silent := reverseSeen{child: true}, reverseSeen{foreign: true}, reverseSeen{silent: true}
+	for _, row := range []struct {
+		name string
+		tok  string
+		seen reverseSeen
+		want revVerdict
+	}{
+		{"bound-none", bound, reverseSeen{}, revPass},
+		{"eperm-none", eperm, reverseSeen{}, revPass},
+		{"bound-foreign", bound, foreign, revInconclusive},
+		{"eperm-foreign", eperm, foreign, revInconclusive},
+		{"eaddrinuse-none", inuse, reverseSeen{}, revInconclusive},
+		{"bound-child", bound, child, revReached},
+		{"bound-child-foreign", bound, reverseSeen{child: true, foreign: true}, revReached},
+		{"bound-child-silent", bound, reverseSeen{child: true, silent: true}, revReached},
+		{"notoken-child", "", child, revReached},
+		{"bound-silent", bound, silent, revSilent},
+		{"bound-silent-foreign", bound, reverseSeen{silent: true, foreign: true}, revSilent},
+		{"eperm-silent", eperm, silent, revSilent},
+		{"notoken-none", "", reverseSeen{}, revNoToken},
+		{"notoken-foreign", "", foreign, revNoToken},
+	} {
+		if got := judgeReverse(row.tok, row.seen); got != row.want {
+			t.Errorf("%s: judgeReverse(%q, %+v) = %d, want %d", row.name, row.tok, row.seen, got, row.want)
+		}
+	}
+}
