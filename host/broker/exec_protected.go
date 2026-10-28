@@ -1,6 +1,6 @@
 package broker
 
-// Row 156 M1a (design_docs/planned/w-exec-protected-test-paths.md §4.1-§4.2):
+// Row 156 M1a (design_docs/implemented/w-exec-protected-test-paths.md §4.1-§4.2):
 // the operator's `protected` pattern set, as pure functions. ParseProtectedPatterns
 // validates the grammar and returns the canonical list; canonicalProtected,
 // protectedDigest, foldProtectedKey and matchProtected are the canonical form,

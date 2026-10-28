@@ -2378,3 +2378,91 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 21/23 built; goal unmoved.
 **Next:** row 150 R1 (controller: measured rectangles, two real passes, threshold V-row, with a misplaced-rectangle negative control), then M8a → M8b. Then 151 after 150.
+
+## 312 — 2026-10-28 — row 150: R1 measured — real-Chrome rectangles, two-pass full path and threshold V-row, with two store-dependent criteria left open; row 156 closed on D-WORLD-86 = A; judge PASS 72 [PRODUCT]
+
+**Kind:** a controller-owned measurement step (R1) on the release row, judged by an independent evaluator, plus bookkeeping (row 156's close) unparked by an attended ruling. The evaluator was spawned through the Agent tool, per the operator's standing request. No designer, planner or executor was needed: R1 is a controller step by the doc's own §5.
+
+**Pick and why:** row 150 R1, following iteration 311's **Next**. Re-checked before picking:
+- no R1 commit, branch, worktree or PR existed (`git log origin/dev --grep R1` returns only design/ledger commits; the PR title search returns merged design PRs only);
+- local dev equalled origin/dev `dba643a9` at Gate 1 (#389/#390 had merged attended since iteration 311);
+- one open PR from this account, #395 (`docs/ruling-d-world-86`), was attended work (commit author is the attended identity; opened by the attended session `ae6f556a`'s worktree). It was left alone and merged attended at 08:20Z during this iteration.
+- Governing doc `w-marketing-capture-orchestration` r2 (narrow-refinement carve-out, §9; not re-litigated).
+
+**Clause map:** clauses 1–7 MET (ratified states, not re-measured); no UNMET clause, no critical-path row. D-WORLD-81 order 156 → 150 → 151.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (9 comments, all this account's). Both watermarks read the same value; unchanged (nothing new to process).
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (log grep count 9). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages. This iteration's claim was sent.
+- Weekly external-issue sweep: not due.
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Dev CI at `dba643a9`: check set 3/3 success.
+- Running skill plus all 13 resource files byte-identical to origin/dev (per-file `cmp` against the resolved symlink target).
+- Base `dba643a9…` recorded at Gate 1 (`2026-10-28T08:02:25Z`).
+- Attended ruling found in flight: PR #395 sets **D-WORLD-86 = A** (drop row 156's M5c/M5d). Acknowledged; acted on only after it merged (08:20Z): `mission_ledger_provenance.sh --id D-WORLD-86` → `verdict=attended flip=3be8e3e7`; ledger valid, 85 rows, **0 OPEN**.
+
+**R1 (controller, outside any sandbox; Chrome 156.0.8078.48, `AILANG_BIN` v0.41.0, tool v0.54.15, load ~5):**
+- Probe `verification/world-iter312/r1-rects-probe_test.go.txt` (run as a `zz_` test, then deleted). It uses the drill's own rig, the six routes from `marketingcheck routes`, and the V51 layout method at each shot's M7c0 geometry. Phone used a supervisor `shot` plus the V58 scan. Then the drill's exact `capture_marketing.sh --verify-twice` ran on the same store, with output kept.
+- **Text-tight boxes refuted (seeds 1–4):** `Range` boxes for the packet paragraphs changed width between seeds (1209/1207 and 1131/1115 px, then again on seeds 3/4), because sha256 hex glyphs vary in width. Paragraph regions now use the element's block box.
+- **Phone background fixed (seed 3):** the first gutter rectangle crossed the blue nav (sd 4.64). A column scan put the phone nav at y 114–322, as on desktop, so the background starts at y 343 (sd 0.000).
+- **Final baseline (seeds 5/6):** `r1-rects.json` (sha256 `ba7c83ce…`) was byte-identical on both seeds. The phone rectangles equal V58's baseline. Every region bottom is ≤ H − 40.
+- **C14 half:** on seeds 5 and 6, pass-A = pass-B SHA256 on **6/6** shots, `inventory: equal`, `check` ok. The named drill (`TestMarketingChromeSixShots` with the baseline, on a third seed) PASSED in 19.4 s.
+- **V62 thresholds** (own helper `r1-stats-main.go.txt`, mirroring `png.go`): min colours 822, chromatic 0.0621–0.2423, light background Y 248.84 and dark 29.96 (sd 0), smallest region 345x23, min content sd 17.13. Decision: **keep all eight values**; M8a replaces the "provisional" comment with a pointer to V62.
+- **V63 controls:** the positive control is rc 0. **14/14** regions moved to the nearest near-blank 64x16 window were refused, each `blank-region <shot>: <region>`. Phone C8′: (i) and (ii) true; **(iii) false** against V50 (thumb right edge 333/334 vs 329).
+
+**Independent evaluation:** **PASS 72/100** ([report](verification/world-iter312/evaluator-r1.md)). Scores: completeness 27/30, reproducibility 11/20, thresholds 13/15, controls 10/15, honesty 11/20. The judge ran its own probes on three fresh seeds, the named drill, its own statistics code, its own negative controls and the V58 scan. Findings:
+- **F1 (blocking before P0, not for the measurement):** on 1 of its 3 seeds the PROVEN roster row wrapped to 3 lines (height 72 vs 96), so the block-box baseline is not fully store-independent. **Reproduced by the controller** from the judge's `layouts.json`: 72.0 on eval seed 1 and 96.0 on the four others; the TESTED row's text reaches x 1303–1315 of 1318.
+- **F2:** R1 has two open criteria, not one.
+- **F3:** the phone thumb spread is 324–338 (judge seeds 338/324/326), not "1 px / 4–5 px". Reproduced by the controller's own `phonescan` run on the judge's PNGs.
+- **F4:** `check` gives no localisation. It accepted rectangles pointed at the wrong row, shifted 14–40 px, whole-viewport, 64x16 glyph windows and a background over content. It refused only a dropped required rectangle and out-of-bounds.
+- **F5:** V62 reproduced with the judge's own code. The data show headroom, not discriminating power.
+- **F6:** a local path appears in a committed log. That is the established repo practice (860 verification files carry it); no email or secret.
+- **After judging, the controller narrowed its written claims to the judge's measurements** (`d30725bc`: V60/V63 text, R1 status "two open criteria", JSON/plan status). These are record corrections in the judge's direction, attributed to the judge. No code or rectangle changed, so no second round was run.
+
+**Row 156 close (bookkeeping, unparked by D-WORLD-86 = A):**
+- Sprint JSON M5c/M5d `held:D-WORLD-86` → `dropped:D-WORLD-86=A …`.
+- Doc status line → IMPLEMENTED.
+- `git mv` of doc, plan and JSON to `design_docs/implemented/` (row 152's convention: historical internal references are left as they are).
+- The one code comment naming the planned path (`host/broker/exec_protected.go:3`) was updated; `go build ./host/broker/` ok.
+- Charter row 156 tag → CLOSED iteration 312.
+
+**Bookkeeping:**
+- Orchestration doc V60–V63 plus the R1 status note; sprint JSON R1 controller step → MEASURED with the two OPEN criteria; plan "Controller steps" line updated.
+- Charter row 150 (R1 measured, open criteria, Next); CURRENT GOAL next line; STATUS 309 rotated to the archive (charter line count asserted unchanged, archive +2 and holds the stamp; the charter keeps 3 stamps).
+
+**Result:** R1 MEASURED with two open criteria. The rectangles are genuinely measured from Chrome's own layout and reproducible on 8 of 9 seeds, and the full path is byte-deterministic within a store on real Chrome. The thresholds are settled for M8a. Two acceptance criteria assume geometry is store-independent and it is not: the phone overflow and wrapping packet paragraphs. They need a doc amendment before P0. Row 156 is CLOSED. Row 150 is 21 of 23 executor milestones built.
+
+**Gate 3b:** the PR head and then the merge commit are each polled, pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). The outcome is reported on #366.
+
+**Routing evidence:** base=dba643a931c2f69f9071520d13f7ba1883e27634@2026-10-28T08:02:25Z (Gate 1 record). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=codex:gpt-6.1-sol`, `EXECUTOR=codex:gpt-6.1-sol`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer, planner and executor: not spawned (R1 is controller-owned per doc §5 and §6; row 156's close is bookkeeping). This is not a routing failure.
+- Evaluator `sonnet` (resolver `agent-tool sonnet declared:alias-pin`, Agent tool, foreground, own worktree `.eval-world-iter312` at `e0b45b25`): 84,409 tok / 272 s. Judge independence: an Anthropic Sonnet judge of an Opus controller's measurements, different models. Its directive named the claims to test but supplied no controller method or candidate finding; it was told to use its own code.
+- No quorum (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Text-tight (`Range`) rectangles: their widths vary with hash glyph widths between seeds.
+- The header-derived phone background: it crossed the nav.
+- Reusing the controller's stats helper for the judge: the directive required independent code.
+- A second judge round for the post-judge record corrections: they only narrow claims to the judge's own reproduced measurements.
+- Self-amending C8′(iii)/P0 inside R1: changing an acceptance criterion is a design change and goes through the designer and quorum (doc r3).
+- Merging #395 from the loop: it was attended work. It merged attended.
+
+**Carried:**
+- The C8′(iii)/P0 amendment (doc r3; the judge recommends asserting the phone defect's presence plus title-right, since about ±10 px would be needed; for packet paragraphs, compare left/top/right and tolerate whole-line height steps, or re-measure on the release store under P3).
+- `check`'s lack of localisation (F4) is by design; position rests on P0.
+- MinRectW/H give no localisation (64x16 glyph windows pass).
+- Everything iteration 311 carried (diagnostics-line ordering, the drill's rectangles precondition weaker than `LoadRectangles`, the manifest assertion only parses, `v0.41.0` hardcoded, the load-sensitive M7a supervisor fixtures).
+
+**Retro:**
+- The real-Chrome rehearsal found two acceptance criteria that silently assumed store-independent geometry. Hash text changes glyph widths, wraps and overflow, so any pixel-exact criterion must be checked on more than one seed before it is trusted. Two seeds agreeing (5/6) was not enough; the judge's third seed broke it. Earned and pre-registered as instance 1: measure geometry claims on at least three seeds before calling them store-independent.
+- Generator ≠ judge paid off again. The judge's own seeds and controls changed the written result (one open criterion became two, and the spread was 14 px rather than 5).
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 156 CLOSED; row 150 21/23 built with R1 measured; goal unmoved.
+**Next:** row 150 M8a (thresholds per V62), then the C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum), then M8b, then P0–P3 and the attended A1. Then 151.

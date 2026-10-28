@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 312 | 2026-10-28 | row 150: R1 measured — real-Chrome rectangles, two-pass full path and threshold V-row, with two store-dependent criteria left open; row 156 closed ... |
 | 311 | 2026-10-28 | row 150: M7c4 built — the real-Chrome drill exists and the capture shell compares frozen inventories around both passes; judge PASS 92 [PRODUCT] |
 | 310 | 2026-10-28 | row 150: M7c3 built — `marketingcheck inventory`/`inventory-compare` freeze the public store so a capture taken over a commit is refused; judge PAS... |
 | 309 | 2026-10-27 | row 150: M7c2b built — the capture shell runs end to end against fake Chrome and a fake daemon; judge PASS 83 [PRODUCT] |

@@ -2778,7 +2778,7 @@
         "host/broker/handlers_ailang.go",
         "host/daemon/workspace_protected_test.go"
       ],
-      "status": "held:D-WORLD-86",
+      "status": "dropped:D-WORLD-86=A (attended 2026-10-28; World relies on the v0.54.15 tool pin's alias refusals plus M5e)",
       "new_tests": [
         "TestWorkspaceWriteProtectedPrecheck"
       ],
@@ -2943,7 +2943,7 @@
         "host/broker/handlers_ailang.go",
         "host/daemon/workspace_protected_test.go"
       ],
-      "status": "held:D-WORLD-86",
+      "status": "dropped:D-WORLD-86=A (attended 2026-10-28; World relies on the v0.54.15 tool pin's alias refusals plus M5e)",
       "new_tests": [
         "TestWorkspaceWriteProtectedPrecheck"
       ],
