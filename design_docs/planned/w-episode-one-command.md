@@ -426,6 +426,8 @@ profile, and only its digest and bytes travel into the start record.
 
 ## §8 Milestones
 
+M0 and M1 built in episode w217a (2026-10-28), except the 52/53-character-name collision-suffix conflict in §3.3; M2–M4 remain unbuilt.
+
 | M | what | gate |
 |---|---|---|
 | **M0** | preset schema, loader and layout checks; the checks section and its profile match (R5); `preset list/show/check/init` | Go tests over fixture presets and profiles; `test_trial.py`'s grader vectors pass in Go; ACs 4, 5, 13 |

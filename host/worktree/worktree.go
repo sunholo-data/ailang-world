@@ -60,14 +60,22 @@ func Env(environ []string) []string {
 
 // Add runs `git -C repo worktree add --detach dir`, or with branch != ""
 // `git -C repo worktree add -b branch dir`.
-func Add(ctx context.Context, git, repo, dir, branch string) error {
+func Add(ctx context.Context, git, repo, dir, branch, startPoint string) error {
 	args := []string{"-C", repo, "worktree", "add"}
 	if branch != "" {
 		args = append(args, "-b", branch, dir)
 	} else {
 		args = append(args, "--detach", dir)
 	}
+	if startPoint != "" {
+		args = append(args, startPoint)
+	}
 	return runGit(ctx, git, args, nil)
+}
+
+// AddExisting checks out an existing branch; git refuses a branch held by another worktree.
+func AddExisting(ctx context.Context, git, repo, dir, branch string) error {
+	return runGit(ctx, git, []string{"-C", repo, "worktree", "add", dir, branch}, nil)
 }
 
 // Output runs `git args...` and returns its standard output. Stderr is kept

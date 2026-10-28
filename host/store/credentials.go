@@ -23,6 +23,7 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -34,9 +35,9 @@ import (
 var credentialsSchemaSQL string
 
 // credentialsSchemaVersion is the credentials store's own user_version,
-// independent of the world store's currentSchemaVersion. Version 2 (row 189
-// M2) adds the profile binding columns, project and profile_digest.
-const credentialsSchemaVersion = 2
+// independent of the world store's currentSchemaVersion. Version 2 added
+// profile bindings; version 3 adds immutable attended episode start history.
+const credentialsSchemaVersion = 3
 
 // CredentialsSchemaVersion exports credentialsSchemaVersion: serve compares a
 // store's version with it to decide whether to upgrade.
@@ -92,8 +93,8 @@ func (r SessionRow) Bound() bool { return r.Project != "" }
 type UnboundCredentialsStoreError struct{ Path string }
 
 func (e *UnboundCredentialsStoreError) Error() string {
-	return fmt.Sprintf("store: credentials store %q is schema version 1, from before the exec profile binding; "+
-		"restart `ailang-worldd serve` with this build once (it upgrades the store at startup), then mint with --profile again", e.Path)
+	return fmt.Sprintf("store: credentials store %q has an older schema; "+
+		"restart `ailang-worldd serve` with this build once (it upgrades the store at startup), then mint again", e.Path)
 }
 
 // CredentialsSchemaError reports a file that is not a credentials store this
@@ -292,7 +293,7 @@ func (c *Credentials) enforceSchema(mode credOpenMode) error {
 	if err != nil {
 		return fmt.Errorf("store: open credentials %q: inspect schema: %w", display, err)
 	}
-	known := version == credentialsSchemaVersion || version == credentialsSchemaV1
+	known := version >= credentialsSchemaV1 && version <= credentialsSchemaVersion
 	switch {
 	case version == 0 && len(tables) == 0:
 		if mode == credOpenRead {
@@ -300,13 +301,13 @@ func (c *Credentials) enforceSchema(mode credOpenMode) error {
 		}
 		c.version = credentialsSchemaVersion
 		return initCredentialsSchema(display, db)
-	case known && len(tables) == 1 && tables[0] == credentialsTable:
+	case known && ((version < 3 && len(tables) == 1 && tables[0] == credentialsTable) || (version == 3 && len(tables) == 2 && tables[0] == "episode_starts" && tables[1] == credentialsTable)):
 		c.version = version
-		if version == credentialsSchemaV1 && mode == credOpenUpgrade {
-			if err := upgradeCredentialsV2(display, db); err != nil {
+		if version < credentialsSchemaVersion && mode == credOpenUpgrade {
+			if err := upgradeCredentialsV3(display, db, version); err != nil {
 				return err
 			}
-			c.version, c.upgradedFrom = credentialsSchemaVersion, credentialsSchemaV1
+			c.version, c.upgradedFrom = credentialsSchemaVersion, version
 		}
 		return nil
 	case known && len(tables) == 0:
@@ -320,16 +321,19 @@ func (c *Credentials) enforceSchema(mode credOpenMode) error {
 	}
 }
 
-// upgradeCredentialsV2 adds the binding columns and stamps version 2 in one
-// transaction: after a crash the store is either version 1 unchanged or
-// version 2 with every row unchanged and unbound.
-func upgradeCredentialsV2(display string, db *sql.DB) error {
+// upgradeCredentialsV3 adds start history and, when upgrading version 1,
+// the binding columns, in one transaction. Existing credentials are unchanged.
+func upgradeCredentialsV3(display string, db *sql.DB, version int) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("store: upgrade credentials %q: begin: %w", display, err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	for _, stmt := range credentialsUpgradeV2 {
+	statements := []string{episodeStartsSQL}
+	if version == 1 {
+		statements = append(append([]string{}, credentialsUpgradeV2...), statements...)
+	}
+	for _, stmt := range statements {
 		if _, err := tx.Exec(stmt); err != nil {
 			return fmt.Errorf("store: upgrade credentials %q: %w", display, err)
 		}
@@ -387,6 +391,11 @@ func applicationTables(db *sql.DB) ([]string, error) {
 // collision on the PK (two mints hashing to the same id) errors loudly rather than
 // being silently absorbed.
 func (c *Credentials) MintSession(ctx context.Context, row SessionRow) error {
+	return c.MintSessionWithStart(ctx, row, nil)
+}
+
+// MintSessionWithStart atomically records the attended start and its credential.
+func (c *Credentials) MintSessionWithStart(ctx context.Context, row SessionRow, start *EpisodeStart) error {
 	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
@@ -396,7 +405,7 @@ func (c *Credentials) MintSession(ctx context.Context, row SessionRow) error {
 	if (row.Project == "") != (row.ProfileDigest == "") {
 		return fmt.Errorf("store: mint session: a profile binding needs both the project and its digest")
 	}
-	if row.Bound() && c.version < credentialsSchemaVersion {
+	if (row.Bound() || start != nil) && c.version < credentialsSchemaVersion {
 		return &UnboundCredentialsStoreError{Path: c.display}
 	}
 	tx, err := c.db.BeginTx(ctx, nil)
@@ -416,6 +425,18 @@ func (c *Credentials) MintSession(ctx context.Context, row SessionRow) error {
 	}
 	if _, err := tx.ExecContext(ctx, stmt, args...); err != nil {
 		return fmt.Errorf("store: mint session: %w", err)
+	}
+	if start != nil {
+		if start.Episode != row.EpisodeID || start.Schema != "world/episode-start/v1" {
+			return fmt.Errorf("store: mint session: invalid start record")
+		}
+		data, err := json.Marshal(start)
+		if err != nil {
+			return err
+		}
+		if _, err := tx.ExecContext(ctx, `INSERT INTO episode_starts (episode, start_json) VALUES (?, ?)`, row.EpisodeID, string(data)); err != nil {
+			return fmt.Errorf("store: mint start: %w", err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("store: mint session: commit: %w", err)
@@ -451,7 +472,7 @@ func (c *Credentials) ResolveSession(ctx context.Context, credentialID string) (
 // version-1 table (and a schema-4 world store's) has no binding columns, so
 // they read as NULL there — unbound.
 func sessionColumns(version int) string {
-	if version >= credentialsSchemaVersion {
+	if version >= 2 {
 		return `SELECT credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest`
 	}
 	return `SELECT credential_id, episode_id, grants_json, expires_at, created_at, NULL, NULL`

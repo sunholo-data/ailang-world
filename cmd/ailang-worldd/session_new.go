@@ -116,7 +116,7 @@ controlling terminal (an agent, cron, CI) it refuses before touching anything.
                        episode's workspace-exec under that profile from the
                        next request, with no restart, and refuses every exec
                        if the profile it loaded has a different digest
-                       (re-mint). The credentials store must be schema 2:
+                       (re-mint). The credentials store must be schema 3:
                        a serve of this build upgrades it once at startup.
   --exec-profiles-dir <dir>
                        where --profile looks (default
@@ -213,7 +213,11 @@ type mintRequest struct {
 	// afterToken runs once the token is written to outPath (episode start's
 	// MCP config). A failure revokes the credential and rolls back like a
 	// mint failure.
-	afterToken func(token string) error
+	afterToken     func(token string) error
+	start          *store.EpisodeStart
+	startPoint     string
+	existingBranch bool
+	presetPrompt   string
 }
 
 // prepareMint is step 1: it validates every input of a provisioning before
@@ -411,7 +415,7 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 	case r.reuse:
 		action = "Use the existing worktree " + r.dir
 	}
-	if !r.reuse && r.branch != "" {
+	if !r.reuse && r.branch != "" && !r.existingBranch {
 		action += " on new branch " + r.branch
 	}
 	binding := authority.ProfileBinding{}
@@ -419,6 +423,12 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 	if r.prof != nil {
 		binding = authority.ProfileBinding{Project: r.prof.Project, Digest: r.prof.Digest}
 		bound = fmt.Sprintf(", bound to exec profile %s %s (%s)", r.prof.Project, r.prof.Digest, r.profFile)
+	}
+	if r.presetPrompt != "" {
+		fmt.Fprint(term, r.presetPrompt)
+	}
+	if r.existingBranch {
+		action += " on existing branch " + r.branch
 	}
 	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds? [y/N] ",
 		action, r.episode, len(grants), grantList(grants), bound, r.ttl)
@@ -440,7 +450,13 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 	// 5. The worktree.
 	created := false
 	if !r.reuse {
-		if err := worktree.Add(ctx, r.git, r.repo, r.dir, r.branch); err != nil {
+		var addErr error
+		if r.existingBranch {
+			addErr = worktree.AddExisting(ctx, r.git, r.repo, r.dir, r.branch)
+		} else {
+			addErr = worktree.Add(ctx, r.git, r.repo, r.dir, r.branch, r.startPoint)
+		}
+		if err := addErr; err != nil {
 			fmt.Fprintf(stderr, "%s%v\n", prefix, err)
 			return exitFatal
 		}
@@ -454,7 +470,13 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 		out = stdout
 	}
 	mintCtx, cancelMint := context.WithTimeout(ctx, 3*time.Second)
-	rawToken, credentialID, row, err := sessionMint(mintCtx, st, r.episode, binding, grants, r.ttl, now, out)
+	var rawToken, credentialID string
+	var row store.SessionRow
+	if r.start != nil {
+		rawToken, credentialID, row, err = authority.MintStarted(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, r.start)
+	} else {
+		rawToken, credentialID, row, err = sessionMint(mintCtx, st, r.episode, binding, grants, r.ttl, now, out)
+	}
 	cancelMint()
 	minted := err == nil
 	if err == nil && r.outPath != "" {

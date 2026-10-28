@@ -1,0 +1,183 @@
+[
+  {
+    "name": "empty argv",
+    "graders": [
+      {
+        "argv": []
+      }
+    ],
+    "error": "grader argv must be a non-empty list of strings"
+  },
+  {
+    "name": "empty argument",
+    "graders": [
+      {
+        "argv": [
+          "x",
+          ""
+        ]
+      }
+    ],
+    "error": "grader argv must be a non-empty list of strings"
+  },
+  {
+    "name": "parent cwd",
+    "graders": [
+      {
+        "argv": [
+          "x"
+        ],
+        "cwd": "../out"
+      }
+    ],
+    "error": "grader cwd '../out' must be relative inside the worktree"
+  },
+  {
+    "name": "parent",
+    "graders": [
+      {
+        "argv": [
+          "x"
+        ],
+        "cwd": ".."
+      }
+    ],
+    "error": "grader cwd '..' must be relative inside the worktree"
+  },
+  {
+    "name": "absolute cwd",
+    "graders": [
+      {
+        "argv": [
+          "x"
+        ],
+        "cwd": "/abs"
+      }
+    ],
+    "error": "grader cwd '/abs' must be relative inside the worktree"
+  },
+  {
+    "name": "duplicate names",
+    "graders": [
+      {
+        "argv": [
+          "x"
+        ]
+      },
+      {
+        "argv": [
+          "x"
+        ]
+      }
+    ],
+    "error": "duplicate grader name 'x'"
+  },
+  {
+    "name": "defaults",
+    "graders": [
+      {
+        "argv": [
+          "make",
+          "adk-conformance"
+        ],
+        "cwd": "backend"
+      }
+    ],
+    "expected": [
+      {
+        "name": "make",
+        "argv": [
+          "make",
+          "adk-conformance"
+        ],
+        "cwd": "backend",
+        "timeout_s": 900
+      }
+    ]
+  },
+  {
+    "name": "default cwd and zero timeout",
+    "graders": [
+      {
+        "argv": [
+          "/bin/x"
+        ],
+        "timeout_s": 0
+      }
+    ],
+    "expected": [
+      {
+        "name": "x",
+        "argv": [
+          "/bin/x"
+        ],
+        "cwd": ".",
+        "timeout_s": 900
+      }
+    ]
+  },
+  {
+    "name": "normalized inside cwd",
+    "graders": [
+      {
+        "name": "named",
+        "argv": [
+          "x"
+        ],
+        "cwd": "backend/../tests",
+        "timeout_s": 0.5
+      }
+    ],
+    "expected": [
+      {
+        "name": "named",
+        "argv": [
+          "x"
+        ],
+        "cwd": "backend/../tests",
+        "timeout_s": 0.5
+      }
+    ]
+  },
+  {
+    "name": "nonstring argument",
+    "graders": [
+      {
+        "argv": [
+          "x",
+          3
+        ]
+      }
+    ],
+    "error": "grader argv must be a non-empty list of strings"
+  },
+  {
+    "name": "string argv",
+    "graders": [
+      {
+        "argv": "x"
+      }
+    ],
+    "error": "grader argv must be a non-empty list of strings"
+  },
+  {
+    "name": "trailing slash basename",
+    "graders": [
+      {
+        "argv": [
+          "/bin/"
+        ]
+      }
+    ],
+    "expected": [
+      {
+        "name": "",
+        "argv": [
+          "/bin/"
+        ],
+        "cwd": ".",
+        "timeout_s": 900
+      }
+    ]
+  }
+]

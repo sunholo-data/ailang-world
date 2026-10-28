@@ -608,23 +608,36 @@ class WorktreeState(Base):
 class SpecValidation(Base):
     def test_bad_specs_are_refused(self):
         spec = self.trial_spec()
-        for bad in ({'agent': 'gpt'}, {'graders': [{'argv': []}]}, {'graders': [{'argv': ['x'], 'cwd': '../out'}]},
-                    {'graders': [{'argv': ['x'], 'cwd': '/abs'}]}, {'graders': [{'argv': ['x']}, {'argv': ['x']}]}):
+        for bad in ({'agent': 'gpt'},):
             s = dict(spec, episodes=[dict(spec['episodes'][0], **bad)])
             with self.assertRaises(trial.TrialError, msg=bad):
                 trial.episode_spec(s, 'tps-a')
         with self.assertRaises(trial.TrialError):
             trial.episode_spec(spec, 'nope')
 
+    def test_shared_grader_spec_vectors(self):
+        path = os.path.join(os.path.dirname(__file__), 'testdata', 'grader_spec_vectors.json')
+        with open(path) as f:
+            vectors = json.load(f)
+        self.assertTrue(vectors)
+        for v in vectors:
+            with self.subTest(v['name']):
+                spec = self.trial_spec()
+                e = dict(spec['episodes'][0], graders=v['graders'])
+                s = dict(spec, episodes=[e])
+                if 'error' in v:
+                    with self.assertRaises(trial.TrialError) as caught:
+                        trial.episode_spec(s, 'tps-a')
+                    self.assertIn(v['error'], str(caught.exception))
+                else:
+                    self.assertEqual(trial.episode_spec(s, 'tps-a')['graders'], v['expected'])
+
     def test_defaults(self):
         spec = self.trial_spec()
         e = dict(spec['episodes'][0])
         del e['deadline_s']
-        e['graders'] = [{'argv': ['make', 'adk-conformance'], 'cwd': 'backend'}]
         got = trial.episode_spec(dict(spec, episodes=[e]), 'tps-a')
         self.assertEqual(got['deadline_s'], 2700)
-        self.assertEqual(got['graders'][0]['timeout_s'], 900)
-        self.assertEqual(got['graders'][0]['name'], 'make')
         self.assertEqual(got['worktree'], self.wt)
 
 

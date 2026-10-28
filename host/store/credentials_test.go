@@ -36,9 +36,15 @@ var canonicalCredentialsDDL = `CREATE TABLE session_credentials (
 func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 	c := openTestCredentials(t)
 	ddl := tableDDL(t, c.db)
-	requireExactTableNames(t, "fresh credentials store", ddl, []string{"session_credentials"})
+	requireExactTableNames(t, "fresh credentials store", ddl, []string{"episode_starts", "session_credentials"})
 	if got, want := normalizeDDL(ddl["session_credentials"]), normalizeDDL(canonicalCredentialsDDL); got != want {
 		t.Fatalf("credentials DDL:\n got: %s\nwant: %s", got, want)
+	}
+	if got := normalizeDDL(ddl["episode_starts"]); got != normalizeDDL(`CREATE TABLE episode_starts (
+    episode TEXT PRIMARY KEY CHECK (episode <> ''),
+    start_json TEXT NOT NULL
+)`) {
+		t.Fatalf("episode start DDL: %s", got)
 	}
 	// The pre-split world table is the version-1 table, column for column.
 	v4 := rawDB(t, filepath.Join(t.TempDir(), "v4.db"))

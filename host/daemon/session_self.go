@@ -17,7 +17,16 @@ type SessionGrant struct {
 	Left   int64  `json:"left"`
 }
 
+type SessionStart struct {
+	Base   store.StartBase `json:"base"`
+	Branch string          `json:"branch"`
+	Preset string          `json:"preset"`
+	Agent  string          `json:"agent"`
+	Model  string          `json:"model"`
+}
+
 type SessionSelf struct {
+	Start       *SessionStart   `json:"start,omitempty"`
 	Git         *SessionGit     `json:"git,omitempty"`
 	Episode     string          `json:"episode"`
 	Worktree    string          `json:"worktree"`
@@ -75,6 +84,14 @@ func (d *Daemon) handleSessionSelf(w http.ResponseWriter, r *http.Request) {
 	for _, g := range b.Caps {
 		used := spend[store.EffectKey{Effect: g.Effect, Scope: g.Scope}]
 		body.Grants = append(body.Grants, SessionGrant{g.Effect, g.Scope, g.Budget, used, max(int64(0), g.Budget-used)})
+	}
+	start, err := d.readEpisodeStart(ctx, b.EpisodeID)
+	if err != nil {
+		d.writeInternalError(w, r, err)
+		return
+	}
+	if start != nil {
+		body.Start = &SessionStart{Base: start.Base, Branch: start.Branch, Preset: start.Preset.Name, Agent: start.Agent, Model: start.Model}
 	}
 	body.Git = readSessionGit(ctx, body.Worktree, "git")
 	writeJSON(w, http.StatusOK, body)
