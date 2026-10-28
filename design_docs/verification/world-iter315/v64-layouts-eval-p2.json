@@ -1,0 +1,273 @@
+{
+  "graph.png": {
+    "ClientWidth": 1425,
+    "InnerWidth": 1440,
+    "InnerHeight": 2013,
+    "ScrollY": 0,
+    "ScrollHeight": 2551,
+    "Nav": {
+      "Left": 0,
+      "Top": 114.265625,
+      "Right": 1425,
+      "Bottom": 322.265625
+    },
+    "TimelineFirst": {
+      "Left": 89.5,
+      "Top": 466.59375,
+      "Right": 1335.5,
+      "Bottom": 655.765625
+    },
+    "Timeline": {
+      "Left": 72.5,
+      "Top": 338.265625,
+      "Right": 1352.5,
+      "Bottom": 688.765625
+    },
+    "GraphSvg": {
+      "Left": 89.5,
+      "Top": 1746.578125,
+      "Right": 1335.5,
+      "Bottom": 2019.140625
+    },
+    "Payload": null,
+    "Packet": null,
+    "Validation": null,
+    "Approvals": null,
+    "ValidationText": "",
+    "ApprovalsText": "",
+    "Roster": []
+  },
+  "packet.png": {
+    "ClientWidth": 1425,
+    "InnerWidth": 1440,
+    "InnerHeight": 3613,
+    "ScrollY": 0,
+    "ScrollHeight": 5242,
+    "Nav": {
+      "Left": 0,
+      "Top": 114.265625,
+      "Right": 1425,
+      "Bottom": 322.265625
+    },
+    "TimelineFirst": {
+      "Left": 89.5,
+      "Top": 423.875,
+      "Right": 1335.5,
+      "Bottom": 613.046875
+    },
+    "Timeline": {
+      "Left": 72.5,
+      "Top": 338.265625,
+      "Right": 1352.5,
+      "Bottom": 2517.0625
+    },
+    "GraphSvg": {
+      "Left": 89.5,
+      "Top": 4275.59375,
+      "Right": 1335.4375,
+      "Bottom": 4337.890625
+    },
+    "Payload": null,
+    "Packet": {
+      "Left": 89.5,
+      "Top": 2782.671875,
+      "Right": 1335.5,
+      "Bottom": 3564.5625
+    },
+    "Validation": {
+      "Left": 106.5,
+      "Top": 2859.5625,
+      "Right": 1318.5,
+      "Bottom": 2907.5625
+    },
+    "Approvals": {
+      "Left": 106.5,
+      "Top": 3147.5625,
+      "Right": 1318.5,
+      "Bottom": 3171.5625
+    },
+    "ValidationText": "decision packet validated: committed with its invocation record at entry #9; proposal, approval request and approvals-chain anchor agree; lifecycle fields are the v1 producer's",
+    "ApprovalsText": "approvals chain: pending",
+    "Roster": [
+      {
+        "Text": "test-invocation: TESTED · producer/author: host/broker · report: sha256:ddaf4879234c69b6b5f5979d012bf6d7683e835077801ee1bfc282034185d907 · verdict pass · 10 named passes",
+        "Rect": {
+          "Left": 106.5,
+          "Top": 3267.5625,
+          "Right": 1318.5,
+          "Bottom": 3315.5625
+        },
+        "Tight": {
+          "Left": 106.5,
+          "Top": 3270.5625,
+          "Right": 1309.984375,
+          "Bottom": 3312.5625
+        }
+      },
+      {
+        "Text": "recorded-effect: ATTESTED · producer/author: host/broker · report: sha256:dcc347330317eea2b2c2a243b1c478f7606d806e8d0fc913cad9371b102e0445",
+        "Rect": {
+          "Left": 106.5,
+          "Top": 3331.5625,
+          "Right": 1318.5,
+          "Bottom": 3355.5625
+        },
+        "Tight": {
+          "Left": 106.5,
+          "Top": 3334.5625,
+          "Right": 1233.75,
+          "Bottom": 3352.5625
+        }
+      },
+      {
+        "Text": "authored-claim: CLAIMED · producer/author: demo-authored · demo-authored · report: sha256:6d438b4f7537389edbb0918bf93edf866820e443dc566864e0bfdee6c8a0ac00",
+        "Rect": {
+          "Left": 106.5,
+          "Top": 3371.5625,
+          "Right": 1318.5,
+          "Bottom": 3419.5625
+        },
+        "Tight": {
+          "Left": 106.5,
+          "Top": 3374.5625,
+          "Right": 756.0625,
+          "Bottom": 3416.5625
+        }
+      },
+      {
+        "Text": "proof-envelope: PROVEN · producer/author: bounded-ai-check-producer · report: sha256:adca2e8b979efdfd62bf45e5b5f96dc28cea1450245fa678205b6546aaf89eb4 · subject: sha256:477ed4ce7ee223d032b12ebe998331de38fbe638a09b660a578f296d6ef611b5 · compiler sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f · version AILANG v0.41.0",
+        "Rect": {
+          "Left": 106.5,
+          "Top": 3435.5625,
+          "Right": 1318.5,
+          "Bottom": 3531.5625
+        },
+        "Tight": {
+          "Left": 106.5,
+          "Top": 3438.5625,
+          "Right": 926.96875,
+          "Bottom": 3528.5625
+        }
+      }
+    ]
+  },
+  "provenance.png": {
+    "ClientWidth": 1425,
+    "InnerWidth": 1440,
+    "InnerHeight": 2913,
+    "ScrollY": 0,
+    "ScrollHeight": 4666,
+    "Nav": {
+      "Left": 0,
+      "Top": 114.265625,
+      "Right": 1425,
+      "Bottom": 322.265625
+    },
+    "TimelineFirst": {
+      "Left": 89.5,
+      "Top": 423.875,
+      "Right": 3697.59375,
+      "Bottom": 613.046875
+    },
+    "Timeline": {
+      "Left": 72.5,
+      "Top": 338.265625,
+      "Right": 3714.59375,
+      "Bottom": 2517.0625
+    },
+    "GraphSvg": {
+      "Left": 89.5,
+      "Top": 3605.203125,
+      "Right": 3697.3125,
+      "Bottom": 3785.59375
+    },
+    "Payload": {
+      "Left": 89.5,
+      "Top": 2822.671875,
+      "Right": 3697.59375,
+      "Bottom": 2881.171875
+    },
+    "Packet": null,
+    "Validation": null,
+    "Approvals": null,
+    "ValidationText": "",
+    "ApprovalsText": "",
+    "Roster": []
+  },
+  "workbench-dark.png": {
+    "ClientWidth": 1425,
+    "InnerWidth": 1440,
+    "InnerHeight": 1013,
+    "ScrollY": 0,
+    "ScrollHeight": 4515,
+    "Nav": {
+      "Left": 0,
+      "Top": 114.265625,
+      "Right": 1425,
+      "Bottom": 322.265625
+    },
+    "TimelineFirst": {
+      "Left": 89.5,
+      "Top": 423.875,
+      "Right": 1335.5,
+      "Bottom": 613.046875
+    },
+    "Timeline": {
+      "Left": 72.5,
+      "Top": 338.265625,
+      "Right": 1352.5,
+      "Bottom": 2517.0625
+    },
+    "GraphSvg": {
+      "Left": 89.5,
+      "Top": 3289.703125,
+      "Right": 1335.46875,
+      "Bottom": 3982.78125
+    },
+    "Payload": null,
+    "Packet": null,
+    "Validation": null,
+    "Approvals": null,
+    "ValidationText": "",
+    "ApprovalsText": "",
+    "Roster": []
+  },
+  "workbench-light.png": {
+    "ClientWidth": 1425,
+    "InnerWidth": 1440,
+    "InnerHeight": 1013,
+    "ScrollY": 0,
+    "ScrollHeight": 4515,
+    "Nav": {
+      "Left": 0,
+      "Top": 114.265625,
+      "Right": 1425,
+      "Bottom": 322.265625
+    },
+    "TimelineFirst": {
+      "Left": 89.5,
+      "Top": 423.875,
+      "Right": 1335.5,
+      "Bottom": 613.046875
+    },
+    "Timeline": {
+      "Left": 72.5,
+      "Top": 338.265625,
+      "Right": 1352.5,
+      "Bottom": 2517.0625
+    },
+    "GraphSvg": {
+      "Left": 89.5,
+      "Top": 3289.703125,
+      "Right": 1335.46875,
+      "Bottom": 3982.78125
+    },
+    "Payload": null,
+    "Packet": null,
+    "Validation": null,
+    "Approvals": null,
+    "ValidationText": "",
+    "ApprovalsText": "",
+    "Roster": []
+  }
+}

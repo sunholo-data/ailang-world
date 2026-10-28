@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Iteration-315 designer: reproduces V64-V67 of w-marketing-capture-orchestration r3.
+# Programs live OUTSIDE the repo in /tmp/world-iter315/{p0check,phonecheck,phoneneg,probe-strip};
+# their sources are banked as .txt. Outputs and inputs are banked under $V.
+set -u
+S=/tmp/world-iter312
+W=/tmp/world-iter315
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter315-row150-c8amend
+V=$WT/design_docs/verification/world-iter315
+B=$WT/design_docs/verification/world-iter312/r1-rects.json
+REF=$HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+STORES="r1-seed1 r1-seed2 r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3"
+mkdir -p "$V" "$W/p0in/neg" "$W/p0in/neg-p1" "$W/neg"
+echo "# go: $(go version)"; echo "# date: $(date -u +%FT%TZ)"
+# --- inputs banked (small JSON), and sha256 of every image read
+for s in $STORES; do cp "$S/$s/layouts.json" "$V/v64-layouts-$s.json"; cp "$S/$s/rects.json" "$V/v64-rects-$s.json"; done
+{ shasum -a 256 "$B" "$REF"; for s in $STORES; do shasum -a 256 "$S/$s/layouts.json" "$S/$s/rects.json" "$S/$s/capture/pass-a/phone.png" "$S/$s/capture/pass-b/phone.png"; done; shasum -a 256 "$S/r1c-seed5/capture/pass-a/workbench-light.png"; } > "$V/v64-inputs-sha256.txt"
+# --- V64: P0 (a) r3 vs r2 on the nine stores
+P=$W/p0check/p0check
+$P convcheck $(for s in r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do echo "$S/$s/layouts.json"; done) > "$V/v64-convcheck.txt"; echo "convcheck rc=$?" >> "$V/v64-convcheck.txt"
+for s in $STORES; do $P fromlayouts "$S/$s/layouts.json" "$S/$s/rects.json" "$W/p0in/$s-block.json" >/dev/null; done
+for s in r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do
+  python3 -I -c "import json,sys;a=json.load(open(sys.argv[1]))['shots'];b=json.load(open(sys.argv[2]))['shots'];print(sys.argv[3],'regenerated==own rects.json' if a==b else 'DIFF')" "$S/$s/rects.json" "$W/p0in/$s-block.json" "$s"
+done >> "$V/v64-convcheck.txt"
+cp "$W/p0in/r1-seed1-block.json" "$V/v64-rects-r1-seed1-blockconverted.json"; cp "$W/p0in/r1-seed2-block.json" "$V/v64-rects-r1-seed2-blockconverted.json"
+args=("r1-seed1/own-rangebox=$S/r1-seed1/rects.json" "r1-seed2/own-rangebox=$S/r1-seed2/rects.json" "r1-seed1/block-converted=$W/p0in/r1-seed1-block.json" "r1-seed2/block-converted=$W/p0in/r1-seed2-block.json")
+for s in r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do args+=("$s=$S/$s/rects.json"); done
+$P check "$B" "${args[@]}" > "$V/v64-p0-positive.txt"; echo "rc=$?" >> "$V/v64-p0-positive.txt"
+# --- V65: P0 (a) negatives and synthetic positives
+$P mutate "$S/r1c-seed5/rects.json" "$W/p0in/neg" >/dev/null; $P mutate "$S/eval-p1/rects.json" "$W/p0in/neg-p1" >/dev/null
+args=(); for f in "$W"/p0in/neg/*.json; do n=$(basename "$f" .json); args+=("seed5/$n=$f"); done
+args+=("p1/neg-tested-at-attested-row=$W/p0in/neg-p1/neg-tested-at-attested-row.json" "p1/neg-packet-all+14=$W/p0in/neg-p1/neg-packet-all+14.json" "p1/syn-pos-tested-wraps-3-lines=$W/p0in/neg-p1/syn-pos-tested-wraps-3-lines.json" "p1/boundary-proven+6lines-bottom3652=$W/p0in/neg-p1/neg-proven-grows-6-lines-below-fold.json")
+$P check "$B" "${args[@]}" > "$V/v65-p0-negative.txt"; echo "rc=$?" >> "$V/v65-p0-negative.txt"
+# --- V66: phone (iii′) on the nine stores (both passes) and the V50 reference
+C=$W/phonecheck/phonecheck
+args=("v50-ref=$REF"); for s in $STORES; do args+=("$s/A=$S/$s/capture/pass-a/phone.png" "$s/B=$S/$s/capture/pass-b/phone.png"); done
+$C "$REF" "${args[@]}" > "$V/v66-phone-positive.txt"; echo "rc=$?" >> "$V/v66-phone-positive.txt"
+$W/probe-strip/strip "$S/r1c-seed5/capture/pass-a/phone.png" > "$V/v66-bottom-strip-seed5.txt"
+# --- V67: phone negatives
+$W/phoneneg/phoneneg "$S/r1c-seed5/capture/pass-a/phone.png" "$W/neg" >/dev/null
+N=$W/neg
+$C "$REF" "desktop-light=$S/r1c-seed5/capture/pass-a/workbench-light.png" "no-scrollbar=$N/no-scrollbar.png" "title-unclipped=$N/title-unclipped.png" "no-overflow=$N/no-overflow.png" "crop-370=$N/crop-370.png" "pad-370=$N/pad-370.png" "full-thumb=$N/full-thumb.png" "timeline-only=$N/timeline-only.png" "blank=$N/blank.png" "shift-5=$N/shift-5.png" "shift-10=$N/shift-10.png" "within-bound/shift-2=$N/shift-2.png" "within-bound/shift-4=$N/shift-4.png" > "$V/v67-phone-negative.txt"; echo "rc=$?" >> "$V/v67-phone-negative.txt"
+shasum -a 256 "$N"/*.png > "$V/v67-synthetic-sha256.txt"
+# --- program sources
+cp "$W/p0check/main.go" "$V/v64-p0check-main.go.txt"; cp "$W/phonecheck/main.go" "$V/v66-phonecheck-main.go.txt"; cp "$W/phoneneg/main.go" "$V/v67-phoneneg-main.go.txt"; cp "$W/probe-strip/main.go" "$V/v66-strip-main.go.txt"
+cp "$0" "$V/v64-run.sh.txt"
+echo done

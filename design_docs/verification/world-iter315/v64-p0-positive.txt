@@ -1,0 +1,62 @@
+r1-seed1/own-rangebox                  r3 REFUSE  r2 REFUSE
+    r3: packet.png/validation: (a1) left/right 106..1285 vs 106..1319
+    r3: packet.png/validation: (a4) height 43 vs 49 not whole lines
+    r3: packet.png/validation: (a2) stack-head top 2862 vs 2859
+    r3: packet.png/approvals-chain: (a1) left/right 106..288 vs 106..1319
+    r3: packet.png/approvals-chain: (a4) height 19 vs 25 not whole lines
+    r3: packet.png/approvals-chain: (a3) gap after validation 245 vs R1 239
+    r3: packet.png/roster-tested: (a1) left/right 106..1315 vs 106..1319
+    r3: packet.png/roster-tested: (a4) height 43 vs 49 not whole lines
+    r3: packet.png/roster-tested: (a3) gap after approvals-chain 101 vs R1 95
+    r3: packet.png/roster-attested: (a1) left/right 106..1237 vs 106..1319
+    r3: packet.png/roster-attested: (a4) height 19 vs 25 not whole lines
+    r3: packet.png/roster-attested: (a3) gap after roster-tested 21 vs R1 15
+    r3: packet.png/roster-claimed: (a1) left/right 106..757 vs 106..1319
+    r3: packet.png/roster-claimed: (a4) height 43 vs 49 not whole lines
+    r3: packet.png/roster-claimed: (a3) gap after roster-attested 21 vs R1 15
+    r3: packet.png/roster-proven: (a1) left/right 106..927 vs 106..1319
+    r3: packet.png/roster-proven: (a4) height 91 vs 97 not whole lines
+    r3: packet.png/roster-proven: (a3) gap after roster-claimed 21 vs R1 15
+    r2: packet.png/validation: edge >2px (dy 3 dh -6)
+    r2: packet.png/approvals-chain: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-tested: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-attested: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-claimed: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-proven: edge >2px (dy 3 dh -6)
+r1-seed2/own-rangebox                  r3 REFUSE  r2 REFUSE
+    r3: packet.png/validation: (a1) left/right 106..1285 vs 106..1319
+    r3: packet.png/validation: (a4) height 43 vs 49 not whole lines
+    r3: packet.png/validation: (a2) stack-head top 2862 vs 2859
+    r3: packet.png/approvals-chain: (a1) left/right 106..288 vs 106..1319
+    r3: packet.png/approvals-chain: (a4) height 19 vs 25 not whole lines
+    r3: packet.png/approvals-chain: (a3) gap after validation 245 vs R1 239
+    r3: packet.png/roster-tested: (a1) left/right 106..1313 vs 106..1319
+    r3: packet.png/roster-tested: (a4) height 43 vs 49 not whole lines
+    r3: packet.png/roster-tested: (a3) gap after approvals-chain 101 vs R1 95
+    r3: packet.png/roster-attested: (a1) left/right 106..1221 vs 106..1319
+    r3: packet.png/roster-attested: (a4) height 19 vs 25 not whole lines
+    r3: packet.png/roster-attested: (a3) gap after roster-tested 21 vs R1 15
+    r3: packet.png/roster-claimed: (a1) left/right 106..757 vs 106..1319
+    r3: packet.png/roster-claimed: (a4) height 43 vs 49 not whole lines
+    r3: packet.png/roster-claimed: (a3) gap after roster-attested 21 vs R1 15
+    r3: packet.png/roster-proven: (a1) left/right 106..927 vs 106..1319
+    r3: packet.png/roster-proven: (a4) height 91 vs 97 not whole lines
+    r3: packet.png/roster-proven: (a3) gap after roster-claimed 21 vs R1 15
+    r2: packet.png/validation: edge >2px (dy 3 dh -6)
+    r2: packet.png/approvals-chain: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-tested: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-attested: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-claimed: edge >2px (dy 3 dh -6)
+    r2: packet.png/roster-proven: edge >2px (dy 3 dh -6)
+r1-seed1/block-converted               r3 ACCEPT  r2 ACCEPT
+r1-seed2/block-converted               r3 ACCEPT  r2 ACCEPT
+r1b-seed3                              r3 ACCEPT  r2 ACCEPT
+r1b-seed4                              r3 ACCEPT  r2 ACCEPT
+r1c-seed5                              r3 ACCEPT  r2 ACCEPT
+r1c-seed6                              r3 ACCEPT  r2 ACCEPT
+eval-p1                                r3 ACCEPT  r2 REFUSE
+    r2: packet.png/roster-proven: edge >2px (dy 0 dh -24)
+eval-p2                                r3 ACCEPT  r2 ACCEPT
+eval-p3                                r3 ACCEPT  r2 ACCEPT
+TOTAL candidates=11 r3-accept=9 r2-accept=8
+rc=0

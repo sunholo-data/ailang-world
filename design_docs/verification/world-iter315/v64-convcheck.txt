@@ -1,0 +1,9 @@
+CONVCHECK rows=28 mismatches=0
+convcheck rc=0
+r1b-seed3 regenerated==own rects.json
+r1b-seed4 regenerated==own rects.json
+r1c-seed5 regenerated==own rects.json
+r1c-seed6 regenerated==own rects.json
+eval-p1 regenerated==own rects.json
+eval-p2 regenerated==own rects.json
+eval-p3 regenerated==own rects.json

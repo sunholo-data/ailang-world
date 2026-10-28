@@ -1,0 +1,99 @@
+$ git log --oneline origin/dev --grep 'M7c\|M8a'
+c953cadc Merge pull request #400 from sunholo-data/sprint/world-iter313-row150-m8a
+d648901e docs(mission): record World iteration 313 — row 150 M8a built (judge r1 PASS 82 → fix → r2 PASS 89); C8′(iii)/P0 amendment next
+1cd6c92f verify(row 150 M8a): judge r2 report — PASS 89/100, zero blocking; F1/F7/F8 closed, F6 partly; N1/N2 non-blocking
+94e1c08b fix(row 150 M8a, controller): judge r1 F1/F6/F7/F8 and a controller truth fix; the page and README now carry gated disclosures
+f6c8d8d4 feat(row 150 M8a): reproduction docs, captions and the release manifest schema; `marketingcheck docs`
+424dc8dc Merge pull request #394 from sunholo-data/sprint/world-iter311-row150-m7c4
+227abe6a docs(mission): record World iteration 311 — row 150 M7c4 built (judge PASS 92); capture shell compares frozen inventories around both passes; R1 next
+1ca31e5e test(row 150 M7c4): key the fake head change to a pass, so the inventories must bracket both passes (controller)
+31a4929b feat(row 150 M7c4): real-Chrome drill test; capture shell compares frozen inventories
+90ef2671 Merge pull request #393 from sunholo-data/sprint/world-iter310-row150-m7c3
+fd33110f docs(mission): record World iteration 310 — row 150 M7c3 built (judge PASS 90); marketingcheck inventory freezes the public store; M7c4 next
+47686112 test(row 150 M7c3): per-branch inventory compare and paging subtests (controller)
+8da32397 feat(row 150 M7c3): frozen public inventory guard — marketingcheck inventory and inventory-compare
+c448b15f Merge pull request #392 from sunholo-data/sprint/world-iter309-row150-m7c2b
+c9235362 docs(mission): record World iteration 309 — row 150 M7c2b built (judge PASS 83); the capture shell runs end to end against fake Chrome and a fake daemon; M7c3 next
+76216725 test(row 150 M7c2b): single-pass and daemon-exits subtests (controller)
+5e20341f feat(row 150 M7c2b): capture shell end-to-end with fake Chrome and a fake daemon
+ba46e463 docs(mission): record World iteration 308 — row 150 M7a-fix built (judge PASS 88); kill_group tolerates macOS killpg EPERM; M7c2b next
+97736493 plan(row 150): M7a-fix — kill_group tolerates macOS killpg EPERM (iteration 308 planner)
+b3b373ec Merge pull request #380 from sunholo-data/sprint/world-iter307-row150-m7c2a
+21c0f044 docs(mission): record World iteration 307 — row 150 M7c2a built (judge PASS 88); kill_group EPERM confirmed, M7a-fix next
+c878e09c docs(row150): mark M7c2a completed (iteration 307); judge r1 report; killpg EPERM repro
+82f1e253 test(row 150 M7c2a): pin "pass stops at the first non-ok shot" (judge r1 survivor)
+ceeb27fd feat(row 150 M7c2a): capture primitives — chrome-version, HTTP ready, six-shot pass; marketingcheck routes
+046b9c2d Merge pull request #373 from sunholo-data/sprint/world-iter306-row150-m7c0
+98a1abd8 docs(mission): record World iteration 306 — row 150 R0 re-confirmed (V59) and M7c0 built (judge PASS 96)
+95bb53cb docs(row150): mark M7c0 (iter 306) and M7c1 (iter 305, PR #370) completed; judge r1 report
+5eb7be62 feat(row150): M7c0 shot geometry — packet 3700, graph 2100, provenance 3000 from measured bottoms
+120e4149 Merge pull request #370 from sunholo-data/sprint/world-iter305-row150-m7c1
+bb79d7f4 docs(mission): record World iteration 305 — row 150 orchestration doc (carve-out after quorum r1/r2) and M7c1 built (judge PASS 81)
+f354e5e5 feat(row 150 M7c1): protected-file observation comparator — Observe/CompareObservations + observe/compare subcommands (path-keyed)
+443104c3 docs(plan): row 150 sprint plan amended per w-marketing-capture-orchestration §5 — M7c0 added, M7c1 made prescriptive (iteration 305 planner, opus)
+ff16bf65 docs(design): w-marketing-capture-orchestration r2 — controller narrow-refinement carve-out after quorum r2 BLOCKED
+867c3643 docs(design): w-marketing-capture-orchestration r0 — row 150 M7c–M8 as built at 4e6e89dc (iteration 305 designer)
+acd65340 Merge pull request #364 from sunholo-data/sprint/world-iter304-row150-m7c
+b4efd3e0 docs(mission): record World iteration 304 — row 150 M7c re-scoped (quorum r5/r6 blocked, split to an as-built doc; judge PASS 82)
+00f7baf9 plan(row150): split M7c into M7c1, M7c2a, M7c2b, M7c3, M7c4 (iteration 304 planner)
+fa04df00 row 150 M7b: PNG structure, decoded content and exact two-pass verifier
+38ac4167 row 150 M7a: bounded capture supervisor with fake Chrome and daemon companions
+$ git log --oneline --merges origin/dev --grep 'M7c\|M8a\|row 150\|row150' -i
+c953cadc Merge pull request #400 from sunholo-data/sprint/world-iter313-row150-m8a
+aafa0b4d Merge pull request #397 from sunholo-data/sprint/world-iter312-row150-r1
+424dc8dc Merge pull request #394 from sunholo-data/sprint/world-iter311-row150-m7c4
+90ef2671 Merge pull request #393 from sunholo-data/sprint/world-iter310-row150-m7c3
+c448b15f Merge pull request #392 from sunholo-data/sprint/world-iter309-row150-m7c2b
+a96820c5 Merge pull request #391 from sunholo-data/sprint/world-iter308-row150-m7afix
+b3b373ec Merge pull request #380 from sunholo-data/sprint/world-iter307-row150-m7c2a
+046b9c2d Merge pull request #373 from sunholo-data/sprint/world-iter306-row150-m7c0
+120e4149 Merge pull request #370 from sunholo-data/sprint/world-iter305-row150-m7c1
+f200b9d2 Merge remote-tracking branch 'origin/dev' into sprint/world-iter305-row150-m7c1
+acd65340 Merge pull request #364 from sunholo-data/sprint/world-iter304-row150-m7c
+72dda61d Merge pull request #361 from sunholo-data/sprint/world-iter302-row150-m7b
+c73c7904 Merge pull request #360 from sunholo-data/sprint/world-iter301-row150-m7a
+47b88a99 Merge pull request #359 from sunholo-data/sprint/world-iter300-row150-m6
+ebdcd7dc Merge pull request #354 from sunholo-data/sprint/world-iter299-row150-m5c
+f4b2dfdb Merge pull request #353 from sunholo-data/sprint/world-iter296-row150-m5b
+$ for s in 120e4149 046b9c2d b3b373ec a96820c5 c448b15f 90ef2671 424dc8dc aafa0b4d c953cadc; do git log -1 --date=format-local:"%Y-%m-%d %H:%M" --format="%h %cd %s" $s; git merge-base --is-ancestor $s 09ff2821; echo "ancestor rc=$?"; done  (TZ=UTC)
+120e4149 2026-10-26 13:06 Merge pull request #370 from sunholo-data/sprint/world-iter305-row150-m7c1
+ancestor rc=0
+046b9c2d 2026-10-27 08:50 Merge pull request #373 from sunholo-data/sprint/world-iter306-row150-m7c0
+ancestor rc=0
+b3b373ec 2026-10-27 13:06 Merge pull request #380 from sunholo-data/sprint/world-iter307-row150-m7c2a
+ancestor rc=0
+a96820c5 2026-10-27 17:29 Merge pull request #391 from sunholo-data/sprint/world-iter308-row150-m7afix
+ancestor rc=0
+c448b15f 2026-10-27 20:56 Merge pull request #392 from sunholo-data/sprint/world-iter309-row150-m7c2b
+ancestor rc=0
+90ef2671 2026-10-28 00:43 Merge pull request #393 from sunholo-data/sprint/world-iter310-row150-m7c3
+ancestor rc=0
+424dc8dc 2026-10-28 04:47 Merge pull request #394 from sunholo-data/sprint/world-iter311-row150-m7c4
+ancestor rc=0
+aafa0b4d 2026-10-28 08:48 Merge pull request #397 from sunholo-data/sprint/world-iter312-row150-r1
+ancestor rc=0
+c953cadc 2026-10-28 13:10 Merge pull request #400 from sunholo-data/sprint/world-iter313-row150-m8a
+ancestor rc=0
+$ judge verdicts as recorded in the iteration log commit subjects
+d648901e docs(mission): record World iteration 313 — row 150 M8a built (judge r1 PASS 82 → fix → r2 PASS 89); C8′(iii)/P0 amendment next
+28b598ac docs(mission): record World iteration 312 — row 150 R1 measured (judge PASS 72), two store-dependent criteria open; row 156 closed on D-WORLD-86 = A
+227abe6a docs(mission): record World iteration 311 — row 150 M7c4 built (judge PASS 92); capture shell compares frozen inventories around both passes; R1 next
+fd33110f docs(mission): record World iteration 310 — row 150 M7c3 built (judge PASS 90); marketingcheck inventory freezes the public store; M7c4 next
+c9235362 docs(mission): record World iteration 309 — row 150 M7c2b built (judge PASS 83); the capture shell runs end to end against fake Chrome and a fake daemon; M7c3 next
+ba46e463 docs(mission): record World iteration 308 — row 150 M7a-fix built (judge PASS 88); kill_group tolerates macOS killpg EPERM; M7c2b next
+21c0f044 docs(mission): record World iteration 307 — row 150 M7c2a built (judge PASS 88); kill_group EPERM confirmed, M7a-fix next
+98a1abd8 docs(mission): record World iteration 306 — row 150 R0 re-confirmed (V59) and M7c0 built (judge PASS 96)
+bb79d7f4 docs(mission): record World iteration 305 — row 150 orchestration doc (carve-out after quorum r1/r2) and M7c1 built (judge PASS 81)
+$ git grep -n "func Test\(MarketingShotGeometry\|MarketingProtectedObservationComparator\|MarketingCapturePassFakeChrome\|MarketingCaptureFakeChromeSixShots\|MarketingCaptureInventoryMutation\|MarketingChromeSixShots\|MarketingDocsLinks\|MarketingRunbookMatchesHelp\)(" 09ff2821 -- scripts cmd  (control: TestMarketingPNGContent, landed M7b)
+09ff2821:cmd/ailang-worldd/marketing_chrome_test.go:51:func TestMarketingChromeSixShots(t *testing.T) {
+09ff2821:scripts/marketingcheck/capture_test.go:76:func TestMarketingCapturePassFakeChrome(t *testing.T) {
+09ff2821:scripts/marketingcheck/capture_test.go:281:func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
+09ff2821:scripts/marketingcheck/docs_test.go:280:func TestMarketingDocsLinks(t *testing.T) {
+09ff2821:scripts/marketingcheck/docs_test.go:383:func TestMarketingRunbookMatchesHelp(t *testing.T) {
+09ff2821:scripts/marketingcheck/observation_test.go:123:func TestMarketingProtectedObservationComparator(t *testing.T) {
+09ff2821:scripts/marketingcheck/png_test.go:308:func TestMarketingPNGContent(t *testing.T) {
+09ff2821:scripts/marketingcheck/png_test.go:820:func TestMarketingShotGeometry(t *testing.T) {
+$ git grep -n "^func Test" 09ff2821 -- scripts/marketingcheck/inventory_test.go host/daemon/marketing_inventory_test.go (M7c3 tests; TestMarketingCaptureInventoryMutation is absent above)
+09ff2821:host/daemon/marketing_inventory_test.go:17:func TestMarketingCaptureInventoryMutation(t *testing.T) {
+09ff2821:scripts/marketingcheck/inventory_test.go:19:func TestMarketingInventoryCompareBranches(t *testing.T) {
+09ff2821:scripts/marketingcheck/inventory_test.go:69:func TestMarketingInventoryReadPaging(t *testing.T) {

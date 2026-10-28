@@ -1,0 +1,425 @@
+// Iteration-315 designer, doc r3 (w-marketing-capture-orchestration §4.4 P0 (a)).
+// Evaluates the r3 P0 position assertion (and, for comparison, the r2 one) of a candidate
+// store's measured rectangles file (the V60 probe's rects.json: integer rectangles, origin
+// floored, far edges ceiled, from Chrome BLOCK boxes) against the R1 baseline (r1-rects.json).
+//
+// r3 predicate, per 1440 px shot, regions taken in R1 order, candidate looked up by name:
+//  (a1) left and right edges within ±2 px of R1.
+//  (a2) the shot's first required region (its stack head): top within ±2 px of R1.
+//  (a3) every later region: gap = its top - previous region's MEASURED bottom; gap >= 0 and
+//       gap - R1gap is within ±2 px of 0, or (only across the two packet gaps whose intervening
+//       content is body-text <p>: validation->approvals-chain, approvals-chain->roster-tested)
+//       within ±2 px of a whole multiple of 24 (one body line: line-height 1.5 x 16 px).
+//  (a4) height: packet paragraph regions (validation, approvals-chain, roster-*) h - R1h within
+//       ±2 px of a whole multiple of 24 and h >= 24; every other region within ±2 px.
+//  background rectangles: every edge within ±2 px.
+//  (b)  every rectangle wholly inside the image and bottom <= H - 40.
+// r2 predicate: (b) plus every edge of every rectangle within ±2 px of R1.
+//
+// Modes:
+//   p0check check <r1-rects.json> <label=candidate-rects.json>...
+//   p0check fromlayouts <layouts.json> <template-rects.json> <out.json>
+//       rebuilds the 1440 px content rectangles from layouts.json with the V60 probe's toRect
+//       (floor origin, ceil far edges clipped to client width and image height). Paragraph boxes
+//       recorded as Range boxes (no "Tight" field: the iteration-312 seeds 1-2 instrument) are
+//       converted to block boxes: top-3, bottom+3, right = packet section right - 17.
+//   p0check convcheck <layouts.json>...  validates that conversion on files that hold both boxes.
+//   p0check mutate <in-rects.json> <outdir>   writes the negative and synthetic-positive arms.
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"math"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+)
+
+type Rect struct {
+	Name string `json:"name"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
+	W    int    `json:"w"`
+	H    int    `json:"h"`
+}
+type Shot struct {
+	Background Rect   `json:"background"`
+	Content    []Rect `json:"content"`
+}
+type Doc struct {
+	Schema string          `json:"schema"`
+	Shots  map[string]Shot `json:"shots"`
+}
+
+var heights = map[string]int{"workbench-light.png": 1100, "workbench-dark.png": 1100, "packet.png": 3700, "graph.png": 2100, "provenance.png": 3000}
+var order = []string{"workbench-light.png", "workbench-dark.png", "packet.png", "graph.png", "provenance.png"}
+
+const line = 24
+
+func load(p string) Doc {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		fmt.Println("INSTRUMENT FAILURE", err)
+		os.Exit(2)
+	}
+	var d Doc
+	if err := json.Unmarshal(b, &d); err != nil {
+		fmt.Println("INSTRUMENT FAILURE", p, err)
+		os.Exit(2)
+	}
+	return d
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
+}
+func lineStep(d int) bool {
+	k := int(math.Round(float64(d) / line))
+	return abs(d-k*line) <= 2
+}
+func para(shot, name string) bool {
+	return shot == "packet.png"
+}
+func freeGap(shot, name string) bool {
+	return shot == "packet.png" && (name == "approvals-chain" || name == "roster-tested")
+}
+
+func inside(c Rect, H int) bool { return c.X >= 0 && c.Y >= 0 && c.X+c.W <= 1440 && c.Y+c.H <= H-40 }
+
+// returns list of failure reasons for r3 and r2
+func judge(base, cand Doc) (r3, r2 []string) {
+	for _, s := range order {
+		bs, ok := base.Shots[s]
+		if !ok {
+			fmt.Println("INSTRUMENT FAILURE: baseline lacks", s)
+			os.Exit(2)
+		}
+		cs, ok := cand.Shots[s]
+		if !ok {
+			r3 = append(r3, s+": shot missing")
+			r2 = append(r2, s+": shot missing")
+			continue
+		}
+		H := heights[s]
+		cm := map[string]Rect{}
+		for _, c := range cs.Content {
+			cm[c.Name] = c
+		}
+		for i, b := range bs.Content {
+			c, ok := cm[b.Name]
+			if !ok {
+				r3 = append(r3, s+"/"+b.Name+": missing")
+				r2 = append(r2, s+"/"+b.Name+": missing")
+				continue
+			}
+			if !(abs(c.X-b.X) <= 2 && abs(c.Y-b.Y) <= 2 && abs(c.W-b.W) <= 2 && abs(c.H-b.H) <= 2 && abs(c.X+c.W-b.X-b.W) <= 2 && abs(c.Y+c.H-b.Y-b.H) <= 2) {
+				r2 = append(r2, fmt.Sprintf("%s/%s: edge >2px (dy %d dh %d)", s, b.Name, c.Y-b.Y, c.H-b.H))
+			}
+			if !inside(c, H) {
+				r2 = append(r2, fmt.Sprintf("%s/%s: (b) bottom %d > H-40 %d or outside", s, b.Name, c.Y+c.H, H-40))
+				r3 = append(r3, fmt.Sprintf("%s/%s: (b) bottom %d > H-40 %d or outside", s, b.Name, c.Y+c.H, H-40))
+			}
+			if !(abs(c.X-b.X) <= 2 && abs(c.X+c.W-b.X-b.W) <= 2) {
+				r3 = append(r3, fmt.Sprintf("%s/%s: (a1) left/right %d..%d vs %d..%d", s, b.Name, c.X, c.X+c.W, b.X, b.X+b.W))
+			}
+			dh := c.H - b.H
+			if para(s, b.Name) {
+				if !(lineStep(dh) && c.H >= line) {
+					r3 = append(r3, fmt.Sprintf("%s/%s: (a4) height %d vs %d not whole lines", s, b.Name, c.H, b.H))
+				}
+			} else if abs(dh) > 2 {
+				r3 = append(r3, fmt.Sprintf("%s/%s: (a4) height %d vs %d", s, b.Name, c.H, b.H))
+			}
+			if i == 0 {
+				if abs(c.Y-b.Y) > 2 {
+					r3 = append(r3, fmt.Sprintf("%s/%s: (a2) stack-head top %d vs %d", s, b.Name, c.Y, b.Y))
+				}
+			} else {
+				pb := bs.Content[i-1]
+				pc, ok := cm[pb.Name]
+				if !ok {
+					continue
+				}
+				gb := b.Y - (pb.Y + pb.H)
+				gc := c.Y - (pc.Y + pc.H)
+				e := gc - gb
+				okGap := gc >= 0 && abs(e) <= 2
+				if freeGap(s, b.Name) {
+					okGap = gc >= 0 && lineStep(e)
+				}
+				if !okGap {
+					r3 = append(r3, fmt.Sprintf("%s/%s: (a3) gap after %s %d vs R1 %d", s, b.Name, pb.Name, gc, gb))
+				}
+			}
+		}
+		b, c := bs.Background, cs.Background
+		if !(abs(c.X-b.X) <= 2 && abs(c.Y-b.Y) <= 2 && abs(c.X+c.W-b.X-b.W) <= 2 && abs(c.Y+c.H-b.Y-b.H) <= 2) {
+			r3 = append(r3, fmt.Sprintf("%s/background: edge >2px", s))
+			r2 = append(r2, fmt.Sprintf("%s/background: edge >2px", s))
+		}
+		if !inside(c, H) {
+			r3 = append(r3, fmt.Sprintf("%s/background: (b)", s))
+			r2 = append(r2, fmt.Sprintf("%s/background: (b)", s))
+		}
+	}
+	return
+}
+
+type Box struct{ Left, Top, Right, Bottom float64 }
+type Row struct {
+	Text  string
+	Rect  *Box
+	Tight *Box
+}
+type Layout struct {
+	ClientWidth                                     float64
+	Nav, TimelineFirst, GraphSvg, Payload, Packet   *Box
+	Validation, Approvals                           *Box
+	ValidationText, ApprovalsText                   string
+	Roster                                          []Row
+}
+
+func toRect(name string, b *Box, cw float64, h int) Rect {
+	if b == nil {
+		fmt.Println("INSTRUMENT FAILURE: region", name, "absent")
+		os.Exit(2)
+	}
+	x, y := int(math.Floor(b.Left)), int(math.Floor(b.Top))
+	r, bt := int(math.Ceil(math.Min(b.Right, cw))), int(math.Ceil(math.Min(b.Bottom, float64(h))))
+	return Rect{name, x, y, r - x, bt - y}
+}
+
+func loadLayouts(p string) map[string]Layout {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		fmt.Println("INSTRUMENT FAILURE", err)
+		os.Exit(2)
+	}
+	var m map[string]Layout
+	if err := json.Unmarshal(b, &m); err != nil {
+		fmt.Println("INSTRUMENT FAILURE", err)
+		os.Exit(2)
+	}
+	return m
+}
+
+func toBlock(t *Box, packet *Box) *Box {
+	return &Box{t.Left, t.Top - 3, packet.Right - 17, t.Bottom + 3}
+}
+
+var grade = regexp.MustCompile(`\b(PROVEN|TESTED|ATTESTED|CLAIMED)\b`)
+
+func fromLayouts(lp, tp, out string) {
+	m := loadLayouts(lp)
+	tmpl := load(tp)
+	d := Doc{Schema: tmpl.Schema, Shots: map[string]Shot{}}
+	for k, v := range tmpl.Shots {
+		d.Shots[k] = v
+	}
+	for _, s := range order {
+		l := m[s]
+		H := heights[s]
+		cw := l.ClientWidth
+		var sh Shot
+		sh.Background = tmpl.Shots[s].Background
+		switch s {
+		case "workbench-light.png", "workbench-dark.png":
+			sh.Content = []Rect{toRect("header", l.Nav, cw, H), toRect("timeline-first", l.TimelineFirst, cw, H)}
+		case "packet.png":
+			legacy := len(l.Roster) > 0 && l.Roster[0].Tight == nil
+			v, a := l.Validation, l.Approvals
+			if legacy {
+				v, a = toBlock(v, l.Packet), toBlock(a, l.Packet)
+			}
+			sh.Content = []Rect{toRect("validation", v, cw, H), toRect("approvals-chain", a, cw, H)}
+			for _, row := range l.Roster {
+				bx := row.Rect
+				if legacy {
+					bx = toBlock(row.Rect, l.Packet)
+				}
+				sh.Content = append(sh.Content, toRect("roster-"+strings.ToLower(grade.FindString(row.Text)), bx, cw, H))
+			}
+		case "graph.png":
+			sh.Content = []Rect{toRect("graph-svg", l.GraphSvg, cw, H)}
+		case "provenance.png":
+			sh.Content = []Rect{toRect("payload", l.Payload, cw, H)}
+		}
+		d.Shots[s] = sh
+	}
+	b, _ := json.MarshalIndent(d, "", "  ")
+	os.WriteFile(out, append(b, '\n'), 0o644)
+	fmt.Println("wrote", out)
+}
+
+func convCheck(files []string) {
+	n, bad := 0, 0
+	for _, f := range files {
+		l := loadLayouts(f)["packet.png"]
+		for _, row := range l.Roster {
+			if row.Tight == nil {
+				continue
+			}
+			c := toBlock(row.Tight, l.Packet)
+			n++
+			if *c != *row.Rect {
+				bad++
+				fmt.Printf("MISMATCH %s %+v vs %+v\n", f, *c, *row.Rect)
+			}
+		}
+	}
+	fmt.Printf("CONVCHECK rows=%d mismatches=%d\n", n, bad)
+}
+
+func clone(d Doc) Doc {
+	b, _ := json.Marshal(d)
+	var o Doc
+	json.Unmarshal(b, &o)
+	return o
+}
+func idx(sh Shot, name string) int {
+	for i, c := range sh.Content {
+		if c.Name == name {
+			return i
+		}
+	}
+	panic(name)
+}
+
+func mutate(in, dir string) {
+	base := load(in)
+	arms := map[string]func(d Doc){
+		"neg-packet-all+14": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			for i := range sh.Content {
+				sh.Content[i].Y += 14
+			}
+		},
+		"neg-attested+14": func(d Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "roster-attested")].Y += 14 },
+		"neg-tested-at-attested-row": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			a := sh.Content[idx(sh, "roster-attested")]
+			a.Name = "roster-tested"
+			sh.Content[idx(sh, "roster-tested")] = a
+		},
+		"neg-tested-at-proven-row": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			a := sh.Content[idx(sh, "roster-proven")]
+			a.Name = "roster-tested"
+			sh.Content[idx(sh, "roster-tested")] = a
+		},
+		"neg-rows-reordered-tested-claimed": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			t, c := idx(sh, "roster-tested"), idx(sh, "roster-claimed")
+			sh.Content[t].Y, sh.Content[c].Y = sh.Content[c].Y, sh.Content[t].Y
+		},
+		"neg-proven-grows-6-lines-below-fold": func(d Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "roster-proven")].H += 6 * 24 },
+		"neg-packet-stack-down-6-lines": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			for i := range sh.Content {
+				sh.Content[i].Y += 144
+			}
+		},
+		"neg-light-header+40":         func(d Doc) { d.Shots["workbench-light.png"].Content[0].Y += 40 },
+		"neg-light-header-whole-view": func(d Doc) { c := &d.Shots["workbench-light.png"].Content[0]; c.X, c.Y, c.W, c.H = 0, 0, 1440, 1100 },
+		"neg-graph-svg-at-timeline": func(d Doc) {
+			c := &d.Shots["graph.png"].Content[0]
+			c.X, c.Y, c.W, c.H = 89, 466, 1247, 190
+		},
+		"neg-tested-64x16-glyphs": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			c := &sh.Content[idx(sh, "roster-tested")]
+			c.Y, c.W, c.H = c.Y+3, 64, 16
+		},
+		"neg-background-over-content": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			sh.Background = Rect{"gutter", 106, 3267, 24, 49}
+			d.Shots["packet.png"] = sh
+		},
+		"neg-attested-dropped": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			i := idx(sh, "roster-attested")
+			sh.Content = append(sh.Content[:i:i], sh.Content[i+1:]...)
+			d.Shots["packet.png"] = sh
+		},
+		"neg-tested-height+14": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			i := idx(sh, "roster-tested")
+			sh.Content[i].H += 14
+			for j := i + 1; j < len(sh.Content); j++ {
+				sh.Content[j].Y += 14
+			}
+		},
+		"neg-payload+14": func(d Doc) { d.Shots["provenance.png"].Content[0].Y += 14 },
+		"neg-dark-timeline-first+24": func(d Doc) { d.Shots["workbench-dark.png"].Content[1].Y += 24 },
+		"syn-pos-tested-wraps-3-lines": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			i := idx(sh, "roster-tested")
+			sh.Content[i].H += 24
+			for j := i + 1; j < len(sh.Content); j++ {
+				sh.Content[j].Y += 24
+			}
+		},
+		"syn-pos-createdAt-wraps": func(d Doc) {
+			sh := d.Shots["packet.png"]
+			for j := idx(sh, "approvals-chain"); j < len(sh.Content); j++ {
+				sh.Content[j].Y += 24
+			}
+		},
+		"syn-pos-proven-5-lines": func(d Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "roster-proven")].H += 24 },
+	}
+	names := make([]string, 0, len(arms))
+	for k := range arms {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	for _, k := range names {
+		d := clone(base)
+		arms[k](d)
+		b, _ := json.MarshalIndent(d, "", "  ")
+		os.WriteFile(filepath.Join(dir, k+".json"), append(b, '\n'), 0o644)
+		fmt.Println("wrote", k)
+	}
+}
+
+func main() {
+	switch os.Args[1] {
+	case "fromlayouts":
+		fromLayouts(os.Args[2], os.Args[3], os.Args[4])
+	case "convcheck":
+		convCheck(os.Args[2:])
+	case "mutate":
+		mutate(os.Args[2], os.Args[3])
+	case "check":
+		base := load(os.Args[2])
+		a3, a2 := 0, 0
+		for _, arg := range os.Args[3:] {
+			label, p, _ := strings.Cut(arg, "=")
+			r3, r2 := judge(base, load(p))
+			v3, v2 := "ACCEPT", "ACCEPT"
+			if len(r3) > 0 {
+				v3 = "REFUSE"
+			} else {
+				a3++
+			}
+			if len(r2) > 0 {
+				v2 = "REFUSE"
+			} else {
+				a2++
+			}
+			fmt.Printf("%-38s r3 %s  r2 %s\n", label, v3, v2)
+			for _, r := range r3 {
+				fmt.Println("    r3:", r)
+			}
+			for _, r := range r2 {
+				fmt.Println("    r2:", r)
+			}
+		}
+		fmt.Printf("TOTAL candidates=%d r3-accept=%d r2-accept=%d\n", len(os.Args)-3, a3, a2)
+	}
+}
