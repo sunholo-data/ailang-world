@@ -2100,7 +2100,7 @@ Executor notes:
 
 ## M8a — Reproduction docs, captions and release manifest schema
 
-Design M8; 25 minutes; dependency: M7c4 **COMPLETE** (the completion semantics in §M7c4; not R1) (amended iteration 305 per w-marketing-capture-orchestration §5); status **pending**.
+Design M8; 25 minutes; dependency: M7c4 **COMPLETE** (the completion semantics in §M7c4; not R1) (amended iteration 305 per w-marketing-capture-orchestration §5); status **built** (iteration 313, PR #400; judge r2 PASS 89; amendment A1 `--capture-manifest` and the thirteen-flag capture line, see the sprint JSON).
 
 Exact executor files:
 

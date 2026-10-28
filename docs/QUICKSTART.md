@@ -1562,7 +1562,8 @@ A produced packet reads `decision packet validated: committed with its invocatio
 writes the public success manifest only after every check passes. It records domain
 objects, read/test/check evidence, a proof and a pending approval packet. Success
 returns exit 0. Inspect a partial store before any further action; never blindly
-retry it. Release capture documentation follows in a later milestone.
+retry it. The attended release screenshot capture, run from this same
+prepared shell, is in section 13 below.
 
 Run from the repository root. Create a disposable worktree explicitly; the seed
 never runs a hidden git operation. Keep the store, session, key and manifest outside
@@ -1636,3 +1637,64 @@ commit or refusal stops the command without automatic retries. The proof key
 authenticates the proof stage and must also configure the daemon
 with `--proof-key-file` and both `--proof-required-identity sameRef` and
 `--proof-required-identity servesEntry`; the seed never exposes it.
+
+## 13. Capture the release screenshots (attended)
+
+This runs from the §12 prepared shell, on the same frozen store, after `demo seed` has
+succeeded. Stop the §12 daemon first. The capture shell starts its own still-mode daemon
+on that store, and only one writer may hold the store at a time. Nothing in this section
+mints a session, publishes a descriptor, commits or approves. The session mint and the
+descriptor publish in §12 are typed by a person at a terminal, as §12 describes.
+
+Build the capture verifier and set the inputs. The Chrome must be an explicit binary of
+major version 155 or later; the capture records its `--version` before and after the
+passes.
+
+```bash
+go build -o "$DEMO_DIR/marketingcheck" ./scripts/marketingcheck
+export WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+export WORLD_MARKETING_RECTS=design_docs/verification/world-iter312/r1-rects.json
+export CAPTURE_OUT=$DEMO_DIR/capture
+```
+
+Optional: preview the still-mode daemon with the capture shell's own serve flags. Stop it
+before you run the capture, because the capture starts its own daemon on the same port.
+
+```bash
+"$DEMO_BIN" serve --db "$DEMO_DIR/world.db" --bind 127.0.0.1:7645 --workbench-still \
+  --ailang-bin "$PIN" --workspace-root "$DEMO_WS" --tool-ailang-bin "$TOOLPIN" \
+  --proof-key-file "$DEMO_DIR/proof.key" --proof-required-identity sameRef --proof-required-identity servesEntry
+```
+
+Run the capture from the repository root. It takes two complete passes over the store and
+writes `$CAPTURE_OUT/pass-a/`, `$CAPTURE_OUT/pass-b/` and `$CAPTURE_OUT/capture-manifest.json`.
+
+```bash
+scripts/capture_marketing.sh --db "$DEMO_DIR/world.db" --manifest "$DEMO_DIR/manifest.json" \
+  --proof-key-file "$DEMO_DIR/proof.key" --ailang-bin "$PIN" --workspace-root "$DEMO_WS" \
+  --tool-ailang-bin "$TOOLPIN" --chrome "$WORLD_CHROME" --out "$CAPTURE_OUT" --verify-twice \
+  --rectangles "$WORLD_MARKETING_RECTS" --worldd-bin "$DEMO_BIN" --bind 127.0.0.1:7645 \
+  --marketingcheck-bin "$DEMO_DIR/marketingcheck"
+```
+
+Then run the release check on the first pass. It requires the six PNG files and the
+capture manifest, and refuses any hash or dimension that does not match:
+
+```bash
+go run ./scripts/marketingcheck docs --root . --assets "$CAPTURE_OUT/pass-a" \
+  --capture-manifest "$CAPTURE_OUT/capture-manifest.json" --require-assets
+```
+
+What the two passes prove, and what they do not. Equality is promised only between the two
+passes over one frozen store. A fresh seed produces a different store and different bytes
+(D-WORLD-75), so a second seed is a new capture, not a repeat of these images. Before the
+attended capture, the controller's P0 probe (`w-marketing-capture-orchestration` §4.4) must
+pass within 24 hours, and P3, a GET-only probe of the release store itself, runs before
+pass A. Two acceptance criteria are still open and are amended before any release capture:
+the phone overflow check C8′(iii) and P0's ±2 px tolerance for wrapping packet paragraphs
+(orchestration V60 and V63).
+
+Promotion is not part of this section. After the capture, the controller copies the six
+verified PNGs and `capture-manifest.json`, unmodified, into `website/static/img/v1/`,
+commits them and runs `./scripts/tracked_binary_gate.sh`. An unattended run never does
+this. The images appear in the website only after that promotion.

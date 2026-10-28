@@ -2466,3 +2466,111 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 156 CLOSED; row 150 21/23 built with R1 measured; goal unmoved.
 **Next:** row 150 M8a (thresholds per V62), then the C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum), then M8b, then P0–P3 and the attended A1. Then 151.
+
+## 313 — 2026-10-28 — row 150: M8a built — reproduction docs, captions, release manifest schema and `marketingcheck docs`; judge r1 PASS 82 → controller fix → r2 PASS 89 [PRODUCT]
+
+**Kind:** one executor milestone on the release row, judged twice by an independent evaluator. Every role was spawned through the Agent tool, per the operator's standing request: executor haiku, evaluator sonnet r1 and r2. No designer or planner was needed: the plan and its governing doc exist, and nothing in them was revised.
+
+**Pick and why:** row 150 M8a, following iteration 312's **Next**. Re-checked before picking:
+- no M8a commit, branch, PR or file existed (`git log origin/dev --grep M8a` returns only the r2 carve-out doc commit; `docs/marketing-capture-manifest.schema.json`, `scripts/marketingcheck/docs_test.go`, `website/static/img/v1/captions.md` and the website page were all absent from `origin/dev`);
+- local dev `05cf2189` was 4 commits behind origin/dev `aafa0b4d` (iteration 312's record merged as #397), so every read came from origin;
+- the one open PR from this account, #398 (`trial/row228a-read-cap-base-lag`), is attended trial work (row 228, episode w228a, written in World). It was left alone.
+- Governing doc `w-marketing-capture-orchestration` r2 (narrow-refinement carve-out, §9; its quorum artifacts exist, so no pick-time quorum ran).
+
+**Clause map:** clauses 1–7 MET (ratified states, not re-measured); no UNMET clause, no critical-path row. D-WORLD-81 order 156 (closed) → 150 → 151.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (10 comments, none from the allowlist). The watermark is unchanged because nothing new was processed.
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (log grep count 9). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages. This iteration's claim was sent.
+- Ledger: `mission_decisions.sh --check` valid, 86 rows, 0 OPEN.
+- Weekly external-issue sweep: not due (#366 opened 2026-10-26, after the Monday boundary).
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Dev CI at `aafa0b4d`: check set 3/3 success.
+- Running skill and all 13 resource files byte-identical to origin/dev (per-file `cmp` against the resolved symlink target).
+- Base `aafa0b4d…` recorded at Gate 1 (`2026-10-28T12:01:59Z`); the Gate-3 `snap` was identical.
+
+**Controller measurements before the directive (load-bearing for the docs):**
+- **Docusaurus images.** Probed on this site's Docusaurus 3.10:
+  - a markdown image `![](/img/v1/packet.png)` whose file is absent FAILS the build (rc 1, "couldn't be resolved to an existing local image file");
+  - a raw JSX `<img src="/img/v1/…">` builds but renders `/img/v1/…`, dropping the deployed `/ailang-world/` base;
+  - `pathname:///img/v1/…` drops the base too;
+  - `<img src={useBaseUrl('/img/v1/…')}>` builds with the file absent and renders `/ailang-world/img/v1/…`.
+  The PNGs do not exist until A1, so the page uses `useBaseUrl` and the README uses ordinary links, not embeds.
+- **Stale plan block.** `capture_marketing.sh` REQUIRES `--worldd-bin`, `--bind` and `--marketingcheck-bin` (it fails "missing --…" otherwise). The plan's attended block predates M7c2b and omits all three, so it was not copied. The runbook test now demands flag-set EQUALITY with the shell's `--help`.
+- **Capture manifest path.** The shell writes `capture-manifest.json` beside `pass-a/`, not in it, hence amendment A1: `docs` takes an explicit `--capture-manifest`.
+- **Base gates green** at `aafa0b4d` (rule 4: the directive's own gate list was baselined): the focused cmd/host gates 9/9 PASS; `scripts/marketingcheck` rc 0 in 35 s.
+- C11 observation taken before (12 records).
+
+**Executor (haiku, Agent tool; resolver `recipe claude:claude-haiku-5-5`, following the iteration-305 precedent of Agent `haiku`):** built M8a in `.wt-world-iter313-row150-m8a` with no git writes.
+- QUICKSTART §12 pointer and a new §13 attended capture runbook;
+- the website page `getting-started/marketing-capture` (six `useBaseUrl` images, disclosures, links to §12/§13 by absolute GitHub URL);
+- `captions.md`, the README Screenshots links, and the JSON Schema;
+- `marketingcheck docs` (`CheckDocs`, `CheckPromotedAssets`, `runDocs`; +431 lines in `main.go`, the only allowed production file besides `png.go`);
+- `docs_test.go` (`TestMarketingDocsLinks`, `TestMarketingRunbookMatchesHelp`, 506 lines), and `TestMarketingDocumentedServeSelectsStill` in `cmd/ailang-worldd/demo_test.go` (the in-process still-mode half, since `scripts/marketingcheck` cannot import package main);
+- the png.go threshold comment (V62: values unchanged);
+- `cli/unknown` moved from `docs` to `bogus`.
+It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a-flag, M8a-capture-flag, M8a-placeholder). The unminted seed refuses with "--session is neither a 64-hex session token nor a readable file". Its seven deviations were all measured, including: the bind failure exits 1 (`exitUsage = 1` in cmd/ailang-worldd), not 2; the seed line lives in §12.
+
+**Controller verification (outside any sandbox; load 7–9 from sibling work):**
+- Main checkout untouched.
+- Re-ran: gofmt clean; vet rc 0; `go build ./...` rc 0; compile fence `go test -run '^$' ./...` rc 0; `TestMarketingDocsLinks` (11 PASS lines) and `TestMarketingRunbookMatchesHelp` (8); `docs --root .` rc 0; `TestProductionGoSurface` rc 0.
+- Full packages, `go test ./scripts/marketingcheck ./cmd/ailang-worldd ./host/daemon` rc 0 (60 / 171 / 381 s).
+- Both named mutants reproduced first-party and restored byte-identical: M8a-filename red at "documented image target must match promoted inventory"; M8a-flag red in both the scripts test and the cmd test.
+- C11 after identical; protected-path diff empty.
+- **Website build:** rc 0 under `BASE_URL=/ailang-world/`, and the page renders six `/ailang-world/img/v1/…` images. **Instrument failure first, caught by a pristine-base control:** a copy of the site with `node_modules` *symlinked* to the main checkout failed SSG on all 35 existing docs pages ("Cannot read properties of undefined (reading 'id')" in DocItem), and so did the pristine base. The probe that had "built rc 0" compiled in 1.35 s, i.e. from webpack's persistent cache, which lives in the shared `node_modules/.cache`. With a private `cp -c` clone of `node_modules` minus `.cache`, both base and branch build rc 0 (22 s full compile). The red was the shared cache, keyed to another site path, not the site.
+
+**Independent evaluation:**
+- **r1 sonnet PASS 82/100** (report `verification/world-iter313/evaluator-r1.md`; completeness 27, truthfulness 22, tests 15, scope 10, honesty 8), zero blocking. It ran every gate, both plan mutants and its own: 13 killed, about 28 survived (mostly main.go refusal branches without a negative arm). Findings F1–F9, all non-blocking. F1: page and README disclosures were ungated (it rewrote the page to "live views" and stayed green). F6: the README spoke in the present tense about images that do not exist yet. F7: the phone alt said "entry" (V50: entries 0–1). F8: §13 omitted P3 and the open criteria. Its verdict said "no false claim".
+- **Controller finding the judge missed:** the page said "The demo store's evidence is demo-authored." That is false. Parent design §3: TESTED names S3's real `ailang test` record, ATTESTED the real S2 RecordedEffect, and PROVEN a subject-bound proof report; only CLAIMED is demo-authored. Reproduced from the design text, then fixed.
+- **Controller fix round `94e1c08b`:**
+  - the provenance sentence corrected in the page and captions;
+  - F1: `checkPage` requires the captions' disclosure strings, and `checkReadme` requires "static captures of recorded history" in the Screenshots section. New arms `refuse-page-disclosure` and `refuse-readme-live-claim`; each guard was disabled and its arm went red, then restored byte-identical. Enforcing it immediately refused the page (it said only "static captures", plural), and the page sentence was fixed;
+  - F6 README promotion caveat; F7 phone alt "entries"; F8 §13 names P3 and C8′(iii)/P0;
+  - full marketingcheck rc 0 (39 s).
+- **r2 sonnet PASS 89/100** (`evaluator-r2.md`; 28/24/17/10/10), zero blocking, fresh context, own worktree at `94e1c08b`. F1, F7 and F8 closed; F6 partly closed; F2–F5 and F9 open (carried). New, both non-blocking: N1, the fix's new sentences (provenance, promotion caveat, P3) are not gated; N2, the page is in the autogenerated sidebar before promotion. Its own mutants: all 12 disclosure strings were killed one at a time.
+
+**Bookkeeping:**
+- Sprint JSON M8a → `completed` (iteration 313, commit `f6c8d8d4`, PR #400, fix `94e1c08b`, amendments A1). Edited in the file's inline style; a first `jq` rewrite that re-flowed earlier milestones was discarded.
+- Plan M8a status line → built.
+- Charter: row 150 (M8a BUILT, carried notes, Next); CURRENT GOAL next line; STATUS 313 stamp; STATUS 310 rotated to the archive. Charter line count asserted unchanged (6292); the archive gained 2 lines and holds ITERATION 310, with control 309 present; queue row 150 and `## Queue` present; ledger valid.
+- Dashboard overwritten; index regenerated `--index-only` through a temporary registry whose `workdir` is the record worktree.
+
+**Result:** M8a BUILT. The release docs, captions and schema exist and are bound to the shot inventory, the CLIs and the capture shell by tests. Release mode will check the attended PNGs' hashes against the capture manifest. Row 150 is 22 of 23 executor milestones built (M8b left), plus the C8′(iii)/P0 amendment, P0–P3 and the attended A1.
+
+**Gate 3b:** PR #400's head and then the merge commit are each polled, pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). The outcome is reported on #366.
+
+**Routing evidence:** base=aafa0b4d1093258aea1be6f2f096f9bba2edfd32@2026-10-28T12:01:59Z (Gate 1 record; Gate-3 `snap` identical). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=opus`, `EXECUTOR=claude:claude-haiku-5-5`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration), handed to `opus` and `claude:claude-haiku-5-5`.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer and planner: not spawned (the plan and governing doc exist; no doc revision). This is not a routing failure.
+- Executor `claude:claude-haiku-5-5` (resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; Agent `haiku`, foreground, sprint worktree): 210,200 tok / 555.7 s.
+- Evaluator `sonnet` (resolver `agent-tool sonnet declared:alias-pin`; Agent tool, foreground): r1 103,058 tok / 319.9 s in `.eval-world-iter313` at `f6c8d8d4`; r2 59,999 tok / 177.6 s in `.eval-world-iter313-r2` at `94e1c08b`. Judge independence: an Anthropic Sonnet judge of an Anthropic Haiku executor's work and an Opus controller's fix — different models, same vendor (`judge-independence: same-vendor-different-model`). The directives named the claims to test and supplied no controller finding or method; the controller's own demo-authored finding was withheld from r1 and stated to r2 as a claim to verify.
+- No quorum (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- A markdown image, a raw `<img>` or `pathname://` for the six shots (measured: build failure or a lost base URL).
+- README image embeds before promotion (they would render broken on GitHub until A1).
+- Copying the plan's attended block verbatim (it lacks three required flags).
+- "The website build is broken at base": the red was the shared webpack cache in a symlinked `node_modules`; a private copy builds base and branch rc 0.
+- Gating every judge suggestion in the fix round. F2–F5, F9, N1 and N2 are carried as non-blocking rather than growing the milestone.
+- A third judge round: r2 passed with zero blocking, and no code changed after r2.
+- Merging #398 or touching it: attended trial work.
+
+**Carried:**
+- The C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum).
+- From the judges: schema, asset and link negative arms (F2, F3, F5); M8a-flag is killed by the token pre-check, with the parse leg exercised only on the happy path (F4); the fix's new sentences ungated (N1); the alt-marker case, titled links and the hard-coded flag count (F9).
+- N2, for Mark at A1: the release-screenshots page is in the sidebar before promotion, so a site deploy between this merge and A1 shows six broken images. Either deploy only after A1, or mark the page `unlisted` until promotion.
+- Everything iteration 312 carried.
+
+**Retro:**
+- **Instrument, instance 1, pre-registered:** a `node_modules` shared by symlink also shares webpack's persistent cache (`node_modules/.cache/webpack`). A build from another site path then fails SSG on every docs page, or "succeeds" from cache in about 1 s. Build Docusaurus probes with a private `cp -c` clone minus `.cache`, and treat a sub-5 s client compile as a cached reading, not a measurement. The pristine-base control is what caught it, before it was attributed to the branch.
+- **A plan's verbatim command block is a claim dated to the plan.** Later milestones changed the CLI it quotes (M7c2b added three required flags). Re-derive any quoted command against the tool's `--help` at dispatch. The new runbook test now does this for §13. Instance 1.
+- **Generator ≠ judge is necessary, not sufficient.** The r1 judge reported "no false claim" over a sentence that misdescribed three of the four evidence grades; the controller's own read of the public text caught it. This is the existing judge-findings-can-be-under-stated rule, not a new one.
+- Harness share 0 of the last 20 index rows. Bar-moving landings: 311, 312 and 313 each moved no clause, and every clause is MET (there is no UNMET clause and no routable critical-path row), so this is not DRIFT. Release-row work is permitted under D-WORLD-64. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 22/23 built (M8b left) plus the C8′(iii)/P0 amendment, P0–P3 and A1; goal unmoved.
+**Next:** row 150's C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum), then M8b, then P0–P3 and the attended A1. Then 151.

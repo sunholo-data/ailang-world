@@ -3441,7 +3441,8 @@
         "scripts/marketingcheck/png.go",
         "scripts/marketingcheck/main.go"
       ],
-      "status": "pending",
+      "status": "completed",
+      "completed": {"iteration": 313, "commit": "f6c8d8d4", "pr": 400, "controller_fix": "94e1c08b (docs + guard: only CLAIMED is demo-authored, a false sentence the r1 judge missed; F1 the page carries the captions disclosures and the README Screenshots section says static captures of recorded history, both guards mutation-proven; F6 README promotion caveat; F7 phone alt says entries; F8 QUICKSTART §13 names P3 and the two open criteria)", "amendments": "A1 docs takes an explicit --capture-manifest FILE (the shell writes capture-manifest.json beside pass-a/); the documented capture line carries all thirteen flags (the plan attended block predated M7c2b's --worldd-bin/--bind/--marketingcheck-bin); website images use useBaseUrl (a markdown image to an absent PNG fails the Docusaurus build; raw img and pathname:// drop the /ailang-world/ base; controller-measured); TestMarketingDocumentedServeSelectsStill in cmd/ailang-worldd/demo_test.go is the in-process still-mode half (controller, iteration 313)", "thresholds": "V62: all eight values kept; png.go comment points at V62; TestMarketingPNGContent boundary literals unchanged", "judge": "sonnet r1 PASS 82 (zero blocking) -> controller fix -> sonnet r2 PASS 89 (zero blocking; F1/F7/F8 closed, F6 partly; F2-F5, F9, N1, N2 carried)", "executor": "claude haiku 5.5 via Agent tool (resolver recipe claude:claude-haiku-5-5), 210,200 tok / 556 s; 4/4 directive mutants killed"},
       "new_tests": [
         "TestMarketingDocsLinks",
         "TestMarketingRunbookMatchesHelp"

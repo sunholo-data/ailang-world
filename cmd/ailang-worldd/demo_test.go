@@ -2602,3 +2602,65 @@ func demoRosterPageControls(t *testing.T) {
 		})
 	}
 }
+
+// TestMarketingDocumentedServeSelectsStill is the in-process half of M8a: the
+// one `"$DEMO_BIN" serve` preview QUICKSTART §13 documents, with its variables
+// pointed at temp paths, selects still mode and reaches the daemon Config with
+// the kernel, tool, workspace and proof flags. The scripts/marketingcheck test
+// proves the same argv parses; it cannot import this package.
+func TestMarketingDocumentedServeSelectsStill(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "docs", "QUICKSTART.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, section, ok := strings.Cut(string(raw), "\n## 13. Capture the release screenshots (attended)\n")
+	if !ok {
+		t.Fatal("QUICKSTART §13 is absent")
+	}
+	section, _, _ = strings.Cut(section, "\n## ")
+	var serveLines []string
+	var cur strings.Builder
+	for _, l := range strings.Split(section, "\n") {
+		l = strings.TrimRight(l, " \t")
+		if strings.HasSuffix(l, `\`) {
+			cur.WriteString(strings.TrimSuffix(l, `\`))
+			cur.WriteByte(' ')
+			continue
+		}
+		cur.WriteString(l)
+		if strings.HasPrefix(cur.String(), `"$DEMO_BIN" serve `) {
+			serveLines = append(serveLines, cur.String())
+		}
+		cur.Reset()
+	}
+	if len(serveLines) != 1 {
+		t.Fatalf("QUICKSTART §13 documents %d serve previews, want 1", len(serveLines))
+	}
+	dir := t.TempDir()
+	line := strings.ReplaceAll(serveLines[0], `"`, "")
+	for name, value := range map[string]string{"DEMO_DIR": dir, "DEMO_WS": filepath.Join(dir, "workspaces"), "DEMO_BIN": filepath.Join(dir, "ailang-worldd"), "PIN": filepath.Join(dir, "pin"), "TOOLPIN": filepath.Join(dir, "toolpin")} {
+		line = strings.ReplaceAll(line, "$"+name, value)
+	}
+	if strings.Contains(line, "$") {
+		t.Fatalf("unexpanded variable in %q", line)
+	}
+	argv := strings.Fields(line)[1:]
+	if len(argv) == 0 || argv[0] != "serve" {
+		t.Fatalf("§13 preview is not a serve argv: %q", line)
+	}
+	got := captureServeConfig(t)
+	var out, errw bytes.Buffer
+	if code := run(argv, &out, &errw); code != exitOK {
+		t.Fatalf("documented serve argv exit %d: %s", code, errw.String())
+	}
+	if !got.WorkbenchStill {
+		t.Fatal("documented serve argv does not select still mode")
+	}
+	if got.BindHost != "127.0.0.1" || got.BindPort != 7645 ||
+		got.DBPath != filepath.Join(dir, "world.db") || got.AilangBin != filepath.Join(dir, "pin") ||
+		got.WorkspaceRoot != filepath.Join(dir, "workspaces") || got.ToolAilangBin != filepath.Join(dir, "toolpin") ||
+		got.ProofKeyFile != filepath.Join(dir, "proof.key") ||
+		!slices.Equal(got.ProofRequiredIdentities, []string{"sameRef", "servesEntry"}) {
+		t.Fatalf("documented serve argv built Config %+v", *got)
+	}
+}

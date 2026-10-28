@@ -1,18 +1,18 @@
-# World mission dashboard — iteration 312 (2026-10-28)
+# World mission dashboard — iteration 313 (2026-10-28)
 
-- **This fire:** row 150 R1 (controller rehearsal) MEASURED, with two criteria left open; row 156 CLOSED on Mark's attended D-WORLD-86 = A (PR #395).
-- **R1 rectangles:** read from Chrome's own layout (V51 method; phone via the V58 scan); block boxes, because text-tight boxes vary with hash glyph widths. Baseline `verification/world-iter312/r1-rects.json`, byte-identical on two seeds (V60).
-- **C14 half:** full path (`capture_marketing.sh` → daemon → pass → shot) twice per store on real Chrome 156.0.8078.48: 6/6 pass-A = pass-B on two seeds; the named drill PASSED (V61).
-- **Thresholds (V62):** real renders clear every provisional bound by a wide margin; keep all eight for M8a.
-- **Controls (V63):** 14/14 regions moved onto blank page were refused. `check` gives no localisation (the judge's controls), so position rests on P0.
-- **Open before P0 (store-dependent geometry):** (1) phone C8′(iii): the scrollbar thumb varies 324–338 px across seeds, so "±2 px of V50" cannot hold; (2) P0's every-edge ±2 px: the PROVEN roster row wrapped 3 vs 4 lines on 1 of 9 seeds.
-- **Judge:** sonnet PASS 72/100 (Agent tool, own worktree, its own seeds and code). It found open criterion (2) and the wider phone spread; the controller reproduced both and narrowed the record.
-- **Roles:** evaluator only (R1 is controller-owned; row 156's close is bookkeeping).
+- **This fire:** row 150 M8a BUILT (PR #400): reproduction docs, captions, release manifest schema and `marketingcheck docs`.
+- **What landed:** QUICKSTART §13 (attended capture runbook, all thirteen `capture_marketing.sh` flags, the still-mode preview, the release check, P0/P3 and the open criteria); the website page `getting-started/marketing-capture` (six `useBaseUrl` images); `captions.md`; README Screenshots links; `docs/marketing-capture-manifest.schema.json` (no hash).
+- **`marketingcheck docs`:** wiring checks against `Shots`; release mode (`--assets … --capture-manifest … --require-assets`) checks the PNG SHA-256 values against the attended capture manifest.
+- **Measured first:** a markdown image to an absent PNG fails the Docusaurus build; a raw `<img>` and `pathname://` drop the `/ailang-world/` base; `useBaseUrl` works. The plan's attended block lacked three required capture flags.
+- **Judges:** sonnet r1 PASS 82 → controller fix (the page said all evidence was demo-authored; only CLAIMED is — the judge missed it; plus disclosure gates F1, F6, F7, F8) → sonnet r2 PASS 89, zero blocking.
+- **Roles:** executor haiku (codex over ration), evaluator sonnet ×2; no designer or planner needed.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 156 (closed) → 150 → 151 → v1.0.0.
-- **Row 150:** 21/23 executor milestones built (M8a, M8b pending); R1 measured; P0, P3 (controller) and A1 (attended) remain.
-- **Next:** M8a (thresholds per V62) → C8′(iii)/P0 amendment (doc r3, designer + quorum) → M8b.
-- **Carried:** the iteration-311 judge notes (diagnostics-line ordering, the drill's rectangles precondition weaker than `LoadRectangles`, the manifest assertion only parses, `v0.41.0` hardcoded); the M7a load-sensitive supervisor fixtures.
-- **Cosmetic residuals (for Mark, if wanted):** phone title clipped with horizontal overflow; provenance payload clips horizontally; tall image proportions.
+- **Row 150:** 22/23 executor milestones built (M8b left); R1 measured; P0, P3 (controller) and A1 (attended) remain.
+- **Next:** the C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum) → M8b.
+- **Open before P0:** phone C8′(iii) (scrollbar thumb 324–338 px across seeds) and P0's ±2 px for wrapping packet paragraphs.
+- **For Mark at A1 (N2):** the release-screenshots page is in the sidebar before promotion, so a docs deploy before A1 shows six broken images. Deploy after A1, or mark the page `unlisted` until then.
+- **Carried:** judge non-blocking F2–F5, F9 and N1 (negative arms, parse-leg kill, ungated new sentences); iteration 311/312 carries.
+- **Instrument note:** build Docusaurus probes with a private `node_modules` (no `.cache`); a symlinked one shares webpack's cache and fails every docs page.
 - **Parked on Mark:** nothing — the ledger has 0 OPEN rows.
 - **Cost:** metered $0.00; Anthropic quota only.
-- **Record/evidence:** world-mission-log.md entry 312; verification/world-iter312/.
+- **Record/evidence:** world-mission-log.md entry 313; verification/world-iter313/.
