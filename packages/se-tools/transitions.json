@@ -2,7 +2,7 @@
   {
     "id": "ailang-read",
     "title": "Read (sandboxed)",
-    "description": "Read an episode-worktree file. Path: non-empty, relative, no `..` segments or leading `-`; policy confines symlinks and protected paths. Unknown keys refuse. Returns content or refusal plus World plan/effect refs; costs one Workspace.Read and commits one entry.",
+    "description": "Read a worktree file. Relative path only; no `..` or leading `-`. Unknown keys refuse. Over max_chars (default 40000 characters), refuse with line ranges; never truncate. Returns content/refusal and World refs; costs one Workspace.Read and commits one entry.",
     "transitionFnFile": "packages/se-tools/se_tools/read.ail",
     "inputSchema": {
       "type": "object",
@@ -20,6 +20,12 @@
           "type": "integer",
           "minimum": 1,
           "description": "Line count, at most 2000"
+        },
+        "max_chars": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 200000,
+          "description": "Character cap, default 40000; oversized reads refuse with suggested ranges"
         }
       },
       "required": [

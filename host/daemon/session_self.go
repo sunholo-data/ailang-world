@@ -18,6 +18,7 @@ type SessionGrant struct {
 }
 
 type SessionSelf struct {
+	Git         *SessionGit     `json:"git,omitempty"`
 	Episode     string          `json:"episode"`
 	Worktree    string          `json:"worktree"`
 	ExpiresAt   int64           `json:"expiresAt"`
@@ -75,5 +76,6 @@ func (d *Daemon) handleSessionSelf(w http.ResponseWriter, r *http.Request) {
 		used := spend[store.EffectKey{Effect: g.Effect, Scope: g.Scope}]
 		body.Grants = append(body.Grants, SessionGrant{g.Effect, g.Scope, g.Budget, used, max(int64(0), g.Budget-used)})
 	}
+	body.Git = readSessionGit(ctx, body.Worktree, "git")
 	writeJSON(w, http.StatusOK, body)
 }

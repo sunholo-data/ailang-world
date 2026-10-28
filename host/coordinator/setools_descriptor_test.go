@@ -37,7 +37,8 @@ func applyPostBaselineRows(t *testing.T, base []map[string]any) {
 	}
 	for _, e := range base {
 		switch e["id"] {
-		case "ailang-read": // row 190: ranged reads
+		case "ailang-read": // rows 190 and 228: ranged reads and character cap
+			patch(e, "inputSchema", "max_chars", `{"type":"integer","minimum":1000,"maximum":200000,"description":"Character cap, default 40000; oversized reads refuse with suggested ranges"}`)
 			patch(e, "inputSchema", "offset", `{"type":"integer","minimum":1,"description":"First line, 1-based"}`)
 			patch(e, "inputSchema", "limit", `{"type":"integer","minimum":1,"description":"Line count, at most 2000"}`)
 			for _, p := range []string{"total_lines", "offset", "limit"} {
@@ -157,14 +158,16 @@ func TestSeToolsDescriptorCompaction(t *testing.T) {
 	// schema (offset/limit in, total_lines/offset/limit out), which takes the
 	// eight tools past 10500: new arguments need schema bytes. The prose bound is unchanged, so the
 	// range is described by the schema, not the description.
+	// Row 228 adds max_chars: 200 bytes for the new schema and guidance.
+	// The prose budget, immutable baseline and equivalence stay pinned.
 	floor := []map[string]any{}
 	for _, e := range candidate {
 		if !slices.Contains(descriptorAddedIDs, e["id"].(string)) {
 			floor = append(floor, e)
 		}
 	}
-	if size, prose := descriptorBytes(t, floor); size > 10600 || prose > 3800 {
-		t.Errorf("candidate byte budget: %d/%d exceeds 10600/3800", size, prose)
+	if size, prose := descriptorBytes(t, floor); size > 10800 || prose > 3800 {
+		t.Errorf("candidate byte budget: %d/%d exceeds 10800/3800", size, prose)
 	} else {
 		all, allProse := descriptorBytes(t, candidate)
 		t.Logf("canonical eight-tool bytes=%d; description UTF-8 bytes=%d (with added tools %d/%d)", size, prose, all, allProse)
@@ -200,10 +203,10 @@ func TestSeToolsDescriptorCompaction(t *testing.T) {
 
 func TestSeToolsDescriptorSourceEquality(t *testing.T) {
 	// Raw byte hashes independently banked from the same reviewed parent; no git or external binary required in CI.
-	// Moved since, each by its own row: read.ail by row 190 (ranged reads);
+	// Moved since, each by its own row: read.ail by rows 190/228 (ranges/cap);
 	// delete.ail is row 191a's new module.
 	hashes := map[string]string{
-		"packages/se-tools/se_tools/read.ail":            "00213aecddeb49c62d4aec429682cf114b58d53aadd057229ef1662e751b75cf",
+		"packages/se-tools/se_tools/read.ail":            "ab4111d34d1abed52264be06ee1cdcec1cf7b65193d206924bc98f8a6c42aba0",
 		"packages/se-tools/se_tools/delete.ail":          "084d90f35b3184af04d77893309d8453b2360dc1eb070947cb5b4d1fda47c834",
 		"packages/se-tools/se_tools/write.ail":           "2d90757c61274f6f172551f179b254178f3ccfcedd21ee7955ab2e47d364deda",
 		"packages/se-tools/se_tools/edit.ail":            "2d12856ab07f987c1d26c82b9320503e830817f27b625e7a80320b22ae32f286",

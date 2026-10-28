@@ -279,7 +279,7 @@ in that sense.
 | **M3** | §3.4 `workspace-git`, **after row 156**; its own judge (confinement-adjacent) | Go tests: every refused flag and revision, a hostile `.gitattributes` and `filter.*` config, the env pin; ACs 9–11 |
 | **M4** | the exit re-run, attended | AC12 |
 
-M0 and M1 need nothing upstream and no publish of new tools. M0 changes `ailang-read`, so it
+M0/M1 built in episode w228a (verification-manifest guard exception pending); they need nothing upstream and no publish of new tools. M0 changes `ailang-read`, so it
 is a se-tools publish. Together they close friction 35 and 36 and can land before M2a returns.
 
 ## §8 Acceptance criteria (no model call; an operator or CI can check each)

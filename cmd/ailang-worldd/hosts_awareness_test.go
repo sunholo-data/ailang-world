@@ -32,7 +32,7 @@ func TestWorldContextAndStatusline(t *testing.T) {
 	if code, out := hostsInitTest(t, dir, "--replace"); code != 0 {
 		t.Fatalf("%d: %s", code, out)
 	}
-	fake := "#!/bin/sh\n[ \"$FAKE_CODE\" = 0 ] || exit \"$FAKE_CODE\"\nprintf '%s\\n' " + shellQuote(`{"episode":"w223d","worktree":"/work/w223d","secondsLeft":3661,"addr":"http://127.0.0.1:47330","grants":[{"effect":"Workspace.Read","left":9,"budget":10}]}`) + "\n"
+	fake := "#!/bin/sh\n[ \"$FAKE_CODE\" = 0 ] || exit \"$FAKE_CODE\"\nprintf '%s\\n' " + shellQuote(`{"episode":"w223d","worktree":"/work/w223d","secondsLeft":3661,"git":{"base":"abcdef0123456789","base_date":"2026-10-28T09:00:00Z","base_subject":"base fixture","behind":3,"ahead":0,"dirty":false},"addr":"http://127.0.0.1:47330","grants":[{"effect":"Workspace.Read","left":9,"budget":10}]}`) + "\n"
 	if err := os.WriteFile(filepath.Join(bin, "ailang-worldd"), []byte(fake), 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -58,10 +58,31 @@ func TestWorldContextAndStatusline(t *testing.T) {
 		return string(out)
 	}
 	context := invoke("world-context", "0")
-	for _, want := range []string{"inside AILANG World (confined)", "Episode w223d · worktree /work/w223d · session 1h1m", worldToolMap, "Grants left: Workspace.Read 9/10", worldBoundary} {
+	for _, want := range []string{"inside AILANG World (confined)", "Base abcdef0 (2026-10-28T09:00:00Z, \"base fixture\") · dev is 3 commits ahead of it", "Episode w223d · worktree /work/w223d · session 1h1m", worldToolMap, "Grants left: Workspace.Read 9/10", worldBoundary} {
 		if !strings.Contains(context, want) {
 			t.Fatalf("missing %q: %s", want, context)
 		}
+	}
+	for _, tc := range []struct {
+		git  string
+		want string
+	}{
+		{`{"error":"local git metadata timed out (2s budget)"}`, "Base unknown: local git metadata timed out (2s budget)"},
+		{`{"base":"abcdef0123456789","base_date":"date","base_subject":"subject","behind":3,"dirty":true}`, "dev is 3 commits ahead of it · worktree has uncommitted changes"},
+		{"null", ""},
+	} {
+		body := `{"episode":"w223d","worktree":"/work/w223d","secondsLeft":3661,"addr":"http://127.0.0.1:47330","grants":[],"git":` + tc.git + `}`
+		script := "#!/bin/sh\nprintf '%s\n' " + shellQuote(body) + "\n"
+		if err := os.WriteFile(filepath.Join(bin, "ailang-worldd"), []byte(script), 0700); err != nil {
+			t.Fatal(err)
+		}
+		got := invoke("world-context", "0")
+		if (tc.want == "" && strings.Contains(got, "Base ")) || (tc.want != "" && !strings.Contains(got, tc.want)) || strings.Contains(got, "never-cache-this-token") {
+			t.Fatal(got)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(bin, "ailang-worldd"), []byte(fake), 0700); err != nil {
+		t.Fatal(err)
 	}
 	failure := invoke("world-context", "11")
 	if strings.Count(failure, "\n") != 1 || !strings.Contains(failure, "operator") {

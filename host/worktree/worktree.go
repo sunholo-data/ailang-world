@@ -131,6 +131,11 @@ func runGit(ctx context.Context, git string, args []string, stdout *capped) erro
 	cmd.Env = Env(os.Environ())
 	cmd.Stdin = nil
 	cmd.WaitDelay = waitDelay
+	if deadline, ok := runCtx.Deadline(); ok {
+		// Short callers (session metadata) must not spend another two seconds
+		// draining pipes inherited by a descendant after git is killed.
+		cmd.WaitDelay = min(waitDelay, max(time.Millisecond, time.Until(deadline)/20))
+	}
 	msg := &capped{max: maxOutput + 1}
 	cmd.Stdout, cmd.Stderr = msg, msg
 	if stdout != nil {
