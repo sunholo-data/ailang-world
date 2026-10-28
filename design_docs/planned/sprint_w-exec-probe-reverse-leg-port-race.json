@@ -1,0 +1,427 @@
+{
+  "id": "w-exec-probe-reverse-leg-port-race",
+  "iteration": 314,
+  "row": "controller-filed (red CI run 40699055042 attempt 1 on origin/dev 2769cff9; no queue row)",
+  "clause": "clause-3",
+  "authority": [
+    "design_docs/planned/w-exec-probe-reverse-leg-port-race.md r3 (quorum-cleared via the narrow-refinement carve-out, §13)",
+    "design_docs/planned/w-exec-probe-reverse-leg-port-race-sprint-plan.md"
+  ],
+  "estimate": "0.75 day",
+  "scope": "3 milestones, each independently green. Files: host/broker/exec_probe.go, host/broker/exec_probe_test.go, docs/QUICKSTART.md (§10 arm 6 prose), .github/workflows/ci.yml (step 8 tests= list). No .ail file. No git writes by the executor; the controller commits.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter314-arm6",
+    "branch": "sprint/world-iter314-arm6-reverse-leg",
+    "head": "e4dbac36",
+    "go_tree_equals": "2769cff9",
+    "sha256": {
+      "host/broker/exec_probe.go": "6eac0a128abcf0e5eff760804ffe6e2949233b90e6cf97f2c60058814a2f88f4",
+      "host/broker/exec_probe_test.go": "45e89f3bfe9901c714b466597ff3bd6d44a3a348e462acb0de76f34e55176d7b",
+      ".github/workflows/ci.yml": "f53248a62086776242cc2225ad0b5b7e5604b1374d1a497e5604e4c2809de9b1",
+      "docs/QUICKSTART.md": "7e67fc487f437a0b20e0068c6c617811350fdfd3ff63baf35f989b2fd10a85e7"
+    }
+  },
+  "environment": [
+    "cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter314-arm6",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "leave WORLD_EXEC_SRT_NODE_MODULES unset (real-srt tests SKIP locally; CI-only evidence)"
+  ],
+  "executor_constraints": [
+    "no git write operations (no commit/add/stash/checkout/restore/reset)",
+    "edit only the four scope files; the P0 scratch test file is created and deleted in the same step",
+    "never edit tools/launchd/*; never touch the main checkout /Users/voightkampff/dev/sunholo-data/ailang-world or ~/.ailang/state/mission-v1*",
+    "each mutation applied alone, observed red, reverted by cp from a snapshot and checked with shasum -a 256 -c",
+    "no t.Parallel(); do not set WORLD_EXEC_SRT_NODE_MODULES",
+    "copy -run regexes from the plan's code blocks, never from markdown table cells (\\| becomes a literal pipe)"
+  ],
+  "measured_baseline": {
+    "gofmt -l host/broker/": "empty, rc 0",
+    "go vet ./host/broker/": "rc 0",
+    "go test -run '^$' ./...": "rc 0, every line ok/no test files, 13.7 s",
+    "go test ./host/broker/ -count=1": "rc 0, ok 167.649s",
+    "go test ./host/daemon/ -count=1 -run 'TestExecStartup|TestExecSrt' -v (AILANG_BIN set)": "rc 0, PASS=2 (TestExecSrtReplayIsByteEqual, TestExecStartupRefusalTable) FAIL=0 SKIP=2 (TestExecSrtMCPEndToEnd, TestExecSrtMCPGrantAndBudget: real srt absent)",
+    "go test ./host/broker -run 'TestExecProbe' -count=1 -v": "rc 0, PASS=10 FAIL=0 SKIP=1 (TestExecProbeArm8: real srt), 2 host-GOOS subtest SKIPs",
+    "go test ./host/broker -run '^TestExecProbeReverseLeg|^TestExecProbeForeignListener' -count=1 -v": "rc 0, no tests to run (names absent at base)",
+    "T6 stand-in at base (scratch, deleted), -count=3": "chatty FAIL 3/3, silent FAIL 3/3 (both: 'reverse leg: the host reached the listener the child bound on 127.0.0.1:<port>'), control PASS 3/3",
+    "/bin/sh fixture proxy+listen run, node absent (scratch, deleted)": "rc 0, tokens [WORLD-PROBE-REFUSED ECONNREFUSED, WORLD-PROBE-BOUND]; $target = port:ms:nonce",
+    "node listen on a Go-held 127.0.0.1 port (darwin)": "REFUSED EADDRINUSE 2/2",
+    "actionlint .github/workflows/ci.yml": "rc 0, 0 findings",
+    "ruby -ryaml YAML.load_file ci.yml": "ok",
+    "VERIFY_GO_LEGS=plain ./scripts/verify_go.sh": "rc 1, wall 464 s: only FAIL host/verifygate TestMissionConfigDefaultFlowIntegration/{valid_ledger,invalid_ledger} 'default-flow fixture timed out … context deadline exceeded' (10 s fixture deadline) under load avg ~15; host/broker ok 294.430s. Re-run alone: rc 0, PASS 7.57 s. Pre-existing load flake, unrelated."
+  },
+  "base_expectations": {
+    "RED_at_base": [
+      "T6 TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (the CI flake reproduction)",
+      "T6 TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent"
+    ],
+    "GREEN_at_base_and_must_stay_green": [
+      "T6 .../control",
+      "TestExecProbePassThroughShimFailsEveryConfinementArm (P1, the positive control)",
+      "TestExecProbeMissingClientFailsTheRefusalArms",
+      "TestExecProbeNoopShimFailsArm1",
+      "TestExecProbeZeroShimFailsArm5",
+      "TestExecProbeFailingToolchainFailsArm7",
+      "TestExecProbeArm8Wired",
+      "TestExecProbeArm8FailsUnsandboxed",
+      "TestExecProbeArm8Absent",
+      "TestExecProbeProtectedSample",
+      "TestExecProbeArmNames",
+      "TestExecStartupRefusalTable",
+      "TestQuickstartSection10ProfilesLoad"
+    ],
+    "absent_at_base_cannot_compile": [
+      "T1 TestExecProbeReverseLegJudge",
+      "T2 TestExecProbeReverseLegChattyForeignHolderIsRetried",
+      "T3 TestExecProbeReverseLegExhaustionRefusesDistinctly",
+      "T4 TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+      "T5 TestExecProbeReverseLegNoTokenIsNotRetried",
+      "T7 TestExecProbeReverseLegSilentHolderRefusesSticky"
+    ],
+    "SKIP_locally_CI_only_evidence": [
+      "TestExecSrtStartupProbePasses",
+      "TestExecSrtProbeRefusesAPackageOnlySandbox",
+      "TestExecSrtMCPGrantAndBudget",
+      "TestExecSrtMCPEndToEnd",
+      "TestExecSrtReplayIsByteEqual subtests",
+      "TestExecStartupRefusalTable/probe-package-only",
+      "TestExecProbeArm8",
+      "handlers_exec_srt_test.go TestExecSrt* set"
+    ],
+    "ci_pass_guard": ".github/workflows/ci.yml:254-256 — for t in $tests; grep -q -- \"^--- PASS: $t \" or ::error::$t did not PASS on linux (SKIP?)"
+  },
+  "gates": [
+    {
+      "id": "G1",
+      "cmd": "gofmt -l host/broker/",
+      "pass": "empty"
+    },
+    {
+      "id": "G2",
+      "cmd": "go vet ./host/broker/",
+      "pass": "rc 0"
+    },
+    {
+      "id": "G3",
+      "cmd": "go test -run '^$' ./...",
+      "pass": "rc 0 (compile fence; go build does not compile _test.go)"
+    },
+    {
+      "id": "G4",
+      "cmd": "go test ./host/broker/ -count=1",
+      "pass": "rc 0"
+    },
+    {
+      "id": "G5",
+      "cmd": "go test ./host/daemon/ -count=1 -run 'TestExecStartup|TestExecSrt' -v",
+      "pass": "rc 0, PASS=2 FAIL=0 SKIP=2"
+    },
+    {
+      "id": "G6",
+      "cmd": "go test ./host/broker -run 'TestExecProbe|TestQuickstartSection10' -count=1 -v",
+      "pass": "rc 0, FAIL 0, only SKIP TestExecProbeArm8 (+2 GOOS subtests)"
+    },
+    {
+      "id": "G7",
+      "cmd": "go test -race ./host/broker -run 'TestExecProbe' -count=1",
+      "pass": "rc 0, 0 DATA RACE"
+    },
+    {
+      "id": "G8",
+      "cmd": "env -i HOME=$HOME PATH=/usr/bin:/bin WORLD_EXEC_SRT_NODE_MODULES=/nonexistent GOCACHE=$(go env GOCACHE) GOPATH=$(go env GOPATH) GOTOOLCHAIN=go1.26.6 /opt/homebrew/bin/go test ./host/broker -run '^(TestExecProbeReverseLegJudge|TestExecProbeReverseLegChattyForeignHolderIsRetried|TestExecProbeReverseLegExhaustionRefusesDistinctly|TestExecProbeReverseLegNoTokenIsNotRetried|TestExecProbeReverseLegSilentHolderRefusesSticky)$' -count=1 -v",
+      "pass": "rc 0, 5 top-level PASS, 0 SKIP",
+      "from": "M2"
+    },
+    {
+      "id": "G9",
+      "cmd": "perl -e 'alarm 900; exec @ARGV' go test ./host/broker -run '^TestExecProbeReverseLeg|^TestExecProbeForeignListener' -count=20 -v",
+      "pass": "each of 7 names PASS 20/20, 0 FAIL",
+      "from": "M3"
+    },
+    {
+      "id": "G10",
+      "cmd": "VERIFY_GO_LEGS=plain ./scripts/verify_go.sh",
+      "pass": "rc 0; if the ONLY failure is host/verifygate TestMissionConfigDefaultFlowIntegration timing out, re-run it alone — PASS alone = pre-existing load flake (red at base too), record and do not touch host/verifygate; any other failure is a stop",
+      "from": "M3"
+    },
+    {
+      "id": "G11",
+      "cmd": "actionlint .github/workflows/ci.yml && ruby -ryaml -e 'YAML.load_file(\".github/workflows/ci.yml\")'",
+      "pass": "rc 0",
+      "from": "M3"
+    },
+    {
+      "id": "G12",
+      "cmd": "step-8 emulation (plan §M3): go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v -run over the 28 tests= names",
+      "pass": "7 new names print ^--- PASS: <name> ",
+      "from": "M3"
+    },
+    {
+      "id": "G13",
+      "cmd": "git diff --name-only",
+      "pass": "exactly the 4 scope files; no .ail (else ./scripts/verify_ail.sh becomes a gate — stop)"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Production change: nonce listener, hello + three-way dial classification, pure judgeReverse, reverseLeg retry loop, picker seam; T1",
+      "est_loc": 210,
+      "files": [
+        "host/broker/exec_probe.go",
+        "host/broker/exec_probe_test.go"
+      ],
+      "edits": [
+        "execProbeScript :80 listen(port,ms,nonce) with createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\\n')}); :87 listen(q[0],q[1],q[2]); doc :59-63",
+        "ExecProbeConfig (:99-107) + reversePort func() (int, error); execProber (:300-305) + pickPort; probeExecProfile :357 passes cfg.reversePort",
+        "new consts execProbeReverseAttempts=3, execProbeHello, execProbeHelloWait=500ms; types reverseSeen, revVerdict; func judgeReverse; import io",
+        "new classifyReverseDial; pollLoopback(port int, want string) func() reverseSeen replaces :561-588 (dial before select kept)",
+        "new (pp *execProber) reverseLeg(ctx, proxyPort) (first execProbeRun, why string)",
+        "probe(): replace :452-465 with c, revWhy := pp.reverseLeg(ctx, net6.port) + sleep + acceptsC; :469 drop rev; :481-485 -> if revWhy != \"\" append"
+      ],
+      "tests": [
+        "TestExecProbeReverseLegJudge (14 rows)"
+      ],
+      "acceptance_commands": [
+        "G1",
+        "G2",
+        "G3",
+        "go test ./host/broker -run '^TestExecProbeReverseLegJudge$' -count=1 -v  => PASS",
+        "G6 => P1 still reports 'reverse leg: the host reached' (via the nonce)",
+        "G4",
+        "G5",
+        "G7"
+      ],
+      "mutations": [
+        {
+          "id": "M1",
+          "edit": "judgeReverse: case seen.child: -> case seen.child || seen.foreign || seen.silent:",
+          "must_fail_test": "TestExecProbeReverseLegJudge row bound-foreign"
+        },
+        {
+          "id": "M8",
+          "edit": "judgeReverse: case seen.foreign || tok == \"WORLD-PROBE-REFUSED EADDRINUSE\": -> case seen.foreign:",
+          "must_fail_test": "TestExecProbeReverseLegJudge row eaddrinuse-none"
+        },
+        {
+          "id": "M11",
+          "edit": "judgeReverse: insert case seen.foreign: return revInconclusive as the first case",
+          "must_fail_test": "TestExecProbeReverseLegJudge row bound-child-foreign"
+        },
+        {
+          "id": "M12",
+          "edit": "judgeReverse: no-token case returns revInconclusive",
+          "must_fail_test": "TestExecProbeReverseLegJudge row notoken-none"
+        },
+        {
+          "id": "M16",
+          "edit": "judgeReverse: return revSilent -> return revInconclusive",
+          "must_fail_test": "TestExecProbeReverseLegJudge row bound-silent"
+        },
+        {
+          "id": "M21",
+          "edit": "judgeReverse: move case seen.silent above case seen.child",
+          "must_fail_test": "TestExecProbeReverseLegJudge row bound-child-silent"
+        },
+        {
+          "id": "M9 (P1 half)",
+          "edit": "classifyReverseDial: string(buf) == want+\"\\n\" -> string(buf) == want+\"X\\n\"",
+          "must_fail_test": "TestExecProbePassThroughShimFailsEveryConfinementArm (lacks 'reverse leg: the host reached')"
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Node-free /bin/sh fixture tests: holders, counting picker, T2 T3 T5 T7",
+      "est_loc": 215,
+      "files": [
+        "host/broker/exec_probe_test.go"
+      ],
+      "edits": [
+        "imports bufio fmt io net sync sync/atomic",
+        "helpers revHolderKinds, revHolder, revPicker (fails past its step list), revFixture (arm8Fixture /bin/sh client), runReverseLeg, revReachedText"
+      ],
+      "tests": [
+        "TestExecProbeReverseLegChattyForeignHolderIsRetried ({linux-bound,darwin-eperm} x {http-400,forged-nonce,garbage,clean-close}; steps kind,free,free; why==\"\" && calls==2)",
+        "TestExecProbeReverseLegExhaustionRefusesDistinctly (chatty-every-time, child-eaddrinuse; prefix 'reverse leg: inconclusive after 3 attempts', no reached text, calls==3)",
+        "TestExecProbeReverseLegNoTokenIsNotRetried (silent-client: 'no token from the child's listener', calls 1; clean: \"\", calls 1)",
+        "TestExecProbeReverseLegSilentHolderRefusesSticky (silent-attempt-1 p0 calls 1; silent-after-chatty p1 calls 2; reset-holder p0 calls 1; silent text, no reached text)"
+      ],
+      "acceptance_commands": [
+        "G1",
+        "G2",
+        "G3",
+        "go test ./host/broker -run '^TestExecProbeReverseLeg(Judge|ChattyForeignHolderIsRetried|ExhaustionRefusesDistinctly|NoTokenIsNotRetried|SilentHolderRefusesSticky)$' -count=1 -v => 5 PASS, 15 subtest PASS, 0 SKIP",
+        "G8 => 5 PASS, 0 SKIP with node absent",
+        "G6",
+        "G4",
+        "G5",
+        "G7",
+        "go test ./host/broker -run '^TestExecProbeReverseLeg' -count=10 => rc 0"
+      ],
+      "mutations": [
+        {
+          "id": "M1",
+          "edit": "as M1",
+          "must_fail_test": "TestExecProbeReverseLegChattyForeignHolderIsRetried (all rows: reached text)"
+        },
+        {
+          "id": "M2",
+          "edit": "reverseLeg: break after tried = append(...)",
+          "must_fail_test": "TestExecProbeReverseLegChattyForeignHolderIsRetried (inconclusive after 1, calls 1)"
+        },
+        {
+          "id": "M3",
+          "edit": "classifyReverseDial: case string(buf) == want+\"\\n\": -> case len(buf) > 0:",
+          "must_fail_test": "TestExecProbeReverseLegChattyForeignHolderIsRetried rows http-400, forged-nonce, garbage"
+        },
+        {
+          "id": "M4",
+          "edit": "classifyReverseDial: -> case strings.HasPrefix(string(buf), \"WORLD-PROBE-NONCE \"):",
+          "must_fail_test": "TestExecProbeReverseLegChattyForeignHolderIsRetried rows *-forged-nonce"
+        },
+        {
+          "id": "M5",
+          "edit": "reverseLeg final return -> return first, \"\"",
+          "must_fail_test": "TestExecProbeReverseLegExhaustionRefusesDistinctly"
+        },
+        {
+          "id": "M6",
+          "edit": "for attempt := 1; ; attempt++ {",
+          "must_fail_test": "TestExecProbeReverseLegExhaustionRefusesDistinctly (calls 4, no free port)"
+        },
+        {
+          "id": "M7",
+          "edit": "final format -> \"reverse leg: inconclusive after %d attempts: the host reached the listener the child bound (%s)\"",
+          "must_fail_test": "TestExecProbeReverseLegExhaustionRefusesDistinctly (!Contains reached text)"
+        },
+        {
+          "id": "M8",
+          "edit": "as M1",
+          "must_fail_test": "TestExecProbeReverseLegExhaustionRefusesDistinctly row child-eaddrinuse"
+        },
+        {
+          "id": "M12",
+          "edit": "as M1",
+          "must_fail_test": "TestExecProbeReverseLegNoTokenIsNotRetried row silent-client (calls 3)"
+        },
+        {
+          "id": "M13",
+          "edit": "reverseLeg: case revPass: continue",
+          "must_fail_test": "TestExecProbeReverseLegNoTokenIsNotRetried row clean (calls 3)"
+        },
+        {
+          "id": "M15",
+          "edit": "classifyReverseDial: replace the hello write with var werr error",
+          "must_fail_test": "TestExecProbeReverseLegChattyForeignHolderIsRetried rows *-http-400 (SILENT)"
+        },
+        {
+          "id": "M16",
+          "edit": "as M1",
+          "must_fail_test": "TestExecProbeReverseLegSilentHolderRefusesSticky row silent-attempt-1 (calls 2)"
+        },
+        {
+          "id": "M17",
+          "edit": "reverseLeg: case revSilent: continue",
+          "must_fail_test": "TestExecProbeReverseLegSilentHolderRefusesSticky row silent-after-chatty"
+        },
+        {
+          "id": "M18",
+          "edit": "classifyReverseDial: delete the werr == nil && EOF -> foreign case",
+          "must_fail_test": "TestExecProbeReverseLegChattyForeignHolderIsRetried rows *-clean-close"
+        },
+        {
+          "id": "M19",
+          "edit": "classifyReverseDial: that case -> case !errors.Is(rerr, os.ErrDeadlineExceeded):",
+          "must_fail_test": "TestExecProbeReverseLegSilentHolderRefusesSticky row reset-holder"
+        },
+        {
+          "id": "M20",
+          "edit": "revSilent format -> reached text",
+          "must_fail_test": "TestExecProbeReverseLegSilentHolderRefusesSticky"
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Node tests T4 + T6 (flake reproduction), CI step 8 tests= line, QUICKSTART §10 arm 6 prose, full AC-MUT pass",
+      "est_loc": 100,
+      "files": [
+        "host/broker/exec_probe_test.go",
+        ".github/workflows/ci.yml",
+        "docs/QUICKSTART.md"
+      ],
+      "edits": [
+        "T4 via newProbeFixture(passthrough) + f.arm8Prober (real node client) + revPicker(http-400,free,free); want reached text on port index 1, calls 2",
+        "T6 via ProbeExecProfiles with revStandIn (fakes every listen run; holder only with proxy); rows chatty/silent/control; import strconv",
+        "ci.yml: insert one tests=\"$tests <7 names>\" line after :247",
+        "QUICKSTART.md: 5 prose lines after :1148 inside list item 6"
+      ],
+      "tests": [
+        "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+        "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (chatty RED at base)"
+      ],
+      "acceptance_commands": [
+        "G1",
+        "G2",
+        "G3",
+        "go test ./host/broker -run '^(TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse)$' -count=1 -v => 2 PASS + 3 subtests, 0 SKIP",
+        "G4",
+        "G5",
+        "G6",
+        "G7",
+        "G8",
+        "G9",
+        "G10",
+        "G11",
+        "G12",
+        "G13"
+      ],
+      "mutations": [
+        {
+          "id": "M1",
+          "edit": "as M1",
+          "must_fail_test": "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty"
+        },
+        {
+          "id": "M9",
+          "edit": "as M1",
+          "must_fail_test": "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (+ P1)"
+        },
+        {
+          "id": "M10",
+          "edit": "var port int before loop; inside: var err error; if attempt == 1 { port, err = pick() }",
+          "must_fail_test": "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (calls 1, inconclusive text)"
+        },
+        {
+          "id": "M14",
+          "edit": "probe(): replace the reverseLeg call with the legacy single-attempt block (plan §M3)",
+          "must_fail_test": "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty"
+        },
+        {
+          "id": "M15",
+          "edit": "as M2",
+          "must_fail_test": "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty"
+        },
+        {
+          "id": "M20",
+          "edit": "as M2",
+          "must_fail_test": "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent"
+        }
+      ],
+      "closing": "AC-MUT in full: each of M1–M21 alone vs go test ./host/broker -run '^TestExecProbe' -count=1 -v; every design-named killer is in the red set; record the full red set; the unmutated control red set is empty"
+    }
+  ],
+  "mutation_revert": "Before each mutant: cp host/broker/exec_probe.go /tmp/w314-mut/exec_probe.go.snap; shasum -a 256 host/broker/exec_probe.go host/broker/exec_probe_test.go > /tmp/w314-mut/pre.sha. After: cp the snap back; shasum -a 256 -c /tmp/w314-mut/pre.sha must say OK for both. A mutant that fails to compile is a protocol error, never a kill.",
+  "design_discrepancies": [
+    "D1 T6 stand-in: design says 'passes every other run through'; attempts 2/3 (listen without proxy) must be faked too, else the unsandboxed child answers its nonce and chatty refuses REACHED after the fix. Resolved in plan.",
+    "D2 AC-MUT 'reds exactly its named killer' is unachievable (M1, M15 red T3/T4/T7 too). Resolved: named killer in red set; full set recorded.",
+    "D3 a reset that lands before the hello write: Linux reports it on the write and the read then returns EOF (by reading, not measured). Resolved: clean EOF requires a successful hello write.",
+    "D4 a partial nonce prefix ending at the deadline is 'foreign' under §4.2 vs §4.3's 'child or silent' claim. Not adopted; flagged.",
+    "D5 picker/nonce failure on attempt 2/3 unspecified. Resolved: refuse 'reverse leg: no free port'.",
+    "D6 exhaustion count = attempts made (M2 text 'inconclusive after 1').",
+    "D7 cosmetic: AC-CI cites ci.yml:254-257; guard loop is :254-256.",
+    "D8 sizing: design +95/-20 prod, +260 test; plan estimates about +125/-30 and +360, hence 3 milestones."
+  ],
+  "out_of_scope": "R2 cross-profile reach on a live counted listener (successor w-exec-probe-cross-profile-poll); narrowing refusal codes; raw/proxy leg accept counting; any srt change; the step-8 guard's top-level-only PASS check (TestExecSrtReplayIsByteEqual parent PASS with skipped subtests)."
+}
