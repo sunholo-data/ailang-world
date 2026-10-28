@@ -1,0 +1,12 @@
+2026-10-28T20:55:14.4441449Z ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	53.547s
+2026-10-28T20:55:14.4451392Z ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	36.680s
+2026-10-28T20:55:14.4452364Z ok  	github.com/sunholo-data/ailang-world/host/agui	7.040s
+2026-10-28T20:55:14.4453208Z ok  	github.com/sunholo-data/ailang-world/host/archive	3.769s
+2026-10-28T20:55:14.4453954Z ok  	github.com/sunholo-data/ailang-world/host/authority	0.192s
+2026-10-28T20:55:14.4454705Z ok  	github.com/sunholo-data/ailang-world/host/boundary	3.960s
+2026-10-28T20:57:41.7022952Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (1.20s)
+2026-10-28T20:57:41.7023750Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.13s)
+2026-10-28T20:57:41.7024668Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 2.149213ms
+2026-10-28T20:57:41.7025788Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-28T20:57:41.7026305Z FAIL
+2026-10-28T20:57:41.7026637Z FAIL	github.com/sunholo-data/ailang-world/host/broker	193.640s
