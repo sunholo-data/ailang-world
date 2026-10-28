@@ -1,0 +1,11 @@
+# V74 (controller, iteration 315): named mutations for the r5 carve-out fixes (World guardrail: each carve-out fix acquires its own acceptance criterion and mutation)
+## M-r5-pin: tamper one byte of the p0check source -> sha256 no longer equals the §4.4 pin (control step must BLOCK)
+pin  0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c
+got  7077dcb5f1e7cd3a2cc52c2d94e44939240f0ea5a7dc79afbddac3cf36501aab
+## M-r5-control: p0check with (a3) neutered; the capture-day control pair must show the mismatch (refuse arm ACCEPTed)
+accept                                 r3 ACCEPT  r2 ACCEPT
+refuse                                 r3 ACCEPT  r2 REFUSE
+TOTAL candidates=2 r3-accept=2 r2-accept=1
+## M-r5-run: phonecheck with the pre-fix span test (old build) vs the run test on the judge's scattered-pixel arm
+span (pre-fix):  r3 ACCEPT
+run (r5):        r3 REFUSE
