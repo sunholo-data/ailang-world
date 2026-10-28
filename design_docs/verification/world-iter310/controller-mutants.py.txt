@@ -1,0 +1,43 @@
+import subprocess, sys, shutil, os, hashlib
+WT="/Users/voightkampff/dev/sunholo-data/.wt-world-iter310-row150-m7c3"
+F=os.path.join(WT,"scripts/marketingcheck/main.go")
+orig=open(F).read(); h0=hashlib.sha256(orig.encode()).hexdigest()
+M=[
+ ("M7c-inventory(plan)", '\t\t\treturn refuse("inventory-empty", []string{"before", "after"}[i], "head or entries empty")\n\t\t}\n\t}\n',
+  '\t\t\treturn refuse("inventory-empty", []string{"before", "after"}[i], "head or entries empty")\n\t\t}\n\t}\n\tif true {\n\t\treturn nil\n\t}\n'),
+ ("M7c3-paging(plan)", '"/v1/log?from=%d&limit=500", from))', '"/v1/log?from=%d&limit=1", from))'),
+ ("head-not-compared", 'if !bytes.Equal(before.Head, after.Head) {', 'if false && !bytes.Equal(before.Head, after.Head) {'),
+ ("entries-count-only", 'if entry != after.Entries[i] {', 'if false && entry != after.Entries[i] {'),
+ ("objects-len-ignored", 'if len(before.Objects) != len(objects) {', 'if false && len(before.Objects) != len(objects) {'),
+ ("objects-hash-ignored", 'if hash, ok := objects[object.Ref]; !ok || hash != object.SHA256 {', 'if hash, ok := objects[object.Ref]; false && (!ok || hash != object.SHA256) {'),
+ ("non200-ignored", 'if resp.StatusCode != http.StatusOK {', 'if false && resp.StatusCode != http.StatusOK {'),
+ ("empty-check-removed", 'len(head) == 0 || bytes.Equal(head, []byte("null")) || bytes.Equal(head, []byte(`""`)) || len(inv.Entries) == 0 {', 'false && (len(head) == 0 || bytes.Equal(head, []byte("null")) || bytes.Equal(head, []byte(`""`)) || len(inv.Entries) == 0) {'),
+ ("refusal-exit-0", '\t\tfmt.Fprintf(os.Stderr, "marketingcheck: %s\\n", err)\n\t\treturn 1\n', '\t\tfmt.Fprintf(os.Stderr, "marketingcheck: %s\\n", err)\n\t\treturn 0\n'),
+ ("no-objects-read", 'for ref := range refs {', 'for ref := range map[string]bool{} { _ = refs'),
+ ("head-text-fallback-dropped", 'if !json.Valid(raw) {', 'if false && !json.Valid(raw) {'),
+ ("paging-single-page", '\t\tinv.Entries = append(inv.Entries, page.Items...)\n\t\tfrom += len(page.Items)\n', '\t\tinv.Entries = append(inv.Entries, page.Items...)\n\t\tfrom += len(page.Items)\n\t\tbreak\n'),
+]
+sel=sys.argv[1:] 
+M.append(("M7c3-paging-full(plan)", [('"/v1/log?from=%d&limit=500", from))','"/v1/log?from=%d&limit=1", from))'),('\t\tinv.Entries = append(inv.Entries, page.Items...)\n\t\tfrom += len(page.Items)\n','\t\tinv.Entries = append(inv.Entries, page.Items...)\n\t\tfrom += len(page.Items)\n\t\tbreak\n')], None))
+for name,a,b in M:
+    if sel and name not in sel: continue
+    pairs = a if isinstance(a,list) else [(a,b)]
+    txt=orig; bad=False
+    for x,y in pairs:
+        n=txt.count(x)
+        if n!=1: print(f"{name}: ANCHOR count={n} — INSTRUMENT FAILURE"); bad=True; break
+        txt=txt.replace(x,y)
+    if bad: continue
+    open(F,"w").write(txt)
+    v=subprocess.run(["go","vet","./scripts/marketingcheck"],cwd=WT,capture_output=True,text=True)
+    if v.returncode!=0:
+        print(f"{name}: MUTANT DOES NOT BUILD/VET: {v.stderr.strip()[:200]}"); open(F,"w").write(orig); continue
+    r=subprocess.run(["go","test","-run","^TestMarketingCaptureInventoryMutation$","./host/daemon","-count=1","-timeout","180s","-v"],cwd=WT,capture_output=True,text=True,env={**os.environ,"AILANG_BIN":os.path.expanduser("~/.pinned-ailang/ailang")})
+    u=subprocess.run(["go","test","-run","^TestMarketingInventory","./scripts/marketingcheck","-count=1","-timeout","120s","-v"],cwd=WT,capture_output=True,text=True)
+    ufails=[l.strip() for l in u.stdout.splitlines() if "inventory_test.go" in l][:3]
+    print(f"   unit: rc={u.returncode} {'KILLED' if u.returncode!=0 else 'SURVIVED'} :: {' | '.join(ufails)[:300]}")
+    fails=[l.strip() for l in r.stdout.splitlines() if "marketing_inventory_test.go" in l and ("must" in l or "invalidates" in l or "inventory" in l and "REST" not in l)]
+    print(f"{name}: rc={r.returncode} {'KILLED' if r.returncode!=0 else 'SURVIVED'} :: {' | '.join(fails)[:400]}")
+    open(F,"w").write(orig)
+assert hashlib.sha256(open(F).read().encode()).hexdigest()==h0, "RESTORE FAILED"
+print("restored sha ok", h0[:12])

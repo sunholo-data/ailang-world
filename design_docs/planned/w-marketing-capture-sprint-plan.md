@@ -1988,7 +1988,7 @@ Executor notes:
 
 ## M7c3 — Frozen public inventory guard (real store, genuine extra commit)
 
-Design M7 (C8/C11); 25 minutes; dependency: M7c2b; status **pending**.
+Design M7 (C8/C11); 25 minutes; dependency: M7c2b; status **BUILT (iteration 310, PR #393)**. The executor stored the plain-text `/v1/head` body as a JSON string (the daemon serves `text/plain`) and added `inventory-unreadable`/`inventory-json` codes for I/O; the controller added `scripts/marketingcheck/inventory_test.go` (test-only: per-branch compare and paging/404 read tests) to close 8 branch survivors of the end-to-end test.
 
 Exact executor files:
 
