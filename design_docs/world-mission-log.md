@@ -2739,6 +2739,12 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Result:** the amendment is BUILT on `sprint/world-iter315-row150-c8-amend`. Design commits are `c36a4306` (r3–r5), `0e975c53` (judge-fix round) and `e5cd4673` (V74). It is LANDED only after merge-commit CI (Gate 3b).
 
+**Gate 3b:**
+- PR #404's head `d4df8a15` was polled SHA-pinned (bounded 1800 s; the verdict file names the SHA): **RED**. `go host build + test gate` failed one subtest, `TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder` (`Why = "", picker calls 1; want the sticky silent refusal`). That is one of row 229's tests, landed in iteration 314. Every other package passed, and `ailang-code verify gate` and the race gate are green.
+- **Attribution:** this diff is `design_docs/` only (0 files outside), and the same test was green at `d7bba842` and `09ff2821`. So the failure is intermittent and inherited, not from this PR. Instance 1.
+- **Not ignorable:** the leg PASSED where the design says a reset must refuse. That could be a false pass of the fail-closed probe, filed as **row 232** with the excerpt banked.
+- Actions: re-ran the failed job on the identical tree (attempt 2), and pushed the record commits (new head; a full CI run). Both are polled before merge; the outcome is reported on #366.
+
 **Routing evidence:** base=09ff28215176d5c09b36ecffba85ee04660ba238@2026-10-28T20:01:37Z (Gate 1 record; the Gate 3 `snap` was the same SHA). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION` empty; `MISSION_ROUTING_NOTE` empty.
 - Controller `claude:claude-opus-5-5` (tok: not reported).
 - Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (same weights, per the operator's standing request; iteration-228/314 precedent). The rotation file holds `claude:claude-opus-5-5`, unchanged because that is the lane that ran. 1 doc, 2 runs (author + the protocol-mandated revision), within the one-doc diet. Tokens 196,359 + 261,559.
@@ -2757,9 +2763,11 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Carried:**
 - Row 231: commit the checkers; the free-gap tolerances; compounding drift; identity accept controls; P0 item (1) command; V65 isolation; (ii) stand-in; the split-thumb fragility.
 - gpt6-1-sol absent from the quorum on OpenAI 429 for the third iteration running (314, 315 ×2). A capacity condition, not a decision.
+- Row 232: row 229's `reset-holder` arm passed the reverse leg on Linux CI (instance 1; possibly a false pass).
 - `.wt-world-iter306-r0` residue.
 
 **Retro:**
+- **A failed heredoc does not stop the next line.** The record script aborted on an ambiguous anchor, and the `git add/commit/push` on the following lines still ran, pushing a partial record commit (`0db9358f`, row 232 only). The memory rule "push only after checked exit codes" was known and still missed, because the chain broke at a heredoc boundary. Gate the push on the script's rc. Instance 1 for World (memory: instances 1–2 on 2026-10-16).
 - **A checker banked as `.txt` gets reviewed as prose, but it runs as code.** The quorum read the rule text, and only a judge told to "read the code against the prose clause by clause" found that the implementation tested a span where the prose (and the code's own header comment) said a run. Instance 1. The directive line is what caught it.
 - **Verdict-in-text instruments exit 0 on REFUSE.** Both checkers print ACCEPT/REFUSE and exit 0 either way, so any future wrapper keyed on `$?` would read every capture as green. This is now stated in §4.4, and row 231's committed form should exit non-zero. Instance 1.
 - **`timeout` is not a macOS command.** A bounded-wait idiom borrowed from Linux failed rc 127 and reported nothing. Use the `date +%s` loop the skill prescribes. Instance 1.
@@ -2767,4 +2775,4 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - Harness share 0. Bar-moving landings: 313, 314 and 315 moved no clause, but every clause is MET with no routable critical-path row, so this is not DRIFT. No skill edit.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release row). Row 150: 22/23 executor milestones built (M8b left); the C8′/P0 amendment is written; P0–P3 and the attended A1 remain.
-**Next:** row 150 M8b, then P0–P3 (r5 predicates and capture-day controls) and the attended A1; then 151. Rows 230 and 231 sit below every release row.
+**Next:** row 150 M8b, then P0–P3 (r5 predicates and capture-day controls) and the attended A1; then 151. Rows 230 and 231 sit below every release row. Row 232 (the reset-holder false pass) takes precedence if it reds dev at Gate 1.
