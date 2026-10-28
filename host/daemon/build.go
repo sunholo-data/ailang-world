@@ -83,7 +83,7 @@ func buildIdentityOf(info *debug.BuildInfo, exeDigest string) BuildIdentity {
 	return b
 }
 
-// currentBuild is computed once per process: the executable is hashed once.
+// currentBuild is computed once per process. Run eagerly freezes it before listening.
 var currentBuild = sync.OnceValue(func() BuildIdentity {
 	info, _ := debug.ReadBuildInfo()
 	return buildIdentityOf(info, executableDigest())
@@ -97,6 +97,10 @@ func executableDigest() string {
 	if err != nil {
 		return ""
 	}
+	return executableDigestAt(path)
+}
+
+func executableDigestAt(path string) string {
 	f, err := os.Open(path)
 	if err != nil {
 		return ""

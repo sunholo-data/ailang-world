@@ -20,6 +20,23 @@ from the binary, that is a defect.*
 > docs and in `serve --help` means the subsection. The heading texts are bound by tests, so
 > they keep their numbers.
 
+## Run World as a service (preview)
+
+On macOS, run `ailang-worldd setup` first, then
+`ailang-worldd service install` yourself at a terminal. Review the complete
+plist and paths, then type `y`. The home service uses `127.0.0.1:7644` and
+the existing home store layout. Add the absolute `--exec-sandbox`,
+`--exec-node`, `--exec-profiles-dir`, `--examples-dir` and `--surface-index`
+paths you need to the install command; `service install --help` lists the flags.
+
+Use `~/.ailang-world/bin/ailang-worldd service status --json` to inspect it.
+`service stop` is attended; stop before publishing transitions as described
+in §9, then use `service start`. Start rotates logs over 10 MiB and asks for
+approval if the plist changed. `service uninstall` is attended and keeps
+the binary, databases, sessions, worktrees and logs. `version --json` reports
+the local binary and pins without contacting a daemon. Upgrade, Linux service
+support and changing existing launchers' addresses come in later milestones.
+
 ## Run your agents through World
 
 World launchers now tell Claude Code, Codex and pi their episode, worktree, session
