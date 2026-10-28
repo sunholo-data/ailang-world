@@ -1,9 +1,11 @@
 module se_tools/read
 
 -- ailang-read (queue row 134, design_docs/planned/w-software-engineering-domain.md
--- §4.2): read one file of the episode worktree. Args {path, offset?, limit?}.
--- Effect Workspace.Read; payload = the policy-tool `read` request
--- {op, path, offset?, limit?}. Row 190: offset (1-based first line) and limit
+-- §4.2): read one file of the episode worktree. Args {path, offset?, limit?, max_chars?}.
+-- Effect Workspace.Read; payload = {op, path, offset?, limit?, max_chars?}.
+-- Row 228: max_chars (1000..200000, default 40000) is consumed by the broker,
+-- which refuses oversized content with ranges, never truncates.
+-- Row 190: offset (1-based first line) and limit
 -- (line count) go through only when given; v0.54.15's policy-tool then
 -- answers with total_lines, offset and limit too, and caps limit at 2000
 -- itself (ailang#1872), so the plan leaves the cap upstream.
@@ -77,18 +79,20 @@ tests [
 -- typed refusal plan, never silently dropped. (v0.54.15 refuses unknown keys
 -- itself; the plan still refuses first, so the refusal names the tool.)
 export func argKeyAllowed(k: string) -> bool ! {}
-ensures { result == (k == "path" || k == "offset" || k == "limit") }
+ensures { result == (k == "path" || k == "offset" || k == "limit" || k == "max_chars") }
 tests [
   ("path", true),
   ("offset", true),
   ("limit", true),
+  ("max_chars", true),
+  ("MAX_CHARS", false),
   ("Path", false),
   ("Offset", false),
   ("content", false),
   ("", false)
 ]
 {
-  k == "path" || k == "offset" || k == "limit"
+  k == "path" || k == "offset" || k == "limit" || k == "max_chars"
 }
 
 -- Row 190: a range value the plan admits. offset is 1-based and limit counts
@@ -199,6 +203,19 @@ func optionalLine(args: Json, k: string) -> Result[Option[int], string] =
     Some(_) => Err("argument \"${k}\" must be an integer")
   }
 
+export func maxCharsOk(n: int) -> bool ! {}
+ensures { result == (n >= 1000 && n <= 200000) }
+tests [(999, false), (1000, true), (40000, true), (200000, true), (200001, false)]
+{ n >= 1000 && n <= 200000 }
+
+func optionalMaxChars(args: Json) -> Result[Option[int], string] =
+  match optionalLine(args, "max_chars") {
+    Err(why) => Err(why),
+    Ok(None) => Ok(None),
+    Ok(Some(n)) => if maxCharsOk(n) then Ok(Some(n))
+      else Err("argument \"max_chars\" must be an integer from 1000 to 200000")
+  }
+
 func optionalField(k: string, v: Option[int], rest: [{key: string, value: Json}]) -> [{key: string, value: Json}] =
   match v {
     Some(n) => kv(k, jint(n)) :: rest,
@@ -215,9 +232,13 @@ func planTool(args: Json) -> string =
         Err(why) => refusal(why),
         Ok(offset) => match optionalLine(args, "limit") {
           Err(why) => refusal(why),
-          Ok(limit) => effectPlan("Workspace.Read",
-            jo(kv("op", js("read")) :: kv("path", js(path)) ::
-              optionalField("offset", offset, optionalField("limit", limit, []))), false)
+          Ok(limit) => match optionalMaxChars(args) {
+            Err(why) => refusal(why),
+            Ok(maxChars) => effectPlan("Workspace.Read",
+              jo(kv("op", js("read")) :: kv("path", js(path)) ::
+                optionalField("offset", offset, optionalField("limit", limit,
+                  optionalField("max_chars", maxChars, [])))), false)
+          }
         }
       }
   }
@@ -228,7 +249,7 @@ func planPhase(doc: Json) -> string =
     Some(args) => match asObject(args) {
       None => refusal("arguments must be a JSON object"),
       Some(es) => match firstUnknownArg(es) {
-        Some(k) => refusal("unknown argument \"${k}\"; ailang-read admits only: path, offset, limit"),
+        Some(k) => refusal("unknown argument \"${k}\"; ailang-read admits only: path, offset, limit, max_chars"),
         None => planTool(args)
       }
     }
@@ -262,7 +283,7 @@ tests [
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"docs/big.md\",\"offset\":2.0}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Read\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"read\",\"path\":\"docs/big.md\",\"offset\":2}}],\"finish\":false,\"result\":null}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"lines\":5}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"lines\\\"; ailang-read admits only: path, offset, limit\"}}"),
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"lines\\\"; ailang-read admits only: path, offset, limit, max_chars\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"offset\":1.5}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"offset\\\" must be an integer\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"src/main.ail\",\"limit\":\"5\"}}",

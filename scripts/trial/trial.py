@@ -205,6 +205,13 @@ def world_context(addr: str, token: str, timeout: float = 5.0) -> str:
     if isinstance(me, dict) and me.get('episode'):
         left = int(me.get('secondsLeft') or 0)
         lines.append(f"Episode {me['episode']} · worktree {me.get('worktree', '?')} · session {left // 3600}h{left // 60 % 60}m left · daemon {me.get('addr', base)}")
+        git = me.get('git')
+        if isinstance(git, dict):
+            if git.get('error'):
+                lines.append(f"Base unknown: {git['error']}")
+            else:
+                lines.append(f"Base {git.get('base', '')[:7]} ({git.get('base_date', '')}, \"{git.get('base_subject', '')}\") · dev is {git.get('behind', 0)} commits ahead of it"
+                             + (' · worktree has uncommitted changes' if git.get('dirty') else ''))
     out = '\n'.join(lines) + '\n' + WORLD_TOOL_MAP
     if isinstance(me, dict) and me.get('grants'):
         out += 'Grants left: ' + ', '.join(f"{g.get('effect')} {g.get('left')}/{g.get('budget')}" for g in me['grants']) + '\n'

@@ -448,7 +448,7 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 	arms := []struct {
 		name, old, replacement, want string
 	}{
-		{"contract", "ensures { result == (k == \"path\" || k == \"offset\" || k == \"limit\") }\n", "",
+		{"contract", "ensures { result == (k == \"path\" || k == \"offset\" || k == \"limit\" || k == \"max_chars\") }\n", "",
 			"argKeyAllowed) MISSING from verify.results[]"},
 		// Anchored on main_test_1's own payload: since row 190 three more
 		// admitted plans (the ranged reads) carry the same cost bytes.

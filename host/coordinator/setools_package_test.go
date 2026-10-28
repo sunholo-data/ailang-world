@@ -199,6 +199,7 @@ func TestSeToolsReadRangePlansAdmittedByPlanLaw(t *testing.T) {
 	rig := newSeToolsRig(t)
 	e := manifest["ailang-read"]
 	for args, payload := range map[string]string{
+		`{"path":"a","max_chars":5000}`:                   `{"op":"read","path":"a","max_chars":5000}`,
 		`{"path":"docs/big.md","offset":201,"limit":100}`: `{"op":"read","path":"docs/big.md","offset":201,"limit":100}`,
 		`{"path":"docs/big.md","limit":2000}`:             `{"op":"read","path":"docs/big.md","limit":2000}`,
 		`{"path":"docs/big.md","offset":3.0}`:             `{"op":"read","path":"docs/big.md","offset":3}`,
@@ -212,12 +213,15 @@ func TestSeToolsReadRangePlansAdmittedByPlanLaw(t *testing.T) {
 		}
 	}
 	for args, why := range map[string]string{
-		`{"path":"a.txt","offset":0}`:    `argument \"offset\" must be an integer >= 1 (got 0)`,
-		`{"path":"a.txt","limit":-3}`:    `argument \"limit\" must be an integer >= 1 (got -3)`,
-		`{"path":"a.txt","limit":2.5}`:   `argument \"limit\" must be an integer`,
-		`{"path":"a.txt","offset":"10"}`: `argument \"offset\" must be an integer`,
-		`{"path":"a.txt","offset":null}`: `argument \"offset\" must be an integer`,
-		`{"path":"-a.txt","offset":-1}`:  `refused: it must be relative`,
+		`{"path":"a","max_chars":999}`:    `argument \"max_chars\" must be an integer from 1000 to 200000`,
+		`{"path":"a","max_chars":200001}`: `argument \"max_chars\" must be an integer from 1000 to 200000`,
+		`{"path":"a","max_chars":5000.5}`: `argument \"max_chars\" must be an integer`,
+		`{"path":"a.txt","offset":0}`:     `argument \"offset\" must be an integer >= 1 (got 0)`,
+		`{"path":"a.txt","limit":-3}`:     `argument \"limit\" must be an integer >= 1 (got -3)`,
+		`{"path":"a.txt","limit":2.5}`:    `argument \"limit\" must be an integer`,
+		`{"path":"a.txt","offset":"10"}`:  `argument \"offset\" must be an integer`,
+		`{"path":"a.txt","offset":null}`:  `argument \"offset\" must be an integer`,
+		`{"path":"-a.txt","offset":-1}`:   `refused: it must be relative`,
 	} {
 		plan, err := parsePlan(rig.run(e, planInput(args)), e.declared())
 		if err != nil {

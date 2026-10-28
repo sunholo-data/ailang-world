@@ -79,6 +79,9 @@ func runWhoami(addr string, args []string, stdout, stderr io.Writer) int {
 		_ = json.NewEncoder(stdout).Encode(self)
 	} else {
 		fmt.Fprintf(stdout, "World · %s\nworktree: %s\nsession: %dh%dm left\ndaemon: %s\nsurface: %s\n", self.Episode, self.Worktree, self.SecondsLeft/3600, self.SecondsLeft/60%60, self.Addr, self.Surface)
+		if line := self.Git.BaseLine(); line != "" {
+			fmt.Fprintln(stdout, line)
+		}
 		for _, g := range self.Grants {
 			fmt.Fprintf(stdout, "  %s %s: %d/%d left\n", g.Effect, g.Scope, g.Left, g.Budget)
 		}

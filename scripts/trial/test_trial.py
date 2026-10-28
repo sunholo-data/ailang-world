@@ -263,11 +263,14 @@ class Argv(unittest.TestCase):
     def test_world_context_from_session_self_and_without_it(self):
         import http.server, threading
         token = 'a' * 64
+        git = {'branch': 'world/ep9', 'head': 'abcdef0123', 'base': 'abcdef0123',
+               'base_subject': 'base fixture', 'base_date': '2026-10-28T09:00:00Z',
+               'ref': 'dev', 'ref_head': 'fedcba9876', 'behind': 3, 'ahead': 0, 'dirty': False}
         class H(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 ok = self.path == '/v1/session/self' and self.headers.get('Authorization') == 'Bearer ' + token
                 body = json.dumps({'episode': 'ep9', 'worktree': '/ws/ep9', 'secondsLeft': 3661, 'addr': 'http://x',
-                                   'grants': [{'effect': 'Workspace.Write', 'left': 9, 'budget': 10}]}).encode()
+                                   'grants': [{'effect': 'Workspace.Write', 'left': 9, 'budget': 10}], 'git': git}).encode()
                 self.send_response(200 if ok else 401); self.end_headers(); self.wfile.write(body if ok else b'{}')
             def log_message(self, *a): pass
         srv = http.server.HTTPServer(('127.0.0.1', 0), H)
@@ -279,6 +282,12 @@ class Argv(unittest.TestCase):
             self.assertIn('Grants left: Workspace.Write 9/10', ctx)
             self.assertIn(trial.WORLD_HOST_SANDBOX, ctx)
             self.assertNotIn(token, ctx)
+            self.assertIn('Base abcdef0 (2026-10-28T09:00:00Z, "base fixture") · dev is 3 commits ahead of it', ctx)
+            git['dirty'] = True
+            self.assertIn(' · worktree has uncommitted changes', trial.world_context(addr, token))
+            git.clear()
+            git['error'] = 'local git metadata timed out (2s budget)'
+            self.assertIn('Base unknown: local git metadata timed out (2s budget)', trial.world_context(addr, token))
             bare = trial.world_context(addr, 'b' * 64)  # a 401: no episode line, the rest still says how to work
             self.assertNotIn('Episode ', bare)
             self.assertIn(trial.WORLD_TOOL_MAP, bare)

@@ -160,14 +160,14 @@ var cliWriteFlags = map[string][]string{
 }
 
 // policyToolRequestKeys are the policy-tool Request fields the handler reads
-// (op) or polices (flags). policy-tool decodes into a Go struct, whose field
+// (op), polices (flags), or consumes (max_chars). policy-tool decodes into a Go struct, whose field
 // match is case-insensitive, so any other spelling of these keys ("OP",
 // "FLAGS", "flagſ") would reach it unseen and is refused. (That decoding was
 // v0.51's; v0.54.15 refuses any key that is not exactly one of its own, so
 // the guard is defence in depth.) Row 190's offset and limit stay out: the
 // handler neither reads nor polices them, so an alias of either bypasses no
 // check here (TestPolicyToolRefusesCaseVariantRangeKeysItself).
-var policyToolRequestKeys = []string{"op", "flags"}
+var policyToolRequestKeys = []string{"op", "flags", "max_chars"}
 
 // RenderEpisodePolicy renders the per-episode AILANG operator policy with
 // exactly the §4.3 key set (measured admitted on v0.51.0, V39). root is the
@@ -463,6 +463,15 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 		refused, _ := json.Marshal(NoExamplesCorpusRefusal)
 		return h.stamp(map[string]json.RawMessage{"ok": json.RawMessage(`false`), "refused": refused})
 	}
+	readCap := defaultReadMaxChars
+	if req.Effect == EffectWorkspaceRead {
+		if raw, exists := fields["max_chars"]; exists {
+			if json.Unmarshal(raw, &readCap) != nil || readCap < 1000 || readCap > 200000 {
+				return nil, &AilangToolRefusalError{Effect: req.Effect, Why: "max_chars must be an integer from 1000 to 200000"}
+			}
+			delete(fields, "max_chars")
+		}
+	}
 	// Re-encode what was checked, so the bytes policy-tool reads are the
 	// bytes the allowlist saw (duplicate keys collapse here, not there).
 	body, err := json.Marshal(fields)
@@ -492,6 +501,9 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 		if _, clash := resp[reserved]; clash {
 			return nil, fmt.Errorf("broker: policy-tool response carries the reserved key %q", reserved)
 		}
+	}
+	if req.Effect == EffectWorkspaceRead && ok {
+		resp = capReadResponse(resp, fields, readCap)
 	}
 	if probe != nil {
 		if d := probe.finish(ctx); d != nil {

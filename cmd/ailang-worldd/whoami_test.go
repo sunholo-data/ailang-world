@@ -28,7 +28,9 @@ func TestWhoami(t *testing.T) {
 		{"argv", []string{token}, 0, 1, ""},
 		{"down", nil, 0, 10, ""},
 		{"expired", nil, 401, 11, ""},
-		{"json", []string{"--json"}, 200, 0, `{"episode":"mine","secondsLeft":61,"grants":[]}`},
+		{"json", []string{"--json"}, 200, 0, `{"episode":"mine","secondsLeft":61,"grants":[],"git":{"base":"abcdef0123","behind":3,"ahead":0,"dirty":false}}`},
+		{"base", nil, 200, 0, `{"episode":"mine","grants":[],"git":{"base":"abcdef0123","base_date":"date","base_subject":"subject","behind":3}}`},
+		{"git-error", nil, 200, 0, `{"episode":"mine","grants":[],"git":{"error":"timed out"}}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			whoamiTransport = selfTransport(func(r *http.Request) (*http.Response, error) {
@@ -56,7 +58,13 @@ func TestWhoami(t *testing.T) {
 					}
 				}
 			}
-			if tc.name == "json" && !strings.Contains(out.String(), `"episode":"mine"`) {
+			if tc.name == "base" && !strings.Contains(out.String(), "Base abcdef0 (date, \"subject\") · dev is 3 commits ahead of it") {
+				t.Fatal(out.String())
+			}
+			if tc.name == "git-error" && !strings.Contains(out.String(), "Base unknown: timed out") {
+				t.Fatal(out.String())
+			}
+			if tc.name == "json" && (!strings.Contains(out.String(), `"episode":"mine"`) || !strings.Contains(out.String(), `"behind":3`) || !strings.Contains(out.String(), `"ahead":0`)) {
 				t.Fatal(out.String())
 			}
 		})

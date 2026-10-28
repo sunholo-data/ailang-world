@@ -94,6 +94,7 @@ if ! printf '%s' "$data" | jq -e '.episode and .secondsLeft and .grants' >/dev/n
 fi
 printf '%s\n' 'You are working inside AILANG World (confined).'
 printf '%s' "$data" | jq -r '"Episode \(.episode) · worktree \(.worktree) · session \((.secondsLeft/3600|floor))h\((.secondsLeft/60|floor)%60)m left · daemon \(.addr)"'
+printf '%s' "$data" | jq -r 'if .git == null then empty elif .git.error then "Base unknown: \(.git.error)" else "Base \(.git.base[0:7]) (\(.git.base_date), \"\(.git.base_subject)\") · dev is \(.git.behind) commits ahead of it" + (if .git.dirty then " · worktree has uncommitted changes" else "" end) end'
 cat <<'WORLD_TOOLS'
 ` + worldToolMap + `WORLD_TOOLS
 printf '%s' "$data" | jq -r '"Grants left: " + ([.grants[] | "\(.effect) \(.left)/\(.budget)"] | join(", "))'
