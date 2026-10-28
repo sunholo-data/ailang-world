@@ -1,0 +1,6 @@
+marketingcheck: rect-too-small workbench-light.png: c1
+capture: check failed
+--- FAIL: TestMarketingChromeSixShots (19.30s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	19.586s
+FAIL

@@ -3321,7 +3321,8 @@
         "scripts/capture_marketing.sh",
         "scripts/marketingcheck/capture_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
+      "completed": {"iteration": 311, "commit": "31a4929b", "pr": 394, "controller_fix": "1ca31e5e (test-only: the fake daemon head change is keyed to a pass via CAPTURE_HEAD_CHANGE=pass-a|pass-b, plus subtests inventory-pass-b and inventory-single-pass; closes 3 placement/single-pass survivors)", "amendments": "A1 single-pass mode takes the after-inventory and compares after pass A (controller, iteration 311)", "judge": "sonnet r1 PASS 92 (zero blocking; plan mutant M7c4-inventory-wiring killed at the named assertion; 10 of 14 judge mutants killed, 3 equivalent)", "executor": "codex gpt-6.1-sol rc 0, 273 s (loopback binds denied in sandbox; controller re-ran every gate outside)", "real_chrome_smoke": "Chrome 156.0.8078.48: placeholder 40x40 rects refused at check (rect-too-small) after both passes and an equal inventory; made-up 100x100 rects PASSED end to end. Not C8 evidence; R1 owns measured rectangles."},
       "new_tests": [
         "TestMarketingChromeSixShots"
       ],
