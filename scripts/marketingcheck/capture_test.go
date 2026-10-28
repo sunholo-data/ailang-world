@@ -288,11 +288,19 @@ func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
 	fixtures := writeSet(t, bs)
 	manifest := putJSON(t, dir, "demo.json", demoFixture())
 	rectangles := putJSON(t, dir, "rectangles.json", rects)
-	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused", "single-pass", "daemon-exits"} {
+	for _, name := range []string{"six-shots", "serve-argv", "version-changed", "old-chrome", "cleanup", "scheme", "bind-refused", "single-pass", "daemon-exits", "inventory", "inventory-pass-b", "inventory-single-pass"} {
 		t.Run(name, func(t *testing.T) {
 			d := t.TempDir()
 			t.Setenv("CAPTURE_FIXTURES", fixtures)
 			t.Setenv("CAPTURE_RECORD", d)
+			// The fake daemon's head changes once a shot of the named pass has run, so
+			// each inventory must bracket both passes, in both modes.
+			switch name {
+			case "inventory", "inventory-single-pass":
+				t.Setenv("CAPTURE_HEAD_CHANGE", "pass-a")
+			case "inventory-pass-b":
+				t.Setenv("CAPTURE_HEAD_CHANGE", "pass-b")
+			}
 			if name == "version-changed" {
 				t.Setenv("CAPTURE_CHANGE", "yes")
 			}
@@ -313,18 +321,34 @@ func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
 			}
 			worldd := filepath.Join(d, "worldd")
 			pngOK(t, os.WriteFile(worldd, []byte(`#!/usr/bin/env python3
-import http.server, json, os, pathlib, sys
+import http.server, json, os, pathlib, sys, urllib.parse
 root = pathlib.Path(__file__).parent
 (root / 'argv').write_text(json.dumps(sys.argv[1:]) + '\n')
 (root / 'pid').write_text(str(os.getpid()))
 if os.environ.get('CAPTURE_DAEMON_EXIT'):
     sys.exit(3)
 host, port = sys.argv[sys.argv.index('--bind') + 1].split(':')
+log = [{'entryHash': 'entry-0', 'transitionRef': 'ref-0'},
+       {'entryHash': 'entry-1', 'transitionRef': 'ref-1'}]
+objects = {'/v1/objects/ref-0': b'object zero', '/v1/objects/ref-1': b'object one'}
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200 if self.path in ('/v1/health', '/v1/head') else 404)
+        url = urllib.parse.urlsplit(self.path)
+        status, body = 200, b'{}'
+        if url.path == '/v1/head':
+            change = os.environ.get('CAPTURE_HEAD_CHANGE')
+            body = b'changed-head' if change and any(root.glob(change + '-*.args')) else b'fixed-head'
+        elif url.path == '/v1/log':
+            query = urllib.parse.parse_qs(url.query)
+            start, limit = int(query['from'][0]), int(query['limit'][0])
+            body = json.dumps({'items': log[start:start + limit]}).encode()
+        elif url.path in objects:
+            body = objects[url.path]
+        elif url.path != '/v1/health':
+            status = 404
+        self.send_response(status)
         self.end_headers()
-        self.wfile.write(b'{}')
+        self.wfile.write(body)
 http.server.HTTPServer((host, int(port)), Handler).serve_forever()
 `), 0700))
 			out := filepath.Join(d, "out")
@@ -333,10 +357,16 @@ http.server.HTTPServer((host, int(port)), Handler).serve_forever()
 				"--proof-key-file", filepath.Join(d, "key"), "--ailang-bin", filepath.Join(d, "ailang"),
 				"--workspace-root", d, "--tool-ailang-bin", tool, "--chrome", fakeCaptureChrome(t, d),
 				"--out", out, "--rectangles", rectangles, "--worldd-bin", worldd, "--bind", bind, "--marketingcheck-bin", bin, "--verify-twice"}
-			if name == "single-pass" {
+			if name == "single-pass" || name == "inventory-single-pass" {
 				args = args[:len(args)-1] // no --verify-twice
 			}
 			rc, _, se := runCaptureCommand(t, "bash", args...)
+			if strings.HasPrefix(name, "inventory") {
+				if rc != 1 || !strings.Contains(se, "inventory-mutated") {
+					t.Fatalf("capture must compare inventories: rc=%d stderr=%q", rc, se)
+				}
+				return
+			}
 			if name == "daemon-exits" {
 				var v captureVerdict
 				pngOK(t, json.Unmarshal([]byte(readFile(t, filepath.Join(out, "daemon-verdict.json"))), &v))
@@ -445,9 +475,13 @@ http.server.HTTPServer((host, int(port)), Handler).serve_forever()
 				var capture CaptureManifest
 				pngOK(t, json.Unmarshal([]byte(readFile(t, filepath.Join(out, "capture-manifest.json"))), &capture))
 				pngOK(t, VerifyCaptureManifest(capture, hashes))
+				for _, name := range []string{"inventory-before.json", "inventory-after.json"} {
+					_, err := os.Stat(filepath.Join(out, name))
+					pngOK(t, err)
+				}
 				diagnostics := readFile(t, filepath.Join(out, "diagnostics.txt"))
-				if !strings.Contains(diagnostics, "chrome-version: Google Chrome 155.0.8059.41\n") || !strings.Contains(diagnostics, "bind: "+bind+"\n") {
-					t.Errorf("diagnostics must record version and bind: %q", diagnostics)
+				if !strings.Contains(diagnostics, "inventory: equal\n") || !strings.Contains(diagnostics, "chrome-version: Google Chrome 155.0.8059.41\n") || !strings.Contains(diagnostics, "bind: "+bind+"\n") {
+					t.Errorf("diagnostics must record version, bind and inventory equality: %q", diagnostics)
 				}
 			}
 		})

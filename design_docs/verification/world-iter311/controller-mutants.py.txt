@@ -1,0 +1,39 @@
+import hashlib, subprocess, sys, os
+WT = "/Users/voightkampff/dev/sunholo-data/.wt-world-iter311-row150-m7c4"
+SH = os.path.join(WT, "scripts/capture_marketing.sh")
+CMP = "step 'inventory compare' \"$marketingcheck_bin\" inventory-compare --before \"$out/inventory-before.json\" --after \"$out/inventory-after.json\""
+INVB = "step 'inventory before' \"$marketingcheck_bin\" inventory --addr \"http://$bind\" --out \"$out/inventory-before.json\"\n"
+INVA = "step 'inventory after' \"$marketingcheck_bin\" inventory --addr \"http://$bind\" --out \"$out/inventory-after.json\"\n"
+PASSA = "step 'pass A' python3 \"$supervisor\" pass --routes \"$out/routes.json\" --base-url \"http://$bind\" --chrome \"$chrome\" --out-dir \"$out/pass-a\"\n"
+IFV = "if [[ $verify_twice == yes ]]; then\n"
+M = {
+ "M7c4-inventory-wiring (plan)": [(CMP + "\n", "")],
+ "compare-rc-ignored": [(CMP, CMP.replace("step 'inventory compare' ", "") + " || true")],
+ "before-after-passA": [(INVB, ""), (PASSA, PASSA + INVB)],
+ "after-before-passB": [(INVA, ""), (PASSA + IFV, PASSA + INVA + IFV)],
+ "compare-before-vs-before": [(CMP, CMP.replace('--after "$out/inventory-after.json"', '--after "$out/inventory-before.json"'))],
+ "after-overwrites-before": [(INVA, INVA.replace("inventory-after.json", "inventory-before.json"))],
+ "single-pass-skips-compare": [(CMP + "\n", "[[ $verify_twice == yes ]] && " + CMP + "\n")],
+ "diagnostics-drops-inventory-line": [("inventory: equal\\n", "")],
+ "no-before-inventory": [(INVB, "")],
+}
+orig = open(SH).read(); sha = hashlib.sha256(orig.encode()).hexdigest()
+env = dict(os.environ)
+for name, edits in M.items():
+    src = orig
+    for a, b in edits:
+        n = src.count(a)
+        if n != 1:
+            print(f"{name}: ANCHOR NOT UNIQUE ({n}) -> not a measurement"); src = None; break
+        src = src.replace(a, b)
+    if src is None: continue
+    open(SH, "w").write(src)
+    r = subprocess.run(["bash", "-n", SH], capture_output=True)
+    if r.returncode: print(f"{name}: bash -n FAILED -> not a measurement"); open(SH,"w").write(orig); continue
+    r = subprocess.run(["go","test","-run","^TestMarketingCaptureFakeChromeSixShots$","./scripts/marketingcheck","-count=1","-timeout","300s","-v"], cwd=WT, capture_output=True, text=True, env=env)
+    fails = [l.strip() for l in r.stdout.splitlines() if l.strip().startswith("--- FAIL") and "/" in l]
+    msgs = [l.strip()[:160] for l in r.stdout.splitlines() if "capture_test.go:" in l][:3]
+    print(f"{name}: {'KILLED' if r.returncode else 'SURVIVED'} rc={r.returncode} {fails} {msgs}")
+    open(SH, "w").write(orig)
+assert hashlib.sha256(open(SH).read().encode()).hexdigest() == sha, "RESTORE FAILED"
+print("restored sha ok", sha[:12])

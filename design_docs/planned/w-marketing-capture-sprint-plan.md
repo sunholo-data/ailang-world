@@ -2034,7 +2034,7 @@ Executor notes:
 
 ## M7c4 — Real Chrome drill (test written by the executor; RUN by the controller)
 
-Design M7 (C7/C8/C9); 25 minutes; dependency: M7c3 and M7a-fix (amended iteration 308: M7a-fix); status **pending**.
+Design M7 (C7/C8/C9); 25 minutes; dependency: M7c3 and M7a-fix (amended iteration 308: M7a-fix); status **BUILT (iteration 311)** — completion (a) is this PR's CI. Controller amendment A1 (iteration 311): without `--verify-twice` the after-inventory and compare run after pass A, so the guard brackets every pass in both modes. The controller added test-only subtests `inventory-pass-b` and `inventory-single-pass` and keyed the fake head change to a pass (`CAPTURE_HEAD_CHANGE=pass-a|pass-b`). Real-Chrome smoke (Chrome 156.0.8078.48): the full path ran, and made-up 100x100 rectangles PASSED `check` end to end, so R1's rectangles must be genuinely measured; `check` does not reject guessed ones.
 
 Exact executor files:
 

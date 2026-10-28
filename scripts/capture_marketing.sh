@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Capture entry point. M7a ships supervision; M7c supplies the six-shot pass.
+# Capture frozen inventory around one or two supervised six-shot passes.
 set -euo pipefail
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 supervisor_pid=
@@ -125,12 +125,17 @@ while [[ ! -s "$started_file" ]]; do
     fi
     sleep 0.01
 done
+step 'inventory before' "$marketingcheck_bin" inventory --addr "http://$bind" --out "$out/inventory-before.json"
 step routes "$marketingcheck_bin" routes --manifest "$manifest" > "$out/routes.json"
 step 'pass A' python3 "$supervisor" pass --routes "$out/routes.json" --base-url "http://$bind" --chrome "$chrome" --out-dir "$out/pass-a"
+if [[ $verify_twice == yes ]]; then
+    step 'pass B' python3 "$supervisor" pass --routes "$out/routes.json" --base-url "http://$bind" --chrome "$chrome" --out-dir "$out/pass-b"
+    version_b=$(step 'chrome-version B' python3 "$supervisor" chrome-version --chrome "$chrome") || exit 1
+    [[ $version_a == "$version_b" ]] || fail 'chrome version changed during capture'
+fi
+step 'inventory after' "$marketingcheck_bin" inventory --addr "http://$bind" --out "$out/inventory-after.json"
+step 'inventory compare' "$marketingcheck_bin" inventory-compare --before "$out/inventory-before.json" --after "$out/inventory-after.json"
 [[ $verify_twice == yes ]] || exit 0
-step 'pass B' python3 "$supervisor" pass --routes "$out/routes.json" --base-url "http://$bind" --chrome "$chrome" --out-dir "$out/pass-b"
-version_b=$(step 'chrome-version B' python3 "$supervisor" chrome-version --chrome "$chrome") || exit 1
-[[ $version_a == "$version_b" ]] || fail 'chrome version changed during capture'
 version=$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["version"])' "$version_a")
-printf 'chrome-version: %s\nbind: %s\n' "$version" "$bind" > "$out/diagnostics.txt"
+printf 'chrome-version: %s\nbind: %s\ninventory: equal\n' "$version" "$bind" > "$out/diagnostics.txt"
 step check "$marketingcheck_bin" check --pass-a "$out/pass-a" --pass-b "$out/pass-b" --manifest "$manifest" --rectangles "$rectangles" --out "$out/capture-manifest.json"

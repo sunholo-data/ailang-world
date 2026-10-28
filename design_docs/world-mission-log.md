@@ -2287,3 +2287,94 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 20/23 built; goal unmoved.
 **Next:** row 150 M7c4 (real-Chrome drill; wire `inventory` into the capture shell), then R1 → M8a → M8b. Then 151 after 150.
+
+## 311 — 2026-10-28 — row 150: M7c4 built — the real-Chrome drill exists and the capture shell compares frozen inventories around both passes; judge PASS 92 [PRODUCT]
+
+**Kind:** one production milestone (M7c4) on the release row: an executor build, a controller mutation drill with a test-only survivor fix, a real-Chrome smoke, and an independent judge. The executor and evaluator roles were spawned through the Agent tool, per the operator's standing request (see Routing evidence).
+
+**Pick and why:** row 150 M7c4, following iteration 310's **Next**. Re-checked before picking:
+- no M7c4 commit, branch, worktree or PR existed (`git log origin/dev --grep M7c4` returns only the plan split, 308's plan amendment and 310's record; the PR search returns only merged #391–#393 and #364);
+- local dev was 4 behind origin at Gate 0 and was fast-forwarded (clean tree apart from two untracked residues); local then equalled origin/dev `90ef2671`;
+- the two open PRs from this account are attended-track work, not this loop's: #390 (`trial/row219a-home-service-m0-m1`) and #389 (`fix/trial-world-context`). Left alone.
+- Plan premises checked at HEAD: `testMintEnv` (`session_test.go:29`), `newDemoApprovalRig` (`demo_test.go:561`), `demoM5cRealSeed` (`demo_test.go:1727`) and the iteration-305 probe reference all exist; `marketing_chrome_test.go` did not; the shell carried no `inventory` call.
+- Governing doc: `w-marketing-capture-orchestration` r2. Its two quorum artifacts both read `blocked`; the doc routes under the narrow-refinement carve-out recorded in its §9 (iteration 305), the same authority iterations 306–310 built under. Not re-litigated.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh` (driver copy): 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (8 comments, all this account's). Both watermarks (`mission-366-last-seen`, `mission-world-last-seen`) read the same value. No ledger row changed since iteration 310.
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (log grep count 8). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages; nothing outranks the queue. This iteration's claim was sent.
+- Weekly external-issue sweep: not due. No thread rotation.
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Dev CI at `90ef2671`: check set 3/3 success.
+- Running skill plus all 13 resource files byte-identical to origin/dev (per-file `cmp` against the resolved symlink target).
+- Base `90ef2671…` recorded at Gate 1 (`2026-10-28T04:01:37Z`).
+
+**Baseline (controller, pristine sprint worktree at the base before the executor ran, `AILANG_BIN` = pinned v0.41.0, load 3–6):** gofmt clean, vet rc 0, `bash -n` rc 0, compile fence rc 0 (34), fake-Chrome test ok, `TestProductionGoSurface`/`TestProductionContextRoots`/`TestSubprocessSinkGate` ok. **`go test ./scripts/marketingcheck` was rc 1 at base**: `TestMarketingSupervisorFakeDaemonCleanup` ("shell trap cleanup exceeded bound: 29.7s", load ~6, inside the package run); the identical `-run` alone was 3/3 ok at load ~3.6. That is the load-sensitive M7a fixture class iteration 308 carried; the directive named it as not the executor's to fix.
+
+**Role execution:**
+- **Designer and planner:** not run. Doc r2 governs and the plan's M7c4 section is prescriptive.
+- **Executor** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`). It was spawned as an Agent-tool supervisor (`MISSION-ROLE: executor`, no model alias) that ran the controller's bounded wrapper (`/tmp/codex_run_iter311.sh`, cap 1800 s) in `.wt-world-iter311-row150-m7c4`. Probe rc 0; run rc 0 in 273 s. Directive `/tmp/codex_directive_iter311.txt` (10,093 B).
+  - What it built: `scripts/capture_marketing.sh` (+10/−5), `scripts/marketingcheck/capture_test.go` (+38/−6: fake daemon log/objects routes, `inventory` subtest), `cmd/ailang-worldd/marketing_chrome_test.go` (new, 246 lines).
+  - Its sandbox denied loopback binds, so every bind-dependent gate and all four of its shell mutants were correctly labelled UNINFORMATIVE; it claimed no kill.
+  - Its `snap/M7c4/` was moved to `/tmp/world-iter311/exec-snap/` (report banked as `verification/world-iter311/executor-report.md`). Committed by the controller as `31a4929b`.
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), Agent tool, foreground, own worktree `.eval-world-iter311` at `1ca31e5e`.
+
+**Controller verification (outside the sandbox, `AILANG_BIN` pinned, load 2.5–6; [log](verification/world-iter311/controller-verification.md)):**
+- Diff read in full against the plan. No write outside `t.TempDir()`; `demo_test.go` untouched; every precondition precedes seeding.
+- Controller amendment **A1**: the plan says "after pass B"; the single-pass branch has no pass B, so its after-inventory and compare run after pass A. The guard brackets every pass that runs, in both modes.
+- **Red-first:** base `capture_marketing.sh` reds `six-shots` (`inventory-before.json` absent) and `inventory` ("capture must compare inventories: rc=0").
+- **Mutation drill** (`verification/world-iter311/controller-mutants.py.txt`, anchors asserted unique, `bash -n` checked, sha restored): 9 shell mutants. On the executor's tree 6 were killed and 3 survived: before-inventory moved after pass A, after-inventory moved before pass B, single-pass skipping the compare. Cause: the fake daemon flipped its head after the first `/v1/log?from=0` read, so it could not tell when the inventories ran relative to the passes.
+- **Controller test-only fix `1ca31e5e`:** the fake head changes once a fake-Chrome shot of the named pass has run (`CAPTURE_HEAD_CHANGE=pass-a|pass-b`, globbing the `<pass>-<shot>.args` files fake Chrome already writes beside the fake daemon), with new subtests `inventory-pass-b` and `inventory-single-pass`. After it, 9/9 killed; the plan mutant M7c4-inventory-wiring dies at "capture must compare inventories".
+- **Completion (b)/(c)/(d):** SKIP with `WORLD_CHROME` unset; FAIL at `:58` with `/nonexistent`; with real Chrome set, rects unset (`:75`), `{schema, shots:{}}` (`:94`), path missing (`:91`) and `AILANG_BIN` empty (`:71`) all FAIL; `inventory` passes and the plan mutant is killed.
+- **Real-Chrome smoke (Chrome 156.0.8078.48; not C8 evidence):** with placeholder 40x40 rectangles the full path ran in 20 s (real seed, real `serve`, 6/6 shots per pass, inventory before/after equal) and `check` then refused `rect-too-small`. With made-up 100x100 rectangles the drill **PASSED end to end** (rc 0, 15 s).
+- **Final tree `1ca31e5e`:** gofmt clean, vet rc 0, `bash -n` rc 0, fence rc 0, SKIP, fake-Chrome 13/13 ok, `-race` fake-Chrome ok, surface/context roots ok, sink gate ok, `go test ./scripts/marketingcheck` ok (flake did not fire), `go test ./cmd/ailang-worldd` ok (144 s).
+- `.ail` untouched, so `verify_ail.sh` was not run (CI's `ailang-code verify gate` covers it).
+
+**Independent evaluation:** r1 **PASS 92/100**, zero blocking ([report](verification/world-iter311/evaluator-r1.md)).
+- Rubric: tests 20/20, lint 10/10, acceptance 29/30, code quality 13/15, documentation 12/15 (no doc status in the diff; the controller owns it), design fidelity 8/10.
+- All gates green; red-first confirmed; (b)/(c)/(d) measured independently, including extra precondition arms (packet roster name missing, wrong-version tool pin).
+- 14 mutants of the shell diff: 10 killed, 3 equivalent (`|| true` after `step`, whose failure handler exits; `--before`/`--after` swapped; before-inventory after `routes`), 1 real survivor (the diagnostics line written before the compare, caught only incidentally by `single-pass`). A1 judged sound.
+- Independently found that made-up rectangles pass on real Chrome.
+- **Controller reproduced both:** the diagnostics-ordering mutant is killed only by `single-pass`; made-up 100x100 rectangles pass end to end.
+
+**Bookkeeping:** sprint JSON M7c4 → completed (iteration 311, PR 394); plan M7c4 status → BUILT with A1 and the R1 risk; charter row 150 updated (M7c4 built, carried notes, R1 risk, Next); CURRENT GOAL next line updated; STATUS 308 rotated to the archive (charter line count asserted unchanged, archive +2 and holds the stamp; the charter keeps 3 stamps).
+
+**Result:** M7c4 BUILT. The capture shell now refuses a capture if the public store changed between an inventory taken before pass A and one taken after the last pass, and the real-Chrome drill exists for R1. Row 150 is 21 of 23 milestones built.
+
+**Gate 3b:** the PR head and then the merge commit are each polled, pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). The outcome is reported on #366.
+
+**Routing evidence:** base=90ef26711bc0812c1a84bab23c7a6454f5996598@2026-10-28T04:01:37Z (Gate 1 record). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=codex:gpt-6.1-sol`, `EXECUTOR=codex:gpt-6.1-sol`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer and planner: not spawned (doc r2 and a prescriptive plan govern). This is not a routing failure.
+- Executor `codex:gpt-6.1-sol`: probe 9,086 tok; run 90,685 tok, rc 0, 273 s. Agent-tool supervisor (transport only, no verdict): 28,440 tok / 303 s.
+- Evaluator `sonnet` (Agent): 83,184 tok / 406 s. Judge independence: cross-vendor (OpenAI executor, Anthropic Sonnet judge), and a different model from the Opus controller that wrote `1ca31e5e`. The judge evaluated the final tree including that commit. Its directive named no controller finding, mutant result or method.
+- No quorum this iteration (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Banking the executor's in-sandbox results: loopback binds were denied, so the whole bind-dependent surface had no verdict until the controller ran it outside.
+- Treating the base `go test ./scripts/marketingcheck` red as M7c4's: it reproduced on the pristine base and passed 3/3 alone.
+- Keeping jq's rewrite of the sprint JSON: `jq` re-expanded four earlier one-line `completed` objects; reverted and replaced with a one-block text edit.
+- Adding the diagnostics-ordering assertion after judging: it is non-blocking and changing the judged tree would need a second round; carried instead.
+- Running R1 here: it needs genuinely measured rectangles over the M7c0 geometry and a threshold V-row, and the smoke shows `check` cannot catch a guessed set.
+
+**Carried:**
+- R1 next (controller: measure all-six rectangles, two real passes, threshold V-row), then M8a → M8b → attended A1.
+- **R1 risk (measured, new):** `check` does not reject guessed rectangles (made-up 100x100 at the origin pass on real Chrome), so R1 must show its rectangles are measured. A negative control (a deliberately misplaced rectangle must refuse) is worth adding to R1.
+- New (judge): the diagnostics line written before the compare is caught only incidentally; the drill's rectangles precondition is weaker than `LoadRectangles` (an out-of-bounds rect runs the whole capture before failing); the manifest assertion only checks it parses; `v0.41.0` is hardcoded in the drill; the plan's `-timeout 660s` equals the inner bound.
+- Everything iteration 310 carried (fetch/unmarshal error paths, CLI usage paths, guard scope), plus 309's (A1 lifetime, `ready()` stop branch, usage errors exit 1) and the load-sensitive M7a supervisor fixtures (`TestMarketingSupervisorFakeDaemonCleanup` red once this iteration at load ~6). D-WORLD-86 stays HOLD.
+
+**Retro:**
+- Fifth consecutive row-150 milestone where the out-of-sandbox controller drill changed the tree before judging. This time the executor's fake was the gap: a trigger keyed to the first log read cannot tell where an inventory sits relative to the passes. Keying a fake's state change to an observable step of the flow it brackets is what made placement testable.
+- The real-Chrome smoke cost about 20 s and found the most important R1 fact of the iteration. A cheap real run with placeholder inputs is worth doing whenever a drill exists, even when its full pass is out of scope.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 21/23 built; goal unmoved.
+**Next:** row 150 R1 (controller: measured rectangles, two real passes, threshold V-row, with a misplaced-rectangle negative control), then M8a → M8b. Then 151 after 150.

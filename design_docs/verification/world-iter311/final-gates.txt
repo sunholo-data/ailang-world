@@ -1,0 +1,12 @@
+tree 1ca31e5e36cd353bb9c8771174db7417f58d788a load 3.90 3.22 2.87
+gofmt: []
+vet rc=0
+bash-n rc=0
+fence rc=0
+--- SKIP: TestMarketingChromeSixShots (0.00s)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	11.209s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	19.709s
+ok  	github.com/sunholo-data/ailang-world/host/store	0.395s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	0.420s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	35.184s
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	144.531s
