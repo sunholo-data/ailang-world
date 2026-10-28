@@ -3,9 +3,11 @@
 // entry, std-dev, scrollbar and title-right; only the verdict lines are new. Each candidate is
 // judged twice: under r2 (iii) (scrollbar rect and title-right within ±2 px of the V50 image)
 // and under r3 (iii′) (the overflow defect PRESENT, no magnitude):
-//   (iii′) image is 390x844, AND a scrollbar thumb exists in the bottom 20 px rows (the scan's
-//   definition: a run of luma 120..200 at least 100 px long) with X0 <= 8 and X1 <= 384, AND the
-//   title is clipped at the right edge: title_right >= 387.
+//
+//	(iii′) image is 390x844, AND a scrollbar thumb exists in the bottom 20 px rows (the scan's
+//	definition: a run of luma 120..200 at least 100 px long) with X0 <= 8 and X1 <= 384, AND the
+//	title is clipped at the right edge: title_right >= 387.
+//
 // (i) compares against the R1 phone baseline constants (V60: header 25,45,345,23 -> {25 45 370 68};
 // first entry 41,428,323,182 -> {41 428 364 610}) within ±4 px; (ii) std-dev >= 4.0 in both.
 package main
@@ -82,13 +84,23 @@ func scrollbar(im image.Image) Rect {
 	bd := im.Bounds()
 	r := Rect{-1, -1, -1, -1}
 	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+		// Longest CONTIGUOUS run of in-range luma (iteration-315 judge fix: the first-to-last
+		// span admitted two stray pixels 100 px apart as a "thumb"; the rule says a run).
 		x0, x1 := -1, -1
-		for x := 0; x < bd.Max.X; x++ {
-			if l := luma(im, x, y); l >= 120 && l <= 200 {
-				if x0 < 0 {
-					x0 = x
+		for x, start := 0, -1; x <= bd.Max.X; x++ {
+			in := false
+			if x < bd.Max.X {
+				l := luma(im, x, y)
+				in = l >= 120 && l <= 200
+			}
+			if in && start < 0 {
+				start = x
+			}
+			if !in && start >= 0 {
+				if x0 < 0 || (x-1)-start > x1-x0 {
+					x0, x1 = start, x-1
 				}
-				x1 = x
+				start = -1
 			}
 		}
 		if x0 >= 0 && x1-x0 >= 100 {

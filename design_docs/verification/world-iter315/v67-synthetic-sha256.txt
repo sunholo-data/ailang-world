@@ -10,3 +10,4 @@ fdf5e085a7d2e959b8dd8304c71f47f1443120b144f71fa03e76579f1bdb1ab1  /tmp/world-ite
 9d841b20d14905709916be7e539e0128cc45aaa93b547bbcbd152cb95394e2e7  /tmp/world-iter315/neg/shift-5.png
 05403c654182ccfc0d182ff102ea755773da01f38b83630313e4b132e85074cf  /tmp/world-iter315/neg/timeline-only.png
 50d236c93dcfcd0c981cf04bee734510e2ae57d247616f7f3563a566b5f7c5ff  /tmp/world-iter315/neg/title-unclipped.png
+c57b01b14094ae695660668b66810814c8d3149d502264abda040f846af24139  /tmp/world-iter315-eval/phn/scattered-pixels-no-thumb.png
