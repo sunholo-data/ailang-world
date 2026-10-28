@@ -2196,3 +2196,94 @@ These are the ratified current states, not new measurements of the bar. D-WORLD-
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 19/23 built; goal unmoved.
 **Next:** row 150 M7c3, then M7c4. Then 151 after 150.
+
+## 310 — 2026-10-28 — row 150: M7c3 built — `marketingcheck inventory`/`inventory-compare` freeze the public store so a capture taken over a commit is refused; judge PASS 90 [PRODUCT]
+
+**Kind:** one production milestone (M7c3) on the release row: an executor build, a controller mutation drill with a test-only survivor fix, and an independent judge. The executor and evaluator roles were spawned through the Agent tool, per the operator's standing request (see Routing evidence).
+
+**Pick and why:** row 150 M7c3, following iteration 309's **Next**. Re-checked before picking:
+- no M7c3 commit, branch, worktree or PR existed (`git log origin/dev --grep M7c3` returns only the plan split and 309's record; the PR search returns only #364, merged; no `m7c3` worktree);
+- local dev equalled origin/dev `c448b15f` at Gate 1;
+- the two open PRs from this account are attended-track work, not this loop's: #390 (`trial/row219a-home-service-m0-m1`) and #389 (`fix/trial-world-context`). Left alone.
+- Plan premises checked at HEAD: every helper the test names exists at the cited lines; `handleLogRange` stops at the first missing index; `clampLimit` caps at 500; `isProtected` guards only `POST /v1/commit`, so the inventory's reads need no credential.
+
+**Clause map:**
+- Clauses 1–7 all MET (ratified states, not re-measured). No UNMET clause, so there is no critical-path row and no drift alarm.
+- D-WORLD-81 order is 156 → 150 → 151. 156 is held on D-WORLD-86, the only OPEN row (`mission_decisions.sh --open`).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (7 comments, all this account's). No ledger row changed since iteration 309 (HEAD was 309's own merge); ledger valid, 85 rows.
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (log grep count 7). No new crash notice.
+- Inbox `mission-world`: only this loop's own claim messages; nothing outranks the queue. This iteration's claim was sent.
+- Weekly external-issue sweep: not due (run after the 2026-10-26 rotation). No thread rotation.
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Dev CI at `c448b15f`: check set 3/3, none non-green.
+- Running skill plus all 13 resource files byte-identical to origin/dev (per-file `cmp` against the resolved symlink target, which is the main checkout).
+- Base `c448b15f…` recorded at Gate 1; the Gate-3 `snap` and the Gate-4 record read the same SHA.
+
+**Baseline (controller, pristine sprint worktree at the base before the executor ran, `AILANG_BIN` = pinned v0.41.0, load ~6):** vet rc 0 on both packages, `TestWorkbenchLiveCursorCrossesGap` ok, `TestProductionGoSurface` ok, `TestProductionContextRoots` and `TestSubprocessSinkGate` ok, gofmt clean. Every pre-existing gate in the directive was green at base before it was sent.
+
+**Role execution:**
+- **Designer and planner:** not run. `w-marketing-capture-orchestration` r2 governs and the plan's M7c3 section is prescriptive.
+- **Executor** `codex:gpt-6.1-sol` (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`). It was spawned as an Agent-tool supervisor (`MISSION-ROLE: executor`, no model alias) that ran the controller's bounded wrapper (`/tmp/codex_run_iter310.sh`, cap 1800 s) in `.wt-world-iter310-row150-m7c3`. Probe rc 0; run rc 0 in 349 s. Directive `/tmp/codex_directive_iter310.txt` (8,426 B).
+  - What it built: `scripts/marketingcheck/main.go` (+166 net: `inventory`, `inventory-compare`, `Inventory`, `ReadInventory`, `CompareInventory`; `writeObservation` generalised to `writeJSON`) and `host/daemon/marketing_inventory_test.go` (91 lines, the plan's eight steps plus the 4-entry/3-entry paging assertion).
+  - Deviation, adjudicated correct (rule 3h): `/v1/head` serves `text/plain`, so a non-JSON head body is stored as a JSON string. The mutant that drops this fails the real daemon.
+  - Its sandbox denied loopback binds, so the inventory test, the package run and all five of its mutants were correctly labelled UNINFORMATIVE; it claimed no kill.
+  - Its `snap/M7c3/` was moved to `/tmp/world-iter310/exec-snap/` (report banked as `verification/world-iter310/executor-report.md`). Committed by the controller as `8da32397`.
+- **Evaluator** `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), Agent tool, foreground, own worktree `.eval-world-iter310` at `47686112`.
+
+**Controller verification (outside the sandbox, `AILANG_BIN` pinned, load 1–6):**
+- Diff read in full against the plan. No write outside `--out`; no context root; no new non-test `.go` under `scripts/`.
+- **Red-first:** base `main.go` reds the e2e test at step 5 (`before inventory: rc 2: usage`).
+- **Mutation drill** (`verification/world-iter310/controller-mutants.py.txt`, one at a time, anchors asserted unique, sha restored):
+  - The plan's 2 mutants were killed at the named assertions: M7c-inventory → "extra commit invalidates capture"; M7c3-paging → "after.json must list all 4 committed entries: got 1".
+  - The controller's own first drafts of both were wrong. `return nil` after a loop fails `go vet` (unreachable code), and `limit=1` alone still pages through every entry. Both were rewritten (`if true { return nil }`; `limit=1` plus stop-after-first-page) before counting.
+  - Of 12 diff-anchored mutants, the e2e test killed 3 (refusal exit 0, head text fallback dropped, and the plan inventory mutant) and 8 survived: head not compared, entries compared by count only, object length ignored, object hash ignored, non-200 ignored, empty check removed, objects never read, single page. The reason is structural: one genuine extra commit changes head AND entries together, and the test store reuses one transition object.
+- **Controller test-only fix `47686112`:** `scripts/marketingcheck/inventory_test.go` adds `TestMarketingInventoryCompareBranches` (14 subtests, one per refusal branch and side) and `TestMarketingInventoryReadPaging` (fake daemon with a page cap of 2, plain-text head, two distinct objects, a 404 arm). After it every mutant is killed by at least one suite. The tree was `shasum`-identical after restoring.
+- **Final tree `47686112`:** gofmt clean, vet rc 0, compile fence rc 0 (34), the e2e test PASS, the unit tests PASS, `TestWorkbenchLiveCursorCrossesGap` ok, `TestProductionGoSurface`/`TestProductionContextRoots`/`TestSubprocessSinkGate` ok, both packages ok, `-race ./scripts/marketingcheck` ok, `-race` inventory/workbench-live in host/daemon ok.
+- `.ail` untouched, so `verify_ail.sh` was not run (CI's `ailang-code verify gate` covers it).
+- Log: `verification/world-iter310/controller-verification.md`.
+
+**Independent evaluation:** r1 **PASS 90/100**, zero blocking ([report](verification/world-iter310/evaluator-r1.md)).
+- Rubric: conformance 27/30, tests and gates 24/25, mutation/non-vacuity 16/20, premise and risk 8/10, hygiene 15/15.
+- All gates green; red-first confirmed for both new test files.
+- Both plan mutants killed at the named assertions. Of about 45 own mutants, every compare branch, the head encoding, paging, object sort/digest, non-200 and the CLI exit were killed. Survivors: head and log fetch errors swallowed, page unmarshal error ignored, `TrimSpace` in the empty check, the before/after label, the CLI usage/flag paths, the schema string, `TrimRight("/")`, and the client timeout. One more (object-presence check) is equivalent.
+- Premise: the guard catches any commit. It cannot see writes that bypass the log, non-transition object puts, an A→B→A revert, or a race between its three reads. Digesting the object envelope without `?payload=true` is sound, since the ref is content-addressed.
+- **Controller reproduced the CLI finding:** the usage paths are correct but untested (`inventory` with no `--addr` rc 2; `inventory-compare` missing `--after` rc 2; `-h` rc 0; unreachable rc 1 `inventory-unreadable`).
+
+**Bookkeeping:** sprint JSON M7c3 → completed (iteration 310); plan M7c3 status → BUILT; charter row 150 updated (M7c3 built, Next); CURRENT GOAL next line updated; STATUS 307 rotated to the archive (charter line count asserted, archive gained the stamp; the charter keeps 3 stamps).
+
+**Result:** M7c3 BUILT. A capture can now prove the store it photographed did not change: an inventory before pass A and after pass B, compared, refuses on any commit. It is not yet wired into `capture_marketing.sh`; that is M7c4's carried step. Row 150 is 20 of 23 milestones built.
+
+**Gate 3b:** the PR head and then the merge commit are each polled, pinned to the full SHA (bounded 30 min, per-invocation verdict path naming the SHA). The outcome is reported on #366.
+
+**Routing evidence:** base=c448b15fd6ee9c9e5e221cb66bf099cb7bcb127c@2026-10-28T00:27:08Z (Gate 4 record; Gate 1 read the same SHA at 00:01:13Z, and the Gate-3 `snap` was identical). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=codex:gpt-6.1-sol`, `EXECUTOR=codex:gpt-6.1-sol`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer and planner: not spawned (doc r2 and a prescriptive plan govern). This is not a routing failure.
+- Executor `codex:gpt-6.1-sol`: probe 10,229 tok; run 96,227 tok, rc 0, 349 s. Agent-tool supervisor (transport only, no verdict): 25,863 tok / 378 s.
+- Evaluator `sonnet` (Agent): 64,452 tok / 482 s. Judge independence: cross-vendor (OpenAI executor, Anthropic Sonnet judge), and a different model from the Opus controller that wrote `47686112`. The judge evaluated the final tree including that commit. Its directive named no controller finding, mutant result or method.
+- No quorum this iteration (no new or revised design doc).
+- Metered **$0.00**.
+
+**Ruled out:**
+- Banking the executor's in-sandbox results: loopback binds were denied, so the whole acceptance surface had no verdict until the controller ran it outside.
+- Counting the controller's first-draft plan mutants: one failed vet, and the other was not the plan's mutant. A mutant that does not build, or that is not the one named, is not a measurement.
+- Adding survivor-closing assertions to the host/daemon e2e test: one genuine commit cannot vary head, entries and objects independently, so the branches belong in a unit test over `CompareInventory` and a fake daemon.
+- Wiring `inventory` into `capture_marketing.sh` here: the plan keeps it out of M7c3's file list and carries it to M7c4.
+- Rotating the log: it holds 26 entries; the rule triggers past ~40. The index was regenerated with `--index-only` through a temporary registry whose `workdir` is the record worktree.
+
+**Carried:**
+- M7c4 next (real-Chrome drill, plus the carried inventory wiring), then R1 → M8a → M8b → attended A1.
+- New (judge): head/log fetch and page-unmarshal error paths untested; CLI usage/flag paths untested; the `inventory-empty` before/after label unpinned; guard scope (writes that bypass the log, non-transition objects, A→B→A, non-atomic reads).
+- Everything iteration 309 carried (A1 lifetime untested; `ready()` stop branch; shell usage errors exit 1; `kill -0` shortcut; 307's `pass` `--out-dir` order; load-sensitive M7a fixtures). D-WORLD-86 stays HOLD.
+
+**Retro:**
+- Fourth consecutive row-150 milestone where the out-of-sandbox controller drill changed the tree before judging. This time the plan's own e2e design could not distinguish its branches, so the fix was a unit test rather than another e2e arm.
+- The controller wrote both plan mutants wrongly on the first attempt (a vet-failing form, and half of a two-part mutant). The anchored runner's vet check caught the first; reading a surprising survivor back against the plan table caught the second. Read the named mutant's full definition before encoding it.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; row 150 20/23 built; goal unmoved.
+**Next:** row 150 M7c4 (real-Chrome drill; wire `inventory` into the capture shell), then R1 → M8a → M8b. Then 151 after 150.

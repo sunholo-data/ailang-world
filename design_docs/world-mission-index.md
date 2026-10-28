@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 310 | 2026-10-28 | row 150: M7c3 built — `marketingcheck inventory`/`inventory-compare` freeze the public store so a capture taken over a commit is refused; judge PAS... |
 | 309 | 2026-10-27 | row 150: M7c2b built — the capture shell runs end to end against fake Chrome and a fake daemon; judge PASS 83 [PRODUCT] |
 | 308 | 2026-10-27 | row 150: M7a-fix built — `kill_group` tolerates macOS `killpg` EPERM, so a good shot no longer ends as `SupervisorError`; judge PASS 88 [PRODUCT] |
 | 307 | 2026-10-27 | row 150: M7c2a built the capture primitives (Chrome-version floor, HTTP readiness, six-shot pass, `marketingcheck routes`); judge PASS 88; `kill_gr... |

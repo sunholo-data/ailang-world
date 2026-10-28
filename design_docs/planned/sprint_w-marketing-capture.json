@@ -3203,7 +3203,8 @@
         "scripts/marketingcheck/main.go",
         "host/daemon/marketing_inventory_test.go"
       ],
-      "status": "pending",
+      "status": "completed",
+      "completed": {"iteration": 310, "commit": "8da32397", "pr": 393, "controller_fix": "47686112 (test-only: scripts/marketingcheck/inventory_test.go per-branch compare and paging/404 read tests close 8 branch survivors of the end-to-end test)", "judge": "sonnet r1 PASS 90 (zero blocking; both plan mutants killed at the named assertions)", "executor": "codex gpt-6.1-sol rc 0, 349 s (loopback binds denied in sandbox; controller re-ran every gate outside)"},
       "new_tests": [
         "TestMarketingCaptureInventoryMutation"
       ],

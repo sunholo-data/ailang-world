@@ -8,17 +8,22 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 )
 
 const usageText = "usage: marketingcheck check --pass-a DIR --pass-b DIR --manifest DEMO_MANIFEST --rectangles RECTS [--out CAPTURE_MANIFEST]\n" +
 	"       marketingcheck routes --manifest DEMO\n" +
 	"       marketingcheck observe --root DIR [--out FILE]\n" +
-	"       marketingcheck compare --before FILE --after FILE"
+	"       marketingcheck compare --before FILE --after FILE\n" +
+	"       marketingcheck inventory --addr URL [--out FILE]\n" +
+	"       marketingcheck inventory-compare --before FILE --after FILE"
 
 func main() { os.Exit(run(os.Args[1:])) }
 func run(args []string) int {
@@ -35,9 +40,170 @@ func run(args []string) int {
 		return runObserve(args[1:])
 	case "compare":
 		return runCompare(args[1:])
+	case "inventory", "inventory-compare":
+		return runInventory(args[0], args[1:])
 	}
 	fmt.Fprintln(os.Stderr, usageText)
 	return 2
+}
+
+// Inventory records the public head, ordered log and distinct transition bodies.
+type Inventory struct {
+	Schema  string            `json:"schema"`
+	Head    json.RawMessage   `json:"head"`
+	Entries []inventoryEntry  `json:"entries"`
+	Objects []inventoryObject `json:"objects"`
+}
+type inventoryEntry struct {
+	EntryHash     string `json:"entryHash"`
+	TransitionRef string `json:"transitionRef"`
+}
+type inventoryObject struct {
+	Ref    string `json:"ref"`
+	SHA256 string `json:"sha256"`
+}
+
+func ReadInventory(base string) (Inventory, error) {
+	inv := Inventory{Schema: "world/demo/capture-inventory/v1"}
+	client := &http.Client{Timeout: 10 * time.Second}
+	get := func(path string) ([]byte, error) {
+		url := strings.TrimRight(base, "/") + path
+		resp, err := client.Get(url)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%s: %s", url, resp.Status)
+		}
+		return io.ReadAll(resp.Body)
+	}
+	raw, err := get("/v1/head")
+	if err != nil {
+		return inv, err
+	}
+	// The real daemon serves canonical hash text; JSON responses remain JSON.
+	inv.Head = raw
+	if !json.Valid(raw) {
+		inv.Head, _ = json.Marshal(string(raw))
+	}
+	for from := 0; ; {
+		raw, err := get(fmt.Sprintf("/v1/log?from=%d&limit=500", from))
+		if err != nil {
+			return inv, err
+		}
+		page := struct {
+			Items []inventoryEntry `json:"items"`
+		}{}
+		if err := json.Unmarshal(raw, &page); err != nil {
+			return inv, err
+		}
+		if len(page.Items) == 0 {
+			break
+		}
+		inv.Entries = append(inv.Entries, page.Items...)
+		from += len(page.Items)
+	}
+	refs := map[string]bool{}
+	for _, entry := range inv.Entries {
+		refs[entry.TransitionRef] = true
+	}
+	for ref := range refs {
+		raw, err := get("/v1/objects/" + ref)
+		if err != nil {
+			return inv, err
+		}
+		sum := sha256.Sum256(raw)
+		inv.Objects = append(inv.Objects, inventoryObject{ref, hex.EncodeToString(sum[:])})
+	}
+	slices.SortFunc(inv.Objects, func(a, b inventoryObject) int { return strings.Compare(a.Ref, b.Ref) })
+	return inv, nil
+}
+
+func CompareInventory(before, after Inventory) error {
+	for i, inv := range []Inventory{before, after} {
+		if head := bytes.TrimSpace(inv.Head); len(head) == 0 || bytes.Equal(head, []byte("null")) || bytes.Equal(head, []byte(`""`)) || len(inv.Entries) == 0 {
+			return refuse("inventory-empty", []string{"before", "after"}[i], "head or entries empty")
+		}
+	}
+	if !bytes.Equal(before.Head, after.Head) {
+		return refuse("inventory-mutated", "inventory", "head differs")
+	}
+	if len(before.Entries) != len(after.Entries) {
+		return refuse("inventory-mutated", "inventory", fmt.Sprintf("entry count %d != %d", len(before.Entries), len(after.Entries)))
+	}
+	for i, entry := range before.Entries {
+		if entry != after.Entries[i] {
+			return refuse("inventory-mutated", "inventory", fmt.Sprintf("entry %d differs", i))
+		}
+	}
+	objects := map[string]string{}
+	for _, object := range after.Objects {
+		objects[object.Ref] = object.SHA256
+	}
+	if len(before.Objects) != len(objects) {
+		return refuse("inventory-mutated", "inventory", "object set differs")
+	}
+	for _, object := range before.Objects {
+		if hash, ok := objects[object.Ref]; !ok || hash != object.SHA256 {
+			return refuse("inventory-mutated", "inventory", "object set differs")
+		}
+	}
+	return nil
+}
+
+func runInventory(command string, args []string) int {
+	fs := flag.NewFlagSet(command, flag.ContinueOnError)
+	var addr, out, before, after string
+	if command == "inventory" {
+		fs.StringVar(&addr, "addr", "", "daemon base URL")
+		fs.StringVar(&out, "out", "", "inventory JSON (default stdout)")
+	} else {
+		fs.StringVar(&before, "before", "", "earlier inventory JSON")
+		fs.StringVar(&after, "after", "", "later inventory JSON")
+	}
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return 0
+		}
+		return 2
+	}
+	if fs.NArg() != 0 || (command == "inventory" && addr == "") || (command == "inventory-compare" && (before == "" || after == "")) {
+		fs.Usage()
+		return 2
+	}
+	var err error
+	if command == "inventory" {
+		var inv Inventory
+		inv, err = ReadInventory(addr)
+		if err == nil {
+			err = writeJSON(inv, out)
+		}
+		if err != nil {
+			err = refuse("inventory-unreadable", addr, err.Error())
+		}
+	} else {
+		inputs := [2]Inventory{}
+		for i, path := range []string{before, after} {
+			var raw []byte
+			raw, err = os.ReadFile(path)
+			if err == nil {
+				err = json.Unmarshal(raw, &inputs[i])
+			}
+			if err != nil {
+				err = refuse("inventory-json", path, err.Error())
+				break
+			}
+		}
+		if err == nil {
+			err = CompareInventory(inputs[0], inputs[1])
+		}
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "marketingcheck: %s\n", err)
+		return 1
+	}
+	return 0
 }
 
 // RouteRow carries the capture route and the authoritative shot geometry and scheme.
@@ -277,7 +443,7 @@ func runObserve(args []string) int {
 	}
 	records, err := Observe(*root)
 	if err == nil {
-		err = writeObservation(records, *out)
+		err = writeJSON(records, *out)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "marketingcheck: observation-io %s: %s\n", *root, err)
@@ -286,7 +452,7 @@ func runObserve(args []string) int {
 	return 0
 }
 
-func writeObservation(records []ObservationRecord, out string) error {
+func writeJSON(records any, out string) error {
 	data, err := json.MarshalIndent(records, "", "  ")
 	if err != nil {
 		return err
