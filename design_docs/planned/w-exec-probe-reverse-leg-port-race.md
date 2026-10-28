@@ -218,6 +218,10 @@ NO-TOKEN and so a refusal. Exhausting the budget therefore fails closed.
 - **R3, EADDRINUSE becomes retry instead of pass.** Today `REFUSED EADDRINUSE` with no reach
   passes. The new design retries it. This is strictly stricter. A host where something always
   holds the chosen port refuses with the inconclusive text instead of passing vacuously.
+- **R4, independence of attempts [r2].** 3 attempts suffice only if per-attempt collisions are
+  near-independent. The per-srt-start mux `bind(0)` argument (V7) supports independence by
+  reading, but no Linux measurement of the in-window collision rate exists. If exhaustion
+  refusals appear in CI, this assumption is the first thing to re-measure.
 
 ## 6. Mutation table
 
@@ -331,7 +335,25 @@ binder stays unproven (§1). The fix does not depend on it.
 - `pollLoopback`;
 - `ExecProbeConfig` and `execProber`.
 
-Arm 8 (`probeProtected`) and arms 1–5 and 7 are untouched. The row 140 design doc's §4.6 wording
+Arm 8 (`probeProtected`) and arms 1–5 and 7 are untouched.
+
+**Caller census [r2].** The two helpers this item changes or re-homes are `pollLoopback`, whose
+signature and semantics change, and `freeLoopbackPort`, which becomes the default port picker.
+`grep -rn 'pollLoopback\|freeLoopbackPort' --include='*.go' .` returns exactly 6 lines, all in
+`host/broker/exec_probe.go`:
+- `:455`, the call `revPort, err := freeLoopbackPort()`;
+- `:460`, the call `poll := pollLoopback(revPort)`;
+- `:551/:552`, `freeLoopbackPort`'s doc comment and definition;
+- `:561/:563`, `pollLoopback`'s doc comment and definition.
+
+Each helper has exactly one call site, and both are inside the reverse leg. The positive control
+in the same run, `grep -rn 'func runBounded\|\.runBounded(' --include='*.go' host | wc -l`,
+returns `9`, and `host/`, `cmd/` and `world/` all exist, so the grep covered them (V22). The
+reverse leg is therefore the only caller of both helpers. "Untouched" for arms 1–5, 7 and 8 is
+now verified by this census rather than asserted. My re-run matches the controller's census
+line for line.
+
+The row 140 design doc's §4.6 wording
 ("a listener the child binds must be unreachable from the host") stays true and needs no
 amendment.
 
@@ -388,6 +410,34 @@ files (V11–V13) were created under `host/broker/zz_iter314_*_test.go`, run, an
 | V19 | Profiles are probed concurrently | Read exec_probe.go:174-183 | one goroutine per profile, `wg.Wait()` |
 | V20 | `exec_startup_test.go:499` is a log, not an assertion | `sed -n 499p host/daemon/exec_startup_test.go` | `t.Logf("%s: %v", id, err)` |
 | V21 | QUICKSTART's arm 6 prose (the S7 edit site) | `sed -n 1140,1160p docs/QUICKSTART.md` | `:1146-1148` "`arm6-network`: World opens its own live `127.0.0.1` listener … a port the child binds must be unreachable from the host." |
+| V22 | **[r2]** Caller census: the reverse leg is the only caller of `pollLoopback` and `freeLoopbackPort`. Run at worktree HEAD `72eba94b` | `grep -rn 'pollLoopback\|freeLoopbackPort' --include='*.go' .`; control `grep -rn 'func runBounded\|\.runBounded(' --include='*.go' host \| wc -l`; `ls -d host cmd world` | Exactly 6 lines, all in `host/broker/exec_probe.go`: `:455 revPort, err := freeLoopbackPort()`, `:460 poll := pollLoopback(revPort)`, `:551 // freeLoopbackPort is a port nothing listens on …`, `:552 func freeLoopbackPort() (int, error) {`, `:561 // pollLoopback dials 127.0.0.1:port every 50 ms …`, `:563 func pollLoopback(port int) func() bool {`. Control `9`. `cmd host world` all exist. This is identical to the controller's census (VERIFIED BY CONTROLLER) |
+
+## 13. Quorum log
+
+**Round 1** (2026-10-28; artifact
+`~/.ailang/state/mission-quorum-world/w-exec-probe-reverse-leg-port-race-2026-10-28T16-32-14Z.json`):
+**BLOCKED**.
+
+| Reviewer | Verdict |
+|---|---|
+| `oc-glm-5-3` | PASS |
+| `gemini-4-argon` | PASS |
+| `oc-kimi-k3` | REJECT |
+| `gpt6-1-sol` | absent (OpenAI 429, no credits) |
+
+- **The objection (`oc-kimi-k3`).** The reviewer did not dispute the design's direction. Its
+  objection was that §9's claim that arms 1–5, 7 and 8 are untouched had no caller census for
+  the two helpers whose signatures or semantics change, `pollLoopback` and `freeLoopbackPort`.
+  **REAL**: the claim was asserted, not measured.
+- **Fix applied in r2.** This applies the reviewer's proposed fix verbatim, with measured values:
+  - a §9 "Caller census" paragraph and Verification Log row V22, re-run first-party and matching
+    the controller's census (6 lines, one call site per helper, both in the reverse leg;
+    control 9);
+  - residual R4 in §5, on the independence of attempts and the missing Linux measurement of the
+    in-window collision rate;
+  - this log.
+
+  Nothing else changed.
 
 ## Related
 
