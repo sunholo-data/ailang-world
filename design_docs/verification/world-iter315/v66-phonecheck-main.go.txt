@@ -1,0 +1,224 @@
+// Iteration-315 designer, doc r3 (w-marketing-capture-orchestration §4.4 phone (iii′)).
+// The V58 scan (world-iter305/v58-phonescan-main.go.txt) UNCHANGED for bands, header, first
+// entry, std-dev, scrollbar and title-right; only the verdict lines are new. Each candidate is
+// judged twice: under r2 (iii) (scrollbar rect and title-right within ±2 px of the V50 image)
+// and under r3 (iii′) (the overflow defect PRESENT, no magnitude):
+//
+//	(iii′) image is 390x844, AND a scrollbar thumb exists in the bottom 20 px rows (the scan's
+//	definition: a run of luma 120..200 at least 100 px long) with X0 <= 8 and X1 <= 384, AND the
+//	title is clipped at the right edge: title_right >= 387.
+//
+// (i) compares against the R1 phone baseline constants (V60: header 25,45,345,23 -> {25 45 370 68};
+// first entry 41,428,323,182 -> {41 428 364 610}) within ±4 px; (ii) std-dev >= 4.0 in both.
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/png"
+	"math"
+	"os"
+)
+
+type Rect struct{ X0, Y0, X1, Y1 int }
+
+func luma(im image.Image, x, y int) float64 {
+	r, g, b, _ := im.At(x, y).RGBA()
+	return 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(b>>8)
+}
+
+func bands(im image.Image) []Rect {
+	bd := im.Bounds()
+	var out []Rect
+	in := false
+	var cur Rect
+	for y := bd.Min.Y; y < bd.Max.Y-20; y++ {
+		x0, x1 := -1, -1
+		for x := bd.Min.X; x < bd.Min.X+370 && x < bd.Max.X; x++ {
+			if luma(im, x, y) < 110 {
+				if x0 < 0 {
+					x0 = x
+				}
+				x1 = x
+			}
+		}
+		if x0 >= 0 {
+			if !in {
+				cur = Rect{x0, y, x1 + 1, y + 1}
+				in = true
+			} else {
+				cur.X0 = min(cur.X0, x0)
+				cur.X1 = max(cur.X1, x1+1)
+				cur.Y1 = y + 1
+			}
+		} else if in {
+			out = append(out, cur)
+			in = false
+		}
+	}
+	if in {
+		out = append(out, cur)
+	}
+	return out
+}
+
+func stddev(im image.Image, r Rect) float64 {
+	var s, ss, n float64
+	for y := r.Y0; y < r.Y1; y++ {
+		for x := r.X0; x < r.X1; x++ {
+			v := luma(im, x, y)
+			s += v
+			ss += v * v
+			n++
+		}
+	}
+	if n == 0 {
+		return 0
+	}
+	m := s / n
+	return math.Sqrt(ss/n - m*m)
+}
+
+func scrollbar(im image.Image) Rect {
+	bd := im.Bounds()
+	r := Rect{-1, -1, -1, -1}
+	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+		// Longest CONTIGUOUS run of in-range luma (iteration-315 judge fix: the first-to-last
+		// span admitted two stray pixels 100 px apart as a "thumb"; the rule says a run).
+		x0, x1 := -1, -1
+		for x, start := 0, -1; x <= bd.Max.X; x++ {
+			in := false
+			if x < bd.Max.X {
+				l := luma(im, x, y)
+				in = l >= 120 && l <= 200
+			}
+			if in && start < 0 {
+				start = x
+			}
+			if !in && start >= 0 {
+				if x0 < 0 || (x-1)-start > x1-x0 {
+					x0, x1 = start, x-1
+				}
+				start = -1
+			}
+		}
+		if x0 >= 0 && x1-x0 >= 100 {
+			if r.Y0 < 0 {
+				r = Rect{x0, y, x1 + 1, y + 1}
+			} else {
+				r.Y1 = y + 1
+			}
+		}
+	}
+	return r
+}
+
+func titleRight(im image.Image, h Rect) int {
+	right := -1
+	for y := h.Y0; y < h.Y1; y++ {
+		for x := 0; x < im.Bounds().Max.X; x++ {
+			if luma(im, x, y) < 110 && x > right {
+				right = x
+			}
+		}
+	}
+	return right
+}
+
+type Report struct {
+	File       string  `json:"file"`
+	W, H       int     `json:"-"`
+	NBands     int     `json:"bands"`
+	Header     Rect    `json:"header"`
+	FirstEntry Rect    `json:"first_entry"`
+	HeaderSD   float64 `json:"header_sd"`
+	EntrySD    float64 `json:"entry_sd"`
+	Scrollbar  Rect    `json:"scrollbar"`
+	TitleRight int     `json:"title_right"`
+}
+
+const entryStart = 9
+
+func scan(path string) (Report, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return Report{}, err
+	}
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		return Report{}, err
+	}
+	b := bands(im)
+	rep := Report{File: path, W: im.Bounds().Dx(), H: im.Bounds().Dy(), NBands: len(b), Scrollbar: scrollbar(im)}
+	if len(b) > 0 {
+		rep.Header = b[0]
+		rep.HeaderSD = stddev(im, b[0])
+		rep.TitleRight = titleRight(im, b[0])
+	}
+	if len(b) >= entryStart+6 {
+		u := b[entryStart]
+		for _, r := range b[entryStart : entryStart+6] {
+			u = Rect{min(u.X0, r.X0), min(u.Y0, r.Y0), max(u.X1, r.X1), max(u.Y1, r.Y1)}
+		}
+		rep.FirstEntry = u
+		rep.EntrySD = stddev(im, u)
+	}
+	return rep, nil
+}
+
+func near(a, b Rect, tol int) bool {
+	d := func(x, y int) bool { return x-y <= tol && y-x <= tol }
+	return d(a.X0, b.X0) && d(a.Y0, b.Y0) && d(a.X1, b.X1) && d(a.Y1, b.Y1)
+}
+
+// R1 phone baseline (V60 r1-rects.json phone.png content, x,y,w,h -> X0,Y0,X1,Y1).
+var r1Header = Rect{25, 45, 25 + 345, 45 + 23}
+var r1Entry = Rect{41, 428, 41 + 323, 428 + 182}
+
+func main() {
+	// usage: phonecheck <v50-reference.png> <label=candidate.png>...
+	ref, err := scan(os.Args[1])
+	if err != nil {
+		fmt.Println("INSTRUMENT FAILURE", err)
+		os.Exit(2)
+	}
+	j, _ := json.Marshal(ref)
+	fmt.Println("V50REF", string(j))
+	fmt.Printf("CONTROL v50-ref header==R1 %v entry==R1 %v\n", ref.Header == r1Header, ref.FirstEntry == r1Entry)
+	acc3, acc3p := 0, 0
+	for _, arg := range os.Args[2:] {
+		label, p := arg, arg
+		for i := 0; i < len(arg); i++ {
+			if arg[i] == '=' {
+				label, p = arg[:i], arg[i+1:]
+				break
+			}
+		}
+		c, err := scan(p)
+		if err != nil {
+			fmt.Println("INSTRUMENT FAILURE", p, err)
+			os.Exit(2)
+		}
+		i := near(c.Header, r1Header, 4) && near(c.FirstEntry, r1Entry, 4)
+		ii := c.HeaderSD >= 4.0 && c.EntrySD >= 4.0
+		iiiOld := near(c.Scrollbar, ref.Scrollbar, 2) && c.TitleRight-ref.TitleRight <= 2 && ref.TitleRight-c.TitleRight <= 2
+		dims := c.W == 390 && c.H == 844
+		thumb := c.Scrollbar.Y0 >= 0 && c.Scrollbar.X0 <= 8 && c.Scrollbar.X1 <= 384
+		clip := c.TitleRight >= 387
+		iiiNew := dims && thumb && clip
+		r2, r3 := "REFUSE", "REFUSE"
+		if i && ii && iiiOld {
+			r2 = "ACCEPT"
+			acc3++
+		}
+		if i && ii && iiiNew {
+			r3 = "ACCEPT"
+			acc3p++
+		}
+		fmt.Printf("%-28s %dx%d bands=%d header=%v entry=%v sd=%.1f/%.1f thumb=%v titleRight=%d | (i)=%v (ii)=%v | r2(iii)=%v -> r2 %s | r3(iii′): dims=%v thumb=%v clip=%v -> r3 %s\n",
+			label, c.W, c.H, c.NBands, c.Header, c.FirstEntry, c.HeaderSD, c.EntrySD, c.Scrollbar, c.TitleRight, i, ii, iiiOld, r2, dims, thumb, clip, r3)
+	}
+	fmt.Printf("TOTAL candidates=%d r2-accept=%d r3-accept=%d\n", len(os.Args)-2, acc3, acc3p)
+}

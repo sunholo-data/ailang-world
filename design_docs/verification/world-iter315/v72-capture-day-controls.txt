@@ -1,0 +1,19 @@
+# V72 capture-day control step (controller, iteration 315, base 09ff2821; re-run after the r5 thumb-run fix); checkers built from banked .txt
+0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c  design_docs/verification/world-iter315/v64-p0check-main.go.txt
+31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c  design_docs/verification/world-iter315/v66-phonecheck-main.go.txt
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  design_docs/verification/world-iter315/v64-rects-r1c-seed5.json
+999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8  ~/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+mutate rc=0
+accept                                 r3 ACCEPT  r2 ACCEPT
+refuse                                 r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    r3: packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+    r2: packet.png/roster-attested: edge >2px (dy 14 dh 0)
+TOTAL candidates=2 r3-accept=1 r2-accept=1
+p0check rc=0
+V50REF {"file":"/Users/voightkampff/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png","bands":21,"header":{"X0":25,"Y0":45,"X1":370,"Y1":68},"first_entry":{"X0":41,"Y0":428,"X1":364,"Y1":610},"header_sd":104.24485613117268,"entry_sd":51.70468891711325,"scrollbar":{"X0":6,"Y0":833,"X1":329,"Y1":841},"title_right":389}
+CONTROL v50-ref header==R1 true entry==R1 true
+accept                       390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} sd=104.2/51.7 thumb={6 833 329 841} titleRight=389 | (i)=true (ii)=true | r2(iii)=true -> r2 ACCEPT | r3(iii′): dims=true thumb=true clip=true -> r3 ACCEPT
+refuse                       1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} sd=104.2/53.5 thumb={-1 -1 -1 -1} titleRight=413 | (i)=false (ii)=true | r2(iii)=false -> r2 REFUSE | r3(iii′): dims=false thumb=false clip=true -> r3 REFUSE
+TOTAL candidates=2 r2-accept=1 r3-accept=1
+phonecheck rc=0

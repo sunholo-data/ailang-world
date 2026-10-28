@@ -13,6 +13,7 @@ confidently and wrongly is worse than none.
 | # | date | what happened |
 |---|---|---|
 | 314 | 2026-10-28 | dev RED at Gate 1 → arm 6 reverse-leg false refusal fixed and LANDED (row 229, PR #403; judge PASS 92) [PRODUCT-HYGIENE] |
+| 315 | 2026-10-28 | row 150: C8′(iii)/P0 store-dependent-geometry amendment written (orchestration doc r3 → r5); quorum BLOCKED twice → carve-out; judge r1 PASS 77 → controller fix → r2 PASS 84 [PRODUCT] |
 | 313 | 2026-10-28 | row 150: M8a built — reproduction docs, captions, release manifest schema and `marketingcheck docs`; judge r1 PASS 82 → controller fix → r2 PASS 89... |
 | 312 | 2026-10-28 | row 150: R1 measured — real-Chrome rectangles, two-pass full path and threshold V-row, with two store-dependent criteria left open; row 156 closed ... |
 | 311 | 2026-10-28 | row 150: M7c4 built — the real-Chrome drill exists and the capture shell compares frozen inventories around both passes; judge PASS 92 [PRODUCT] |

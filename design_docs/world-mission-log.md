@@ -2673,3 +2673,106 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (hygiene on MET clause 3); row 150 22/23 built (M8b left) plus the C8′(iii)/P0 amendment, P0–P3 and A1.
 **Next:** row 150's C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum), then M8b, then P0–P3 and the attended A1; then 151. Row 230 sits below every release row.
+
+## 315 — 2026-10-28 — row 150: C8′(iii)/P0 store-dependent-geometry amendment written (orchestration doc r3 → r5); quorum BLOCKED twice → carve-out; judge r1 PASS 77 → controller fix → r2 PASS 84 [PRODUCT]
+
+**Kind:** design amendment (designer → quorum → designer revision → re-quorum → controller carve-out → independent evaluator ×2 → controller fix round → PR). Every role was spawned through the Agent tool, per the operator's standing request. No planner or executor was routed: the pick is a doc revision, and it changes no milestone (M8b is next and its plan is unchanged).
+
+**Pick and why:** the queue head under D-WORLD-81 (150 → 151) and the iteration-314 **Next**: row 150's C8′(iii)/P0 amendment. R1 (iteration 312, V60–V63) had measured two acceptance rules that cannot hold on a store other than the one measured: P0 (a) "±2 px on every edge" (packet paragraphs wrap with the store's text) and phone C8′(iii) "overflow geometry within ±2 px of V50" (the thumb width follows the text). P0, P3 and A1 cannot run until both are amended.
+
+**Clause map:** clauses 1–7 MET (ratified states, not re-measured); no UNMET clause and no critical-path row; release order D-WORLD-81 150 → 151 → v1.0.0.
+
+**Gate 0:**
+- Kill switch armed; gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (12 comments). Watermark unchanged.
+- Self-notices rc 1: the newest crash `6345079873` (2026-10-22) is already credited (log count 12). No new crash.
+- Inbox `mission-world`: 21 unread, all this loop's own claim messages; the iteration-315 claim was sent and confirmed in the listing.
+- Ledger valid, 88 rows, 0 OPEN. External-issue sweep not due (#366 is this week's issue).
+- **Hygiene incident (controller):** the first Gate-0 env read listed values rather than names, which printed an OAuth token value into this session's local transcript. That is the exact pattern Gate 0 forbids. The value is in no repo file, commit or message. Reported to Mark.
+
+**Gate 1:**
+- Local dev was 9 behind with a clean tracked tree; fast-forwarded to `09ff2821`. Base `09ff2821…` recorded at `2026-10-28T20:01:37Z`.
+- Skill: `SKILL.md` and all 13 resource files are byte-identical to `origin/dev` at the resolved symlink target (per-file `cmp`).
+- CI at `09ff2821`: 3 checks, all success.
+- Open PR from this account: #402 `trial/row217a-presets-start`, an attended Codex-through-World trial of row 217. It is not this loop's work and was left alone.
+
+**Design (designer opus, Agent tool; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`):**
+- **r3: P0 (a)** is a structural match: (a1) left/right ±2 px; (a2) stack-head top ±2 px; (a3) each later region's gap from the previous region's **measured** bottom equals the R1 gap ±2 px, and the two body-text gaps may differ by whole 24 px lines; (a4) packet paragraph heights are the R1 height plus whole 24 px lines (`line-height:1.5`, `render.go:193`). The content gate runs inside the capture store's own accepted rectangles.
+- **Phone (iii′):** the overflow defect is present. That means a thumb in the bottom 20 px with x0 ≤ 8 and x1 ≤ 384, and title ink at x ≥ 387.
+- Measured on the nine iteration-312 stores (V64–V68):
+  - P0: 9/9 accepted (r2 8/9) and 18/18 negatives refused, including every wrong crop `check` accepted at V63.
+  - Phone: 19/19 accepted (r2 1/19) and 11/11 refused.
+- Thumb right edge per store: 324–340, against V50's 329. The judge's ±10 px idea would already refuse the 340 store.
+- **Controller check before quorum:** rebuilt both checkers from the banked `.txt` and re-ran them. P0 r3 accepts 7/7 block-box stores (r2 6/7); phone accepts V50 + 9 stores and refuses the desktop image.
+
+**Quorum** (`--author claude:claude-opus-5-5`; seated kimi-k3, gpt6-1-sol, gemini-4-argon; reserve glm-5-3; the Claude seat sits out; gpt6-1-sol absent both rounds, `unreachable`, OpenAI 429):
+- **r3 round:** BLOCKED 3/3 (kimi, gemini, glm), $0.43. All three objected to provenance and labels: the header claimed one base for rows measured at four commits, §9 still said "r1", milestones that had landed were shown pending, the invocations were unbound, and the row-149 coupling was unnamed.
+- **Controller measured the drift premise first (rule 3f):**
+  - ancestry rc 0 ×3;
+  - `host/workbench`: 0 files and 0 commits in 4e6e89dc..09ff2821, with range control `aeaa957d` = 2;
+  - `host/daemon/workbench*` = 0;
+  - `daemon.go` changed only health/session fields;
+  - `png.go` changed only a comment.
+- **r4 (designer revision, resumed via SendMessage):** per-row bases, V69 (drift), V70 (milestones), V71 (checkers build from `.txt`).
+- **r4 re-quorum:** BLOCKED, $0.58. Gemini **PASS**. Kimi: the release-blocking checker is an uncommitted `.txt` program; fix = commit it, OR keep the route with sha256 pins, capture-day controls and a stated reason. GLM: P0's blocking clause needs a still-HTML repeat-GET whose instrument P0 retires; fix = an instrument-per-artifact checklist, plus one stored R1 height.
+- **Disposition:** neither reject disputes the r3 rules, and every objection carries a concrete fix, so the **narrow-refinement carve-out** applies.
+- **r5 (controller):**
+  - Kimi's second option: pins, plus the control step executed as V72. The rationale paragraph and the V50 known-accept substitution are named controller-authored. Kimi's first option was filed as row 231.
+  - GLM's checklist, verbatim, and C12 aligned with it.
+  - V73: the stored R1 height is 97 (block 96.0, floor/ceil), and the wrapped store's is 73.
+  - Each fix got its own named mutation per the World guardrail (V74: M-r5-pin, M-r5-control, M-r5-run).
+- Artifacts banked: `verification/world-iter315/quorum-r3.json`, `quorum-r4.json`.
+
+**Independent evaluation (sonnet, Agent tool, own worktree `.eval-world-iter315`):**
+- **r1 at `c36a4306`: PASS 77/100** (24/20/13/11/9), zero blocking.
+  - Reproduced V64, V66, V69, V72 and V73 byte-for-byte or numerically.
+  - Read both checkers against the prose clause by clause, and ran its own arms.
+  - Found phonecheck's thumb test is a first-to-last **span**, not the **run** the rule and its own header say: two stray grey pixels passed.
+  - Also found stale r4/r3 labels, row 231 not yet filed, identity-only accept controls, whole-line slides accepted in the free gaps, compounding ±2 drift, V65 not isolating four clauses, and the carve-out guardrail's per-fix criterion and mutation missing.
+- **Controller fix round (`0e975c53`):** reproduced the span defect (old ACCEPT) and changed `scrollbar()` to the longest contiguous run. The 19 positives' outputs are byte-identical, the scattered arm flips to REFUSE, and the other 28 arms are unchanged. Source re-pinned, V66/V67/V72 re-run, stale text fixed.
+- **r2 at `0e975c53`: PASS 84/100** (25/21/17/12/9), zero blocking. Divergence 1 and the stale text are CLOSED. It found a new fragility: a real thumb split by one off-range pixel left of its midpoint is refused. It left open NB2 (row 231), NB7 (per-fix criteria) and NB8 (truncated hashes).
+- **After r2 (`e5cd4673`, controller, not re-judged):** V74 named mutations and the per-fix criteria table (NB7), full hashes (NB8), the exclusive-X1 note, and the judge's arm generator banked. Row 231 was filed with this record (NB2).
+
+**Bookkeeping:**
+- Charter: STATUS 315 added; STATUS 312 rotated to the archive (archive count 1, control 311 = 1). Charter 6297 → 6298 (+1 = row 231; the stamp swap nets 0); archive +2. `## Queue` and rows 150 and 229–231 present; ledger valid, 88 rows. CURRENT GOAL next line updated. Row 150 records the amendment and NEXT = M8b.
+- Doc stays in `planned/`, because row 150 is not complete.
+
+**Result:** the amendment is BUILT on `sprint/world-iter315-row150-c8-amend`. Design commits are `c36a4306` (r3–r5), `0e975c53` (judge-fix round) and `e5cd4673` (V74). It is LANDED only after merge-commit CI (Gate 3b).
+
+**Gate 3b:**
+- PR #404's head `d4df8a15` was polled SHA-pinned (bounded 1800 s; the verdict file names the SHA): **RED**. `go host build + test gate` failed one subtest, `TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder` (`Why = "", picker calls 1; want the sticky silent refusal`). That is one of row 229's tests, landed in iteration 314. Every other package passed, and `ailang-code verify gate` and the race gate are green.
+- **Attribution:** this diff is `design_docs/` only (0 files outside), and the same test was green at `d7bba842` and `09ff2821`. So the failure is intermittent and inherited, not from this PR. Instance 1.
+- **Not ignorable:** the leg PASSED where the design says a reset must refuse. That could be a false pass of the fail-closed probe, filed as **row 232** with the excerpt banked.
+- Actions: re-ran the failed job on the identical tree (attempt 2), and pushed the record commits (new head; a full CI run). Both are polled before merge; the outcome is reported on #366.
+
+**Routing evidence:** base=09ff28215176d5c09b36ecffba85ee04660ba238@2026-10-28T20:01:37Z (Gate 1 record; the Gate 3 `snap` was the same SHA). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION` empty; `MISSION_ROUTING_NOTE` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (same weights, per the operator's standing request; iteration-228/314 precedent). The rotation file holds `claude:claude-opus-5-5`, unchanged because that is the lane that ran. 1 doc, 2 runs (author + the protocol-mandated revision), within the one-doc diet. Tokens 196,359 + 261,559.
+- Planner and executor: not routed (design amendment; no milestone change).
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), r1 160,583 tok / 462 s, r2 186,872 tok / 82 s (resumed). Generator ≠ judge: opus vs sonnet.
+- Quorum: kimi-k3 / gemini-4-argon / glm-5-3 (reserve), gpt6-1-sol absent both rounds (unreachable, 429). Metered: r3 round $0.4317 (kimi 29,993/4,415 tok, gemini 34,060/1,075, glm 30,597/17,020) + r4 round $0.5831 = **$1.01**.
+
+**Ruled out:**
+- The controller's own "the V50 reference image is no longer on disk" (from a search of the repo and `/tmp/world-iter305*` only). It lives at `~/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png` (sha `999125ff…` = V63). Rule 3a: the search location was the instrument.
+- The first quorum launch's rc 127: `timeout` does not exist on macOS, so the quorum never ran. It was re-run under a `date +%s` deadline loop. An instrument failure, not a verdict.
+- The controller's brief said M7c2a had no PR. The designer's `git log` showed PR #380 (`b3b373ec`), and the controller confirmed it.
+- Re-baselining R1 for cross-base drift: unneeded, because the renderer and still path are byte-unchanged from 4e6e89dc to 09ff2821.
+- A ±10 px tolerance around V50 for phone (iii): refuted by the 340 px store.
+- The "ratified in iteration 95" citation in r5: not confirmable from the charter (the judge), so it was removed.
+
+**Carried:**
+- Row 231: commit the checkers; the free-gap tolerances; compounding drift; identity accept controls; P0 item (1) command; V65 isolation; (ii) stand-in; the split-thumb fragility.
+- gpt6-1-sol absent from the quorum on OpenAI 429 for the third iteration running (314, 315 ×2). A capacity condition, not a decision.
+- Row 232: row 229's `reset-holder` arm passed the reverse leg on Linux CI (instance 1; possibly a false pass).
+- `.wt-world-iter306-r0` residue.
+
+**Retro:**
+- **A failed heredoc does not stop the next line.** The record script aborted on an ambiguous anchor, and the `git add/commit/push` on the following lines still ran, pushing a partial record commit (`0db9358f`, row 232 only). The memory rule "push only after checked exit codes" was known and still missed, because the chain broke at a heredoc boundary. Gate the push on the script's rc. Instance 1 for World (memory: instances 1–2 on 2026-10-16).
+- **A checker banked as `.txt` gets reviewed as prose, but it runs as code.** The quorum read the rule text, and only a judge told to "read the code against the prose clause by clause" found that the implementation tested a span where the prose (and the code's own header comment) said a run. Instance 1. The directive line is what caught it.
+- **Verdict-in-text instruments exit 0 on REFUSE.** Both checkers print ACCEPT/REFUSE and exit 0 either way, so any future wrapper keyed on `$?` would read every capture as green. This is now stated in §4.4, and row 231's committed form should exit non-zero. Instance 1.
+- **`timeout` is not a macOS command.** A bounded-wait idiom borrowed from Linux failed rc 127 and reported nothing. Use the `date +%s` loop the skill prescribes. Instance 1.
+- **Read the environment by NAME** — a Gate-0 rule the controller broke this iteration (above). Instance 1 for World, and the rule already exists, so no skill edit.
+- Harness share 0. Bar-moving landings: 313, 314 and 315 moved no clause, but every clause is MET with no routable critical-path row, so this is not DRIFT. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release row). Row 150: 22/23 executor milestones built (M8b left); the C8′/P0 amendment is written; P0–P3 and the attended A1 remain.
+**Next:** row 150 M8b, then P0–P3 (r5 predicates and capture-day controls) and the attended A1; then 151. Rows 230 and 231 sit below every release row. Row 232 (the reset-holder false pass) takes precedence if it reds dev at Gate 1.

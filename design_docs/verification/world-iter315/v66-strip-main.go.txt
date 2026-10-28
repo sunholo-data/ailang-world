@@ -1,0 +1,39 @@
+package main
+
+import (
+	"fmt"
+	"image/png"
+	"os"
+)
+
+func main() {
+	f, _ := os.Open(os.Args[1])
+	im, err := png.Decode(f)
+	if err != nil {
+		panic(err)
+	}
+	b := im.Bounds()
+	fmt.Println("bounds", b)
+	for y := b.Max.Y - 16; y < b.Max.Y; y++ {
+		// run-length encode luma buckets
+		prev := -1
+		start := 0
+		s := fmt.Sprintf("y=%d:", y)
+		for x := 0; x <= b.Max.X; x++ {
+			v := -2
+			if x < b.Max.X {
+				r, g, bb, _ := im.At(x, y).RGBA()
+				l := 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(bb>>8)
+				v = int(l) / 10 * 10
+			}
+			if v != prev {
+				if prev >= -1 && x > 0 {
+					s += fmt.Sprintf(" [%d-%d]%d", start, x-1, prev)
+				}
+				prev = v
+				start = x
+			}
+		}
+		fmt.Println(s)
+	}
+}

@@ -1,18 +1,15 @@
-# World mission dashboard — iteration 314 (2026-10-28)
+# World mission dashboard — iteration 315 (2026-10-28)
 
-- **This fire:** dev was RED at Gate 1, so it preempted the queue: the arm 6 reverse-leg false refusal is fixed as row 229 (PR #403).
-- **The red:** `origin/dev` `2769cff9` failed `TestExecSrtMCPGrantAndBudget` with "reverse leg: the host reached the listener the child bound…". A re-run on the identical tree was green, so it is a flake. The same false refusal could refuse daemon startup in production.
-- **Cause:** the probe closed the port it picked, then counted ANY connect as the sandboxed child. On Linux the child is in its own netns, so a reach was always some other host process; srt's own mux binds an ephemeral port at every start.
-- **Fix:** a fresh port and nonce per attempt, plus a hello on every dial. The child's nonce means refuse; other bytes or EOF mean foreign, so retry (≤3), then refuse "inconclusive"; silence means a sticky refusal. A leg passes only if no dial connected.
-- **Measured first:** live against the pinned srt 0.0.78 mux, the hello gets an HTTP 400 in ≤3 ms (3/3). That is what made the quorum's last objection carve-out-eligible.
-- **Quorum:** r1 and r2 BLOCKED (kimi, glm); r3 applied the reviewers' verbatim fixes under the carve-out. gpt6-1-sol was absent both rounds (OpenAI API 429, no credits). Spend $0.69.
-- **Judge:** sonnet PASS 92/100, zero blocking. Two surviving mutants (hello wait, `c.resume()`) became row 230.
-- **CI:** PR head 3/3 green, and all 7 new tests plus the real-srt tests PASS on Linux. The merge commit is polled before LANDED.
-- **Roles (Agent tool):** designer opus ×3 runs (one doc; the third run is FLAGGED over diet), planner opus, executor haiku, evaluator sonnet.
+- **This fire:** row 150's C8′(iii)/P0 amendment is written. The two geometry rules that R1 found unable to hold on another store are replaced with store-independent ones (orchestration doc r3 → r5).
+- **P0 (a):** left/right edges and stack-head tops stay at ±2 px. Each later region is placed from the previous region's measured bottom. Packet paragraphs may grow or shrink by whole 24 px lines. Result: 9/9 stores accepted (the old rule accepted 8) and 18/18 wrong crops refused.
+- **Phone (iii′):** the check asserts that the overflow defect is present (a thumb at the bottom, title ink clipped at ≥387), not its width. The width ranges 324–340 across stores. Result: 19/19 images accepted (the old rule accepted 1) and 12/12 refused.
+- **Quorum:** the r3 round was BLOCKED 3/3 on provenance labels. The controller measured the renderer as unchanged across all four bases. r4 was revised and BLOCKED again (Gemini PASS; Kimi and GLM REJECT), so r5 applies their fixes under the carve-out: source sha256 pins, a capture-day accept/refuse control step, and the P0 checklist. Each fix has its own named mutation. gpt6-1-sol was absent both rounds (OpenAI 429). Spend $1.01.
+- **Judge:** sonnet r1 PASS 77, zero blocking. It found that phonecheck tested a span, not a run, so two stray pixels passed; the controller fixed it and re-pinned. r2 PASS 84, zero blocking.
+- **Roles (Agent tool):** designer opus (2 runs, one doc) and evaluator sonnet (2 rounds). No planner or executor; the milestone plan is unchanged.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
-- **Row 150:** 22/23 executor milestones built (M8b left); P0, P3 and A1 remain.
-- **Next:** row 150's C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum) → M8b. Row 230 sits below the release rows.
-- **Harness:** row 144's ticket was resolved by the fleet (`d95ead6`), and the reply is acked.
-- **Parked on Mark:** nothing — the ledger has 0 OPEN rows.
-- **Cost:** metered $0.69 (quorum); Anthropic quota otherwise. Codex is over its ration.
-- **Record/evidence:** world-mission-log.md entry 314; verification/world-iter314/.
+- **Row 150:** 22/23 executor milestones built (M8b left). The amendment is written; P0, P3 and the attended A1 remain.
+- **Next:** row 150 M8b, then P0–P3 using the r5 predicates. Rows 230 and new 231 (commit the P0/phone checkers) sit below the release rows.
+- **Parked on Mark:** nothing; the ledger has 0 OPEN rows.
+- **Heads-up for Mark:** at Gate 0 the controller printed env values, including an OAuth token, into its own local session transcript. The token is in no repo file or message. Rotate it if transcripts leave the machine.
+- **Cost:** metered $1.01 (quorum); Anthropic quota otherwise.
+- **Record/evidence:** world-mission-log.md entry 315; verification/world-iter315/.

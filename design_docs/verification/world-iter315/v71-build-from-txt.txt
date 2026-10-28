@@ -1,0 +1,24 @@
+# V71 build from banked .txt, 2026-10-28T20:23:50Z, go version go1.26.6 darwin/arm64
+$ cp v64-p0check-main.go.txt $B/p0/main.go && cd $B/p0 && go mod init p0check && go build -o p0check .
+go: creating new go.mod: module p0check
+go: to add module requirements and sums:
+	go mod tidy
+build rc=0
+$ cp v66-phonecheck-main.go.txt $B/phone/main.go && cd $B/phone && go mod init phonecheck && go build -o phonecheck .
+go: creating new go.mod: module phonecheck
+go: to add module requirements and sums:
+	go mod tidy
+build rc=0
+$ $B/p0/p0check check design_docs/verification/world-iter312/r1-rects.json seed5=v64-rects-r1c-seed5.json eval-p1=v64-rects-eval-p1.json
+seed5                                  r3 ACCEPT  r2 ACCEPT
+eval-p1                                r3 ACCEPT  r2 REFUSE
+    r2: packet.png/roster-proven: edge >2px (dy 0 dh -24)
+TOTAL candidates=2 r3-accept=2 r2-accept=1
+rc=0
+$ $B/phone/phonecheck <V50 phone.png> seed5A=/tmp/world-iter312/r1c-seed5/capture/pass-a/phone.png desktop=/tmp/world-iter312/r1c-seed5/capture/pass-a/workbench-light.png
+V50REF {"file":"/Users/voightkampff/.ailang/state/world-iter},"header_sd":104.24485613117268,"entry_sd":51.70468891711325,"scrollbar":{"X0":6,"Y0":833,"X1":329,"Y1":841},"title_right":389}
+CONTROL v50-ref header==R1 true entry==R1 true
+seed5A                       390x844 bands=21 header={25 45 i′): dims=true thumb=true clip=true -> r3 ACCEPT
+desktop                      1440x1100 bands=28 header={25 4| r3(iii′): dims=false thumb=false clip=true -> r3 REFUSE
+TOTAL candidates=2 r2-accept=0 r3-accept=1
+rc=0

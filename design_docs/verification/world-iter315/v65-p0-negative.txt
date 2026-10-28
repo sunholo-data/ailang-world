@@ -1,0 +1,115 @@
+seed5/neg-attested+14                  r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    r3: packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+    r2: packet.png/roster-attested: edge >2px (dy 14 dh 0)
+seed5/neg-attested-dropped             r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-attested: missing
+    r2: packet.png/roster-attested: missing
+seed5/neg-background-over-content      r3 REFUSE  r2 REFUSE
+    r3: packet.png/background: edge >2px
+    r2: packet.png/background: edge >2px
+seed5/neg-dark-timeline-first+24       r3 REFUSE  r2 REFUSE
+    r3: workbench-dark.png/timeline-first: (a3) gap after header 124 vs R1 100
+    r2: workbench-dark.png/timeline-first: edge >2px (dy 24 dh 0)
+seed5/neg-graph-svg-at-timeline        r3 REFUSE  r2 REFUSE
+    r3: graph.png/graph-svg: (a4) height 190 vs 274
+    r3: graph.png/graph-svg: (a2) stack-head top 466 vs 1746
+    r2: graph.png/graph-svg: edge >2px (dy -1280 dh -84)
+seed5/neg-light-header+40              r3 REFUSE  r2 REFUSE
+    r3: workbench-light.png/header: (a2) stack-head top 154 vs 114
+    r3: workbench-light.png/timeline-first: (a3) gap after header 60 vs R1 100
+    r2: workbench-light.png/header: edge >2px (dy 40 dh 0)
+seed5/neg-light-header-whole-view      r3 REFUSE  r2 REFUSE
+    r3: workbench-light.png/header: (b) bottom 1100 > H-40 1060 or outside
+    r3: workbench-light.png/header: (a1) left/right 0..1440 vs 0..1425
+    r3: workbench-light.png/header: (a4) height 1100 vs 209
+    r3: workbench-light.png/header: (a2) stack-head top 0 vs 114
+    r3: workbench-light.png/timeline-first: (a3) gap after header -677 vs R1 100
+    r2: workbench-light.png/header: edge >2px (dy -114 dh 891)
+    r2: workbench-light.png/header: (b) bottom 1100 > H-40 1060 or outside
+seed5/neg-packet-all+14                r3 REFUSE  r2 REFUSE
+    r3: packet.png/validation: (a2) stack-head top 2873 vs 2859
+    r2: packet.png/validation: edge >2px (dy 14 dh 0)
+    r2: packet.png/approvals-chain: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-tested: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-attested: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 14 dh 0)
+seed5/neg-packet-stack-down-6-lines    r3 REFUSE  r2 REFUSE
+    r3: packet.png/validation: (a2) stack-head top 3003 vs 2859
+    r3: packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside
+    r2: packet.png/validation: edge >2px (dy 144 dh 0)
+    r2: packet.png/approvals-chain: edge >2px (dy 144 dh 0)
+    r2: packet.png/roster-tested: edge >2px (dy 144 dh 0)
+    r2: packet.png/roster-attested: edge >2px (dy 144 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 144 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 144 dh 0)
+    r2: packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside
+seed5/neg-payload+14                   r3 REFUSE  r2 REFUSE
+    r3: provenance.png/payload: (a2) stack-head top 2836 vs 2822
+    r2: provenance.png/payload: edge >2px (dy 14 dh 0)
+seed5/neg-proven-grows-6-lines-below-fold r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside
+    r2: packet.png/roster-proven: edge >2px (dy 0 dh 144)
+    r2: packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside
+seed5/neg-rows-reordered-tested-claimed r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-tested: (a3) gap after approvals-chain 199 vs R1 95
+    r3: packet.png/roster-attested: (a3) gap after roster-tested -89 vs R1 15
+    r3: packet.png/roster-claimed: (a3) gap after roster-attested -89 vs R1 15
+    r3: packet.png/roster-proven: (a3) gap after roster-claimed 119 vs R1 15
+    r2: packet.png/roster-tested: edge >2px (dy 104 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy -104 dh 0)
+seed5/neg-tested-64x16-glyphs          r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-tested: (a1) left/right 106..170 vs 106..1319
+    r3: packet.png/roster-tested: (a4) height 16 vs 49 not whole lines
+    r3: packet.png/roster-tested: (a3) gap after approvals-chain 98 vs R1 95
+    r3: packet.png/roster-attested: (a3) gap after roster-tested 45 vs R1 15
+    r2: packet.png/roster-tested: edge >2px (dy 3 dh -33)
+seed5/neg-tested-at-attested-row       r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-tested: (a3) gap after approvals-chain 159 vs R1 95
+    r3: packet.png/roster-attested: (a3) gap after roster-tested -25 vs R1 15
+    r2: packet.png/roster-tested: edge >2px (dy 64 dh -24)
+seed5/neg-tested-at-proven-row         r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-attested: (a3) gap after roster-tested -201 vs R1 15
+    r2: packet.png/roster-tested: edge >2px (dy 168 dh 48)
+seed5/neg-tested-height+14             r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-tested: (a4) height 63 vs 49 not whole lines
+    r2: packet.png/roster-tested: edge >2px (dy 0 dh 14)
+    r2: packet.png/roster-attested: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 14 dh 0)
+seed5/syn-pos-createdAt-wraps          r3 ACCEPT  r2 REFUSE
+    r2: packet.png/approvals-chain: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-tested: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-attested: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 24 dh 0)
+seed5/syn-pos-proven-5-lines           r3 ACCEPT  r2 REFUSE
+    r2: packet.png/roster-proven: edge >2px (dy 0 dh 24)
+seed5/syn-pos-tested-wraps-3-lines     r3 ACCEPT  r2 REFUSE
+    r2: packet.png/roster-tested: edge >2px (dy 0 dh 24)
+    r2: packet.png/roster-attested: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 24 dh 0)
+p1/neg-tested-at-attested-row          r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-tested: (a3) gap after approvals-chain 159 vs R1 95
+    r3: packet.png/roster-attested: (a3) gap after roster-tested -25 vs R1 15
+    r2: packet.png/roster-tested: edge >2px (dy 64 dh -24)
+    r2: packet.png/roster-proven: edge >2px (dy 0 dh -24)
+p1/neg-packet-all+14                   r3 REFUSE  r2 REFUSE
+    r3: packet.png/validation: (a2) stack-head top 2873 vs 2859
+    r2: packet.png/validation: edge >2px (dy 14 dh 0)
+    r2: packet.png/approvals-chain: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-tested: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-attested: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 14 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 14 dh -24)
+p1/syn-pos-tested-wraps-3-lines        r3 ACCEPT  r2 REFUSE
+    r2: packet.png/roster-tested: edge >2px (dy 0 dh 24)
+    r2: packet.png/roster-attested: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-claimed: edge >2px (dy 24 dh 0)
+    r2: packet.png/roster-proven: edge >2px (dy 24 dh -24)
+p1/boundary-proven+6lines-bottom3652   r3 ACCEPT  r2 REFUSE
+    r2: packet.png/roster-proven: edge >2px (dy 0 dh 120)
+TOTAL candidates=23 r3-accept=5 r2-accept=0
+rc=0

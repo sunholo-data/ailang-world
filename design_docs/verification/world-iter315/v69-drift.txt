@@ -1,0 +1,324 @@
+# V69 cross-base drift, run 2026-10-28T20:23:11Z in the iteration-315 worktree
+$ git rev-parse HEAD origin/dev
+09ff28215176d5c09b36ecffba85ee04660ba238
+09ff28215176d5c09b36ecffba85ee04660ba238
+$ git rev-parse 4e6e89dc; git merge-base --is-ancestor 4e6e89dc 09ff2821; echo rc
+4e6e89dc44c9ee9771b415b3cfdc23fadfaadff1
+rc=0
+$ git rev-parse eacd90e7; git merge-base --is-ancestor eacd90e7 09ff2821; echo rc
+eacd90e7d412ecb0a7363254549a6c3a0c71a589
+rc=0
+$ git rev-parse dba643a9; git merge-base --is-ancestor dba643a9 09ff2821; echo rc
+dba643a931c2f69f9071520d13f7ba1883e27634
+rc=0
+$ (glm form) for b in eacd90e7 dba643a9 09ff2821; do git merge-base --is-ancestor 4e6e89dc $b && git merge-base --is-ancestor $b origin/dev; echo $?; done
+eacd90e7 rc=0
+dba643a9 rc=0
+09ff2821 rc=0
+$ negative control: git merge-base --is-ancestor 09ff2821 4e6e89dc; echo rc
+rc=1
+$ git diff --name-only 4e6e89dc..09ff2821 -- host/workbench | wc -l
+       0
+$ git log --oneline 4e6e89dc..09ff2821 -- host/workbench | wc -l
+       0
+$ positive range control: git diff --name-only aeaa957d^..aeaa957d -- host/workbench
+aeaa957d 2026-10-22 row 150 M6: serve --workbench-still suppresses only the workbench live.js script
+host/workbench/render.go
+host/workbench/render_test.go
+       2
+$ git diff --name-only 4e6e89dc..09ff2821 -- "host/daemon/workbench*" | wc -l
+       0
+$ (kimi list) git diff --name-only 4e6e89dc 09ff2821 -- host/workbench/ host/daemon/workbench.go host/daemon/daemon.go host/daemon/workbench_still.go host/daemon/workbench_packet_evidence.go scripts/marketingcheck/ scripts/marketing_capture.py scripts/capture_marketing.sh host/pins/ cmd/ailang-worldd/
+cmd/ailang-worldd/cli.go
+cmd/ailang-worldd/demo_test.go
+cmd/ailang-worldd/doctor.go
+cmd/ailang-worldd/doctor_awareness_test.go
+cmd/ailang-worldd/doctor_hosts.go
+cmd/ailang-worldd/doctor_hosts_test.go
+cmd/ailang-worldd/doctor_test.go
+cmd/ailang-worldd/help_test.go
+cmd/ailang-worldd/hosts.go
+cmd/ailang-worldd/hosts_awareness.go
+cmd/ailang-worldd/hosts_awareness_test.go
+cmd/ailang-worldd/hosts_hooks_test.go
+cmd/ailang-worldd/hosts_test.go
+cmd/ailang-worldd/keyguard.go
+cmd/ailang-worldd/main.go
+cmd/ailang-worldd/marketing_chrome_test.go
+cmd/ailang-worldd/pi_adapter.go
+cmd/ailang-worldd/service.go
+cmd/ailang-worldd/service_launchctl.go
+cmd/ailang-worldd/service_test.go
+cmd/ailang-worldd/version.go
+cmd/ailang-worldd/whoami.go
+cmd/ailang-worldd/whoami_test.go
+host/daemon/daemon.go
+scripts/capture_marketing.sh
+scripts/marketing_capture.py
+scripts/marketingcheck/capture_test.go
+scripts/marketingcheck/docs_test.go
+scripts/marketingcheck/inventory_test.go
+scripts/marketingcheck/main.go
+scripts/marketingcheck/observation_test.go
+scripts/marketingcheck/png.go
+scripts/marketingcheck/png_test.go
+scripts/marketingcheck/supervisor_test.go
+$ (glm form) git diff --stat 4e6e89dc..09ff2821 -- host/workbench host/daemon cmd/ailang-worldd scripts/marketingcheck
+ cmd/ailang-worldd/cli.go                   |   2 +-
+ cmd/ailang-worldd/demo_test.go             |  62 ++
+ cmd/ailang-worldd/doctor.go                | 124 +++-
+ cmd/ailang-worldd/doctor_awareness_test.go |  30 +
+ cmd/ailang-worldd/doctor_hosts.go          | 238 ++++++++
+ cmd/ailang-worldd/doctor_hosts_test.go     | 337 +++++++++++
+ cmd/ailang-worldd/doctor_test.go           |   6 +-
+ cmd/ailang-worldd/help_test.go             |   2 +-
+ cmd/ailang-worldd/hosts.go                 | 226 ++++++++
+ cmd/ailang-worldd/hosts_awareness.go       | 187 ++++++
+ cmd/ailang-worldd/hosts_awareness_test.go  | 158 ++++++
+ cmd/ailang-worldd/hosts_hooks_test.go      |  57 ++
+ cmd/ailang-worldd/hosts_test.go            | 325 +++++++++++
+ cmd/ailang-worldd/keyguard.go              |   2 +
+ cmd/ailang-worldd/main.go                  |  17 +-
+ cmd/ailang-worldd/marketing_chrome_test.go | 246 ++++++++
+ cmd/ailang-worldd/pi_adapter.go            |  62 ++
+ cmd/ailang-worldd/service.go               | 704 +++++++++++++++++++++++
+ cmd/ailang-worldd/service_launchctl.go     |  56 ++
+ cmd/ailang-worldd/service_test.go          | 425 ++++++++++++++
+ cmd/ailang-worldd/version.go               |  40 ++
+ cmd/ailang-worldd/whoami.go                |  90 +++
+ cmd/ailang-worldd/whoami_test.go           |  72 +++
+ host/daemon/activity.go                    | 109 ++++
+ host/daemon/build.go                       |   6 +-
+ host/daemon/daemon.go                      |  23 +-
+ host/daemon/health_exec_tools_test.go      |  62 ++
+ host/daemon/home_service_test.go           |  96 ++++
+ host/daemon/marketing_inventory_test.go    |  91 +++
+ host/daemon/route_table_test.go            |   6 +-
+ host/daemon/session_git.go                 | 125 ++++
+ host/daemon/session_git_test.go            | 119 ++++
+ host/daemon/session_self.go                |  81 +++
+ host/daemon/session_self_test.go           |  93 +++
+ host/daemon/surface_live_chrome_test.go    | 188 ++++++
+ host/daemon/surface_live_test.go           |  73 +++
+ host/daemon/surface_model.go               |  10 +
+ host/daemon/workspace.go                   |  41 ++
+ scripts/marketingcheck/capture_test.go     | 499 ++++++++++++++++
+ scripts/marketingcheck/docs_test.go        | 516 +++++++++++++++++
+ scripts/marketingcheck/inventory_test.go   | 128 +++++
+ scripts/marketingcheck/main.go             | 882 ++++++++++++++++++++++++++++-
+ scripts/marketingcheck/observation_test.go | 255 +++++++++
+ scripts/marketingcheck/png.go              |   6 +-
+ scripts/marketingcheck/png_test.go         |  51 +-
+ scripts/marketingcheck/supervisor_test.go  | 237 ++++++++
+ 46 files changed, 7114 insertions(+), 51 deletions(-)
+$ git diff --stat 4e6e89dc..eacd90e7 -- host/workbench host/daemon host/pins scripts/marketingcheck scripts/marketing_capture.py scripts/capture_marketing.sh cmd/ailang-worldd
+ scripts/marketingcheck/main.go             | 220 ++++++++++++++++++++++++-
+ scripts/marketingcheck/observation_test.go | 255 +++++++++++++++++++++++++++++
+ 2 files changed, 472 insertions(+), 3 deletions(-)
+$ git diff --stat eacd90e7..dba643a9 -- host/workbench host/daemon host/pins scripts/marketingcheck scripts/marketing_capture.py scripts/capture_marketing.sh cmd/ailang-worldd
+ cmd/ailang-worldd/cli.go                   |   2 +-
+ cmd/ailang-worldd/doctor.go                | 124 +++--
+ cmd/ailang-worldd/doctor_awareness_test.go |  30 ++
+ cmd/ailang-worldd/doctor_hosts.go          | 238 ++++++++++
+ cmd/ailang-worldd/doctor_hosts_test.go     | 337 ++++++++++++++
+ cmd/ailang-worldd/doctor_test.go           |   6 +-
+ cmd/ailang-worldd/help_test.go             |   2 +-
+ cmd/ailang-worldd/hosts.go                 | 226 +++++++++
+ cmd/ailang-worldd/hosts_awareness.go       | 186 ++++++++
+ cmd/ailang-worldd/hosts_awareness_test.go  | 137 ++++++
+ cmd/ailang-worldd/hosts_hooks_test.go      |  57 +++
+ cmd/ailang-worldd/hosts_test.go            | 325 +++++++++++++
+ cmd/ailang-worldd/keyguard.go              |   2 +
+ cmd/ailang-worldd/main.go                  |  17 +-
+ cmd/ailang-worldd/marketing_chrome_test.go | 246 ++++++++++
+ cmd/ailang-worldd/pi_adapter.go            |  62 +++
+ cmd/ailang-worldd/service.go               | 704 +++++++++++++++++++++++++++++
+ cmd/ailang-worldd/service_launchctl.go     |  56 +++
+ cmd/ailang-worldd/service_test.go          | 425 +++++++++++++++++
+ cmd/ailang-worldd/version.go               |  40 ++
+ cmd/ailang-worldd/whoami.go                |  87 ++++
+ cmd/ailang-worldd/whoami_test.go           |  64 +++
+ host/daemon/activity.go                    | 109 +++++
+ host/daemon/build.go                       |   6 +-
+ host/daemon/daemon.go                      |  23 +-
+ host/daemon/health_exec_tools_test.go      |  62 +++
+ host/daemon/home_service_test.go           |  96 ++++
+ host/daemon/marketing_inventory_test.go    |  91 ++++
+ host/daemon/route_table_test.go            |   6 +-
+ host/daemon/session_self.go                |  79 ++++
+ host/daemon/session_self_test.go           |  93 ++++
+ host/daemon/surface_live_chrome_test.go    | 188 ++++++++
+ host/daemon/surface_live_test.go           |  73 +++
+ host/daemon/surface_model.go               |  10 +
+ host/daemon/workspace.go                   |  41 ++
+ scripts/capture_marketing.sh               |  64 ++-
+ scripts/marketing_capture.py               | 166 ++++++-
+ scripts/marketingcheck/capture_test.go     | 499 ++++++++++++++++++++
+ scripts/marketingcheck/inventory_test.go   | 128 ++++++
+ scripts/marketingcheck/main.go             | 230 +++++++++-
+ scripts/marketingcheck/png.go              |   4 +-
+ scripts/marketingcheck/png_test.go         |  49 +-
+ scripts/marketingcheck/supervisor_test.go  | 237 ++++++++++
+ 43 files changed, 5554 insertions(+), 73 deletions(-)
+$ git diff --stat dba643a9..09ff2821 -- host/workbench host/daemon host/pins scripts/marketingcheck scripts/marketing_capture.py scripts/capture_marketing.sh cmd/ailang-worldd
+ cmd/ailang-worldd/demo_test.go            |  62 ++++
+ cmd/ailang-worldd/hosts_awareness.go      |   1 +
+ cmd/ailang-worldd/hosts_awareness_test.go |  25 +-
+ cmd/ailang-worldd/whoami.go               |   3 +
+ cmd/ailang-worldd/whoami_test.go          |  12 +-
+ host/daemon/session_git.go                | 125 ++++++++
+ host/daemon/session_git_test.go           | 119 +++++++
+ host/daemon/session_self.go               |   2 +
+ scripts/marketingcheck/docs_test.go       | 516 ++++++++++++++++++++++++++++++
+ scripts/marketingcheck/main.go            | 440 ++++++++++++++++++++++++-
+ scripts/marketingcheck/png.go             |   2 +-
+ scripts/marketingcheck/png_test.go        |   2 +-
+ 12 files changed, 1302 insertions(+), 7 deletions(-)
+$ git diff eacd90e7..dba643a9 -- host/daemon/daemon.go
+diff --git a/host/daemon/daemon.go b/host/daemon/daemon.go
+index d4891c29..4069f628 100644
+--- a/host/daemon/daemon.go
++++ b/host/daemon/daemon.go
+@@ -393,6 +393,8 @@ func (e *StartupError) Unwrap() error { return e.Err }
+ // and the HTTP server is built with its D7 timeouts. Listen/Serve/Shutdown/Close
+ // drive the rest of the lifecycle.
+ type Daemon struct {
++	startedAt int64
++	activity  activityTracker
+ 	cfg       Config
+ 	store     *store.Store
+ 	bootstrap func(context.Context, *store.Store, string) (registry.Registry, hashref.HashRef, error)
+@@ -592,8 +594,13 @@ func (r IntegrityReport) Lines() []string {
+ // HealthResponse is the GET /v1/health body: daemon version, db path and the
+ // archived-interpreter HashRef + verbatim `ailang --version` recorded in the
+ // archive manifest (frozen route table, Decision 3).
++// TestFrozenV1RouteTableMatchesMux and TestDaemonDependencyAllowlist: additive health data only.
+ type HealthResponse struct {
+-	Status string `json:"status"`
++	StartedAt  int64             `json:"started_at"`
++	Supervisor string            `json:"supervisor"`
++	Active     HealthActive      `json:"active"`
++	ExecTools  map[string]string `json:"exec_tools"`
++	Status     string            `json:"status"`
+ 	// DaemonVersion is this package's Version.
+ 	DaemonVersion string `json:"daemon_version"`
+ 	// DBPath is the configured store database path.
+@@ -669,6 +676,7 @@ func resolveErrorLog(w io.Writer) io.Writer {
+ // ctx is threaded to bootstrap reads; it does not bound every startup operation.
+ // Pass the caller's intended bootstrap-read ctx; this API supplies no default timeout.
+ func New(ctx context.Context, cfg Config) (*Daemon, error) {
++	_ = CurrentBuild()
+ 	if !isLoopbackHost(cfg.BindHost) {
+ 		return nil, &StartupError{
+ 			Stage: StageBindPolicy,
+@@ -762,7 +770,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
+ 	}
+ 
+ 	d := &Daemon{
+-		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
++		startedAt: time.Now().Unix(),
++		cfg:       cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
+ 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
+ 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
+ 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
+@@ -770,6 +779,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
+ 		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
+ 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
+ 	}
++	d.resolver = activityResolver{inner: d.resolver, activity: &d.activity}
++
+ 	d.human = serializedHandler{mu: &d.humanMu, h: broker.NewHumanHandler(s)}
+ 	workspace.bindingFor = d.episodeBinding
+ 	release := unpinnedRelease
+@@ -1031,6 +1042,7 @@ func releaseFromVersion(version string) string {
+ // such as "world/epoch-registry/v1" contain slashes.
+ func (d *Daemon) Handler() http.Handler {
+ 	mux := http.NewServeMux()
++	mux.HandleFunc("GET /v1/session/self", d.handleSessionSelf)
+ 	mux.HandleFunc("GET /v1/health", d.handleHealth)
+ 	mux.HandleFunc("GET /v1/head", d.handleHead)
+ 	mux.HandleFunc("GET /v1/worlds/{ref}", d.handleWorld)
+@@ -1062,7 +1074,7 @@ func (d *Daemon) Handler() http.Handler {
+ 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
+ 	mux.HandleFunc("POST /mcp/", d.projection.MCP)
+ 	mux.HandleFunc("POST /agui/", d.handleAGUI)
+-	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(mux))
++	return trackActivityRequests(NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(mux)))
+ }
+ 
+ // isProtected reports whether a request must carry a valid session credential
+@@ -1087,12 +1099,14 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
+ 		InterpreterVersion: d.interpreterVersion,
+ 		DegradedEpisodes:   d.workspace.degradedEpisodes(),
+ 		Build:              CurrentBuild(),
+-		CredentialsDB:      d.credentialsPath,
++		StartedAt:          d.startedAt, Supervisor: serviceSupervisor(), Active: d.activity.snapshot(time.Now().Unix()),
++		CredentialsDB: d.credentialsPath,
+ 	}
+ 	if d.workspace.bin != "" {
+ 		body.ToolRef = d.workspace.binRef.String()
+ 	}
+ 	body.ExecProfiles, body.ExecProfilesExcluded = d.workspace.healthProfiles()
++	body.ExecTools = d.workspace.healthExecTools()
+ 	w.Header().Set("Content-Type", "application/json")
+ 	if err := json.NewEncoder(w).Encode(body); err != nil {
+ 		// The status line is already written; there is nothing left to say to
+@@ -1230,6 +1244,7 @@ func startBounded(ctx context.Context, cfg Config, budget time.Duration, constru
+ }
+ 
+ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
++	_ = CurrentBuild() // Freeze executable bytes before any listener accepts.
+ 	d, err := startBounded(ctx, cfg, 9*time.Second, New)
+ 	if err != nil {
+ 		return err
+$ git diff dba643a9..09ff2821 -- scripts/marketingcheck/png.go
+diff --git a/scripts/marketingcheck/png.go b/scripts/marketingcheck/png.go
+index 5cf4fb28..dae201ea 100644
+--- a/scripts/marketingcheck/png.go
++++ b/scripts/marketingcheck/png.go
+@@ -24,7 +24,7 @@ func refuse(code, name, detail string) error { return &Refusal{code, name, detai
+ const (
+ 	FileCap = 1_048_576
+ 	DirCap  = 8_388_608
+-	// Content thresholds are provisional until M7c measures real renders.
++	// Content thresholds: measured on real Chrome renders in R1 (w-marketing-capture-orchestration §10 V62, iteration 312); every real reading clears its bound by a wide margin, so all eight values are kept.
+ 	MinColors         = 32
+ 	ChromaticDelta    = 12
+ 	ChromaticFraction = 0.01
+$ grep -n "still\|Still\|workbench" on the added lines of that daemon.go diff (count)
+0
+$ git diff dba643a9..09ff2821 -- scripts/marketingcheck/main.go | grep "^+func \|^-func \|^+	case \"" 
++	case "docs":
++func docsReadmeLink(target string) *regexp.Regexp {
++func checkCaptions(text string) (map[string]string, error) {
++func docsLinkTargets(text string) []string {
++func checkDocLinks(root, dir, text, code string) error {
++func dirOrRoot(dir string) string {
++func subsection(text, heading string) (string, bool) {
++func checkPage(root, page string, alts map[string]string) error {
++func checkReadme(root, readme string) error {
++func checkSchema(text string) error {
++func jsonStrings(v any) []string {
++func CheckDocs(root string, read func(rel string) ([]byte, error)) error {
++func CheckPromotedAssets(dir, captureManifest string, requireAssets bool) error {
++func runDocs(args []string) int {
+$ git diff dba643a9..09ff2821 -- scripts/marketingcheck/main.go | grep -c "^-[^-]" (removed lines)
+1
+$ git diff dba643a9..09ff2821 -- scripts/marketingcheck/main.go | grep "^-[^-]"
+-	"       marketingcheck inventory-compare --before FILE --after FILE"
+$ git log --oneline dba643a9..09ff2821 -- scripts/marketingcheck scripts/marketing_capture.py scripts/capture_marketing.sh host/workbench host/daemon/workbench.go host/daemon/workbench_still.go host/pins
+94e1c08b fix(row 150 M8a, controller): judge r1 F1/F6/F7/F8 and a controller truth fix; the page and README now carry gated disclosures
+f6c8d8d4 feat(row 150 M8a): reproduction docs, captions and the release manifest schema; `marketingcheck docs`
+$ git diff dba643a9..09ff2821 -- scripts/marketingcheck/png_test.go
+-		}{{"unknown", []string{"docs"}, 2}, {"no-command", nil, 2}, {"missing-flags", []string{"check"}, 2}, {"unknown-flag", []string{"check", "--unknown"}, 2}, {"positional", append(append([]string(nil), args...), "extra"), 2}, {"help", []string{"check", "--help"}, 0}} {
++		}{{"unknown", []string{"bogus"}, 2}, {"no-command", nil, 2}, {"missing-flags", []string{"check"}, 2}, {"unknown-flag", []string{"check", "--unknown"}, 2}, {"positional", append(append([]string(nil), args...), "extra"), 2}, {"help", []string{"check", "--help"}, 0}} {
+$ git diff --name-only dba643a9..09ff2821 -- scripts/marketing_capture.py scripts/capture_marketing.sh host/workbench host/pins "host/daemon/workbench*" | wc -l
+       0
+$ git diff --name-only 4e6e89dc..09ff2821 -- host/pins | wc -l
+       0
+$ git diff --numstat dba643a9..09ff2821 -- scripts/marketingcheck/main.go
+439	1	scripts/marketingcheck/main.go
+$ (kimi list) ... | wc -l
+      34
+$ git diff --name-only dba643a9..09ff2821 -- host/daemon/daemon.go | wc -l
+       0

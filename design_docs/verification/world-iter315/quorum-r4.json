@@ -1,0 +1,77 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter315-row150-c8amend/design_docs/planned/w-marketing-capture-orchestration.md",
+  "iso_ts": "2026-10-28T20:27:47Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.265473,
+      "tokens_in": 36046,
+      "tokens_out": 10489,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The release-blocking acceptance predicate — C8′ for all five desktop shots, the phone (i)/(ii)/(iii′) checks, P0, P3, and therefore A1 itself — is implemented only as two unreviewed, CI-less Go programs that exist solely as `.txt` files (`v64-p0check-main.go.txt`, `v66-phonecheck-main.go.txt`), hand-built in /tmp on capture day. The doc affirmatively states 'Neither M7c4's drill nor any committed checker gains a position check in this revision' without ever justifying why the position check is not committed to `scripts/marketingcheck` — the natural extension point, whose insufficiency the doc itself documents in V63 ('check cannot tell a guessed rectangle... from a measured one'). That is a missing conflict-surface analysis for the single most load-bearing piece of new machinery in the row, and it inverts route-to-extension bias: the gate that decides the only remaining deliverable is the least-reviewed code in the system, authored by the designer whose own rules it enforces, with the only precedent (the V58 scan) itself flagged by the iteration-305 judge as near the carve-out's judgment line. 'As the V58 scan does' is a citation of a contested precedent, not a justification.",
+        "catch": "§4.4's P0/P3 invocation spec has no capture-day integrity control over the checker programs: V71 verified that the banked .txt sources build and reproduce known verdicts exactly once, at iteration 315, but nothing in P0 or P3 requires (a) verifying a pinned sha256 of the .txt files before `go build`, or (b) running known-accept/known-refuse controls against the freshly built binary before its verdict is trusted on the release store. Both .txt files are ordinary mutable repo files, so a silent edit or toolchain drift between iteration 315 and capture day changes the release gate with no tripwire — a silent-fallback exposure on the row's final gate.",
+        "proposed_fix": "Resolve the conflict surface explicitly, one of two ways. Preferred: amend §5 to add a milestone (M8c, or fold into M8b) committing the position predicate into `scripts/marketingcheck` as a `position` subcommand plus the phone scan, with the already-banked V64–V67 corpora converted to committed fixtures (accept: nine stores' rects.json and 19 phone PNGs by hash; refuse: the 18 p0 arms and 11 phone arms), gated by `go test ./scripts/marketingcheck` in CI, and make P0/P3 invoke the committed binary — this directly closes the gap V63 documented in `check`. If the controller-program route is retained instead, add to §4.4: (1) a recorded sha256 for each .txt ('the predicate source', pinned in a V-row), verified before every build; (2) a mandatory capture-day control step — `p0check check r1-rects.json accept=\u003cseed5 rects\u003e refuse=\u003cattested+14 arm\u003e` must print ACCEPT/REFUSE, and `phonecheck \u003cV50\u003e accept=\u003cseed5 pass-A\u003e refuse=\u003cseed5 desktop light\u003e` must print ACCEPT/REFUSE — with any control mismatch equal to BLOCKED-and-escalated, before the checker's verdict on the capture store is read; and (3) a new short subsection stating why the committed checker is deliberately not extended (review cost, timing relative to A1, or whatever the actual reason is), so the conflict with the V58/marketingcheck surface is analyzed rather than inherited."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.169128,
+      "tokens_in": 41167,
+      "tokens_out": 223,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The P0/P3 verification steps rely on compiling and executing banked .txt Go source files (v64-p0check-main.go.txt and v66-phonecheck-main.go.txt) in an external /tmp scratch directory rather than running a first-class subcommand of scripts/marketingcheck, which leaves a procedural boundary between the committed test suite and the controller's release-day checks.",
+        "catch": "During P0 and P3 execution, ensure the controller parses the 'r3' verdict column (not the informational 'r2' column) from the scratch-built p0check and phonecheck binaries, and verify that no row-149 CSS changes have fixed the 390px horizontal overflow before A1 runs (since C8'(iii') asserts the overflow defect's presence)."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.148484,
+      "tokens_in": 36848,
+      "tokens_out": 22022,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "P0 — the 24-hour gate that decides whether the attended release capture A1 may start — is internally contradictory about the still-HTML determinism check, and the contradiction is already live because M7c4 has landed (V70). P0's blocking clause reads 'If any shot differs between passes, any route's still HTML varies, or any shot fails the content gate, M7 does not start', and its record list requires 'the still-HTML repeat-GET result' as a Verification row; both depend on the iter305 probe, the very instrument the same paragraph retires with 'Once M7c4 lands, the M7c4 drill with measured rectangles replaces the probe.' The drill's verified behavior (V61 b: six pass-A/pass-B SHA256s, check verdicts, inventory equality) contains no route-level repeat-GET measurement, and neither does the V60 block-box probe that P0's position-assertion paragraph does name. So a controller executing P0 as written has no step that can produce the measurement its own blocking condition keys on — a safety check that silently drops out of the gate, in a document whose r4 round was specifically a provenance-and-labels hygiene pass. C12 compounds the disagreement: its statement of what P0 must show (6/6 identical nonblank shots, r3 position assertion, phone (i)/(ii)/(iii′), P3) omits the still-HTML repeat-GET entirely, so P0's text and the acceptance criterion for P0 do not match.",
+        "catch": "Fix or verify two concrete things. (1) Name the instrument that produces the route-level still-HTML repeat-GET result on capture day: as written, the only named producer is the probe that P0 itself replaces, V61(b) shows the M7c4 drill does not perform repeat-GETs, and C12 already omits the check — so either bind a step that performs it or delete the clause and record-list item with a stated rationale, and align C12 either way. (2) The R1 baseline is self-inconsistent on a value the r3 rule (a4) keys on: V60's printed baseline has roster-proven h = 97, while V60's own narrative ('height 72 against 96'), the r3 disposition table ('72 px against 96 (V60)') and V64's refusal message ('block box 72 against R1 96') all say 96 — the doc cites V60 for a number V60's baseline print contradicts, and 'the R1 height' in (a4) must be one verified number.",
+        "proposed_fix": "Rewrite §4.4 P0 as an explicit instrument-per-artifact checklist and align C12 with it: 'P0 (within 24 h before A1, disposable test-minted store): (1) route-level still determinism — serve the store under WorkbenchStill and repeat-GET every capture route 2 s apart (the iter305 probe's still half, retained for this check even though the M7c4 drill replaces its capture half), asserting byte-identical HTML and script_tags=0; the result is a required P0 record; (2) six-shot two-pass — the M7c4 drill (TestMarketingChromeSixShots) with WORLD_CHROME and WORLD_MARKETING_RECTS set, recording Chrome --version and all six pass-A/pass-B SHA256s; (3) rectangles — the V60 block-box probe run on the same store, emitting the store's own rects.json; (4) verdicts — p0check and phonecheck exactly per the r4 invocations. Any failure in (1)–(4) blocks M7 and triggers the parent fallback.' Amend C12 to name item (1) so P0 and C12 agree; if the repeat-GET is instead intentionally dropped at capture time, delete it from P0's blocking clause and record list and add one sentence of rationale (V40 plus V69's renderer-identity result pin the still path; the M7c3 frozen-inventory guard and two-pass image equality re-attest it), still aligning C12. Separately, add a one-line verification row (or a correction) fixing the roster-proven height to the single value stored in r1-rects.json, and cite that one number in the r3 table, §4.4 and V64's message — if the 1 px difference is a border artefact, say so, so that 'the R1 height' in (a4) is unambiguous."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r4 applies the r3-round reviewers' proposed fixes (per-row bases, V69 cross-base drift measured by controller first-party: host/workbench 0 files/0 commits 4e6e89dc..09ff2821 with range control 2; landed-milestone status; bound checker invocations; §9 label; named row-149 coupling). Rules unchanged from r3."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The release-blocking acceptance predicate — C8′ for all five desktop shots, the phone (i)/(ii)/(iii′) checks, P0, P3, and therefore A1 itself — is implemented only as two unreviewed, CI-less Go programs that exist solely as `.txt` files (`v64-p0check-main.go.txt`, `v66-phonecheck-main.go.txt`), hand-built in /tmp on capture day. The doc affirmatively states 'Neither M7c4's drill nor any committed checker gains a position check in this revision' without ever justifying why the position check is not committed to `scripts/marketingcheck` — the natural extension point, whose insufficiency the doc itself documents in V63 ('check cannot tell a guessed rectangle... from a measured one'). That is a missing conflict-surface analysis for the single most load-bearing piece of new machinery in the row, and it inverts route-to-extension bias: the gate that decides the only remaining deliverable is the least-reviewed code in the system, authored by the designer whose own rules it enforces, with the only precedent (the V58 scan) itself flagged by the iteration-305 judge as near the carve-out's judgment line. 'As the V58 scan does' is a citation of a contested precedent, not a justification.",
+      "oc-glm-5-3: P0 — the 24-hour gate that decides whether the attended release capture A1 may start — is internally contradictory about the still-HTML determinism check, and the contradiction is already live because M7c4 has landed (V70). P0's blocking clause reads 'If any shot differs between passes, any route's still HTML varies, or any shot fails the content gate, M7 does not start', and its record list requires 'the still-HTML repeat-GET result' as a Verification row; both depend on the iter305 probe, the very instrument the same paragraph retires with 'Once M7c4 lands, the M7c4 drill with measured rectangles replaces the probe.' The drill's verified behavior (V61 b: six pass-A/pass-B SHA256s, check verdicts, inventory equality) contains no route-level repeat-GET measurement, and neither does the V60 block-box probe that P0's position-assertion paragraph does name. So a controller executing P0 as written has no step that can produce the measurement its own blocking condition keys on — a safety check that silently drops out of the gate, in a document whose r4 round was specifically a provenance-and-labels hygiene pass. C12 compounds the disagreement: its statement of what P0 must show (6/6 identical nonblank shots, r3 position assertion, phone (i)/(ii)/(iii′), P3) omits the still-HTML repeat-GET entirely, so P0's text and the acceptance criterion for P0 do not match."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.5830850000000001,
+    "total_tokens_in": 114061,
+    "total_tokens_out": 32734
+  }
+}

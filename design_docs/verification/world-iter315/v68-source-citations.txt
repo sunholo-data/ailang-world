@@ -1,0 +1,49 @@
+$ git rev-parse HEAD
+09ff28215176d5c09b36ecffba85ee04660ba238
+$ grep -n "line-height" host/workbench/render.go
+193:body{font-family:system-ui,sans-serif;line-height:1.5;margin:0;color:var(--ink);background:var(--bg)}
+196:a{color:var(--acc)}h1,h2,h3{line-height:1.2}footer{color:var(--mut)}
+$ grep -n "^\.hash" host/workbench/render.go (control: the .payload rule on the same line count)
+197:.hash{display:inline-block;max-width:14ch;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;white-space:nowrap}
+198:.unavailable{font-weight:600;color:var(--warn)}.payload{overflow:auto;white-space:pre-wrap}.verdict-fail{font-weight:700}.verdict-pass{font-weight:700}
+$ grep -c "class=\"hash\"" host/workbench/render.go
+10
+$ grep -n "{{define \"packet\"}}" host/workbench/render.go | cut -c1-80
+273:{{define "packet"}}<section aria-label="decision packet"><h3>decision packet
+$ grep -o "<p>[a-zA-Z ]*" of the packet template line (paragraph sequence)
+<p>{{.Sentence
+<p>createdAt {{.CreatedAt
+<p>policy {{.Policy
+<p>proposal
+<p>approval request
+<p>committed at
+<p>approvals chain
+<p>evidence
+<p>evidence
+<p>evidence roster UNAVAILABLE 
+<p>{{.Kind
+$ grep -o "report: <a[^>]*>{{.Ref}}" (roster ref is NOT class=hash)
+report: <a href="{{workbenchHref .Href}}">{{.Ref}}</a>
+$ grep -n "grade.FindString\|roster-\"+\|math.Floor\|math.Ceil" design_docs/verification/world-iter312/r1-rects-probe_test.go.txt
+136:	pre := regexp.MustCompile(`(?s)<pre id="probe-rects">(.*?)</pre>`)
+160:		x, y := int(math.Floor(b.Left)), int(math.Floor(b.Top))
+161:		right, bottom := int(math.Ceil(math.Min(b.Right, clientW))), int(math.Ceil(math.Min(b.Bottom, float64(h))))
+164:	grade := regexp.MustCompile(`\b(PROVEN|TESTED|ATTESTED|CLAIMED)\b`)
+182:				g := grade.FindString(row.Text)
+187:				sh.Content = append(sh.Content, toRect("roster-"+strings.ToLower(g), row.Rect, cw, s.Height))
+201:		top := int(math.Ceil(l.Nav.Bottom)) + 20
+212:	phoneBgTop := int(math.Ceil(layouts["workbench-light.png"].Nav.Bottom)) + 20
+$ distinct packet paragraph block heights across the 9 stores (python over v64-layouts-*.json; seeds 1-2 Range boxes +6)
+{24.0: 18, 48.0: 27, 72.0: 1, 96.0: 8}
+$ grep -n "\"--rectangles\", rectsPath" design_docs/verification/world-iter312/r1-rects-probe_test.go.txt (the probe capture uses the store's own rects.json)
+249:		"--chrome", chrome, "--out", capture, "--rectangles", rectsPath, "--worldd-bin", worldd,
+$ packet section bottom (layouts packet.png .Packet.Bottom) per store
+eval-p1.json 3540.5625
+eval-p2.json 3564.5625
+eval-p3.json 3564.5625
+r1-seed1.json 3564.5625
+r1-seed2.json 3564.5625
+r1b-seed3.json 3564.5625
+r1b-seed4.json 3564.5625
+r1c-seed5.json 3564.5625
+r1c-seed6.json 3564.5625

@@ -1,0 +1,66 @@
+package main
+
+import (
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	"os"
+	"path/filepath"
+)
+
+func load(p string) *image.RGBA {
+	f, _ := os.Open(p)
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		panic(err)
+	}
+	o := image.NewRGBA(im.Bounds())
+	draw.Draw(o, o.Bounds(), im, im.Bounds().Min, draw.Src)
+	return o
+}
+func save(im image.Image, p string) {
+	f, _ := os.Create(p)
+	png.Encode(f, im)
+	f.Close()
+}
+func fill(im *image.RGBA, x0, y0, x1, y1 int, l uint8) {
+	for y := y0; y < y1; y++ {
+		for x := x0; x < x1; x++ {
+			im.Set(x, y, color.RGBA{l, l, l, 255})
+		}
+	}
+}
+
+// erase thumb: bottom 20 rows to page colour
+func nothumb(im *image.RGBA) { fill(im, 0, 824, 390, 844, 250) }
+
+func main() {
+	src, out := os.Args[1], os.Args[2]
+	mk := func(name string, f func(im *image.RGBA)) { im := load(src); f(im); save(im, filepath.Join(out, name+".png")) }
+	// title band rows: header y 45..68
+	mk("title-right-386", func(im *image.RGBA) { fill(im, 387, 45, 390, 68, 250) })  // ink at <=385
+	mk("title-right-387", func(im *image.RGBA) { fill(im, 388, 45, 390, 68, 250) })  // ink to 387
+	mk("B1-thumb-split-px150", func(im *image.RGBA) { fill(im, 150, 833, 151, 841, 250) })
+	mk("B1b-thumb-split-px250", func(im *image.RGBA) { fill(im, 250, 833, 251, 841, 250) })
+	mk("B1c-thumb-split-px8", func(im *image.RGBA) { fill(im, 8, 833, 9, 841, 250) })
+	mk("B3-grey-bar-x0-300-no-thumb", func(im *image.RGBA) { nothumb(im); fill(im, 0, 830, 300, 835, 160) })
+	mk("B3b-grey-bar-full-width", func(im *image.RGBA) { nothumb(im); fill(im, 0, 830, 390, 835, 160) })
+	mk("B4-run-100px", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 106, 841, 190) })
+	mk("B4b-run-101px", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 107, 841, 190) })
+	mk("B5-two-pieces-rows-differ", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 60, 837, 190); fill(im, 200, 837, 330, 841, 190) })
+	mk("title-right-385", func(im *image.RGBA) { fill(im, 386, 45, 390, 68, 250) })
+	mk("short-thumb-x20", func(im *image.RGBA) { nothumb(im); fill(im, 20, 833, 300, 841, 190) })
+	mk("short-thumb-x6-130", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 130, 841, 190) })
+	mk("short-thumb-x6-90", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 90, 841, 190) })
+	mk("thumb-x9", func(im *image.RGBA) { nothumb(im); fill(im, 9, 833, 330, 841, 190) })
+	mk("thumb-x8", func(im *image.RGBA) { nothumb(im); fill(im, 8, 833, 330, 841, 190) })
+	mk("thumb-end384", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 384, 841, 190) })
+	mk("thumb-end385", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 385, 841, 190) })
+	mk("scattered-pixels-no-thumb", func(im *image.RGBA) { nothumb(im); fill(im, 3, 836, 4, 837, 160); fill(im, 150, 836, 151, 837, 160) })
+	mk("thumb-above-bottom20", func(im *image.RGBA) { nothumb(im); fill(im, 6, 815, 330, 823, 190) })
+	mk("thumb-dark-luma100", func(im *image.RGBA) { nothumb(im); fill(im, 6, 833, 330, 841, 100) })
+	mk("tall-image-844-ok-but-thumb-1row", func(im *image.RGBA) { nothumb(im); fill(im, 6, 840, 330, 841, 190) })
+	mk("title-ink-spoof-pixel-388", func(im *image.RGBA) { fill(im, 360, 45, 390, 68, 250); fill(im, 388, 50, 389, 51, 0) })
+}
