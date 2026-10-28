@@ -335,6 +335,16 @@ func TestMarketingDocsLinks(t *testing.T) {
 		captions := strings.ReplaceAll(docsRepoFile(t, docsCaptionsPath), "static capture of recorded history", "")
 		docsWantRefusal(t, CheckDocs("../..", docsOverlay(map[string]string{docsCaptionsPath: captions})), "docs-captions", "")
 	})
+	t.Run("refuse-page-disclosure", func(t *testing.T) {
+		for _, d := range []string{"static capture of recorded history", "demo-authored", "v0.54.15", "1440x3700"} {
+			page := strings.ReplaceAll(docsRepoFile(t, docsPagePath), d, "")
+			docsWantRefusal(t, CheckDocs("../..", docsOverlay(map[string]string{docsPagePath: page})), "docs-disclosure", "required disclosure is absent from the website page")
+		}
+	})
+	t.Run("refuse-readme-live-claim", func(t *testing.T) {
+		readme := strings.Replace(docsRepoFile(t, docsReadmePath), "are static captures of recorded history", "are live screenshots", 1)
+		docsWantRefusal(t, CheckDocs("../..", docsOverlay(map[string]string{docsReadmePath: readme})), "docs-readme", "the Screenshots section must say the images are static captures of recorded history")
+	})
 	t.Run("refuse-schema-hash", func(t *testing.T) {
 		schema := strings.Replace(docsRepoFile(t, docsSchemaPath), "{", "{\n  \"x-note\": \""+strings.Repeat("ab", 32)+"\",", 1)
 		docsWantRefusal(t, CheckDocs("../..", docsOverlay(map[string]string{docsSchemaPath: schema})), "docs-schema", "")

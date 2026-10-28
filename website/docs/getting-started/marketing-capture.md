@@ -12,7 +12,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 These images are static captures of recorded history, published by the attended v1.0.0 release capture. Until that capture is promoted, the images are not yet in the site.
 :::
 
-The six images below are in the order the release capture takes them. Each is a static capture of a demo store, not a live view. The captions say what each image shows and what it does not.
+The six images below are in the order the release capture takes them. Each is a static capture of recorded history from a demo store, not a live view. The captions say what each image shows and what it does not.
 
 ### Light workbench
 
@@ -46,14 +46,14 @@ The provenance view at 1440x3000. It shows the stored invocation record, opened 
 
 ### Phone
 
-<img src={useBaseUrl('/img/v1/phone.png')} alt="Phone-width workbench for the selected demo world, with its header and first timeline entry" />
+<img src={useBaseUrl('/img/v1/phone.png')} alt="Phone-width workbench for the selected demo world, with its header and first timeline entries" />
 
 The phone layout at 390x844, showing the selected world and a readable timeline. The page overflows horizontally and the title is clipped to "AILANG World Workbenc". That is a known cosmetic defect, not a content failure.
 
 ## What the images do and do not show
 
 - They are static captures of recorded history from one demo store. They are not a live view, and they do not show anything that happened after the capture.
-- The demo store's evidence is demo-authored. The CLAIMED rows are demo-authored commentary and are never review. A validated packet is the state of that store at capture time, not an approval.
+- Only the CLAIMED row is demo-authored: it is commentary and is never review. The TESTED row comes from a real `ailang test` run in the seed, the ATTESTED row from a recorded effect, and the PROVEN row from a subject-bound proof the daemon's validator accepted. A validated packet is the state of that store at capture time, not an approval.
 - The images show the packet awaiting a decision. No approval decision appears in any of them.
 - The packet, graph and provenance images are tall (1440x3700, 1440x2100 and 1440x3000) so that the required content is in the image rather than below the fold.
 - The provenance claim is narrowed to the stored invocation record with its leading fields legible. The complete reference set is in the accompanying `why` JSON.

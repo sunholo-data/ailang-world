@@ -59,7 +59,7 @@ deterministic reconciliation before the receipt can be resolved.
 
 ### Screenshots
 
-The [light workbench](website/static/img/v1/workbench-light.png) and the [decision packet](website/static/img/v1/packet.png) are static captures of recorded history, published with the v1.0.0 release capture. The full set, its captions and what the images do not show are on the [release screenshots page](https://www.sunholo.com/ailang-world/docs/getting-started/marketing-capture); the reproduction steps are in [docs/QUICKSTART.md](docs/QUICKSTART.md#13-capture-the-release-screenshots-attended) §13.
+The [light workbench](website/static/img/v1/workbench-light.png) and the [decision packet](website/static/img/v1/packet.png) are static captures of recorded history. The attended v1.0.0 release capture publishes them, and these two links resolve only after that capture is promoted. The full set, its captions and what the images do not show are on the [release screenshots page](https://www.sunholo.com/ailang-world/docs/getting-started/marketing-capture); the reproduction steps are in [docs/QUICKSTART.md](docs/QUICKSTART.md#13-capture-the-release-screenshots-attended) §13.
 
 ## Why
 

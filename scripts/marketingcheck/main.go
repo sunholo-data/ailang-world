@@ -719,6 +719,12 @@ func checkPage(root, page string, alts map[string]string) error {
 			return refuse("docs-image", name, "documented alt must equal captions.md")
 		}
 	}
+	// The page is the public face of the captions, so it carries the same disclosures.
+	for _, d := range docsDisclosures {
+		if !strings.Contains(page, d) {
+			return refuse("docs-disclosure", d, "required disclosure is absent from the website page")
+		}
+	}
 	return checkDocLinks(root, "website/docs/getting-started", page, "docs-link")
 }
 
@@ -739,6 +745,9 @@ func checkReadme(root, readme string) error {
 	section, ok := subsection(readme, "Screenshots")
 	if !ok {
 		return refuse("docs-readme", docsReadmePath, "no Screenshots section")
+	}
+	if !strings.Contains(section, "static captures of recorded history") {
+		return refuse("docs-readme", docsReadmePath, "the Screenshots section must say the images are static captures of recorded history")
 	}
 	return checkDocLinks(root, "", section, "docs-link")
 }

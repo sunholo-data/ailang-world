@@ -1689,7 +1689,10 @@ What the two passes prove, and what they do not. Equality is promised only betwe
 passes over one frozen store. A fresh seed produces a different store and different bytes
 (D-WORLD-75), so a second seed is a new capture, not a repeat of these images. Before the
 attended capture, the controller's P0 probe (`w-marketing-capture-orchestration` §4.4) must
-pass within 24 hours.
+pass within 24 hours, and P3, a GET-only probe of the release store itself, runs before
+pass A. Two acceptance criteria are still open and are amended before any release capture:
+the phone overflow check C8′(iii) and P0's ±2 px tolerance for wrapping packet paragraphs
+(orchestration V60 and V63).
 
 Promotion is not part of this section. After the capture, the controller copies the six
 verified PNGs and `capture-manifest.json`, unmodified, into `website/static/img/v1/`,

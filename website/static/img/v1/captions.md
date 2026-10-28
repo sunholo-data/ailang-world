@@ -37,14 +37,14 @@ The provenance view at 1440x3000, a tall framing. It shows the stored invocation
 
 ## phone.png
 
-Alt: Phone-width workbench for the selected demo world, with its header and first timeline entry
+Alt: Phone-width workbench for the selected demo world, with its header and first timeline entries
 
 The phone layout at 390x844: the selected world and a readable timeline. At this width the page overflows horizontally, and the title is clipped to "AILANG World Workbenc". That is a disclosed cosmetic defect in the renderer, not a content failure. This is a static capture of recorded history. The headless capture shows a vertical scrollbar.
 
 ## Disclosures
 
 - Every image is a static capture of recorded history from a demo store. It is not a live view and not a review of the store's content.
-- The CLAIMED evidence rows are demo-authored commentary and are never review. A validated packet is the state of one demo store at capture time.
+- Only the CLAIMED row is demo-authored commentary, and it is never review. The TESTED row comes from a real `ailang test` run in the seed, the ATTESTED row from a recorded effect, and the PROVEN row from a subject-bound proof the daemon's validator accepted. A validated packet is the state of one demo store at capture time.
 - Tall framing: packet.png is 1440x3700, graph.png is 1440x2100 and provenance.png is 1440x3000. The other three are 1440x1100 and 390x844.
 - The provenance claim is narrowed to: the stored invocation record, opened from the approval entry, with its leading fields legible; the complete reference set is the accompanying `why` JSON.
 - Separate pins: the capsule and proof interpreter is v0.41.0, and the workspace tools use the separate v0.54.15 tool pin. The two are not interchangeable.
