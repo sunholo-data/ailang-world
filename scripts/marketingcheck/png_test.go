@@ -798,7 +798,7 @@ func TestMarketingTwoPassInventory(t *testing.T) {
 			name string
 			args []string
 			rc   int
-		}{{"unknown", []string{"docs"}, 2}, {"no-command", nil, 2}, {"missing-flags", []string{"check"}, 2}, {"unknown-flag", []string{"check", "--unknown"}, 2}, {"positional", append(append([]string(nil), args...), "extra"), 2}, {"help", []string{"check", "--help"}, 0}} {
+		}{{"unknown", []string{"bogus"}, 2}, {"no-command", nil, 2}, {"missing-flags", []string{"check"}, 2}, {"unknown-flag", []string{"check", "--unknown"}, 2}, {"positional", append(append([]string(nil), args...), "extra"), 2}, {"help", []string{"check", "--help"}, 0}} {
 			t.Run(tc.name, func(t *testing.T) { invoke(t, tc.args, tc.rc, "") })
 		}
 	})

@@ -24,7 +24,7 @@ func refuse(code, name, detail string) error { return &Refusal{code, name, detai
 const (
 	FileCap = 1_048_576
 	DirCap  = 8_388_608
-	// Content thresholds are provisional until M7c measures real renders.
+	// Content thresholds: measured on real Chrome renders in R1 (w-marketing-capture-orchestration §10 V62, iteration 312); every real reading clears its bound by a wide margin, so all eight values are kept.
 	MinColors         = 32
 	ChromaticDelta    = 12
 	ChromaticFraction = 0.01

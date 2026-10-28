@@ -57,6 +57,10 @@ receipt as fail-closed: do not retry automatically. A crash after the effect
 record write but before the outcome append can leave a record that requires
 deterministic reconciliation before the receipt can be resolved.
 
+### Screenshots
+
+The [light workbench](website/static/img/v1/workbench-light.png) and the [decision packet](website/static/img/v1/packet.png) are static captures of recorded history, published with the v1.0.0 release capture. The full set, its captions and what the images do not show are on the [release screenshots page](https://www.sunholo.com/ailang-world/docs/getting-started/marketing-capture); the reproduction steps are in [docs/QUICKSTART.md](docs/QUICKSTART.md#13-capture-the-release-screenshots-attended) §13.
+
 ## Why
 
 Extrapolate the model trend — smarter, faster, cheaper, increasingly on-device — and

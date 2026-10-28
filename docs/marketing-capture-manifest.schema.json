@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sunholo-data/ailang-world/blob/dev/docs/marketing-capture-manifest.schema.json",
+  "title": "World marketing capture manifest (world/demo/capture-manifest/v1)",
+  "description": "Describes the sibling capture-manifest.json that the attended release capture writes next to the six promoted PNGs. This file is a schema, not a capture record: it carries no hash and no example. Real SHA-256 values come only from the attended capture's own bytes, and the release check (marketingcheck docs --require-assets) refuses any manifest whose hashes do not match them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "frozen-head", "shots"],
+  "properties": {
+    "schema": {
+      "const": "world/demo/capture-manifest/v1"
+    },
+    "frozen-head": {
+      "type": "string",
+      "description": "The frozen public head the six shots were captured from."
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "sha256", "width", "height", "route"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["workbench-light.png", "workbench-dark.png", "packet.png", "graph.png", "provenance.png", "phone.png"]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Lowercase hex SHA-256 of the raw PNG bytes, computed from the attended capture."
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "route": {
+            "type": "string",
+            "pattern": "^/workbench",
+            "description": "The workbench route the shot was captured from."
+          }
+        }
+      }
+    }
+  }
+}
