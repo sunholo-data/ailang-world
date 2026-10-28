@@ -204,7 +204,7 @@ ailang-worldd episode start [<episode>] --preset <name> [--task <file>] [--launc
 - **Episode id (R4):** `<preset>-<yymmddhhmm>` from the local clock, e.g.
   `world-codex-2610281352`. If `<workspace-root>/<id>` or `<sessions>/<id>.session` already
   exists, `-2` … `-9` is appended, and a tenth collision is refused. The result must match P18,
-  and a preset name of more than 53 characters is refused at load for that reason.
+  and a preset name of more than 51 characters is refused at load for that reason (51 + `-yymmddhhmm` + `-9` = 64; r0 said 53, a miscount found building w217a).
 - **Branch:** `world/<episode>`, a new branch, as today. With `--branch <existing>` (a fix-up
   round, 218 §3.9 and §7 Q1), the worktree checks out the existing branch with no `-b`. It is
   refused if that branch is checked out in another worktree, and the prompt says
@@ -426,7 +426,7 @@ profile, and only its digest and bytes travel into the start record.
 
 ## §8 Milestones
 
-M0 and M1 built in episode w217a (2026-10-28), except the 52/53-character-name collision-suffix conflict in §3.3; M2–M4 remain unbuilt.
+M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2–M4 remain unbuilt.
 
 | M | what | gate |
 |---|---|---|

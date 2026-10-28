@@ -205,12 +205,15 @@ func TestDroppedCredentialsTableIsRefused(t *testing.T) {
 		t.Fatal(err)
 	}
 	_ = db.Close()
+	before, _ := schemaState(t, rawDB(t, path))
 	if c, err := OpenCredentials(path); err == nil {
 		_ = c.Close()
 		t.Fatal("a credentials store missing its table was reopened")
 	}
-	if names, _ := schemaState(t, rawDB(t, path)); len(names) != 0 {
-		t.Fatalf("refused open recreated %v", names)
+	// Version 3's episode_starts survives the drop; the refused open must
+	// leave the tables exactly as it found them, recreating nothing.
+	if after, _ := schemaState(t, rawDB(t, path)); !reflect.DeepEqual(after, before) {
+		t.Fatalf("refused open changed the tables: %v -> %v", before, after)
 	}
 }
 

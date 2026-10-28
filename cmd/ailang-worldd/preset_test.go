@@ -198,7 +198,7 @@ func TestPresetDeclineAndNoTerminal(t *testing.T) {
 
 // AC4/5: every unsafe layout or bad check refuses before daemon and fence.
 func TestPresetRefusalsBeforeDaemon(t *testing.T) {
-	cases := []string{"symlink", "writable", "inside", "unknown", "name", "reserved", "slow", "make", "duplicate", "absolute", "parent", "missing", "grant"}
+	cases := []string{"symlink", "writable", "dirwritable", "longname", "inside", "unknown", "name", "reserved", "slow", "make", "duplicate", "absolute", "parent", "missing", "grant"}
 	for _, tc := range cases {
 		t.Run(tc, func(t *testing.T) {
 			f := newPresetFixture(t)
@@ -212,6 +212,11 @@ func TestPresetRefusalsBeforeDaemon(t *testing.T) {
 				_ = os.Symlink(target, f.file)
 			case "writable":
 				_ = os.Chmod(f.file, 0o660)
+			case "dirwritable":
+				_ = os.Chmod(f.dir, 0o770)
+			case "longname":
+				// 52 + "-yymmddhhmm" + "-9" is 65, one past the episode grammar.
+				name = strings.Repeat("a", 52)
 			case "inside":
 				dir = f.r.f.ws
 				_ = os.WriteFile(filepath.Join(dir, "p.json"), f.data, 0o600)
@@ -257,6 +262,10 @@ func TestPresetRefusalsBeforeDaemon(t *testing.T) {
 			}
 			if code := runEpisodeStart(args, &out, &errOut, sessionEnv{}); code == 0 {
 				t.Fatal("accepted", tc)
+			}
+			want := map[string]string{"dirwritable": "presets directory", "longname": "at most 51 characters", "name": `the file says name "wrong"`}[tc]
+			if want != "" && !strings.Contains(errOut.String(), want) {
+				t.Fatalf("%s refusal lacks %q:\n%s", tc, want, errOut.String())
 			}
 			if tc == "slow" || tc == "make" {
 				errOut.Reset()

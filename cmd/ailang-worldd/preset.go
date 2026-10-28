@@ -143,7 +143,20 @@ func expandPresetPath(path string) (string, error) {
 }
 
 // presetLayout precedes parsing and never consults a daemon.
+// maxPresetNameLen keeps a derived id, <name>-<yymmddhhmm>-9, within the
+// episode grammar's 64 characters (51 + 11 + 2).
+const maxPresetNameLen = 51
+
 func presetLayout(path, root string) error {
+	dir := filepath.Dir(path)
+	if di, err := os.Lstat(dir); err == nil {
+		if di.Mode()&os.ModeSymlink != 0 || !di.IsDir() {
+			return presetRefusal("presets directory "+dir+" is a symlink or not a directory", "grants and checks must be operator-owned", "use a real private directory (0700)")
+		}
+		if di.Mode().Perm()&0o022 != 0 {
+			return presetRefusal(fmt.Sprintf("presets directory %s is group- or other-writable (%04o)", dir, di.Mode().Perm()), "another user could replace a preset and widen its authority", "chmod 700 "+dir)
+		}
+	}
 	info, err := os.Lstat(path)
 	if err != nil {
 		return err
@@ -318,8 +331,8 @@ func loadLaunchPreset(ctx context.Context, name, dir, profilesDir, workspaceRoot
 	if name == "se-tools" {
 		return nil, presetRefusal("preset se-tools is reserved", "it names the existing grant set", "choose another preset name")
 	}
-	if !workspaceEpisodePattern.MatchString(name) || len(name) > 53 {
-		return nil, presetRefusal("invalid preset name "+name, "use the episode grammar, at most 53 characters", "choose a shorter lowercase name")
+	if !workspaceEpisodePattern.MatchString(name) || len(name) > maxPresetNameLen {
+		return nil, presetRefusal("invalid preset name "+name, fmt.Sprintf("use the episode grammar, at most %d characters, so <name>-<yymmddhhmm>-9 fits the 64-character episode id", maxPresetNameLen), "choose a shorter lowercase name")
 	}
 	path, err := expandPresetPath(filepath.Join(dir, name+".json"))
 	if err != nil {
@@ -339,8 +352,11 @@ func loadLaunchPreset(ctx context.Context, name, dir, profilesDir, workspaceRoot
 	if err := strictPresetJSON(data, &p); err != nil {
 		return nil, presetRefusal("preset "+name+": "+err.Error(), "preset fields are closed", "fix the field, then preset check "+name)
 	}
-	if p.Name != name || p.Schema != "world/preset/v1" {
-		return nil, presetRefusal("preset "+name+": name must equal the file basename and schema must be world/preset/v1", "the file identifies its authority", "fix the name and schema")
+	if p.Schema != "world/preset/v1" {
+		return nil, presetRefusal(fmt.Sprintf("preset %s: schema is %q, not world/preset/v1", name, p.Schema), "the file identifies its authority", "set \"schema\": \"world/preset/v1\"")
+	}
+	if p.Name != name {
+		return nil, presetRefusal(fmt.Sprintf("preset %s: the file says name %q, which is not its basename %q", name, p.Name, name), "the file identifies its authority", "rename the file or set \"name\": \""+name+"\"")
 	}
 	// An explicit workspace root is inspected before any other field.
 	var layoutDaemon struct {
@@ -525,7 +541,7 @@ func runPreset(args []string, out, errOut io.Writer) int {
 			return exitUsage
 		}
 		name := pos[0]
-		if name == "se-tools" || !workspaceEpisodePattern.MatchString(name) || len(name) > 53 {
+		if name == "se-tools" || !workspaceEpisodePattern.MatchString(name) || len(name) > maxPresetNameLen {
 			return fail(errors.New("invalid or reserved preset name"))
 		}
 		p := launchPreset{Schema: "world/preset/v1", Name: name, Repo: *repo, Base: *base, Remote: *remote, Agent: *agent, Profile: *profile, TTLS: 43200,
