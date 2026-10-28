@@ -1,18 +1,18 @@
-# World mission dashboard — iteration 313 (2026-10-28)
+# World mission dashboard — iteration 314 (2026-10-28)
 
-- **This fire:** row 150 M8a BUILT (PR #400): reproduction docs, captions, release manifest schema and `marketingcheck docs`.
-- **What landed:** QUICKSTART §13 (attended capture runbook, all thirteen `capture_marketing.sh` flags, the still-mode preview, the release check, P0/P3 and the open criteria); the website page `getting-started/marketing-capture` (six `useBaseUrl` images); `captions.md`; README Screenshots links; `docs/marketing-capture-manifest.schema.json` (no hash).
-- **`marketingcheck docs`:** wiring checks against `Shots`; release mode (`--assets … --capture-manifest … --require-assets`) checks the PNG SHA-256 values against the attended capture manifest.
-- **Measured first:** a markdown image to an absent PNG fails the Docusaurus build; a raw `<img>` and `pathname://` drop the `/ailang-world/` base; `useBaseUrl` works. The plan's attended block lacked three required capture flags.
-- **Judges:** sonnet r1 PASS 82 → controller fix (the page said all evidence was demo-authored; only CLAIMED is — the judge missed it; plus disclosure gates F1, F6, F7, F8) → sonnet r2 PASS 89, zero blocking.
-- **Roles:** executor haiku (codex over ration), evaluator sonnet ×2; no designer or planner needed.
-- **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 156 (closed) → 150 → 151 → v1.0.0.
-- **Row 150:** 22/23 executor milestones built (M8b left); R1 measured; P0, P3 (controller) and A1 (attended) remain.
-- **Next:** the C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum) → M8b.
-- **Open before P0:** phone C8′(iii) (scrollbar thumb 324–338 px across seeds) and P0's ±2 px for wrapping packet paragraphs.
-- **For Mark at A1 (N2):** the release-screenshots page is in the sidebar before promotion, so a docs deploy before A1 shows six broken images. Deploy after A1, or mark the page `unlisted` until then.
-- **Carried:** judge non-blocking F2–F5, F9 and N1 (negative arms, parse-leg kill, ungated new sentences); iteration 311/312 carries.
-- **Instrument note:** build Docusaurus probes with a private `node_modules` (no `.cache`); a symlinked one shares webpack's cache and fails every docs page.
+- **This fire:** dev was RED at Gate 1, so it preempted the queue: the arm 6 reverse-leg false refusal is fixed as row 229 (PR #403).
+- **The red:** `origin/dev` `2769cff9` failed `TestExecSrtMCPGrantAndBudget` with "reverse leg: the host reached the listener the child bound…". A re-run on the identical tree was green, so it is a flake. The same false refusal could refuse daemon startup in production.
+- **Cause:** the probe closed the port it picked, then counted ANY connect as the sandboxed child. On Linux the child is in its own netns, so a reach was always some other host process; srt's own mux binds an ephemeral port at every start.
+- **Fix:** a fresh port and nonce per attempt, plus a hello on every dial. The child's nonce means refuse; other bytes or EOF mean foreign, so retry (≤3), then refuse "inconclusive"; silence means a sticky refusal. A leg passes only if no dial connected.
+- **Measured first:** live against the pinned srt 0.0.78 mux, the hello gets an HTTP 400 in ≤3 ms (3/3). That is what made the quorum's last objection carve-out-eligible.
+- **Quorum:** r1 and r2 BLOCKED (kimi, glm); r3 applied the reviewers' verbatim fixes under the carve-out. gpt6-1-sol was absent both rounds (OpenAI API 429, no credits). Spend $0.69.
+- **Judge:** sonnet PASS 92/100, zero blocking. Two surviving mutants (hello wait, `c.resume()`) became row 230.
+- **CI:** PR head 3/3 green, and all 7 new tests plus the real-srt tests PASS on Linux. The merge commit is polled before LANDED.
+- **Roles (Agent tool):** designer opus ×3 runs (one doc; the third run is FLAGGED over diet), planner opus, executor haiku, evaluator sonnet.
+- **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
+- **Row 150:** 22/23 executor milestones built (M8b left); P0, P3 and A1 remain.
+- **Next:** row 150's C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum) → M8b. Row 230 sits below the release rows.
+- **Harness:** row 144's ticket was resolved by the fleet (`d95ead6`), and the reply is acked.
 - **Parked on Mark:** nothing — the ledger has 0 OPEN rows.
-- **Cost:** metered $0.00; Anthropic quota only.
-- **Record/evidence:** world-mission-log.md entry 313; verification/world-iter313/.
+- **Cost:** metered $0.69 (quorum); Anthropic quota otherwise. Codex is over its ration.
+- **Record/evidence:** world-mission-log.md entry 314; verification/world-iter314/.

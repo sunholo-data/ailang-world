@@ -1,0 +1,113 @@
+=== G1-gofmt
+rc=0
+=== G2-vet
+rc=0
+=== G3-fence
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.112s [no tests to run]
+ok  	github.com/sunholo-data/ailang-world/host/daemon	2.051s [no tests to run]
+rc=0
+=== G4-broker
+--- FAIL: TestEpisodeLiveReplayThreeArmsAndEvidence (0.00s)
+    episode_test.go:169: AILANG_BIN must name the pinned released interpreter
+rc=1
+=== G5-daemon
+=== RUN   TestExecSrtMCPEndToEnd
+=== RUN   TestExecSrtMCPGrantAndBudget
+=== RUN   TestExecSrtReplayIsByteEqual
+=== RUN   TestExecSrtReplayIsByteEqual/unprotected
+=== RUN   TestExecSrtReplayIsByteEqual/protected
+=== RUN   TestExecStartupRefusalTable
+=== RUN   TestExecStartupRefusalTable/argv0-missing
+=== RUN   TestExecStartupRefusalTable/env-bad-name
+=== RUN   TestExecStartupRefusalTable/env-world-owned
+=== RUN   TestExecStartupRefusalTable/episode-bad-id
+=== RUN   TestExecStartupRefusalTable/episode-no-project
+=== RUN   TestExecStartupRefusalTable/episode-not-pair
+=== RUN   TestExecStartupRefusalTable/episode-twice
+=== RUN   TestExecStartupRefusalTable/episode-without-profile
+=== RUN   TestExecStartupRefusalTable/max-output-without-profile
+=== RUN   TestExecStartupRefusalTable/max-output-zero
+=== RUN   TestExecStartupRefusalTable/no-sandbox
+=== RUN   TestExecStartupRefusalTable/no-workspace-tools
+=== RUN   TestExecStartupRefusalTable/node-absent
+=== RUN   TestExecStartupRefusalTable/node-in-cache
+=== RUN   TestExecStartupRefusalTable/node-in-root
+=== RUN   TestExecStartupRefusalTable/node-in-state
+=== RUN   TestExecStartupRefusalTable/node-too-old
+=== RUN   TestExecStartupRefusalTable/node-without-profile
+=== RUN   TestExecStartupRefusalTable/probe-missing
+=== RUN   TestExecStartupRefusalTable/probe-no-client
+=== RUN   TestExecStartupRefusalTable/probe-noop
+=== RUN   TestExecStartupRefusalTable/probe-package-only
+=== RUN   TestExecStartupRefusalTable/probe-passthrough
+=== RUN   TestExecStartupRefusalTable/probe-toolchain
+=== RUN   TestExecStartupRefusalTable/probe-zero
+=== RUN   TestExecStartupRefusalTable/profile-absent
+=== RUN   TestExecStartupRefusalTable/profile-in-cache
+=== RUN   TestExecStartupRefusalTable/profile-in-root
+=== RUN   TestExecStartupRefusalTable/profile-in-state
+=== RUN   TestExecStartupRefusalTable/project-twice
+=== RUN   TestExecStartupRefusalTable/protected-double-star
+=== RUN   TestExecStartupRefusalTable/protected-malformed-value
+=== RUN   TestExecStartupRefusalTable/protected-over-limit
+=== RUN   TestExecStartupRefusalTable/protected-slash-glob
+=== RUN   TestExecStartupRefusalTable/readroot-decoy
+=== RUN   TestExecStartupRefusalTable/readroot-home
+=== RUN   TestExecStartupRefusalTable/readroot-home-symlink
+=== RUN   TestExecStartupRefusalTable/readroot-in-state
+=== RUN   TestExecStartupRefusalTable/readroot-root-ancestor
+=== RUN   TestExecStartupRefusalTable/readroot-slash
+=== RUN   TestExecStartupRefusalTable/root-escapes
+=== RUN   TestExecStartupRefusalTable/sandbox-in-cache
+=== RUN   TestExecStartupRefusalTable/sandbox-in-root
+=== RUN   TestExecStartupRefusalTable/sandbox-in-state
+=== RUN   TestExecStartupRefusalTable/sandbox-not-srt
+=== RUN   TestExecStartupRefusalTable/sandbox-other-digest
+=== RUN   TestExecStartupRefusalTable/sandbox-other-version
+=== RUN   TestExecStartupRefusalTable/sandbox-without-profile
+=== RUN   TestExecStartupRefusalTable/seed-in-root
+=== RUN   TestExecStartupRefusalTable/timeout-cap
+=== RUN   TestExecStartupRefusalTable/unknown-key
+ok  	github.com/sunholo-data/ailang-world/host/daemon	24.410s
+rc=0
+=== G7-race
+ok  	github.com/sunholo-data/ailang-world/host/broker	30.138s
+rc=0
+=== G8-nodeless
+=== RUN   TestExecProbeReverseLegJudge
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/silent-client
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/clean
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+=== RUN   TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+ok  	github.com/sunholo-data/ailang-world/host/broker	3.708s
+rc=0
+=== G9-stab
+ok  	github.com/sunholo-data/ailang-world/host/broker	100.120s
+rc=0
+=== G11-actionlint
+rc=0
+=== G10-verify-go
+==================
+==================
+==================
+==================
+ok  	github.com/sunholo-data/ailang-world/host/broker	285.358s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	348.214s
+✓ go gate PASSED (plain): build clean; legs run pass with pinned AILANG_BIN (AILANG v0.41.0
+rc=0

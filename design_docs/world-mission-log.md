@@ -2574,3 +2574,102 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; row 150 22/23 built (M8b left) plus the C8′(iii)/P0 amendment, P0–P3 and A1; goal unmoved.
 **Next:** row 150's C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum), then M8b, then P0–P3 and the attended A1. Then 151.
+
+## 314 — 2026-10-28 — dev RED at Gate 1 → arm 6 reverse-leg false refusal fixed and LANDED (row 229, PR #403; judge PASS 92) [PRODUCT-HYGIENE]
+
+**Kind:** full inner loop on a Gate-1 red (designer → quorum ×2 → carve-out revision → planner → executor → independent evaluator → PR), every role spawned through the Agent tool per the operator's standing request.
+
+**Pick and why:** Gate 1 found `origin/dev` `2769cff9` (PR #401, docs-only) red on `go host build + test gate`, run 40699055042 attempt 1, job 122853572046, step 8 (`Row 140 Workspace.Exec real-srt tests`), with 17 steps skipped behind it. The one failure was host/daemon `TestExecSrtMCPGrantAndBudget`: `exec startup probe failed for profile "proj" (1 of 7 arms): arm6-network: reverse leg: the host reached the listener the child bound on 127.0.0.1:44109`. Parents `c953cadc`, `9ec31fca`, `e40ab235`, `aafa0b4d` and `05cf2189` were green, and a re-run of the failed job on the identical tree (attempt 2) was green with every step run, so it is a flake. A scan of the 8 newest failed CI runs found no other real-sandbox instance (instance 1). A red dev outranks the queue and World owns this repo, so this followed the iteration-228 precedent, even though dev was already green again on the re-run. The fail-closed probe can refuse daemon startup in production the same way, so the defect is real beyond CI.
+
+**Clause map:** clauses 1–7 MET (ratified states, not re-measured); no UNMET clause, no critical-path row. D-WORLD-81 order 150 → 151 resumes next iteration.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (11 comments, none from the allowlist). Watermark unchanged.
+- Self-notices rc 1: the newest crash `6345079873` (rc=1, 2026-10-22) is already credited (log grep count 11). No new crash notice.
+- Inbox `mission-world`: one `harness-resolved` reply from `mission-fleet` for `gate5:controlplane-send-refused-local-store` (fleet iteration 66, #1994, `d95ead6`, judged PASS 91). Row 144 is marked RESOLVED and the reply acked. The rest are this loop's own claim messages; this iteration's claim was sent.
+- Ledger: `mission_decisions.sh --check` valid, 88 rows, 0 OPEN.
+- Weekly external-issue sweep: not due (#366 opened 2026-10-26, after the Monday boundary).
+- Residue: `ailang-world/.wt-world-iter306-r0` (unattributed since 306) left untouched again.
+
+**Gate 1:**
+- Base `2769cff9…` recorded at `2026-10-28T16:01:25Z`; local dev = origin/dev; no open PR from this account.
+- Running skill and all resource files byte-identical to origin/dev, for both the resolved symlink target and the pin copy (per-file `cmp`, silent).
+- Check set at `2769cff9`: 3 checks, `go host build + test gate` failure (above).
+
+**Diagnosis (controller, then designer):**
+- `host/broker/exec_probe.go` (unchanged since `885af2d1`, 2026-10-20) picked `revPort` with `freeLoopbackPort` (listen `:0`, read the port, close it), then `pollLoopback` counted ANY connect to it as a reach.
+- M0's committed matrix shows the child binds inside its own netns on Linux (`WORLD-PROBE-BOUND; host reached=False`) and is refused (EPERM) on macOS. So on Linux the host can never reach the child, and a reach means another host process took the port.
+- The controller's hypothesis, "parallel test packages", was REFUTED by the designer: step 8 runs `go test ./host/broker/ ./host/daemon/ -p 1`, and neither package calls `t.Parallel()`. The controller re-verified both (control: `t.Parallel()` exists in host/verifygate).
+- The designer found the concrete in-window binder by reading srt 0.0.78's source: the mux proxy binds host `127.0.0.1:0` at every srt start, including Run C's own, and stays silent until the first byte. That is the exact shape the poll counted.
+- Deterministic reproduction at base: a stand-in srt holding a listener on the reverse port gave the CI signature 3/3; the control gave 0/3.
+
+**Design and quorum** (`w-exec-probe-reverse-leg-port-race`, designer opus via the Agent tool; author vendor benched; seats glm-5.3, kimi-k3 and gpt6-1-sol, with reserve gemini-4-argon):
+- **r1:** glm PASS, gemini PASS, kimi REJECT: no caller census for the two changed helpers. gpt6-1-sol was absent (OpenAI 429, "no credits remaining"). Measured, not forwarded (rule 3f): `grep -rn 'pollLoopback\|freeLoopbackPort'` gave 6 lines, one call site per helper, both in the reverse leg (control `runBounded` = 9). The designer applied kimi's verbatim fix in r2 (V22, R4).
+- **r2 (the one re-quorum):** gemini PASS, glm REJECT (the new tests T1/T2/T3/T5/T7 are not in CI's PASS-guard list, so a SKIP could pass silently), kimi REJECT (a silent listener that is reached would be retried into a pass, which weakens P20). gpt6-1-sol absent again (429).
+  - Kimi's fix branched on an unmeasured premise: does srt's mux answer a garbage hello? The controller measured it live with the pinned srt 0.0.78 (cli.js sha `3c3092bd…` = pin), importing its own `createMuxProxyServer` and `createHttpProxyServer`. Hello → `HTTP/1.1 400 Bad Request` and close within 0–3 ms (3/3); no hello → silent to the 1.5 s deadline (2/2). Source reading agrees: a first-byte peek, then the HTTP backend's `clientError` 400.
+  - That resolved kimi's conditional to its first branch. Every remaining objection now had a concrete reviewer-authored fix and none disputed the direction, so the **narrow-refinement carve-out** applied: r3 is the reviewers' verbatim fixes (the hello, the three-way classification, a sticky silent refusal, all 7 tests in `tests=`, node-less V24). It routed straight to the planner.
+- Quorum spend $0.687 (r1 $0.314, r2 $0.373). Artifacts are banked in `verification/world-iter314/quorum/`.
+
+**Fix:**
+- The child's listener answers each accept with `WORLD-PROBE-NONCE <nonce>`, using a fresh port and a 128-bit nonce per attempt. World writes `WORLD-PROBE-HELLO` on each connected dial and reads for 500 ms:
+  - nonce → child → refuse ("the host reached…");
+  - other bytes, or a clean EOF → foreign → retry on a fresh port, at most 3 attempts, then "inconclusive after N attempts";
+  - zero bytes, a reset, or a failed hello write → silent → refuse, and the refusal sticks for the leg.
+- A pass needs zero connected dials.
+- Planner opus: M1 production and the pure judge T1; M2 node-free shell tests T2/T3/T5/T7; M3 node tests T4/T6, `ci.yml` `tests=` and QUICKSTART §10. Seven design/code discrepancies (D1–D7) were resolved in the plan.
+
+**Executor (haiku, Agent tool; resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`):**
+- Built M1–M3 in `.wt-world-iter314-arm6` with no git writes; snapshots `.snap/M1..M3`.
+- Reported every gate green and 21/21 mutants killed, each restore sha-verified.
+- Deviations: `_ = werr` for M18/M19 to compile; G10 not re-run at base; it did not write the report file (its own instructions forbid report files), so the controller banked it.
+
+**Controller verification:**
+- Main checkout untouched. Commits rebuilt per milestone from the snapshots: M1 `2f2ba233`, M2 `5856a606`, M3 `d7bba842`. At each boundary gofmt, vet, compile fence and `-run TestExecProbe` were rc 0. Reconstruction faithful, `shasum -c` 4/4 OK.
+- Gate sweep (`verification/world-iter314/controller/`): gofmt, vet and compile fence rc 0; `-race` on the probe tests rc 0; node-less run rc 0 (T4 SKIPs by design); 10× stability rc 0; actionlint clean. `verify_go.sh` plain with the pinned v0.41.0 `AILANG_BIN` PASSED (broker 285 s, daemon 348 s).
+- **Instrument failure first:** the controller's own G4 `go test ./host/broker/` ran without `AILANG_BIN` and went red on `TestEpisodeLiveReplayThreeArmsAndEvidence` ("AILANG_BIN must name the pinned released interpreter"). That is a fact about the gate script, not the code; the `verify_go.sh` leg is the corrected form.
+
+**Independent evaluation:**
+- r1 sonnet (Agent tool, own worktree `.wt-world-iter314-eval` at `d7bba842`): **PASS 92/100** (28/19/24/10/11), zero blocking. Report: `verification/world-iter314/evaluator-r1.md`.
+- It derived from the code that no path passes a reach of the child. It ran the gates (17 PASS, 1 SKIP Arm8) and T6 3×, and killed 10 plan mutants and 8 of its own 10. Survivors: O8 (hello wait 500 → 5 ms) and O10 (drop `c.resume()`).
+- Findings, all non-blocking: F1 (design residual: a real reach misread as foreign, then a clean attempt), F2/F3 (the two survivors), F4 (G10 not re-run at base).
+- **Controller reproduction:** O8 GREEN and O10 GREEN (survivors confirmed); M4 RED; M17 RED on the assertion "want the sticky silent refusal on attempt 1", not on a build error. Eval tree restored, 0 porcelain.
+- F2 and F3 are carried as row 230. No fix round: neither is a correctness defect, and F3's only discriminating platform is Linux CI.
+
+**Bookkeeping:**
+- Design, plan and JSON moved to `implemented/` (status, milestone commits, PR, evaluation).
+- Charter: rows 229 (LANDED) and 230 (pins, cross-profile poll, R4) appended after 228; row 144 marked RESOLVED by the fleet; CURRENT GOAL next line updated; STATUS 314 stamp added and STATUS 311 rotated to the archive. Line count 6294 → 6296 (+2 rows; the stamp swap is net 0); archive +2 with ITERATION 311 at its head; 3 stamps; `## Queue`, row 150 and rows 228–230 present; ledger valid.
+
+**Result:** LANDED (pending merge-commit CI). Arm 6's reverse leg counts only the child's nonce as a reach. A port another host process holds, including srt's own mux, is retried rather than refused, while any silent or nonce-answering reach still refuses. On the PR head `d7bba842` CI was 3/3 green, and its Linux job shows `--- PASS` for all 7 new tests, `TestExecSrtMCPGrantAndBudget`, `TestExecSrtStartupProbePasses` and the pass-through control, with 0 FAIL lines.
+
+**Gate 3b:** PR #403's head `d7bba842` was polled SHA-pinned (bounded 30 min, verdict path naming the SHA): ALL GREEN 3/3. The record commit and the merge commit are each polled the same way, and the outcome is reported on #366.
+
+**Routing evidence:** base=2769cff9477dc89f5eb61c6aaeb58079cb4120e3@2026-10-28T18:26:55Z (Gate 4 record; the Gate 1 record and the Gate 3 `snap` were the same SHA). Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=opus`, `EXECUTOR=claude:claude-haiku-5-5`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration), handed to `opus` and `claude:claude-haiku-5-5`.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (same weights, per the operator's standing request; iteration-228 precedent). The rotation state file's next entry after `codex:gpt-6.1-sol` is `pi:ollama/glm-5.3:cloud`; the resolver's answer was followed verbatim, and the pointer was set to the lane that ran. 1 doc, 3 runs: author, the r2 revision (protocol-mandated), and the r3 carve-out revision. The third run exceeds the one-doc-plus-one-revision diet and is FLAGGED; it was the reviewers' own verbatim fixes, not a new design. Tokens 164,464 / 170,326 / 234,780 (reported per run, cumulative transcript).
+- Planner: Agent `opus` (`agent-tool opus fail-closed:env-pin`; derive-planner-lane `opus fail-closed:env-pin`), 218,436 tok.
+- Executor: Agent `haiku` (resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; iteration-305/313 precedent), 161,690 tok / 2,773 s.
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), 60,099 tok / 268 s. Generator ≠ judge: haiku vs sonnet.
+- Quorum: glm-5.3 / kimi-k3 / gemini-4-argon (reserve), with gpt6-1-sol absent on OpenAI 429 both rounds. Metered $0.687.
+
+**Ruled out:**
+- "Parallel test packages caused the collision" (controller hypothesis): refuted, step 8 is `-p 1` and no broker/daemon test is `t.Parallel()`.
+- TCP self-connect as the primary cause: Go's dialer detects and retries it.
+- Option B (bounded retry without identity): it lets an intermittent breach pass.
+- C1 (World holds the port): it stops observing reachability.
+- C2/C3 (child-chosen port, out-of-range port): they narrow the window without classifying a reach.
+- The controller's own G4 red: AILANG_BIN unset in the gate script, an instrument failure.
+
+**Carried:**
+- Row 230: F2 hello-wait pin; F3 `c.resume()` pin; R2 cross-profile poll (`w-exec-probe-cross-profile-poll`); R4 Linux collision rate unmeasured.
+- The OpenAI quorum seat (`gpt6-1-sol`) is absent on HTTP 429 "no credits remaining". This is the metered API account, not the codex subscription. A capacity condition, not a decision.
+- `.wt-world-iter306-r0` residue.
+
+**Retro:**
+- **A reviewer's conditional fix is a measurement request.** Kimi's r2 objection branched on "does srt's mux answer garbage?" Measuring it (≈1 minute, the pinned package's own server constructors) turned a judgment-shaped block into a carve-out-eligible one, and the alternative was a `needs-human-review` park on a question nobody had measured. This is rule 3f applied to a branching fix. Instance 1.
+- **A controller gate script must export the mission's pin itself.** G4 ran bare `go test` without `AILANG_BIN` and produced a false red; `verify_go.sh` refuses loudly when the pin is unset, but a hand-written gate script does not inherit that. Instance 1.
+- **An executor's own instructions can override a directive's report path.** Haiku declined to write `executor-report.md` and returned the text instead; the controller banked it. Instance 1 (no skill edit).
+- Harness share 0 of the last 20 index rows. Bar-moving landings: 312, 313 and 314 each moved no clause, and every clause is MET with no routable critical-path row, so this is not DRIFT. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (hygiene on MET clause 3); row 150 22/23 built (M8b left) plus the C8′(iii)/P0 amendment, P0–P3 and A1.
+**Next:** row 150's C8′(iii)/P0 store-dependent-geometry amendment (doc r3, designer + quorum), then M8b, then P0–P3 and the attended A1; then 151. Row 230 sits below every release row.

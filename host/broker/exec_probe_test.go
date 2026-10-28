@@ -10,14 +10,21 @@ package broker
 // World's node) and skip, by name, only when none is found.
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -413,5 +420,319 @@ func TestExecProbeProtectedSample(t *testing.T) {
 	}
 	if _, err := execProbeProtectedSample("src/*.go"); err == nil {
 		t.Fatal("unsupported construction must return explicit error")
+	}
+}
+
+// T1 (design §7): the reverse leg's whole decision for one attempt, §4.2's order.
+func TestExecProbeReverseLegJudge(t *testing.T) {
+	const bound, eperm, inuse = "WORLD-PROBE-BOUND", "WORLD-PROBE-REFUSED EPERM", "WORLD-PROBE-REFUSED EADDRINUSE"
+	child, foreign, silent := reverseSeen{child: true}, reverseSeen{foreign: true}, reverseSeen{silent: true}
+	for _, row := range []struct {
+		name string
+		tok  string
+		seen reverseSeen
+		want revVerdict
+	}{
+		{"bound-none", bound, reverseSeen{}, revPass},
+		{"eperm-none", eperm, reverseSeen{}, revPass},
+		{"bound-foreign", bound, foreign, revInconclusive},
+		{"eperm-foreign", eperm, foreign, revInconclusive},
+		{"eaddrinuse-none", inuse, reverseSeen{}, revInconclusive},
+		{"bound-child", bound, child, revReached},
+		{"bound-child-foreign", bound, reverseSeen{child: true, foreign: true}, revReached},
+		{"bound-child-silent", bound, reverseSeen{child: true, silent: true}, revReached},
+		{"notoken-child", "", child, revReached},
+		{"bound-silent", bound, silent, revSilent},
+		{"bound-silent-foreign", bound, reverseSeen{silent: true, foreign: true}, revSilent},
+		{"eperm-silent", eperm, silent, revSilent},
+		{"notoken-none", "", reverseSeen{}, revNoToken},
+		{"notoken-foreign", "", foreign, revNoToken},
+	} {
+		if got := judgeReverse(row.tok, row.seen); got != row.want {
+			t.Errorf("%s: judgeReverse(%q, %+v) = %d, want %d", row.name, row.tok, row.seen, got, row.want)
+		}
+	}
+}
+
+// revHolderKinds are the test-owned holders of a reverse-leg port (design
+// §6): chatty ones drain World's hello first (closing with unread input
+// would reset) and then answer; "silent" accepts and never writes;
+// "reset" accepts and closes with SO_LINGER 0.
+var revHolderKinds = []string{"http-400", "forged-nonce", "garbage", "clean-close", "silent", "reset"}
+
+func revHolder(t *testing.T, kind string) int {
+	t.Helper()
+	if !slices.Contains(revHolderKinds, kind) {
+		t.Fatalf("revHolder: unknown kind %q", kind)
+	}
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var mu sync.Mutex
+	var held []net.Conn
+	t.Cleanup(func() {
+		_ = ln.Close()
+		mu.Lock()
+		defer mu.Unlock()
+		for _, c := range held {
+			_ = c.Close()
+		}
+	})
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			switch kind {
+			case "silent":
+				mu.Lock()
+				held = append(held, c)
+				mu.Unlock()
+				continue
+			case "reset":
+				_ = c.(*net.TCPConn).SetLinger(0)
+				_ = c.Close()
+				continue
+			}
+			go func() {
+				defer c.Close()
+				_ = c.SetDeadline(time.Now().Add(2 * time.Second))
+				_, _ = bufio.NewReader(c).ReadString('\n') // World's hello
+				switch kind {
+				case "http-400":
+					_, _ = io.WriteString(c, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n")
+				case "forged-nonce":
+					_, _ = io.WriteString(c, "WORLD-PROBE-NONCE "+strings.Repeat("0", 32)+"\n")
+				case "garbage":
+					_, _ = io.WriteString(c, "garbage\n")
+				} // clean-close: zero bytes, then FIN
+			}()
+		}
+	}()
+	return ln.Addr().(*net.TCPAddr).Port
+}
+
+// revPicker is the reverse leg's port seam in tests: call n returns
+// steps[n-1] ("free" = a port nothing holds, else a revHolder kind) and
+// records the port; a call past the list fails, so an unbounded retry
+// ends at once instead of hanging.
+type revPicker struct {
+	t     *testing.T
+	steps []string
+	calls atomic.Int32
+	mu    sync.Mutex
+	ports []int
+}
+
+func newRevPicker(t *testing.T, steps ...string) *revPicker { return &revPicker{t: t, steps: steps} }
+
+func (p *revPicker) pick() (int, error) {
+	n := int(p.calls.Add(1))
+	if n > len(p.steps) {
+		return 0, fmt.Errorf("test picker exhausted after %d ports", len(p.steps))
+	}
+	var port int
+	if p.steps[n-1] == "free" {
+		var err error
+		if port, err = freeLoopbackPort(); err != nil {
+			return 0, err
+		}
+	} else {
+		port = revHolder(p.t, p.steps[n-1])
+	}
+	p.mu.Lock()
+	p.ports = append(p.ports, port)
+	p.mu.Unlock()
+	return port, nil
+}
+
+func (p *revPicker) port(t *testing.T, i int) int {
+	t.Helper()
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if i >= len(p.ports) {
+		t.Fatalf("picker handed out %d ports, want at least %d", len(p.ports), i+1)
+	}
+	return p.ports[i]
+}
+
+// revFixture is arm8Fixture's /bin/sh node, srt and client (V24: no node,
+// no real srt): the client answers the proxy op with a refusal and the
+// listen op with listenTok ("" = no token), and never binds.
+func revFixture(t *testing.T, listenTok string, p *revPicker) *execProber {
+	t.Helper()
+	body := "for a in \"$@\"; do [ \"$a\" = proxy ] && echo 'WORLD-PROBE-REFUSED ECONNREFUSED'; done\n"
+	if listenTok != "" {
+		body += "echo '" + listenTok + "'\n"
+	}
+	pp := arm8Fixture(t, body, nil)
+	pp.pickPort = p.pick
+	return pp
+}
+
+func runReverseLeg(t *testing.T, pp *execProber) string {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	_, why := pp.reverseLeg(ctx, 1) // port 1: nothing listens there
+	return why
+}
+
+const revReachedText = "the host reached the listener the child bound"
+
+// T2 (design §7): a foreign answer on attempt 1 is retried; attempt 2 passes.
+func TestExecProbeReverseLegChattyForeignHolderIsRetried(t *testing.T) {
+	for _, plat := range []struct{ name, tok string }{{"linux-bound", "WORLD-PROBE-BOUND"}, {"darwin-eperm", "WORLD-PROBE-REFUSED EPERM"}} {
+		for _, kind := range []string{"http-400", "forged-nonce", "garbage", "clean-close"} {
+			t.Run(plat.name+"-"+kind, func(t *testing.T) {
+				p := newRevPicker(t, kind, "free", "free")
+				why := runReverseLeg(t, revFixture(t, plat.tok, p))
+				if why != "" || p.calls.Load() != 2 {
+					t.Fatalf("Why = %q, picker calls %d; want a pass on attempt 2 (calls 2)", why, p.calls.Load())
+				}
+			})
+		}
+	}
+}
+
+// T3 (design §7): exhaustion refuses distinctly and never as a reach.
+func TestExecProbeReverseLegExhaustionRefusesDistinctly(t *testing.T) {
+	for _, row := range []struct {
+		name, tok string
+		steps     []string
+	}{
+		{"chatty-every-time", "WORLD-PROBE-BOUND", []string{"http-400", "http-400", "http-400"}},
+		{"child-eaddrinuse", "WORLD-PROBE-REFUSED EADDRINUSE", []string{"free", "free", "free"}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			p := newRevPicker(t, row.steps...)
+			why := runReverseLeg(t, revFixture(t, row.tok, p))
+			if !strings.HasPrefix(why, "reverse leg: inconclusive after 3 attempts") || strings.Contains(why, revReachedText) || p.calls.Load() != 3 {
+				t.Fatalf("Why = %q, picker calls %d; want inconclusive after 3 attempts, no reach text, calls 3", why, p.calls.Load())
+			}
+		})
+	}
+}
+
+// T5 (design §7): a child with no token, or a clean pass, is judged on attempt 1.
+func TestExecProbeReverseLegNoTokenIsNotRetried(t *testing.T) {
+	for _, row := range []struct {
+		name, tok string
+		steps     []string
+	}{
+		{"silent-client", "", []string{"free", "free", "free"}},
+		{"clean", "WORLD-PROBE-BOUND", []string{"free", "free", "free"}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			p := newRevPicker(t, row.steps...)
+			why := runReverseLeg(t, revFixture(t, row.tok, p))
+			if row.name == "clean" {
+				if why != "" || p.calls.Load() != 1 {
+					t.Fatalf("Why = %q, picker calls %d; want a pass on attempt 1", why, p.calls.Load())
+				}
+				return
+			}
+			if !strings.Contains(why, "reverse leg: no token from the child's listener") || p.calls.Load() != 1 {
+				t.Fatalf("Why = %q, picker calls %d; want no-token on attempt 1", why, p.calls.Load())
+			}
+		})
+	}
+}
+
+// T7 (design §7): a silent holder is a sticky refusal, on any attempt.
+func TestExecProbeReverseLegSilentHolderRefusesSticky(t *testing.T) {
+	silentText := func(port int) string {
+		return fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing", port)
+	}
+	for _, row := range []struct {
+		name  string
+		steps []string
+		at    int // the attempt index (0-based) that must refuse
+		calls int32
+	}{
+		{"silent-attempt-1", []string{"silent", "free", "free"}, 0, 1},
+		{"silent-after-chatty", []string{"http-400", "silent", "free"}, 1, 2},
+		{"reset-holder", []string{"reset", "free", "free"}, 0, 1},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			p := newRevPicker(t, row.steps...)
+			why := runReverseLeg(t, revFixture(t, "WORLD-PROBE-BOUND", p))
+			if !strings.HasPrefix(why, silentText(p.port(t, row.at))) || !strings.Contains(why, "answered nothing to World's hello") ||
+				strings.Contains(why, revReachedText) || p.calls.Load() != row.calls {
+				t.Fatalf("Why = %q, picker calls %d; want the sticky silent refusal on attempt %d, calls %d", why, p.calls.Load(), row.at+1, row.calls)
+			}
+		})
+	}
+}
+
+// T4 (design §7): a collision on attempt 1 must not mask a real reach on
+// attempt 2. The pass-through shim runs World's real node client
+// unsandboxed: attempt 1's child gets EADDRINUSE under an http-400 holder
+// (INCONCLUSIVE); attempt 2's child binds and answers the nonce.
+func TestExecProbeReverseLegRealReachSurvivesAForeignAttempt(t *testing.T) {
+	f := newProbeFixture(t, shimSrtTree(t, "passthrough"), nil, "", []any{"sh", "-c", "exit 0"})
+	pp := f.arm8Prober(t) // client = World's node
+	p := newRevPicker(t, "http-400", "free", "free")
+	pp.pickPort = p.pick
+	why := runReverseLeg(t, pp)
+	want := fmt.Sprintf("reverse leg: %s on 127.0.0.1:%d", revReachedText, p.port(t, 1))
+	if why != want || p.calls.Load() != 2 {
+		t.Fatalf("Why = %q, picker calls %d; want %q and 2", why, p.calls.Load(), want)
+	}
+}
+
+// revStandIn is a node srt stand-in for T6: a run whose argv carries
+// `listen` never runs the child; it prints the Linux-correct tokens, and
+// when the argv also carries `proxy` (attempt 1 = Run C, as srt's own mux
+// would) it first plants a holder of shape MODE on the listen port.
+// Every other run passes through, unsandboxed.
+const revStandIn = `const {spawnSync}=require('child_process');const os=require('os');const net=require('net');
+const a=process.argv.slice(2);
+if(a[0]!=='--settings'||a[2]!=='--'){console.error('STANDIN: bad launch '+JSON.stringify(a));process.exit(99)}
+const argv=a.slice(3);const li=argv.indexOf('listen');
+if(li<0){const r=spawnSync(argv[0],argv.slice(1),{stdio:'inherit'});if(r.error){console.error('STANDIN: '+r.error.code);process.exit(127)}
+process.exit(r.status===null?128+os.constants.signals[r.signal]:r.status)}
+const mode=MODE;const q=argv[li+1].split(':');const port=+q[0],ms=+q[1];
+const say=s=>process.stdout.write(s+'\n');
+const report=()=>{if(argv.includes('proxy'))say('WORLD-PROBE-REFUSED ECONNREFUSED');say('WORLD-PROBE-BOUND')};
+const done=srv=>setTimeout(()=>{if(srv)srv.close();process.exit(0)},ms);
+if(mode==='control'||!argv.includes('proxy')){report();done(null)}
+else{const srv=net.createServer(mode==='chatty'?c=>{c.once('data',()=>c.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'))}:c=>{});
+srv.on('error',e=>{console.error('STANDIN: holder '+e.code);process.exit(98)});
+srv.listen(port,'127.0.0.1',()=>{report();done(srv)})}
+`
+
+// T6 (design §7): the CI flake, reproduced through ProbeExecProfiles.
+// chatty is RED at base (P0); silent is the sticky refusal; control has no holder.
+func TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse(t *testing.T) {
+	for _, mode := range []string{"chatty", "silent", "control"} {
+		t.Run(mode, func(t *testing.T) {
+			cli := strings.Replace(revStandIn, "MODE", strconv.Quote(mode), 1)
+			f := newProbeFixture(t, fakeSrtTree(t, "0.0.0-test", cli), nil, "", []any{"sh", "-c", "echo toolchain-ok"})
+			err := f.probe(t, "")
+			var why string
+			var perr *ExecProbeError
+			if errors.As(err, &perr) {
+				for _, fl := range perr.Failed {
+					if fl.Arm == ExecProbeArmNetwork {
+						why = fl.Why
+					}
+				}
+			}
+			t.Logf("%s: arm 6 = %q", mode, why)
+			switch mode {
+			case "chatty", "control":
+				if strings.Contains(why, "reverse leg") {
+					t.Errorf("%s: arm 6 reports a reverse leg: %s", mode, why)
+				}
+			case "silent":
+				if !strings.Contains(why, "reverse leg: a listener on 127.0.0.1:") || !strings.Contains(why, "answered nothing to World's hello") || strings.Contains(why, revReachedText) {
+					t.Errorf("silent: arm 6 must carry the silent refusal, not the reached text: %s", why)
+				}
+			}
+			f.assertProbeCleaned(t)
+		})
 	}
 }
