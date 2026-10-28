@@ -1,0 +1,185 @@
+    zz_iter312_r1_test.go:104: ROUTES [{"name":"workbench-light.png","width":1440,"height":1100,"scheme":"light","route":"/workbench"},{"name":"workbench-dark.png","width":1440,"height":1100,"scheme":"dark","route":"/workbench"},{"name":"packet.png","width":1440,"height":3700,"scheme":"light","route":"/workbench?object=sha256:a78861132c6315945b64cbf377750b55b61217f06e1cbf83a9b0b6ab83b08757"},{"name":"graph.png","width":1440,"height":2100,"scheme":"light","route":"/workbench?from=9\u0026entry=9"},{"name":"provenance.png","width":1440,"height":3000,"scheme":"light","route":"/workbench?object=sha256:f3b4ecaecbf0ad5e3d2373da0f929bbf63c62f2aa56cede9eb22953a0a27ff6b\u0026payload=1"},{"name":"phone.png","width":390,"height":844,"scheme":"light","route":"/workbench"}]
+    zz_iter312_r1_test.go:204: LAYOUT workbench-light.png 1440x1100 light client=1425 inner=1440x1013 scrollH=4515 nav=&{Left:0 Top:114.265625 Right:1425 Bottom:322.265625} first=&{Left:89.5 Top:423.875 Right:1335.5 Bottom:613.046875} svg=&{Left:89.5 Top:3289.703125 Right:1335.46875 Bottom:3982.78125} payload=<nil> packet=<nil> validation=<nil> approvals=<nil> ("") roster=0
+    zz_iter312_r1_test.go:204: LAYOUT workbench-dark.png 1440x1100 dark client=1425 inner=1440x1013 scrollH=4515 nav=&{Left:0 Top:114.265625 Right:1425 Bottom:322.265625} first=&{Left:89.5 Top:423.875 Right:1335.5 Bottom:613.046875} svg=&{Left:89.5 Top:3289.703125 Right:1335.46875 Bottom:3982.78125} payload=<nil> packet=<nil> validation=<nil> approvals=<nil> ("") roster=0
+    zz_iter312_r1_test.go:204: LAYOUT packet.png 1440x3700 light client=1425 inner=1440x3613 scrollH=5242 nav=&{Left:0 Top:114.265625 Right:1425 Bottom:322.265625} first=&{Left:89.5 Top:423.875 Right:1335.5 Bottom:613.046875} svg=&{Left:89.5 Top:4275.59375 Right:1335.4375 Bottom:4337.890625} payload=<nil> packet=&{Left:89.5 Top:2782.671875 Right:1335.5 Bottom:3564.5625} validation=&{Left:106.5 Top:2859.5625 Right:1318.5 Bottom:2907.5625} approvals=&{Left:106.5 Top:3147.5625 Right:1318.5 Bottom:3171.5625} ("approvals chain: pending") roster=4
+    zz_iter312_r1_test.go:207: ROSTER block=&{Left:106.5 Top:3267.5625 Right:1318.5 Bottom:3315.5625} tight=&{Left:106.5 Top:3270.5625 Right:1311.5 Bottom:3312.5625} "test-invocation: TESTED · producer/author: host/broker · report: sha256:d201170d2a382494bf7d21b5862e15b650ee1c4458cae2adca9648d27cf71f3e · verdict pass · 10 named passes"
+    zz_iter312_r1_test.go:207: ROSTER block=&{Left:106.5 Top:3331.5625 Right:1318.5 Bottom:3355.5625} tight=&{Left:106.5 Top:3334.5625 Right:1232.765625 Bottom:3352.5625} "recorded-effect: ATTESTED · producer/author: host/broker · report: sha256:325da6532c7999da458ec942a0f402f2425b74fd90f7d0d1ee64b6a768c449fe"
+    zz_iter312_r1_test.go:207: ROSTER block=&{Left:106.5 Top:3371.5625 Right:1318.5 Bottom:3419.5625} tight=&{Left:106.5 Top:3374.5625 Right:756.0625 Bottom:3416.5625} "authored-claim: CLAIMED · producer/author: demo-authored · demo-authored · report: sha256:6d438b4f7537389edbb0918bf93edf866820e443dc566864e0bfdee6c8a0ac00"
+    zz_iter312_r1_test.go:207: ROSTER block=&{Left:106.5 Top:3435.5625 Right:1318.5 Bottom:3531.5625} tight=&{Left:106.5 Top:3438.5625 Right:926.96875 Bottom:3528.5625} "proof-envelope: PROVEN · producer/author: bounded-ai-check-producer · report: sha256:be5113c270e7e05cd14c4dee0e984ec8261c094dd2f440a2ac2bc3002954bf88 · subject: sha256:477ed4ce7ee223d032b12ebe998331de38fbe638a09b660a578f296d6ef611b5 · compiler sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f · version AILANG v0.41.0"
+    zz_iter312_r1_test.go:204: LAYOUT graph.png 1440x2100 light client=1425 inner=1440x2013 scrollH=2551 nav=&{Left:0 Top:114.265625 Right:1425 Bottom:322.265625} first=&{Left:89.5 Top:466.59375 Right:1335.5 Bottom:655.765625} svg=&{Left:89.5 Top:1746.578125 Right:1335.5 Bottom:2019.140625} payload=<nil> packet=<nil> validation=<nil> approvals=<nil> ("") roster=0
+    zz_iter312_r1_test.go:204: LAYOUT provenance.png 1440x3000 light client=1425 inner=1440x2913 scrollH=4666 nav=&{Left:0 Top:114.265625 Right:1425 Bottom:322.265625} first=&{Left:89.5 Top:423.875 Right:3697.59375 Bottom:613.046875} svg=&{Left:89.5 Top:3605.203125 Right:3697.3125 Bottom:3785.59375} payload=&{Left:89.5 Top:2822.671875 Right:3697.59375 Bottom:2881.171875} packet=<nil> validation=<nil> approvals=<nil> ("") roster=0
+    zz_iter312_r1_test.go:218: PHONE bands=21 header={Name:header X:25 Y:45 W:345 H:23} first={Name:timeline-first X:41 Y:428 W:323 H:182}
+    zz_iter312_r1_test.go:235: RECTS {
+          "schema": "world/demo/capture-rectangles/v1",
+          "shots": {
+            "graph.png": {
+              "background": {
+                "name": "gutter",
+                "x": 2,
+                "y": 343,
+                "w": 24,
+                "h": 1717
+              },
+              "content": [
+                {
+                  "name": "graph-svg",
+                  "x": 89,
+                  "y": 1746,
+                  "w": 1247,
+                  "h": 274
+                }
+              ]
+            },
+            "packet.png": {
+              "background": {
+                "name": "gutter",
+                "x": 2,
+                "y": 343,
+                "w": 24,
+                "h": 3317
+              },
+              "content": [
+                {
+                  "name": "validation",
+                  "x": 106,
+                  "y": 2859,
+                  "w": 1213,
+                  "h": 49
+                },
+                {
+                  "name": "approvals-chain",
+                  "x": 106,
+                  "y": 3147,
+                  "w": 1213,
+                  "h": 25
+                },
+                {
+                  "name": "roster-tested",
+                  "x": 106,
+                  "y": 3267,
+                  "w": 1213,
+                  "h": 49
+                },
+                {
+                  "name": "roster-attested",
+                  "x": 106,
+                  "y": 3331,
+                  "w": 1213,
+                  "h": 25
+                },
+                {
+                  "name": "roster-claimed",
+                  "x": 106,
+                  "y": 3371,
+                  "w": 1213,
+                  "h": 49
+                },
+                {
+                  "name": "roster-proven",
+                  "x": 106,
+                  "y": 3435,
+                  "w": 1213,
+                  "h": 97
+                }
+              ]
+            },
+            "phone.png": {
+              "background": {
+                "name": "gutter",
+                "x": 2,
+                "y": 343,
+                "w": 12,
+                "h": 461
+              },
+              "content": [
+                {
+                  "name": "header",
+                  "x": 25,
+                  "y": 45,
+                  "w": 345,
+                  "h": 23
+                },
+                {
+                  "name": "timeline-first",
+                  "x": 41,
+                  "y": 428,
+                  "w": 323,
+                  "h": 182
+                }
+              ]
+            },
+            "provenance.png": {
+              "background": {
+                "name": "gutter",
+                "x": 2,
+                "y": 343,
+                "w": 24,
+                "h": 2617
+              },
+              "content": [
+                {
+                  "name": "payload",
+                  "x": 89,
+                  "y": 2822,
+                  "w": 1336,
+                  "h": 60
+                }
+              ]
+            },
+            "workbench-dark.png": {
+              "background": {
+                "name": "gutter",
+                "x": 2,
+                "y": 343,
+                "w": 24,
+                "h": 717
+              },
+              "content": [
+                {
+                  "name": "header",
+                  "x": 0,
+                  "y": 114,
+                  "w": 1425,
+                  "h": 209
+                },
+                {
+                  "name": "timeline-first",
+                  "x": 89,
+                  "y": 423,
+                  "w": 1247,
+                  "h": 191
+                }
+              ]
+            },
+            "workbench-light.png": {
+              "background": {
+                "name": "gutter",
+                "x": 2,
+                "y": 343,
+                "w": 24,
+                "h": 717
+              },
+              "content": [
+                {
+                  "name": "header",
+                  "x": 0,
+                  "y": 114,
+                  "w": 1425,
+                  "h": 209
+                },
+                {
+                  "name": "timeline-first",
+                  "x": 89,
+                  "y": 423,
+                  "w": 1247,
+                  "h": 191
+                }
+              ]
+            }
+          }
+        }
+    zz_iter312_r1_test.go:260: CAPTURE ok: {"verdict": "ok", "detail": "", "shots": [{"name": "workbench-light.png", "verdict": "ok"}, {"name": "workbench-dark.png", "verdict": "ok"}, {"name": "packet.png", "verdict": "ok"}, {"name": "graph.png", "verdict": "ok"}, {"name": "provenance.png", "verdict": "ok"}, {"name": "phone.png", "verdict": "ok"}]}
+        {"verdict": "ok", "detail": "", "shots": [{"name": "workbench-light.png", "verdict": "ok"}, {"name": "workbench-dark.png", "verdict": "ok"}, {"name": "packet.png", "verdict": "ok"}, {"name": "graph.png", "verdict": "ok"}, {"name": "provenance.png", "verdict": "ok"}, {"name": "phone.png", "verdict": "ok"}]}
+--- PASS: TestIter312R1Rects (32.65s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	33.033s

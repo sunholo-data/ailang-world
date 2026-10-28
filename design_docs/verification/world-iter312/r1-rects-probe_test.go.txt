@@ -1,0 +1,327 @@
+package main
+
+// Iteration-312 controller R1 measurement only; never committed as a .go file
+// (banked as design_docs/verification/world-iter312/r1-rects-probe_test.go.txt).
+//
+// One seeded store (newMarketingChromeRig, the drill's own rig), then:
+//  1. `marketingcheck routes` on the rig's manifest gives the exact capture routes;
+//  2. each 1440 px shot's required regions are read from Chrome's own layout
+//     (V51 method: a measurement-only loopback proxy in front of a
+//     WorkbenchStill daemon drops CSP and appends one external script that
+//     writes getBoundingClientRect()/Range rects into a <pre> after every section;
+//     `--dump-dom --window-size=W,H --force-device-scale-factor=1`);
+//  3. phone: a supervisor `shot` of /workbench at 390x844 on the still daemon,
+//     then the V58 band scan (ink = luma < 110 in x < 370, bottom 20 px excluded,
+//     header = band 0, first entry = union of bands 9..14);
+//  4. the rectangles file is written and the FULL shell (capture_marketing.sh,
+//     the drill's exact flags, --verify-twice) runs on the SAME store into
+//     PROBE_OUT/capture, which is kept for hashes, thresholds and controls.
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"html"
+	"image"
+	"image/png"
+	"io"
+	"math"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/daemon"
+)
+
+type r1Box struct{ Left, Top, Right, Bottom float64 }
+type r1Roster struct {
+	Text  string
+	Rect  *r1Box
+	Tight *r1Box
+}
+type r1Layout struct {
+	ClientWidth, InnerWidth, InnerHeight, ScrollY, ScrollHeight float64
+	Nav, TimelineFirst, Timeline, GraphSvg, Payload, Packet     *r1Box
+	Validation, Approvals                                       *r1Box
+	ValidationText, ApprovalsText                               string
+	Roster                                                      []r1Roster
+}
+type r1Rect struct {
+	Name string `json:"name,omitempty"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
+	W    int    `json:"w"`
+	H    int    `json:"h"`
+}
+type r1Shot struct {
+	Background r1Rect   `json:"background"`
+	Content    []r1Rect `json:"content"`
+}
+
+const r1JS = `(function(){function R(r){return {left:r.left,top:r.top,right:r.right,bottom:r.bottom};}
+function el(s){var e=document.querySelector(s);return e?R(e.getBoundingClientRect()):null;}
+function tight(e){var g=document.createRange();g.selectNodeContents(e);return R(g.getBoundingClientRect());}
+function txt(e){return R(e.getBoundingClientRect());}
+var o={clientWidth:document.documentElement.clientWidth,innerWidth:innerWidth,innerHeight:innerHeight,scrollY:scrollY,scrollHeight:document.documentElement.scrollHeight};
+o.nav=el('nav[aria-label="world browser"]');o.timelineFirst=el('section[aria-label="timeline"] article');o.timeline=el('section[aria-label="timeline"]');
+o.graphSvg=el('section[aria-label="world graph"] svg');o.payload=el('pre.payload');o.packet=el('section[aria-label="decision packet"]');
+var pk=document.querySelector('section[aria-label="decision packet"]');o.roster=[];
+if(pk){var ps=pk.querySelectorAll(':scope > p');if(ps.length){o.validation=txt(ps[0]);o.validationText=ps[0].textContent;}
+for(var i=0;i<ps.length;i++){if(/^approvals chain: /.test(ps[i].textContent)){o.approvals=txt(ps[i]);o.approvalsText=ps[i].textContent;}}
+var rs=pk.querySelectorAll('div[aria-label="evidence roster"] > p');for(var j=0;j<rs.length;j++){o.roster.push({text:rs[j].textContent,rect:txt(rs[j]),tight:tight(rs[j])});}}
+var p=document.createElement('pre');p.id='probe-rects';p.textContent=JSON.stringify(o);document.body.appendChild(p);})();`
+
+func TestIter312R1Rects(t *testing.T) {
+	chrome, out := os.Getenv("WORLD_CHROME"), os.Getenv("PROBE_OUT")
+	if chrome == "" || out == "" {
+		t.Skip("probe env unset")
+	}
+	interp, tool := os.Getenv("AILANG_BIN"), os.Getenv("WORLD_TOOL_AILANG_BIN")
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rig := newMarketingChromeRig(t, interp, tool)
+	dir := t.TempDir()
+	worldd, check := filepath.Join(dir, "ailang-worldd"), filepath.Join(dir, "marketingcheck")
+	marketingChromeCommand(t, 120e9, "go", "build", "-o", worldd, ".")
+	marketingChromeCommand(t, 120e9, "go", "build", "-o", check, filepath.Join(root, "scripts", "marketingcheck"))
+	var routes []struct {
+		Name          string `json:"name"`
+		Width, Height int
+		Route, Scheme string
+	}
+	rawRoutes := marketingChromeCommand(t, 60e9, check, "routes", "--manifest", rig.manifest)
+	if err := json.Unmarshal([]byte(rawRoutes), &routes); err != nil || len(routes) != 6 {
+		t.Fatalf("routes: %v %s", err, rawRoutes)
+	}
+	t.Logf("ROUTES %s", strings.TrimSpace(rawRoutes))
+
+	corpus := filepath.Join(filepath.Dir(filepath.Dir(rig.db)), "outside", "corpus")
+	cfg := daemon.Config{DBPath: rig.db, BindHost: daemon.DefaultBindHost, AilangBin: interp, WorkspaceRoot: rig.ws,
+		ToolAilangBin: tool, ExamplesDir: corpus, ErrorLog: new(bytes.Buffer), ProofKeyFile: rig.key,
+		ProofRequiredIdentities: []string{"sameRef", "servesEntry"}, WorkbenchStill: true}
+	d, err := daemon.New(boundedTestContext(t), cfg)
+	if err != nil {
+		t.Fatalf("daemon.New (still): %v", err)
+	}
+	srv := httptest.NewServer(d.Handler())
+	handler := d.Handler()
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/probe/rects.js" {
+			w.Header().Set("Content-Type", "text/javascript")
+			io.WriteString(w, r1JS)
+			return
+		}
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, r)
+		body := rec.Body.Bytes()
+		if r.URL.Path == "/workbench" {
+			body = bytes.Replace(body, []byte("</body>"), []byte(`<script src="/probe/rects.js" defer></script></body>`), 1)
+		}
+		for k, v := range rec.Header() {
+			if k != "Content-Length" && k != "Content-Security-Policy" {
+				w.Header()[k] = v
+			}
+		}
+		w.WriteHeader(rec.Code)
+		w.Write(body)
+	}))
+	pre := regexp.MustCompile(`(?s)<pre id="probe-rects">(.*?)</pre>`)
+	measure := func(route string, w, h int, scheme string) r1Layout {
+		sv := "1"
+		if scheme == "dark" {
+			sv = "0"
+		}
+		outb := marketingChromeCommand(t, 120e9, chrome, "--headless=new", "--no-first-run", "--no-default-browser-check", "--disable-background-networking",
+			"--user-data-dir="+t.TempDir(), "--dump-dom", fmt.Sprintf("--window-size=%d,%d", w, h), "--force-device-scale-factor=1", "--lang=en-US",
+			"--blink-settings=preferredColorScheme="+sv, proxy.URL+route)
+		m := pre.FindStringSubmatch(outb)
+		if m == nil {
+			t.Fatalf("no probe-rects in dump-dom of %s (%d bytes)", route, len(outb))
+		}
+		var l r1Layout
+		if err := json.Unmarshal([]byte(html.UnescapeString(m[1])), &l); err != nil {
+			t.Fatalf("layout %s: %v", route, err)
+		}
+		return l
+	}
+	// floor the origin, ceil the far edges, clip to the visible client width and image height.
+	toRect := func(name string, b *r1Box, clientW float64, h int) r1Rect {
+		if b == nil {
+			t.Fatalf("region %s not found", name)
+		}
+		x, y := int(math.Floor(b.Left)), int(math.Floor(b.Top))
+		right, bottom := int(math.Ceil(math.Min(b.Right, clientW))), int(math.Ceil(math.Min(b.Bottom, float64(h))))
+		return r1Rect{Name: name, X: x, Y: y, W: right - x, H: bottom - y}
+	}
+	grade := regexp.MustCompile(`\b(PROVEN|TESTED|ATTESTED|CLAIMED)\b`)
+	rects := map[string]r1Shot{}
+	layouts := map[string]r1Layout{}
+	for _, s := range routes {
+		if s.Name == "phone.png" {
+			continue
+		}
+		l := measure(s.Route, s.Width, s.Height, s.Scheme)
+		layouts[s.Name] = l
+		cw := l.ClientWidth
+		var sh r1Shot
+		switch s.Name {
+		case "workbench-light.png", "workbench-dark.png":
+			sh.Content = []r1Rect{toRect("header", l.Nav, cw, s.Height), toRect("timeline-first", l.TimelineFirst, cw, s.Height)}
+		case "packet.png":
+			sh.Content = []r1Rect{toRect("validation", l.Validation, cw, s.Height), toRect("approvals-chain", l.Approvals, cw, s.Height)}
+			seen := map[string]bool{}
+			for _, row := range l.Roster {
+				g := grade.FindString(row.Text)
+				if g == "" || seen[g] {
+					t.Fatalf("roster row grade %q (dup=%v): %s", g, seen[g], row.Text)
+				}
+				seen[g] = true
+				sh.Content = append(sh.Content, toRect("roster-"+strings.ToLower(g), row.Rect, cw, s.Height))
+			}
+			if len(seen) != 4 {
+				t.Fatalf("roster grades %v", seen)
+			}
+		case "graph.png":
+			sh.Content = []r1Rect{toRect("graph-svg", l.GraphSvg, cw, s.Height)}
+		case "provenance.png":
+			sh.Content = []r1Rect{toRect("payload", l.Payload, cw, s.Height)}
+		}
+		// Background: the left page gutter, below the browser nav, above the bottom 40 px.
+		if l.Nav == nil {
+			t.Fatalf("%s: no nav", s.Name)
+		}
+		top := int(math.Ceil(l.Nav.Bottom)) + 20
+		sh.Background = r1Rect{Name: "gutter", X: 2, Y: top, W: 24, H: s.Height - 40 - top}
+		rects[s.Name] = sh
+		t.Logf("LAYOUT %s %dx%d %s client=%.0f inner=%.0fx%.0f scrollH=%.0f nav=%+v first=%+v svg=%+v payload=%+v packet=%+v validation=%+v approvals=%+v (%q) roster=%d",
+			s.Name, s.Width, s.Height, s.Scheme, l.ClientWidth, l.InnerWidth, l.InnerHeight, l.ScrollHeight, l.Nav, l.TimelineFirst, l.GraphSvg, l.Payload, l.Packet, l.Validation, l.Approvals, l.ApprovalsText, len(l.Roster))
+		for _, row := range l.Roster {
+			t.Logf("ROSTER block=%+v tight=%+v %q", row.Rect, row.Tight, row.Text)
+		}
+	}
+	// Phone: a real shot through the supervisor, then the V58 scan. Its background uses
+	// the light shot's nav bottom (the phone nav spans the same rows, y 114..322, by column scan).
+	phoneBgTop := int(math.Ceil(layouts["workbench-light.png"].Nav.Bottom)) + 20
+	phonePNG := filepath.Join(out, "phone-measure.png")
+	_ = os.Remove(phonePNG)
+	marketingChromeCommand(t, 120e9, "python3", filepath.Join(root, "scripts", "marketing_capture.py"), "shot", "--chrome", chrome, "--out", phonePNG,
+		"--url", srv.URL+"/workbench", "--width", "390", "--height", "844", "--scheme", "light")
+	header, entry, bands := r1PhoneScan(t, phonePNG)
+	t.Logf("PHONE bands=%d header=%+v first=%+v", len(bands), header, entry)
+	rects["phone.png"] = r1Shot{
+		Background: r1Rect{Name: "gutter", X: 2, Y: phoneBgTop, W: 12, H: 844 - 40 - phoneBgTop},
+		Content:    []r1Rect{header, entry},
+	}
+	srv.Close()
+	proxy.Close()
+	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+	doc, _ := json.MarshalIndent(map[string]any{"schema": "world/demo/capture-rectangles/v1", "shots": rects}, "", "  ")
+	rectsPath := filepath.Join(out, "rects.json")
+	if err := os.WriteFile(rectsPath, append(doc, '\n'), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lj, _ := json.MarshalIndent(layouts, "", "  ")
+	_ = os.WriteFile(filepath.Join(out, "layouts.json"), lj, 0o644)
+	t.Logf("RECTS %s", doc)
+
+	// The drill's exact shell invocation, on the SAME store, output kept.
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bind := listener.Addr().String()
+	listener.Close()
+	capture := filepath.Join(out, "capture")
+	_ = os.RemoveAll(capture)
+	cmd := exec.Command("bash", filepath.Join(root, "scripts", "capture_marketing.sh"),
+		"--db", rig.db, "--manifest", rig.manifest, "--proof-key-file", rig.key,
+		"--ailang-bin", rig.interp, "--workspace-root", rig.ws, "--tool-ailang-bin", rig.tool,
+		"--chrome", chrome, "--out", capture, "--rectangles", rectsPath, "--worldd-bin", worldd,
+		"--bind", bind, "--marketingcheck-bin", check, "--verify-twice")
+	so, se := new(bytes.Buffer), new(bytes.Buffer)
+	cmd.Stdout, cmd.Stderr = so, se
+	runErr := cmd.Run()
+	_ = os.WriteFile(filepath.Join(out, "capture.stdout"), so.Bytes(), 0o644)
+	_ = os.WriteFile(filepath.Join(out, "capture.stderr"), se.Bytes(), 0o644)
+	_ = os.WriteFile(filepath.Join(out, "demo-manifest.json"), r1MustRead(t, rig.manifest), 0o644)
+	if runErr != nil {
+		t.Fatalf("capture_marketing.sh: %v\nstderr=%s", runErr, se)
+	}
+	t.Logf("CAPTURE ok: %s", strings.TrimSpace(so.String()))
+}
+
+func r1MustRead(t *testing.T, p string) []byte {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
+}
+
+type r1Band struct{ X0, Y0, X1, Y1 int }
+
+func r1Luma(im image.Image, x, y int) float64 {
+	r, g, b, _ := im.At(x, y).RGBA()
+	return 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(b>>8)
+}
+
+// V58 scan, unchanged rule: bands of rows with ink (luma < 110) in x < 370,
+// bottom 20 px excluded; header = band 0; first entry = union of bands 9..14.
+func r1PhoneScan(t *testing.T, path string) (r1Rect, r1Rect, []r1Band) {
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bd := im.Bounds()
+	var out []r1Band
+	in := false
+	var cur r1Band
+	for y := bd.Min.Y; y < bd.Max.Y-20; y++ {
+		x0, x1 := -1, -1
+		for x := bd.Min.X; x < bd.Min.X+370 && x < bd.Max.X; x++ {
+			if r1Luma(im, x, y) < 110 {
+				if x0 < 0 {
+					x0 = x
+				}
+				x1 = x
+			}
+		}
+		if x0 >= 0 {
+			if !in {
+				cur, in = r1Band{x0, y, x1 + 1, y + 1}, true
+			} else {
+				cur.X0, cur.X1, cur.Y1 = min(cur.X0, x0), max(cur.X1, x1+1), y+1
+			}
+		} else if in {
+			out, in = append(out, cur), false
+		}
+	}
+	if in {
+		out = append(out, cur)
+	}
+	if len(out) < 15 {
+		t.Fatalf("phone scan: %d bands", len(out))
+	}
+	u := out[9]
+	for _, r := range out[9:15] {
+		u = r1Band{min(u.X0, r.X0), min(u.Y0, r.Y0), max(u.X1, r.X1), max(u.Y1, r.Y1)}
+	}
+	h := out[0]
+	return r1Rect{Name: "header", X: h.X0, Y: h.Y0, W: h.X1 - h.X0, H: h.Y1 - h.Y0},
+		r1Rect{Name: "timeline-first", X: u.X0, Y: u.Y0, W: u.X1 - u.X0, H: u.Y1 - u.Y0}, out
+}

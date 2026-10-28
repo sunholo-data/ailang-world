@@ -1,0 +1,20 @@
+workbench-light.png 1440x1100 colors=837 chromatic=0.1867 bg(2,343,24,717) meanY=248.84 sd=0.000
+  header           (0,114,1425,209) w=1425 h=209 meanY=236.72 sd=18.74 colors=333
+  timeline-first   (89,423,1247,191) w=1247 h=191 meanY=251.17 sd=26.56 colors=315
+workbench-dark.png 1440x1100 colors=838 chromatic=0.1870 bg(2,343,24,717) meanY=29.96 sd=0.000
+  header           (0,114,1425,209) w=1425 h=209 meanY=59.55 sd=17.01 colors=351
+  timeline-first   (89,423,1247,191) w=1247 h=191 meanY=43.56 sd=24.64 colors=343
+packet.png 1440x3700 colors=875 chromatic=0.0621 bg(2,343,24,3317) meanY=248.84 sd=0.000
+  validation       (106,2859,1213,49) w=1213 h=49 meanY=237.36 sd=53.50 colors=173
+  approvals-chain  (106,3147,1213,25) w=1213 h=25 meanY=249.78 sd=30.26 colors=155
+  roster-tested    (106,3267,1213,49) w=1213 h=49 meanY=235.96 sd=52.25 colors=344
+  roster-attested  (106,3331,1213,25) w=1213 h=25 meanY=222.38 sd=64.18 colors=343
+  roster-claimed   (106,3371,1213,49) w=1213 h=49 meanY=236.15 sd=51.73 colors=343
+  roster-proven    (106,3435,1213,97) w=1213 h=97 meanY=233.90 sd=53.20 colors=345
+graph.png 1440x2100 colors=1267 chromatic=0.1060 bg(2,343,24,1717) meanY=248.84 sd=0.000
+  graph-svg        (89,1746,1247,274) w=1247 h=274 meanY=239.12 sd=54.59 colors=294
+provenance.png 1440x3000 colors=851 chromatic=0.0695 bg(2,343,24,2617) meanY=248.84 sd=0.000
+  payload          (89,2822,1336,60) w=1336 h=60 meanY=234.31 sd=56.56 colors=172
+phone.png 390x844 colors=823 chromatic=0.2423 bg(2,343,12,461) meanY=248.84 sd=0.000
+  header           (25,45,345,23) w=345 h=23 meanY=142.24 sd=104.24 colors=170
+  timeline-first   (41,428,323,182) w=323 h=182 meanY=239.50 sd=51.70 colors=310

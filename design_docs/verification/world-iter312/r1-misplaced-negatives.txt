@@ -1,0 +1,14 @@
+rc=1 graph.png--graph-svg.json :: marketingcheck: blank-region graph.png: graph-svg
+rc=1 packet.png--approvals-chain.json :: marketingcheck: blank-region packet.png: approvals-chain
+rc=1 packet.png--roster-attested.json :: marketingcheck: blank-region packet.png: roster-attested
+rc=1 packet.png--roster-claimed.json :: marketingcheck: blank-region packet.png: roster-claimed
+rc=1 packet.png--roster-proven.json :: marketingcheck: blank-region packet.png: roster-proven
+rc=1 packet.png--roster-tested.json :: marketingcheck: blank-region packet.png: roster-tested
+rc=1 packet.png--validation.json :: marketingcheck: blank-region packet.png: validation
+rc=1 phone.png--header.json :: marketingcheck: blank-region phone.png: header
+rc=1 phone.png--timeline-first.json :: marketingcheck: blank-region phone.png: timeline-first
+rc=1 provenance.png--payload.json :: marketingcheck: blank-region provenance.png: payload
+rc=1 workbench-dark.png--header.json :: marketingcheck: blank-region workbench-dark.png: header
+rc=1 workbench-dark.png--timeline-first.json :: marketingcheck: blank-region workbench-dark.png: timeline-first
+rc=1 workbench-light.png--header.json :: marketingcheck: blank-region workbench-light.png: header
+rc=1 workbench-light.png--timeline-first.json :: marketingcheck: blank-region workbench-light.png: timeline-first

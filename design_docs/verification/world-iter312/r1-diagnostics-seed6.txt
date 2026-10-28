@@ -1,0 +1,3 @@
+chrome-version: Google Chrome 156.0.8078.48
+bind: 127.0.0.1:50849
+inventory: equal

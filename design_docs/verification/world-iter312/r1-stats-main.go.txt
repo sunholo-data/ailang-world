@@ -1,0 +1,158 @@
+// iter-312 R1 controller helper (outside the repo): threshold measurements on real
+// renders and misplaced-rectangle generation. Mirrors png.go's rgbAt/luminance/rectStats.
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"math"
+	"os"
+	"path/filepath"
+)
+
+type Rect struct {
+	Name       string `json:"name,omitempty"`
+	X, Y, W, H int    `json:"-"`
+}
+type R struct {
+	Name string `json:"name,omitempty"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
+	W    int    `json:"w"`
+	H    int    `json:"h"`
+}
+type SR struct {
+	Background R   `json:"background"`
+	Content    []R `json:"content"`
+}
+type Rects struct {
+	Schema string        `json:"schema"`
+	Shots  map[string]SR `json:"shots"`
+}
+
+func rgb(im image.Image, x, y int) (uint8, uint8, uint8) {
+	c := color.NRGBAModel.Convert(im.At(x, y)).(color.NRGBA)
+	return c.R, c.G, c.B
+}
+func lum(r, g, b uint8) float64 { return .299*float64(r) + .587*float64(g) + .114*float64(b) }
+func stats(im image.Image, r R) (mean, sd float64, colors int) {
+	var s, ss float64
+	cs := map[uint32]bool{}
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			a, b, c := rgb(im, x, y)
+			v := lum(a, b, c)
+			s += v
+			ss += v * v
+			cs[uint32(a)<<16|uint32(b)<<8|uint32(c)] = true
+		}
+	}
+	n := float64(r.W * r.H)
+	m := s / n
+	return m, math.Sqrt(math.Max(0, ss/n-m*m)), len(cs)
+}
+func load(p string) image.Image {
+	f, err := os.Open(p)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	im, err := png.Decode(f)
+	if err != nil {
+		panic(err)
+	}
+	return im
+}
+
+// nearest near-uniform 64x16 window (sd < 1.0, under check's 4.0 floor) to r's origin, searched on a 2 px grid.
+func blank(im image.Image, r R) (R, bool) {
+	b := im.Bounds()
+	best, bd := R{}, math.MaxFloat64
+	for y := 0; y+16 <= b.Dy()-20; y += 2 {
+		for x := 0; x+64 <= b.Dx()-20; x += 2 {
+			d := math.Hypot(float64(x-r.X), float64(y-r.Y))
+			if d >= bd {
+				continue
+			}
+			w := R{Name: r.Name, X: x, Y: y, W: 64, H: 16}
+			if _, sd, _ := stats(im, w); sd < 1.0 {
+				best, bd = w, d
+			}
+		}
+	}
+	return best, bd < math.MaxFloat64
+}
+
+func main() {
+	mode, rectsPath, dir := os.Args[1], os.Args[2], os.Args[3]
+	var rs Rects
+	raw, _ := os.ReadFile(rectsPath)
+	if err := json.Unmarshal(raw, &rs); err != nil {
+		panic(err)
+	}
+	order := []string{"workbench-light.png", "workbench-dark.png", "packet.png", "graph.png", "provenance.png", "phone.png"}
+	switch mode {
+	case "stats":
+		for _, name := range order {
+			im := load(filepath.Join(dir, name))
+			b := im.Bounds()
+			cs := map[uint32]bool{}
+			chrom := 0
+			for y := 0; y < b.Dy(); y++ {
+				for x := 0; x < b.Dx(); x++ {
+					r, g, bb := rgb(im, x, y)
+					cs[uint32(r)<<16|uint32(g)<<8|uint32(bb)] = true
+					if int(max(r, g, bb))-int(min(r, g, bb)) > 12 {
+						chrom++
+					}
+				}
+			}
+			sr := rs.Shots[name]
+			bm, bsd, _ := stats(im, sr.Background)
+			fmt.Printf("%s %dx%d colors=%d chromatic=%.4f bg(%d,%d,%d,%d) meanY=%.2f sd=%.3f\n", name, b.Dx(), b.Dy(), len(cs), float64(chrom)/float64(b.Dx()*b.Dy()), sr.Background.X, sr.Background.Y, sr.Background.W, sr.Background.H, bm, bsd)
+			for _, c := range sr.Content {
+				m, sd, n := stats(im, c)
+				fmt.Printf("  %-16s (%d,%d,%d,%d) w=%d h=%d meanY=%.2f sd=%.2f colors=%d\n", c.Name, c.X, c.Y, c.W, c.H, c.W, c.H, m, sd, n)
+			}
+		}
+	case "col":
+		im := load(dir)
+		var x int
+		fmt.Sscan(os.Args[4], &x)
+		pr, pg, pb := rgb(im, x, 0)
+		for y := 1; y < im.Bounds().Dy(); y++ {
+			r, g, b := rgb(im, x, y)
+			if r != pr || g != pg || b != pb {
+				fmt.Printf("y=%d (%d,%d,%d)->(%d,%d,%d)\n", y, pr, pg, pb, r, g, b)
+				pr, pg, pb = r, g, b
+			}
+		}
+	case "misplace":
+		// one output file per (shot, content rect): that rect moved to the nearest blank 64x16 window.
+		out := os.Args[4]
+		for _, name := range order {
+			im := load(filepath.Join(dir, name))
+			sr := rs.Shots[name]
+			for i, c := range sr.Content {
+				w, ok := blank(im, c)
+				if !ok {
+					fmt.Printf("%s %s: NO BLANK WINDOW\n", name, c.Name)
+					continue
+				}
+				cp := Rects{Schema: rs.Schema, Shots: map[string]SR{}}
+				for k, v := range rs.Shots {
+					cp.Shots[k] = SR{Background: v.Background, Content: append([]R(nil), v.Content...)}
+				}
+				cp.Shots[name].Content[i] = w
+				j, _ := json.Marshal(cp)
+				p := filepath.Join(out, fmt.Sprintf("%s--%s.json", name, c.Name))
+				os.WriteFile(p, j, 0o644)
+				_, sd, _ := stats(im, w)
+				fmt.Printf("%s %s: (%d,%d,%d,%d) -> (%d,%d,64,16) sd=%.2f %s\n", name, c.Name, c.X, c.Y, c.W, c.H, w.X, w.Y, sd, p)
+			}
+		}
+	}
+}

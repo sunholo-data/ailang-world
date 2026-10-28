@@ -1,0 +1,4 @@
+=== RUN   TestMarketingChromeSixShots
+--- PASS: TestMarketingChromeSixShots (19.42s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	19.708s
