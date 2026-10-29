@@ -67,6 +67,7 @@ type ExecStartup struct {
 	// Excluded are the profiles directory's left-out profiles, in file order.
 	Excluded       []ExecProfileExclusion
 	Sandbox        *ExecSandbox
+	Tools          *ExecToolState
 	MaxOutputBytes int64
 	OperatorHome   string
 }
@@ -155,7 +156,15 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 	forbidden := []namedRoot{{"an exec cache", filepath.Join(paths.StateDir, "exec-cache")},
 		{"the state dir", paths.StateDir}, {"the workspace root", paths.WorkspaceRoot}}
 
-	node, err := resolveExecNode(ctx, cfg.Node, forbidden)
+	configuredNode := cfg.Node
+	if configuredNode == "" {
+		var err error
+		configuredNode, err = execNodePath("")
+		if err != nil {
+			return nil, err
+		}
+	}
+	node, err := resolveExecNode(ctx, configuredNode, forbidden)
 	if err != nil {
 		return nil, err
 	}
@@ -229,6 +238,11 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 		return nil, err
 	}
 	if err := st.applyProbe(order, flagged, errs); err != nil {
+		return nil, err
+	}
+	st.Tools, err = NewExecToolState(ExecToolStateConfig{Node: configuredNode, Sandbox: st.Sandbox, Profiles: st.Profiles,
+		ProbeConfig: ExecProbeConfig{Paths: paths, MaxOutputBytes: maxOut, Client: cfg.ProbeClient}})
+	if err != nil {
 		return nil, err
 	}
 	return st, nil
@@ -348,17 +362,9 @@ func checkPlacement(flag, value, real string, forbidden []namedRoot) error {
 // resolveExecNode resolves --exec-node once (default: node on PATH), checks
 // its placement (the binary, its directory and its libnode) and its version.
 func resolveExecNode(ctx context.Context, flagValue string, forbidden []namedRoot) (string, error) {
-	name := flagValue
-	if name == "" {
-		name = "node"
-	}
-	found := name
-	if !strings.Contains(name, "/") {
-		p, err := exec.LookPath(name)
-		if err != nil {
-			return "", startupErr("--exec-node", flagValue, "node does not resolve on PATH: %v", err)
-		}
-		found = p
+	found, err := execNodePath(flagValue)
+	if err != nil {
+		return "", err
 	}
 	abs, err := filepath.Abs(found)
 	if err == nil {
@@ -388,22 +394,49 @@ func resolveExecNode(ctx context.Context, flagValue string, forbidden []namedRoo
 			return "", err
 		}
 	}
+	if err := checkExecNodeVersion(ctx, abs); err != nil {
+		return "", startupErr("--exec-node", flagValue, "%v", err)
+	}
+	return abs, nil
+}
+
+func execNodePath(flagValue string) (string, error) {
+	name := flagValue
+	if name == "" {
+		name = "node"
+	}
+	found := name
+	if !strings.Contains(name, "/") {
+		p, err := exec.LookPath(name)
+		if err != nil {
+			return "", startupErr("--exec-node", flagValue, "node does not resolve on PATH: %v", err)
+		}
+		found = p
+	}
+	return filepath.Abs(found)
+}
+
+func checkExecNodeVersion(ctx context.Context, abs string) error {
 	vctx, cancel := context.WithTimeout(ctx, execNodeVersionBudget)
 	defer cancel()
 	out, err := runBounded(vctx, handlerBounds{execTimeout: execNodeVersionBudget}, handlerCommand{
 		path: abs, args: []string{"--version"}, dir: "/", env: execHostEnv()})
 	if err != nil {
-		return "", startupErr("--exec-node", flagValue, "%s --version: %v", abs, err)
+		var exited *HandlerExitError
+		if errors.As(err, &exited) && len(exited.Output) > 0 {
+			return fmt.Errorf("%s (--version failed)", firstExecFailure(string(exited.Output)))
+		}
+		return fmt.Errorf("%s --version: %w", abs, err)
 	}
 	version := strings.TrimSpace(string(out))
 	major, minor, ok := parseNodeVersion(version)
 	if !ok {
-		return "", startupErr("--exec-node", flagValue, "%s --version printed %q, not vMAJOR.MINOR.PATCH", abs, version)
+		return fmt.Errorf("%s --version printed %q, not vMAJOR.MINOR.PATCH", abs, version)
 	}
 	if major < ExecMinNode[0] || (major == ExecMinNode[0] && minor < ExecMinNode[1]) {
-		return "", startupErr("--exec-node", flagValue, "version %s is below %d.%d (srt's engines)", version, ExecMinNode[0], ExecMinNode[1])
+		return fmt.Errorf("version %s is below %d.%d (srt's engines)", version, ExecMinNode[0], ExecMinNode[1])
 	}
-	return abs, nil
+	return nil
 }
 
 func parseNodeVersion(v string) (int, int, bool) {
@@ -467,6 +500,22 @@ func loadExecProfileFile(file string, h ExecHostPaths, forbidden []namedRoot) (*
 	p, err := ParseExecProfile(data)
 	if err != nil {
 		return nil, &ExecStartupError{Flag: "--exec-profile", Value: file, Err: err}
+	}
+	commands := []ExecProfileCommand{p.Probe}
+	for _, c := range p.Commands {
+		commands = append(commands, c)
+	}
+	for _, c := range commands {
+		real, err := filepath.EvalSymlinks(c.Argv0)
+		if err != nil {
+			return nil, startupErr("--exec-profile", file, "argv[0] %s: %v", c.Argv0, err)
+		}
+		if _, _, err := resolveArgv0(real, nil); err != nil {
+			return nil, startupErr("--exec-profile", file, "argv[0] %s: %v", c.Argv0, err)
+		}
+		if err := checkPlacement("--exec-profile", file+" argv[0] "+c.Argv0, real, forbidden); err != nil {
+			return nil, err
+		}
 	}
 	if err := CheckExecReadRoots(p.ReadRoots, h); err != nil {
 		return nil, &ExecStartupError{Flag: "--exec-profile", Value: file, Err: err}

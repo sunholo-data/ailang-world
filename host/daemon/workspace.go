@@ -147,7 +147,8 @@ type ailangBuild struct {
 // workspaceExec is the verified exec profiles and the archived sandbox that
 // runs them (row 140 §4.6).
 type workspaceExec struct {
-	tools map[string]string // immutable real paths captured at startup (row 223a)
+	toolState *broker.ExecToolState
+	tools     map[string]string // immutable real paths captured at startup (row 223a)
 	// profile is the episode default: the only profile, when exactly one is
 	// configured (nil with several, or beside a left-out one).
 	profile *broker.ExecProfile
@@ -256,7 +257,7 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	w.exec = &workspaceExec{profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
+	w.exec = &workspaceExec{toolState: st.Tools, profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
 		sources: st.Sources, excluded: st.Excluded, excludedWhy: map[string]string{},
 		sandbox: st.Sandbox, maxOutputBytes: st.MaxOutputBytes, operatorHome: st.OperatorHome}
 	w.exec.tools = captureExecTools(w.exec)
@@ -492,7 +493,7 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 		return cached.h
 	}
 	var h broker.Handler
-	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Profile: profile, Sandbox: w.exec.sandbox,
+	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Tools: w.exec.toolState, Profile: profile, Sandbox: w.exec.sandbox,
 		Episode: episodeID, Worktree: epRoot, WorkspaceRoot: w.root, StateDir: w.stateDir,
 		OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes})
 	if err != nil {
@@ -745,11 +746,22 @@ func (v verifiedTool) Execute(ctx context.Context, req broker.EffectRequest, pay
 func (w *workspaceTools) healthExecTools() map[string]string {
 	tools := map[string]string{}
 	if w != nil && w.exec != nil {
+		if w.exec.toolState != nil {
+			return w.exec.toolState.Accepted()
+		}
 		for name, path := range w.exec.tools {
 			tools[name] = path
 		}
 	}
 	return tools
+}
+
+func (w *workspaceTools) healthExecToolStatus() map[string]broker.ExecToolStatus {
+	if w != nil && w.exec != nil && w.exec.toolState != nil {
+		_, status := w.exec.toolState.Health()
+		return status
+	}
+	return nil
 }
 
 func captureExecTools(e *workspaceExec) map[string]string {

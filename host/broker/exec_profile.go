@@ -91,8 +91,9 @@ type ExecCache struct {
 // ExecProfileCommand is a command with its argv[0] resolved once at load.
 type ExecProfileCommand struct {
 	ExecCommand
-	Argv0       string // absolute path of the executable argv[0] names
-	Argv0SHA256 string // its sha256 at load; re-verified before every call
+	ConfiguredArgv0 string // populated on an accepted per-call snapshot
+	Argv0           string // absolute path of the executable argv[0] names
+	Argv0SHA256     string // its sha256 at load; re-verified before every call
 }
 
 // ExecProfileError is a profile load refusal naming the field.
