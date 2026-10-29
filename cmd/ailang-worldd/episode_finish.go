@@ -81,7 +81,10 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		return fail("episode and --preset <name> are required", "finish needs a pinned start record", "ailang-worldd episode finish --help")
 	}
 	ep := pos[0]
-	ctx := context.Background()
+	// One bound for the whole command: each check also has its own cap, and the
+	// prompt waits on a person, so this is generous rather than tight.
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
+	defer cancel()
 	p, err := finishPreset(*preset, *dir)
 	if err != nil {
 		return fail(err.Error(), "finish needs the preset's daemon and paths", "ailang-worldd preset check "+*preset)
