@@ -33,10 +33,10 @@ func TestEpisodeStartReadProjectionsAndSessionRoutesCannotWrite(t *testing.T) {
 		{"GET", "/.well-known/agent.json", ""},
 		{"GET", "/v1/session/self", ""},
 		{"GET", "/v1/episodes/mine/report", ""},
-		{"POST", "/v1/commit", `{"start":{"base":"forged"}}`},
+		{"POST", "/v1/commit", `{"start":{"base":"forged","launches":[{"exit":0,"transcript":"forged"}]}}`},
 		{"POST", "/mcp/", `{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}`},
 		{"POST", "/a2a/", `{"jsonrpc":"2.0","id":1,"method":"tasks/get","params":{"id":"absent"}}`},
-		{"POST", "/agui/", `{"start":{"base":"forged"}}`},
+		{"POST", "/agui/", `{"start":{"base":"forged","launches":[{"exit":0,"transcript":"forged"}]}}`},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
 			r := httptest.NewRequest(tc.method, tc.path, strings.NewReader(tc.body))

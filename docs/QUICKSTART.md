@@ -26,7 +26,7 @@ On macOS, run `ailang-worldd setup` first, then
 `ailang-worldd service install` yourself at a terminal. Review the complete
 plist and paths, then type `y`. The home service uses `127.0.0.1:7644` and
 the existing home store layout. Add the absolute `--exec-sandbox`,
-`--exec-node`, `--exec-profiles-dir`, `--examples-dir` and `--surface-index`
+`--exec-node`, `--exec-profiles-dir`, `--examples-dir`, `--surface-follow` and `--surface-index`
 paths you need to the install command; `service install --help` lists the flags.
 
 Use `~/.ailang-world/bin/ailang-worldd service status --json` to inspect it.

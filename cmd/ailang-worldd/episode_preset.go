@@ -64,6 +64,16 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	if err != nil {
 		return fail(err)
 	}
+	launching := fs.Lookup("launch") != nil && fs.Lookup("launch").Value.String() == "true"
+	headless := fs.Lookup("headless") != nil && fs.Lookup("headless").Value.String() == "true"
+	if launching {
+		if _, err := launchMode(p.Preset, headless); err != nil {
+			return fail(err)
+		}
+		if task == "" {
+			return fail(presetRefusal("--launch needs --task", "headless launch runs the pinned task", "add --task <file>"))
+		}
+	}
 	if len(pos) > 1 {
 		return fail(errors.New("expected at most one episode id"))
 	}
@@ -103,6 +113,18 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	})
 	if agent != "claude" && agent != "codex" {
 		return fail(errors.New("agent must be claude or codex"))
+	}
+	if launching {
+		if _, err := launchBinary(agent); err != nil {
+			return fail(err)
+		}
+		launchDir := filepath.Join(filepath.Dir(p.Daemon.SessionsDir), "launch", ep)
+		if err := validateLaunchDir(launchDir, p.Daemon.WorkspaceRoot, filepath.Join(p.Daemon.WorkspaceRoot, ep), p.Daemon.SessionsDir); err != nil {
+			return fail(err)
+		}
+		if err := launchLockCheck(filepath.Join(p.Daemon.SessionsDir, ep+".launch.lock")); err != nil {
+			return fail(err)
+		}
 	}
 	if ttl < 0 {
 		return fail(errors.New("ttl must be non-negative"))
@@ -265,6 +287,9 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	}
 	if code := provisionEpisode(req, out, errOut, env); code != exitOK {
 		return code
+	}
+	if launching {
+		return launchEpisode(ep, name, dir, headless, out, errOut)
 	}
 	taskPath := ""
 	if taskRecord != nil {

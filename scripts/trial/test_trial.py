@@ -251,6 +251,36 @@ class Argv(unittest.TestCase):
         bare = trial.build_trial_argv('codex', model='m', prompt_text='P', cwd='/v', mcp_config_path=None, addr='127.0.0.1:7644')
         self.assertFalse([a for a in bare if a.startswith('developer_instructions=')])  # control: no context, no flag
 
+    def test_launch_shared_vectors(self):
+        """Shared with the Go launch implementation; all HTTP stays on loopback."""
+        import http.server, threading
+        path = os.path.join(os.path.dirname(__file__), 'testdata', 'launch_vectors.json')
+        with open(path) as f:
+            vectors = json.load(f)
+        for case in vectors['contexts']:
+            body = case['session_self']
+            class H(http.server.BaseHTTPRequestHandler):
+                def do_GET(self):
+                    self.send_response(401 if body is None else 200)
+                    self.end_headers()
+                    self.wfile.write(json.dumps(body).encode())
+                def log_message(self, *a): pass
+            srv = http.server.HTTPServer(('127.0.0.1', 0), H)
+            thread = threading.Thread(target=srv.serve_forever, daemon=True)
+            thread.start()
+            try:
+                addr = f'127.0.0.1:{srv.server_port}'
+                self.assertEqual(trial.world_context(addr, 'a' * 64),
+                                 case['expected'].replace(case['addr'], addr), case['name'])
+            finally:
+                srv.shutdown()
+                srv.server_close()
+                thread.join()
+        for case in vectors['prompts']:
+            self.assertEqual(trial.build_prompt(case['task'], case['commands']), case['expected'])
+        dev = vectors['developer_instructions']
+        self.assertEqual(json.dumps(dev['context'], ensure_ascii=True), dev['value'])
+
     def test_world_context_text_matches_hosts_init(self):
         """The copy of hosts init's tool map and boundary cannot drift from the Go constants."""
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

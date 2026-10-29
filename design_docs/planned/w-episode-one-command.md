@@ -426,7 +426,7 @@ profile, and only its digest and bytes travel into the start record.
 
 ## §8 Milestones
 
-M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2–M4 remain unbuilt.
+M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2 built in w217b (2026-10-29): headless launch, transcript and append-only launch history; M3–M4 remain unbuilt.
 
 | M | what | gate |
 |---|---|---|

@@ -179,6 +179,8 @@ It does not replace World's event store with git, rebuild all history without bo
 
 ## §8 Milestones
 
+**M0/M1 built (w220a); M2 built (w220b):** D-WORLD-103 all defaults; strict follow envelope, pinned collector/config and bounded scheduler; atomic config-keyed cache, restart seeds, snapshot/status readers, daemon lifecycle and serve/service flags. M3 onward remains unbuilt; host timing and attended exit remain unverified.
+
 | M | what | gate |
 |---|---|---|
 | **M0** | Re-measure premises; settle R1–R7 and the shared N2d schema boundary | Operator records rulings; Go fixture tests preserve legacy v1 decode/validate and reject malformed envelope namespaces |

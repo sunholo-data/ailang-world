@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/agentrun"
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/capsule"
 	"github.com/sunholo-data/ailang-world/host/checkrun"
@@ -1217,6 +1218,7 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// (go env, uv python find) through host/toolprobe's one exec site.
 		"host/toolprobe/toolprobe.go": {driveToolprobeOutput},
 		"host/checkrun/checkrun.go":   {driveCheckrun},
+		"host/agentrun/agentrun.go":   {driveAgentrun},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -2673,6 +2675,24 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	}
 	if afterRetry != afterFirst {
 		t.Fatalf("AC9c: counters moved across reopen+recovery+retry: %s -> %s", afterFirst, afterRetry)
+	}
+}
+
+func driveAgentrun(t *testing.T, probe string) {
+	t.Helper()
+	dir := t.TempDir()
+	out, err := os.CreateTemp(dir, "stdout")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer out.Close()
+	errout, err := os.CreateTemp(dir, "stderr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer errout.Close()
+	if r, err := agentrun.Run(boundedTestContext(t), []string{probe}, dir, childenv.Scrubbed(os.Environ()), out, errout, time.Second); err != nil || r.ExitCode != 0 {
+		t.Fatalf("agentrun.Run via the probe: %+v, %v", r, err)
 	}
 }
 

@@ -1,4 +1,4 @@
-// Package checkrun runs an attended finish check outside the sandbox.
+// Package checkrun runs finish's attended subprocesses: checks and gh.
 // It owns one bounded subprocess site, driven by the AC10 census. Checks
 // execute agent code, so credentials are always removed from their environment.
 package checkrun

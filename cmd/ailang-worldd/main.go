@@ -8,7 +8,7 @@
 //
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	                    [--workspace-root <dir> --tool-ailang-bin <path>]
-//	                    [--examples-dir <dir>] [--surface-index <file>]
+//	                    [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>]
 //	                    [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
 //	                    [--workspace-package-cache <dir>]
 //	                    [--run-allow-caps Env,Net,Declassify]
@@ -34,6 +34,7 @@
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
 //	ailang-worldd episode start <episode> --repo <dir> [--profile <project>] ...
+//	ailang-worldd episode launch <episode> --preset <name> [--presets-dir D] [--headless]
 //	ailang-worldd [--addr http://127.0.0.1:7644] episode report <episode> [--json] [--follow]
 //	ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
 //	ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
@@ -83,7 +84,7 @@ Usage:
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
-                      [--examples-dir <dir>] [--surface-index <file>]
+                      [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
                       [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
@@ -114,7 +115,7 @@ Usage:
                     [--workspace-root <dir>] [--from-dir <dir>] [--replace]
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
-                    [--examples-dir <dir>] [--surface-index <file>] [--online]
+                    [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>] [--online]
   ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
                     [--task <file>] [--agent claude|codex] [--model <m>] [--ttl N]
                     [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
@@ -124,7 +125,8 @@ Usage:
   ailang-worldd episode finish <episode> --preset <name> [--presets-dir D] [--title TEXT]
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]
   ailang-worldd preset list|show|check|init [name] [--presets-dir <dir>]
-  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>]
+  ailang-worldd episode launch <episode> --preset <name> [--presets-dir <dir>] [--headless]
+  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>] [--launch] [--headless]
   ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
   ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
                     [--rig <dir> --addr <url> [--project ailang-world]]
@@ -256,6 +258,9 @@ serve flags:
                        generated index served at GET /surface/index.json;
                        optional, may be built later, must be outside
                        --workspace-root (including symlink targets)
+  --surface-follow <file>
+                       follow config; mutually exclusive with --surface-index;
+                       must be outside --workspace-root; restart to apply changes
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof
@@ -475,6 +480,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
 	surfaceIndex := fs.String("surface-index", "", "generated surface index outside --workspace-root (optional; may be built later)")
+	surfaceFollow := fs.String("surface-follow", "", "follow config outside --workspace-root; mutually exclusive with --surface-index")
 	var moduleRoot string
 	var episodeModuleRoots []string
 	fs.Func("workspace-module-root", "REL under each episode worktree that is the AILANG sandbox and module root (default .)", func(v string) error {
@@ -541,6 +547,10 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "ailang-worldd serve: unexpected argument %q\n", extra[0])
 		return exitUsage
 	}
+	if *surfaceIndex != "" && *surfaceFollow != "" {
+		fmt.Fprintln(stderr, "surface follow refused: --surface-follow and --surface-index are mutually exclusive; next: ailang-worldd serve --help")
+		return exitUsage
+	}
 	if *dbPath == "" {
 		fmt.Fprintln(stderr, "ailang-worldd serve: --db is required")
 		return exitUsage
@@ -563,7 +573,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 
 	cfg := daemon.Config{DBPath: *dbPath, CredentialsPath: *credsDB, BindHost: host, BindPort: port, AilangBin: *ailangBin,
 		WorkbenchStill: *workbenchStill,
-		WorkspaceRoot:  *workspaceRoot, ToolAilangBin: *toolAilangBin, SurfaceIndex: *surfaceIndex,
+		WorkspaceRoot:  *workspaceRoot, ToolAilangBin: *toolAilangBin, SurfaceIndex: *surfaceIndex, SurfaceFollow: *surfaceFollow,
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),

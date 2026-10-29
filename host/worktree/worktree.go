@@ -43,14 +43,14 @@ const (
 	MaxStdout = 8 << 20
 )
 
-// Env is the child environment: environ without registry or GIT_* variables.
+// Env is the child environment: environ without registry, GIT_* or WORLD_SESSION variables.
 // Like childenv.Scrubbed it is never nil, so exec never falls back to
 // inheriting the process environment.
 func Env(environ []string) []string {
 	scrubbed := childenv.Scrubbed(environ)
 	kept := make([]string, 0, len(scrubbed))
 	for _, kv := range scrubbed {
-		if strings.HasPrefix(kv, "GIT_") {
+		if strings.HasPrefix(kv, "GIT_") || strings.HasPrefix(kv, "WORLD_SESSION=") {
 			continue
 		}
 		kept = append(kept, kv)

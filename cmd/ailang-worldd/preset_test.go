@@ -189,7 +189,8 @@ func TestPresetDeclineAndNoTerminal(t *testing.T) {
 	}
 	var out, errOut bytes.Buffer
 	runEpisodeStart([]string{"--help"}, &out, &errOut, sessionEnv{})
-	for _, bad := range []string{"--yes", "--launch", "--resume"} {
+	// --launch arrived in row 217 M2; --resume is M3, and there is never a --yes.
+	for _, bad := range []string{"--yes", "--resume"} {
 		if strings.Contains(out.String(), bad) {
 			t.Fatal("unexpected flag", bad)
 		}

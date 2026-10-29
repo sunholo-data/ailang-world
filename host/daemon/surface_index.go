@@ -29,6 +29,10 @@ func (d *Daemon) handleSurfaceIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if d.follow != nil {
+		d.handleFollowIndex(w, r)
+		return
+	}
 	data, _, empty, err := d.readSurfaceIndex()
 	switch {
 	case err != nil:
@@ -47,6 +51,18 @@ func (d *Daemon) handleSurfaceIndex(w http.ResponseWriter, r *http.Request) {
 // fixed reason (no index configured, or not built yet); err is a refusal, to
 // be reported through surfaceIndexRefusal.
 func (d *Daemon) readSurfaceIndex() (data []byte, ix surface.Index, empty string, err error) {
+	if d.follow != nil {
+		s := d.follow.publisher.Snapshot()
+		if len(s.Envelope.Repos) == 0 {
+			return nil, ix, "the follow index is building", nil
+		}
+		if len(d.follow.config.Repos) > 1 {
+			return nil, ix, "", fmt.Errorf("%s", groupedFollowReason)
+		}
+		ix = s.Envelope.Repos[0].Index
+		data, err = surface.Marshal(ix)
+		return data, ix, "", err
+	}
 	if d.cfg.SurfaceIndex == "" {
 		return nil, ix, "no surface index is configured: start serve with --surface-index <file>", nil
 	}
@@ -81,6 +97,9 @@ func (d *Daemon) surfaceIndexRefusal(err error) string {
 	var pe *os.PathError
 	if errors.As(err, &pe) {
 		err = pe.Err
+	}
+	if d.follow != nil {
+		return err.Error()
 	}
 	reason := strings.ReplaceAll(err.Error(), d.cfg.SurfaceIndex, "the configured surface index")
 	return "the configured surface index: " + reason

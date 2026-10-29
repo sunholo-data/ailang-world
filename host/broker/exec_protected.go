@@ -233,6 +233,11 @@ func foldProtectedRune(r rune) rune {
 // matchProtected reports whether the worktree-relative path rel is protected
 // by the canonical set. A directory form D/** hits D and everything under it;
 // a base-name form hits any base name it matches, at any depth.
+// MatchProtected tests a path against a canonical exec-profile protected set.
+func MatchProtected(canonical []string, rel string) bool {
+	return matchProtected(canonical, rel)
+}
+
 func matchProtected(canonical []string, rel string) bool {
 	key := foldProtectedKey(strings.TrimPrefix(path.Clean(filepath.ToSlash(rel)), "./"))
 	base := path.Base(key)

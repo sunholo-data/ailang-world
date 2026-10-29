@@ -24,6 +24,7 @@ gets `405 Method Not Allowed` from the router.
 | `GET` | `/v1/receipts/{id}` | none | Receipt of a `rest:` commit |
 | `GET` | `/v1/episodes/{episode}/report` | none | One episode's summary: calls by tool, effects, budgets, refusals |
 | `GET` | `/v1/session/self` | **session** | The calling session's episode, time left and grants |
+| `POST` | `/v1/episodes/{episode}/finish` | **operator proof** (any session credential is refused) | `episode finish`'s operator route: lands the approval decision and the finish record |
 | `GET` | `/workbench` | none | Read-only HTML operator renderer |
 | `GET` | `/workbench/live.js` | none | The workbench's embedded same-origin live client script |
 | `GET` | `/.well-known/agent.json` | **session** | Session-scoped A2A agent card |
@@ -31,9 +32,10 @@ gets `405 Method Not Allowed` from the router.
 | `POST` | `/mcp/` | **session** | MCP Streamable HTTP (`initialize`, `ping`, `tools/list`, `tools/call`) |
 | `POST` | `/agui/` | none | Read-only AG-UI 1.0 SSE run of the world's live state, bounded to 18 s; resume with standard state or `Last-Event-ID` (QUICKSTART, "Watch the world live") |
 
-The other eleven `/v1` routes are the frozen v1 machine table, pinned against a checked sketch
-by a test. `/v1/session/self` (row 223d), `/workbench`, `/workbench/live.js`, the agent card,
-`/a2a/`, `/mcp/` and `/agui/` are additive.
+The thirteen `/v1` routes are the frozen v1 machine table, pinned against a checked sketch by a
+test; `/v1/session/self` (row 223d) and `/v1/episodes/{episode}/finish` (row 218) joined it
+additively. `/workbench`, `/workbench/live.js`, the agent card, `/a2a/`, `/mcp/` and `/agui/` are
+additive routes outside it.
 
 **Auth** means `Authorization: Bearer <64-hex-credential>` holding a live session (see
 [Sessions and episodes](../concepts/sessions-and-episodes.md)). The `GET /v1/*` routes are not
