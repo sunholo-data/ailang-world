@@ -181,13 +181,13 @@ It does not replace World's event store with git, rebuild all history without bo
 
 | M | what | gate |
 |---|---|---|
-| M0 | Re-measure premises; settle R1–R7 and the shared N2d schema boundary | Operator records rulings; Go fixture tests preserve legacy v1 decode/validate and reject malformed envelope namespaces |
-| M1 | Read-only source collector, config, pinned-head collection and bounded scheduler | Go tests with fake clock/git: unchanged probe counts, moving refs, rewind, cancellation, deadlines, call budget and no git writes |
-| M2 | Atomic cache and snapshot reader, per-repo status and service wiring | Go tests for rename/write failure, restart recovery, no partial generation, stale partition retention and plist argv mutual exclusion |
-| M3 | Session/start overlay, ended states and finish integration seam | Go tests for deduplication, expiry, missing starts, unconfigured repo, cap/refusal and finish-before-revoke; operator verifies actual 218 reader |
-| M4 | Namespaced multi-repo model, minimal open cards, independent visible-page polling and generation-safe stack refresh | Go tests for equal PR/row/hash collisions and model/stack generation handling; operator opens two repos, disables AG-UI and observes refresh with navigation retained |
-| M5 | Bounds and loaded-host measurement | Go tests for all caps and last-good preservation; operator times four default cold windows and a changed head under concurrent session load |
-| M6 | Attended exit run | Operator merges a PR and measures app appearance within 60 seconds without surface-index or reload; starts an episode with no agent lifecycle call and sees its open state. Repeat across two repos. Record source clock, synchronizer if needed by R7, elapsed times and evidence |
+| **M0** | Re-measure premises; settle R1–R7 and the shared N2d schema boundary | Operator records rulings; Go fixture tests preserve legacy v1 decode/validate and reject malformed envelope namespaces |
+| **M1** | Read-only source collector, config, pinned-head collection and bounded scheduler | Go tests with fake clock/git: unchanged probe counts, moving refs, rewind, cancellation, deadlines, call budget and no git writes |
+| **M2** | Atomic cache and snapshot reader, per-repo status and service wiring | Go tests for rename/write failure, restart recovery, no partial generation, stale partition retention and plist argv mutual exclusion |
+| **M3** | Session/start overlay, ended states and finish integration seam | Go tests for deduplication, expiry, missing starts, unconfigured repo, cap/refusal and finish-before-revoke; operator verifies actual 218 reader |
+| **M4** | Namespaced multi-repo model, minimal open cards, independent visible-page polling and generation-safe stack refresh | Go tests for equal PR/row/hash collisions and model/stack generation handling; operator opens two repos, disables AG-UI and observes refresh with navigation retained |
+| **M5** | Bounds and loaded-host measurement | Go tests for all caps and last-good preservation; operator times four default cold windows and a changed head under concurrent session load |
+| **M6** | Attended exit run | Operator merges a PR and measures app appearance within 60 seconds without surface-index or reload; starts an episode with no agent lifecycle call and sees its open state. Repeat across two repos. Record source clock, synchronizer if needed by R7, elapsed times and evidence |
 
 ## §9 Acceptance criteria (no model call; an operator or CI can check each)
 
