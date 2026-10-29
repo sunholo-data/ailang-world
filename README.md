@@ -123,8 +123,9 @@ executed. Mission-loop machinery is shared infrastructure from the
 **Phase: the 1.0 release candidate (`v1.0.0-rc.1`).** As of 2026-10-27, all seven clauses of
 the [ratified 1.0 bar](design_docs/world-mission.md) are met, including the two that measure
 World against the status quo (clause 4 by D-WORLD-77, clause 5 by D-WORLD-80). `v1.0.0-rc.1` is
-the current GitHub pre-release; per D-WORLD-81, `v1.0.0` follows once rows 156 (protected test
-paths), 150 (marketing capture) and 151 (agent-generated projections) land.
+the current GitHub pre-release; per D-WORLD-81, `v1.0.0` follows once rows 150 (marketing
+capture) and 151 (agent-generated projections) land. Row 156 (protected test paths) closed
+in iteration 312 after the attended D-WORLD-86 ruling.
 
 **Built and working** (on `dev`, CI-gated):
 
@@ -183,10 +184,10 @@ rows 135 (`ailang-run` stdin, argv and per-call capabilities), 138 (the develope
 
 **In progress**, on two tracks:
 
-- **The mission loop, toward `v1.0.0` (D-WORLD-81)** — rows **150** (marketing capture) and
-  **156** (protected test paths, so an agent cannot edit the tests that judge it through
-  `workspace-exec`) are in sprint, with 156's remaining milestones held on D-WORLD-86, a ruling
-  open for the owner; row 151 (agent-generated projections) follows. Row 139, the
+- **The mission loop, toward `v1.0.0` (D-WORLD-81)** — row **150** (marketing capture) is
+  in sprint; row 151 (agent-generated projections) follows. Row 156 (protected test paths)
+  is closed: D-WORLD-86 = A dropped M5c/M5d, relying on the v0.54.15 tool pin's alias
+  refusals plus M5e. Row 139, the
   interpreter epoch upgrade path, has M1/M2 landed: the release manifest
   `pins/ailang-releases.json` and `world-publish epoch nominate`.
 - **The attended track: all agent work through World** (D-WORLD-94, set by the owner
