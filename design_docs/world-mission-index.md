@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 317 | 2026-10-29 | no pick: rule (d) block report; release rows 150/151 wait on attended steps; row 232's premise re-measured (not a breach; mechanism found); D-WORLD-102 filed [ADMIN] |
 | 316 | 2026-10-29 | row 150: M8b built — final repository gates and C11 protected-path observation; QUICKSTART §13 states the r5 P0/phone rules; judge r1 PASS 93 → r2 PASS 93 [PRODUCT] |
 | 314 | 2026-10-28 | dev RED at Gate 1 → arm 6 reverse-leg false refusal fixed and LANDED (row 229, PR #403; judge PASS 92) [PRODUCT-HYGIENE] |
 | 315 | 2026-10-28 | row 150: C8′(iii)/P0 store-dependent-geometry amendment written (orchestration doc r3 → r5); quorum BLOCKED twice → carve-out; judge r1 PASS 77 → controller fix → r2 PASS 84 [PRODUCT] |

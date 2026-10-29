@@ -1,0 +1,41 @@
+# Row 232 reset-holder premise re-measure (iteration 317, controller, macOS arm64, go1.26.6, base 23940015)
+
+## Idle: go test ./host/broker/ -run 'TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder' -count=500
+ok  	github.com/sunholo-data/ailang-world/host/broker	71.543s
+rc=0
+FAIL lines: 0
+
+## Under load (32 x yes on 16 cores): same test -count=300
+reset-holder FAIL subtests: 5
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.18s)
+        exec_probe_test.go:661: TIMING ArchiveExecSandbox took 8.222584ms
+        exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.23s)
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.23s)
+        exec_probe_test.go:661: TIMING ArchiveExecSandbox took 12.447292ms
+        exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.14s)
+FAIL
+rc=1
+
+Count note: `grep -c -- '--- FAIL'` over the load log reads 10 because each failure prints a
+parent line and a subtest line; the subtest count above (5 of 300) is the measurement.
+
+## Mechanism probe (row232-dial-reset-probe.go.txt, built and run outside the repo)
+An accept-then-RST listener (SetLinger(0) + Close, exactly revHolder's "reset" kind) dialled
+2000 times with net.DialTimeout(200 ms), counting dials that themselves return an error:
+  idle:        connected=1990 dial_errors=10  (all "connect: connection reset by peer")
+  under load:  connected=1971 dial_errors=29; connected=1975 dial_errors=25 (same error)
+So a dial against a resetting listener can FAIL AT CONNECT (ECONNRESET reaches the socket before
+Go's connect completes). pollLoopback (host/broker/exec_probe.go) drops every dial error, so such
+a dial records none of child/foreign/silent; when it is the only dial in the attempt (revFixture's
+/bin/sh client returns at once), judgeReverse sees nothing and the leg passes: Why = "", calls 1,
+which is exactly the CI and local signature.
+
+## Reading (controller, not yet judged)
+- Not a confinement breach: the dial that is lost is to a FOREIGN holder; the child's own listener
+  answers the nonce (classifyReverseDial), it does not reset. A connect-time reset proves only that
+  something accepted on the port.
+- It IS a design-conformance gap: the design classifies a reset as SILENT (a sticky refusal); a
+  connect-time reset is currently classified as "no listener". The fix candidate is to record a
+  dial that fails with ECONNRESET as silent. That is row 232's work, not this iteration's.

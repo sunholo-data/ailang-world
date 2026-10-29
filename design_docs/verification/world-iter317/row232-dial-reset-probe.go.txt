@@ -1,0 +1,33 @@
+package main
+
+import (
+	"fmt"
+	"net"
+	"time"
+)
+
+// Dial an accept-then-RST listener N times; count how often the dial itself
+// errors (so a poller that ignores dial errors records nothing) vs connects.
+func main() {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil { panic(err) }
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil { return }
+			_ = c.(*net.TCPConn).SetLinger(0)
+			_ = c.Close()
+		}
+	}()
+	addr := ln.Addr().String()
+	dialErr, connected := 0, 0
+	errs := map[string]int{}
+	for i := 0; i < 2000; i++ {
+		c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
+		if err != nil { dialErr++; errs[err.Error()[len(err.Error())-30:]]++; continue }
+		connected++
+		_ = c.Close()
+	}
+	fmt.Printf("dials=2000 connected=%d dial_errors=%d\n", connected, dialErr)
+	for k, v := range errs { fmt.Printf("  %d x ...%s\n", v, k) }
+}
