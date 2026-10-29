@@ -740,5 +740,18 @@ class AgainstTheRealValidator(Base):
             self.assertIn('refused:', got['error'])
 
 
+class SharedScrubVectors(unittest.TestCase):
+    def test_shared_scrub_vectors(self):
+        path = os.path.join(os.path.dirname(__file__), 'testdata', 'scrub_vectors.json')
+        with open(path, encoding='utf-8') as f:
+            vectors = json.load(f)
+        self.assertGreater(len(vectors), 0)
+        for vector in vectors:
+            with self.subTest(vector['name']):
+                refused = bool(trial.BARE_HEX64_RE.search(vector['text']) or
+                               'bearer ' in vector['text'].lower())
+                self.assertEqual(vector['refuse'], refused)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -23,7 +23,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/daemon"
 )
 
-const episodeReportHelp = `usage: ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
+const episodeReportHelp = `usage: ailang-worldd [--addr <url>] episode report <episode> [--json | --markdown] [--follow] [--interval 2s] [--addr <url>]
 
 Summarises one episode from World's own store, in one request
 (GET /v1/episodes/<episode>/report): total calls, calls by tool, effect
@@ -33,6 +33,7 @@ refusals (the effect was allowed and ran, but the handler answered ok:false),
 the files read (successful ailang-read calls; --json lists them), the first
 and last entries and their times.
 
+  --markdown    render a scrubbed PR body (cannot combine with --json or --follow)
   --json        print the route's JSON (one object; with --follow one compact
                 line per change)
   --follow      re-print when the episode changes, until Ctrl-C; the store
@@ -49,6 +50,7 @@ func runEpisodeReport(globalAddr string, args []string, stdout, stderr io.Writer
 	fs := flag.NewFlagSet("ailang-worldd episode report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
+	markdown := fs.Bool("markdown", false, "render a scrubbed PR body")
 	asJSON := fs.Bool("json", false, "print the route's JSON")
 	follow := fs.Bool("follow", false, "re-print when the episode changes, until Ctrl-C")
 	interval := fs.Duration("interval", 2*time.Second, "poll interval with --follow")
@@ -70,11 +72,15 @@ func runEpisodeReport(globalAddr string, args []string, stdout, stderr io.Writer
 		fmt.Fprintln(stderr, "ailang-worldd episode report: --interval must be positive")
 		return exitUsage
 	}
+	if *markdown && (*asJSON || *follow) {
+		fmt.Fprintln(stderr, "refusing: --markdown cannot combine with --json or --follow")
+		return exitUsage
+	}
 	base := globalAddr
 	if *addr != "" {
 		base = *addr
 	}
-	o := reportOpts{episode: positional[0], json: *asJSON, interval: *interval}
+	o := reportOpts{episode: positional[0], json: *asJSON, markdown: *markdown, interval: *interval}
 	if !*follow {
 		ctx, cancel := budgetContext(whyBudget)
 		defer cancel()
@@ -88,6 +94,7 @@ func runEpisodeReport(globalAddr string, args []string, stdout, stderr io.Writer
 type reportOpts struct {
 	episode  string
 	json     bool
+	markdown bool
 	interval time.Duration
 }
 
@@ -127,7 +134,19 @@ func reportOnce(ctx context.Context, c *client, o reportOpts, stdout, stderr io.
 		fmt.Fprintf(stderr, "ailang-worldd episode report: %v\n", err)
 		return exitUsage
 	}
-	if o.json {
+	if o.markdown {
+		h, err := (worldReader{ctx: ctx, c: c}).health()
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return exitUsage
+		}
+		text, err := renderReportMarkdown(rep, h.DBPath, reportAdditions{})
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return exitUsage
+		}
+		fmt.Fprint(stdout, text)
+	} else if o.json {
 		fmt.Fprintln(stdout, string(body))
 	} else {
 		printReport(stdout, rep)

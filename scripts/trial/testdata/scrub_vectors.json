@@ -1,0 +1,62 @@
+[
+  {
+    "name": "plain",
+    "text": "ordinary report",
+    "refuse": false
+  },
+  {
+    "name": "bare",
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "refuse": true
+  },
+  {
+    "name": "upper",
+    "text": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "refuse": true
+  },
+  {
+    "name": "prefixed",
+    "text": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "refuse": false
+  },
+  {
+    "name": "colon",
+    "text": ":aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "refuse": false
+  },
+  {
+    "name": "65hex",
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "refuse": false
+  },
+  {
+    "name": "63hex",
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "refuse": false
+  },
+  {
+    "name": "delimited",
+    "text": "x 1111111111111111111111111111111111111111111111111111111111111111!",
+    "refuse": true
+  },
+  {
+    "name": "colon-then-bare",
+    "text": ":aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "refuse": true
+  },
+  {
+    "name": "bearer",
+    "text": "Bearer x",
+    "refuse": true
+  },
+  {
+    "name": "mixed",
+    "text": "bEaReR x",
+    "refuse": true
+  },
+  {
+    "name": "no-space",
+    "text": "bearer",
+    "refuse": false
+  }
+]

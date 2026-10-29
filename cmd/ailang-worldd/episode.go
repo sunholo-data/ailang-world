@@ -47,7 +47,9 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
-const episodeHelp = `Launch presets (M0/M1):
+const episodeHelp = `episode finish <episode> --preset <name>: attended local checks, commit and body; see episode finish --help.
+
+Launch presets (M0/M1):
   ailang-worldd episode start [episode] --preset NAME [--presets-dir D] [--task FILE]
       [--agent claude|codex] [--model M] [--ttl S] [--branch EXISTING]
 Presets pin the base, grants and checks. Overrides are named at the terminal.
@@ -153,6 +155,8 @@ func runEpisode(addr string, args []string, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "start":
 		return runEpisodeStart(args[1:], stdout, stderr, realSessionEnv())
+	case "finish":
+		return runEpisodeFinish(args[1:], stdout, stderr, realSessionEnv())
 	case "report":
 		return runEpisodeReport(addr, args[1:], stdout, stderr)
 	case "--help", "-help", "-h", "help":

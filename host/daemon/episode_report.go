@@ -57,6 +57,7 @@ type EpisodeReport struct {
 	Budgets         []ReportBudget    `json:"budgets"`
 	PlanRefusals    ReportRefusals    `json:"plan_refusals"`
 	HandlerRefusals ReportRefusals    `json:"handler_refusals"`
+	Writes          ReportWrites      `json:"writes"`
 	Reads           ReportReads       `json:"reads"`
 	FirstAt         string            `json:"first_at"`
 	LastAt          string            `json:"last_at"`
@@ -108,7 +109,31 @@ type ReportReads struct {
 	Unlisted  int          `json:"unlisted"`  // read calls whose path is not a local relative path
 }
 
-// ReportRead is one distinct path: how often it was read, and first when.
+// ReportWrites separates explicit edits from paths produced by effect results.
+type ReportWrites struct {
+	Written               []ReportWrite      `json:"written"`
+	Produced              []ReportRead       `json:"produced"`
+	DeltasTruncated       []int64            `json:"deltas_truncated"`
+	DeltaErrors           []ReportDeltaError `json:"delta_errors"`
+	WrittenTruncated      int                `json:"written_truncated"`
+	ProducedTruncated     int                `json:"produced_truncated"`
+	Unlisted              int                `json:"unlisted"`
+	DeltaTruncatedOmitted int                `json:"deltas_truncated_omitted"`
+	DeltaErrorsOmitted    int                `json:"delta_errors_omitted"`
+}
+type ReportWrite struct {
+	Path       string `json:"path"`
+	Op         string `json:"op"`
+	Count      int    `json:"count"`
+	FirstEntry int64  `json:"first_entry"`
+	lastEntry  int64
+}
+type ReportDeltaError struct {
+	Entry int64  `json:"entry"`
+	Error string `json:"error"`
+}
+
+// ReportRead is one distinct path: how often it was read or produced, and first when.
 type ReportRead struct {
 	Path       string `json:"path"`
 	Count      int    `json:"count"`
@@ -135,6 +160,7 @@ var reportSurfaces = []coordinator.Surface{coordinator.SurfaceA2A, coordinator.S
 
 // reportNotes say where each derived field comes from, in the body itself.
 var reportNotes = map[string]string{
+	"writes":           "written: successful committed ailang-write/edit/delete calls, from input.path; produced: allowed non-failed effect result worktree_delta.changes; deltas_truncated and delta_errors name evidence gaps; local relative paths only, each path list ordered by first entry and capped at 1000; excess counts and unlisted are explicit",
 	"entries":          "first and last log entries of the episode's committed calls",
 	"plan_refusals":    "calls whose plan named no effect and answered ok:false (refused before any effect ran)",
 	"handler_refusals": "calls whose effect was allowed and ran, but whose handler result is ok:false (the effect record alone shows these as allowed)",
@@ -174,12 +200,14 @@ type budgetState struct {
 }
 
 type reportBuilder struct {
-	rep     EpisodeReport
-	effects map[[2]string]int
-	budgets map[budgetKey]*budgetState
-	reads   map[string]*ReportRead
-	firstAt int64
-	lastAt  int64
+	rep      EpisodeReport
+	effects  map[[2]string]int
+	budgets  map[budgetKey]*budgetState
+	written  map[string]*ReportWrite
+	produced map[string]*ReportRead
+	reads    map[string]*ReportRead
+	firstAt  int64
+	lastAt   int64
 }
 
 // buildEpisodeReport scans episode's journal key ranges and aggregates its
@@ -191,7 +219,9 @@ func buildEpisodeReport(ctx context.Context, intents intentReader, reads objectW
 			PlanRefusals:    ReportRefusals{ByTool: map[string]int{}, First: []ReportRefusal{}},
 			HandlerRefusals: ReportRefusals{ByTool: map[string]int{}, First: []ReportRefusal{}},
 			Reads:           ReportReads{Files: []ReportRead{}},
+			Writes:          ReportWrites{Written: []ReportWrite{}, Produced: []ReportRead{}, DeltasTruncated: []int64{}, DeltaErrors: []ReportDeltaError{}},
 			Notes:           reportNotes},
+		written: map[string]*ReportWrite{}, produced: map[string]*ReportRead{},
 		effects: map[[2]string]int{},
 		budgets: map[budgetKey]*budgetState{},
 		reads:   map[string]*ReportRead{},
@@ -263,6 +293,8 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 	// not fail and whose handler did not answer ok:false (the refusal test
 	// below); a plan refusal returned above, before any effect.
 	isRead := tool == reportReadTool
+	isWrite := tool == "ailang-write" || tool == "ailang-edit" || tool == "ailang-delete"
+	writeEffect := false
 	for pos, text := range rec.Effects {
 		ref, err := hashref.Parse(text)
 		if err != nil {
@@ -280,8 +312,17 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 			return fmt.Errorf("entry %d: %w", entry, err)
 		}
 		b.effect(entry, pos, d)
+		if d.Effect == broker.EffectWorkspaceWrite || d.Effect == broker.EffectWorkspaceDelete {
+			writeEffect = true
+		}
+		if d.Allowed && !d.Failed {
+			if err := b.delta(ctx, reads, entry, d.ResultRef); err != nil {
+				return err
+			}
+		}
 		if !d.Allowed || d.Failed {
 			isRead = false
+			isWrite = false
 		}
 		if d.Allowed && !d.Failed && handlerRefused == "" {
 			if handlerRefused, err = handlerRefusal(ctx, reads, d.ResultRef); err != nil {
@@ -292,6 +333,9 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 	if handlerRefused != "" {
 		addRefusal(&b.rep.HandlerRefusals, entry, tool, handlerRefused)
 		return nil
+	}
+	if isWrite && writeEffect {
+		return b.write(ctx, reads, entry, rec.Input, strings.TrimPrefix(tool, "ailang-"))
 	}
 	if isRead {
 		return b.read(ctx, reads, entry, rec.Input)
@@ -329,6 +373,82 @@ func (b *reportBuilder) read(ctx context.Context, reads objectWorldReader, entry
 	r.Count++
 	if entry < r.FirstEntry {
 		r.FirstEntry = entry
+	}
+	return nil
+}
+
+func (b *reportBuilder) write(ctx context.Context, reads objectWorldReader, entry int64, input, op string) error {
+	ref, err := hashref.Parse(input)
+	if err != nil {
+		return err
+	}
+	obj, ok, err := reads.GetObject(ctx, ref)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("entry %d: missing input", entry)
+	}
+	var in struct {
+		Path string `json:"path"`
+	}
+	if json.Unmarshal(obj.Payload, &in) != nil || !filepath.IsLocal(in.Path) {
+		b.rep.Writes.Unlisted++
+		return nil
+	}
+	r := b.written[in.Path]
+	if r == nil {
+		r = &ReportWrite{Path: in.Path, FirstEntry: entry}
+		b.written[in.Path] = r
+	}
+	r.Count++
+	if entry < r.FirstEntry {
+		r.FirstEntry = entry
+	}
+	if entry >= r.lastEntry {
+		r.Op, r.lastEntry = op, entry
+	}
+	return nil
+}
+
+func (b *reportBuilder) delta(ctx context.Context, reads objectWorldReader, entry int64, ref hashref.HashRef) error {
+	if ref.IsZero() {
+		return nil
+	}
+	obj, ok, err := reads.GetObject(ctx, ref)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("entry %d: missing effect result", entry)
+	}
+	var res struct {
+		Delta *broker.WorktreeDelta `json:"worktree_delta"`
+	}
+	if json.Unmarshal(obj.Payload, &res) != nil || res.Delta == nil {
+		return nil
+	}
+	d := res.Delta
+	if d.Truncated {
+		b.rep.Writes.DeltasTruncated = append(b.rep.Writes.DeltasTruncated, entry)
+	}
+	if d.Error != "" {
+		b.rep.Writes.DeltaErrors = append(b.rep.Writes.DeltaErrors, ReportDeltaError{Entry: entry, Error: clipReason(d.Error)})
+	}
+	for _, c := range d.Changes {
+		if c.PathTruncated || !filepath.IsLocal(c.Path) {
+			b.rep.Writes.Unlisted++
+			continue
+		}
+		r := b.produced[c.Path]
+		if r == nil {
+			r = &ReportRead{Path: c.Path, FirstEntry: entry}
+			b.produced[c.Path] = r
+		}
+		r.Count++
+		if entry < r.FirstEntry {
+			r.FirstEntry = entry
+		}
 	}
 	return nil
 }
@@ -513,6 +633,50 @@ func (b *reportBuilder) finish() {
 	}
 	for _, r := range b.rep.Reads.Files {
 		b.rep.Reads.Count += r.Count
+	}
+	for _, r := range b.written {
+		b.rep.Writes.Written = append(b.rep.Writes.Written, *r)
+	}
+	for _, r := range b.produced {
+		b.rep.Writes.Produced = append(b.rep.Writes.Produced, *r)
+	}
+	w := &b.rep.Writes
+	sort.Slice(w.Written, func(i, j int) bool {
+		if w.Written[i].FirstEntry != w.Written[j].FirstEntry {
+			return w.Written[i].FirstEntry < w.Written[j].FirstEntry
+		}
+		return w.Written[i].Path < w.Written[j].Path
+	})
+	sort.Slice(w.Produced, func(i, j int) bool {
+		if w.Produced[i].FirstEntry != w.Produced[j].FirstEntry {
+			return w.Produced[i].FirstEntry < w.Produced[j].FirstEntry
+		}
+		return w.Produced[i].Path < w.Produced[j].Path
+	})
+	if n := len(w.Written); n > reportReadFiles {
+		w.WrittenTruncated = n - reportReadFiles
+		w.Written = w.Written[:reportReadFiles]
+	}
+	if n := len(w.Produced); n > reportReadFiles {
+		w.ProducedTruncated = n - reportReadFiles
+		w.Produced = w.Produced[:reportReadFiles]
+	}
+	sort.Slice(w.DeltasTruncated, func(i, j int) bool { return w.DeltasTruncated[i] < w.DeltasTruncated[j] })
+	sort.Slice(w.DeltaErrors, func(i, j int) bool { return w.DeltaErrors[i].Entry < w.DeltaErrors[j].Entry })
+	unique := w.DeltasTruncated[:0]
+	for _, entry := range w.DeltasTruncated {
+		if len(unique) == 0 || unique[len(unique)-1] != entry {
+			unique = append(unique, entry)
+		}
+	}
+	w.DeltasTruncated = unique
+	if n := len(w.DeltasTruncated); n > reportReadFiles {
+		w.DeltaTruncatedOmitted = n - reportReadFiles
+		w.DeltasTruncated = w.DeltasTruncated[:reportReadFiles]
+	}
+	if n := len(w.DeltaErrors); n > reportReadFiles {
+		w.DeltaErrorsOmitted = n - reportReadFiles
+		w.DeltaErrors = w.DeltaErrors[:reportReadFiles]
 	}
 	b.rep.FirstAt = time.Unix(b.firstAt, 0).UTC().Format(time.RFC3339)
 	b.rep.LastAt = time.Unix(b.lastAt, 0).UTC().Format(time.RFC3339)

@@ -361,7 +361,7 @@ tool. And it never force-pushes.
 | M | what | gate |
 |---|---|---|
 | **M0** | row 198 additions: the report's `writes` (§3.3) and `--markdown` (§3.5) | Go tests over seeded episodes (writes, deltas over cap, delta errors); the body scrub test |
-| **M1** | the local half: fence, validation, checks (R2), attribution, `host/worktree.Commit` with the trailer, body render, `--dry-run` | Go tests with a fixture repo and the fake terminal; ACs 1–6 |
+| **M1** | **M0/M1 built (w218a)**: fence, validation, pinned checks (R2), attribution, `host/worktree.Commit` with the trailer, body render, `--dry-run`; protected paths left to M2 | Go tests with a fixture repo and the fake terminal; ACs 1–6 |
 | **M2** | the approval scope, the operator route (R6), dispatch through a `git`/`gh` seam (a fake in tests), outcome classes, the finish record, revoke | Go tests with the fake seam for every outcome class; ACs 7–12 |
 | **M3** | re-runs and fix-up rounds (§3.9); delete the unwired handler (R8) | Go tests killing finish after each step and re-running; AC13 |
 | **M4** | the exit run, attended: one episode from `episode start` to a merged PR, on a real repo | AC14 |
