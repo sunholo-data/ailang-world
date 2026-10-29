@@ -5,7 +5,12 @@ branch, daemon paths, grants, agent and checks before the terminal confirmation.
 No check or fetch runs at start. Add --launch --headless to launch after mint. Finish runs the checks
 pinned in the start record, even if the preset file later changes:
 `ailang-worldd episode finish <id> --preset my-repo --dry-run` previews the local
-commit and report body; omit --dry-run to keep them and print manual PR steps.
+commit and report body. Omit --dry-run to approve the exact PR bytes at the terminal:
+finish pushes without force, creates the ailang-world label if approved, opens a draft
+PR (or use --ready), records the outcome, then revokes the episode credentials.
+Approval and records use a one-time operator proof beside the credentials store;
+the daemon refuses session credentials on this route. Protected changes are named
+in the commit, body and prompt; --exec-profiles-dir locates the pinned profile.
 
 Create and inspect a preset (replace the repository and branch with yours):
 
