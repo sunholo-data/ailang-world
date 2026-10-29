@@ -9,7 +9,12 @@ import (
 )
 
 func TestConfigRefusals(t *testing.T) {
-	root := t.TempDir()
+	// LoadConfig canonicalises repo paths, and on macOS t.TempDir() is under
+	// /var, a symlink to /private/var: resolve it so the expected path matches.
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	configDir := filepath.Join(root, "operator")
 	home := filepath.Join(root, "home")
 	workspace := filepath.Join(root, "workspace")
