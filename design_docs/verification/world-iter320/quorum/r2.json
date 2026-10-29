@@ -1,0 +1,61 @@
+{
+  "doc": "design_docs/planned/w-exec-refusal-check-134-substring.md",
+  "iso_ts": "2026-10-29T17:40:31Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.022456,
+      "tokens_in": 10093,
+      "tokens_out": 227,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "AC-A-ROOT runs the prebuilt broker.test binary without -test.timeout. Unlike invocation through go test, a directly executed Go test binary defaults to no overall test timeout. This acceptance check therefore introduces an unbounded wait, violating the bounded-waits axiom.",
+        "catch": "V23 records failure counts but neither verifies the direct binary's timeout configuration nor supplies a deadline. The same omission appears in the runnable AC-A-ROOT instructions.",
+        "proposed_fix": "Add an explicit deadline to AC-A-ROOT: GOTMPDIR=\u003croot\u003e-ro /tmp/wNNNd/broker.test -test.run '^(\u003csix\u003e)$' -test.v -test.timeout=2m. Update V23 with a rerun using that exact command, recording elapsed time, exit status, the expected six top-level failures and ten TempDir errors, and absence of a timeout panic. State that a timeout is an acceptance failure, not an expected read-only-root failure."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.050892,
+      "tokens_in": 11418,
+      "tokens_out": 261,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In T1 and M3/M7, `json.NewDecoder` with a second `Decode(\u0026json.RawMessage{})` still permits duplicate keys within the single JSON object (e.g., `{\"ok\":true,\"ok\":false,\"refused\":\"x\"}`), because `encoding/json` overwrites earlier keys without error. However, since `out` is produced by `json.Marshal` in `handlers_exec.go`, duplicate keys cannot arise in production replies.",
+        "catch": "In T2 (`TestExecToolF15RefusalUnderTempRoot134`), `os.MkdirTemp(\"\", \"w234-x134x-\")` uses `os.TempDir()`, which reads `TMPDIR` (not `GOTMPDIR`). Ensure `t.Cleanup(func() { os.RemoveAll(root) })` is registered immediately before `t.Setenv(\"GOTMPDIR\", root)` so no sub-directory creation failure can leak the outer temp root."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0801304,
+      "tokens_in": 10090,
+      "tokens_out": 15001,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The site is fixed; the class is only provably closed for host/broker. §7's 'one true hit' is relative to the line-oriented literal-token grep grammars of V15–V17/V25, which cannot see multi-line calls, tokens built by concatenation, or table-driven absence assertions; 170 variable-token sites are untriaged (R3); and no package outside host/broker has ever been run under a 134 root (V24). So after this lands, AC-D's ambient-env full gate can still flake from an undiscovered sibling in another package, and the doc asserts rather than measures that none exists — the residual is honestly routed to a candidate row, which is why this is a concern and not a rejection.",
+        "catch": "The §7 negative results ('one true hit among literal-token checks', 'bytes: 0') are properties of the grep grammars, not of the repo: the doc should state this scoping explicitly, because the current wording invites reading 'one true hit' as 'one site in the repo'. Additionally, R2's single real candidate (doctor_hosts_test.go:106 \"17\") is admitted unverified ('I did not verify this') yet is proposed as the basis for a candidate row.",
+        "proposed_fix": "Add one bounded leg to AC-D: `GOTMPDIR=/tmp/wNNNd/tmp-x134x go test ./... -count=1` (writable root; the assignment overrides ambient GOTMPDIR and TMPDIR per V10/V23), wanting `ok` for every package, with any red outside host/broker filed as a new queue row before this row lands. This converts R3's 'other packages were not run under a 134 root' from an asserted gap into a measured one at the cost of one command. Also append one scoping sentence to §7's result: 'one true hit' is relative to the line-oriented grep grammars in V15–V17/V25, which cannot see multi-line, concatenated, or variable-token absence checks — that open set is R3, not a closed count. Before filing w-test-presence-tokens-vacuous, spend the one context read to verify whether doctor_hosts_test.go:106's haystack (files[name]) can quote temp paths."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2: both r1 rejects applied verbatim (EOF check + T1 rows + M7; GOTMPDIR-forced ACs with measured root-honoured equivalent, sweep claim narrowed + extended). Controller re-read §2/§5."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-1-sol: AC-A-ROOT runs the prebuilt broker.test binary without -test.timeout. Unlike invocation through go test, a directly executed Go test binary defaults to no overall test timeout. This acceptance check therefore introduces an unbounded wait, violating the bounded-waits axiom."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.15347840000000001,
+    "total_tokens_in": 31601,
+    "total_tokens_out": 15489
+  }
+}

@@ -12,7 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 320 | 2026-10-29 | no pick: rule (d) block report 3; release rows 150/151 still wait on attended steps; dev green at 8cee85a9 [ADMIN] |
+| 320 | 2026-10-29 | rule (d) block report 3, then dev went red under the record → row 234: requireF15's "134" substring check replaced by a structural predicate; judge PASS 91 [PRODUCT] |
 | 319 | 2026-10-29 | no pick: rule (d) block report 2; release rows 150/151 still wait on attended steps; dev green with row 232's fix (the dc24fccf red predates it) [ADMIN] |
 | 318 | 2026-10-29 | row 232: a reverse-leg dial that fails at connect with ECONNRESET is SILENT — taken as a Gate-1 dev red; Linux errno measured first-party; judge r1 PASS 92 [PRODUCT] |
 | 317 | 2026-10-29 | no pick: rule (d) block report; release rows 150/151 wait on attended steps; row 232's premise re-measured (not a breach; mechanism found); D-WORLD-102 filed [ADMIN] |

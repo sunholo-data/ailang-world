@@ -1,0 +1,8 @@
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+    exec_tools_test.go:537: problem "", want accepted=false: {"ok":true,"refused":"exec /tmp/x134x/node does not start"}
+--- FAIL: TestF15RefusalProblemIsStructural (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.362s
+FAIL

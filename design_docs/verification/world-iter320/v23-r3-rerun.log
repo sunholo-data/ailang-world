@@ -1,0 +1,33 @@
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolSymlinkInsideWorkspaceRefuses894627295: permission denied
+--- FAIL: TestExecToolSymlinkInsideWorkspaceRefuses (0.00s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolDeletedTargetRefusesF153468858964: permission denied
+--- FAIL: TestExecToolDeletedTargetRefusesF15 (0.00s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolFailedProbeRefusesF15896491606: permission denied
+--- FAIL: TestExecToolFailedProbeRefusesF15 (0.00s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolPlacementReappliednodeworkspace1588103800: permission denied
+=== RUN   TestExecToolPlacementReapplied/node/state
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolPlacementReappliednodestate1467406997: permission denied
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolPlacementReappliedargv0workspace3722544381: permission denied
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolPlacementReappliedargv0state4183593035: permission denied
+=== RUN   TestExecToolPlacementReapplied/startup
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolPlacementReappliedstartup983185594: permission denied
+--- FAIL: TestExecToolPlacementReapplied (0.00s)
+    --- FAIL: TestExecToolPlacementReapplied/node/workspace (0.00s)
+    --- FAIL: TestExecToolPlacementReapplied/node/state (0.00s)
+    --- FAIL: TestExecToolPlacementReapplied/argv0/workspace (0.00s)
+    --- FAIL: TestExecToolPlacementReapplied/argv0/state (0.00s)
+    --- FAIL: TestExecToolPlacementReapplied/startup (0.00s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolCellarProfilePathRefusesByName2598480998: permission denied
+--- FAIL: TestExecToolCellarProfilePathRefusesByName (0.00s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+    testing.go:1426: TempDir: mkdir /tmp/w320/ctl-r3/tmp-x134x-ro/TestExecToolStartFailureIsRetriedWithoutChangingIdentity2335349065: permission denied
+--- FAIL: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.00s)
+FAIL

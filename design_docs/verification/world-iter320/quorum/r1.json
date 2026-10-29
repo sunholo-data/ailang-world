@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-exec-refusal-check-134-substring.md",
+  "iso_ts": "2026-10-29T17:22:10Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.015502000000000002,
+      "tokens_in": 6666,
+      "tokens_out": 217,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The proposed predicate does not enforce its claimed strict two-key refusal envelope over the entire reply. json.Decoder.Decode reads only the first JSON value: a valid refusal followed by another JSON object or trailing garbage is accepted when before == after. DisallowUnknownFields does not reject that trailing content, so the central structural-validation claim is stronger than the implementation and tests establish.",
+        "catch": "Add rejection cases for a refusal followed by an execResult object and a refusal followed by non-JSON garbage. The existing mutation table does not exercise complete-input validation.",
+        "proposed_fix": "After the first successful Decode, decode again into a temporary value and require the result to be io.EOF; otherwise return a trailing-content error. Add the io import, T1 rows rejecting concatenated JSON and trailing garbage, and a control accepting trailing whitespace. Add a mutant that removes the EOF check and verify those rows kill it. Revise the structural claim to explicitly require exactly one complete JSON value."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.035084000000000004,
+      "tokens_in": 7726,
+      "tokens_out": 209,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "json.Decoder.Decode in f15RefusalProblem only consumes the first JSON value from the byte slice and does not check for trailing non-whitespace bytes, though out is produced by a single json.Marshal call in handlers_exec.go.",
+        "catch": "In Section 7 (Residual R2), doctor_hosts_test.go:106 is noted as an unverified presence check on the bare token \"17\" that might vacuously pass if a temp path contains \"17\"; verify whether its haystack actually embeds t.TempDir() paths when filing the follow-up candidate row.",
+        "proposed_fix": "If strict single-object framing is desired in f15RefusalProblem, check that no tokens remain after Decode, or rely on the existing single-Marshal producer contract."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.118845,
+      "tokens_in": 6673,
+      "tokens_out": 24887,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The acceptance criteria exercise the 134-in-path hazard through TMPDIR only, but the doc's own V10 premise (testing.go reads GOTMPDIR first, so 'setting TMPDIR would not be enough where GOTMPDIR is set') means any environment with ambient GOTMPDIR set silently redirects every t.TempDir away from the x134x root: AC-A's six-caller legs and AC-D's 134-TMPDIR leg then go green without ever exercising the defect condition, and nothing in the AC detects it. That is exactly the silent vacuous pass the doc's own T2 null-case fatal ('temp root not honoured') exists to prevent, defended against in T2 but left open in the very procedures that gate the merge, violating the no-silent-fallback axiom. The author's prototype runs were real (V6/V11 -v paths show tmp-x134x took effect), but the AC as written is not hermetic and is not repeatable as specified on machines where GOTMPDIR is set.",
+        "catch": "Section 7's closure claim ('Result: one true hit, :89') is broader than the class actually searched: the hazard class is defined as any absence substring assertion, but greps V15-V17 cover only literal-token strings.*(Contains|Count|Index|LastIndex|HasSuffix|HasPrefix) calls. bytes.Contains/bytes.Index with []byte(\"\u003cdigits\u003e\"), regexp-based absence checks, and variable-token forms (strings.Contains(out, tok) where tok is an identifier) in other packages were never searched, even though the doc explicitly makes the sweep 'the evidence' for packages not run under a 134 TMPDIR. Either narrow the claim to the searched function family or run the added patterns before asserting class-level closure.",
+        "proposed_fix": "Amend AC-A (and AC-D's 134 leg) to force the root through the verified-first variable and assert it took effect, e.g.: 'AC-A: GOTMPDIR=/tmp/wNNNd/tmp-x134x go test ./host/broker/ -run ^(six|T1|T2|TestExecToolExit134ChecksNode)$ -count=20 -v' (control root likewise; the assignment overrides any ambient GOTMPDIR, and per V10 this also dominates ambient TMPDIR), plus a root-honoured assertion that grep -c tmp-x134x on the -v output matches the PASS count (mirroring T2's precondition fatal), recorded as a new verification-log row. T2's internal t.Setenv stays unchanged. Additionally, either rewrite the Section 7 result sentence as 'one true hit among literal-token strings.* absence checks' or extend the sweep with bytes.(Contains|Index)(..., []byte(\"[0-9]+\")) and a variable-token pass (strings.(Contains|Index|Count)(..., [A-Za-z_][A-Za-z0-9_.]*) with context reads) before claiming the class is closed for packages not run under a 134 TMPDIR."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller reproduced the defect (6/6 FAIL with TMPDIR containing 134, control passes) and spot-read the structural predicate; test-only change in host/broker."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-1-sol: The proposed predicate does not enforce its claimed strict two-key refusal envelope over the entire reply. json.Decoder.Decode reads only the first JSON value: a valid refusal followed by another JSON object or trailing garbage is accepted when before == after. DisallowUnknownFields does not reject that trailing content, so the central structural-validation claim is stronger than the implementation and tests establish.",
+      "oc-glm-5-3: The acceptance criteria exercise the 134-in-path hazard through TMPDIR only, but the doc's own V10 premise (testing.go reads GOTMPDIR first, so 'setting TMPDIR would not be enough where GOTMPDIR is set') means any environment with ambient GOTMPDIR set silently redirects every t.TempDir away from the x134x root: AC-A's six-caller legs and AC-D's 134-TMPDIR leg then go green without ever exercising the defect condition, and nothing in the AC detects it. That is exactly the silent vacuous pass the doc's own T2 null-case fatal ('temp root not honoured') exists to prevent, defended against in T2 but left open in the very procedures that gate the merge, violating the no-silent-fallback axiom. The author's prototype runs were real (V6/V11 -v paths show tmp-x134x took effect), but the AC as written is not hermetic and is not repeatable as specified on machines where GOTMPDIR is set."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.169431,
+    "total_tokens_in": 21065,
+    "total_tokens_out": 25313
+  }
+}

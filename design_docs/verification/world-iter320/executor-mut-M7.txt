@@ -1,0 +1,11 @@
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+    exec_tools_test.go:537: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"}{"exit_code":134}
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+    exec_tools_test.go:537: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"} garbage
+--- FAIL: TestF15RefusalProblemIsStructural (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.365s
+FAIL

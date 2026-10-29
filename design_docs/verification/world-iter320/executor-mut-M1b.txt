@@ -1,0 +1,6 @@
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+    exec_tools_test.go:511: not a pre-launch refusal (the call spawned): {"ok":false,"refused":"exec node /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/w234-x134x-2953314380/TestExecToolF15RefusalUnderTempRoot1343575706789/001/node → /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/w234-x134x-2953314380/TestExecToolF15RefusalUnderTempRoot1343575706789/001/a/stub-node does not start: lstat /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/w234-x134x-2953314380/TestExecToolF15RefusalUnderTempRoot1343575706789/001/a/stub-node: no such file or directory\n  why: the target is gone\n  next: reinstall the package that provides /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/w234-x134x-2953314380/TestExecToolF15RefusalUnderTempRoot1343575706789/001/node, then retry (no restart needed)"} (spawns 0 -> 0)
+--- FAIL: TestExecToolF15RefusalUnderTempRoot134 (0.04s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.306s
+FAIL

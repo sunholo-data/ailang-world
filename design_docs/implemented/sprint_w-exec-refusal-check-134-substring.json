@@ -1,0 +1,254 @@
+{
+  "id": "w-exec-refusal-check-134-substring",
+  "iteration": 320,
+  "row": "234",
+  "clause": "red on dev (outranks the queue)",
+  "authority": [
+    "design_docs/implemented/w-exec-refusal-check-134-substring.md r2 + quorum-r2 fix applied as round 3 (narrow-refinement carve-out, controller)",
+    "design_docs/implemented/w-exec-refusal-check-134-substring-sprint-plan.md"
+  ],
+  "estimate": "0.1 day",
+  "scope": "2 milestones, each independently green. Code: host/broker/exec_tools_test.go ONLY (test helper + tests). M2 creates design_docs/verification/world-iter320/executor-report.md and executor-*.txt evidence copies. No production .go, no .ail, no CI, no docs/. The executor must NOT edit design_docs/world-mission*.md: queue/charter row 234 text is written by the controller from design §1/§2 and the executor report. No git writes by the executor; the controller commits.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter320-f15",
+    "branch": "sprint/world-iter320-f15-tempdir",
+    "head": "5407c160",
+    "go_tree_equals": "785b3bd1",
+    "sha256": {
+      "host/broker/exec_tools_test.go": "20179c17a1fb9c3e4949d01ecc2c618b6e0a809d2efd81705903f239a589fe63",
+      "host/broker/exec_tools_round2_test.go": "fe2deb2a078c5c62600776c9c4a83abd63d2ad56c493179cf0b057dcb9c272d7",
+      "host/broker/handlers_exec.go": "d85457256d78add86ac475fc0eb77bcf8cc373082c27139ba3d9f7fd023b2ad0"
+    },
+    "fixed_sha256_prototype": {
+      "host/broker/exec_tools_test.go": "475fb831692647b87b00690c1142ae2aa6efc9aa8e41df236c2ac2682e039be6"
+    }
+  },
+  "environment": [
+    "cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter320-f15",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "unset GOTMPDIR (only the AC commands set it, inline)",
+    "mkdir -p /tmp/w320x (executor scratch = the design's /tmp/wNNNd)",
+    "leave WORLD_EXEC_SRT_NODE_MODULES unset"
+  ],
+  "executor_constraints": [
+    "no git write operations (no commit/add/stash/checkout/restore/reset)",
+    "edit only host/broker/exec_tools_test.go (M1) and create only design_docs/verification/world-iter320/executor-report.md + executor-*.txt (M2)",
+    "never edit design_docs/world-mission*.md (the controller writes row 234), never move the design doc, never edit tools/launchd/*, never touch the main checkout or ~/.ailang/state/mission-v1*, never run ailang messages",
+    "snapshots and logs live under /tmp/w320x, never inside the worktree",
+    "each mutation applied alone, run ONLY against its named killer rows, observed red, restored by cp from the snapshot and checked with shasum -a 256 -c",
+    "a mutant that fails to compile is a protocol error, never a kill; do not gofmt a mutant",
+    "no t.Parallel() (T2 uses t.Setenv)",
+    "copy -run regexes and code from the plan's fenced blocks, never from markdown table cells",
+    "bound every wait with perl -e 'alarm N; exec @ARGV'; never end the turn announcing a wait",
+    "go build ./... is not a compile fence for _test.go: use go test -run '^$' ./host/broker/ or go vet ./host/broker/"
+  ],
+  "controller_only": [
+    "write queue/charter row 234 (design_docs/world-mission.md queue + STATUS) and the mission log entry, from design §1/§2 and the executor report",
+    "move the design doc and plan from planned/ to implemented/",
+    "commit, PR, and read CI: 'go race gate' and 'go host build + test gate' must both show 'ok  \tgithub.com/sunholo-data/ailang-world/host/broker' on the fixed head"
+  ],
+  "measured_baseline": {
+    "git diff --stat 785b3bd1 HEAD": "4 files, all under design_docs/",
+    "go version": "go1.26.6 darwin/arm64",
+    "$AILANG_BIN --version": "AILANG v0.41.0",
+    "ambient GOTMPDIR": "unset",
+    "grep -cE '^\\| *234 *\\|' design_docs/world-mission.md": "0",
+    "grep -nE 'GOTMPDIR|TMPDIR' .github/workflows/*.yml": "no output",
+    "grep -nE 'TestExecTool|requireF15' .github/workflows/ci.yml docs/QUICKSTART.md": "no output",
+    "requireF15 guard": "host/broker/exec_tools_test.go:89 strings.Contains(string(out), \"134\")",
+    "prototype M0 (T2 at base, -count=10)": "rc 1, 10 FAIL, 0 PASS",
+    "prototype diff": "+91/-4, gofmt empty, vet ok, compile fence ok",
+    "prototype AC-A": "both roots rc 0, top PASS 180, subtest PASS 320, FAIL 0, SKIP 0, 9 names (43 s / 39 s)",
+    "prototype AC-A-ROOT": "rc 1, 1 s, top 6, all 11, leaf 10, TempDir: mkdir 10, timeout panics 0, === RUN 11",
+    "prototype AC-C": "every M1-M7 named killer FAIL, every control PASS, no build failure, sha OK after each restore",
+    "prototype AC-D": "rc 0 and rc 0: plain `ok  github.com/sunholo-data/ailang-world/host/broker 221.614s` (222 s wall); race `ok … 322.370s` (328 s wall), 0 `DATA RACE`"
+  },
+  "base_expectations": {
+    "RED_at_base": [
+      "TestExecToolF15RefusalUnderTempRoot134 against the base requireF15 (M0/AC-B): 10/10",
+      "the six requireF15 callers whenever a temp path holds 134 (~1.7%/test; 6/6 under a forced 134 GOTMPDIR)"
+    ],
+    "GREEN_at_base_and_must_stay_green": [
+      "TestExecToolDeletedTargetRefusesF15",
+      "TestExecToolFailedProbeRefusesF15",
+      "TestExecToolPlacementReapplied",
+      "TestExecToolCellarProfilePathRefusesByName",
+      "TestExecToolStartFailureIsRetriedWithoutChangingIdentity",
+      "TestExecToolSymlinkInsideWorkspaceRefuses",
+      "TestExecToolExit134ChecksNode",
+      "the whole host/broker package"
+    ],
+    "absent_at_base_cannot_compile": [
+      "T1 TestF15RefusalProblemIsStructural",
+      "T3 additions to TestExecToolExit134ChecksNode (call f15RefusalProblem)"
+    ]
+  },
+  "gates": [
+    {
+      "id": "G1",
+      "cmd": "gofmt -l host/broker/",
+      "pass": "empty"
+    },
+    {
+      "id": "G2",
+      "cmd": "go vet ./host/broker/",
+      "pass": "rc 0"
+    },
+    {
+      "id": "G3",
+      "cmd": "go test -run '^$' ./host/broker/",
+      "pass": "rc 0 (compile fence)"
+    },
+    {
+      "id": "G4",
+      "name": "AC-A",
+      "cmd": "for d in tmp-x134x tmp-ctl: GOTMPDIR=/tmp/w320x/$d go test ./host/broker/ -run '^(TestExecToolDeletedTargetRefusesF15|TestExecToolFailedProbeRefusesF15|TestExecToolPlacementReapplied|TestExecToolCellarProfilePathRefusesByName|TestExecToolStartFailureIsRetriedWithoutChangingIdentity|TestExecToolSymlinkInsideWorkspaceRefuses|TestF15RefusalProblemIsStructural|TestExecToolF15RefusalUnderTempRoot134|TestExecToolExit134ChecksNode)$' -count=20 -v",
+      "pass": "each root: rc 0, 180 '^--- PASS', 320 '^    --- PASS', 0 '--- FAIL', 0 SKIP, 9 unique names"
+    },
+    {
+      "id": "G5",
+      "name": "AC-A-ROOT",
+      "cmd": "go test -c -o /tmp/w320x/broker.test ./host/broker/; mkdir /tmp/w320x/tmp-x134x-ro, chmod 555; from host/broker/: GOTMPDIR=/tmp/w320x/tmp-x134x-ro /tmp/w320x/broker.test -test.run '^(TestExecToolDeletedTargetRefusesF15|TestExecToolFailedProbeRefusesF15|TestExecToolPlacementReapplied|TestExecToolCellarProfilePathRefusesByName|TestExecToolStartFailureIsRetriedWithoutChangingIdentity|TestExecToolSymlinkInsideWorkspaceRefuses)$' -test.v -test.timeout=2m",
+      "pass": "rc 1; 6 top-level '--- FAIL'; leaf FAIL (all '--- FAIL' except the TestExecToolPlacementReapplied parent) = 10 = grep -c 'TempDir: mkdir /tmp/w320x/tmp-x134x-ro'; 'panic: test timed out' = 0 (a timeout is an acceptance FAILURE); === RUN 11"
+    },
+    {
+      "id": "G6",
+      "name": "AC-D",
+      "cmd": "GOTMPDIR=/tmp/w320x/tmp-x134x go test ./host/broker/ -count=1; GOTMPDIR=/tmp/w320x/tmp-x134x go test -race ./host/broker/ -count=1; go build ./... && go test ./...; ./scripts/verify_ail.sh",
+      "pass": "plain and race 'ok  \tgithub.com/sunholo-data/ailang-world/host/broker', 0 DATA RACE; full gate rc 0; verify_ail.sh rc 0. Known load flakes (TestWorktreeSnapshotRefusesAConfiguredFilter, TestExecProtectedCheckTimeout/after-cancel, verifygate TestMissionConfigDefaultFlowIntegration): re-run alone -count=3; any exec_tools* failure or other failure is a stop",
+      "from": "M2"
+    },
+    {
+      "id": "G7",
+      "cmd": "git diff --name-only; git status --porcelain",
+      "pass": "diff: exactly host/broker/exec_tools_test.go; status adds only the plan files and design_docs/verification/world-iter320/executor-*; 0 world-mission lines"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "T2 red-first (AC-B = M0), f15RefusalProblem, requireF15 rewired, T1, T3; AC-A, AC-A-ROOT; mutation drill M1-M7 (AC-C)",
+      "est_loc": 95,
+      "files": [
+        "host/broker/exec_tools_test.go"
+      ],
+      "edits": [
+        "M1.1: append T2 TestExecToolF15RefusalUnderTempRoot134 at end of the PRISTINE file; run AC-B: go test ./host/broker/ -run '^TestExecToolF15RefusalUnderTempRoot134$' -count=10 -v => 10 FAIL, 0 PASS, 0 'temp root not honoured'",
+        "M1.2a imports (:3-13): add \"bytes\" before \"context\"; \"fmt\" and \"io\" after \"errors\"",
+        "M1.2b insert f15RefusalProblem(out []byte, before, after int64) string (plan block, gofmt form) directly above func requireF15 (:75)",
+        "M1.2c requireF15 (:82-91): after := f.h.Spawns(); if problem := f15RefusalProblem(out, before, after); problem != \"\" { t.Fatalf(\"not a pre-launch refusal (%s): %s (spawns %d -> %d)\", problem, out, before, after) }; then the loose struct with only Refused + json.Unmarshal; parts loop unchanged",
+        "M1.2d TestExecToolExit134ChecksNode (:243-248): before := f.h.Spawns() before f.call; after the err check: if f15RefusalProblem(out, before, f.h.Spawns()) == \"\" { t.Fatalf(\"a launch that exited 134 passes requireF15: %s\", out) }",
+        "M1.3 append T1 TestF15RefusalProblemIsStructural at end of file (after T2)"
+      ],
+      "tests": [
+        "T1 TestF15RefusalProblemIsStructural (9 rows: accepted refusal-temp-root-134, trailing-whitespace; rejected post-launch-f15 (0->1), launched-exit-134 (0->1), refusal-plus-exit-code, ok-true, refused-empty, concatenated-json, trailing-garbage; message 'problem %q, want accepted=%v: %s')",
+        "T2 TestExecToolF15RefusalUnderTempRoot134 (os.MkdirTemp(\"\", \"w234-x134x-\") + cleanup; t.Setenv(\"GOTMPDIR\", root); newMovingExec; precondition strings.Contains(m.link, \"x134x\") else fatal 'temp root not honoured'; os.Remove(m.a); requireF15(t, m.f, m.link, m.a, \"the target is gone\"))",
+        "T3 TestExecToolExit134ChecksNode/{broken-node,command-aborted}: f15RefusalProblem(out, before, f.h.Spawns()) != \"\""
+      ],
+      "acceptance_commands": [
+        "AC-B (M1.1, before the fix)",
+        "G1",
+        "G2",
+        "G3",
+        "git diff --stat => exec_tools_test.go +91/-4",
+        "G4 AC-A",
+        "G5 AC-A-ROOT",
+        "AC-C (the mutation drill below)",
+        "G7"
+      ],
+      "mutations": [
+        {
+          "id": "M0 OLD-HELPER",
+          "edit": "base requireF15 (:75-98) with T2 added = M1.1 red-first step",
+          "must_fail_test": "TestExecToolF15RefusalUnderTempRoot134 10/10 at -count=10",
+          "prototype": "10/10 FAIL"
+        },
+        {
+          "id": "M1 MUT-PATH-SUBSTRING",
+          "edit": "'\\tif after != before {' -> '\\tif after != before || strings.Contains(string(out), \"134\") {'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/{refusal-temp-root-134,trailing-whitespace}; TestExecToolF15RefusalUnderTempRoot134",
+          "prototype": "3/3 FAIL (T2 message reads '(the call spawned)', D3)"
+        },
+        {
+          "id": "M2 MUT-NO-SPAWN-GUARD",
+          "edit": "'\\tif after != before {' -> '\\tif false && after != before {'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/post-launch-f15; TestExecToolExit134ChecksNode/broken-node",
+          "control_pass": "TestExecToolExit134ChecksNode/command-aborted",
+          "prototype": "2/2 FAIL, control PASS"
+        },
+        {
+          "id": "M3 MUT-LOOSE-DECODE",
+          "edit": "delete '\\tdec.DisallowUnknownFields()'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/refusal-plus-exit-code",
+          "control_pass": "TestF15RefusalProblemIsStructural/launched-exit-134",
+          "prototype": "FAIL, control PASS"
+        },
+        {
+          "id": "M4 MUT-OK-IGNORED",
+          "edit": "'\\tif r.OK == nil || *r.OK {' -> '\\tif false && (r.OK == nil || *r.OK) {'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/ok-true",
+          "prototype": "FAIL"
+        },
+        {
+          "id": "M5 MUT-REFUSED-OPTIONAL",
+          "edit": "'\\tif r.Refused == nil || *r.Refused == \"\" {' -> '\\tif r.Refused == nil {'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/refused-empty",
+          "prototype": "FAIL"
+        },
+        {
+          "id": "M6 MUT-ACCEPT-ALL",
+          "edit": "insert '\\tif true {\\n\\t\\treturn \"\"\\n\\t}' above '\\tdec := json.NewDecoder(bytes.NewReader(out))'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/{post-launch-f15,launched-exit-134,refusal-plus-exit-code,ok-true,refused-empty,concatenated-json,trailing-garbage}; TestExecToolExit134ChecksNode/{broken-node,command-aborted}",
+          "prototype": "7 + 2 FAIL"
+        },
+        {
+          "id": "M7 MUT-NO-EOF-CHECK",
+          "edit": "'\\tif err := dec.Decode(&json.RawMessage{}); err != io.EOF {' -> '\\tif err := dec.Decode(&json.RawMessage{}); false && err != io.EOF {'",
+          "must_fail_test": "TestF15RefusalProblemIsStructural/{concatenated-json,trailing-garbage}",
+          "prototype": "2/2 FAIL ('problem \"\", want accepted=false')"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2",
+      "title": "AC-D (whole host/broker under a GOTMPDIR 134 root, plain and -race; go build ./... && go test ./...; verify_ail.sh) and the executor report with evidence logs",
+      "est_loc": 0,
+      "files": [
+        "design_docs/verification/world-iter320/executor-report.md",
+        "design_docs/verification/world-iter320/executor-*.txt"
+      ],
+      "edits": [
+        "no code edits; copy /tmp/w320x logs to design_docs/verification/world-iter320/executor-<name>.txt; write executor-report.md in the shape of design_docs/verification/world-iter318/executor-report.md"
+      ],
+      "tests": [
+        "the whole host/broker package (plain and race) under GOTMPDIR=/tmp/w320x/tmp-x134x",
+        "go test ./..."
+      ],
+      "acceptance_commands": [
+        "G6 AC-D",
+        "shasum -a 256 -c /tmp/w320x/fixed.sha => OK",
+        "round2_test.go and handlers_exec.go sha256 equal base",
+        "G7"
+      ],
+      "mutations": [],
+      "closing": "Hand-off: the controller writes row 234 into design_docs/world-mission.md, moves the docs to implemented/, commits, and reads both CI gates on the PR.",
+      "status": "planned"
+    }
+  ],
+  "mutation_revert": "After M1.4 is green: cp host/broker/exec_tools_test.go /tmp/w320x/exec_tools_test.go.snap; shasum -a 256 host/broker/exec_tools_test.go > /tmp/w320x/fixed.sha. Per mutant: apply one edit, run only its killer line(s), cp the snap back, shasum -a 256 -c /tmp/w320x/fixed.sha must say OK.",
+  "design_discrepancies": [
+    "D1 T1 literal JSON fixed by the planner (design names rows only); launched-exit-134 uses spawns 0->1 and is killed only by M6, as design §4 says.",
+    "D2 M0 realised as the red-first step: T2 appended to the pristine file before the fix (= base requireF15 + T2); measured 10/10 FAIL.",
+    "D3 M1's form ORs into the spawn branch, so T2's kill message reads '(the call spawned)'; the named rows go red, which is the kill.",
+    "D4 the predicate block is the gofmt-expanded form of design §2's one-line ifs; same semantics; the '// [r2]' marker dropped.",
+    "D5 requireF15 reads the counter once (after := f.h.Spawns()), runs the predicate before the loose json.Unmarshal, and drops the unused OK field.",
+    "D6 measured diff +91/-4 vs the design's +75/-8 (gofmt expansion and doc comments).",
+    "D7 TestExecToolExit134ChecksNode's own name holds '134', so its paths contain 134 (base substring would have caught shape 2 here by accident; design V8 measured in a probe test without 134 in its name). No effect on the fix: T3 asserts on the text-free predicate.",
+    "D8 /tmp/wNNNd instantiated as /tmp/w320x for the executor (planner used /tmp/w320p); <six> expanded.",
+    "D9 AC-A additionally counts 320 subtest PASS lines ((5+2+9) x 20) so a skipped T1 row cannot pass."
+  ],
+  "out_of_scope": "R1 TMPDIR letter tokens; R2 presence checks satisfied vacuously by temp paths (w-test-presence-tokens-vacuous); R3 the 170 untriaged variable-token absence sites (w-test-variable-token-absence-sweep); any production change; any CI list edit.",
+  "status": "planned"
+}
