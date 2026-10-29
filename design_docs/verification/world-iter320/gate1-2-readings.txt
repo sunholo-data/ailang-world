@@ -1,0 +1,39 @@
+World mission iteration 320 — Gate 0–2 readings (controller claude-opus-5-5, 2026-10-29)
+
+Gate 0
+- kill switch: ~/.ailang/state/mission-world.disabled absent -> armed
+- gh: sunholo-voight-kampff active; billing tripwire CLEAN (ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN unset)
+- mission_directives.sh --issue 366: 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z
+  inclusive, 0 new, 0 already processed (of 18 comments). Nothing to mark.
+- mission_gate0_self_notices.sh: verdict "1 crash notice" = the same 2026-10-22 rc=1 notice on #313
+  (issuecomment-6345079873); already credited — grep -c in world-mission-log.md = 17 before this entry.
+  Control issue=107 expect=4 got=4 ok.
+- mission-world inbox unread: only this loop's own claim messages (iter-314..319); iter-320 claim sent
+  (inbox_1793289832458_d0b201f3) and seen in the listing.
+- ledger: mission_decisions.sh --check -> "decision ledger valid: 91 rows"; --open -> D-WORLD-102 only.
+  New since iteration 319 (90 rows): D-WORLD-104 (row 221 rulings R1–R7, all defaults), created and
+  RESOLVED attended 2026-10-29; mission_ledger_provenance.sh --id D-WORLD-104 -> verdict=attended
+  flip=ddfa6a13 creation=6b10491c. It does not touch rows 150/151/230/231/233 or D-WORLD-102.
+
+Gate 1
+- git rev-parse dev origin/dev -> both 8cee85a98dc800f808ad061c597ab88a0ea0140b (local dev not behind)
+- Gate-1 base: 8cee85a98dc800f808ad061c597ab88a0ea0140b 2026-10-29T16:01:55Z
+- skill drift: per-file cmp of SKILL.md + 13 resources (14 files) vs origin/dev in BOTH the resolved
+  symlink target and the pin worktree -> zero DRIFT lines; positive control (cmp of a 1-byte string
+  against SKILL.md) fired.
+- dev CI: commits/8cee85a9/check-runs -> checks=3, zero NOT-GREEN. CI list: 8cee85a9, 90e6103b, bd8bb914,
+  56376ab9, 4763dd1c, c96f5b09 all success.
+- since iteration 319's base bcb07394: 30 commits, 6 first-parent merges (#412 = 319 record; #413 220a,
+  #414 221d design, #415 218b, #416 217b, #417 220b — all trial/ attended-track branches).
+- open PRs: #418 trial/row219c-exec-per-call (draft, created 2026-10-29T15:43:23Z), row 219 M3
+  attended episode; no worktree in this clone (git worktree list | grep -c row219c -> 0), trial/
+  prefix = attended track -> NOT this loop's, left alone.
+
+Gate 2
+- clause map: 1–7 MET; no UNMET clause; no critical-path row.
+- row 150: waits on the attended A1 (P0/P3 by the controller inside Mark's window). Commits since
+  bcb07394 mentioning row 150 / A1 / marketing -> 0 (control "row 2[12]x" -> 20).
+- row 151: needs row 188 N2d + N4a. git log origin/dev --since=2026-10-01 | grep -ciE 'N2d|N4a' -> 0;
+  control N2c -> 2 (6f2ba039 is row 188's newest landing). Rows 217/218/219 still [NEXT] attended-track.
+- rows 231 -> 230 -> 233: hygiene below every D-WORLD-81 release row; rule (d) (D-WORLD-46) bars them;
+  D-WORLD-102 OPEN, default B -> block report.
