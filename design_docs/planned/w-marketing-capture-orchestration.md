@@ -2,7 +2,7 @@
 
 **Status:** r5 (iteration 315). r5 is a **controller narrow-refinement carve-out** after the r4 re-quorum BLOCKED (`verification/world-iter315/quorum-r4.json`: Gemini PASS, Kimi and GLM REJECT with concrete fixes, gpt6-1-sol absent); it applies those fixes in the reviewers' terms (§9 r5; V72–V73) and is not a quorum PASS. r4 was the one permitted designer revision after the r3 round BLOCKED (`quorum-r3.json`); it fixed provenance and labels only (§9 r4; V69–V71). r3 (iteration 315) amended only the two store-dependent geometry rules that R1 measured as unable to hold on another store: P0 position assertion (a) and phone C8′(iii) (§4.4, §7, §9 r3; V64–V68). Before it: r2 (iteration 305). r0 designer, r1 designer revision after quorum r1 BLOCKED, r2 **controller narrow-refinement carve-out** after quorum r2 BLOCKED: every remaining objection carried a concrete reviewer fix and none disputed direction, so the fixes are applied in the reviewers' own terms (§9) and the doc routes to the planner without a third quorum. No round of this document has passed with all seats; Gemini passed r1 and r2, and the r4 re-quorum.
 **Target:** World v1.0.0, queue row 150 / D-WORLD-64, D-WORLD-69 (A), D-WORLD-75 (A), D-WORLD-81 (A)
-**Priority:** P1 release · **Estimated:** 1 executor run pending (M8b, ≈25 min [plan estimate, not measured]), plus the controller steps P0 and P3 and the attended A1. M7c0–M8a have landed (§2, V70). See §6 for the inventory.
+**Priority:** P1 release · **Estimated:** 0 executor runs pending (M8b built iteration 316, PR #405); the controller steps P0 and P3 and the attended A1 remain. M7c0–M8a have landed (§2, V70). See §6 for the inventory.
 **Created:** 2026-10-26 (iteration 305)
 **Base:** `09ff28215176d5c09b36ecffba85ee04660ba238` (origin/dev, iteration 315). Verification rows were measured at four commits: V32–V58 at `4e6e89dc` (iteration 305), V59 at `eacd90e7` (306), V60–V63 at `dba643a9` (312), V64–V71 at `09ff2821` (315). Each earlier base is an ancestor of `09ff2821`, and V69 shows that the renderer (`host/workbench`), the `host/daemon/workbench*` files, the pins and the capture scripts that produced R1 are byte-unchanged between `dba643a9` and `09ff2821`, so R1 is not re-baselined. Parent r4 base `c21f303` and iteration-304 HEAD `039bfa77` are both ancestors (V32).
 **Planner-Lane:** mission routing default. It applies **only to the pending milestones in §5**, and only after this document's own quorum disposition permits it (a quorum PASS, or the Gate-2 narrow-refinement carve-out recorded in §9; r2 used the carve-out, not a PASS). This document does not authorize, and never authorized, any landed code (§2).
@@ -131,7 +131,7 @@ Executed at `4e6e89dc` on 2026-10-26, load average ≈2. Pins: `AILANG_BIN` = v0
 | M7c3 | LANDED (PR #393, iteration 310; r4) | `TestMarketingCaptureInventoryMutation` (host/daemon/marketing_inventory_test.go) | present at `09ff2821` (V70); not re-run |
 | M7c4 | LANDED (PR #394, iteration 311; r4) | `TestMarketingChromeSixShots` (cmd/ailang-worldd/marketing_chrome_test.go) | present at `09ff2821` (V70); its real-Chrome run is V61 (b) |
 | M8a | LANDED (PR #400, iteration 313; r4) | `TestMarketingDocsLinks`, `TestMarketingRunbookMatchesHelp` (docs_test.go) | present at `09ff2821` (V70); not re-run |
-| M8b | PENDING | final gates | not yet verified |
+| M8b | BUILT (PR #405, iteration 316) | final gates (plan §M8b) | controller-run at `3f185a9a`: focused 7/7 PASS, verify_ail and both race gates rc 0; full suite red only on two load-induced `host/broker` tests, 3/3 green isolated at head and base |
 
 The rows marked r4 were updated in iteration 315 from `git log` and `git grep` at `09ff2821` (V70). The "Result at base" column above them still records the iteration-305 run at `4e6e89dc`.
 
@@ -265,7 +265,7 @@ Each milestone is one executor run of ≤30 min. Files, interfaces, acceptance a
 | **M7c3** — LANDED (PR #393) | Frozen public inventory guard (plan §M7c3) | Unchanged. The seeded store's log is contiguous (indexes 0–9, V40), so `handleLogRange`'s stop-at-gap does not truncate it. |
 | **M7c4** — LANDED (PR #394) | Real Chrome drill, plus inventory wiring into the shell (plan §M7c4) | File list **adds** a local rig helper inside `cmd/ailang-worldd/marketing_chrome_test.go` (§4.3); `demo_test.go` is not edited. **Completion is defined below.** |
 | **M8a** — LANDED (PR #400) | Docs, captions, manifest schema (plan §M8a) | File list **adds `scripts/marketingcheck/png_test.go`**: its `cli/unknown` case passes `docs` and expects rc 2 (`png_test.go:800`), which M8a's `docs` subcommand changes. The environment block uses tool pin v0.54.15. Captions say "static capture of recorded history" and disclose the tall framing. Also applies the R1 threshold V-row to `png.go` and the `TestMarketingPNGContent` boundary literals (V57; owner and gate in §5 R1). |
-| **M8b** — PENDING | Final repository gates and protected-path observation (plan §M8b) | Its `TestMarketingCaptureFakeChromeSixShots` gate runs with **`-timeout 300s`**, not 120 s; the test spans two shell runs of ≤120 s each. |
+| **M8b** — BUILT (iteration 316, PR #405) | Final repository gates and protected-path observation (plan §M8b) | Its `TestMarketingCaptureFakeChromeSixShots` gate runs with **`-timeout 300s`**, not 120 s; the test spans two shell runs of ≤120 s each. |
 
 **M7c4 completion semantics.** M7c4 is COMPLETE when all of the following hold:
 (a) its PR lands with PR CI green;
@@ -295,7 +295,7 @@ Completion does **not** include a real-Chrome pass, and it never marks C8/C9 met
 | Kind | Items | Status |
 |---|---|---|
 | Executor runs landed | M1a, M1b, M2a, M2b, M3a, M3b, M4a, M4b, M5a, M5b, M5c, M6, M7a, M7b, then M7c1, M7c0, M7c2a, M7a-fix, M7c2b, M7c3, M7c4, M8a | 22 landed (§2; the last eight are r4 additions from V70). M2a and M5b each took more than one fire (M2a "run2"; M5b iterations 296–298) |
-| Executor runs pending | M8b | 1 run, ≈25 min [plan estimate, not measured] |
+| Executor runs pending | none (M8b built iteration 316, PR #405) | 0 |
 | Controller steps | R0 (re-confirm), R1 (all-six rectangles, full-path C14), P0, P3 | R0 done (V59) and R1 measured (V60–V63); P0 and P3 pending. Each is bounded by its command timeout (probe ≤540 s, measured 11–15 s; drill ≤660 s) |
 | Attended | descriptor publish + one `session mint` (Mark types the confirmations), then A1 | 1 session |
 
