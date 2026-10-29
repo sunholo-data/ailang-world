@@ -599,11 +599,12 @@ func (r IntegrityReport) Lines() []string {
 // archive manifest (frozen route table, Decision 3).
 // TestFrozenV1RouteTableMatchesMux and TestDaemonDependencyAllowlist: additive health data only.
 type HealthResponse struct {
-	StartedAt  int64             `json:"started_at"`
-	Supervisor string            `json:"supervisor"`
-	Active     HealthActive      `json:"active"`
-	ExecTools  map[string]string `json:"exec_tools"`
-	Status     string            `json:"status"`
+	StartedAt      int64                            `json:"started_at"`
+	Supervisor     string                           `json:"supervisor"`
+	Active         HealthActive                     `json:"active"`
+	ExecTools      map[string]string                `json:"exec_tools"`
+	ExecToolStatus map[string]broker.ExecToolStatus `json:"exec_tool_status,omitempty"`
+	Status         string                           `json:"status"`
 	// DaemonVersion is this package's Version.
 	DaemonVersion string `json:"daemon_version"`
 	// DBPath is the configured store database path.
@@ -1122,6 +1123,7 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	}
 	body.ExecProfiles, body.ExecProfilesExcluded = d.workspace.healthProfiles()
 	body.ExecTools = d.workspace.healthExecTools()
+	body.ExecToolStatus = d.workspace.healthExecToolStatus()
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		// The status line is already written; there is nothing left to say to
@@ -1210,11 +1212,19 @@ func (d *Daemon) Serve() error { return d.srv.Serve(d.ln) }
 // under drainTimeout (= shutdownTimeout), and if they do not, connections are
 // hard-closed and a non-nil error is returned so the caller can exit non-zero.
 // The drain is never unbounded.
-func (d *Daemon) Shutdown() error { return drain(d.srv, d.drainTimeout) }
+func (d *Daemon) Shutdown() error {
+	if d.workspace != nil && d.workspace.exec != nil && d.workspace.exec.toolState != nil {
+		d.workspace.exec.toolState.Close()
+	}
+	return drain(d.srv, d.drainTimeout)
+}
 
 // Close releases writer authority by closing the store (which releases the
 // cross-process writer lock).
 func (d *Daemon) Close() error {
+	if d.workspace != nil && d.workspace.exec != nil && d.workspace.exec.toolState != nil {
+		d.workspace.exec.toolState.Close()
+	}
 	d.stopSurfaceFollow()
 	d.stopTemplateMaintenance()
 	return d.store.Close()

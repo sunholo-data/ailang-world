@@ -217,11 +217,11 @@ func TestExecHandlerResultShape(t *testing.T) {
 	if got := keysOf(m); !reflect.DeepEqual(got, want) {
 		t.Fatalf("result keys = %v, want %v", got, want)
 	}
-	if got := keysOf(m["profile"].(map[string]any)); !reflect.DeepEqual(got, []string{"argv0_sha256", "command", "digest", "project"}) {
+	if got := keysOf(m["profile"].(map[string]any)); !reflect.DeepEqual(got, []string{"argv0", "argv0_sha256", "argv0_target", "command", "digest", "project"}) {
 		t.Fatalf("profile keys = %v", got)
 	}
 	if got := keysOf(m["sandbox"].(map[string]any)); !reflect.DeepEqual(got,
-		[]string{"cli_sha256", "network", "read_fence", "runtime", "settings_digest", "version"}) {
+		[]string{"cli_sha256", "network", "node", "node_sha256", "node_target", "read_fence", "runtime", "settings_digest", "version"}) {
 		t.Fatalf("sandbox keys = %v", got)
 	}
 	r := execDecode(t, out)
@@ -229,11 +229,12 @@ func TestExecHandlerResultShape(t *testing.T) {
 		t.Fatalf("result = %+v", r)
 	}
 	c := f.profile.Commands["test"]
-	if r.Profile != (execResultProfile{Project: "proj", Digest: f.profile.Digest, Command: "test", Argv0SHA256: c.Argv0SHA256}) {
+	if r.Profile != (execResultProfile{Project: "proj", Digest: f.profile.Digest, Command: "test", Argv0: c.Argv0, Argv0Target: c.Argv0, Argv0SHA256: c.Argv0SHA256}) {
 		t.Fatalf("profile block = %+v", r.Profile)
 	}
 	settings, _ := os.ReadFile(filepath.Join(f.state, "exec", "ep1.proj.srt.json"))
-	if r.Sandbox != (execResultSandbox{Runtime: ExecSandboxPackage, Version: "0.0.0-test", CLISHA256: f.sandbox.CLISHA256,
+	if r.Sandbox != (execResultSandbox{Node: f.sandbox.Node, NodeTarget: f.sandbox.Node, NodeSHA256: f.sandbox.NodeSHA256,
+		Runtime: ExecSandboxPackage, Version: "0.0.0-test", CLISHA256: f.sandbox.CLISHA256,
 		SettingsDigest: "sha256:" + sha256Hex(settings), ReadFence: true, Network: "none"}) {
 		t.Fatalf("sandbox block = %+v", r.Sandbox)
 	}

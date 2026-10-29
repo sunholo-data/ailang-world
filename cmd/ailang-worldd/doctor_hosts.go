@@ -213,6 +213,21 @@ func doctorExecTools(r *doctorReport, profile string, startup map[string]string)
 	}
 	sort.Strings(ordered)
 	for _, name := range ordered {
+		if status, ok := r.execToolStatus[name]; ok {
+			switch {
+			case status.Probe == "pending":
+				r.add(markOK, "exec tools", name+": resolves to "+status.Target+"; the next exec call re-checks it, no restart needed", "")
+			case strings.HasPrefix(status.Probe, "failed:") || strings.HasPrefix(status.Probe, "does-not-start:"):
+				next := status.Next
+				if next == "" {
+					next = "reinstall the package that provides " + status.Configured + ", then retry (no restart needed)"
+				}
+				r.add(markFail, "exec tools", name+": "+status.Probe, next)
+			default:
+				r.add(markOK, "exec tools", name+": "+status.Accepted, "")
+			}
+			continue
+		}
 		current := resolveDoctorTool(name, paths)
 		old := startup[name]
 		if old != "" {

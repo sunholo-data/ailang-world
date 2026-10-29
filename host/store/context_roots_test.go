@@ -55,8 +55,14 @@ var contextRootPins = map[string]int{
 	// (context.WithDeadline), and checkProtected bounds it by
 	// protectedCheckTimeout (3 751 ms, design V24); Git only, no Store call.
 	"host/broker/handlers_exec.go|Execute|WithoutCancel": 1,
-	"host/capsule/capsule.go|Run|Background":             1,
-	"host/daemon/daemon.go|drain|Background":             1,
+	// Row 219 M3 round 2: re-acceptance's single-flight probe is detached from
+	// the first caller's cancellation (waiters share its result) and feeds
+	// context.WithTimeout directly (the node version budget plus a 120 s probe
+	// ceiling); round 3 also cancels it through ExecToolState.Close on daemon
+	// shutdown. No Store call.
+	"host/broker/exec_tools.go|resolve|WithoutCancel": 1,
+	"host/capsule/capsule.go|Run|Background":          1,
+	"host/daemon/daemon.go|drain|Background":          1,
 	// Row 134 M4b: an episode's tool handler is built inside the coordinator's
 	// BinderFor, which carries no ctx; its one summary subprocess is bounded
 	// by workspaceHandlerBudget (3 s) fed directly from this root, and it

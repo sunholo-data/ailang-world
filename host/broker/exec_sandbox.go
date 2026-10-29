@@ -65,14 +65,16 @@ type execManifestEntry struct {
 
 // ExecSandbox is an archived, verified srt plus the node that runs it.
 type ExecSandbox struct {
-	Dir        string // <state>/archive/exec-sandbox/<Digest>/node_modules
-	Digest     string // sha256 of the manifest
-	Version    string
-	CLISHA256  string
-	Node       string
-	NodeSHA256 string
-	Libnode    []execFileDigest
-	manifest   []execManifestEntry
+	Dir            string // <state>/archive/exec-sandbox/<Digest>/node_modules
+	Digest         string // sha256 of the manifest
+	Version        string
+	CLISHA256      string
+	Node           string
+	NodeConfigured string // configured identity; Node is the accepted target
+	NodeSHA256     string
+	Libnode        []execFileDigest
+	manifest       []execManifestEntry
+	nodeIdentity   *execToolIdentity // immutable per-call acceptance identity
 }
 
 // CLI is the archived srt entry point World runs.
@@ -200,7 +202,7 @@ func libnodeDigests(node string) ([]execFileDigest, error) {
 
 // Verify re-checks the archived tree entry by entry, node and libnode, and
 // names the first file that drifted.
-func (s *ExecSandbox) Verify() error {
+func (s *ExecSandbox) verifyArchive() error {
 	got, err := execManifest(s.Dir)
 	if err != nil {
 		return &ExecStackDriftError{Path: s.Dir, Why: err.Error()}
@@ -224,6 +226,13 @@ func (s *ExecSandbox) Verify() error {
 		if !seen[e.Rel] {
 			return &ExecStackDriftError{Path: filepath.Join(s.Dir, e.Rel), Why: "missing from the archive"}
 		}
+	}
+	return nil
+}
+
+func (s *ExecSandbox) Verify() error {
+	if err := s.verifyArchive(); err != nil {
+		return err
 	}
 	for _, f := range append([]execFileDigest{{Path: s.Node, SHA256: s.NodeSHA256}}, s.Libnode...) {
 		if err := verifyFileDigest(f.Path, f.SHA256); err != nil {

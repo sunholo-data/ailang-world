@@ -31,6 +31,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/pinfetch"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/worktree"
@@ -107,12 +108,13 @@ const (
 )
 
 type doctorReport struct {
-	w             io.Writer
-	fails         int
-	asJSON        bool
-	classCode     int
-	execTools     map[string]string
-	credentialsDB string
+	w              io.Writer
+	fails          int
+	asJSON         bool
+	classCode      int
+	execToolStatus map[string]broker.ExecToolStatus
+	execTools      map[string]string
+	credentialsDB  string
 }
 
 func (r *doctorReport) add(mark doctorMark, name, detail, fix string) {
@@ -296,19 +298,20 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
 		return ""
 	}
 	var h struct {
-		Status             string            `json:"status"`
-		DaemonVersion      string            `json:"daemon_version"`
-		DBPath             string            `json:"db_path"`
-		InterpreterVersion string            `json:"interpreter_version"`
-		ExecTools          map[string]string `json:"exec_tools"`
-		CredentialsDB      string            `json:"credentials_db"`
+		Status             string                           `json:"status"`
+		DaemonVersion      string                           `json:"daemon_version"`
+		DBPath             string                           `json:"db_path"`
+		InterpreterVersion string                           `json:"interpreter_version"`
+		ExecTools          map[string]string                `json:"exec_tools"`
+		ExecToolStatus     map[string]broker.ExecToolStatus `json:"exec_tool_status"`
+		CredentialsDB      string                           `json:"credentials_db"`
 	}
 	if status != http.StatusOK || json.Unmarshal(body, &h) != nil || h.DaemonVersion == "" {
 		r.add(markFail, "daemon", fmt.Sprintf("something that is not ailang-worldd answers at %s (HTTP %d)", addr, status),
 			"stop it, or serve on another --bind and pass --addr")
 		return ""
 	}
-	r.execTools, r.credentialsDB = h.ExecTools, h.CredentialsDB
+	r.execTools, r.execToolStatus, r.credentialsDB = h.ExecTools, h.ExecToolStatus, h.CredentialsDB
 	detail := fmt.Sprintf("ailang-worldd %s at %s, store %s", h.DaemonVersion, addr, h.DBPath)
 	if h.InterpreterVersion != "" {
 		detail += ", interpreter " + firstLine(h.InterpreterVersion)

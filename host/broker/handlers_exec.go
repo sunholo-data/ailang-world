@@ -113,6 +113,7 @@ func execHostEnv() []string { return []string{"PATH=/usr/bin:/bin"} }
 
 // ExecHandlerConfig binds one episode's Workspace.Exec to one profile.
 type ExecHandlerConfig struct {
+	Tools         *ExecToolState // nil retains the fixed stack (also used by probe scratch handlers)
 	Profile       *ExecProfile
 	Sandbox       *ExecSandbox
 	Episode       string
@@ -128,6 +129,7 @@ type ExecHandlerConfig struct {
 
 // ExecHandler serves Workspace.Exec for one episode × project (§4.5).
 type ExecHandler struct {
+	tools          *ExecToolState
 	profile        *ExecProfile
 	sandbox        *ExecSandbox
 	worktree       string
@@ -172,7 +174,7 @@ func NewExecHandler(cfg ExecHandlerConfig) (*ExecHandler, error) {
 		}
 		readRoots = append(readRoots, r, real)
 	}
-	h := &ExecHandler{profile: cfg.Profile, sandbox: cfg.Sandbox, worktree: cfg.Worktree, maxOutput: cfg.MaxOutputBytes,
+	h := &ExecHandler{tools: cfg.Tools, profile: cfg.Profile, sandbox: cfg.Sandbox, worktree: cfg.Worktree, maxOutput: cfg.MaxOutputBytes,
 		cache:        filepath.Join(cfg.StateDir, "exec-cache", cfg.Episode, cfg.Profile.Project),
 		settingsPath: filepath.Join(cfg.StateDir, "exec", cfg.Episode+"."+cfg.Profile.Project+".srt.json")}
 	if h.maxOutput <= 0 {
@@ -226,6 +228,8 @@ type execResult struct {
 }
 
 type execResultProfile struct {
+	Argv0       string `json:"argv0"`
+	Argv0Target string `json:"argv0_target"`
 	Project     string `json:"project"`
 	Digest      string `json:"digest"`
 	Command     string `json:"command"`
@@ -233,6 +237,9 @@ type execResultProfile struct {
 }
 
 type execResultSandbox struct {
+	Node           string `json:"node"`
+	NodeTarget     string `json:"node_target"`
+	NodeSHA256     string `json:"node_sha256"`
 	Runtime        string `json:"runtime"`
 	Version        string `json:"version"`
 	CLISHA256      string `json:"cli_sha256"`
@@ -261,10 +268,26 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	if err != nil {
 		return execRefusal(fmt.Sprintf("command %q: %v", id, err))
 	}
+	sandbox := h.sandbox
+	if h.tools != nil {
+		var profile *ExecProfile
+		var why string
+		sandbox, profile, why, err = h.tools.resolve(ctx, h.profile.Project, h.worktree)
+		if err != nil {
+			return nil, err
+		}
+		if why != "" {
+			return execRefusal(why)
+		}
+		if profile == nil {
+			return execRefusal(fmt.Sprintf("unknown exec project %q", h.profile.Project))
+		}
+		cmd = profile.Commands[id]
+	}
 	emitted := EmitExecArgs(cmd.ExecCommand, normalized)
 	// §4.6: the stack that sets up the fence is re-verified before EACH call;
 	// a mismatch is a failure naming the file, with nothing spawned.
-	if err := h.sandbox.Verify(); err != nil {
+	if err := sandbox.Verify(); err != nil {
 		return nil, err
 	}
 	if err := verifyFileDigest(cmd.Argv0, cmd.Argv0SHA256); err != nil {
@@ -298,13 +321,36 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	start := time.Now()
 	h.spawns.Add(1)
 	_, runErr := runBounded(ctx, handlerBounds{execTimeout: budget, maxOutputBytes: h.maxOutput}, handlerCommand{
-		path: h.sandbox.Node, args: launch, dir: cwd, env: execHostEnv(), capture: capture,
+		path: sandbox.Node, args: launch, dir: cwd, env: execHostEnv(), capture: capture,
 	})
+	if code, exited := handlerExitStatus(runErr); exited && code == 134 && !cleanupIncomplete(runErr) {
+		if err := checkExecNodeVersion(ctx, sandbox.Node); err != nil {
+			if ctx.Err() != nil {
+				return execRefusal("the re-check after node moved was interrupted; retry")
+			}
+			why := err.Error()
+			if h.tools != nil {
+				return execRefusal(h.tools.nodeFailed(sandbox, why))
+			}
+			t := execAcceptedTool{name: "node", configured: sandbox.Node}
+			next := execToolNext(t.configured, sandbox.Node, "", "", false)
+			return execRefusal(execToolF15(t, sandbox.Node, why, "--version failed", next))
+		}
+	}
+	configuredArgv0 := cmd.ConfiguredArgv0
+	if configuredArgv0 == "" {
+		configuredArgv0 = cmd.Argv0
+	}
+	configuredNode := sandbox.NodeConfigured
+	if configuredNode == "" {
+		configuredNode = sandbox.Node
+	}
 	res := execResult{DurationMS: time.Since(start).Milliseconds(),
 		Argv: append(append([]string(nil), cmd.Argv...), emitted...),
 		Profile: execResultProfile{Project: h.profile.Project, Digest: h.profile.Digest, Command: id,
-			Argv0SHA256: cmd.Argv0SHA256},
-		Sandbox: execResultSandbox{Runtime: ExecSandboxPackage, Version: h.sandbox.Version, CLISHA256: h.sandbox.CLISHA256,
+			Argv0: configuredArgv0, Argv0Target: cmd.Argv0, Argv0SHA256: cmd.Argv0SHA256},
+		Sandbox: execResultSandbox{Node: configuredNode, NodeTarget: sandbox.Node, NodeSHA256: sandbox.NodeSHA256,
+			Runtime: ExecSandboxPackage, Version: sandbox.Version, CLISHA256: sandbox.CLISHA256,
 			SettingsDigest: h.settingsDigest, ReadFence: true, Network: "none"}}
 	if cleanupIncomplete(runErr) {
 		return nil, runErr
