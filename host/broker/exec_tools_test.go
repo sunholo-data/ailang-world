@@ -346,29 +346,9 @@ func TestExecToolInPlaceRewriteStaysDrift(t *testing.T) {
 	}
 }
 
+// Caller cancellation no longer cancels the shared probe (M3 round 2).
 func TestExecToolInterruptedProbeIsNotRemembered(t *testing.T) {
-	m := newMovingExec(t, execFixtureOpts{})
-	repointTool(t, m.link, m.b)
-	ctx, cancel := context.WithCancel(boundedTestContext(t))
-	defer cancel()
-	m.state.cfg.Probe = func(ctx context.Context, _ ExecProbeConfig, _ []*ExecProfile) ([]error, error) {
-		m.probes.Add(1)
-		cancel()
-		<-ctx.Done()
-		return nil, ctx.Err()
-	}
-	_, _, why, err := m.state.resolve(ctx, "proj", m.f.worktree)
-	if err != nil || !strings.Contains(why, "was interrupted; retry") {
-		t.Fatalf("interruption: %s, %v", why, err)
-	}
-	m.state.cfg.Probe = func(context.Context, ExecProbeConfig, []*ExecProfile) ([]error, error) {
-		m.probes.Add(1)
-		return []error{nil}, nil
-	}
-	m.f.mustRun(t, "test", "a")
-	if m.probes.Load() != 2 {
-		t.Fatal("interrupted probe was remembered")
-	}
+	testExecToolCallerLeavesProbeRunning(t)
 }
 
 func TestExecToolLibnodeIdentityAndDrift(t *testing.T) {

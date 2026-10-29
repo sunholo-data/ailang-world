@@ -359,11 +359,68 @@ func checkPlacement(flag, value, real string, forbidden []namedRoot) error {
 	return nil
 }
 
+// checkExecChainPlacement checks the configured spelling and every component
+// before following a link, including links in parent directories. Checking
+// only EvalSymlinks' final result would trust an agent-writable steering link.
+func checkExecChainPlacement(flag, value, path string, forbidden []namedRoot) error {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	if err := checkPlacement(flag, value, abs, forbidden); err != nil {
+		return err
+	}
+	pending := strings.Split(abs, string(filepath.Separator))
+	prefix := string(filepath.Separator)
+	links := 0
+	for len(pending) > 0 {
+		part := pending[0]
+		pending = pending[1:]
+		if part == "" || part == "." {
+			continue
+		}
+		if part == ".." {
+			prefix = filepath.Dir(prefix)
+			continue
+		}
+		candidate := filepath.Join(prefix, part)
+		if err := checkPlacement(flag, value, candidate, forbidden); err != nil {
+			return err
+		}
+		info, err := os.Lstat(candidate)
+		if err != nil {
+			return err
+		}
+		if info.Mode()&os.ModeSymlink == 0 {
+			prefix = candidate
+			continue
+		}
+		links++
+		if links > 255 {
+			return startupErr(flag, value, "too many symlinks")
+		}
+		target, err := os.Readlink(candidate)
+		if err != nil {
+			return err
+		}
+		if filepath.IsAbs(target) {
+			prefix = string(filepath.Separator)
+		}
+		// Do not Clean a link's target: a/../b must visit a first,
+		// because a itself may be a symlink into a forbidden root.
+		pending = append(strings.Split(target, string(filepath.Separator)), pending...)
+	}
+	return nil
+}
+
 // resolveExecNode resolves --exec-node once (default: node on PATH), checks
 // its placement (the binary, its directory and its libnode) and its version.
 func resolveExecNode(ctx context.Context, flagValue string, forbidden []namedRoot) (string, error) {
 	found, err := execNodePath(flagValue)
 	if err != nil {
+		return "", err
+	}
+	if err := checkExecChainPlacement("--exec-node", flagValue, found, forbidden); err != nil {
 		return "", err
 	}
 	abs, err := filepath.Abs(found)
@@ -386,11 +443,7 @@ func resolveExecNode(ctx context.Context, flagValue string, forbidden []namedRoo
 		return "", &ExecStartupError{Flag: "--exec-node", Value: flagValue, Err: err}
 	}
 	for _, l := range libs {
-		real, err := filepath.EvalSymlinks(l.Path)
-		if err != nil {
-			return "", &ExecStartupError{Flag: "--exec-node", Value: flagValue, Err: err}
-		}
-		if err := checkPlacement("--exec-node", flagValue, real, forbidden); err != nil {
+		if err := checkExecChainPlacement("--exec-node", flagValue, l.Path, forbidden); err != nil {
 			return "", err
 		}
 	}
@@ -513,7 +566,7 @@ func loadExecProfileFile(file string, h ExecHostPaths, forbidden []namedRoot) (*
 		if _, _, err := resolveArgv0(real, nil); err != nil {
 			return nil, startupErr("--exec-profile", file, "argv[0] %s: %v", c.Argv0, err)
 		}
-		if err := checkPlacement("--exec-profile", file+" argv[0] "+c.Argv0, real, forbidden); err != nil {
+		if err := checkExecChainPlacement("--exec-profile", file+" argv[0] "+c.Argv0, c.Argv0, forbidden); err != nil {
 			return nil, err
 		}
 	}

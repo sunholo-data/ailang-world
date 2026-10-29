@@ -279,6 +279,9 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 		if why != "" {
 			return execRefusal(why)
 		}
+		if profile == nil {
+			return execRefusal(fmt.Sprintf("unknown exec project %q", h.profile.Project))
+		}
 		cmd = profile.Commands[id]
 	}
 	emitted := EmitExecArgs(cmd.ExecCommand, normalized)

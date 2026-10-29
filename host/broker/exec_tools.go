@@ -25,9 +25,10 @@ type ExecToolStateConfig struct {
 }
 
 type execToolIdentity struct {
-	path string
-	info os.FileInfo
-	libs []execToolIdentity
+	path   string
+	source string // absolute spelling used to match libnode digests by path
+	info   os.FileInfo
+	libs   []execToolIdentity
 }
 
 func toolIdentity(path string, node bool) (execToolIdentity, error) {
@@ -48,7 +49,7 @@ func toolIdentity(path string, node bool) (execToolIdentity, error) {
 		return execToolIdentity{path: path}, err
 	}
 	info, err := os.Stat(real)
-	id := execToolIdentity{path: real, info: info}
+	id := execToolIdentity{path: real, source: abs, info: info}
 	if err != nil {
 		return id, err
 	}
@@ -89,6 +90,7 @@ type execAcceptedTool struct {
 	observed                           *execToolIdentity
 	refused                            string
 	why, next, checked                 string
+	revision                           uint64 // status publication order, independent of wall-clock time
 }
 
 type ExecToolStatus struct {
@@ -100,10 +102,10 @@ type ExecToolStatus struct {
 	Next       string `json:"next,omitempty"`
 }
 
-// ExecToolState publishes immutable sandbox/profile snapshots. gate serializes
-// re-checks while mu protects only publication and health reads, never a probe.
+// ExecToolState publishes immutable sandbox/profile snapshots. A shared flight
+// serializes re-checks; mu protects publication, never hashing or a probe.
 type ExecToolState struct {
-	gate      chan struct{}
+	flight    *execToolFlight
 	mu        sync.RWMutex
 	tools     map[string]execAcceptedTool
 	sandbox   *ExecSandbox
@@ -121,7 +123,7 @@ func NewExecToolState(cfg ExecToolStateConfig) (*ExecToolState, error) {
 	if cfg.Node == "" {
 		cfg.Node = cfg.Sandbox.Node
 	}
-	s := &ExecToolState{gate: make(chan struct{}, 1), tools: map[string]execAcceptedTool{},
+	s := &ExecToolState{tools: map[string]execAcceptedTool{},
 		sandbox: cfg.Sandbox, profiles: cfg.Profiles, cfg: cfg,
 		forbidden: []namedRoot{{"an exec cache", filepath.Join(cfg.ProbeConfig.Paths.StateDir, "exec-cache")},
 			{"the state dir", cfg.ProbeConfig.Paths.StateDir}, {"the workspace root", cfg.ProbeConfig.Paths.WorkspaceRoot}}}
@@ -210,6 +212,7 @@ func (s *ExecToolState) remember(key string, id execToolIdentity, why, next stri
 	t := s.tools[key]
 	t.why, t.next, t.checked = why, next, time.Now().UTC().Format(time.RFC3339Nano)
 	t.observed = &id
+	t.revision++
 	if probe {
 		t.failed = &id
 	} else {
@@ -218,20 +221,125 @@ func (s *ExecToolState) remember(key string, id execToolIdentity, why, next stri
 	s.tools[key] = t
 }
 
+type execToolFlight struct {
+	done                  chan struct{}
+	project, tool, target string
+	sandbox               *ExecSandbox
+	profile               *ExecProfile
+	why                   string
+	err                   error
+}
+
+// execRecheckBudget is the sum of the profiles' arm timeouts plus ten
+// seconds for setup, capped at 120 seconds. It belongs to the shared flight,
+// never to the first caller's deadline.
+func execRecheckBudget(profiles map[string]*ExecProfile) time.Duration {
+	budget := 10 * time.Second
+	for _, p := range profiles {
+		budget += time.Duration(len(execProbeOrder(p))-1)*execProbeRunBudget +
+			time.Duration(p.TimeoutMS)*time.Millisecond
+	}
+	if budget > 120*time.Second {
+		budget = 120 * time.Second
+	}
+	return budget
+}
+
+func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*ExecSandbox, *ExecProfile, string, error) {
+	for {
+		s.mu.RLock()
+		sb, profile := s.sandbox, s.profiles[project]
+		tools := make(map[string]execAcceptedTool, len(s.tools))
+		for key, t := range s.tools {
+			tools[key] = t
+		}
+		flight := s.flight
+		s.mu.RUnlock()
+		if profile == nil {
+			return nil, nil, fmt.Sprintf("unknown exec project %q", project), nil
+		}
+		// The common path does all filesystem work outside the publication
+		// gate. Revalidate the snapshot under mu before returning it.
+		pendingTool, pendingTarget := "node", tools["node"].configured
+		clean := flight == nil
+		if clean {
+			if err := sb.verifyArchive(); err != nil {
+				return nil, nil, "", err
+			}
+			for key, t := range tools {
+				if key != "node" && t.project != project {
+					continue
+				}
+				id, err := toolIdentity(t.configured, key == "node")
+				if err != nil || !sameTool(id, t.identity) || t.why != "" {
+					clean = false
+					pendingTool, pendingTarget = t.name, t.configured
+					break
+				}
+			}
+			if clean {
+				if err := sb.Verify(); err != nil {
+					return nil, nil, "", err
+				}
+				for key, t := range tools {
+					if key != "node" && t.project == project {
+						if err := verifyFileDigest(t.identity.path, t.sum); err != nil {
+							return nil, nil, "", err
+						}
+					}
+				}
+			}
+		}
+		s.mu.Lock()
+		if s.sandbox != sb {
+			s.mu.Unlock()
+			continue
+		}
+		for key, t := range tools {
+			if s.tools[key].revision != t.revision {
+				clean = false
+			}
+		}
+		if clean && s.flight == nil {
+			s.mu.Unlock()
+			return sb, profile, "", nil
+		}
+		flight = s.flight
+		if flight == nil {
+			flight = &execToolFlight{done: make(chan struct{}), project: project, tool: pendingTool, target: pendingTarget}
+			s.flight = flight
+			// Bound the detached root as well as the probe below: at most a
+			// node version check plus the 120-second probe ceiling.
+			workCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), execNodeVersionBudget+120*time.Second)
+			go func(f *execToolFlight) {
+				defer cancel()
+				f.sandbox, f.profile, f.why, f.err = s.resolveOnce(workCtx, project, repo)
+				s.mu.Lock()
+				s.flight = nil
+				close(f.done)
+				s.mu.Unlock()
+			}(flight)
+		}
+		s.mu.Unlock()
+		select {
+		case <-ctx.Done():
+			return nil, nil, fmt.Sprintf("exec %s: re-checking the changed target\n  why: the startup probe is still running after %s changed\n  next: retry in a few seconds (no restart needed)", flight.tool, flight.target), nil
+		case <-flight.done:
+			if flight.project == project {
+				return flight.sandbox, flight.profile, flight.why, flight.err
+			}
+		}
+	}
+}
+
 // resolve returns a snapshot for this call. Waiting calls obey their own
 // contexts. Failed probes are cached by identity; start failures are retried.
-func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*ExecSandbox, *ExecProfile, string, error) {
+func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (*ExecSandbox, *ExecProfile, string, error) {
 	if repo == "" {
 		repo = s.cfg.ProbeConfig.Paths.WorkspaceRoot
 	}
 	interrupted := func(tool string) (*ExecSandbox, *ExecProfile, string, error) {
 		return nil, nil, "the re-check after " + tool + " moved was interrupted; retry", nil
-	}
-	select {
-	case s.gate <- struct{}{}:
-		defer func() { <-s.gate }()
-	case <-ctx.Done():
-		return interrupted("exec tool")
 	}
 	if ctx.Err() != nil {
 		return interrupted("exec tool")
@@ -250,6 +358,7 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 	changed := map[string]bool{}
 	nodeChanged := false
 	affected := map[string]bool{}
+	excluded := map[string]string{}
 	for _, key := range append([]string{"node"}, sortedKeys(toolsWithoutNode(tools))...) {
 		t := tools[key]
 		if key != "node" && !nodeChanged && t.project != project {
@@ -264,10 +373,21 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 			}
 			next := execToolNext(t.configured, target, repo, execToolProject(t, project), true)
 			why := "the target is gone"
+			refused := execToolF15(t, target, err.Error(), why, next)
 			s.remember(key, id, "does-not-start: "+why, next, false)
-			return nil, nil, execToolF15(t, target, err.Error(), why, next), nil
+			if key != "node" && nodeChanged {
+				excluded[t.project] = refused
+				delete(current, key)
+				continue
+			}
+			return nil, nil, refused, nil
 		}
 		if t.failed != nil && sameTool(*t.failed, id) {
+			if key != "node" && nodeChanged {
+				excluded[t.project] = t.refused
+				delete(current, key)
+				continue
+			}
 			return nil, nil, t.refused, nil
 		}
 		changed[key] = !sameTool(t.identity, id)
@@ -282,17 +402,31 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 	// libnode files when some other member of the node identity changed.
 	for key, id := range current {
 		t := tools[key]
+		if key != "node" && excluded[t.project] != "" {
+			delete(current, key)
+			continue
+		}
+		// An unchanged node (including a start-failure retry) is checked
+		// by sb.Verify against its retained digests below. This loop protects
+		// unchanged components when accepting a different node identity.
+		if key == "node" && !changed[key] {
+			continue
+		}
 		if t.identity.path == id.path && os.SameFile(t.identity.info, id.info) {
 			if err := verifyFileDigest(id.path, t.sum); err != nil {
 				return nil, nil, "", err
 			}
 		}
 		if key == "node" {
-			for i, oldLib := range t.identity.libs {
+			for _, oldLib := range t.identity.libs {
 				for _, lib := range id.libs {
-					if sameTool(oldLib, lib) && i < len(oldSB.Libnode) {
-						if err := verifyFileDigest(lib.path, oldSB.Libnode[i].SHA256); err != nil {
-							return nil, nil, "", err
+					if sameTool(oldLib, lib) {
+						for _, digest := range oldSB.Libnode {
+							if digest.Path == oldLib.source {
+								if err := verifyFileDigest(lib.path, digest.SHA256); err != nil {
+									return nil, nil, "", err
+								}
+							}
 						}
 					}
 				}
@@ -303,7 +437,10 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 	var movedKey string
 	for _, key := range sortedKeys(current) {
 		t, id := tools[key], current[key]
-		if !changed[key] && !(key == "node" && strings.HasPrefix(t.why, "does-not-start: ")) {
+		if key != "node" && excluded[t.project] != "" {
+			continue
+		}
+		if !changed[key] && !(nodeChanged && key != "node") && !(key == "node" && strings.HasPrefix(t.why, "does-not-start: ")) {
 			continue
 		}
 		if changed[key] {
@@ -321,7 +458,7 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 			// accepted target, then enforce startup's placement.
 			_, _, err = resolveArgv0(id.path, nil)
 			if err == nil {
-				err = checkPlacement("argv[0]", t.configured, id.path, s.forbidden)
+				err = checkExecChainPlacement("argv[0]", t.configured, t.configured, s.forbidden)
 			}
 		}
 		if ctx.Err() != nil {
@@ -333,15 +470,44 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 			if key != "node" {
 				why = "the executable failed startup checks"
 			}
+			refused := execToolF15(t, id.path, err.Error(), why, next)
 			s.remember(key, id, "does-not-start: "+why+": "+err.Error(), next, false)
-			return nil, nil, execToolF15(t, id.path, err.Error(), why, next), nil
+			if key != "node" && nodeChanged {
+				excluded[t.project] = refused
+				delete(current, key)
+				continue
+			}
+			return nil, nil, refused, nil
 		}
-		sum, err := sha256File(id.path)
-		if err != nil {
-			return nil, nil, "", err
+		// An unchanged identity retains its accepted digest even after a
+		// start failure. Verify below refuses rewritten bytes without a probe.
+		if changed[key] {
+			// A libnode change alone does not change the node file identity.
+			// Preserve that file's digest while updating the composite identity.
+			sum := t.sum
+			var err error
+			if t.identity.path != id.path || !os.SameFile(t.identity.info, id.info) {
+				sum, err = sha256File(id.path)
+			}
+			if err != nil {
+				return nil, nil, "", err
+			}
+			t.identity, t.sum = id, sum
 		}
-		t.identity, t.sum = id, sum
 		tools[key] = t
+	}
+	// Excluding a profile must not publish any of its unprobed candidates.
+	// Its original accepted tools remain available for a later repair/retry.
+	s.mu.RLock()
+	for key, t := range tools {
+		if key != "node" && excluded[t.project] != "" {
+			tools[key] = s.tools[key]
+			delete(current, key)
+		}
+	}
+	s.mu.RUnlock()
+	if nodeChanged {
+		moved, movedKey = tools["node"].name, "node"
 	}
 	sb, profiles := s.snapshots(tools)
 	if nodeChanged {
@@ -358,17 +524,63 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 	if moved != "" {
 		var order []*ExecProfile
 		for _, p := range sortedKeys(profiles) {
-			if nodeChanged || affected[p] {
+			if excluded[p] == "" && (nodeChanged || affected[p]) {
 				order = append(order, profiles[p])
 			}
 		}
 		cfg := s.cfg.ProbeConfig
 		cfg.Sandbox = sb
-		errs, err := s.cfg.Probe(ctx, cfg, order)
+		probed := make(map[string]*ExecProfile, len(order))
+		for _, p := range order {
+			probed[p.Project] = p
+		}
+		probeCtx, cancel := context.WithTimeout(ctx, execRecheckBudget(probed))
+		errs, err := s.cfg.Probe(probeCtx, cfg, order)
+		if probeCtx.Err() != nil {
+			err = errors.Join(err, probeCtx.Err())
+		}
+		cancel()
 		if ctx.Err() != nil {
 			return interrupted(moved)
 		}
-		err = errors.Join(append(errs, err)...)
+		// Like startup's applyProbe, accept passing profiles and exclude a
+		// failing profile with its own tool's refusal. A global probe error
+		// (or no passing profile) still refuses the changed stack.
+		passing := 0
+		for i := range order {
+			if i < len(errs) && errs[i] == nil {
+				passing++
+			}
+		}
+		if err == nil && passing > 0 {
+			for i, p := range order {
+				if i >= len(errs) || errs[i] == nil {
+					continue
+				}
+				s.mu.RLock()
+				profiles[p.Project] = s.profiles[p.Project]
+				s.mu.RUnlock()
+				for _, key := range sortedKeys(current) {
+					t := tools[key]
+					if key == "node" || t.project != p.Project {
+						continue
+					}
+					why := "the startup probe failed after the target changed: " + errs[i].Error()
+					next := execToolNext(t.configured, t.identity.path, repo, t.project, false)
+					refused := execToolF15(t, t.identity.path, errs[i].Error(), why, next)
+					excluded[p.Project] = refused
+					s.remember(key, current[key], "failed: "+why, next, true)
+					s.mu.Lock()
+					old := s.tools[key]
+					old.refused = refused
+					s.tools[key] = old
+					s.mu.Unlock()
+					delete(current, key)
+				}
+			}
+		} else {
+			err = errors.Join(append(errs, err)...)
+		}
 		if err != nil {
 			t := tools[movedKey]
 			why := "the startup probe failed after the target changed: " + err.Error()
@@ -382,6 +594,7 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 					old.failed, old.observed = &id, &id
 					old.why, old.next, old.refused = "failed: "+why, next, refused
 					old.checked = time.Now().UTC().Format(time.RFC3339Nano)
+					old.revision++
 					s.tools[key] = old
 				}
 			}
@@ -413,12 +626,18 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 	for key := range current {
 		t := tools[key]
 		t.failed, t.observed, t.why, t.next, t.refused = nil, nil, "", "", ""
+		// A failure recorded after our snapshot wins over this late call.
+		latest := s.tools[key]
+		if latest.revision != tools[key].revision && sameTool(latest.identity, t.identity) {
+			t.failed, t.observed, t.why, t.next, t.refused = latest.failed, latest.observed, latest.why, latest.next, latest.refused
+		}
 		t.checked = time.Now().UTC().Format(time.RFC3339Nano)
+		t.revision = latest.revision + 1
 		s.tools[key] = t
 	}
 	s.sandbox, s.profiles = sb, profiles
 	s.mu.Unlock()
-	return sb, profiles[project], "", nil
+	return sb, profiles[project], excluded[project], nil
 }
 
 func execToolProject(t execAcceptedTool, project string) string {
@@ -498,6 +717,7 @@ func (s *ExecToolState) nodeFailed(sb *ExecSandbox, why string) string {
 		t.checked = time.Now().UTC().Format(time.RFC3339Nano)
 		id := t.identity
 		t.observed = &id
+		t.revision++
 		s.tools["node"] = t
 	}
 	return execToolF15(t, sb.Node, why, "--version failed", next)
