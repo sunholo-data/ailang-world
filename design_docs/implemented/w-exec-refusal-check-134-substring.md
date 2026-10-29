@@ -1,6 +1,6 @@
 # w-exec-refusal-check-134-substring: `requireF15` reds any refusal whose temp path contains "134"
 
-- **Status**: Planned (designed iteration 320, r2 after quorum round 1 BLOCKED; see §10). Queue row 234 (the controller filed it this
+- **Status**: Implemented (iteration 320: M1 `63fd4f81`, judge-NB1 rows `227b494b`; independent judge sonnet PASS 91). Designed iteration 320, r2 after quorum round 1 BLOCKED, quorum r2's one fix applied under the narrow-refinement carve-out (§10). Queue row 234 (the controller filed it this
   iteration; it is not in the charter at the base yet, V19). It is a red on `dev`, so it outranks the queue.
 - **Item**: a test-helper defect from row 219 M3 (`44eed437`, w219c, Codex in an attended World
   episode). The helper landed in PR #418, merged 2026-10-29T16:11:00Z (V5). Only test code changes.

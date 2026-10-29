@@ -4,8 +4,8 @@
 **Branch:** `sprint/world-iter320-f15-tempdir`
 **Base:** HEAD `391ef1aa` (the plan commit) on top of `5407c160` (the design commit). The Go tree
 equals the design's measurement base `785b3bd1`: `git diff --stat 785b3bd1 HEAD -- host` is empty.
-**Plan:** `design_docs/planned/w-exec-refusal-check-134-substring-sprint-plan.md`
-**Design:** `design_docs/planned/w-exec-refusal-check-134-substring.md`
+**Plan:** `design_docs/implemented/w-exec-refusal-check-134-substring-sprint-plan.md`
+**Design:** `design_docs/implemented/w-exec-refusal-check-134-substring.md`
 
 ## Base sha256 check (plan §3)
 

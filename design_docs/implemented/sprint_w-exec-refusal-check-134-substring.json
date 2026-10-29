@@ -4,8 +4,8 @@
   "row": "234",
   "clause": "red on dev (outranks the queue)",
   "authority": [
-    "design_docs/planned/w-exec-refusal-check-134-substring.md r2 + quorum-r2 fix applied as round 3 (narrow-refinement carve-out, controller)",
-    "design_docs/planned/w-exec-refusal-check-134-substring-sprint-plan.md"
+    "design_docs/implemented/w-exec-refusal-check-134-substring.md r2 + quorum-r2 fix applied as round 3 (narrow-refinement carve-out, controller)",
+    "design_docs/implemented/w-exec-refusal-check-134-substring-sprint-plan.md"
   ],
   "estimate": "0.1 day",
   "scope": "2 milestones, each independently green. Code: host/broker/exec_tools_test.go ONLY (test helper + tests). M2 creates design_docs/verification/world-iter320/executor-report.md and executor-*.txt evidence copies. No production .go, no .ail, no CI, no docs/. The executor must NOT edit design_docs/world-mission*.md: queue/charter row 234 text is written by the controller from design §1/§2 and the executor report. No git writes by the executor; the controller commits.",

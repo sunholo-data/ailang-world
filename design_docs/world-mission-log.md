@@ -3070,7 +3070,7 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: the fix only adds evidence for a figure the judge could not re-derive; nothing scored changed.
 - Report: `design_docs/verification/world-iter319/evaluator-r1.md`.
 
-## 320 — 2026-10-29 — no pick: rule (d) block report 3; release rows 150/151 still wait on attended steps; dev green at 8cee85a9 [ADMIN]
+## 320 — 2026-10-29 — rule (d) block report 3, then dev went red under the record → row 234: requireF15's "134" substring check replaced by a structural predicate; judge PASS 91 [PRODUCT]
 
 **Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (317 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, this entry, the index row, the dashboard, and `verification/world-iter320/gate1-2-readings.txt`. An independent judge reviews it before merge.
 
@@ -3127,3 +3127,33 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: the fixes correct evidence wording; nothing scored changed.
 - **Retro addendum:** a command copied into a record must be the command that produced the number. Iteration 319 printed the same default-format grep, and its judge flagged the grep as weak (NB2 there) without catching that it returns 4. Instance 1 of the printed-command-differs class here; no rule change.
 - Report: `design_docs/verification/world-iter320/evaluator-r1.md`.
+
+**Second item — row 234, a dev red found at Gate 3b of the record (standing rule 1: a bookkeeping-only pick allows a second).**
+- **How it surfaced.** The record PR #419's head `b477df9a` was 3/3 green on base `8cee85a9`. While it was in CI, the attended session merged #418 (row 219 M3, `trial/row219c-exec-per-call`) as `171ece91` at 16:11Z. So #419's merge `785b3bd1` sits on top of it. `171ece91`'s own push run went red in the race gate (`TestExecToolCellarProfilePathRefusesByName`). `785b3bd1` went red in the host gate twice: first on row 200's known flake (`TestWorktreeSnapshotRefusesAConfiguredFilter` control, the first instance in the non-race leg), and on rerun on `TestExecToolSymlinkInsideWorkspaceRefuses`. Both signatures begin `not a pre-launch refusal:`.
+- **Mechanism, measured first.** `requireF15` (`host/broker/exec_tools_test.go:89`, added by `44eed437`) failed on `strings.Contains(string(out), "134")`. Both failing temp dirs contain `134` (`…3490134876`, `…596413420`). With a temp root whose path contains `134`, all 6 callers FAIL; with a control root, all pass. The designer measured the natural rate at 5/300 (≈1.7% per caller per run) and showed the substring never caught a real exit-134 launch.
+- **Why the loop took it.** Dev red on World's own repo outranks the queue for the owning mission (precedent 314, 318). The code is from the attended track, so a claim message named row 234 before routing (`iter-320 claim: row 234 dev red`). `git log 785b3bd1..origin/dev` was empty and there were no open PRs before the executor ran, so there was no collision.
+- **Design** (`w-exec-refusal-check-134-substring`, designer opus via the Agent tool; author vendor benched; seats gpt6-1-sol, gemini-4-argon, oc-glm-5-3, reserve oc-kimi-k3):
+  - r1 BLOCKED, $0.1694: gpt6-1-sol (one `Decode` does not reject trailing content) and glm (TMPDIR-only ACs are vacuous under an ambient GOTMPDIR; sweep claim too wide). gemini passed. The designer measured both as correct (V20, V23) and applied their fixes in the one revision.
+  - r2 BLOCKED, $0.1535: only gpt6-1-sol, on a new surface the revision had introduced (the prebuilt `broker.test` acceptance run had no `-test.timeout`). glm and gemini passed. No absent reviewers.
+  - **Narrow-refinement carve-out:** that one objection had a concrete fix and did not dispute direction, so the controller applied it verbatim (`-test.timeout=2m`, timeout = acceptance failure) and re-ran V23 with that exact command: exit 1 in 1 s, 6 top-level and 10 leaf FAILs, 10 `TempDir: mkdir` errors, 0 timeout panics. Then routed to the planner. Artifacts `verification/world-iter320/quorum/r1.json`, `r2.json`.
+- **Plan** (opus): M1 code, M2 evidence. Prototype-validated on a scratch copy: every mutant M0–M7 red on its named killer, and the plan's code blocks reproduce the prototype byte-for-byte (sha256 `475fb831…`). Deviations D1–D9 are recorded in the plan.
+- **Executor** (haiku): M1 `63fd4f81` (+91/−4, one file) and M2 `ebc220e0` (evidence). AC-B T2 at base 10/10 FAIL. AC-A 180 PASS / 0 FAIL on both roots. AC-A-ROOT as designed. AC-D plain `ok`, race `ok` with 0 DATA RACE, full `go build ./... && go test ./...` rc 0 (35 packages), `verify_ail.sh` rc 0. M1–M7 all killed, with byte-identical restores.
+- **Controller check:** diff scope is one file; the sha matches the prototype; my own re-run of the 6 callers, T1 and T3 was 40/40 PASS under both a `x134x` root and a control root.
+- **Judge** (sonnet, Agent tool, own worktree `.wt-world-iter320-eval` at `ebc220e0`, foreground; 45,248 tok / 657 s / 14 tool uses): **PASS 91/100**, zero blocking (30/21/19/14/7).
+  - It reverted the guard and saw 6 callers red under the 134 root, and re-ran M1/M3/M7.
+  - Of its own mutants, X2–X4 were killed. **X1 (missing `ok` accepted) and X5 (missing `refused` accepted) survived.** The controller reproduced both survivals, added T1 rows `ok-missing` and `refused-missing` (`227b494b`), and showed each mutant now reds only its new row. NB2 (race leg needs `AILANG_BIN`) is environment; NB3 (sweep wording) was already scoped.
+  - Report: `verification/world-iter320/evaluator-sprint-r1.md`.
+- **Routing evidence (second item):**
+  - Sprint worktree base `785b3bd1de34c31c41e0ea5f5f38ebc794ec2406@2026-10-29T16:57:17Z` (`mission-base.sh snap`; DRIFT from the Gate-1 base, 11 commits, recorded).
+  - Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (the 318 precedent). 1 doc, 2 runs (author + the mandated revision). 117,503 tok / 1,397 s, then 153,942 tok / 802 s cumulative. Rotation pointer unchanged (the lane that ran).
+  - Planner: Agent `opus`, 155,638 tok / 1,505 s.
+  - Executor: Agent `haiku` (resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`), 93,146 tok / 1,398 s.
+  - Evaluator: Agent `sonnet`, as above. Generator ≠ judge: haiku/opus vs sonnet.
+  - Quorum metered $0.3229.
+- **Ruled out:** reverting #418 (the defect is a one-helper test bug with a measured mechanism, not a product regression); widening scope to the 170 variable-token absence sites (residual R3) or row 200's filter flake (a separate row with its own fix).
+- **Retro:**
+  1. **A green PR head does not certify its merge when the base moves during CI.** #419 was green on `8cee85a9`; its merge landed on `171ece91`, which carried a new red. Gate 3b's merge-commit poll caught it. Re-reading `origin/dev` immediately before merging would have shown the base had moved. Instance 1 here; no rule change.
+  2. **A bare-number substring over output that embeds temp paths is a time bomb.** It is filed as design residuals R2/R3 rather than swept here.
+  3. Row 200's flake now has its first non-race-leg instance (`785b3bd1` attempt 1, job 123580031823).
+- **Progress (second item):** 1.0 clauses 7/7 MET; goal unmoved (gate health on a MET clause). Dev red is fixed once the sprint PR lands.
+- **Next:** land row 234 (merge-commit CI), then a rule (d) block report unless D-WORLD-102 = A or dev goes red.

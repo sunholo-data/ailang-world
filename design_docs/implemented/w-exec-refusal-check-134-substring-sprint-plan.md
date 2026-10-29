@@ -1,6 +1,6 @@
 # Sprint plan — `w-exec-refusal-check-134-substring` (iteration 320, row 234, red on `dev`)
 
-**Design doc:** [`design_docs/planned/w-exec-refusal-check-134-substring.md`](w-exec-refusal-check-134-substring.md)
+**Design doc:** [`design_docs/implemented/w-exec-refusal-check-134-substring.md`](w-exec-refusal-check-134-substring.md)
 (r2 + the quorum-r2 fix applied by the controller as round 3; §10 Quorum log). **Sprint base:**
 worktree `/Users/voightkampff/dev/sunholo-data/.wt-world-iter320-f15`, branch
 `sprint/world-iter320-f15-tempdir`, HEAD `5407c160`. Its Go tree equals the design's measurement
