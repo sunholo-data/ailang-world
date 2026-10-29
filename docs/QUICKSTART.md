@@ -1150,7 +1150,8 @@ control.
    port another host process holds is retried on a fresh port, up to 3 attempts. `reverse leg:
    inconclusive after 3 attempts` means something on the host kept taking the chosen ports: retry,
    or find that process. `reverse leg: a listener on … answered nothing to World's hello` means a
-   process that never answers held the port, and World cannot tell it from the child: find it.
+   process that never answers (or that resets the host's dial) held the port, and World cannot
+   tell it from the child: find it.
 7. `arm7-toolchain`: the profile's `probe` exits 0.
 8. `arm8-protected-write` (protected profiles only): directory writes are refused. Base-name
    writes are refused on darwin; on Linux they succeed and must be detected by the integrity

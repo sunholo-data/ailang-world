@@ -1,0 +1,172 @@
+# Iteration 318 designer probe outputs (darwin/arm64, 16 cores; load = 32 x yes). Raw, unedited.
+
+## /tmp/w318-designer/probe/idle-child-amp.txt
+mode=child cycles=200 hold=100ms tight=4
+  ERR-ECONNREFUSED       dials=866095  cycles=200
+  ERR-ECONNRESET         dials=115     cycles=80
+  child                  dials=85279   cycles=200
+  silent-postconnect     dials=530     cycles=167
+  CYCLES child-seen=200 silent(pre-fix rule)=167 silent(post-fix rule: +connect ECONNRESET)=185
+
+## /tmp/w318-designer/probe/idle-child-faithful.txt
+mode=child cycles=100 hold=1000ms tight=0
+  ERR-ECONNREFUSED       dials=242     cycles=100
+  child                  dials=1901    cycles=100
+  silent-postconnect     dials=2       cycles=2
+  CYCLES child-seen=100 silent(pre-fix rule)=2 silent(post-fix rule: +connect ECONNRESET)=2
+
+## /tmp/w318-designer/probe/idle-mux-amp.txt
+mode=mux cycles=200 hold=100ms tight=4
+  ERR-ECONNREFUSED       dials=814409  cycles=200
+  ERR-ECONNRESET         dials=1       cycles=1
+  foreign                dials=73263   cycles=200
+  silent-postconnect     dials=811     cycles=198
+  CYCLES child-seen=0 silent(pre-fix rule)=198 silent(post-fix rule: +connect ECONNRESET)=198
+
+## /tmp/w318-designer/probe/idle-mux-faithful.txt
+mode=mux cycles=100 hold=1000ms tight=0
+  ERR-ECONNREFUSED       dials=313     cycles=100
+  foreign                dials=1898    cycles=100
+  silent-postconnect     dials=3       cycles=3
+  CYCLES child-seen=0 silent(pre-fix rule)=3 silent(post-fix rule: +connect ECONNRESET)=3
+
+## /tmp/w318-designer/probe/idle-rst.txt
+dials=2000 connected=1957 dial_errors=43
+  43 x ...nect: connection reset by peer
+
+## /tmp/w318-designer/probe/load-child-amp.txt
+mode=child cycles=200 hold=100ms tight=4
+  ERR-ECONNREFUSED       dials=1301184 cycles=200
+  ERR-ECONNRESET         dials=30      cycles=22
+  ERR-OTHER:dial tcp 127.0.0.1:50098: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:50189: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:50227: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:50496: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:50566: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:50586: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:51140: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:51214: connect: invalid argument dials=4       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:51303: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:51710: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52187: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52288: connect: invalid argument dials=3       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52352: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52497: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52634: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52712: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:53023: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:53893: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54053: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54230: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54478: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54500: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54536: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54594: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54824: connect: invalid argument dials=3       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:54929: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:55100: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:55198: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:55597: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:55604: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:56312: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:56568: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:56806: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57015: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57062: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57370: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57390: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57480: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57531: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57545: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57719: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57782: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:57823: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:58470: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:58512: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:58525: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:58546: connect: invalid argument dials=3       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59247: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59290: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59622: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59664: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59730: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59839: connect: invalid argument dials=3       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60294: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60327: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60342: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60394: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60412: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60459: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60885: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:61461: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:61636: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:61673: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:62329: connect: invalid argument dials=2       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:62474: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:62820: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:62987: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63019: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63125: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63219: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63402: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63424: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63815: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63934: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:64323: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:64397: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:64424: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:64564: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:64827: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:65361: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:65474: connect: invalid argument dials=1       cycles=1
+  ERR-TIMEOUT            dials=1       cycles=1
+  child                  dials=159074  cycles=200
+  silent-postconnect     dials=704     cycles=179
+  CYCLES child-seen=200 silent(pre-fix rule)=179 silent(post-fix rule: +connect ECONNRESET)=191
+
+## /tmp/w318-designer/probe/load-child-faithful.txt
+mode=child cycles=100 hold=1000ms tight=0
+  ERR-ECONNREFUSED       dials=784     cycles=100
+  child                  dials=1813    cycles=100
+  CYCLES child-seen=100 silent(pre-fix rule)=0 silent(post-fix rule: +connect ECONNRESET)=0
+
+## /tmp/w318-designer/probe/load-mux-amp.txt
+mode=mux cycles=200 hold=100ms tight=4
+  ERR-ECONNREFUSED       dials=985836  cycles=200
+  ERR-ECONNRESET         dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:51180: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:52828: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:55250: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:56151: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:58420: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:59650: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:60399: connect: invalid argument dials=1       cycles=1
+  ERR-OTHER:dial tcp 127.0.0.1:63770: connect: invalid argument dials=1       cycles=1
+  foreign                dials=182533  cycles=200
+  silent-postconnect     dials=832     cycles=194
+  CYCLES child-seen=0 silent(pre-fix rule)=194 silent(post-fix rule: +connect ECONNRESET)=195
+
+## /tmp/w318-designer/probe/load-mux-faithful.txt
+mode=mux cycles=100 hold=1000ms tight=0
+  ERR-ECONNREFUSED       dials=519     cycles=100
+  foreign                dials=1863    cycles=100
+  silent-postconnect     dials=13      cycles=13
+  CYCLES child-seen=0 silent(pre-fix rule)=13 silent(post-fix rule: +connect ECONNRESET)=13
+
+## /tmp/w318-designer/probe/load-rst.txt
+dials=2000 connected=1921 dial_errors=79
+  79 x ...nect: connection reset by peer
+
+## /tmp/w318-designer/probe/load-t7.txt
+ok  	github.com/sunholo-data/ailang-world/host/broker	57.503s
+rc=0
+
+## /tmp/w318-designer/ctl/load-none.txt
+mode=none secs=45
+  errno:connection refused                 2013574
+  errno:invalid argument                   122
+
+## /tmp/w318-designer/ctl/load-rst.txt
+mode=rst secs=45
+  connected                                492165
+  errno:connection reset by peer           96566

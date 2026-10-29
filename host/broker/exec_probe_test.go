@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -733,6 +734,98 @@ func TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse(t *testing.T) {
 				}
 			}
 			f.assertProbeCleaned(t)
+		})
+	}
+}
+
+// revDialErr is the error net.DialTimeout returns when connect(2) fails with
+// errno (Go's non-blocking connect: *net.OpError -> *os.SyscallError -> Errno).
+func revDialErr(errno syscall.Errno) error {
+	return &net.OpError{Op: "dial", Net: "tcp", Err: os.NewSyscallError("connect", errno)}
+}
+
+// T8 (row 232 design §6): only ECONNRESET proves a listener completed the
+// handshake; every other dial error records nothing. real-refused and
+// timeout are real dials, each checked against its known shape first.
+func TestExecProbeReverseDialErrIsSilent(t *testing.T) {
+	port, err := freeLoopbackPort()
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+	_, realRefused := net.DialTimeout("tcp", addr, time.Second)
+	if !errors.Is(realRefused, syscall.ECONNREFUSED) {
+		t.Fatalf("control: a dial to the freed port %s gave %v, want ECONNREFUSED", addr, realRefused)
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+	defer cancel()
+	var d net.Dialer
+	_, realTimeout := d.DialContext(ctx, "tcp", addr)
+	var ne net.Error
+	if !errors.As(realTimeout, &ne) || !ne.Timeout() {
+		t.Fatalf("control: an expired-context dial gave %v, want a net.Error timeout", realTimeout)
+	}
+	for _, row := range []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"op-reset", revDialErr(syscall.ECONNRESET), true},
+		{"bare-reset", syscall.ECONNRESET, true},
+		{"wrapped-reset", fmt.Errorf("x: %w", revDialErr(syscall.ECONNRESET)), true},
+		{"nil", nil, false},
+		{"op-refused", revDialErr(syscall.ECONNREFUSED), false},
+		{"real-refused", realRefused, false},
+		{"op-einval", revDialErr(syscall.EINVAL), false},
+		{"op-aborted", revDialErr(syscall.ECONNABORTED), false},
+		{"addrnotavail", revDialErr(syscall.EADDRNOTAVAIL), false},
+		{"timeout", realTimeout, false},
+		{"deadline-exceeded", &net.OpError{Op: "dial", Net: "tcp", Err: os.ErrDeadlineExceeded}, false},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			if got := dialErrIsSilent(row.err); got != row.want {
+				t.Fatalf("dialErrIsSilent(%v) = %v, want %v", row.err, got, row.want)
+			}
+		})
+	}
+}
+
+// T9 (row 232 design §6): pollLoopback records a connect-time reset as
+// silent, through its dial seam and with no timing: the poll dials once
+// before it first checks stop. Calls after the first return ECONNREFUSED,
+// so extra dials before stop are harmless.
+func TestExecProbeReversePollRecordsConnectReset(t *testing.T) {
+	port, err := freeLoopbackPort()
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantAddr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+	refused := revDialErr(syscall.ECONNREFUSED)
+	for _, row := range []struct {
+		name  string
+		first error
+		want  reverseSeen
+	}{
+		{"connect-reset", revDialErr(syscall.ECONNRESET), reverseSeen{silent: true}},
+		{"refused-only", refused, reverseSeen{}},
+		{"einval-then-refused", revDialErr(syscall.EINVAL), reverseSeen{}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			var calls atomic.Int32
+			var badAddr atomic.Bool
+			fake := func(addr string) (net.Conn, error) {
+				if addr != wantAddr {
+					badAddr.Store(true)
+				}
+				if calls.Add(1) == 1 {
+					return nil, row.first
+				}
+				return nil, refused
+			}
+			got := pollLoopback(port, "WORLD-PROBE-NONCE "+strings.Repeat("0", 32), fake)()
+			if got != row.want || calls.Load() < 1 || badAddr.Load() {
+				t.Fatalf("seen = %+v after %d dials (bad addr %v); want %+v after >=1 dial to %s", got, calls.Load(), badAddr.Load(), row.want, wantAddr)
+			}
 		})
 	}
 }

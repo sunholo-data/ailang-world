@@ -1,0 +1,75 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232/design_docs/planned/w-exec-probe-reset-holder-false-pass.md",
+  "iso_ts": "2026-10-29T08:44:46Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1376418,
+      "tokens_in": 9071,
+      "tokens_out": 28396,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern: the doc's entire normative anchor is the parent's §4.2 classification ('zero bytes at the deadline, or a reset with zero bytes → silent'), which it proves the code under-implemented at connect time — yet §7's files-touched table contains no edit to design_docs/implemented/w-exec-probe-reverse-leg-port-race.md and nowhere does the doc state where the amended classification is durably recorded. As written, a future designer reading only the implemented parent still sees the post-connect reset as the complete SILENT rule and can reintroduce the dropped dial error (the exact M22 shape) while believing they conform — the same spec-drift mechanism that produced this defect. Every other load-bearing premise (per-platform errno identity and construction path, 0 ECONNRESET across ~9.3M no-listener dials on both platforms, caller census with positive control, CI guard behavior, cadence) carries a V-row, and the residual fail-open timeout class is declared, pinned (M28/T8) and gated (AC-LINUX-LOAD), so this is the one genuine hole in an otherwise complete conflict-surface analysis.",
+        "catch": "Two verifiable gaps: (1) §7 must state the amendment's write-back disposition — either the mission's process edits the parent file (add the row) or the queue row 232 plus this planned doc is the durable record (say so explicitly, since a frozen-history convention is the only thing that makes the current §7 correct); (2) the § Item claim 'PR #402 did not touch host/broker/exec_probe*.go' is asserted with no V-row — one gh command pins it and the defect-attribution story ('instance 3', latent-not-regression) currently rests on it unverified.",
+        "proposed_fix": "Add to §7's files table a row: `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md | §4.2 amendment note (row 232): a dial failing at connect with ECONNRESET is the same TCP event as the post-connect zero-byte reset and is classed SILENT; ECONNREFUSED, EINVAL, timeouts and local-side errors record nothing | ±2` — or, if implemented docs are frozen history, add one sentence to §7: 'The parent is an immutable record; queue row 232 and this doc are the amendment ledger, and §2 supersedes parent §4.2 on dial errors.' Also add V16: `gh pr view 402 --json files` → observed: no file matching host/broker/exec_probe*, pinning the attribution claim."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.208476,
+      "tokens_in": 8947,
+      "tokens_out": 12109,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "AC-LINUX requires `--- PASS:` lines for T8 and T9 in BOTH the step-8 host gate and the \"go race gate\", but the only CI edit in Files-touched is the step-8 `tests=` list at ci.yml:247 (±1 line), and no verification-log row shows how the race gate selects its tests. If the race gate filters via its own list (or skips), the mandated PASS lines cannot exist and AC-LINUX is unachievable as written; if it runs the package wholesale with -race, that is asserted, not verified (V11 covers only :236-262, the step-8 block).",
+        "catch": "Verify the race gate's `go test` invocation in .github/workflows/ci.yml (the step that produced run 40833618366): does it run ./host/broker in full, or a named-tests list? If a list, T8/T9 must be added there too or AC-LINUX's race-gate clause is dead. Also secondary: the single-dial T7 shape is the motivating case, yet the timeout-row justification ('~20 dials per attempt, one lost dial cannot hide a reach', V15) applies only to the 1000 ms child path — quantify or explicitly bound the residual T7 flake rate from the unclassified 200 ms timeout class under race-gate-like load, since that is the one path that can still redden dev post-fix.",
+        "proposed_fix": "Add a verification-log row: `V16 | Race-gate test selection | sed -n '\u003cstart\u003e,\u003cend\u003ep' .github/workflows/ci.yml | grep -n 'go test\\|--race\\|tests=' | observed: race gate runs [full ./host/broker | a list at :NNN]`. If it is a list, add `TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset` to it in the Files-touched table (ci.yml becomes ±2 lines) and cite the line in AC-LINUX. And amend the §2 timeout row: replace the bare '20 dials cannot hide a reach' sentence with 'in the 1000 ms child path ~20 dials absorb a lost dial; in the single-dial reset-holder shape that motivated this row a lost timeout dial still hides the holder — rate bounded by V14 (0 timeouts in ~538K sequential dials, idle and loaded, darwin and Linux), so T7 stays a stability read and T9 remains the deterministic proof.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.044836,
+      "tokens_in": 10184,
+      "tokens_out": 205,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In T9, stopping pollLoopback immediately after starting it guarantees at least one dial before the stop channel is checked, which is deterministic, though the fake dialer in T9 must still handle arbitrary subsequent calls gracefully if the goroutine schedules multiple iterations before stop() is invoked.",
+        "catch": "Ensure the fake dialer in T9 (`connect-reset`) is concurrency-safe or stateless after call 1 (returning `op-refused` for all calls \u003e= 2) so that if the poll goroutine loops more than once before `stop()` is called, it does not panic or race.",
+        "proposed_fix": "In §6 T9 specification, explicitly state that the `connect-reset` fake dialer uses an `atomic.Int32` counter to return `op-reset` on call 1 and `op-refused` on all subsequent calls."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2: Linux premise now measured by the controller on a Linux CI runner (run 40842980481): no-listener = ECONNREFUSED only (0 ECONNRESET in 7.3M); reset-holder = connect-time ECONNRESET; T7 reds at base on Linux under load. AC-LINUX gates added."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.3909538,
+    "total_tokens_in": 28202,
+    "total_tokens_out": 40710
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "id": "w-exec-probe-reset-holder-false-pass",
+  "iteration": 318,
+  "row": "232",
+  "clause": "clause-3",
+  "authority": [
+    "design_docs/planned/w-exec-probe-reset-holder-false-pass.md r2 (quorum r2 PROCEED at N-1; gpt6-1-sol absent unreachable)",
+    "design_docs/planned/w-exec-probe-reset-holder-false-pass-sprint-plan.md",
+    "parent: design_docs/implemented/w-exec-probe-reverse-leg-port-race.md §4.2"
+  ],
+  "estimate": "0.25 day",
+  "scope": "2 milestones, each independently green. Files: host/broker/exec_probe.go, host/broker/exec_probe_test.go, .github/workflows/ci.yml (:247 only), docs/QUICKSTART.md (:1153 only), design_docs/planned/w-exec-probe-reset-holder-false-pass.md (four narrow reviewer amendments only), design_docs/implemented/w-exec-probe-reverse-leg-port-race.md (two amendment notes only). No .ail file. No git writes by the executor; the controller commits.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232",
+    "branch": "sprint/world-iter318-row232",
+    "head": "e1110207",
+    "go_tree_equals": "df5a0671",
+    "sha256": {
+      "host/broker/exec_probe.go": "6e1b6536545999117344d5bf3d5d0d3326aa00ebfbda1a615153fbdda8b743bc",
+      "host/broker/exec_probe_test.go": "8c9cb59872baee416775e18fb38aa8ccc692c637c649ac804a1c0c60047d1c6a",
+      ".github/workflows/ci.yml": "c40e8d653f0f9ee1163bd1af80d656d7eff528d57760d0b48938f0d169058dc7",
+      "docs/QUICKSTART.md": "a7dc9c61a5e7b41b3870e58d653fd698af5d5c061e1a2827709392d7f5414d8e",
+      "design_docs/planned/w-exec-probe-reset-holder-false-pass.md": "7477c3529f9701d7614146ab4ac4fad0696ffa1c0d069f5e484033a7824ae22d",
+      "design_docs/implemented/w-exec-probe-reverse-leg-port-race.md": "12c6ec7be3336c7f9795ddf2be0ce7cd346483f0e5364d182e0f4349007d3956"
+    }
+  },
+  "environment": [
+    "cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "leave WORLD_EXEC_SRT_NODE_MODULES unset (real-srt tests SKIP locally; CI-only evidence)"
+  ],
+  "executor_constraints": [
+    "no git write operations (no commit/add/stash/checkout/restore/reset)",
+    "edit only the six scope files, only at the sites the plan names",
+    "never edit tools/launchd/*; never touch the main checkout /Users/voightkampff/dev/sunholo-data/ailang-world or ~/.ailang/state/mission-v1*",
+    "each mutation applied alone, run ONLY against its named killer rows (not the suite), observed red, reverted by cp from a snapshot and checked with shasum -a 256 -c",
+    "a mutant that fails to compile is a protocol error, never a kill",
+    "no t.Parallel(); do not set WORLD_EXEC_SRT_NODE_MODULES",
+    "copy -run regexes from the plan's code blocks, never from markdown table cells (\\| becomes a literal pipe)",
+    "bound every wait with perl -e 'alarm N; exec @ARGV'; never end the turn announcing a wait",
+    "go build ./... is not a compile fence for _test.go: use go test -run '^$' ./host/broker/ or go vet ./host/broker/"
+  ],
+  "controller_only": [
+    "full ./scripts/verify_go.sh (plain and race legs)",
+    "AC-LINUX-LOAD: throwaway branch at the fixed head, 2xnproc yes, go test ./host/broker/ -run '^TestExecProbeReverseLegSilentHolderRefusesSticky$/^reset-holder$' -count=300 -v; whole log: 0 FAIL and exactly 300 '    --- PASS: .../reset-holder'",
+    "AC-LINUX on the PR's CI: step 8 '--- PASS:' for T7, T8, T9 plus '    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder'; go race gate shows 'ok  \tgithub.com/sunholo-data/ailang-world/host/broker'"
+  ],
+  "measured_baseline": {
+    "git status --porcelain | wc -l": "0",
+    "git diff --stat df5a0671 HEAD": "13 files, all under design_docs/",
+    "go version (worktree)": "go1.26.6 darwin/arm64",
+    "$AILANG_BIN --version": "AILANG v0.41.0",
+    "gofmt -l host/broker/": "empty, rc 0",
+    "go vet ./host/broker/": "rc 0",
+    "go test -run '^$' ./host/broker/": "rc 0, ok [no tests to run], 1 s",
+    "go test ./host/broker/ -run '^TestExecProbeReverse' -count=1 -v": "rc 0, 8 s, PASS=6 FAIL=0 SKIP=0",
+    "grep -c syscall host/broker/exec_probe.go host/broker/exec_probe_test.go": "0 and 0",
+    "grep -rn 'pollLoopback\\|classifyReverseDial\\|judgeReverse' host/ | wc -l": "13 (pollLoopback call :566, def :694 only); control runBounded census 9",
+    "gh pr view 402 --json files": "29 files, 0 match host/broker/exec_probe; control .go paths present",
+    "prototype (scratch copy /tmp/w318-planner/proto, repo untouched)": "prod +19/-6, test +93; gofmt empty; vet ok; T8 11 + T9 3 subtests PASS; -count=20 each of 8 names PASS 20, 0 FAIL, 98 s; -race rc 0, 0 DATA RACE; every M22-M29 and M28b killer FAIL, every control PASS",
+    "prototype full go test ./host/broker/ -count=1": "rc 1, 198 s: only TestWorktreeSnapshotRefusesAConfiguredFilter (worktree_delta_test.go:432 git clean-filter control) under concurrent load; alone -count=3 PASS 3/3 at base and on the prototype (unrelated load flake)"
+  },
+  "base_expectations": {
+    "RED_at_base": [
+      "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder on Linux under load (>=7/300, design V14); not a reliable local red (0/300 darwin, V8)",
+      "M22 (today's behaviour on the new seam) vs TestExecProbeReversePollRecordsConnectReset/connect-reset: the deterministic red"
+    ],
+    "GREEN_at_base_and_must_stay_green": [
+      "TestExecProbeReverseLegJudge",
+      "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+      "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+      "TestExecProbeReverseLegNoTokenIsNotRetried",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky",
+      "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+      "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+      "TestExecProbePassThroughShimFailsEveryConfinementArm",
+      "TestQuickstartSection10ProfilesLoad",
+      "the whole host/broker package"
+    ],
+    "absent_at_base_cannot_compile": [
+      "T8 TestExecProbeReverseDialErrIsSilent",
+      "T9 TestExecProbeReversePollRecordsConnectReset"
+    ],
+    "SKIP_locally_CI_only_evidence": [
+      "TestExecSrt* real-srt tests",
+      "TestExecProbeArm8"
+    ],
+    "ci_pass_guard": ".github/workflows/ci.yml:254-257 — for t in $tests; grep -q -- \"^--- PASS: $t \" or ::error::$t did not PASS on linux (SKIP?); the go-race-verify job (:418, VERIFY_GO_LEGS: race) runs go test ./... -race without -v and has no PASS guard"
+  },
+  "gates": [
+    {
+      "id": "G1",
+      "cmd": "gofmt -l host/broker/",
+      "pass": "empty"
+    },
+    {
+      "id": "G2",
+      "cmd": "go vet ./host/broker/",
+      "pass": "rc 0"
+    },
+    {
+      "id": "G3",
+      "cmd": "go test -run '^$' ./host/broker/",
+      "pass": "rc 0 (compile fence; go build does not compile _test.go)"
+    },
+    {
+      "id": "G4",
+      "cmd": "perl -e 'alarm 900; exec @ARGV' sh -c 'go build ./... && go vet ./host/broker/ && go test ./host/broker/ -count=1'",
+      "pass": "rc 0, ok github.com/sunholo-data/ailang-world/host/broker; if the ONLY failure is TestWorktreeSnapshotRefusesAConfiguredFilter, re-run it alone -count=3 — PASS alone = unrelated load flake, record it, do not touch worktree_delta*; any other failure is a stop"
+    },
+    {
+      "id": "G5",
+      "cmd": "perl -e 'alarm 600; exec @ARGV' go test -race ./host/broker/ -run '^TestExecProbeReverse' -count=1",
+      "pass": "rc 0, 0 DATA RACE"
+    },
+    {
+      "id": "G6",
+      "cmd": "perl -e 'alarm 900; exec @ARGV' go test ./host/broker/ -run '^TestExecProbeReverse' -count=20 -v",
+      "pass": "each of 8 names '^--- PASS: <name> ' x20, 0 FAIL, 20 '    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder '",
+      "from": "M2"
+    },
+    {
+      "id": "G7",
+      "cmd": "perl -e 'alarm 900; exec @ARGV' ./scripts/verify_ail.sh",
+      "pass": "rc 0 (no .ail touched)"
+    },
+    {
+      "id": "G8",
+      "cmd": "actionlint .github/workflows/ci.yml && ruby -ryaml -e 'YAML.load_file(\".github/workflows/ci.yml\")'",
+      "pass": "rc 0",
+      "from": "M2"
+    },
+    {
+      "id": "G9",
+      "cmd": "git diff --name-only",
+      "pass": "after M1: exactly the two Go files; after M2: exactly the six scope files; no .ail"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "dialErrIsSilent, pollLoopback dial seam and ECONNRESET branch; T8 and T9; mutation drill M22-M29 + M28b",
+      "est_loc": 112,
+      "files": [
+        "host/broker/exec_probe.go",
+        "host/broker/exec_probe_test.go"
+      ],
+      "edits": [
+        "exec_probe.go import block: insert \"syscall\" between \"sync/atomic\" (:43) and \"time\" (:44)",
+        "exec_probe.go :566: poll := pollLoopback(port, \"WORLD-PROBE-NONCE \"+nonce, nil)",
+        "exec_probe.go :690-694: new func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) } (one-line body) + rewritten pollLoopback doc comment + signature pollLoopback(port int, want string, dial func(addr string) (net.Conn, error)) func() reverseSeen with nil -> net.DialTimeout(\"tcp\", addr, 200*time.Millisecond)",
+        "exec_probe.go :705: if c, err := dial(addr); err == nil {",
+        "exec_probe.go after '_ = c.Close()' (:714): } else if dialErrIsSilent(err) { silent.Store(true) }",
+        "exec_probe_test.go: import \"syscall\" between \"sync/atomic\" and \"testing\"; append helper revDialErr(errno syscall.Errno) error, T8, T9 verbatim from plan §M1.2"
+      ],
+      "tests": [
+        "TestExecProbeReverseDialErrIsSilent (11 subtests: true op-reset, bare-reset, wrapped-reset; false nil, op-refused, real-refused, op-einval, op-aborted, addrnotavail, timeout, deadline-exceeded; real-refused and timeout shape-checked before the table)",
+        "TestExecProbeReversePollRecordsConnectReset (3 subtests: connect-reset -> reverseSeen{silent: true}; refused-only -> {}; einval-then-refused -> {}; fake dialer atomic.Int32: call 1 = row error, later = op-refused; asserts calls >= 1 and addr == 127.0.0.1:<port>)"
+      ],
+      "acceptance_commands": [
+        "G1",
+        "G2",
+        "G3",
+        "go test ./host/broker/ -run '^TestExecProbeReverse(DialErrIsSilent|PollRecordsConnectReset)$' -count=1 -v => 2 top-level PASS, 14 subtest PASS, 0 FAIL, 0 SKIP",
+        "go test ./host/broker/ -run '^TestExecProbeReverse' -count=1 -v => 8 top-level PASS, 0 FAIL",
+        "G4",
+        "G5",
+        "G9"
+      ],
+      "mutations": [
+        {
+          "id": "M22 MUT-DIALERR-DROPPED",
+          "edit": "delete the '} else if dialErrIsSilent(err) { silent.Store(true) }' branch (today's behaviour)",
+          "must_fail_test": "TestExecProbeReversePollRecordsConnectReset/connect-reset (control PASS: /refused-only)"
+        },
+        {
+          "id": "M23 MUT-RESET-NOT-SILENT",
+          "edit": "func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) && false }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/{op-reset,bare-reset,wrapped-reset}; TestExecProbeReversePollRecordsConnectReset/connect-reset"
+        },
+        {
+          "id": "M24 MUT-RESET-NO-UNWRAP",
+          "edit": "func dialErrIsSilent(err error) bool { return err == syscall.ECONNRESET }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/{op-reset,wrapped-reset} (control PASS: /bare-reset)"
+        },
+        {
+          "id": "M25 MUT-REFUSED-IS-SILENT",
+          "edit": "func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.ECONNREFUSED) }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/{op-refused,real-refused}; TestExecProbeReversePollRecordsConnectReset/refused-only; TestExecProbeReverseLegNoTokenIsNotRetried/clean; TestExecProbeReverseLegChattyForeignHolderIsRetried (all 8 rows)"
+        },
+        {
+          "id": "M26 MUT-ANY-ERR-IS-SILENT",
+          "edit": "func dialErrIsSilent(err error) bool { return err != nil || errors.Is(err, syscall.ECONNRESET) }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/{op-refused,op-einval,op-aborted,timeout,addrnotavail}; TestExecProbeReverseLegNoTokenIsNotRetried/clean (control PASS: T8/nil)"
+        },
+        {
+          "id": "M27 MUT-EINVAL-IS-SILENT",
+          "edit": "func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.EINVAL) }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/op-einval; TestExecProbeReversePollRecordsConnectReset/einval-then-refused"
+        },
+        {
+          "id": "M28 MUT-TIMEOUT-IS-SILENT",
+          "edit": "func dialErrIsSilent(err error) bool { var ne net.Error; return errors.Is(err, syscall.ECONNRESET) || (errors.As(err, &ne) && ne.Timeout()) }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/{timeout,deadline-exceeded}"
+        },
+        {
+          "id": "M28b MUT-DEADLINE-IS-SILENT (planner-added, D1)",
+          "edit": "func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) || errors.Is(err, os.ErrDeadlineExceeded) }",
+          "must_fail_test": "TestExecProbeReverseDialErrIsSilent/deadline-exceeded (control PASS: /timeout)"
+        },
+        {
+          "id": "M29 MUT-CONNECT-RESET-IS-FOREIGN",
+          "edit": "in the dialErrIsSilent branch: silent.Store(true) -> foreign.Store(true)",
+          "must_fail_test": "TestExecProbeReversePollRecordsConnectReset/connect-reset"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2",
+      "title": "CI step 8 tests= line, QUICKSTART §10 arm 6 clause, reviewers' doc amendments (design + parent), AC-STABLE, gates",
+      "est_loc": 16,
+      "files": [
+        ".github/workflows/ci.yml",
+        "docs/QUICKSTART.md",
+        "design_docs/planned/w-exec-probe-reset-holder-false-pass.md",
+        "design_docs/implemented/w-exec-probe-reverse-leg-port-race.md"
+      ],
+      "edits": [
+        "ci.yml:247: 'TestExecProbeReverseLegSilentHolderRefusesSticky\"' -> 'TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset\"'",
+        "QUICKSTART.md:1153 -> two lines: '   process that never answers (or that resets the host's dial) held the port, and World cannot' / '   tell it from the child: find it.' (the backticked refusal text on :1152 is unchanged)",
+        "design §2 timeout row: append kimi's single-dial wording (T7 stays a stability read; T9 is the proof)",
+        "design §6 T9 bullet: append gemini's atomic.Int32 counter sentence",
+        "design §6 AC-LINUX: replace with the restated bullet (step 8 PASS for T7/T8/T9 + reset-holder subtest line; race gate 'ok' for host/broker)",
+        "design §9: new V16 row (gh pr view 402 --json files: 29 files, probe [], control .go paths)",
+        "parent header: '- **Amended by**: row 232, `w-exec-probe-reset-holder-false-pass` (iteration 318): ...' after the Status line",
+        "parent §4.2: indented 'Amended by row 232' note after the ':188' reset bullet"
+      ],
+      "tests": [
+        "TestQuickstartSection10ProfilesLoad (must stay PASS)",
+        "step-8 emulation over TestExecProbeReverseLegSilentHolderRefusesSticky, TestExecProbeReverseDialErrIsSilent, TestExecProbeReversePollRecordsConnectReset"
+      ],
+      "acceptance_commands": [
+        "G1",
+        "G2",
+        "G3",
+        "G8",
+        "grep -c 'TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset\"' .github/workflows/ci.yml => 1",
+        "go test ./host/broker/ -run '^TestQuickstartSection10ProfilesLoad$' -count=1 -v => PASS",
+        "go test ./host/broker/ -count=1 -p 1 -timeout 600s -v -run '^(TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReverseDialErrIsSilent|TestExecProbeReversePollRecordsConnectReset)$' => each '^--- PASS: <name> ' present; 1 '    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder '",
+        "G6",
+        "G4",
+        "G5",
+        "G7",
+        "G9"
+      ],
+      "mutations": [],
+      "closing": "Hand-off: the controller runs the full ./scripts/verify_go.sh, AC-LINUX-LOAD on a Linux CI throwaway branch at the fixed head, and reads AC-LINUX on the PR's CI.",
+      "status": "planned"
+    }
+  ],
+  "mutation_revert": "After M1.1-M1.3 are green: cp host/broker/exec_probe.go /tmp/w318-exec/exec_probe.go.snap; shasum -a 256 host/broker/exec_probe.go host/broker/exec_probe_test.go > /tmp/w318-exec/m1.sha. Per mutant: apply one edit, run only its killer rows, cp the snap back, shasum -a 256 -c /tmp/w318-exec/m1.sha must say OK for both. A mutant that fails to compile is a protocol error, never a kill.",
+  "design_discrepancies": [
+    "D1 FALSE in design: M28's killer T8 'timeout' (a real expired-context dial) does not satisfy errors.Is(err, os.ErrDeadlineExceeded) (measured is-ErrDeadline=false, is-ctxDeadline=true, Timeout()=true), so an os.ErrDeadlineExceeded-form M28 survives. Resolved: T8 gains row deadline-exceeded (&net.OpError{Err: os.ErrDeadlineExceeded}); M28 pinned to the net.Error form; M28b added. Design §5/§6 text not amended (outside the three permitted amendments) — controller to note.",
+    "D2 AC-LINUX as written is unsatisfiable: the race gate (ci.yml:418 job, VERIFY_GO_LEGS: race; verify_go.sh:355) runs go test ./... -race without -v. Restated per kimi.",
+    "D3 QUICKSTART: '(or reset the host's dial)' cannot go inside the backticked literal refusal text on :1152; placed on :1153 after 'never answers'.",
+    "D4 cosmetic: design §6 cites the dial-before-stop property at :690-693 (the doc comment); the code is :704-720.",
+    "D5 syscall is imported by neither exec_probe.go nor exec_probe_test.go today; both gain it. Prod diff +19/-6 vs design +12/-3 (rewritten doc comment).",
+    "D6 AC-MUT 'reds exactly its named killer': per the mission rule mutants run only against their named rows; M25 also reds T3/T7 free-port rows, expected.",
+    "D7 AC-GATE go test ./... is the controller's verify_go.sh; the executor gate is go build ./... && go vet ./host/broker/ && go test ./host/broker/ + compile fence + verify_ail.sh.",
+    "D8 step 8's PASS guard checks top-level names only; the reset-holder subtest line is read from the -v log (a failing subtest fails its parent). No extra CI guard."
+  ],
+  "out_of_scope": "R5 foreign-holder exit classed silent (successor w-exec-probe-holder-exit-reset); R6 darwin EINVAL at close; classing timeouts or EINVAL silent; any change to cadence, timeouts, classifyReverseDial, judgeReverse or refusal texts; any srt change.",
+  "status": "planned"
+}

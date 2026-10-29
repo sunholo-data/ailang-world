@@ -41,6 +41,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 	"unicode/utf8"
 )
@@ -563,7 +564,7 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
 			argv = slices.Clone(proxyArgv)
 		}
 		argv = append(argv, "listen", fmt.Sprintf("%d:%d:%s", port, execProbeListenMS, nonce))
-		poll := pollLoopback(port, "WORLD-PROBE-NONCE "+nonce)
+		poll := pollLoopback(port, "WORLD-PROBE-NONCE "+nonce, nil)
 		r := pp.run(ctx, argv, false, execProbeRunBudget)
 		seen := poll()
 		tok := r.token(0)
@@ -687,11 +688,21 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
 	return false, false // silent
 }
 
+// dialErrIsSilent reports whether a failed reverse-leg dial proves a listener accepted the
+// handshake and reset it (row 232): only ECONNRESET. ECONNREFUSED (nothing listens), EINVAL
+// (seen on darwin with nothing listening), timeouts and local errors record nothing.
+func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }
+
 // pollLoopback dials 127.0.0.1:port every 50 ms until stopped and
-// classifies every connected dial (classifyReverseDial); the returned stop
-// function reports what the dials saw. It dials once before it first checks
-// for stop, so an attempt always observes at least one dial.
-func pollLoopback(port int, want string) func() reverseSeen {
+// classifies every connected dial (classifyReverseDial); a dial that fails
+// with ECONNRESET is silent (dialErrIsSilent). The returned stop function
+// reports what the dials saw. It dials once before it first checks for
+// stop, so an attempt always observes at least one dial. dial nil means
+// net.DialTimeout("tcp", addr, 200ms); tests inject dial errors through it.
+func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error)) func() reverseSeen {
+	if dial == nil {
+		dial = func(addr string) (net.Conn, error) { return net.DialTimeout("tcp", addr, 200*time.Millisecond) }
+	}
 	var child, foreign, silent atomic.Bool
 	done := make(chan struct{})
 	finished := make(chan struct{})
@@ -702,7 +713,7 @@ func pollLoopback(port int, want string) func() reverseSeen {
 		}
 		addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
 		for {
-			if c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond); err == nil {
+			if c, err := dial(addr); err == nil {
 				switch isChild, isForeign := classifyReverseDial(c, want); {
 				case isChild:
 					child.Store(true)
@@ -712,6 +723,8 @@ func pollLoopback(port int, want string) func() reverseSeen {
 					silent.Store(true)
 				}
 				_ = c.Close()
+			} else if dialErrIsSilent(err) {
+				silent.Store(true)
 			}
 			select {
 			case <-done:

@@ -1,0 +1,31 @@
+2026-10-29T07:09:53.9847315Z go version go1.26.6 linux/amd64
+2026-10-29T07:09:54.0742659Z go: downloading golang.org/x/text v0.42.0
+2026-10-29T07:09:54.0761538Z go: downloading github.com/sunholo-data/ailang v0.47.2
+2026-10-29T07:09:54.6600435Z go: downloading modernc.org/sqlite v1.54.0
+2026-10-29T07:09:55.8496572Z go: downloading golang.org/x/sys v0.48.0
+2026-10-29T07:09:56.0264532Z go: downloading modernc.org/libc v1.74.1
+2026-10-29T07:09:57.1427997Z go: downloading github.com/dustin/go-humanize v1.0.1
+2026-10-29T07:09:57.2859225Z go: downloading github.com/google/uuid v1.6.0
+2026-10-29T07:09:57.3414798Z go: downloading modernc.org/mathutil v1.7.1
+2026-10-29T07:09:57.4009313Z go: downloading modernc.org/memory v1.11.0
+2026-10-29T07:09:57.4608227Z go: downloading github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
+2026-10-29T07:10:20.9240543Z ── go test ./... -count=1 -race -timeout 8m (leg bound 1500s)
+2026-10-29T07:10:20.9266220Z go version go1.26.6 linux/amd64
+2026-10-29T07:13:00.8894105Z ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	122.055s
+2026-10-29T07:13:00.8913622Z ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	43.413s
+2026-10-29T07:13:00.8940174Z ok  	github.com/sunholo-data/ailang-world/host/agui	7.513s
+2026-10-29T07:13:00.8940977Z ok  	github.com/sunholo-data/ailang-world/host/archive	5.851s
+2026-10-29T07:13:00.8941531Z ok  	github.com/sunholo-data/ailang-world/host/authority	2.441s
+2026-10-29T07:13:00.8942077Z ok  	github.com/sunholo-data/ailang-world/host/boundary	3.937s
+2026-10-29T07:14:56.7584634Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (1.23s)
+2026-10-29T07:14:56.7585643Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.21s)
+2026-10-29T07:14:56.7586942Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 3.036932ms
+2026-10-29T07:14:56.7587768Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T07:14:56.7588313Z FAIL
+2026-10-29T07:14:56.7588706Z FAIL	github.com/sunholo-data/ailang-world/host/broker	227.232s
+2026-10-29T07:14:56.7589256Z ok  	github.com/sunholo-data/ailang-world/host/canon	1.015s
+2026-10-29T07:14:56.7589739Z ok  	github.com/sunholo-data/ailang-world/host/capsule	35.330s
+2026-10-29T07:14:56.7590237Z ok  	github.com/sunholo-data/ailang-world/host/childenv	1.012s
+2026-10-29T07:14:56.7590737Z ok  	github.com/sunholo-data/ailang-world/host/coordinator	107.744s
+2026-10-29T07:16:39.3107387Z ok  	github.com/sunholo-data/ailang-world/host/daemon	290.453s
+2026-10-29T07:16:39.3108337Z ok  	github.com/sunholo-data/ailang-world/host/evidence	63.535s

@@ -1,0 +1,74 @@
+// Scratch control for row 232 (iteration 318 designer). NOT repo code.
+// mode=none: dial a port nothing ever listens on; mode=rst: an accept-then-RST
+// listener (revHolder "reset"). 4 spinning dialers for -secs; tally errno.
+package main
+
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"net"
+	"os"
+	"sync"
+	"syscall"
+	"time"
+)
+
+func main() {
+	mode := flag.String("mode", "none", "none|rst")
+	secs := flag.Int("secs", 30, "seconds")
+	flag.Parse()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		panic(err)
+	}
+	addr := ln.Addr().String()
+	if *mode == "none" {
+		ln.Close()
+	} else {
+		go func() {
+			for {
+				c, err := ln.Accept()
+				if err != nil {
+					return
+				}
+				_ = c.(*net.TCPConn).SetLinger(0)
+				_ = c.Close()
+			}
+		}()
+	}
+	var mu sync.Mutex
+	tally := map[string]int{}
+	end := time.Now().Add(time.Duration(*secs) * time.Second)
+	var wg sync.WaitGroup
+	for k := 0; k < 4; k++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for time.Now().Before(end) {
+				c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
+				key := "connected"
+				var en syscall.Errno
+				var ne net.Error
+				switch {
+				case err == nil:
+					c.Close()
+				case errors.As(err, &en):
+					key = "errno:" + en.Error()
+				case errors.As(err, &ne) && ne.Timeout():
+					key = "timeout"
+				default:
+					key = "other:" + err.Error()
+				}
+				mu.Lock()
+				tally[key]++
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+	fmt.Fprintf(os.Stdout, "mode=%s secs=%d\n", *mode, *secs)
+	for k, v := range tally {
+		fmt.Printf("  %-40s %d\n", k, v)
+	}
+}

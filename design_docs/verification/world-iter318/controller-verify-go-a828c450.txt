@@ -1,0 +1,91 @@
+# controller verify_go.sh at a828c450 (iteration 318)
+rc: rc=1; load during run: 'load averages: 5.09 6.95 8.20' at 10:39 (1/5/15 min)
+top CPU now:
+ %CPU COMM
+ 51.4 /Applications/Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+ 37.2 grep
+ 31.4 /opt/homebrew/opt/git/libexec/git-core/git
+ 21.0 /Applications/Firefox.app/Contents/MacOS/gpu-helper.app/Contents/MacOS/Firefox GPU Helper
+ 17.4 /opt/homebrew/opt/git/libexec/git-core/git-remote-https
+
+## reds
+   ✓ all 64 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+--- FAIL: TestDoctorQuickIsFast (4.10s)
+    doctor_hosts_test.go:189: quick took 4.088111s
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	219.981s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	85.209s
+ok  	github.com/sunholo-data/ailang-world/host/agui	4.306s
+ok  	github.com/sunholo-data/ailang-world/host/archive	51.124s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.831s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	5.673s
+--- FAIL: TestProtectedGitFilterPreflight (21.51s)
+    --- FAIL: TestProtectedGitFilterPreflight/configured-process-include (4.92s)
+        exec_protected_check_test.go:96: open /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestProtectedGitFilterPreflightconfigured-process-include882847258/002/spawns: no such file or directory
+FAIL
+
+## isolated re-runs at head a828c450 (AILANG_BIN pinned)
+TestProtectedGitFilterPreflight -count=1 x3: ok ok ok
+TestDoctorQuickIsFast -count=1 x3: ok ok ok
+git diff --quiet df5a0671 HEAD -- cmd/ailang-worldd: byte-identical
+exec_protected_check_test.go unchanged; pollLoopback call sites: 1 (reverseLeg)
+
+## every other package
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+ok 16-pinned-font-in-dir
+ok 17-renamed-binary-pinned (bad-signature)
+ok 18-unpinned-font (not-allowlisted)
+ok 19-pinned-name-other-bytes (sha256-mismatch)
+ok 20-font-over-file-cap (file-cap-exceeded)
+ok 21-font-outside-dir (not-allowlisted)
+ok 22-font-in-subdirectory (not-allowlisted)
+ok 23-font-dir-cap (dir-cap-exceeded)
+ok 24-png-and-font-together
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	219.981s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	85.209s
+ok  	github.com/sunholo-data/ailang-world/host/agui	4.306s
+ok  	github.com/sunholo-data/ailang-world/host/archive	51.124s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.831s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	5.673s
+FAIL	github.com/sunholo-data/ailang-world/host/broker	328.912s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.334s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	97.994s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	0.443s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	83.885s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	418.648s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	30.602s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.552s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	3.560s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.175s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	57.010s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	3.487s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.358s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.225s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.833s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.053s
+ok  	github.com/sunholo-data/ailang-world/host/replay	64.992s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	6.725s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.949s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.565s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.887s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	84.270s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	250.216s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	3.814s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	14.429s
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	180.501s
