@@ -23,12 +23,26 @@ type fakeServiceController struct {
 	boots, stops int
 	key          string
 	bootErr      error
+	kicks        int
+	binary       string
+	running      string
+	onKick       func() error
 }
 
 func (f *fakeServiceController) Bootstrap(domain, plist string) error {
 	f.boots++
 	f.loaded = true
+	f.running = serviceFileHash(f.binary)
 	return f.bootErr
+}
+func (f *fakeServiceController) Kickstart(domain, label string) error {
+	f.kicks++
+	f.loaded = true
+	f.running = serviceFileHash(f.binary)
+	if f.onKick != nil {
+		return f.onKick()
+	}
+	return nil
 }
 func (f *fakeServiceController) Bootout(domain, label string) error {
 	f.stops++
@@ -54,6 +68,7 @@ type serviceFixture struct {
 	home, db, source  string
 	serving, mismatch bool
 	writes            []string
+	active            daemon.HealthActive
 }
 
 func newServiceFixture(t *testing.T) *serviceFixture {
@@ -62,18 +77,21 @@ func newServiceFixture(t *testing.T) *serviceFixture {
 	f.env = serviceEnv{paths: homeServicePaths(f.home), controller: nil, terminal: sessionEnv{
 		openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }, now: func() int64 { return 123 }},
 		goos: "darwin", domain: "gui/123", label: worldServiceLabel, wait: 0, portFree: func(string) error { return nil }}
-	f.ctl = &fakeServiceController{}
+	f.ctl = &fakeServiceController{binary: f.env.paths.Binary}
 	f.env.controller = f.ctl
+	f.env.probe = func(binary, home string) ([]byte, error) {
+		return json.Marshal(serviceVersion{Build: daemon.BuildIdentity{ExecutableSHA256: serviceFileHash(binary)}, Platform: runtime.GOOS + "/" + runtime.GOARCH, ToolRelease: toolRelease(), InterpreterRelease: interpreterRelease})
+	}
 	f.env.observe = func(p string) { f.writes = append(f.writes, p) }
 	f.env.client = &http.Client{Transport: serviceTransport(func(r *http.Request) (*http.Response, error) {
 		if !f.serving {
 			return nil, errors.New("stopped")
 		}
-		hash := serviceFileHash(f.env.paths.Binary)
+		hash := f.ctl.running
 		if f.mismatch {
 			hash = "sha256:other"
 		}
-		b, _ := json.Marshal(daemon.HealthResponse{Status: "ok", Build: daemon.BuildIdentity{ExecutableSHA256: hash}})
+		b, _ := json.Marshal(daemon.HealthResponse{Status: "ok", Build: daemon.BuildIdentity{ExecutableSHA256: hash}, Active: f.active})
 		return &http.Response{StatusCode: 200, Body: io.NopCloser(bytes.NewReader(b)), Header: make(http.Header)}, nil
 	})}
 	f.db = filepath.Join(f.home, "data", "world.db")
@@ -222,6 +240,10 @@ func TestHomeServiceUninstallAndWriteSet(t *testing.T) {
 	}
 	os.MkdirAll(filepath.Dir(f.env.paths.Log), 0700)
 	os.WriteFile(f.env.paths.Log, []byte("keep log"), 0600)
+	os.WriteFile(f.source, []byte("write-set upgrade"), 0700)
+	if code, msg := f.run("upgrade", "--binary", f.source); code != 0 {
+		t.Fatalf("%d %s", code, msg)
+	}
 	for _, v := range []string{"status", "stop", "start", "uninstall"} {
 		if code, msg := f.run(v); code != 0 {
 			t.Fatalf("%s %d %s", v, code, msg)

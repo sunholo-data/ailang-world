@@ -26,15 +26,17 @@ import (
 )
 
 const worldServiceLabel = "com.sunholo.ailang-world.worldd"
-const serviceHelp = `usage: ailang-worldd service install|status|stop|start|uninstall [flags]
+const serviceHelp = `usage: ailang-worldd service install|status|upgrade|stop|start|uninstall [flags]
   install [--bind 127.0.0.1:7644] [--db PATH] [--credentials-db PATH]
     [--workspace-root DIR] [--interpreter-dir DIR] [--tools-dir DIR]
     [--exec-sandbox DIR] [--exec-profiles-dir DIR] [--exec-node PATH]
     [--examples-dir DIR] [--surface-index PATH] [--binary PATH] [--replace]
-  status [--json]
+  status [--json] [--verbose]
+  upgrade [--binary FILE] [--pause]
 Install, stop and uninstall require a typed y at the controlling terminal.
 Start uses the approved plist; edited plists require confirmation.
-Uninstall keeps all data, binaries and logs. macOS preview; upgrade is not built.
+Upgrade requires a typed y; --pause permits interruption of active episodes.
+Uninstall keeps all data, binaries and logs. macOS preview.
 `
 
 type servicePaths struct {
@@ -48,22 +50,22 @@ func homeServicePaths(home string) servicePaths {
 }
 
 type serviceRecord struct {
-	Schema         string   `json:"schema"`
-	Label          string   `json:"label"`
-	Plist          string   `json:"plist"`
-	PlistSHA256    string   `json:"plist_sha256"`
-	PlistText      string   `json:"plist_text"`
-	Binary         string   `json:"binary"`
-	BinarySHA256   string   `json:"binary_sha256"`
-	PreviousSHA256 string   `json:"previous_sha256"`
-	Address        string   `json:"address"`
-	Store          string   `json:"store"`
-	Credentials    string   `json:"credentials"`
-	Workspace      string   `json:"workspace"`
-	Log            string   `json:"log"`
-	InstalledAt    int64    `json:"installed_at"`
-	Uninstalled    bool     `json:"uninstalled"`
-	Upgrades       []string `json:"upgrades"`
+	Schema         string           `json:"schema"`
+	Label          string           `json:"label"`
+	Plist          string           `json:"plist"`
+	PlistSHA256    string           `json:"plist_sha256"`
+	PlistText      string           `json:"plist_text"`
+	Binary         string           `json:"binary"`
+	BinarySHA256   string           `json:"binary_sha256"`
+	PreviousSHA256 string           `json:"previous_sha256"`
+	Address        string           `json:"address"`
+	Store          string           `json:"store"`
+	Credentials    string           `json:"credentials"`
+	Workspace      string           `json:"workspace"`
+	Log            string           `json:"log"`
+	InstalledAt    int64            `json:"installed_at"`
+	Uninstalled    bool             `json:"uninstalled"`
+	Upgrades       []serviceUpgrade `json:"upgrades"`
 }
 type serviceEnv struct {
 	paths               servicePaths
@@ -75,6 +77,7 @@ type serviceEnv struct {
 	portFree            func(string) error
 	// observe records every intended filesystem mutation, including temp paths.
 	observe func(string)
+	probe   func(string, string) ([]byte, error)
 }
 
 func realServiceEnv() serviceEnv {
@@ -282,6 +285,8 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 	fs := flag.NewFlagSet("service "+verb, flag.ContinueOnError)
 	fs.SetOutput(errOut)
 	asJSON := fs.Bool("json", false, "JSON status")
+	verbose := fs.Bool("verbose", false, "full supervisor status")
+	pause := fs.Bool("pause", false, "interrupt active episodes during upgrade")
 	def := defaultWorldPaths()
 	bind := fs.String("bind", daemon.DefaultBind, "loopback address")
 	db := fs.String("db", def.db, "store")
@@ -302,13 +307,16 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 	if fs.NArg() != 0 {
 		return serviceMessage(errOut, "unexpected argument", "service verbs take flags only", serviceHelp, 1)
 	}
-	if verb != "install" && verb != "status" && verb != "start" && verb != "stop" && verb != "uninstall" {
+	if verb != "install" && verb != "status" && verb != "start" && verb != "stop" && verb != "uninstall" && verb != "upgrade" {
 		fmt.Fprint(errOut, serviceHelp)
 		return 1
 	}
 	badFlag := false
 	fs.Visit(func(f *flag.Flag) {
-		if verb != "install" && !(verb == "status" && f.Name == "json") {
+		allowed := verb == "install" && f.Name != "json" && f.Name != "verbose" && f.Name != "pause" ||
+			verb == "status" && (f.Name == "json" || f.Name == "verbose") ||
+			verb == "upgrade" && (f.Name == "binary" || f.Name == "pause")
+		if !allowed {
 			badFlag = true
 		}
 	})
@@ -324,6 +332,9 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 				return serviceMessage(errOut, "unsafe service path", err.Error(), "remove symlinks from the home service paths", 1)
 			}
 		}
+	}
+	if verb == "upgrade" {
+		return e.upgrade(*binary, *pause, out, errOut)
 	}
 	if verb == "install" {
 		if e.goos != "darwin" {
@@ -348,7 +359,7 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 		}
 		for _, dir := range []string{filepath.Dir(*db), *root} {
 			if st, err := os.Lstat(dir); err != nil || !st.IsDir() {
-				return serviceMessage(errOut, "service directory missing", dir, "run ailang-worldd setup", 1)
+				return serviceMessage(errOut, "service install: "+dir+" does not exist", "the store directory and the workspace root must exist before install; ailang-worldd setup creates both", "ailang-worldd setup, then ailang-worldd service install", 1)
 			}
 		}
 		if within(*root, filepath.Dir(*db)) || within(*root, e.paths.Binary) || within(filepath.Dir(*db), e.paths.Binary) {
@@ -416,7 +427,7 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 			}
 		}
 		plist := renderServicePlist(e.label, e.paths, argv, filepath.Dir(*db))
-		r := serviceRecord{Schema: "world/service/v1", Label: e.label, Plist: e.paths.Plist, PlistSHA256: serviceHash([]byte(plist)), PlistText: plist, Binary: e.paths.Binary, BinarySHA256: serviceHash(source), Address: *bind, Store: *db, Credentials: *creds, Workspace: *root, Log: e.paths.Log, InstalledAt: e.terminal.now(), Upgrades: []string{}}
+		r := serviceRecord{Schema: "world/service/v1", Label: e.label, Plist: e.paths.Plist, PlistSHA256: serviceHash([]byte(plist)), PlistText: plist, Binary: e.paths.Binary, BinarySHA256: serviceHash(source), Address: *bind, Store: *db, Credentials: *creds, Workspace: *root, Log: e.paths.Log, InstalledAt: e.terminal.now(), Upgrades: []serviceUpgrade{}}
 		record, _ := json.MarshalIndent(r, "", "  ")
 		if len(old) > 0 {
 			fmt.Fprint(term, servicePlistDiff(string(old), plist))
@@ -469,7 +480,7 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 		return serviceMessage(errOut, "no World service is installed", "no valid service.json and plist at "+e.paths.Plist, "ailang-worldd service install", code)
 	}
 	if verb == "status" {
-		return e.status(r, *asJSON, out, errOut)
+		return e.status(r, *asJSON, *verbose, out, errOut)
 	}
 	if err := serviceLockFree(e.paths.Lock); err != nil {
 		return serviceMessage(errOut, "a service change is in progress", err.Error(), "wait and retry", 1)
@@ -540,7 +551,7 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 	}
 	return 0
 }
-func (e serviceEnv) status(r serviceRecord, asJSON bool, out, errOut io.Writer) int {
+func (e serviceEnv) status(r serviceRecord, asJSON, verbose bool, out, errOut io.Writer) int {
 	print, printErr := e.controller.Print(e.domain, e.label)
 	h, healthErr := e.health(r.Address)
 	installed := serviceFileHash(e.paths.Binary)
@@ -578,13 +589,17 @@ func (e serviceEnv) status(r serviceRecord, asJSON bool, out, errOut io.Writer) 
 	if asJSON {
 		_ = json.NewEncoder(out).Encode(report)
 	} else {
+		fmt.Fprintf(out, "World service: %s\n", state)
 		fmt.Fprintf(out, "pid: %d; uptime: %ds; runs: %d; last exit: %d\n", report.PID, uptime, report.Runs, report.LastExit)
-		fmt.Fprintf(out, "World service: %s\naddress: %s\ninstalled: %s\nrunning: %s\n%s\nstore: %s\nlog: %s (%d bytes)\n", state, r.Address, installed, h.Build.ExecutableSHA256, print, r.Store, e.paths.Log, logSize)
+		fmt.Fprintf(out, "address: %s\ninstalled: %s\nrunning: %s\nstore: %s\nlog: %s (%d bytes)\n", r.Address, installed, h.Build.ExecutableSHA256, r.Store, e.paths.Log, logSize)
+		if verbose {
+			fmt.Fprintln(out, print)
+		}
 		if edited {
 			serviceMessage(out, "! the plist differs from the one installed", "its sha256 differs from service.json", "service start shows the diff, or service install --replace", 0)
 		}
 		if code == 10 {
-			serviceMessage(errOut, "the World service is not serving and matching at "+r.Address, "supervisor state: "+print+"; "+serviceTail(e.paths.Log, 10), "ailang-worldd service start", 10)
+			serviceMessage(errOut, "the World service is not serving and matching at "+r.Address, fmt.Sprintf("loaded: %t; last exit: %d; %s", report.Loaded, report.LastExit, serviceTail(e.paths.Log, 10)), "ailang-worldd service start", 10)
 		}
 		if logSize > 100<<20 {
 			fmt.Fprintln(out, "warning: log exceeds 100 MiB; service stop then service start rotates it")
