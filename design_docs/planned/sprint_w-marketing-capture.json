@@ -3572,7 +3572,8 @@
         "website/static/img/v1/captions.md",
         "docs/marketing-capture-manifest.schema.json"
       ],
-      "status": "pending",
+      "status": "completed",
+      "completed": {"iteration": 316, "pr": 405, "commits": "3f185a9a (executor doc corrections), 706af0e4 (judge NB1 fix + load-red evidence)", "judge": "sonnet r1 PASS 93 -> r2 PASS 93 (zero blocking; M8b-C11-redrill killed by digest-equal-line-change; NB2 rects-path value unpinned -> row 231)", "executor": "codex gpt-6.1-sol rc 0, ~11 min (socket tests uninformative under sandbox; controller re-ran every gate outside)", "controller_gates": "at 3f185a9a: focused 7/7 top-level PASS, verify_ail rc 0, go build rc 0, both -race gates rc 0; go test ./... red only on two load-induced host/broker tests, each 3/3 green isolated at head and base; C11 before/after equal (12 records)"},
       "new_tests": [
         "TestMarketingProtectedObservationComparator"
       ],

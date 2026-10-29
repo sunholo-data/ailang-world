@@ -2776,3 +2776,92 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release row). Row 150: 22/23 executor milestones built (M8b left); the C8′/P0 amendment is written; P0–P3 and the attended A1 remain.
 **Next:** row 150 M8b, then P0–P3 (r5 predicates and capture-day controls) and the attended A1; then 151. Rows 230 and 231 sit below every release row. Row 232 (the reset-holder false pass) takes precedence if it reds dev at Gate 1.
+
+## 316 — 2026-10-29 — row 150: M8b built — final repository gates and C11 protected-path observation; QUICKSTART §13 states the r5 P0/phone rules; judge r1 PASS 93 → r2 PASS 93 [PRODUCT]
+
+**Kind:** validation milestone (executor → controller re-run of every gate outside the sandbox → independent evaluator → one controller doc fix → evaluator r2 → PR). Roles were spawned per the routing table and the operator's standing request. The executor ran on its provider pin through the codex recipe, not the Agent tool, because the spawn-pin hook refuses an alias spawn for a `provider:model` pin. The judge ran on the Agent tool.
+
+**Pick and why:** the iteration-315 **Next** and the queue head under D-WORLD-81 (150 → 151): row 150 M8b, the last executor milestone. Dev CI at `8bfaa1ab` was green (CI 1/1 success on the head), so row 232 did not outrank it.
+
+**Clause map:** clauses 1–7 MET (ratified states, not re-measured); no UNMET clause and no critical-path row; release order D-WORLD-81 150 → 151 → v1.0.0. M8b moves no clause.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh account sunholo-voight-kampff; billing tripwire CLEAN. Env read by NAME only.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (13 comments). Watermark unchanged.
+- Self-notices rc 1: the newest crash `6345079873` (2026-10-22) is already credited (log count 13). No new crash.
+- Inbox `mission-world`: unread items are this loop's own claim messages. The iteration-316 claim was sent and confirmed in the listing.
+- Ledger valid, 88 rows, 0 OPEN. External-issue sweep not due (#366 is this week's issue).
+
+**Gate 1:**
+- Local dev = origin/dev = `8bfaa1ab` with a clean tracked tree. Base recorded `8bfaa1ab28000937234aececa2ccd818e2b522a9@2026-10-29T00:04:34Z`; the Gate-3 snap matched (no drift).
+- Skill: `SKILL.md` and all 13 resource files are byte-identical to `origin/dev` at the resolved symlink target (per-file `cmp`).
+- Open PR from this account: #402 (attended row-217 trial). Not this loop's work; left alone.
+
+**Rule 3e(a) baseline (controller, at base, outside the sandbox):** all 7 focused plan gates had a named top-level PASS with 0 SKIP. `verify_ail.sh` rc 0 in both the plan's form (`AILANG_BIN` = pinned v0.41.0, 82 s) and the release form (v0.54.19 + `WORLD_PKG_AILANG_BIN`, 28 s). The initial C11 observation had 12 records. The first baseline attempt word-split a list under zsh and ran nothing; that was an instrument failure, rerun from a bash script.
+
+**Executor (codex `gpt-6.1-sol`, recipe; probe rc 0; sandbox `workspace-write`; 11 min; 130,665 tok):**
+- `docs/QUICKSTART.md` §13: the sentence "two acceptance criteria are still open" had been false since r5. It now states P0 (a)'s structural match and phone C8′(iii′)'s defect-present rule, and points at §4.4 for the pinned checkers and capture-day controls. It also says the verdict is the `r3` text, because both checkers exit 0 either way.
+- `docs/QUICKSTART.md` §13: `WORLD_MARKETING_RECTS` changed from the R1 file to `$DEMO_DIR/rects.json` (§4.4 P3: the release store's own rectangles are the capture file; R1 is the position baseline).
+- `README.md`: row 156 closed in iteration 312 (D-WORLD-86 = A), so `v1.0.0` waits on 150 and 151.
+- Three allowlisted files were read and left unchanged.
+- Mutation M8b-C11-redrill: `if false && b.Lines != a.Lines` was killed by `digest-equal-line-change` only, and restored byte-identical (sha `bfc99a8d…` both sides).
+- C11 before/after equal; protected diff empty.
+- Socket tests were labelled UNINFORMATIVE UNDER SANDBOX. The full and race suites were not run, as directed (controller-owned).
+
+**Controller verification (outside the sandbox, at `3f185a9a`, macOS):**
+- 7/7 focused gates had a top-level PASS with 0 SKIP.
+- QuickStart sweep in `cmd/ailang-worldd`: 7 PASS, 0 FAIL. `TestMarketingDocsLinks` and `TestMarketingRunbookMatchesHelp` PASS; `TestQuickstart*` in host/broker and host/daemon ok.
+- `verify_ail.sh` rc 0 (65 s); `go build ./...` rc 0; `go test -race ./host/daemon` rc 0 (477 s); `go test -race` coordinator/workbench/evidence/marketingcheck rc 0 (188 s).
+- **`go test ./...` rc 1, red only in `host/broker`:** `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty` (arm 6, `accepts 2`) and `TestExecProtectedCheckTimeout/reserve-after-before` (a deadline overrun). The package took 524 s while the judge ran heavy focused tests concurrently.
+- Attribution: each test passed 3/3 isolated at head AND at base `8bfaa1ab`. The package passed uncontended (rc 0, 231 s). Neither test file reads the changed docs (grep 0). So the reds are intermittent under CPU load and inherited, not this diff.
+- The `chatty` arm is a row-229 probe test, so it is added to row 232 as instance 2 (macOS, under load; instance 1 was `reset-holder` on Linux CI). Banked at `verification/world-iter316/m8b-host-broker-load-reds.txt`. That file sits under the plan's "and its scratch snapshots" clause, not the five-file allowlist (judge r2 note).
+
+**Independent evaluation (sonnet, Agent tool, own worktree `.eval-world-iter316`, foreground):**
+- **r1 at `3f185a9a`: PASS 93/100** (31/20/14/14/14), zero blocking.
+  - Checked every changed sentence against §4.4 and the charter, and recomputed both checker sha256 pins.
+  - Re-ran the redrill (one subtest reds) and two mutations of its own. A `--rectangls` flag typo is killed by `TestMarketingRunbookMatchesHelp`, and a `packetx.png` link by `TestMarketingDocsLinks`.
+  - Ran the focused gates plus the doc readers: all PASS.
+  - NB1: §13 does not say where `$DEMO_DIR/rects.json` comes from. NB2: reverting the rects path to R1 **survives** every test (the controller reproduced this: both doc tests PASS with the revert). NB3: the P0/P3 sentence is terse. NB4: an executor ledger count slip (51 vs 52, self-disclosed).
+- **Controller fix (`706af0e4`):** NB1. The sentence now names "the V60 block-box probe's output for that store" (§4.4 P0 item 3). Doc readers re-run: PASS.
+- **r2 at `706af0e4` (resumed): PASS 93/100**, zero blocking.
+  - NB1 CLOSED.
+  - NB2 agreed non-blocking, going to row 231.
+  - NB3 and NB4 accepted.
+  - It spot-checked the broker attribution (both PASS once at head; grep 0) and called it plausible, not proven (no contended re-run).
+
+**Bookkeeping:**
+- Sprint JSON M8b `completed`; plan §M8b status **built**; orchestration §3 and §5 M8b BUILT, `Estimated:` 0 executor runs pending.
+- Charter: STATUS 316 added and STATUS 313 rotated to the archive; CURRENT GOAL next line updated.
+- Row 150: M8b recorded, NEXT = P0/P3 within the attended A1 window.
+- Row 231 gains NB2 (a rects-path guard test). Row 232 gains instance 2.
+- Doc stays in `planned/`, because row 150 is not complete (A1).
+
+**Result:** M8b is BUILT on `sprint/world-iter316-row150-m8b` (PR #405). Commits are `3f185a9a` (executor diff) and `706af0e4` (NB1 + evidence), plus this record. It is LANDED only after merge-commit CI (Gate 3b).
+
+**Routing evidence:** base=8bfaa1ab28000937234aececa2ccd818e2b522a9@2026-10-29T00:04:34Z (Gate 1 record = Gate 3 snap). Driver env: `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION` empty; `MISSION_ROUTING_NOTE` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer and planner: not routed (plan exists; no design change).
+- Executor: resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; probe rc 0; ran `codex exec` (workspace-write, `--add-dir` GOCACHE/GOMODCACHE/snapshot dir), rc 0, 130,665 tok. Not the Agent tool: the recipe is the only valid path for a `provider:model` pin.
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`); r1 68,577 tok / 306 s; r2 76,420 tok cumulative / 70 s (resumed).
+- Generator ≠ judge: codex (OpenAI) vs sonnet (Anthropic), cross-vendor.
+- Quorum: none (no doc). Metered $0.00.
+
+**Ruled out:**
+- "The full-suite red is this diff": refuted. The diff is docs-only, both tests are 3/3 green at head and base, and the package is green uncontended.
+- The first rule-3e(a) baseline "rc=1 0s" was a zsh word-split instrument failure, not a gate verdict.
+- verify_ail's 9 property skips are the gate's pinned no-generator set, identical at base. They are not M8b's.
+
+**Carried:**
+- Row 231 + NB2 (no test pins `WORLD_MARKETING_RECTS`).
+- Row 232 instance 2 (the `chatty` arm on macOS under load).
+- `.wt-world-iter306-r0` residue.
+- Row 150's remaining steps are all controller-in-attended-window or attended: P0 within 24 h before A1, P3 before pass A, and A1 itself (descriptor publish + `session mint` + capture + promotion).
+
+**Retro:**
+- **Concurrent judge + full suite manufactures reds.** Running the judge's focused Chrome/daemon tests alongside `go test ./...` doubled `host/broker` to 524 s and reddened two timing-sensitive tests. The attribution cost about 10 min. Next time, either run the full suite before spawning the judge, or forbid the judge heavy tests while it runs. Instance 1.
+- **The zsh word-split trap struck a controller loop again**, which Gate 3b already names for pollers. It applies to every ad-hoc gate loop: write it as a bash script. Instance 1 for World (the fleet had 7).
+- **A doc test that reads flags does not read values.** `TestMarketingRunbookMatchesHelp` proves the flags parse, but not which file they name, so the rects-path revert survives. Filed on row 231.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release row). Row 150: 23/23 executor milestones built. Remaining: the controller steps P0/P3 and the attended A1 (needs Mark).
+**Next:** row 150's A1 is attended. Mark schedules it, and the controller runs P0 (≤24 h before) and P3 (before pass A) in that window. The loop's next pick under D-WORLD-81 is row 151 if routable (it needs row 188 N2d and N4a; check at Gate 2), else the highest routable of rows 230–232.

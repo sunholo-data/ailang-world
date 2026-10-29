@@ -1,15 +1,15 @@
-# World mission dashboard — iteration 315 (2026-10-28)
+# World mission dashboard — iteration 316 (2026-10-29)
 
-- **This fire:** row 150's C8′(iii)/P0 amendment is written. The two geometry rules that R1 found unable to hold on another store are replaced with store-independent ones (orchestration doc r3 → r5).
-- **P0 (a):** left/right edges and stack-head tops stay at ±2 px. Each later region is placed from the previous region's measured bottom. Packet paragraphs may grow or shrink by whole 24 px lines. Result: 9/9 stores accepted (the old rule accepted 8) and 18/18 wrong crops refused.
-- **Phone (iii′):** the check asserts that the overflow defect is present (a thumb at the bottom, title ink clipped at ≥387), not its width. The width ranges 324–340 across stores. Result: 19/19 images accepted (the old rule accepted 1) and 12/12 refused.
-- **Quorum:** the r3 round was BLOCKED 3/3 on provenance labels. The controller measured the renderer as unchanged across all four bases. r4 was revised and BLOCKED again (Gemini PASS; Kimi and GLM REJECT), so r5 applies their fixes under the carve-out: source sha256 pins, a capture-day accept/refuse control step, and the P0 checklist. Each fix has its own named mutation. gpt6-1-sol was absent both rounds (OpenAI 429). Spend $1.01.
-- **Judge:** sonnet r1 PASS 77, zero blocking. It found that phonecheck tested a span, not a run, so two stray pixels passed; the controller fixed it and re-pinned. r2 PASS 84, zero blocking.
-- **Roles (Agent tool):** designer opus (2 runs, one doc) and evaluator sonnet (2 rounds). No planner or executor; the milestone plan is unchanged.
+- **This fire:** row 150's last executor milestone, M8b, is built (PR #405). It covers the final repository gates and the C11 protected-path observation.
+- **Docs:** QUICKSTART §13 no longer says two criteria are "still open". It states the r5 rules: P0 (a) is a structural match, and phone (iii′) checks that the overflow defect is present. The verdict is the checkers' `r3` text, since both exit 0 either way. The capture's rectangles file is now the release store's own V60 `rects.json`; R1 is the position baseline only. README no longer lists row 156 as pending.
+- **Gates (controller, outside the sandbox):** all 7 focused gates passed, plus `verify_ail.sh`, `go build` and both race gates.
+- **Full-suite red:** `go test ./...` was red only on two `host/broker` timing tests while the judge ran heavy tests at the same time. Both pass 3/3 isolated, at head and at base, and the package is green when uncontended. One of them is row 232 instance 2.
+- **C11 and mutation:** protected paths are unchanged (12 records). The C11 redrill mutant is killed.
+- **Judge:** sonnet r1 PASS 93, zero blocking. The controller fixed NB1 (naming the V60 probe as the rects source). r2 PASS 93, zero blocking. NB2 (no test pins the rects value) goes to row 231.
+- **Roles:** executor codex `gpt-6.1-sol` (recipe), judge sonnet (Agent tool), cross-vendor. No designer or planner was needed.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
-- **Row 150:** 22/23 executor milestones built (M8b left). The amendment is written; P0, P3 and the attended A1 remain.
-- **Next:** row 150 M8b, then P0–P3 using the r5 predicates. Rows 230 and new 231 (commit the P0/phone checkers) sit below the release rows.
-- **Parked on Mark:** nothing; the ledger has 0 OPEN rows.
-- **Heads-up for Mark:** at Gate 0 the controller printed env values, including an OAuth token, into its own local session transcript. The token is in no repo file or message. Rotate it if transcripts leave the machine.
-- **Cost:** metered $1.01 (quorum); Anthropic quota otherwise.
-- **Record/evidence:** world-mission-log.md entry 315; verification/world-iter315/.
+- **Row 150:** 23/23 executor milestones built. Remaining: the **attended A1** (descriptor publish, `session mint`, capture, promotion), with the controller's P0 in the 24 h before it and P3 before pass A.
+- **Next (loop):** row 151 if routable (it needs row 188 N2d/N4a), else rows 230–232.
+- **Parked on Mark:** no ledger decisions (0 OPEN). **Attended action:** schedule A1 when convenient.
+- **Cost:** metered $0.00; codex and Anthropic quota only.
+- **Record/evidence:** world-mission-log.md entry 316; verification/world-iter316/.

@@ -1653,12 +1653,15 @@ descriptor publish in §12 are typed by a person at a terminal, as §12 describe
 
 Build the capture verifier and set the inputs. The Chrome must be an explicit binary of
 major version 155 or later; the capture records its `--version` before and after the
-passes.
+passes. The controller supplies the release store's own measured `rects.json` (the V60
+block-box probe's output for that store), accepted by the P0 position assertion under P3
+(orchestration §4.4), at `$DEMO_DIR/rects.json`. The R1 rectangles are the position
+baseline only.
 
 ```bash
 go build -o "$DEMO_DIR/marketingcheck" ./scripts/marketingcheck
 export WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-export WORLD_MARKETING_RECTS=design_docs/verification/world-iter312/r1-rects.json
+export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json
 export CAPTURE_OUT=$DEMO_DIR/capture
 ```
 
@@ -1695,9 +1698,12 @@ passes over one frozen store. A fresh seed produces a different store and differ
 (D-WORLD-75), so a second seed is a new capture, not a repeat of these images. Before the
 attended capture, the controller's P0 probe (`w-marketing-capture-orchestration` §4.4) must
 pass within 24 hours, and P3, a GET-only probe of the release store itself, runs before
-pass A. Two acceptance criteria are still open and are amended before any release capture:
-the phone overflow check C8′(iii) and P0's ±2 px tolerance for wrapping packet paragraphs
-(orchestration V60 and V63).
+pass A. P0 (a) now requires a structural match against R1 (§4.4 (a1)–(a4)); phone
+C8′(iii′) requires the disclosed overflow defect to be present, without its magnitude.
+Use the sha256-pinned `.txt` checkers in `design_docs/verification/world-iter315/`,
+following orchestration §4.4 (r5) for the exact invocations and capture-day accept/refuse
+controls before reading either capture-store verdict. Read `p0check`'s `r3` column and
+`phonecheck`'s `r3` field: both print ACCEPT/REFUSE and exit 0 either way.
 
 Promotion is not part of this section. After the capture, the controller copies the six
 verified PNGs and `capture-manifest.json`, unmodified, into `website/static/img/v1/`,

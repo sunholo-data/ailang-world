@@ -2172,7 +2172,7 @@ Narrowest gate list: exactly the command block above, plus each listed mutation 
 
 ## M8b — Final repository gates and protected-path observation
 
-Design M8; 25 minutes; dependency: M8a; status **pending**.
+Design M8; 25 minutes; dependency: M8a; status **built** (iteration 316, PR #405; executor codex gpt-6.1-sol; controller-run repository gates outside the sandbox; judge r1 PASS 93 → r2 PASS 93; see the sprint JSON `completed` record).
 
 Exact executor files:
 
