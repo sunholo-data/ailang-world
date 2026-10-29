@@ -34,6 +34,7 @@
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
 //	ailang-worldd episode start <episode> --repo <dir> [--profile <project>] ...
+//	ailang-worldd episode launch <episode> --preset <name> [--presets-dir D] [--headless]
 //	ailang-worldd [--addr http://127.0.0.1:7644] episode report <episode> [--json] [--follow]
 //	ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
 //	ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
@@ -124,7 +125,8 @@ Usage:
   ailang-worldd episode finish <episode> --preset <name> [--presets-dir D] [--title TEXT]
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]
   ailang-worldd preset list|show|check|init [name] [--presets-dir <dir>]
-  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>]
+  ailang-worldd episode launch <episode> --preset <name> [--presets-dir <dir>] [--headless]
+  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>] [--launch] [--headless]
   ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
   ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
                     [--rig <dir> --addr <url> [--project ailang-world]]

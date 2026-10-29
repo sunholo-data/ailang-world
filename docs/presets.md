@@ -1,8 +1,8 @@
-# Launch presets (M0/M1)
+# Launch presets
 
 A preset is private operator configuration. It pins the repository's local base
 branch, daemon paths, grants, agent and checks before the terminal confirmation.
-No check runs at start. No fetch or agent launch occurs. Finish runs the checks
+No check or fetch runs at start. Add --launch --headless to launch after mint. Finish runs the checks
 pinned in the start record, even if the preset file later changes:
 `ailang-worldd episode finish <id> --preset my-repo --dry-run` previews the local
 commit and report body; omit --dry-run to keep them and print manual PR steps.
@@ -40,7 +40,7 @@ default daemon is the home service's service.json. For a separate daemon use:
 
 The complete generated file has schema world/preset/v1, name, repo, remote,
 base, agent, ttl_s and grants. Optional fields are profile, model, daemon,
-launch and checks. Unknown fields refuse. launch is validated for future use.
+launch and checks. Unknown fields refuse. launch selects the mode and wall cap.
 Grants use {"effect":"Workspace.Read","scope":"worktree","budget":5000}, or
 {"set":"se-tools","budget":50}. Workspace.Exec requires profile.
 
@@ -66,3 +66,41 @@ preset bytes, base sha and pinned checks. Session self exposes a smaller start
 summary. Revoke ends the credential and retains start history. A schema-2
 credentials store must first be upgraded by serve; the CLI never upgrades it.
 The fixture tests in preset_test.go exercise this workflow in temporary dirs.
+
+## Headless launch (M2)
+
+Mint and launch together at the attended terminal:
+
+```sh
+ailang-worldd episode start --preset my-repo --task /absolute/path/to/task.md --launch --headless
+```
+
+Or launch a previously minted, live episode:
+
+```sh
+ailang-worldd episode launch my-episode --preset my-repo --headless
+ailang-worldd episode report my-episode --json
+ailang-worldd episode finish my-episode --preset my-repo
+```
+
+Launch reads the preset name, agent, model, task digest and launch settings pinned
+at mint. The current preset supplies the daemon and paths and must name the same
+store. Without --headless, the pinned launch.mode selects the mode; its default
+is interactive, which arrives in M3. For headless defaults use
+`"launch": {"mode": "headless", "deadline_s": 3600}`; a missing or zero deadline
+also means 3600 seconds.
+
+With sessions_dir /absolute/path/world/sessions, the agent starts in the empty
+0700 directory /absolute/path/world/launch/my-episode. A nonempty directory,
+symlink or overlap with workspace/session data refuses. A 0600
+/absolute/path/world/sessions/my-episode.launch.lock holds the launch pid; remove
+a stale lock only after that launch has ended.
+
+The 0600 stream is /absolute/path/world/sessions/my-episode.transcript.jsonl;
+stderr is /absolute/path/world/sessions/my-episode.agent.err. Later launches
+append a numbered separator. Literal session tokens cause the stream to be
+replaced with a refusal line. Temporary output stays in the sessions directory.
+Claude's private MCP config is deleted after exit; Codex receives the token only
+in its child environment. The report's start.launches records the exit, reason,
+transcript digest and redacted argv. The lock is removed, and the session stays
+live so another launch or episode finish can use it. Finish is the next step.

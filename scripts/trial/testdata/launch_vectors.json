@@ -1,0 +1,115 @@
+{
+  "contexts": [
+    {
+      "name": "base-and-grants",
+      "session_self": {
+        "episode": "ep9",
+        "worktree": "/absolute/path/ws/ep9",
+        "secondsLeft": 3661,
+        "addr": "http://fixture",
+        "git": {
+          "base": "abcdef0123",
+          "base_date": "2026-10-28T09:00:00Z",
+          "base_subject": "base <&> 🚀",
+          "behind": 3,
+          "dirty": false
+        },
+        "grants": [
+          {
+            "effect": "Workspace.Write",
+            "left": 9,
+            "budget": 10
+          },
+          {
+            "effect": "Workspace.Read",
+            "left": 0,
+            "budget": 1000000
+          }
+        ]
+      },
+      "addr": "127.0.0.1:7644",
+      "expected": "You are working inside AILANG World (confined).\nEpisode ep9 · worktree /absolute/path/ws/ep9 · session 1h1m left · daemon http://fixture\nBase abcdef0 (2026-10-28T09:00:00Z, \"base <&> 🚀\") · dev is 3 commits ahead of it\nYour only file and shell access is World's MCP tools:\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\nGrants left: Workspace.Write 9/10, Workspace.Read 0/1000000\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  ·  explain an entry: ailang-worldd why <entry>\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
+    },
+    {
+      "name": "dirty",
+      "session_self": {
+        "episode": "ep9",
+        "worktree": "/absolute/path/ws/ep9",
+        "secondsLeft": 3661,
+        "addr": "http://fixture",
+        "git": {
+          "base": "abcdef0123",
+          "base_date": "2026-10-28T09:00:00Z",
+          "base_subject": "base <&> 🚀",
+          "behind": 3,
+          "dirty": true
+        },
+        "grants": [
+          {
+            "effect": "Workspace.Write",
+            "left": 9,
+            "budget": 10
+          },
+          {
+            "effect": "Workspace.Read",
+            "left": 0,
+            "budget": 1000000
+          }
+        ]
+      },
+      "addr": "127.0.0.1:7644",
+      "expected": "You are working inside AILANG World (confined).\nEpisode ep9 · worktree /absolute/path/ws/ep9 · session 1h1m left · daemon http://fixture\nBase abcdef0 (2026-10-28T09:00:00Z, \"base <&> 🚀\") · dev is 3 commits ahead of it · worktree has uncommitted changes\nYour only file and shell access is World's MCP tools:\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\nGrants left: Workspace.Write 9/10, Workspace.Read 0/1000000\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  ·  explain an entry: ailang-worldd why <entry>\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
+    },
+    {
+      "name": "git-error",
+      "session_self": {
+        "episode": "ep9",
+        "secondsLeft": 7200,
+        "git": {
+          "error": "local git metadata timed out (2s budget)"
+        }
+      },
+      "addr": "127.0.0.1:7644",
+      "expected": "You are working inside AILANG World (confined).\nEpisode ep9 · worktree ? · session 2h0m left · daemon http://127.0.0.1:7644\nBase unknown: local git metadata timed out (2s budget)\nYour only file and shell access is World's MCP tools:\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  ·  explain an entry: ailang-worldd why <entry>\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
+    },
+    {
+      "name": "minimal-episode",
+      "session_self": {
+        "episode": "ep1",
+        "secondsLeft": 59
+      },
+      "addr": "127.0.0.1:7644",
+      "expected": "You are working inside AILANG World (confined).\nEpisode ep1 · worktree ? · session 0h0m left · daemon http://127.0.0.1:7644\nYour only file and shell access is World's MCP tools:\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  ·  explain an entry: ailang-worldd why <entry>\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
+    },
+    {
+      "name": "unauthorized",
+      "session_self": null,
+      "addr": "127.0.0.1:7644",
+      "expected": "You are working inside AILANG World (confined).\nYour only file and shell access is World's MCP tools:\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  ·  explain an entry: ailang-worldd why <entry>\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
+    }
+  ],
+  "prompts": [
+    {
+      "task": "Fix fixture.\n",
+      "commands": [
+        "go-test",
+        "go-vet"
+      ],
+      "expected": "Fix fixture.\n\n---\nChannel note (trial operator): work only through the World MCP tools (`mcp__world__*`); there is no shell and no native file access, and paths are relative to the episode worktree. `workspace-exec` runs the operator's profiled commands by id: `go-test`, `go-vet`. Each call is sandboxed (no network, short timeout). When you are done, finish by summarising the change you made.\n"
+    },
+    {
+      "task": "No newline",
+      "commands": [],
+      "expected": "No newline\n\n---\nChannel note (trial operator): work only through the World MCP tools (`mcp__world__*`); there is no shell and no native file access, and paths are relative to the episode worktree. `workspace-exec` runs the operator's profiled commands by id: (none profiled). Each call is sandboxed (no network, short timeout). When you are done, finish by summarising the change you made.\n"
+    },
+    {
+      "task": "",
+      "commands": [],
+      "expected": "\n\n---\nChannel note (trial operator): work only through the World MCP tools (`mcp__world__*`); there is no shell and no native file access, and paths are relative to the episode worktree. `workspace-exec` runs the operator's profiled commands by id: (none profiled). Each call is sandboxed (no network, short timeout). When you are done, finish by summarising the change you made.\n"
+    }
+  ],
+  "developer_instructions": {
+    "context": "You are working inside AILANG World (confined).\nEpisode ep9 · worktree /absolute/path/ws/ep9 · session 1h1m left · daemon http://fixture\nBase abcdef0 (2026-10-28T09:00:00Z, \"base <&> 🚀\") · dev is 3 commits ahead of it\nYour only file and shell access is World's MCP tools:\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\nGrants left: Workspace.Write 9/10, Workspace.Read 0/1000000\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  ·  explain an entry: ailang-worldd why <entry>\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World.",
+    "value": "\"You are working inside AILANG World (confined).\\nEpisode ep9 \\u00b7 worktree /absolute/path/ws/ep9 \\u00b7 session 1h1m left \\u00b7 daemon http://fixture\\nBase abcdef0 (2026-10-28T09:00:00Z, \\\"base <&> \\ud83d\\ude80\\\") \\u00b7 dev is 3 commits ahead of it\\nYour only file and shell access is World's MCP tools:\\n  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)\\n  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)\\n  AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search\\nGrants left: Workspace.Write 9/10, Workspace.Read 0/1000000\\nEvery call is recorded. See it: http://127.0.0.1:7644/surface  \\u00b7  explain an entry: ailang-worldd why <entry>\\nYour host's own file and shell tools are switched off or read-only on purpose; World's tools above are how you read, write and run checks, and they are not governed by that sandbox.\\nOut of budget or need a new grant? Say so; the operator mints it. Don't try to work around World.\""
+  }
+}
