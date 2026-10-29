@@ -293,8 +293,13 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 					continue
 				}
 				if key != "node" {
+					// A chain that no longer passes placement is not clean:
+					// re-acceptance walks every argv[0] chain it examines and
+					// refuses a bad one in F15's three-part form.
 					if err := checkExecChainPlacement("argv[0]", t.configured, t.configured, s.forbidden); err != nil {
-						return nil, nil, err.Error(), nil
+						clean = false
+						pendingTool, pendingTarget = t.name, t.configured
+						break
 					}
 				}
 				id, err := toolIdentity(t.configured, key == "node")
@@ -423,6 +428,23 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 				continue
 			}
 			return nil, nil, refused, nil
+		}
+		// The final target can be unchanged while the chain to it now passes
+		// through a forbidden root: walk it for every argv[0] examined here,
+		// so an unchanged identity never skips the placement check.
+		if key != "node" {
+			if err := checkExecChainPlacement("argv[0]", t.configured, t.configured, s.forbidden); err != nil {
+				next := execToolNext(t.configured, id.path, repo, execToolProject(t, project), false)
+				why := "the executable failed startup checks"
+				refused := execToolF15(t, id.path, err.Error(), why, next)
+				s.remember(key, id, "does-not-start: "+why+": "+err.Error(), next, false)
+				if nodeChanged {
+					excluded[t.project] = refused
+					delete(current, key)
+					continue
+				}
+				return nil, nil, refused, nil
+			}
 		}
 		if t.failed != nil && sameTool(*t.failed, id) {
 			if key != "node" && nodeChanged {

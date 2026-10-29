@@ -250,3 +250,33 @@ func TestExecToolCloseCancelsFlight(t *testing.T) {
 		t.Fatalf("closed state started another flight: %v", err)
 	}
 }
+
+// The judge's round-3 reproduction (operator fix): the final target is
+// unchanged, but the chain to it now runs through the workspace root. The call
+// must refuse in F15's form and spawn nothing.
+func TestExecToolBadChainSameTargetRefuses(t *testing.T) {
+	base := canonicalTempDir(t)
+	tool := filepath.Join(base, "real-tool")
+	if err := os.WriteFile(tool, []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	mid := filepath.Join(base, "mid")
+	repointTool(t, mid, tool)
+	link := filepath.Join(base, "link")
+	repointTool(t, link, mid)
+	m := newMovingExec(t, execFixtureOpts{profile: func(p map[string]any) {
+		p["commands"] = map[string]any{"test": map[string]any{"argv": []any{link}, "positional": "relpath", "max_args": 8}}
+	}})
+	m.f.mustRun(t, "test", "a")
+	steer := filepath.Join(m.f.root, "steer")
+	repointTool(t, steer, tool)
+	repointTool(t, mid, steer)
+	before := m.f.h.Spawns()
+	out, err := m.f.call(t, "test", "a")
+	if err != nil || !strings.Contains(string(out), "does not start:") {
+		t.Fatalf("want the F15 refusal, got %s %v", out, err)
+	}
+	if m.f.h.Spawns() != before {
+		t.Fatal("ran through a steering link inside the workspace root")
+	}
+}
