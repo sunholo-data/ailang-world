@@ -48,8 +48,9 @@ func TestFrozenV1RouteTableMatchesMux(t *testing.T) {
 	}
 	sort.Strings(mux)
 	sort.Strings(sketch)
-	// Twelve since row 223d added GET /v1/session/self.
-	if len(mux) != 12 || len(sketch) != 12 || !reflect.DeepEqual(mux, sketch) {
-		t.Fatalf("frozen routes: mux=%v sketch=%v; want identical twelve pairs", mux, sketch)
+	// Thirteen since row 218 M2 added POST /v1/episodes/{episode}/finish (the
+	// operator route, D-WORLD-100 R6); twelve since row 223d's GET /v1/session/self.
+	if len(mux) != 13 || len(sketch) != 13 || !reflect.DeepEqual(mux, sketch) {
+		t.Fatalf("frozen routes: mux=%v sketch=%v; want identical thirteen pairs", mux, sketch)
 	}
 }

@@ -47,6 +47,7 @@ import (
 // EpisodeReport is the GET /v1/episodes/{episode}/report body and
 // `ailang-worldd episode report --json`'s output.
 type EpisodeReport struct {
+	Finish  *EpisodeFinish      `json:"finish,omitempty"`
 	Start   *store.EpisodeStart `json:"start,omitempty"`
 	Episode string              `json:"episode"`
 	// Entries is [first, last]: the episode's first and last log entries.
@@ -711,7 +712,12 @@ func (d *Daemon) handleEpisodeReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rep.Start = start
-	if !ok && start == nil {
+	rep.Finish, err = d.readEpisodeFinish(ctx, episode)
+	if err != nil {
+		d.writeInternalError(w, r, err)
+		return
+	}
+	if !ok && start == nil && rep.Finish == nil {
 		writeAPIError(w, "NotFound", "episode "+episode+" has no committed calls", http.StatusNotFound)
 		return
 	}
