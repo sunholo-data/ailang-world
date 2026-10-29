@@ -49,7 +49,12 @@ import (
 
 const episodeHelp = `episode finish <episode> --preset <name>: attended local checks, commit and body; see episode finish --help.
 
-Launch presets (M0/M1):
+Headless launch (M2):
+  ailang-worldd episode launch <episode> --preset NAME [--presets-dir D] [--headless]
+  --launch             launch after mint (requires a launch preset and task)
+  --headless           select headless mode (on start, requires --launch)
+
+Launch presets:
   ailang-worldd episode start [episode] --preset NAME [--presets-dir D] [--task FILE]
       [--agent claude|codex] [--model M] [--ttl S] [--branch EXISTING]
 Presets pin the base, grants and checks. Overrides are named at the terminal.
@@ -81,7 +86,8 @@ launch line for its agent. In order:
   4. for claude, a private 0600 MCP config <sessions-dir>/<episode>.mcp.json,
      then the launch line: the bare claude argv (no native tools, only World's
      MCP tools the grants cover), or for codex the WORLD_SESSION form.
-It never runs the agent, commits, pushes or opens a PR. The token is never
+With --launch it runs the headless agent after mint; otherwise it prints the launch line.
+It never commits, pushes or opens a PR. The token is never
 printed; it lives only in the .session file and the .mcp.json (delete the
 .mcp.json after the run).
 
@@ -155,6 +161,8 @@ func runEpisode(addr string, args []string, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "start":
 		return runEpisodeStart(args[1:], stdout, stderr, realSessionEnv())
+	case "launch":
+		return runEpisodeLaunch(args[1:], stdout, stderr)
 	case "finish":
 		return runEpisodeFinish(args[1:], stdout, stderr, realSessionEnv())
 	case "report":
@@ -187,6 +195,8 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	ttl := fs.Int64("ttl", 3600, "session lifetime in seconds")
 	preset := fs.String("preset", "", "launch preset, or se-tools grant set")
 	presetsDir := fs.String("presets-dir", defaultPresetsDir(), "launch presets")
+	launch := fs.Bool("launch", false, "launch after the attended mint")
+	headless := fs.Bool("headless", false, "headless launch; requires --launch")
 	var grantSpecs multiFlag
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable")
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
@@ -204,6 +214,13 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	fail := func(format string, a ...any) int {
 		fmt.Fprintf(stderr, "ailang-worldd episode start: "+format+"\n", a...)
 		return exitUsage
+	}
+
+	if *headless && !*launch {
+		return fail("%v", presetRefusal("--headless requires --launch on episode start", "headless selects a launch mode", "add --launch with a launch preset"))
+	}
+	if (*launch || *headless) && (*preset == "" || *preset == "se-tools") {
+		return fail("%v", presetRefusal("--launch and --headless require a launch preset", "the launch settings and task must be pinned", "use --preset <name>"))
 	}
 
 	// Launch presets validate before daemon contact and share the existing fence.
