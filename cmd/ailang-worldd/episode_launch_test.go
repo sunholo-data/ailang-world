@@ -174,7 +174,13 @@ func TestLaunchHeadlessClaudeAC9AndSecondLaunch(t *testing.T) {
 	} else if !strings.Contains(out, "episode finish ep --preset p") || !strings.Contains(out, "episode report ep") {
 		t.Fatal(out)
 	}
-	dir := filepath.Join(f.root, "launch", "ep")
+	// The child reports its resolved cwd; on macOS t.TempDir() is under /var,
+	// a symlink to /private/var, so compare against the resolved root.
+	root, err := filepath.EvalSymlinks(f.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(root, "launch", "ep")
 	if got := strings.TrimSpace(f.contents(filepath.Join(f.facts, "cwd"))); got != dir {
 		t.Fatalf("cwd %q != %q", got, dir)
 	}

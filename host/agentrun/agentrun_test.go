@@ -28,7 +28,9 @@ func TestAgentrunWallCapKillsDescendants(t *testing.T) {
 	agent := filepath.Join(bin, "codex")
 	// The descendant holds inherited descriptors and writes repeatedly; killing
 	// only the direct child leaves the heartbeat growing after Run returns.
-	script := "#!/bin/sh\n(while :; do printf x >> \"$HEARTBEAT\"; /bin/sleep 0.05; done) &\nwait\n"
+	// It writes once before forking, so a slow start under load can't look like
+	// a child that never ran; the 3 s cap leaves room for that start.
+	script := "#!/bin/sh\n[ -n \"$WORLD_TEST_WARM\" ] && exit 0\nprintf x >> \"$HEARTBEAT\"\n(while :; do printf x >> \"$HEARTBEAT\"; /bin/sleep 0.05; done) &\nwait\n"
 	if err := os.WriteFile(agent, []byte(script), 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -49,11 +51,12 @@ func TestAgentrunWallCapKillsDescendants(t *testing.T) {
 		}
 	}
 	env = append(env, "HEARTBEAT="+heartbeat)
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	warmAgent(t, agent, void, env)
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
 	before := time.Now()
-	r, err := Run(ctx, []string{agent}, void, env, out, errout, time.Second)
-	if err != nil || r.Reason != "timeout" || time.Since(before) > 3*time.Second {
+	r, err := Run(ctx, []string{agent}, void, env, out, errout, 3*time.Second)
+	if err != nil || r.Reason != "timeout" || time.Since(before) > 6*time.Second {
 		t.Fatalf("%+v %v", r, err)
 	}
 	first, err := os.ReadFile(heartbeat)
@@ -79,7 +82,7 @@ func TestAgentrunForwardsSIGTERM(t *testing.T) {
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	ready := filepath.Join(root, "ready")
 	agent := filepath.Join(bin, "claude")
-	script := "#!/bin/sh\ntrap 'printf received; exit 0' TERM\nprintf ready > \"$READY\"\nwhile :; do /bin/sleep 1; done\n"
+	script := "#!/bin/sh\n[ -n \"$WORLD_TEST_WARM\" ] && exit 0\ntrap 'printf received; exit 0' TERM\nprintf ready > \"$READY\"\nwhile :; do /bin/sleep 1; done\n"
 	if err := os.WriteFile(agent, []byte(script), 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -94,6 +97,7 @@ func TestAgentrunForwardsSIGTERM(t *testing.T) {
 	}
 	defer errout.Close()
 	env := append(childenv.Scrubbed([]string{"PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME")}), "READY="+ready)
+	warmAgent(t, agent, void, env)
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 	type outcome struct {
@@ -128,5 +132,23 @@ func TestAgentrunForwardsSIGTERM(t *testing.T) {
 	data, err := os.ReadFile(out.Name())
 	if err != nil || string(data) != "received" {
 		t.Fatal("signal did not reach child", string(data), err)
+	}
+}
+
+// warmAgent runs a freshly written fake agent once in its no-op mode. On macOS
+// the first exec of a new executable waits for the system's first-execution
+// check (1.7 s measured on an idle-ish host, more under load; repeat execs take
+// none), which would otherwise eat these tests' 2-3 s caps.
+func warmAgent(t *testing.T, agent, dir string, env []string) {
+	t.Helper()
+	sink, err := os.CreateTemp(t.TempDir(), "warm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sink.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	if r, err := Run(ctx, []string{agent}, dir, append(env, "WORLD_TEST_WARM=1"), sink, sink, time.Minute); err != nil || r.ExitCode != 0 {
+		t.Fatalf("warm-up run: %+v %v", r, err)
 	}
 }

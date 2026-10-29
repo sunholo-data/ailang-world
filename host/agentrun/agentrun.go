@@ -78,7 +78,20 @@ func Run(ctx context.Context, argv []string, dir string, env []string, stdout, s
 	}
 	// A child that backgrounds descendants must not leave them running.
 	killErr := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-	if killErr != nil && !procbound.NothingToKill(killErr, func() bool { return procbound.GroupEmpty(cmd.Process.Pid) }) {
+	// darwin: a descendant just killed by the wall cap is reparented and stays a
+	// zombie until launchd reaps it, so give the reap a second before calling a
+	// zombie-only group (EPERM) a cleanup failure.
+	groupGone := func() bool {
+		for deadline := time.Now().Add(time.Second); ; time.Sleep(10 * time.Millisecond) {
+			if procbound.GroupEmpty(cmd.Process.Pid) {
+				return true
+			}
+			if time.Now().After(deadline) {
+				return false
+			}
+		}
+	}
+	if killErr != nil && !procbound.NothingToKill(killErr, groupGone) {
 		return r, errors.Join(err, killErr)
 	}
 	var exit *exec.ExitError
