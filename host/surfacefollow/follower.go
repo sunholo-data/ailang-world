@@ -32,6 +32,8 @@ type Follower struct {
 	Config    Config
 	Collector *Collector
 	Sink      Sink
+	// Seed contains accepted cache partitions, checked again by the first probe.
+	Seed map[string]surface.FollowPartition
 }
 
 type repoState struct {
@@ -85,6 +87,10 @@ func (f *Follower) Run(ctx context.Context) error {
 	states := make([]repoState, len(f.Config.Repos))
 	for i, r := range f.Config.Repos {
 		states[i].status.ID = r.ID
+		if p, ok := f.Seed[r.ID]; ok {
+			states[i].status = Status{ID: r.ID, Head: p.Head, BuiltAt: p.BuiltAt,
+				CheckedAt: p.CheckedAt, LastFailure: p.LastFailure, Partition: &p}
+		}
 	}
 	events := make(chan event, 16)
 	send := func(e event) {

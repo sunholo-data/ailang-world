@@ -256,6 +256,8 @@ type Config struct {
 	// SurfaceIndex is the optional generated index, outside WorkspaceRoot.
 	// It may appear after startup and is read anew on each request.
 	SurfaceIndex string
+	// SurfaceFollow enrolls read-only sources; mutually exclusive with SurfaceIndex.
+	SurfaceFollow string
 	// RunAllowCaps, RunNetAllow and RunNetAllowHTTP (`--run-allow-caps`,
 	// `--run-net-allow`, `--run-net-allow-http`; row 135 §4.3/§4.6) are the
 	// operator's ailang-run allowlist: the extra capabilities (Declassify,
@@ -393,6 +395,7 @@ func (e *StartupError) Unwrap() error { return e.Err }
 // and the HTTP server is built with its D7 timeouts. Listen/Serve/Shutdown/Close
 // drive the rest of the lifecycle.
 type Daemon struct {
+	follow    *surfaceFollow
 	startedAt int64
 	activity  activityTracker
 	cfg       Config
@@ -677,6 +680,9 @@ func resolveErrorLog(w io.Writer) io.Writer {
 // Pass the caller's intended bootstrap-read ctx; this API supplies no default timeout.
 func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	_ = CurrentBuild()
+	if cfg.SurfaceIndex != "" && cfg.SurfaceFollow != "" {
+		return nil, &StartupError{Stage: StageConfig, Detail: "surface follow refused: --surface-follow and --surface-index are mutually exclusive; next: ailang-worldd serve --help"}
+	}
 	if !isLoopbackHost(cfg.BindHost) {
 		return nil, &StartupError{
 			Stage: StageBindPolicy,
@@ -769,7 +775,13 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		return nil, &StartupError{Stage: StageStoreOpen, Detail: "cannot open the credentials store", Err: err}
 	}
 
+	follow, err := newSurfaceFollow(cfg, workspace.root)
+	if err != nil {
+		_ = s.Close()
+		return nil, &StartupError{Stage: StageConfig, Detail: err.Error()}
+	}
 	d := &Daemon{
+		follow:    follow,
 		startedAt: time.Now().Unix(),
 		cfg:       cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
@@ -1036,7 +1048,7 @@ func releaseFromVersion(version string) string {
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
 // ten. GET /surface/index.json, GET /surface/static (the server-rendered timeline and stack
 // pages, row 188 M2/M3) and GET /surface/surface.js (their script, M4a) are also unversioned
-// read routes outside the frozen table, as are GET /surface/model.json and
+// read routes outside the frozen table, as are GET /surface/follow-status.json, GET /surface/model.json and
 // GET /surface/stack.json (the app's view model, N1) and GET /surface with /surface/app.js,
 // /surface/app.css and /surface/ailang-logo.svg (the app, N2b).
 // The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
@@ -1059,6 +1071,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)
+	mux.HandleFunc("GET /surface/follow-status.json", d.handleSurfaceFollowStatus)
 	mux.HandleFunc("GET /surface", d.handleSurface)
 	mux.HandleFunc("GET /surface/static", d.handleSurfaceStatic)
 	mux.HandleFunc("GET /surface/surface.js", d.handleSurfaceScript)
@@ -1202,6 +1215,7 @@ func (d *Daemon) Shutdown() error { return drain(d.srv, d.drainTimeout) }
 // Close releases writer authority by closing the store (which releases the
 // cross-process writer lock).
 func (d *Daemon) Close() error {
+	d.stopSurfaceFollow()
 	d.stopTemplateMaintenance()
 	return d.store.Close()
 }
@@ -1308,6 +1322,7 @@ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
 	// Row 153 M3b: rebuild missing templates only now that the listener is bound
 	// and announced; the goroutine is cancelled and joined by Close.
 	d.startTemplateMaintenance(ctx)
+	d.startSurfaceFollow(ctx)
 
 	served := make(chan error, 1)
 	go func() { served <- d.Serve() }()
