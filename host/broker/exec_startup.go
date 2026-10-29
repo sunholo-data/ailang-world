@@ -365,7 +365,7 @@ func checkPlacement(flag, value, real string, forbidden []namedRoot) error {
 func checkExecChainPlacement(flag, value, path string, forbidden []namedRoot) error {
 	abs, err := filepath.Abs(path)
 	if err != nil {
-		return err
+		return startupErr(flag, value, "does not resolve: %v", err)
 	}
 	if err := checkPlacement(flag, value, abs, forbidden); err != nil {
 		return err
@@ -389,7 +389,7 @@ func checkExecChainPlacement(flag, value, path string, forbidden []namedRoot) er
 		}
 		info, err := os.Lstat(candidate)
 		if err != nil {
-			return err
+			return startupErr(flag, value, "does not resolve: %v", err)
 		}
 		if info.Mode()&os.ModeSymlink == 0 {
 			prefix = candidate
@@ -401,7 +401,7 @@ func checkExecChainPlacement(flag, value, path string, forbidden []namedRoot) er
 		}
 		target, err := os.Readlink(candidate)
 		if err != nil {
-			return err
+			return startupErr(flag, value, "does not resolve: %v", err)
 		}
 		if filepath.IsAbs(target) {
 			prefix = string(filepath.Separator)
