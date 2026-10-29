@@ -204,6 +204,10 @@ func printFollowed(w io.Writer, o reportOpts, body []byte, rep daemon.EpisodeRep
 
 // printReport renders the compact human table.
 func printReport(w io.Writer, r daemon.EpisodeReport) {
+	if r.Start != nil {
+		data, _ := json.MarshalIndent(r.Start, "  ", "  ")
+		fmt.Fprintf(w, "start:\n  %s\n", data)
+	}
 	fmt.Fprintf(w, "episode %s: %d calls, entries %d-%d, %s .. %s\n",
 		r.Episode, r.TotalCalls, r.Entries[0], r.Entries[1], r.FirstAt, r.LastAt)
 	fmt.Fprintln(w, "calls by tool:")

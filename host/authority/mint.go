@@ -41,6 +41,11 @@ type ProfileBinding struct {
 // MintBound is Mint recording a profile binding on the credential. A binding
 // needs both fields; the zero binding mints exactly what Mint mints.
 func MintBound(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer) (rawToken, credentialID string, row store.SessionRow, err error) {
+	return MintStarted(ctx, st, episodeID, binding, grants, ttl, now, out, nil)
+}
+
+// MintStarted keeps the credential and its attended start in one transaction.
+func MintStarted(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, start *store.EpisodeStart) (rawToken, credentialID string, row store.SessionRow, err error) {
 	if (binding.Project == "") != (binding.Digest == "") {
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: a profile binding needs both the project and its digest")
 	}
@@ -79,7 +84,7 @@ func MintBound(ctx context.Context, st *store.Credentials, episodeID string, bin
 		Project:       binding.Project,
 		ProfileDigest: binding.Digest,
 	}
-	if err := st.MintSession(ctx, row); err != nil {
+	if err := st.MintSessionWithStart(ctx, row, start); err != nil {
 		return "", "", store.SessionRow{}, err
 	}
 

@@ -121,6 +121,8 @@ Usage:
                     [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
   ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s] [--addr <url>]
+  ailang-worldd preset list|show|check|init [name] [--presets-dir <dir>]
+  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>]
   ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
   ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
                     [--rig <dir> --addr <url> [--project ailang-world]]
@@ -429,6 +431,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 			return exitUsage
 		}
 		return runEpisode(*addr, rest[1:], stdout, stderr)
+
+	case "preset":
+		return runPreset(rest[1:], stdout, stderr)
 
 	case "profile": // row 189 M4: profile_init.go
 		return runProfile(rest[1:], stdout, stderr)

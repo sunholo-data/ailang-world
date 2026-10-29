@@ -50,7 +50,7 @@ func TestAddAndRemoveAWorktree(t *testing.T) {
 	repo := newRepo(t, git)
 	dir := filepath.Join(t.TempDir(), "ws", "ep1")
 	_ = os.MkdirAll(filepath.Dir(dir), 0o755)
-	if err := Add(testCtx(t), git, repo, dir, ""); err != nil {
+	if err := Add(testCtx(t), git, repo, dir, "", ""); err != nil {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(dir, ".git"))
@@ -69,7 +69,7 @@ func TestAddWithBranch(t *testing.T) {
 	git := gitBin(t)
 	repo := newRepo(t, git)
 	dir := filepath.Join(t.TempDir(), "ep2")
-	if err := Add(testCtx(t), git, repo, dir, "ep2-work"); err != nil {
+	if err := Add(testCtx(t), git, repo, dir, "ep2-work", ""); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(git, "-C", dir, "rev-parse", "--abbrev-ref", "HEAD")
@@ -91,7 +91,7 @@ func TestAddIgnoresAmbientGitAndRegistryEnvironment(t *testing.T) {
 	t.Setenv("GIT_WORK_TREE", decoy)
 	t.Setenv("AILANG_REGISTRY_API_KEY", "sentinel")
 	dir := filepath.Join(t.TempDir(), "ep3")
-	if err := Add(testCtx(t), git, repo, dir, ""); err != nil {
+	if err := Add(testCtx(t), git, repo, dir, "", ""); err != nil {
 		t.Fatalf("Add under an ambient GIT_DIR: %v", err)
 	}
 	list := exec.Command(git, "-C", repo, "worktree", "list", "--porcelain")
@@ -121,7 +121,7 @@ func TestIsLinked(t *testing.T) {
 	git := gitBin(t)
 	repo := newRepo(t, git)
 	linked := filepath.Join(t.TempDir(), "ep1")
-	if err := Add(testCtx(t), git, repo, linked, ""); err != nil {
+	if err := Add(testCtx(t), git, repo, linked, "", ""); err != nil {
 		t.Fatal(err)
 	}
 	plain := t.TempDir()
@@ -177,7 +177,7 @@ func TestOutputRefusesStdoutPastItsCap(t *testing.T) {
 
 func TestAddFailureIsReported(t *testing.T) {
 	git := gitBin(t)
-	err := Add(testCtx(t), git, filepath.Join(t.TempDir(), "not-a-repo"), filepath.Join(t.TempDir(), "x"), "")
+	err := Add(testCtx(t), git, filepath.Join(t.TempDir(), "not-a-repo"), filepath.Join(t.TempDir(), "x"), "", "")
 	if err == nil || !strings.Contains(err.Error(), "worktree add") {
 		t.Fatalf("err = %v, want a reported git failure", err)
 	}

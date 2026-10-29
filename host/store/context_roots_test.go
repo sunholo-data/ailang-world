@@ -25,6 +25,8 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/doctor.go|doctorStore|Background":                     1, // row 138 M4: doctor's read-only store reads (3 s) through OpenReadOnly
 	"cmd/ailang-worldd/session_new.go|provisionEpisode|Background":           1, // row 138 M5 / row 189 M3: worktree add + 3 s mint + rollback (75 s), shared by session new and episode start
 	"cmd/ailang-worldd/session_new.go|checkBindingFits|Background":           1, // row 189 M2: read-only ListSessions of one episode before the fence (3 s)
+	"cmd/ailang-worldd/preset.go|runPreset|Background":                       1, // row 217: read-only preset validation and git inspection (8 s)
+	"cmd/ailang-worldd/episode_preset.go|runPresetEpisodeStart|Background":   1, // row 217: pre-fence validation and git inspection (8 s)
 	"cmd/ailang-worldd/session_new.go|runSessionList|Background":             1, // row 138 M5: read-only ListSessions (3 s)
 	"cmd/ailang-worldd/setup.go|runSetup|Background":                         1, // row 138 M3: setup's whole-command budget (12 min); no Store call
 	"cmd/ailang-worldd/profile_init.go|runProfileInit|Background":            1, // row 189 M4: profile init's toolchain probes (75 s); no Store call

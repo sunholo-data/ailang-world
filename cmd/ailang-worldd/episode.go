@@ -47,7 +47,13 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
-const episodeHelp = `usage: ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
+const episodeHelp = `Launch presets (M0/M1):
+  ailang-worldd episode start [episode] --preset NAME [--presets-dir D] [--task FILE]
+      [--agent claude|codex] [--model M] [--ttl S] [--branch EXISTING]
+Presets pin the base, grants and checks. Overrides are named at the terminal.
+--preset se-tools retains the existing grant-set meaning.
+
+usage: ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
            [--task <file>] [--agent claude|codex] [--model <m>] [--ttl 3600]
            [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
            [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
@@ -175,7 +181,8 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	agent := fs.String("agent", "claude", "claude or codex")
 	model := fs.String("model", "", "the agent's model")
 	ttl := fs.Int64("ttl", 3600, "session lifetime in seconds")
-	preset := fs.String("preset", "", "grant preset (se-tools)")
+	preset := fs.String("preset", "", "launch preset, or se-tools grant set")
+	presetsDir := fs.String("presets-dir", defaultPresetsDir(), "launch presets")
 	var grantSpecs multiFlag
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable")
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
@@ -193,6 +200,11 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	fail := func(format string, a ...any) int {
 		fmt.Fprintf(stderr, "ailang-worldd episode start: "+format+"\n", a...)
 		return exitUsage
+	}
+
+	// Launch presets validate before daemon contact and share the existing fence.
+	if *preset != "" && *preset != "se-tools" {
+		return runPresetEpisodeStart(fs, positional, *preset, *presetsDir, *profilesDir, *task, grantSpecs, stdout, stderr, env)
 	}
 
 	// 1. Validate everything before the daemon check and the fence.

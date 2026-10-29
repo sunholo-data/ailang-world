@@ -31,3 +31,9 @@ CREATE TABLE IF NOT EXISTS session_credentials (
     project TEXT CHECK (project IS NULL OR project <> ''),
     profile_digest TEXT CHECK ((profile_digest IS NULL) = (project IS NULL) AND (profile_digest IS NULL OR profile_digest <> ''))
 );
+
+-- Attended start history is independent of revocable credentials (version 3).
+CREATE TABLE IF NOT EXISTS episode_starts (
+    episode TEXT PRIMARY KEY CHECK (episode <> ''),
+    start_json TEXT NOT NULL
+);

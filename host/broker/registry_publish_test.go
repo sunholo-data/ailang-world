@@ -1282,7 +1282,7 @@ func driveBrokerDryRunPublish(t *testing.T, probe string) {
 func driveWorktreeAdd(t *testing.T, probe string) {
 	t.Helper()
 	t.Setenv("GIT_DIR", filepath.Join(t.TempDir(), "decoy.git"))
-	if err := worktree.Add(boundedTestContext(t), probe, t.TempDir(), filepath.Join(t.TempDir(), "ep"), ""); err != nil {
+	if err := worktree.Add(boundedTestContext(t), probe, t.TempDir(), filepath.Join(t.TempDir(), "ep"), "", ""); err != nil {
 		t.Fatalf("worktree.Add via the probe: %v", err)
 	}
 }
