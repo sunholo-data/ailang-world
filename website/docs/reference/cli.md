@@ -22,7 +22,7 @@ Usage:
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
-                      [--examples-dir <dir>] [--surface-index <file>]
+                      [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
                       [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
@@ -53,7 +53,7 @@ Usage:
                     [--workspace-root <dir>] [--from-dir <dir>] [--replace]
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
-                    [--examples-dir <dir>] [--surface-index <file>] [--online]
+                    [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>] [--online]
   ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--profile <project>]
                     [--task <file>] [--agent claude|codex] [--model <m>] [--ttl N]
                     [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
@@ -191,6 +191,9 @@ serve flags:
                        generated index served at GET /surface/index.json;
                        optional, may be built later, must be outside
                        --workspace-root (including symlink targets)
+  --surface-follow <file>
+                       follow config; mutually exclusive with --surface-index;
+                       must be outside --workspace-root; restart to apply changes
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof

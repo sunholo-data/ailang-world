@@ -30,7 +30,7 @@ const serviceHelp = `usage: ailang-worldd service install|status|upgrade|stop|st
   install [--bind 127.0.0.1:7644] [--db PATH] [--credentials-db PATH]
     [--workspace-root DIR] [--interpreter-dir DIR] [--tools-dir DIR]
     [--exec-sandbox DIR] [--exec-profiles-dir DIR] [--exec-node PATH]
-    [--examples-dir DIR] [--surface-index PATH] [--binary PATH] [--replace]
+    [--examples-dir DIR] [--surface-index PATH] [--surface-follow PATH] [--binary PATH] [--replace]
   status [--json] [--verbose]
   upgrade [--binary FILE] [--pause]
 Install, stop and uninstall require a typed y at the controlling terminal.
@@ -298,7 +298,7 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 	binary := fs.String("binary", binaryDefault, "source binary")
 	replace := fs.Bool("replace", false, "replace plist")
 	extra := map[string]*string{}
-	for _, name := range []string{"exec-sandbox", "exec-profiles-dir", "exec-node", "examples-dir", "surface-index"} {
+	for _, name := range []string{"exec-sandbox", "exec-profiles-dir", "exec-node", "examples-dir", "surface-index", "surface-follow"} {
 		extra[name] = fs.String(name, "", "absolute path")
 	}
 	if code, done := parseVerbFlags(fs, args[1:], serviceHelp, out, errOut); done {
@@ -337,6 +337,9 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 		return e.upgrade(*binary, *pause, out, errOut)
 	}
 	if verb == "install" {
+		if *extra["surface-index"] != "" && *extra["surface-follow"] != "" {
+			return serviceMessage(errOut, "surface follow refused", "--surface-follow and --surface-index are mutually exclusive", "ailang-worldd serve --help", 1)
+		}
 		if e.goos != "darwin" {
 			return serviceMessage(errOut, "service install: not supported on "+e.goos+" yet", "the systemd unit is M6", "run serve by hand (QUICKSTART §1)", 1)
 		}
@@ -418,7 +421,7 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 			return serviceMessage(errOut, "invalid source binary", *binary, "choose a regular binary file", 1)
 		}
 		argv := []string{e.paths.Binary, "serve", "--db", *db, "--credentials-db", *creds, "--bind", *bind, "--ailang-bin", roles[0].dest, "--workspace-root", *root, "--tool-ailang-bin", roles[1].dest}
-		for _, name := range []string{"exec-sandbox", "exec-profiles-dir", "exec-node", "examples-dir", "surface-index"} {
+		for _, name := range []string{"exec-sandbox", "exec-profiles-dir", "exec-node", "examples-dir", "surface-index", "surface-follow"} {
 			if *extra[name] != "" {
 				if !filepath.IsAbs(*extra[name]) {
 					return serviceMessage(errOut, "relative --"+name, "all service paths must be absolute", "supply an absolute path", 1)
