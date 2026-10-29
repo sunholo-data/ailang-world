@@ -528,6 +528,8 @@ func TestF15RefusalProblemIsStructural(t *testing.T) {
 		{"refusal-plus-exit-code", `{"ok":false,"refused":"exec /tmp/x134x/node does not start","exit_code":134}`, 0, 0, false},
 		{"ok-true", `{"ok":true,"refused":"exec /tmp/x134x/node does not start"}`, 0, 0, false},
 		{"refused-empty", `{"ok":false,"refused":""}`, 0, 0, false},
+		{"ok-missing", `{"refused":"exec /tmp/x134x/node does not start"}`, 0, 0, false},
+		{"refused-missing", `{"ok":false}`, 0, 0, false},
 		{"concatenated-json", env + `{"exit_code":134}`, 0, 0, false},
 		{"trailing-garbage", env + " garbage", 0, 0, false},
 	} {
