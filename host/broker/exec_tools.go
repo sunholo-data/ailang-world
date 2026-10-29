@@ -22,6 +22,7 @@ type ExecToolStateConfig struct {
 	Profiles    map[string]*ExecProfile
 	ProbeConfig ExecProbeConfig
 	Probe       ExecToolProbe // nil means all arms of ProbeExecProfilesEach
+	ProbeBudget time.Duration // test override; zero uses execRecheckBudget
 }
 
 type execToolIdentity struct {
@@ -105,13 +106,15 @@ type ExecToolStatus struct {
 // ExecToolState publishes immutable sandbox/profile snapshots. A shared flight
 // serializes re-checks; mu protects publication, never hashing or a probe.
 type ExecToolState struct {
-	flight    *execToolFlight
-	mu        sync.RWMutex
-	tools     map[string]execAcceptedTool
-	sandbox   *ExecSandbox
-	profiles  map[string]*ExecProfile
-	cfg       ExecToolStateConfig
-	forbidden []namedRoot
+	closed     bool
+	probedNode map[string]execToolIdentity
+	flight     *execToolFlight
+	mu         sync.RWMutex
+	tools      map[string]execAcceptedTool
+	sandbox    *ExecSandbox
+	profiles   map[string]*ExecProfile
+	cfg        ExecToolStateConfig
+	forbidden  []namedRoot
 }
 
 func execCommandKey(project, command string) string { return project + "/" + command }
@@ -123,7 +126,7 @@ func NewExecToolState(cfg ExecToolStateConfig) (*ExecToolState, error) {
 	if cfg.Node == "" {
 		cfg.Node = cfg.Sandbox.Node
 	}
-	s := &ExecToolState{tools: map[string]execAcceptedTool{},
+	s := &ExecToolState{tools: map[string]execAcceptedTool{}, probedNode: map[string]execToolIdentity{},
 		sandbox: cfg.Sandbox, profiles: cfg.Profiles, cfg: cfg,
 		forbidden: []namedRoot{{"an exec cache", filepath.Join(cfg.ProbeConfig.Paths.StateDir, "exec-cache")},
 			{"the state dir", cfg.ProbeConfig.Paths.StateDir}, {"the workspace root", cfg.ProbeConfig.Paths.WorkspaceRoot}}}
@@ -154,6 +157,9 @@ func NewExecToolState(cfg ExecToolStateConfig) (*ExecToolState, error) {
 				return nil, err
 			}
 		}
+	}
+	for project := range cfg.Profiles {
+		s.probedNode[project] = s.tools["node"].identity
 	}
 	s.sandbox, s.profiles = s.snapshots(s.tools)
 	return s, nil
@@ -223,6 +229,7 @@ func (s *ExecToolState) remember(key string, id execToolIdentity, why, next stri
 
 type execToolFlight struct {
 	done                  chan struct{}
+	cancel                context.CancelFunc
 	project, tool, target string
 	sandbox               *ExecSandbox
 	profile               *ExecProfile
@@ -245,9 +252,24 @@ func execRecheckBudget(profiles map[string]*ExecProfile) time.Duration {
 	return budget
 }
 
+// Close stops shared re-check work and prevents new flights.
+func (s *ExecToolState) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.closed = true
+	if s.flight != nil {
+		s.flight.cancel()
+	}
+}
+
 func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*ExecSandbox, *ExecProfile, string, error) {
 	for {
 		s.mu.RLock()
+		if s.closed {
+			s.mu.RUnlock()
+			return nil, nil, "", errors.New("exec tool state is closed")
+		}
+		probedNode := s.probedNode[project]
 		sb, profile := s.sandbox, s.profiles[project]
 		tools := make(map[string]execAcceptedTool, len(s.tools))
 		for key, t := range s.tools {
@@ -261,7 +283,7 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 		// The common path does all filesystem work outside the publication
 		// gate. Revalidate the snapshot under mu before returning it.
 		pendingTool, pendingTarget := "node", tools["node"].configured
-		clean := flight == nil
+		clean := flight == nil && sameTool(probedNode, tools["node"].identity)
 		if clean {
 			if err := sb.verifyArchive(); err != nil {
 				return nil, nil, "", err
@@ -269,6 +291,11 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 			for key, t := range tools {
 				if key != "node" && t.project != project {
 					continue
+				}
+				if key != "node" {
+					if err := checkExecChainPlacement("argv[0]", t.configured, t.configured, s.forbidden); err != nil {
+						return nil, nil, err.Error(), nil
+					}
 				}
 				id, err := toolIdentity(t.configured, key == "node")
 				if err != nil || !sameTool(id, t.identity) || t.why != "" {
@@ -291,6 +318,10 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 			}
 		}
 		s.mu.Lock()
+		if s.closed {
+			s.mu.Unlock()
+			return nil, nil, "", errors.New("exec tool state is closed")
+		}
 		if s.sandbox != sb {
 			s.mu.Unlock()
 			continue
@@ -311,13 +342,20 @@ func (s *ExecToolState) resolve(ctx context.Context, project, repo string) (*Exe
 			// Bound the detached root as well as the probe below: at most a
 			// node version check plus the 120-second probe ceiling.
 			workCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), execNodeVersionBudget+120*time.Second)
+			flight.cancel = cancel
 			go func(f *execToolFlight) {
-				defer cancel()
+				defer func() {
+					if recovered := recover(); recovered != nil {
+						f.sandbox, f.profile, f.why = nil, nil, ""
+						f.err = fmt.Errorf("exec re-check panicked: %v; retry", recovered)
+					}
+					cancel()
+					s.mu.Lock()
+					s.flight = nil
+					close(f.done)
+					s.mu.Unlock()
+				}()
 				f.sandbox, f.profile, f.why, f.err = s.resolveOnce(workCtx, project, repo)
-				s.mu.Lock()
-				s.flight = nil
-				close(f.done)
-				s.mu.Unlock()
 			}(flight)
 		}
 		s.mu.Unlock()
@@ -348,6 +386,10 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 	tools := make(map[string]execAcceptedTool, len(s.tools))
 	for k, t := range s.tools {
 		tools[k] = t
+	}
+	probedNodes := make(map[string]execToolIdentity, len(s.probedNode))
+	for p, id := range s.probedNode {
+		probedNodes[p] = id
 	}
 	oldSB := s.sandbox
 	s.mu.RUnlock()
@@ -398,6 +440,11 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 			affected[t.project] = true
 		}
 	}
+	for p := range probedNodes {
+		if (nodeChanged || p == project) && excluded[p] == "" && !sameTool(probedNodes[p], current["node"]) {
+			affected[p] = true
+		}
+	}
 	// Never turn an in-place rewrite into an upgrade, including unchanged
 	// libnode files when some other member of the node identity changed.
 	for key, id := range current {
@@ -440,7 +487,7 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 		if key != "node" && excluded[t.project] != "" {
 			continue
 		}
-		if !changed[key] && !(nodeChanged && key != "node") && !(key == "node" && strings.HasPrefix(t.why, "does-not-start: ")) {
+		if !changed[key] && !((nodeChanged || affected[t.project]) && key != "node") && !(key == "node" && strings.HasPrefix(t.why, "does-not-start: ")) {
 			continue
 		}
 		if changed[key] {
@@ -521,6 +568,10 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 	if err := sb.Verify(); err != nil {
 		return nil, nil, "", err
 	}
+	if moved == "" && affected[project] {
+		moved, movedKey = tools["node"].name, "node"
+	}
+	passed := map[string]bool{}
 	if moved != "" {
 		var order []*ExecProfile
 		for _, p := range sortedKeys(profiles) {
@@ -534,12 +585,18 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 		for _, p := range order {
 			probed[p.Project] = p
 		}
-		probeCtx, cancel := context.WithTimeout(ctx, execRecheckBudget(probed))
-		errs, err := s.cfg.Probe(probeCtx, cfg, order)
-		if probeCtx.Err() != nil {
-			err = errors.Join(err, probeCtx.Err())
+		budget := execRecheckBudget(probed)
+		if s.cfg.ProbeBudget > 0 {
+			budget = s.cfg.ProbeBudget
 		}
+		probeCtx, cancel := context.WithTimeout(ctx, budget)
+		defer cancel()
+		errs, err := s.cfg.Probe(probeCtx, cfg, order)
+		probeErr := probeCtx.Err()
 		cancel()
+		if ctx.Err() == nil && errors.Is(probeErr, context.DeadlineExceeded) {
+			return nil, nil, fmt.Sprintf("exec %s: re-checking the changed target\n  why: the startup probe did not finish within %s\n  next: retry; if it keeps timing out, check host load (no restart needed)", moved, budget), nil
+		}
 		if ctx.Err() != nil {
 			return interrupted(moved)
 		}
@@ -601,6 +658,11 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 			s.mu.Unlock()
 			return nil, nil, refused, nil
 		}
+		for i, p := range order {
+			if i < len(errs) && errs[i] == nil {
+				passed[p.Project] = true
+			}
+		}
 		// A target moving during the probe is never published as accepted.
 		for key, before := range current {
 			after, err := toolIdentity(tools[key].configured, key == "node")
@@ -623,6 +685,10 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 		return interrupted(moved)
 	}
 	s.mu.Lock()
+	if s.closed || ctx.Err() != nil {
+		s.mu.Unlock()
+		return interrupted(moved)
+	}
 	for key := range current {
 		t := tools[key]
 		t.failed, t.observed, t.why, t.next, t.refused = nil, nil, "", "", ""
@@ -634,6 +700,9 @@ func (s *ExecToolState) resolveOnce(ctx context.Context, project, repo string) (
 		t.checked = time.Now().UTC().Format(time.RFC3339Nano)
 		t.revision = latest.revision + 1
 		s.tools[key] = t
+	}
+	for p := range passed {
+		s.probedNode[p] = tools["node"].identity
 	}
 	s.sandbox, s.profiles = sb, profiles
 	s.mu.Unlock()

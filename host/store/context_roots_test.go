@@ -56,7 +56,8 @@ var contextRootPins = map[string]int{
 	// Row 219 M3 round 2: re-acceptance's single-flight probe is detached from
 	// the first caller's cancellation (waiters share its result) and feeds
 	// context.WithTimeout directly (the node version budget plus a 120 s probe
-	// ceiling); no Store call.
+	// ceiling); round 3 also cancels it through ExecToolState.Close on daemon
+	// shutdown. No Store call.
 	"host/broker/exec_tools.go|resolve|WithoutCancel": 1,
 	"host/capsule/capsule.go|Run|Background":          1,
 	"host/daemon/daemon.go|drain|Background":          1,

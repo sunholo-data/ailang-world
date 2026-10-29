@@ -1197,11 +1197,19 @@ func (d *Daemon) Serve() error { return d.srv.Serve(d.ln) }
 // under drainTimeout (= shutdownTimeout), and if they do not, connections are
 // hard-closed and a non-nil error is returned so the caller can exit non-zero.
 // The drain is never unbounded.
-func (d *Daemon) Shutdown() error { return drain(d.srv, d.drainTimeout) }
+func (d *Daemon) Shutdown() error {
+	if d.workspace != nil && d.workspace.exec != nil && d.workspace.exec.toolState != nil {
+		d.workspace.exec.toolState.Close()
+	}
+	return drain(d.srv, d.drainTimeout)
+}
 
 // Close releases writer authority by closing the store (which releases the
 // cross-process writer lock).
 func (d *Daemon) Close() error {
+	if d.workspace != nil && d.workspace.exec != nil && d.workspace.exec.toolState != nil {
+		d.workspace.exec.toolState.Close()
+	}
 	d.stopTemplateMaintenance()
 	return d.store.Close()
 }
