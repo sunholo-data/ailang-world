@@ -4,12 +4,12 @@
   "row": "232",
   "clause": "clause-3",
   "authority": [
-    "design_docs/planned/w-exec-probe-reset-holder-false-pass.md r2 (quorum r2 PROCEED at N-1; gpt6-1-sol absent unreachable)",
-    "design_docs/planned/w-exec-probe-reset-holder-false-pass-sprint-plan.md",
+    "design_docs/implemented/w-exec-probe-reset-holder-false-pass.md r2 (quorum r2 PROCEED at N-1; gpt6-1-sol absent unreachable)",
+    "design_docs/implemented/w-exec-probe-reset-holder-false-pass-sprint-plan.md",
     "parent: design_docs/implemented/w-exec-probe-reverse-leg-port-race.md §4.2"
   ],
   "estimate": "0.25 day",
-  "scope": "2 milestones, each independently green. Files: host/broker/exec_probe.go, host/broker/exec_probe_test.go, .github/workflows/ci.yml (:247 only), docs/QUICKSTART.md (:1153 only), design_docs/planned/w-exec-probe-reset-holder-false-pass.md (four narrow reviewer amendments only), design_docs/implemented/w-exec-probe-reverse-leg-port-race.md (two amendment notes only). No .ail file. No git writes by the executor; the controller commits.",
+  "scope": "2 milestones, each independently green. Files: host/broker/exec_probe.go, host/broker/exec_probe_test.go, .github/workflows/ci.yml (:247 only), docs/QUICKSTART.md (:1153 only), design_docs/implemented/w-exec-probe-reset-holder-false-pass.md (four narrow reviewer amendments only), design_docs/implemented/w-exec-probe-reverse-leg-port-race.md (two amendment notes only). No .ail file. No git writes by the executor; the controller commits.",
   "base": {
     "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232",
     "branch": "sprint/world-iter318-row232",
@@ -20,7 +20,7 @@
       "host/broker/exec_probe_test.go": "8c9cb59872baee416775e18fb38aa8ccc692c637c649ac804a1c0c60047d1c6a",
       ".github/workflows/ci.yml": "c40e8d653f0f9ee1163bd1af80d656d7eff528d57760d0b48938f0d169058dc7",
       "docs/QUICKSTART.md": "a7dc9c61a5e7b41b3870e58d653fd698af5d5c061e1a2827709392d7f5414d8e",
-      "design_docs/planned/w-exec-probe-reset-holder-false-pass.md": "7477c3529f9701d7614146ab4ac4fad0696ffa1c0d069f5e484033a7824ae22d",
+      "design_docs/implemented/w-exec-probe-reset-holder-false-pass.md": "7477c3529f9701d7614146ab4ac4fad0696ffa1c0d069f5e484033a7824ae22d",
       "design_docs/implemented/w-exec-probe-reverse-leg-port-race.md": "12c6ec7be3336c7f9795ddf2be0ce7cd346483f0e5364d182e0f4349007d3956"
     }
   },
@@ -224,7 +224,7 @@
       "files": [
         ".github/workflows/ci.yml",
         "docs/QUICKSTART.md",
-        "design_docs/planned/w-exec-probe-reset-holder-false-pass.md",
+        "design_docs/implemented/w-exec-probe-reset-holder-false-pass.md",
         "design_docs/implemented/w-exec-probe-reverse-leg-port-race.md"
       ],
       "edits": [
