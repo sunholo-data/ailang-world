@@ -1040,9 +1040,10 @@ func releaseFromVersion(version string) string {
 // GET /workbench/live.js serves the embedded same-origin live client; see
 // docs/QUICKSTART.md, "Open the live workbench" for the read-only panes.
 //
-// The eleven /v1 patterns below are the complete frozen v1 machine table (ten GET, one POST;
+// The thirteen /v1 patterns below are the complete frozen v1 machine table (eleven GET, two POST;
 // GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40; GET /v1/episodes/{episode}/report
-// by row 198, mirrored in the sketch's routes()).
+// by row 198; POST /v1/episodes/{episode}/finish, the operator route, by row 218 M2
+// (D-WORLD-100 R6); all mirrored in the sketch's routes()).
 // The next registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
 // ten. GET /surface/index.json, GET /surface/static (the server-rendered timeline and stack
@@ -1066,6 +1067,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	mux.HandleFunc("GET /v1/receipts/{id}", d.handleReceipt)
 	mux.HandleFunc("GET /v1/episodes/{episode}/report", d.handleEpisodeReport)
+	mux.HandleFunc("POST /v1/episodes/{episode}/finish", d.handleEpisodeFinish)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)

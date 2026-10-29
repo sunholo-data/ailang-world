@@ -13,7 +13,10 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/worktree"
@@ -43,6 +46,12 @@ type finishFixture struct {
 	checks, outcomes     int
 	expired              bool
 	failCheck            bool
+	seam                 *fakeFinishDispatch
+	finishRecords        []daemon.EpisodeFinish
+	scopes               []string
+	credentialID         string
+	recordFailure        bool
+	recordHook           func()
 }
 
 func newFinishFixture(t *testing.T) *finishFixture {
@@ -72,9 +81,24 @@ func newFinishFixture(t *testing.T) *finishFixture {
 		t.Fatal(err)
 	}
 	f.before = base
-	f.rep.Start = &store.EpisodeStart{Agent: "codex", Model: "fixture-model", Preset: store.StartPreset{Name: "fixture"},
-		Branch: "custom-branch", Base: store.StartBase{SHA: base, Branch: "dev"}, Remote: store.StartRemote{Name: "origin"}}
-	f.health = daemon.HealthResponse{DBPath: f.db}
+	f.rep.Start = &store.EpisodeStart{Episode: "ep1", Agent: "codex", Model: "fixture-model", Preset: store.StartPreset{Name: "fixture", Bytes: `{"profile":""}`},
+		Branch: "custom-branch", Base: store.StartBase{SHA: base, Branch: "dev"}, Remote: store.StartRemote{Name: "origin", URL: "https://github.com/fixture/repo.git"}}
+	f.gitOutput("-C", f.wt, "remote", "add", "origin", f.rep.Start.Remote.URL)
+	credentials := filepath.Join(f.root, "credentials.db")
+	f.health = daemon.HealthResponse{DBPath: f.db, CredentialsDB: credentials}
+	st, err := store.OpenCredentials(credentials)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, f.credentialID, _, err = authority.Mint(boundedTestContext(t), st, "ep1", []broker.Capability{{Effect: "Workspace.Write", Scope: "world", Budget: 10, ExpiresAt: time.Now().Unix() + 3600}}, 3600, time.Now().Unix(), nil)
+	st.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.seam = &fakeFinishDispatch{label: true}
+	oldFactory, oldHook := finishDispatchFactory, finishBeforeDispatch
+	finishDispatchFactory = func() finishDispatch { return f.seam }
+	t.Cleanup(func() { finishDispatchFactory, finishBeforeDispatch = oldFactory, oldHook })
 	f.write("a.go", "agent\n")
 	f.write("gen.txt", "produced\n")
 	f.write("b.go", "hand\n")
@@ -129,6 +153,43 @@ func (f *finishFixture) serve(w http.ResponseWriter, r *http.Request) {
 			f.t.Error("session credential missing")
 		}
 		json.NewEncoder(w).Encode(daemon.SessionSelf{Episode: "ep1", SecondsLeft: 100})
+	case "/v1/episodes/ep1/finish":
+		if r.Header.Get("Authorization") != "" || r.Header.Get("X-World-Operator-Proof") == "" {
+			f.t.Error("operator proof required, no session credential")
+		}
+		var input daemon.FinishRequest
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			f.t.Fatal(err)
+		}
+		path := filepath.Join(filepath.Dir(f.health.CredentialsDB), "operator-proofs", "ep1.json")
+		data, err := os.ReadFile(path)
+		if err != nil || !strings.Contains(string(data), finishSHA([]byte(r.Header.Get("X-World-Operator-Proof")))) {
+			f.t.Error("proof file does not bind request")
+		}
+		os.Remove(path)
+		if input.Phase == "approve" {
+			f.scopes = append(f.scopes, input.Scope)
+			json.NewEncoder(w).Encode(daemon.FinishApproval{Request: "sha256:" + strings.Repeat("2", 64), Approval: "sha256:" + strings.Repeat("3", 64)})
+		} else {
+			creds, err := store.OpenCredentialsReadOnly(f.health.CredentialsDB)
+			if err != nil {
+				f.t.Fatal(err)
+			}
+			_, exists, err := creds.ResolveSession(r.Context(), f.credentialID)
+			creds.Close()
+			if err != nil || !exists {
+				f.t.Error("credential revoked before record")
+			}
+			if f.recordFailure {
+				w.WriteHeader(500)
+				return
+			}
+			f.finishRecords = append(f.finishRecords, *input.Record)
+			if f.recordHook != nil {
+				f.recordHook()
+			}
+			w.Write([]byte("{}"))
+		}
 	case "/v1/commit":
 		if r.Header.Get("Authorization") != "Bearer "+strings.Repeat("1", 64) {
 			f.t.Error("outcome credential missing")
@@ -245,7 +306,7 @@ func TestEpisodeFinishValidationAC2(t *testing.T) {
 				extra = []string{"--allow-failing", "missing"}
 				want = "missing is not a check"
 			}
-			rc, _, errw := f.run(testMintEnv("", 1), extra...)
+			rc, _, errw := f.run(testMintEnv("y\n", 1), extra...)
 			if rc != 1 || !strings.Contains(errw, want) || f.checks != 0 || f.outcomes != 0 {
 				t.Fatalf("%d %s checks %d outcomes %d", rc, errw, f.checks, f.outcomes)
 			}
@@ -265,7 +326,7 @@ func TestEpisodeFinishChecksAC3(t *testing.T) {
 			if allow {
 				extra = append(extra, "--allow-failing", "fail")
 			}
-			rc, _, errw := f.run(testMintEnv("", 1), extra...)
+			rc, _, errw := f.run(testMintEnv("y\n", 1), extra...)
 			if f.checks != 2 || f.outcomes != 2 {
 				t.Fatalf("checks %d outcomes %d: %s", f.checks, f.outcomes, errw)
 			}
@@ -332,7 +393,7 @@ func TestEpisodeFinishAttributionCommitDryRunAC5AC6(t *testing.T) {
 			t.Fatal("dry-run changed bytes of " + p)
 		}
 	}
-	rc, out, errw = f.run(testMintEnv("", 1), "--include-unattributed", "--title", "Fixture finish")
+	rc, out, errw = f.run(testMintEnv("y\n", 1), "--include-unattributed", "--title", "Fixture finish")
 	if rc != 0 {
 		t.Fatalf("%d %s", rc, errw)
 	}
@@ -351,7 +412,7 @@ func TestEpisodeFinishAttributionCommitDryRunAC5AC6(t *testing.T) {
 	}
 	bodyPath := filepath.Join(f.sessions, "ep1.pr-body.md")
 	info, _ := os.Stat(bodyPath)
-	if info == nil || info.Mode().Perm() != 0o600 || !strings.Contains(out, "next: git -C ") || !strings.Contains(out, "next: gh pr create") {
+	if info == nil || info.Mode().Perm() != 0o600 || !strings.Contains(out, "https://github.com/fixture/repo/pull/1") {
 		t.Fatal(out)
 	}
 	head := strings.TrimSpace(f.gitOutput("-C", f.wt, "rev-parse", "HEAD"))
@@ -366,12 +427,12 @@ func TestEpisodeFinishHelp(t *testing.T) {
 	if rc := runEpisodeFinish([]string{"--help"}, &out, &errw, noTerminalEnv(1)); rc != 0 {
 		t.Fatalf("help rc %d: %s", rc, errw.String())
 	}
-	for _, flag := range []string{"--preset", "--presets-dir", "--title", "--allow-failing", "--include-unattributed", "--dry-run"} {
+	for _, flag := range []string{"--preset", "--presets-dir", "--title", "--allow-failing", "--include-unattributed", "--dry-run", "--ready", "--exec-profiles-dir"} {
 		if !strings.Contains(out.String(), flag) {
 			t.Error("missing " + flag)
 		}
 	}
-	for _, flag := range []string{"--yes", "--renew", "--ready", "--check"} {
+	for _, flag := range []string{"--yes", "--renew", "--check"} {
 		if strings.Contains(out.String(), flag) {
 			t.Error("out-of-scope flag " + flag)
 		}
