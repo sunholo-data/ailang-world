@@ -37,3 +37,11 @@ Gate 2
   control N2c -> 2 (6f2ba039 is row 188's newest landing). Rows 217/218/219 still [NEXT] attended-track.
 - rows 231 -> 230 -> 233: hygiene below every D-WORLD-81 release row; rule (d) (D-WORLD-46) bars them;
   D-WORLD-102 OPEN, default B -> block report.
+
+Judge follow-through (r1 NB1, NB2), reproduced by the controller
+- NB1: the N2d/N4a count depends on the text grepped. Subjects only (--format='%h %s') -> 0; full
+  messages (default git log format) -> 4. git log --since=2026-10-01 -i -E --grep='N2d|N4a' lists
+  fe9c891e (iter-319 record), 92495b60 (iter-317 record), be184351 (roadmap rows 217-222),
+  dc719822 (w-world-surface-outputs r0): all describe the work, none is a feat commit building it.
+- NB2: gh run list --workflow CI --branch dev --limit 6 -> 8cee85a9, 90e6103b, bd8bb914, 56376ab9,
+  4763dd1c, c96f5b09: all success.
