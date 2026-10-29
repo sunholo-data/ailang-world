@@ -2865,3 +2865,66 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release row). Row 150: 23/23 executor milestones built. Remaining: the controller steps P0/P3 and the attended A1 (needs Mark).
 **Next:** row 150's A1 is attended. Mark schedules it, and the controller runs P0 (≤24 h before) and P3 (before pass A) in that window. The loop's next pick under D-WORLD-81 is row 151 if routable (it needs row 188 N2d and N4a; check at Gate 2), else the highest routable of rows 230–232.
+
+## 317 — 2026-10-29 — no pick: rule (d) block report; release rows 150/151 wait on attended steps; row 232's premise re-measured (not a breach; mechanism found); D-WORLD-102 filed [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (314 rotated to the archive), the CURRENT GOAL line, a row-232 measurement note, the new D-WORLD-102 ledger row, this entry, the index row, the dashboard, and the evidence under `verification/world-iter317/`. An independent judge reviews it before merge.
+
+**Pick and why:** none.
+- **Clause map at `23940015`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
+- **D-WORLD-81 release rows:**
+  - **150** waits only on the attended A1. The controller runs P0 (≤24 h before) and P3 (before pass A) inside that window (orchestration r5 §4.4).
+  - **151** needs row 188's N2d and N4a (`w-agent-generated-projections` §8). D-WORLD-95 R2 runs rows 219 → 217 → 218 before N2d, and the roadmap (`w-all-agent-work-through-world` §3) puts all of them on the attended track as World episodes. Row 217's attended trial is draft PR #402.
+  - Neither row is loop-routable.
+- **Rows 230–232** are hygiene tagged "below every D-WORLD-81 release row". Rule (d) bars residual and hardening rows when nothing on the path is routable. D-WORLD-64's exception covers rows 148–151 only.
+- So iteration 316's **Next** ("else the highest routable of rows 230–232") contradicted rule (d). It is corrected here and in CURRENT GOAL. Precedent: iterations 257–264 were block reports for the same reason.
+- **Row 232 "possibly soundness"** is the one claim that could have made a hygiene row outrank the queue: a genuine soundness bug outranks under the skill's Gate-0 rule. The controller measured it before deciding; see below. It is not a breach, so rule (d) holds.
+- **New ask D-WORLD-102** (recommended A, default B): may the loop take 232 → 231 → 230 while the release rows wait? Without it every fire until the attended steps land is a block report.
+
+**Row 232 re-measure (controller, macOS arm64, go1.26.6, base `23940015`; evidence `verification/world-iter317/row232-reset-holder-remeasure.txt` and `row232-dial-reset-probe.go.txt`):**
+- `go test ./host/broker/ -run 'TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder' -count=500` idle: rc 0, 0 FAIL (71.5 s).
+- The same run with `-count=300` under CPU load (32 `yes` processes on 16 cores): rc 1, **5 subtest FAILs**, each `Why = "", picker calls 1`. That is the CI signature from PR #404 run 40766776779. A raw `grep -c -- '--- FAIL'` reads 10, because each failure prints a parent line and a subtest line.
+- **Mechanism probe** (a standalone Go program built outside the repo): an accept-then-RST listener (`SetLinger(0)` + `Close`, exactly `revHolder`'s `reset` kind) dialled 2,000 times with `net.DialTimeout(200 ms)`. The dial ITSELF failed with `connect: connection reset by peer` 10 times idle, and 29 and 25 times in two runs under load.
+- `pollLoopback` (`host/broker/exec_probe.go`) ignores every dial error. So a lone dial that fails this way records none of child, foreign or silent, and `judgeReverse` passes the leg. `revFixture`'s `/bin/sh` client returns at once, so the attempt has exactly one dial.
+- **Reading:** this is not a confinement breach. The lost dial reaches a FOREIGN holder; the child's own listener answers the nonce (`classifyReverseDial`) and never resets. It IS a conformance gap: the design classifies a reset as SILENT (a sticky refusal), while a connect-time reset is classified as no listener. The fix candidate is to record an ECONNRESET dial as silent, with a race-free pin. That is row 232's work and is pickable only on D-WORLD-102 = A.
+- No production change and no test change was made.
+
+**Gate 0:**
+- The kill switch is armed (`mission-world.disabled` absent). gh account is `sunholo-voight-kampff`. The billing tripwire is CLEAN. Env was read by NAME.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (14 comments, all the loop's own). Both watermarks (`mission-366-last-seen`, `mission-world-last-seen`) read that time and are unchanged.
+- `mission_gate0_self_notices.sh` rc 1 on the same 2026-10-22 rc=1 notice `6345079873`, already credited (log count 14). Control 107:4 ok.
+- The unread `mission-world` inbox holds only this loop's claim messages. The iteration-317 claim was sent and confirmed in the listing.
+- `mission_decisions.sh --check`: valid, 88 rows and 0 OPEN at base; 89 rows and 1 OPEN (D-WORLD-102) after this record. The external-issue sweep is not due (#366 is this week's thread).
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `23940015`. Gate-1 base `23940015ebeba61e56334580b2848b19a1a7315b@2026-10-29T04:01:30Z`; Gate-4 base the same SHA at 04:08:20Z.
+- Commit check-runs 3/3 success (`go host build + test gate`, `ailang-code verify gate`, `go race gate`). So PR #405 (row 150 M8b) is LANDED by merge-commit CI.
+- Skill drift: `SKILL.md` and all 13 resource files are byte-identical to `origin/dev`, both at the resolved symlink target and in the pin copy (per-file `cmp`, no DRIFT line). All rules were read from the resolved target.
+- Open PRs from this account: #402 (the attended row-217 trial, draft). It is not this loop's work and was left alone.
+- Died-mid-flight traces: no iteration branch or worktree for 317 existed. `.wt-world-iter306-r0` is the known residue.
+
+**Designer / planner / executor:** not spawned. There is no pick, so nothing to design, plan or execute (precedent 257–264). The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=23940015ebeba61e56334580b2848b19a1a7315b@2026-10-29T04:08:20Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED` and `MISSION_EXECUTOR_RESOLVED` = `codex:gpt-6.1-sol` (recipe), `MISSION_EVALUATOR_RESOLVED=sonnet`. `MISSION_OVER_RATION` and `MISSION_ROUTING_NOTE` are empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet` (tok: see the follow-through).
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150 (attended A1) or 151 (behind attended rows 219/217/218 and 188 N2d/N4a).
+- Picking 230, 231 or 232 under rule (d). Iteration 316's Next is corrected.
+- Treating row 232 as a soundness outrank: measured above, the lost dial is a foreign holder's, not the child's.
+- The hypothesis that the reset-holder failure is a classification bug in `classifyReverseDial`: refuted. The failing attempts record nothing at all, so the dial never reached the classifier.
+- `ailang mission rotate-log` (32 live entries, under the ~40 threshold); the index row is hand-written as in 316.
+
+**Retro:**
+1. **A controller's Next line can contradict an attended rule without anyone noticing.** Iteration 316 wrote "else rows 230–232", and only the rule-(d) reread at this Gate 2 caught it. Instance 1. No rule change: the Gate-2 rule (d) check already exists and worked.
+2. **Measure a "possibly soundness" tag before it steers a pick.** One 3-minute load loop plus a 30-line probe turned row 232 from "unmeasured, possibly a breach" into a located mechanism with a fix candidate, and removed its claim to outrank. The load axis mattered: 0/500 idle would have read as "cannot reproduce".
+3. **Idle cadence:** this is block report 1 of a possible run. D-WORLD-102 is the lever. Without it the fleet pays one judge per fire for records about the same block, as in 257–264.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: 23/23 executor milestones built and M8b LANDED. Remaining: the attended A1 with the controller's P0/P3.
+**Next:** if D-WORLD-102 = A, take **row 232** (record a connect-time ECONNRESET as silent, with a race-free pin), then 231, then 230. Else rule (d) again. In either case row 150's P0/P3 run in the A1 window Mark schedules, and row 151 becomes routable when row 188's N2d and N4a land.
