@@ -424,7 +424,7 @@ M0/M1 built in episode `w219a` (Go implementation and fake-supervisor tests; rea
 |---|---|---|
 | **M0** | eager build identity (P1); `ailang-worldd version [--json]`; health's `started_at`, `supervisor`, `active` | Go tests; the AC15 swap-before-first-health test |
 | **M1** | `service install/status/stop/start/uninstall` on macOS behind a `launchctl` seam (a fake in tests, `launchctl` in production), the TTY fence, `service.json`, plist rendering and validation, log rotation | Go tests with the fake seam; the operator ACs 1–4, 10–11 on the Mac |
-| **M2** | `service upgrade` with the active-session refusal and rollback | Go tests (fake seam, a failing candidate); operator ACs 7–9 |
+| **M2** | **Built in w219b:** `service upgrade` with the active-session refusal and rollback | Go tests (fake seam, a failing candidate); operator ACs 7–9 remain attended |
 | **M3** | per-call exec resolution (§3.6), **after row 156** | Go tests with a re-pointed symlink fixture; confinement arms re-run; its own judge (confinement-adjacent) |
 | **M4** | §5's pointers: one default address (R1), the doctor `service` check, whoami, episode start's messages, hosts init, the herdr `world-config-init` defaults, `why --expect-store`, the now-card line, QUICKSTART with test-bound command lines | Go tests; `sh integrations/herdr/ailang-world/test/run.sh`; ACs 12–14 |
 | **M5** | the cutover (§7), attended | ACs 5–6 on the Mac; the cutover record |

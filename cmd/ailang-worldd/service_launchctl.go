@@ -16,6 +16,7 @@ const serviceRegistryKeyFix = "launchctl unsetenv AILANG_REGISTRY_API_KEY"
 
 type serviceController interface {
 	Bootstrap(domain, plist string) error
+	Kickstart(domain, label string) error
 	Bootout(domain, label string) error
 	Print(domain, label string) (string, error)
 	Getenv(name string) (string, error)
@@ -38,6 +39,10 @@ func (systemServiceController) command(args ...string) (string, error) {
 }
 func (c systemServiceController) Bootstrap(domain, plist string) error {
 	_, err := c.command("bootstrap", domain, plist)
+	return err
+}
+func (c systemServiceController) Kickstart(domain, label string) error {
+	_, err := c.command("kickstart", "-k", domain+"/"+label)
 	return err
 }
 func (c systemServiceController) Bootout(domain, label string) error {
