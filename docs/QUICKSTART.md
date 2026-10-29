@@ -1653,9 +1653,10 @@ descriptor publish in §12 are typed by a person at a terminal, as §12 describe
 
 Build the capture verifier and set the inputs. The Chrome must be an explicit binary of
 major version 155 or later; the capture records its `--version` before and after the
-passes. The controller supplies the release store's own measured `rects.json`, accepted
-by the P0 position assertion under P3 (orchestration §4.4), at `$DEMO_DIR/rects.json`.
-The R1 rectangles are the position baseline only.
+passes. The controller supplies the release store's own measured `rects.json` (the V60
+block-box probe's output for that store), accepted by the P0 position assertion under P3
+(orchestration §4.4), at `$DEMO_DIR/rects.json`. The R1 rectangles are the position
+baseline only.
 
 ```bash
 go build -o "$DEMO_DIR/marketingcheck" ./scripts/marketingcheck

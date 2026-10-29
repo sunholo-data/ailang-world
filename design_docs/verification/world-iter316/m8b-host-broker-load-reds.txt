@@ -1,0 +1,38 @@
+# Iteration 316 M8b — host/broker reds in the controller's full go test ./... at 3f185a9a (macOS, judge running focused tests concurrently)
+# Attribution: 3/3 PASS each, isolated, at head 3f185a9a AND base 8bfaa1ab; host/broker package rc 0 uncontended (231 s vs 524 s contended).
+# Neither test reads README.md or docs/QUICKSTART.md (grep count 0). Row 232 evidence (row-229 probe family).
+
+--- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (12.60s)
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (4.00s)
+        exec_probe_test.go:713: TIMING ArchiveExecSandbox took 342.279542ms
+        exec_probe_test.go:724: chatty: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 1; stderr \"node:events:505\\n    throw er; // Unhandled 'error' event\\n    ^\\n\\nError: read ECONNRESET\\n    at TCP.onStreamRead (node:internal/stream_base_commons:221:20)\\nEmitted 'error' event on Socket instance at:\\n    at emitErrorNT (node:internal/streams…\"); reverse leg: a listener on 127.0.0.1:57240 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"
+        exec_probe_test.go:728: chatty: arm 6 reports a reverse leg: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 1; stderr "node:events:505\n    throw er; // Unhandled 'error' event\n    ^\n\nError: read ECONNRESET\n    at TCP.onStreamRead (node:internal/stream_base_commons:221:20)\nEmitted 'error' event on Socket instance at:\n    at emitErrorNT (node:internal/streams…"); reverse leg: a listener on 127.0.0.1:57240 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses
+--- FAIL: TestExecProtectedCheckTimeout (44.63s)
+    --- FAIL: TestExecProtectedCheckTimeout/reserve-after-before (9.61s)
+        exec_protected_record_test.go:685: reserve-after-before returned at/after the original deadline
+
+   1 --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.02s)
+   1 --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.18s)
+   1 --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.71s)
+   1 --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.79s)
+   1 --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.86s)
+   1 --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.98s)
+   1 --- PASS: TestExecProtectedCheckTimeout (34.83s)
+   1 --- PASS: TestExecProtectedCheckTimeout (35.63s)
+   1 --- PASS: TestExecProtectedCheckTimeout (35.80s)
+   1 --- PASS: TestExecProtectedCheckTimeout (35.87s)
+   1 --- PASS: TestExecProtectedCheckTimeout (35.96s)
+   1 --- PASS: TestExecProtectedCheckTimeout (36.26s)
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	230.878s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	35.103s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	35.897s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	36.055s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	36.118s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	36.216s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	36.521s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	6.269s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	6.433s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	6.957s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	7.107s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	7.141s
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	7.316s
