@@ -69,3 +69,7 @@ run 40853596929, job 123378886910 (go race gate) failure; log 35062 B
 ok-lines control: 56
 row 232 fix f438ba41 ancestor of dc24fccf: no
 next dev CI (793cc67c, #410 merge carrying the fix) and bcb07394: success
+## local dev at fire time (judge NB1)
+local dev HEAD before the ff-only merge: dc24fccf (session-start git status; ff output listed bcb07394 as the new HEAD)
+git rev-list --count dc24fccf..bcb07394 = 8
+git rev-list --count --first-parent dc24fccf..bcb07394 = 2

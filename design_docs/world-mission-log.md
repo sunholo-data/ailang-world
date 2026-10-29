@@ -2910,7 +2910,7 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Routing evidence:** base=23940015ebeba61e56334580b2848b19a1a7315b@2026-10-29T04:08:20Z (Gate 4).
 - Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED` and `MISSION_EXECUTOR_RESOLVED` = `codex:gpt-6.1-sol` (recipe), `MISSION_EVALUATOR_RESOLVED=sonnet`. `MISSION_OVER_RATION` and `MISSION_ROUTING_NOTE` are empty.
 - Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
-- Evaluator: Agent `sonnet` (tok: see the follow-through).
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), 42,335 tok / 31 s. Generator ≠ judge: opus controller vs sonnet judge.
 - Quorum: none (no doc). Metered $0.
 
 **Ruled out:**
@@ -3047,7 +3047,7 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Routing evidence:** base=bcb073940751056d273562ca7f79753f980b0683@2026-10-29T12:04:01Z (Gate 4).
 - Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
 - Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
-- Evaluator: Agent `sonnet` (tok: see the follow-through).
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), 42,335 tok / 31 s. Generator ≠ judge: opus controller vs sonnet judge.
 - Quorum: none (no doc). Metered $0.
 
 **Ruled out:**
@@ -3063,3 +3063,9 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains; row 151: behind row 188 N2d/N4a.
 **Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land. If T7 `reset-holder` reds on post-fix code, re-measure the Linux dial-error classes first (row 232 design R7).
+
+**Record follow-through (iteration 319):** the independent evaluator judged record commit `fe9c891e` on `bcb07394` and returned **PASS 91/100, zero blocking** (33/22/20/16). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (42,335 tok, 31 s, 7 tool calls).
+- **Verified by the judge:** the rotation (charter +4/−4, 316 at the archive top), ledger valid with D-WORLD-102 the sole OPEN row, #366's 17 comments all from the loop's account, `bcb07394` 3/3 green, the `dc24fccf` red on pre-fix code (`f438ba41` not an ancestor), notice count 16, rows 217–219 still `[NEXT]` attended-track, and no closing keyword or address.
+- **Non-blocking:** NB1 the "8 commits behind" figure was not in the evidence → added to `gate1-2-readings.txt` (`dc24fccf..bcb07394` = 8, first-parent 2). NB2 the N2d/N4a grep is weak on its own because the row-188 sprint plan does not name them; the conclusion also rests on N2c being row 188's newest landing and on rows 217–219 being open. NB3 row 150's blocker was taken from the charter and the 316 clause map. NB4 hand-written index row (fine).
+- No r2: the fix only adds evidence for a figure the judge could not re-derive; nothing scored changed.
+- Report: `design_docs/verification/world-iter319/evaluator-r1.md`.
