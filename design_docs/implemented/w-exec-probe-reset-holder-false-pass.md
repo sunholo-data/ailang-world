@@ -1,6 +1,6 @@
 # w-exec-probe-reset-holder-false-pass — a dial that fails AT CONNECT with ECONNRESET is dropped, so a resetting holder can pass the reverse leg
 
-- **Status**: Planned (iteration 318, designer, **r2**). Queue row 232. An amendment to
+- **Status**: Implemented (iteration 318: M1 `f438ba41`, M2 `a828c450`, PR #410 merge `793cc67c`; judge sonnet PASS 92). Designed iteration 318 (r2). Queue row 232. An amendment to
   `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md` (the parent; §4.2, §6, §7).
 - **Item**: Clause 3 (the Workspace.Exec fail-closed startup probe), a conformance defect that
   reddened `dev` itself. Run 40833618366, job 123313206642 ("go race gate", linux/amd64) at

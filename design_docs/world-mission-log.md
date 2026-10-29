@@ -2934,3 +2934,83 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **Non-blocking:** N1 the record gave no production-side argument for "not a breach". The controller confirmed `execProbeListenMS` = 1000 (`exec_probe.go:98`) and the 50 ms poll (`:719`), and added that argument (about 20 dials per attempt) and the "never resets is not enforced" caveat to row 232. N2 the rate is load-sensitive (the judge got 0/300 at 32 `yes`), so row 232 now quotes both readings. N3 the background load was not recorded; it is noted in the judge report.
 - No r2: the fix only adds caveats that weaken the record's claims, and nothing the judge scored was changed.
 - Report: `design_docs/verification/world-iter317/evaluator-r1.md`.
+
+## 318 — 2026-10-29 — row 232: a reverse-leg dial that fails at connect with ECONNRESET is SILENT — taken as a Gate-1 dev red; Linux errno measured first-party; judge r1 PASS 92 [PRODUCT]
+
+**Kind:** full inner loop on a Gate-1 red: designer → quorum r1 BLOCKED → controller measurement → designer revision → quorum r2 PROCEED → planner → executor → independent evaluator → PR #410. Every role was spawned through the Agent tool, per the operator's standing request.
+
+**Pick and why:**
+- **Clause map at `df5a0671`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row. Rows 150 (attended A1) and 151 (behind row 188 N2d/N4a, after attended rows 219 → 217 → 218) are not loop-routable, so rule (d) would make this a block report.
+- **But dev was red.** Commit check-runs on `df5a0671` (PR #402's merge, the attended row-217a trial) read `go race gate: failure`. Job 123313206642, run 40833618366: `--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder`, `exec_probe_test.go:664: Why = "", picker calls 1`. Every other package was `ok`. The two `WARNING: DATA RACE` blocks in that log are the gate's own known-positive control (`w-race-gate-blindspot/racecontrol`), not a finding.
+- **Attribution:** #402 touched `host/broker/registry_publish_test.go` only, not `exec_probe*`. The signature is row 232's (instances: PR #404, iteration 316's `chatty`, this one — the first on `dev`). `gh run rerun --failed` → attempt 2 **success**. So it is the measured flake, not #402.
+- **Rule:** a red dev outranks the queue for the owning mission (World owns its repo). Row 232's own tag already said "a Gate-1 dev red on this test outranks the queue". Precedent: iteration 314 took a dev red under rule (d). **D-WORLD-102 was not used and is not resolved.** It stays OPEN, and its scope is now 231 → 230 (plus new row 233).
+
+**Linux premise, measured by the controller** (rule 3f — the quorum's objection was measured, not forwarded). Throwaway branch `probe/world-iter318-linux-errno` (deleted after), ubuntu-latest, `Linux 7.0.0-1017-azure x86_64`, 4 cores, go1.26.6 linux/amd64. Probe source `verification/world-iter318/linux-errno-probe.go.txt`; log `linux-errno-probe-run40842980481.txt`.
+- No listener (idle and under 2×nproc `yes`, 1 and 4 dialers): ECONNREFUSED (0x6f) on **7,325,743 of 7,325,743** dials. Zero ECONNRESET, zero EINVAL (EINVAL is darwin-only).
+- Accept-then-RST holder (T7's `reset` shape): sequential — connected 642,869 / ECONNRESET (0x68) 1,742 idle; 195,092 / **147,968** under load. Four spinning dialers add timeouts (143 idle, 179 load). **ECONNREFUSED never appears** against the holder.
+- T7 `reset-holder` at base under load, `-count=300`: **≥7 FAIL** with the CI signature (counted from a `tail -30`, so a floor).
+- The dev rerun was green on the same run.
+
+**Design** (`w-exec-probe-reset-holder-false-pass`, designer opus via the Agent tool; author vendor benched; seats glm-5.3, kimi-k3, gpt6-1-sol, reserve gemini-4-argon):
+- Decision: a failed dial counts only if its error proves a completed handshake, which is ECONNRESET alone (`errors.Is`). ECONNREFUSED, EINVAL, timeouts, ECONNABORTED and local errors record nothing. darwin control: 0 ECONNRESET in 2,013,696 no-listener dials under load; 122 EINVAL (so EINVAL must not count).
+- False-refusal risk measured: World's own child listener does reset host dials as it closes, but in every reachable cycle its nonce was seen (100/100) and `judgeReverse`'s child-first order returns REACHED; in a correct sandbox the child's listener is unreachable. Increment at the real cadence 0 of 400 cycles.
+- **r1 BLOCKED:** glm and kimi REJECT on the same premise (the Linux errno was from memory); gemini PASS (asked for the scratch sources in-repo). gpt6-1-sol absent (unreachable).
+- **r2 (the one revision, carrying the controller's Linux numbers):** **PROCEED at N-1, `gpt6-1-sol` absent (unreachable)**; glm, kimi and gemini-4-argon PASS. Their non-blocking points (race-gate selection; a parent §4.2 amendment note; T9's `atomic.Int32` fake dialer) went to the planner.
+- Artifacts: `verification/world-iter318/quorum/r1.json`, `r2.json`. Metered $0.609 (r1 $0.218, r2 $0.391).
+
+**Plan** (opus): M1 production + T8/T9 + the drill; M2 the CI list, QUICKSTART and doc notes. The planner prototyped the fix outside the repo and ran every mutant. D1 (false in the design): M28's named killer cannot see an `os.ErrDeadlineExceeded` mutant, so it added T8 `deadline-exceeded` and M28b. D2: AC-LINUX as written was unachievable (the race gate runs `go test ./... -race` without `-v`, `ci.yml:418`/`:497`); restated as step-8 PASS lines plus `ok host/broker` in the race gate.
+
+**Executor** (haiku, Agent tool; resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`):
+- `host/broker/exec_probe.go` +19/−6: `dialErrIsSilent(err) = errors.Is(err, syscall.ECONNRESET)`; `pollLoopback(port, want, dial)` with `nil` = the old 200 ms dial; the error branch sets `silent`; `reverseLeg` passes `nil`.
+- `exec_probe_test.go` +93: T8 `TestExecProbeReverseDialErrIsSilent`, T9 `TestExecProbeReversePollRecordsConnectReset`.
+- `ci.yml:247` gains both names; QUICKSTART §10 arm 6 "(or that resets the host's dial)"; the parent design gains its row-232 amendment note.
+- Drill M22–M29 + M28b: every mutant red on its named killer, in-table controls green, restores sha256-verified. `-count=20` 20/20.
+- Commits: `f438ba41` (M1), `a828c450` (M2), `6b4c2b60` (evidence). The controller rebuilt them from the executor's `.snap/` milestone snapshots, byte-identical to the final tree.
+
+**Controller verification (outside any sandbox):**
+- **AC-LINUX-LOAD** at the fixed head on a Linux runner under 2×nproc `yes` (run 40849609705, log `ac-linux-load-run40849609705.txt`): T7 `reset-holder` `-count=300 -v` → `PASS_LINES=300 FAIL_LINES=0`; `^TestExecProbeReverse` `-count=5` all PASS. Paired red: ≥7/300 at base.
+- `./scripts/verify_go.sh` at `a828c450` (load average 5–8, sibling missions running): rc 1 on `TestDoctorQuickIsFast` (4.09 s against its bound; `cmd/ailang-worldd` byte-identical to base) and `TestProtectedGitFilterPreflight/configured-process-include` (a missing temp file; `exec_protected_check_test.go` unchanged, and `pollLoopback` has one call site). Each passed 3/3 isolated at head. Attributed to load; CI was the arbiter. Log `controller-verify-go-a828c450.txt`.
+- PR head `a828c450` and `6b4c2b60`: check-runs 3/3 success on Linux.
+
+**Independent evaluator** (sonnet, Agent tool, own worktree `.wt-world-iter318-eval` at `a828c450`, foreground): **PASS 92/100** (28/24/19/13/8), zero blocking. It re-ran M22–M29 and M28b and four mutants of its own (ECONNABORTED silent; reset sets `child`; new branch disabled; injected dial bypassed): all red. T8/T9 `-count=200` green; P20 holds (the change can only refuse more). Non-blocking: NB1 the AC-LINUX-LOAD and verify_go logs were untracked → committed `6b4c2b60`; NB2 "§6 omits M28b" → **refuted**, the committed doc lists it at `a828c450`:164 (the judge was reading the executor's report); NB3 the executor skipped the plan's base run (the judge's drill covers it); NB4 one kernel measured; NB5 timeouts are deliberately not silent. Report `verification/world-iter318/evaluator-r1.md`.
+
+**Gate 3b:** PR #410 merged as `793cc67c` (merge commit). Merge-commit check-runs **3/3 success** (`go host build + test gate`, `go race gate`, `ailang-code verify gate`), polled SHA-pinned on the full 40-char SHA with numeric guards; confirmed by a direct `gh run list --workflow CI --branch dev` read at `793cc67c`. Row 232 is **LANDED**, and dev is green again.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN; env read by NAME.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (16 comments, none from the allowlist). Both watermarks read that time; nothing to mark.
+- `mission_gate0_self_notices.sh` rc 1 on the 2026-10-22 rc=1 notice `6345079873`, already credited (log count 15). Control 107:4 ok.
+- Unread `mission-world` inbox: only this loop's claim messages (iteration-318 claim sent and confirmed in the listing).
+- Ledger: 89 rows, 1 OPEN (D-WORLD-102), unchanged except its evidence cell.
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `df5a0671`. Gate-1 base `df5a0671dadd567ece879fe89afcc018c2deaa23@2026-10-29T08:02:57Z`; the Gate-3 `snap` was the same SHA.
+- Skill drift: `SKILL.md` and all 13 resource files byte-identical to `origin/dev` at both the resolved symlink target and the pin copy (14 files each, no DRIFT line). Rules read from the resolved target.
+- Open PRs from this account: #407 (`trial/row220d-design`, attended row-220 design) — not this loop's; left alone.
+
+**Routing evidence:** base=793cc67c0ab029793f44930a2e1ad6a4edf574b4@2026-10-29T10:17:56Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `PLANNER=opus`, `EXECUTOR=claude:claude-haiku-5-5`, `EVALUATOR=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration), handed to `opus` and `claude:claude-haiku-5-5`.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer: resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (same weights; iterations 228/314 precedent). Rotation pointer unchanged at `claude:claude-opus-5-5` (the lane that ran). 1 doc, 2 runs (author + the protocol-mandated revision, within the one-doc diet). 128,419 tok / 1,376 s, then 173,648 tok / 192 s (cumulative transcript).
+- Planner: Agent `opus` (`agent-tool opus fail-closed:env-pin`; derive-planner-lane `opus fail-closed:env-pin`), 148,168 tok / 728 s.
+- Executor: Agent `haiku` (resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`), 108,961 tok / 1,412 s.
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), 68,460 tok / 314 s. Generator ≠ judge: haiku vs sonnet.
+- Quorum: glm-5.3 / kimi-k3 / gemini-4-argon (reserve), gpt6-1-sol absent (unreachable) both rounds — the open `quorum:gpt6-1-sol-openai-api-credits-exhausted` ticket's condition. Metered $0.609.
+- Two Linux CI probe runs on a throwaway branch (Actions minutes, $0 metered).
+
+**Ruled out:**
+- Picking rows 231/230 (rule (d); D-WORLD-102 unanswered). Row 232 was taken only because dev was red on its test.
+- Treating the red as #402's: refuted (no `exec_probe*` file in its diff; rerun green).
+- The quorum's worry that the reset holder surfaces as ECONNREFUSED on Linux: refuted by measurement (0 of them in rst mode).
+- Counting EINVAL or timeouts as silent: refuted by the no-listener controls (darwin EINVAL with nothing listening; Linux timeouts only under spinning saturation).
+- The judge's NB2 (M28b missing): refuted at `a828c450`:164.
+- `ailang mission rotate-log` (33 live entries, under ~40); the index row is hand-written.
+
+**Retro:**
+1. **A quorum objection that names an unmeasurable premise may be measurable after all.** Both rejects said "Linux was not run"; the rig has no container tool, but a throwaway branch with a push-triggered workflow is a Linux machine in about five minutes. It turned a premise into 7.3M dials of evidence and gave the sprint a paired red (≥7/300 at base) and green (300/300 at head) on the platform of record. Instance 1; no rule change.
+2. **A docs-only evidence commit restarts a 20-minute CI cycle.** Committing the evidence before the PR opens would have saved one cycle. Instance 1.
+3. **A judge reading the executor's report inherits its stale claims** (NB2). The judge was told to derive from the diff, and mostly did. Instance 1.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 232 LANDED. Row 150: the attended A1 remains; row 151: behind row 188 N2d/N4a.
+**Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233). Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land. If T7 `reset-holder` reds again on Linux CI, re-measure the Linux dial-error classes first (design R7).

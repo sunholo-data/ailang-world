@@ -1,6 +1,6 @@
 # Sprint plan — `w-exec-probe-reset-holder-false-pass` (iteration 318, row 232, clause 3)
 
-**Design doc:** [`design_docs/planned/w-exec-probe-reset-holder-false-pass.md`](w-exec-probe-reset-holder-false-pass.md)
+**Design doc:** [`design_docs/implemented/w-exec-probe-reset-holder-false-pass.md`](w-exec-probe-reset-holder-false-pass.md)
 (r2; quorum PROCEED at N-1, `gpt6-1-sol` absent unreachable). **Parent:**
 [`design_docs/implemented/w-exec-probe-reverse-leg-port-race.md`](../implemented/w-exec-probe-reverse-leg-port-race.md) (§4.2).
 **Sprint base:** worktree `/Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232`, branch
@@ -16,7 +16,7 @@ whole change and every mutant were prototyped by the planner in a scratch copy
 - `host/broker/exec_probe_test.go`
 - `.github/workflows/ci.yml` (line 247 only)
 - `docs/QUICKSTART.md` (line 1153 only)
-- `design_docs/planned/w-exec-probe-reset-holder-false-pass.md` (the four narrow amendments in M2 only)
+- `design_docs/implemented/w-exec-probe-reset-holder-false-pass.md` (the four narrow amendments in M2 only)
 - `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md` (the two amendment notes in M2 only)
 
 **No `.ail` file. No other file.**
@@ -126,7 +126,7 @@ git diff --name-only
 ```sh
 mkdir -p /tmp/w318-exec
 shasum -a 256 host/broker/exec_probe.go host/broker/exec_probe_test.go .github/workflows/ci.yml docs/QUICKSTART.md \
-  design_docs/planned/w-exec-probe-reset-holder-false-pass.md design_docs/implemented/w-exec-probe-reverse-leg-port-race.md \
+  design_docs/implemented/w-exec-probe-reset-holder-false-pass.md design_docs/implemented/w-exec-probe-reverse-leg-port-race.md \
   > /tmp/w318-exec/base.sha
 cat /tmp/w318-exec/base.sha
 go test ./host/broker/ -run '^TestExecProbeReverse' -count=1 -v > /tmp/w318-exec/focused-base.txt 2>&1; echo "rc=$?"
@@ -141,7 +141,7 @@ Expected (planner, this session):
 | `host/broker/exec_probe_test.go` | `8c9cb59872ba` |
 | `.github/workflows/ci.yml` | `c40e8d653f0f` |
 | `docs/QUICKSTART.md` | `a7dc9c61a5e7` |
-| `design_docs/planned/w-exec-probe-reset-holder-false-pass.md` | `7477c3529f97` |
+| `design_docs/implemented/w-exec-probe-reset-holder-false-pass.md` | `7477c3529f97` |
 | `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md` | `12c6ec7be333` |
 
 Focused base run: rc 0, 8 s, **6** `--- PASS` (`…LegJudge`, `…ChattyForeignHolderIsRetried`,
@@ -469,7 +469,7 @@ After the last mutant, `shasum -a 256 -c /tmp/w318-exec/m1.sha` must print `OK` 
 ### Milestone M2 — CI list, QUICKSTART clause, the reviewers' doc amendments, AC-STABLE, gates (±1 CI, +1 docs, about +12 doc lines)
 
 **Files:** `.github/workflows/ci.yml`, `docs/QUICKSTART.md`,
-`design_docs/planned/w-exec-probe-reset-holder-false-pass.md`,
+`design_docs/implemented/w-exec-probe-reset-holder-false-pass.md`,
 `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md`.
 
 #### M2.1 `.github/workflows/ci.yml:247` (step 8 `tests=` list)
@@ -502,7 +502,7 @@ Replace it with these **two** lines (3-space indent, inside list item 6):
 
 The backticked refusal text on `:1152` is the code's literal string and stays byte-identical (D3).
 
-#### M2.3 The design doc's four narrow amendments (`design_docs/planned/w-exec-probe-reset-holder-false-pass.md`)
+#### M2.3 The design doc's four narrow amendments (`design_docs/implemented/w-exec-probe-reset-holder-false-pass.md`)
 
 These are the only edits allowed to this file. Use the Edit tool with the exact old strings.
 
