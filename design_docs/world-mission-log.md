@@ -3069,3 +3069,61 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **Non-blocking:** NB1 the "8 commits behind" figure was not in the evidence → added to `gate1-2-readings.txt` (`dc24fccf..bcb07394` = 8, first-parent 2). NB2 the N2d/N4a grep is weak on its own because the row-188 sprint plan does not name them; the conclusion also rests on N2c being row 188's newest landing and on rows 217–219 being open. NB3 row 150's blocker was taken from the charter and the 316 clause map. NB4 hand-written index row (fine).
 - No r2: the fix only adds evidence for a figure the judge could not re-derive; nothing scored changed.
 - Report: `design_docs/verification/world-iter319/evaluator-r1.md`.
+
+## 320 — 2026-10-29 — no pick: rule (d) block report 3; release rows 150/151 still wait on attended steps; dev green at 8cee85a9 [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (317 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, this entry, the index row, the dashboard, and `verification/world-iter320/gate1-2-readings.txt`. An independent judge reviews it before merge.
+
+**Pick and why:** none.
+- **Clause map at `8cee85a9`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
+- **D-WORLD-81 release rows, blockers re-measured this iteration (not transcribed):**
+  - **150** waits only on the attended A1. The controller runs P0 (≤24 h before) and P3 (before pass A) inside the window Mark schedules (orchestration r5 §4.4). Since iteration 319's base `bcb07394`, `git log --format='%h %s' | grep -ciE 'row ?150|A1\b|marketing'` → **0** (control `row ?2[12][0-9]` → **20**). Nothing moved it.
+  - **151** needs row 188's N2d and N4a. Over commit SUBJECTS, `git log origin/dev --since=2026-10-01 --format='%h %s' | grep -ciE 'N2d|N4a'` → **0**; control `N2c` → **2**. Over full messages (the default `git log` format, which iteration 319 printed) the count is **4**. All four are record or design commits that describe the work and do not build it: `fe9c891e` (319 record), `92495b60` (317 record), `be184351` (roadmap rows 217–222), `dc719822` (`w-world-surface-outputs` r0). No feat commit names N2d or N4a. Row 188's newest landing is N2c (`6f2ba039`, merged as `1e7b3cd3`). Since iteration 319 the attended track landed 220a (#413), 221's design (#414), 218b (#415), 217b (#416) and 220b (#417), and 219c is draft PR #418. Rows 217–219 are still `[NEXT]` on the attended track, and D-WORLD-95 R2 runs them before N2d. So nothing here is loop-routable.
+- **Rows 231, 230, 233** are hygiene "below every D-WORLD-81 release row". Rule (d) bars them. D-WORLD-64's exception covers rows 148–151 only. D-WORLD-102 is OPEN with default B, so this is a block report.
+- **New ledger row D-WORLD-104** (row 221's seven rulings, "all defaults") was created and resolved in an attended session on 2026-10-29. `mission_ledger_provenance.sh` → `verdict=attended` (flip `ddfa6a13`, creation `6b10491c`). It covers row 221 (attended track) and does not change any row above.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN; env read by NAME.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (18 comments, none from the allowlist). Nothing to mark.
+- `mission_gate0_self_notices.sh`: verdict "1 crash notice", the same 2026-10-22 rc=1 notice `6345079873`, already credited (log count 17 before this entry). Control 107:4 ok.
+- Unread `mission-world` inbox: only this loop's claim messages. The iteration-320 claim was sent (`inbox_1793289832458_d0b201f3`) and shows in the listing.
+- `mission_decisions.sh --check`: valid, 91 rows, 1 OPEN (D-WORLD-102). The external-issue sweep is not due (#366 is this week's thread).
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `8cee85a98dc800f808ad061c597ab88a0ea0140b` (not behind). Gate-1 base `8cee85a9…@2026-10-29T16:01:55Z`.
+- Since `bcb07394`: 30 commits, 6 first-parent merges (#412 iteration 319's record, #413–#417 attended trial branches).
+- Skill drift: per-file `cmp` of `SKILL.md` and 13 resource files against `origin/dev`, at both the resolved symlink target and the pin worktree, printed zero DRIFT lines; a positive control fired. Rules read from the resolved target.
+- Dev CI: `commits/8cee85a9/check-runs` → 3, none not-green; the last six dev CI runs all `success`.
+- Open PRs: #418 `trial/row219c-exec-per-call` (draft, row 219 M3 attended episode). No worktree in this clone, and the `trial/` prefix is the attended track, so it is not this loop's. Left alone.
+- Died-mid-flight traces: no iteration-320 branch or worktree existed before this one. `.wt-world-iter306-r0` is the known residue.
+
+**Designer / planner / executor:** not spawned. There is no pick, so the routing table has nothing to send them (precedent 257–264, 317, 319). No spawn was attempted, so none failed. The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=8cee85a98dc800f808ad061c597ab88a0ea0140b@2026-10-29T16:04:30Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), tokens recorded in the follow-through. Generator ≠ judge: opus controller vs sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150 (attended A1) or 151 (row 188 N2d/N4a absent, measured above).
+- Picking 231, 230 or 233 under rule (d) with D-WORLD-102 unanswered.
+- Adopting PR #418: attended track, not this mission's loop work.
+- `ailang mission rotate-log` (36 live entries with this one, under the ~40 threshold); the index row is hand-written as in 317–319.
+
+**Retro:**
+1. **Idle cadence:** this is block report 3 in a row (317, 319, 320; 318 was a dev red). Each costs one judge and no code. The attended track is moving fast (five merges since iteration 319), but none of it reaches row 151's N2d/N4a. D-WORLD-102 is still the only lever the loop has, and the digest shows it as the one open decision. It is not asked again.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains; row 151: behind row 188 N2d/N4a.
+**Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.
+
+**Record follow-through (iteration 320):** the independent evaluator judged record commit `5ea2151b` on `8cee85a9` and returned **PASS 94/100, zero blocking** (35/23/25/11). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (47,355 tok, 64 s, 7 tool uses).
+- **Verified by the judge:** no allowlisted comment on #366 (18, all the loop's), no N2d/N4a feat commit, 0 row-150 commits since `bcb07394`, D-WORLD-104 provenance `attended`, `8cee85a9` 3/3 green, 30 commits / 6 merges, #418 the only open PR, ledger 91 rows with D-WORLD-102 the only OPEN row, and the rotation, headings, `base=` and keyword checks.
+- **NB1, reproduced and fixed:** the N2d/N4a count is 0 over commit subjects and 4 over full messages, all four being record or design commits. The entry had printed the full-message command beside the subject-only reading; it now gives both and names the commits.
+- **NB2, fixed:** the six-run dev CI listing is now in `gate1-2-readings.txt`.
+- No r2: the fixes correct evidence wording; nothing scored changed.
+- **Retro addendum:** a command copied into a record must be the command that produced the number. Iteration 319 printed the same default-format grep, and its judge flagged the grep as weak (NB2 there) without catching that it returns 4. Instance 1 of the printed-command-differs class here; no rule change.
+- Report: `design_docs/verification/world-iter320/evaluator-r1.md`.
