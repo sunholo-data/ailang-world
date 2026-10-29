@@ -2,7 +2,10 @@
 
 A preset is private operator configuration. It pins the repository's local base
 branch, daemon paths, grants, agent and checks before the terminal confirmation.
-No check runs at start. No fetch or agent launch occurs.
+No check runs at start. No fetch or agent launch occurs. Finish runs the checks
+pinned in the start record, even if the preset file later changes:
+`ailang-worldd episode finish <id> --preset my-repo --dry-run` previews the local
+commit and report body; omit --dry-run to keep them and print manual PR steps.
 
 Create and inspect a preset (replace the repository and branch with yours):
 

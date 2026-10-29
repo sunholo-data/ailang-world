@@ -25,6 +25,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/capsule"
+	"github.com/sunholo-data/ailang-world/host/checkrun"
 	"github.com/sunholo-data/ailang-world/host/childenv"
 	"github.com/sunholo-data/ailang-world/host/evidence"
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -1215,6 +1216,7 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// Row 189 M4: `profile init` asks the repo's toolchain where it lives
 		// (go env, uv python find) through host/toolprobe's one exec site.
 		"host/toolprobe/toolprobe.go": {driveToolprobeOutput},
+		"host/checkrun/checkrun.go":   {driveCheckrun},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -2671,5 +2673,12 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	}
 	if afterRetry != afterFirst {
 		t.Fatalf("AC9c: counters moved across reopen+recovery+retry: %s -> %s", afterFirst, afterRetry)
+	}
+}
+
+func driveCheckrun(t *testing.T, probe string) {
+	t.Helper()
+	if r, err := checkrun.Run(boundedTestContext(t), []string{probe}, t.TempDir(), time.Second); err != nil || r.ExitCode != 0 {
+		t.Fatalf("checkrun.Run via the probe: %+v, %v", r, err)
 	}
 }
