@@ -1,0 +1,78 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232/design_docs/planned/w-exec-probe-reset-holder-false-pass.md",
+  "iso_ts": "2026-10-29T08:30:22Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0836126,
+      "tokens_in": 7313,
+      "tokens_out": 16676,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The fix's efficacy on Linux — the only platform where the defect was actually observed (V1, linux/amd64 go-race-gate) and where CI enforces it — rests on an explicitly memory-based, unverified premise: 'Linux reports a RST received in SYN_SENT as ECONNREFUSED and a RST after establishment as ECONNRESET … read from memory, not from source this session' (§2, R7). The doc's fails-closed argument (§4c) bounds only one direction (ECONNRESET arising with nothing listening → false refusal); it does not bound the opposite failure, in which the reset-holder's accept-then-RST surfaces on Linux as ECONNREFUSED or ECONNABORTED at connect time. In that case `dialErrIsSilent` never fires, T7 `reset-holder` stays red on Linux, and the exact CI failure this doc exists to fix persists — the doc itself concedes the possibility ('If T7 reset-holder reds on Linux CI after this fix…') yet ships the inference as a non-blocking residual (R7) rather than a gate. The premise was verifiable without Linux hardware, by the same source-reading standard the log already employs (V9 reads Go's `fd_unix.go`): Linux kernel `net/ipv4/tcp_ipv4.c` RST handling (SYN_SENT→ECONNREFUSED vs established→ECONNRESET) confirms or refutes it, and that verification was not performed.",
+        "catch": "The Linux connect-time errno for the exact holder scenario — a listener closed with SO_LINGER(0) while the client's handshake sits completed in its backlog: whether a pending Go connect() reads SO_ERROR=ECONNRESET on Linux, or can instead see ECONNREFUSED/ECONNABORTED. This is asserted from memory (R7) and is the sole premise connecting the fix to the observed linux/amd64 failure. Secondary: the cadence claim '1000 ms hold, 50 ms poll; exec_probe.go:98' is load-bearing for the timeout-row justification ('about 20 dials per attempt') but no V-row covers reading line :98 — V3's grep list does not include it.",
+        "proposed_fix": "Add a V14 row that source-verifies the Linux errno mapping instead of asserting it from memory: read Linux kernel net/ipv4/tcp_ipv4.c (tcp_v4_err / RST-to-errno paths) and the listener-close path, confirming (i) RST in SYN_SENT → ECONNREFUSED, (ii) RST after establishment → ECONNRESET, and (iii) a listening socket closed with SO_LINGER(0) RSTs connections whose handshakes completed in its backlog, so a pending Go connect() reads SO_ERROR=ECONNRESET via the already-verified fd_unix.go:127-131 mechanism; cite the kernel file/function/lines in the Observed column and rewrite §2's Linux paragraph from 'read from memory' to 'verified from kernel source, runtime-unobserved'. Then convert R7 from a residual into an explicit acceptance gate in §6: the mission is not complete until the linux/amd64 go-race-gate run shows T7 reset-holder green; if it reds, re-measure the Linux dial-error classes and amend the §2 table with the observed class before any retry. State plainly in §2 that on Linux the fix's effect on the observed failure (V1) is validated only by that gate, not by any row in this log. Also add the missing verification row for exec_probe.go:98 (hold/poll cadence) with the actual read command and observed lines."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.095796,
+      "tokens_in": 7247,
+      "tokens_out": 4937,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The fix's efficacy is unverified on the only platform where the defect was ever observed. The motivating failure (V1) is linux/amd64 CI; every measurement in the log is darwin (V2 concedes no Linux run was possible). The doc itself states, from memory (R7), that Linux reports a RST received in SYN_SENT as ECONNREFUSED — and ECONNREFUSED is the one class the decision table deliberately leaves unclassified (necessarily: it also means nothing-listening, M25). So on Linux the reset-holder's connect-time error can surface as a class this fix intentionally drops, meaning instance 3 may persist after merge, and the doc's only answer is a post-merge residual ('if T7 reds on Linux CI after this fix, re-measure'). A design whose core premise ('this closes the observed gap') is both unmeasured on the platform of record and has a plausible, self-acknowledged mechanism for not working fails premise verification. Claiming it 'fails closed' addresses only the safety direction (no false pass), never the efficacy direction (the CI flake it exists to fix).",
+        "catch": "§2's sentence 'The CI failure's signature is byte-identical to the darwin one (V1)' is asserted, not evidenced: V1 contains only the CI log; no darwin-side failure signature was captured this session (V8: 0/300 at base under load — the failure was never even reproduced on darwin), and the assertion text 'Why = \"\", picker calls 1' is identical for ANY dropped dial error, including ECONNREFUSED and EINVAL. It is being used to smuggle the unverified Linux errno mechanism into looking verified. Pair this with the unmeasured Linux dial-error distribution for the exact reset-holder shape (accept-then-SetLinger(0)-Close): on Linux, SYN-in-flight-during-listener-close produces RST to a SYN_SENT socket → ECONNREFUSED, which stays classed 'none'.",
+        "proposed_fix": "Add a blocking pre-implementation verification step and a V14 log row: run the existing ctl/rst probe (or a temporary T7 instrumented with errors.As(err, \u0026errno) + t.Logf of dial-error classes) on a Linux CI runner via a one-off workflow_dispatch job, capturing the connect-time errno distribution for the reset-holder shape. Then branch the design on the result: (a) if Linux connect-time resets are ECONNRESET, record V14 (command + counts) and proceed as written; (b) if ECONNREFUSED appears in that distribution, rewrite §2's decision table — either extend classification (e.g., a connect-time ECONNREFUSED counts as silent only when the same attempt already established a connection to that port, mirroring the R5 candidate logic) or explicitly narrow scope to darwin and keep Linux T7 as a documented open residual with the flake rate stated. Independently of the outcome, delete or reword the 'byte-identical signature' claim to 'the assertion text is consistent with a dropped connect-time dial error but does not identify its errno class (base repro this session: 0/300 on darwin, V8).'"
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.03854,
+      "tokens_in": 8225,
+      "tokens_out": 282,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The Linux kernel behavior for connect-time RST after SYN-ACK (`ECONNRESET` vs `ECONNREFUSED` in `SYN_SENT`) could not be empirically run locally and is explicitly flagged as UNVERIFIED (R7), relying on CI log signature parity (V1) and Go stdlib `fd_unix.go` inspection (V9).",
+        "catch": "In §3 and V5/V6, the close-time probe (`/tmp/w318-designer/probe/main.go`) lives in `/tmp` rather than `design_docs/verification/` like the iteration-317 probe in V4, meaning future reviewers cannot re-run V5/V6 from the repo.",
+        "proposed_fix": "Check the `/tmp/w318-designer/probe/main.go` and `/tmp/w318-designer/ctl` scratch sources into `design_docs/verification/world-iter318/` (as `.go.txt` files matching iteration 317's convention) so V5, V6, and V7 remain reproducible from the repository."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read the full doc: ECONNRESET-only rule backed by a 2M-dial no-listener control; false-refusal risk measured; deterministic T8/T9 with mutation table; CI list + QUICKSTART edits named."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The fix's efficacy on Linux — the only platform where the defect was actually observed (V1, linux/amd64 go-race-gate) and where CI enforces it — rests on an explicitly memory-based, unverified premise: 'Linux reports a RST received in SYN_SENT as ECONNREFUSED and a RST after establishment as ECONNRESET … read from memory, not from source this session' (§2, R7). The doc's fails-closed argument (§4c) bounds only one direction (ECONNRESET arising with nothing listening → false refusal); it does not bound the opposite failure, in which the reset-holder's accept-then-RST surfaces on Linux as ECONNREFUSED or ECONNABORTED at connect time. In that case `dialErrIsSilent` never fires, T7 `reset-holder` stays red on Linux, and the exact CI failure this doc exists to fix persists — the doc itself concedes the possibility ('If T7 reset-holder reds on Linux CI after this fix…') yet ships the inference as a non-blocking residual (R7) rather than a gate. The premise was verifiable without Linux hardware, by the same source-reading standard the log already employs (V9 reads Go's `fd_unix.go`): Linux kernel `net/ipv4/tcp_ipv4.c` RST handling (SYN_SENT→ECONNREFUSED vs established→ECONNRESET) confirms or refutes it, and that verification was not performed.",
+      "oc-kimi-k3: The fix's efficacy is unverified on the only platform where the defect was ever observed. The motivating failure (V1) is linux/amd64 CI; every measurement in the log is darwin (V2 concedes no Linux run was possible). The doc itself states, from memory (R7), that Linux reports a RST received in SYN_SENT as ECONNREFUSED — and ECONNREFUSED is the one class the decision table deliberately leaves unclassified (necessarily: it also means nothing-listening, M25). So on Linux the reset-holder's connect-time error can surface as a class this fix intentionally drops, meaning instance 3 may persist after merge, and the doc's only answer is a post-merge residual ('if T7 reds on Linux CI after this fix, re-measure'). A design whose core premise ('this closes the observed gap') is both unmeasured on the platform of record and has a plausible, self-acknowledged mechanism for not working fails premise verification. Claiming it 'fails closed' addresses only the safety direction (no false pass), never the efficacy direction (the CI flake it exists to fix)."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.2179486,
+    "total_tokens_in": 22785,
+    "total_tokens_out": 21895
+  }
+}

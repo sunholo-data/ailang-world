@@ -1,0 +1,83 @@
+// Iteration 318 controller probe (row 232): the connect-time errno distribution of a
+// loopback dial on THIS host, against (none) a port nothing listens on and (rst) an
+// accept-then-RST listener shaped like T7's reset-holder (SetLinger(0) then Close).
+// -dialers 1 dials sequentially (T7's lone dial); -dialers 4 spins. NOT repo code.
+package main
+
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"net"
+	"os"
+	"runtime"
+	"sort"
+	"sync"
+	"syscall"
+	"time"
+)
+
+func main() {
+	mode := flag.String("mode", "none", "none|rst")
+	secs := flag.Int("secs", 30, "seconds")
+	dialers := flag.Int("dialers", 4, "concurrent dialers")
+	flag.Parse()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		panic(err)
+	}
+	addr := ln.Addr().String()
+	if *mode == "none" {
+		ln.Close()
+	} else {
+		go func() {
+			for {
+				c, err := ln.Accept()
+				if err != nil {
+					return
+				}
+				_ = c.(*net.TCPConn).SetLinger(0)
+				_ = c.Close()
+			}
+		}()
+	}
+	var mu sync.Mutex
+	tally := map[string]int{}
+	end := time.Now().Add(time.Duration(*secs) * time.Second)
+	var wg sync.WaitGroup
+	for k := 0; k < *dialers; k++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for time.Now().Before(end) {
+				c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
+				key := "connected"
+				var en syscall.Errno
+				var ne net.Error
+				switch {
+				case err == nil:
+					c.Close()
+				case errors.As(err, &en):
+					key = fmt.Sprintf("errno:%s(0x%x) is-ECONNRESET=%v", en.Error(), uintptr(en), errors.Is(err, syscall.ECONNRESET))
+				case errors.As(err, &ne) && ne.Timeout():
+					key = "timeout"
+				default:
+					key = "other:" + err.Error()
+				}
+				mu.Lock()
+				tally[key]++
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+	fmt.Fprintf(os.Stdout, "PROBE goos=%s goarch=%s mode=%s dialers=%d secs=%d\n", runtime.GOOS, runtime.GOARCH, *mode, *dialers, *secs)
+	keys := make([]string, 0, len(tally))
+	for k := range tally {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		fmt.Printf("  %-60s %d\n", k, tally[k])
+	}
+}

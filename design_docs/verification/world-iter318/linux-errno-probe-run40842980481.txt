@@ -1,0 +1,317 @@
+﻿2026-10-29T08:33:29.6679291Z Current runner version: '2.338.0'
+2026-10-29T08:33:29.6697298Z ##[group]Runner Image Provisioner
+2026-10-29T08:33:29.6697848Z Hosted Compute Agent
+2026-10-29T08:33:29.6698232Z Version: 20261021.618
+2026-10-29T08:33:29.6698636Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-29T08:33:29.6699052Z Build Date: 2026-10-21T00:45:21Z
+2026-10-29T08:33:29.6699442Z Worker ID: {c2b4fc67-2c76-4c66-b230-3c3b2bf4847c}
+2026-10-29T08:33:29.6699889Z Region: centralus
+2026-10-29T08:33:29.6700250Z Cloud: Azure
+2026-10-29T08:33:29.6700590Z ##[endgroup]
+2026-10-29T08:33:29.6701363Z ##[group]Operating System
+2026-10-29T08:33:29.6701711Z Ubuntu
+2026-10-29T08:33:29.6702070Z 26.04.1
+2026-10-29T08:33:29.6702407Z LTS
+2026-10-29T08:33:29.6703056Z ##[endgroup]
+2026-10-29T08:33:29.6703510Z ##[group]Runner Image
+2026-10-29T08:33:29.6704005Z Image: ubuntu-26.04
+2026-10-29T08:33:29.6704514Z Version: 20261025.179.1
+2026-10-29T08:33:29.6705478Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261025.179/images/ubuntu/Ubuntu2604-Readme.md
+2026-10-29T08:33:29.6706706Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261025.179
+2026-10-29T08:33:29.6707344Z ##[endgroup]
+2026-10-29T08:33:29.6709136Z ##[group]GITHUB_TOKEN Permissions
+2026-10-29T08:33:29.6710611Z Actions: write
+2026-10-29T08:33:29.6711012Z ArtifactMetadata: write
+2026-10-29T08:33:29.6711362Z Attestations: write
+2026-10-29T08:33:29.6711718Z Checks: write
+2026-10-29T08:33:29.6712087Z CodeQuality: write
+2026-10-29T08:33:29.6712431Z Contents: write
+2026-10-29T08:33:29.6713020Z CopilotRequests: write
+2026-10-29T08:33:29.6713363Z Deployments: write
+2026-10-29T08:33:29.6713719Z Discussions: write
+2026-10-29T08:33:29.6714093Z Drives: write
+2026-10-29T08:33:29.6714429Z Issues: write
+2026-10-29T08:33:29.6714856Z Metadata: read
+2026-10-29T08:33:29.6715199Z Models: read
+2026-10-29T08:33:29.6715594Z Packages: write
+2026-10-29T08:33:29.6715934Z Pages: write
+2026-10-29T08:33:29.6716265Z PullRequests: write
+2026-10-29T08:33:29.6716649Z RepositoryProjects: write
+2026-10-29T08:33:29.6717010Z SecurityEvents: write
+2026-10-29T08:33:29.6717416Z Statuses: write
+2026-10-29T08:33:29.6717816Z VulnerabilityAlerts: read
+2026-10-29T08:33:29.6718167Z ##[endgroup]
+2026-10-29T08:33:29.6719602Z Secret source: Actions
+2026-10-29T08:33:29.6720157Z Cache mode: write
+2026-10-29T08:33:29.6720659Z Prepare workflow directory
+2026-10-29T08:33:29.7006758Z Prepare all required actions
+2026-10-29T08:33:29.7039158Z Getting action download info
+2026-10-29T08:33:29.9308880Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-29T08:33:30.0035423Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-10-29T08:33:30.5728815Z Complete job name: probe
+2026-10-29T08:33:30.6295355Z ##[group]Run actions/checkout@v4
+2026-10-29T08:33:30.6295799Z with:
+2026-10-29T08:33:30.6296070Z   repository: sunholo-data/ailang-world
+2026-10-29T08:33:30.6298153Z   token: ***
+2026-10-29T08:33:30.6298434Z   ssh-strict: true
+2026-10-29T08:33:30.6298695Z   ssh-user: git
+2026-10-29T08:33:30.6298957Z   persist-credentials: true
+2026-10-29T08:33:30.6299239Z   clean: true
+2026-10-29T08:33:30.6299511Z   sparse-checkout-cone-mode: true
+2026-10-29T08:33:30.6299814Z   fetch-depth: 1
+2026-10-29T08:33:30.6300069Z   fetch-tags: false
+2026-10-29T08:33:30.6300328Z   show-progress: true
+2026-10-29T08:33:30.6300614Z   lfs: false
+2026-10-29T08:33:30.6300869Z   submodules: false
+2026-10-29T08:33:30.6301146Z   set-safe-directory: true
+2026-10-29T08:33:30.6301438Z   allow-unsafe-pr-checkout: false
+2026-10-29T08:33:30.6301800Z env:
+2026-10-29T08:33:30.6302041Z   GOTOOLCHAIN: go1.26.6
+2026-10-29T08:33:30.6302320Z ##[endgroup]
+2026-10-29T08:33:30.8500603Z Syncing repository: sunholo-data/ailang-world
+2026-10-29T08:33:30.8501903Z ##[group]Getting Git version info
+2026-10-29T08:33:30.8502572Z Working directory is '/home/runner/work/ailang-world/ailang-world'
+2026-10-29T08:33:30.8503469Z [command]/usr/bin/git version
+2026-10-29T08:33:30.8531502Z git version 2.56.0
+2026-10-29T08:33:30.8551213Z ##[endgroup]
+2026-10-29T08:33:30.8562370Z Temporarily overriding HOME='/home/runner/work/_temp/8995fbd9-ee02-4c57-99c9-0ac3a60f01d5' before making global git config changes
+2026-10-29T08:33:30.8564190Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-29T08:33:30.8565502Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ailang-world/ailang-world
+2026-10-29T08:33:30.8631983Z Deleting the contents of '/home/runner/work/ailang-world/ailang-world'
+2026-10-29T08:33:30.8634882Z ##[group]Initializing the repository
+2026-10-29T08:33:30.8638689Z [command]/usr/bin/git init /home/runner/work/ailang-world/ailang-world
+2026-10-29T08:33:30.8728867Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-29T08:33:30.8729462Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-29T08:33:30.8730049Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-29T08:33:30.8730595Z hint: call:
+2026-10-29T08:33:30.8730833Z hint:
+2026-10-29T08:33:30.8731134Z hint: 	git config --global init.defaultBranch <name>
+2026-10-29T08:33:30.8731480Z hint:
+2026-10-29T08:33:30.8731808Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-29T08:33:30.8732341Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-29T08:33:30.8732947Z hint:
+2026-10-29T08:33:30.8733328Z hint: 	git branch -m <name>
+2026-10-29T08:33:30.8733822Z hint:
+2026-10-29T08:33:30.8734187Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-29T08:33:30.8739285Z Initialized empty Git repository in /home/runner/work/ailang-world/ailang-world/.git/
+2026-10-29T08:33:30.8747991Z [command]/usr/bin/git remote add origin https://github.com/sunholo-data/ailang-world
+2026-10-29T08:33:30.8793081Z ##[endgroup]
+2026-10-29T08:33:30.8793828Z ##[group]Disabling automatic garbage collection
+2026-10-29T08:33:30.8795368Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-29T08:33:30.8822160Z ##[endgroup]
+2026-10-29T08:33:30.8822920Z ##[group]Setting up auth
+2026-10-29T08:33:30.8827516Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-29T08:33:30.8853792Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-29T08:33:30.9275424Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-29T08:33:30.9303600Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-29T08:33:30.9513649Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-29T08:33:30.9541110Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-29T08:33:30.9748118Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-29T08:33:30.9802182Z ##[endgroup]
+2026-10-29T08:33:30.9802807Z ##[group]Fetching the repository
+2026-10-29T08:33:30.9808722Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cf93d0f5256ef57d9c04312f30ce49b4a53c0701:refs/remotes/origin/probe/world-iter318-linux-errno
+2026-10-29T08:33:32.6978703Z From https://github.com/sunholo-data/ailang-world
+2026-10-29T08:33:32.6980892Z  * [new ref]         cf93d0f5256ef57d9c04312f30ce49b4a53c0701 -> origin/probe/world-iter318-linux-errno
+2026-10-29T08:33:32.6984501Z ##[endgroup]
+2026-10-29T08:33:32.6985761Z ##[group]Determining the checkout info
+2026-10-29T08:33:32.6987097Z ##[endgroup]
+2026-10-29T08:33:32.6989317Z [command]/usr/bin/git sparse-checkout disable
+2026-10-29T08:33:32.7031453Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-29T08:33:32.7056070Z ##[group]Checking out the ref
+2026-10-29T08:33:32.7059516Z [command]/usr/bin/git checkout --progress --force -B probe/world-iter318-linux-errno refs/remotes/origin/probe/world-iter318-linux-errno
+2026-10-29T08:33:32.9764656Z Switched to a new branch 'probe/world-iter318-linux-errno'
+2026-10-29T08:33:32.9767906Z branch 'probe/world-iter318-linux-errno' set up to track 'origin/probe/world-iter318-linux-errno'.
+2026-10-29T08:33:32.9785167Z ##[endgroup]
+2026-10-29T08:33:32.9825329Z [command]/usr/bin/git log -1 --format=%H
+2026-10-29T08:33:32.9846778Z cf93d0f5256ef57d9c04312f30ce49b4a53c0701
+2026-10-29T08:33:33.0090016Z ##[group]Run actions/setup-go@v5
+2026-10-29T08:33:33.0090679Z with:
+2026-10-29T08:33:33.0091173Z   go-version: 1.26.6
+2026-10-29T08:33:33.0091702Z   check-latest: false
+2026-10-29T08:33:33.0096279Z   token: ***
+2026-10-29T08:33:33.0096776Z   cache: true
+2026-10-29T08:33:33.0097292Z env:
+2026-10-29T08:33:33.0097778Z   GOTOOLCHAIN: go1.26.6
+2026-10-29T08:33:33.0098317Z ##[endgroup]
+2026-10-29T08:33:33.0989561Z Setup go version spec 1.26.6
+2026-10-29T08:33:33.0996347Z Attempting to download 1.26.6...
+2026-10-29T08:33:33.1107891Z (node:2139) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-29T08:33:33.1109731Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-29T08:33:34.0480200Z matching 1.26.6...
+2026-10-29T08:33:34.0503831Z Acquiring 1.26.6 from https://github.com/actions/go-versions/releases/download/1.26.6-31764261251/go-1.26.6-linux-x64.tar.gz
+2026-10-29T08:33:34.6185557Z Extracting Go...
+2026-10-29T08:33:34.6238686Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/e6e39c08-f2d5-47a4-b2d3-9fb61de8d497 -f /home/runner/work/_temp/0bfb9890-3265-40e8-a142-efaafca18146
+2026-10-29T08:33:35.4357742Z Successfully extracted go to /home/runner/work/_temp/e6e39c08-f2d5-47a4-b2d3-9fb61de8d497
+2026-10-29T08:33:35.4358227Z Adding to the cache ...
+2026-10-29T08:33:39.1582392Z Successfully cached go to /opt/hostedtoolcache/go/1.26.6/x64
+2026-10-29T08:33:39.1583458Z Added go to the path
+2026-10-29T08:33:39.1585803Z Successfully set up Go version 1.26.6
+2026-10-29T08:33:39.1786625Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOMODCACHE
+2026-10-29T08:33:39.1830275Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOCACHE
+2026-10-29T08:33:39.1874841Z /home/runner/go/pkg/mod
+2026-10-29T08:33:39.1888615Z /home/runner/.cache/go-build
+2026-10-29T08:33:39.3916807Z Cache hit for: setup-go-Linux-x64-ubuntu26-go-1.26.6-7e7d34241896909f5f39c60d1a096c08bbef809938b6e24d50fffddb12d9e413
+2026-10-29T08:33:39.3993118Z (node:2139) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-29T08:33:40.2511955Z Received 12591202 of 12591202 (100.0%), 18.6 MBs/sec
+2026-10-29T08:33:40.2512309Z Cache Size: ~12 MB (12591202 B)
+2026-10-29T08:33:40.2529130Z [command]/usr/bin/tar -xf /home/runner/work/_temp/a07110fa-49d0-4d2b-9ab6-dbb1a78d0748/cache.tzst -P -C /home/runner/work/ailang-world/ailang-world --use-compress-program unzstd
+2026-10-29T08:33:40.3367816Z Cache restored successfully
+2026-10-29T08:33:40.3376917Z Cache restored from key: setup-go-Linux-x64-ubuntu26-go-1.26.6-7e7d34241896909f5f39c60d1a096c08bbef809938b6e24d50fffddb12d9e413
+2026-10-29T08:33:40.3400150Z go version go1.26.6 linux/amd64
+2026-10-29T08:33:40.3400320Z 
+2026-10-29T08:33:40.3400577Z ##[group]go env
+2026-10-29T08:33:40.3532936Z AR='ar'
+2026-10-29T08:33:40.3533125Z CC='gcc'
+2026-10-29T08:33:40.3533314Z CGO_CFLAGS='-O2 -g'
+2026-10-29T08:33:40.3533512Z CGO_CPPFLAGS=''
+2026-10-29T08:33:40.3533693Z CGO_CXXFLAGS='-O2 -g'
+2026-10-29T08:33:40.3533876Z CGO_ENABLED='1'
+2026-10-29T08:33:40.3534053Z CGO_FFLAGS='-O2 -g'
+2026-10-29T08:33:40.3534509Z CGO_LDFLAGS='-O2 -g'
+2026-10-29T08:33:40.3534691Z CXX='g++'
+2026-10-29T08:33:40.3534856Z GCCGO='gccgo'
+2026-10-29T08:33:40.3535025Z GO111MODULE=''
+2026-10-29T08:33:40.3535200Z GOAMD64='v1'
+2026-10-29T08:33:40.3535380Z GOARCH='amd64'
+2026-10-29T08:33:40.3535548Z GOAUTH='netrc'
+2026-10-29T08:33:40.3535808Z GOBIN=''
+2026-10-29T08:33:40.3536006Z GOCACHE='/home/runner/.cache/go-build'
+2026-10-29T08:33:40.3536243Z GOCACHEPROG=''
+2026-10-29T08:33:40.3536413Z GODEBUG=''
+2026-10-29T08:33:40.3536633Z GOENV='/home/runner/.config/go/env'
+2026-10-29T08:33:40.3536853Z GOEXE=''
+2026-10-29T08:33:40.3537027Z GOEXPERIMENT=''
+2026-10-29T08:33:40.3537201Z GOFIPS140='off'
+2026-10-29T08:33:40.3537372Z GOFLAGS=''
+2026-10-29T08:33:40.3538127Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build1990972032=/tmp/go-build -gno-record-gcc-switches'
+2026-10-29T08:33:40.3538686Z GOHOSTARCH='amd64'
+2026-10-29T08:33:40.3538879Z GOHOSTOS='linux'
+2026-10-29T08:33:40.3539059Z GOINSECURE=''
+2026-10-29T08:33:40.3539296Z GOMOD='/home/runner/work/ailang-world/ailang-world/go.mod'
+2026-10-29T08:33:40.3539608Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-10-29T08:33:40.3539834Z GONOPROXY=''
+2026-10-29T08:33:40.3540005Z GONOSUMDB=''
+2026-10-29T08:33:40.3540229Z GOOS='linux'
+2026-10-29T08:33:40.3540418Z GOPATH='/home/runner/go'
+2026-10-29T08:33:40.3540614Z GOPRIVATE=''
+2026-10-29T08:33:40.3540860Z GOPROXY='https://proxy.golang.org,direct'
+2026-10-29T08:33:40.3541144Z GOROOT='/opt/hostedtoolcache/go/1.26.6/x64'
+2026-10-29T08:33:40.3541400Z GOSUMDB='sum.golang.org'
+2026-10-29T08:33:40.3541611Z GOTELEMETRY='local'
+2026-10-29T08:33:40.3541840Z GOTELEMETRYDIR='/home/runner/.config/go/telemetry'
+2026-10-29T08:33:40.3542100Z GOTMPDIR=''
+2026-10-29T08:33:40.3542276Z GOTOOLCHAIN='go1.26.6'
+2026-10-29T08:33:40.3542564Z GOTOOLDIR='/opt/hostedtoolcache/go/1.26.6/x64/pkg/tool/linux_amd64'
+2026-10-29T08:33:40.3543004Z GOVCS=''
+2026-10-29T08:33:40.3543176Z GOVERSION='go1.26.6'
+2026-10-29T08:33:40.3543361Z GOWORK=''
+2026-10-29T08:33:40.3543538Z PKG_CONFIG='pkg-config'
+2026-10-29T08:33:40.3543669Z 
+2026-10-29T08:33:40.3543920Z ##[endgroup]
+2026-10-29T08:33:40.3725673Z ##[group]Run cd design_docs/verification/world-iter318/linux-errno-probe && go build -o /tmp/probe . && uname -a && nproc && go version
+2026-10-29T08:33:40.3726227Z cd design_docs/verification/world-iter318/linux-errno-probe && go build -o /tmp/probe . && uname -a && nproc && go version
+2026-10-29T08:33:40.3755039Z shell: /usr/bin/bash -e {0}
+2026-10-29T08:33:40.3755191Z env:
+2026-10-29T08:33:40.3755310Z   GOTOOLCHAIN: go1.26.6
+2026-10-29T08:33:40.3755444Z ##[endgroup]
+2026-10-29T08:33:42.1359290Z Linux runnervmnwato 7.0.0-1017-azure #17-Ubuntu SMP PREEMPT Thu Sep 24 15:54:51 UTC 2026 x86_64 GNU/Linux
+2026-10-29T08:33:42.1386792Z 4
+2026-10-29T08:33:42.1413477Z go version go1.26.6 linux/amd64
+2026-10-29T08:33:42.1443608Z ##[group]Run for m in none rst; do for d in 1 4; do /tmp/probe -mode $m -dialers $d -secs 30; done; done
+2026-10-29T08:33:42.1443987Z for m in none rst; do for d in 1 4; do /tmp/probe -mode $m -dialers $d -secs 30; done; done
+2026-10-29T08:33:42.1467862Z shell: /usr/bin/bash -e {0}
+2026-10-29T08:33:42.1468002Z env:
+2026-10-29T08:33:42.1468119Z   GOTOOLCHAIN: go1.26.6
+2026-10-29T08:33:42.1468249Z ##[endgroup]
+2026-10-29T08:34:12.1534670Z PROBE goos=linux goarch=amd64 mode=none dialers=1 secs=30
+2026-10-29T08:34:12.1535264Z   errno:connection refused(0x6f) is-ECONNRESET=false           1328238
+2026-10-29T08:34:42.1569676Z PROBE goos=linux goarch=amd64 mode=none dialers=4 secs=30
+2026-10-29T08:34:42.1569993Z   errno:connection refused(0x6f) is-ECONNRESET=false           4085689
+2026-10-29T08:35:12.1592575Z PROBE goos=linux goarch=amd64 mode=rst dialers=1 secs=30
+2026-10-29T08:35:12.1595225Z   connected                                                    642869
+2026-10-29T08:35:12.1595746Z   errno:connection reset by peer(0x68) is-ECONNRESET=true      1742
+2026-10-29T08:35:42.2845098Z PROBE goos=linux goarch=amd64 mode=rst dialers=4 secs=30
+2026-10-29T08:35:42.2854470Z   connected                                                    1488248
+2026-10-29T08:35:42.2854741Z   errno:connection reset by peer(0x68) is-ECONNRESET=true      342
+2026-10-29T08:35:42.2854986Z   timeout                                                      143
+2026-10-29T08:35:42.2882338Z ##[group]Run n=$(( $(nproc) * 2 )); pids=(); for i in $(seq $n); do yes > /dev/null & pids+=($!); done
+2026-10-29T08:35:42.2882922Z n=$(( $(nproc) * 2 )); pids=(); for i in $(seq $n); do yes > /dev/null & pids+=($!); done
+2026-10-29T08:35:42.2883262Z for m in none rst; do for d in 1 4; do /tmp/probe -mode $m -dialers $d -secs 30; done; done
+2026-10-29T08:35:42.2883488Z kill "${pids[@]}"
+2026-10-29T08:35:42.2907026Z shell: /usr/bin/bash -e {0}
+2026-10-29T08:35:42.2907164Z env:
+2026-10-29T08:35:42.2907279Z   GOTOOLCHAIN: go1.26.6
+2026-10-29T08:35:42.2907405Z ##[endgroup]
+2026-10-29T08:36:12.3132802Z PROBE goos=linux goarch=amd64 mode=none dialers=1 secs=30
+2026-10-29T08:36:12.3173740Z   errno:connection refused(0x6f) is-ECONNRESET=false           638159
+2026-10-29T08:36:42.3233892Z PROBE goos=linux goarch=amd64 mode=none dialers=4 secs=30
+2026-10-29T08:36:42.3266150Z   errno:connection refused(0x6f) is-ECONNRESET=false           1273657
+2026-10-29T08:37:12.3333141Z PROBE goos=linux goarch=amd64 mode=rst dialers=1 secs=30
+2026-10-29T08:37:12.3403122Z   connected                                                    195092
+2026-10-29T08:37:12.3517975Z   errno:connection reset by peer(0x68) is-ECONNRESET=true      147968
+2026-10-29T08:37:42.3704023Z PROBE goos=linux goarch=amd64 mode=rst dialers=4 secs=30
+2026-10-29T08:37:42.3723097Z   connected                                                    488125
+2026-10-29T08:37:42.3753007Z   errno:connection reset by peer(0x68) is-ECONNRESET=true      1184
+2026-10-29T08:37:42.3762351Z   timeout                                                      179
+2026-10-29T08:37:42.4307046Z ##[group]Run n=$(( $(nproc) * 2 )); pids=(); for i in $(seq $n); do yes > /dev/null & pids+=($!); done
+2026-10-29T08:37:42.4307398Z n=$(( $(nproc) * 2 )); pids=(); for i in $(seq $n); do yes > /dev/null & pids+=($!); done
+2026-10-29T08:37:42.4307798Z go test ./host/broker/ -run '^TestExecProbeReverseLegSilentHolderRefusesSticky$/^reset-holder$' -count=300 2>&1 | tail -30 || true
+2026-10-29T08:37:42.4308122Z kill "${pids[@]}"
+2026-10-29T08:37:42.4332359Z shell: /usr/bin/bash -e {0}
+2026-10-29T08:37:42.4332500Z env:
+2026-10-29T08:37:42.4332614Z   GOTOOLCHAIN: go1.26.6
+2026-10-29T08:37:42.4332893Z ##[endgroup]
+2026-10-29T08:38:33.7185358Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.03s)
+2026-10-29T08:38:33.7193607Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 3.571928ms
+2026-10-29T08:38:33.7194429Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7194940Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.02s)
+2026-10-29T08:38:33.7195551Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.02s)
+2026-10-29T08:38:33.7196127Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 6.969141ms
+2026-10-29T08:38:33.7196783Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7197262Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.01s)
+2026-10-29T08:38:33.7197785Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.01s)
+2026-10-29T08:38:33.7198348Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 4.008829ms
+2026-10-29T08:38:33.7198987Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7199462Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.02s)
+2026-10-29T08:38:33.7199978Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.02s)
+2026-10-29T08:38:33.7200868Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 9.991903ms
+2026-10-29T08:38:33.7201509Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7201982Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.01s)
+2026-10-29T08:38:33.7202499Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.01s)
+2026-10-29T08:38:33.7203163Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 1.393529ms
+2026-10-29T08:38:33.7203796Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7204267Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.01s)
+2026-10-29T08:38:33.7204783Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.01s)
+2026-10-29T08:38:33.7205360Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 1.236063ms
+2026-10-29T08:38:33.7206001Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7206477Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.02s)
+2026-10-29T08:38:33.7206999Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.02s)
+2026-10-29T08:38:33.7207571Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 3.659268ms
+2026-10-29T08:38:33.7208207Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+2026-10-29T08:38:33.7208575Z FAIL
+2026-10-29T08:38:33.7208842Z FAIL	github.com/sunholo-data/ailang-world/host/broker	5.693s
+2026-10-29T08:38:33.7209124Z FAIL
+2026-10-29T08:38:33.7327819Z Post job cleanup.
+2026-10-29T08:38:33.8155419Z (node:4879) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-29T08:38:33.8156104Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-29T08:38:33.8202308Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOMODCACHE
+2026-10-29T08:38:33.8237302Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOCACHE
+2026-10-29T08:38:33.8266248Z /home/runner/go/pkg/mod
+2026-10-29T08:38:33.8281622Z /home/runner/.cache/go-build
+2026-10-29T08:38:33.8286720Z Cache hit occurred on the primary key setup-go-Linux-x64-ubuntu26-go-1.26.6-7e7d34241896909f5f39c60d1a096c08bbef809938b6e24d50fffddb12d9e413, not saving cache.
+2026-10-29T08:38:33.8436655Z Post job cleanup.
+2026-10-29T08:38:33.9037996Z [command]/usr/bin/git version
+2026-10-29T08:38:33.9075222Z git version 2.56.0
+2026-10-29T08:38:33.9100195Z Temporarily overriding HOME='/home/runner/work/_temp/5ff5465e-1b5b-4507-919a-01f4ff39bd61' before making global git config changes
+2026-10-29T08:38:33.9100906Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-29T08:38:33.9103969Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ailang-world/ailang-world
+2026-10-29T08:38:33.9138367Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-29T08:38:33.9169759Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-29T08:38:33.9425406Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-29T08:38:33.9449443Z http.https://github.com/.extraheader
+2026-10-29T08:38:33.9456369Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-29T08:38:33.9491692Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-29T08:38:33.9715486Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-29T08:38:33.9742078Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-29T08:38:34.0082495Z Cleaning up orphan processes
+2026-10-29T08:38:34.0311613Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

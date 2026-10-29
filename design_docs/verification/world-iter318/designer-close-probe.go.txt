@@ -1,0 +1,180 @@
+// Scratch probe for row 232 (iteration 318 designer). NOT repo code.
+// Mimics the reverse leg: a node listener process on a freshly freed port,
+// polled by pollLoopback's exact dial+hello+classify loop (50 ms cadence,
+// 200 ms dial timeout, 500 ms hello wait) from before spawn until the
+// process has exited. Records every dial outcome.
+package main
+
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"net"
+	"os"
+	"os/exec"
+	"sort"
+	"strconv"
+	"sync"
+	"syscall"
+	"time"
+)
+
+// child: lines 82-84 of execProbeScript (listen op), verbatim body.
+const childJS = `const net=require('net');const say=s=>process.stdout.write(s+'\n');const code=e=>(e&&e.code)||'EUNKNOWN';
+function listen(port,ms,nonce){return new Promise(r=>{const v=net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')});
+v.on('error',e=>r('WORLD-PROBE-REFUSED '+code(e)));
+v.listen(+port,'127.0.0.1',()=>{say('WORLD-PROBE-BOUND');setTimeout(()=>{v.close();r(null)},+ms)})})}
+(async()=>{const a=process.argv.slice(1);const t=await listen(a[0],a[1],a[2]);if(t)say(t)})();`
+
+// mux: srt-mux-shaped chatty holder (answers bytes with HTTP 400 and closes),
+// whose process exits abruptly after ms (srt exiting with the mux open).
+const muxJS = `const net=require('net');const a=process.argv.slice(1);
+const v=net.createServer(c=>{c.on('error',()=>{});c.once('data',()=>c.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'))});
+v.listen(+a[0],'127.0.0.1',()=>{process.stdout.write('UP\n');setTimeout(()=>process.exit(0),+a[1])});`
+
+const hello = "WORLD-PROBE-HELLO\n"
+
+func classify(c net.Conn, want string) string {
+	_ = c.SetDeadline(time.Now().Add(500 * time.Millisecond))
+	_, werr := io.WriteString(c, hello)
+	buf := make([]byte, 0, len(want)+1)
+	one := make([]byte, 1)
+	var rerr error
+	for len(buf) < len(want)+1 {
+		var n int
+		n, rerr = c.Read(one)
+		if n == 1 {
+			buf = append(buf, one[0])
+			if one[0] == '\n' {
+				break
+			}
+		}
+		if rerr != nil {
+			break
+		}
+	}
+	switch {
+	case string(buf) == want+"\n":
+		return "child"
+	case len(buf) > 0:
+		return "foreign"
+	case werr == nil && errors.Is(rerr, io.EOF):
+		return "foreign-eof"
+	}
+	return "silent-postconnect"
+}
+
+func dialClass(err error) string {
+	var ne net.Error
+	switch {
+	case errors.Is(err, syscall.ECONNRESET):
+		return "ERR-ECONNRESET"
+	case errors.Is(err, syscall.ECONNREFUSED):
+		return "ERR-ECONNREFUSED"
+	case errors.Is(err, syscall.ECONNABORTED):
+		return "ERR-ECONNABORTED"
+	case errors.As(err, &ne) && ne.Timeout():
+		return "ERR-TIMEOUT"
+	}
+	return "ERR-OTHER:" + err.Error()
+}
+
+func freePort() int {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		panic(err)
+	}
+	p := ln.Addr().(*net.TCPAddr).Port
+	ln.Close()
+	return p
+}
+
+func main() {
+	mode := flag.String("mode", "child", "child|mux")
+	cycles := flag.Int("n", 50, "cycles")
+	hold := flag.Int("hold", 1000, "listener hold ms")
+	tight := flag.Int("tight", 0, "extra spinning dialers (no 50ms sleep) to amplify the close window")
+	node := flag.String("node", "/opt/homebrew/bin/node", "node")
+	flag.Parse()
+	total := map[string]int{}
+	cyc := map[string]int{} // cycles in which the class appeared at least once
+	var cycPreSilent, cycPostSilent, cycChild int
+	for i := 0; i < *cycles; i++ {
+		port := freePort()
+		addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+		want := fmt.Sprintf("WORLD-PROBE-NONCE %032x", i)
+		var mu sync.Mutex
+		seen := map[string]int{}
+		rec := func(k string) { mu.Lock(); seen[k]++; mu.Unlock() }
+		done := make(chan struct{})
+		var wg sync.WaitGroup
+		dialer := func(sleep bool) {
+			defer wg.Done()
+			for {
+				c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
+				if err == nil {
+					rec(classify(c, want))
+					c.Close()
+				} else {
+					rec(dialClass(err))
+				}
+				if sleep {
+					select {
+					case <-done:
+						return
+					case <-time.After(50 * time.Millisecond):
+					}
+				} else {
+					select {
+					case <-done:
+						return
+					default:
+					}
+				}
+			}
+		}
+		wg.Add(1 + *tight)
+		go dialer(true) // pollLoopback's own cadence, started before the spawn
+		for k := 0; k < *tight; k++ {
+			go dialer(false)
+		}
+		var cmd *exec.Cmd
+		if *mode == "child" {
+			cmd = exec.Command(*node, "-e", childJS, "--", strconv.Itoa(port), strconv.Itoa(*hold), fmt.Sprintf("%032x", i))
+		} else {
+			cmd = exec.Command(*node, "-e", muxJS, "--", strconv.Itoa(port), strconv.Itoa(*hold))
+		}
+		cmd.Stdout = io.Discard
+		if err := cmd.Run(); err != nil {
+			fmt.Fprintln(os.Stderr, "run:", err)
+		}
+		close(done) // stop only after the process exited, as reverseLeg does
+		wg.Wait()
+		for k, v := range seen {
+			total[k] += v
+			cyc[k]++
+		}
+		pre := seen["silent-postconnect"] > 0
+		post := pre || seen["ERR-ECONNRESET"] > 0
+		if pre {
+			cycPreSilent++
+		}
+		if post {
+			cycPostSilent++
+		}
+		if seen["child"] > 0 {
+			cycChild++
+		}
+	}
+	keys := make([]string, 0, len(total))
+	for k := range total {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	fmt.Printf("mode=%s cycles=%d hold=%dms tight=%d\n", *mode, *cycles, *hold, *tight)
+	for _, k := range keys {
+		fmt.Printf("  %-22s dials=%-7d cycles=%d\n", k, total[k], cyc[k])
+	}
+	fmt.Printf("  CYCLES child-seen=%d silent(pre-fix rule)=%d silent(post-fix rule: +connect ECONNRESET)=%d\n", cycChild, cycPreSilent, cycPostSilent)
+}

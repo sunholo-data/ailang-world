@@ -1,0 +1,30 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+	"os"
+	"syscall"
+	"time"
+)
+
+func silent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }
+
+func main() {
+	op := func(e error) error { return &net.OpError{Op: "dial", Net: "tcp", Err: os.NewSyscallError("connect", e)} }
+	ln, _ := net.Listen("tcp", "127.0.0.1:0")
+	a := ln.Addr().String()
+	ln.Close()
+	_, refused := net.DialTimeout("tcp", a, 200*time.Millisecond)
+	_, timeout := (&net.Dialer{}).DialContext(func() context.Context { c, _ := context.WithTimeout(context.Background(), time.Nanosecond); return c }(), "tcp", "10.255.255.1:9")
+	for _, r := range []struct {
+		n string
+		e error
+	}{{"nil", nil}, {"op-reset", op(syscall.ECONNRESET)}, {"bare-reset", syscall.ECONNRESET}, {"op-refused", op(syscall.ECONNREFUSED)},
+		{"real-refused", refused}, {"op-einval", op(syscall.EINVAL)}, {"op-aborted", op(syscall.ECONNABORTED)}, {"real-timeout", timeout},
+		{"wrapped-fmt", fmt.Errorf("x: %w", op(syscall.ECONNRESET))}} {
+		fmt.Printf("%-13s silent=%-5v err=%v\n", r.n, silent(r.e), r.e)
+	}
+}

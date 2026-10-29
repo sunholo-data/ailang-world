@@ -1,0 +1,10 @@
+#!/bin/bash
+# Iteration 318 designer: the idle set (V4, V5), run with no load generators.
+# Reconstructed verbatim from the inline background command used in the session.
+cd /tmp/w318-designer/probe
+./probe -mode child -n 100 -hold 1000 > idle-child-faithful.txt 2>&1
+./probe -mode mux -n 100 -hold 1000 > idle-mux-faithful.txt 2>&1
+./probe -mode child -n 200 -hold 100 -tight 4 > idle-child-amp.txt 2>&1
+./probe -mode mux -n 200 -hold 100 -tight 4 > idle-mux-amp.txt 2>&1
+/tmp/w318-designer/rst/rst > idle-rst.txt 2>&1   # built from ../world-iter317/row232-dial-reset-probe.go.txt
+echo DONE > idle.done

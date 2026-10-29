@@ -1,0 +1,14 @@
+#!/bin/bash
+# Load set: 32 x yes on 16 cores; own PIDs tracked and killed on exit.
+cd /tmp/w318-designer/probe
+pids=()
+for i in $(seq 32); do yes > /dev/null & pids+=($!); done
+echo "${pids[@]}" > load.pids
+trap 'kill "${pids[@]}" 2>/dev/null' EXIT
+./probe -mode child -n 100 -hold 1000 > load-child-faithful.txt 2>&1
+./probe -mode mux -n 100 -hold 1000 > load-mux-faithful.txt 2>&1
+./probe -mode child -n 200 -hold 100 -tight 4 > load-child-amp.txt 2>&1
+./probe -mode mux -n 200 -hold 100 -tight 4 > load-mux-amp.txt 2>&1
+/tmp/w318-designer/rst/rst > load-rst.txt 2>&1
+cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter318-row232 && AILANG_BIN=$HOME/.pinned-ailang/ailang perl -e 'alarm 400; exec @ARGV' go test ./host/broker/ -run '^TestExecProbeReverseLegSilentHolderRefusesSticky$/^reset-holder$' -count=300 > /tmp/w318-designer/probe/load-t7.txt 2>&1; echo "rc=$?" >> /tmp/w318-designer/probe/load-t7.txt
+echo DONE > /tmp/w318-designer/probe/load.done
