@@ -1,0 +1,26 @@
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+    exec_tools_test.go:540: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"}
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+    exec_tools_test.go:540: problem "", want accepted=false: {"exit_code":134,"timed_out":false,"limit":null,"duration_ms":3,"stdout":"","stderr":"/tmp/x134x/node: Abort trap: 6"}
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+    exec_tools_test.go:540: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/node does not start","exit_code":134}
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+    exec_tools_test.go:540: problem "", want accepted=false: {"ok":true,"refused":"exec /tmp/x134x/node does not start"}
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+    exec_tools_test.go:540: problem "", want accepted=false: {"ok":false,"refused":""}
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+    exec_tools_test.go:540: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"}{"exit_code":134}
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+    exec_tools_test.go:540: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"} garbage
+--- FAIL: TestF15RefusalProblemIsStructural (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.363s
+FAIL

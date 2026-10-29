@@ -1,0 +1,12 @@
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+    exec_tools_test.go:537: problem "the call spawned", want accepted=true: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"}
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+    exec_tools_test.go:537: problem "the call spawned", want accepted=true: {"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"} 
+        	
+--- FAIL: TestF15RefusalProblemIsStructural (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.361s
+FAIL

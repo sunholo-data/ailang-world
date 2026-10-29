@@ -1,0 +1,4 @@
+plain rc=0 elapsed=235s
+race rc=0 elapsed=314s
+full rc=0 elapsed=438s
+ail rc=0 elapsed=47s

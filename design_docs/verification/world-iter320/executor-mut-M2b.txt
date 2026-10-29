@@ -1,0 +1,10 @@
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+    exec_tools_test.go:284: a launch that exited 134 passes requireF15: {"ok":false,"refused":"exec node /private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodebroken-node1364711922/001/node → /private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodebroken-node1364711922/001/node does not start: dyld: Library not loaded: libada.3.dylib (--version failed)\n  why: --version failed\n  next: reinstall the package that provides /private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodebroken-node1364711922/001/node, then retry (no restart needed)"}
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- FAIL: TestExecToolExit134ChecksNode (0.32s)
+    --- FAIL: TestExecToolExit134ChecksNode/broken-node (0.16s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.16s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.580s
+FAIL

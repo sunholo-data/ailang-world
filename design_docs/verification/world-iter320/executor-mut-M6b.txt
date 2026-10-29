@@ -1,0 +1,11 @@
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+    exec_tools_test.go:287: a launch that exited 134 passes requireF15: {"ok":false,"refused":"exec node /private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodebroken-node3534257446/001/node → /private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodebroken-node3534257446/001/node does not start: dyld: Library not loaded: libada.3.dylib (--version failed)\n  why: --version failed\n  next: reinstall the package that provides /private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodebroken-node3534257446/001/node, then retry (no restart needed)"}
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+    exec_tools_test.go:287: a launch that exited 134 passes requireF15: {"exit_code":134,"timed_out":false,"limit":null,"duration_ms":123,"stdout":"","stdout_bytes":0,"stdout_truncated":false,"stdout_sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","stderr":"","stderr_bytes":0,"stderr_truncated":false,"stderr_sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","argv":["printf","[%s]","a"],"profile":{"argv0":"/usr/bin/printf","argv0_target":"/usr/bin/printf","project":"proj","digest":"sha256:52cc162203fafd8746525d8fe45318f36b2f88abd14051d8518441ad01b503a0","command":"test","argv0_sha256":"d7992bc59e048ee061716365839990227ab463d954d87e6c2e7f987c0054fd59"},"sandbox":{"node":"/private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodecommand-aborted1025168538/001/node","node_target":"/private/tmp/w320x/tmp-ctl-m/TestExecToolExit134ChecksNodecommand-aborted1025168538/001/node","node_sha256":"ae8b76172be09d66949b65dc9b3a835bfcfd4595b38878b120696e58294960b5","runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:7a05622cd09ed29b046ba88c82434e563642ea05066b805c863aaaa538ef0311","read_fence":true,"network":"none"}}
+--- FAIL: TestExecToolExit134ChecksNode (0.31s)
+    --- FAIL: TestExecToolExit134ChecksNode/broken-node (0.16s)
+    --- FAIL: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.575s
+FAIL

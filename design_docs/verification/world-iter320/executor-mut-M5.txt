@@ -1,0 +1,8 @@
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+    exec_tools_test.go:537: problem "", want accepted=false: {"ok":false,"refused":""}
+--- FAIL: TestF15RefusalProblemIsStructural (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.361s
+FAIL

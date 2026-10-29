@@ -1,0 +1,1002 @@
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.03s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.49s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.34s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.14s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.31s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.34s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.03s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.31s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.49s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.34s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.14s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.35s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.26s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.03s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.31s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.14s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.03s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.33s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.34s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.33s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.31s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.49s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.03s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.33s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.32s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.34s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.03s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.03s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.31s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.35s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.26s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.03s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.49s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.34s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.33s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.49s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.03s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.31s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.16s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.03s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.14s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.31s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.32s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.48s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.03s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.24s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.14s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.14s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.31s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.47s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.32s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.14s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.31s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.47s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.32s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.24s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.29s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.31s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.30s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.47s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.32s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.24s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.31s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+=== RUN   TestExecToolSymlinkInsideWorkspaceRefuses
+--- PASS: TestExecToolSymlinkInsideWorkspaceRefuses (0.02s)
+=== RUN   TestExecToolDeletedTargetRefusesF15
+--- PASS: TestExecToolDeletedTargetRefusesF15 (0.31s)
+=== RUN   TestExecToolFailedProbeRefusesF15
+--- PASS: TestExecToolFailedProbeRefusesF15 (0.49s)
+=== RUN   TestExecToolPlacementReapplied
+=== RUN   TestExecToolPlacementReapplied/node/workspace
+=== RUN   TestExecToolPlacementReapplied/node/state
+=== RUN   TestExecToolPlacementReapplied/argv0/workspace
+=== RUN   TestExecToolPlacementReapplied/argv0/state
+=== RUN   TestExecToolPlacementReapplied/startup
+--- PASS: TestExecToolPlacementReapplied (0.33s)
+    --- PASS: TestExecToolPlacementReapplied/node/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/node/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/workspace (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/argv0/state (0.02s)
+    --- PASS: TestExecToolPlacementReapplied/startup (0.25s)
+=== RUN   TestExecToolExit134ChecksNode
+=== RUN   TestExecToolExit134ChecksNode/broken-node
+=== RUN   TestExecToolExit134ChecksNode/command-aborted
+--- PASS: TestExecToolExit134ChecksNode (0.30s)
+    --- PASS: TestExecToolExit134ChecksNode/broken-node (0.15s)
+    --- PASS: TestExecToolExit134ChecksNode/command-aborted (0.15s)
+=== RUN   TestExecToolCellarProfilePathRefusesByName
+--- PASS: TestExecToolCellarProfilePathRefusesByName (0.02s)
+=== RUN   TestExecToolStartFailureIsRetriedWithoutChangingIdentity
+--- PASS: TestExecToolStartFailureIsRetriedWithoutChangingIdentity (0.32s)
+=== RUN   TestExecToolF15RefusalUnderTempRoot134
+--- PASS: TestExecToolF15RefusalUnderTempRoot134 (0.02s)
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/refusal-temp-root-134
+=== RUN   TestF15RefusalProblemIsStructural/trailing-whitespace
+=== RUN   TestF15RefusalProblemIsStructural/post-launch-f15
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+=== RUN   TestF15RefusalProblemIsStructural/ok-true
+=== RUN   TestF15RefusalProblemIsStructural/refused-empty
+=== RUN   TestF15RefusalProblemIsStructural/concatenated-json
+=== RUN   TestF15RefusalProblemIsStructural/trailing-garbage
+--- PASS: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-temp-root-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-whitespace (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/post-launch-f15 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/ok-true (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/refused-empty (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/concatenated-json (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/trailing-garbage (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	36.487s

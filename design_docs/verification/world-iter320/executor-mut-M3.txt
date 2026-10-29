@@ -1,0 +1,10 @@
+=== RUN   TestF15RefusalProblemIsStructural
+=== RUN   TestF15RefusalProblemIsStructural/launched-exit-134
+=== RUN   TestF15RefusalProblemIsStructural/refusal-plus-exit-code
+    exec_tools_test.go:536: problem "", want accepted=false: {"ok":false,"refused":"exec /tmp/x134x/node does not start","exit_code":134}
+--- FAIL: TestF15RefusalProblemIsStructural (0.00s)
+    --- PASS: TestF15RefusalProblemIsStructural/launched-exit-134 (0.00s)
+    --- FAIL: TestF15RefusalProblemIsStructural/refusal-plus-exit-code (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.368s
+FAIL
