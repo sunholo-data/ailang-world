@@ -1,9 +1,12 @@
 package broker
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -72,6 +75,37 @@ func newMovingExec(t *testing.T, opts execFixtureOpts) *movingExec {
 	return m
 }
 
+// f15RefusalProblem says why out is not a pre-launch F15 refusal ("" when it is). out must be
+// exactly one complete JSON value (trailing whitespace allowed): the two-key envelope. A launch is
+// seen by structure, never by text (row 234): a launched reply is execResult, which always
+// carries exit_code, so a strict decode into the two-key envelope fails; a post-launch refusal
+// (a 134 exit with a broken node, handlers_exec.go:326) has the envelope's shape but moved the
+// spawn counter.
+func f15RefusalProblem(out []byte, before, after int64) string {
+	dec := json.NewDecoder(bytes.NewReader(out))
+	dec.DisallowUnknownFields()
+	var r struct {
+		OK      *bool   `json:"ok"`
+		Refused *string `json:"refused"`
+	}
+	if err := dec.Decode(&r); err != nil {
+		return "not the refusal envelope: " + err.Error()
+	}
+	if err := dec.Decode(&json.RawMessage{}); err != io.EOF {
+		return fmt.Sprintf("trailing content after the envelope: %v", err)
+	}
+	if r.OK == nil || *r.OK {
+		return "ok is not false"
+	}
+	if r.Refused == nil || *r.Refused == "" {
+		return "refused is empty"
+	}
+	if after != before {
+		return "the call spawned"
+	}
+	return ""
+}
+
 func requireF15(t *testing.T, f *execFixture, parts ...string) string {
 	t.Helper()
 	before := f.h.Spawns()
@@ -79,15 +113,15 @@ func requireF15(t *testing.T, f *execFixture, parts ...string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	after := f.h.Spawns()
+	if problem := f15RefusalProblem(out, before, after); problem != "" {
+		t.Fatalf("not a pre-launch refusal (%s): %s (spawns %d -> %d)", problem, out, before, after)
+	}
 	var refusal struct {
-		OK      bool   `json:"ok"`
 		Refused string `json:"refused"`
 	}
 	if err := json.Unmarshal(out, &refusal); err != nil {
 		t.Fatal(err)
-	}
-	if refusal.OK || refusal.Refused == "" || strings.Contains(string(out), "134") || f.h.Spawns() != before {
-		t.Fatalf("not a pre-launch refusal: %s (spawns %d -> %d)", out, before, f.h.Spawns())
 	}
 	for _, part := range append([]string{"does not start:", "\n  why: ", "\n  next: "}, parts...) {
 		if !strings.Contains(refusal.Refused, part) {
@@ -241,9 +275,13 @@ func TestExecToolExit134ChecksNode(t *testing.T) {
 				t.Fatal(err)
 			}
 			f := newExecFixture(t, execFixtureOpts{node: node})
+			before := f.h.Spawns()
 			out, err := f.call(t, "test", "a")
 			if err != nil {
 				t.Fatal(err)
+			}
+			if f15RefusalProblem(out, before, f.h.Spawns()) == "" {
+				t.Fatalf("a launch that exited 134 passes requireF15: %s", out)
 			}
 			if fail {
 				if !strings.Contains(string(out), "dyld: Library not loaded") || !strings.Contains(string(out), "no restart needed") || strings.Contains(string(out), "exit status 134") {
@@ -450,5 +488,54 @@ func TestExecToolArchiveDriftPrecedesReacceptance(t *testing.T) {
 	var drift *ExecStackDriftError
 	if !errors.As(err, &drift) || drift.Path != m.f.sandbox.CLI() || out != nil || m.probes.Load() != 0 || m.f.h.Spawns() != 0 {
 		t.Fatalf("archive drift reached reacceptance: %s, %v", out, err)
+	}
+}
+
+// T2 (row 234): the six requireF15 callers' refusals quote t.TempDir paths, so a temp root
+// holding "134" must not red a real pre-launch refusal. The root is forced through GOTMPDIR
+// (testing reads it first, one parent per test); the precondition makes the hazard real.
+func TestExecToolF15RefusalUnderTempRoot134(t *testing.T) {
+	root, err := os.MkdirTemp("", "w234-x134x-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(root) })
+	t.Setenv("GOTMPDIR", root)
+	m := newMovingExec(t, execFixtureOpts{})
+	if !strings.Contains(m.link, "x134x") {
+		t.Fatalf("temp root not honoured: %s is not under %s", m.link, root)
+	}
+	if err := os.Remove(m.a); err != nil {
+		t.Fatal(err)
+	}
+	requireF15(t, m.f, m.link, m.a, "the target is gone")
+}
+
+// T1 (row 234): f15RefusalProblem judges structure and the spawn counter, never text. The
+// accepted rows quote temp paths holding "134"; every reject row fails on one property.
+func TestF15RefusalProblemIsStructural(t *testing.T) {
+	env := `{"ok":false,"refused":"exec /tmp/x134x/TestExecToolCellarProfilePathRefusesByName1349870625/001/node does not start: the target is gone"}`
+	for _, row := range []struct {
+		name          string
+		out           string
+		before, after int64
+		accepted      bool
+	}{
+		{"refusal-temp-root-134", env, 0, 0, true},
+		{"trailing-whitespace", env + " \n\t", 0, 0, true},
+		{"post-launch-f15", env, 0, 1, false},
+		{"launched-exit-134", `{"exit_code":134,"timed_out":false,"limit":null,"duration_ms":3,"stdout":"","stderr":"/tmp/x134x/node: Abort trap: 6"}`, 0, 1, false},
+		{"refusal-plus-exit-code", `{"ok":false,"refused":"exec /tmp/x134x/node does not start","exit_code":134}`, 0, 0, false},
+		{"ok-true", `{"ok":true,"refused":"exec /tmp/x134x/node does not start"}`, 0, 0, false},
+		{"refused-empty", `{"ok":false,"refused":""}`, 0, 0, false},
+		{"concatenated-json", env + `{"exit_code":134}`, 0, 0, false},
+		{"trailing-garbage", env + " garbage", 0, 0, false},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			problem := f15RefusalProblem([]byte(row.out), row.before, row.after)
+			if (problem == "") != row.accepted {
+				t.Fatalf("problem %q, want accepted=%v: %s", problem, row.accepted, row.out)
+			}
+		})
 	}
 }
