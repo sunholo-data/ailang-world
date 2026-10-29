@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -646,4 +647,52 @@ func validatePublishApproval(ctx context.Context,
 			ErrPublishApprovalExpired, id.ApprovalRef.String(), scope.ExpiresAt, req.Now)
 	}
 	return id.ApprovalRef, nil
+}
+
+// FinishApprovalScope is the frozen, exact-byte authority for one attended PR.
+type FinishApprovalScope struct {
+	Repository, Remote, Head, SHA, Base, TitleSHA256, BodySHA256 string
+	Draft, CreateLabel                                           bool
+	ExpiresAt                                                    int64
+}
+
+var finishScopePattern = regexp.MustCompile(`^github-pr:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#remote=([^&#=[:space:]]+)&head=([^&#=[:space:]]+)&sha=([0-9a-f]{40})&base=([^&#=[:space:]]+)&title-sha256=([0-9a-f]{64})&body-sha256=([0-9a-f]{64})&label=ailang-world&draft=(true|false)&create-label=(true|false)&expires=([1-9][0-9]*)$`)
+
+// FormatFinishApprovalScope emits every term in its frozen order.
+func FormatFinishApprovalScope(s FinishApprovalScope) string {
+	return fmt.Sprintf("github-pr:%s#remote=%s&head=%s&sha=%s&base=%s&title-sha256=%s&body-sha256=%s&label=ailang-world&draft=%t&create-label=%t&expires=%d",
+		s.Repository, s.Remote, s.Head, s.SHA, s.Base, s.TitleSHA256, s.BodySHA256, s.Draft, s.CreateLabel, s.ExpiresAt)
+}
+
+// ParseFinishApprovalScope refuses unaccounted bytes, duplicate or reordered terms.
+func ParseFinishApprovalScope(raw string) (FinishApprovalScope, error) {
+	m := finishScopePattern.FindStringSubmatch(raw)
+	if m == nil {
+		return FinishApprovalScope{}, fmt.Errorf("broker: malformed finish approval scope")
+	}
+	expiry, err := strconv.ParseInt(m[10], 10, 64)
+	if err != nil {
+		return FinishApprovalScope{}, fmt.Errorf("broker: invalid finish expiry: %w", err)
+	}
+	s := FinishApprovalScope{m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8] == "true", m[9] == "true", expiry}
+	if FormatFinishApprovalScope(s) != raw {
+		return FinishApprovalScope{}, fmt.Errorf("broker: noncanonical finish scope")
+	}
+	return s, nil
+}
+
+// RecordOperatorApproval lands the existing request and decision types through
+// the approvals head. The caller must authenticate the operator first.
+func RecordOperatorApproval(ctx context.Context, s *store.Store, scope, requester, decidedBy string, now int64) (hashref.HashRef, hashref.HashRef, error) {
+	obj := brokerObject(ApprovalRequestV1, mustApprovalJSON(approvalRequestWire{
+		Effect: EffectHumanApprove, Scope: scope, Cost: 1, Requester: requester, Now: now,
+	}))
+	if err := s.PutObject(ctx, obj); err != nil {
+		return hashref.HashRef{}, hashref.HashRef{}, err
+	}
+	if err := appendApprovalHead(ctx, s, obj.Hash, hashref.HashRef{}); err != nil {
+		return hashref.HashRef{}, hashref.HashRef{}, err
+	}
+	decision, err := decideApproval(ctx, s, obj.Hash, "approve", decidedBy, now)
+	return obj.Hash, decision, err
 }

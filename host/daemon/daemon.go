@@ -1054,6 +1054,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	mux.HandleFunc("GET /v1/receipts/{id}", d.handleReceipt)
 	mux.HandleFunc("GET /v1/episodes/{episode}/report", d.handleEpisodeReport)
+	mux.HandleFunc("POST /v1/episodes/{episode}/finish", d.handleEpisodeFinish)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)

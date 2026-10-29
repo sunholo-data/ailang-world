@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/checkrun"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -24,7 +25,7 @@ import (
 )
 
 const episodeFinishHelp = `usage: ailang-worldd episode finish <episode> --preset <name> [--presets-dir D]
-    [--title <text>] [--allow-failing <check>]... [--include-unattributed] [--dry-run]
+    [--ready] [--exec-profiles-dir D] [--title <text>] [--allow-failing <check>]... [--include-unattributed] [--dry-run]
 
 ATTENDED: requires a controlling terminal before reading files or contacting
 the daemon. Runs the checks pinned at episode start, records each outcome,
@@ -35,10 +36,13 @@ Each unsandboxed check needs its own typed y at that terminal.
   --title TEXT            commit title (default: start task title)
   --allow-failing CHECK   allow this named failing check; repeatable
   --include-unattributed  include hand edits, listed as Not made through World
+  --ready                 open a ready PR (default: draft)
+  --exec-profiles-dir D    pinned profile lookup (default: private exec-profiles)
   --dry-run               print git show --stat and body, then reset HEAD
 
 Without --dry-run, writes <sessions>/<episode>.pr-body.md (0600) and prints
-manual push and draft PR steps. This local half never pushes or opens a PR.
+an exact-byte approval at the terminal. Typed y records approval, pushes and
+opens the PR, records its outcome, then revokes the episode credentials.
 Example: ailang-worldd episode finish my-episode --preset my-repo --dry-run
 `
 
@@ -56,6 +60,8 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	dir := fs.String("presets-dir", defaultPresetsDir(), "private presets")
 	title := fs.String("title", "", "commit title")
 	include := fs.Bool("include-unattributed", false, "include hand edits")
+	ready := fs.Bool("ready", false, "open a ready PR")
+	profilesDir := fs.String("exec-profiles-dir", defaultExecProfilesDir(), "private exec profiles")
 	dry := fs.Bool("dry-run", false, "print then reset local commit")
 	var allowed multiFlag
 	fs.Var(&allowed, "allow-failing", "allow this failing check")
@@ -96,6 +102,13 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	}
 	if same, _ := store.SameDatabase(h.DBPath, p.DB); !same {
 		return fail(fmt.Sprintf("the daemon serves store %s; preset %s names %s (F6)", h.DBPath, *preset, p.DB), "a preset must bind the served store", "fix the preset daemon, or run service status")
+	}
+	credentials, err := credentialsFor(p.DB, p.CredentialsDB)
+	if err != nil {
+		return fail(err.Error(), "finish needs the preset credentials store", "fix the preset")
+	}
+	if same, _ := store.SameDatabase(h.CredentialsDB, credentials); !same {
+		return fail(fmt.Sprintf("the daemon serves credentials store %s; preset %s names %s (F6)", h.CredentialsDB, *preset, credentials), "the operator proof must be beside the served credentials store", "fix the preset daemon")
 	}
 	_, rep, err := fetchReport(ctx, c, ep)
 	if err != nil && !errors.Is(err, errNoCalls) {
@@ -199,7 +212,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		if err != nil {
 			return fail(err.Error(), "the check verdict was not confirmed recorded; do not retry blindly", "inspect the episode report")
 		}
-		results = append(results, finishCheckResult{check.Name, check.Unsandboxed, passed, entry})
+		results = append(results, finishCheckResult{check.Name, check.Unsandboxed, passed, entry, taskOutcomeObject(canonical).Hash})
 		if !passed && !containsString(allowed, check.Name) {
 			return fail(fmt.Sprintf("check %s failed (rc %d), outcome %d\n%s", check.Name, r.ExitCode, entry, clipOutcomeHead(r.Stderr)), "a required check failed", "fix it in a new round, or --allow-failing "+check.Name)
 		}
@@ -237,9 +250,16 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 			passed++
 		}
 	}
+	protected, err := finishProtected(ctx, start, credentials, *profilesDir, changed)
+	if err != nil {
+		return fail(err.Error(), "finish must use the start profile binding", "restore the pinned exec profile")
+	}
 	paragraph := fmt.Sprintf("%s %s; %d calls; %d/%d checks passed; %d files changed.", start.Agent, start.Model, rep.TotalCalls, passed, len(results), len(changed))
+	if len(protected) > 0 {
+		paragraph += " Protected paths changed: " + strings.Join(protected, ", ") + "."
+	}
 	trailer := reportTrailer(rep, h.DBPath)
-	add := reportAdditions{Checks: results, Unattributed: unattributed, Finish: true}
+	add := reportAdditions{Checks: results, Unattributed: unattributed, Protected: protected, Finish: true}
 	// Refuse unsafe body bytes before creating the local commit.
 	if _, err := renderReportMarkdown(rep, h.DBPath, add); err != nil {
 		return fail(err.Error(), "the body must pass the trial scrub", "inspect the episode report")
@@ -279,7 +299,94 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if err := writeFinishBody(bodyFile, rendered); err != nil {
 		return fail(err.Error(), "commit kept at "+sha, steps(sha))
 	}
-	fmt.Fprintf(stdout, "committed at %s\nbody: %s\nnext: %s\n", sha, bodyFile, steps(sha))
+	fmt.Fprintf(stdout, "committed at %s\nbody: %s\n", sha, bodyFile)
+	repo, err := finishRepository(start.Remote.URL)
+	if err != nil {
+		return fail(err.Error(), "finish needs the start record's GitHub repository", steps(sha))
+	}
+	seam := finishDispatchFactory()
+	hasLabel, err := seam.Prepare(ctx, wt, repo)
+	if err != nil {
+		return fail("gh can't reach GitHub as you (F8): "+err.Error(), "finish needs gh and a label lookup before approval", "gh auth login; "+steps(sha))
+	}
+	scope := broker.FinishApprovalScope{
+		Repository: repo, Remote: start.Remote.URL, Head: start.Branch, SHA: sha, Base: start.Base.Branch,
+		TitleSHA256: finishSHA([]byte(actualTitle)), BodySHA256: finishSHA([]byte(rendered)),
+		Draft: !*ready, CreateLabel: !hasLabel, ExpiresAt: time.Now().Unix() + 900,
+	}
+	scopeText := broker.FormatFinishApprovalScope(scope)
+	if _, err := broker.ParseFinishApprovalScope(scopeText); err != nil {
+		return fail(err.Error(), "approval must bind every byte", steps(sha))
+	}
+	finishPrompt(tty, scope, actualTitle, rendered, protected)
+	answer, _ := reader.ReadString('\n')
+	if strings.TrimSpace(answer) != "y" {
+		return fail("pull request declined", "opening a PR requires typed y at the terminal; commit kept at "+sha, steps(sha))
+	}
+	var approval daemon.FinishApproval
+	if err := finishOperatorPost(ctx, c, credentials, ep, daemon.FinishRequest{Phase: "approve", Scope: scopeText}, &approval); err != nil {
+		return fail(err.Error(), "approval was not confirmed recorded", steps(sha))
+	}
+	if finishBeforeDispatch != nil {
+		finishBeforeDispatch()
+	}
+	head, headErr := query("rev-parse", "HEAD")
+	remote, remoteErr := query("remote", "get-url", start.Remote.Name)
+	currentBody, bodyErr := os.ReadFile(bodyFile)
+	if headErr != nil || remoteErr != nil || bodyErr != nil || strings.TrimSpace(head) != scope.SHA ||
+		strings.TrimSpace(remote) != scope.Remote || finishSHA(currentBody) != scope.BodySHA256 ||
+		finishSHA([]byte(actualTitle)) != scope.TitleSHA256 {
+		return fail("the commit or body changed since approval (F6)", "approval binds HEAD, remote, title and exact body bytes", steps(sha))
+	}
+	outcome, pr, dispatchErr := finishDispatchOutcome(ctx, seam, git, wt, start.Remote.Name, repo, scope.Head,
+		scope.SHA, scope.Base, actualTitle, bodyFile, scope.Draft, scope.CreateLabel)
+	checkRefs := make([]string, 0, len(results))
+	for _, result := range results {
+		checkRefs = append(checkRefs, result.Ref)
+	}
+	finish := daemon.EpisodeFinish{
+		Episode: ep, Branch: scope.Head, Base: start.Base.SHA, Commit: scope.SHA, Remote: scope.Remote,
+		PR: pr, Approval: approval.Approval, Checks: checkRefs, Unattributed: unattributed,
+		ReportSHA256: scope.BodySHA256, Trailer: trailer, Outcome: outcome, FinishedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+	if err := finishOperatorPost(ctx, c, credentials, ep, daemon.FinishRequest{Phase: "record", Record: &finish}, nil); err != nil {
+		fmt.Fprintln(stderr, presetRefusal(err.Error(), "finish outcome was not confirmed recorded; session kept", "inspect the episode report; "+steps(sha)))
+		return exitFatal
+	}
+	creds, err := store.OpenCredentials(credentials)
+	if err == nil {
+		err = revokeEpisodeCredentials(ctx, creds, ep, stdout)
+		creds.Close()
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, presetRefusal("PR recorded, session NOT closed (F10)", err.Error(), "ailang-worldd session revoke --episode "+ep+" --db "+p.DB))
+		return exitFatal
+	}
+	if dispatchErr != nil {
+		what := "gh can't reach GitHub as you (F8)"
+		if outcome == "push-failed" {
+			what = "push failed (F7)"
+		}
+		if outcome == "ambiguous" {
+			what = "the push or PR may have happened (F9)"
+		}
+		remaining := steps(sha)
+		if strings.Contains(dispatchErr.Error(), "not an ancestor") {
+			remaining = "resolve the diverged branch by hand; never force; " + remaining
+		}
+		if outcome == "ambiguous" {
+			remaining = "inspect git ls-remote and gh pr view before any write; " + remaining
+		}
+		if outcome == "pr-failed" {
+			parts := strings.SplitN(remaining, "\n", 2)
+			if len(parts) == 2 {
+				remaining = parts[1]
+			}
+		}
+		fmt.Fprintln(stderr, presetRefusal(what+": "+dispatchErr.Error(), "recorded outcome "+outcome, remaining))
+		return exitFatal
+	}
+	fmt.Fprintln(stdout, pr.URL)
 	return exitOK
 }
 

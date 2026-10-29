@@ -398,19 +398,14 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 
 	ids := []string{credID}
 	if *episode != "" {
-		rows, err := st.ListSessions(revokeCtx, *episode, store.MaxListSessions)
-		if err != nil {
+		if err := revokeEpisodeCredentials(revokeCtx, st, *episode, stdout); err != nil {
 			fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+			if errors.Is(err, errNoEpisodeCredential) {
+				return exitUsage
+			}
 			return exitFatal
 		}
-		if len(rows) == 0 {
-			fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: episode %s has no session credential in %s\n", *episode, credPath)
-			return exitUsage
-		}
-		ids = ids[:0]
-		for _, r := range rows {
-			ids = append(ids, r.CredentialID)
-		}
+		return exitOK
 	} else if _, ok, err := st.ResolveSession(revokeCtx, credID); err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
 		return exitFatal
@@ -498,4 +493,25 @@ func isHex64(s string) bool {
 		}
 	}
 	return true
+}
+
+var errNoEpisodeCredential = errors.New("episode has no session credential")
+
+// revokeEpisodeCredentials shares episode-wide revoke without creating a new
+// context root. Finish calls it only after the finish record lands.
+func revokeEpisodeCredentials(ctx context.Context, st *store.Credentials, episode string, stdout io.Writer) error {
+	rows, err := st.ListSessions(ctx, episode, store.MaxListSessions)
+	if err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return fmt.Errorf("refusing: episode %s has no session credential: %w", episode, errNoEpisodeCredential)
+	}
+	for _, row := range rows {
+		if err := authority.Revoke(ctx, st, row.CredentialID); err != nil {
+			return err
+		}
+		fmt.Fprintf(stdout, "revoked session credential %s\n", row.CredentialID)
+	}
+	return nil
 }

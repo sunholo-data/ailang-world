@@ -43,12 +43,14 @@ type finishCheckResult struct {
 	Unsandboxed bool
 	Passed      bool
 	Entry       int64
+	Ref         string
 }
 
 type reportAdditions struct {
 	Checks       []finishCheckResult
 	Commit       string
 	Unattributed []string
+	Protected    []string
 	Finish       bool
 }
 
@@ -71,9 +73,12 @@ func renderReportMarkdown(r daemon.EpisodeReport, db string, add reportAdditions
 			if c.Unsandboxed {
 				class = "UNSANDBOXED"
 			}
-			fmt.Fprintf(&b, "- %s: %s (%s), outcome entry %d\n", c.Name, verdict, class, c.Entry)
+			fmt.Fprintf(&b, "- %s: %s (%s), outcome entry %d (%s)\n", c.Name, verdict, class, c.Entry, c.Ref)
 		}
 		fmt.Fprintf(&b, "\nCommit: %s\n\nD-WORLD-60: apply the ailang-world label when opening the PR.\n\n", add.Commit)
+	}
+	if len(add.Protected) > 0 {
+		fmt.Fprintf(&b, "Protected paths changed: %s\n\n", strings.Join(add.Protected, ", "))
 	}
 	introEnd := b.Len()
 	b.WriteString("## What the agent did\n\n")
