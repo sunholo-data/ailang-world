@@ -1,6 +1,7 @@
 # w-exec-probe-reverse-leg-port-race — arm 6's reverse leg counts ANY listener on its port as the child's, so a port another host process takes refuses startup
 
 - **Status**: Implemented (iteration 314: M1 `2f2ba233`, M2 `5856a606`, M3 `d7bba842`, PR #403; judge sonnet PASS 92)
+- **Amended by**: row 232, `w-exec-probe-reset-holder-false-pass` (iteration 318): §4.2's silent class also takes a dial that fails at connect with ECONNRESET.
 - **Item**: iteration 314, controller-filed from the red CI run on `origin/dev` `2769cff9`
   (run 40699055042 attempt 1, job 122853572046, step 8). Clause 3 (the Workspace.Exec effect's
   fail-closed startup probe), as an availability defect.
@@ -186,6 +187,9 @@ nonce 500/500 times, the slowest under 1 ms on darwin (V26).
   - the line equals `want+"\n"`: set `seen.child`;
   - ≥1 byte that is not that line, or a clean EOF with zero bytes: set `seen.foreign`;
   - zero bytes at the deadline, or a reset with zero bytes: set `seen.silent`.
+    **Amended by row 232** (`w-exec-probe-reset-holder-false-pass`, iteration 318): a dial that
+    fails *at connect* with ECONNRESET is the same TCP event and also sets `seen.silent`
+    (`dialErrIsSilent`); every other dial error records nothing.
 
   The reset case follows the reviewer's "zero bytes after the hello" branch. It also covers a
   child listener closing with a dial still queued in its backlog, which can arrive as a reset.

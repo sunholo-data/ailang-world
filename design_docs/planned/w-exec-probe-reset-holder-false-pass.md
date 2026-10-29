@@ -55,7 +55,7 @@ completed with a listener on the port**. Exactly one class does that: ECONNRESET
 | `ECONNRESET`, matched with `errors.Is(err, syscall.ECONNRESET)` through `*net.OpError` → `*os.SyscallError` → `Errno` | **SILENT** (sticky refusal) | Never seen with nothing listening: 0 of 2,013,696 dials under load on darwin (V7), and **0 of 7,325,743 on Linux**, idle and loaded (V14). Seen with a resetting listener on both platforms (V4, V7; Linux 1,742 / 342 / 147,968 / 1,184 across the four rst runs, V14) and with a listener that closes while dials are in flight (V5, V6). The same event as the post-connect zero-byte reset the parent already classes silent |
 | `ECONNREFUSED` | none | Nothing listens. That covers every dial before the child binds and after it closes, a macOS `EPERM` child, and a Linux netns child. Counts: 2,013,574 of 2,013,696 no-listener dials on darwin (V7) and 7,325,743 of 7,325,743 on Linux (V14). Against the resetting holder it occurred **0 times on Linux** (V14), so the holder does not surface as a class this fix drops. Classing it silent would refuse every attempt (M25) |
 | `EINVAL` (`connect: invalid argument`, darwin only) | **none** | **Seen with NOTHING listening:** 122 of 2,013,696 under load (V7). So it is not evidence of a listener. Classing it silent would add false refusals on a loaded Mac (M27). It is also seen around a listener's close under load (V6), and so stays a known unclassified residual (R6). Linux showed 0 (V14) |
-| timeout (`net.Error.Timeout()`, `os.ErrDeadlineExceeded`) | none | It is ambiguous: a full backlog, or a scheduler stall. Darwin: 0 in about 2.6 M loopback dials under load (V7). [r2] **Linux: timeouts DO occur against the resetting holder under 4 spinning dialers**, 143 idle and 179 loaded, and 0 with one sequential dialer (V14). They stay "none", because classing them silent is not proven safe (with nothing listening, no timeout was seen, but that is not a proof). This is the residual reason T7 is not strictly deterministic (§6). The child's listener is dialled about 20 times per attempt (V15), so one lost dial cannot hide a reach |
+| timeout (`net.Error.Timeout()`, `os.ErrDeadlineExceeded`) | none | It is ambiguous: a full backlog, or a scheduler stall. Darwin: 0 in about 2.6 M loopback dials under load (V7). [r2] **Linux: timeouts DO occur against the resetting holder under 4 spinning dialers**, 143 idle and 179 loaded, and 0 with one sequential dialer (V14). They stay "none", because classing them silent is not proven safe (with nothing listening, no timeout was seen, but that is not a proof). This is the residual reason T7 is not strictly deterministic (§6). The child's listener is dialled about 20 times per attempt (V15), so one lost dial cannot hide a reach. The reset holder is a single-dial shape (T7's `/bin/sh` client exits at once), so a lost timeout dial still hides it: T7 stays a stability read, and T9 is the proof |
 | `ECONNABORTED` | none | Not observed in any run (V5–V7). Pinned by a T8 row so that a change has to be deliberate |
 | local-side errors (`EADDRNOTAVAIL`, `EMFILE`, `EACCES`/`EPERM` from a host firewall) | none | They describe the dialling side, not a peer |
 
@@ -153,14 +153,15 @@ If (c) failed on some host, the effect would be a refusal, never a pass, so it f
 | M25 MUT-REFUSED-IS-SILENT | ECONNREFUSED is silent | T8 `op-refused`, `real-refused`; T9 `refused-only`; T5 `clean` and every T2 row (free ports dial ECONNREFUSED, so the leg refuses SILENT instead of `""`) |
 | M26 MUT-ANY-ERR-IS-SILENT | `err != nil` is silent | T8 `op-refused`, `op-einval`, `op-aborted`, `timeout`, `addrnotavail`; T5 `clean` |
 | M27 MUT-EINVAL-IS-SILENT | EINVAL is silent | T8 `op-einval`; T9 `einval-then-refused` |
-| M28 MUT-TIMEOUT-IS-SILENT | a timeout is silent | T8 `timeout` |
+| M28 MUT-TIMEOUT-IS-SILENT | a timeout is silent | T8 `timeout`, `deadline-exceeded` |
+| M28b MUT-DEADLINE-IS-SILENT (planner-added, D1) | `os.ErrDeadlineExceeded` is silent | T8 `deadline-exceeded` (row `timeout` stays green: the in-table control; a real dial timeout does not satisfy `errors.Is(err, os.ErrDeadlineExceeded)`) |
 | M29 MUT-CONNECT-RESET-IS-FOREIGN | a connect-time reset sets `foreign` | T9 `connect-reset`: want exactly `{silent}`, not `{foreign}` (the leg would retry, then pass on attempt 2) |
 
 ## 6. Tests
 
 | Test | Needs node? | Kills |
 |---|---|---|
-| T8 `TestExecProbeReverseDialErrIsSilent` | no (pure) | M23, M24, M25, M26, M27, M28 |
+| T8 `TestExecProbeReverseDialErrIsSilent` | no (pure) | M23, M24, M25, M26, M27, M28, M28b |
 | T9 `TestExecProbeReversePollRecordsConnectReset` | no (injected dial) | M22, M23, M25, M27, M29 |
 | T7 `TestExecProbeReverseLegSilentHolderRefusesSticky` (existing, unchanged) | no | parent M16, M17, M19, M20 |
 
@@ -173,7 +174,8 @@ If (c) failed on some host, the effect would be a refusal, never a pass, so it f
 - **T9** calls `pollLoopback(port≠0, want, fake)` and stops it at once; the poll dials once before
   it checks stop (`:690-693`), so ≥1 dial is guaranteed with no timing. Rows: `connect-reset`
   (call 1 `op-reset`, later `op-refused`) wants exactly `{silent:true}`; `refused-only` and
-  `einval-then-refused` want `{}`.
+  `einval-then-refused` want `{}`. The fake dialer counts calls with an `atomic.Int32`: call 1 returns the row's error and every
+  later call returns `op-refused`, so extra loop iterations before stop are harmless.
 - **T7 `reset-holder` after the fix.** With one sequential dialer (T7's shape), every outcome
   against that holder was a connect (then zero bytes and a reset: silent) or a connect-time
   ECONNRESET, on darwin (V4) and Linux (V14 `-dialers 1`, idle and loaded). The fix makes both
@@ -192,10 +194,15 @@ If (c) failed on some host, the effect would be a refusal, never a pass, so it f
 - **AC-STABLE.** `go test ./host/broker -run '^TestExecProbeReverse' -count=20 -v`: every test
   passes 20/20. Then T7 `reset-holder` `-count=300` under 32 `yes`: 0 FAIL. That is a stability
   read, not the proof.
-- **AC-LINUX [r2].** The fix PR's linux/amd64 CI must show `--- PASS:` for T7 `…/reset-holder`,
-  T8 and T9 in both "go host build + test gate" (step 8's list plus the subtest line) and "go race
-  gate". A red there blocks the merge: re-measure the Linux dial-error classes (V14's probe) and
-  amend §2's table with the observed class before any retry.
+- **AC-LINUX [r2, restated in the sprint].** The fix PR's linux/amd64 CI must show, in step 8
+  ("Row 140 Workspace.Exec real-srt tests, verbose", the only `tests=` PASS-guard list,
+  `ci.yml:245-257`), `--- PASS:` for T7, T8 and T9, plus the subtest line
+  `    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder` in its `-v` log. In
+  the "go race gate" job (`go-race-verify`, `VERIFY_GO_LEGS: race`), which runs
+  `go test ./... -count=1 -race` without `-v` and so prints only `ok`/`FAIL` per package, it must
+  show `ok  	github.com/sunholo-data/ailang-world/host/broker`. A red in either blocks the merge:
+  re-measure the Linux dial-error classes (V14's probe) and amend §2's table with the observed
+  class before any retry.
 - **AC-LINUX-LOAD [r2] (controller-run, before merge).** V14's workflow pattern on a throwaway
   branch at the **fixed** head: start 2×nproc `yes`; run `go test ./host/broker/ -run
   '^TestExecProbeReverseLegSilentHolderRefusesSticky$/^reset-holder$' -count=300 -v`; kill the
@@ -259,6 +266,7 @@ leg changes; arms 1–5, 7 and 8 are untouched.
 | V13 | QUICKSTART edit site | `sed -n 1146,1153p docs/QUICKSTART.md` | `:1151-1153` "`reverse leg: a listener on … answered nothing to World's hello` means a process that never answers held the port …" |
 | V14 | **[r2] Linux dial-error classes, and T7 at base under load.** VERIFIED BY CONTROLLER: throwaway branch `probe/world-iter318-linux-errno` (`cf93d0f5`), run 40842980481. Log: `design_docs/verification/world-iter318/linux-errno-probe-run40842980481.txt`. Probe: `linux-errno-probe.go.txt` (sha256 prefix `cdae00854dcb`), an accept-then-`SetLinger(0)`-`Close` listener (T7's shape) | `for m in none rst; do for d in 1 4; do /tmp/probe -mode $m -dialers $d -secs 30; done; done`, idle, then under 2×nproc `yes`; then under load, `go test ./host/broker/ -run '^TestExecProbeReverseLegSilentHolderRefusesSticky$/^reset-holder$' -count=300 2>&1 \| tail -30` | Log `:217-219`: `Linux … 7.0.0-1017-azure … x86_64`, `4`, `go1.26.6 linux/amd64`. Idle (`:226-236`): none d1 `connection refused(0x6f) … 1328238`; none d4 `4085689`; rst d1 `connected 642869`, `connection reset by peer(0x68) is-ECONNRESET=true 1742`; rst d4 `connected 1488248`, reset `342`, `timeout 143`. Load (`:245-255`): none d1 refused `638159`; none d4 `1273657`; rst d1 `connected 195092`, reset `147968`; rst d4 `connected 488125`, reset `1184`, `timeout 179`. No other class anywhere. T7 (`:264-279` and on): 7 `--- FAIL: …/reset-holder` in the tail, each `exec_probe_test.go:664: Why = "", picker calls 1`; `FAIL …/host/broker 5.693s`. Controller: dev's failed job re-ran green on attempt 2 |
 | V15 | **[r2]** The cadence: a 1000 ms hold, a 50 ms poll and a 200 ms dial | `grep -n 'const execProbeListenMS\|time.After(50 \* time.Millisecond)\|200\*time.Millisecond' host/broker/exec_probe.go` | `:98 const execProbeListenMS = 1000`; `:705 … net.DialTimeout("tcp", addr, 200*time.Millisecond)`; `:719 case <-time.After(50 * time.Millisecond):`. So about 1000/50 = 20 dials per attempt |
+| V16 | PR #402 (the merge that reddened `dev`) touched no probe file | `gh pr view 402 --repo sunholo-data/ailang-world --json files,mergeCommit --jq '{merge: .mergeCommit.oid, n: (.files\|length), probe: [.files[].path \| select(test("host/broker/exec_probe"))], go: [.files[].path \| select(test("\\.go$"))][0:2]}'` | merge `df5a0671dadd…`; `n` 29; `probe` `[]`; control `go` `["cmd/ailang-worldd/episode.go","cmd/ailang-worldd/episode_preset.go"]`, so the filter matches real paths |
 
 ## 10. Quorum log
 
