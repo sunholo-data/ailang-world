@@ -3157,3 +3157,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
   3. Row 200's flake now has its first non-race-leg instance (`785b3bd1` attempt 1, job 123580031823).
 - **Progress (second item):** 1.0 clauses 7/7 MET; goal unmoved (gate health on a MET clause). Dev red is fixed once the sprint PR lands.
 - **Next:** land row 234 (merge-commit CI), then a rule (d) block report unless D-WORLD-102 = A or dev goes red.
+
+**Row 234 follow-through (Gate 3b):** PR #420 head `00564d7d` check-runs 3/3 success. `origin/dev` re-read right before merging was still `785b3bd1` (retro item 1 applied), and the PR was `MERGEABLE`/`CLEAN`. Merge `2f15c7cde321f5b6833ce49f4f0c6a1a45923187`: check-runs 3/3 success (host gate, race gate, verify gate). Row 234 is tagged LANDED, and dev is green.
