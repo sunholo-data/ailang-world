@@ -3014,3 +3014,52 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 232 LANDED. Row 150: the attended A1 remains; row 151: behind row 188 N2d/N4a.
 **Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233). Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land. If T7 `reset-holder` reds again on Linux CI, re-measure the Linux dial-error classes first (design R7).
+
+## 319 — 2026-10-29 — no pick: rule (d) block report 2; release rows 150/151 still wait on attended steps; dev green with row 232's fix (the dc24fccf red predates it) [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (316 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, this entry, the index row, the dashboard, and `verification/world-iter319/gate1-2-readings.txt`. An independent judge reviews it before merge.
+
+**Pick and why:** none.
+- **Clause map at `bcb07394`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
+- **D-WORLD-81 release rows, blockers re-measured this iteration (not transcribed):**
+  - **150** waits only on the attended A1. The controller runs P0 (≤24 h before) and P3 (before pass A) inside the window Mark schedules (orchestration r5 §4.4).
+  - **151** needs row 188's N2d and N4a (`w-agent-generated-projections` §8). `git log origin/dev --since=2026-10-01 | grep -ciE 'N2d|N4a'` → **0**; control `N2c` → **2** (N2c, `6f2ba039`, is row 188's newest landing). D-WORLD-95 R2 runs rows 219 → 217 → 218 before N2d. Since iteration 317 the attended track landed 217a (#402), 220d's design (#407), 219b (#409) and 218a (#408), but all three rows are still `[NEXT]` on the attended track, and their exit criteria are runs Mark makes. So none of them, and not N2d, is loop-routable.
+- **Rows 231, 230, 233** are hygiene "below every D-WORLD-81 release row". Rule (d) bars them. D-WORLD-64's exception covers rows 148–151 only. D-WORLD-102 (may the loop take them while the release rows wait) is OPEN with default B, so this is a block report.
+- **Dev is not red:** `bcb07394` check-runs 3/3 success. The CI run between iterations 318's pick and its landing, on `dc24fccf` (#408's merge, run 40853596929), was red in the go race gate on `TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder` (`exec_probe_test.go:664: Why = "", picker calls 1`). `git merge-base --is-ancestor f438ba41 dc24fccf` → no: that commit lacks row 232's fix, and `793cc67c` (the fix's merge) and `bcb07394` are both green. It is row 232 instance 4 on pre-fix code, not a red to outrank with, and not iteration 318's "if T7 reds again on Linux CI" trigger (which is about post-fix code).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN; env read by NAME.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (17 comments, none from the allowlist). Nothing to mark.
+- `mission_gate0_self_notices.sh`: verdict "1 crash notice" on the same 2026-10-22 rc=1 notice `6345079873`, already credited (log count 16 before this entry). Control 107:4 ok.
+- Unread `mission-world` inbox: only this loop's claim messages (the iteration-319 claim was sent and confirmed in the listing).
+- `mission_decisions.sh --check`: valid, 90 rows, 1 OPEN (D-WORLD-102). The external-issue sweep is not due (#366 is this week's thread).
+
+**Gate 1:**
+- Local `dev` was 8 commits (2 first-parent merges, #410 and #411) behind; fast-forwarded (`--ff-only`, tree had only the known untracked residue) to `origin/dev` = `bcb07394`. Gate-1 base `bcb073940751056d273562ca7f79753f980b0683@2026-10-29T12:02:21Z`; Gate-4 base the same SHA at 12:04:01Z.
+- Skill drift: `SKILL.md` and all 13 resource files byte-identical to `origin/dev` at the resolved symlink target (per-file `cmp`; the first loop printed DIFF for all 13 because it dropped the `resources/` prefix from the `git show` path. That was the instrument's fault: a single-file control and the corrected loop both read SAME). Rules read from the resolved target.
+- Open PRs from this account: none.
+- Died-mid-flight traces: no iteration-319 branch or worktree existed before this one. `.wt-world-iter306-r0` is the known residue.
+
+**Designer / planner / executor:** not spawned. There is no pick, so nothing to design, plan or execute (precedent 257–264, 317). The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=bcb073940751056d273562ca7f79753f980b0683@2026-10-29T12:04:01Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet` (tok: see the follow-through).
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150 (attended A1) or 151 (row 188 N2d/N4a absent, measured above).
+- Picking 231, 230 or 233 under rule (d) with D-WORLD-102 unanswered.
+- Treating the `dc24fccf` red as a live dev red: it predates the fix, and both later dev commits are green.
+- `ailang mission rotate-log` (35 live entries with this one, under the ~40 threshold); the index row is hand-written as in 317–318.
+
+**Retro:**
+1. **A drift-check loop that prints DIFF for every file is more likely a path bug than drift.** It was caught here by a single-file control before anything acted on it. The skill's own prescribed loop (Gate 1 rule (d)) builds `rel` correctly; the defect was in a hand-rolled variant. Instance 1; no rule change.
+2. **Idle cadence:** this is block report 2 of a possible run (iterations 257–264 were eight). Each costs one judge. D-WORLD-102 remains the only lever the loop has; it is not re-asked, only re-surfaced in the digest as the single open decision.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains; row 151: behind row 188 N2d/N4a.
+**Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land. If T7 `reset-holder` reds on post-fix code, re-measure the Linux dial-error classes first (row 232 design R7).

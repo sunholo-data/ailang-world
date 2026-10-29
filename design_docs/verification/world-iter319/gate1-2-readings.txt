@@ -1,0 +1,71 @@
+# World iteration 319 — Gate 1/2 readings (controller, 2026-10-29T12:04:21Z)
+## origin/dev and Gate-1 base
+bcb073940751056d273562ca7f79753f980b0683
+## commit check-runs on origin/dev
+checks=3
+  go host build + test gate: completed success
+  go race gate (go test -race, own job): completed success
+  ailang-code verify gate: completed success
+## CI workflow, last 3 on dev
+success bcb073940 2026-10-29T10:35:20Z
+success 793cc67c0 2026-10-29T10:02:20Z
+failure dc24fccf4 2026-10-29T09:56:45Z
+## ledger
+decision ledger valid: 90 rows
+D-WORLD-102	OPEN
+## row 151 blocker: row 188 landings since 2026-10-20 (N2d/N4a absent)
+6f2ba039 feat(row 188 N2c): live refresh in the World app over AG-UI (w188l, 3 rounds)
+33e82cc0 feat(row 188 N2b): the brand is the way home; drop the duplicate "world" crumb (w188k round 3)
+41e6424e feat(row 188 N2b): the World app at /surface, the approved v3 working copy on live data
+4a9b2f8d feat(row 188 N1): GET /surface/model.json and /surface/stack.json — the view model in tested Go
+81b98fe4 plan(row 188): keep the Claude/Codex alternation — N2a Codex, N2b Claude
+b56b7561 plan(row 188): split N2 into N2a (font allowance, font route, CSP) and N2b (the app shell), per D-WORLD-90
+9ceb1503 design(row 188): commit the v3 working copy as a design fixture (D-WORLD-88)
+eb45b402 feat(row 188 N0): the surface index's human layer — titles, summaries, names, goals, delivered verdicts
+a71963ee plan(row 188): re-cut S1 around the Tauri app on the artifact's design (D-WORLD-88)
+98314ddb docs(mission): file D-WORLD-88 OPEN — row 188's surface medium (R5 revisited)
+fe86a018 feat(row 188 M4a): /surface/surface.js — keys, address bar, Appearance
+baaf5c95 feat(row 188 M3): GET /surface?brane=&at= — the brane stack, front card open
+e80d4eeb feat(row 188 M2): GET /surface — the world timeline, server-rendered
+4959f230 feat(row 188 M1): serve --surface-index and GET /surface/index.json
+7785e340 feat(row 188 M0c): the surface index's episode facts — steps, files, reads, decisions
+18f14015 feat(row 188 M0b): the episode report lists the files read, from World's invocation records
+a8a6d8fe feat(row 188 M0a): the surface index from git history — host/surface and ailang-worldd surface-index
+f1b8936e docs(charter): rename row 188 to w-world-os-surface (attended, Mark: "yep rename the row")
+150b3cf2 plan(row 188): w-world-os-surface S1 sprint plan — six milestones as World episodes
+49ac0d15 design(row 188): commit the w-world-os-surface mockup source as a design fixture
+4ac4e953 design(row 188): w-world-os-surface r2 — a small UI layer on the Sunholo palette
+6c28bce3 design(row 188): w-world-os-surface r2 — Sunholo themes, agent views, outputs in place
+e7ba7162 design(row 188): w-world-os-surface r2 approved for build (D-WORLD-87); row 188 re-scoped
+0524eea2 docs(charter): file D-WORLD-87 (row 188 re-scope, w-world-os-surface) OPEN — attended
+b722059c design(row 188): w-world-os-surface r2 — times in words
+186a7bbb design(row 188): w-world-os-surface r2 — earlier and later stacks mirror each other
+2b5a9f82 design(row 188): w-world-os-surface r2 — brane glyphs; the forward stack
+eada13c1 design(row 188): w-world-os-surface r2 — the stack shows the history, not just the brane
+74d0c305 design(row 188): w-world-os-surface r2 — one keyboard map for both distances
+06a4a6e0 design(row 188): w-world-os-surface r2 — amber is you; labels and numbers over prose
+e28ce7e9 design(row 188): w-world-os-surface r2 — the front card's inputs are the controls
+b2d08a8b design(row 188): w-world-os-surface r2 — two distances; the front card is the state
+05903ac7 design(row 188): w-world-os-surface r1 — one view, three distances, one action
+6232fd35 design(row 188): w-world-os-surface r0 draft — branes, the block view, states as places (attended)
+N2d/N4a commit count: 0
+control (N2c) count: 2
+## attended landings since iteration 317's base 23940015
+bcb07394 Merge pull request #411 from sunholo-data/mission/world-iter318-record
+793cc67c Merge pull request #410 from sunholo-data/sprint/world-iter318-row232
+dc24fccf Merge pull request #408 from sunholo-data/trial/row218a-finish-local
+bd434cb9 Merge pull request #409 from sunholo-data/trial/row219b-service-upgrade
+750cf0d9 Merge pull request #407 from sunholo-data/trial/row220d-design
+df5a0671 Merge pull request #402 from sunholo-data/trial/row217a-presets-start
+aa7271e0 Merge pull request #406 from sunholo-data/mission/world-iter317-record
+## open PRs from this account
+(end of PR list)
+## dc24fccf (#408 merge, pre-#410) CI red attribution
+run 40853596929, job 123378886910 (go race gate) failure; log 35062 B
+2026-10-29T10:02:12.8123774Z --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (1.04s)
+2026-10-29T10:02:12.8131484Z     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.02s)
+2026-10-29T10:02:12.8143485Z         exec_probe_test.go:661: TIMING ArchiveExecSandbox took 4.680073ms
+2026-10-29T10:02:12.8145136Z         exec_probe_test.go:664: Why = "", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+ok-lines control: 56
+row 232 fix f438ba41 ancestor of dc24fccf: no
+next dev CI (793cc67c, #410 merge carrying the fix) and bcb07394: success
