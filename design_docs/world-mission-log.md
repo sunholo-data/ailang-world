@@ -1756,7 +1756,8 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (26 comments) and 0 on #313 since `2026-10-22T01:34:42Z` (44). Nothing to mark.
 - `mission_gate0_self_notices.sh`: rc 1, "1 crash notice" — the same 2026-10-22 rc=1 notice `6345079873`, already credited (22 mentions in the live log before this entry). Control 107:4 ok. #366: 26 comments, all self, 0 crash.
 - Inbox: the `mission-world` inbox holds only this loop's claim/report messages; nothing addressed to World.
-- `mission_decisions.sh --check`: valid, 91 rows; `--open`: D-WORLD-102 only.
+- `mission_decisions.sh --check`: valid, 91 rows; `--open`: D-WORLD-102 only (at Gate 0).
+- **Attended ruling acknowledged (D-WORLD-102 = A).** While this iteration ran, Mark recorded an attended ruling in the ledger (#434, flip `dac17cee`, 2026-10-30 21:16 CET; "merge 433 and 102 a"): extend D-WORLD-64's exception to rows 231 → 230 → 233, stopping as soon as 150 or 151 is routable. `mission_ledger_provenance.sh --id D-WORLD-102` → `verdict=attended` (creation `92495b60`). Found at the pre-merge re-read of `origin/dev` (`35b5aecf`); the record was rebased onto it (clean), the D-WORLD-102 row is byte-identical to origin's, and `--check` → valid, 91 rows, **0 OPEN**. The same window also merged #433 (the census probe cap — one of the two load flakes classified below) and #435 (row 219 M4); none touches this row's three files (intersection empty against 32 incoming files). This pick stays row 236: a dev red outranks the queue, and standing rule 1 allows one item.
 
 **Gate 1:**
 - Local `dev` = `origin/dev` = `4d43d8e31b8e54673fbe955641aa83af0f60e9fd`. Gate-1 base `4d43d8e3…@2026-10-30T20:01:39Z`.
@@ -1791,7 +1792,7 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - A wider margin only (design option a): measured to leave P4/P4b surviving.
 - Re-running the full gate locally until green: the rig's load is other sessions'; CI decides.
 - Folding NB1 into this row: pre-existing, a different guard; filed as 237.
-- Using D-WORLD-102: not needed; a dev red outranks rule (d).
+- Using D-WORLD-102: not needed for this pick (a dev red outranks rule (d)); it was resolved = A by an attended ruling mid-iteration, so rows 231 → 230 → 233 are next.
 
 **Retro:**
 1. **The executor's AC-4 command carried no `-timeout`**, so a loaded rig turned a green package into a 10-minute panic. The planner wrote the command from the doc's AC-4 text; CI passes `-timeout 8m` per package. Instance 1 here; future plans should carry an explicit `-timeout` on the full-suite line.
@@ -1799,4 +1800,4 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - Harness share 0. No skill edit.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Dev red fixed in a PR; row 237 filed.
-**Next:** row 236 lands on merge CI green (landing note). Then a rule (d) block report unless D-WORLD-102 = A (231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.
+**Next:** row 236 lands on merge CI green (landing note). Then row 231 → 230 → 233 under D-WORLD-102 = A (attended, #434), stopping when a release row is routable; a dev red still outranks. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.

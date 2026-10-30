@@ -5,9 +5,9 @@
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built. It waits on the **attended A1**: the controller runs P0 ≤24 h before and P3 before pass A.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218 (all still `[NEXT]`).
-- **Rows 231 → 230 → 233:** hygiene, barred by rule (d) until D-WORLD-102 = A. Rows 235 and 237 (new: the approve guard's `Record != nil` arm is unpinned) are hygiene outside D-WORLD-102's scope.
+- **Rows 231 → 230 → 233:** now the loop's, in that order — **D-WORLD-102 = A** (Mark, attended 2026-10-30, #434), stopping when a release row is routable. Rows 235 and 237 (new: the approve guard's `Record != nil` arm is unpinned) are hygiene outside D-WORLD-102's scope.
 - **Roles this fire:** designer opus (Agent; quorum r1 and r2 BLOCKED on evidence, carve-out applied) · planner opus · executor haiku · judge sonnet. All foreground Agent-tool spawns.
-- **Parked on Mark:** **D-WORLD-102**: may the loop take 231 → 230 → 233 while the release rows wait? Recommend A, default B. **Attended actions:** schedule row 150's A1; the 219 → 217 → 218 track unblocks 151. Attended PR #433 (census probe cap) would also remove one of the two load flakes the local full gate hit this fire.
-- **Next (loop):** row 236's landing note, then a block report unless D-WORLD-102 = A or dev goes red.
+- **Parked on Mark:** no open decision (0 OPEN ledger rows; D-WORLD-102 answered A in-session, acknowledged). **Attended actions:** schedule row 150's A1; the 219 → 217 → 218 track unblocks 151. Attended PR #433 (census probe cap, merged this window) removes one of the two load flakes the local full gate hit this fire.
+- **Next (loop):** row 236's landing note, then row 231 (D-WORLD-102 = A); a dev red still outranks.
 - **Cost:** $0.6052 metered (two quorum rounds); Anthropic quota (opus controller/designer/planner, haiku executor, sonnet judge).
 - **Record and evidence:** world-mission-log.md entry 327; verification/world-iter327/; index regenerated with `rotate-log --index-only`.
