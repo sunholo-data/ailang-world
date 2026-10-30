@@ -1739,3 +1739,64 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: one corrected figure.
 
 **Landing (iteration 326):** PR #431 merged as `1f861724`. The PR head `f3e49e7d` was 3/3 green before the merge, and origin/dev was re-read right before it (`b49ce51a`, MERGEABLE/CLEAN, `--match-head-commit`). The merge tree is byte-identical to the head tree (`b14d383a`). **Merge CI:** `commits/1f861724/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. Both CI pollers ran under `/bin/bash` from a script file, with the subject SHA in each verdict line. One controller instrument fault, no effect on any verdict: a zsh glob over a not-yet-written verdict path printed `no matches found` for a 5-minute read; the read was re-run under `/bin/bash` against the poller's exact path.
+
+## 327 — 2026-10-30 — dev red at Gate 1 → row 236 built: the finish route's scope-expiry test raced two wall-clock reads across a second edge; daemon clock seam + exact-edge tests; judge PASS 93 [PRODUCT]
+
+**Kind:** a Gate-1 dev red on World's own repo, which outranks the queue (precedent 318, 320). Full inner loop: designer → quorum → planner → executor → independent judge. The record is in the same PR as the code (#436); the landing note records merge CI.
+
+**Pick and why:** row 236 (filed this iteration).
+- **Dev red:** `origin/dev` `4d43d8e3` (#432's merge, a docs-only landing note) — `commits/4d43d8e3/check-runs` 3: race gate `failure`, host gate and verify gate `success`. Parents `cfdab426`, `1f861724`, `f3e49e7d`, `b49ce51a` all green. Job log fetched with `--allow-escape-sequences` (36,460 B): the two `DATA RACE` blocks are the gate's own known-positive control (`racecontrol/main.go`); the one test failure is `--- FAIL: TestEpisodeFinishScopeExpiry (0.15s) episode_finish_test.go:170: expiry 1793383038: 200`. The package took 352 s on the runner.
+- **Mechanism, measured before routing:** the test builds `time.Now().Unix()+3601`; the handler (`episode_finish.go:168–169`, and the same bound at `:270–271`) refuses only when `scope.ExpiresAt > now+3600` with its own later `time.Now()`. A second edge between the reads makes `+3601` equal the bound → accepted → 200. On a scratch worktree: test read aligned ≤50 µs before an edge → **20/20 FAIL** plain and **20/20** `-race`, with the CI signature; aligned 2 ms before → 0/20 (the handler is fast idle); aligned just after an edge (control) → 0/20; unmodified idle `-race` → 0/400. `verification/world-iter327/gate1-2-readings.txt`.
+- **Why taken, not filed like row 235:** row 235 (iteration 322) had an unreproduced mechanism (0/80). This one is reproduced deterministically, so it is the 318/320 shape. The code is the attended track's (row 218 M2, `8c5a14e6`); a claim message named the row before routing (`inbox_1793390682086_a0f83fd5`). The only open PR, #433 (attended, draft), touches `host/broker/registry_publish_test.go` only — no collision.
+- **Rerun:** the failed job was re-run (attempt 2) → `4d43d8e3` 3/3 success, so dev is green while the root cause is fixed.
+- **Clause map at `4d43d8e3`:** 1–7 MET. Rows 150/151 unchanged since 326 (no commit since `b49ce51a` but 326's own record and landing). D-WORLD-102 is OPEN and was not used.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (26 comments) and 0 on #313 since `2026-10-22T01:34:42Z` (44). Nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 1, "1 crash notice" — the same 2026-10-22 rc=1 notice `6345079873`, already credited (22 mentions in the live log before this entry). Control 107:4 ok. #366: 26 comments, all self, 0 crash.
+- Inbox: the `mission-world` inbox holds only this loop's claim/report messages; nothing addressed to World.
+- `mission_decisions.sh --check`: valid, 91 rows; `--open`: D-WORLD-102 only.
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `4d43d8e31b8e54673fbe955641aa83af0f60e9fd`. Gate-1 base `4d43d8e3…@2026-10-30T20:01:39Z`.
+- Rules read from the resolved symlink target (`~/dev/sunholo-data/ailang/.claude/skills/mission-control`).
+- Open PRs: #433 `fix/census-driver-cap` (draft; worktree in an attended scratchpad, not this loop's) — left alone.
+- Died-mid-flight traces: none for 327; `.wt-world-iter306-r0` is the known residue.
+
+**Design** (`w-finish-scope-expiry-boundary`; designer resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus`, the 318/320 precedent; rotation pointer unchanged — the lane that ran):
+- r1: an unexported daemon clock seam, exact-edge tests on a pinned clock; option (a) margin (`+3660`) rejected because P4/P4b survive (measured), retries rejected. Sibling sweep: 2 same-hazard sites, both in `episode_finish_test.go` (the failing arm and AC11's `future` `+301`), both fixed here.
+- Quorum r1 BLOCKED ($0.2474; seats oc-kimi-k3 REJECT, gpt6-1-sol REJECT, gemini-4-argon PASS; claude benched as author vendor; no absentees): reuse-vs-new seam; "no test reaches `:271`" conflated detection with execution.
+- One mandated revision (r2): coverage measured (`:271`'s condition executes, its refusal branch never does; `:169` control covered); two clocks kept apart on purpose with reuse measured infeasible; field renamed `finishNow`.
+- Quorum r2 BLOCKED ($0.3578; same seats; no absentees): kimi — the r2 diff's mutant/package evidence was from the pre-rename prototype; gpt — the construction audit was textual. Neither disputes direction, both carry a concrete `proposed_fix` → **narrow-refinement carve-out (r3)**: kimi's own minimum-acceptable annotations applied verbatim; gpt's type-aware audit run by the controller (`go/packages` + `go/types`, tests included, 108 packages, 0 load errors): **11** constructions (`daemon.go:784` in `New` + 10 `host/daemon` test literals), 0 `new()`, 0 zero-value; a scratch alias control adds exactly 3, one per branch; none of the 10 literals' files mentions the finish route (control 10). `controller-r3-daemon-construction-audit.txt`. Artifacts `quorum/r1.json`, `r2.json`.
+
+**Plan** (opus, `opus fail-closed:env-pin`): M1 code, M2 evidence. Prototype-validated on the exact planned files: AC-1/AC-1b 20/20 red at base, 20/20 green on the fix, plain and race; 21/21 mutants red on their named killers (S0 control green); `host/daemon` plain `ok 335.8s`, race `ok 409.0s`; `cmd/ailang-worldd` at base 237/0/9 = fix 237/0/9 (so the designer's coverage-mode failures were mode/load). Deviations D1–D5 in the plan §8 (comment-only fixes, exact mutant text, S0 control).
+
+**Executor** (haiku; resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`, Agent `haiku`): M1 `d7a54db5` (+84/−13, three `host/daemon` files; sha256 equal to the plan's), M2 `75d07431` (evidence). AC-1/AC-1b base red / fix green; AC-2 21/21 killed, restores byte-identical, `scratch removed: yes`; AC-3 vet rc 0, package plain `ok` 441 s, race `ok` 525 s, `-count=200` race `ok`; AC-4 `verify_ail.sh` rc 0, `go build ./...` rc 0, `go test ./...` **rc 1** → stopped as the plan requires.
+- **Controller classification** (`controller-ac4-classification.txt`, load average 14–18 from other sessions): `host/daemon` = Go's default 10-min package timeout in the all-packages parallel run, no assertion failed (the package passes alone, AC-3). `host/broker` (`TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential` agentrun/checkrun `driver0` at 1.0 s — the census cap attended PR #433 raises; `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty`) is unreachable from this diff (`go list -deps -test ./host/broker` → 0 `host/daemon`, control 1) and each passed 3/3 alone. CI is the authoritative full gate.
+- The executor's commits carry a Haiku 5.5 co-author line (its harness's attribution), not the Opus line the directive named.
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), own detached worktree `.wt-world-iter327-eval` at `e7743475`, foreground, read-only: **PASS 93/100, zero blocking** (34/23/24/12). Reproduced the base red 20/20 on a `/tmp` copy; killed Q1, Q3, Q4, R1, R3, S3, W1 and an own mutant (proof bound 300 → 360); vet clean; Finish `-race -count=20` ok; full package `-timeout 1200s` one failure, `TestDaemonStartReportsMissingTemplates`, because its shell lacked `AILANG_BIN` (not in the diff). 49,634 tok / 587 s / 16 tool uses. Report `verification/world-iter327/evaluator-sprint-r1.md`.
+- **NB1, reproduced → row 237:** dropping `|| input.Record != nil` from the approve guard leaves all 5 Finish tests (`-v` lists them as PASS) and `cmd/ailang-worldd -run Finish` green. Pre-existing; out of this row's scope.
+- NB2 (no clean local full-gate green; CI is the authority), NB3 (the judge did not recount the audit's 11), NB4 (evidence volume) — noted.
+
+**Routing evidence:** base=4d43d8e31b8e54673fbe955641aa83af0f60e9fd@2026-10-30T20:01:39Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`; `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent `opus` (151,898 tok / 1,786 s; revision resume 215,874 tok / 1,225 s as reported) · planner Agent `opus` (155,785 tok / 1,502 s) · executor Agent `haiku` (95,050 tok / 2,119 s) · evaluator Agent `sonnet` (49,634 tok / 587 s). Generator ≠ judge: opus/haiku vs sonnet.
+- Fable diet: 1 doc, 2 designer runs (author + the mandated revision); the r3 fixes were the controller's, not a third run.
+- Quorum metered $0.6052 (r1 $0.2474 + r2 $0.3578).
+
+**Ruled out:**
+- Filing and not taking (the row-235 path): the mechanism is reproduced, not hypothetical.
+- A wider margin only (design option a): measured to leave P4/P4b surviving.
+- Re-running the full gate locally until green: the rig's load is other sessions'; CI decides.
+- Folding NB1 into this row: pre-existing, a different guard; filed as 237.
+- Using D-WORLD-102: not needed; a dev red outranks rule (d).
+
+**Retro:**
+1. **The executor's AC-4 command carried no `-timeout`**, so a loaded rig turned a green package into a 10-minute panic. The planner wrote the command from the doc's AC-4 text; CI passes `-timeout 8m` per package. Instance 1 here; future plans should carry an explicit `-timeout` on the full-suite line.
+2. **Quorum r2 objected to evidence measured on a pre-rename prototype.** A rename between rounds is cheap to re-verify only if the designer re-runs the whole battery; r2 re-ran a subset. Instance 1.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Dev red fixed in a PR; row 237 filed.
+**Next:** row 236 lands on merge CI green (landing note). Then a rule (d) block report unless D-WORLD-102 = A (231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.

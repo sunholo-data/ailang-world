@@ -4,8 +4,8 @@
   "row": "236",
   "clause": "red on dev (outranks the queue): CI run 41093918891 attempt 1, go race gate, TestEpisodeFinishScopeExpiry",
   "authority": [
-    "design_docs/planned/w-finish-scope-expiry-boundary.md r3 (r2 after quorum r1 BLOCKED + quorum-r2 fixes applied by the controller under the narrow-refinement carve-out)",
-    "design_docs/planned/w-finish-scope-expiry-boundary-sprint-plan.md"
+    "design_docs/implemented/w-finish-scope-expiry-boundary.md r3 (r2 after quorum r1 BLOCKED + quorum-r2 fixes applied by the controller under the narrow-refinement carve-out)",
+    "design_docs/implemented/w-finish-scope-expiry-boundary-sprint-plan.md"
   ],
   "estimate": "0.1 day (executor wall 1.5-2 h, dominated by package runs)",
   "scope": "2 milestones, each independently green. Code: host/daemon/daemon.go (finishNow field + New wiring), host/daemon/episode_finish.go (three reads onto d.finishNow, time import removed), host/daemon/episode_finish_test.go (T1 rewritten, T2/T3 new, AC11 future +301 -> +3600), applied ONLY as the plan's single machine-extracted diff (patch -p1). M2 creates design_docs/verification/world-iter327/executor-report.md and executor-*.txt. No .ail, no CI, no docs/, no tools/launchd/*. The executor must NOT edit design_docs/world-mission*.md (row 236 is the controller's). No git writes by the executor.",
@@ -32,7 +32,7 @@
     "export PATH=/opt/homebrew/bin:$PATH",
     "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0)",
     "mkdir -p /tmp/w327x/tools (executor scratch; never inside the worktree)",
-    "PLAN=design_docs/planned/w-finish-scope-expiry-boundary-sprint-plan.md; x() { awk -v h=\"$1\" '$0==h{f=1;next} f&&/^```$/{f=0} f' \"$PLAN\"; }",
+    "PLAN=design_docs/implemented/w-finish-scope-expiry-boundary-sprint-plan.md; x() { awk -v h=\"$1\" '$0==h{f=1;next} f&&/^```$/{f=0} f' \"$PLAN\"; }",
     "the controller shell is zsh: run scripts as #!/bin/bash executables"
   ],
   "executor_constraints": [

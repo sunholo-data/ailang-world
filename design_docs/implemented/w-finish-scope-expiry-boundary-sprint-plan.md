@@ -1,6 +1,6 @@
 # Sprint plan — `w-finish-scope-expiry-boundary` (iteration 327, row 236, red on `dev`)
 
-**Design doc:** [`design_docs/planned/w-finish-scope-expiry-boundary.md`](w-finish-scope-expiry-boundary.md)
+**Design doc:** [`design_docs/implemented/w-finish-scope-expiry-boundary.md`](w-finish-scope-expiry-boundary.md)
 (r3: r2 after quorum r1, plus the quorum-r2 fixes applied by the controller; §10). **Sprint base:**
 worktree `/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327`, branch
 `sprint/world-iter327-finish-scope-expiry`, HEAD `f7767f12`. Its Go tree equals the design's
@@ -63,7 +63,7 @@ cd /Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327
 export PATH=/opt/homebrew/bin:$PATH
 export AILANG_BIN=$HOME/.pinned-ailang/ailang     # reports "AILANG v0.41.0" (measured, V-P2)
 mkdir -p /tmp/w327x/tools                         # the executor's scratch dir; NEVER inside the worktree
-PLAN=design_docs/planned/w-finish-scope-expiry-boundary-sprint-plan.md
+PLAN=design_docs/implemented/w-finish-scope-expiry-boundary-sprint-plan.md
 x() { awk -v h="$1" '$0==h{f=1;next} f&&/^```$/{f=0} f' "$PLAN"; }   # extracts one fenced block by its exact opening line
 ```
 

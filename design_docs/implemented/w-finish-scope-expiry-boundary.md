@@ -1,6 +1,6 @@
 # w-finish-scope-expiry-boundary: `TestEpisodeFinishScopeExpiry` races two wall-clock reads across a second edge
 
-- **Status**: Planned (designed iteration 327, unattended). **r3**: r2 after quorum r1 BLOCKED, then the quorum-r2 fixes applied by the controller (§10). This is
+- **Status**: Implemented iteration 327 (M1 `d7a54db5`, M2 `75d07431`, PR #436; judge sonnet PASS 93). Designed iteration 327, unattended. **r3**: r2 after quorum r1 BLOCKED, then the quorum-r2 fixes applied by the controller (§10). This is
   the one mandated revision (§10). It is a red on `dev` (`4d43d8e3`, race gate, attempt 1), so it
   outranks the queue. The controller numbers the row (the charter's last row at base is 235, V12).
 - **Item**: a test defect from row 218 M2 (`8c5a14e6`, 2026-10-29, w218b, Codex, attended track,
