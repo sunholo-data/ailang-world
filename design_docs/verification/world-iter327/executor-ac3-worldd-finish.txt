@@ -1,0 +1,260 @@
+# command:
+#   go test -timeout 560s ./cmd/ailang-worldd/ -run Finish -count=1 -v
+# ---- output ----
+=== RUN   TestEpisodeFinishDeclineAC7
+--- PASS: TestEpisodeFinishDeclineAC7 (0.26s)
+=== RUN   TestEpisodeFinishBytesAC8
+=== RUN   TestEpisodeFinishBytesAC8/body
+=== RUN   TestEpisodeFinishBytesAC8/HEAD
+=== RUN   TestEpisodeFinishBytesAC8/remote
+--- PASS: TestEpisodeFinishBytesAC8 (0.87s)
+    --- PASS: TestEpisodeFinishBytesAC8/body (0.27s)
+    --- PASS: TestEpisodeFinishBytesAC8/HEAD (0.30s)
+    --- PASS: TestEpisodeFinishBytesAC8/remote (0.30s)
+=== RUN   TestEpisodeFinishDispatchAC9AC11AC12
+=== RUN   TestEpisodeFinishDispatchAC9AC11AC12/missing-label
+    episode_finish_m2_test.go:185: scope: github-pr:fixture/repo#remote=https://github.com/fixture/repo.git&head=custom-branch&sha=6a76656b8b66a466f6c11efef5a972d2d4697a2b&base=dev&title-sha256=85a4aee5185fb02479e6156ccb8d5b3827d2c5b6bad0eb09d554b53d86ab3dd7&body-sha256=c0f14c9aa83ab85db1a47be5747ce881f61fa01e9f2aed0d6e8dc223390a11c9&label=ailang-world&draft=true&create-label=true&expires=1793398437
+        calls: [ls-remote push label-create pr-view pr-create]
+=== RUN   TestEpisodeFinishDispatchAC9AC11AC12/existing-pr
+    episode_finish_m2_test.go:185: scope: github-pr:fixture/repo#remote=https://github.com/fixture/repo.git&head=custom-branch&sha=ccaf6ddea7500e100be8b2d4560a973288344e15&base=dev&title-sha256=85a4aee5185fb02479e6156ccb8d5b3827d2c5b6bad0eb09d554b53d86ab3dd7&body-sha256=a2a9c46dba2793d86c22890e382162de709b4e32ed786c3b85734ab4671bdb86&label=ailang-world&draft=true&create-label=false&expires=1793398437
+        calls: [ls-remote push pr-view]
+=== RUN   TestEpisodeFinishDispatchAC9AC11AC12/ready
+    episode_finish_m2_test.go:185: scope: github-pr:fixture/repo#remote=https://github.com/fixture/repo.git&head=custom-branch&sha=61ff82702ddb260f8ac7abc91a9258b88368fb79&base=dev&title-sha256=85a4aee5185fb02479e6156ccb8d5b3827d2c5b6bad0eb09d554b53d86ab3dd7&body-sha256=8d832f82a73a2b1994be8ad5bf3d4d786d67aa95f4ad9cc23eedf1f39567bcac&label=ailang-world&draft=false&create-label=false&expires=1793398437
+        calls: [ls-remote push pr-view pr-create]
+--- PASS: TestEpisodeFinishDispatchAC9AC11AC12 (0.83s)
+    --- PASS: TestEpisodeFinishDispatchAC9AC11AC12/missing-label (0.27s)
+    --- PASS: TestEpisodeFinishDispatchAC9AC11AC12/existing-pr (0.27s)
+    --- PASS: TestEpisodeFinishDispatchAC9AC11AC12/ready (0.29s)
+=== RUN   TestEpisodeFinishOutcomesAC10
+=== RUN   TestEpisodeFinishOutcomesAC10/push-failed
+    episode_finish_m2_test.go:213: push-failed: [ls-remote push]
+=== RUN   TestEpisodeFinishOutcomesAC10/pr-failed
+    episode_finish_m2_test.go:213: pr-failed: [ls-remote push pr-view pr-create]
+=== RUN   TestEpisodeFinishOutcomesAC10/ambiguous
+    episode_finish_m2_test.go:213: ambiguous: [ls-remote push]
+=== RUN   TestEpisodeFinishOutcomesAC10/diverged
+    episode_finish_m2_test.go:213: push-failed: [ls-remote ancestor]
+--- PASS: TestEpisodeFinishOutcomesAC10 (1.23s)
+    --- PASS: TestEpisodeFinishOutcomesAC10/push-failed (0.32s)
+    --- PASS: TestEpisodeFinishOutcomesAC10/pr-failed (0.30s)
+    --- PASS: TestEpisodeFinishOutcomesAC10/ambiguous (0.29s)
+    --- PASS: TestEpisodeFinishOutcomesAC10/diverged (0.32s)
+=== RUN   TestFinishRepository
+--- PASS: TestFinishRepository (0.00s)
+=== RUN   TestEpisodeFinishProtected
+=== RUN   TestEpisodeFinishProtected/false
+    episode_finish_m2_test.go:304: prompt:
+        repository: fixture/repo
+        branch: custom-branch
+        sha: 46d186983d996aac7e0dcf77c483d2815308abe5
+        base: dev
+        title: World episode ep1
+        body (1239 bytes), first lines:
+        Episode ep1: codex fixture-model working through AILANG World only.
+        
+        ## Checks
+        
+        
+        Commit: 46d186983d996aac7e0dcf77c483d2815308abe5
+        label: ailang-world
+        draft
+        protected paths changed: a_test.go
+        Open this pull request? [y/N] 
+=== RUN   TestEpisodeFinishProtected/true
+--- PASS: TestEpisodeFinishProtected (0.50s)
+    --- PASS: TestEpisodeFinishProtected/false (0.31s)
+    --- PASS: TestEpisodeFinishProtected/true (0.20s)
+=== RUN   TestFinishProductionGHArgv
+--- PASS: TestFinishProductionGHArgv (1.00s)
+=== RUN   TestEpisodeFinishRecordFailureKeepsSession
+--- PASS: TestEpisodeFinishRecordFailureKeepsSession (0.28s)
+=== RUN   TestEpisodeFinishRevokeFailureF10
+--- PASS: TestEpisodeFinishRevokeFailureF10 (0.28s)
+=== RUN   TestEpisodeFinishCredentialsMismatch
+--- PASS: TestEpisodeFinishCredentialsMismatch (0.11s)
+=== RUN   TestEpisodeFinishFenceAC1
+--- PASS: TestEpisodeFinishFenceAC1 (0.15s)
+=== RUN   TestEpisodeFinishValidationAC2
+=== RUN   TestEpisodeFinishValidationAC2/degraded
+=== RUN   TestEpisodeFinishValidationAC2/expired
+=== RUN   TestEpisodeFinishValidationAC2/inflight
+=== RUN   TestEpisodeFinishValidationAC2/unchanged
+=== RUN   TestEpisodeFinishValidationAC2/no-start
+=== RUN   TestEpisodeFinishValidationAC2/preset-mismatch
+=== RUN   TestEpisodeFinishValidationAC2/argv-bound
+=== RUN   TestEpisodeFinishValidationAC2/unknown-allow
+--- PASS: TestEpisodeFinishValidationAC2 (1.10s)
+    --- PASS: TestEpisodeFinishValidationAC2/degraded (0.12s)
+    --- PASS: TestEpisodeFinishValidationAC2/expired (0.12s)
+    --- PASS: TestEpisodeFinishValidationAC2/inflight (0.13s)
+    --- PASS: TestEpisodeFinishValidationAC2/unchanged (0.16s)
+    --- PASS: TestEpisodeFinishValidationAC2/no-start (0.12s)
+    --- PASS: TestEpisodeFinishValidationAC2/preset-mismatch (0.12s)
+    --- PASS: TestEpisodeFinishValidationAC2/argv-bound (0.16s)
+    --- PASS: TestEpisodeFinishValidationAC2/unknown-allow (0.17s)
+=== RUN   TestEpisodeFinishChecksAC3
+=== RUN   TestEpisodeFinishChecksAC3/false
+=== RUN   TestEpisodeFinishChecksAC3/true
+--- PASS: TestEpisodeFinishChecksAC3 (0.47s)
+    --- PASS: TestEpisodeFinishChecksAC3/false (0.18s)
+    --- PASS: TestEpisodeFinishChecksAC3/true (0.29s)
+=== RUN   TestEpisodeFinishUnsandboxedAC4
+=== RUN   TestEpisodeFinishUnsandboxedAC4/n
+=== RUN   TestEpisodeFinishUnsandboxedAC4/y
+--- PASS: TestEpisodeFinishUnsandboxedAC4 (0.44s)
+    --- PASS: TestEpisodeFinishUnsandboxedAC4/n (0.16s)
+    --- PASS: TestEpisodeFinishUnsandboxedAC4/y (0.27s)
+=== RUN   TestEpisodeFinishAttributionCommitDryRunAC5AC6
+    episode_finish_test.go:386: AC5 --dry-run --include-unattributed:
+        commit c313cbd965c87982ed8e8e53bf743fa9894a241b
+        Author: codex via AILANG World <ailang-world@invalid>
+        Date:   Fri Oct 30 22:59:03 2026 +0100
+        
+            World episode ep1
+            
+            codex fixture-model; 4 calls; 0/0 checks passed; 3 files changed.
+            
+            World-Provenance: store=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestEpisodeFinishAttributionCommitDryRunAC5AC63193597809/001/world.db episode=ep1 entries=1-6000
+        
+         a.go    | 1 +
+         b.go    | 1 +
+         gen.txt | 1 +
+         3 files changed, 3 insertions(+)
+        
+        Episode ep1: codex fixture-model working through AILANG World only.
+        
+        ## Checks
+        
+        
+        Commit: c313cbd965c87982ed8e8e53bf743fa9894a241b
+        
+        D-WORLD-60: apply the ailang-world label when opening the PR.
+        
+        ## What the agent did
+        
+        4 calls.
+        
+        Calls by tool:
+        - ailang-read: 2
+        - ailang-cli: 1
+        - workspace-exec: 1
+        
+        Effects by decision:
+        - Ailang.CLI allowed: 1
+        - Workspace.Exec denied:budget: 1
+        - Workspace.Read allowed: 1
+        
+        Plan refusals: 1 (ailang-read 1)
+          #12 ailang-read: missing path
+        Handler refusals: 1 (ailang-cli 1)
+          #15 ailang-cli: fmt write refuses
+        
+        Budgets (used / left):
+        - Workspace.Exec@worktree: 91 / 509
+        
+        ## Files
+        
+        Written:
+        - a.go (write), 1 calls, first entry 12
+        
+        Produced:
+        - gen.txt, 1 calls, first entry 14
+        
+        Evidence gaps: 0 written and 0 produced paths beyond the report cap; 0 nonlocal paths unlisted.
+        Evidence entries beyond the cap: 0 truncated deltas, 0 delta errors.
+        
+        ### Not made through World
+        
+        - b.go
+        
+        Files read: 0 (0 read calls; 0 outside the worktree).
+        
+        World entries 1-6000; walk any of them with ailang-worldd why <entry>.
+        
+        World-Provenance: store=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestEpisodeFinishAttributionCommitDryRunAC5AC63193597809/001/world.db episode=ep1 entries=1-6000
+        
+    episode_finish_test.go:401: AC6 commit message:
+        Fixture finish
+        
+        codex fixture-model; 4 calls; 0/0 checks passed; 3 files changed.
+        
+        World-Provenance: store=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestEpisodeFinishAttributionCommitDryRunAC5AC63193597809/001/world.db episode=ep1 entries=1-6000
+        
+        
+--- PASS: TestEpisodeFinishAttributionCommitDryRunAC5AC6 (0.59s)
+=== RUN   TestEpisodeFinishHelp
+--- PASS: TestEpisodeFinishHelp (0.00s)
+=== RUN   TestFinishSharedScrubVectors
+=== RUN   TestFinishSharedScrubVectors/plain
+=== RUN   TestFinishSharedScrubVectors/bare
+=== RUN   TestFinishSharedScrubVectors/upper
+=== RUN   TestFinishSharedScrubVectors/prefixed
+=== RUN   TestFinishSharedScrubVectors/colon
+=== RUN   TestFinishSharedScrubVectors/65hex
+=== RUN   TestFinishSharedScrubVectors/63hex
+=== RUN   TestFinishSharedScrubVectors/delimited
+=== RUN   TestFinishSharedScrubVectors/colon-then-bare
+=== RUN   TestFinishSharedScrubVectors/bearer
+=== RUN   TestFinishSharedScrubVectors/mixed
+=== RUN   TestFinishSharedScrubVectors/no-space
+--- PASS: TestFinishSharedScrubVectors (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/plain (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/bare (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/upper (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/prefixed (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/colon (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/65hex (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/63hex (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/delimited (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/colon-then-bare (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/bearer (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/mixed (0.00s)
+    --- PASS: TestFinishSharedScrubVectors/no-space (0.00s)
+=== RUN   TestFinishMarkdownOrderCapAndAC5
+    episode_markdown_test.go:65: AC5 report --markdown:
+        Episode ep1: codex fixture-model working through AILANG World only.
+        
+        ## What the agent did
+        
+        4 calls.
+        
+        Calls by tool:
+        - ailang-read: 2
+        - ailang-cli: 1
+        - workspace-exec: 1
+        
+        Effects by decision:
+        - Ailang.CLI allowed: 1
+        - Workspace.Exec denied:budget: 1
+        - Workspace.Read allowed: 1
+        
+        Plan refusals: 1 (ailang-read 1)
+          #12 ailang-read: missing path
+        Handler refusals: 1 (ailang-cli 1)
+          #15 ailang-cli: fmt write refuses
+        
+        Budgets (used / left):
+        - Workspace.Exec@worktree: 91 / 509
+        
+        ## Files
+        
+        Written:
+        - a.go (write), 1 calls, first entry 12
+        
+        Produced:
+        - gen.txt, 1 calls, first entry 14
+        
+        Evidence gaps: 0 written and 0 produced paths beyond the report cap; 0 nonlocal paths unlisted.
+        Evidence entries beyond the cap: 0 truncated deltas, 0 delta errors.
+        
+        Files read: 0 (0 read calls; 0 outside the worktree).
+        
+        World entries 1-6000; walk any of them with ailang-worldd why <entry>.
+        
+        World-Provenance: store=/fixture/world.db episode=ep1 entries=1-6000
+        
+--- PASS: TestFinishMarkdownOrderCapAndAC5 (0.00s)
+=== RUN   TestFinishMarkdownCLIRefusalsLoopback
+--- PASS: TestFinishMarkdownCLIRefusalsLoopback (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	9.307s

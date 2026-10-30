@@ -76,7 +76,7 @@ func TestEpisodeFinishOperatorProofAC11(t *testing.T) {
 			case "expired":
 				proof = finishProofFile(t, d, "approve", time.Now().Unix()-1, 0o600)
 			case "future":
-				proof = finishProofFile(t, d, "approve", time.Now().Unix()+301, 0o600)
+				proof = finishProofFile(t, d, "approve", time.Now().Unix()+3600, 0o600)
 			case "readable":
 				proof = finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o640)
 			case "world-readable":
@@ -159,15 +159,77 @@ func TestEpisodeFinishOperatorProofAC11(t *testing.T) {
 	}
 }
 
+// finishClockAt is far from the wall clock (2033-05-18), so a handler that reads
+// the wall clock instead of d.finishNow refuses every accept arm below (row 236).
+const finishClockAt int64 = 2_000_000_000
+
+func pinFinishClock(d *Daemon, at int64) { d.finishNow = func() int64 { return at } }
+
+func finishScopeAt(expires int64) string {
+	scope, _ := broker.ParseFinishApprovalScope(testFinishScope())
+	scope.ExpiresAt = expires
+	return broker.FormatFinishApprovalScope(scope)
+}
+
+// TestEpisodeFinishScopeExpiry pins the approve phase's scope bound in
+// handleEpisodeFinish at both exact edges: expired is ExpiresAt <= now, too far
+// is ExpiresAt > now+3600. No arm depends on two clock reads sharing a second.
 func TestEpisodeFinishScopeExpiry(t *testing.T) {
 	d := newHandlerDaemon(t)
-	for _, expiry := range []int64{time.Now().Unix() - 1, time.Now().Unix() + 3601} {
-		scope, _ := broker.ParseFinishApprovalScope(testFinishScope())
-		scope.ExpiresAt = expiry
-		proof := finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o600)
-		w := finishRoute(t, d, FinishRequest{Phase: "approve", Scope: broker.FormatFinishApprovalScope(scope)}, proof, "")
-		if w.Code != 403 {
-			t.Fatalf("expiry %d: %d", expiry, w.Code)
+	pinFinishClock(d, finishClockAt)
+	for _, arm := range []struct {
+		offset int64
+		want   int
+	}{{-1, 403}, {0, 403}, {1, 200}, {3600, 200}, {3601, 403}} {
+		proof := finishProofFile(t, d, "approve", finishClockAt+100, 0o600)
+		w := finishRoute(t, d, FinishRequest{Phase: "approve", Scope: finishScopeAt(finishClockAt + arm.offset)}, proof, "")
+		if w.Code != arm.want {
+			t.Fatalf("scope expiry now%+d: %d, want %d: %s", arm.offset, w.Code, arm.want, w.Body.String())
+		}
+	}
+}
+
+// TestEpisodeFinishOperatorProofExpiryBoundary pins consumeOperatorProof's
+// bound: ExpiresAt <= now and ExpiresAt > now+300 are refused.
+func TestEpisodeFinishOperatorProofExpiryBoundary(t *testing.T) {
+	d := newHandlerDaemon(t)
+	pinFinishClock(d, finishClockAt)
+	input := FinishRequest{Phase: "approve", Scope: finishScopeAt(finishClockAt + 900)}
+	for _, arm := range []struct {
+		offset int64
+		want   int
+	}{{-1, 403}, {0, 403}, {1, 200}, {300, 200}, {301, 403}} {
+		proof := finishProofFile(t, d, "approve", finishClockAt+arm.offset, 0o600)
+		if w := finishRoute(t, d, input, proof, ""); w.Code != arm.want {
+			t.Fatalf("proof expiry now%+d: %d, want %d: %s", arm.offset, w.Code, arm.want, w.Body.String())
+		}
+	}
+}
+
+// TestEpisodeFinishRecordRechecksScopeExpiry pins finishDecisionScope's
+// record-time re-check: an approval whose scope has expired by record time, or
+// that names an expiry more than an hour past the record clock, no longer
+// authorizes a record.
+func TestEpisodeFinishRecordRechecksScopeExpiry(t *testing.T) {
+	d := newHandlerDaemon(t)
+	pinFinishClock(d, finishClockAt)
+	proof := finishProofFile(t, d, "approve", finishClockAt+100, 0o600)
+	w := finishRoute(t, d, FinishRequest{Phase: "approve", Scope: finishScopeAt(finishClockAt + 3600)}, proof, "")
+	var approval FinishApproval
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &approval) != nil {
+		t.Fatalf("approve: %d %s", w.Code, w.Body.String())
+	}
+	record := &EpisodeFinish{Episode: "ep1", Branch: "world/ep1", Commit: strings.Repeat("a", 40),
+		Remote: "https://github.com/o/r.git", Approval: approval.Approval, Outcome: "push-failed"}
+	for _, arm := range []struct {
+		clock int64
+		want  int
+	}{{-1, 403}, {0, 200}, {3599, 200}, {3600, 403}} {
+		at := finishClockAt + arm.clock
+		pinFinishClock(d, at)
+		proof := finishProofFile(t, d, "record", at+100, 0o600)
+		if w := finishRoute(t, d, FinishRequest{Phase: "record", Record: record}, proof, ""); w.Code != arm.want {
+			t.Fatalf("record at approve%+d: %d, want %d: %s", arm.clock, w.Code, arm.want, w.Body.String())
 		}
 	}
 }

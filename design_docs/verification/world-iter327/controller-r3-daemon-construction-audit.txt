@@ -1,0 +1,105 @@
+# iteration 327 controller: type-aware audit of every host/daemon.Daemon construction (quorum r2, gpt6-1-sol fix)
+# tool: go/packages + go/types (golang.org/x/tools v0.51.0), Tests: true, pattern ./..., at 4d43d8e3; source follows
+# detects: composite literals whose resolved type is daemon.Daemon (any import alias), new(daemon.Daemon), zero-value var declarations
+## base reading
+host/daemon/binding_test.go:174:8	composite-literal
+host/daemon/binding_test.go:202:8	composite-literal
+host/daemon/daemon.go:784:8	composite-literal
+host/daemon/guarded_chains_test.go:24:9	composite-literal
+host/daemon/guarded_chains_test.go:60:8	composite-literal
+host/daemon/health_exec_tool_status_test.go:80:8	composite-literal
+host/daemon/health_exec_tools_test.go:48:8	composite-literal
+host/daemon/home_service_test.go:41:8	composite-literal
+host/daemon/home_service_test.go:63:8	composite-literal
+host/daemon/startup_budget_test.go:125:8	composite-literal
+host/daemon/startup_budget_test.go:36:8	composite-literal
+packages=108 load-errors=0 constructions=11
+## positive control: scratch host/daemon/zz_w327_auditctl_test.go (package daemon_test, import alias dd) with new(dd.Daemon), var z dd.Daemon, dd.Daemon{}; removed afterwards, git status clean
+host/daemon/zz_w327_auditctl_test.go:5:16	new()
+host/daemon/zz_w327_auditctl_test.go:7:20	zero-value var
+host/daemon/zz_w327_auditctl_test.go:7:45	composite-literal
+packages=109 load-errors=0 constructions=14
+## finish-route reach of the files holding the 10 test literals (grep -ci finish; grep -c 'finishRoute\|/finish')
+binding_test: finish=0 route=0
+guarded_chains_test: finish=0 route=0
+health_exec_tool_status_test: finish=0 route=0
+health_exec_tools_test: finish=0 route=0
+home_service_test: finish=0 route=0
+startup_budget_test: finish=0 route=0
+control episode_finish_test: route=10
+## audit source (/tmp/w327/audit/main.go)
+// daemon-construction audit (iteration 327, controller): every place a value of
+// type host/daemon.Daemon comes into being, resolved by go/types (aliases included).
+package main
+
+import (
+	"fmt"
+	"go/ast"
+	"go/types"
+	"os"
+	"sort"
+
+	"golang.org/x/tools/go/packages"
+)
+
+const target = "github.com/sunholo-data/ailang-world/host/daemon.Daemon"
+
+func isDaemon(t types.Type) bool {
+	if t == nil {
+		return false
+	}
+	n, ok := types.Unalias(t).(*types.Named)
+	return ok && n.Obj().Pkg() != nil && n.Obj().Pkg().Path()+"."+n.Obj().Name() == target
+}
+
+func main() {
+	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo, Tests: true, Dir: os.Args[1]}
+	pkgs, err := packages.Load(cfg, "./...")
+	if err != nil {
+		fmt.Println("LOAD ERROR", err)
+		os.Exit(2)
+	}
+	seen := map[string]bool{}
+	var out []string
+	errs := 0
+	for _, p := range pkgs {
+		errs += len(p.Errors)
+		for _, f := range p.Syntax {
+			ast.Inspect(f, func(n ast.Node) bool {
+				var kind string
+				var pos ast.Node
+				switch x := n.(type) {
+				case *ast.CompositeLit:
+					if isDaemon(p.TypesInfo.TypeOf(x)) {
+						kind, pos = "composite-literal", x
+					}
+				case *ast.CallExpr:
+					if id, ok := x.Fun.(*ast.Ident); ok && id.Name == "new" && len(x.Args) == 1 && isDaemon(p.TypesInfo.TypeOf(x.Args[0])) {
+						kind, pos = "new()", x
+					}
+				case *ast.ValueSpec:
+					if len(x.Values) == 0 {
+						for _, nm := range x.Names {
+							if isDaemon(p.TypesInfo.TypeOf(nm)) {
+								kind, pos = "zero-value var", x
+							}
+						}
+					}
+				}
+				if kind != "" {
+					s := fmt.Sprintf("%s\t%s", p.Fset.Position(pos.Pos()), kind)
+					if !seen[s] {
+						seen[s] = true
+						out = append(out, s)
+					}
+				}
+				return true
+			})
+		}
+	}
+	sort.Strings(out)
+	for _, s := range out {
+		fmt.Println(s)
+	}
+	fmt.Printf("packages=%d load-errors=%d constructions=%d\n", len(pkgs), errs, len(out))
+}

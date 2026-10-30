@@ -1,0 +1,39 @@
+host/daemon/session_self_test.go:34:	row := store.SessionRow{EpisodeID: "mine", ExpiresAt: now + 3600,
+host/daemon/session_self_test.go:78:				r.ExpiresAt = now - 1
+host/daemon/surface_page_test.go:120:		{CredentialID: strings.Repeat("a", 64), EpisodeID: "w188e", GrantsJSON: "[]", CreatedAt: now - 360, ExpiresAt: now + 3600},
+host/daemon/surface_page_test.go:121:		{CredentialID: strings.Repeat("b", 64), EpisodeID: "w-old", GrantsJSON: "[]", CreatedAt: now - 7200, ExpiresAt: now - 1},
+host/daemon/setools_run_e2e_test.go:397:		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: b})
+host/daemon/workspace_test.go:546:	grants := []broker.Capability{{Effect: broker.EffectWorkspaceRead, Scope: broker.WorkspaceScope, ExpiresAt: now + 3600, Budget: 5}}
+host/daemon/episode_start_test.go:28:		[]broker.Capability{{Effect: broker.EffectWorkspaceRead, Scope: "worktree", Budget: 1, ExpiresAt: now + 3600}}, 3600, now, nil, start)
+host/daemon/setools_e2e_test.go:246:		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+host/daemon/workspace_family_test.go:96:	grants := []broker.Capability{{Effect: broker.EffectWorkspaceExec, Scope: broker.WorkspaceScope, ExpiresAt: now + 3600, Budget: 5}}
+host/daemon/home_service_test.go:64:	expired := d.activity.begin("expired", now-1, now)
+host/daemon/home_service_test.go:66:	old := d.activity.begin("idle", now+1000, now-301)
+host/daemon/home_service_test.go:68:	resolver := activityResolver{inner: homeResolver{now + 1000}, activity: &d.activity}
+host/daemon/surface_model_test.go:95:		{CredentialID: strings.Repeat("a", 64), EpisodeID: "w188i", GrantsJSON: "[]", CreatedAt: now - 360, ExpiresAt: now + 3600},
+host/daemon/surface_model_test.go:96:		{CredentialID: strings.Repeat("b", 64), EpisodeID: "w-old", GrantsJSON: "[]", CreatedAt: now - 7200, ExpiresAt: now - 1},
+host/authority/resolver_test.go:77:	ok := resolveNow(t, res, "Bearer "+tok, now+1)
+host/authority/resolver_test.go:121:	b := resolveNow(t, New(st), "Bearer "+tok, now+5)
+host/authority/resolvecontext_test.go:56:		{name: "success", header: "Bearer " + tok, now: now + 1, wantDeny: nil},
+host/authority/mint_test.go:37:	if row.ExpiresAt != now+3600 || row.CreatedAt != now {
+host/authority/mint_test.go:38:		t.Fatalf("row expiry %d / created %d, want %d / %d", row.ExpiresAt, row.CreatedAt, now+3600, now)
+host/authority/mint_test.go:44:	b := resolveNow(t, New(st), "Bearer "+rawToken, now+1)
+host/authority/mint_test.go:210:	out := resolveNow(t, New(st), "Bearer "+tok, now+1)
+cmd/ailang-worldd/demo_test.go:54:	expiry := now + 3600
+cmd/ailang-worldd/demo_test.go:60:		grants[0].ExpiresAt = now - 10
+cmd/ailang-worldd/demo_test.go:67:		mintTime = now - 7200
+cmd/ailang-worldd/demo_test.go:628:		{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 100},
+cmd/ailang-worldd/demo_test.go:629:		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: budget},
+cmd/ailang-worldd/demo_test.go:632:		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+cmd/ailang-worldd/demo_proof_test.go:81:	grants := []broker.Capability{{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 1000}}
+cmd/ailang-worldd/marketing_chrome_test.go:214:		{Effect: "world.apply", Scope: "world", ExpiresAt: now + 7200, Budget: 100},
+cmd/ailang-worldd/marketing_chrome_test.go:215:		{Effect: "Human.Approve", Scope: "worktree", ExpiresAt: now + 7200, Budget: 20},
+cmd/ailang-worldd/marketing_chrome_test.go:218:		grants = append(grants, broker.Capability{Effect: effect, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+cmd/ailang-worldd/session_new_test.go:110:	if len(rows) != 1 || rows[0].EpisodeID != "ep1" || rows[0].ExpiresAt != now+14400 {
+cmd/ailang-worldd/session_new_test.go:122:		if g.Scope != "worktree" || g.Budget != 50 || g.ExpiresAt != now+14400 {
+cmd/ailang-worldd/session_new_test.go:339:	if code := runSessionList([]string{"--db", f.db, "--json", "--episode", "ep1"}, &out, &errw, testMintEnv("", now+999999)); code != exitOK {
+cmd/ailang-worldd/cliwalk_e2e_test.go:111:		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
+cmd/ailang-worldd/quickstart_se_test.go:194:	if res.Success.ExpiresAt != now+3600 {
+cmd/ailang-worldd/quickstart_se_test.go:195:		t.Fatalf("session expiry %d, want %d", res.Success.ExpiresAt, now+3600)
+cmd/ailang-worldd/quickstart_se_test.go:203:	for _, at := range []int64{now, now + 3599} {
+cmd/ailang-worldd/quickstart_se_test.go:208:	for _, at := range []int64{now + 3600, now + 3601} {

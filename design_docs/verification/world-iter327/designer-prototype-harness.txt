@@ -1,0 +1,8 @@
+HF1 fix spin before pin in ScopeExpiry x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	19.972s] sha=d641a586ebd3/d641a586ebd3
+HF1r -race x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	21.682s] sha=d641a586ebd3/d641a586ebd3
+HF2 fix spin@79 (AC11 future, now +3600) x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	19.467s] sha=d641a586ebd3/d641a586ebd3
+HF2r -race x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	21.117s] sha=d641a586ebd3/d641a586ebd3

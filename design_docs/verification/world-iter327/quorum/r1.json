@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-finish-scope-expiry-boundary.md",
+  "iso_ts": "2026-10-30T20:36:12Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.18934199999999998,
+      "tokens_in": 7209,
+      "tokens_out": 11181,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate-2 failure on the closest piece of overlapping machinery. Section 2 cites `coordinator.Config.Now func() int64` — an already-injected clock seam that the daemon itself wires at `daemon.go:836` — as a *precedent* for the new `d.now` field, but never justifies not *reusing* it for the finish route. That is exactly the reuse-vs-new analysis the rubric demands: the doc would add a second, independently pinnable `Now func() int64` inside the same daemon, so finish-route tests and coordinator behavior can be pinned to different notions of 'now' in the same process with no error. 'Here are three precedents' is not the required conflict-surface argument; for coordinators specifically the doc must state why `d.coord.Config.Now` (or a moved/renamed shared seam) is wrong for `:116/:168/:270`, or reuse it.",
+        "catch": "Two verification holes support the same fix: (1) the nil-panic risk claim in section 3 ('None of them does') rests on V13, which only greps `host/daemon/*_test.go` — non-test `\u0026Daemon{` literal construction anywhere else in the repo is unchecked, and the design deliberately ships no nil guard, so any such site reaching the finish route panics at runtime; the stated empirical backstop (full `go test ./...`) was explicitly not run (V10). (2) AC-2 says 'apply every mutant in Section 4' but Section 4 includes TM2, whose row is marked '(rejected design)' — the AC is not executable as written.",
+        "proposed_fix": "Replace the precedent bullets in section 2 with an explicit reuse analysis, e.g.: 'The daemon already injects a clock seam: coordinator.Config.Now func() int64, wired to the wall clock at daemon.go:836. Reusing it for episode_finish.go:116/168/270 was considered and rejected: (i) the finish route executes on the daemon regardless of coordinator state, so borrowing d.coord.Config.Now couples finish-route timing to coordinator configuration; (ii) coordinator.Now and the finish boundary are pinned by disjoint test suites, and a shared seam would let a deadline test silently perturb expiry edges (and vice versa) — one daemon must not contain two mutually driftable clocks; a single unexported d.now, placed next to drainTimeout (daemon.go:441-454), keeps the seam component-local exactly as sessionEnv.now does (session_test.go:29-33), while coordinator.Now remains coordinator-owned.' Add verification row V14: `grep -rn '\u0026Daemon{' --include='*.go' .` (all packages, non-test included) proving every construction site goes through New, or asserting per-site why a literal cannot reach the finish route; and either run the deferred full `go test ./...` locally before handoff or state explicitly that AC-4 makes CI the first full-suite check. Amend AC-2 to 'apply every mutant in Section 4 except TM2'."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.016734000000000002,
+      "tokens_in": 7227,
+      "tokens_out": 228,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The claim that no existing test reaches episode_finish.go:271 is not established by V6. Surviving mutations demonstrate missing detection, not missing execution: tests can execute a condition without asserting its effect. The grep of route-call spellings also does not establish exhaustive call-path coverage. This leaves a stated codebase premise unverified.",
+        "catch": "Section 2 describes T3 as reaching previously unexecuted code, while V6 only demonstrates that the selected existing tests do not kill the expiry-check mutants. Those are different claims.",
+        "proposed_fix": "Replace “which no test reaches today, V6” with “whose expiry-bound mutations survive the existing Finish-selected tests in both packages, V6.” Rename V6 to describe mutation sensitivity rather than reachability. If previously unexecuted code is essential to the rationale, add a verification-log row with coverage or temporary execution instrumentation for the record-phase expiry check, including the exact test selection and observed execution count."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.04134,
+      "tokens_in": 8395,
+      "tokens_out": 388,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In T3 (`TestEpisodeFinishRecordRechecksScopeExpiry`), mutating `d.now` across sequential HTTP requests to `d` could trigger a data race under `-race` if `d` runs background goroutines that also read `d.now`, or if an HTTP handler overlaps with the test's write to `d.now`. Currently `d.now` is only read in `episode_finish.go` synchronously during the request and `pinFinishClock` is called between synchronous requests, which explains why `-race -count=200` (V10) passed, but if future callers read `d.now` from background loops without synchronization, mutating the function pointer directly on `Daemon` in tests will race.",
+        "catch": "In §4 (Mutation table), the row for S1/S2/S3 lists lines `:115`/`:167`/`:269` for `d.now()`, whereas §1 and §2 list `:116`, `:168`, and `:270` (likely due to the removed `time` import shifting line numbers by 1 in the prototype).",
+        "proposed_fix": "Update the S1/S2/S3 row in §4 to note that `:115`/`:167`/`:269` are post-diff line numbers (shifted by 1 from base `:116`/`:168`/`:270` after removing the `\"time\"` import), and document on `Daemon.now` that test mutations via `pinFinishClock` must only occur before or between synchronous handler invocations."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller reproduced the mechanism first-party (aligned harness 20/20 FAIL, control 0/20); seam follows coordinator.Config.Now precedent; production bound unchanged."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: Gate-2 failure on the closest piece of overlapping machinery. Section 2 cites `coordinator.Config.Now func() int64` — an already-injected clock seam that the daemon itself wires at `daemon.go:836` — as a *precedent* for the new `d.now` field, but never justifies not *reusing* it for the finish route. That is exactly the reuse-vs-new analysis the rubric demands: the doc would add a second, independently pinnable `Now func() int64` inside the same daemon, so finish-route tests and coordinator behavior can be pinned to different notions of 'now' in the same process with no error. 'Here are three precedents' is not the required conflict-surface argument; for coordinators specifically the doc must state why `d.coord.Config.Now` (or a moved/renamed shared seam) is wrong for `:116/:168/:270`, or reuse it.",
+      "gpt6-1-sol: The claim that no existing test reaches episode_finish.go:271 is not established by V6. Surviving mutations demonstrate missing detection, not missing execution: tests can execute a condition without asserting its effect. The grep of route-call spellings also does not establish exhaustive call-path coverage. This leaves a stated codebase premise unverified."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.24741599999999997,
+    "total_tokens_in": 22831,
+    "total_tokens_out": 11797
+  }
+}

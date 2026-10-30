@@ -1,0 +1,4 @@
+# command:
+#   go test -race -timeout 1450s ./host/daemon/ -count=1
+# ---- output ----
+ok  	github.com/sunholo-data/ailang-world/host/daemon	524.659s

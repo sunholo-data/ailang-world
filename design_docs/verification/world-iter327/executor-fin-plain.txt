@@ -1,0 +1,33 @@
+# command:
+#   go test -timeout 280s ./host/daemon/ -run ^TestEpisodeFinish -count=1 -v
+# ---- output ----
+=== RUN   TestEpisodeFinishOperatorProofAC11
+=== RUN   TestEpisodeFinishOperatorProofAC11/session
+=== RUN   TestEpisodeFinishOperatorProofAC11/missing
+=== RUN   TestEpisodeFinishOperatorProofAC11/wrong
+=== RUN   TestEpisodeFinishOperatorProofAC11/expired
+=== RUN   TestEpisodeFinishOperatorProofAC11/future
+=== RUN   TestEpisodeFinishOperatorProofAC11/readable
+=== RUN   TestEpisodeFinishOperatorProofAC11/world-readable
+=== RUN   TestEpisodeFinishOperatorProofAC11/symlink
+=== RUN   TestEpisodeFinishOperatorProofAC11/phase
+--- PASS: TestEpisodeFinishOperatorProofAC11 (0.03s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/session (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/missing (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/wrong (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/expired (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/future (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/readable (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/world-readable (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/symlink (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/phase (0.00s)
+=== RUN   TestEpisodeFinishScopeExpiry
+--- PASS: TestEpisodeFinishScopeExpiry (0.01s)
+=== RUN   TestEpisodeFinishOperatorProofExpiryBoundary
+--- PASS: TestEpisodeFinishOperatorProofExpiryBoundary (0.01s)
+=== RUN   TestEpisodeFinishRecordRechecksScopeExpiry
+--- PASS: TestEpisodeFinishRecordRechecksScopeExpiry (0.01s)
+=== RUN   TestEpisodeFinishAuthorizationPrecedesBody
+--- PASS: TestEpisodeFinishAuthorizationPrecedesBody (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.452s

@@ -1,0 +1,14 @@
+## grep -rnE '&Daemon\{|Daemon\{\}' --include='*.go' . | grep -v _test.go
+cmd/ailang-worldd/episode_finish.go:396:		return presetDaemon{}, fmt.Errorf("invalid preset name %q", name)
+cmd/ailang-worldd/episode_finish.go:400:		return presetDaemon{}, err
+cmd/ailang-worldd/episode_finish.go:403:		return presetDaemon{}, err
+cmd/ailang-worldd/episode_finish.go:407:		return presetDaemon{}, err
+cmd/ailang-worldd/episode_finish.go:411:		return presetDaemon{}, err
+cmd/ailang-worldd/episode_finish.go:414:		return presetDaemon{}, fmt.Errorf("invalid preset schema or name")
+host/daemon/daemon.go:784:	d := &Daemon{
+## grep -rnE 'daemon\.Daemon\{|new\(daemon\.Daemon\)|new\(Daemon\)' --include='*.go' . | wc -l
+       0
+## control: grep -rnE 'daemon\.[A-Z][A-Za-z]*\{' --include='*.go' . | wc -l
+      85
+## test literals: grep -rn '&Daemon{' --include='*_test.go' . | wc -l
+      10

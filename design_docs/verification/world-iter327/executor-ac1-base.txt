@@ -1,0 +1,10 @@
+# command:
+#   W=<worktree> H=/tmp/w327x/tools/harness.sh; $H $W host/daemon/episode_finish_test.go 164|79 20 <run> [-race]  (base, before the diff; control SPIN="for time.Now().Nanosecond() > 100_000_000 {}")
+#   shasum -a 256 -c /tmp/w327x/base.sha
+# ---- output ----
+AC1 base plain:    rc=1 PASS=0 FAIL=20 first=[episode_finish_test.go:171: expiry 1793399760: 200] tail=[FAIL] sha=094884e036f7/094884e036f7
+AC1 base race:     rc=1 PASS=0 FAIL=20 first=[episode_finish_test.go:171: expiry 1793399786: 200] tail=[FAIL] sha=094884e036f7/094884e036f7
+AC1 base control:  rc=0 PASS=20 FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	1.963s] sha=094884e036f7/094884e036f7
+AC1b base plain:   rc=1 PASS=0 FAIL=20 first=[episode_finish_test.go:94: 200 {"request":"sha256:eba242effb39fb5748b862ee2b4422ea4e836e3ef7d9a5b23496ed0e492b6c82","approval":"sha256:6099ca36467cb83a874a4cf33131de624c34fb97d59e46f77a191edaf504e15a"}] tail=[FAIL] sha=094884e036f7/094884e036f7
+AC1b base race:    rc=1 PASS=0 FAIL=20 first=[episode_finish_test.go:94: 200 {"request":"sha256:2b6eed343f84d6cdb9de14dadff9bada4df2724ae7bded484b08201c90ec1530","approval":"sha256:ae864bc17a82960ed417bae52cb4b8dda8bcfbb5cbcbd0de019855843da3abce"}] tail=[FAIL] sha=094884e036f7/094884e036f7
+AC1b base control: rc=0 PASS=20 FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	4.174s] sha=094884e036f7/094884e036f7
