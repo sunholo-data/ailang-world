@@ -1727,8 +1727,14 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Retro:**
 1. **Idle cadence:** block report 9 of the run (317, 319–326). Each costs one judge and two CI cycles, and no code. D-WORLD-102 is still the only lever the loop has.
-2. **The CURRENT GOAL line grows by one "Earlier (iteration N)" clause per fire.** It is 5,378 bytes and carries 14 earlier-iteration clauses, each restating the same block report; the log and status archive already hold that history. Instance 1 recorded. Not trimmed here: it is charter prose outside a block report's record scope, and trimming it is a judgement call better made with the next real pick.
+2. **The CURRENT GOAL line grows by one "Earlier (iteration N)" clause per fire.** Before this record it was 5,378 bytes (`wc -c` at `b49ce51a`, newline included) with 14 earlier-iteration clauses; this record's prepend takes it to 5,704 bytes and 15. Each clause restates the same block report, and the log and status archive already hold that history. Instance 1 recorded. Not trimmed here: it is charter prose outside a block report's record scope, and trimming it is a judgement call better made with the next real pick.
 - Harness share 0. No skill edit.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a.
 **Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.
+
+**Record follow-through (iteration 326):** the independent evaluator judged record commit `84e1d94e` on `b49ce51a`: **r1 PASS 97/100, zero blocking** (35/23/25/14). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (46,259 tok, 33 s, 4 tool uses). It re-ran the no-pick premise (5 commits in `39aabca3..b49ce51a`, all 325's; #366's 25 comments all from the loop's account; no open PR; ledger valid, 91 rows, D-WORLD-102 the only OPEN row), dev CI (`b49ce51a` 3/3 success), and the rotation: the 323 stamp in the archive is `cmp`-identical to the one removed, the charter keeps 3 stamps, the charter diff is 4/4 lines, the index gains exactly one line, and there is no auto-close keyword. It took the 29-number upstream sweep and the `6345079873` credit counts from the readings file rather than re-running them.
+- **NB1** (the retro's 5,378-byte GOAL-line figure is the size before this record; after it the line is 5,704 bytes with 15 clauses): confirmed and corrected in retro item 2.
+- **NB2** (the upstream sweep was accepted from the controller's readings): noted. The readings file prints the pattern, `results=29` and both controls, so it can be re-run as written.
+- No r2: one corrected figure.
+
