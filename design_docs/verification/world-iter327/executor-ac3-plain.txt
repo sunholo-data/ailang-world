@@ -1,0 +1,5 @@
+# command:
+#   go vet ./host/daemon/
+#   go test -timeout 880s ./host/daemon/ -count=1
+# ---- output ----
+ok  	github.com/sunholo-data/ailang-world/host/daemon	441.258s

@@ -1,0 +1,220 @@
+# command: go build ./... && go test ./...   (default -timeout 10m per package)
+# ---- output ----
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	262.768s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	118.588s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	14.670s
+ok  	github.com/sunholo-data/ailang-world/host/agui	12.303s
+ok  	github.com/sunholo-data/ailang-world/host/archive	68.661s
+ok  	github.com/sunholo-data/ailang-world/host/authority	3.623s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	7.686s
+--- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (11.60s)
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (4.48s)
+        exec_probe_test.go:714: TIMING ArchiveExecSandbox took 351.6295ms
+        exec_probe_test.go:725: chatty: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 1; stderr \"node:events:505\\n    throw er; // Unhandled 'error' event\\n    ^\\n\\nError: read ECONNRESET\\n    at TCP.onStreamRead (node:internal/stream_base_commons:221:20)\\nEmitted 'error' event on Socket instance at:\\n    at emitErrorNT (node:internal/streams…\"); reverse leg: a listener on 127.0.0.1:60103 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"
+        exec_probe_test.go:729: chatty: arm 6 reports a reverse leg: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 1; stderr "node:events:505\n    throw er; // Unhandled 'error' event\n    ^\n\nError: read ECONNRESET\n    at TCP.onStreamRead (node:internal/stream_base_commons:221:20)\nEmitted 'error' event on Socket instance at:\n    at emitErrorNT (node:internal/streams…"); reverse leg: a listener on 127.0.0.1:60103 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses
+--- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential (65.66s)
+    registry_publish_test.go:1161: AC10(a) re-derived N = 12 production subprocess launch sites in 12 files:
+    registry_publish_test.go:1164:     host/agentrun/agentrun.go:33 exec.CommandContext
+    registry_publish_test.go:1164:     host/archive/archive.go:479 exec.CommandContext
+    registry_publish_test.go:1164:     host/archive/check.go:95 exec.CommandContext
+    registry_publish_test.go:1164:     host/broker/handlers.go:159 exec.CommandContext
+    registry_publish_test.go:1164:     host/capsule/capsule.go:236 exec.CommandContext
+    registry_publish_test.go:1164:     host/checkrun/checkrun.go:60 exec.CommandContext
+    registry_publish_test.go:1164:     host/evidence/proof_producer.go:178 exec.CommandContext
+    registry_publish_test.go:1164:     host/pkgproj/iface.go:171 exec.CommandContext
+    registry_publish_test.go:1164:     host/pkgproj/pkgproj.go:259 exec.Command
+    registry_publish_test.go:1164:     host/replay/replay.go:336 exec.CommandContext
+    registry_publish_test.go:1164:     host/toolprobe/toolprobe.go:43 exec.CommandContext
+    registry_publish_test.go:1164:     host/worktree/worktree.go:138 exec.CommandContext
+    --- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/agentrun/agentrun.go (1.01s)
+        --- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/agentrun/agentrun.go/driver0 (1.01s)
+            registry_publish_test.go:1237: agentrun.Run via the probe: {ExitCode:-1 Reason:timeout}, <nil>
+    --- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/checkrun/checkrun.go (1.00s)
+        --- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential/host/checkrun/checkrun.go/driver0 (1.00s)
+            registry_publish_test.go:1237: checkrun.Run via the probe: {ExitCode:-1 Stdout: Stderr:}, context deadline exceeded
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	514.197s
+ok  	github.com/sunholo-data/ailang-world/host/canon	5.007s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	125.406s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	2.938s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	4.508s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	169.089s
+ailang-worldd: internal error: POST /agui/: failure
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: database is closed
+ailang-worldd: internal error: GET /v1/objects/by-semantic-id/x: host-secret-detail
+ailang-worldd: internal error: GET /workbench: private commit read detail
+ailang-worldd: internal error: GET /workbench: private table detail
+ailang-worldd: internal error: GET /workbench: SECRET approval I/O
+ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+panic: test timed out after 10m0s
+	running tests:
+		TestWorkbenchPacketRosterTestedAndProven (3m54s)
+		TestWorkbenchPacketRosterTestedAndProven/test-record-size (1s)
+
+goroutine 115291 [running]:
+testing.(*M).startAlarm.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2802 +0x2cc
+created by time.goFunc
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/time/sleep.go:215 +0x38
+
+goroutine 1 [chan receive, 3 minutes]:
+testing.(*T).Run(0x5d5800126b48, {0x10117dd62?, 0x2893e0e000a451e0?}, 0x101ae6850)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2109 +0x3bc
+testing.runTests.func1(0x5d5800126b48)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2585 +0x40
+testing.tRunner(0x5d5800126b48, 0x5d580043bc48)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+testing.runTests({0x101177ae5, 0x24}, {0x1011886ca, 0x30}, 0x5d57fffa83a8, {0x101bccf20, 0x130, 0x130}, {0x8080808080802513?, 0x1011583c1?, ...})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2583 +0x3f0
+testing.(*M).Run(0x5d580079cfa0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2443 +0x578
+main.main()
+	_testmain.go:670 +0x80
+
+goroutine 115287 [syscall]:
+syscall.syscalln(0x1009adfc0, {0x5d58021bac68, 0x6, 0x6})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/sys_darwin.go:38 +0x20
+syscall.syscall6(0x10040bcb0?, 0x14aecd5e0?, 0x103d38a00?, 0x90?, 0x5d5800487008?, 0x5d580040bef0?, 0x5d58021bad08?)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/syscall/syscall_darwin.go:407 +0x28
+syscall.wait4(0x5d58021bad38?, 0x1009d689c?, 0x90?, 0x101acd480?)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/syscall/zsyscall_darwin_arm64.go:44 +0x4c
+syscall.Wait4(0x5d5800b00620?, 0x5d58021bad74, 0x5d580040bcb0?, 0x5d5800b005b0?)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/syscall/syscall_bsd.go:144 +0x28
+os.(*Process).pidWait.func1(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec_unix.go:64
+os.ignoringEINTR2[...](...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file_posix.go:273
+os.(*Process).pidWait(0x5d580157c900)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec_unix.go:63 +0x9c
+os.(*Process).wait(0x103d38a00?)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec_unix.go:28 +0x24
+os.(*Process).Wait(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x5d5801880820)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:930 +0x38
+os/exec.(*Cmd).Run(0x5d5801880820)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:632 +0x38
+os/exec.(*Cmd).Output(0x5d5801880820)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:1026 +0xb4
+github.com/sunholo-data/ailang-world/host/daemon.gradeDaemonConfig(_, {_, _, _})
+	/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327/host/daemon/workbench_grade_test.go:65 +0x10c
+github.com/sunholo-data/ailang-world/host/daemon.newGradeDaemon(0x5d58008b06c8, {0x5d58015fce30, 0x1, 0x1})
+	/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327/host/daemon/workbench_grade_test.go:83 +0xc4
+github.com/sunholo-data/ailang-world/host/daemon.TestWorkbenchPacketRosterTestedAndProven.func42(0x5d58008b06c8)
+	/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327/host/daemon/workbench_packet_evidence_test.go:968 +0xa4
+testing.tRunner(0x5d58008b06c8, 0x5d580157c880)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 88588
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+
+goroutine 115288 [IO wait]:
+internal/poll.runtime_pollWait(0x14ab41400, 0x72)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/netpoll.go:351 +0xa0
+internal/poll.(*pollDesc).wait(0x5d58007ed1a0?, 0x5d580082a000?, 0x1)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_poll_runtime.go:84 +0x28
+internal/poll.(*pollDesc).waitRead(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0x5d58007ed1a0, {0x5d580082a000, 0x200, 0x200})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_unix.go:165 +0x234
+os.(*File).read(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file_posix.go:30
+os.(*File).Read(0x5d5800082250, {0x5d580082a000?, 0x5d5800733d08?, 0x0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:144 +0x68
+bytes.(*Buffer).ReadFrom(0x5d580266f830, {0x101af05c8, 0x5d5800082250})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/bytes/buffer.go:229 +0x90
+io.copyBuffer({0x101af07e0, 0x5d580266f830}, {0x101af05c8, 0x5d5800082250}, {0x0, 0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:415 +0x14c
+io.Copy(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:388
+os.genericWriteTo(0x5d5800733e20?, {0x101af07e0?, 0x5d580266f830?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:295 +0x44
+os.(*File).WriteTo(0x0?, {0x101af07e0?, 0x5d580266f830?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:273 +0x5c
+io.copyBuffer({0x101af07e0, 0x5d580266f830}, {0x101af06c0, 0x5d5800082250}, {0x0, 0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:411 +0x98
+io.Copy(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:602 +0x40
+os/exec.(*Cmd).Start.func2(0x0?)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:757 +0x30
+created by os/exec.(*Cmd).Start in goroutine 115287
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:756 +0x6c8
+
+goroutine 115289 [IO wait]:
+internal/poll.runtime_pollWait(0x14ab41c00, 0x72)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/netpoll.go:351 +0xa0
+internal/poll.(*pollDesc).wait(0x5d58007ed260?, 0x5d5800952000?, 0x1)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_poll_runtime.go:84 +0x28
+internal/poll.(*pollDesc).waitRead(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0x5d58007ed260, {0x5d5800952000, 0x8000, 0x8000})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_unix.go:165 +0x234
+os.(*File).read(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file_posix.go:30
+os.(*File).Read(0x5d5800082268, {0x5d5800952000?, 0x14ae50001?, 0x100c9ad60?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:144 +0x68
+io.copyBuffer({0x101af2c40, 0x5d58029b0b40}, {0x101af05c8, 0x5d5800082268}, {0x0, 0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:429 +0x18c
+io.Copy(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:388
+os.genericWriteTo(0x5d58017ea538?, {0x101af2c40?, 0x5d58029b0b40?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:295 +0x44
+os.(*File).WriteTo(0x0?, {0x101af2c40?, 0x5d58029b0b40?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:273 +0x5c
+io.copyBuffer({0x101af2c40, 0x5d58029b0b40}, {0x101af06c0, 0x5d5800082268}, {0x0, 0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:411 +0x98
+io.Copy(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:602 +0x40
+os/exec.(*Cmd).Start.func2(0x0?)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:757 +0x30
+created by os/exec.(*Cmd).Start in goroutine 115287
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:756 +0x6c8
+
+goroutine 88588 [chan receive]:
+testing.(*T).Run(0x5d58008b0008, {0x5d58024fc430?, 0x1012c6068?}, 0x5d580157c880)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2109 +0x3bc
+github.com/sunholo-data/ailang-world/host/daemon.TestWorkbenchPacketRosterTestedAndProven(0x5d58008b0008)
+	/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327/host/daemon/workbench_packet_evidence_test.go:966 +0x1cdc
+testing.tRunner(0x5d58008b0008, 0x101ae6850)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+
+goroutine 115290 [select]:
+os/exec.(*Cmd).watchCtx(0x5d5801880820, 0x5d5800a80460)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:797 +0x74
+created by os/exec.(*Cmd).Start in goroutine 115287
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:783 +0x69c
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	603.261s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	48.078s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	5.634s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	5.229s
+ok  	github.com/sunholo-data/ailang-world/host/pins	5.624s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	77.648s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	4.734s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	4.604s
+ok  	github.com/sunholo-data/ailang-world/host/projection	17.526s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	4.276s
+ok  	github.com/sunholo-data/ailang-world/host/registry	4.411s
+ok  	github.com/sunholo-data/ailang-world/host/replay	84.794s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	10.561s
+ok  	github.com/sunholo-data/ailang-world/host/store	14.712s
+ok  	github.com/sunholo-data/ailang-world/host/surface	4.401s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	4.808s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	5.256s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	98.958s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	440.326s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	5.638s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	18.214s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	176.251s
+FAIL

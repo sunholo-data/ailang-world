@@ -1,0 +1,7 @@
+# command:
+#   harness.sh $W host/daemon/episode_finish_test.go 179|79 20 <run> [-race]  (fixed tree)
+# ---- output ----
+AC1 fix plain:  rc=0 PASS=20 FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	19.754s] sha=b872a38cc091/b872a38cc091
+AC1 fix race:   rc=0 PASS=20 FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	24.013s] sha=b872a38cc091/b872a38cc091
+AC1b fix plain: rc=0 PASS=20 FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	21.272s] sha=b872a38cc091/b872a38cc091
+AC1b fix race:  rc=0 PASS=20 FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	23.039s] sha=b872a38cc091/b872a38cc091

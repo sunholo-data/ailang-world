@@ -1,0 +1,6 @@
+# command:
+#   shasum -a 256 host/daemon/daemon.go host/daemon/episode_finish.go host/daemon/episode_finish_test.go
+# ---- output ----
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+e429375dc3e0b03841d5bef84eafcdc4b718dd324c287c8df8bee30f42e9bf0b  host/daemon/episode_finish.go
+b872a38cc091e250e570d1bba16afa17044c57ff1d9a69cc63484400429b9d67  host/daemon/episode_finish_test.go

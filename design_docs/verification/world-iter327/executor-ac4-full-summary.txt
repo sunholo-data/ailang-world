@@ -1,0 +1,9 @@
+# command: perl -e alarm 2700 bash -c "go build ./... && go test ./..."   (NO -timeout: default 10m per package)
+# result: rc=1 elapsed=606s; go build rc 0; host/daemon FAILED by 10m panic (see executor-ac4-full.txt)
+--- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (11.60s)
+--- FAIL: TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential (65.66s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	514.197s
+panic: test timed out after 10m0s
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	603.261s
+FAIL
