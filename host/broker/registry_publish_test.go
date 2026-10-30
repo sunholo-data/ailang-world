@@ -2678,6 +2678,11 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	}
 }
 
+// probeRunCap bounds one census probe run. The probe is a freshly built
+// binary, and its first exec on macOS can take ~1.7 s (friction 52/55), so a
+// 1 s cap flaked under full-suite load. The cap only matters when exceeded.
+const probeRunCap = 10 * time.Second
+
 func driveAgentrun(t *testing.T, probe string) {
 	t.Helper()
 	dir := t.TempDir()
@@ -2691,14 +2696,14 @@ func driveAgentrun(t *testing.T, probe string) {
 		t.Fatal(err)
 	}
 	defer errout.Close()
-	if r, err := agentrun.Run(boundedTestContext(t), []string{probe}, dir, childenv.Scrubbed(os.Environ()), out, errout, time.Second); err != nil || r.ExitCode != 0 {
+	if r, err := agentrun.Run(boundedTestContext(t), []string{probe}, dir, childenv.Scrubbed(os.Environ()), out, errout, probeRunCap); err != nil || r.ExitCode != 0 {
 		t.Fatalf("agentrun.Run via the probe: %+v, %v", r, err)
 	}
 }
 
 func driveCheckrun(t *testing.T, probe string) {
 	t.Helper()
-	if r, err := checkrun.Run(boundedTestContext(t), []string{probe}, t.TempDir(), time.Second); err != nil || r.ExitCode != 0 {
+	if r, err := checkrun.Run(boundedTestContext(t), []string{probe}, t.TempDir(), probeRunCap); err != nil || r.ExitCode != 0 {
 		t.Fatalf("checkrun.Run via the probe: %+v, %v", r, err)
 	}
 }
