@@ -28,7 +28,37 @@ if [ -e "$env_file" ]; then
 fi
 
 worldd=$(command -v ailang-worldd 2>/dev/null || :)
-[ -n "$worldd" ] || worldd='$HOME/go/bin/ailang-worldd'
+[ -n "$worldd" ] || worldd="$HOME/go/bin/ailang-worldd"
+addr=http://127.0.0.1:7644
+db=$HOME/.ailang/world/world.db
+ws=$HOME/.ailang/world-ws
+sessions=$HOME/.ailang/world/sessions
+record=$HOME/.ailang-world/service.json
+if [ -e "$record" ]; then
+  if [ ! -r "$record" ]; then
+    printf 'note: %s is unreadable; using defaults.\n' "$record" >&2
+  elif ! command -v jq >/dev/null 2>&1; then
+    printf 'note: %s cannot be read without jq; using defaults.\n' "$record" >&2
+  elif jq -e '.schema == "world/service/v1" and .uninstalled != true
+      and (.address | type == "string" and test("^(127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$"))
+      and ([.binary,.store,.workspace] | all(type == "string" and length > 0))' "$record" >/dev/null 2>&1; then
+    worldd=$(jq -r .binary "$record")
+    addr=http://$(jq -r .address "$record")
+    db=$(jq -r .store "$record")
+    ws=$(jq -r .workspace "$record")
+    sessions=$(dirname -- "$db")/sessions
+    printf 'World defaults came from %s.\n' "$record"
+  else
+    printf 'note: %s is invalid or uninstalled (expected world/service/v1 and a loopback address); using defaults.\n' "$record" >&2
+  fi
+fi
+# Escape record data for the double-quoted assignments in the sourced file.
+config_escape() { printf '%s' "$1" | sed 's/[\\$`"]/\\&/g'; }
+worldd=$(config_escape "$worldd")
+addr=$(config_escape "$addr")
+db=$(config_escape "$db")
+ws=$(config_escape "$ws")
+sessions=$(config_escape "$sessions")
 
 mkdir -p "$dir" || world_die "cannot create $dir." "world.env is written there." "check $dir's parent and permissions"
 tmp=$env_file.tmp.$$
@@ -40,12 +70,12 @@ tmp=$env_file.tmp.$$
 
 # The ailang-worldd binary, and the daemon it talks to.
 WORLDD="$worldd"
-WORLD_ADDR="http://127.0.0.1:47330"
+WORLD_ADDR="$addr"
 # World's store, workspace root and session directory (episode start's --db,
 # --workspace-root and --sessions-dir).
-WORLD_DB="\$HOME/.ailang/world/world.db"
-WORLD_WS="\$HOME/.ailang/world-ws"
-WORLD_SESSIONS="\$HOME/.ailang/world/sessions"
+WORLD_DB="$db"
+WORLD_WS="$ws"
+WORLD_SESSIONS="$sessions"
 # Where ailang-worldd hosts init wrote the launchers (bin/claude-world, ...).
 WORLD_HOSTS="\$HOME/.ailang-world/hosts"
 

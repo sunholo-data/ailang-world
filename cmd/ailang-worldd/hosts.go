@@ -22,7 +22,8 @@ bin/claude-world, bin/codex-world, bin/pi-world, hosts.json;
 bin/world-context, bin/world-statusline, claude-plugin/, codex/AGENTS.md,
 codex/hooks.json, pi/world-status.ts. Runtime status caches live under state/.
 Changed files refuse unless --replace; unchanged bytes are a no-op.
-Defaults: --out-dir ~/.ailang-world/hosts; --addr http://127.0.0.1:47330.
+With an installed service, scripts call its stable installed binary path.
+Defaults: --out-dir ~/.ailang-world/hosts; --addr http://127.0.0.1:7644 or service.json's address.
 --pi-mcp-adapter defaults to ~/.pi/agent/npm/node_modules/pi-mcp-adapter;
 its package.json must name pi.extensions. Missing adapters produce a refusing launcher.
 `
@@ -91,7 +92,7 @@ func runHosts(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("hosts init", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	out := fs.String("out-dir", defaultHostsDir(), "output directory")
-	addr := fs.String("addr", "http://127.0.0.1:47330", "World URL")
+	addr := fs.String("addr", defaultServiceAddr(), "World URL")
 	adapterFlag := fs.String("pi-mcp-adapter", defaultPiMCPAdapter(), "pi MCP extension directory")
 	replace := fs.Bool("replace", false, "replace changed files")
 	if code, done := parseVerbFlags(fs, args[1:], hostsHelp, stdout, stderr); done {
@@ -220,6 +221,12 @@ func runHosts(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, "! Codex will ask you to log in: ~/.codex/auth.json does not exist.")
 	} else {
 		return fail(authErr)
+	}
+	if r, ok := homeServiceRecord(); ok {
+		path, _ := os.Executable()
+		if serviceFileHash(path) != serviceFileHash(r.Binary) {
+			fmt.Fprintf(stdout, "! the scripts call the installed World binary %s, not this one (%s)\n", r.Binary, path)
+		}
 	}
 	fmt.Fprintf(stdout, "World hosts ready in %s\n", dir)
 	return exitOK

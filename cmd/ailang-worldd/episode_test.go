@@ -83,6 +83,7 @@ type episodeRun struct {
 }
 
 func newEpisodeRun(t *testing.T) episodeRun {
+	t.Setenv("HOME", t.TempDir())
 	base := t.TempDir()
 	return episodeRun{f: newEpisodeFixture(t), sessions: filepath.Join(base, "sessions"), profiles: filepath.Join(base, "profiles")}
 }

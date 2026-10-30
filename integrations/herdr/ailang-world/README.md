@@ -24,13 +24,15 @@ The plugin uses only `ailang-worldd hosts init`'s launchers, `doctor --quick --j
 
 ## Install
 
-1. Write World's launchers once: `ailang-worldd hosts init --addr http://127.0.0.1:47330`.
+1. Write World's launchers once: `ailang-worldd hosts init`.
 2. The commands are executable in git (mode 755); if a copy lost that, `chmod 755 bin/* test/run.sh`.
 3. Link the plugin into herdr (the operator does this, after review):
    `herdr plugin link /path/to/ailang-world/integrations/herdr/ailang-world`.
 4. Write the config: run the **World: write config** action, or
    `bin/world-config-init --config-dir <the plugin's herdr config directory>`.
-   It writes `world.env` once (0600), prints it and asks you to edit it:
+   It reads defaults from `~/.ailang-world/service.json` when valid and installed,
+   falling back to port 7644 and the home paths. It writes `world.env` once (0600),
+   prints it and asks you to review it:
    - `WORLDD`, `WORLD_ADDR`, `WORLD_DB`, `WORLD_WS`, `WORLD_SESSIONS`, `WORLD_HOSTS`: World's
      binary, daemon address, store, workspace root, session directory and launchers;
    - `WORLD_PROFILE`, `WORLD_TTL`, `WORLD_GRANTS`: the mint's default exec profile, lifetime
