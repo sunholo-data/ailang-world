@@ -423,7 +423,11 @@ func TestEpisodeFinishAttributionCommitDryRunAC5AC6(t *testing.T) {
 	head := strings.TrimSpace(f.gitOutput("-C", f.wt, "rev-parse", "HEAD"))
 	// M3: a re-run after `done` is the finished state, not M1's "already committed" refusal.
 	records, finishPosts := len(f.finishRecords), countRequests(f.requests, "/v1/episodes/ep1/finish")
+	calls, prepares := len(f.seam.calls), f.seam.prepares
 	rc, out, errw = f.run(testMintEnv("", 1), "--include-unattributed")
+	if len(f.seam.calls) != calls || f.seam.prepares != prepares {
+		t.Fatalf("finished rerun called dispatch: calls %d -> %d, prepares %d -> %d", calls, len(f.seam.calls), prepares, f.seam.prepares)
+	}
 	if rc != 0 || !strings.Contains(out, "episode ep1 is already finished: https://github.com/fixture/repo/pull/1") || strings.TrimSpace(f.gitOutput("-C", f.wt, "rev-parse", "HEAD")) != head {
 		t.Fatalf("rerun %d %s %s", rc, out, errw)
 	}

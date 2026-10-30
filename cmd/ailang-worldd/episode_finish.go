@@ -223,7 +223,9 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 			if err != nil || strings.TrimSpace(branchHead) != previous {
 				return fail("the recorded branch moved since finish", "a fix-up must build on the recorded commit", newRound)
 			}
-			if _, err := query("checkout", start.Branch); err != nil {
+			if *dry {
+				fmt.Fprintf(stdout, "would re-attach the fix-up branch %s\n", start.Branch)
+			} else if _, err := query("-c", "core.hooksPath=/dev/null", "checkout", start.Branch); err != nil {
 				return fail(err.Error(), "cannot restore the fix-up branch", newRound)
 			}
 		}

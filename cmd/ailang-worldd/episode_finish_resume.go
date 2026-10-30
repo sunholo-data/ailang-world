@@ -142,13 +142,16 @@ func finishStep(step string) {
 	}
 }
 
+// Test seam for a failure after the credentials store has opened successfully.
+var finishRevokeCredentials = revokeEpisodeCredentials
+
 func finishRevoke(ctx context.Context, credentials, ep string, stdout io.Writer) error {
 	creds, err := store.OpenCredentials(credentials)
 	if err != nil {
 		return err
 	}
 	defer creds.Close()
-	err = revokeEpisodeCredentials(ctx, creds, ep, stdout)
+	err = finishRevokeCredentials(ctx, creds, ep, stdout)
 	if errors.Is(err, errNoEpisodeCredential) {
 		fmt.Fprintln(stdout, "session already closed")
 		return nil
