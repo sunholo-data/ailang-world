@@ -65,8 +65,8 @@ ddb5da67 success attempt=1
 0
 
 ## Directives (allowlisted) on #366 and #313
-[1;33mmission_directives: #366 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 23 comments; the rest are public feedback, never directives)[0m
-[1;33mmission_directives: #313 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-22T01:34:42Z inclusive, 0 new, 0 already processed (of 44 comments; the rest are public feedback, never directives)[0m
+mission_directives: #366 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 23 comments; the rest are public feedback, never directives)
+mission_directives: #313 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-22T01:34:42Z inclusive, 0 new, 0 already processed (of 44 comments; the rest are public feedback, never directives)
 
 ## Decision ledger
 decision ledger valid: 91 rows

@@ -3406,3 +3406,10 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a.
 **Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land. Rotate the log at the next entry.
+
+**Record follow-through (iteration 324):** the independent evaluator judged record commit `e4396284` on `42fdf32a`: **r1 PASS 93/100, zero blocking** (34/24/23/12). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (37,995 tok, 70 s, 7 tool uses). It re-derived the no-pick premise (5 commits since `8b840dd0`, all 323's own; 0 allowlisted comments on #366's 23 or #313's 44; ledger 91 valid with D-WORLD-102 the only OPEN row; `42fdf32a` 3/3), the 29 closed upstream numbers under `bash -c`, the rotation (3 stamps; 321's stamp byte-identical at the archive head; charter diff 4/4; queue untouched) and the 40 live log entries.
+- **NB1** (log names a follow-through that did not exist yet): this paragraph and the landing line close it.
+- **NB2** (the 29 depends on the pattern; the judge's narrower regex found 25, all closed): already labelled a lower bound; no change.
+- **NB3** (raw ANSI colour escapes in the readings file's directive lines): applied, escapes stripped.
+- **NB4** (seven block reports in a row; D-WORLD-102 is the only lever): already Retro 1; it stays in the digest.
+- No r2: the one change is a byte-level clean-up of the evidence file.
