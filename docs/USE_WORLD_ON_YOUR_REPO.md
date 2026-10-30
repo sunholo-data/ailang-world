@@ -65,18 +65,27 @@ out, named on `serve`'s stderr, and every other profile still serves. Adding a p
 
 ## Once per machine session
 
-### 3. Start the daemon (either)
+### 3. Run World
+
+Install the home service once, yourself at a terminal:
 
 ```sh
-ailang-worldd serve --db <world.db> --bind 127.0.0.1:47330 --ailang-bin <interpreter-pin> --workspace-root <workspace-root> --tool-ailang-bin <tool-pin> --exec-sandbox <srt-node_modules>
+ailang-worldd service install
+```
+
+Every client and episode start defaults to the service's address. For a scratch store,
+the other choice is to run serve by hand (either):
+
+```sh
+ailang-worldd serve --db <world.db> --bind 127.0.0.1:7644 --ailang-bin <interpreter-pin> --workspace-root <workspace-root> --tool-ailang-bin <tool-pin> --exec-sandbox <srt-node_modules>
 ```
 
 - `--ailang-bin` and `--tool-ailang-bin` are the two binaries `setup` installed.
 - `--exec-sandbox` names the `node_modules` holding `@anthropic-ai/sandbox-runtime`. With it,
   and with no `--exec-profile`, `serve` loads every `<project>.json` in
   `~/.ailang-world-exec/profiles/` (`--exec-profiles-dir` names another directory).
-- If you run step 5 with no daemon serving, its refusal prints this line with your paths filled
-  in.
+- If you run step 5 with no daemon serving, its refusal names service start when installed,
+  or prints this serve line with your paths filled in.
 
 Leave it running. It serves every episode. You never restart it for a new episode, and minting
 works while it serves (row 189 M1–M3): an episode bound to a profile runs under that profile from
@@ -93,7 +102,7 @@ questions mid-run, so put everything it needs in the file.
 ### 5. Start the episode (you)
 
 ```sh
-ailang-worldd episode start <ep> --repo <dir> --profile <project> --task <task-file> --addr 127.0.0.1:47330
+ailang-worldd episode start <ep> --repo <dir> --profile <project> --task <task-file>
 ```
 
 In the plugin, `/world-start <ep>` prints this line for your repo. If your store or workspace
@@ -118,7 +127,8 @@ It refuses, before any worktree, credential or file exists, when:
 - the daemon on `--addr` is another build, serves another tool binary than this build pins, reads
   another credentials store, or has not loaded the profile's current bytes. The refusal names
   the fix;
-- no daemon is serving. The refusal prints the `serve` line;
+- no daemon is serving. When the service is installed, run `ailang-worldd service start`;
+  otherwise the refusal prints the `serve` line;
 - `<sessions-dir>/<ep>.session` or `<sessions-dir>/<ep>.mcp.json` already exists.
 
 On success it writes the token once to `<sessions-dir>/<ep>.session` (0600) and, for claude, a
@@ -142,9 +152,9 @@ the token from the session file through `WORLD_SESSION`, and no `.mcp.json` is w
 ### 7. Watch (either)
 
 ```sh
-ailang-worldd episode report <ep> --follow --addr 127.0.0.1:47330
-ailang-worldd --addr 127.0.0.1:47330 provenance --episode <ep>
-ailang-worldd --addr 127.0.0.1:47330 why <entry> --json
+ailang-worldd episode report <ep> --follow
+ailang-worldd provenance --episode <ep>
+ailang-worldd why <entry> --json
 ```
 
 `episode report` summarises calls by tool, effect decisions, the budget left on each grant, and
@@ -157,7 +167,7 @@ Run your own tests, lint and review in the worktree, `<workspace-root>/<ep>`. Th
 refusals the agent hit:
 
 ```sh
-ailang-worldd episode report <ep> --json --addr 127.0.0.1:47330
+ailang-worldd episode report <ep> --json
 ```
 
 Plan refusals and handler `ok:false` results are listed there. Check that the agent's summary

@@ -19,7 +19,7 @@ import (
 
 func doctorClass(name string) (string, int) {
 	switch name {
-	case "daemon":
+	case "daemon", "service":
 		return "daemon", 10
 	case "session":
 		return "session", 11

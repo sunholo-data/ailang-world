@@ -20,22 +20,38 @@ from the binary, that is a defect.*
 > docs and in `serve --help` means the subsection. The heading texts are bound by tests, so
 > they keep their numbers.
 
-## Run World as a service (preview)
+## Run World as a service
 
-On macOS, run `ailang-worldd setup` first, then
-`ailang-worldd service install` yourself at a terminal. Review the complete
-plist and paths, then type `y`. The home service uses `127.0.0.1:7644` and
-the existing home store layout. Add the absolute `--exec-sandbox`,
-`--exec-node`, `--exec-profiles-dir`, `--examples-dir`, `--surface-follow` and `--surface-index`
-paths you need to the install command; `service install --help` lists the flags.
+On macOS, install once yourself at a terminal. Review the complete plist and paths,
+then type `y`. The installed binary is `~/.ailang-world/bin/ailang-worldd`;
+put that directory first on PATH. The home service uses `127.0.0.1:7644`.
+Every client verb, `episode start` and `hosts init` defaults to the service's
+address from `~/.ailang-world/service.json`, falling back to 7644 without it.
+Hand `serve` (§1) stays available for scratch stores.
 
-Use `~/.ailang-world/bin/ailang-worldd service status --json` to inspect it.
-`service stop` is attended; stop before publishing transitions as described
-in §9, then use `service start`. Start rotates logs over 10 MiB and asks for
-approval if the plist changed. `service uninstall` is attended and keeps
-the binary, databases, sessions, worktrees and logs. `version --json` reports
-the local binary and pins without contacting a daemon. Upgrade, Linux service
-support and changing existing launchers' addresses come in later milestones.
+These are the operator's commands; upgrade, stop and install ask for your confirmation.
+Replace placeholders with your paths. For why, use the trailer's `store=` path.
+
+```sh
+ailang-worldd setup
+ailang-worldd service install
+ailang-worldd service status --json
+ailang-worldd service upgrade --binary <file>
+ailang-worldd service stop
+ailang-worldd service start
+ailang-worldd hosts init --replace
+ailang-worldd doctor --quick
+ailang-worldd whoami --json
+ailang-worldd why <entry> --expect-store <store= path from the trailer>
+```
+
+Add absolute `--exec-sandbox`, `--exec-node`, `--exec-profiles-dir`,
+`--examples-dir`, `--surface-follow` and `--surface-index` paths to install as
+needed. Stop before publishing transitions (§9), then start again.
+Start rotates logs over 10 MiB and asks for approval if the plist changed.
+Uninstall keeps the binary, databases, sessions, worktrees and logs.
+An upgrade refuses active sessions unless you explicitly pass `--pause`.
+Linux service support is a later milestone.
 
 ## Run your agents through World
 
@@ -43,7 +59,7 @@ World launchers now tell Claude Code, Codex and pi their episode, worktree, sess
 lifetime, remaining grants and tool map. Claude adds a World status segment while
 keeping your user status command; pi adds a footer. Refresh generated files with
 `ailang-worldd hosts init --replace`. Inspect your own session with
-`ailang-worldd --addr http://127.0.0.1:47330 whoami --json` using `WORLD_SESSION`
+`ailang-worldd whoami --json` using `WORLD_SESSION`
 or `whoami --session <file>`; never put a token in argv. This calls the authenticated
 `GET /v1/session/self` endpoint. It reports only the caller's session, with no token
 or credential hash; exit 10 means daemon unavailable and 11 means session invalid.
@@ -53,9 +69,9 @@ With World serving and an approved episode session (see the attended steps below
 generate private launch settings once:
 
 ```bash
-ailang-worldd hosts init --addr http://127.0.0.1:47330
+ailang-worldd hosts init
 export WORLD_SESSION="$(cat /path/to/private/episode.session)"
-ailang-worldd --addr http://127.0.0.1:47330 doctor --db /path/to/world.db \
+ailang-worldd doctor --db /path/to/world.db \
   --session /path/to/private/episode.session --host claude --quick
 ~/.ailang-world/hosts/bin/claude-world
 # Or choose one of:
@@ -231,7 +247,7 @@ restarts or stops a daemon, and it never runs the agent.
   `--exec-episode-project` flag**. If the profile file changes later and the daemon is restarted
   on the new bytes, every exec of that episode refuses, naming both digests: re-mint it. Without
   `--profile` the session holds no `Workspace.Exec` grant.
-- Before the terminal opens it reads `GET /v1/health` on `--addr` (default `127.0.0.1:47330`) and
+- Before the terminal opens it reads `GET /v1/health` on `--addr` (default `127.0.0.1:7644`) and
   refuses a daemon of another build, one serving another tool binary than this build pins, one
   reading another credentials store, or one that has not loaded the profile's current bytes. Two
   builds are the same when their executables have the same sha256, or, failing that, when both

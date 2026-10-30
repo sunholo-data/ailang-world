@@ -13,6 +13,7 @@ import (
 	"math"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -40,8 +41,9 @@ type Model struct {
 
 // NowEdge is the daemon's live facts and Today.
 type NowEdge struct {
-	Live            *LiveCursor `json:"live,omitempty"`
-	LiveUnavailable string      `json:"liveUnavailable,omitempty"`
+	Service         *ModelService `json:"service,omitempty"`
+	Live            *LiveCursor   `json:"live,omitempty"`
+	LiveUnavailable string        `json:"liveUnavailable,omitempty"`
 
 	Health  string `json:"health"`
 	Checked string `json:"checked"` // HH:MM UTC
@@ -54,6 +56,45 @@ type NowEdge struct {
 	// NeedsYou is empty in S1: nothing the daemon reads records a wait on you.
 	NeedsYou []string `json:"needsYou"`
 	Today    Today    `json:"today"`
+}
+
+// ModelService is the running build and the file currently at its stable path.
+type ModelService struct {
+	Build           string `json:"build"`
+	StartedAt       string `json:"startedAt"`
+	Supervisor      string `json:"supervisor"`
+	InstalledSHA256 string `json:"installedSha256,omitempty"`
+	RestartPending  bool   `json:"restartPending"`
+	Line            string `json:"line"`
+	Warn            bool   `json:"warn"`
+}
+
+func modelService(now Now) *ModelService {
+	if now.Build == "" {
+		return nil
+	}
+	shortSHA := func(s string) string {
+		s = strings.TrimPrefix(s, "sha256:")
+		if len(s) > 7 {
+			return s[:7]
+		}
+		return s
+	}
+	s := &ModelService{Build: shortSHA(now.Build), StartedAt: now.StartedAt.UTC().Format(time.RFC3339),
+		Supervisor: now.Supervisor, InstalledSHA256: now.InstalledSHA256,
+		RestartPending: now.InstalledSHA256 != "" && now.InstalledSHA256 != now.Build}
+	age := RelativeTime(now.StartedAt, now.At)
+	switch {
+	case s.RestartPending:
+		s.Line = fmt.Sprintf("World is running build %s (started %s); the installed binary is %s. Run ailang-worldd service upgrade.", s.Build, age, shortSHA(now.InstalledSHA256))
+		s.Warn = true
+	case now.Supervisor == "none":
+		s.Line = "World is not running as a service. It stops when its terminal does. Run ailang-worldd service install."
+		s.Warn = true
+	default:
+		s.Line = fmt.Sprintf("build %s · started %s", s.Build, age)
+	}
+	return s
 }
 
 // LiveCursor is the newest log entry read with the model.
@@ -230,6 +271,7 @@ func BuildModel(ix surface.Index, now Now) Model {
 	m := Model{Schema: ModelSchema, Now: b.now.Format(time.RFC3339), Lanes: []ModelLane{}, Links: []ModelLink{}}
 	m.NowEdge = NowEdge{Live: now.Live, LiveUnavailable: now.LiveUnavailable, Health: "World healthy", Checked: b.now.Format("15:04"), Daemon: "unstamped",
 		Sessions: []ModelSession{}, SessionsUnavailable: now.SessionsUnavailable, NeedsYou: []string{}, Today: b.today()}
+	m.NowEdge.Service = modelService(now)
 	if now.Revision != "" {
 		m.NowEdge.Daemon, m.NowEdge.Clean = short(now.Revision), !now.Modified
 	}

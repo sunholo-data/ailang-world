@@ -16,9 +16,12 @@ const worldToolMap = `Your only file and shell access is World's MCP tools:
 const worldBoundary = "Out of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
 
 // hostsWorlddPath is the ailang-worldd the generated scripts call: the binary
-// running hosts init, symlinks resolved, so they work whether or not it is on
-// the agent's PATH (a bare name read "daemon down" when it was not).
+// installed service path when present, otherwise the running binary with
+// symlinks resolved, so they work independently of the agent's PATH.
 var hostsWorlddPath = func() string {
+	if r, ok := homeServiceRecord(); ok {
+		return r.Binary
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		return "ailang-worldd"
