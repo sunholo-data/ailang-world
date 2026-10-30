@@ -1,0 +1,82 @@
+# World iteration 324 — Gate 0–2 readings (controller, 2026-10-30T08:03:26Z)
+# Every line below was produced by the command printed above it, in this run.
+
+## origin/dev
+$ git rev-parse origin/dev
+42fdf32a95c09df95d56f951d807e9bd92f508d4
+
+## What moved since iteration 323's base (8b840dd0)
+$ git log --format="%h %s" 8b840dd0..origin/dev
+42fdf32a Merge pull request #426 from sunholo-data/mission/world-iter323-landed
+23e34d87 docs(mission): iteration 323 landed — merge CI 3/3 on attempt 1
+bd3dae14 Merge pull request #425 from sunholo-data/mission/world-iter323-record
+6500fd13 docs(mission): iteration 323 — judge r1 PASS 93; NB1 banked, NB3/NB4 applied, NB2 refuted
+f7c68d57 docs(mission): iteration 323 record — rule (d) block report 6 (no pick)
+
+## Row 150 blocker (attended A1) — commit subjects in range
+$ git log --format=%s 8b840dd0..origin/dev | grep -ciE "row ?150|A1\b|marketing"
+0
+$ (control) git log --format=%s 8b840dd0..origin/dev | grep -ciE "iteration|record|merge"
+5
+$ (range size) git log --format=%s 8b840dd0..origin/dev | wc -l
+5
+
+## Row 151 blocker (row 188 N2d + N4a)
+$ git log origin/dev --since=2026-10-01 --format="%h %s" | grep -ciE "N2d|N4a"
+0
+$ (control) ... | grep -ciE "N2c"
+2
+$ git log origin/dev --since=2026-10-01 -i -E --grep="N2d|N4a" --format="%h %s"
+fe9c891e docs(mission): record World iteration 319 — no pick (rule (d) block report 2); release rows wait on attended steps; dev green
+92495b60 docs(mission): record World iteration 317 — no pick (rule (d) block report); row 232 premise re-measured; D-WORLD-102 filed
+be184351 roadmap: all of Mark's agent work through World — goal doc, rows 217-222 NEXT; file D-WORLD-94/95 OPEN
+dc719822 docs(design): w-world-surface-outputs r0 — the front card's outputs, every file type, and work in other programs
+
+## Attended-track rows 217/218/219 tags
+217. **[NEXT
+218. **[NEXT
+219. **[NEXT
+
+## External predicates: every upstream ailang issue/PR number the charter names (all spellings)
+$ grep -oE "(ailang ?#|ailang/(issues|pull)/|upstream (issue )?#)[0-9]+" design_docs/world-mission.md | grep -oE "[0-9]+$" | sort -un
+count=29
+# INSTRUMENT FAILURE on the first run (not a verdict): the controller's shell is zsh, which does not word-split an unquoted $NUMS,
+# so the loop ran ONCE with all 29 numbers in one API path and printed '1843:ERR' / not-closed=1. Re-run under bash -c, same pattern:
+476:closed 477:closed 486:closed 493:closed 498:closed 517:closed 611:closed 633:closed 764:closed 885:closed 941:closed 984:closed 1036:closed 1037:closed 1042:closed 1043:closed 1096:closed 1160:closed 1424:closed 1542:closed 1547:closed 1557:closed 1558:closed 1559:closed 1580:closed 1602:closed 1607:closed 1635:closed 1843:closed 
+not-closed=0
+$ (positive control: row 53 names ailang#941)
+ailang#941
+$ (instrument control: the API reports open issues when they exist) gh issue list -R sunholo-data/ailang --state open --limit 3 --json number --jq length
+3
+
+## Dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+$ gh run list -R sunholo-data/ailang-world --branch dev --workflow CI --limit 5 --json headSha,conclusion,attempt
+42fdf32a success attempt=1
+bd3dae14 success attempt=1
+8b840dd0 success attempt=1
+e15fc11f success attempt=2
+ddb5da67 success attempt=1
+
+## Open PRs (repo)
+0
+
+## Directives (allowlisted) on #366 and #313
+[1;33mmission_directives: #366 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 23 comments; the rest are public feedback, never directives)[0m
+[1;33mmission_directives: #313 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-22T01:34:42Z inclusive, 0 new, 0 already processed (of 44 comments; the rest are public feedback, never directives)[0m
+
+## Decision ledger
+decision ledger valid: 91 rows
+D-WORLD-102	OPEN
+$ (ledger unchanged since 323) git diff 8b840dd0 origin/dev -- design_docs/world-mission.md | grep -c "^[-+]| D-WORLD"
+2
+# = one -/+ pair on D-WORLD-102 only: iteration 323's own evidence-note append. No row changed state.
+
+## Weekly external-issue sweep — iteration 305 ran this week's (0 orphans of 1); re-checked here.
+$ gh issue list -R sunholo-data/ailang-world --state open --limit 200 --json number --jq length
+1
+#366  4 / 49 / 2 / 1
+negative control (fresh literal, not printed): charter count=0

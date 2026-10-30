@@ -3355,3 +3355,54 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: every change is wording, a dashboard line or a banked reading.
 
 **Landing (iteration 323):** PR #425 merged as `bd3dae14`. The PR head `6500fd13` was 3/3 green before the merge, and origin/dev was re-read right before it (`8b840dd0`, MERGEABLE/CLEAN, `--match-head-commit`). The merge tree is byte-identical to the head tree. On the merge, the charter keeps 3 stamps and the ledger is valid at 91 rows. **Merge CI:** `commits/bd3dae14/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green.
+
+## 324 — 2026-10-30 — no pick: rule (d) block report 7; release rows 150/151 still wait on attended steps; no upstream predicate open; dev green at 42fdf32a [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (321 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, this entry, the index row, the dashboard, and `verification/world-iter324/gate1-2-readings.txt`. An independent judge reviews it before merge.
+
+**Pick and why:** none.
+- **Clause map at `42fdf32a`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
+- **What moved since iteration 323:** nothing but 323's own record and landing. `git log 8b840dd0..origin/dev` lists 5 commits (`f7c68d57`, `6500fd13`, merge `bd3dae14` of #425, `23e34d87`, merge `42fdf32a` of #426).
+- **D-WORLD-81 release rows, blockers re-measured this iteration:**
+  - **150** waits only on the attended A1. The controller runs P0 (≤24 h before) and P3 (before pass A) inside the window Mark schedules (orchestration r5 §4.4). Over commit subjects `8b840dd0..42fdf32a`, `grep -ciE 'row ?150|A1\b|marketing'` → **0**; the control `grep -ciE 'iteration|record|merge'` → **5** of 5 commits, so the instrument saw the whole range.
+  - **151** needs row 188's N2d and N4a. `git log origin/dev --since=2026-10-01 --format='%h %s' | grep -ciE 'N2d|N4a'` → **0**; control `N2c` → **2**. The full-message form → **4**: the same four record or design commits iterations 320–323 named (`fe9c891e`, `92495b60`, `be184351`, `dc719822`). None builds either milestone. Rows 217, 218 and 219 are still `[NEXT]` on the attended track, so neither milestone is loop-routable.
+- **Rows 231, 230, 233** are hygiene "below every D-WORLD-81 release row". Rule (d) bars them, and D-WORLD-64's exception covers rows 148–151 only. D-WORLD-102 is OPEN with default B, so this is a block report. Row 235 is hygiene below the release rows too; rule (d) bars it, and it is not in D-WORLD-102's scope.
+- **External predicates re-read** with iteration 323's whole-charter pattern: **29** distinct upstream numbers, **all 29 closed** (`gh api repos/sunholo-data/ailang/issues/<n> --jq .state`). Controls: row 53's `ailang#941` matched, and `gh issue list -R sunholo-data/ailang --state open --limit 3` returned 3. Still a lower bound (bare `#N` not counted). The first run of this check was an instrument failure (see Retro 2); the readings file prints both runs.
+- **Weekly external-issue sweep (Gate 0 step 5):** iteration 305 ran this week's sweep. Re-checked: 1 open issue, #366, the bookkeeping thread (charter 4 / log 49 / status-archive 2 / dashboard 1 before this record). **0 orphans of 1 enumerated.** A fresh negative-control literal read 0 in the charter (not printed).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent). gh `sunholo-voight-kampff`. Billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (23 comments) and 0 on #313 since `2026-10-22T01:34:42Z` (44 comments). Nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 1, verdict "1 crash notice". It is the same 2026-10-22 rc=1 notice `6345079873`, already credited (`grep -c 6345079873 design_docs/world-mission-log.md` → 21 before this entry). Control 107:4 ok. No new notice on #366.
+- Unread inbox: the stapledon iteration-59 `[fyi]`, a fleet iteration-71 report, and a fleet `[harness-resolved]` ticket addressed to the attended track (watermark ghost of #1962). None is a World item. The `mission-world` inbox holds only this loop's claim messages. The iteration-324 claim was sent (`inbox_1793347370348_58cb7988`).
+- `mission_decisions.sh --check`: valid, 91 rows, 1 OPEN (D-WORLD-102). The only ledger diff in `8b840dd0..42fdf32a` is 323's own D-WORLD-102 evidence-note append (one −/+ pair).
+
+**Gate 1:**
+- Local `dev` was 5 behind `origin/dev`, with only untracked residue in the tree, and fast-forwarded to `42fdf32a`. Gate-1 base `42fdf32a95c09df95d56f951d807e9bd92f508d4@2026-10-30T08:02:41Z`.
+- Skill drift: per-file `cmp` of `SKILL.md` and 13 resource files at the resolved symlink target against `origin/dev` in the driver clone: all 14 SAME. Rules read from the resolved target.
+- Dev CI: `commits/42fdf32a/check-runs` → 3, all success. The last five dev CI runs (`42fdf32a`, `bd3dae14`, `8b840dd0`, `e15fc11f`, `ddb5da67`) all read success; `e15fc11f`'s is its attempt-2 re-run (row 235).
+- Open PRs: none. Died-mid-flight traces: no iteration-324 branch or worktree existed before this one. `.wt-world-iter306-r0` is the known residue. The attended scratchpad worktrees belong to the attended track and were left alone.
+
+**Designer / planner / executor:** not spawned. There is no pick, so the routing table has nothing to send them (precedent 257–264, 317, 319–323). No spawn was attempted, so none failed. The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (driver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=42fdf32a95c09df95d56f951d807e9bd92f508d4@2026-10-30T08:05:07Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet`, tokens recorded in the follow-through. Generator ≠ judge: opus controller vs sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150 (attended A1) or 151 (row 188 N2d/N4a absent, measured above).
+- Picking 231, 230, 233 or 235 under rule (d) with D-WORLD-102 unanswered.
+- Re-asking D-WORLD-102. It is the one open decision and the digest carries it; it is not asked again.
+- `ailang mission rotate-log`: this entry makes 40 live entries, which is at the ~40 threshold, not past it. The index row is hand-written as in 317–323. The next iteration that adds an entry should rotate (`--keep 20`, registry pointed at the record worktree per Gate 4).
+
+**Retro:**
+1. **Idle cadence:** block report 7 of the run (317, 319, 320, 321, 322, 323, 324). Each costs one judge and two CI cycles, and no code. D-WORLD-102 is still the only lever the loop has.
+2. **The controller's shell is an instrument too.** The upstream-state loop was written as `for n in $NUMS` and run in this harness's zsh. zsh does not word-split an unquoted variable, so the loop ran once with all 29 numbers in one API path and printed `1843:ERR` / `not-closed=1`. That looks like a real open predicate. Re-run under `bash -c` with the same pattern, all 29 read closed. A `count=29` beside a single result line was the tell. In the same file, zsh's `echo` turned the `\b` in a displayed command into a backspace byte. Both are fixed in the readings file, which prints the failed run beside the corrected one. Instance 1 in this charter; no rule edit. Iteration 323's per-number loop was correct, so it does not need re-checking.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a.
+**Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land. Rotate the log at the next entry.
