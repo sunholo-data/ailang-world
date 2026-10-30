@@ -62,7 +62,14 @@ func runWhoami(addr string, args []string, stdout, stderr io.Writer) int {
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
-		return fail("daemon unavailable", "World did not answer", "start ailang-worldd serve, then retry whoami", 10)
+		r, ok := homeServiceRecord()
+		if !ok {
+			return fail("daemon unavailable", "nothing answered at "+addr+", and no World service is installed (no ~/.ailang-world/service.json)", "ailang-worldd service install (or serve by hand for a scratch store: QUICKSTART §1)", 10)
+		}
+		if serviceAddressMatches(addr, r) {
+			return fail("daemon unavailable", "the World service is not serving at "+addr, "ailang-worldd service start (ailang-worldd service status shows why it stopped)", 10)
+		}
+		return fail("daemon unavailable", "nothing answered at "+addr+" (the World service is at "+r.Address+")", "pass --addr http://"+r.Address+", or start the daemon at "+addr, 10)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusUnauthorized {

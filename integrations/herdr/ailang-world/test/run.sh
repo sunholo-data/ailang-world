@@ -21,6 +21,8 @@ if [ -n "$notexec" ]; then
 fi
 
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/world-herdr-test.XXXXXX") || exit 2
+export HOME="$TMP/home" XDG_CONFIG_HOME="$TMP/xdg"
+mkdir -p "$HOME" "$XDG_CONFIG_HOME"
 # A watcher an action started (case 23) is stopped before the directory goes.
 stop_watchers() {
   for _p in "$TMP"/*/state/world-watch.lock/pid; do
@@ -941,6 +943,30 @@ run world-agent-popup "$T/answers" --workspace myrepo --pane p-1
 check "25 an unknown answer is refused" [ "$CODE" -ne 0 ]
 refute "25 an unknown answer starts nothing" has "$T/herdr.log" "pane split"
 check "25 the refusal is kept in last-error.txt" has "$T/state/last-error.txt" '"9" is not a host this plugin starts.'
+
+# ---------------------------------------------------------------- 26. home service defaults (never the real HOME)
+mkdir -p "$HOME/.ailang-world"
+cat >"$HOME/.ailang-world/service.json" <<EOF
+{"schema":"world/service/v1","address":"127.0.0.1:7999","binary":"$HOME/.ailang-world/bin/ailang-worldd","store":"$HOME/data/world.db","workspace":"$HOME/workspaces"}
+EOF
+"$BIN/world-config-init" --config-dir "$TMP/config-service" >"$TMP/config-out" 2>"$TMP/config-err"
+check "26 service record is named" has "$TMP/config-out" "$HOME/.ailang-world/service.json"
+(
+  . "$TMP/config-service/world.env"
+  [ "$WORLDD" = "$HOME/.ailang-world/bin/ailang-worldd" ] &&
+  [ "$WORLD_ADDR" = http://127.0.0.1:7999 ] &&
+  [ "$WORLD_DB" = "$HOME/data/world.db" ] &&
+  [ "$WORLD_WS" = "$HOME/workspaces" ] &&
+  [ "$WORLD_SESSIONS" = "$HOME/data/sessions" ]
+)
+check "26 service values and sessions path" [ "$?" -eq 0 ]
+rm "$HOME/.ailang-world/service.json"
+"$BIN/world-config-init" --config-dir "$TMP/config-default" >"$TMP/config-out" 2>"$TMP/config-err"
+check "26 absent record uses 7644" has "$TMP/config-default/world.env" 'WORLD_ADDR="http://127.0.0.1:7644"'
+printf '%s\n' '{"schema":"world/service/v1","uninstalled":true,"address":"127.0.0.1:7999"}' >"$HOME/.ailang-world/service.json"
+"$BIN/world-config-init" --config-dir "$TMP/config-uninstalled" >"$TMP/config-out" 2>"$TMP/config-err"
+check "26 uninstalled record uses 7644" has "$TMP/config-uninstalled/world.env" 'WORLD_ADDR="http://127.0.0.1:7644"'
+rm "$HOME/.ailang-world/service.json"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

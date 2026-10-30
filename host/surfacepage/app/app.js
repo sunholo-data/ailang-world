@@ -324,7 +324,12 @@
     return 'Live · up to entry ' + s.cursor + ' · checked ' + s.checked;
   }
 
-  if (typeof module !== 'undefined') module.exports = { splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  function serviceLineHTML(service) {
+    if (!service) return '';
+    return '<div class="nl sub" data-service' + (service.warn ? ' style="color:var(--you)"' : '') + '>' + esc(service.line) + '</div>';
+  }
+
+  if (typeof module !== 'undefined') module.exports = { serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
@@ -492,6 +497,7 @@
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${DOW[now.getUTCDay()]} ${dayOf(D.now)} · ${hm(D.now)}</div></div>
       <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
+      ${serviceLineHTML(ne.service)}
       <div class="nl sub" data-live>${esc(liveStatus(live))}</div>
       ${today}
       ${running}

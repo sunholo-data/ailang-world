@@ -13,7 +13,7 @@ package main
 // and applies no schema. MUT-DOCTOR-OPENS-STORE (store.Open in place of
 // either) is killed by TestDoctorLockProbeCreatesNothing. Pins are hashed,
 // never executed. An optional host --version uses the driven, scrubbed
-// toolprobe site; no other check executes a tool.
+// toolprobe site; the full service check also queries the supervisor through its seam.
 
 import (
 	"context"
@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/pinfetch"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/worktree"
@@ -53,6 +54,7 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
                digests (never executed); stale tarballs and old binaries noted
   daemon       what answers at --addr: a worldd (its store and interpreter),
                a foreign listener, or nothing
+  service      installed service, supervisor and build identity (full pass only)
   store        exists (never created), writer lock held or free, world head
                and transition registry present
   examples     the examples corpus examples-search reads
@@ -63,7 +65,7 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
 Defaults: --db ~/.ailang/world/world.db, --workspace-root ~/.ailang/world-ws,
 the pin directories of 'setup', --examples-dir ~/.ailang/examples.
 --session checks the private token file and reads credentials read-only.
---host runs the host's --version (the only exec doctor does), with a 5 s
+--host runs the host's --version (the only exec in --quick), with a 5 s
 timeout and an empty environment except PATH and HOME, and verifies launch digests.
 --profile resolves commands through its path and checks startup exec tool paths.
 --quick checks only daemon, session and host; healthy checks finish under 2 s.
@@ -115,6 +117,7 @@ type doctorReport struct {
 	execToolStatus map[string]broker.ExecToolStatus
 	execTools      map[string]string
 	credentialsDB  string
+	serviceBuild   daemon.BuildIdentity
 }
 
 func (r *doctorReport) add(mark doctorMark, name, detail, fix string) {
@@ -168,6 +171,9 @@ func runDoctor(addr string, args []string, stdout, stderr io.Writer) int {
 
 	// Named dependency classes always precede the slower machine inventory.
 	healthDB := doctorDaemon(r, addr, *db)
+	if !*quick {
+		doctorService(r, addr)
+	}
 	project := ""
 	if *session != "" {
 		creds := *credsDB
@@ -294,10 +300,18 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
 	c.timeout = doctorProbeTimeout
 	status, body, err := c.do(ctx, http.MethodGet, "/v1/health", nil)
 	if err != nil {
-		r.add(markFail, "daemon", "nothing is listening at "+addr, "start World: ailang-worldd serve --db "+shellQuote(db)+" …")
+		fix := "start World: ailang-worldd serve --db " + shellQuote(db) + " …"
+		if service, ok := homeServiceRecord(); ok && serviceAddressMatches(addr, service) {
+			fix = "ailang-worldd service start"
+			if _, err := os.Stat(service.Plist); os.IsNotExist(err) {
+				fix = "ailang-worldd service install"
+			}
+		}
+		r.add(markFail, "daemon", "nothing is listening at "+addr, fix)
 		return ""
 	}
 	var h struct {
+		Build              daemon.BuildIdentity             `json:"build"`
 		Status             string                           `json:"status"`
 		DaemonVersion      string                           `json:"daemon_version"`
 		DBPath             string                           `json:"db_path"`
@@ -311,6 +325,7 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
 			"stop it, or serve on another --bind and pass --addr")
 		return ""
 	}
+	r.serviceBuild = h.Build
 	r.execTools, r.execToolStatus, r.credentialsDB = h.ExecTools, h.ExecToolStatus, h.CredentialsDB
 	detail := fmt.Sprintf("ailang-worldd %s at %s, store %s", h.DaemonVersion, addr, h.DBPath)
 	if h.InterpreterVersion != "" {
