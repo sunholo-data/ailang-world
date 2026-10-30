@@ -78,7 +78,7 @@ must enable the capability with `serve --run-allow-caps`
 | `Workspace.Exec` | Exec handler (`workspace-exec`): an operator-profiled command under the srt sandbox | Bound with the workspace tools; every call is refused `no exec profile configured` unless `serve` has `--exec-profile` (and `--exec-sandbox`) |
 | `Human.Approve` | Approval-request handler, serialized daemon-wide | Bound by the daemon for every episode (row 172), so an invocation can request approval and mint its decision packet |
 | `FS.Read`, `FS.Write` | Direct file handler, scope = one canonical absolute file path | Library only; no production caller |
-| `Git.Commit`, `Model.Infer`, `Human.PollApproval` | Broker handlers | Library only; not served by the daemon |
+| `Model.Infer`, `Human.PollApproval` | Broker handlers | Library only; not served by the daemon |
 | `Registry.Publish` | Package publish handler | Used only by the attended `world-publish publish` |
 
 When a transition declares an effect the daemon has no handler for, the coordinator refuses it

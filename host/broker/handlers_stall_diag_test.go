@@ -139,9 +139,9 @@ func TestStallDiagnosisAttributesHandlerWindow(t *testing.T) {
 		return nil, fmt.Errorf("stub: %w", ErrHandlerTimeout)
 	})
 	timing := &timingHandler{handler: handler}
-	session, recording := handlerSession(t, EffectGitCommit, scope, timing)
+	session, recording := handlerSession(t, EffectModelInfer, scope, timing)
 	diagnosis := invokeWithStallDiagnosis(t, session, recording, timing,
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("handler stall"))
+		EffectRequest{Effect: EffectModelInfer, Scope: scope, Cost: 2, Now: 1}, []byte("handler stall"))
 	if diagnosis.executeWindow() < 1200*time.Millisecond {
 		t.Fatalf("handler stall was not attributed to Execute: %s", diagnosis)
 	}
@@ -156,14 +156,14 @@ func TestStallDiagnosisAttributesStoreWindow(t *testing.T) {
 		return nil, fmt.Errorf("stub: %w", ErrHandlerTimeout)
 	})
 	timing := &timingHandler{handler: handler}
-	session, recording := handlerSession(t, EffectGitCommit, scope, timing)
+	session, recording := handlerSession(t, EffectModelInfer, scope, timing)
 	recording.onStoreCall = func(op string) {
 		if op == "AppendEffectOutcome" {
 			time.Sleep(1500 * time.Millisecond)
 		}
 	}
 	diagnosis := invokeWithStallDiagnosis(t, session, recording, timing,
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("store stall"))
+		EffectRequest{Effect: EffectModelInfer, Scope: scope, Cost: 2, Now: 1}, []byte("store stall"))
 	if len(diagnosis.storeCalls) == 0 || diagnosis.postHandlerWindow() < 1200*time.Millisecond {
 		t.Fatalf("store stall was not attributed to post-handler work: %s", diagnosis)
 	}
