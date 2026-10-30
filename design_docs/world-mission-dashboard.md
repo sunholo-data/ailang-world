@@ -1,7 +1,7 @@
 # World mission dashboard — iteration 326 (2026-10-30)
 
 - **This fire:** rule (d) block report 9 of the run (317, 319, 320, 321, 322, 323, 324, 325, 326). No pick, no code.
-- **Dev:** green at `b49ce51a` (iteration 325's landing, check-runs 3/3 on attempt 1). This record's merge is checked in the log's landing note.
+- **Dev:** green at `1f861724` (this record's merge, check-runs 3/3 on attempt 1). Before it, `b49ce51a` (iteration 325's landing) was the last merge.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built. It waits on the **attended A1**: the controller runs P0 ≤24 h before and P3 before pass A.
 - **Row 151:** needs row 188 N2d and N4a. Neither is on dev yet; they come after the attended rows 219 → 217 → 218 (all still `[NEXT]`).
