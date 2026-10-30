@@ -38,7 +38,7 @@ func TestHostsInitWritesEveryFile(t *testing.T) {
 	if code, out := hostsInitTest(t, dir); code != 0 {
 		t.Fatalf("%d: %s", code, out)
 	}
-	files := hostFiles(dir, "http://127.0.0.1:47330")
+	files := hostFiles(dir, "http://127.0.0.1:7644")
 	// Independent wire-format assertions protect the measured host flags.
 	wantSettings := "{\"permissions\":{\"deny\":[\"Bash\",\"Edit\",\"Write\",\"Read\",\"Glob\",\"Grep\",\"NotebookEdit\",\"WebFetch\",\"WebSearch\"],\"disableBypassPermissionsMode\":\"disable\"}}\n"
 	var settings map[string]any
@@ -50,13 +50,13 @@ func TestHostsInitWritesEveryFile(t *testing.T) {
 	if string(settingsBytes)+"\n" != wantSettings {
 		t.Fatal("settings bytes differ")
 	}
-	wantCodex := "sandbox_mode = \"read-only\"\napproval_policy = \"never\"\nweb_search = \"disabled\"\n[features]\nhooks = true\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = \"http://127.0.0.1:47330/mcp/\"\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n"
+	wantCodex := "sandbox_mode = \"read-only\"\napproval_policy = \"never\"\nweb_search = \"disabled\"\n[features]\nhooks = true\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = \"http://127.0.0.1:7644/mcp/\"\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n"
 	if string(files["codex/config.toml"]) != wantCodex {
 		t.Fatal("Codex bytes differ")
 	}
 	for name, want := range map[string]string{
-		"claude-world.mcp.json": "{\"mcpServers\":{\"world\":{\"headers\":{\"Authorization\":\"Bearer ${WORLD_SESSION}\"},\"type\":\"http\",\"url\":\"http://127.0.0.1:47330/mcp/\"}}}\n",
-		"pi-world-mcp.json":     "{\"mcpServers\":{\"world\":{\"auth\":\"bearer\",\"bearerTokenEnv\":\"WORLD_SESSION\",\"lifecycle\":\"eager\",\"url\":\"http://127.0.0.1:47330/mcp/\"}}}\n",
+		"claude-world.mcp.json": "{\"mcpServers\":{\"world\":{\"headers\":{\"Authorization\":\"Bearer ${WORLD_SESSION}\"},\"type\":\"http\",\"url\":\"http://127.0.0.1:7644/mcp/\"}}}\n",
+		"pi-world-mcp.json":     "{\"mcpServers\":{\"world\":{\"auth\":\"bearer\",\"bearerTokenEnv\":\"WORLD_SESSION\",\"lifecycle\":\"eager\",\"url\":\"http://127.0.0.1:7644/mcp/\"}}}\n",
 	} {
 		if string(files[name]) != want {
 			t.Errorf("%s bytes: %s", name, files[name])
@@ -70,7 +70,7 @@ func TestHostsInitWritesEveryFile(t *testing.T) {
 	if err := json.Unmarshal(b, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if manifest.Schema != "world/hosts/v1" || manifest.Addr != "http://127.0.0.1:47330" || len(manifest.Files) != len(files) {
+	if manifest.Schema != "world/hosts/v1" || manifest.Addr != "http://127.0.0.1:7644" || len(manifest.Files) != len(files) {
 		t.Fatalf("manifest: %+v", manifest)
 	}
 	for name, want := range files {
@@ -160,7 +160,7 @@ func TestHostsInitRefusesChangedFileWithoutReplace(t *testing.T) {
 		t.Fatalf("replace: %d %s", code, out)
 	}
 	got, _ := os.ReadFile(p)
-	if !bytes.Equal(got, hostFiles(dir, "http://127.0.0.1:47330")["codex/config.toml"]) {
+	if !bytes.Equal(got, hostFiles(dir, "http://127.0.0.1:7644")["codex/config.toml"]) {
 		t.Fatal("replace did not restore config")
 	}
 }

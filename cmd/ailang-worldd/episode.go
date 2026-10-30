@@ -64,7 +64,7 @@ usage: ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--p
            [--task <file>] [--agent claude|codex] [--model <m>] [--ttl 3600]
            [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
            [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
-           [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:47330]
+           [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)]
        ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s]
            (a client verb: see 'ailang-worldd episode report --help')
 
@@ -76,8 +76,9 @@ launch line for its agent. In order:
      executable sha256, or else the same clean vcs revision),
      serves the tool binary this build pins, reads the credentials store this
      mint writes and, with --profile, has loaded that profile with the digest
-     the file has now. No daemon serving: refused, printing the serve line to
-     run (episode start never starts or restarts a daemon);
+     the file has now. No daemon serving: refused, naming service start for
+     the home service or a serve line for a scratch daemon
+     (episode start never starts or restarts a daemon);
   2. session new's own path, unchanged: the /dev/tty fence, a y/N naming the
      worktree (on --branch, default world/<episode>), every grant and the
      profile's project and digest, then the worktree and the mint;
@@ -108,11 +109,11 @@ printed; it lives only in the .session file and the .mcp.json (delete the
   --sessions-dir <dir>  default ~/.ailang/world/sessions
   --exec-profiles-dir <dir>
                         where --profile looks (default ~/.ailang-world-exec/profiles)
-  --addr host:port      the serving daemon (default 127.0.0.1:47330; loopback only)
+  --addr host:port      the serving daemon (default 127.0.0.1:7644 or service.json's address; loopback only)
 `
 
-// defaultEpisodeAddr is the rig daemon's address (w-world-onboarding §3.1).
-const defaultEpisodeAddr = "127.0.0.1:47330"
+// defaultEpisodeAddr is the home service fallback; service.json's address takes precedence.
+const defaultEpisodeAddr = daemon.DefaultBind
 
 // worldMCPServer is the MCP server name every launch uses (arms.py MCP_SERVER).
 const worldMCPServer = "world"
@@ -201,7 +202,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable")
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
 	sessionsDir := fs.String("sessions-dir", defaultSessionsDir(), "where the session file and the MCP config are written")
-	addr := fs.String("addr", defaultEpisodeAddr, "the serving daemon, host:port")
+	addr := fs.String("addr", defaultServiceBind(), "the serving daemon, host:port")
 	positional, err := parseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -291,16 +292,30 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 		return fail("%v", err)
 	}
 	// ...then the daemon (AC3), still before the fence.
+	homeService, isService := homeServiceRecord()
+	isService = isService && serviceAddressMatches(hostPort, homeService)
 	health, err := fetchDaemonHealth(hostPort)
 	if err != nil {
 		var down *daemonUnreachableError
 		if errors.As(err, &down) {
+			if isService {
+				return fail("refusing: the World service is not serving at %s\n  why: %v; episode start reuses a serving daemon and never starts one\n  next: ailang-worldd service start (ailang-worldd service status shows why it stopped)", hostPort, down.err)
+			}
 			return fail("refusing: no daemon is serving on %s (%v). episode start reuses a serving daemon and never starts one: "+
 				"start it in another terminal, then run this again:\n  %s", hostPort, down.err, serveLine(req, hostPort))
 		}
 		return fail("refusing: %v", err)
 	}
-	if err := checkDaemon(health, req, hostPort, episodeSelfBuild()); err != nil {
+	self := episodeSelfBuild()
+	if isService && !daemon.SameBuild(self, health.Build) {
+		installed := serviceFileHash(homeService.Binary)
+		path, _ := os.Executable()
+		if self.ExecutableSHA256 != installed {
+			return fail("refusing: this ailang-worldd (%s, sha %s) is not the installed one (%s)\n  why: episode start requires the daemon's own build, and the World service runs %s\n  next: run %s episode start …, or install this one: %s service upgrade", path, pointerSHA7(self.ExecutableSHA256), pointerSHA7(installed), homeService.Binary, homeService.Binary, path)
+		}
+		return fail("refusing: the World service is running build %s; the installed binary is %s (restart pending)\n  why: the installed file was replaced without a restart\n  next: ailang-worldd service stop, then ailang-worldd service start", pointerSHA7(health.Build.ExecutableSHA256), pointerSHA7(installed))
+	}
+	if err := checkDaemon(health, req, hostPort, self); err != nil {
 		return fail("refusing: %v", err)
 	}
 	if mcpFile != "" {

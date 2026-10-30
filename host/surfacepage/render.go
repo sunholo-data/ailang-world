@@ -20,6 +20,10 @@ var logoSVG string
 
 // Now is the now edge's input, measured by the daemon per request.
 type Now struct {
+	Build           string
+	StartedAt       time.Time
+	Supervisor      string
+	InstalledSHA256 string
 	Live            *LiveCursor
 	LiveUnavailable string
 

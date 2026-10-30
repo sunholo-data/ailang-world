@@ -37,6 +37,7 @@ const (
 	whyScanDefault = 500
 	whyScanMax     = 5000
 	logPageMax     = 500
+	frozenRigPort  = 47_330 // historical trailer recovery, never a default
 )
 
 // ---------------------------------------------------------------------------
@@ -89,8 +90,9 @@ type invRecord struct {
 
 // worldReader is the GET side of the daemon, under one command budget.
 type worldReader struct {
-	ctx context.Context
-	c   *client
+	ctx         context.Context
+	c           *client
+	healthCache *healthInfo
 }
 
 // getJSON decodes a 200 into v; a 404 is (false, nil); anything else errors.
@@ -164,6 +166,9 @@ type healthInfo struct {
 }
 
 func (r worldReader) health() (healthInfo, error) {
+	if r.healthCache != nil {
+		return *r.healthCache, nil
+	}
 	var h healthInfo
 	_, err := r.getJSON("/v1/health", &h)
 	return h, err
@@ -250,7 +255,7 @@ func (r worldReader) scanEntries(from, to int64, reverse bool, max int,
 // why
 // ---------------------------------------------------------------------------
 
-const whyHelp = `usage: ailang-worldd [--addr <url>] why <target> [--scan N] [--json]
+const whyHelp = `usage: ailang-worldd [--addr <url>] why <target> [--scan N] [--json] [--expect-store <path>]
        ailang-worldd [--addr <url>] why --result <file> [--scan N] [--json]
 
 Walks one committed invocation back to its whole provenance chain, checking
@@ -349,6 +354,7 @@ func runWhy(addr string, args []string, stdin io.Reader, stdout, stderr io.Write
 	fs := flag.NewFlagSet("ailang-worldd why", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
+	expectStore := fs.String("expect-store", "", "refuse unless the daemon serves this store (World-Provenance store= path)")
 	resultFile := fs.String("result", "", "a 'call --json-out' output file")
 	scan := fs.Int("scan", whyScanDefault, "entries to scan back from head (max 5000)")
 	asJSON := fs.Bool("json", false, "print the chain as JSON")
@@ -374,6 +380,20 @@ func runWhy(addr string, args []string, stdin io.Reader, stdout, stderr io.Write
 	ctx, cancel := budgetContext(whyBudget)
 	defer cancel()
 	r := worldReader{ctx: ctx, c: newClient(addr)}
+	if *expectStore != "" {
+		h, err := r.health()
+		if err != nil {
+			fmt.Fprintf(stderr, "ailang-worldd why: %v\n", err)
+			return exitUsage
+		}
+		r.healthCache = &h
+		if !sameStorePath(h.DBPath, *expectStore) {
+			return serviceMessage(stderr,
+				fmt.Sprintf("ailang-worldd why: the daemon at %s serves store %s, not %s", addr, h.DBPath, *expectStore),
+				"entry indexes are per store, so the same index in another store is another entry (a World-Provenance trailer names its store as store=<path>)",
+				fmt.Sprintf("pass the --addr of the daemon serving %s (the frozen rig: start it from daemon-cmdline.txt on 127.0.0.1:%d), or drop --expect-store", *expectStore, frozenRigPort), exitUsage)
+		}
+	}
 	e, matchedBy, err := r.locate(t, *scan)
 	if err != nil {
 		if errors.Is(err, errScanExhausted) || errors.Is(err, context.DeadlineExceeded) {

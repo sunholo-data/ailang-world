@@ -172,7 +172,11 @@ const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
 assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'frontHTML',
-  'geometry', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'nextBackoff', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'shortTitle', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+  'geometry', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'nextBackoff', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+
+assert.equal(app.serviceLineHTML(undefined), '');
+assert.equal(app.serviceLineHTML({line:'<build & file>',warn:false}), '<div class="nl sub" data-service>&lt;build &amp; file&gt;</div>');
+assert.equal(app.serviceLineHTML({line:'restart',warn:true}), '<div class="nl sub" data-service style="color:var(--you)">restart</div>');
 
 const bytes = fs.readFileSync('golden');
 const expected = bytes.toString().split('\n\n').slice(0,-1).flatMap(f => f.split('\n').filter(l => l.startsWith('data: ')).map(l => JSON.parse(l.slice(6))));
