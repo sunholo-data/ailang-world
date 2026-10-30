@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 326 | 2026-10-30 | no pick: rule (d) block report 9; release rows 150/151 still wait on attended steps; dev green at b49ce51a [ADMIN] |
 | 325 | 2026-10-30 | no pick: rule (d) block report 8; release rows 150/151 still wait on attended steps; log rotated to 20 live entries; dev green at 39aabca3 [ADMIN] |
 | 324 | 2026-10-30 | no pick: rule (d) block report 7; release rows 150/151 still wait on attended steps; no upstream predicate open; dev green at 42fdf32a [ADMIN] |
 | 323 | 2026-10-30 | no pick: rule (d) block report 6; release rows 150/151 still wait on attended steps; no upstream predicate open; dev green at 8b840dd0 [ADMIN] |
