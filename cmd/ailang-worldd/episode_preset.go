@@ -67,10 +67,11 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	launching := fs.Lookup("launch") != nil && fs.Lookup("launch").Value.String() == "true"
 	headless := fs.Lookup("headless") != nil && fs.Lookup("headless").Value.String() == "true"
 	if launching {
-		if _, err := launchMode(p.Preset, headless); err != nil {
+		if _, _, err := launchMode(p.Preset, headless); err != nil {
 			return fail(err)
 		}
-		if task == "" {
+		mode, _, _ := launchMode(p.Preset, headless)
+		if mode == "headless" && task == "" {
 			return fail(presetRefusal("--launch needs --task", "headless launch runs the pinned task", "add --task <file>"))
 		}
 	}
@@ -117,6 +118,12 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	if launching {
 		if _, err := launchBinary(agent); err != nil {
 			return fail(err)
+		}
+		mode, _, _ := launchMode(p.Preset, headless)
+		if mode == "interactive" {
+			if _, err := launchLauncher(agent, fs.Lookup("hosts-dir").Value.String(), p.Daemon.Addr); err != nil {
+				return fail(err)
+			}
 		}
 		launchDir := filepath.Join(filepath.Dir(p.Daemon.SessionsDir), "launch", ep)
 		if err := validateLaunchDir(launchDir, p.Daemon.WorkspaceRoot, filepath.Join(p.Daemon.WorkspaceRoot, ep), p.Daemon.SessionsDir); err != nil {
@@ -167,6 +174,12 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	mcp := ""
 	if agent == "claude" {
 		mcp = filepath.Join(p.Daemon.SessionsDir, ep+".mcp.json")
+	}
+	if launching {
+		mode, _, _ := launchMode(p.Preset, headless)
+		if mode == "interactive" {
+			mcp = ""
+		}
 	}
 	for _, path := range []string{sessionFile, taskCopy, mcp} {
 		if path == "" {
@@ -289,7 +302,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		return code
 	}
 	if launching {
-		return launchEpisode(ep, name, dir, headless, out, errOut)
+		return launchEpisode(ep, name, dir, headless, out, errOut, fs.Lookup("hosts-dir").Value.String())
 	}
 	taskPath := ""
 	if taskRecord != nil {

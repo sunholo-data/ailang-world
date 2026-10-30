@@ -49,9 +49,13 @@ import (
 
 const episodeHelp = `episode finish <episode> --preset <name>: attended local checks, commit and body; see episode finish --help.
 
-Headless launch (M2):
+Interactive launch (default) and headless launch:
   ailang-worldd episode launch <episode> --preset NAME [--presets-dir D] [--headless]
-  --launch             launch after mint (requires a launch preset and task)
+  --launch             launch after mint (requires a launch preset; --task only with --headless)
+  --hosts-dir D        hosts init output directory for interactive launch
+  ailang-worldd episode start --resume <episode> --preset NAME
+      [--presets-dir D] [--exec-profiles-dir D]
+  Resume re-mints an expired session with the pinned start and a fresh terminal y.
   --headless           select headless mode (on start, requires --launch)
 
 Launch presets:
@@ -86,7 +90,7 @@ launch line for its agent. In order:
   4. for claude, a private 0600 MCP config <sessions-dir>/<episode>.mcp.json,
      then the launch line: the bare claude argv (no native tools, only World's
      MCP tools the grants cover), or for codex the WORLD_SESSION form.
-With --launch it runs the headless agent after mint; otherwise it prints the launch line.
+With --launch it runs the agent after mint; otherwise it prints the launch line.
 It never commits, pushes or opens a PR. The token is never
 printed; it lives only in the .session file and the .mcp.json (delete the
 .mcp.json after the run).
@@ -195,6 +199,8 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	ttl := fs.Int64("ttl", 3600, "session lifetime in seconds")
 	preset := fs.String("preset", "", "launch preset, or se-tools grant set")
 	presetsDir := fs.String("presets-dir", defaultPresetsDir(), "launch presets")
+	resume := fs.String("resume", "", "resume an expired episode")
+	fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
 	launch := fs.Bool("launch", false, "launch after the attended mint")
 	headless := fs.Bool("headless", false, "headless launch; requires --launch")
 	var grantSpecs multiFlag
@@ -208,6 +214,12 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 			fmt.Fprint(stdout, episodeHelp)
 			return exitOK
 		}
+		for _, arg := range args {
+			if arg == "--resume" || strings.HasPrefix(arg, "--resume=") {
+				fmt.Fprintln(stderr, presetRefusal("--resume takes only --preset, --presets-dir and --exec-profiles-dir", "resume reuses the pinned start", "ailang-worldd episode start --resume "+*resume+" --preset "+*preset))
+				return exitUsage
+			}
+		}
 		fmt.Fprint(stderr, episodeHelp)
 		return exitUsage
 	}
@@ -216,6 +228,11 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 		return exitUsage
 	}
 
+	resumeSet := false
+	fs.Visit(func(f *flag.Flag) { resumeSet = resumeSet || f.Name == "resume" })
+	if resumeSet {
+		return runEpisodeResume(fs, positional, *resume, *preset, *presetsDir, *profilesDir, stdout, stderr, env)
+	}
 	if *headless && !*launch {
 		return fail("%v", presetRefusal("--headless requires --launch on episode start", "headless selects a launch mode", "add --launch with a launch preset"))
 	}

@@ -14,6 +14,12 @@ import (
 
 func TestStartLaunchValidatesBeforeFence(t *testing.T) {
 	f := newPresetFixture(t)
+	bin := t.TempDir()
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	if err := os.WriteFile(filepath.Join(bin, "codex"), []byte("#!/bin/sh\nif [ \"$1\" = --version ]; then echo fixture; exit 0; fi\nexit 99\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
 	var p launchPreset
 	_ = json.Unmarshal(f.data, &p)
 	p.Launch = &presetLaunch{Mode: "interactive"}
@@ -23,8 +29,8 @@ func TestStartLaunchValidatesBeforeFence(t *testing.T) {
 	var out, errOut bytes.Buffer
 	beforeRows := f.r.f.rows(t)
 	beforeTrees := presetGit(t, f.r.f, "worktree", "list", "--porcelain")
-	if code := runEpisodeStart(f.args("--task", f.task, "--launch"), &out, &errOut, spyEnv(&opened)); code == 0 ||
-		!strings.Contains(errOut.String(), "interactive launch is not built yet") || opened {
+	if code := runEpisodeStart(f.args("--task", f.task, "--launch", "--hosts-dir", t.TempDir()), &out, &errOut, spyEnv(&opened)); code == 0 ||
+		!strings.Contains(errOut.String(), "hosts init") || opened {
 		t.Fatal(code, opened, errOut.String())
 	}
 	f.r.assertNoSessionFiles(t)

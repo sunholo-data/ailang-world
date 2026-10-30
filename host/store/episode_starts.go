@@ -13,7 +13,8 @@ const episodeStartsSQL = `CREATE TABLE episode_starts (
 )`
 
 // EpisodeStart holds immutable attended mint fields, independent of credentials.
-// Launches is append-only through AppendEpisodeLaunch; mint fields never change.
+// Mint fields never change. Launches and Resumes are append-only, written only
+// by AppendEpisodeLaunch and MintSessionWithResume respectively.
 // It contains no token and has no session-authorized writer.
 type EpisodeStart struct {
 	Schema        string          `json:"schema"`
@@ -31,6 +32,7 @@ type EpisodeStart struct {
 	Task          *StartTask      `json:"task,omitempty"`
 	Checks        []StartCheck    `json:"checks"`
 	TTLS          int64           `json:"ttl_s"`
+	Resumes       []EpisodeResume `json:"resumes,omitempty"`
 	Launches      []EpisodeLaunch `json:"launches,omitempty"`
 }
 type StartPreset struct {
@@ -97,6 +99,9 @@ type EpisodeLaunch struct {
 	TranscriptState  string   `json:"transcript_state"`
 	Host             string   `json:"host"`
 	ArgvRedacted     []string `json:"argv_redacted"`
+	HostSessionID    string   `json:"host_session_id,omitempty"`
+	HostTranscript   string   `json:"host_transcript,omitempty"`
+	TranscriptReason string   `json:"transcript_reason,omitempty"`
 	MCPConfigDeleted *bool    `json:"mcp_config_deleted,omitempty"`
 }
 
@@ -146,4 +151,50 @@ func (c *Credentials) AppendEpisodeLaunch(ctx context.Context, episode string, l
 		return err
 	}
 	return tx.Commit()
+}
+
+type EpisodeResume struct {
+	ResumedFrom      string `json:"resumed_from"`
+	ResumedAt        string `json:"resumed_at"`
+	TTLS             int64  `json:"ttl_s"`
+	PresetFileSHA256 string `json:"preset_file_sha256"`
+}
+
+// MintSessionWithResume atomically mints a credential and appends resume history.
+func (c *Credentials) MintSessionWithResume(ctx context.Context, row SessionRow, resume EpisodeResume) error {
+	if c.lock == nil {
+		return errors.New("store: resume requires the credentials writer lock")
+	}
+	return c.mintSession(ctx, row, nil, &resume)
+}
+
+func appendResume(ctx context.Context, tx *sql.Tx, episode string, resume EpisodeResume) error {
+	var data string
+	if err := tx.QueryRowContext(ctx, "SELECT start_json FROM episode_starts WHERE episode = ?", episode).Scan(&data); err != nil {
+		return err
+	}
+	var row map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(data), &row); err != nil {
+		return err
+	}
+	var entries []json.RawMessage
+	if raw := row["resumes"]; raw != nil {
+		if err := json.Unmarshal(raw, &entries); err != nil {
+			return err
+		}
+	}
+	entry, err := json.Marshal(resume)
+	if err != nil {
+		return err
+	}
+	row["resumes"], err = json.Marshal(append(entries, entry))
+	if err != nil {
+		return err
+	}
+	encoded, err := json.Marshal(row)
+	if err != nil {
+		return err
+	}
+	_, err = tx.ExecContext(ctx, "UPDATE episode_starts SET start_json = ? WHERE episode = ?", string(encoded), episode)
+	return err
 }

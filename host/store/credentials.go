@@ -396,6 +396,10 @@ func (c *Credentials) MintSession(ctx context.Context, row SessionRow) error {
 
 // MintSessionWithStart atomically records the attended start and its credential.
 func (c *Credentials) MintSessionWithStart(ctx context.Context, row SessionRow, start *EpisodeStart) error {
+	return c.mintSession(ctx, row, start, nil)
+}
+
+func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *EpisodeStart, resume *EpisodeResume) error {
 	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
@@ -405,7 +409,7 @@ func (c *Credentials) MintSessionWithStart(ctx context.Context, row SessionRow, 
 	if (row.Project == "") != (row.ProfileDigest == "") {
 		return fmt.Errorf("store: mint session: a profile binding needs both the project and its digest")
 	}
-	if (row.Bound() || start != nil) && c.version < credentialsSchemaVersion {
+	if (row.Bound() || start != nil || resume != nil) && c.version < credentialsSchemaVersion {
 		return &UnboundCredentialsStoreError{Path: c.display}
 	}
 	tx, err := c.db.BeginTx(ctx, nil)
@@ -436,6 +440,11 @@ func (c *Credentials) MintSessionWithStart(ctx context.Context, row SessionRow, 
 		}
 		if _, err := tx.ExecContext(ctx, `INSERT INTO episode_starts (episode, start_json) VALUES (?, ?)`, row.EpisodeID, string(data)); err != nil {
 			return fmt.Errorf("store: mint start: %w", err)
+		}
+	}
+	if resume != nil {
+		if err := appendResume(ctx, tx, row.EpisodeID, *resume); err != nil {
+			return fmt.Errorf("store: mint resume: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {

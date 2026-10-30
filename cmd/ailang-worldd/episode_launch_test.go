@@ -341,8 +341,32 @@ func TestLaunchRefusalsStartNothing(t *testing.T) {
 		{"lock", "pid", func(f *launchFixture) {
 			_ = os.WriteFile(filepath.Join(f.sessions, "ep.launch.lock"), []byte(fmt.Sprint(os.Getpid())), 0o600)
 		}, nil},
-		{"expired", "--branch world/ep", func(f *launchFixture) { f.expired = true }, nil},
-		{"revoked", "--branch world/ep", func(f *launchFixture) { f.revoked = true }, nil},
+		{"expired", "episode start --resume ep --preset p", func(f *launchFixture) {
+			f.expired = true
+			s := f.read()
+			_ = os.Remove(f.creds)
+			c, err := store.OpenCredentials(f.creds)
+			if err != nil {
+				f.t.Fatal(err)
+			}
+			err = c.MintSessionWithStart(presetTestContext(f.t), store.SessionRow{CredentialID: "fixture", EpisodeID: "ep", GrantsJSON: "[]", CreatedAt: 1, ExpiresAt: 2}, s)
+			_ = c.Close()
+			if err != nil {
+				f.t.Fatal(err)
+			}
+		}, nil},
+		{"revoked", "--branch world/ep", func(f *launchFixture) {
+			f.revoked = true
+			c, err := store.OpenCredentials(f.creds)
+			if err != nil {
+				f.t.Fatal(err)
+			}
+			err = c.RevokeSession(presetTestContext(f.t), "fixture")
+			_ = c.Close()
+			if err != nil {
+				f.t.Fatal(err)
+			}
+		}, nil},
 		{"wrong-session", "--branch world/ep", func(f *launchFixture) { f.selfEpisode = "other" }, nil},
 		{"no-start", "has no start record", func(f *launchFixture) { f.missingStart = true }, nil},
 		{"preset-mismatch", "does not match", func(f *launchFixture) { f.rewrite(func(s *store.EpisodeStart) { s.Preset.Name = "other" }) }, nil},
@@ -351,10 +375,20 @@ func TestLaunchRefusalsStartNothing(t *testing.T) {
 		{"task-digest", "digest does not match", func(f *launchFixture) {
 			_ = os.WriteFile(filepath.Join(f.sessions, "ep.task.md"), []byte("tampered"), 0o600)
 		}, nil},
-		{"interactive", "interactive launch is not built yet", func(f *launchFixture) {
+		{"interactive", "interactive launch needs a terminal", func(f *launchFixture) {
+			old := openLaunchTerminal
+			f.t.Cleanup(func() { openLaunchTerminal = old })
+			openLaunchTerminal = func() (*os.File, error) { return nil, fmt.Errorf("fixture no terminal") }
 			f.rewrite(func(s *store.EpisodeStart) { s.Preset.Bytes = `{"launch":{"mode":"interactive"}}` })
 		}, nil},
-		{"default-interactive", "interactive launch is not built yet", func(f *launchFixture) {
+		{"default-interactive", "hosts init", func(f *launchFixture) {
+			old := openLaunchTerminal
+			f.t.Cleanup(func() { openLaunchTerminal = old })
+			tty := filepath.Join(f.t.TempDir(), "tty")
+			openLaunchTerminal = func() (*os.File, error) { return os.OpenFile(tty, os.O_RDWR|os.O_CREATE, 0o600) }
+			f.fake("claude", "")
+			b, _ := os.ReadFile(filepath.Join(f.bin, "claude"))
+			_ = os.WriteFile(filepath.Join(f.bin, "claude"), []byte(strings.Replace(string(b), "#!/bin/sh\n", "#!/bin/sh\nif [ \"$1\" = --version ]; then echo fixture; exit 0; fi\n", 1)), 0o700)
 			f.rewrite(func(s *store.EpisodeStart) { s.Preset.Bytes = "{}" })
 		}, nil},
 		{"binary", "missing from PATH", func(f *launchFixture) { f.t.Setenv("PATH", f.t.TempDir()) }, nil},
@@ -364,7 +398,7 @@ func TestLaunchRefusalsStartNothing(t *testing.T) {
 			f := newLaunchFixture(t, "claude")
 			tc.change(f)
 			before := launchFileSnapshot(t, f.root)
-			if code, _, errOut := f.run(tc.extra...); code == 0 || !strings.Contains(errOut, tc.want) || !strings.Contains(errOut, "why:") || !strings.Contains(errOut, "next:") || strings.Contains(errOut, "--resume") {
+			if code, _, errOut := f.run(tc.extra...); code == 0 || !strings.Contains(errOut, tc.want) || !strings.Contains(errOut, "why:") || !strings.Contains(errOut, "next:") {
 				t.Fatal(code, errOut)
 			}
 			if after := launchFileSnapshot(t, f.root); !reflect.DeepEqual(before, after) {
@@ -407,12 +441,12 @@ func TestLaunchAndStartHelp(t *testing.T) {
 		if code := runEpisode("", []string{verb, "--help"}, &out, &errOut); code != 0 {
 			t.Fatal(code, errOut.String())
 		}
-		for _, flag := range []string{"--preset", "--presets-dir", "--headless"} {
+		for _, flag := range []string{"--preset", "--presets-dir", "--headless", "--hosts-dir"} {
 			if !strings.Contains(out.String(), flag) {
 				t.Fatal("missing flag", flag, out.String())
 			}
 		}
-		if verb == "start" && !strings.Contains(out.String(), "--launch") {
+		if verb == "start" && (!strings.Contains(out.String(), "--launch") || !strings.Contains(out.String(), "--resume")) {
 			t.Fatal(out.String())
 		}
 	}
