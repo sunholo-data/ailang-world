@@ -48,10 +48,15 @@ Gate 2
   only `sunholo-data/ailang#N` / `upstream #N` spellings) found 3 rows: 130, 162, 164. The judge (r1 NB1)
   found rows 53, 77, 78 that this missed.
   SECOND PASS (every queue row; spellings ailang#N, ailang/issues/N, ailang/pull/N, upstream #N,
-  upstream issue #N) -> 15 rows naming 13 distinct issues/PRs:
-    5 53 73 75 77 78 108 130 134 135 136 141 162 164 184  (all 13 closed per gh api .../issues/<n>)
+  upstream issue #N) -> 15 rows naming 13 distinct issues/PRs — STILL SHORT (judge r2 NB1: spaced form).
+  THIRD PASS (adds `ailang ?#N`, `upstream ?#N`; positive control row 53 present) -> at least 18 rows,
+  16 distinct issues/PRs:
+    5 53 73 75 77 78 108 116 118 130 134 135 136 141 162 164 178 184  (all 16 closed per gh api .../issues/<n>)
+  Lower bound: bare `#N` is not counted (ambiguous with World's own PR numbers); rows 156/159 cite bare
+  upstream numbers — 156 is CLOSED, 159 already records its seam delivered (judge r2).
   LANDED/CLOSED/RE-LANDED rows (5, 73, 75, 108, 134, 135, 136, 141, 184): moot.
-  Already recorded: 130 (#1542 merged 2026-10-03), 164 (#1635 merged 2026-10-07).
+  Already recorded: 130 (#1542 merged 2026-10-03), 164 (#1635 merged 2026-10-07), RESOLVED rows 116 (#1424),
+  118 (#1580), 178 (#1843).
   UNRECORDED on live rows:
     row 53  -> #941  CLOSED COMPLETED 2026-10-15T18:12:34Z; closing comment: fix #1824 merged as 514ca3bc3
     row 77  -> #1042 CLOSED NOT_PLANNED 2026-09-13T15:53:23Z; superseded (resolver rewritten, 70e45306)
