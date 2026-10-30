@@ -1,0 +1,11 @@
+# controller AC-4 classification, 2026-10-30T22:11:23Z, HEAD 75d07431, load: 15.87 16.42 14.18
+# go list -deps -test ./host/broker | grep -c host/daemon$ -> 0 (control host/broker -> 1)
+## go test -timeout 900s ./host/broker/ -run '^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$' -count=3 -v
+rc=0 top-level PASS=3 FAIL=0
+ok  	github.com/sunholo-data/ailang-world/host/broker	33.676s
+## go test -timeout 900s ./host/broker/ -run '^TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse$' -count=3 -v
+rc=0 top-level PASS=3 FAIL=0
+ok  	github.com/sunholo-data/ailang-world/host/broker	16.976s
+## host/daemon in the executor's AC-4 `go test ./...` (executor-ac4-full.txt)
+`panic: test timed out after 10m0s` (Go's default package timeout; the gate command carried no -timeout) during TestWorkbenchPacketRosterTestedAndProven, at 603.261 s, with every package of the repo running in parallel at load average ~14-18 from other sessions' go tests. No assertion failed. The same package ON THE FIX, run alone (AC-3, executor-ac3-*.txt): plain `ok` 441 s, -race `ok` 525 s, 0 DATA RACE.
+Verdict: load/timeout, not a regression. host/broker failures: unreachable from this diff (0 deps) and 3/3 PASS alone each. The authoritative full gate is CI on the PR head (Linux, 3 jobs; the race leg passes -timeout 8m per package).
