@@ -3413,3 +3413,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **NB3** (raw ANSI colour escapes in the readings file's directive lines): applied, escapes stripped.
 - **NB4** (seven block reports in a row; D-WORLD-102 is the only lever): already Retro 1; it stays in the digest.
 - No r2: the one change is a byte-level clean-up of the evidence file.
+
+**Landing (iteration 324):** PR #427 merged as `c4386177`. The PR head `bd437ae8` was 3/3 green before the merge, and origin/dev was re-read right before it (`42fdf32a`, MERGEABLE/CLEAN, `--match-head-commit`). The merge tree is byte-identical to the head tree (`3e61fd70`). On the merge, the charter keeps 3 stamps. **Merge CI:** `commits/c4386177/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. The controller's first CI poller had the same zsh word-splitting fault as Retro 2 (`set -- $r` did not split, so it could only end at its deadline); it was stopped and re-run under `bash -c` before any verdict was read.
