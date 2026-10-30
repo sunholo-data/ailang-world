@@ -32,3 +32,15 @@ This file is the controller's banked summary of the judge's returned reports. Th
 
 ## Disposition
 No r3. r2's only finding changes a count's wording; every row it added is already RESOLVED, and no note, ordering or verdict changes.
+
+## r3 — landing follow-through `ace05db9` on merge `e15fc11f`: PASS 88/100, zero blocking
+- Breakdown: correctness 29/35 · evidence 21/25 · integrity 25/25 · clarity 13/15. 84,813 tok, 8 tool uses, 69 s.
+- **Verified by the judge:**
+  - Run 40980017500: attempt 1 race-gate failure in `TestHumanApproveIsSerializedAcrossEpisodes` ("unwrapped probe max = 1, want 2"); attempt 2 green; check-runs 3/3.
+  - The DATA RACE blocks are the `racecontrol` known-positive control.
+  - Tree identity `58cfae0d…`; no prior mention in charter, logs or archive.
+  - The mechanism and candidate are a faithful reading of `concurrencyProbe.Execute` (the serialized arm's first holder is released only by the 200 ms timeout).
+  - The judge's own `-count=5` run passed 5/5.
+  - Charter diff: stamp and one appended row only; 3 stamps; ledger valid; no closing keyword.
+- **Applied:** NB1 (cite the iteration-265 report's earlier, different failure), NB2 (clause-6 is controller-assigned), NB3 (standing rule 5 is the mission-control skill's) and NB4 (the row-232 precedent described without an instance number). NB5 (darwin-only) was already stated.
+

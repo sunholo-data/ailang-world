@@ -1,0 +1,17 @@
+Iteration 322 — merge-commit race red: TestHumanApproveIsSerializedAcrossEpisodes control arm (instance 1)
+
+CI: run 40980017500 (merge e15fc11f), attempt 1 go race gate failure; attempt 2 (gh run rerun --failed) success.
+Failure lines (job 123817474361 log, ANSI-stripped):
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.72s)
+    decisionpacket_daemon_test.go:260: serialized probe max = 1
+    decisionpacket_daemon_test.go:261: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epA:a requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0ac
+    decisionpacket_daemon_test.go:267: unwrapped probe max = 1, want 2
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	379.848s
+
+Tree identity: git rev-parse e15fc11f^{tree} aa66b3ff^{tree} -> both 58cfae0d27b9cf3355bd11a39661e474b800ed80
+
+Local (darwin, hw.ncpu=16, AILANG_BIN=~/.pinned-ailang/ailang, worktree at aa66b3ff):
+  go test -race ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=20 -v   (load ~3): 20 PASS, 0 FAIL, ~0.49 s each; control max = 2 in all 20
+  load_32_30.log (N yes burners, count=30): PASS=30 FAIL=0 control-max-2=30 slowest=0.61s
+  load_128_30.log (N yes burners, count=30): PASS=30 FAIL=0 control-max-2=30 slowest=1.34s
+  load averages observed: ~6.1 (32 burners), ~24.9 (128 burners)
