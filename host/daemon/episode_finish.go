@@ -14,7 +14,6 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -114,7 +113,7 @@ func (d *Daemon) consumeOperatorProof(episode, phase, proof string) error {
 		return fmt.Errorf("operator proof cannot be read")
 	}
 	var p operatorProof
-	now := time.Now().Unix()
+	now := d.finishNow()
 	if json.Unmarshal(data, &p) != nil || p.Phase != phase || p.ExpiresAt <= now || p.ExpiresAt > now+300 {
 		return fmt.Errorf("operator proof phase or expiry is invalid")
 	}
@@ -166,7 +165,7 @@ func (d *Daemon) handleEpisodeFinish(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	if input.Phase == "approve" {
 		scope, err := broker.ParseFinishApprovalScope(input.Scope)
-		now := time.Now().Unix()
+		now := d.finishNow()
 		if err != nil || scope.ExpiresAt <= now || scope.ExpiresAt > now+3600 || input.Record != nil {
 			refuse("operator route: invalid or expired finish scope")
 			return
@@ -273,7 +272,7 @@ func (d *Daemon) finishDecisionScope(ctx context.Context, text string) (broker.F
 		return bad()
 	}
 	scope, err := broker.ParseFinishApprovalScope(request.Scope)
-	now := time.Now().Unix()
+	now := d.finishNow()
 	if err != nil || scope.ExpiresAt <= now || scope.ExpiresAt > now+3600 {
 		return bad()
 	}

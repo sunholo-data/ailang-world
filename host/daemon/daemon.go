@@ -445,6 +445,16 @@ type Daemon struct {
 	// exercised without a ten-second test.
 	drainTimeout time.Duration
 
+	// finishNow is the clock the operator finish route reads (row 236): the
+	// proof expiry, the approve-time scope bound and the record-time
+	// re-check, all in Unix seconds and all under humanMu on the request
+	// path. New always sets it to the wall clock. It is a field so a test can
+	// pin the exact boundary instead of racing two wall-clock reads; a test
+	// may write it only before or between synchronous handler calls. It is
+	// NOT the coordinator's clock (coordinator.Config.Now, wired below): no
+	// finish-route time is ever compared with a coordinator time.
+	finishNow func() int64
+
 	// readDeadline bounds every store read a GET handler performs. New always
 	// sets it from the readDeadline constant; it is a field rather than a
 	// direct constant reference for the same two reasons drainTimeout is —
@@ -787,7 +797,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		cfg:       cfg, store: s, bootstrap: registry.Bootstrap, reads: s, intents: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
-		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
+		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog), finishNow: func() int64 { return time.Now().Unix() },
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
