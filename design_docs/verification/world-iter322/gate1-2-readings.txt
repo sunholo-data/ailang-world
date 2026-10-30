@@ -6,7 +6,7 @@ Gate 0
 - mission_directives.sh --issue 366: 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z
   inclusive, 0 new, 0 already processed (of 21 comments). Nothing to mark.
 - mission_gate0_self_notices.sh: rc=1, verdict "1 crash notice" = the same 2026-10-22 rc=1 notice on #313
-  (issuecomment-6345079873); already credited — grep -c in world-mission-log.md = 19 before this entry.
+  (issuecomment-6345079873); already credited — grep -c 6345079873 world-mission-log.md = 19 before this entry.
   Control issue=107 expect=4 got=4 ok. No new notice on #366 (21 comments, 0 crash).
 - unread inbox: controlplane "pinned source clone drifted (99 behind)" (driver notice; this fire ran pinned,
   AILANG_DRIVER_AGE=0) and two mission-fleet items about pi:provider-error:no-retry (stapledon's ticket,
@@ -35,7 +35,7 @@ Gate 1
 Gate 2
 - clause map: 1–7 MET; no UNMET clause; no critical-path row.
 - row 150: waits on the attended A1 (P0/P3 by the controller inside Mark's window). Commit subjects
-  33f0561a..ddb5da67 mentioning row 150 / A1 / marketing -> 0 (control "iteration|record" -> 3, i.e. the
+  33f0561a..ddb5da67, grep -ciE 'row ?150|A1\b|marketing' -> 0 (control "iteration|record" -> 3, i.e. the
   instrument sees all 3 commits).
 - row 151: needs row 188 N2d + N4a. git log origin/dev --since=2026-10-01 --format='%h %s' |
   grep -ciE 'N2d|N4a' -> 0; control N2c -> 2. Full-message form (--grep, -i -E 'N2d|N4a') -> 4, the same
@@ -43,19 +43,26 @@ Gate 2
   either milestone. Rows 217/218/219 still [NEXT] attended-track.
 - rows 231 -> 230 -> 233: hygiene below every D-WORLD-81 release row; rule (d) (D-WORLD-46) bars them;
   D-WORLD-102 OPEN, default B -> block report.
-- external-predicate re-read (gate-2 "a blocked thing is exactly the thing nobody re-measures"): every
-  queue row that names a sunholo-data/ailang issue (3 rows) re-read with gh:
-    row 130 -> #1542 MERGED 2026-10-03 (already recorded: HARNESS-RESOLVED iteration 285)
-    row 164 -> #1635 MERGED 2026-10-07 (already recorded: RESOLVED BY FLEET)
+- external-predicate re-read (gate-2 "a blocked thing is exactly the thing nobody re-measures"):
+  FIRST PASS (controller, incomplete — no positive control; tag filter NEXT|PARKED|BACKLOG|GATED|IN|HARNESS and
+  only `sunholo-data/ailang#N` / `upstream #N` spellings) found 3 rows: 130, 162, 164. The judge (r1 NB1)
+  found rows 53, 77, 78 that this missed.
+  SECOND PASS (every queue row; spellings ailang#N, ailang/issues/N, ailang/pull/N, upstream #N,
+  upstream issue #N) -> 15 rows naming 13 distinct issues/PRs:
+    5 53 73 75 77 78 108 130 134 135 136 141 162 164 184  (all 13 closed per gh api .../issues/<n>)
+  LANDED/CLOSED/RE-LANDED rows (5, 73, 75, 108, 134, 135, 136, 141, 184): moot.
+  Already recorded: 130 (#1542 merged 2026-10-03), 164 (#1635 merged 2026-10-07).
+  UNRECORDED on live rows:
+    row 53  -> #941  CLOSED COMPLETED 2026-10-15T18:12:34Z; closing comment: fix #1824 merged as 514ca3bc3
+    row 77  -> #1042 CLOSED NOT_PLANNED 2026-09-13T15:53:23Z; superseded (resolver rewritten, 70e45306)
+    row 78  -> #1043 CLOSED COMPLETED 2026-10-03T08:35:45Z; triage comment: eec86ca4f (PR #1377)
     row 162 -> #1607 CLOSED 2026-10-09T07:43:49Z by be6ca8b43 (#1704, M-PKG-REGISTRY-CONFINEMENT;
-               design c3bfb1c07 #1667). NOT recorded anywhere in the charter, log or archive (grep 1607:
-               charter 2 hits, both the row-141/162 text; archive 1, the iteration-238 stamp). The fix is
-               in tag v0.53.1 onward (git tag --contains be6ca8b43 -> v0.53.1, v0.53.2, ...); World's tool
-               pin is v0.54.15, so the pinned tool carries it.
-  Disposition: row 162 was "gated on nothing" — #1607 was one of three options ("or wait for #1607"), not
-  its blocker — so the flip does not change its ordering. It stays PARKED-unranked and rule (d) bars it.
-  Its premise was measured on v0.52.1 (row 141 design V13) and must be re-measured on the pinned tool
-  before anyone designs it. Recorded on the row with this date.
+               design c3bfb1c07 #1667). git tag --contains be6ca8b43 -> v0.53.1, v0.53.2, ...; World's
+               tool pin is v0.54.15, so the pinned tool carries it.
+  Disposition: dated notes on rows 53, 77, 78, 162; no ordering changes (53 already left the routable list;
+  77/78 are fleet-owned harness halves, not re-measured here; 162 was "gated on nothing" — #1607 was one of
+  three options — stays PARKED-unranked under rule (d); its v0.52.1 V13 premise must be re-measured on the
+  pinned tool before design).
 - role resolver (driver env): designer recipe claude:claude-opus-5-5; planner agent-tool opus; executor
   recipe claude:claude-haiku-5-5; evaluator agent-tool sonnet; MISSION_OVER_RATION=codex. Only the
   evaluator is spawned (no pick).

@@ -12,7 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 322 | 2026-10-30 | no pick: rule (d) block report 5; release rows 150/151 still wait on attended steps; row 162's upstream #1607 found closed and recorded [ADMIN] |
+| 322 | 2026-10-30 | no pick: rule (d) block report 5; release rows 150/151 still wait on attended steps; four live rows' closed upstream issues recorded (53, 77, 78, 162) [ADMIN] |
 | 321 | 2026-10-29 | no pick: rule (d) block report 4; release rows 150/151 still wait on attended steps; dev green at 33f0561a [ADMIN] |
 | 320 | 2026-10-29 | rule (d) block report 3, then dev went red under the record → row 234: requireF15's "134" substring check replaced by a structural predicate; judge PASS 91 [PRODUCT] |
 | 319 | 2026-10-29 | no pick: rule (d) block report 2; release rows 150/151 still wait on attended steps; dev green with row 232's fix (the dc24fccf red predates it) [ADMIN] |

@@ -3214,9 +3214,9 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: the fix adds evidence wording; nothing scored changed.
 - Report: `design_docs/verification/world-iter321/evaluator-r1.md`.
 
-## 322 — 2026-10-30 — no pick: rule (d) block report 5; release rows 150/151 still wait on attended steps; row 162's upstream #1607 found closed and recorded [ADMIN]
+## 322 — 2026-10-30 — no pick: rule (d) block report 5; release rows 150/151 still wait on attended steps; four live rows' closed upstream issues recorded (53, 77, 78, 162) [ADMIN]
 
-**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (319 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, a dated predicate note on row 162, this entry, the index row, the dashboard, and `verification/world-iter322/gate1-2-readings.txt`. An independent judge reviews it before merge.
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (319 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, dated predicate notes on rows 53, 77, 78 and 162, this entry, the index row, the dashboard, and `verification/world-iter322/gate1-2-readings.txt`. An independent judge reviews it before merge.
 
 **Pick and why:** none.
 - **Clause map at `ddb5da67`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
@@ -3225,16 +3225,23 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
   - **150** waits only on the attended A1. The controller runs P0 (≤24 h before) and P3 (before pass A) inside the window Mark schedules (orchestration r5 §4.4). Over commit subjects `33f0561a..ddb5da67`, `grep -ciE 'row ?150|A1\b|marketing'` → **0**; the control `grep -ciE 'iteration|record'` → **3**, so the instrument saw every commit in the range.
   - **151** needs row 188's N2d and N4a. `git log origin/dev --since=2026-10-01 --format='%h %s' | grep -ciE 'N2d|N4a'` → **0**; control `N2c` → **2**. The full-message form (`git log origin/dev --since=2026-10-01 -i -E --grep='N2d|N4a'`) → **4**: the same four record or design commits iterations 320 and 321 named (`fe9c891e`, `92495b60`, `be184351`, `dc719822`). None builds either milestone. Rows 217, 218 and 219 are still `[NEXT]` on the attended track, so neither milestone is loop-routable.
 - **Rows 231, 230, 233** are hygiene "below every D-WORLD-81 release row". Rule (d) bars them, and D-WORLD-64's exception covers rows 148–151 only. D-WORLD-102 is OPEN with default B, so this is a block report.
-- **External predicates re-read.** Gate 2 says to re-read the predicate of every row that waits on an outside party, not only the row being picked. Three queue rows name a `sunholo-data/ailang` issue:
-  - Row 130 → #1542, merged 2026-10-03. Already recorded (HARNESS-RESOLVED, iteration 285).
-  - Row 164 → #1635, merged 2026-10-07. Already recorded (RESOLVED BY FLEET).
-  - **Row 162 → #1607, CLOSED 2026-10-09T07:43:49Z by `be6ca8b43`** (#1704, M-PKG-REGISTRY-CONFINEMENT; design `c3bfb1c07`, #1667). Nothing in the charter, log or archive recorded this; `1607` appears only in the iteration-238 text that filed the row. `git tag --contains be6ca8b43` starts at v0.53.1, and World's tool pin is v0.54.15, so the pinned tool carries the fix.
-  - **Disposition for 162:** the row's own text says "gated on nothing". #1607 was one of three options ("or wait for #1607"), not a blocker, so the closure does not change the row's order. It stays PARKED-unranked and barred by rule (d). Its premise (V13) was measured on v0.52.1 and is now unverified on the pinned tool. The row now carries a dated note saying to re-measure V13 before designing.
+- **External predicates re-read.** Gate 2 says to re-read the predicate of every row that waits on an outside party, not only the row being picked.
+  - **First pass (controller, incomplete):** it found three rows naming a `sunholo-data/ailang` issue: 130, 162 and 164. The enumerator kept only rows whose tag was one of NEXT/PARKED/BACKLOG/GATED/IN/HARNESS, and it matched only `sunholo-data/ailang#N` or `upstream #N`. It had no positive control. The judge found rows 53, 77 and 78, which it had missed.
+  - **Second pass:** every queue row, matching `ailang#N`, `ailang/issues/N`, `ailang/pull/N`, `upstream #N` and `upstream issue #N`. It found **15 rows naming 13 distinct issues or PRs: 5, 53, 73, 75, 77, 78, 108, 130, 134, 135, 136, 141, 162, 164, 184. All 13 are closed** (`gh api repos/sunholo-data/ailang/issues/<n>`). On rows tagged LANDED, CLOSED or RE-LANDED (5, 73, 75, 108, 134, 135, 136, 141, 184) the closure changes nothing. Rows 130 and 164 already recorded it.
+  - **Four live rows had not recorded the closure:**
+    - **Row 53** (`[ROUTED — WORLD-SIDE COMPLETE … TRACKING #941]`). #941 closed COMPLETED 2026-10-15T18:12:34Z. The closing comment says the salvage fix is #1824, merged as `514ca3bc3` (fleet iterations 36/41). World had no further move, so nothing re-enters the routable list.
+    - **Row 77.** Its code half is #1042, closed NOT_PLANNED 2026-09-13 as superseded: the resolver was rewritten as a pin passthrough (`70e45306`).
+    - **Row 78.** Its code half is #1043, closed COMPLETED 2026-10-03. The triage comment says `eec86ca4f` (PR #1377) wires both `-e` extensions into `mission_pi_run.sh`.
+    - **Row 162 → #1607, CLOSED 2026-10-09T07:43:49Z by `be6ca8b43`** (#1704, M-PKG-REGISTRY-CONFINEMENT; design `c3bfb1c07`, #1667). Before this record, `1607` appeared only in the charter's row-141 and row-162 text and the iteration-238 archive stamp. `git tag --contains be6ca8b43` starts at v0.53.1, and World's tool pin is v0.54.15, so the pinned tool carries the fix.
+  - **Disposition:** each of the four rows now carries a dated note giving the closing reference. No ordering changes:
+    - 53 had already left the routable list.
+    - 77 and 78 are fleet-owned harness halves. They were not re-measured here, because that is outside this loop's authority.
+    - 162 says "gated on nothing": #1607 was one of three options ("or wait for #1607"), not a blocker. It stays PARKED-unranked and barred by rule (d). Its V13 premise was measured on v0.52.1, and its note says to re-measure V13 on the pinned tool before designing.
 
 **Gate 0:**
 - Kill switch armed (`mission-world.disabled` absent). gh `sunholo-voight-kampff`. Billing tripwire CLEAN. Env read by NAME.
 - `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (21 comments, none from the allowlist). Nothing to mark.
-- `mission_gate0_self_notices.sh`: rc 1, verdict "1 crash notice". It is the same 2026-10-22 rc=1 notice `6345079873`, already credited (log count 19 before this entry). Control 107:4 ok. No new notice on #366.
+- `mission_gate0_self_notices.sh`: rc 1, verdict "1 crash notice". It is the same 2026-10-22 rc=1 notice `6345079873`, already credited (`grep -c 6345079873 design_docs/world-mission-log.md` → 19 before this entry). Control 107:4 ok. No new notice on #366.
 - Unread inbox: a controlplane driver notice that the pinned source clone is 99 commits behind (this fire ran pinned, driver age 0), and two mission-fleet items about stapledon's `pi:provider-error:no-retry` ticket (not World's). The `mission-world` inbox holds only this loop's claim messages. The iteration-322 claim was sent (`inbox_1793318597095_a077fd3c`) and shows in the listing.
 - `mission_decisions.sh --check`: valid, 91 rows, 1 OPEN (D-WORLD-102). No ledger row changed since iteration 321. The external-issue sweep is not due (#366 is this week's thread).
 
@@ -3257,13 +3264,14 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Ruled out:**
 - Picking 150 (attended A1) or 151 (row 188 N2d/N4a absent, measured above).
 - Picking 231, 230 or 233 under rule (d) with D-WORLD-102 unanswered.
-- Picking 162 because its upstream predicate flipped. Gate 2's flipped-predicate rule makes a row the pick when the flip changes its ordering. Row 162 was gated on nothing, so its order is unchanged, and rule (d) (an attended ruling) bars it either way.
+- Picking 162, 77 or 78 because an upstream predicate flipped. Gate 2's flipped-predicate rule makes a row the pick when the flip changes its ordering. None of these flips does. Row 162 was gated on nothing, and 77 and 78 are fleet-owned harness halves. Rule (d), an attended ruling, bars all three either way.
 - Re-measuring row 162's V13 premise now. That is design work on a barred row, and it would run `pkg_docs` against the live registry. It is noted on the row for whoever picks it.
 - `ailang mission rotate-log` (38 live entries with this one, under the ~40 threshold). The index row is hand-written as in 317–321.
 
 **Retro:**
 1. **Idle cadence:** this is block report 5 of the run (317, 319, 320, 321, 322). Each costs one judge and no code. D-WORLD-102 is still the only lever the loop has. The digest shows it as the one open decision; it is not asked again.
-2. **The external-predicate re-read found something the four previous block reports did not run.** Iterations 317–321 re-measured the release rows' blockers but not the other rows' upstream predicates. Row 162's had been stale for 21 days. It changed nothing this time, but a block report is the cheapest place to run that read. Instance 1 in World; no rule edit (Gate 2 already prescribes it; this was a skipped step, not a missing rule).
+2. **The external-predicate re-read found something the four previous block reports did not run.** Iterations 317–321 re-measured the release rows' blockers but not the other rows' upstream predicates. Four live rows were stale, by 15 to 47 days. No ordering changed this time, but a block report is the cheapest place to run that read. Gate 2 already prescribes it, so this was a skipped step, not a missing rule, and there is no rule edit.
+3. **The controller's first enumeration was a hand-filtered subset with no positive control,** which is the rule-3a/3g shape. It kept only rows with one of six tags and matched only two spellings of an issue reference. It reported "three rows" as if that were complete. The judge's independent search found three more live rows. The fix in practice is to enumerate every queue row, match every reference spelling, and assert the count against a row you know names an issue. Row 53, the one with an explicit TRACKING tag, is now that control. Instance 1; no rule edit.
 - Harness share 0. No skill edit.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a.

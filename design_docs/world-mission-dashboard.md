@@ -6,7 +6,7 @@
 - **Row 150:** 23/23 milestones built. It waits on the **attended A1**: the controller runs P0 ≤24 h before and P3 before pass A.
 - **Row 151:** needs row 188 N2d and N4a. Neither is on dev yet; they come after the attended rows 219 → 217 → 218 (all still `[NEXT]`).
 - **Rows 231 → 230 → 233:** hygiene, barred by rule (d) until D-WORLD-102 = A.
-- **Row 162 (parked):** its upstream issue #1607 closed 2026-10-09 (fix in v0.53.1+, so in the v0.54.15 tool pin). Order unchanged; re-measure its premise before designing.
+- **Stale upstream predicates:** rows 53, 77, 78 and 162 named upstream ailang issues that had closed (2026-09-13 to 2026-10-15) unrecorded; each now carries a dated note. Order unchanged; row 162's premise needs re-measuring on the v0.54.15 tool pin before design.
 - **Roles:** no designer, planner or executor (no pick). Record judge sonnet via the Agent tool.
 - **Parked on Mark:** **D-WORLD-102**: may the loop take 231 → 230 → 233 while the release rows wait? Recommend A, default B. **Attended actions:** schedule row 150's A1; the 219 → 217 → 218 track unblocks 151.
 - **Next (loop):** a block report unless D-WORLD-102 = A or dev goes red.
