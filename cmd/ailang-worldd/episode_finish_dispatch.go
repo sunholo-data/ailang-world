@@ -174,8 +174,10 @@ func finishDispatchOutcome(ctx context.Context, seam finishDispatch, git, wt, re
 			return fail(fmt.Errorf("%s on %s is at %s, not an ancestor (F7)", branch, remote, head))
 		}
 	}
-	if err := seam.Push(ctx, git, wt, remote, sha, branch); err != nil {
-		return fail(err)
+	if head != sha {
+		if err := seam.Push(ctx, git, wt, remote, sha, branch); err != nil {
+			return fail(err)
+		}
 	}
 	class = "pr-failed"
 	if createLabel {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -137,75 +136,6 @@ func writeExecutable(t *testing.T, body string) string {
 	return path
 }
 
-func runGit(t *testing.T, dir string, args ...string) string {
-	t.Helper()
-	git, err := exec.LookPath("git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	cmd := exec.Command(git, args...)
-	cmd.Dir = dir
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("git %s: %v: %s", strings.Join(args, " "), err, out)
-	}
-	return strings.TrimSpace(string(out))
-}
-
-func TestGitCommitRoundTripScrubsHostileHome(t *testing.T) {
-	git, err := exec.LookPath("git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	repo := t.TempDir()
-	runGit(t, repo, "init", "-q")
-	if err := os.WriteFile(filepath.Join(repo, "tracked.txt"), []byte("content"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	runGit(t, repo, "add", "tracked.txt")
-
-	hostileHome := t.TempDir()
-	hookDir := filepath.Join(hostileHome, "hooks")
-	if err := os.MkdirAll(hookDir, 0o700); err != nil {
-		t.Fatal(err)
-	}
-	marker := filepath.Join(repo, "hostile-hook-ran")
-	hook := filepath.Join(hookDir, "pre-commit")
-	if err := os.WriteFile(hook, []byte("#!/bin/sh\n: > \""+marker+"\"\n"), 0o700); err != nil {
-		t.Fatal(err)
-	}
-	config := "[user]\n\tname = HOSTILE NAME\n\temail = hostile@example.invalid\n" +
-		"[commit]\n\tgpgsign = false\n[core]\n\thooksPath = " + hookDir + "\n"
-	if err := os.WriteFile(filepath.Join(hostileHome, ".gitconfig"), []byte(config), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("HOME", hostileHome)
-
-	handler, err := NewGitHandler(GitHandlerConfig{GitPath: git})
-	if err != nil {
-		t.Fatal(err)
-	}
-	session, recording := handlerSession(t, EffectGitCommit, repo, handler)
-	result, ref, err := session.Invoke(boundedTestContext(t),
-		EffectRequest{Effect: EffectGitCommit, Scope: repo, Cost: 2, Now: 1}, []byte("broker commit"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ref.IsZero() || len(result) == 0 || len(recording.records) != 1 {
-		t.Fatalf("Invoke = result %q, ref %s, records %d", result, ref, len(recording.records))
-	}
-	if got := runGit(t, repo, "rev-parse", "HEAD"); got == "" {
-		t.Fatal("commit does not exist")
-	}
-	if got := runGit(t, repo, "show", "-s", "--format=%an <%ae>|%cn <%ce>", "HEAD"); got !=
-		"AILANG World <ailang-world@invalid>|AILANG World <ailang-world@invalid>" {
-		t.Fatalf("commit identity = %q, hostile HOME leaked", got)
-	}
-	if _, err := os.Stat(marker); !os.IsNotExist(err) {
-		t.Fatalf("hostile hooksPath became observable: marker stat error = %v", err)
-	}
-}
-
 // pinnedAILANG resolves the pinned interpreter the way the landed replay and
 // capsule tests do. Hardcoding /tmp/ailang-v0300/ailang passes on the rig and
 // fails in CI, where the pinned v0.30.0 binary is installed under $HOME — a
@@ -296,28 +226,6 @@ func TestModelStubRoundTripDeterministicRecordedBytes(t *testing.T) {
 	}
 }
 
-func TestGitHandlerTimeoutWritesFailureRecord(t *testing.T) {
-	fake := writeExecutable(t, "sleep 5\nprintf 'finished\\n'")
-	handler, err := NewGitHandler(GitHandlerConfig{
-		GitPath: fake, ExecTimeout: 40 * time.Millisecond,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	scope := t.TempDir()
-	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
-	start := time.Now()
-	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("timeout"))
-	elapsed := time.Since(start)
-	// 2s tolerates process-spawn latency on a shared CI runner while still
-	// reding hard if the deadline is ignored (the subprocess sleeps 5s).
-	if elapsed > 2*time.Second {
-		t.Errorf("Git timeout elapsed = %s, want <= 2s for a 40ms bound", elapsed)
-	}
-	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerTimeout)
-}
-
 func TestModelHandlerTimeoutWritesFailureRecord(t *testing.T) {
 	fake := writeExecutable(t, "sleep 5\nprintf 'finished\\n'")
 	handler, err := NewModelHandler(ModelHandlerConfig{
@@ -337,21 +245,6 @@ func TestModelHandlerTimeoutWritesFailureRecord(t *testing.T) {
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerTimeout)
 }
 
-func TestGitHandlerOutputCapWritesFailureRecord(t *testing.T) {
-	fake := writeExecutable(t, "i=0\nwhile [ \"$i\" -lt 256 ]; do printf 0123456789abcdef; i=$((i+1)); done")
-	handler, err := NewGitHandler(GitHandlerConfig{
-		GitPath: fake, MaxOutputBytes: 64,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	scope := t.TempDir()
-	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
-	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("overflow"))
-	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerOverflow)
-}
-
 func TestModelHandlerOutputCapWritesFailureRecord(t *testing.T) {
 	fake := writeExecutable(t, "i=0\nwhile [ \"$i\" -lt 256 ]; do printf 0123456789abcdef; i=$((i+1)); done")
 	handler, err := NewModelHandler(ModelHandlerConfig{
@@ -366,36 +259,20 @@ func TestModelHandlerOutputCapWritesFailureRecord(t *testing.T) {
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerOverflow)
 }
 
-func TestGitHandlerNonZeroExitWritesFailureRecord(t *testing.T) {
+func TestModelHandlerNonZeroExitWritesFailureRecord(t *testing.T) {
 	fake := writeExecutable(t, "printf 'diagnostic\\n'\nexit 17")
-	handler, err := NewGitHandler(GitHandlerConfig{GitPath: fake})
+	handler, err := NewModelHandler(ModelHandlerConfig{AILANGPath: fake, Stub: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	scope := t.TempDir()
-	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
+	scope := "model-scope"
+	session, recording := handlerSession(t, EffectModelInfer, scope, handler)
 	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, nil)
+		EffectRequest{Effect: EffectModelInfer, Scope: scope, Cost: 2, Now: 1}, nil)
 	var exitErr *HandlerExitError
 	if !errors.As(invokeErr, &exitErr) {
 		t.Fatalf("Invoke error = %v, want *HandlerExitError through EffectFailedError", invokeErr)
 	}
-	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, nil)
-}
-
-func TestGitHandlerMissingRepoWritesFailureRecord(t *testing.T) {
-	git, err := exec.LookPath("git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	handler, err := NewGitHandler(GitHandlerConfig{GitPath: git})
-	if err != nil {
-		t.Fatal(err)
-	}
-	scope := filepath.Join(t.TempDir(), "missing")
-	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
-	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, nil)
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, nil)
 }
 
@@ -757,15 +634,15 @@ echo $! > "%s"
 : > "%s/forked"
 wait`, markdir, markdir, gcPidFile, markdir))
 	warmUpFixture(t, fake, execWarmUpRunner)
-	handler, err := NewGitHandler(GitHandlerConfig{
-		GitPath: fake, ExecTimeout: 100 * time.Millisecond,
+	handler, err := NewModelHandler(ModelHandlerConfig{
+		AILANGPath: fake, Stub: true, ExecTimeout: 100 * time.Millisecond,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	scope := t.TempDir()
 	timing := &timingHandler{handler: handler}
-	session, recording := handlerSession(t, EffectGitCommit, scope, timing)
+	session, recording := handlerSession(t, EffectModelInfer, scope, timing)
 
 	kill := &killRecord{}
 	orig := killGroup
@@ -787,7 +664,7 @@ wait`, markdir, markdir, gcPidFile, markdir))
 	}
 
 	diagnosis := invokeWithStallDiagnosis(t, session, recording, timing,
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("group"))
+		EffectRequest{Effect: EffectModelInfer, Scope: scope, Cost: 2, Now: 1}, []byte("group"))
 	kill.mu.Lock()
 	count, offset, pgid, errno := kill.count, kill.offset, kill.pgid, kill.errno
 	kill.mu.Unlock()

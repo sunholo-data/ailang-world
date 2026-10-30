@@ -43,10 +43,13 @@ Each unsandboxed check needs its own typed y at that terminal.
 Without --dry-run, writes <sessions>/<episode>.pr-body.md (0600) and prints
 an exact-byte approval at the terminal. Typed y records approval, pushes and
 opens the PR, records its outcome, then revokes the episode credentials.
+Re-runs resume the pending commit using its saved body and any reusable approval.
+After completion, new changes form a fix-up round on the same branch.
 Example: ailang-worldd episode finish my-episode --preset my-repo --dry-run
 `
 
 var finishClient = newClient
+var finishAfterStep func(step string)
 
 func runEpisodeFinish(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	return runEpisodeFinishWith(args, stdout, stderr, env, commitOneObject)
@@ -122,15 +125,6 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		return fail(fmt.Sprintf("preset %s does not match start preset %s", *preset, start.Preset.Name), "finish must use the start preset", "use --preset "+start.Preset.Name)
 	}
 	newRound := "ailang-worldd episode start --preset " + *preset + " --branch " + start.Branch
-	token, err := resolveSession(filepath.Join(p.SessionsDir, ep+".session"), stderr)
-	if err != nil {
-		return fail("episode "+ep+"'s session has expired: finish records under it", "a live episode session is required", newRound)
-	}
-	status, _, body, err := c.doRequest(ctx, http.MethodGet, "/v1/session/self", nil, map[string]string{"Authorization": "Bearer " + token})
-	var self daemon.SessionSelf
-	if err != nil || status != http.StatusOK || json.Unmarshal(body, &self) != nil || self.Episode != ep || self.SecondsLeft <= 0 {
-		return fail("episode "+ep+"'s session has expired: finish records under it", "a live episode session is required", newRound)
-	}
 	wt := filepath.Join(p.WorkspaceRoot, ep)
 	degraded := !worktree.IsLinked(wt)
 	for _, e := range h.DegradedEpisodes {
@@ -139,19 +133,12 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if degraded {
 		return fail("episode "+ep+" is degraded", "finish requires a linked git worktree", newRound)
 	}
-	if rep.Uncommitted != 0 {
-		return fail("an effect of "+ep+" is still in flight", "uncommitted_intents must be zero", "wait, or ailang-worldd episode report "+ep+" --follow")
-	}
 	git, err := sessionGit()
 	if err != nil {
 		return fail(err.Error(), "finish requires git", "install git")
 	}
 	query := func(args ...string) (string, error) {
 		return worktree.Output(ctx, git, append([]string{"-C", wt, "-c", "core.fsmonitor=false"}, args...))
-	}
-	branch, err := query("symbolic-ref", "--short", "HEAD")
-	if err != nil || strings.TrimSpace(branch) != start.Branch {
-		return fail("HEAD is not on "+start.Branch, "finish uses the start record's branch", "restore the recorded branch")
 	}
 	previous, err := query("rev-parse", "HEAD")
 	if err != nil {
@@ -160,146 +147,220 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	previous = strings.TrimSpace(previous)
 	bodyFile := filepath.Join(p.SessionsDir, ep+".pr-body.md")
 	steps := func(sha string) string {
-		return finishHandSteps(wt, start, sha, bodyFile)
+		return "ailang-worldd episode finish " + ep + " --preset " + *preset + "\n" + strings.ReplaceAll(finishHandSteps(wt, start, sha, bodyFile), "\nnext: ", "\n")
 	}
 	message, err := query("log", "-1", "--format=%B")
 	if err != nil {
 		return fail(err.Error(), "cannot read HEAD message", "repair the worktree")
 	}
-	for _, line := range strings.Split(message, "\n") {
-		if strings.HasPrefix(line, "World-Provenance: ") && strings.Contains(line, " episode="+ep+" ") {
-			return fail("already committed at "+previous, "re-runs are row 218 M3", steps(previous))
-		}
-	}
-	changed, err := finishChanged(query, start.Base.SHA)
+	statusText, err := query("status", "--porcelain=v1", "-z", "--untracked-files=all")
 	if err != nil {
-		return fail(err.Error(), "cannot inspect changed paths", "repair the worktree")
+		return fail(err.Error(), "cannot inspect worktree status", "repair the worktree")
 	}
-	if len(changed) == 0 {
-		return fail("nothing to finish", "the worktree has no changes against "+start.Base.SHA, newRound)
+	mode, headTrailer := finishMode(message, ep, previous, statusText != "", rep.Finish)
+	branch, branchErr := query("symbolic-ref", "--short", "HEAD")
+	detachedDone := branchErr != nil && rep.Finish != nil && rep.Finish.Outcome == "done" && rep.Finish.Commit == previous
+	if (branchErr != nil || strings.TrimSpace(branch) != start.Branch) && !detachedDone {
+		return fail("HEAD is not on "+start.Branch, "finish uses the start record's branch", "restore the recorded branch")
 	}
-	if err := validateFinishChecks(start.Checks, allowed, wt); err != nil {
-		return fail(err.Error(), "all checks must be valid before any runs", "fix checks in the next episode's preset")
+	revoke := func() int {
+		if err := finishRevoke(ctx, credentials, ep, stdout); err != nil {
+			fmt.Fprintln(stderr, presetRefusal("PR recorded, session NOT closed (F10)", err.Error(), steps(previous)+"\nailang-worldd session revoke --episode "+ep+" --db "+p.DB))
+			return exitFatal
+		}
+		return exitOK
+	}
+	if mode == "finished" {
+		if branchErr == nil {
+			finishDetach(query, wt, stderr)
+		}
+		fmt.Fprintf(stdout, "episode %s is already finished: %s\n%s\n", ep, rep.Finish.PR.URL, rep.Finish.PR.URL)
+		return revoke()
 	}
 	reader := bufio.NewReader(tty)
 	var results []finishCheckResult
-	for _, check := range start.Checks {
-		var r checkrun.Result
-		var runErr error
-		if check.Unsandboxed {
-			cwd := filepath.Join(wt, check.Cwd)
-			fmt.Fprintf(tty, "check %s runs the agent's code outside the sandbox: %s in %s\nRun this check? [y/N] ", check.Name, strings.Join(check.Argv, " "), cwd)
-			answer, _ := reader.ReadString('\n')
-			if strings.TrimSpace(answer) != "y" {
-				return fail("check "+check.Name+" declined", "unsandboxed code requires its own typed y", "run finish again when ready")
+	var unattributed, protected []string
+	var actualTitle, trailer, sha, rendered string
+	if mode == "resume" || mode == "resume-dispatch" {
+		if *dry {
+			return fail("--dry-run: episode "+ep+" is already committed at "+previous, "dry-run previews the commit, and it exists", steps(previous))
+		}
+		if statusText != "" {
+			fmt.Fprintf(stdout, "%d uncommitted paths are not part of this finish\n", finishStatusCount(statusText))
+		}
+		actualTitle, err = query("log", "-1", "--format=%s")
+		if err != nil {
+			return fail(err.Error(), "cannot read commit title", "repair the worktree")
+		}
+		actualTitle = strings.TrimSuffix(actualTitle, "\n")
+		if *title != "" && *title != actualTitle {
+			return fail(fmt.Sprintf("--title differs from the commit's title %q", actualTitle), "the title is part of the committed finish", "drop --title")
+		}
+		sha, trailer = previous, headTrailer
+		var bodyErr error
+		rendered, results, unattributed, protected, bodyErr = finishResumeBody(bodyFile, sha, trailer, rep.Finish)
+		if bodyErr != nil {
+			return fail(bodyErr.Error(), "the body records the checks of the run that made the commit and can't be re-derived", "git -C "+shellQuote(wt)+" reset --soft HEAD~1; then run finish again")
+		}
+	} else {
+		if statusText == "" {
+			return fail("nothing to finish", "the worktree has no changes against HEAD", newRound)
+		}
+		token, err := resolveSession(filepath.Join(p.SessionsDir, ep+".session"), stderr)
+		if err != nil {
+			return fail("episode "+ep+"'s session has expired: finish records under it", "a live episode session is required", newRound)
+		}
+		status, _, body, err := c.doRequest(ctx, http.MethodGet, "/v1/session/self", nil, map[string]string{"Authorization": "Bearer " + token})
+		var self daemon.SessionSelf
+		if err != nil || status != http.StatusOK || json.Unmarshal(body, &self) != nil || self.Episode != ep || self.SecondsLeft <= 0 {
+			return fail("episode "+ep+"'s session has expired: finish records under it", "a live episode session is required", newRound)
+		}
+		if rep.Uncommitted != 0 {
+			return fail("an effect of "+ep+" is still in flight", "uncommitted_intents must be zero", "wait, or ailang-worldd episode report "+ep+" --follow")
+		}
+		if detachedDone {
+			branchHead, err := query("rev-parse", "refs/heads/"+start.Branch)
+			if err != nil || strings.TrimSpace(branchHead) != previous {
+				return fail("the recorded branch moved since finish", "a fix-up must build on the recorded commit", newRound)
 			}
-			r, runErr = checkrun.Run(ctx, check.Argv, cwd, time.Duration(check.TimeoutS*float64(time.Second)))
-		} else {
-			r, runErr = finishSandboxCheck(ctx, c, token, check)
-		}
-		if runErr != nil {
-			r.ExitCode = -1
-			r.Stderr = runErr.Error() + "\n" + r.Stderr
-		}
-		passed := r.ExitCode == 0 && runErr == nil
-		payload := finishOutcome(rep, check, r, passed)
-		raw, _ := json.Marshal(payload)
-		canonical, _, err := parseTaskOutcome(raw)
-		if err != nil {
-			return fail(err.Error(), "check outcome cannot be recorded", "repair the check definition")
-		}
-		entry, err := record(ctx, c, token, taskOutcomeObject(canonical), taskOutcomeWrittenBy, "", "outcome record")
-		if err != nil {
-			return fail(err.Error(), "the check verdict was not confirmed recorded; do not retry blindly", "inspect the episode report")
-		}
-		results = append(results, finishCheckResult{check.Name, check.Unsandboxed, passed, entry, taskOutcomeObject(canonical).Hash})
-		if !passed && !containsString(allowed, check.Name) {
-			return fail(fmt.Sprintf("check %s failed (rc %d), outcome %d\n%s", check.Name, r.ExitCode, entry, clipOutcomeHead(r.Stderr)), "a required check failed", "fix it in a new round, or --allow-failing "+check.Name)
-		}
-	}
-	// Refresh both evidence and paths after checks, which may produce files.
-	_, rep, err = fetchReport(ctx, c, ep)
-	if err != nil {
-		return fail(err.Error(), "cannot refresh check evidence", "inspect the episode report")
-	}
-	if rep.Uncommitted != 0 {
-		return fail("an effect of "+ep+" is still in flight", "uncommitted_intents must be zero", "wait for it")
-	}
-	changed, err = finishChanged(query, start.Base.SHA)
-	if err != nil {
-		return fail(err.Error(), "cannot refresh changed paths", "repair the worktree")
-	}
-	unattributed := finishUnattributed(changed, rep)
-	if len(unattributed) > 0 && !*include {
-		gaps, _ := json.Marshal(struct {
-			Truncated []int64                   `json:"deltas_truncated"`
-			Errors    []daemon.ReportDeltaError `json:"delta_errors"`
-		}{rep.Writes.DeltasTruncated, rep.Writes.DeltaErrors})
-		return fail("unattributed paths (F5): "+strings.Join(unattributed, ", "), "no World write or delta proves these paths; "+string(gaps), "remove them, or --include-unattributed")
-	}
-	actualTitle := *title
-	if actualTitle == "" && start.Task != nil {
-		actualTitle = start.Task.Title
-	}
-	if actualTitle == "" {
-		actualTitle = "World episode " + ep
-	}
-	passed := 0
-	for _, r := range results {
-		if r.Passed {
-			passed++
-		}
-	}
-	protected, err := finishProtected(ctx, start, credentials, *profilesDir, changed)
-	if err != nil {
-		return fail(err.Error(), "finish must use the start profile binding", "restore the pinned exec profile")
-	}
-	paragraph := fmt.Sprintf("%s %s; %d calls; %d/%d checks passed; %d files changed.", start.Agent, start.Model, rep.TotalCalls, passed, len(results), len(changed))
-	if len(protected) > 0 {
-		paragraph += " Protected paths changed: " + strings.Join(protected, ", ") + "."
-	}
-	trailer := reportTrailer(rep, h.DBPath)
-	add := reportAdditions{Checks: results, Unattributed: unattributed, Protected: protected, Finish: true}
-	// Refuse unsafe body bytes before creating the local commit.
-	if _, err := renderReportMarkdown(rep, h.DBPath, add); err != nil {
-		return fail(err.Error(), "the body must pass the trial scrub", "inspect the episode report")
-	}
-	for _, part := range []string{actualTitle, paragraph, trailer} {
-		if err := scrubMarkdown(part); err != nil {
-			return fail(err.Error(), "the commit must pass the trial scrub", "choose safe commit text")
-		}
-	}
-	sha, err := worktree.Commit(ctx, git, wt, start.Agent, changed, actualTitle, paragraph, trailer)
-	if err != nil {
-		return fail(err.Error(), "local git commit failed", "inspect git status before retrying")
-	}
-	add.Commit = sha
-	rendered, renderErr := renderReportMarkdown(rep, h.DBPath, add)
-	if *dry || renderErr != nil {
-		// Always restore HEAD on a dry-run error too.
-		defer func() {
-			if _, err := query("reset", "-q", "--mixed", previous); err != nil {
-				fmt.Fprintln(stderr, "dry-run reset failed: "+err.Error())
-				code = exitUsage
+			if _, err := query("checkout", start.Branch); err != nil {
+				return fail(err.Error(), "cannot restore the fix-up branch", newRound)
 			}
-		}()
-	}
-	if renderErr != nil {
-		return fail(renderErr.Error(), "body render failed", "inspect the episode report")
-	}
-	if *dry {
-		stat, err := query("show", "--stat", "--format=medium", "HEAD")
-		if err != nil {
-			return fail(err.Error(), "cannot show dry-run commit", "inspect the worktree")
 		}
-		fmt.Fprintln(stdout, stat)
-		fmt.Fprint(stdout, rendered)
-		return exitOK
+		changeBase, err := finishChangeBase(query, start)
+		if err != nil {
+			return fail(err.Error(), "cannot inspect finish change base", "repair the worktree")
+		}
+		changed, err := finishChanged(query, changeBase)
+		if err != nil {
+			return fail(err.Error(), "cannot inspect changed paths", "repair the worktree")
+		}
+		if len(changed) == 0 {
+			return fail("nothing to finish", "the worktree has no changes against "+start.Base.SHA, newRound)
+		}
+		if err := validateFinishChecks(start.Checks, allowed, wt); err != nil {
+			return fail(err.Error(), "all checks must be valid before any runs", "fix checks in the next episode's preset")
+		}
+		for _, check := range start.Checks {
+			var r checkrun.Result
+			var runErr error
+			if check.Unsandboxed {
+				cwd := filepath.Join(wt, check.Cwd)
+				fmt.Fprintf(tty, "check %s runs the agent's code outside the sandbox: %s in %s\nRun this check? [y/N] ", check.Name, strings.Join(check.Argv, " "), cwd)
+				answer, _ := reader.ReadString('\n')
+				if strings.TrimSpace(answer) != "y" {
+					return fail("check "+check.Name+" declined", "unsandboxed code requires its own typed y", "run finish again when ready")
+				}
+				r, runErr = checkrun.Run(ctx, check.Argv, cwd, time.Duration(check.TimeoutS*float64(time.Second)))
+			} else {
+				r, runErr = finishSandboxCheck(ctx, c, token, check)
+			}
+			if runErr != nil {
+				r.ExitCode = -1
+				r.Stderr = runErr.Error() + "\n" + r.Stderr
+			}
+			passed := r.ExitCode == 0 && runErr == nil
+			payload := finishOutcome(rep, check, r, passed)
+			raw, _ := json.Marshal(payload)
+			canonical, _, err := parseTaskOutcome(raw)
+			if err != nil {
+				return fail(err.Error(), "check outcome cannot be recorded", "repair the check definition")
+			}
+			entry, err := record(ctx, c, token, taskOutcomeObject(canonical), taskOutcomeWrittenBy, "", "outcome record")
+			if err != nil {
+				return fail(err.Error(), "the check verdict was not confirmed recorded; do not retry blindly", "inspect the episode report")
+			}
+			results = append(results, finishCheckResult{check.Name, check.Unsandboxed, passed, entry, taskOutcomeObject(canonical).Hash})
+			if !passed && !containsString(allowed, check.Name) {
+				return fail(fmt.Sprintf("check %s failed (rc %d), outcome %d\n%s", check.Name, r.ExitCode, entry, clipOutcomeHead(r.Stderr)), "a required check failed", "fix it in a new round, or --allow-failing "+check.Name)
+			}
+		}
+		// Refresh both evidence and paths after checks, which may produce files.
+		_, rep, err = fetchReport(ctx, c, ep)
+		if err != nil {
+			return fail(err.Error(), "cannot refresh check evidence", "inspect the episode report")
+		}
+		if rep.Uncommitted != 0 {
+			return fail("an effect of "+ep+" is still in flight", "uncommitted_intents must be zero", "wait for it")
+		}
+		changed, err = finishChanged(query, changeBase)
+		if err != nil {
+			return fail(err.Error(), "cannot refresh changed paths", "repair the worktree")
+		}
+		unattributed = finishUnattributed(changed, rep)
+		if len(unattributed) > 0 && !*include {
+			gaps, _ := json.Marshal(struct {
+				Truncated []int64                   `json:"deltas_truncated"`
+				Errors    []daemon.ReportDeltaError `json:"delta_errors"`
+			}{rep.Writes.DeltasTruncated, rep.Writes.DeltaErrors})
+			return fail("unattributed paths (F5): "+strings.Join(unattributed, ", "), "no World write or delta proves these paths; "+string(gaps), "remove them, or --include-unattributed")
+		}
+		actualTitle = *title
+		if actualTitle == "" && start.Task != nil {
+			actualTitle = start.Task.Title
+		}
+		if actualTitle == "" {
+			actualTitle = "World episode " + ep
+		}
+		passed := 0
+		for _, r := range results {
+			if r.Passed {
+				passed++
+			}
+		}
+		protected, err = finishProtected(ctx, start, credentials, *profilesDir, changed)
+		if err != nil {
+			return fail(err.Error(), "finish must use the start profile binding", "restore the pinned exec profile")
+		}
+		paragraph := fmt.Sprintf("%s %s; %d calls; %d/%d checks passed; %d files changed.", start.Agent, start.Model, rep.TotalCalls, passed, len(results), len(changed))
+		if len(protected) > 0 {
+			paragraph += " Protected paths changed: " + strings.Join(protected, ", ") + "."
+		}
+		trailer = reportTrailer(rep, h.DBPath)
+		add := reportAdditions{Checks: results, Unattributed: unattributed, Protected: protected, Finish: true}
+		// Refuse unsafe body bytes before creating the local commit.
+		if _, err := renderReportMarkdown(rep, h.DBPath, add); err != nil {
+			return fail(err.Error(), "the body must pass the trial scrub", "inspect the episode report")
+		}
+		for _, part := range []string{actualTitle, paragraph, trailer} {
+			if err := scrubMarkdown(part); err != nil {
+				return fail(err.Error(), "the commit must pass the trial scrub", "choose safe commit text")
+			}
+		}
+		sha, err = worktree.Commit(ctx, git, wt, start.Agent, changed, actualTitle, paragraph, trailer)
+		if err != nil {
+			return fail(err.Error(), "local git commit failed", "inspect git status before retrying")
+		}
+		add.Commit = sha
+		var renderErr error
+		rendered, renderErr = renderReportMarkdown(rep, h.DBPath, add)
+		if *dry || renderErr != nil {
+			// Always restore HEAD on a dry-run error too.
+			defer func() {
+				if _, err := query("reset", "-q", "--mixed", previous); err != nil {
+					fmt.Fprintln(stderr, "dry-run reset failed: "+err.Error())
+					code = exitUsage
+				}
+			}()
+		}
+		if renderErr != nil {
+			return fail(renderErr.Error(), "body render failed", "inspect the episode report")
+		}
+		if *dry {
+			stat, err := query("show", "--stat", "--format=medium", "HEAD")
+			if err != nil {
+				return fail(err.Error(), "cannot show dry-run commit", "inspect the worktree")
+			}
+			fmt.Fprintln(stdout, stat)
+			fmt.Fprint(stdout, rendered)
+			return exitOK
+		}
+		if err := writeFinishBody(bodyFile, rendered); err != nil {
+			return fail(err.Error(), "commit kept at "+sha, steps(sha))
+		}
+		finishStep("commit")
+		fmt.Fprintf(stdout, "committed at %s\nbody: %s\n", sha, bodyFile)
 	}
-	if err := writeFinishBody(bodyFile, rendered); err != nil {
-		return fail(err.Error(), "commit kept at "+sha, steps(sha))
-	}
-	fmt.Fprintf(stdout, "committed at %s\nbody: %s\n", sha, bodyFile)
 	repo, err := finishRepository(start.Remote.URL)
 	if err != nil {
 		return fail(err.Error(), "finish needs the start record's GitHub repository", steps(sha))
@@ -307,7 +368,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	seam := finishDispatchFactory()
 	hasLabel, err := seam.Prepare(ctx, wt, repo)
 	if err != nil {
-		return fail("gh can't reach GitHub as you (F8): "+err.Error(), "finish needs gh and a label lookup before approval", "gh auth login; "+steps(sha))
+		return fail("gh can't reach GitHub as you (F8): "+err.Error(), "finish needs gh and a label lookup before approval", steps(sha)+"\ngh auth login")
 	}
 	scope := broker.FinishApprovalScope{
 		Repository: repo, Remote: start.Remote.URL, Head: start.Branch, SHA: sha, Base: start.Base.Branch,
@@ -318,14 +379,25 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if _, err := broker.ParseFinishApprovalScope(scopeText); err != nil {
 		return fail(err.Error(), "approval must bind every byte", steps(sha))
 	}
-	finishPrompt(tty, scope, actualTitle, rendered, protected)
-	answer, _ := reader.ReadString('\n')
-	if strings.TrimSpace(answer) != "y" {
-		return fail("pull request declined", "opening a PR requires typed y at the terminal; commit kept at "+sha, steps(sha))
-	}
 	var approval daemon.FinishApproval
-	if err := finishOperatorPost(ctx, c, credentials, ep, daemon.FinishRequest{Phase: "approve", Scope: scopeText}, &approval); err != nil {
-		return fail(err.Error(), "approval was not confirmed recorded", steps(sha))
+	remoteNow, remoteErr := query("remote", "get-url", start.Remote.Name)
+	if remoteErr != nil || strings.TrimSpace(remoteNow) != start.Remote.URL {
+		return fail("the remote changed since start (F6)", "finish uses the pinned remote", steps(sha))
+	}
+	if reused, ok := finishReusableApproval(rep.Finish, mode, scope, hasLabel, time.Now().Unix()); ok {
+		scope, scopeText = reused, rep.Finish.Scope
+		approval.Approval = rep.Finish.Approval
+		fmt.Fprintf(tty, "resuming under approval %s, expires in %d s\n", approval.Approval, scope.ExpiresAt-time.Now().Unix())
+	} else {
+		finishPrompt(tty, scope, actualTitle, rendered, protected)
+		answer, _ := reader.ReadString('\n')
+		if strings.TrimSpace(answer) != "y" {
+			return fail("pull request declined", "opening a PR requires typed y at the terminal; commit kept at "+sha, steps(sha))
+		}
+		if err := finishOperatorPost(ctx, c, credentials, ep, daemon.FinishRequest{Phase: "approve", Scope: scopeText}, &approval); err != nil {
+			return fail(err.Error(), "approval was not confirmed recorded", steps(sha))
+		}
+		finishStep("approve")
 	}
 	if finishBeforeDispatch != nil {
 		finishBeforeDispatch()
@@ -339,28 +411,27 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		return fail("the commit or body changed since approval (F6)", "approval binds HEAD, remote, title and exact body bytes", steps(sha))
 	}
 	outcome, pr, dispatchErr := finishDispatchOutcome(ctx, seam, git, wt, start.Remote.Name, repo, scope.Head,
-		scope.SHA, scope.Base, actualTitle, bodyFile, scope.Draft, scope.CreateLabel)
+		scope.SHA, scope.Base, actualTitle, bodyFile, scope.Draft, scope.CreateLabel && !hasLabel)
+	finishStep("dispatch")
 	checkRefs := make([]string, 0, len(results))
 	for _, result := range results {
 		checkRefs = append(checkRefs, result.Ref)
 	}
 	finish := daemon.EpisodeFinish{
 		Episode: ep, Branch: scope.Head, Base: start.Base.SHA, Commit: scope.SHA, Remote: scope.Remote,
-		PR: pr, Approval: approval.Approval, Checks: checkRefs, Unattributed: unattributed,
+		PR: pr, Approval: approval.Approval, Scope: scopeText, Checks: checkRefs, Unattributed: unattributed,
 		ReportSHA256: scope.BodySHA256, Trailer: trailer, Outcome: outcome, FinishedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 	if err := finishOperatorPost(ctx, c, credentials, ep, daemon.FinishRequest{Phase: "record", Record: &finish}, nil); err != nil {
-		fmt.Fprintln(stderr, presetRefusal(err.Error(), "finish outcome was not confirmed recorded; session kept", "inspect the episode report; "+steps(sha)))
+		fmt.Fprintln(stderr, presetRefusal(err.Error(), "finish outcome was not confirmed recorded; session kept", steps(sha)+"\ninspect the episode report"))
 		return exitFatal
 	}
-	creds, err := store.OpenCredentials(credentials)
-	if err == nil {
-		err = revokeEpisodeCredentials(ctx, creds, ep, stdout)
-		creds.Close()
+	finishStep("record")
+	if outcome == "done" {
+		finishDetach(query, wt, stderr)
 	}
-	if err != nil {
-		fmt.Fprintln(stderr, presetRefusal("PR recorded, session NOT closed (F10)", err.Error(), "ailang-worldd session revoke --episode "+ep+" --db "+p.DB))
-		return exitFatal
+	if rc := revoke(); rc != exitOK {
+		return rc
 	}
 	if dispatchErr != nil {
 		what := "gh can't reach GitHub as you (F8)"
@@ -372,16 +443,10 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		}
 		remaining := steps(sha)
 		if strings.Contains(dispatchErr.Error(), "not an ancestor") {
-			remaining = "resolve the diverged branch by hand; never force; " + remaining
+			remaining += "\nresolve the diverged branch by hand; never force"
 		}
 		if outcome == "ambiguous" {
-			remaining = "inspect git ls-remote and gh pr view before any write; " + remaining
-		}
-		if outcome == "pr-failed" {
-			parts := strings.SplitN(remaining, "\n", 2)
-			if len(parts) == 2 {
-				remaining = parts[1]
-			}
+			remaining += "\ninspect git ls-remote and gh pr view before any write"
 		}
 		fmt.Fprintln(stderr, presetRefusal(what+": "+dispatchErr.Error(), "recorded outcome "+outcome, remaining))
 		return exitFatal

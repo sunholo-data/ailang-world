@@ -363,7 +363,7 @@ tool. And it never force-pushes.
 | **M0** | row 198 additions: the report's `writes` (§3.3) and `--markdown` (§3.5) | Go tests over seeded episodes (writes, deltas over cap, delta errors); the body scrub test |
 | **M1** | **M0/M1 built (w218a)**: fence, validation, pinned checks (R2), attribution, `host/worktree.Commit` with the trailer, body render, `--dry-run`; protected paths left to M2 | Go tests with a fixture repo and the fake terminal; ACs 1–6 |
 | **M2** | **Built (w218b)**: approval scope, operator route (R6), dispatch through the git/gh seam, outcome classes, finish record, revoke and protected paths | Go tests for ACs 7–12; AC10's re-run half and AC13 remain M3 |
-| **M3** | re-runs and fix-up rounds (§3.9); delete the unwired handler (R8) | Go tests killing finish after each step and re-running; AC13 |
+| **M3** | **Built (w218c)**: re-runs and fix-up rounds (§3.9); delete the unwired handler (R8) | Go tests killing finish after each step and re-running; AC13 |
 | **M4** | the exit run, attended: one episode from `episode start` to a merged PR, on a real repo | AC14 |
 
 ## §9 Acceptance criteria (no model call; an operator or CI can check each)
