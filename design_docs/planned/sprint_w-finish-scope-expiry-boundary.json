@@ -1,0 +1,171 @@
+{
+  "id": "w-finish-scope-expiry-boundary",
+  "iteration": 327,
+  "row": "236",
+  "clause": "red on dev (outranks the queue): CI run 41093918891 attempt 1, go race gate, TestEpisodeFinishScopeExpiry",
+  "authority": [
+    "design_docs/planned/w-finish-scope-expiry-boundary.md r3 (r2 after quorum r1 BLOCKED + quorum-r2 fixes applied by the controller under the narrow-refinement carve-out)",
+    "design_docs/planned/w-finish-scope-expiry-boundary-sprint-plan.md"
+  ],
+  "estimate": "0.1 day (executor wall 1.5-2 h, dominated by package runs)",
+  "scope": "2 milestones, each independently green. Code: host/daemon/daemon.go (finishNow field + New wiring), host/daemon/episode_finish.go (three reads onto d.finishNow, time import removed), host/daemon/episode_finish_test.go (T1 rewritten, T2/T3 new, AC11 future +301 -> +3600), applied ONLY as the plan's single machine-extracted diff (patch -p1). M2 creates design_docs/verification/world-iter327/executor-report.md and executor-*.txt. No .ail, no CI, no docs/, no tools/launchd/*. The executor must NOT edit design_docs/world-mission*.md (row 236 is the controller's). No git writes by the executor.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327",
+    "branch": "sprint/world-iter327-finish-scope-expiry",
+    "head": "f7767f12",
+    "go_tree_equals": "4d43d8e3",
+    "sha256": {
+      "host/daemon/daemon.go": "5b09012f8d19df9e2d3d15588aee9349cf3112782222f07bac7e71dafcca7104",
+      "host/daemon/episode_finish.go": "ea44759896b57b12aeff835469c978e91bfe6236bd22020305658ee51daa3703",
+      "host/daemon/episode_finish_test.go": "094884e036f77e325ea4984109d7d384e3ea8262f87350a80da2913834c70992"
+    },
+    "fixed_sha256_prototype": {
+      "host/daemon/daemon.go": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+      "host/daemon/episode_finish.go": "e429375dc3e0b03841d5bef84eafcdc4b718dd324c287c8df8bee30f42e9bf0b",
+      "host/daemon/episode_finish_test.go": "b872a38cc091e250e570d1bba16afa17044c57ff1d9a69cc63484400429b9d67"
+    },
+    "plan_diff_sha256": "d36610127fb2ebb075fe828a4f7bb0bc8802a81b71af22ed297a7db0c9f552eb",
+    "plan_diff_stat": "3 files changed, 84 insertions(+), 13 deletions(-)"
+  },
+  "environment": [
+    "cd /Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter327",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0)",
+    "mkdir -p /tmp/w327x/tools (executor scratch; never inside the worktree)",
+    "PLAN=design_docs/planned/w-finish-scope-expiry-boundary-sprint-plan.md; x() { awk -v h=\"$1\" '$0==h{f=1;next} f&&/^```$/{f=0} f' \"$PLAN\"; }",
+    "the controller shell is zsh: run scripts as #!/bin/bash executables"
+  ],
+  "executor_constraints": [
+    "no git write operations (no commit/add/stash/checkout/restore/reset/apply)",
+    "edit the three host/daemon files ONLY by extracting the plan's ```diff block with x() and applying it with patch -p1 after a clean --dry-run; never hand-edit; stop if the extracted diff sha256 or the resulting file sha256s differ from the plan",
+    "create only design_docs/verification/world-iter327/executor-report.md + executor-*.txt (M2); do not touch the existing designer-*/controller-*/quorum files",
+    "never edit design_docs/world-mission*.md, never move the design doc, never edit tools/launchd/*, never touch the main checkout or ~/.ailang/state/mission-v1*, never run ailang messages",
+    "tool scripts, snapshots and logs live under /tmp/w327x; the only worktree file a tool creates is host/daemon/zz_mut_wall.go, which allmuts.sh deletes (must print 'scratch removed: yes')",
+    "each mutation applied alone by runmut.sh, restored by cp, sha before == after; build_err != 0 or MUT-APPLY-FAILED is a protocol error, never a kill; do not gofmt a mutant",
+    "no t.Parallel() (tests write d.finishNow between synchronous handler calls)",
+    "copy commands from the plan's fenced blocks, never from markdown table cells",
+    "bound every wait (perl -e 'alarm N; exec @ARGV' and go test -timeout); run long tests in the foreground; never two package-scale go test runs at once; never end the turn announcing a wait",
+    "go build ./... is not a compile fence for _test.go: use go vet ./host/daemon/"
+  ],
+  "controller_only": [
+    "write row 236 into design_docs/world-mission.md (queue + STATUS) and the mission log entry, from design §1/§2 and the executor report",
+    "move the design doc and plan from planned/ to implemented/",
+    "commit, PR, and read CI: all 3 jobs green on the fix head, with 'ok  \tgithub.com/sunholo-data/ailang-world/host/daemon' in the go race gate"
+  ],
+  "measured_baseline": {
+    "git diff --name-only 4d43d8e3 HEAD": "21 files, all under design_docs/ (0 others)",
+    "go version": "go1.26.6 darwin/arm64",
+    "$AILANG_BIN --version": "AILANG v0.41.0",
+    "grep -cE '^236\\. ' design_docs/world-mission.md": "0 (control '^235\\. ' -> 6304)",
+    "grep -nE 'EpisodeFinish|finish' .github/workflows/*.yml": "no output (control TestLiveScriptPure at ci.yml:269)",
+    "prototype AC-1 base (spin before :164, -count=20)": "plain rc 1 FAIL 20; race rc 1 FAIL 20; first 'episode_finish_test.go:171: expiry <n>: 200'; control (spin to >100ms) rc 0 PASS 20",
+    "prototype AC-1b base (spin before :79)": "plain rc 1 FAIL 20; race rc 1 FAIL 20; first 'episode_finish_test.go:94: 200 {\"request\":...'; control rc 0 PASS 20",
+    "prototype AC-1 fix (spin before :179)": "plain rc 0 PASS 20 (22.2 s); race rc 0 PASS 20 (22.9 s)",
+    "prototype AC-1b fix (spin before :79)": "plain rc 0 PASS 20 (25.1 s); race rc 0 PASS 20 (23.4 s)",
+    "prototype G1-G3": "gofmt empty; vet rc 0; ^TestEpisodeFinish plain rc 0 5 PASS, race rc 0 5 PASS 0 DATA RACE",
+    "prototype AC-2": "21/21 killed as named (P1-P6, Q1-Q4, Q6, R1-R4, R6, S1-S3, W1, TM1), S0 control rc 0, 0 build errors, every sha restored, scratch removed",
+    "prototype AC-3 plain": "rc 0, 'ok  github.com/sunholo-data/ailang-world/host/daemon 335.821s' (load avg 14.4)",
+    "prototype AC-3 race/count200/worldd": "race rc 0 ok 409.042s, 0 DATA RACE; -run ^TestEpisodeFinish -race -count=200 rc 0 ok 52.989s; cmd/ailang-worldd -run Finish rc 0 ok 7.861s (19 PASS)",
+    "cmd/ailang-worldd plain baseline at base 4d43d8e3": "rc 0, ok 90.701s, 237 PASS / 0 FAIL / 9 SKIP; same on the planned code: rc 0, ok 89.031s, 237/0/9, identical SKIP set (designer V15 coverage-mode failures do not reproduce in plain mode)",
+    "plan round trip": "the plan's diff block + 4 tool blocks extracted with x() (bash and zsh) are byte-identical to the planner's; patch -p1 on a fresh git archive HEAD gives the three fixed sha256s, 0 .orig/.rej"
+  },
+  "base_expectations": {
+    "RED_at_base": [
+      "AC-1: TestEpisodeFinishScopeExpiry with the boundary spin before :164, 20/20 plain and race",
+      "AC-1b: TestEpisodeFinishOperatorProofAC11 with the spin before :79 (future arm), 20/20 plain and race",
+      "both, flakily, whenever a second edge falls between the test's and the handler's clock reads"
+    ],
+    "GREEN_at_base_and_must_stay_green": [
+      "TestEpisodeFinishOperatorProofAC11",
+      "TestEpisodeFinishAuthorizationPrecedesBody",
+      "the whole host/daemon package (plain and race)",
+      "go test ./cmd/ailang-worldd/ -run Finish"
+    ],
+    "absent_at_base": [
+      "T2 TestEpisodeFinishOperatorProofExpiryBoundary",
+      "T3 TestEpisodeFinishRecordRechecksScopeExpiry"
+    ]
+  },
+  "gates": [
+    {"id": "G1", "cmd": "gofmt -l host/daemon/", "pass": "empty"},
+    {"id": "G2", "cmd": "go vet ./host/daemon/", "pass": "rc 0 (compile fence)"},
+    {"id": "G3", "cmd": "go test -timeout 280s ./host/daemon/ -run '^TestEpisodeFinish' -count=1 -v, then with -race", "pass": "rc 0, 5 '--- PASS: TestEpisodeFinish' each, 0 FAIL, 0 DATA RACE"},
+    {"id": "G4", "name": "AC-1/AC-1b on the fix", "cmd": "harness.sh <wt> host/daemon/episode_finish_test.go 179|79 20 '^TestEpisodeFinishScopeExpiry$'|'^TestEpisodeFinishOperatorProofAC11$' [-race]", "pass": "each rc=0 PASS=20 FAIL=0, sha=b872a38cc091/b872a38cc091, elapsed >= ~20 s (spin ran)"},
+    {"id": "G5", "name": "AC-2", "cmd": "/tmp/w327x/tools/allmuts.sh <wt>", "pass": "21 lines rc=1 build_err=0 with named killers; S0 rc=0; every sha pair equal; 'scratch removed: yes'; shasum -c /tmp/w327x/fixed.sha OK x3"},
+    {"id": "G6", "name": "AC-3", "cmd": "go vet ./host/daemon/; go test -timeout 880s ./host/daemon/ -count=1; go test -race -timeout 1450s ./host/daemon/ -count=1; go test -race ./host/daemon/ -run '^TestEpisodeFinish' -count=200; go test ./cmd/ailang-worldd/ -run Finish", "pass": "all rc 0, 'ok' lines, 0 DATA RACE", "from": "M2"},
+    {"id": "G7", "name": "AC-4", "cmd": "go build ./... && go test ./...; ./scripts/verify_ail.sh", "pass": "rc 0 and rc 0; or every failure classified by plan §M2.3 (rerun alone -count=3; else baseline the same command at base 4d43d8e3 in a git-archive copy under /tmp/w327x/base); any host/daemon or *Finish* failure is a stop", "from": "M2"},
+    {"id": "G8", "cmd": "git diff --name-only; git diff --stat; git status --porcelain", "pass": "exactly the 3 host/daemon files, 84 insertions/13 deletions; status adds only executor-* under design_docs/verification/world-iter327/; 0 world-mission lines"}
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "AC-1/AC-1b red at base (harness); the diff (finishNow seam + T1/T2/T3 + AC11 future); G1-G3; AC-1/AC-1b green; AC-2 mutation drill",
+      "est_loc": 97,
+      "files": ["host/daemon/daemon.go", "host/daemon/episode_finish.go", "host/daemon/episode_finish_test.go"],
+      "edits": [
+        "M1.1 extract mut.py, runmut.sh, harness.sh, allmuts.sh from the plan into /tmp/w327x/tools (sha256 listed in the plan)",
+        "M1.2 AC-1 (line 164) and AC-1b (line 79) at base: 4 x FAIL 20 + 2 controls PASS 20, file restored",
+        "M1.3 x '```diff' > /tmp/w327x/plan.diff (sha256 d3661012...); patch -p1 --dry-run then patch -p1; three files must equal fixed_sha256_prototype",
+        "M1.4 gofmt/vet/finish tests plain and race",
+        "M1.5 AC-1 (line 179) and AC-1b (line 79) on the fix: 4 x PASS 20; snapshot /tmp/w327x/fixed.sha",
+        "M1.6 allmuts.sh"
+      ],
+      "tests": [
+        "T1 TestEpisodeFinishScopeExpiry (rewritten): pinned clock finishClockAt=2_000_000_000; scope at now -1/0/+1/+3600/+3601 -> 403/403/200/200/403",
+        "T2 TestEpisodeFinishOperatorProofExpiryBoundary (new): proof at now -1/0/+1/+300/+301 -> 403/403/200/200/403",
+        "T3 TestEpisodeFinishRecordRechecksScopeExpiry (new): approve scope T+3600 at T; push-failed record at T-1/T/T+3599/T+3600 -> 403/200/200/403",
+        "AC11 future arm: time.Now().Unix()+301 -> +3600"
+      ],
+      "acceptance_commands": ["M1.2 AC-1/AC-1b base", "G1", "G2", "G3", "G4", "G5"],
+      "mutations": [
+        {"id": "P1", "line": "episode_finish.go:168", "edit": "'scope.ExpiresAt <= now' -> 'scope.ExpiresAt < now'", "must_fail_test": "TestEpisodeFinishScopeExpiry (:187 now+0: 200, want 403)", "prototype": "killed"},
+        {"id": "P2", "line": "episode_finish.go:168", "edit": "'scope.ExpiresAt <= now ||' -> 'false ||'", "must_fail_test": "TestEpisodeFinishScopeExpiry (now-1)", "prototype": "killed"},
+        {"id": "P3", "line": "episode_finish.go:168", "edit": "'scope.ExpiresAt > now+3600' -> 'scope.ExpiresAt >= now+3600'", "must_fail_test": "TestEpisodeFinishScopeExpiry (now+3600: 403, want 200); also T3", "prototype": "killed (T1 + T3)"},
+        {"id": "P4", "line": "episode_finish.go:168", "edit": "'now+3600' -> 'now+3601'", "must_fail_test": "TestEpisodeFinishScopeExpiry (now+3601)", "prototype": "killed"},
+        {"id": "P5", "line": "episode_finish.go:168", "edit": "'now+3600' -> 'now+3660'", "must_fail_test": "TestEpisodeFinishScopeExpiry (now+3601)", "prototype": "killed"},
+        {"id": "P6", "line": "episode_finish.go:168", "edit": "'scope.ExpiresAt > now+3600' -> 'false'", "must_fail_test": "TestEpisodeFinishScopeExpiry (now+3601)", "prototype": "killed"},
+        {"id": "Q1", "line": "episode_finish.go:270", "edit": "'scope.ExpiresAt <= now' -> 'scope.ExpiresAt < now'", "must_fail_test": "TestEpisodeFinishRecordRechecksScopeExpiry (:232 approve+3600: 200, want 403)", "prototype": "killed"},
+        {"id": "Q2", "line": "episode_finish.go:270", "edit": "'scope.ExpiresAt <= now ||' -> 'false ||'", "must_fail_test": "T3 (approve+3600)", "prototype": "killed"},
+        {"id": "Q3", "line": "episode_finish.go:270", "edit": "'scope.ExpiresAt > now+3600' -> 'scope.ExpiresAt >= now+3600'", "must_fail_test": "T3 (approve+0: 403, want 200)", "prototype": "killed"},
+        {"id": "Q4", "line": "episode_finish.go:270", "edit": "'now+3600' -> 'now+3601'", "must_fail_test": "T3 (approve-1: 200, want 403)", "prototype": "killed"},
+        {"id": "Q6", "line": "episode_finish.go:270", "edit": "'scope.ExpiresAt > now+3600' -> 'false'", "must_fail_test": "T3 (approve-1)", "prototype": "killed"},
+        {"id": "R1", "line": "episode_finish.go:116", "edit": "'p.ExpiresAt <= now' -> 'p.ExpiresAt < now'", "must_fail_test": "TestEpisodeFinishOperatorProofExpiryBoundary (:204 now+0: 200, want 403)", "prototype": "killed"},
+        {"id": "R2", "line": "episode_finish.go:116", "edit": "'p.ExpiresAt <= now ||' -> 'false ||'", "must_fail_test": "TestEpisodeFinishOperatorProofAC11/expired; T2", "prototype": "killed (+ AC11 cascade, D4)"},
+        {"id": "R3", "line": "episode_finish.go:116", "edit": "'p.ExpiresAt > now+300' -> 'p.ExpiresAt >= now+300'", "must_fail_test": "T2 (now+300: 403, want 200)", "prototype": "killed"},
+        {"id": "R4", "line": "episode_finish.go:116", "edit": "'now+300' -> 'now+301'", "must_fail_test": "T2 (now+301: 200, want 403)", "prototype": "killed"},
+        {"id": "R6", "line": "episode_finish.go:116", "edit": "'p.ExpiresAt > now+300' -> 'false'", "must_fail_test": "TestEpisodeFinishOperatorProofAC11/future; T2", "prototype": "killed (+ AC11 cascade, D4)"},
+        {"id": "S0", "line": "episode_finish.go:115", "edit": "control: 'd.finishNow()' -> itself, scratch zz_mut_wall.go (wallNow) present", "control_pass": "rc 0, fails=[]", "prototype": "rc 0"},
+        {"id": "S1", "line": "episode_finish.go:115", "edit": "'d.finishNow()' -> 'wallNow()' (scratch file)", "must_fail_test": "T1, T2, T3", "prototype": "killed (all three)"},
+        {"id": "S2", "line": "episode_finish.go:167", "edit": "'d.finishNow()' -> 'wallNow()'", "must_fail_test": "T1, T2, T3", "prototype": "killed (all three)"},
+        {"id": "S3", "line": "episode_finish.go:269", "edit": "'d.finishNow()' -> 'wallNow()'", "must_fail_test": "T3 (approve+0: 403, want 200)", "prototype": "killed"},
+        {"id": "W1", "line": "daemon.go:800", "edit": "'finishNow: func() int64 { return time.Now().Unix() }' -> 'finishNow: func() int64 { return 0 }'", "must_fail_test": "TestEpisodeFinishOperatorProofAC11 (:106: 403)", "prototype": "killed"},
+        {"id": "TM1", "line": "episode_finish_test.go:179", "edit": "'pinFinishClock(d, finishClockAt)' -> '_ = finishClockAt'", "must_fail_test": "TestEpisodeFinishScopeExpiry (:187 now+1: 403, want 200)", "prototype": "killed"}
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2",
+      "title": "AC-3 (host/daemon plain + race, -count=200 race finish tests, cmd/ailang-worldd -run Finish), AC-4 (go build ./... && go test ./...; verify_ail.sh), executor report",
+      "est_loc": 0,
+      "files": ["design_docs/verification/world-iter327/executor-report.md", "design_docs/verification/world-iter327/executor-*.txt"],
+      "edits": ["no code edits; copy /tmp/w327x logs to design_docs/verification/world-iter327/executor-<name>.txt; write executor-report.md in the shape of design_docs/verification/world-iter320/executor-report.md"],
+      "tests": ["the whole host/daemon package (plain and race)", "go test ./..."],
+      "acceptance_commands": ["G6 AC-3", "G7 AC-4 (+ plan §M2.3 failure classification)", "shasum -a 256 -c /tmp/w327x/fixed.sha => OK x3", "G8"],
+      "mutations": [],
+      "closing": "Hand-off: the controller writes row 236, moves the docs to implemented/, commits, and reads all 3 CI jobs on the PR.",
+      "status": "planned"
+    }
+  ],
+  "mutation_revert": "runmut.sh copies the target to /tmp/w327x/tools/orig.<pid>, applies one exact single-line replacement (assert count == 1), runs go test -timeout 180s ./host/daemon/ -run '^TestEpisodeFinish' -count=1 -v, copies the original back and prints sha before/after (must be equal). After the drill: shasum -a 256 -c /tmp/w327x/fixed.sha must be OK x3 and host/daemon/zz_mut_wall.go absent.",
+  "failure_classification": "AC-4 failure outside host/daemon and not *Finish*: rerun alone -count=3 in the worktree (3/3 PASS = load flake); if it still fails, run the same command at base 4d43d8e3 in /tmp/w327x/base (git archive); fails there too = pre-existing; passes there = regression, stop. A git-archive copy has no .git, so tests shelling out to git fail there for that reason alone.",
+  "design_discrepancies": [
+    "D1 test comments fixed vs designer-prototype.diff: 'd.now' -> 'd.finishNow' (stale pre-rename name); base line refs :169/:117/:271 replaced by function names (they are wrong once the time import goes); T3 comment reflowed. Comments only. Consequence: T3 Fatalf at :232, not design §4's :231. Production files byte-identical to designer r2 prototype (V17 sha prefixes e6b70d7e3f3f / e429375dc3e0).",
+    "D2 mutant texts made concrete ('arm dropped' = 'false ||' / 'false'); fixed-tree line numbers (:116/:168/:270, seam :115/:167/:269, daemon.go:800, test :179); 16 bound mutants = P1-P6, Q1-Q4+Q6, R1-R4+R6 as the design.",
+    "D3 S0 control (no-op replacement with the scratch wallNow file present) added; rc 0.",
+    "D4 R2/R6 also red later AC11 subtests by cascade (an accepted proof writes the approval heads; later 'refusal wrote' checks fire). Named killers red.",
+    "D5 /tmp/w327d instantiated as /tmp/w327x; tool scripts are designer-tools.txt with that path, a build_err count, extra go-test flags and restore-on-apply-failure.",
+    "First verification of the r2 diff: the design's r3 notes say P/Q/R/TM1 attributions and package-green were measured only on the pre-rename prototype; the planner's run on the exact planned files re-measured all of them."
+  ],
+  "out_of_scope": "R1 production client on the proof's upper edge (episode_finish_operator.go:48); R2 the other 17 time.Now() reads in host/daemon; option (ii) shared daemon clock; row 235 (TestHumanApproveIsSerializedAcrossEpisodes); any CI list edit.",
+  "status": "planned"
+}
