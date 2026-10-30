@@ -3346,3 +3346,10 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a.
 **Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.
+
+**Record follow-through (iteration 323):** the independent evaluator judged record commit `f7c68d57` on `8b840dd0`: **r1 PASS 93/100, zero blocking** (33/23/25/12). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (46,440 tok, 58 s, 10 tool uses). It re-derived the no-pick premise (6 commits since `ddb5da67`, 0 directives in #366's 22 comments, 0 open PRs, `8b840dd0` 3/3), the 29 closed upstream numbers by its own per-number API reads, the sweep counts, the STATUS rotation (320 stamp byte-identical in the archive, 3 stamps, 243 queue rows before and after) and the ledger (91 valid).
+- **NB1** (four of the five dev CI runs not re-derived by the judge): verified by the controller with `gh run list --workflow CI --branch dev --limit 5` (all success; `e15fc11f` attempt 2) and banked in the readings file.
+- **NB2** (readings "prints only `217. **[NEXT`"): refuted. The file prints all three tags (217, 218, 219). The `[NEXT` cut is the pattern stopping at the tag, by design.
+- **NB3** (the dashboard dropped row 162's re-measure caveat): applied.
+- **NB4** ("loop-routable" for rows rule (d) bars): applied. The stamp now says "the next rows below them".
+- No r2: every change is wording, a dashboard line or a banked reading.

@@ -71,3 +71,11 @@ per-issue (charter / log / status-archive / dashboard counts of #N):
 #366  4 / 45 / 1 / 0  (Ailang World mission bookkeeping — week of 2026-10-26)
 negative control (fresh literal, not printed): charter count=0
 verdict: 0 orphans of 1 enumerated open issue (the only open issue is this week's bookkeeping thread)
+
+## Dev CI run history (added after judge r1 NB1)
+$ gh run list -R sunholo-data/ailang-world --branch dev --workflow CI --limit 5 --json headSha,conclusion,attempt
+8b840dd0 success attempt=1
+e15fc11f success attempt=2
+ddb5da67 success attempt=1
+33f0561a success attempt=1
+2f15c7cd success attempt=1
