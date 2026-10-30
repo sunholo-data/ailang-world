@@ -139,6 +139,10 @@ session_meta record's cwd to the launch directory. Zero or multiple matches
 record transcript_state: missing with a reason, leave the previous copy alone,
 and preserve the agent's exit outcome. Copied streams use the same token scan,
 scrubbing and numbered separators as headless launch. Terminal output is separate.
+Only regular host files are copied: the open refuses a symlink leaf and checks
+the open file again. Files larger than 64 MiB record missing with that reason;
+no copy is kept. Private staging files are removed on every outcome. The wall
+cap is the session's remaining lifetime; parent cancellation records canceled.
 
 An expired session can be resumed with its pinned grants, checks, agent, model,
 TTL and existing worktree:
@@ -156,4 +160,14 @@ resumes list records the old credential and the current preset file digest;
 the original mint fields stay pinned. An edited preset is named in the prompt,
 and its new grants are used only by a new episode start. A live credential
 refuses with F12 and points to episode launch; revoked or finished episodes
-have no credential to resume and need a new start.
+have no credential to resume and need a new start. A credential remains live
+at its exact expiry second; resume is allowed only after that second.
+
+The current credential is the last successful resumes entry's credential_id,
+or the original start credential when no resume has succeeded. Revoking that
+id ends the episode even while older expired rows remain. The mint transaction
+rechecks current authority and liveness, so competing resumes cannot both mint.
+A failure after mint revokes the new credential, marks its history entry failed,
+and restores the old file names. Failed entries do not advance current authority.
+The adopted worktree must still have the pinned branch and belong to the pinned
+repository, checked using both repositories' resolved git common directories.

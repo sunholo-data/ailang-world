@@ -335,7 +335,7 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 				_ = ro.Close()
 				live := false
 				for _, row := range rows {
-					live = live || row.ExpiresAt > time.Now().Unix()
+					live = live || row.ExpiresAt >= time.Now().Unix()
 				}
 				if e == nil && len(rows) > 0 && !live {
 					newRound = "ailang-worldd episode start --resume " + ep + " --preset " + name

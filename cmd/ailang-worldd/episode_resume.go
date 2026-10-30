@@ -18,6 +18,9 @@ import (
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
+// Tests inject a post-rename failure without changing the mint or token writer.
+var resumeAfterRename = func() error { return nil }
+
 func runEpisodeResume(fs *flag.FlagSet, pos []string, ep, name, presetsDir, profilesDir string, out, errOut io.Writer, env sessionEnv) int {
 	next := "ailang-worldd episode start --resume " + ep + " --preset " + name
 	fail := func(err error) int {
@@ -73,15 +76,21 @@ func runEpisodeResume(fs *flag.FlagSet, pos []string, ep, name, presetsDir, prof
 	}
 	now := env.now()
 	for _, row := range rows {
-		if row.ExpiresAt > now {
+		if row.ExpiresAt >= now {
 			left := row.ExpiresAt - now
 			return fail(presetRefusal(fmt.Sprintf("episode %s has a live session (%dh%dm left) (F12)", ep, left/3600, left/60%60), "resume re-mints only an expired session", "ailang-worldd episode launch "+ep+" --preset "+name))
 		}
 	}
-	if len(rows) == 0 {
+	current := store.CurrentEpisodeCredential(start, rows)
+	var old store.SessionRow
+	for _, row := range rows {
+		if row.CredentialID == current {
+			old = row
+		}
+	}
+	if old.CredentialID == "" {
 		return fail(presetRefusal("episode "+ep+" has no credential to resume (revoked or finished)", "revoke ends an episode", "ailang-worldd episode start --preset "+name+" --branch "+start.Branch))
 	}
-	old := rows[len(rows)-1]
 	var grants []broker.Capability
 	if err := json.Unmarshal([]byte(old.GrantsJSON), &grants); err != nil {
 		return fail(err)
@@ -116,6 +125,22 @@ func runEpisodeResume(fs *flag.FlagSet, pos []string, ep, name, presetsDir, prof
 	branch, err := worktree.Output(ctx, git, []string{"-C", req.dir, "symbolic-ref", "--short", "HEAD"})
 	if err != nil || strings.TrimSpace(branch) != start.Branch {
 		return fail(fmt.Errorf("worktree %s is not on start branch %s", req.dir, start.Branch))
+	}
+	common := func(dir string) (string, error) {
+		s, err := worktree.Output(ctx, git, []string{"-C", dir, "rev-parse", "--git-common-dir"})
+		if err != nil {
+			return "", err
+		}
+		p := strings.TrimSpace(s)
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(dir, p)
+		}
+		return filepath.EvalSymlinks(p)
+	}
+	adopted, adoptedErr := common(req.dir)
+	repoCommon, repoErr := common(start.Repo)
+	if adoptedErr != nil || repoErr != nil || adopted != repoCommon {
+		return fail(fmt.Errorf("the worktree %s is not a worktree of %s", req.dir, start.Repo))
 	}
 	suffix := ".expired-" + strconv.FormatInt(now, 10)
 	var oldFiles []string
@@ -163,14 +188,24 @@ func runEpisodeResume(fs *flag.FlagSet, pos []string, ep, name, presetsDir, prof
 	req.presetPrompt = fmt.Sprintf("resume episode %s (started %s; preset %s, pinned %s)\n  preset    %s\n  expired   credential %s expired %s; %s.session and %s.mcp.json are kept as %s.session%s and %s.mcp.json%s\n  worktree  %s on existing branch %s (adopted)\n  agent     %s %s\n  grants    %s\n  session   %ds\n",
 		ep, start.StartedAt, name, start.Preset.SHA256, presetStatus, old.CredentialID, time.Unix(old.ExpiresAt, 0).Format(time.RFC3339), ep, ep, ep, suffix, ep, suffix, req.dir, start.Branch, start.Agent, start.Model, grantList(grants), start.TTLS)
 	req.resume = &store.EpisodeResume{ResumedFrom: old.CredentialID, ResumedAt: time.Unix(now, 0).Format(time.RFC3339), TTLS: start.TTLS, PresetFileSHA256: digest}
+	var renamed []string
+	req.resumeRollback = func() error {
+		var errs []error
+		for i := len(renamed) - 1; i >= 0; i-- {
+			file := renamed[i]
+			errs = append(errs, os.Rename(file+suffix, file))
+		}
+		return errors.Join(errs...)
+	}
 	req.outPath = filepath.Join(p.SessionsDir, ep+".session")
 	req.beforeToken = func() error {
 		for _, file := range oldFiles {
 			if err := os.Rename(file, file+suffix); err != nil {
 				return err
 			}
+			renamed = append(renamed, file)
 		}
-		return nil
+		return resumeAfterRename()
 	}
 	if code := provisionEpisode(req, out, errOut, env); code != exitOK {
 		return code

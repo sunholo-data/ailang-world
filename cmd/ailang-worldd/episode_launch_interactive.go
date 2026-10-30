@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
@@ -126,21 +127,30 @@ func claudeTranscriptPath(dir, id string, env []string) hostTranscript {
 		if regularHostTranscript(path) {
 			return hostTranscript{path: path, id: id}
 		}
+		if _, err := os.Lstat(path); err == nil {
+			return hostTranscript{reason: "not a regular file: " + path}
+		}
 		return hostTranscript{reason: "no " + path}
 	}
 	prefix := slug[:200] + "-"
 	entries, _ := os.ReadDir(projects)
 	var matches []string
+	var rejected string
 	for _, entry := range entries {
 		if entry.IsDir() && strings.HasPrefix(entry.Name(), prefix) {
 			p := filepath.Join(projects, entry.Name(), id+".jsonl")
 			if regularHostTranscript(p) {
 				matches = append(matches, p)
+			} else if _, err := os.Lstat(p); err == nil {
+				rejected = "not a regular file: " + p
 			}
 		}
 	}
 	if len(matches) == 1 {
 		return hostTranscript{path: matches[0], id: id}
+	}
+	if len(matches) == 0 && rejected != "" {
+		return hostTranscript{reason: rejected}
 	}
 	return hostTranscript{reason: fmt.Sprintf("%d transcripts under %s/%s* for %s", len(matches), projects, prefix, id)}
 }
@@ -153,6 +163,7 @@ func codexTranscriptPath(hostsDir, dir string, start, end time.Time) hostTranscr
 	last := hi.In(time.Local).Format("2006/01/02")
 	real, _ := filepath.EvalSymlinks(dir)
 	var matches []hostTranscript
+	var rejected string
 	for {
 		date := day.Format("2006/01/02")
 		entries, _ := os.ReadDir(filepath.Join(root, date))
@@ -168,10 +179,18 @@ func codexTranscriptPath(hostsDir, dir string, start, end time.Time) hostTranscr
 			}
 			path := filepath.Join(root, date, name)
 			if !regularHostTranscript(path) {
+				rejected = "not a regular file: " + path
 				continue
 			}
-			f, err := os.Open(path)
+			f, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
 			if err != nil {
+				rejected = fmt.Sprintf("not a regular file: %s: %v", path, err)
+				continue
+			}
+			info, statErr := f.Stat()
+			if statErr != nil || !info.Mode().IsRegular() {
+				_ = f.Close()
+				rejected = "not a regular file: " + path
 				continue
 			}
 			var meta struct {
@@ -195,6 +214,9 @@ func codexTranscriptPath(hostsDir, dir string, start, end time.Time) hostTranscr
 	if len(matches) == 1 {
 		return matches[0]
 	}
+	if len(matches) == 0 && rejected != "" {
+		return hostTranscript{reason: rejected}
+	}
 	return hostTranscript{reason: fmt.Sprintf("%d rollouts under %s for %s", len(matches), root, dir)}
 }
 
@@ -202,11 +224,25 @@ func copyHostTranscript(source hostTranscript, stage *os.File) error {
 	if !regularHostTranscript(source.path) {
 		return fmt.Errorf("host transcript is not a regular file: %s", source.path)
 	}
-	f, err := os.Open(source.path)
+	f, err := os.OpenFile(source.path, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
+	if err != nil {
+		return fmt.Errorf("host transcript is not a regular file: %s: %w", source.path, err)
+	}
+	defer f.Close()
+	info, err := f.Stat()
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	_, err = io.Copy(stage, f)
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("host transcript is not a regular file: %s", source.path)
+	}
+	const capBytes = 64 << 20
+	if info.Size() > capBytes {
+		return fmt.Errorf("host transcript larger than 64 MiB: %s", source.path)
+	}
+	n, err := io.Copy(stage, io.LimitReader(f, capBytes+1))
+	if n > capBytes {
+		return fmt.Errorf("host transcript larger than 64 MiB: %s", source.path)
+	}
 	return err
 }

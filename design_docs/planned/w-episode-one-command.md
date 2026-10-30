@@ -426,7 +426,7 @@ profile, and only its digest and bytes travel into the start record.
 
 ## §8 Milestones
 
-M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2 built in w217b (2026-10-29): headless launch, transcript and append-only launch history. M3 built in w217c (2026-10-30): interactive launch, copied host transcripts and append-only resumes; deviation from §3.5 step 4: interactive children share the terminal foreground process group (no tcsetpgrp), terminal INT/QUIT/HUP are not forwarded, TERM and cancellation target the child pid; M4 remains unbuilt.
+M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2 built in w217b (2026-10-29): headless launch, transcript and append-only launch history. M3 built in w217c (2026-10-30): interactive launch, copied host transcripts and append-only resumes; deviation from §3.5 step 4: interactive children share the terminal foreground process group (no tcsetpgrp), terminal INT/QUIT/HUP are not forwarded, TERM and cancellation target the child pid; round 2 hardens current-credential revocation, atomic resume guards and rollback, expiry equality, repository adoption, and bounded no-follow host copies with staging cleanup; M4 remains unbuilt.
 
 | M | what | gate |
 |---|---|---|

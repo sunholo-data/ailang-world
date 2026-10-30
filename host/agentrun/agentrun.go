@@ -95,7 +95,9 @@ func run(ctx context.Context, argv []string, dir string, env []string, stdout, s
 	if cmd.ProcessState != nil {
 		r.ExitCode = cmd.ProcessState.ExitCode()
 	}
-	if runCtx.Err() != nil && (tty == nil || errors.Is(runCtx.Err(), context.DeadlineExceeded)) {
+	if tty != nil && ctx.Err() != nil {
+		r.Reason = "canceled"
+	} else if runCtx.Err() != nil {
 		r.Reason = "timeout"
 	} else if seen || r.ExitCode < 0 {
 		r.Reason = "signal"

@@ -216,6 +216,7 @@ type mintRequest struct {
 	afterToken     func(token string) error
 	resume         *store.EpisodeResume
 	beforeToken    func() error
+	resumeRollback func() error
 	start          *store.EpisodeStart
 	startPoint     string
 	existingBranch bool
@@ -500,6 +501,16 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 		}
 	}
 	if err != nil && minted {
+		if r.resume != nil {
+			if rerr := st.FailEpisodeResume(ctx, r.episode, credentialID); rerr != nil {
+				fmt.Fprintf(stderr, "%scould not mark failed resume: %v\n", prefix, rerr)
+			}
+			if r.resumeRollback != nil {
+				if rerr := r.resumeRollback(); rerr != nil {
+					fmt.Fprintf(stderr, "%scould not restore resume files: %v\n", prefix, rerr)
+				}
+			}
+		}
 		// The row exists but nobody holds its token: revoke it too.
 		if rerr := authority.Revoke(ctx, st, credentialID); rerr != nil {
 			fmt.Fprintf(stderr, "%scould not revoke the unwritten credential %s: %v\n", prefix, credentialID, rerr)

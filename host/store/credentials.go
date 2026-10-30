@@ -417,6 +417,12 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 		return fmt.Errorf("store: mint session: begin: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
+	if resume != nil {
+		if err := checkResume(ctx, tx, row, *resume); err != nil {
+			return err
+		}
+		resume.CredentialID = row.CredentialID
+	}
 	// An unbound row names only the five original columns, so the same
 	// statement works on a version-1 store; the binding columns stay NULL.
 	stmt := `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)

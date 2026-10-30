@@ -13,8 +13,9 @@ const episodeStartsSQL = `CREATE TABLE episode_starts (
 )`
 
 // EpisodeStart holds immutable attended mint fields, independent of credentials.
-// Mint fields never change. Launches and Resumes are append-only, written only
-// by AppendEpisodeLaunch and MintSessionWithResume respectively.
+// Mint fields never change. Launches and Resumes are appended only by
+// AppendEpisodeLaunch and MintSessionWithResume respectively. FailEpisodeResume
+// may mark a resume failed without removing its history.
 // It contains no token and has no session-authorized writer.
 type EpisodeStart struct {
 	Schema        string          `json:"schema"`
@@ -154,10 +155,83 @@ func (c *Credentials) AppendEpisodeLaunch(ctx context.Context, episode string, l
 }
 
 type EpisodeResume struct {
+	CredentialID     string `json:"credential_id"`
+	Failed           bool   `json:"failed,omitempty"`
 	ResumedFrom      string `json:"resumed_from"`
 	ResumedAt        string `json:"resumed_at"`
 	TTLS             int64  `json:"ttl_s"`
 	PresetFileSHA256 string `json:"preset_file_sha256"`
+}
+
+// CurrentEpisodeCredential returns the last successful resume's credential,
+// or the original start credential. Failed attempts never advance the chain.
+func CurrentEpisodeCredential(start *EpisodeStart, rows []SessionRow) string {
+	for i := len(start.Resumes) - 1; i >= 0; i-- {
+		if !start.Resumes[i].Failed {
+			return start.Resumes[i].CredentialID
+		}
+	}
+	if len(start.Resumes) > 0 {
+		return start.Resumes[0].ResumedFrom
+	}
+	var oldest *SessionRow
+	for i := range rows {
+		if oldest == nil || rows[i].CreatedAt < oldest.CreatedAt {
+			oldest = &rows[i]
+		}
+	}
+	if oldest != nil {
+		return oldest.CredentialID
+	}
+	return ""
+}
+
+// checkResume runs before insertion in the mint transaction. CreatedAt is the
+// caller's mint time, never a store clock read.
+func checkResume(ctx context.Context, tx *sql.Tx, row SessionRow, resume EpisodeResume) error {
+	var data string
+	if err := tx.QueryRowContext(ctx, "SELECT start_json FROM episode_starts WHERE episode = ?", row.EpisodeID).Scan(&data); err != nil {
+		return err
+	}
+	var start EpisodeStart
+	if err := json.Unmarshal([]byte(data), &start); err != nil {
+		return err
+	}
+	rs, err := tx.QueryContext(ctx, "SELECT credential_id, created_at, expires_at FROM session_credentials WHERE episode_id = ?", row.EpisodeID)
+	if err != nil {
+		return err
+	}
+	var rows []SessionRow
+	for rs.Next() {
+		var r SessionRow
+		if err := rs.Scan(&r.CredentialID, &r.CreatedAt, &r.ExpiresAt); err != nil {
+			_ = rs.Close()
+			return err
+		}
+		rows = append(rows, r)
+	}
+	err = rs.Err()
+	_ = rs.Close()
+	if err != nil {
+		return err
+	}
+	current := CurrentEpisodeCredential(&start, rows)
+	found := false
+	for _, r := range rows {
+		if r.CredentialID == current {
+			found = true
+		}
+		if r.ExpiresAt >= row.CreatedAt {
+			return errors.New("episode has a live session (F12)")
+		}
+	}
+	if !found {
+		return errors.New("no credential to resume (revoked or finished): revoke ends an episode")
+	}
+	if current != resume.ResumedFrom {
+		return errors.New("episode current credential changed (F12); retry resume")
+	}
+	return nil
 }
 
 // MintSessionWithResume atomically mints a credential and appends resume history.
@@ -166,6 +240,55 @@ func (c *Credentials) MintSessionWithResume(ctx context.Context, row SessionRow,
 		return errors.New("store: resume requires the credentials writer lock")
 	}
 	return c.mintSession(ctx, row, nil, &resume)
+}
+
+// FailEpisodeResume keeps history while returning current authority to the
+// previous credential. It changes only the failed entry's status.
+func (c *Credentials) FailEpisodeResume(ctx context.Context, episode, credential string) error {
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
+	if c.lock == nil {
+		return errors.New("store: fail resume requires the credentials writer lock")
+	}
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	var data string
+	if err := tx.QueryRowContext(ctx, "SELECT start_json FROM episode_starts WHERE episode = ?", episode).Scan(&data); err != nil {
+		return err
+	}
+	var start map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(data), &start); err != nil {
+		return err
+	}
+	var entries []map[string]json.RawMessage
+	if err := json.Unmarshal(start["resumes"], &entries); err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		var id string
+		if err := json.Unmarshal(entry["credential_id"], &id); err != nil {
+			return err
+		}
+		if id == credential {
+			entry["failed"] = json.RawMessage("true")
+		}
+	}
+	start["resumes"], err = json.Marshal(entries)
+	if err != nil {
+		return err
+	}
+	encoded, err := json.Marshal(start)
+	if err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, "UPDATE episode_starts SET start_json = ? WHERE episode = ?", string(encoded), episode); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func appendResume(ctx context.Context, tx *sql.Tx, episode string, resume EpisodeResume) error {
