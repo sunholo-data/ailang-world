@@ -12,17 +12,18 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 325 | 2026-10-30 | no pick: rule (d) block report 8; release rows 150/151 still wait on attended steps; log rotated to 20 live entries; dev green at 39aabca3 [ADMIN] |
 | 324 | 2026-10-30 | no pick: rule (d) block report 7; release rows 150/151 still wait on attended steps; no upstream predicate open; dev green at 42fdf32a [ADMIN] |
 | 323 | 2026-10-30 | no pick: rule (d) block report 6; release rows 150/151 still wait on attended steps; no upstream predicate open; dev green at 8b840dd0 [ADMIN] |
-| 322 | 2026-10-30 | no pick: rule (d) block report 5; release rows 150/151 still wait on attended steps; four live rows' closed upstream issues recorded (53, 77, 78, 162) [ADMIN] |
+| 322 | 2026-10-30 | no pick: rule (d) block report 5; release rows 150/151 still wait on attended steps; four live rows' closed upstream issues recorded (53, 77, 78, 1... |
 | 321 | 2026-10-29 | no pick: rule (d) block report 4; release rows 150/151 still wait on attended steps; dev green at 33f0561a [ADMIN] |
-| 320 | 2026-10-29 | rule (d) block report 3, then dev went red under the record → row 234: requireF15's "134" substring check replaced by a structural predicate; judge PASS 91 [PRODUCT] |
-| 319 | 2026-10-29 | no pick: rule (d) block report 2; release rows 150/151 still wait on attended steps; dev green with row 232's fix (the dc24fccf red predates it) [ADMIN] |
-| 318 | 2026-10-29 | row 232: a reverse-leg dial that fails at connect with ECONNRESET is SILENT — taken as a Gate-1 dev red; Linux errno measured first-party; judge r1 PASS 92 [PRODUCT] |
-| 317 | 2026-10-29 | no pick: rule (d) block report; release rows 150/151 wait on attended steps; row 232's premise re-measured (not a breach; mechanism found); D-WORLD-102 filed [ADMIN] |
-| 316 | 2026-10-29 | row 150: M8b built — final repository gates and C11 protected-path observation; QUICKSTART §13 states the r5 P0/phone rules; judge r1 PASS 93 → r2 PASS 93 [PRODUCT] |
+| 320 | 2026-10-29 | rule (d) block report 3, then dev went red under the record → row 234: requireF15's "134" substring check replaced by a structural predicate; judge... |
+| 319 | 2026-10-29 | no pick: rule (d) block report 2; release rows 150/151 still wait on attended steps; dev green with row 232's fix (the dc24fccf red predates it) [A... |
+| 318 | 2026-10-29 | row 232: a reverse-leg dial that fails at connect with ECONNRESET is SILENT — taken as a Gate-1 dev red; Linux errno measured first-party; judge r1... |
+| 317 | 2026-10-29 | no pick: rule (d) block report; release rows 150/151 wait on attended steps; row 232's premise re-measured (not a breach; mechanism found); D-WORLD... |
+| 316 | 2026-10-29 | row 150: M8b built — final repository gates and C11 protected-path observation; QUICKSTART §13 states the r5 P0/phone rules; judge r1 PASS 93 → r2 ... |
+| 315 | 2026-10-28 | row 150: C8′(iii)/P0 store-dependent-geometry amendment written (orchestration doc r3 → r5); quorum BLOCKED twice → carve-out; judge r1 PASS 77 → c... |
 | 314 | 2026-10-28 | dev RED at Gate 1 → arm 6 reverse-leg false refusal fixed and LANDED (row 229, PR #403; judge PASS 92) [PRODUCT-HYGIENE] |
-| 315 | 2026-10-28 | row 150: C8′(iii)/P0 store-dependent-geometry amendment written (orchestration doc r3 → r5); quorum BLOCKED twice → carve-out; judge r1 PASS 77 → controller fix → r2 PASS 84 [PRODUCT] |
 | 313 | 2026-10-28 | row 150: M8a built — reproduction docs, captions, release manifest schema and `marketingcheck docs`; judge r1 PASS 82 → controller fix → r2 PASS 89... |
 | 312 | 2026-10-28 | row 150: R1 measured — real-Chrome rectangles, two-pass full path and threshold V-row, with two store-dependent criteria left open; row 156 closed ... |
 | 311 | 2026-10-28 | row 150: M7c4 built — the real-Chrome drill exists and the capture shell compares frozen inventories around both passes; judge PASS 92 [PRODUCT] |
