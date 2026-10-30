@@ -3294,3 +3294,55 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **`gh run rerun 40980017500 --failed`** gave attempt 2 green. `commits/e15fc11f/check-runs` → 3, all success, so dev is green.
 - I did not take the red as a second item. A re-run cleared it, the merge tree equals a green tree, there is one instance, and it does not reproduce locally. That does not meet the "measured failure" bar for a fix (the mission-control skill's standing rule 5, "data before conclusions"). The precedent is row 232: filed from PR CI reds and taken only when it went red on dev at Gate 1 (iteration 318).
 - **Judge r3** (SendMessage resume, sonnet, 84,813 tok, 69 s, 8 tool uses) checked the landing follow-through `ace05db9`: **PASS 88/100, zero blocking** (29/21/25/13). It verified the run attempts, that the DATA RACE blocks are the known-positive control, the tree identity, the no-prior-mention grep, the mechanism against `concurrencyProbe.Execute`, and the charter diff (one row appended plus the stamp). Its own focused run passed 5/5. NB1 (the iteration-265 history), NB2 (clause tag "assigned"), NB3 (the standing rule's source) and NB4 (row 232's instance numbering) were applied in the amended commit. NB5 (darwin-only measurement) was already stated.
+
+## 323 — 2026-10-30 — no pick: rule (d) block report 6; release rows 150/151 still wait on attended steps; no upstream predicate open; dev green at 8b840dd0 [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (320 rotated to the archive), the CURRENT GOAL line, a D-WORLD-102 evidence note, this entry, the index row, the dashboard, and `verification/world-iter323/gate1-2-readings.txt`. An independent judge reviews it before merge.
+
+**Pick and why:** none.
+- **Clause map at `8b840dd0`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
+- **What moved since iteration 322:** nothing but 322's own record and landing. `git log ddb5da67..origin/dev` lists 6 commits (`c0484c24`, `d11b8848`, `aa66b3ff`, merge `e15fc11f` of #423, `c2ee8597`, merge `8b840dd0` of #424).
+- **D-WORLD-81 release rows, blockers re-measured this iteration:**
+  - **150** waits only on the attended A1. The controller runs P0 (≤24 h before) and P3 (before pass A) inside the window Mark schedules (orchestration r5 §4.4). Over commit subjects `ddb5da67..8b840dd0`, `grep -ciE 'row ?150|A1\b|marketing'` → **0**; the control `grep -ciE 'iteration|record|merge'` → **6** of 6 commits, so the instrument saw the whole range.
+  - **151** needs row 188's N2d and N4a. `git log origin/dev --since=2026-10-01 --format='%h %s' | grep -ciE 'N2d|N4a'` → **0**; control `N2c` → **2**. The full-message form → **4**: the same four record or design commits iterations 320–322 named (`fe9c891e`, `92495b60`, `be184351`, `dc719822`). None builds either milestone. Rows 217, 218 and 219 are still `[NEXT]` on the attended track, so neither milestone is loop-routable.
+- **Rows 231, 230, 233** are hygiene "below every D-WORLD-81 release row". Rule (d) bars them, and D-WORLD-64's exception covers rows 148–151 only. D-WORLD-102 is OPEN with default B, so this is a block report. Row 235 (filed by 322) is hygiene below the release rows too; rule (d) bars it, and it is not in D-WORLD-102's scope.
+- **External predicates re-read.** This time the enumeration covers the whole charter, not only queue rows: `grep -oE '(ailang ?#|ailang/(issues|pull)/|upstream (issue )?#)[0-9]+'` → **29** distinct numbers. **All 29 are closed** (`gh api repos/sunholo-data/ailang/issues/<n> --jq .state`), so no row waits on an open upstream issue and no predicate can have flipped since iteration 322. Controls: row 53's `ailang#941` matched (pattern fires), and `gh issue list -R sunholo-data/ailang --state open --limit 3` returned 3 (the API reports open issues when they exist). It is a lower bound: a bare `#N` is not counted, because World's own PR numbers share that space.
+- **Weekly external-issue sweep (Gate 0 step 5):** iteration 305 ran this week's sweep after the 2026-10-26 rotation (0 orphans of 1). Re-run here as a check: `gh issue list -R sunholo-data/ailang-world --state open` → 1 issue, the REST issues endpoint (PRs excluded) → 1, and the one issue is #366, the bookkeeping thread (charter 4 / log 45 / status-archive 1 / dashboard 0 before this record). **0 orphans of 1 enumerated.** A fresh negative-control literal read 0 in the charter (not printed, per Gate 4's spent-control rule).
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent). gh `sunholo-voight-kampff`. Billing tripwire CLEAN. Env read by NAME.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (22 comments, none from the allowlist). Nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 1, verdict "1 crash notice". It is the same 2026-10-22 rc=1 notice `6345079873`, already credited (`grep -c 6345079873 design_docs/world-mission-log.md` → 20 before this entry). Control 107:4 ok. No new notice on #366.
+- Unread inbox: a controlplane driver notice that stapledon's pinned source clone drifted (not World's), the iteration-322 `[fyi]` report, and a daneel item. The `mission-world` inbox holds only this loop's claim messages. The iteration-323 claim was sent (`inbox_1793332967693_601a6427`).
+- `mission_decisions.sh --check`: valid, 91 rows, 1 OPEN (D-WORLD-102). No ledger row changed since iteration 322.
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `8b840dd03cc4b6ff5d7a745c0d03faf8a147e3d5`; no fast-forward needed. Gate-1 base `8b840dd0…@2026-10-30T04:01:39Z`.
+- Skill drift: per-file `cmp` of `SKILL.md` and 13 resource files at the resolved symlink target against `origin/dev` in the driver clone: all 14 SAME. Rules read from the resolved target.
+- Dev CI: `commits/8b840dd0/check-runs` → 3, all success (ailang-code verify gate, go race gate, go host build + test gate). The last five dev CI runs (`8b840dd0`, `e15fc11f`, `ddb5da67`, `33f0561a`, `2f15c7cd`) all read success; `e15fc11f`'s is its attempt-2 re-run (row 235).
+- Open PRs: none. Died-mid-flight traces: no iteration-323 branch or worktree existed before this one. `.wt-world-iter306-r0` is the known residue. The attended session's scratchpad worktrees belong to the attended track and were left alone.
+
+**Designer / planner / executor:** not spawned. There is no pick, so the routing table has nothing to send them (precedent 257–264, 317, 319–322). No spawn was attempted, so none failed. The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (driver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=8b840dd03cc4b6ff5d7a745c0d03faf8a147e3d5@2026-10-30T04:04:09Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet`, tokens recorded in the follow-through. Generator ≠ judge: opus controller vs sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150 (attended A1) or 151 (row 188 N2d/N4a absent, measured above).
+- Picking 231, 230, 233 or 235 under rule (d) with D-WORLD-102 unanswered.
+- Re-asking D-WORLD-102. It is the one open decision and the digest carries it; it is not asked again.
+- `ailang mission rotate-log` (39 live entries with this one, under the ~40 threshold). The index row is hand-written as in 317–322.
+
+**Retro:**
+1. **Idle cadence:** this is block report 6 of the run (317, 319, 320, 321, 322, 323). Each costs one judge and two CI cycles, and no code. D-WORLD-102 is still the only lever the loop has.
+2. **Whole-charter enumeration instead of queue-row enumeration.** Iteration 322 needed three passes to count the upstream references on queue rows. Matching every spelling across the whole charter and checking each number's state took one pass and gave a superset (29 numbers). Because every one is closed, the answer does not depend on which row names which issue. Instance 1; no rule edit.
+3. **The controller's own search truncated a positive.** My first check for this week's issue sweep piped `grep` through `tail -4`, which cut off iteration 305's "0 orphans of 1" line, and the first draft of the stamp said no iteration had run the sweep. A per-iteration `awk` over the log found 305's line, and the stamp was corrected before commit. This is rule 3a aimed at a display filter: a `tail` on a search is a sample, not a result. Instance 1; no rule edit.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a.
+**Next:** rule (d) block report unless D-WORLD-102 = A (then 231 → 230 → 233) or dev goes red. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.
