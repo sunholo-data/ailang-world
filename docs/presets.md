@@ -12,6 +12,14 @@ Approval and records use a one-time operator proof beside the credentials store;
 the daemon refuses session credentials on this route. Protected changes are named
 in the commit, body and prompt; --exec-profiles-dir locates the pinned profile.
 
+Re-runs finish the pending commit using its saved body. A still-valid approval for
+the same bytes is reused; completed runs print the PR URL and retry session closure.
+After completion the kept worktree is detached, freeing the branch for a new episode:
+start a fix-up with `episode start --preset my-repo --branch world/<first-ep>`.
+Each fix-up commits only changes since the last World commit, pushes as a
+fast-forward, and takes the existing open PR. The same episode can also make a
+fix-up while it has a live session; either kind requires a new approval.
+
 Create and inspect a preset (replace the repository and branch with yours):
 
 ```sh

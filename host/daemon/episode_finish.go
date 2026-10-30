@@ -32,6 +32,7 @@ type EpisodeFinish struct {
 	Remote       string   `json:"remote"`
 	PR           FinishPR `json:"pr"`
 	Approval     string   `json:"approval"`
+	Scope        string   `json:"scope"`
 	Checks       []string `json:"checks"`
 	Unattributed []string `json:"unattributed"`
 	ReportSHA256 string   `json:"report_sha256"`
@@ -183,11 +184,16 @@ func (d *Daemon) handleEpisodeFinish(w http.ResponseWriter, r *http.Request) {
 		refuse("operator route: record episode does not match")
 		return
 	}
-	scope, err := d.finishDecisionScope(ctx, record.Approval)
+	scope, scopeText, err := d.finishDecisionScope(ctx, record.Approval)
 	if err != nil || scope.Head != record.Branch || scope.SHA != record.Commit || scope.Remote != record.Remote {
 		refuse("operator route: record does not match an approved finish scope")
 		return
 	}
+	if record.Scope != "" && record.Scope != scopeText {
+		refuse("operator route: record scope differs from approval")
+		return
+	}
+	record.Scope = scopeText
 	switch record.Outcome {
 	case "done", "push-failed", "pr-failed", "ambiguous":
 	default:
@@ -202,7 +208,7 @@ func (d *Daemon) handleEpisodeFinish(w http.ResponseWriter, r *http.Request) {
 	if _, used, err := d.store.GetRegistryHead(ctx, usedHead); err != nil {
 		d.writeInternalError(w, r, err)
 		return
-	} else if used && record.Outcome == "done" {
+	} else if used {
 		writeAPIError(w, "Conflict", "finish approval already consumed\nwhy: done is single use\nnext: inspect the episode report", http.StatusConflict)
 		return
 	}
@@ -235,9 +241,9 @@ func (d *Daemon) handleEpisodeFinish(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"record": obj.Hash.String()})
 }
 
-func (d *Daemon) finishDecisionScope(ctx context.Context, text string) (broker.FinishApprovalScope, error) {
-	bad := func() (broker.FinishApprovalScope, error) {
-		return broker.FinishApprovalScope{}, fmt.Errorf("invalid finish approval")
+func (d *Daemon) finishDecisionScope(ctx context.Context, text string) (broker.FinishApprovalScope, string, error) {
+	bad := func() (broker.FinishApprovalScope, string, error) {
+		return broker.FinishApprovalScope{}, "", fmt.Errorf("invalid finish approval")
 	}
 	ref, err := hashref.Parse(text)
 	if err != nil {
@@ -271,5 +277,5 @@ func (d *Daemon) finishDecisionScope(ctx context.Context, text string) (broker.F
 	if err != nil || scope.ExpiresAt <= now || scope.ExpiresAt > now+3600 {
 		return bad()
 	}
-	return scope, nil
+	return scope, request.Scope, nil
 }

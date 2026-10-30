@@ -51,6 +51,7 @@ type finishFixture struct {
 	scopes               []string
 	credentialID         string
 	recordFailure        bool
+	allowRevoked         bool
 	recordHook           func()
 }
 
@@ -143,6 +144,10 @@ func (f *finishFixture) serve(w http.ResponseWriter, r *http.Request) {
 	f.requests = append(f.requests, r.URL.Path)
 	switch r.URL.Path {
 	case "/v1/episodes/ep1/report":
+		if len(f.finishRecords) > 0 {
+			latest := f.finishRecords[len(f.finishRecords)-1]
+			f.rep.Finish = &latest
+		}
 		json.NewEncoder(w).Encode(f.rep)
 	case "/v1/session/self":
 		if f.expired {
@@ -177,7 +182,7 @@ func (f *finishFixture) serve(w http.ResponseWriter, r *http.Request) {
 			}
 			_, exists, err := creds.ResolveSession(r.Context(), f.credentialID)
 			creds.Close()
-			if err != nil || !exists {
+			if err != nil || (!exists && !f.allowRevoked) {
 				f.t.Error("credential revoked before record")
 			}
 			if f.recordFailure {
@@ -416,9 +421,18 @@ func TestEpisodeFinishAttributionCommitDryRunAC5AC6(t *testing.T) {
 		t.Fatal(out)
 	}
 	head := strings.TrimSpace(f.gitOutput("-C", f.wt, "rev-parse", "HEAD"))
-	rc, _, errw = f.run(testMintEnv("", 1), "--include-unattributed")
-	if rc != 1 || !strings.Contains(errw, "already committed at "+head) || strings.TrimSpace(f.gitOutput("-C", f.wt, "rev-parse", "HEAD")) != head {
-		t.Fatalf("rerun %d %s", rc, errw)
+	// M3: a re-run after `done` is the finished state, not M1's "already committed" refusal.
+	records, finishPosts := len(f.finishRecords), countRequests(f.requests, "/v1/episodes/ep1/finish")
+	calls, prepares := len(f.seam.calls), f.seam.prepares
+	rc, out, errw = f.run(testMintEnv("", 1), "--include-unattributed")
+	if len(f.seam.calls) != calls || f.seam.prepares != prepares {
+		t.Fatalf("finished rerun called dispatch: calls %d -> %d, prepares %d -> %d", calls, len(f.seam.calls), prepares, f.seam.prepares)
+	}
+	if rc != 0 || !strings.Contains(out, "episode ep1 is already finished: https://github.com/fixture/repo/pull/1") || strings.TrimSpace(f.gitOutput("-C", f.wt, "rev-parse", "HEAD")) != head {
+		t.Fatalf("rerun %d %s %s", rc, out, errw)
+	}
+	if len(f.finishRecords) != records || countRequests(f.requests, "/v1/episodes/ep1/finish") != finishPosts {
+		t.Fatalf("rerun after done posted again: records %d -> %d", records, len(f.finishRecords))
 	}
 }
 
@@ -437,4 +451,14 @@ func TestEpisodeFinishHelp(t *testing.T) {
 			t.Error("out-of-scope flag " + flag)
 		}
 	}
+}
+
+func countRequests(paths []string, want string) int {
+	n := 0
+	for _, p := range paths {
+		if p == want {
+			n++
+		}
+	}
+	return n
 }
