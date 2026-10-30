@@ -30,7 +30,9 @@ func TestMintResumedStoresAndRollsBack(t *testing.T) {
 		t.Fatal(ok, err)
 	}
 	got, err := st.EpisodeStart(ctx, "ep")
-	if err != nil || len(got.Resumes) != 1 || got.Resumes[0] != resume {
+	want := resume
+	want.CredentialID = id // round 2: each resume records the credential it minted
+	if err != nil || len(got.Resumes) != 1 || got.Resumes[0] != want {
 		t.Fatal(got, err)
 	}
 	before, err := st.ListSessions(ctx, "", store.MaxListSessions)

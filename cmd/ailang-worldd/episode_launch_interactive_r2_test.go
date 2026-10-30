@@ -155,7 +155,7 @@ func TestLaunchInteractiveWallCapIsSessionLeft(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(daemon.SessionSelf{
 				Episode:     "ep",
 				Worktree:    filepath.Join(f.ws, "ep"),
-				SecondsLeft: 5,
+				SecondsLeft: 2,
 				Addr:        "http://" + defaultEpisodeAddr,
 				Grants:      []daemon.SessionGrant{{Effect: "Workspace.Read", Scope: "worktree", Budget: 50, Left: 50}},
 			})
@@ -167,7 +167,9 @@ func TestLaunchInteractiveWallCapIsSessionLeft(t *testing.T) {
 	}
 	entry := f.read().Launches[0]
 	elapsed := time.Since(started)
-	if entry.FinishReason != "timeout" || elapsed < 5*time.Second || elapsed > 8*time.Second {
+	// The cap is the session's 2 s, not the preset's 60 s or the fake's 30 s sleep; the
+	// upper bound leaves room for a loaded grader (it failed at 8.6 s with a 5-8 s window).
+	if entry.FinishReason != "timeout" || elapsed < 2*time.Second || elapsed > 20*time.Second {
 		t.Fatal(entry, elapsed)
 	}
 	assertNoLaunchStageR2(t, f.sessions)
