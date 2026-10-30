@@ -46,6 +46,15 @@ func MintBound(ctx context.Context, st *store.Credentials, episodeID string, bin
 
 // MintStarted keeps the credential and its attended start in one transaction.
 func MintStarted(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, start *store.EpisodeStart) (rawToken, credentialID string, row store.SessionRow, err error) {
+	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, start, nil)
+}
+
+// MintResumed keeps the credential and its resume entry in one transaction.
+func MintResumed(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, resume store.EpisodeResume) (rawToken, credentialID string, row store.SessionRow, err error) {
+	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, nil, &resume)
+}
+
+func mintRecorded(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, start *store.EpisodeStart, resume *store.EpisodeResume) (rawToken, credentialID string, row store.SessionRow, err error) {
 	if (binding.Project == "") != (binding.Digest == "") {
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: a profile binding needs both the project and its digest")
 	}
@@ -84,7 +93,12 @@ func MintStarted(ctx context.Context, st *store.Credentials, episodeID string, b
 		Project:       binding.Project,
 		ProfileDigest: binding.Digest,
 	}
-	if err := st.MintSessionWithStart(ctx, row, start); err != nil {
+	if resume != nil {
+		err = st.MintSessionWithResume(ctx, row, *resume)
+	} else {
+		err = st.MintSessionWithStart(ctx, row, start)
+	}
+	if err != nil {
 		return "", "", store.SessionRow{}, err
 	}
 

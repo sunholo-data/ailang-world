@@ -214,6 +214,9 @@ type mintRequest struct {
 	// MCP config). A failure revokes the credential and rolls back like a
 	// mint failure.
 	afterToken     func(token string) error
+	resume         *store.EpisodeResume
+	beforeToken    func() error
+	resumeRollback func() error
 	start          *store.EpisodeStart
 	startPoint     string
 	existingBranch bool
@@ -472,13 +475,18 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 	mintCtx, cancelMint := context.WithTimeout(ctx, 3*time.Second)
 	var rawToken, credentialID string
 	var row store.SessionRow
-	if r.start != nil {
+	if r.resume != nil {
+		rawToken, credentialID, row, err = authority.MintResumed(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, *r.resume)
+	} else if r.start != nil {
 		rawToken, credentialID, row, err = authority.MintStarted(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, r.start)
 	} else {
 		rawToken, credentialID, row, err = sessionMint(mintCtx, st, r.episode, binding, grants, r.ttl, now, out)
 	}
 	cancelMint()
 	minted := err == nil
+	if err == nil && r.beforeToken != nil {
+		err = r.beforeToken()
+	}
 	if err == nil && r.outPath != "" {
 		if r.outDirCreate {
 			err = os.MkdirAll(filepath.Dir(r.outPath), 0o700)
@@ -493,6 +501,16 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 		}
 	}
 	if err != nil && minted {
+		if r.resume != nil {
+			if rerr := st.FailEpisodeResume(ctx, r.episode, credentialID); rerr != nil {
+				fmt.Fprintf(stderr, "%scould not mark failed resume: %v\n", prefix, rerr)
+			}
+			if r.resumeRollback != nil {
+				if rerr := r.resumeRollback(); rerr != nil {
+					fmt.Fprintf(stderr, "%scould not restore resume files: %v\n", prefix, rerr)
+				}
+			}
+		}
 		// The row exists but nobody holds its token: revoke it too.
 		if rerr := authority.Revoke(ctx, st, credentialID); rerr != nil {
 			fmt.Fprintf(stderr, "%scould not revoke the unwritten credential %s: %v\n", prefix, credentialID, rerr)

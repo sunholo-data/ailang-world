@@ -152,7 +152,7 @@ func redactLaunchArgv(argv []string, prompt, token string) []string {
 	out := make([]string, len(argv))
 	for i, a := range argv {
 		switch {
-		case a == prompt:
+		case prompt != "" && a == prompt:
 			out[i] = "<prompt " + serviceHash([]byte(prompt)) + ">"
 		case token != "" && strings.Contains(a, token), strings.Contains(strings.ToLower(a), "bearer "):
 			out[i] = "<redacted>"

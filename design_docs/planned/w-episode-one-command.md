@@ -58,7 +58,7 @@ Each premise is **measured** (read in this worktree's code on 2026-10-28, base `
 | P14 | D-WORLD-98 R1 (resolved): the home service is on `127.0.0.1:7644`, and the defaults of `episode start`, `hosts init` and the herdr plugin move to it. `~/.ailang-world/service.json` (0600) records the address, store, credentials and workspace paths, and row 219's design names "row 217's presets" as one of its readers. | D-WORLD-98; [`w-worldd-home-service`](w-worldd-home-service.md) §3.2 | measured / quoted |
 | P15 | D-WORLD-99 R3: a worktree's lag is measured against the repo's local `dev`, "with a per-preset override when row 217 lands". | D-WORLD-99 | measured |
 | P16 | D-WORLD-96: row 224's standing allowance is approved **per preset** (the preset's grants and repos, 12 h TTL, 10 sessions a day). An allowance has to bind *which* preset bytes it approved. | D-WORLD-96 | measured |
-| P17 | `claude --session-id <uuid>` fixes the session id, and an interactive session's transcript is written to `~/.claude/projects/<cwd with / as ->/<uuid>.jsonl`. A positional prompt starts an interactive session with that first message. Interactive `codex` writes `rollout-*.jsonl` under `$CODEX_HOME/sessions/YYYY/MM/DD/`, and `codex "<prompt>"` starts interactively with that prompt. | `claude --help`, `codex --help`, their docs | **verify** |
+| P17 | Measured on this Mac 2026-10-30 (claude 2.1.314, codex-cli 0.164.0), using names and binary strings only: Claude writes `<CLAUDE_CONFIG_DIR or HOME/.claude>/projects/<slug>/<session-id>.jsonl`; the slug uses the symlink-resolved cwd and replaces every byte outside `[A-Za-z0-9]` with `-`; over 200 characters it is the first 200 plus `-<hash>`. `--session-id` fixes the UUID; subagent files are separate. Codex writes 0644 `$CODEX_HOME/sessions/YYYY/MM/DD/rollout-<local YYYY-MM-DDThh-mm-ss>-<uuid>.jsonl`; World sets CODEX_HOME to `<hosts>/codex`. Its first JSON value is `session_meta` with `payload.id` and `payload.cwd`. Both accept a trailing positional first prompt. | Operator P17 measurement on this Mac; host binary strings and keys-only rollout check | measured |
 | P18 | Episode ids match `^[a-z0-9][a-z0-9-]{0,63}$`. | `cmd/ailang-worldd/doctor.go` (`workspaceEpisodePattern`) | measured |
 
 **P12 changes row 218's example.** [`w-episode-finish`](w-episode-finish.md) §3.2 shows
@@ -426,7 +426,7 @@ profile, and only its digest and bytes travel into the start record.
 
 ## §8 Milestones
 
-M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2 built in w217b (2026-10-29): headless launch, transcript and append-only launch history; M3–M4 remain unbuilt.
+M0 and M1 built in episode w217a (2026-10-28); the name cap is 51 characters (§3.3). M2 built in w217b (2026-10-29): headless launch, transcript and append-only launch history. M3 built in w217c (2026-10-30): interactive launch, copied host transcripts and append-only resumes; deviation from §3.5 step 4: interactive children share the terminal foreground process group (no tcsetpgrp), terminal INT/QUIT/HUP are not forwarded, TERM and cancellation target the child pid; round 2 hardens current-credential revocation, atomic resume guards and rollback, expiry equality, repository adoption, and bounded no-follow host copies with staging cleanup; M4 remains unbuilt.
 
 | M | what | gate |
 |---|---|---|

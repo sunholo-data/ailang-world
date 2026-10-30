@@ -27,18 +27,20 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
-const episodeLaunchHelp = `usage: ailang-worldd episode launch <episode> --preset <name> [--presets-dir D] [--headless]
+const episodeLaunchHelp = `usage: ailang-worldd episode launch <episode> --preset <name> [--presets-dir D] [--hosts-dir D] [--headless]
   --preset NAME    required; daemon and paths; must match the pinned start
   --presets-dir D  private preset directory
+  --hosts-dir D    hosts init output directory
   --headless       run the pinned task with a bounded wall cap
-Interactive launch is row 217 M3. Headless writes the stream and launch history
+Interactive launch is the default and uses this terminal and hosts init launcher.
+Headless writes the stream and launch history
 beside the session, then prints the finish step. The session remains live.
 Example: ailang-worldd episode launch my-episode --preset my-repo --headless
 `
 
 var launchClient = newClient
 
-func launchMode(p launchPreset, headless bool) (time.Duration, error) {
+func launchMode(p launchPreset, headless bool) (string, time.Duration, error) {
 	mode := "interactive"
 	deadline := 3600.0
 	if p.Launch != nil {
@@ -53,16 +55,16 @@ func launchMode(p launchPreset, headless bool) (time.Duration, error) {
 		mode = "headless"
 	}
 	if mode != "headless" {
-		return 0, presetRefusal("interactive launch is not built yet (row 217 M3)", "M2 runs headless agents only", "add --headless, or run the launch line episode start printed")
+		return mode, 0, nil
 	}
 	if deadline > float64((time.Duration(1<<63-1)-time.Minute)/time.Second) {
-		return 0, errors.New("launch deadline is too large")
+		return mode, 0, errors.New("launch deadline is too large")
 	}
 	wall := time.Duration(deadline * float64(time.Second))
 	if wall <= 0 {
-		return 0, errors.New("launch deadline is below timer resolution")
+		return mode, 0, errors.New("launch deadline is below timer resolution")
 	}
-	return wall, nil
+	return mode, wall, nil
 }
 
 // canonicalLaunchPath resolves existing ancestors too, so an absent child under
@@ -231,6 +233,7 @@ func runEpisodeLaunch(args []string, stdout, stderr io.Writer) int {
 	name := fs.String("preset", "", "required launch preset")
 	dir := fs.String("presets-dir", defaultPresetsDir(), "private presets")
 	headless := fs.Bool("headless", false, "headless launch")
+	hostsDir := fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
 	pos, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, episodeLaunchHelp)
@@ -246,12 +249,12 @@ func runEpisodeLaunch(args []string, stdout, stderr io.Writer) int {
 	if len(pos) != 1 || !workspaceEpisodePattern.MatchString(pos[0]) || *name == "" || *name == "se-tools" {
 		return fail(errors.New("episode and --preset <name> are required"))
 	}
-	return launchEpisode(pos[0], *name, *dir, *headless, stdout, stderr)
+	return launchEpisode(pos[0], *name, *dir, *headless, stdout, stderr, *hostsDir)
 }
 
 // launchEpisode is shared by episode launch and the post-mint start path.
 // Its preflight has no writes; only a fully validated launch takes the lock.
-func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io.Writer) int {
+func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io.Writer, hostsDirs ...string) int {
 	fail := func(err error) int {
 		msg := err.Error()
 		if !strings.Contains(msg, "\n  why:") {
@@ -289,27 +292,56 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	if err := json.Unmarshal([]byte(start.Preset.Bytes), &pinned); err != nil {
 		return fail(fmt.Errorf("pinned preset bytes: %w", err))
 	}
-	wall, err := launchMode(pinned, headless)
+	hostsDir := defaultHostsDir()
+	if len(hostsDirs) > 0 {
+		hostsDir = hostsDirs[0]
+	}
+	mode, wall, err := launchMode(pinned, headless)
 	if err != nil {
 		return fail(err)
 	}
+	var tty *os.File
+	if mode == "interactive" {
+		tty, err = openLaunchTerminal()
+		if err != nil {
+			return fail(presetRefusal("interactive launch needs a terminal ("+err.Error()+")", "the agent runs in this terminal", "run it from a terminal window, or add --headless"))
+		}
+		defer tty.Close()
+	}
+	var task []byte
 	if start.Task == nil {
-		return fail(errors.New("start record has no task"))
-	}
-	taskPath := filepath.Join(p.SessionsDir, ep+".task.md")
-	if err := launchRegularOrAbsent(taskPath); err != nil {
-		return fail(err)
-	}
-	task, err := os.ReadFile(taskPath)
-	if err != nil {
-		return fail(fmt.Errorf("pinned task copy %s is missing or unreadable: %w", taskPath, err))
-	}
-	if serviceHash(task) != start.Task.SHA256 {
-		return fail(fmt.Errorf("pinned task copy %s digest does not match start task.sha256", taskPath))
+		if mode == "headless" {
+			return fail(errors.New("start record has no task"))
+		}
+	} else {
+		taskPath := filepath.Join(p.SessionsDir, ep+".task.md")
+		if err := launchRegularOrAbsent(taskPath); err != nil {
+			return fail(err)
+		}
+		task, err = os.ReadFile(taskPath)
+		if err != nil {
+			return fail(fmt.Errorf("pinned task copy %s is missing or unreadable: %w", taskPath, err))
+		}
+		if serviceHash(task) != start.Task.SHA256 {
+			return fail(fmt.Errorf("pinned task copy %s digest does not match start task.sha256", taskPath))
+		}
 	}
 	newRound := "ailang-worldd episode start --preset " + name + " --branch " + start.Branch
 	token, err := resolveSession(filepath.Join(p.SessionsDir, ep+".session"), io.Discard)
 	expired := func() int {
+		if path, e := credentialsFor(p.DB, p.CredentialsDB); e == nil {
+			if ro, e := store.OpenCredentialsReadOnly(path); e == nil {
+				rows, e := ro.ListSessions(ctx, ep, store.MaxListSessions)
+				_ = ro.Close()
+				live := false
+				for _, row := range rows {
+					live = live || row.ExpiresAt >= time.Now().Unix()
+				}
+				if e == nil && len(rows) > 0 && !live {
+					newRound = "ailang-worldd episode start --resume " + ep + " --preset " + name
+				}
+			}
+		}
 		return fail(presetRefusal("episode "+ep+"'s session has expired or been revoked (F9)", "launch requires a live session for this episode", newRound))
 	}
 	if err != nil {
@@ -320,6 +352,9 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	if err != nil || status != http.StatusOK || json.Unmarshal(body, &self) != nil || self.Episode != ep || self.SecondsLeft <= 0 {
 		return expired()
 	}
+	if mode == "interactive" {
+		wall = time.Duration(self.SecondsLeft) * time.Second
+	}
 	contextText, err := launchContext(body, p.Addr, token)
 	if err != nil {
 		return fail(err)
@@ -328,7 +363,10 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	if err != nil {
 		return fail(err)
 	}
-	prompt := launchPrompt(string(task), commands)
+	prompt := ""
+	if start.Task != nil {
+		prompt = launchPrompt(string(task), commands)
+	}
 	if strings.Contains(prompt, token) {
 		return fail(errors.New("pinned task would put the token in argv"))
 	}
@@ -343,6 +381,12 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	lock := filepath.Join(p.SessionsDir, ep+".launch.lock")
 	if err := launchLockCheck(lock); err != nil {
 		return fail(err)
+	}
+	if mode == "interactive" {
+		host, err = launchLauncher(start.Agent, hostsDir, p.Addr)
+		if err != nil {
+			return fail(err)
+		}
 	}
 	transcript := filepath.Join(p.SessionsDir, ep+".transcript.jsonl")
 	errPath := filepath.Join(p.SessionsDir, ep+".agent.err")
@@ -361,6 +405,16 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 		mcpArg = mcp
 	}
 	argv := launchArgv(start.Agent, start.Model, prompt, dir, mcpArg, p.Addr, contextText, "", grants)
+	sessionID := ""
+	if mode == "interactive" {
+		if start.Agent == "claude" {
+			sessionID, err = launchSessionUUID()
+			if err != nil {
+				return fail(err)
+			}
+		}
+		argv = interactiveLaunchArgv(host, start.Agent, start.Model, sessionID, contextText, prompt, grants)
+	}
 	for _, a := range append(append([]string{}, argv...), host) {
 		if strings.Contains(a, token) {
 			return fail(errors.New("launch argv would carry the session token"))
@@ -418,7 +472,7 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	if err := validateLaunchDir(dir, p.WorkspaceRoot, filepath.Join(p.WorkspaceRoot, ep), p.SessionsDir); err != nil {
 		return fail(err)
 	}
-	if start.Agent == "claude" {
+	if mode == "headless" && start.Agent == "claude" {
 		if err := os.Remove(mcp); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fail(err)
 		}
@@ -447,16 +501,24 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 			childEnv = append(childEnv, kv)
 		}
 	}
-	if start.Agent == "codex" {
+	if mode == "interactive" || start.Agent == "codex" {
 		childEnv = append(childEnv, "WORLD_SESSION="+token)
 	}
 	redacted := redactLaunchArgv(argv, prompt, token)
 	argv[0] = host
 	runCtx, runCancel := context.WithTimeout(context.Background(), wall+time.Minute)
 	defer runCancel()
-	started := time.Now().UTC().Format(time.RFC3339)
-	result, runErr := agentrun.Run(runCtx, argv, dir, childEnv, outStage, errStage, wall)
-	ended := time.Now().UTC().Format(time.RFC3339)
+	startTime := time.Now()
+	started := startTime.UTC().Format(time.RFC3339)
+	var result agentrun.Result
+	var runErr error
+	if mode == "interactive" {
+		result, runErr = agentrun.RunInteractive(runCtx, argv, dir, childEnv, tty, wall)
+	} else {
+		result, runErr = agentrun.Run(runCtx, argv, dir, childEnv, outStage, errStage, wall)
+	}
+	endTime := time.Now()
+	ended := endTime.UTC().Format(time.RFC3339)
 	var deleted *bool
 	var cleanupErr error
 	if mcp != "" {
@@ -468,10 +530,30 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 		}
 	}
 	n := len(localStart.Launches) + 1
-	state, digest, keepErr := keepLaunchStream(outStage, transcript, token, n)
-	_, _, stderrErr := keepLaunchStream(errStage, errPath, token, n)
-	entry := store.EpisodeLaunch{Mode: "headless", StartedAt: started, EndedAt: ended, Exit: result.ExitCode, FinishReason: result.Reason,
-		Transcript: transcript, TranscriptSHA256: digest, TranscriptState: state, Host: host, ArgvRedacted: redacted, MCPConfigDeleted: deleted}
+	var state, digest string
+	var keepErr, stderrErr error
+	var source hostTranscript
+	if mode == "interactive" {
+		if start.Agent == "claude" {
+			source = claudeTranscriptPath(dir, sessionID, childEnv)
+		} else {
+			source = codexTranscriptPath(hostsDir, dir, startTime, endTime)
+			sessionID = source.id
+		}
+		state = "missing"
+		if source.path != "" {
+			if e := copyHostTranscript(source, outStage); e != nil {
+				source.reason = e.Error()
+			} else {
+				state, digest, keepErr = keepLaunchStream(outStage, transcript, token, n)
+			}
+		}
+	} else {
+		state, digest, keepErr = keepLaunchStream(outStage, transcript, token, n)
+		_, _, stderrErr = keepLaunchStream(errStage, errPath, token, n)
+	}
+	entry := store.EpisodeLaunch{Mode: mode, StartedAt: started, EndedAt: ended, Exit: result.ExitCode, FinishReason: result.Reason,
+		Transcript: transcript, TranscriptSHA256: digest, TranscriptState: state, Host: host, ArgvRedacted: redacted, MCPConfigDeleted: deleted, HostSessionID: sessionID, HostTranscript: source.path, TranscriptReason: source.reason}
 	storeCtx, storeCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer storeCancel()
 	creds, recordErr := store.OpenCredentials(credsPath)

@@ -15,7 +15,8 @@ import (
 // Every surviving production root is named, including the explicit CLI mint
 // root. These are compatibility exceptions, NOT evidence of bounded store waits.
 var contextRootPins = map[string]int{
-	"cmd/ailang-worldd/episode_launch.go|launchEpisode|Background": 3, // row 217 M2: HTTP preflight (8 s), agent (wall cap + margin), append (3 s)
+	"cmd/ailang-worldd/episode_resume.go|runEpisodeResume|Background": 1, // row 217 M3: resume preflight (8 s)
+	"cmd/ailang-worldd/episode_launch.go|launchEpisode|Background":    3, // row 217 M2: HTTP preflight (8 s), agent (wall cap + margin), append (3 s)
 
 	"cmd/ailang-worldd/cli.go|get|Background":                                1,
 	"cmd/ailang-worldd/cli.go|execute|Background":                            1,

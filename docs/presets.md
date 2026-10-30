@@ -117,3 +117,65 @@ Claude's private MCP config is deleted after exit; Codex receives the token only
 in its child environment. The report's start.launches records the exit, reason,
 transcript digest and redacted argv. The lock is removed, and the session stays
 live so another launch or episode finish can use it. Finish is the next step.
+
+## Interactive launch and resume (M3)
+
+Interactive launch is the default when the pinned preset has no launch mode.
+Run it from a terminal window; the agent uses that terminal for input and output.
+Prepare the confined launchers once, then launch the approved session:
+
+```sh
+ailang-worldd hosts init --out-dir /absolute/path/world/hosts --addr http://127.0.0.1:47330
+ailang-worldd episode launch my-episode --preset my-repo --hosts-dir /absolute/path/world/hosts
+```
+
+Launch checks the launcher digests and daemon address before taking the launch
+lock. A missing or stale launcher prints the exact hosts init --replace remedy.
+Start and launch together with --launch; interactive mode needs no --task.
+Use --headless with a task for unattended runs. The token reaches the interactive
+child only as WORLD_SESSION; no per-episode MCP config is written.
+
+After exit, World copies the host's structured transcript into the private 0600
+/absolute/path/world/sessions/my-episode.transcript.jsonl. It never moves,
+changes or deletes the host's source. Claude uses CLAUDE_CONFIG_DIR, or HOME
+plus /.claude, then projects/<slug>/<session-id>.jsonl. The slug replaces every
+non-alphanumeric byte in the resolved launch directory with a hyphen; for long
+slugs World finds the host's directory by its first 200 characters and a hyphen.
+Codex uses /absolute/path/world/hosts/codex/sessions/YYYY/MM/DD/rollout-*.jsonl.
+World searches the local dates and times of the run and matches the first
+session_meta record's cwd to the launch directory. Zero or multiple matches
+record transcript_state: missing with a reason, leave the previous copy alone,
+and preserve the agent's exit outcome. Copied streams use the same token scan,
+scrubbing and numbered separators as headless launch. Terminal output is separate.
+Only regular host files are copied: the open refuses a symlink leaf and checks
+the open file again. Files larger than 64 MiB record missing with that reason;
+no copy is kept. Private staging files are removed on every outcome. The wall
+cap is the session's remaining lifetime; parent cancellation records canceled.
+
+An expired session can be resumed with its pinned grants, checks, agent, model,
+TTL and existing worktree:
+
+```sh
+ailang-worldd episode start --resume my-episode --preset my-repo
+ailang-worldd episode launch my-episode --preset my-repo --hosts-dir /absolute/path/world/hosts
+```
+
+Resume accepts only --preset, --presets-dir and --exec-profiles-dir beside
+--resume. It asks a fresh terminal y before minting. Old .session and .mcp.json
+files, when present, are renamed with .expired-<unix> appended and retain their
+permissions. A new 0600 session file holds the fresh token. The start record's
+resumes list records the old credential and the current preset file digest;
+the original mint fields stay pinned. An edited preset is named in the prompt,
+and its new grants are used only by a new episode start. A live credential
+refuses with F12 and points to episode launch; revoked or finished episodes
+have no credential to resume and need a new start. A credential remains live
+at its exact expiry second; resume is allowed only after that second.
+
+The current credential is the last successful resumes entry's credential_id,
+or the original start credential when no resume has succeeded. Revoking that
+id ends the episode even while older expired rows remain. The mint transaction
+rechecks current authority and liveness, so competing resumes cannot both mint.
+A failure after mint revokes the new credential, marks its history entry failed,
+and restores the old file names. Failed entries do not advance current authority.
+The adopted worktree must still have the pinned branch and belong to the pinned
+repository, checked using both repositories' resolved git common directories.
