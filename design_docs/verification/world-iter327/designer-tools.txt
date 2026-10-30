@@ -1,0 +1,50 @@
+# usage: mut.py FILE LINE OLD NEW  -- replace OLD with NEW exactly once on LINE (1-indexed)
+import sys
+path, line, old, new = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
+lines = open(path).read().split('\n')
+src = lines[line-1]
+assert src.count(old) == 1, (line, src, old)
+lines[line-1] = src.replace(old, new)
+open(path, 'w').write('\n'.join(lines))
+#!/bin/bash
+# usage: runmut.sh TREE RUNREGEX COUNT ID FILE LINE OLD NEW
+tree=$1; re=$2; n=$3; id=$4; f=$5; ln=$6; old=$7; new=$8
+cd "$tree" || exit 9
+cp "$f" "/tmp/w327d/tools/orig.$$"
+before=$(shasum -a 256 "$f" | cut -c1-12)
+python3 -I /tmp/w327d/tools/mut.py "$f" "$ln" "$old" "$new" || { echo "$id MUT-APPLY-FAILED"; exit 9; }
+out=$(go test -timeout 180s ./host/daemon/ -run "$re" -count="$n" -v 2>&1); rc=$?
+cp "/tmp/w327d/tools/orig.$$" "$f"; rm "/tmp/w327d/tools/orig.$$"
+after=$(shasum -a 256 "$f" | cut -c1-12)
+fails=$(echo "$out" | grep -E -- '--- FAIL' | sed -E 's/ *--- FAIL: ([^ ]+).*/\1/' | sort | uniq -c | tr '\n' ';')
+first=$(echo "$out" | grep -E '_test.go:[0-9]+:' | head -1 | sed 's/^ *//')
+echo "$id rc=$rc fails=[$fails] first=[$first] sha=$before/$after"
+#!/bin/bash
+# usage: harness.sh TREE FILE LINE COUNT RUNREGEX [extra go test flags]  -- inserts the boundary spin before LINE, runs, restores
+tree=$1; f=$2; ln=$3; n=$4; re=$5; shift 5
+cd "$tree" || exit 9
+cp "$f" /tmp/w327d/tools/h.orig
+before=$(shasum -a 256 "$f" | cut -c1-12)
+python3 -I - "$f" "$ln" <<'PY'
+import sys
+p, ln = sys.argv[1], int(sys.argv[2])
+L = open(p).read().split('\n')
+import os; L.insert(ln-1, '\t' + os.environ.get('SPIN', 'for time.Now().Nanosecond() < 999_950_000 {}') + ' // designer harness')
+open(p,'w').write('\n'.join(L))
+PY
+out=$(go test -timeout 300s "$@" ./host/daemon/ -run "$re" -count="$n" -v 2>&1); rc=$?
+cp /tmp/w327d/tools/h.orig "$f"
+after=$(shasum -a 256 "$f" | cut -c1-12)
+echo "rc=$rc PASS=$(echo "$out" | grep -cE '^--- PASS') FAIL=$(echo "$out" | grep -cE '^--- FAIL') sub-FAIL=$(echo "$out" | grep -cE '^    --- FAIL') first=[$(echo "$out" | grep -E '_test.go:[0-9]+:' | head -1 | sed 's/^ *//')] tail=[$(echo "$out" | tail -1)] sha=$before/$after"
+import sys, collections
+# usage: covsum.py FILE_SUFFIX LINE... < profiles ; sums counts of every block whose [start,end] line span contains LINE
+suffix, lines = sys.argv[1], [int(x) for x in sys.argv[2:]]
+blocks = collections.defaultdict(int)
+for raw in sys.stdin:
+    if raw.startswith('mode:') or suffix not in raw: continue
+    loc, nstmt, cnt = raw.rsplit(' ', 2)
+    blocks[loc] += int(cnt)
+for ln in lines:
+    hits = [(loc, c) for loc, c in blocks.items() if int(loc.split(':')[1].split('.')[0]) <= ln <= int(loc.split(',')[1].split('.')[0])]
+    for loc, c in sorted(hits): print(f"line {ln}: block {loc.split('/')[-1]} count={c}")
+    if not hits: print(f"line {ln}: no block")

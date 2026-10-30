@@ -1,0 +1,10 @@
+# designer, iteration 327: prototype (/tmp/w327d/fix = git archive 4d43d8e3 + designer-prototype.diff), darwin/arm64 go1.26.6, AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0)
+go vet ./host/daemon/                                                  -> rc=0
+go test -timeout 540s ./host/daemon/ -count=1                          -> ok  github.com/sunholo-data/ailang-world/host/daemon 279.811s
+go test -race -timeout 570s ./host/daemon/ -count=1                    -> ok  github.com/sunholo-data/ailang-world/host/daemon 521.323s (no DATA RACE / --- FAIL lines)
+go build ./...                                                         -> rc=0
+go test -timeout 300s ./cmd/ailang-worldd/ -run 'Finish' -count=1      -> ok  github.com/sunholo-data/ailang-world/cmd/ailang-worldd 9.946s
+go test -timeout 120s ./host/daemon/ -run '^TestEpisodeFinish' -race -count=200 -> ok  github.com/sunholo-data/ailang-world/host/daemon 62.627s
+base idle control: go test -timeout 300s -race ./host/daemon/ -run '^TestEpisodeFinishScopeExpiry$' -count=400 (base copy) -> ok 13.495s
+CI: gh api repos/sunholo-data/ailang-world/actions/runs/41093918891/attempts/1 -> failure (go race gate failure); run now attempt 2 -> success (updated 2026-10-30T20:20:46Z)
+not run: the full `go test ./...` and ./scripts/verify_ail.sh on the prototype (no .ail touched; left to the executor's AC-5)

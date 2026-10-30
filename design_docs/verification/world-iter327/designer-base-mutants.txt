@@ -1,0 +1,16 @@
+P1-lower-strict rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+P2-no-lower rc=1 fails=[   3 TestEpisodeFinishScopeExpiry;] first=[episode_finish_test.go:170: expiry 1793390978: 200] sha=ea44759896b5/ea44759896b5
+P3-upper-inclusive rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+P4-bound-3601 rc=1 fails=[   3 TestEpisodeFinishScopeExpiry;] first=[episode_finish_test.go:170: expiry 1793394584: 200] sha=ea44759896b5/ea44759896b5
+P5-bound-3660 rc=1 fails=[   3 TestEpisodeFinishScopeExpiry;] first=[episode_finish_test.go:170: expiry 1793394586: 200] sha=ea44759896b5/ea44759896b5
+P6-no-upper rc=1 fails=[   3 TestEpisodeFinishScopeExpiry;] first=[episode_finish_test.go:170: expiry 1793394588: 200] sha=ea44759896b5/ea44759896b5
+Q1-lower-strict rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+Q2-no-lower rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+Q3-upper-inclusive rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+Q4-bound-3601 rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+Q6-no-upper rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+R1-proof-lower-strict rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+R2-proof-no-lower rc=1 fails=[   3 TestEpisodeFinishOperatorProofAC11;   3 TestEpisodeFinishOperatorProofAC11/expired;   3 TestEpisodeFinishOperatorProofAC11/future;   3 TestEpisodeFinishOperatorProofAC11/phase;   3 TestEpisodeFinishOperatorProofAC11/readable;   3 TestEpisodeFinishOperatorProofAC11/symlink;   3 TestEpisodeFinishOperatorProofAC11/world-readable;] first=[episode_finish_test.go:93: 200 {"request":"sha256:a26ad322f82e4558062ec5b61325a84de6e53114913711ad7188d734bf4bf806","approval":"sha256:86d8114adf457dd8b1a1f168a5e1a0a3f330ae0383571a412f9ced6fd959599c"}] sha=ea44759896b5/ea44759896b5
+R3-proof-upper-inclusive rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+R4-proof-bound-301 rc=1 fails=[   3 TestEpisodeFinishOperatorProofAC11;   3 TestEpisodeFinishOperatorProofAC11/future;   3 TestEpisodeFinishOperatorProofAC11/phase;   3 TestEpisodeFinishOperatorProofAC11/readable;   3 TestEpisodeFinishOperatorProofAC11/symlink;   3 TestEpisodeFinishOperatorProofAC11/world-readable;] first=[episode_finish_test.go:93: 200 {"request":"sha256:0da4ed66f9f5b5dee8ef870275da4303c2496c7249493fb152236c538db84c46","approval":"sha256:5a0d7e02fd418f3ef52edf19eeacafe6b982185385d531a4e1a18ff1b4234895"}] sha=ea44759896b5/ea44759896b5
+R6-proof-no-upper rc=1 fails=[   3 TestEpisodeFinishOperatorProofAC11;   3 TestEpisodeFinishOperatorProofAC11/future;   3 TestEpisodeFinishOperatorProofAC11/phase;   3 TestEpisodeFinishOperatorProofAC11/readable;   3 TestEpisodeFinishOperatorProofAC11/symlink;   3 TestEpisodeFinishOperatorProofAC11/world-readable;] first=[episode_finish_test.go:93: 200 {"request":"sha256:8980c3d9fab6bec878690c1a0706361e6992e24b4d9b09c26b07921918241892","approval":"sha256:adc5ad1073b7cfbaba15d7945365dba926073415881a638eeed5b75a76d0aafe"}] sha=ea44759896b5/ea44759896b5

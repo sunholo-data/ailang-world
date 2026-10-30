@@ -1,0 +1,27 @@
+./cmd/ailang-worldd/episode_finish_test.go:93:	_, f.credentialID, _, err = authority.Mint(boundedTestContext(t), st, "ep1", []broker.Capability{{Effect: "Workspace.Write", Scope: "world", Budget: 10, ExpiresAt: time.Now().Unix() + 3600}}, 3600, time.Now().Unix(), nil)
+./host/daemon/session_git_test.go:56:		EpisodeID: "mine", ExpiresAt: time.Now().Unix() + 3600, GrantsJSON: "[]",
+./host/daemon/episode_finish_test.go:57:		Draft: true, ExpiresAt: time.Now().Unix() + 900,
+./host/daemon/episode_finish_test.go:74:				finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:77:				proof = finishProofFile(t, d, "approve", time.Now().Unix()-1, 0o600)
+./host/daemon/episode_finish_test.go:79:				proof = finishProofFile(t, d, "approve", time.Now().Unix()+301, 0o600)
+./host/daemon/episode_finish_test.go:81:				proof = finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o640)
+./host/daemon/episode_finish_test.go:83:				proof = finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o644)
+./host/daemon/episode_finish_test.go:85:				proof = finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:89:				proof = finishProofFile(t, d, "record", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:103:	proof := finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:133:		proof = finishProofFile(t, d, "record", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:144:		proof = finishProofFile(t, d, "record", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:150:	proof = finishProofFile(t, d, "record", time.Now().Unix()+100, 0o600)
+./host/daemon/episode_finish_test.go:164:	for _, expiry := range []int64{time.Now().Unix() - 1, time.Now().Unix() + 3601} {
+./host/daemon/episode_finish_test.go:167:		proof := finishProofFile(t, d, "approve", time.Now().Unix()+100, 0o600)
+./host/daemon/credentials_split_test.go:51:		hex.EncodeToString(sum[:]), episode, string(grants), time.Now().Unix()+3600, time.Now().Unix()); err != nil {
+./host/daemon/agui_test.go:458:	expired, _, _, err := authority.Mint(boundedTestContext(t), testCreds(t, d), "expired", grantForAuth(), 1, time.Now().Unix()-10, nil)
+./host/daemon/session_middleware_test.go:114:	backdated := time.Now().Unix() - 10
+./host/daemon/daemon_test.go:1059:		grants = append(grants, broker.Capability{Effect: e, Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10})
+./host/daemon/daemon_test.go:1123:		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
+./host/daemon/daemon_test.go:1151:		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
+./host/daemon/binding_test.go:185:		ExpiresAt: time.Now().Unix() + 600, CreatedAt: time.Now().Unix(), Project: "proj-b", ProfileDigest: digestB}); err != nil {
+./host/projection/projection_test.go:81:	return broker.Capability{Effect: effect, Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10}
+./host/projection/projection_test.go:96:		[]broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10}},
+./host/projection/projection_test.go:97:		60, time.Now().Unix()-3600, io.Discard)
+./host/projection/projection_test.go:235:			ExpiresAt: time.Now().Unix() + 3600, CreatedAt: time.Now().Unix(),

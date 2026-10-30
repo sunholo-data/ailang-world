@@ -1,0 +1,48 @@
+# designer r2, iteration 327: coverage of host/daemon/episode_finish.go at base 4d43d8e3 (/tmp/w327d/base = git archive HEAD), AILANG_BIN=$HOME/.pinned-ailang/ailang (v0.41.0)
+# build: go test -c -coverpkg=./host/daemon -o /tmp/w327d/daemon-cov.test ./host/daemon/  (and the same for ./cmd/ailang-worldd/, ./cmd/world-publish/: the only packages whose tests import host/daemon, per go list -test)
+# a one-shot 'go test ./host/daemon/ -coverpkg=./host/daemon -coverprofile=… -timeout 570s' TIMED OUT (FAIL 571.209s), so the 302 host/daemon tests ran as 6 round-robin shards from host/daemon/:
+#   daemon-cov.test -test.run '^(<shard names>)$' -test.count=1 -test.timeout=1500s -test.coverprofile=cov-shard<k>.out ; mode: set (count = 1 if any test in the shard executed the block)
+# summed per block with covsum.py (designer-tools.txt): cat cov-shard*.out | python3 -I covsum.py host/daemon/episode_finish.go <lines>
+host/daemon shard0 rc=0 tests=51 coverage: 56.1% of statements in ./host/daemon
+host/daemon shard1 rc=0 tests=51 coverage: 52.1% of statements in ./host/daemon
+host/daemon shard2 rc=0 tests=50 coverage: 62.7% of statements in ./host/daemon
+host/daemon shard3 rc=0 tests=50 coverage: 56.9% of statements in ./host/daemon
+host/daemon shard4 rc=0 tests=50 coverage: 52.2% of statements in ./host/daemon
+host/daemon shard5 rc=0 tests=50 coverage: 49.6% of statements in ./host/daemon
+## host/daemon, all 6 shards summed (value = number of shards that executed the block):
+line 117: block episode_finish.go:115.2,117.104 count=2
+line 117: block episode_finish.go:117.104,119.3 count=1
+line 169: block episode_finish.go:166.30,169.96 count=2
+line 169: block episode_finish.go:169.96,172.4 count=1
+line 186: block episode_finish.go:186.2,187.110 count=1
+line 271: block episode_finish.go:269.2,271.72 count=1
+line 271: block episode_finish.go:271.72,273.3 count=0
+## per shard, :169 (positive control) and :271:
+shard0: 169: block episode_finish.go:166.30,169.96 count=1;169: block episode_finish.go:169.96,172.4 count=0;271: block episode_finish.go:269.2,271.72 count=1;271: block episode_finish.go:271.72,273.3 count=0;
+shard1: 169: block episode_finish.go:166.30,169.96 count=1;169: block episode_finish.go:169.96,172.4 count=1;271: block episode_finish.go:269.2,271.72 count=0;271: block episode_finish.go:271.72,273.3 count=0;
+shard2: 169: block episode_finish.go:166.30,169.96 count=0;169: block episode_finish.go:169.96,172.4 count=0;271: block episode_finish.go:269.2,271.72 count=0;271: block episode_finish.go:271.72,273.3 count=0;
+shard3: 169: block episode_finish.go:166.30,169.96 count=0;169: block episode_finish.go:169.96,172.4 count=0;271: block episode_finish.go:269.2,271.72 count=0;271: block episode_finish.go:271.72,273.3 count=0;
+shard4: 169: block episode_finish.go:166.30,169.96 count=0;169: block episode_finish.go:169.96,172.4 count=0;271: block episode_finish.go:269.2,271.72 count=0;271: block episode_finish.go:271.72,273.3 count=0;
+shard5: 169: block episode_finish.go:166.30,169.96 count=0;169: block episode_finish.go:169.96,172.4 count=0;271: block episode_finish.go:269.2,271.72 count=0;271: block episode_finish.go:271.72,273.3 count=0;
+shard0 holds TestEpisodeFinishOperatorProofAC11: 1; shard1 holds TestEpisodeFinishScopeExpiry: 1
+## cmd/ailang-worldd (246 tests, 6 shards, from cmd/ailang-worldd/): in-process coverage of episode_finish.go
+wshard0 rc=1 TestCLIRealSubprocessEpisode TestDoctorQuickIsFast TestWorldContextAndStatusline TestHostsLaunchersExecHost 
+wshard1 rc=1 TestHostsAwarenessCallsTheInitBinary 
+wshard2 rc=1 TestLaunchHeadlessClaudeAC9AndSecondLaunch TestPiLauncherRefusesMissingAdapter 
+wshard3 rc=1 TestDoctorHostScrubsEnvironmentAndDetectsDrift TestLaunchHeadlessCodexTokenAndPinnedMode TestHomeServiceUpgradeProductionProbe 
+wshard4 rc=0 
+wshard5 rc=1 TestHostsLaunchersRefuseWithoutSession TestSessionNewWithoutAControllingTerminalRefusesEndToEnd 
+(NOT TRIAGED: 12 FAILs under a background, terminal-less, coverage-instrumented prebuilt binary, most at ~5 s; none has Finish in its name; the same package passes -run Finish in a plain run, designer-prototype-packages.txt)
+line 117: block episode_finish.go:115.2,117.104 count=0
+line 117: block episode_finish.go:117.104,119.3 count=0
+line 169: block episode_finish.go:166.30,169.96 count=0
+line 169: block episode_finish.go:169.96,172.4 count=0
+line 186: block episode_finish.go:186.2,187.110 count=0
+line 271: block episode_finish.go:269.2,271.72 count=0
+line 271: block episode_finish.go:271.72,273.3 count=0
+cmd/ailang-worldd's finish tests reach a STUB route (episode_finish_test.go:156 'case "/v1/episodes/ep1/finish":' in finishFixture.serve), never the daemon handler
+## cmd/world-publish (rc=1: 1 FAIL TestTransitionsWithoutAControllingTerminalRefusesAndWritesNothing, /dev/tty absent; elapsed 27s):
+line 169: block episode_finish.go:166.30,169.96 count=0
+line 169: block episode_finish.go:169.96,172.4 count=0
+line 271: block episode_finish.go:269.2,271.72 count=0
+line 271: block episode_finish.go:271.72,273.3 count=0

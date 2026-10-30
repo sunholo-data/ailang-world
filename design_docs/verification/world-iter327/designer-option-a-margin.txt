@@ -1,0 +1,6 @@
+OPT-A harness spin@164 x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	19.691s] sha=d748a63b3304/d748a63b3304
+OPTA-P4-bound-3601 rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+OPTA-P4b-bound-3659 rc=0 fails=[] first=[] sha=ea44759896b5/ea44759896b5
+OPTA-P5-bound-3660 rc=1 fails=[   3 TestEpisodeFinishScopeExpiry;] first=[episode_finish_test.go:170: expiry 1793394931: 200] sha=ea44759896b5/ea44759896b5
+OPTA-P6-no-upper rc=1 fails=[   3 TestEpisodeFinishScopeExpiry;] first=[episode_finish_test.go:170: expiry 1793394932: 200] sha=ea44759896b5/ea44759896b5

@@ -1,0 +1,29 @@
+host/coordinator/decisionpacket.go:39:	return createdAt >= 0 && deadlineAt > createdAt && escalationsRemaining >= 0
+host/coordinator/decisionpacket.go:42:func mintable(now, grantExpiresAt int64) bool { return now >= 0 && now < grantExpiresAt }
+host/broker/approve.go:639:	if scope.ExpiresAt < request.Now {
+host/broker/approve.go:644:	if req.Now > scope.ExpiresAt {
+host/broker/decide.go:112:func capabilityLive(c Capability, now int64) bool        { return now >= 0 && now < c.ExpiresAt }
+host/broker/publish_op.go:74:	// RequestedAt <= DecidedAt <= PublishAt < ExpiresAt. The inequalities are
+host/daemon/activity.go:46:		if ep.expires < now || last < now-300 {
+host/daemon/activity.go:61:		if key.expires >= now && last >= now-300 && last > recent[key.episode] {
+host/daemon/episode_finish.go:117:	if json.Unmarshal(data, &p) != nil || p.Phase != phase || p.ExpiresAt <= now || p.ExpiresAt > now+300 {
+host/daemon/episode_finish.go:169:		if err != nil || scope.ExpiresAt <= now || scope.ExpiresAt > now+3600 || input.Record != nil {
+host/daemon/episode_finish.go:271:	if err != nil || scope.ExpiresAt <= now || scope.ExpiresAt > now+3600 {
+host/daemon/daemon.go:844:	if invokeDeadline <= 0 || invokeDeadline >= writeTimeout {
+host/daemon/surface_page.go:194:		if now.Unix() < row.ExpiresAt {
+host/daemon/binding.go:56:		if r.EpisodeID != episodeID || now > r.ExpiresAt || !r.Bound() {
+host/authority/mint.go:55:	if ttl < 0 {
+host/authority/mint.go:107:		if out[i].ExpiresAt > sessionExpiry {
+host/authority/resolver.go:43:	// DenialExpired — mapping row exists but expires_at < now.
+host/authority/resolver.go:149:	if now > row.ExpiresAt {
+cmd/ailang-worldd/episode.go:259:	if *ttl < 0 || *budget < 0 {
+cmd/ailang-worldd/episode_finish_operator.go:121:		if row.ExpiresAt > time.Now().Unix() {
+cmd/ailang-worldd/episode_preset.go:129:	if ttl < 0 {
+cmd/ailang-worldd/doctor_hosts.go:88:	if now.Unix() >= row.ExpiresAt {
+cmd/ailang-worldd/session.go:239:	if *ttl < 0 {
+cmd/ailang-worldd/session.go:266:	// broker's liveness rule is now < ExpiresAt in Unix seconds, so a grant left
+cmd/ailang-worldd/session_new.go:229:	if o.ttl < 0 {
+cmd/ailang-worldd/session_new.go:380:		if now > r.ExpiresAt || !r.Bound() || (r.Project == p.Project && r.ProfileDigest == p.Digest) {
+cmd/ailang-worldd/session_new.go:572:	if *ttl < 0 || *budget < 0 {
+cmd/ailang-worldd/session_new.go:764:			Live: now < r.ExpiresAt, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, Grants: grants,
+cmd/ailang-worldd/episode_launch.go:58:	if deadline > float64((time.Duration(1<<63-1)-time.Minute)/time.Second) {

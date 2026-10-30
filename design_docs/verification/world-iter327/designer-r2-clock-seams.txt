@@ -1,0 +1,49 @@
+## coordinator clock: wiring and reachability (base 4d43d8e3)
+$ sed -n 818,818p;835,836p host/daemon/daemon.go
+	if cfg.AilangBin != "" {
+		d.coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: d.capsule,
+			Binder: d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+$ grep -n 'cfg Config\|cfg\.Now' host/coordinator/coordinator.go host/coordinator/effectful.go | grep -v _test
+host/coordinator/coordinator.go:59:	cfg Config
+host/coordinator/coordinator.go:76:func New(cfg Config) (*Coordinator, error) {
+host/coordinator/coordinator.go:78:	case cfg.Store == nil, cfg.Runner == nil, cfg.Binder == nil, cfg.Now == nil:
+host/coordinator/coordinator.go:354:	pl := planInvocation(world, call.Surface, id, call.EpisodeID, d, input, outBytes, c.cfg.Now())
+host/coordinator/effectful.go:284:	now := c.cfg.Now() // one logical time: the effect requests and the intent
+$ grep -rnE 'func \(c \*Coordinator\) (Now|Clock|Config)' host/coordinator | wc -l   (an accessor for the clock)
+       0
+  control: grep -rnE 'func \(c \*Coordinator\) [A-Z]' host/coordinator | wc -l
+       2
+$ grep -n 'func newHandlerDaemon' -A3 host/daemon/handlers_test.go   (no AilangBin, so d.coord stays nil)
+23-	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
+$ grep -rn 'coordinator.New(' host/daemon/*_test.go | wc -l   (tests that need a pinned coordinator clock build their own)
+       7
+## finish-approval stamps: who reads them back
+$ grep -rn 'ParseFinishApprovalScope\|RecordOperatorApproval\|finishDecisionScope' --include='*.go' . | grep -v _test
+cmd/ailang-worldd/episode_finish.go:318:	if _, err := broker.ParseFinishApprovalScope(scopeText); err != nil {
+host/broker/approve.go:667:// ParseFinishApprovalScope refuses unaccounted bytes, duplicate or reordered terms.
+host/broker/approve.go:668:func ParseFinishApprovalScope(raw string) (FinishApprovalScope, error) {
+host/broker/approve.go:684:// RecordOperatorApproval lands the existing request and decision types through
+host/broker/approve.go:686:func RecordOperatorApproval(ctx context.Context, s *store.Store, scope, requester, decidedBy string, now int64) (hashref.HashRef, hashref.HashRef, error) {
+host/daemon/episode_finish.go:167:		scope, err := broker.ParseFinishApprovalScope(input.Scope)
+host/daemon/episode_finish.go:173:		request, decision, err := broker.RecordOperatorApproval(ctx, d.store, input.Scope, "operator:episode-finish", "operator:terminal", now)
+host/daemon/episode_finish.go:186:	scope, err := d.finishDecisionScope(ctx, record.Approval)
+host/daemon/episode_finish.go:238:func (d *Daemon) finishDecisionScope(ctx context.Context, text string) (broker.FinishApprovalScope, error) {
+host/daemon/episode_finish.go:269:	scope, err := broker.ParseFinishApprovalScope(request.Scope)
+$ grep -n 'request.Now\|decision.Now\|req.Now' host/broker/approve.go   (the only stamp comparisons; inside the publish-approval check)
+143:			Requester: input.Requester, Now: req.Now,
+629:	if request.Now > req.Now {
+632:			ErrPublishApprovalMalformed, requestRef.String(), request.Now, req.Now)
+634:	if decision.Now < request.Now || decision.Now > req.Now {
+637:			ErrPublishApprovalMalformed, id.ApprovalRef.String(), decision.Now, request.Now, req.Now)
+639:	if scope.ExpiresAt < request.Now {
+642:			ErrPublishApprovalMalformed, scope.ExpiresAt, request.Now)
+644:	if req.Now > scope.ExpiresAt {
+647:			ErrPublishApprovalExpired, id.ApprovalRef.String(), scope.ExpiresAt, req.Now)
+$ grep -n '^func ' host/broker/approve.go | awk -F: '$1<629' | tail -1   (the function holding them)
+517:func validatePublishApproval(ctx context.Context,
+$ grep -n 'func findApprovalDecision' -A2 host/broker/approve.go   (decisions are found by the request ref, which only the finish route holds for a finish approval)
+252:func findApprovalDecision(ctx context.Context, s approvalStore, requestRef hashref.HashRef) (store.Object, bool, error) {
+253-	return walkApprovalHead(ctx, s, requestRef, true)
+254-}
+$ grep -rnE '\b(request|decision)\.Now\b' --include='*.go' host cmd | grep -v _test | cut -d: -f1,2   (every read of an approval request/decision stamp, repo-wide)
+host/broker/approve.go:629 host/broker/approve.go:632 host/broker/approve.go:634 host/broker/approve.go:637 host/broker/approve.go:639 host/broker/approve.go:642 

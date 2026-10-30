@@ -1,0 +1,16 @@
+H0 base idle (no spin) race x400:
+ok  	github.com/sunholo-data/ailang-world/host/daemon	13.495s
+H1 base spin@164 x20:
+rc=1 PASS=0 FAIL=20 sub-FAIL=0 first=[episode_finish_test.go:171: expiry 1793394729: 200] tail=[FAIL] sha=094884e036f7/094884e036f7
+H1r base spin@164 -race x20:
+rc=1 PASS=0 FAIL=20 sub-FAIL=0 first=[episode_finish_test.go:171: expiry 1793394752: 200] tail=[FAIL] sha=094884e036f7/094884e036f7
+H2 base spin@79 (proof +301 arm) x20:
+rc=1 PASS=0 FAIL=20 sub-FAIL=100 first=[episode_finish_test.go:94: 200 {"request":"sha256:0dfc611b68cd25cb2ed962ad1116c9b3899f79f4b65f1cae337e15e7ef045576","approval":"sha256:4b73bb9dd2fda5b6c936fecc370e9c6b328126c204785215dac89ef5fd7e935b"}] tail=[FAIL] sha=094884e036f7/094884e036f7
+H2r base spin@79 -race x20:
+rc=1 PASS=0 FAIL=20 sub-FAIL=100 first=[episode_finish_test.go:94: 200 {"request":"sha256:57d9ec9c8e463fa3f9419583a8adc6f7c972cc8406a0323c4c5bb7b467e08f34","approval":"sha256:89ba5a5a9ff9de61b01b295947d604ac51c47210182cac8a6821d97899c7eaa7"}] tail=[FAIL] sha=094884e036f7/094884e036f7
+H1c base control spin@164 (just after an edge) x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	0.669s] sha=094884e036f7/094884e036f7
+H2c base control spin@79 (just after an edge) x20:
+rc=0 PASS=20 FAIL=0 sub-FAIL=0 first=[] tail=[ok  	github.com/sunholo-data/ailang-world/host/daemon	3.660s] sha=094884e036f7/094884e036f7
+H1 re-check default spin x5:
+rc=1 PASS=0 FAIL=5 sub-FAIL=0 first=[episode_finish_test.go:171: expiry 1793394834: 200] tail=[FAIL] sha=094884e036f7/094884e036f7

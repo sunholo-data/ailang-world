@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-finish-scope-expiry-boundary.md",
+  "iso_ts": "2026-10-30T21:05:42Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.281031,
+      "tokens_in": 10542,
+      "tokens_out": 16627,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's load-bearing evidence was measured on the wrong artifact, so its central claims fail premise verification as written. The mutation table's conclusion ('The prototype kills all 16 bound mutants, plus S1-S3, W1 and TM1', V8), the §3/AC-3 claim that 'the whole host/daemon package passes plain and under -race on the prototype' (V10: 279.8s plain, 521.3s race, count=200 finish race run), and AC-3's 'All are green (prototype: V10)' were all executed against the pre-rename r1 prototype. The r2 revision renamed the seam field to finishNow and rewrote its doc comment — i.e., the exact diff this doc specifies and the executor will commit — but the doc's own log (§4 header, V17) admits the post-rename tree was only re-verified for vet, a 50-count race subset of the finish tests, and mutants S1-S3 and W1. For the specified artifact, 17 of the 20 AC-2 mutant-kill attributions (P1-P6, Q1-Q6, R1-R6, TM1) and the full package plain/race batteries are asserted by transitivity from a different source tree, not verified. The rename is almost certainly behavior-neutral, but this doc sets its own standard that every factual claim carries a V-row, and the claims that carry the row's safety case currently do not, for the diff actually being proposed. The doc applies this same honesty rule to itself for AC-4 ('I did not run the full ./... or verify_ail.sh') but not for the r1-to-r2 delta.",
+        "catch": "V8's 16-mutant table, the TM1 load-bearing-pin kill, and V10's package battery all predate the finishNow rename; only S1-S3 and W1 were re-run post-rename (V17). Verify by re-running the full §4 mutant battery (P1-P6, Q1-Q6, R1-R6, S1-S3, W1, TM1) and the full V10 battery (go vet ./host/daemon/; go test ./host/daemon/ -count=1; the same with -race; go test ./host/daemon/ -run '^TestEpisodeFinish' -race -count=200; go test ./cmd/ailang-worldd/ -run Finish; go build ./...) against the post-rename /tmp/w327d/fix tree, checking that each mutant reds exactly the killer named in §4 and that sha256 of episode_finish.go is restored after each. Alternatively, if the mechanical-rename argument is accepted, explicitly re-label §4's 'Prototype killer' column and V10's header as r1-prototype evidence and add to AC-2/AC-3 a sentence mirroring AC-4's disclosure: that the executor's run is the first verification of the r2 diff.",
+        "proposed_fix": "Add a verification-log row and revise the evidence labels: '| V18 | Post-rename (r2) full re-verification | against /tmp/w327d/fix with finishNow in place: runmut.sh /tmp/w327d/fix for P1-P6, Q1-Q6, R1-R6, S1-S3, W1, TM1 (scratch zz_designer_mut_wall.go for S1-S3, removed after); go vet ./host/daemon/; go test ./host/daemon/ -count=1; go test ./host/daemon/ -race -count=1; go test ./host/daemon/ -run ''^TestEpisodeFinish'' -race -count=200; go test ./cmd/ailang-worldd/ -run Finish; go build ./... | all 20 mutants rc=1, each red exactly at the killer named in §4; all package runs rc=0; episode_finish.go sha256 restored after every mutant |'. Also change §3's sentence to 'The whole host/daemon package passes plain and under -race on the post-rename prototype (V18)', change §4's trailing claim to 'The r2 prototype kills all 20 mutants (V18; the pre-rename prototype did the same, V8)', and have AC-3 cite V18 instead of V10. If the re-run cannot be done before submission, the minimum acceptable revision is to annotate §4 header ('P/Q/R/TM1 kill attributions verified on the pre-rename prototype; the r2 diff's first verification is AC-2 at execution time') and §3/AC-3 ('package green verified on the pre-rename prototype; AC-3 at execution is the first package run of the r2 diff'), matching the disclosure standard the doc already applies to AC-4."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.024006,
+      "tokens_in": 10613,
+      "tokens_out": 278,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The no-fallback clock change introduces a nil-function panic for daemons not initialized by New, but the claimed exhaustive construction audit is not established by V13/V14. Their searches miss populated value literals such as `d := Daemon{...}`, package-alias-qualified literals, and zero-value declarations such as `var d Daemon`. Thus §3's safety premise—that every daemon reaching the finish route receives finishNow—is still unverified.",
+        "catch": "V14's `\u0026Daemon\\{|Daemon\\{\\}` pattern does not enumerate every Daemon construction, and V13 searches only `\u0026Daemon{`. Passing existing tests does not establish that omitted construction paths cannot reach the handler.",
+        "proposed_fix": "Replace the exhaustive-construction claim with a type-aware audit at the measurement commit: enumerate composite literals, new expressions, and zero-value declarations whose resolved type is host/daemon.Daemon, including package aliases. Add a verification-log row listing each construction and whether it can reach the finish handler. Initialize finishNow explicitly at every reachable construction or route construction through New; retain the no-silent-fallback behavior. Until that audit is complete, describe V13/V14 as textual-search results rather than proof that all constructions are covered."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.05280000000000001,
+      "tokens_in": 12060,
+      "tokens_out": 228,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §4, mutant rows Q4 and Q6 state that T3 arm `approve-1` kills the `:271` upper bound (`\u003e now+3600`), which relies on evaluating the record clock backwards in time (`T-1`) relative to the scope's `T+3600` expiry rather than setting a scope expiry above `now+3600`, though mathematically equivalent (`(T+3600) \u003e (T-1)+3600`).",
+        "catch": "Ensure the `finishNow` field comment in `host/daemon/daemon.go` explicitly warns both that it is not shared with `coordinator.Config.Now` and that tests may only mutate it before or between synchronous handler invocations.",
+        "proposed_fix": "No changes required; the r2 verification entries (V14-V17) thoroughly resolve the conflict surface, struct-literal risk, and coverage vs. mutation-sensitivity premises."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2: coverage now measured (refusal branch at :271 count 0, condition count 1, :169 control covered); two-clock decision argued with reuse infeasibility measured; field renamed finishNow."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The doc's load-bearing evidence was measured on the wrong artifact, so its central claims fail premise verification as written. The mutation table's conclusion ('The prototype kills all 16 bound mutants, plus S1-S3, W1 and TM1', V8), the §3/AC-3 claim that 'the whole host/daemon package passes plain and under -race on the prototype' (V10: 279.8s plain, 521.3s race, count=200 finish race run), and AC-3's 'All are green (prototype: V10)' were all executed against the pre-rename r1 prototype. The r2 revision renamed the seam field to finishNow and rewrote its doc comment — i.e., the exact diff this doc specifies and the executor will commit — but the doc's own log (§4 header, V17) admits the post-rename tree was only re-verified for vet, a 50-count race subset of the finish tests, and mutants S1-S3 and W1. For the specified artifact, 17 of the 20 AC-2 mutant-kill attributions (P1-P6, Q1-Q6, R1-R6, TM1) and the full package plain/race batteries are asserted by transitivity from a different source tree, not verified. The rename is almost certainly behavior-neutral, but this doc sets its own standard that every factual claim carries a V-row, and the claims that carry the row's safety case currently do not, for the diff actually being proposed. The doc applies this same honesty rule to itself for AC-4 ('I did not run the full ./... or verify_ail.sh') but not for the r1-to-r2 delta.",
+      "gpt6-1-sol: The no-fallback clock change introduces a nil-function panic for daemons not initialized by New, but the claimed exhaustive construction audit is not established by V13/V14. Their searches miss populated value literals such as `d := Daemon{...}`, package-alias-qualified literals, and zero-value declarations such as `var d Daemon`. Thus §3's safety premise—that every daemon reaching the finish route receives finishNow—is still unverified."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.357837,
+    "total_tokens_in": 33215,
+    "total_tokens_out": 17133
+  }
+}

@@ -1,0 +1,14 @@
+# iteration 327 controller readings (Gate 1/2), 2026-10-30T20:05:29Z
+origin/dev = 4d43d8e31b8e54673fbe955641aa83af0f60e9fd (merge of #432, docs-only landing note)
+check-runs: go race gate=failure; host gate=success; verify gate=success (run 41093918891 attempt 1)
+parents cfdab426, 1f861724, f3e49e7d, b49ce51a: race gate success
+failing test: TestEpisodeFinishScopeExpiry (host/daemon/episode_finish_test.go:162), message 'expiry 1793383038: 200' (= test_now+3601 arm; 2026-10-30T17:57:18Z)
+server bounds: host/daemon/episode_finish.go:169 and :271 'scope.ExpiresAt > now+3600' with now = time.Now().Unix() read inside the handler
+data races in the job log: 2, both in design_docs/verification/w-race-gate-blindspot/racecontrol (the gate's known-positive control, expected)
+
+## local repro, darwin, origin/dev 4d43d8e3
+idle: go test ./host/daemon/ -race -run '^TestEpisodeFinishScopeExpiry$' -count=400 -> rc=0 for 4d43d8e3, ok  	github.com/sunholo-data/ailang-world/host/daemon	13.286s
+aligned (scratch edit: spin until time.Now().Nanosecond() >= 999_950_000, then +3601 arm only), -count=20: rc=1, FAIL lines 20; first: episode_finish_test.go:172: expiry 1793394229: 200
+aligned, -race, -count=20: rc=1, FAIL lines 20
+aligned at 998_000_000 (2 ms before the boundary), -count=20: rc=0, FAIL lines 0 (the handler finished inside 2 ms locally)
+control (spin until Nanosecond() <= 100_000_000, just AFTER a boundary), -count=20: rc=0 (ok  	github.com/sunholo-data/ailang-world/host/daemon	1.422s)
