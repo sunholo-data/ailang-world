@@ -3353,3 +3353,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **NB3** (the dashboard dropped row 162's re-measure caveat): applied.
 - **NB4** ("loop-routable" for rows rule (d) bars): applied. The stamp now says "the next rows below them".
 - No r2: every change is wording, a dashboard line or a banked reading.
+
+**Landing (iteration 323):** PR #425 merged as `bd3dae14`. The PR head `6500fd13` was 3/3 green before the merge, and origin/dev was re-read right before it (`8b840dd0`, MERGEABLE/CLEAN, `--match-head-commit`). The merge tree is byte-identical to the head tree. On the merge, the charter keeps 3 stamps and the ledger is valid at 91 rows. **Merge CI:** `commits/bd3dae14/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green.
