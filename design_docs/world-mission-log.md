@@ -2178,3 +2178,9 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105).
 **Next:** rule (d) block report unless D-WORLD-105 is answered A or B, Mark widens D-WORLD-102's scope, or a release row (150, 151) becomes routable; a dev red still outranks.
+
+**Record follow-through (iteration 332):** the independent evaluator judged record commit `6ad80117` on `85a7bd5c`: **r1 PASS 95/100, zero blocking** (34/23/24/14). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context on a detached worktree at the record commit (40,183 tok, 45 s, 5 tool uses). It re-ran the no-pick premise: the 5 commits in `cb85eb2b..85a7bd5c` are all 331's own work; no `MarkEdmondson1234` comment on #366 (32 comments) and 44 on #313; ledger valid at 92 rows; D-WORLD-102 covers 231 → 230 → 233 only. It also re-ran the edit integrity: 3 stamps kept; the 329 stamp has the same md5 at the archive head as in the charter at `85a7bd5c`; archive +2/−0; index +1/−0; CURRENT GOAL 7,731 → 7,744 bytes with 20 → 20 clauses. It found no `sk-ant`/`oat01` string and no closing keyword in the diff. It took the upstream 29/29 sweep, the CI run list and the inbox counts from the readings file.
+- **NB1** (the index row is truncated at "stil..."): the index generator truncates every long heading. No change.
+- **NB2** (the token in the local transcript may merit rotation): this is already retro item 2, and the rotation is Mark's call.
+- **NB3** (CI runs `9e562235`/`a6af0cd4` taken from the readings file): the readings file prints the `gh run list` output that produced them. No change.
+- No r2: nothing to fix.
