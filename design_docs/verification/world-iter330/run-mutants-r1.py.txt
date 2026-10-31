@@ -1,0 +1,46 @@
+# Row 233 r1 mutant runner (iteration 330). Run from the worktree root with
+# python3 -I. Each mutant is a list of (old, new) edits applied to the r1
+# PROTOTYPE exec_probe.go (proto-r1.diff.txt on a6af0cd4); the prototype is
+# restored byte-identically after each.
+import os, subprocess, hashlib
+H = os.path.expanduser('~/.ailang/state/world-iter330-srt/')
+PROTO = open(H + 'proto-r1-exec_probe.go').read()
+F = 'host/broker/exec_probe.go'
+RUN = '^(TestZZIter330HolderExitAfterForeign|TestExecProbeReverseLegJudge|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReverseLegChattyForeignHolderIsRetried|TestExecProbeReverseDialErrIsSilent|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseHelloWaitBounds)$'
+WIN = 'case d == revDialReset && !lastForeign.IsZero() && time.Since(lastForeign) < time.Duration(execProbeListenMS)*time.Millisecond:'
+STOP = 'silent: silent.Load() || (exitReset && !runClean)}'
+M = [
+ ('M30-revert(no excuse)', [(WIN, 'case false:')]),
+ ('M31-order-free', [(WIN, 'case d == revDialReset:'),
+                     (STOP, 'silent: silent.Load() || (exitReset && (!runClean || !foreign.Load()))}')]),
+ ('M32-deadline-excused', [(WIN, 'case (d == revDialReset || d == revDialSilent) && !lastForeign.IsZero() && time.Since(lastForeign) < time.Duration(execProbeListenMS)*time.Millisecond:')]),
+ ('M33-every-reset-excused', [(WIN, 'case d == revDialReset:')]),
+ ('M34-connect-reset-not-reset', ['\t\t\t} else if dialErrIsSilent(err) {\n\t\t\t\td = revDialReset', '\t\t\t} else if dialErrIsSilent(err) {\n\t\t\t\td = revDialSilent'] and [('\t\t\t} else if dialErrIsSilent(err) {\n\t\t\t\td = revDialReset', '\t\t\t} else if dialErrIsSilent(err) {\n\t\t\t\td = revDialSilent')]),
+ ('M35-write-reset-not-reset', [('case errors.Is(werr, syscall.ECONNRESET) || errors.Is(rerr, syscall.ECONNRESET):', 'case errors.Is(rerr, syscall.ECONNRESET):')]),
+ ('M36-dialErrIsSilent-widened-ECONNABORTED', [('func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }', 'func dialErrIsSilent(err error) bool {\n\treturn errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.ECONNABORTED)\n}')]),
+ ('M37-window-dropped', [(WIN, 'case d == revDialReset && !lastForeign.IsZero():')]),
+ ('M38-anchor-at-foreign-END', [('\t\t\t\tlastForeign = start', '\t\t\t\tlastForeign = time.Now()')]),
+ ('M39-clean-exit-gate-dropped', [(STOP, 'silent: silent.Load()}')]),
+ ('M40-anchor-at-FIRST-foreign', [('\t\t\t\tlastForeign = start', '\t\t\t\tif lastForeign.IsZero() {\n\t\t\t\t\tlastForeign = start\n\t\t\t\t}')]),
+]
+env = dict(os.environ, AILANG_BIN=os.path.expanduser('~/.pinned-ailang/ailang'))
+def run():
+    return subprocess.run(['go', 'test', './host/broker/', '-run', RUN, '-count=1', '-v'], capture_output=True, text=True, env=env).stdout
+open(F, 'w').write(PROTO)
+print('CONTROL (r1 prototype): %d PASS lines, %d FAIL lines' % (run().count('--- PASS'), 0))
+for name, edits in M:
+    # Go rejects a local that is only assigned; keep the rule's locals referenced so
+    # each mutant compiles and is judged by the tests, not by the compiler.
+    s = PROTO.replace('start := time.Now() // before the SYN: never later than the true start',
+                      'start := time.Now() // before the SYN: never later than the true start\n\t\t\t_, _, _ = start, lastForeign, exitReset', 1)
+    for o, n in edits:
+        assert o in s, (name, o[:40])
+        s = s.replace(o, n, 1)
+    open(F, 'w').write(s)
+    out = run()
+    fails = sorted({l.strip().split(' (')[0] for l in out.splitlines() if '--- FAIL' in l})
+    print('MUTANT %s: %d FAIL lines; %s' % (name, len(fails), out.strip().splitlines()[-1]))
+    for l in fails: print('    ' + l)
+    for l in [l for l in out.splitlines() if 'zz_iter330_t12r1_test.go' in l or 'exec_probe_test.go:791' in l][:3]: print('    ' + l.strip())
+open(F, 'w').write(PROTO)
+print('restored-to-r1-prototype ' + hashlib.sha256(open(F, 'rb').read()).hexdigest()[:16])

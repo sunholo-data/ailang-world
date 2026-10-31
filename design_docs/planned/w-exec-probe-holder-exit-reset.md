@@ -1,6 +1,6 @@
-# w-exec-probe-holder-exit-reset — a reset that FOLLOWS a foreign answer on the same attempt's port is that holder's exit, so it is retried, not refused
+# w-exec-probe-holder-exit-reset — a reset within one hold of a foreign answer, in a cleanly exited run, is that holder's exit, so it is retried, not refused
 
-- **Status**: Planned (designed iteration 330, r0). Queue row 233. An amendment to
+- **Status**: Planned (designed iteration 330, r1: quorum r1 fixes, §11). Queue row 233. An amendment to
   `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md` (row 229, the reverse leg's
   §4.2 classification) and the successor named by
   `design_docs/implemented/w-exec-probe-reset-holder-false-pass.md` (row 232) §3 reading 3 and §8 R5.
@@ -8,9 +8,10 @@
 - **Item**: Clause 3 (MET; availability hygiene). When a foreign chatty holder exits while the
   reverse leg's poll is still dialling, the dial it cuts reads zero bytes and a reset. Today that
   dial is SILENT, so the attempt is a sticky refusal of startup, not INCONCLUSIVE (a retry).
-- **Estimated**: ~0.25 day. Production about +25/−12 LOC in `host/broker/exec_probe.go` (one
-  small enum, the classifier returns it, the poll's switch gains one case). Tests about +100 LOC
-  (one new table test). One `ci.yml` list edit. One QUICKSTART clause (§7).
+- **Estimated**: ~0.25 day. Production about +35/−15 LOC in `host/broker/exec_probe.go` (one
+  small enum, the classifier returns it, the poll's switch gains one timed case, `stop` takes
+  `runClean`, `reverseLeg` passes `r.err == nil`). Tests about +150 LOC (one new table test; two
+  call sites pass `true`). One `ci.yml` list edit. One QUICKSTART clause (§7).
 - **Measurement base**: `a6af0cd4` (worktree `sprint/world-iter330-exec-probe-holder-exit-reset`;
   `host/broker/exec_probe.go` sha256 prefix `96f33172667d27de`, V1).
 - **Instruments**: `go1.26.6 darwin/arm64`, 16 cores, node v26.12.1 (V1). Real srt is the pinned
@@ -46,7 +47,7 @@ collision into a refused startup.
 | Today `{foreign, silent}` is judged SILENT | **CONFIRMED** (controller, then first-party): foreign-only → 4 (`revInconclusive`), foreign+silent → 3 (`revSilent`), silent-only → 3 | V2 |
 | The R5 sequence (foreign answers, then a zero-byte reset as the mux exits) happens with **real** srt | **CONFIRMED on darwin under load; not seen idle.** Real srt 0.0.78, hold 1000 ms: **0/100** cycles idle, **2/100** under load. Hold 0 (darwin's real child exits at once with EPERM): **0/100** idle, **5/100 (each a lone `S`: see the hold-0 caveat in R5)** under load. In the hold-1000 shape every silent was a **read-side reset (`S`) after ≥19 foreign answers, ≤8 ms before srt's exit, and the last connected dial of its cycle**. The hold-0 silents were lone dials (`seq S`); that is an artefact of the probe starting its poll late (R5) | V9, V10 |
 | Rate | Real srt is **lower** than the row-232 stand-in (3/100 idle, 13/100 load; V18). The stand-in over-states darwin idle | V9, V10, V18 |
-| Linux | **MEASURED on a CI runner (`7.0.0-1017-azure`, 4 vCPU, node v22.23.4), and far worse than darwin.** Real srt, hold 1000 ms (Linux's real shape: the child binds in its own netns and holds): **0/100** idle, **54/100** under 8 `yes`, every one `F…FS` (a reset after 18–19 foreign answers, the last connected dial). The node mux stand-in (`mux-server.mjs`) gave 0/100 idle and **49/100** loaded, the same shape. Under the rule all of them are INCONCLUSIVE: **54 → 0** and **49 → 0** | V11 |
+| Linux | **MEASURED on a CI runner (`7.0.0-1017-azure`, 4 vCPU, node v22.23.4), and far worse than darwin.** Real srt, hold 1000 ms (Linux's real shape: the child binds in its own netns and holds): **0/100** idle, **54/100** under 8 `yes`, every one `F…FS` (a reset after 18–19 foreign answers, the last connected dial). The node mux stand-in (`mux-server.mjs`) gave 0/100 idle and **49/100** loaded, the same shape. Under r0's rule all of them are INCONCLUSIVE: **54 → 0** and **49 → 0**. **[r1]** The run was repeated with dial start times under the final rule: **49 → 0** (real srt) and **82 → 0** (stand-in), with the largest gap 94.4 ms of the 1000 ms window (V22) | V11 |
 | `SO_REUSEPORT` might let the child co-hold the mux's port | **REFUTED for the mux and World's child, on darwin; and REFUTED on Linux too on Linux.** srt's dist has 0 `reusePort` uses; the mux binds positionally. On the live real-srt mux port, a Go default bind, a Go `SO_REUSEPORT` bind and the child's exact node `listen` shape all fail `EADDRINUSE`, while the paired control (two `SO_REUSEPORT` sockets) co-binds. Node refuses `reusePort` on darwin with `ENOTSUP` | V5, V6, V7, V11 |
 
 ## 2. The mechanism
@@ -67,217 +68,281 @@ been stopped.
 
 ## 3. Design
 
-### 3.1 The rule
+### 3.1 The rule [r1: tightened]
 
-> **A zero-byte RESET observed after the attempt's poll has already recorded a foreign answer
-> records nothing.** A reset means ECONNRESET at connect, on the hello write, or on the read, with
-> zero bytes read. Everything else is unchanged: a reset BEFORE the first foreign answer is silent,
-> a zero-byte DEADLINE (or any other zero-byte error) is silent wherever it falls, and the child's
-> nonce dominates.
+> **A zero-byte RESET records nothing if, and only if, (i) a dial that read a foreign answer
+> STARTED less than `execProbeListenMS` (1000 ms) before the reset was observed, and (ii) the
+> child's run then exited cleanly (`r.err == nil`).** Otherwise it is silent, as today. A reset is
+> ECONNRESET at connect, on the hello write, or on the read, with zero bytes read. A zero-byte
+> deadline (or any other zero-byte error) is silent wherever it falls, and the child's nonce
+> dominates.
 
-`judgeReverse` is **not** changed. The rule lives in the poll, which is the only place that knows
-the order of the dials.
+r0's rule was "any reset after any foreign answer". Quorum r1 (§11, objection 3) showed that r0
+could not exclude a reset that came from the child's own listener. Conditions (i) and (ii) are
+what make the proof in §3.3 go through. They cost nothing on the measured data: the largest gap
+from the last foreign dial's start to an exit reset was **94.4 ms** (Linux, 131 resets) and
+**57.7 ms** (darwin), against a 1000 ms bound, and every one of those runs exited cleanly (V21,
+V22).
 
-**Ordering needs no new field.** `reverseSeen` is three bools and carries no order. It does not
-need to. The poll goroutine is the only writer of `child`, `foreign` and `silent`, and it dials
-sequentially (`:745-765`, V3). So "has this attempt already seen a foreign answer" is just
-`foreign.Load()` read on that goroutine, in program order. No lock, no timestamp, no fourth bool.
+`judgeReverse` and `reverseSeen` (three bools) are **not** changed. The rule lives in the poll,
+which is the only place that knows the order and timing of the dials, and in the poll's `stop`,
+which `reverseLeg` calls with `r.err == nil` once the run has returned.
 
-### 3.2 Code shape (prototype measured: V12, V13)
+### 3.2 Code shape (r1 prototype measured: V23, V24)
 
 ```go
-// dialSeen is what one reverse-leg dial observed.
-type dialSeen int
+type dialSeen int // dialNone, dialChild, dialForeign, dialSilent, dialReset (as r0)
 
-const (
-	dialNone    dialSeen = iota // the dial failed and proves no listener (ECONNREFUSED, EINVAL, a timeout, …)
-	dialChild                   // the child's nonce line
-	dialForeign                 // other bytes, or a clean EOF after a written hello
-	dialSilent                  // zero bytes at the deadline, or another zero-byte error
-	dialReset                   // zero bytes, then ECONNRESET at connect, on the hello write or on the read
-)
+func classifyReverseDial(c net.Conn, want string) dialSeen // as r0: zero bytes + ECONNRESET (write or read) → dialReset
 
-func classifyReverseDial(c net.Conn, want string) dialSeen // body as today; the last arms become:
-	// case werr == nil && errors.Is(rerr, io.EOF):                              return dialForeign
-	// case errors.Is(werr, syscall.ECONNRESET) || errors.Is(rerr, syscall.ECONNRESET): return dialReset
-	// default:                                                                  return dialSilent
-
-// pollLoopback's loop body:
-	d := dialNone
-	if c, err := dial(addr); err == nil {
-		d = classifyReverseDial(c, want)
-		_ = c.Close()
-	} else if dialErrIsSilent(err) {
-		d = dialReset
+func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error)) func(runClean bool) reverseSeen {
+	…
+	var exitReset bool        // poll goroutine only; read by stop after <-finished
+	var lastForeign time.Time // the START of the latest dial that read a foreign answer
+	…
+		d := dialNone
+		start := time.Now() // taken before the dial: never later than the real SYN
+		if c, err := dial(addr); err == nil {
+			d = classifyReverseDial(c, want)
+			_ = c.Close()
+		} else if dialErrIsSilent(err) { // ECONNRESET only (V19)
+			d = dialReset
+		}
+		switch {
+		case d == dialChild:
+			child.Store(true)
+		case d == dialForeign:
+			foreign.Store(true)
+			lastForeign = start
+		case d == dialReset && !lastForeign.IsZero() &&
+			time.Since(lastForeign) < time.Duration(execProbeListenMS)*time.Millisecond:
+			exitReset = true // row 233: a foreign holder's exit, provisionally (§3.3)
+		case d == dialReset || d == dialSilent:
+			silent.Store(true)
+		}
+	…
+	return func(runClean bool) reverseSeen {
+		close(done)
+		<-finished
+		return reverseSeen{child: child.Load(), foreign: foreign.Load(),
+			silent: silent.Load() || (exitReset && !runClean)}
 	}
-	switch {
-	case d == dialChild:
-		child.Store(true)
-	case d == dialForeign:
-		foreign.Store(true)
-	case d == dialReset && foreign.Load():
-		// Row 233: the foreign holder's exit. Records nothing; a deadline still refuses.
-	case d == dialReset || d == dialSilent:
-		silent.Store(true)
-	}
+}
+
+// reverseLeg: seen := poll(r.err == nil)
 ```
 
-The prototype (`$V/proto-exec_probe.diff.txt`, +34/−15) used the names `revDial*`. The sprint
-uses `dial*`, because the test file already has a `revDialErr` helper (V14). `dialErrIsSilent`
-keeps its name and meaning: a connect-time ECONNRESET proves a listener completed the handshake,
-and that dial is now `dialReset`, so it is silent unless a foreign answer came first. No refusal
-text changes. `classifyReverseDial` has no caller outside `exec_probe.go` (V14).
+The prototype (`$V/proto-r1.diff.txt`) used the names `revDial*`. The sprint uses `dial*`, because
+the test file already has a `revDialErr` helper (V14). The two test call sites of `pollLoopback`
+(`exec_probe_test.go:829`, `:908`) pass `true`. `dialErrIsSilent` is unchanged. It matches
+ECONNRESET only, and T8 pins that (V19), so no other connect error can become `dialReset`. No
+refusal text changes.
 
-### 3.3 Soundness: which verdicts change, and why none of them can pass a breach
+### 3.3 Soundness: the accepted set does not grow on any execution that observes the child
 
-The probe is a fail-closed startup gate. The property that must not weaken is P20 (V46): a
-listener the child binds is unreachable from the host, so a real reach must always refuse.
+The probe is a fail-closed startup gate. The property that must not weaken is P20: a listener the
+child binds is unreachable from the host, so a real reach must refuse.
 
-**Exactly one verdict changes.** Take one attempt, with child token `tok` and the poll's dials in
-order. Today's `reverseSeen` is `{child:false, foreign:true, silent:true}`, and **every** silent
-dial is a reset (connect, write or read ECONNRESET, zero bytes) that comes **after** the attempt's
-first foreign answer. That attempt is SILENT today (sticky refusal). Under the rule it is
-`{foreign:true}`, which is INCONCLUSIVE (a retry on a fresh port). That holds for `tok` =
-`WORLD-PROBE-BOUND`, any `WORLD-PROBE-REFUSED <errno>`, and `EADDRINUSE`.
+**Lemma (no observation of the child is ever excused).** Suppose that in one attempt the child
+binds a host-reachable listener on `127.0.0.1:p` at time `B`, and the run exits cleanly. Then no
+dial whose connection reached that listener is excused.
 
-Nothing else changes:
+*Proof.*
 
-| Attempt shape (poll order) | Today | After | Why unchanged / changed |
+1. **The listener lives at least `L = execProbeListenMS` = 1000 ms.** The script binds, prints
+   `WORLD-PROBE-BOUND`, then runs `setTimeout(()=>{v.close();r(null)},+ms)` (`:94`, V17). Its only
+   other exits are an uncaught error or a signal, and either one makes srt, and so `pp.run`, report
+   a non-zero status. `r.err == nil` (condition ii) therefore means the listener was closed by its
+   timer, at `C ≥ B + L`.
+2. **While it listens, the child's listener never resets a connection.** Every connection it
+   accepts gets `c.resume(); c.end(nonce)` (`:92`), which is the nonce and then a FIN. A dial that
+   reaches it therefore reads the nonce (CHILD), or, if the nonce is late, zero bytes at the
+   deadline (SILENT, which the rule never excuses). The kernel resets a connection queued on a
+   listener only when that listener closes (Linux `tcp_abort_on_overflow` = 0 on the CI runner,
+   V22: an overflow drops the SYN, it does not reset it). So a reset that comes from the child's
+   listener is observed at `e ≥ C ≥ B + L`.
+3. **A foreign answer means the child was not reachable on `127.0.0.1:p` at that moment.** Say a
+   dial started at `s_f` and connected at `a_f ≥ s_f` to a listener that answered with something
+   other than the nonce. Then the child's listener was not routable at `a_f`:
+   - the child binds `127.0.0.1` without `reusePort` (V17), so it cannot share that address with
+     another listener on darwin (V6, V7) or on Linux (V11);
+   - darwin lets a wildcard listener share the port, but a `127.0.0.1` dial then always reaches
+     the `127.0.0.1` listener, which is the child (20/20, V8);
+   - World's client never answers anything but the nonce (`:92`; row 232 §4(a)).
+
+   Because the child holds the port from `B` to `C`, it follows that `a_f < B` or `a_f ≥ C`.
+4. **Close the cases.**
+   - If `a_f ≥ C`: the foreign dial came after the child closed, and the poll is sequential, so any
+     later reset dial also connects after `C` and cannot have reached the child.
+   - If `a_f < B`: then `s_f ≤ a_f < B`, so `e − s_f > (B + L) − B = L`. Condition (i) fails, and
+     the reset is SILENT.
+   - **Measured, not true times.** The poll records `s_obs ≤ s_f`, because `start` is taken before
+     `dial`. It reads `time.Since` at `e_obs ≥ e`. So `e_obs − s_obs ≥ e − s_f > L`, and a scheduler
+     stall can only widen the measured gap. A stall never excuses a reset; it can only refuse.
+     (The clock is Go's monotonic one.) ∎
+
+**Theorem (the accepted set).** Take any execution of the reverse leg in which at least one
+reverse-leg dial reached a host-reachable child listener. By the lemma, every such observation is
+recorded as today (CHILD, or SILENT for a deadline or a reset), and the observations that are not
+the child's are recorded as today or more leniently. `judgeReverse` gives CHILD priority over
+everything, and SILENT priority over FOREIGN. So:
+
+- an attempt that saw the nonce is REACHED, as today;
+- an attempt that saw the child only through a deadline or a reset is SILENT, as today.
+
+The rule cannot make that attempt INCONCLUSIVE, so it cannot lead to a later attempt's PASS.
+**The leg's verdict on every execution that observes the child is unchanged.**
+
+**Exactly what does change.** Executions in which no dial reached a child listener, and in which
+every silent observation of an attempt is a reset satisfying (i) and (ii). Today such an attempt is
+SILENT. Under the rule it is INCONCLUSIVE, so the leg retries on a fresh port, and three
+INCONCLUSIVE attempts still refuse (`:621`, `:111`). By the lemma, the excused reset is **not** the
+child's. Today's refusal of that attempt rests only on a non-child listener's exit, which is the
+class row 229 deliberately retries (foreign).
+
+**gpt's case, answered.** "A reachable child observed only through resets after a foreign answer"
+cannot have those resets excused (lemma, case `a_f < B`). Such an execution is SILENT under the
+rule, exactly as today. The rule does change executions with a reachable but **never-observed**
+child, where today's refusal came from a foreign holder's exit by chance. In those, the child was
+not observed under either rule. Today's refusal hangs on whether the holder's exit happened to cut
+a dial: 49–54 of 100 collided attempts on loaded Linux, 0–2 of 100 elsewhere (V10, V11, V21, V22).
+The rule does not change what the probe observes of the child. It changes only how a non-child
+listener's exit is attributed.
+
+**What the proof relies on (stated, with evidence):**
+
+- (a) the poll is one goroutine and dials sequentially (`:745-765`, V3);
+- (b) the child cannot co-hold `127.0.0.1:p` with another listener, and darwin routes to the more
+  specific address (V6–V8, V11);
+- (c) the script's listener closes only through its timer, unless the process fails (`:92-94`,
+  V17), and a failure reaches `r.err` (srt's `process.exit(code ?? 0)` and `exit(1)` for a signal,
+  `cli.js:428-447`, V5);
+- (d) a listening socket does not reset queued connections before it closes. Linux
+  `tcp_abort_on_overflow` = 0 was measured on the runner (V22). On darwin this is the BSD
+  behaviour and was **not separately measured**.
+
+If (b) or (d) failed, the cost would be a co-held child answering the nonce (REACHED), or an early
+reset counted as silent. Both fail closed, except a (d) failure that resets within 1000 ms of a
+foreign answer. That one is listed as R6.
+
+| Attempt shape (poll order; `clean` = the run exited 0) | Today | After | Why |
 |---|---|---|---|
 | any dial reads the nonce | REACHED | REACHED | the child is first in `judgeReverse` (`:152`) |
 | `tok` is not a probe token | NO-TOKEN | NO-TOKEN | checked before silent (`:154`) |
-| reset(s) only, no foreign (T7 `reset-holder`, row 232's connect reset) | SILENT | SILENT | no foreign answer precedes it |
-| reset **before** the first foreign answer (`SF`, `CF`) | SILENT | SILENT | order is checked; an order-free rule is mutant M31 |
-| a zero-byte **deadline** anywhere (`FD`, `DF`, `FSD`) | SILENT | SILENT | a deadline is a listener that is alive and not answering, the slow-child case row 229 R1 closed; excusing it is M32 |
-| foreign, then reset(s) only (`FS`, `FC`, `FW`, `fS`) | SILENT | **INCONCLUSIVE** | the changed row |
+| reset(s) only, no foreign (`S`, T7 `reset-holder`, T9 `connect-reset`) | SILENT | SILENT | no foreign anchor |
+| reset **before** the first foreign answer (`SF`, `CF`) | SILENT | SILENT | no foreign anchor yet |
+| a zero-byte **deadline** anywhere (`FD`, `FSD`) | SILENT | SILENT | the rule never excuses a deadline |
+| foreign, then a reset ≥ 1000 ms after the foreign dial **started** (`FP`, `LQ`) | SILENT | SILENT | condition (i) |
+| foreign, then a reset < 1000 ms after, but the run did **not** exit cleanly (`FS`, unclean) | SILENT | SILENT | condition (ii) |
+| foreign, then reset(s) < 1000 ms after the latest foreign dial started, clean exit (`FS`, `FC`, `FW`, `fS`, `GGFS`) | SILENT | **INCONCLUSIVE** | the changed row; by the lemma the reset is not the child's |
+| foreign, then a non-reset connect error (`FA` ECONNABORTED, `FT` timeout) | INCONCLUSIVE | INCONCLUSIVE | `dialErrIsSilent` is ECONNRESET-only (V19): records nothing, as today |
+| connect error only (`A`, `T`) | PASS | PASS | as today |
 | foreign only, or `EADDRINUSE` with nothing | INCONCLUSIVE | INCONCLUSIVE | — |
-| nothing connected, sandbox token | PASS | PASS | — |
 
-**Why the changed row cannot pass a breach.**
+### 3.4 Alternatives (r1: re-evaluated)
 
-1. **No attempt the rule touches can pass itself.** Row 229's invariant (§4.3: an attempt passes
-   only when *zero* dials connected) is untouched. The changed attempt had connected dials, so it
-   is INCONCLUSIVE, never PASS. Three INCONCLUSIVE attempts refuse with
-   `reverse leg: inconclusive after 3 attempts` (`:621`, `execProbeReverseAttempts = 3`, `:111`).
-   The rule can delay a refusal into the next attempt. It cannot turn a refusal into a pass.
-2. **The excused reset cannot be the child's listener on a co-held port.** For that, the child would
-   have to hold a host-reachable listener on a port a foreign listener answered on, in the same
-   attempt.
-   - *Co-holding with srt's mux* (the only identified in-window binder) is refused. On the live
-     real-srt mux port, the child's exact `listen` shape gets `EADDRINUSE`, and so do a Go default
-     bind and a Go `SO_REUSEPORT` bind. The control, two `SO_REUSEPORT` sockets, does co-bind (V6,
-     V7). srt never sets `reusePort` (V5). World's child binds positionally (`:94`), and node
-     refuses `reusePort` on darwin anyway (`ENOTSUP`, V6). In a breach with a shared namespace the
-     child's token is then `EADDRINUSE`, and that attempt is INCONCLUSIVE today, whatever the poll
-     saw.
-   - *Co-holding with some other foreign listener on darwin* is possible when one side binds the
-     wildcard: Go's default sockets co-bind `0.0.0.0:p` with `127.0.0.1:p` in either order (V6).
-     But every dial to `127.0.0.1:p` then reaches the `127.0.0.1` listener, 20/20 in both orders
-     (V8). World's child binds `127.0.0.1`, so while it holds, the poll reaches the child and reads
-     the nonce: REACHED.
-   - *Linux* is stricter than darwin. Wildcard and `127.0.0.1` co-binds are refused in both orders, and so is every mixed `SO_REUSEPORT` pair. Only two sockets that **both** set `SO_REUSEPORT` co-bind (Go and node `reusePort:true`, V11). On the live real-srt mux port, all three binds fail `EADDRINUSE` (V11). On Linux the correct child also sits in its own netns, so the host cannot reach it at all (row 229 §4.3).
-3. **A sequential child (foreign exits, then the child binds) is still caught.** Its listener
-   answers the nonce (REACHED) or, if slow, reaches the deadline (silent, still refused under the
-   rule). World's child resets host dials only **as it closes** (row 232 §3 reading 1). In every
-   cycle where the child was reachable, the nonce was seen too (100/100 idle and loaded; row 232
-   V5, V6). So the only breach the rule could hide is one that the poll observes **solely** through
-   close-time resets after a foreign answer, for a whole 1000 ms hold at a 50 ms cadence. Such a
-   breach already passes today in any attempt without a collision. The rule adds no new class of
-   miss. It only adds the precondition "a foreign answer came first", and the leg then retries.
-4. **The probe client is unchanged and still never answers foreign** (row 232 §4(a)). The rule
-   depends on that assumption no more than today's code does: a child that answered foreign would
-   already be retried today.
-
-**What the rule relies on (stated, not enforced):** (a) the poll is single-goroutine and
-sequential (the code at `:745-765`); (b) the child cannot co-hold a host-reachable `127.0.0.1`
-listener with a foreign `127.0.0.1` listener without `SO_REUSEPORT` on both (V6, V7; Linux V11);
-(c) World's probe client never sets `reusePort` (`:94`). If (b) ever failed, the co-held child
-would receive dials and read the nonce, as in V8, so the failure would still be REACHED.
-
-### 3.4 Rejected alternatives (measured where it mattered)
-
-- **(A) Order-free:** any `{foreign, silent}` is INCONCLUSIVE, with no struct or poll change.
-  Rejected. It also excuses a genuinely silent holder that later answered (`SF`), and a slow
-  child whose first dials timed out. M31 is this rule and is killed by T12 `SF` and `CF` (V13).
-- **(B) Any silent after foreign is foreign** (deadlines too). Rejected. A deadline means the peer
-  is alive and silent, which is row 229 R1's slow-child case. Every exit-time silent observed with
-  real srt was a reset (V9, V10), so (B) buys no availability over the chosen rule. M32 is (B) and
-  is killed by T12 `FD` and `FSD` (V13).
-- **(C) The chosen rule, plus "the reset must be the attempt's LAST connected dial".** Every observed
-  exit reset was the last connected dial (`connectedAfterFirstSilent=0`, V9, V10, V11), so (C)
-  would be sound too. It needs a pending state resolved at `stop()`, about 6 more LOC, and it
-  defends only against a foreign holder that keeps resetting **after** it has answered. Point 3
-  shows that holder cannot hide a breach. Not adopted. It is recorded here so a reviewer can ask
-  for it.
-- **(D) Count EPIPE on the hello write as a reset too.** Not adopted. EPIPE was never observed.
-  The one failed write seen (Linux, `W`) was `write: connection reset by peer` followed by EOF, which
-  is ECONNRESET and is covered by the rule (V11). There was no `O` class anywhere. EPIPE therefore
-  stays silent, which fails closed.
+- **(A) Order-free `{foreign, silent}` → INCONCLUSIVE.** Rejected. It excuses `SF` and resets
+  of any age. That is M31, killed by T12 `SF`, `CF`, `FP` and `LQ` (V24).
+- **(B) Any silent after foreign, deadlines included.** Rejected. A deadline is a live, silent
+  peer, which is row 229 R1's slow child. That is M32, killed by `FD` and `FSD`.
+- **(r0) Any reset after any foreign answer.** Superseded. It could not exclude a child reset that
+  follows a foreign answer from before `B` (quorum r1, objection 3). M37, which drops the window,
+  is r0's rule, and it is killed by `FP` and `LQ`.
+- **(Controller a) Excuse only when the child's token is `WORLD-PROBE-REFUSED <errno>`.** Rejected.
+  On Linux the correct child binds in its own netns and reports `WORLD-PROBE-BOUND` (row 229 §4.3
+  table, row "Linux, correct, port collided with srt's mux": BOUND → foreign). So (a) would excuse
+  nothing on Linux, where the false refusals are: 49/100 and 54/100 loaded (V11, V22). The timed
+  window gives the same guarantee for every token.
+- **(Controller b) Adjacency plus a bound from the constants.** Rejected as stated. The longest
+  gap between dial starts is `200 + 500 + 50 = 750 ms` (`execProbeHelloWait`, the dial timeout,
+  `execProbePollEvery`). That is shorter than the 1000 ms hold, but it does not exclude a child
+  reset adjacent to a foreign answer. For example, a foreign answer that arrives 450 ms after its
+  connect, then the next dial connecting 200 ms later, gives `B` just after `a_f` and the child's
+  close-time reset ≈ `a_f + 1000`, inside a 500 ms read. Measuring the gap directly (condition i)
+  closes that case exactly, and every observed exit reset was adjacent anyway (V21, V22).
+- **(C) "The reset must be the attempt's last connected dial."** Not needed for soundness, given
+  the lemma. Recorded only.
+- **(D) Count EPIPE as a reset.** Not adopted. It was never observed. The one write failure seen
+  was ECONNRESET (`W`, V11). EPIPE therefore stays silent, which fails closed.
 
 ## 4. Test plan
 
 | Test | Kind | Needs node? | Kills | Measured? |
 |---|---|---|---|---|
-| **T12** `TestExecProbeReversePollHolderExitAfterForeign` (new) | deterministic: scripted dial seam, no sleep, no socket | no | M30, M31, M32, M34, M35; M33 together with T7 and T9 | **yes**, prototype: control green, each mutant red (V13) |
-| T1 `TestExecProbeReverseLegJudge` (unchanged) | pure | no | `judgeReverse` must stay byte-identical: row `bound-silent-foreign` still wants SILENT, because the rule lives in the poll | green on the prototype (V12) |
-| T7 `TestExecProbeReverseLegSilentHolderRefusesSticky` (unchanged) | real holders | no | M33, through `reset-holder` | M33 red (V13) |
-| T9 `TestExecProbeReversePollRecordsConnectReset` (unchanged) | injected dial | no | M33, through `connect-reset` | M33 red (V13) |
-| T2–T6, T8, T10, T11 (unchanged) | as today | as today | regression | all green on the prototype (V12) |
+| **T12** `TestExecProbeReversePollHolderExitAfterForeign` (new; 18 rows) | scripted dial seam. No socket. Sleeps are used only as lower bounds (rows `FP`, `LQ`, `GGFS`) | no | M30–M40 (M33 also by T7/T9, M36 also by T8) | **yes**, r1 prototype: control 52 PASS lines; every mutant red (V24) |
+| T8 `TestExecProbeReverseDialErrIsSilent` (unchanged) | pure | no | M36 (`op-aborted`) | V19, V24 |
+| T1, T7, T9 (T9 and T10 pass `true` to `stop`) | as today | as today | M33 (T7 `reset-holder`, T9 `connect-reset`) | V24 |
+| T2–T6, T10, T11 (unchanged) | as today | as today | regression | green on the r1 prototype (V23) |
 
-**T12 shape.** The prototype is `$V/zz_iter330_t12_test.go.txt`. `scriptConn` is a `net.Conn`
-whose `Write` returns a scripted error and whose `Read` hands over a scripted answer one byte at a
-time, then a scripted error (`io.EOF` when none). `scriptedDial(steps, want)` returns the steps in
-order: `N` nonce, `F` HTTP 400, `f` clean EOF, `S` read `ECONNRESET`, `W` write `ECONNRESET` then
-EOF, `D` `os.ErrDeadlineExceeded`, `C` connect `ECONNRESET` (`revDialErr`). After the last step it
-returns ECONNREFUSED, and it closes an `all` channel once every step has been handed out. The test
-starts `pollLoopback(40000, want, dial)`, waits on `all` (with a 10 s fatal guard), then calls
-`stop()`. That is deterministic: the poll is sequential, and `stop()` waits for the in-flight
-classify (row 230 V24). Each row asserts the exact `reverseSeen` **and**
-`judgeReverse("WORLD-PROBE-BOUND", seen)`:
+**T12's scripted alphabet** (`$V/zz_iter330_t12r1_test.go.txt`):
 
-| Row | Want `reverseSeen` | Want verdict |
-|---|---|---|
-| `FS`, `FC`, `FW`, `fS` | `{foreign}` | INCONCLUSIVE |
-| `FD`, `SF`, `CF`, `FSD` | `{foreign, silent}` | SILENT |
-| `S` | `{silent}` | SILENT |
-| `FSN` | `{child, foreign}` | REACHED |
+- `N` nonce; `F` HTTP 400; `f` clean EOF;
+- `S` read ECONNRESET; `W` write ECONNRESET then EOF; `D` `os.ErrDeadlineExceeded`;
+- `C` connect ECONNRESET; `A` connect ECONNABORTED; `T` a connect timeout (`os.ErrDeadlineExceeded`);
+- `P` a read reset whose dial blocks ≥ `execProbeListenMS`;
+- `L`/`G` a foreign answer whose dial blocks ≥ 600 ms; `Q` a read reset whose dial blocks ≥ 450 ms.
 
-The sprint names the rows by shape (`foreign-then-read-reset`, …). The letters here match the
-prototype's output in V13.
+The dialer closes `all` once every step has been handed out. The test then calls
+`stop(clean)` and asserts the exact `reverseSeen` and `judgeReverse("WORLD-PROBE-BOUND", seen)`.
 
-**AC-MUT.** Apply M30–M35 one at a time. Each reds its named killer, and the tree is restored
-byte-identical (sha256 of both Go files). **AC-CI**: T12 joins step 8's `tests=` list
-(`ci.yml:247`, V16), since the family's rule is that every reverse-leg test is PASS-guarded and
-cannot skip on Linux. **AC-STABLE**: `go test ./host/broker -run '^TestExecProbeReverse' -count=20`
-passes 20/20, and T12 `-count=500` under 32 `yes` gives 0 FAIL. **AC-GATE**: `gofmt -l` is
-empty, `go vet ./host/broker/` is clean, `go build ./... && go test ./...` passes, and
-`./scripts/verify_ail.sh` passes. No `.ail` is touched. **AC-LINUX**: the fix PR's linux/amd64
+**Why the sleeps cannot flake a correct tree.** Each sleep is a lower bound on elapsed time:
+
+- `FP`: the gap is ≥ 1000 ms, so it must be SILENT for any scheduling.
+- `LQ`: the gap is ≥ 600 + 450 ms from L's start, so SILENT.
+- `GGFS`: the correct anchor is F's start, and its gap is only F + 50 ms + S, which is ≈ 50 ms.
+  That leaves about 950 ms of scheduling margin before a correct tree could redden. The first-G
+  anchor (M40) is ≥ 1250 ms.
+
+| Rows | `clean` | Want `reverseSeen` | Want verdict |
+|---|---|---|---|
+| `FS`, `FC`, `FW`, `fS`, `GGFS`, `FA`, `FT` | true | `{foreign}` | INCONCLUSIVE |
+| `FD`, `SF`, `CF`, `FSD`, `FP`, `LQ` | true | `{foreign, silent}` | SILENT |
+| `FS-unclean` | **false** | `{foreign, silent}` | SILENT |
+| `S` | true | `{silent}` | SILENT |
+| `FSN` | true | `{child, foreign}` | REACHED |
+| `A`, `T` | true | `{}` | PASS |
+
+**AC-MUT.** Apply M30–M40 one at a time. Each reds its named killer, and the tree is restored
+byte-identical. **AC-CI**: T12 joins step 8's `tests=` list (`ci.yml:247`, V16). **AC-STABLE**:
+`go test ./host/broker -run '^TestExecProbeReverse' -count=20` passes 20/20, and T12 `-count=200`
+under 32 `yes` gives 0 FAIL. **AC-GATE**: `gofmt -l` is empty, `go vet ./host/broker/` is clean,
+`go build ./... && go test ./...` passes, and `./scripts/verify_ail.sh` passes. **AC-LINUX**: the fix PR's linux
 step 8 shows `--- PASS: TestExecProbeReversePollHolderExitAfterForeign`.
 
 ## 5. Mutation table (continues the parent's M1–M21, row 232's M22–M29, the judge's O1–O10, row 230's K1–K9)
 
-| ID | Mutant | Killer, and the assertion that fires | Run? |
-|---|---|---|---|
-| M30 MUT-EXIT-RESET-SILENT | the rule's case removed (**today's behaviour**) | T12 `FS`, `FC`, `FW`, `fS`, `FSN`: `seen {… foreign:true silent:true} verdict 3; want {… foreign:true silent:false} verdict 4` | V13 red |
-| M31 MUT-EXIT-RULE-ORDER-FREE | a reset is excused if the attempt **ever** saw foreign (option A) | T12 `SF`, `CF`: `verdict 4; want … silent:true verdict 3` | V13 red |
-| M32 MUT-DEADLINE-EXCUSED | a deadline after foreign is excused too (option B) | T12 `FD`, `FSD` | V13 red |
-| M33 MUT-EVERY-RESET-EXCUSED | a reset records nothing even with no foreign before it | T12 `S`, `SF`, `CF`; T7 `reset-holder`; T9 `connect-reset` | V13 red |
-| M34 MUT-CONNECT-RESET-NOT-RESET | a connect-time ECONNRESET maps to `dialSilent` | T12 `FC` | V13 red |
-| M35 MUT-WRITE-RESET-NOT-RESET | only the read's ECONNRESET counts as a reset | T12 `FW` | V13 red |
+All were run against the r1 prototype (V24). The locals the rule uses are kept referenced so
+that each mutant compiles.
+
+| ID | Mutant | Killer(s) |
+|---|---|---|
+| M30 MUT-EXIT-RESET-SILENT | the excuse removed (**today's behaviour**) | T12 `FS`, `FC`, `FW`, `fS`, `GGFS`, `FSN` |
+| M31 MUT-EXIT-RULE-ORDER-FREE | any reset is excused if the attempt **ever** saw foreign (option A) | T12 `SF`, `CF`, `FP`, `LQ` |
+| M32 MUT-DEADLINE-EXCUSED | a deadline inside the window is excused too (option B) | T12 `FD`, `FSD` |
+| M33 MUT-EVERY-RESET-EXCUSED | a reset is excused with no foreign anchor | T12 `S`, `SF`, `CF`, `FP`, `LQ`; T7 `reset-holder`; T9 `connect-reset` |
+| M34 MUT-CONNECT-RESET-NOT-RESET | a connect ECONNRESET maps to `dialSilent` | T12 `FC` |
+| M35 MUT-WRITE-RESET-NOT-RESET | only the read's ECONNRESET is a reset | T12 `FW` |
+| **M36 MUT-DIALERR-WIDENED** [r1, quorum objections 1–2] | `dialErrIsSilent` also matches ECONNABORTED | T8 `op-aborted` (`dialErrIsSilent(… software caused connection abort) = true, want false`); T12 `A` (`seen {silent:true} verdict 3; want {} verdict 0`) |
+| **M37 MUT-WINDOW-DROPPED** [r1] (= r0's rule) | condition (i) removed | T12 `FP`, `LQ` |
+| **M38 MUT-ANCHOR-AT-FOREIGN-END** [r1] | the window is measured from the foreign dial's END, not its start | T12 `LQ` |
+| **M39 MUT-CLEAN-GATE-DROPPED** [r1] | condition (ii) removed (`stop` ignores `runClean`) | T12 `FS-unclean` |
+| **M40 MUT-ANCHOR-AT-FIRST-FOREIGN** [r1] (sound, but loses availability) | the window is measured from the FIRST foreign dial | T12 `GGFS` |
+| M41 (wiring, review-only) | `reverseLeg` passes `true` instead of `r.err == nil` | **no deterministic killer.** It is one line, checked by review. A reverse-leg fixture would need a real exit reset timed against the run, which is wall-clock. Recorded as the single unpinned line |
 
 ## 6. Milestones
 
-- **M1** (one milestone): `dialSeen`, the classifier's return, the poll's switch, T12, the `ci.yml:247`
-  gain, and the QUICKSTART clause. Prove M30–M35 red one at a time.
+- **M1** (one milestone): `dialSeen`, the classifier's return, the poll's timed case and `stop(runClean)`,
+  `reverseLeg`'s `poll(r.err == nil)`, T12, the two test call sites, the `ci.yml:247` gain, and the
+  QUICKSTART clause. Prove M30–M40 red one at a time; review M41's one line.
 
 ## 7. Files
 
 | File | Change | LOC (est.) |
 |---|---|---|
-| `host/broker/exec_probe.go` | `dialSeen` (near `:686`); `classifyReverseDial` returns it (`:687-720`, doc comment updated); `pollLoopback`'s loop body (`:747-759`) and its doc comment (`:727-732`) | +25 / −12 |
-| `host/broker/exec_probe_test.go` | `scriptConn`, `scriptedDial`, T12 | +100 |
+| `host/broker/exec_probe.go` | `dialSeen` (near `:686`); `classifyReverseDial` returns it (`:687-720`, doc comment updated); `pollLoopback`'s locals, loop body (`:737-759`), `stop(runClean bool)` (`:767-771`) and doc comment (`:727-732`); `reverseLeg` `:600` `seen := poll(r.err == nil)` | +35 / −15 |
+| `host/broker/exec_probe_test.go` | `scriptConn`, `scriptedDial`, T12; T9 `:829` and T10 `:908` call `stop(true)` | +150 / −2 |
 | `.github/workflows/ci.yml` | `:247` `tests=` gains `TestExecProbeReversePollHolderExitAfterForeign` | ±1 |
-| `docs/QUICKSTART.md` | §10 arm 6 (`:1168-1170`): after "(or that resets the host's dial)", add "; a reset right after a foreign answer on the same port is that process exiting, and is retried" | ±1 |
+| `docs/QUICKSTART.md` | §10 arm 6 (`:1168-1170`): after "(or that resets the host's dial)", add "; a reset within a second of a foreign answer on the same port, in a run that exited cleanly, is that process exiting, and is retried" | ±1 |
 
 **S7** applies: the refusal-text paragraph describes which resets refuse. **S2/S3**: this is a
 repair inside the host's effect boundary, with no new surface. It is not a package, for the same
@@ -286,20 +351,21 @@ added.
 
 ## 8. Conflict surface, risks and residuals
 
-**Conflict surface.** Two hunks of `exec_probe.go` (`:686-720`, `:745-759`) and their comments. Arms
-1–5, 7 and 8, `judgeReverse`, `reverseLeg`, every constant and every refusal text are untouched.
-`pollLoopback` has one production call site (`:598`) and two test call sites (`:829`, `:908`;
-V14). Its signature is unchanged.
+**Conflict surface.** Three hunks of `exec_probe.go` (`:686-720`, `:737-771`, `:600`) and their
+comments. Arms 1–5, 7 and 8, `judgeReverse`, `reverseSeen`, every constant and every refusal text
+are untouched. `pollLoopback` has one production call site (`:598`, stopped at `:600`) and two test
+call sites (`:829`, `:908`; V14). Its returned `stop` gains the `runClean` parameter.
 
 - **R1, the rate after the fix is 0 for the observed signature; the collision itself is untouched.**
   In every hold-1000 run, darwin and Linux, real srt and stand-in alike, each exit silent was a
-  reset after foreign: darwin load 2 → 0, Linux load 54 → 0, Linux stand-in 49 → 0 (V10, V11). So
+  reset after foreign, within 94.4 ms of the foreign dial's start, in a clean run: darwin load 2 → 0
+  and 1 → 0, Linux load 54 → 0 and 49 → 0, Linux stand-in 49 → 0 and 82 → 0 (V10, V11, V21, V22). So
   the rule removes the false refusal it targets. It does not make the collision rarer (row 229 R4 watch), and a foreign holder
   that is silent **before** it answers still refuses.
-- **R2, the sticky guarantee is narrowed by exactly one shape** (§3.3), and the narrowing is to a
-  retry, not to a pass. A breach visible **only** as close-time resets after a foreign answer gets
-  another attempt. §3.3 point 3 argues that this breach is already invisible to today's code in any
-  uncollided attempt.
+- **R2, what the change does accept [r1].** It accepts no execution that observes the child (§3.3
+  lemma and theorem). It does retry, rather than refuse, an attempt whose only silent evidence is a
+  non-child listener's exit reset. If the child is reachable but never observed in that attempt,
+  today's refusal came from that coincidence. This is stated, not hidden (§3.3, "gpt's case").
 - **R3, platform residuals.** darwin's wildcard co-bind (V6) is handled by routing (V8).
   Linux co-binding needs `SO_REUSEPORT` on both sockets (V11). Neither srt (V5) nor World's child (V17) sets it. A future child script that added `reusePort` would still be caught by routing: the kernel spreads connections across the group, so the child would receive dials and answer the nonce. That is argued, not measured, and so it is a review point for any edit to `execProbeScript`'s `listen` op.
 - **R5, an exit reset that is the attempt's FIRST connected dial stays a sticky refusal.** The
@@ -317,6 +383,17 @@ V14). Its signature is unchanged.
   (`answered nothing to World's hello` in a non-test log). Measurement path: drive the production
   `listen` child under real srt with a poll started before srt, which needs the mux port known in
   advance (not possible with srt's `bind(0)`). Successor candidate only if the trigger fires.
+- **R6, darwin's "no reset before close" (§3.3 reliance d) is not separately measured [r1].** Linux
+  `tcp_abort_on_overflow` = 0 was measured (V22). On darwin it rests on the BSD behaviour. A
+  violation would matter only if a live child listener reset a host dial within 1000 ms of a
+  foreign answer, in a run that exited cleanly. That cannot happen in a correct sandbox, where the
+  host cannot reach the listener at all.
+- **R7, one transient red during the r1 prototype's suite run [r1].**
+  `TestExecProbePassThroughShimFailsEveryConfinementArm` failed once on its expected text: the proxy
+  leg showed `accepts 4`, where the test wants 3 (`$V/out-proto-r1-suite.txt`). That is arm 6's
+  World-owned listener, a path this change does not touch. It did not reproduce: 5/5 PASS on the
+  prototype and 5/5 at base (V23). Recorded as the row 230 R2 cross-process accept class, not
+  attributed to this rule.
 - **R4, EPIPE and other write errors stay silent** (option D, not adopted). If CI ever shows an
   exit with that shape, the R4 trigger of row 230 §3.5 (`answered nothing to World's hello` in a
   non-test log) fires, and the class is re-measured first.
@@ -326,7 +403,8 @@ V14). Its signature is unchanged.
 ## 9. What this item is NOT doing
 
 - No change to `judgeReverse`, `reverseSeen`, the attempt count, the hold, the cadence, the hello
-  wait or any refusal text.
+  wait or any refusal text. `execProbeListenMS` is now also the excuse window, and the lemma
+  depends on that: whoever changes the hold changes the window with it.
 - No new listener options, no port range, no lock.
 - No claim about holders other than srt's mux beyond §3.3's argument. Each excused reset needs a
   foreign answer first on the same port.
@@ -351,14 +429,27 @@ every `go test`.
 | V9 | **Real srt, darwin, idle.** srt runs `/bin/sh -c 'echo "PX:$HTTP_PROXY"; sleep H'` with `$V/srt-settings.json.txt`; the probe reads the mux port from `PX:`, runs pollLoopback's exact loop (200 ms dial, hello, 500 ms read, 50 ms cadence) and stops it after srt exits. Classes: `F` bytes, `f` clean EOF, `S` read reset, `C` connect reset, `W` write fail, `D` deadline, `R` refused | `$V/run-darwin.sh.txt` → `$V/out-darwin.txt` (`=== IDLE hold=1 n=100`, `=== IDLE hold=0 n=100`) | hold 1: `CLASSES map[F:2183 R:4 f:1]`; `anySilent=0`; `STICKY-SILENT-CYCLES today=0`. hold 0: `CLASSES map[F:5 f:95]`; `anySilent=0`; `today=0` |
 | V10 | **Real srt, darwin, under 32 `yes`** | same runner (`=== LOAD …`) | `load: { 6.37 9.08 6.57 }` at start, `{ 46.12 31.51 17.55 }` at end. hold 1: `CLASSES map[F:2151 R:8 S:2 f:2]`; `anySilent=2 silentAfterForeign=2 silentBeforeForeign=0 multiSilent=0 connectedAfterFirstSilent=0 deadlineSilentAfterForeign=0`; `STICKY-SILENT-CYCLES today=2 … ruleD(reset-after-foreign)=0`; the two cycles `seq FFFFFFFFFFFFFFFFFFFS` (`S at exit-7.6ms`) and `FFFFFFFFFFFFFFFFFFFFFS` (`exit-3.3ms`). hold 0: `CLASSES map[F:33 R:1 S:5 f:62]`; `silentOnly=5`; `today=5 … ruleD=5`; each `seq S` (a lone dial, `exit-4.9` to `-20.7ms`). `yes-alive-after=0`. The runner was rebuilt mid-run to add Linux port discovery (a branch dead on darwin); the banked source is the final one |
 | V11 | **Linux** (throwaway branch `probe/world-iter330-holderexit`, orphan commit `b410b9d7`, workflow `$V/linux-probe-workflow.yml.txt`) | Pushed, polled to `completed success` (run 41185322456, job 124490964931), log fetched with `gh api --allow-escape-sequences "repos/sunholo-data/ailang-world/actions/jobs/124490964931/logs"` (82,169 bytes raw), ANSI stripped → `$V/linux-probe-run41185322456.txt`. Branch then deleted: `git push origin --delete probe/world-iter330-holderexit`; `git ls-remote origin 'refs/heads/probe/world-iter330-*' \| wc -l` → `0` (control `refs/heads/dev` → `1`). On Linux the probe finds srt's host mux port by pid (`ss -Hltnp`), since the child's `HTTP_PROXY` names the in-netns bridge (`PX:***localhost:3128`) | `Linux … 7.0.0-1017-azure … x86_64`, `4`, `go1.26.6 linux/amd64`, node `v22.23.4`; srt sha256 = pin. COBINDCTL: Go `default-then-default`, `default-then-reuseport`, `reuseport-then-default` → in use; **`reuseport-then-reuseport -> CO-BOUND`**; `wildcard-default-then-loopback-default` and `loopback-default-then-wildcard-default` → **in use**; node `0/0 -> second EADDRINUSE`, **`1/1 -> CO-BOUND`**, `0/1 -> second EADDRINUSE`. Live mux: `COBIND go-default … in use`, `go-SO_REUSEPORT … in use`, `node-child-shape EADDRINUSE`. IDLE srt hold 1: `CLASSES map[F:1999]`, `today=0`. IDLE srt hold 0: `CLASSES map[C:1 R:54 S:43 W:1]`, `total=99 anyForeign=0 silentOnly=45`, `today=45 … ruleD=45`; `W` = `write: connection reset by peer r=EOF`; 1 `NO-PORT` cycle. IDLE stand-in: `F:2000`, `today=0`. Load `0.56 0.42 0.19` before the burners. **LOAD srt hold 1: `CLASSES map[F:1910 R:12 S:54]`; `anySilent=54 silentAfterForeign=54 silentBeforeForeign=0 multiSilent=0 connectedAfterFirstSilent=0 deadlineSilentAfterForeign=0`; `today=54 ruleA=0 ruleB=0 ruleD=0`**; shapes 53× `F{19}S`, 1× `F{18}S`. LOAD srt hold 0: `CLASSES map[F:1 R:24 S:66 f:8]`, `silentOnly=66`, `today=66 … ruleD=66`. **LOAD stand-in: `F:1942 R:4 S:49 f:2`; `silentAfterForeign=49`; `today=49 … ruleD=0`.** `load-end: 10.53 7.54 3.48`; `yes-alive-after=0`; `PROBE-DONE` |
-| V12 | **The prototype, and the whole ExecProbe suite on it** | prototype applied (`$V/proto-exec_probe.diff.txt`); `$V/zz_iter330_t12_test.go.txt` copied in; `go vet ./host/broker/`; `go test ./host/broker/ -run '^(TestExecProbe\|TestZZIter330)' -count=1 -v` → `$V/out-proto-suite.txt`; then `git checkout -- host/broker/exec_probe.go`, test deleted, `shasum -a 256 host/broker/exec_probe.go`, `git status --porcelain` | vet clean; `22 --- PASS`, `0 --- FAIL`, `1 --- SKIP` (`TestExecProbeArm8`, real srt needs CI's env); T1–T11 and the T12 prototype all PASS; `ok … 36.160s`. Restored `96f33172667d27de`; porcelain shows only `?? design_docs/verification/world-iter330/` |
-| V13 | **T12 prototype against M30–M35** | `bash $V/run-mutants.sh.txt` → `$V/out-mutants.txt` (the step-8 reverse-leg tests T1, T2, T7, T8, T9, T10 plus T12) | `CONTROL (prototype): 44 PASS lines`. M30: `FC FS FSN FW fS` FAIL, `dials FS: seen {… foreign:true silent:true} verdict 3; want {… silent:false} verdict 4`. M31: `CF SF` FAIL, `dials SF: … verdict 4; want … silent:true verdict 3`. M32: `FD FSD` FAIL. M33: `…SilentHolderRefusesSticky/reset-holder`, `…PollRecordsConnectReset/connect-reset`, T12 `CF S SF` FAIL. M34: `FC` FAIL. M35: `FW` FAIL. `restored-to-prototype a3568e76a6709599` |
+| V12 | **[r0] The r0 prototype, and the whole ExecProbe suite on it** | prototype applied (`$V/proto-exec_probe.diff.txt`); `$V/zz_iter330_t12_test.go.txt` copied in; `go vet ./host/broker/`; `go test ./host/broker/ -run '^(TestExecProbe\|TestZZIter330)' -count=1 -v` → `$V/out-proto-suite.txt`; then `git checkout -- host/broker/exec_probe.go`, test deleted, `shasum -a 256 host/broker/exec_probe.go`, `git status --porcelain` | vet clean; `22 --- PASS`, `0 --- FAIL`, `1 --- SKIP` (`TestExecProbeArm8`, real srt needs CI's env); T1–T11 and the T12 prototype all PASS; `ok … 36.160s`. Restored `96f33172667d27de`; porcelain shows only `?? design_docs/verification/world-iter330/` |
+| V13 | **[r0] T12 r0 prototype against M30–M35** (superseded by V24) | `bash $V/run-mutants.sh.txt` → `$V/out-mutants.txt` (the step-8 reverse-leg tests T1, T2, T7, T8, T9, T10 plus T12) | `CONTROL (prototype): 44 PASS lines`. M30: `FC FS FSN FW fS` FAIL, `dials FS: seen {… foreign:true silent:true} verdict 3; want {… silent:false} verdict 4`. M31: `CF SF` FAIL, `dials SF: … verdict 4; want … silent:true verdict 3`. M32: `FD FSD` FAIL. M33: `…SilentHolderRefusesSticky/reset-holder`, `…PollRecordsConnectReset/connect-reset`, T12 `CF S SF` FAIL. M34: `FC` FAIL. M35: `FW` FAIL. `restored-to-prototype a3568e76a6709599` |
 | V14 | Census | `grep -rn classifyReverseDial --include='*.go' host cmd \| grep -v host/broker/exec_probe.go \| wc -l`; `grep -rn 'pollLoopback(' --include='*.go' host cmd`; `grep -rn revDialErr --include='*.go' host cmd \| wc -l` | `0`; `exec_probe.go:598` (`reverseLeg`), `:733` (def), `exec_probe_test.go:829` (T9), `:908` (T10); `12` (the test helper, so the sprint avoids the `revDial*` prefix) |
 | V15 | QUICKSTART's arm-6 text | `sed -n 1164,1172p docs/QUICKSTART.md` | `:1168-1170` "`reverse leg: a listener on … answered nothing to World's hello` means a process that never answers (or that resets the host's dial) held the port, and World cannot tell it from the child: find it." |
 | V16 | CI step 8's list | `grep -n -e 'TestExecProbe' .github/workflows/ci.yml` | `:247` lists T1–T11 (`…TestExecProbeReverseHelloWaitBounds TestExecProbeChildListenerDrainsTheHello`) |
 | V17 | World's child binds positionally (no `reusePort`) | `grep -n "v.listen(+port,'127.0.0.1'" host/broker/exec_probe.go` | `:94 v.listen(+port,'127.0.0.1',()=>{say('WORLD-PROBE-BOUND');…` |
 | V18 | The stand-in rate this row inherited | read `design_docs/verification/world-iter318/designer-probe-outputs.txt` via row 232 V5/V6 | mux-shaped stand-in, 1000 ms, faithful: idle `pre=3 post=3`; load `silent-postconnect 13`, `pre=13 post=13` |
+| V19 | **[r1, objections 1–2] `dialErrIsSilent` matches ECONNRESET only, and T8 pins it.** VERIFIED BY CONTROLLER at `a6af0cd4`, then re-run first-party | `sed -n 722,725p host/broker/exec_probe.go`; `grep -n 'dialErrIsSilent(' host/broker/exec_probe.go`; `go test ./host/broker/ -run '^TestExecProbeReverseDialErrIsSilent$' -count=1 -v` → `$V/out-t8-base.txt` | `:725 func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }`; callers `:725` (def) and `:757` only. T8: `op-reset`, `bare-reset`, `wrapped-reset` (want true) and `nil`, `op-refused`, `real-refused`, `op-einval`, `op-aborted`, `addrnotavail`, `timeout`, `deadline-exceeded` (want false): 11 `--- PASS`, `ok … 0.350s` |
+| V20 | [r1] The constants and script lines the lemma and option (b) use | `grep -n '^const execProbeListenMS\|^const execProbeHelloWait\|^const execProbePollEvery\|DialTimeout("tcp", addr, 200\|net.createServer(c=>{c.resume();c.end' host/broker/exec_probe.go` | `:92 … net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '…`; `:108 execProbeListenMS = 1000`; `:128 execProbeHelloWait = 500 * time.Millisecond`; `:131 execProbePollEvery = 50 * time.Millisecond`; `:735 … net.DialTimeout("tcp", addr, 200*time.Millisecond)`. With V17 (`:94` the timer close) |
+| V21 | **[r1] darwin, real srt, hold 1000 ms, 32 `yes`, with dial start times** (`$V/srtexit-r1.go.txt`: every observation carries the `time.Now()` taken before its dial; each silent prints `sinceLastForeignDialStart` and `cleanExit`; rule E = §3.1) | `$V/run-darwin-r1.sh.txt` → `$V/out-darwin-r1.txt` | `load: { 4.35 5.96 9.01 }` → `{ 50.25 27.44 17.50 }`. `CLASSES map[F:2152 R:11 S:1 f:1]`; `cycle 79 silent S at exit-3.8ms sinceLastForeignDialStart=57.7ms cleanExit=true`; `STICKY-SILENT-CYCLES today=1 … ruleD=0 ruleE(timed+clean,r1)=0`; `yes-alive-after=0` |
+| V22 | **[r1] Linux, the same with start times, plus `tcp_abort_on_overflow`.** Throwaway branch `probe/world-iter330-holderexit-r1` (`8b2d0fc`; only the workflow and probe files), run 41186735782, job 124495072930. Log fetched with `gh api --allow-escape-sequences …/jobs/124495072930/logs` (61,711 bytes), ANSI stripped → `$V/linux-probe-r1-run41186735782.txt`. Then `git push origin --delete probe/world-iter330-holderexit-r1`; `git ls-remote origin 'refs/heads/probe/world-iter330-*' \| wc -l` | `abort_on_overflow=0`. IDLE srt: `F:1999`, `today=0 … ruleE=0`. Load `0.96 …` → `11.48 …`. **LOAD srt: `CLASSES map[F:1870 R:9 S:49 f:1]`, `silentAfterForeign=49 connectedAfterFirstSilent=0`, `today=49 … ruleE(timed+clean,r1)=0`.** LOAD stand-in: `F:1900 R:7 S:81 W:1`, `today=82 … ruleE=0`. Over all 131 silent lines (130 `S`, 1 `W`): `max sinceLastForeignDialStart 94.4ms`, `cleanExit=true` 131/131. `yes-alive-after=0`, `PROBE-DONE`. Remote probe branches after deletion: `0` (control `refs/heads/dev`: `1`) |
+| V23 | **[r1] The r1 prototype and the suite on it** | `$V/proto-r1.diff.txt` applied; `go vet ./host/broker/`; `$V/zz_iter330_t12r1_test.go.txt` copied in; `go test ./host/broker/ -run '^(TestExecProbe\|TestZZIter330)' -count=1 -v` → `$V/out-proto-r1-suite.txt`; then `TestExecProbePassThroughShimFailsEveryConfinementArm` `-count=5` at base and on the prototype; restore with `git checkout`, delete the scratch test, `shasum -a 256 host/broker/exec_probe.go` | vet clean. Suite: 21 `--- PASS`, 1 `--- FAIL`, 1 `--- SKIP` (`TestExecProbeArm8`). The FAIL was `TestExecProbePassThroughShimFailsEveryConfinementArm`, `… does not report "a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3"` (it saw `accepts 4`; R7). Re-runs: base `5 PASS`, prototype `5 PASS, 0 FAIL`. T12's 18 rows PASS (`4.24s`). Restored `96f33172667d27de` |
+| V24 | **[r1] T12 r1 against M30–M40** | `python3 -I $V/run-mutants-r1.py.txt` → `$V/out-mutants-r1.txt` (T1, T2, T7, T8, T9, T10 and T12; the rule's locals kept referenced so each mutant compiles) | `CONTROL (r1 prototype): 52 PASS lines`. M30: T12 `FC FS FSN FW GGFS fS`. M31: `CF FP LQ SF`. M32: `FD FSD`. M33: T7 `reset-holder`, T9 `connect-reset`, T12 `CF FP LQ S SF`. M34: `FC`. M35: `FW`. **M36: T8 `op-aborted` (`dialErrIsSilent(dial tcp: connect: software caused connection abort) = true, want false`) and T12 `A` (`seen {… silent:true} verdict 3; want {…} verdict 0`).** M37: `FP LQ`. M38: `LQ`. M39: `FS-unclean`. M40: `GGFS`. `restored-to-r1-prototype 9cdd698ea2ff3284` |
 
 ## 11. Quorum log
 
-r0: not yet reviewed.
+**Round 1** (artifact `~/.ailang/state/mission-quorum-world/w-exec-probe-holder-exit-reset-2026-10-31T08-49-28Z.json`,
+$0.3150): **BLOCKED**, 3/3 reject. Answered in r1:
+
+| # | Objection (seat) | r1 answer |
+|---|---|---|
+| 1 | `oc-glm-5-3`: the rule maps all of `dialErrIsSilent`'s matches to `dialReset`, but no V-row shows that function's body | V19 shows the body (`errors.Is(err, syscall.ECONNRESET)`, `:725`) and its only caller (`:757`), and re-runs T8's 11 rows first-party (the controller had measured them first). §3.2 states that the match set is ECONNRESET only |
+| 2 | `oc-kimi-k3`: no T12 row or mutant tries a NON-ECONNRESET connect error after a foreign answer, so a too-broad helper would pass | T12 gains `FA` (ECONNABORTED after foreign → `{foreign}`, as today), `A` (ECONNABORTED alone → `{}` PASS), `FT` and `T` (a connect timeout). **M36** widens `dialErrIsSilent` to ECONNABORTED and is red on T8 `op-aborted` and T12 `A` (V24). `FA` alone cannot kill M36, because an excused and a recorded-nothing dial look the same after a foreign answer. `A` is the row that discriminates |
+| 3 | `gpt6-1-sol`: a foreign answer names neither the owner of a later connection nor the cause of its reset; r0 admitted a child seen only through resets after a foreign answer; "a different execution already escapes" is no proof | **The rule is tightened (§3.1), and the argument is replaced by a proof (§3.3).** A reset is excused only if a foreign dial **started** less than `execProbeListenMS` before the reset was observed, **and** the run exited cleanly. The lemma: the child's listener lives ≥ 1000 ms (its timer; a clean exit rules out an early death), it resets nothing before it closes, and no foreign answer can arrive while it holds `127.0.0.1:p`. So any child reset comes > 1000 ms after the start of every earlier foreign dial, and is never excused. Host timing only widens the measured gap. The theorem: every execution that observes the child keeps today's verdict. What does change is stated exactly: attempts whose only silent evidence is a non-child exit reset. **Availability is unchanged from r0 on the banked data:** darwin load 1 → 0, Linux load 49 → 0, Linux stand-in 82 → 0, largest gap 94.4 ms, every run clean (V21, V22). The controller's candidate (a), token-gating, is rejected because the Linux token is BOUND (row 229 §4.3), which would buy 0 of the 49. Candidate (b), adjacency plus a constant bound, is rejected with a counter-example (750 ms < 1000 ms does not exclude it) in favour of measuring the gap directly (§3.4). New mutants M37 (window dropped, = r0), M38 (end anchor), M39 (clean gate dropped) and M40 (first-foreign anchor) are all red (V24). M41 (`reverseLeg` passes `true`) is the one review-only line |

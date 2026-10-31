@@ -1,0 +1,75 @@
+CONTROL (r1 prototype): 52 PASS lines, 0 FAIL lines
+MUTANT M30-revert(no excuse): 7 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FC
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FS
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FSN
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FW
+    --- FAIL: TestZZIter330HolderExitAfterForeign/GGFS
+    --- FAIL: TestZZIter330HolderExitAfterForeign/fS
+    zz_iter330_t12r1_test.go:141: dials FS (clean true): seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+    zz_iter330_t12r1_test.go:141: dials FC (clean true): seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+    zz_iter330_t12r1_test.go:141: dials FW (clean true): seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+MUTANT M31-order-free: 5 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/CF
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FP
+    --- FAIL: TestZZIter330HolderExitAfterForeign/LQ
+    --- FAIL: TestZZIter330HolderExitAfterForeign/SF
+    zz_iter330_t12r1_test.go:141: dials SF (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+    zz_iter330_t12r1_test.go:141: dials CF (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+    zz_iter330_t12r1_test.go:141: dials FP (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M32-deadline-excused: 3 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FD
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FSD
+    zz_iter330_t12r1_test.go:141: dials FD (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+    zz_iter330_t12r1_test.go:141: dials FSD (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M33-every-reset-excused: 10 FAIL lines; FAIL
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+    --- FAIL: TestExecProbeReversePollRecordsConnectReset
+    --- FAIL: TestExecProbeReversePollRecordsConnectReset/connect-reset
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/CF
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FP
+    --- FAIL: TestZZIter330HolderExitAfterForeign/LQ
+    --- FAIL: TestZZIter330HolderExitAfterForeign/S
+    --- FAIL: TestZZIter330HolderExitAfterForeign/SF
+    zz_iter330_t12r1_test.go:141: dials SF (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+    zz_iter330_t12r1_test.go:141: dials CF (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+    zz_iter330_t12r1_test.go:141: dials S (clean true): seen {child:false foreign:false silent:false} verdict 0; want {child:false foreign:false silent:true} verdict 3
+MUTANT M34-connect-reset-not-reset: 2 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FC
+    zz_iter330_t12r1_test.go:141: dials FC (clean true): seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+MUTANT M35-write-reset-not-reset: 2 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FW
+    zz_iter330_t12r1_test.go:141: dials FW (clean true): seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+MUTANT M36-dialErrIsSilent-widened-ECONNABORTED: 4 FAIL lines; FAIL
+    --- FAIL: TestExecProbeReverseDialErrIsSilent
+    --- FAIL: TestExecProbeReverseDialErrIsSilent/op-aborted
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/A
+    exec_probe_test.go:791: dialErrIsSilent(dial tcp: connect: software caused connection abort) = true, want false
+    zz_iter330_t12r1_test.go:141: dials A (clean true): seen {child:false foreign:false silent:true} verdict 3; want {child:false foreign:false silent:false} verdict 0
+MUTANT M37-window-dropped: 3 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FP
+    --- FAIL: TestZZIter330HolderExitAfterForeign/LQ
+    zz_iter330_t12r1_test.go:141: dials FP (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+    zz_iter330_t12r1_test.go:141: dials LQ (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M38-anchor-at-foreign-END: 2 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/LQ
+    zz_iter330_t12r1_test.go:141: dials LQ (clean true): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M39-clean-exit-gate-dropped: 2 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/FS-unclean
+    zz_iter330_t12r1_test.go:141: dials FS (clean false): seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M40-anchor-at-FIRST-foreign: 2 FAIL lines; FAIL
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+    --- FAIL: TestZZIter330HolderExitAfterForeign/GGFS
+    zz_iter330_t12r1_test.go:141: dials GGFS (clean true): seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+restored-to-r1-prototype 9cdd698ea2ff3284

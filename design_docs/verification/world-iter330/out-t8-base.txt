@@ -1,0 +1,19 @@
+// dialErrIsSilent reports whether a failed reverse-leg dial proves a listener accepted the
+// handshake and reset it (row 232): only ECONNRESET. ECONNREFUSED (nothing listens), EINVAL
+// (seen on darwin with nothing listening), timeouts and local errors record nothing.
+func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }
+725:func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }
+757:			} else if dialErrIsSilent(err) {
+--- PASS: TestExecProbeReverseDialErrIsSilent (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/bare-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/wrapped-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/nil (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-refused (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/real-refused (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-einval (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-aborted (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/addrnotavail (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/timeout (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/deadline-exceeded (0.00s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.350s

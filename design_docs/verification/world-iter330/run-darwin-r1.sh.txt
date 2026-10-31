@@ -1,0 +1,14 @@
+#!/bin/bash
+# Row 233 r1 runner: real srt 0.0.78, hold 1000 ms, under 32 `yes`, with dial start times (rule E).
+set -u
+S=$HOME/.ailang/state/world-iter330-srt/node_modules/@anthropic-ai/sandbox-runtime
+cd "$HOME/.ailang/state/world-iter330-srt/probe"
+echo "srt cli.js $(shasum -a 256 $S/dist/cli.js | cut -c1-16); node $(node --version); $(uname -sr)"
+pids=(); for i in $(seq 32); do yes > /dev/null & pids+=($!); done
+trap 'kill "${pids[@]}" 2>/dev/null' EXIT
+sleep 2; echo "load: $(sysctl -n vm.loadavg)"
+echo "=== LOAD hold=1 n=100 (r1)"; ./srtexit-r1 -srt "$S" -n 100 -hold 1 -cobind=false
+echo "load-end: $(sysctl -n vm.loadavg)"
+kill "${pids[@]}" 2>/dev/null; sleep 1
+alive=0; for p in "${pids[@]}"; do kill -0 "$p" 2>/dev/null && alive=$((alive+1)); done
+echo "yes-alive-after=$alive"; echo RUN-DONE
