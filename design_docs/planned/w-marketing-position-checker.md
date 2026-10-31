@@ -1,6 +1,6 @@
 # w-marketing-position-checker: commit the P0/P3 position and phone predicates as CI-gated `marketingcheck` subcommands
 
-- **Status**: r2, iteration 328 (unattended). r1 was the one mandated revision after quorum r1 on
+- **Status**: Implemented iteration 328 (M1a `2822723a`, M1b `d673c56f`, M1c `27ef6447`, M1d `c4b129b0`, M2a `c6a12dc9`, M2b `9ddab47c`, M3 `03fe5a1a`; judge sonnet PASS 90, zero blocking; report `verification/world-iter328/evaluator-sprint-r1.md`). It stays in `planned/` because the committed code comments and the pinned `testdata/position/SHA256SUMS` cite this path. Design: r2, iteration 328 (unattended). r1 was the one mandated revision after quorum r1 on
   r0 (`9abc25b5`) was BLOCKED (fixes A, B, C). Quorum r2 on r1 (`3aaee4d0`) was BLOCKED on two
   objections, each carrying a concrete reviewer fix and neither disputing the direction, so r2 is
   the **controller's narrow-refinement carve-out**: it applies those fixes in the reviewers' own
