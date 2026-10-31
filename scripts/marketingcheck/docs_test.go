@@ -17,6 +17,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -453,6 +454,173 @@ func TestMarketingRunbookMatchesHelp(t *testing.T) {
 					t.Errorf("`marketingcheck %s` documents %s, absent from its usage line", sub, flag)
 				}
 			}
+		}
+	})
+	// Row 231 M3 (design §3 M3, §4 D1–D3): which file WORLD_MARKETING_RECTS names, and the
+	// documented position and phone lines, executed from the repo root with one built binary.
+	mcDir := t.TempDir()
+	mcBin := ""
+	marketingcheckBin := func(t *testing.T) string {
+		t.Helper()
+		if mcBin == "" {
+			bin := filepath.Join(mcDir, "marketingcheck")
+			if res := mustRun(t, subprocBuildLimit, "", nil, "go", "build", "-o", bin, "."); res.Code != 0 {
+				t.Fatalf("go build marketingcheck rc %d: %s", res.Code, res.Stderr)
+			}
+			mcBin = bin
+		}
+		return mcBin
+	}
+	// exportPath returns the one `export NAME=` value of §13, expanded, and requires it under dir.
+	exportPath := func(t *testing.T, name string) string {
+		t.Helper()
+		lines := docsWithPrefix(cmds13, "export "+name+"=")
+		if len(lines) != 1 {
+			t.Fatalf("§13 has %d `export %s=` commands, want 1", len(lines), name)
+		}
+		p := docsExpand(t, strings.TrimPrefix(lines[0], "export "+name+"="), vars)[0]
+		if !strings.HasPrefix(p, dir+string(filepath.Separator)) {
+			t.Fatalf("%s expands to %s, outside $DEMO_DIR %s; refusing to write a fixture there", name, p, dir)
+		}
+		return p
+	}
+	// runDocumented runs one documented `go run ./scripts/marketingcheck <sub> …` line with the
+	// built binary from the repo root; want maps each label to ACCEPT or REFUSE.
+	runDocumented := func(t *testing.T, line string, lineVars map[string]string, want func(label string) string) {
+		t.Helper()
+		argv := docsExpand(t, line, lineVars)
+		args := argv[3:]
+		rc, seen := 0, 0
+		var labels []string
+		for i, a := range args {
+			if i == 0 || strings.HasPrefix(a, "--") || (i > 0 && args[i-1] == "--baseline") {
+				continue
+			}
+			label, _, ok := strings.Cut(a, "=")
+			if !ok {
+				t.Fatalf("documented line %q: token %q is not LABEL=PATH", line, a)
+			}
+			labels = append(labels, label)
+			if want(label) == "REFUSE" {
+				rc = 1
+			}
+		}
+		res := mustRun(t, subprocRunLimit, "../..", nil, marketingcheckBin(t), args...)
+		if res.Code != rc {
+			t.Errorf("documented line %q: rc %d, want %d\nstdout: %s\nstderr: %s", line, res.Code, rc, res.Stdout, res.Stderr)
+		}
+		for _, label := range labels {
+			if regexp.MustCompile(`(?m)^` + regexp.QuoteMeta(label) + ` +` + want(label) + ` `).MatchString(res.Stdout) {
+				seen++
+			} else {
+				t.Errorf("documented line %q: no `%s %s` line\nstdout: %s\nstderr: %s", line, label, want(label), res.Stdout, res.Stderr)
+			}
+		}
+		if seen == 0 {
+			t.Errorf("documented line %q judged no label", line)
+		}
+	}
+	byPrefix := func(label string) string {
+		switch {
+		case strings.HasPrefix(label, "accept"):
+			return "ACCEPT"
+		case strings.HasPrefix(label, "refuse"):
+			return "REFUSE"
+		}
+		return "unknown label " + label
+	}
+	t.Run("rects-value", func(t *testing.T) {
+		exports := docsWithPrefix(cmds13, "export WORLD_MARKETING_RECTS=")
+		if len(exports) != 1 || exports[0] != "export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json" {
+			t.Fatalf("§13 must hold exactly one `export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json`, got %q", exports)
+		}
+		capture := docsWithPrefix(cmds13, "scripts/capture_marketing.sh ")
+		if len(capture) != 1 || !strings.Contains(capture[0], `--rectangles "$WORLD_MARKETING_RECTS"`) {
+			t.Errorf("the capture line must pass --rectangles \"$WORLD_MARKETING_RECTS\": %q", capture)
+		}
+		var release []string
+		for _, line := range docsWithPrefix(cmds13, "go run ./scripts/marketingcheck position ") {
+			if strings.Contains(line, " release=") {
+				release = append(release, line)
+			}
+		}
+		if len(release) != 1 {
+			t.Fatalf("§13 has %d `position … release=` lines, want 1", len(release))
+		}
+		f := strings.Fields(release[0])
+		if !slices.Contains(f, `release="$WORLD_MARKETING_RECTS"`) {
+			t.Errorf("the release position line must pass release=\"$WORLD_MARKETING_RECTS\": %q", release[0])
+		}
+		i := slices.Index(f, "--baseline")
+		if i < 0 || i+1 >= len(f) || f[i+1] != "design_docs/verification/world-iter312/r1-rects.json" {
+			t.Fatalf("the release position line's --baseline must be the R1 file: %q", release[0])
+		}
+		for _, tok := range f[i+2:] {
+			if _, p, ok := strings.Cut(tok, "="); ok && strings.Trim(p, `"`) == f[i+1] {
+				t.Errorf("the release position line's candidate is the baseline: %q", release[0])
+			}
+		}
+	})
+	t.Run("position-lines", func(t *testing.T) {
+		lines := docsWithPrefix(cmds13, "go run ./scripts/marketingcheck position ")
+		if len(lines) != 3 {
+			t.Fatalf("§13 documents %d position lines, want 3", len(lines))
+		}
+		rects := exportPath(t, "WORLD_MARKETING_RECTS")
+		lineVars := map[string]string{"WORLD_MARKETING_RECTS": rects}
+		for k, v := range vars {
+			lineVars[k] = v
+		}
+		releases := 0
+		for _, line := range lines {
+			if !strings.Contains(line, " release=") {
+				runDocumented(t, line, lineVars, byPrefix)
+				continue
+			}
+			releases++
+			for _, run := range []struct{ fixture, verdict string }{{"stores/eval-p1.json", "ACCEPT"}, {"v65/neg-attested+14.json", "REFUSE"}} {
+				b, err := os.ReadFile(filepath.Join(positionTestdata, filepath.FromSlash(run.fixture)))
+				pngOK(t, err)
+				pngOK(t, os.WriteFile(rects, b, 0o644))
+				runDocumented(t, line, lineVars, func(label string) string {
+					if label == "release" {
+						return run.verdict
+					}
+					return byPrefix(label)
+				})
+			}
+		}
+		if releases != 1 {
+			t.Errorf("§13 documents %d release position lines, want 1", releases)
+		}
+	})
+	t.Run("phone-lines", func(t *testing.T) {
+		lines := docsWithPrefix(cmds13, "go run ./scripts/marketingcheck phone ")
+		if len(lines) != 2 {
+			t.Fatalf("§13 documents %d phone lines, want 2", len(lines))
+		}
+		out := exportPath(t, "CAPTURE_OUT")
+		passA := filepath.Join(out, "pass-a")
+		pngOK(t, os.MkdirAll(passA, 0o755))
+		seed5 := renderPhoneSkeleton(loadPhoneSkeleton(t, filepath.Join(phoneTestdata, "skeleton-r1c-seed5-pass-a-phone.json")))
+		writePhonePNG(t, filepath.Join(passA, "phone.png"), seed5)
+		writePhonePNG(t, filepath.Join(passA, "workbench-light.png"), phoneArmByName(t, "new/tall-845").Make(seed5))
+		lineVars := map[string]string{"CAPTURE_OUT": out}
+		for k, v := range vars {
+			lineVars[k] = v
+		}
+		labels := map[string]bool{}
+		for _, line := range lines {
+			runDocumented(t, line, lineVars, func(label string) string {
+				labels[label] = true
+				if label == "release" {
+					return "ACCEPT"
+				}
+				return byPrefix(label)
+			})
+		}
+		if !labels["refuse"] || !labels["release"] {
+			t.Errorf("§13's phone lines must carry a refuse and a release label, got %v", labels)
 		}
 	})
 	t.Run("seed", func(t *testing.T) {

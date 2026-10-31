@@ -1682,6 +1682,16 @@ export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json
 export CAPTURE_OUT=$DEMO_DIR/capture
 ```
 
+Check the release store's rectangles against the R1 baseline before the capture (P3,
+orchestration §4.4), from the repository root. The two accept controls on the first line must
+exit 0 and the refuse control must exit 1. The release line must print `release ACCEPT` and exit 0.
+
+```bash
+go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json accept-seed5=scripts/marketingcheck/testdata/position/stores/r1c-seed5.json accept-eval-p1=scripts/marketingcheck/testdata/position/stores/eval-p1.json
+go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json refuse=scripts/marketingcheck/testdata/position/v65/neg-attested+14.json
+go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json release="$WORLD_MARKETING_RECTS"
+```
+
 Optional: preview the still-mode daemon with the capture shell's own serve flags. Stop it
 before you run the capture, because the capture starts its own daemon on the same port.
 
@@ -1702,6 +1712,15 @@ scripts/capture_marketing.sh --db "$DEMO_DIR/world.db" --manifest "$DEMO_DIR/man
   --marketingcheck-bin "$DEMO_DIR/marketingcheck"
 ```
 
+Then check the phone shot of the first pass. The refuse control must exit 1, and the release
+line must print `release ACCEPT` and exit 0. The phone accept controls read images held outside
+the repository, so they stay in orchestration §4.4's capture-day control step.
+
+```bash
+go run ./scripts/marketingcheck phone refuse="$CAPTURE_OUT/pass-a/workbench-light.png"
+go run ./scripts/marketingcheck phone release="$CAPTURE_OUT/pass-a/phone.png"
+```
+
 Then run the release check on the first pass. It requires the six PNG files and the
 capture manifest, and refuses any hash or dimension that does not match:
 
@@ -1717,10 +1736,10 @@ attended capture, the controller's P0 probe (`w-marketing-capture-orchestration`
 pass within 24 hours, and P3, a GET-only probe of the release store itself, runs before
 pass A. P0 (a) now requires a structural match against R1 (§4.4 (a1)–(a4)); phone
 C8′(iii′) requires the disclosed overflow defect to be present, without its magnitude.
-Use the sha256-pinned `.txt` checkers in `design_docs/verification/world-iter315/`,
-following orchestration §4.4 (r5) for the exact invocations and capture-day accept/refuse
-controls before reading either capture-store verdict. Read `p0check`'s `r3` column and
-`phonecheck`'s `r3` field: both print ACCEPT/REFUSE and exit 0 either way.
+Both checks are `marketingcheck` subcommands, tested in CI against the iteration-315 corpora.
+Each exits 0 only when every label is ACCEPT, 1 when any label is REFUSE or an input is refused,
+and 2 on a usage error; read the exit code and the label's line together. Under `go run`, any
+non-zero exit is reported as 1, with `exit status 2` on stderr for a usage error.
 
 Promotion is not part of this section. After the capture, the controller copies the six
 verified PNGs and `capture-manifest.json`, unmodified, into `website/static/img/v1/`,
