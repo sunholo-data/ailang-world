@@ -4,7 +4,7 @@
   - Production: three non-comment lines in `host/broker/exec_probe.go`; byte-identical output at 500 ms.
   - Item 3 (cross-profile reach): refuted at HEAD by measurement; enforcement residual → row 242. Item 4: watch with a trigger list.
   - PR #442; judge sonnet PASS 88, zero blocking.
-- **Dev:** green at `e5c1867f` (3/3). Row 230 lands when #442's merge CI is green.
+- **Dev:** green. Row 230 LANDED: #442 merged as `9e562235`, merge check-runs 3/3 success on attempt 1.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**. P0/P3 run `marketingcheck position`/`phone`; they need `~/.ailang/state/world-iter328-phone-corpus/`.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
