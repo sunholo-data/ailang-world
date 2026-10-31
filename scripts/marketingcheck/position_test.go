@@ -5,6 +5,7 @@ package main
 // banked oracle, its exit codes, and the deadline-enforcing subprocess runner both parity tests use.
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -12,10 +13,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -154,6 +157,317 @@ func sha256Hex(b []byte) string {
 }
 
 // ---- the 44 position inputs (design §2.3, §3 M1) ----
+
+type labelledPath struct{ Label, Path string }
+
+var positionStores = []string{"r1b-seed3", "r1b-seed4", "r1c-seed5", "r1c-seed6", "eval-p1", "eval-p2", "eval-p3"}
+
+func posIdx(sh ShotRects, name string) int {
+	for i, c := range sh.Content {
+		if c.Name == name {
+			return i
+		}
+	}
+	panic(name)
+}
+
+// positionNewArms is the Go port of design_docs/verification/world-iter328/v13-isoarms-main.go.txt,
+// applied to stores/r1c-seed5.json.
+var positionNewArms = []struct {
+	Name string
+	Mut  func(d *Rectangles)
+}{
+	{"iso-a1-tested-w-3", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "roster-tested")].W -= 3 }},
+	{"iso-freegap-validation-h+240", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "validation")].H += 240 }},
+	{"iso-minh-approvals-h-1", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].H = 1 }},
+	{"iso-nonpara-graph-svg-h+24", func(d *Rectangles) { d.Shots["graph.png"].Content[0].H += 24 }},
+	{"iso-nonpara-payload-h+24", func(d *Rectangles) { d.Shots["provenance.png"].Content[0].H += 24 }},
+	{"acc-tested-w-2", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "roster-tested")].W -= 2 }},
+	{"perm-approvals-y+48", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y += 48 }},
+	{"perm-approvals-y-48", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y -= 48 }},
+	{"perm-validation-h+216", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "validation")].H += 216 }},
+	{"perm-roster-drift-2px", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		shift := 0
+		for _, n := range []string{"roster-tested", "roster-attested", "roster-claimed", "roster-proven"} {
+			i := posIdx(sh, n)
+			shift += 2
+			sh.Content[i].Y += shift
+			sh.Content[i].H += 2
+			shift += 2
+		}
+	}},
+}
+
+// positionNewArmSHA256 is the banked generator's output (V13), so the port is byte-pinned.
+var positionNewArmSHA256 = map[string]string{
+	"acc-tested-w-2":               "d471e623c1fdc088789a91b912f42d82b8fc8861a8582e5bfa4a2e13a6fa99cc",
+	"iso-a1-tested-w-3":            "4b1bb2420e4d611f14c1e5abf8b066f63cf061cbf466111ba316b1a3fb96ee45",
+	"iso-freegap-validation-h+240": "8574e69cca8cd546e3653897232b13cca06214f017480d37a522c1f7a65ec69e",
+	"iso-minh-approvals-h-1":       "4b6f9498077e64d94e544cc3b95e370a3c5df6a597f85cb32b90a4941092f930",
+	"iso-nonpara-graph-svg-h+24":   "5b384a4aec473be76b1e62a32a4f0e0a1a8bbe10e0e87c07842566af5ec312c4",
+	"iso-nonpara-payload-h+24":     "6da98f40004129e8c868812f385c7c8f4b65ee2d15ec0788d61a1a66d09e247b",
+	"perm-approvals-y+48":          "f96fb392cfa657ebeea35641274de832f8428230839751dd28722a6c8c2ccba7",
+	"perm-approvals-y-48":          "bc7a9fb2512d52418967d29e5619d901928bb8a621e6d817191fed1222aac08d",
+	"perm-roster-drift-2px":        "7e9a35bba5a59c36168113a971e4058ea061d6b9a938d232190e47785af73a70",
+	"perm-validation-h+216":        "6e4f9772de397ee47f7e3b953f1c69fdb044ee368cf15bb05060f1f15a2cd8bc",
+}
+
+// writePositionNewArms writes the ten in-test arms into dir and returns name -> path.
+func writePositionNewArms(t *testing.T, dir string) map[string]string {
+	t.Helper()
+	src, err := os.ReadFile(filepath.Join(positionTestdata, "stores", "r1c-seed5.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[string]string{}
+	for _, a := range positionNewArms {
+		var d Rectangles
+		if err := json.Unmarshal(src, &d); err != nil {
+			t.Fatal(err)
+		}
+		a.Mut(&d)
+		b, err := json.MarshalIndent(d, "", "  ")
+		if err != nil {
+			t.Fatal(err)
+		}
+		p := filepath.Join(dir, a.Name+".json")
+		if err := os.WriteFile(p, append(b, '\n'), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		out[a.Name] = p
+	}
+	return out
+}
+
+// positionInputs returns the 44 labelled inputs: V64 (11), V65 (19 + 4), new (10).
+func positionInputs(t *testing.T) []labelledPath {
+	t.Helper()
+	var in []labelledPath
+	for _, s := range []string{"r1-seed1", "r1-seed2", "r1-seed1-blockconverted", "r1-seed2-blockconverted"} {
+		in = append(in, labelledPath{"stores/" + s, filepath.Join(positionTestdata, "stores", s+".json")})
+	}
+	for _, s := range positionStores {
+		in = append(in, labelledPath{"stores/" + s, filepath.Join(positionTestdata, "stores", s+".json")})
+	}
+	for _, d := range []string{"v65", "v65-p1"} {
+		files, err := filepath.Glob(filepath.Join(positionTestdata, d, "*.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		sort.Strings(files)
+		for _, f := range files {
+			in = append(in, labelledPath{d + "/" + strings.TrimSuffix(filepath.Base(f), ".json"), f})
+		}
+	}
+	arms := writePositionNewArms(t, t.TempDir())
+	for _, a := range positionNewArms {
+		in = append(in, labelledPath{"new/" + a.Name, arms[a.Name]})
+	}
+	if len(in) != 44 {
+		t.Fatalf("position inputs: %d, want 44", len(in))
+	}
+	return in
+}
+
+func loadPositionBaseline(t *testing.T) Rectangles {
+	t.Helper()
+	base, err := LoadRectangles(positionBaseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return base
+}
+
+// positionTag is a reason's clause tag: (a1)…(a4), (b), missing or background.
+func positionTag(reason string) string {
+	_, rest, _ := strings.Cut(reason, ": ")
+	switch {
+	case strings.HasPrefix(rest, "("):
+		return rest[:strings.Index(rest, ")")+1]
+	case strings.Contains(reason, "missing"):
+		return "missing"
+	case strings.Contains(rest, "edge >2px"):
+		return "background"
+	}
+	return "?" + reason
+}
+
+// positionVerdict is "ACCEPT" or "REFUSE <tag>[,<tag>...]" with sorted unique tags.
+func positionVerdict(reasons []string) string {
+	if len(reasons) == 0 {
+		return "ACCEPT"
+	}
+	set := map[string]bool{}
+	for _, r := range reasons {
+		set[positionTag(r)] = true
+	}
+	var tags []string
+	for k := range set {
+		tags = append(tags, k)
+	}
+	sort.Strings(tags)
+	return "REFUSE " + strings.Join(tags, ",")
+}
+
+// positionWant is the 44-row verdict table (design §3 M1; V10, V13): 19 ACCEPT.
+var positionWant = map[string]string{
+	"stores/r1-seed1":                            "REFUSE (a1),(a2),(a3),(a4)",
+	"stores/r1-seed2":                            "REFUSE (a1),(a2),(a3),(a4)",
+	"stores/r1-seed1-blockconverted":             "ACCEPT",
+	"stores/r1-seed2-blockconverted":             "ACCEPT",
+	"stores/r1b-seed3":                           "ACCEPT",
+	"stores/r1b-seed4":                           "ACCEPT",
+	"stores/r1c-seed5":                           "ACCEPT",
+	"stores/r1c-seed6":                           "ACCEPT",
+	"stores/eval-p1":                             "ACCEPT",
+	"stores/eval-p2":                             "ACCEPT",
+	"stores/eval-p3":                             "ACCEPT",
+	"v65/neg-attested+14":                        "REFUSE (a3)",
+	"v65/neg-attested-dropped":                   "REFUSE missing",
+	"v65/neg-background-over-content":            "REFUSE background",
+	"v65/neg-dark-timeline-first+24":             "REFUSE (a3)",
+	"v65/neg-graph-svg-at-timeline":              "REFUSE (a2),(a4)",
+	"v65/neg-light-header+40":                    "REFUSE (a2),(a3)",
+	"v65/neg-light-header-whole-view":            "REFUSE (a1),(a2),(a3),(a4),(b)",
+	"v65/neg-packet-all+14":                      "REFUSE (a2)",
+	"v65/neg-packet-stack-down-6-lines":          "REFUSE (a2),(b)",
+	"v65/neg-payload+14":                         "REFUSE (a2)",
+	"v65/neg-proven-grows-6-lines-below-fold":    "REFUSE (b)",
+	"v65/neg-rows-reordered-tested-claimed":      "REFUSE (a3)",
+	"v65/neg-tested-64x16-glyphs":                "REFUSE (a1),(a3),(a4)",
+	"v65/neg-tested-at-attested-row":             "REFUSE (a3)",
+	"v65/neg-tested-at-proven-row":               "REFUSE (a3)",
+	"v65/neg-tested-height+14":                   "REFUSE (a4)",
+	"v65/syn-pos-createdAt-wraps":                "ACCEPT",
+	"v65/syn-pos-proven-5-lines":                 "ACCEPT",
+	"v65/syn-pos-tested-wraps-3-lines":           "ACCEPT",
+	"v65-p1/neg-packet-all+14":                   "REFUSE (a2)",
+	"v65-p1/neg-proven-grows-6-lines-below-fold": "ACCEPT",
+	"v65-p1/neg-tested-at-attested-row":          "REFUSE (a3)",
+	"v65-p1/syn-pos-tested-wraps-3-lines":        "ACCEPT",
+	"new/iso-a1-tested-w-3":                      "REFUSE (a1)",
+	"new/iso-freegap-validation-h+240":           "REFUSE (a3)",
+	"new/iso-minh-approvals-h-1":                 "REFUSE (a4)",
+	"new/iso-nonpara-graph-svg-h+24":             "REFUSE (a4)",
+	"new/iso-nonpara-payload-h+24":               "REFUSE (a4)",
+	"new/acc-tested-w-2":                         "ACCEPT",
+	"new/perm-approvals-y+48":                    "ACCEPT",
+	"new/perm-approvals-y-48":                    "ACCEPT",
+	"new/perm-validation-h+216":                  "ACCEPT",
+	"new/perm-roster-drift-2px":                  "ACCEPT",
+}
+
+func TestMarketingPositionFixtures(t *testing.T) {
+	sums := map[string]string{}
+	f, err := os.Open(filepath.Join(positionTestdata, "SHA256SUMS"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := sc.Text()
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) != 2 {
+			t.Fatalf("SHA256SUMS: malformed line %q", line)
+		}
+		sums[fields[1]] = fields[0]
+	}
+	if len(sums) != 34 {
+		t.Fatalf("SHA256SUMS lists %d files, want 34", len(sums))
+	}
+	seen := 0
+	err = filepath.WalkDir(positionTestdata, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || filepath.Base(p) == "SHA256SUMS" {
+			return err
+		}
+		rel, _ := filepath.Rel(positionTestdata, p)
+		rel = filepath.ToSlash(rel)
+		b, err := os.ReadFile(p)
+		if err != nil {
+			return err
+		}
+		want, ok := sums[rel]
+		if !ok {
+			t.Errorf("%s: not listed in SHA256SUMS", rel)
+		} else if got := sha256Hex(b); got != want {
+			t.Errorf("%s: sha256 %s, SHA256SUMS %s", rel, got, want)
+		}
+		seen++
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if seen != 34 {
+		t.Errorf("testdata/position holds %d files besides SHA256SUMS, want 34", seen)
+	}
+	inputs, err := os.ReadFile(filepath.Join(oracleDir, "v64-inputs-sha256.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range append([]string{"r1-seed1", "r1-seed2"}, positionStores...) {
+		want := sums["stores/"+s+".json"] + "  /tmp/world-iter312/" + s + "/rects.json"
+		if !strings.Contains(string(inputs), want+"\n") {
+			t.Errorf("stores/%s.json: sha256 %s is not the store's rects.json line in v64-inputs-sha256.txt", s, sums["stores/"+s+".json"])
+		}
+	}
+	for _, s := range []string{"r1-seed1", "r1-seed2"} {
+		got, err1 := os.ReadFile(filepath.Join(positionTestdata, "stores", s+"-blockconverted.json"))
+		want, err2 := os.ReadFile(filepath.Join(oracleDir, "v64-rects-"+s+"-blockconverted.json"))
+		if err1 != nil || err2 != nil || !bytes.Equal(got, want) {
+			t.Errorf("stores/%s-blockconverted.json differs from the banked file (%v %v)", s, err1, err2)
+		}
+	}
+	base, err := os.ReadFile(positionBaseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sha256Hex(base); got != positionBaselinePin {
+		t.Errorf("baseline r1-rects.json sha256 %s, want %s", got, positionBaselinePin)
+	}
+	arms := writePositionNewArms(t, t.TempDir())
+	for name, p := range arms {
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := sha256Hex(b); got != positionNewArmSHA256[name] {
+			t.Errorf("new arm %s: sha256 %s, banked generator (V13) %s", name, got, positionNewArmSHA256[name])
+		}
+	}
+}
+
+func TestMarketingPositionCorpus(t *testing.T) {
+	base := loadPositionBaseline(t)
+	accept := 0
+	for _, in := range positionInputs(t) {
+		t.Run(in.Label, func(t *testing.T) {
+			cand, err := loadPositionCandidate(in.Path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			reasons, regions := PositionJudge(base, cand)
+			if regions != 17 {
+				t.Errorf("regions %d, want 17", regions)
+			}
+			got := positionVerdict(reasons)
+			if want, ok := positionWant[in.Label]; !ok || got != want {
+				t.Errorf("want %q, got %q (reasons %q)\n\t%q: %q,", want, got, reasons, in.Label, got)
+			}
+		})
+		if positionWant[in.Label] == "ACCEPT" {
+			accept++
+		}
+	}
+	if len(positionWant) != 44 || accept != 19 {
+		t.Errorf("verdict table: %d rows, %d ACCEPT; want 44 and 19", len(positionWant), accept)
+	}
+}
 
 func TestMarketingPositionCLI(t *testing.T) {
 	dir := t.TempDir()
