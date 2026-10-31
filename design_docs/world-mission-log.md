@@ -1804,3 +1804,106 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 236 lands on merge CI green (landing note). Then row 231 → 230 → 233 under D-WORLD-102 = A (attended, #434), stopping when a release row is routable; a dev red still outranks. Row 150's P0/P3 run in the A1 window Mark schedules; row 151 becomes routable when row 188's N2d and N4a land.
 
 **Landing (iteration 327):** PR #436 merged as `37f8fb82` (merge commit, `--match-head-commit f395fafb`). The branch was rebased twice onto attended merges that landed while it was in CI: #433–#435 (incl. the D-WORLD-102 = A ruling) and #437 (row 218 M3, which also edits `episode_finish.go`). The final head `f395fafb` was 3/3 green on base `25ed07f1`, re-read MERGEABLE/CLEAN right before the merge; the earlier heads `e7743475` (code, on `4d43d8e3`), `7998f124` and `9ac0640b` were each 3/3 green too. **Merge CI:** `commits/37f8fb82/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 328 — 2026-10-31 — row 231 built: the P0/P3 position and phone predicates become CI-gated marketingcheck subcommands with a parity oracle and generated fixtures; judge PASS 90 [PRODUCT-HYGIENE]
+
+**Kind:** the first pick under D-WORLD-102 = A (attended ruling 2026-10-30, #434). Full inner loop: designer → quorum ×2 → carve-out → planner → executor → independent judge. The record is in the same PR as the code (#440). A landing note will record merge CI.
+
+**Pick and why:** row 231 `w-marketing-position-checker`.
+- **Clause map at `cec48f69`:** 1–7 MET; no UNMET clause.
+- **Release rows not routable.** Row 150 waits only on the attended A1. Row 151 needs row 188 N2d/N4a: 0 matching commits on `origin/dev` since iteration 327's base. The only new commits are #438, the attended `trial/row217c-interactive-resume` dogfood ledger row, and 327's own record and landing.
+- So D-WORLD-102 = A applies, with its order 231 → 230 → 233.
+- **Premise checked first-party:** `scripts/marketingcheck/main.go` dispatches `check`, `routes`, `observe`, `compare`, `inventory`/`inventory-compare` and `docs`, but no `position` or `phone`. The predicates existed only as `world-iter315/v64-p0check-main.go.txt` (425 lines) and `v66-phonecheck-main.go.txt` (224 lines).
+- Claim message `inbox_1793405384179_a8734bee` sent before routing. No open PR.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (28 comments, LEGACY watermark), so nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 0 with verdict text "1 crash notice". It is the 2026-10-22 rc=1 notice `6345079873`, already credited (23 mentions in the live log). Control 107:4 ok.
+- Inbox: `mission-world` holds only this loop's own claim and report messages.
+- Ledger: 0 OPEN rows at Gate 0; D-WORLD-102 is RESOLVED = A (attended).
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `cec48f69af6da7fe4817d9a1bf3e9f01b0274cb0`. Base recorded `cec48f69…@2026-10-31T00:08:05Z`; re-read before the worktree with no drift.
+- Skill: `SKILL.md` and all 13 `resources/*.md` were `cmp`-identical to `origin/dev`, per file; rules were read from the resolved symlink target.
+- Dev CI: `cec48f69` check-runs 3/3 success; the last 5 CI runs on dev were success on attempt 1.
+- Died-mid-flight traces: none for 327. `.wt-world-iter306-r0` is the known residue.
+
+**Design** (`w-marketing-position-checker`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318/320/327 precedent; rotation pointer unchanged):
+- **r0** `9abc25b5`: 502 lines, 30 V-rows, 40 evidence files.
+  - Surface: `position --baseline RECTS LABEL=RECTS…` and `phone LABEL=PNG…`. Exit 0/1/2.
+  - Parity oracle: the banked `.txt` programs, built in-test after a sha check.
+  - Fixtures: position JSON checked in as produced and sha-pinned. Phone fixtures are 2 KB "skeleton" geometry, because `tracked_binary_gate.sh` rejects a PNG outside `website/static/img/v1/` (measured on a throwaway commit).
+  - One deliberate verdict change: phone (ii) runs `CheckRegion` (C8′'s own words), ledgered as `header-15px`.
+  - The real phone corpus was copied out of `/tmp` to `~/.ailang/state/world-iter328-phone-corpus/`, with all 11 hashes equal to the iteration-315 pins.
+- **Quorum r1 BLOCKED** ($0.2120). Seats gpt6-1-sol REJECT, oc-glm-5-3 REJECT, gemini-4-argon PASS; claude benched; no absentees.
+  - gpt: the 10-image skeleton byte-equality was unsatisfiable with 2 committed skeletons.
+  - glm: the `Shots` geometry premise had no V-row, and it was not said how the prototype was built.
+  - **The controller measured glm's premise before routing (rule 3f).** The prototype copied alone fails `undefined: Rect`, rc 1; in a `git archive` tree it builds, rc 0. So it read `png.go`'s `Shots`, whose values equal p0check's `heights` and its 1440 literal.
+- **r1** `3aaee4d0`, the one mandated revision.
+  - 10 skeletons, byte-equal 10/10 with three failing controls (V31).
+  - V32 holds the measurements above, plus `TestMarketingPositionGeometryMatchesOracle` with mutants P14 (verdict-neutral, sole killer) and P15.
+  - The host-local corpus is named as a residual (V33: no durable copy of the iteration-312 images).
+- **Quorum r2 BLOCKED** ($0.1922; same seats and verdicts; no absentees).
+  - gpt: oracle subprocess waits unbounded.
+  - glm: §2.7 deleted the oracle source pins the tests are specified to read.
+  - Both carry a concrete `proposed_fix`, and neither disputes the direction → **narrow-refinement carve-out (r2, `08dc31be`)**, applied by the controller.
+  - Applied: gpt's §2.2 runner paragraph verbatim; glm's "stop deleting the pins" heading and pin line; gemini's M2 count wording; P16/P17 mutation rows; V34/V35 as executor acceptance rows; quorum r1 glm's AC-5 scope note.
+- Artifacts: `verification/world-iter328/quorum-r1.json`, `quorum-r2.json`.
+
+**Plan** (opus; `derive-planner-lane.sh` → `opus fail-closed:env-pin`, resolver `agent-tool opus`), `0f0b65b2`:
+- 7 milestones: M1a runner · M1b `position` + 34 fixtures · M1c pins + corpus · M1d parity · M2a `phone` + 10 skeletons · M2b arms + parity · M3 docs + NB2.
+- 22 banked `plan-*.txt` sources with sha256, so the executor wrote no Go.
+- Every cumulative tree passed vet and the package tests, plain and race. 36/36 mutants killed.
+- Deviations D-1..D-15. D-15 adds two `TestProductionGoSurface` allow-list lines in `host/store/context_roots_test.go`. D-14: no `nohup`, which breaks `shell-hup`.
+- Its repo gate showed one load red, `host/verifygate` `invalid_ledger`, passing alone.
+
+**Executor** (haiku; resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`, Agent `haiku`):
+- Commits: M1a `2822723a` · M1b `d673c56f` · M1c `27ef6447` · M1d `c4b129b0` · M2a `c6a12dc9` · M2b `9ddab47c` · M3 `03fe5a1a` · evidence `96eae6cc`. Every acceptance matched the plan.
+- Parity: position 44/0/0; phone 41 and 59 with ledger 1; skeletons `CHECK images=10 byte-equal=10`.
+- Mutants 36/36 KILLED. V34: pins 1 and 1. V35: P17 red in 21.8 s with `subprocess-timeout`; P17b (`Setpgid` removed) red because the grandchild survives.
+- Repo gate: `verify_ail.sh` rc 0, `go build` rc 0. `go test -timeout 20m ./...` rc 1 on `host/broker` `TestExecProtectedCheckTimeout/reserve-after-before` (load 20–24). The test passed alone 3/3, and so did the package (226–251 s).
+- Deviations from the directive: Haiku 5.5 co-author line again (its harness attribution, instance 2 after 327), some plan-named commit prefixes, and `executor-*.txt` names. All harmless.
+
+**Controller checks before the judge:**
+- No production context root: every `context.*` use is in a `_test.go`.
+- D-15 is allow-list lines only.
+- `host/broker` does not depend on the diff (`go list -deps -test`: 0 `scripts/marketingcheck`; `host/store` changed only in a test file) and is byte-identical to base.
+- `./scripts/verify_go.sh` at `96eae6cc` on a rig without the judge (load ~12): rc 1, on the same `reserve-after-before` row only (`handler subprocess timed out after 3s`). `scripts/marketingcheck` ok 132.6 s; every other package and gate green.
+- Classified as load: the third local instance of that row (iteration 293 recorded it under co-load). CI arbitrates.
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), own worktree `.wt-world-iter328-eval` (branch `eval/world-iter328-r1` at `96eae6cc`), foreground, run after `verify_go.sh` finished.
+- **PASS 90/100, zero blocking** (32/21/24/13).
+- Verified: vet and package tests plain and race; the real-corpus run with 0 SKIP (135 PASS lines); oracles self-built, 7 position + 4 phone spot checks equal; fixtures regenerate byte-identically (34 position, phone skeletons no diff); one-byte fixture edit, zero-regions and empty-baseline guards fire; runner deadline and group-kill mutants red; each oracle hash once in the orchestration doc; §13 value revert reds `rects-value`; scope clean.
+- 21 own mutants + 8 of the plan's; worktree restored (`status --porcelain` empty).
+- **Survivors, filed as row 240:** background-edge tolerance ±2→±200 (×3); phone entry tolerance 4→40; `gc ≥ 0` (maybe equivalent); `main.go` cases reached only by docs subtests; §13 export revert misses `position-lines`.
+- **The controller reproduced the entry-tolerance survivor** on a copy of `96eae6cc`: control rc 0, mutant rc 0 (`ok … 43.8s`).
+- Report: `verification/world-iter328/evaluator-sprint-r1.md`.
+
+**Routing evidence:** base=cec48f69af6da7fe4817d9a1bf3e9f01b0274cb0@2026-10-31T00:08:05Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Tokens and time per role:
+  - controller `claude:claude-opus-5-5`: tok not reported;
+  - designer Agent `opus`: 370,480 tok / 1,865 s; revision resume 420,824 tok / 324 s, as reported;
+  - planner Agent `opus`: 398,391 tok / 3,986 s;
+  - executor Agent `haiku`: 125,504 tok / 3,370 s;
+  - evaluator Agent `sonnet`: 76,134 tok / 607 s.
+- Generator ≠ judge: opus/haiku vs sonnet. All five roles were spawned; none fell back.
+- Designer diet: 1 doc, 2 runs (author + mandated revision). The r2 fixes were the controller's, not a third run.
+- Metered $0.4042 (quorum r1 $0.2120 + r2 $0.1922).
+
+**Ruled out:**
+- Moving the docs to `implemented/`: the committed code comments and the pinned `testdata/position/SHA256SUMS` cite `planned/`. Marked Implemented in place.
+- Fixing the judge survivors in this PR: non-blocking, the same tolerances live in the banked oracle, and a change would need a re-judge. Filed as row 240.
+- Tightening carried findings (1)/(2)/(7) here: they change real-store verdicts and need the orchestration doc's own quorum. Row 238.
+- Re-running the full local suite until green: CI is the arbiter, and the red row is unreachable from the diff.
+- A third design run: the carve-out conditions held (concrete fixes, no direction dispute).
+
+**Retro:**
+1. **Banked validated sources made the small-model executor exact.** The planner (66 min) assembled and mutation-tested every file, and the executor (Haiku) only copied and checked hashes: 36/36 killed, every acceptance as planned. Instance 1 at this scale; worth repeating for plan-sized ports.
+2. **`host/broker` `reserve-after-before` reds under load** (3 s subprocess bound), twice this iteration and once in 293. If CI ever reds on it, it gets a row. Watch-item, not filed.
+3. The controller's first evaluator-worktree call passed `--detach` to `mission-worktree.sh add`, which takes `BRANCH SHA PATH`. It failed `worktree_add_rc_255` with no partial tree. Controller slip; no harm.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 231 BUILT in PR #440; rows 238–240 filed.
+**Next:** row 231 lands on merge CI green (landing note). Then row 230 → 233 under D-WORLD-102 = A, stopping when a release row is routable; a dev red still outranks. Row 150's P0/P3 now invoke `marketingcheck position`/`phone` (orchestration §4.4) in the A1 window Mark schedules.
