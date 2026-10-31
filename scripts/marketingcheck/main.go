@@ -25,7 +25,8 @@ const usageText = "usage: marketingcheck check --pass-a DIR --pass-b DIR --manif
 	"       marketingcheck compare --before FILE --after FILE\n" +
 	"       marketingcheck inventory --addr URL [--out FILE]\n" +
 	"       marketingcheck inventory-compare --before FILE --after FILE\n" +
-	"       marketingcheck docs --root DIR [--assets DIR [--capture-manifest FILE --require-assets]]"
+	"       marketingcheck docs --root DIR [--assets DIR [--capture-manifest FILE --require-assets]]\n" +
+	"       marketingcheck position --baseline RECTS LABEL=RECTS..."
 
 func main() { os.Exit(run(os.Args[1:])) }
 func run(args []string) int {
@@ -46,6 +47,8 @@ func run(args []string) int {
 		return runInventory(args[0], args[1:])
 	case "docs":
 		return runDocs(args[1:])
+	case "position":
+		return runPosition(args[1:], os.Stdout, os.Stderr)
 	}
 	fmt.Fprintln(os.Stderr, usageText)
 	return 2

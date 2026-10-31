@@ -216,6 +216,9 @@ func TestProductionGoSurface(t *testing.T) {
 		// tooling outside host/ and cmd/; the exact two-pass PNG gate for the six-shot pass.
 		"scripts/marketingcheck/main.go": false,
 		"scripts/marketingcheck/png.go":  false,
+		// Row 231 (w-marketing-position-checker): the P0/P3 position predicate,
+		// `marketingcheck position`, ported from the banked p0check oracle.
+		"scripts/marketingcheck/position.go": false,
 	}
 	scanned, reproducers := 0, 0
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {

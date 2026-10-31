@@ -1,0 +1,169 @@
+{
+  "schema": "world/demo/capture-rectangles/v1",
+  "shots": {
+    "graph.png": {
+      "background": {
+        "name": "gutter",
+        "x": 2,
+        "y": 343,
+        "w": 24,
+        "h": 1717
+      },
+      "content": [
+        {
+          "name": "graph-svg",
+          "x": 89,
+          "y": 1746,
+          "w": 1247,
+          "h": 274
+        }
+      ]
+    },
+    "packet.png": {
+      "background": {
+        "name": "gutter",
+        "x": 2,
+        "y": 343,
+        "w": 24,
+        "h": 3317
+      },
+      "content": [
+        {
+          "name": "validation",
+          "x": 106,
+          "y": 2859,
+          "w": 1213,
+          "h": 49
+        },
+        {
+          "name": "approvals-chain",
+          "x": 106,
+          "y": 3147,
+          "w": 1213,
+          "h": 25
+        },
+        {
+          "name": "roster-tested",
+          "x": 106,
+          "y": 3267,
+          "w": 1213,
+          "h": 73
+        },
+        {
+          "name": "roster-attested",
+          "x": 106,
+          "y": 3355,
+          "w": 1213,
+          "h": 25
+        },
+        {
+          "name": "roster-claimed",
+          "x": 106,
+          "y": 3395,
+          "w": 1213,
+          "h": 49
+        },
+        {
+          "name": "roster-proven",
+          "x": 106,
+          "y": 3459,
+          "w": 1213,
+          "h": 97
+        }
+      ]
+    },
+    "phone.png": {
+      "background": {
+        "name": "gutter",
+        "x": 2,
+        "y": 343,
+        "w": 12,
+        "h": 461
+      },
+      "content": [
+        {
+          "name": "header",
+          "x": 25,
+          "y": 45,
+          "w": 345,
+          "h": 23
+        },
+        {
+          "name": "timeline-first",
+          "x": 41,
+          "y": 428,
+          "w": 323,
+          "h": 182
+        }
+      ]
+    },
+    "provenance.png": {
+      "background": {
+        "name": "gutter",
+        "x": 2,
+        "y": 343,
+        "w": 24,
+        "h": 2617
+      },
+      "content": [
+        {
+          "name": "payload",
+          "x": 89,
+          "y": 2822,
+          "w": 1336,
+          "h": 60
+        }
+      ]
+    },
+    "workbench-dark.png": {
+      "background": {
+        "name": "gutter",
+        "x": 2,
+        "y": 343,
+        "w": 24,
+        "h": 717
+      },
+      "content": [
+        {
+          "name": "header",
+          "x": 0,
+          "y": 114,
+          "w": 1425,
+          "h": 209
+        },
+        {
+          "name": "timeline-first",
+          "x": 89,
+          "y": 423,
+          "w": 1247,
+          "h": 191
+        }
+      ]
+    },
+    "workbench-light.png": {
+      "background": {
+        "name": "gutter",
+        "x": 2,
+        "y": 343,
+        "w": 24,
+        "h": 717
+      },
+      "content": [
+        {
+          "name": "header",
+          "x": 0,
+          "y": 114,
+          "w": 1425,
+          "h": 209
+        },
+        {
+          "name": "timeline-first",
+          "x": 89,
+          "y": 423,
+          "w": 1247,
+          "h": 191
+        }
+      ]
+    }
+  }
+}
