@@ -1,7 +1,10 @@
 # w-marketing-position-checker: commit the P0/P3 position and phone predicates as CI-gated `marketingcheck` subcommands
 
-- **Status**: r1, iteration 328 (unattended): the one mandated revision after quorum r1 on r0
-  (`9abc25b5`) was BLOCKED. r1 applies fixes A, B and C (§10) and changes nothing else.
+- **Status**: r2, iteration 328 (unattended). r1 was the one mandated revision after quorum r1 on
+  r0 (`9abc25b5`) was BLOCKED (fixes A, B, C). Quorum r2 on r1 (`3aaee4d0`) was BLOCKED on two
+  objections, each carrying a concrete reviewer fix and neither disputing the direction, so r2 is
+  the **controller's narrow-refinement carve-out**: it applies those fixes in the reviewers' own
+  terms (§10, round 2) and routes to the planner without a third quorum. It is not a quorum PASS.
 - **Item**: queue row 231 (V02). The P0/P3 position predicate (`p0check`) and the phone predicate
   (`phonecheck`) exist only as banked controller programs,
   `design_docs/verification/world-iter315/v64-p0check-main.go.txt` and `v66-phonecheck-main.go.txt`.
@@ -94,6 +97,21 @@ The banked sources become the **oracle**. Two CI tests copy each `.txt` into `t.
 V03). They build it with `go build -o <bin> <file>.go`. File mode needs no `go.mod` and costs
 2.04 s on a cold cache and 0.34 s on a warm one (V26). Then they run oracle and subcommand on the
 same files and compare per label:
+
+**[r2, quorum r2 gpt6-1-sol, verbatim]** Every test subprocess uses a shared deadline-enforcing
+runner: oracle and CLI builds have a 120-second deadline, individual checker runs have a 30-second
+deadline, and output draining has a finite bound. On expiry, the runner terminates and reaps the
+process tree and fails the test with `subprocess-timeout`, identifying the command; it never skips
+or substitutes a result. These limits remain within the package's eight-minute race-test budget.
+(Controller note: build the runner on `exec.CommandContext` with `context.WithTimeout`, the bounded
+context quorum r1's gemini catch asked for, start the child in its own process group, and kill the
+group on expiry. Its acceptance control is a deliberately hanging build/checker, §4 P17 and AC-4.)
+
+**[r2, quorum r2 oc-glm-5-3]** The parity tests **hardcode the full pins**:
+`v64-p0check-main.go.txt` sha256 `0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c`,
+`v66-phonecheck-main.go.txt` sha256 `31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c`. The orchestration doc keeps both pins as its
+own registry line (§2.7 `:238`). A pin-check subtest asserts that the edited orchestration doc
+carries each hardcoded hash exactly once, so a deleted or edited pin line is red (§4 P16).
 
 - **position**: the r3 verdict **and** the r3 reason lines. On the prototype, 44 inputs (V64 11, V65
   23, and 10 new arms) gave 0 verdict differences and 0 reason differences. The same harness, given
@@ -221,7 +239,7 @@ run it.
   (`zero-bands: no ink rows read`, rc 1) on the blank arm, besides (i)–(iii′) (V16).
 - No CI-path test calls `t.Skip`. The only skip is `TestMarketingPhoneRealCorpus` without its env.
 
-### 2.5 Capture-day control step (replaces §4.4's source pins and orchestration V72's controls)
+### 2.5 Capture-day control step (replaces §4.4's controller invocations and orchestration V72's controls; the two oracle source pins are retained)
 
 Run from the repository root at the capture commit. Record that commit's green CI run id. Any
 deviation below is BLOCKED and escalated before a capture-store verdict is read. No step is piped
@@ -280,7 +298,7 @@ at base (V28).
   green:".
 - **:236** → "P0 (a): `go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json <label>=<store-rects.json>` … The verdict is `<label> ACCEPT` or `<label> REFUSE` with one indented line per failing clause, read together with the exit code (§2.1 of row 231's design). r2 is no longer printed."
 - **:237** → "Phone: `go run ./scripts/marketingcheck phone <label>=<capture pass-a/phone.png>`; (i), (ii), (iii′), with (ii) = `CheckRegion`. No reference image is an argument."
-- **:238** (source pins and control step) → §2.5's five steps. The V50 and seed-5 hashes stay, in full.
+- **:238** (source pins and control step) → §2.5's five steps. The V50 and seed-5 hashes stay, in full. **[r2, glm]** The replacement ends with an explicit pin line: 'Parity-oracle sources (row 231): design_docs/verification/world-iter315/v64-p0check-main.go.txt sha256 `0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c`; v66-phonecheck-main.go.txt sha256 `31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c`.'
 - **:239** ("Why the committed checker is not extended") → "**Committed (row 231).** The banked
   `.txt` programs remain the parity oracle that CI builds from the pinned sources; a change to
   either source, or any verdict difference outside the one-entry ledger, is a red."
@@ -345,8 +363,9 @@ files). Each test row's sole killer is in §4.
   recorded geometry, `render_pix_sha256` matches, the PNG round trip is lossless, and the render
   ACCEPTs (V31).
 - `TestMarketingPhoneArms`: in-test Go ports of the 12 phoneneg, 23 judge and 4 new generators on
-  the seed-5 render, plus both renders. 41 rows, 12 ACCEPT (V14 baseline; per-arm list V15 column
-  3).
+  the seed-5 render, plus the seed-5 and seed-2 base renders (41 rows, 12 ACCEPT; all 10 renders
+  are covered by `TestMarketingPhoneSkeleton`) (V14 baseline; per-arm list V15 column 3; wording
+  per quorum r2 gemini-4-argon).
 - `TestMarketingPhoneParity`: the oracle over the same 41 PNGs written to TempDir, with ledger
   `{header-15px}`.
 - `TestMarketingPhoneCLI`: §2.4's phone cases.
@@ -408,6 +427,8 @@ the same arm.
 | P13 | one byte appended to `testdata/position/v65/neg-attested+14.json` | `TestMarketingPositionFixtures`: sha256 mismatch | — |
 | P14 | **[r1]** `Shots` `graph.png` 2100 → 2101 (verdict-neutral) | `TestMarketingPositionGeometryMatchesOracle`: `graph.png: Shots 1440x2101, oracle 1440x2100`. It is the sole killer among the position tests: parity over the 44 inputs shows 0 verdict and 0 reason differences. Outside them, the existing `TestMarketingShotGeometry/graph.png` and `TestMarketingPNGContent/canonical-shots` also red, but they pin `Shots` to their own tables, not to the oracle | V32 |
 | P15 | **[r1]** `Shots` `packet.png` 3700 → 3660 | `TestMarketingPositionGeometryMatchesOracle`: `packet.png: Shots 1440x3660, oracle 1440x3700`. Not verdict-neutral: parity also reds (19 verdict and 43 reason differences, via `packet.png/background: (b)`) | V32 |
+| P16 | **[r2, glm]** delete the parity-oracle pin line from the edited orchestration doc (§2.7 `:238`) | the parity tests' pin-check subtest (sole killer): want each hardcoded hash exactly once in `w-marketing-capture-orchestration.md`, got 0 | executor measures (AC-1) |
+| P17 | **[r2, gpt]** the runner's deadline removed, against a deliberately hanging build/checker (a fake `go`/checker that sleeps past the bound) | the runner's own test: want a `subprocess-timeout` failure naming the command within the bound, and no surviving child process (process-group check) | executor measures (AC-4) |
 | F1 | (ii) removed | `TestMarketingPhoneArms/new/header-solid-ink` (also `header-15px`) | V14 |
 | F2 | dims removed | `…/new/tall-845` | V14 |
 | F3 | (ii) back to the std-dev stand-in | `…/new/header-15px` only; also the parity ledger entry stops differing | V14, V11 |
@@ -429,7 +450,9 @@ The rows with "—" are mechanical. The executor measures them in the sprint.
 
 - **AC-1 (parity).** Both parity tests pass in CI, comparing 44 position labels and 41 phone labels.
   The phone ledger holds exactly `header-15px`. With the real corpus, phone parity also passes over
-  the 59 V11 inputs with the same ledger.
+  the 59 V11 inputs with the same ledger. **[r2, glm]** On the M3 tree, with §2.7's edits applied,
+  both parity tests are green and `grep -c` of each full oracle hash in the edited orchestration
+  doc is 1 (recorded as V34 by the executor).
 - **AC-2 (verdicts unchanged on real stores).** With `WORLD_PHONE_CORPUS`, the real-corpus test
   shows 10/10 real phone images ACCEPT. In CI, the 7 block-box stores and the 2 block-converted files ACCEPT,
   and the 2 Range-box files REFUSE. Both match the banked V64/V66 outputs (V05, V08).
@@ -437,9 +460,12 @@ The rows with "—" are mechanical. The executor measures them in the sprint.
   files for `t.Skip` finds only `TestMarketingPhoneRealCorpus`. That grep is labelled
   instrument-health only.
 - **AC-4 (mutations).** Every §4 row is red with its mutant applied, and green when restored. The
-  executor runs them in a throwaway copy.
+  executor runs them in a throwaway copy. **[r2, gpt]** This includes P17's hanging control: the
+  test fails in time with `subprocess-timeout`, and no child process survives it (recorded as V35).
 - **AC-5 (docs).** M3's subtests pass, D1–D3 red, and §2.7's lines changed as written.
-  `git diff --stat` touches only §6's files.
+  `git diff --stat` touches only §6's files plus banked evidence under
+  `design_docs/verification/world-iter328/` (r2: quorum r1 glm's secondary catch, M2/M3 bank
+  executor outputs there).
 - **AC-6 (repo gate).** §3's gate lines, plus CI green on the PR.
 
 ## 6. Files touched, conflict surface
@@ -581,3 +607,31 @@ r1 is the one mandated revision. It changes only what is listed here.
     exists (V33). CI's real-geometry coverage is the 10 skeletons.
   - No storage mechanism is added. Gemini's catch about a `go build` timeout is not in the r1
     directive and is not applied.
+
+**Round 2** on r1 (`3aaee4d0`). Artifact `verification/world-iter328/quorum-r2.json`, a byte copy of
+`~/.ailang/state/mission-quorum-world/w-marketing-position-checker-2026-10-31T00-51-18Z.json`:
+$0.1922, **BLOCKED**. Same seats: `gpt6-1-sol` REJECT, `oc-glm-5-3` REJECT, `gemini-4-argon` PASS;
+Claude benched; no seat absent. Running quorum total $0.4042.
+
+Both blocking objections carry a concrete reviewer `proposed_fix`, and neither disputes the
+direction: one is about bounded waits, the other about pin bookkeeping. So the controller applied
+them under the Gate-2 **narrow-refinement carve-out** (r2) and routed to the planner without a third
+round. The fixes are the reviewers' own text, and no controller-invented resolution was used.
+
+- **D. gpt6-1-sol (REJECT).** Verbatim: "The design leaves oracle subprocess waits unbounded. §2.2
+  requires CI tests to invoke `go build` and run oracle binaries but specifies no subprocess
+  deadlines or termination policy; §10 explicitly leaves the build-timeout finding unfixed. An outer
+  `go test -timeout` is not a specified child-process cancellation and cleanup mechanism. This fails
+  the bounded-waits axiom." **Fix:** the reviewer's §2.2 paragraph verbatim (deadline runner,
+  120 s builds, 30 s runs, bounded drain, process-tree reap, `subprocess-timeout`); its hanging
+  control is §4 P17 and AC-4 (V35, executor). This also closes quorum r1's gemini catch.
+- **E. oc-glm-5-3 (REJECT).** Verbatim: "The row deletes the very pin its own oracle mechanism is
+  specified to read. … No V-row runs the parity tests against the post-M3 doc to show the pin check
+  survives the row's own edits." **Fix:** "Stop deleting the pins." The §2.5 heading and the §2.7
+  `:238` replacement use the reviewer's text. §2.2 states that the tests hardcode the full pins. A
+  pin-check subtest is mutation-pinned by P16, and AC-1 carries the post-M3 parity plus `grep -c`
+  check (V34, executor).
+- **F. gemini-4-argon (PASS, non-blocking).** The M2 count wording ("plus both renders" against 10
+  skeletons) uses the reviewer's replacement text verbatim (§3 M2).
+- Also applied: quorum r1 glm's secondary catch (AC-5's file scope against banked evidence). V34 and
+  V35 are acceptance measurements that only the built tests can produce, so they are the executor's.

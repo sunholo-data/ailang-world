@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-position-checker.md",
+  "iso_ts": "2026-10-31T00:51:18Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.03648200000000001,
+      "tokens_in": 16821,
+      "tokens_out": 284,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design leaves oracle subprocess waits unbounded. §2.2 requires CI tests to invoke `go build` and run oracle binaries but specifies no subprocess deadlines or termination policy; §10 explicitly leaves the build-timeout finding unfixed. An outer `go test -timeout` is not a specified child-process cancellation and cleanup mechanism. This fails the bounded-waits axiom.",
+        "catch": "Require bounded execution for oracle builds, oracle runs, and CLI subprocess tests, including termination of descendants and a named failure on timeout. The measured build times in V26 establish cost, not a bound.",
+        "proposed_fix": "Add to §2.2: “Every test subprocess uses a shared deadline-enforcing runner: oracle and CLI builds have a 120-second deadline, individual checker runs have a 30-second deadline, and output draining has a finite bound. On expiry, the runner terminates and reaps the process tree and fails the test with `subprocess-timeout`, identifying the command; it never skips or substitutes a result. These limits remain within the package’s eight-minute race-test budget.” Add a verification-log row with a deliberately hanging build/checker control demonstrating timely failure and no surviving child processes, and require that control in milestone acceptance."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.08056,
+      "tokens_in": 18815,
+      "tokens_out": 265,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §3 M2 (`TestMarketingPhoneArms`) and §5 AC-1, the doc still counts 41 rows/labels ('39 generators on the seed-5 render, plus both renders. 41 rows, 12 ACCEPT') even though r1 Fix A expanded the committed skeletons from 2 to 10.",
+        "catch": "In §3 M2, clarify whether `TestMarketingPhoneArms` and `TestMarketingPhoneParity` evaluate the 2 original base renders (seed-5 and seed-2) plus 39 arms (41 total), or all 10 skeleton renders plus 39 arms (49 total), so the phrasing 'plus both renders' does not conflict with the r1 change to 10 skeletons.",
+        "proposed_fix": "In §3 M2 (`TestMarketingPhoneArms`), replace 'plus both renders' with 'plus the seed-5 and seed-2 base renders (41 rows, 12 ACCEPT; all 10 renders are covered by `TestMarketingPhoneSkeleton`)'."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0751484,
+      "tokens_in": 16862,
+      "tokens_out": 11714,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The row deletes the very pin its own oracle mechanism is specified to read. §2.2 makes the CI parity tests 'check its sha256 against the §4.4 pin (0a9a6795…, 31576922…)', and §2.7 :239's replacement text still says CI 'builds from the pinned sources' — but §2.5 is headed 'replaces §4.4's source pins' and the :238 edit keeps only 'the V50 and seed-5 hashes', so after M3 the two oracle source pins appear zero times in the orchestration doc (V03 verified they appear exactly once at base, as the sole pin registry). The doc never says whether the parity tests hardcode the full hashes or grep the doc; if they grep, the row's own M3 edit reds TestMarketingPositionParity/TestMarketingPhoneParity on the landing PR (AC-1, the central behavior-preservation gate, fails); if they hardcode, the doc's stated mechanism and :239's 'pinned sources' are false as written. No V-row runs the parity tests against the post-M3 doc to show the pin check survives the row's own edits.",
+        "catch": "Verify and state where the two oracle source pins (0a9a6795…927c, 31576922…0b4c) live after M3 replaces orchestration :238, and prove first-party that whatever the parity tests read for the pin still exists and matches after the :235–:239 edits are applied. V10/V11 measured parity at base; nothing measures parity against the edited doc.",
+        "proposed_fix": "Stop deleting the pins. Amend §2.5's heading to '(replaces §4.4's controller invocations and orchestration V72's controls; the two oracle source pins are retained)' and change the :238 replacement to end with an explicit pin line: 'Parity-oracle sources (row 231): design_docs/verification/world-iter315/v64-p0check-main.go.txt sha256 0a9a6795…927c; v66-phonecheck-main.go.txt sha256 31576922…0b4c.' In §2.2, state that the parity tests hardcode the full pins (single source of truth remaining the orchestration §9 'Row 231' entry), and add V34: apply §2.7's doc edits to a throwaway copy, then run TestMarketingPositionParity and TestMarketingPhoneParity (expect green) and grep -c each full hash in the edited orchestration doc (expect 1 each), proving the pin check passes against the post-M3 doc. Add a P16-style mutant (delete the pin line from the edited doc) with the parity test's pin-check subtest as sole killer, so the retained pin is itself mutation-tested."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r1 applies both blocking fixes: 10 committed skeletons with a measured byte-equal check and controls (V31); in-package prototype build and Shots-vs-oracle geometry measured by the controller and re-run (V32) plus geometry pin test P14/P15. Gemini host-local corpus named as residual."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-1-sol: The design leaves oracle subprocess waits unbounded. §2.2 requires CI tests to invoke `go build` and run oracle binaries but specifies no subprocess deadlines or termination policy; §10 explicitly leaves the build-timeout finding unfixed. An outer `go test -timeout` is not a specified child-process cancellation and cleanup mechanism. This fails the bounded-waits axiom.",
+      "oc-glm-5-3: The row deletes the very pin its own oracle mechanism is specified to read. §2.2 makes the CI parity tests 'check its sha256 against the §4.4 pin (0a9a6795…, 31576922…)', and §2.7 :239's replacement text still says CI 'builds from the pinned sources' — but §2.5 is headed 'replaces §4.4's source pins' and the :238 edit keeps only 'the V50 and seed-5 hashes', so after M3 the two oracle source pins appear zero times in the orchestration doc (V03 verified they appear exactly once at base, as the sole pin registry). The doc never says whether the parity tests hardcode the full hashes or grep the doc; if they grep, the row's own M3 edit reds TestMarketingPositionParity/TestMarketingPhoneParity on the landing PR (AC-1, the central behavior-preservation gate, fails); if they hardcode, the doc's stated mechanism and :239's 'pinned sources' are false as written. No V-row runs the parity tests against the post-M3 doc to show the pin check survives the row's own edits."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.1921904,
+    "total_tokens_in": 52498,
+    "total_tokens_out": 12263
+  }
+}
