@@ -156,6 +156,41 @@ func sha256Hex(b []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
+// checkPinRegistry asserts the orchestration doc carries the hardcoded pin exactly once (§4 P16).
+func checkPinRegistry(t *testing.T, source, pin string) {
+	t.Helper()
+	doc, err := os.ReadFile(oraclePinRegistry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := strings.Count(string(doc), pin); n != 1 {
+		t.Fatalf("%s: want the %s pin %s exactly once, got %d", oraclePinRegistry, source, pin, n)
+	}
+}
+
+// buildOracle copies the banked source into a TempDir as a .go file after checking its pin, and
+// builds it in file mode under the build deadline.
+func buildOracle(t *testing.T, source, pin string) string {
+	t.Helper()
+	src, err := os.ReadFile(filepath.Join(oracleDir, source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sha256Hex(src); got != pin {
+		t.Fatalf("%s: sha256 %s, pin %s", source, got, pin)
+	}
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "oracle.go"), src, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	bin := filepath.Join(dir, "oracle")
+	res := mustRun(t, subprocBuildLimit, dir, nil, "go", "build", "-o", bin, "oracle.go")
+	if res.Code != 0 {
+		t.Fatalf("oracle build rc %d: %s", res.Code, res.Stderr)
+	}
+	return bin
+}
+
 // ---- the 44 position inputs (design §2.3, §3 M1) ----
 
 type labelledPath struct{ Label, Path string }
@@ -467,6 +502,79 @@ func TestMarketingPositionCorpus(t *testing.T) {
 	if len(positionWant) != 44 || accept != 19 {
 		t.Errorf("verdict table: %d rows, %d ACCEPT; want 44 and 19", len(positionWant), accept)
 	}
+}
+
+// parseP0check reads the oracle's `check` output: label -> r3 verdict and r3 reasons.
+func parseP0check(t *testing.T, out string) map[string][]string {
+	t.Helper()
+	got := map[string][]string{}
+	cur := ""
+	for _, line := range strings.Split(out, "\n") {
+		switch {
+		case line == "" || strings.HasPrefix(line, "TOTAL "):
+		case strings.HasPrefix(line, "    r3: "):
+			got[cur] = append(got[cur], strings.TrimPrefix(line, "    r3: "))
+		case strings.HasPrefix(line, "    r2: "):
+		default:
+			f := strings.Fields(line)
+			if len(f) < 3 || f[1] != "r3" {
+				t.Fatalf("oracle line %q", line)
+			}
+			cur = f[0]
+			got[cur] = []string{f[2]}
+		}
+	}
+	return got
+}
+
+func TestMarketingPositionParity(t *testing.T) {
+	t.Run("pin-registry", func(t *testing.T) { checkPinRegistry(t, positionOracleSource, positionOraclePin) })
+	oracle := buildOracle(t, positionOracleSource, positionOraclePin)
+	inputs := positionInputs(t)
+	args := []string{"check", positionBaseline}
+	for _, in := range inputs {
+		args = append(args, in.Label+"="+in.Path)
+	}
+	res := mustRun(t, subprocRunLimit, "", nil, oracle, args...)
+	if res.Code != 0 {
+		t.Fatalf("oracle rc %d: %s%s", res.Code, res.Stdout, res.Stderr)
+	}
+	oracleOut := parseP0check(t, res.Stdout)
+	ledger := map[string]bool{} // design §2.2: the position ledger is empty
+	base := loadPositionBaseline(t)
+	compared, verdictDiffs, reasonDiffs := 0, 0, 0
+	for _, in := range inputs {
+		o, ok := oracleOut[in.Label]
+		if !ok {
+			t.Errorf("%s: no oracle line", in.Label)
+			continue
+		}
+		cand, err := loadPositionCandidate(in.Path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		reasons, _ := PositionJudge(base, cand)
+		v := "ACCEPT"
+		if len(reasons) > 0 {
+			v = "REFUSE"
+		}
+		compared++
+		if ledger[in.Label] {
+			continue
+		}
+		if v != o[0] {
+			verdictDiffs++
+			t.Errorf("%s: oracle %s, position %s", in.Label, o[0], v)
+		}
+		if strings.Join(reasons, "\n") != strings.Join(o[1:], "\n") {
+			reasonDiffs++
+			t.Errorf("%s: reasons differ\n oracle   %q\n position %q", in.Label, o[1:], reasons)
+		}
+	}
+	if compared != 44 || len(oracleOut) != 44 {
+		t.Fatalf("compared %d labels (oracle printed %d), want 44", compared, len(oracleOut))
+	}
+	t.Logf("PARITY position: inputs=%d verdict-diffs=%d reason-diffs=%d", compared, verdictDiffs, reasonDiffs)
 }
 
 func TestMarketingPositionCLI(t *testing.T) {
