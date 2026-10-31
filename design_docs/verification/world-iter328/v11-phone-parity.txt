@@ -1,0 +1,115 @@
+# V11 phone parity: banked phonecheck (r3 field + per-clause booleans) vs prototype `marketingcheck phone` ((ii) = CheckRegion; source v11-prototype-phone.go.txt)
+# inputs: V50 + 9 stores x 2 passes + desktop-light + 12 phoneneg arms + 23 judge arms + 4 new arms (v14-newarms-main.go.txt, v11-h15-main.go.txt), all from the REAL seed-5 pass-A base
+$ bash parity_phone.sh   (script: v11-parity-phone.sh.txt)
+banked rc=0
+committed rc=1
+PARITY phone: inputs=59 banked-accept=30 verdict-diffs=1
+DIFF new/header-15px ACCEPT REFUSE ('true', 'true', 'true', 'true', 'true') ['(ii) rect-too-small phone.png: header']
+CLAUSE-DIFF new/header-15px (True, True, True, True, True) (True, False, True, True, True)
+clause-level diffs=1
+# => exactly one divergence, new/header-15px: the named (ii) change (std-dev stand-in ACCEPT, CheckRegion REFUSE rect-too-small, header 15 px < MinRectH 16)
+# positive control: prototype with (ii) dropped (PH_MUT=ii)
+PARITY phone: inputs=59 banked-accept=30 verdict-diffs=1
+DIFF new/header-solid-ink REFUSE ACCEPT ('true', 'false', 'true', 'true', 'true') []
+CLAUSE-DIFF v67/blank (False, False, True, False, False) (False, True, True, False, False)
+CLAUSE-DIFF v67/timeline-only (False, False, True, False, False) (False, True, True, False, False)
+CLAUSE-DIFF new/header-solid-ink (True, False, True, True, True) (True, True, True, True, True)
+clause-level diffs=3
+# prototype output (committed side):
+v50-ref                      ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389
+r1-seed1/A                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389
+r1-seed1/B                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389
+r1-seed2/A                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389
+r1-seed2/B                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389
+r1b-seed3/A                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+r1b-seed3/B                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+r1b-seed4/A                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 332 841} titleRight=389
+r1b-seed4/B                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 332 841} titleRight=389
+r1c-seed5/A                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+r1c-seed5/B                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+r1c-seed6/A                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 334 841} titleRight=389
+r1c-seed6/B                  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 334 841} titleRight=389
+eval-p1/A                    ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 338 841} titleRight=389
+eval-p1/B                    ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 338 841} titleRight=389
+eval-p2/A                    ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389
+eval-p2/B                    ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389
+eval-p3/A                    ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 326 841} titleRight=389
+eval-p3/B                    ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 326 841} titleRight=389
+desktop-light                REFUSE 1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} thumb={-1 -1 -1 -1} titleRight=413
+    (i) header {25 45 370 68} entry {90 428 370 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) dims 1440x1100
+    (iii′) thumb {-1 -1 -1 -1}
+v67/blank                    REFUSE 390x844 bands=0 header={0 0 0 0} entry={0 0 0 0} thumb={-1 -1 -1 -1} titleRight=-1
+    zero-bands: no ink rows read
+    (i) header {0 0 0 0} entry {0 0 0 0} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) thumb {-1 -1 -1 -1}
+    (iii′) title-right -1
+v67/crop-370                 REFUSE 370x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=369
+    (iii′) dims 370x844
+    (iii′) title-right 369
+v67/full-thumb               REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={3 833 388 841} titleRight=389
+    (iii′) thumb {3 833 388 841}
+v67/no-overflow              REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=371
+    (iii′) thumb {-1 -1 -1 -1}
+    (iii′) title-right 371
+v67/no-scrollbar             REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=389
+    (iii′) thumb {-1 -1 -1 -1}
+v67/pad-370                  REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=369
+    (iii′) title-right 369
+v67/shift-10                 REFUSE 390x844 bands=21 header={25 55 370 78} entry={41 438 364 620} thumb={6 843 333 844} titleRight=389
+    (i) header {25 55 370 78} entry {41 438 364 620} vs R1 {25 45 370 68} {41 428 364 610} ±4
+v67/shift-2                  ACCEPT 390x844 bands=21 header={25 47 370 70} entry={41 430 364 612} thumb={6 835 333 843} titleRight=389
+v67/shift-4                  ACCEPT 390x844 bands=21 header={25 49 370 72} entry={41 432 364 614} thumb={6 837 333 844} titleRight=389
+v67/shift-5                  REFUSE 390x844 bands=21 header={25 50 370 73} entry={41 433 364 615} thumb={6 838 333 844} titleRight=389
+    (i) header {25 50 370 73} entry {41 433 364 615} vs R1 {25 45 370 68} {41 428 364 610} ±4
+v67/timeline-only            REFUSE 390x844 bands=13 header={42 50 135 68} entry={0 0 0 0} thumb={-1 -1 -1 -1} titleRight=134
+    (i) header {42 50 135 68} entry {0 0 0 0} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) thumb {-1 -1 -1 -1}
+    (iii′) title-right 134
+v67/title-unclipped          REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=371
+    (iii′) title-right 371
+judge/B1-thumb-split-px150   REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={151 833 333 841} titleRight=389
+    (iii′) thumb {151 833 333 841}
+judge/B1b-thumb-split-px250  ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 250 841} titleRight=389
+judge/B1c-thumb-split-px8    REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={9 833 333 841} titleRight=389
+    (iii′) thumb {9 833 333 841}
+judge/B3-grey-bar-x0-300-no-thumb ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={0 830 300 835} titleRight=389
+judge/B3b-grey-bar-full-width REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={0 830 390 835} titleRight=389
+    (iii′) thumb {0 830 390 835}
+judge/B4-run-100px           REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=389
+    (iii′) thumb {-1 -1 -1 -1}
+judge/B4b-run-101px          ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 107 841} titleRight=389
+judge/B5-two-pieces-rows-differ REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={200 837 330 841} titleRight=389
+    (iii′) thumb {200 837 330 841}
+judge/scattered-pixels-no-thumb REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=389
+    (iii′) thumb {-1 -1 -1 -1}
+judge/short-thumb-x20        REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={20 833 300 841} titleRight=389
+    (iii′) thumb {20 833 300 841}
+judge/short-thumb-x6-130     ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 130 841} titleRight=389
+judge/short-thumb-x6-90      REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=389
+    (iii′) thumb {-1 -1 -1 -1}
+judge/tall-image-844-ok-but-thumb-1row ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 840 330 841} titleRight=389
+judge/thumb-above-bottom20   REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=389
+    (iii′) thumb {-1 -1 -1 -1}
+judge/thumb-dark-luma100     REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={-1 -1 -1 -1} titleRight=389
+    (iii′) thumb {-1 -1 -1 -1}
+judge/thumb-end384           ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 384 841} titleRight=389
+judge/thumb-end385           REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 385 841} titleRight=389
+    (iii′) thumb {6 833 385 841}
+judge/thumb-x8               ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={8 833 330 841} titleRight=389
+judge/thumb-x9               REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={9 833 330 841} titleRight=389
+    (iii′) thumb {9 833 330 841}
+judge/title-ink-spoof-pixel-388 REFUSE 390x844 bands=21 header={25 45 358 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=388
+    (i) header {25 45 358 68} entry {41 428 364 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+judge/title-right-385        REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=385
+    (iii′) title-right 385
+judge/title-right-386        REFUSE 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=386
+    (iii′) title-right 386
+judge/title-right-387        ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=387
+new/entry-solid-ink          REFUSE 390x844 bands=16 header={25 45 370 68} entry={41 428 364 778} thumb={6 833 333 841} titleRight=389
+    (i) header {25 45 370 68} entry {41 428 364 778} vs R1 {25 45 370 68} {41 428 364 610} ±4
+new/header-15px              ACCEPT 390x844 bands=21 header={26 49 370 64} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+new/header-solid-ink         ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+new/tall-845                 REFUSE 390x845 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+    (iii′) dims 390x845
+TOTAL candidates=59 accept=31 refuse=28

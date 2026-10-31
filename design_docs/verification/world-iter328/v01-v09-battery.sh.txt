@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Iteration-328 designer evidence battery (row 231). Run from anywhere; writes /tmp/w328d/ev/*.txt.
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231; V=$WT/design_docs/verification/world-iter315; B=$WT/design_docs/verification/world-iter312/r1-rects.json
+E=/tmp/w328d/ev; cd /tmp/w328d
+run() { echo "\$ $*"; "$@"; echo "rc=$?"; }
+{
+echo "# V01 base + toolchains"; run git -C $WT rev-parse HEAD; run git -C $WT branch --show-current; (cd base && echo "\$ (in repo copy) go version" && go version); echo "\$ (in /tmp, outside any module) go version"; (cd /tmp && go version)
+} > $E/v01-base-toolchain.txt 2>&1
+{
+echo "# V03 source/input sha256 pins vs orchestration §4.4"; run shasum -a 256 $V/v64-p0check-main.go.txt $V/v66-phonecheck-main.go.txt $V/v64-rects-r1c-seed5.json $B $HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+echo "\$ grep -o <each full hash> design_docs/planned/w-marketing-capture-orchestration.md | sort | uniq -c"
+grep -o '0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c\|31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c\|ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333\|999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8' $WT/design_docs/planned/w-marketing-capture-orchestration.md | sort | uniq -c
+echo "# negative control: a hash that is not in the doc"; echo "\$ grep -c 7077dcb5 (the V74 tampered hash, cited only truncated) ..."; grep -c '7077dcb5[0-9a-f]\{56\}' $WT/design_docs/planned/w-marketing-capture-orchestration.md
+} > $E/v03-source-pins.txt 2>&1
+{
+echo "# V04 banked programs built from their .txt (copy -> main.go, go mod init, go build), go1.26.4 outside the repo"
+for pair in p0check:v64-p0check-main.go.txt phonecheck:v66-phonecheck-main.go.txt phoneneg:v67-phoneneg-main.go.txt judgearms:v67b-judge-phone-arms-main.go.txt strip:v66-strip-main.go.txt; do n=${pair%%:*}; f=${pair#*:}; echo "$n: $(ls -la banked/$n/$n | awk '{print $5}') bytes"; cmp banked/$n/main.go $V/$f && echo "  built source cmp-identical to $f"; done
+echo "\$ (go1.26.6) cp v64-p0check-main.go.txt b126/p0check.go && go build -o p0check p0check.go   # file mode, no go.mod"; ls b126/p0check >/dev/null && echo "built rc=0"
+} > $E/v04-banked-builds.txt 2>&1
+{
+echo "# V05-V07 V64/V65 reproduced from banked sources and banked JSON (outputs diffed against the banked .txt)"
+bash /dev/stdin <<'IN'
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231; V=$WT/design_docs/verification/world-iter315; cd /tmp/w328d
+diff v64-repro.txt $V/v64-p0-positive.txt && echo "V64: banked p0check over the 11 banked candidates: BYTE-IDENTICAL to v64-p0-positive.txt"
+grep -E 'r3 (ACCEPT|REFUSE)' v64-repro.txt; tail -2 v64-repro.txt
+for s in r1-seed1 r1-seed2 r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do a=$(shasum -a 256 < /tmp/world-iter312/$s/rects.json | cut -c1-64); b=$(shasum -a 256 < $V/v64-rects-$s.json | cut -c1-64); [ "$a" = "$b" ] && echo "$s: banked v64-rects == /tmp/world-iter312 original ($a)" || echo "$s DIFF"; done
+for s in r1-seed1 r1-seed2; do cmp fl/$s-block.json $V/v64-rects-$s-blockconverted.json && echo "$s: p0check fromlayouts(banked layouts) cmp-identical to banked blockconverted"; done
+./banked/p0check/p0check convcheck $(for s in r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do echo $V/v64-layouts-$s.json; done)
+diff v65-repro.txt $V/v65-p0-negative.txt && echo "V65: banked p0check mutate (seed5, eval-p1) + check: BYTE-IDENTICAL to v65-p0-negative.txt"
+grep -E '^\S.* r3 ' v65-repro.txt | awk '{print $1, $3}'; tail -2 v65-repro.txt
+IN
+} > $E/v05-v07-p0-reproduction.txt 2>&1
+{
+echo "# V08-V09 V66/V67 reproduced (bash; real PNGs still at /tmp/world-iter312)"
+diff v66-repro.txt $V/v66-phone-positive.txt && echo "V66: BYTE-IDENTICAL to v66-phone-positive.txt"; grep -c 'r3 ACCEPT' v66-repro.txt | sed 's/^/r3 ACCEPT lines: /'; tail -2 v66-repro.txt
+bash -c 'V='$V'; n=0; for s in r1-seed1 r1-seed2 r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do for p in a b; do f=/tmp/world-iter312/$s/capture/pass-$p/phone.png; h=$(shasum -a 256 < $f | cut -c1-64); grep -qF "$h  $f" $V/v64-inputs-sha256.txt && n=$((n+1)); done; done; echo "phone PNG sha256 matching v64-inputs-sha256.txt: $n/18"; echo "negative control (all-zero hash) matches: $(grep -c 0000000000000000000000000000000000000000000000000000000000000000 $V/v64-inputs-sha256.txt)"'
+echo "phoneneg (go1.26.4) outputs vs banked v67-synthetic-sha256.txt (iteration 315 build; its V64 row records go1.26.6):"; diff v67-syn-now.s <(grep -v scattered v67-syn-banked.txt) && echo "  12/12 equal (the 13th banked line, the judge arm, is compared below)"
+echo "judge arm scattered-pixels-no-thumb: $(shasum -a 256 < judge-arms/scattered-pixels-no-thumb.png | cut -c1-64) (banked $(grep scattered $V/v67-synthetic-sha256.txt | cut -c1-64))"
+diff v67-repro.txt $V/v67-phone-negative.txt && echo "V67: BYTE-IDENTICAL to v67-phone-negative.txt"; grep -oE '^\S+|-> r3 (ACCEPT|REFUSE)' v67-repro.txt | paste - - | grep -v V50REF; tail -1 v67-repro.txt
+} > $E/v08-v09-phone-reproduction.txt 2>&1
+echo battery-part1 done

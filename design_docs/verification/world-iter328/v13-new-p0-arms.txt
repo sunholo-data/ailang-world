@@ -1,0 +1,37 @@
+# V13 the new P0 arms on the BANKED p0check (generator v13-isoarms-main.go.txt, input v64-rects-r1c-seed5.json)
+$ isoarms v64-rects-r1c-seed5.json iso-pos/ && p0check check r1-rects.json <arm=file>...
+acc-tested-w-2                         r3 ACCEPT  r2 ACCEPT
+iso-a1-tested-w-3                      r3 REFUSE  r2 REFUSE
+    r3: packet.png/roster-tested: (a1) left/right 106..1316 vs 106..1319
+iso-freegap-validation-h+240           r3 REFUSE  r2 REFUSE
+    r3: packet.png/approvals-chain: (a3) gap after validation -1 vs R1 239
+iso-minh-approvals-h-1                 r3 REFUSE  r2 REFUSE
+    r3: packet.png/approvals-chain: (a4) height 1 vs 25 not whole lines
+iso-nonpara-graph-svg-h+24             r3 REFUSE  r2 REFUSE
+    r3: graph.png/graph-svg: (a4) height 298 vs 274
+iso-nonpara-payload-h+24               r3 REFUSE  r2 REFUSE
+    r3: provenance.png/payload: (a4) height 84 vs 60
+perm-approvals-y+48                    r3 ACCEPT  r2 REFUSE
+perm-approvals-y-48                    r3 ACCEPT  r2 REFUSE
+perm-roster-drift-2px                  r3 ACCEPT  r2 REFUSE
+perm-validation-h+216                  r3 ACCEPT  r2 REFUSE
+TOTAL candidates=10 r3-accept=5 r2-accept=1
+rc=0
+d471e623c1fdc088789a91b912f42d82b8fc8861a8582e5bfa4a2e13a6fa99cc  acc-tested-w-2.json
+4b1bb2420e4d611f14c1e5abf8b066f63cf061cbf466111ba316b1a3fb96ee45  iso-a1-tested-w-3.json
+8574e69cca8cd546e3653897232b13cca06214f017480d37a522c1f7a65ec69e  iso-freegap-validation-h+240.json
+4b6f9498077e64d94e544cc3b95e370a3c5df6a597f85cb32b90a4941092f930  iso-minh-approvals-h-1.json
+5b384a4aec473be76b1e62a32a4f0e0a1a8bbe10e0e87c07842566af5ec312c4  iso-nonpara-graph-svg-h+24.json
+6da98f40004129e8c868812f385c7c8f4b65ee2d15ec0788d61a1a66d09e247b  iso-nonpara-payload-h+24.json
+f96fb392cfa657ebeea35641274de832f8428230839751dd28722a6c8c2ccba7  perm-approvals-y+48.json
+bc7a9fb2512d52418967d29e5619d901928bb8a621e6d817191fed1222aac08d  perm-approvals-y-48.json
+7e9a35bba5a59c36168113a971e4058ea061d6b9a938d232190e47785af73a70  perm-roster-drift-2px.json
+6e4f9772de397ee47f7e3b953f1c69fdb044ee368cf15bb05060f1f15a2cd8bc  perm-validation-h+216.json
+
+$ python3: per-region dy/dh of perm-roster-drift-2px against v64-rects-r1c-seed5.json (packet.png)
+validation dy 0 dh 0
+approvals-chain dy 0 dh 0
+roster-tested dy 2 dh 2
+roster-attested dy 6 dh 2
+roster-claimed dy 10 dh 2
+roster-proven dy 14 dh 2

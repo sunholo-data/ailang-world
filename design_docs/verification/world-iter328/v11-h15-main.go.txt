@@ -1,0 +1,24 @@
+// Iteration-328 designer: the one corner where (ii)=CheckRegion and the std-dev stand-in can
+// disagree while (i) holds: a header band 15 px tall (both edges 4 px inside R1's 45..68).
+// usage: h15 <skeleton-render.png> <out.png>   (repaints header rows 45..48 and 64..67 with page colour)
+package main
+
+import (
+	"image"
+	"image/draw"
+	"image/png"
+	"os"
+)
+
+func main() {
+	f, _ := os.Open(os.Args[1])
+	src, _ := png.Decode(f)
+	w := image.NewRGBA(src.Bounds())
+	draw.Draw(w, w.Bounds(), src, image.Point{}, draw.Src)
+	bg := &image.Uniform{src.At(5, 5)}
+	draw.Draw(w, image.Rect(0, 45, 390, 49), bg, image.Point{}, draw.Src)
+	draw.Draw(w, image.Rect(0, 64, 390, 68), bg, image.Point{}, draw.Src)
+	o, _ := os.Create(os.Args[2])
+	png.Encode(o, w)
+	o.Close()
+}

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Compare per-arm r3 verdicts: arms derived from the REAL seed-5 pass-A PNG vs from its skeleton render; banked checker on both, prototype on the render.
+set -u; cd /tmp/w328d; REF=$HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png; C=/tmp/w328d/banked/phonecheck/phonecheck
+real=(); sk=()
+for d in v67:neg-phone judge:judge-arms new:new-phone; do k=${d%%:*}; r=${d#*:}; for f in $r/*.png; do n=$(basename $f .png); real+=("$k/$n=$f"); sk+=("$k/$n=skel-arms/$k/$n.png"); done; done
+$C "$REF" "${real[@]}" | grep -oE '^\S+|-> r3 (ACCEPT|REFUSE)$' | paste - - | grep -v '^V50REF\|^CONTROL\|^TOTAL' | awk '{print $1,$4}' > sk-real.txt
+$C "$REF" "${sk[@]}" | grep -oE '^\S+|-> r3 (ACCEPT|REFUSE)$' | paste - - | grep -v '^V50REF\|^CONTROL\|^TOTAL' | awk '{print $1,$4}' > sk-banked.txt
+/tmp/w328d/mc phone "${sk[@]}" | grep -E '^\S+ +(ACCEPT|REFUSE)' | awk '{print $1,$2}' > sk-committed.txt
+echo "arms: $(wc -l < sk-real.txt)"; echo "real-vs-render (banked) diffs: $(diff sk-real.txt sk-banked.txt | grep -c '^>')"; diff sk-real.txt sk-banked.txt; echo "render banked-vs-committed diffs: $(diff sk-banked.txt sk-committed.txt | grep -c '^>')"

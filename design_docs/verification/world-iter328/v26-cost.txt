@@ -1,0 +1,20 @@
+# V26 cost (re-measured into this file)
+$ /usr/bin/time -p ./mc phone <39 skeleton-derived PNGs>   (prototype, plain build)
+real 0.18
+user 0.18
+sys 0.01
+$ /usr/bin/time -p ./mc-race phone <same>   (prototype, go build -race)
+real 3.02
+user 3.13
+sys 0.05
+$ cd tb3 && GOCACHE=$(mktemp -d) /usr/bin/time -p go build -o p p0check.go   (cold cache, file mode, no go.mod)
+real 2.04
+user 6.34
+sys 1.44
+rc=0
+$ (warm cache, same)
+real 0.34
+user 0.21
+sys 0.15
+rc=0
+CI base run: scripts/marketingcheck plain 26.907s, race 157.042s (V19); race leg package timeout -timeout 8m (verify_go.sh:355)

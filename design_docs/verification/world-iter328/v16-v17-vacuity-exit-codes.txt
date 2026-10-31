@@ -1,0 +1,55 @@
+# V16-V17 vacuity and exit codes: banked programs vs prototype (inputs: vac/*.json built by python from r1-rects.json)
+$ p0check check vac/baseline-graph-empty.json same=vac/baseline-graph-empty.json   # baseline whose graph.png content is []
+same                                   r3 ACCEPT  r2 ACCEPT
+TOTAL candidates=1 r3-accept=1 r2-accept=1
+rc=0
+$ p0check check r1-rects.json    # zero candidates
+TOTAL candidates=0 r3-accept=0 r2-accept=0
+rc=0
+$ phonecheck <V50>    # zero candidates
+TOTAL candidates=0 r2-accept=0 r3-accept=0
+rc=0
+$ p0check check r1-rects.json refuse=neg/neg-attested+14.json
+refuse                                 r3 REFUSE  r2 REFUSE
+rc=0
+--- prototype:
+$ marketingcheck position --baseline vac/baseline-graph-empty.json same=vac/baseline-graph-empty.json
+marketingcheck: bad-rectangles graph.png: content rectangles required
+rc=1
+$ marketingcheck position --baseline r1-rects.json   # zero candidates
+rc=2
+$ marketingcheck position --baseline r1-rects.json none=vac/cand-no-shots.json
+marketingcheck: zero-regions vac/cand-no-shots.json: no content rectangles in the five 1440 px shots
+rc=1
+$ marketingcheck position --baseline r1-rects.json empty=vac/cand-empty-content.json
+marketingcheck: zero-regions vac/cand-empty-content.json: no content rectangles in the five 1440 px shots
+rc=1
+$ marketingcheck position --baseline r1-rects.json refuse=neg/neg-attested+14.json
+refuse                                 REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+TOTAL candidates=1 accept=0 refuse=1
+rc=1
+$ marketingcheck position --baseline r1-rects.json accept=v64-rects-eval-p1.json
+accept                                 ACCEPT regions=17
+TOTAL candidates=1 accept=1 refuse=0
+rc=0
+$ marketingcheck phone   # zero candidates
+rc=2
+$ marketingcheck phone blank=neg-phone/blank.png
+blank                        REFUSE 390x844 bands=0 header={0 0 0 0} entry={0 0 0 0} thumb={-1 -1 -1 -1} titleRight=-1
+    zero-bands: no ink rows read
+    (i) header {0 0 0 0} entry {0 0 0 0} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (ii) rect-out-of-bounds phone.png: header
+    (ii) rect-out-of-bounds phone.png: timeline-first
+    (iii′) thumb {-1 -1 -1 -1}
+    (iii′) title-right -1
+TOTAL candidates=1 accept=0 refuse=1
+rc=1
+$ marketingcheck phone notpng=vac/cand-no-shots.json
+marketingcheck: decode-failed vac/cand-no-shots.json: png: invalid format: not a PNG file
+rc=1
+$ marketingcheck phone v50=<V50 reference>
+v50                          ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389
+TOTAL candidates=1 accept=1 refuse=0
+rc=0

@@ -1,0 +1,104 @@
+# V27 marketingcheck CLI surface at base
+$ sed -n '22,52p' scripts/marketingcheck/main.go
+const usageText = "usage: marketingcheck check --pass-a DIR --pass-b DIR --manifest DEMO_MANIFEST --rectangles RECTS [--out CAPTURE_MANIFEST]\n" +
+	"       marketingcheck routes --manifest DEMO\n" +
+	"       marketingcheck observe --root DIR [--out FILE]\n" +
+	"       marketingcheck compare --before FILE --after FILE\n" +
+	"       marketingcheck inventory --addr URL [--out FILE]\n" +
+	"       marketingcheck inventory-compare --before FILE --after FILE\n" +
+	"       marketingcheck docs --root DIR [--assets DIR [--capture-manifest FILE --require-assets]]"
+
+func main() { os.Exit(run(os.Args[1:])) }
+func run(args []string) int {
+	if len(args) == 0 {
+		fmt.Fprintln(os.Stderr, usageText)
+		return 2
+	}
+	switch args[0] {
+	case "check":
+		return runCheck(args[1:])
+	case "routes":
+		return runRoutes(args[1:])
+	case "observe":
+		return runObserve(args[1:])
+	case "compare":
+		return runCompare(args[1:])
+	case "inventory", "inventory-compare":
+		return runInventory(args[0], args[1:])
+	case "docs":
+		return runDocs(args[1:])
+	}
+	fmt.Fprintln(os.Stderr, usageText)
+	return 2
+}
+$ grep -n 'return 0\|return 1\|return 2' in runCheck (main.go:267-293)
+10:			return 0
+12:		return 2
+16:		return 2
+25:		return 1
+27:	return 0
+$ grep -n 'case "position"\|case "phone"\|func runPosition\|func runPhone\|func PositionJudge\|func ScanPhone\|type phoneRect\|^func parseLabelled\|^type PhoneScan' scripts/marketingcheck/*.go
+rc=1 (1 = no collision); control: grep -c 'case "docs"' main.go = 1
+$ grep -n '^type Rect\|^type Shot \|^type ShotRects\|^type Rectangles\|^func LoadRectangles\|^func CheckShotRects\|^func CheckRegion\|^func rgbAt\|^func luminance\|^func rectStats\|MinRectStdDev\|MinRectW\|MinRectH' png.go
+33:	MinRectW          = 64
+34:	MinRectH          = 16
+35:	MinRectStdDev     = 4.0
+43:type Shot struct {
+138:type Rect struct {
+145:type ShotRects struct {
+149:type Rectangles struct {
+154:func CheckShotRects(name string, r ShotRects) error {
+174:func LoadRectangles(path string) (Rectangles, error) {
+211:func rgbAt(im image.Image, x, y int) (uint8, uint8, uint8) {
+225:func luminance(r, g, b uint8) float64 { return .299*float64(r) + .587*float64(g) + .114*float64(b) }
+254:func rectStats(im image.Image, r Rect) (float64, float64, int) {
+281:func CheckRegion(name string, im image.Image, r Rect) error {
+$ sed -n '49,53p' png.go (shot table)
+var Shots = []Shot{
+	{"workbench-light.png", 1440, 1100, "light"}, {"workbench-dark.png", 1440, 1100, "dark"},
+	{"packet.png", 1440, 3700, "light"}, {"graph.png", 1440, 2100, "light"},
+	{"provenance.png", 1440, 3000, "light"}, {"phone.png", 390, 844, "light"},
+}
+$ docs_test.go marketingcheck-lines rule:
+		}
+		for _, line := range lines {
+			fields := strings.Fields(line)
+			sub := fields[3]
+			usageLine := ""
+			for _, u := range strings.Split(usageText, "\n") {
+				if strings.Contains(u, "marketingcheck "+sub+" ") {
+					usageLine = u
+				}
+			}
+			if usageLine == "" {
+				t.Fatalf("usageText has no line for `marketingcheck %s`", sub)
+			}
+			for flag := range docsFlags(line) {
+				if !strings.Contains(usageLine, flag) {
+					t.Errorf("`marketingcheck %s` documents %s, absent from its usage line", sub, flag)
+				}
+			}
+		}
+$ grep -n '^func Test' scripts/marketingcheck/*_test.go
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/inventory_test.go:19:func TestMarketingInventoryCompareBranches(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/inventory_test.go:69:func TestMarketingInventoryReadPaging(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/observation_test.go:123:func TestMarketingProtectedObservationComparator(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/capture_test.go:76:func TestMarketingCapturePassFakeChrome(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/capture_test.go:281:func TestMarketingCaptureFakeChromeSixShots(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/docs_test.go:280:func TestMarketingDocsLinks(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/docs_test.go:383:func TestMarketingRunbookMatchesHelp(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/png_test.go:203:func TestMarketingPNGStructure(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/png_test.go:308:func TestMarketingPNGContent(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/png_test.go:549:func TestMarketingTwoPassInventory(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/png_test.go:820:func TestMarketingShotGeometry(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/supervisor_test.go:25:func TestMarketingKillGroupTolerance(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/supervisor_test.go:119:func TestMarketingKillGroupStress(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/supervisor_test.go:322:func TestMarketingSupervisorFakeChromeSuccess(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/supervisor_test.go:385:func TestMarketingSupervisorFakeChromeNoFile(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/supervisor_test.go:461:func TestMarketingSupervisorFakeChromeTimeoutKillsGroup(t *testing.T) {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/supervisor_test.go:522:func TestMarketingSupervisorFakeDaemonCleanup(t *testing.T) {
+$ ls scripts/marketingcheck/testdata
+ls: /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/testdata: No such file or directory
+$ grep -rn 'usageText' scripts/marketingcheck/*_test.go
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/docs_test.go:443:			for _, u := range strings.Split(usageText, "\n") {
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/scripts/marketingcheck/docs_test.go:449:				t.Fatalf("usageText has no line for `marketingcheck %s`", sub)

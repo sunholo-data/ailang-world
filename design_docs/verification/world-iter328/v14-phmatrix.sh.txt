@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -u; cd /tmp/w328d
+args=("seed5-render=skel/r1c-seed5-render.png" "seed2-render=skel/r1-seed2-render.png")
+for k in v67 judge new; do for f in skel-arms/$k/*.png; do args+=("$k/$(basename $f .png)=$f"); done; done
+PH_MUT=none /tmp/w328d/mc-mut phone "${args[@]}" | grep -E '^\S+ +(ACCEPT|REFUSE)' | awk '{print $1,$2}' > pm-none.txt
+echo "baseline: $(grep -c ACCEPT pm-none.txt) accept / $(grep -c REFUSE pm-none.txt) refuse of $(wc -l < pm-none.txt)"
+for m in i ii standin dims present x0 x1 clip span; do
+  PH_MUT=$m /tmp/w328d/mc-mut phone "${args[@]}" | grep -E '^\S+ +(ACCEPT|REFUSE)' | awk '{print $1,$2}' > pm-$m.txt
+  echo "mutant $m: $(diff pm-none.txt pm-$m.txt | grep '^>' | awk '{print $2}' | tr '\n' ' ')"
+done

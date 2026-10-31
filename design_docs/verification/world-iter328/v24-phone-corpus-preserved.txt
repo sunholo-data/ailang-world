@@ -1,0 +1,32 @@
+# V24 phone corpus preserved outside /tmp (macOS wipes /private/tmp on boot) at ~/.ailang/state/world-iter328-phone-corpus/
+$ cp -p /tmp/world-iter312/<store>/capture/pass-a/phone.png ...; cp -p r1c-seed5 workbench-light.png; cp -p V50; shasum -a 256 *.png > SHA256SUMS
+746a020e6ad5e6a009a3149fe5b2f39de14d1bf18adbd5bd285718a47cb3bb1b  eval-p1-pass-a-phone.png
+3793ef8b914a92030adbeb3b0fb548bb123accfb1b13f996769df06b7ff0b0fb  eval-p2-pass-a-phone.png
+aa471bfa73da37f82870047b1d7ff963befa9055648f909708f64f0d46ddbbba  eval-p3-pass-a-phone.png
+676d93d3bde3668fdeef2380763ff7714dba6ba14ec45665a6a0c079582f7bf4  r1-seed1-pass-a-phone.png
+ff61fd2d3265825299c84f99028159065dc9787289730601279f5d892031fb78  r1-seed2-pass-a-phone.png
+20a8699be3a156b133f18dfed968f9a5782c1313d4783742641bf8a3a457d52f  r1b-seed3-pass-a-phone.png
+ef0f5680df915d4c2bc4738e0c68bcebd939e4a6b3244f40e6801426751edeb1  r1b-seed4-pass-a-phone.png
+94b14d0f403130ac812a5cbebd22919d6d68a0548dbd0078f735b7008ae8cd1c  r1c-seed5-pass-a-phone.png
+8c3c7493bb37a4f18561bb18307a3b9bd20826d3ec9b446280e817a171ed2594  r1c-seed5-pass-a-workbench-light.png
+07195b928cdc6b840bdac5b1ab4fe1fb412d26918a8ed220e7e812a072d18065  r1c-seed6-pass-a-phone.png
+999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8  v50-reference-phone.png
+each sha256 present in world-iter315/v64-inputs-sha256.txt: 11/11
+pass-B == pass-A for every store (v64-inputs-sha256.txt pairs), so pass A alone carries V66's 19 inputs: 9 stores + V50 = 10 distinct phone images
+
+# decoded image type (dtype: prints %T of png.Decode; source v24-dtype-main.go.txt)
+$ dtype ~/.ailang/state/world-iter328-phone-corpus/*.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/eval-p1-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/eval-p2-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/eval-p3-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1-seed1-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1-seed2-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1b-seed3-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1b-seed4-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1c-seed5-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1c-seed5-pass-a-workbench-light.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/r1c-seed6-pass-a-phone.png
+*image.RGBA <nil> ~/.ailang/state/world-iter328-phone-corpus/v50-reference-phone.png
+for comparison: a skeleton render (image.RGBA, png.Encode) and a phoneneg arm (image.NRGBA, png.Encode); both opaque, so both decode as *image.RGBA too:
+*image.RGBA <nil> skel/r1c-seed5-render.png
+*image.RGBA <nil> neg-phone/no-scrollbar.png

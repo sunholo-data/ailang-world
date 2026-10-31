@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Parity: banked phonecheck (r3 field) vs prototype `marketingcheck phone` on the same PNGs.
+set -u
+S=/tmp/world-iter312; REF=$HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+C=${C:-/tmp/w328d/banked/phonecheck/phonecheck}; MC=${MC:-/tmp/w328d/mc}; cd /tmp/w328d; N=/tmp/w328d/neg-phone; J=/tmp/w328d/judge-arms
+args=("v50-ref=$REF")
+for s in r1-seed1 r1-seed2 r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do args+=("$s/A=$S/$s/capture/pass-a/phone.png" "$s/B=$S/$s/capture/pass-b/phone.png"); done
+args+=("desktop-light=$S/r1c-seed5/capture/pass-a/workbench-light.png")
+for f in $N/*.png; do args+=("v67/$(basename $f .png)=$f"); done
+for f in $J/*.png; do args+=("judge/$(basename $f .png)=$f"); done
+for f in ${EXTRA_DIR:-/tmp/w328d/new-phone}/*.png; do [ -f "$f" ] && args+=("new/$(basename $f .png)=$f"); done
+$C "$REF" "${args[@]}" > par-phone-banked.txt; echo "banked rc=$?"
+$MC phone "${args[@]}" > par-phone-committed.txt; echo "committed rc=$?"
+python3 -I - par-phone-banked.txt par-phone-committed.txt <<'PY'
+import sys,re
+a={};b={}
+for l in open(sys.argv[1]):
+    m=re.match(r'^(\S+)\s.*-> r3 (ACCEPT|REFUSE)$', l.rstrip())
+    if m: a[m[1]]=m[2]
+    m2=re.match(r'^(\S+)\s.*\| \(i\)=(\w+) \(ii\)=(\w+) .*dims=(\w+) thumb=(\w+) clip=(\w+)', l)
+    if m2: a[m2[1]+'#clauses']=m2.groups()[1:]
+cur=None
+for l in open(sys.argv[2]):
+    if l.startswith('TOTAL'): continue
+    if not l.startswith(' '):
+        f=l.split(); cur=f[0]; b[cur]=f[1]; b[cur+'#why']=[]
+    else: b[cur+'#why'].append(l.strip())
+keys=[k for k in a if '#' not in k]
+assert set(keys)==set(k for k in b if '#' not in k)
+vd=[k for k in keys if a[k]!=b[k]]
+acc=sum(a[k]=='ACCEPT' for k in keys)
+print(f"PARITY phone: inputs={len(keys)} banked-accept={acc} verdict-diffs={len(vd)}")
+for k in vd: print("DIFF",k,a[k],b[k],a[k+'#clauses'],b[k+'#why'])
+# clause-level: banked (i),(ii),dims,thumb,clip false <-> committed reason present
+cd=0
+for k in keys:
+    i,ii,dims,thumb,clip=[x=='true' for x in a[k+'#clauses']]
+    w=' '.join(b[k+'#why'])
+    got=('(i) ' not in w, '(ii)' not in w, 'dims' not in w, 'thumb' not in w, 'title-right' not in w)
+    if got!=(i,ii,dims,thumb,clip): cd+=1; print("CLAUSE-DIFF",k,(i,ii,dims,thumb,clip),got)
+print(f"clause-level diffs={cd}")
+PY

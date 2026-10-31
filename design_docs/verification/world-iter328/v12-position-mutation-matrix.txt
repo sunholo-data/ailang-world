@@ -1,0 +1,10 @@
+# V12 position mutation matrix (prototype with env-switched mutants; flips relative to the unmutated build)
+# arm set: V64 11 + V65 23 + new 10. Script v12-posmatrix.sh.txt
+mutant a1: flips(v65+v65p1)=0 :: new/iso-a1-tested-w-3 
+mutant a2: flips(v65+v65p1)=3 :: v65/neg-packet-all+14 v65/neg-payload+14 v65p1/neg-packet-all+14 
+mutant a3: flips(v65+v65p1)=6 :: v65/neg-attested+14 v65/neg-dark-timeline-first+24 v65/neg-rows-reordered-tested-claimed v65/neg-tested-at-attested-row v65/neg-tested-at-proven-row v65p1/neg-tested-at-attested-row new/iso-freegap-validation-h+240 
+mutant minh: flips(v65+v65p1)=0 :: new/iso-minh-approvals-h-1 
+mutant nonpara: flips(v65+v65p1)=0 :: new/iso-nonpara-graph-svg-h+24 new/iso-nonpara-payload-h+24 
+mutant freegc: flips(v65+v65p1)=0 :: new/iso-freegap-validation-h+240 
+mutant b: flips(v65+v65p1)=1 :: v65/neg-proven-grows-6-lines-below-fold 
+mutant bg: flips(v65+v65p1)=1 :: v65/neg-background-over-content 

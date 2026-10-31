@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Parity: banked p0check (r3 column + r3 reasons) vs prototype `marketingcheck position` on the same inputs.
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231; V=$WT/design_docs/verification/world-iter315; B=$WT/design_docs/verification/world-iter312/r1-rects.json
+P=${P:-/tmp/w328d/banked/p0check/p0check}; MC=${MC:-/tmp/w328d/mc}; cd /tmp/w328d
+args=("r1-seed1/own-rangebox=$V/v64-rects-r1-seed1.json" "r1-seed2/own-rangebox=$V/v64-rects-r1-seed2.json" "r1-seed1/block-converted=$V/v64-rects-r1-seed1-blockconverted.json" "r1-seed2/block-converted=$V/v64-rects-r1-seed2-blockconverted.json")
+for s in r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do args+=("$s=$V/v64-rects-$s.json"); done
+for f in neg/*.json; do n=$(basename "$f" .json); args+=("seed5/$n=$f"); done
+args+=("p1/neg-tested-at-attested-row=neg-p1/neg-tested-at-attested-row.json" "p1/neg-packet-all+14=neg-p1/neg-packet-all+14.json" "p1/syn-pos-tested-wraps-3-lines=neg-p1/syn-pos-tested-wraps-3-lines.json" "p1/boundary-proven+6lines-bottom3652=neg-p1/neg-proven-grows-6-lines-below-fold.json")
+for f in ${EXTRA_DIR:-/nonexistent}/*.json; do [ -f "$f" ] || continue; n=$(basename "$f" .json); args+=("extra/$n=$f"); done
+$P check "$B" "${args[@]}" > par-pos-banked.txt; echo "banked rc=$?"
+$MC position --baseline "$B" "${args[@]}" > par-pos-committed.txt; echo "committed rc=$?"
+python3 -I - par-pos-banked.txt par-pos-committed.txt <<'PY'
+import sys,re
+def parse(p, banked):
+    out={}; cur=None
+    for line in open(p):
+        if line.startswith('TOTAL') or line.startswith('rc='): continue
+        if not line.startswith(' '):
+            f=line.split(); cur=f[0]
+            out[cur]=[(f[2] if banked else f[1]),[]]
+        else:
+            t=line.strip()
+            if banked:
+                if t.startswith('r3: '): out[cur][1].append(t[4:])
+            else: out[cur][1].append(t)
+    return out
+a=parse(sys.argv[1],True); b=parse(sys.argv[2],False)
+assert a.keys()==b.keys(), (a.keys()^b.keys())
+n=len(a); vd=sum(a[k][0]!=b[k][0] for k in a); rd=sum(a[k][1]!=b[k][1] for k in a)
+acc=sum(a[k][0]=='ACCEPT' for k in a)
+print(f"PARITY position: inputs={n} banked-accept={acc} verdict-diffs={vd} reason-diffs={rd}")
+for k in a:
+    if a[k]!=b[k]: print("DIFF",k,a[k],b[k])
+PY

@@ -1,0 +1,38 @@
+# V18 why no phone PNG can be committed: the repo's own tracked-binary gate (script src/v18-gate-demo.sh.txt), plus the release-asset check
+verify_go.sh lines carrying this allowance: 1
+== control (base tree):
+   ✓ 3 pinned font(s) validated, 1017220 bytes (host/surfacepage/fonts/)
+   ✓ 0 other binary blobs among 5159 tracked files
+rc=0
+== arm 1 (real phone.png under scripts/marketingcheck/testdata/phone/):
+tracked_binary_gate.sh: FATAL: binary blob(s) rejected:
+    scripts/marketingcheck/testdata/phone/seed5-pass-a.png  not-allowlisted
+  Compiled/binary artifacts never belong in git: 'git rm --cached <path>' and .gitignore it.
+  The only binary allowance is well-formed PNG under website/static/img/v1/ (see verify_go.sh).
+  ...plus the fonts pinned by sha256 under host/surfacepage/fonts/ (D-WORLD-90; see verify_go.sh).
+rc=1
+== arm 2 (under the release allowance, in a subdirectory):
+tracked_binary_gate.sh: FATAL: binary blob(s) rejected:
+    website/static/img/v1/fixtures/seed5.png  not-allowlisted
+  Compiled/binary artifacts never belong in git: 'git rm --cached <path>' and .gitignore it.
+  The only binary allowance is well-formed PNG under website/static/img/v1/ (see verify_go.sh).
+  ...plus the fonts pinned by sha256 under host/surfacepage/fonts/ (D-WORLD-90; see verify_go.sh).
+rc=1
+$ grep -n 'BINARY iff\|ALLOWANCE. A binary blob\|no subdirectories' scripts/tracked_binary_gate.sh
+22:# BINARY iff it contains a NUL byte anywhere. Every Mach-O, ELF and PNG does; the tree at
+29:# ALLOWANCE. A binary blob is admitted only if its path is <dir/><name>.png with name
+30:# [a-z0-9][a-z0-9-]* (no subdirectories) AND the blob is a well-formed PNG: signature, IHDR
+$ grep -n 'tracked_binary_gate.sh --allow-png' scripts/verify_go.sh
+240:bash scripts/tracked_binary_gate.sh --allow-png 'website/static/img/v1/' \
+$ (copy of base) go run ./scripts/marketingcheck docs --root . --assets <dir holding only a fixture PNG>
+marketingcheck: extra-shot seed5-phone-fixture.png: unexpected PNG
+exit status 1
+rc=1
+$ control: same with an empty dir
+marketingcheck: missing-shot workbench-light.png: required PNG absent
+exit status 1
+rc=1
+$ git ls-files | grep -c '\.png$' (worktree)
+0
+$ control: git ls-files | grep -c '\.json$'
+1255

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231; V=$WT/design_docs/verification/world-iter315; B=$WT/design_docs/verification/world-iter312/r1-rects.json
+cd /tmp/w328d
+args=("r1-seed1/own-rangebox=$V/v64-rects-r1-seed1.json" "r1-seed2/own-rangebox=$V/v64-rects-r1-seed2.json" "r1-seed1/block-converted=$V/v64-rects-r1-seed1-blockconverted.json" "r1-seed2/block-converted=$V/v64-rects-r1-seed2-blockconverted.json")
+for s in r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do args+=("$s=$V/v64-rects-$s.json"); done
+for f in neg/*.json; do args+=("v65/$(basename $f .json)=$f"); done
+args+=("v65p1/neg-tested-at-attested-row=neg-p1/neg-tested-at-attested-row.json" "v65p1/neg-packet-all+14=neg-p1/neg-packet-all+14.json" "v65p1/syn-pos-tested-wraps-3-lines=neg-p1/syn-pos-tested-wraps-3-lines.json" "v65p1/boundary-proven+6lines-bottom3652=neg-p1/neg-proven-grows-6-lines-below-fold.json")
+for f in iso-pos/*.json; do args+=("new/$(basename $f .json)=$f"); done
+POS_MUT=none /tmp/w328d/mc-mut position --baseline "$B" "${args[@]}" | grep -E '^\S+ +(ACCEPT|REFUSE)' | awk '{print $1,$2}' > mx-none.txt
+for m in a1 a2 a3 minh nonpara freegc b bg; do
+  POS_MUT=$m /tmp/w328d/mc-mut position --baseline "$B" "${args[@]}" | grep -E '^\S+ +(ACCEPT|REFUSE)' | awk '{print $1,$2}' > mx-$m.txt
+  flips=$(diff mx-none.txt mx-$m.txt | grep '^>' | awk '{print $2}' | tr '\n' ' ')
+  v65=$(diff mx-none.txt mx-$m.txt | grep '^>' | grep -c ' v65' )
+  echo "mutant $m: flips(v65+v65p1)=$v65 :: $flips"
+done

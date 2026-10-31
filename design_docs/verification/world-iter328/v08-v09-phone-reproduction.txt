@@ -1,0 +1,27 @@
+# V08-V09 V66/V67 reproduced (bash; real PNGs still at /tmp/world-iter312)
+V66: BYTE-IDENTICAL to v66-phone-positive.txt
+r3 ACCEPT lines: 19
+TOTAL candidates=19 r2-accept=1 r3-accept=19
+rc=0
+phone PNG sha256 matching v64-inputs-sha256.txt: 18/18
+negative control (all-zero hash) matches: 0
+phoneneg (go1.26.4) outputs vs banked v67-synthetic-sha256.txt (iteration 315 build; its V64 row records go1.26.6):
+  12/12 equal (the 13th banked line, the judge arm, is compared below)
+judge arm scattered-pixels-no-thumb: c57b01b14094ae695660668b66810814c8d3149d502264abda040f846af24139 (banked c57b01b14094ae695660668b66810814c8d3149d502264abda040f846af24139)
+V67: BYTE-IDENTICAL to v67-phone-negative.txt
+desktop-light	-> r3 REFUSE
+no-scrollbar	-> r3 REFUSE
+title-unclipped	-> r3 REFUSE
+no-overflow	-> r3 REFUSE
+crop-370	-> r3 REFUSE
+pad-370	-> r3 REFUSE
+full-thumb	-> r3 REFUSE
+timeline-only	-> r3 REFUSE
+blank	-> r3 REFUSE
+shift-5	-> r3 REFUSE
+shift-10	-> r3 REFUSE
+within-bound/shift-2	-> r3 ACCEPT
+within-bound/shift-4	-> r3 ACCEPT
+scattered-pixels-no-thumb	-> r3 REFUSE
+TOTAL	rc=0
+rc=0

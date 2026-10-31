@@ -1,0 +1,17 @@
+// prints the Go type png.Decode returns for each file argument
+package main
+
+import (
+	"fmt"
+	"image/png"
+	"os"
+)
+
+func main() {
+	for _, p := range os.Args[1:] {
+		f, _ := os.Open(p)
+		im, err := png.Decode(f)
+		f.Close()
+		fmt.Printf("%T %v %s\n", im, err, p)
+	}
+}

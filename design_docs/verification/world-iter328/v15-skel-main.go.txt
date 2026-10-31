@@ -1,0 +1,157 @@
+// Iteration-328 designer prototype: derive a phone "skeleton" (the scan's geometry) from a real
+// Chrome phone.png, then re-render it as a synthetic PNG. usage:
+//   skel derive <real phone.png> <out.json>     skel render <skeleton.json> <out.png>
+package main
+
+import (
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	"os"
+)
+
+type R struct{ X0, Y0, X1, Y1 int }
+type Skel struct {
+	Schema       string   `json:"schema"`
+	Source       string   `json:"source"`
+	SourceSHA256 string   `json:"source_sha256"`
+	W, H         int
+	Background   [3]uint8 `json:"background"`
+	Thumb        [3]uint8 `json:"thumb"`
+	Bands        []R      `json:"bands"`
+	TitleRight   int      `json:"title_right"`
+	Scrollbar    R        `json:"scrollbar"`
+}
+
+func luma(im image.Image, x, y int) float64 {
+	r, g, b, _ := im.At(x, y).RGBA()
+	return 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(b>>8)
+}
+func bands(im image.Image) []R {
+	bd := im.Bounds()
+	var out []R
+	in := false
+	var cur R
+	for y := bd.Min.Y; y < bd.Max.Y-20; y++ {
+		x0, x1 := -1, -1
+		for x := bd.Min.X; x < bd.Min.X+370 && x < bd.Max.X; x++ {
+			if luma(im, x, y) < 110 {
+				if x0 < 0 {
+					x0 = x
+				}
+				x1 = x
+			}
+		}
+		if x0 >= 0 {
+			if !in {
+				cur = R{x0, y, x1 + 1, y + 1}
+				in = true
+			} else {
+				cur.X0 = min(cur.X0, x0)
+				cur.X1 = max(cur.X1, x1+1)
+				cur.Y1 = y + 1
+			}
+		} else if in {
+			out = append(out, cur)
+			in = false
+		}
+	}
+	if in {
+		out = append(out, cur)
+	}
+	return out
+}
+func scrollbar(im image.Image) R {
+	bd := im.Bounds()
+	r := R{-1, -1, -1, -1}
+	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+		x0, x1 := -1, -1
+		for x, start := 0, -1; x <= bd.Max.X; x++ {
+			in := false
+			if x < bd.Max.X {
+				l := luma(im, x, y)
+				in = l >= 120 && l <= 200
+			}
+			if in && start < 0 {
+				start = x
+			}
+			if !in && start >= 0 {
+				if x0 < 0 || (x-1)-start > x1-x0 {
+					x0, x1 = start, x-1
+				}
+				start = -1
+			}
+		}
+		if x0 >= 0 && x1-x0 >= 100 {
+			if r.Y0 < 0 {
+				r = R{x0, y, x1 + 1, y + 1}
+			} else {
+				r.Y1 = y + 1
+			}
+		}
+	}
+	return r
+}
+func titleRight(im image.Image, h R) int {
+	right := -1
+	for y := h.Y0; y < h.Y1; y++ {
+		for x := 0; x < im.Bounds().Max.X; x++ {
+			if luma(im, x, y) < 110 && x > right {
+				right = x
+			}
+		}
+	}
+	return right
+}
+func rgb(im image.Image, x, y int) [3]uint8 {
+	c := color.RGBAModel.Convert(im.At(x, y)).(color.RGBA)
+	return [3]uint8{c.R, c.G, c.B}
+}
+
+func main() {
+	switch os.Args[1] {
+	case "derive":
+		raw, _ := os.ReadFile(os.Args[2])
+		f, _ := os.Open(os.Args[2])
+		im, err := png.Decode(f)
+		if err != nil {
+			panic(err)
+		}
+		b := bands(im)
+		s := Skel{Schema: "world/marketingcheck/phone-skeleton/v0", Source: os.Args[2], SourceSHA256: fmt.Sprintf("%x", sha256.Sum256(raw)),
+			W: im.Bounds().Dx(), H: im.Bounds().Dy(), Background: rgb(im, 389, 30), Bands: b, TitleRight: titleRight(im, b[0]), Scrollbar: scrollbar(im)}
+		s.Thumb = rgb(im, (s.Scrollbar.X0+s.Scrollbar.X1)/2, s.Scrollbar.Y0)
+		j, _ := json.MarshalIndent(s, "", "  ")
+		os.WriteFile(os.Args[3], append(j, '\n'), 0o644)
+	case "render":
+		var s Skel
+		j, _ := os.ReadFile(os.Args[2])
+		json.Unmarshal(j, &s)
+		im := image.NewRGBA(image.Rect(0, 0, s.W, s.H))
+		bg := color.RGBA{s.Background[0], s.Background[1], s.Background[2], 255}
+		ink := color.RGBA{0, 0, 0, 255}
+		draw.Draw(im, im.Bounds(), &image.Uniform{bg}, image.Point{}, draw.Src)
+		for i, b := range s.Bands {
+			x1 := b.X1
+			if i == 0 {
+				x1 = s.TitleRight + 1
+			}
+			for y := b.Y0; y < b.Y1; y++ {
+				for x := b.X0; x < x1; x++ {
+					if (x-b.X0)%2 == 0 || x == b.X1-1 || x == x1-1 {
+						im.Set(x, y, ink)
+					}
+				}
+			}
+		}
+		t := color.RGBA{s.Thumb[0], s.Thumb[1], s.Thumb[2], 255}
+		draw.Draw(im, image.Rect(s.Scrollbar.X0, s.Scrollbar.Y0, s.Scrollbar.X1, s.Scrollbar.Y1), &image.Uniform{t}, image.Point{}, draw.Src)
+		o, _ := os.Create(os.Args[3])
+		png.Encode(o, im)
+		o.Close()
+	}
+}

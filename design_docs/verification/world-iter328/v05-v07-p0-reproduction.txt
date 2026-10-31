@@ -1,0 +1,53 @@
+# V05-V07 V64/V65 reproduced from banked sources and banked JSON (outputs diffed against the banked .txt)
+V64: banked p0check over the 11 banked candidates: BYTE-IDENTICAL to v64-p0-positive.txt
+r1-seed1/own-rangebox                  r3 REFUSE  r2 REFUSE
+r1-seed2/own-rangebox                  r3 REFUSE  r2 REFUSE
+r1-seed1/block-converted               r3 ACCEPT  r2 ACCEPT
+r1-seed2/block-converted               r3 ACCEPT  r2 ACCEPT
+r1b-seed3                              r3 ACCEPT  r2 ACCEPT
+r1b-seed4                              r3 ACCEPT  r2 ACCEPT
+r1c-seed5                              r3 ACCEPT  r2 ACCEPT
+r1c-seed6                              r3 ACCEPT  r2 ACCEPT
+eval-p1                                r3 ACCEPT  r2 REFUSE
+eval-p2                                r3 ACCEPT  r2 ACCEPT
+eval-p3                                r3 ACCEPT  r2 ACCEPT
+TOTAL candidates=11 r3-accept=9 r2-accept=8
+rc=0
+r1-seed1: banked v64-rects == /tmp/world-iter312 original (8c18d44a720717fa95838c550eed8d7a6f04ab333e1f9b5b082acc104bf89f54)
+r1-seed2: banked v64-rects == /tmp/world-iter312 original (f0aa0767ec96a97634e1ba33f88c19e0ca8e74cee909392408d4e4cb1ea56821)
+r1b-seed3: banked v64-rects == /tmp/world-iter312 original (89aa914caff11e8e97b9524b8403a2d90be76a2c425093dae0492e3ddda949e1)
+r1b-seed4: banked v64-rects == /tmp/world-iter312 original (89aa914caff11e8e97b9524b8403a2d90be76a2c425093dae0492e3ddda949e1)
+r1c-seed5: banked v64-rects == /tmp/world-iter312 original (ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333)
+r1c-seed6: banked v64-rects == /tmp/world-iter312 original (ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333)
+eval-p1: banked v64-rects == /tmp/world-iter312 original (2d7ce1b6d7a90a157ad898d11ff0f9d4f73a17a146a40e7b7b86d4f5d76aae6d)
+eval-p2: banked v64-rects == /tmp/world-iter312 original (ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333)
+eval-p3: banked v64-rects == /tmp/world-iter312 original (ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333)
+r1-seed1: p0check fromlayouts(banked layouts) cmp-identical to banked blockconverted
+r1-seed2: p0check fromlayouts(banked layouts) cmp-identical to banked blockconverted
+CONVCHECK rows=28 mismatches=0
+V65: banked p0check mutate (seed5, eval-p1) + check: BYTE-IDENTICAL to v65-p0-negative.txt
+seed5/neg-attested+14 REFUSE
+seed5/neg-attested-dropped REFUSE
+seed5/neg-background-over-content REFUSE
+seed5/neg-dark-timeline-first+24 REFUSE
+seed5/neg-graph-svg-at-timeline REFUSE
+seed5/neg-light-header+40 REFUSE
+seed5/neg-light-header-whole-view REFUSE
+seed5/neg-packet-all+14 REFUSE
+seed5/neg-packet-stack-down-6-lines REFUSE
+seed5/neg-payload+14 REFUSE
+seed5/neg-proven-grows-6-lines-below-fold REFUSE
+seed5/neg-rows-reordered-tested-claimed REFUSE
+seed5/neg-tested-64x16-glyphs REFUSE
+seed5/neg-tested-at-attested-row REFUSE
+seed5/neg-tested-at-proven-row REFUSE
+seed5/neg-tested-height+14 REFUSE
+seed5/syn-pos-createdAt-wraps ACCEPT
+seed5/syn-pos-proven-5-lines ACCEPT
+seed5/syn-pos-tested-wraps-3-lines ACCEPT
+p1/neg-tested-at-attested-row REFUSE
+p1/neg-packet-all+14 REFUSE
+p1/syn-pos-tested-wraps-3-lines ACCEPT
+p1/boundary-proven+6lines-bottom3652 ACCEPT
+TOTAL candidates=23 r3-accept=5 r2-accept=0
+rc=0

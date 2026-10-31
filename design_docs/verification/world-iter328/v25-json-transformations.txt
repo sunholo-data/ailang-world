@@ -1,0 +1,26 @@
+# V25 transformations on the JSON corpora
+r1-rects.json CR-bytes=0 last-byte=0a
+v64-rects-eval-p1.json CR-bytes=0 last-byte=0a
+v64-rects-eval-p2.json CR-bytes=0 last-byte=0a
+v64-rects-eval-p3.json CR-bytes=0 last-byte=0a
+v64-rects-r1-seed1-blockconverted.json CR-bytes=0 last-byte=0a
+v64-rects-r1-seed1.json CR-bytes=0 last-byte=0a
+v64-rects-r1-seed2-blockconverted.json CR-bytes=0 last-byte=0a
+v64-rects-r1-seed2.json CR-bytes=0 last-byte=0a
+v64-rects-r1b-seed3.json CR-bytes=0 last-byte=0a
+v64-rects-r1b-seed4.json CR-bytes=0 last-byte=0a
+v64-rects-r1c-seed5.json CR-bytes=0 last-byte=0a
+v64-rects-r1c-seed6.json CR-bytes=0 last-byte=0a
+control: printf 'a
+b
+' -> CR-bytes=1
+$ ls .gitattributes
+ls: /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/.gitattributes: No such file or directory
+$ git config --get core.autocrlf
+rc=1 (1 = unset)
+$ git check-attr -a design_docs/verification/world-iter315/v64-rects-r1c-seed5.json
+(empty = no attribute applies)
+control: a scratch repo with '*.json -text' -> a.json: text: unset
+$ grep -n MarshalIndent r1-rects-probe_test.go.txt (the V60 probe writes rects.json with Go encoding/json, 2-space indent)
+228:	doc, _ := json.MarshalIndent(map[string]any{"schema": "world/demo/capture-rectangles/v1", "shots": rects}, "", "  ")
+233:	lj, _ := json.MarshalIndent(layouts, "", "  ")

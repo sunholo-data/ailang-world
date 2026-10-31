@@ -1,0 +1,13 @@
+# V04 banked programs built from their .txt (copy -> main.go, go mod init, go build), go1.26.4 outside the repo
+p0check: 3533634 bytes
+  built source cmp-identical to v64-p0check-main.go.txt
+phonecheck: 3099842 bytes
+  built source cmp-identical to v66-phonecheck-main.go.txt
+phoneneg: 2937442 bytes
+  built source cmp-identical to v67-phoneneg-main.go.txt
+judgearms: 2937922 bytes
+  built source cmp-identical to v67b-judge-phone-arms-main.go.txt
+strip: 2725090 bytes
+  built source cmp-identical to v66-strip-main.go.txt
+$ (go1.26.6) cp v64-p0check-main.go.txt b126/p0check.go && go build -o p0check p0check.go   # file mode, no go.mod
+built rc=0
