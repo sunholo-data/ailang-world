@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-reverse-leg-pins.md",
+  "iso_ts": "2026-10-31T05:14:29Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.069,
+      "tokens_in": 15535,
+      "tokens_out": 343,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §1 row 4, a markdown table edit error injected the full row for V19b ('**[r1] Census of probe-bearing test packages**...') into the Evidence column of row 4 and pushed 'V20' onto a broken 2-column row, leaving V19b absent from §10's Verification Log table.",
+        "catch": "Move the V19b verification row out of §1's summary table and into §10's Verification Log table between V19 and V20, and restore 'V20' as the Evidence cell of §1 row 4.",
+        "proposed_fix": "In §1 row 4, end the row with `| V20 |` and delete the trailing `| V20 |` line. In §10, insert between V19 and V20: `| V19b | **[r1] Census of probe-bearing test packages** (controller-measured at e5c1867f, re-run first-party) | grep -rln 'ProbeExecProfiles\\|ExecStartupConfig\\|ExecProfileFlags\\|exec-profile' --include='*_test.go' . \\| xargs -n1 dirname \\| sort \\| uniq -c | 5 cmd/ailang-worldd, 5 host/broker, 2 host/daemon: three packages |`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.078099,
+      "tokens_in": 13831,
+      "tokens_out": 13349,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The r1 fix for quorum objection #1 was applied incorrectly and left the doc's own verification discipline broken: the V19b census row does not exist as a row in the §10 verification log (V19 jumps to V20, with V19's observed column pointing 'to V19b'), and its content was instead pasted into the §1 table, corrupting row 4 into a 7-cell row under a 4-column header (|#|Row 230 says|Verdict|Evidence|). Worse, that pasted cell also replaced item 4's Evidence citation: row 4's verdict ('the 8 failed CI runs since 2026-10-28…') is V20's measurement, but its Evidence column now reads 'V19b' — the package census, which is evidence for §8 R2, not for item 4. Meanwhile §8 R2's load-bearing cross-process claim ('three test packages probe: cmd/ailang-worldd 5, host/broker 5, host/daemon 2') cites a verification row that cannot be found in the log. This is exactly the evidence-consistency defect class that two quorum seats rejected r0 for; the doc claims to resolve that objection while introducing a new instance of it.",
+        "catch": "Two secondary flags: (1) V2 records four grep hits for execProbeHelloWait (:109, :110, :657, :662), but §8's conflict-surface census asserts it is 'used only in exec_probe.go (:110, :662, plus comments)' — the :657 hit is never classified as comment or code, so the census is unverified against the doc's own log; if :657 is code, the conflict surface is incomplete and P2 adds a third code-use site the census misses. (2) §1 row 1's claim that at 60 s 'the existing suite reds only through T6/silent' is generalized from V4, which ran only '-run ^TestExecProbeReverse|TestExecProbeForeignListener' — the whole package was never measured at 60 s.",
+        "proposed_fix": "Apply three concrete edits. (1) Restore §1 row 4 to four cells with the correct evidence: '| 4 | R4: no Linux measurement of the in-window collision rate exists | **Status unchanged: still none.** Watch item only. In the 8 failed CI runs since 2026-10-28, `inconclusive after` appears 0 times. The only `answered nothing to World's hello` lines are T6's deliberate `t.Logf`. Runs re-run to green were not scanned | V20 |'. (2) Insert the census into §10 between V19 and V20 as a proper log row: '| V19b | **[r1]** Census of probe-bearing test packages (controller-measured at `e5c1867f`, re-run first-party) | `grep -rln 'ProbeExecProfiles\\|ExecStartupConfig\\|ExecProfileFlags\\|exec-profile' --include='*_test.go' . \\| xargs -n1 dirname \\| sort \\| uniq -c` | `5 cmd/ailang-worldd`, `5 host/broker`, `2 host/daemon`: three packages |'; §8 R2's '(V19b)' citation then resolves. (3) Amend V2's observed column to classify the fourth hit, e.g. '`:657` is the doc comment above `classifyReverseDial` (read via `sed -n 657p host/broker/exec_probe.go`)' — or, if :657 is code, correct §8's census to list it and add the P2 use site (:582) as a known post-change addition."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.181002,
+      "tokens_in": 13569,
+      "tokens_out": 9353,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Item 3 is closed as 'REFUTED' (§1 row 3, §3.4) on the strength of a measured timing margin (0 collisions in 40 runs, worst margin 216.9 ms) for a fail-closed startup gate, even though the doc's own forced reproduction (V18) shows a real collision refuses BOTH profiles — a user-facing startup outage — and R1 admits the exclusion holds 'by measured ordering, not by a lock.' R1's 'Not proposed' analysis evaluates exactly one enforcement design (a cross-profile barrier with per-early-return signaling) and rejects it as a larger concurrency surface, but never evaluates the structurally simpler alternative: hoisting the `net6 := newProbeListener()` bind out of `probe()` (`:455`) into `ProbeExecProfilesEach` before the goroutine fan-out (`:224-229`), which makes the exclusion invariant hold by construction with zero signaling and no deadlock surface. With no enforcement, no successor row (§3.4: 'There is no successor row for the in-process case'), and only the §3.5 log-watch trigger as mitigation, the doc leaves a demonstrated nondeterministic cross-profile false-refusal path open on a fail-closed startup check — contrary to the mission's deterministic-behavior axiom — while declining the one cheap structural fix without considering it.",
+        "catch": "In §8 R1, the reopen vector is 'a future edit that moves newProbeListener later in probe()' — i.e., the invariant is guarded by nothing but the current statement order and a 40-run measurement. Before accepting 'REFUTED, no code,' verify whether the bind can be hoisted into `ProbeExecProfilesEach` (one listener per profile allocated before `go func()` at `:226`, handed into `probeExecProfile`, closed by a parent-level defer on error paths at `:369-401`), which would delete the reopen vector entirely; and note the separate, lesser flag: T11 pins `c.resume()` — a line the doc's own V5/V10/V12 evidence shows is host-visibly inert on the only measured platform — via an exact source-string match, so if item 2's disposition stands as structural-only, that should be an explicit, acknowledged trade in the quorum, not silently carried by an S6 label.",
+        "proposed_fix": "Revise §3.4 and R1 to one of: (a) add P4 — hoist the per-profile net6 bind into `ProbeExecProfilesEach` ahead of the fan-out so port exclusion across profiles is structural rather than measured, with a verification-log row demonstrating K-style mutation (moving the bind back after a slow pre-bind step) reds a test or is impossible by construction; or (b) if the hoist is judged out of scope, demote the item-3 verdict from REFUTED to 'refuted at HEAD by measurement; enforcement residual open,' open a tracked successor row for the hoist, and add a comment at `:455`/`:226` stating the ordering invariant the code relies on — since the current text ships a known double-refusal failure mode (V18) guarded only by the §3.5 `accepts N≥2` watch trigger that fires after a startup refusal has already occurred."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller pass r1: all six r1 objections resolved; controller measured items 1-4 first-party (3 probing pkgs incl host/daemon; 40 not 80 runs; srt pin.json 3c3092bd26b3; :680-689 and :736-741 read as claimed)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The r1 fix for quorum objection #1 was applied incorrectly and left the doc's own verification discipline broken: the V19b census row does not exist as a row in the §10 verification log (V19 jumps to V20, with V19's observed column pointing 'to V19b'), and its content was instead pasted into the §1 table, corrupting row 4 into a 7-cell row under a 4-column header (|#|Row 230 says|Verdict|Evidence|). Worse, that pasted cell also replaced item 4's Evidence citation: row 4's verdict ('the 8 failed CI runs since 2026-10-28…') is V20's measurement, but its Evidence column now reads 'V19b' — the package census, which is evidence for §8 R2, not for item 4. Meanwhile §8 R2's load-bearing cross-process claim ('three test packages probe: cmd/ailang-worldd 5, host/broker 5, host/daemon 2') cites a verification row that cannot be found in the log. This is exactly the evidence-consistency defect class that two quorum seats rejected r0 for; the doc claims to resolve that objection while introducing a new instance of it.",
+      "oc-kimi-k3: Item 3 is closed as 'REFUTED' (§1 row 3, §3.4) on the strength of a measured timing margin (0 collisions in 40 runs, worst margin 216.9 ms) for a fail-closed startup gate, even though the doc's own forced reproduction (V18) shows a real collision refuses BOTH profiles — a user-facing startup outage — and R1 admits the exclusion holds 'by measured ordering, not by a lock.' R1's 'Not proposed' analysis evaluates exactly one enforcement design (a cross-profile barrier with per-early-return signaling) and rejects it as a larger concurrency surface, but never evaluates the structurally simpler alternative: hoisting the `net6 := newProbeListener()` bind out of `probe()` (`:455`) into `ProbeExecProfilesEach` before the goroutine fan-out (`:224-229`), which makes the exclusion invariant hold by construction with zero signaling and no deadlock surface. With no enforcement, no successor row (§3.4: 'There is no successor row for the in-process case'), and only the §3.5 log-watch trigger as mitigation, the doc leaves a demonstrated nondeterministic cross-profile false-refusal path open on a fail-closed startup check — contrary to the mission's deterministic-behavior axiom — while declining the one cheap structural fix without considering it."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.328101,
+    "total_tokens_in": 42935,
+    "total_tokens_out": 23045
+  }
+}
