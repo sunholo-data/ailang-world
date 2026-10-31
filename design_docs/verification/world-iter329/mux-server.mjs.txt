@@ -1,0 +1,11 @@
+// srt 0.0.78's own mux (the in-window foreign holder, parent V7/V23) listening on 127.0.0.1:0;
+// prints MUX-PORT <port> and stays up for argv[3] ms. Usage: node <this as .mjs> <srt package dir> <ms>
+const S = process.argv[2];
+const { createMuxProxyServer } = await import(S + '/dist/sandbox/mux-proxy.js');
+const { createHttpProxyServer } = await import(S + '/dist/sandbox/http-proxy.js');
+const http = createHttpProxyServer({ filter: async () => ({ deniedReason: 'probe' }) });
+const mux = createMuxProxyServer({ httpServer: http, handleSocksConnection: s => s.destroy() });
+await mux.listenHttpBackend();
+await new Promise(r => mux.server.listen(0, '127.0.0.1', r));
+console.log('MUX-PORT ' + mux.getPort());
+setTimeout(() => process.exit(0), +process.argv[3]);

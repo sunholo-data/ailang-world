@@ -1,0 +1,17 @@
+// F3 probe (node only): what the child listener's server-side socket does with
+// and without c.resume() after World's hello arrives. Usage: node <this> resume|noresume N
+const net=require('net');const mode=process.argv[2];const N=+process.argv[3]||20;
+let ev={end:0,close:0,err:{},rl:[],clientErr:{},clientNonce:0,clientEnd:0};
+function once(){return new Promise(done=>{
+ const v=net.createServer(c=>{if(mode==='resume')c.resume();c.end('WORLD-PROBE-NONCE abc\n');
+  c.on('end',()=>ev.end++);c.on('close',()=>{ev.close++});c.on('error',e=>{ev.err[e.code]=(ev.err[e.code]||0)+1});
+  setTimeout(()=>ev.rl.push(c.readableLength),100)});
+ v.listen(0,'127.0.0.1',()=>{const s=net.connect(v.address().port,'127.0.0.1');let b='';
+  s.on('connect',()=>s.write('WORLD-PROBE-HELLO\n'));
+  s.on('data',d=>{b+=d;if(b==='WORLD-PROBE-NONCE abc\n')ev.clientNonce++});
+  s.on('end',()=>{ev.clientEnd++;setTimeout(()=>s.end(),20)});
+  s.on('error',e=>{ev.clientErr[e.code]=(ev.clientErr[e.code]||0)+1});
+  setTimeout(()=>{v.close();s.destroy();done()},300)})})}
+(async()=>{for(let i=0;i<N;i++)await once();
+ const rl={};for(const x of ev.rl)rl[x]=(rl[x]||0)+1;
+ console.log(JSON.stringify({mode,N,serverEnd:ev.end,serverClose:ev.close,serverErr:ev.err,serverReadableLengthAt100ms:rl,clientNonce:ev.clientNonce,clientEnd:ev.clientEnd,clientErr:ev.clientErr}))})();

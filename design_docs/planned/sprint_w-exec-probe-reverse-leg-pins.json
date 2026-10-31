@@ -1,0 +1,172 @@
+{
+  "id": "w-exec-probe-reverse-leg-pins",
+  "iteration": 329,
+  "row": "230",
+  "clause": "clause-3",
+  "authority": [
+    "design_docs/planned/w-exec-probe-reverse-leg-pins.md r2 (762d8cb4; quorum r1 fixes §11; quorum r2 narrow-refinement carve-out §12, controller-applied)",
+    "design_docs/planned/w-exec-probe-reverse-leg-pins-sprint-plan.md",
+    "parent: design_docs/implemented/w-exec-probe-reverse-leg-port-race.md (row 229; §4.1, §4.2, §5 R2/R4)"
+  ],
+  "estimate": "0.1 executor day (wall time: two full host/broker runs ~3.5 min each, AC-STABLE ~1.5 min)",
+  "method": "Prototype-validated banked sources: the planner assembled the FINAL contents of every changed file per milestone in a detached git worktree of 762d8cb4 (sibling of the repo, removed after), ran every acceptance command and every mutant, and banked them under design_docs/verification/world-iter329/plan-*.txt. The executor copies, sha256-checks with shasum -a 256 -c, runs the acceptance commands and the banked mutation runner, and commits. It writes no Go and no YAML.",
+  "scope": "2 milestones, each independently green. Files: host/broker/exec_probe.go, host/broker/exec_probe_test.go, .github/workflows/ci.yml (:247 tests= line only), plus new executor-*.txt evidence files under design_docs/verification/world-iter329/. No .ail, no QUICKSTART edit (byte-identical text at 500 ms, design V21).",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins",
+    "branch": "sprint/world-iter329-exec-probe-reverse-leg-pins",
+    "head": "762d8cb4",
+    "go_tree_equals": "e5c1867f",
+    "sha256": {
+      "host/broker/exec_probe.go": "390c74e841f26a1283743c4dc95efe6d31baf3ccc44b77e64d6af8283e8a23cd",
+      "host/broker/exec_probe_test.go": "6c4e0e7a91a4fae16ae039e69fea1ad5b5975567c5290e701b14af879d13f110",
+      ".github/workflows/ci.yml": "38485513f306728b614e0faf3b04085d20f8c85737d813da84875810453f6e4e"
+    },
+    "check": "shasum -a 256 -c design_docs/verification/world-iter329/plan-base-SHA256SUMS.txt"
+  },
+  "environment": [
+    "cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang   # AILANG v0.41.0",
+    "BANK=design_docs/verification/world-iter329",
+    "SCR=/Users/voightkampff/dev/sunholo-data/.exec-w329   # sibling of the repo, never /tmp; big logs only, not committed",
+    "leave WORLD_EXEC_SRT_NODE_MODULES unset (30 real-srt/tool tests SKIP locally)"
+  ],
+  "banked": {
+    "plan-M1-exec_probe.go.txt": {"dest": "host/broker/exec_probe.go", "lines": 885, "sha256": "6e9c8315920985df3aa53ec01a4de29eaf1b3a731844f9854593ad77f6323efe"},
+    "plan-M1-exec_probe_test.go.txt": {"dest": "host/broker/exec_probe_test.go", "lines": 918, "sha256": "008c2a8de5d23d8ac8a886eb093cb3c1907290be5777dcf38402f18a4fabfee5"},
+    "plan-M1-ci.yml.txt": {"dest": ".github/workflows/ci.yml", "lines": 503, "sha256": "f511dd8e71f2e05e18d190ced31ff0341a1303a86cfea9a63c41d7fb95815753"},
+    "plan-M2-exec_probe.go.txt": {"dest": "host/broker/exec_probe.go", "lines": 913, "sha256": "96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4"},
+    "plan-M2-exec_probe_test.go.txt": {"dest": "host/broker/exec_probe_test.go", "lines": 933, "sha256": "e35784db17623df899e573096edf41ea4b205dbb4975701380594082e8181c5e"},
+    "plan-M2-ci.yml.txt": {"dest": ".github/workflows/ci.yml", "lines": 503, "sha256": "daf57b6e168f616cd99e370df8ded5c853df72207c3cc5ec248110702c0ecead"},
+    "plan-run-mutants.sh.txt": {"role": "mutation runner: bash $BANK/plan-run-mutants.sh.txt M1|M2", "sha256": "6cf4ff4fe720fddf174a40b2e7f39a43be034eb8aa42e24e60c70ecec5f52610"},
+    "plan-base-SHA256SUMS.txt / plan-M1-SHA256SUMS.txt / plan-M2-SHA256SUMS.txt": {"role": "shasum -a 256 -c inputs, repo-relative paths"},
+    "plan-M1.diff.txt / plan-M2.diff.txt": {"role": "review only; never applied"},
+    "plan-planner-validation.txt / plan-planner-mutants-M1.txt / plan-planner-mutants-M2.txt": {"role": "planner's measured runs"}
+  },
+  "executor_constraints": [
+    "write no Go/YAML: cp banked files, then shasum -a 256 -c the milestone's SHA256SUMS; any non-OK line is a STOP",
+    "base check before M1: shasum -a 256 -c $BANK/plan-base-SHA256SUMS.txt (3 OK) or STOP",
+    "mutants only via bash $BANK/plan-run-mutants.sh.txt M1|M2 (refuses to start unless exec_probe.go equals the banked copy; restores by cp; exits 3 on restore mismatch); NOT-APPLIED / BUILD-FAILED / RESTORE MISMATCH is a STOP",
+    "git: one commit per milestone + one evidence commit; git add of named files only (never -A or .); no push, PR, amend, rebase, stash, checkout -- file",
+    "do not edit the design, the plan, the JSON, any plan-*.txt, docs/QUICKSTART.md, design_docs/world-mission*.md, tools/launchd/*, any skill, go.mod; never touch the main checkout or ~/.ailang/state/mission-v1*",
+    "no t.Parallel(); do not set WORLD_EXEC_SRT_NODE_MODULES",
+    "shell is zsh: run loops under bash -c; never 'cmd | tail; echo rc=$?'",
+    "go build ./... is not a compile fence for _test.go: use go test -run '^$' ./host/broker/",
+    "bound every go test with perl -e 'alarm N; exec @ARGV' and a 590000 ms Bash timeout; rc=142 -> re-run once, then STOP; one package-scale go test at a time",
+    "copy -run regexes from the plan's fenced blocks, never from table cells"
+  ],
+  "gates": [
+    {"id": "G1", "cmd": "gofmt -l host/broker/", "pass": "empty"},
+    {"id": "G2", "cmd": "go vet ./host/broker/", "pass": "rc 0"},
+    {"id": "G3", "cmd": "perl -e 'alarm 300; exec @ARGV' go test -run '^$' ./host/broker/", "pass": "rc 0, ok [no tests to run]"},
+    {"id": "G4", "cmd": "perl -e 'alarm 570; exec @ARGV' sh -c 'go build ./... && go test -count=1 -v ./host/broker/'", "pass": "rc 0; top-level PASS/FAIL/SKIP = 334/0/30 after M1, 335/0/30 after M2 (design V3 baseline 333/0/30). If the ONLY failure is TestExecProtectedCheckTimeout/reserve-after-before, re-run it alone -count=3; 3/3 PASS = known load flake, record both; anything else is a STOP"},
+    {"id": "G5", "cmd": "perl -e 'alarm 570; exec @ARGV' go test -race ./host/broker/ -run '^TestExecProbeReverse|^TestExecProbeChildListener|^TestExecProbeForeignListener' -count=1 -v", "pass": "rc 0, 0 DATA RACE, 11 top-level PASS", "from": "M2"},
+    {"id": "G6", "cmd": "perl -e 'alarm 570; exec @ARGV' go test ./host/broker/ -run '^TestExecProbeReverse|^TestExecProbeChildListener' -count=20 -v; then T10 -count=3000 under run-load.sh.txt (32 yes)", "pass": "each of 10 names '^--- PASS: <name> ' x20, 0 FAIL; T10 3000 PASS, 0 FAIL, 'load runner rc=0 yes-alive-after=0', pgrep -x yes = 0", "from": "M2"},
+    {"id": "G7", "cmd": "perl -e 'alarm 570; exec @ARGV' ./scripts/verify_ail.sh", "pass": "rc 0; '✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass'", "from": "M2"},
+    {"id": "G8", "cmd": "actionlint .github/workflows/ci.yml && ruby -ryaml -e 'YAML.load_file(\".github/workflows/ci.yml\"); puts \"yaml ok\"'", "pass": "rc 0, yaml ok"},
+    {"id": "G9", "cmd": "git diff --name-only", "pass": "before each milestone commit: exactly the three scope files"}
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "F2: pin execProbeHelloWait from both sides (T10); P1 execProbePollEvery; P2 SILENT text names the wait; T7 extension; CI gains T10",
+      "files": ["host/broker/exec_probe.go", "host/broker/exec_probe_test.go", ".github/workflows/ci.yml"],
+      "diff": "exec_probe.go +6/-3; exec_probe_test.go +87/-0; ci.yml 1/1",
+      "steps": [
+        "cp $BANK/plan-M1-exec_probe.go.txt host/broker/exec_probe.go; cp $BANK/plan-M1-exec_probe_test.go.txt host/broker/exec_probe_test.go; cp $BANK/plan-M1-ci.yml.txt .github/workflows/ci.yml",
+        "shasum -a 256 -c $BANK/plan-M1-SHA256SUMS.txt => 3 OK"
+      ],
+      "tests": [
+        "TestExecProbeReverseHelloWaitBounds (T10; rows slow-child -> {child}, slow-mux -> {foreign}; floor execProbeHelloFloor=250ms via helloConn simulated arrival; ceiling execProbeListenMS*ms - execProbePollEvery)",
+        "TestExecProbeReverseLegSilentHolderRefusesSticky (T7, extended: Why contains \"answered nothing to World's hello within <execProbeHelloWait.Milliseconds()> ms;\")"
+      ],
+      "acceptance_commands": [
+        "G1", "G2", "G3", "G8",
+        "grep -c 'TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds\"' .github/workflows/ci.yml => 1",
+        "go test ./host/broker/ -run '^TestExecProbeReverse|^TestExecProbeChildListener|^TestExecProbeForeignListener' -count=1 -v => 10 top-level PASS, 34 subtest PASS, 0 FAIL, 0 SKIP",
+        "G4 => 334/0/30",
+        "bash $BANK/plan-run-mutants.sh.txt M1 => the 13 '==' lines of plan M1.3; restored sha256 6e9c8315...",
+        "G9"
+      ],
+      "mutations": [
+        {"id": "K1 (=O8)", "edit": "const execProbeHelloWait = 5 * time.Millisecond", "must_fail_test": "TestExecProbeReverseHelloWaitBounds/{slow-child,slow-mux}", "planner": "RED 3 FAIL: exec_probe_test.go:911: an answer 250ms after the hello: seen {child:false foreign:false silent:true} ...; want {child:true ...}, not silent"},
+        {"id": "K2", "edit": "= 249 * time.Millisecond", "must_fail_test": "T10 both rows", "planner": "RED 3 FAIL, :911"},
+        {"id": "K2c (control)", "edit": "= 250 * time.Millisecond / = 950 * time.Millisecond", "must_pass_test": "T10", "planner": "GREEN / GREEN"},
+        {"id": "K3", "edit": "= 951 * time.Millisecond", "must_fail_test": "T10 both rows", "planner": "RED 3 FAIL: :914: hello deadline at stop+950.905583ms (sets 1); want a deadline no later than stop+950ms"},
+        {"id": "K4", "edit": "= 60 * time.Second", "must_fail_test": "T10 both rows", "planner": "RED 3 FAIL: :914: stop+59.999897916s; T6/silent wall-clock red is design V4, not re-run (D-9)"},
+        {"id": "K5", "edit": "SetDeadline line in classifyReverseDial -> comment", "must_fail_test": "T10 both rows", "planner": "RED 3 FAIL: :914: ... (sets 0)"},
+        {"id": "K7", "edit": "P2 reverted to the literal 'within 500 ms' AND execProbeHelloWait = 400 * time.Millisecond", "must_fail_test": "TestExecProbeReverseLegSilentHolderRefusesSticky/{silent-attempt-1,silent-after-chatty,reset-holder}", "planner": "RED 4 FAIL: exec_probe_test.go:669: Why = \"... within 500 ms; ...\"; want it to contain \"answered nothing to World's hello within 400 ms;\""},
+        {"id": "K9", "edit": "const execProbeListenMS = 500", "must_fail_test": "T10 both rows", "planner": "RED 3 FAIL: :914: stop+499.815416ms ... no later than stop+450ms (intended coupling)"},
+        {"id": "K8 (control)", "edit": "time.After(execProbePollEvery) -> time.After(50 * time.Millisecond)", "must_pass_test": "T10", "planner": "GREEN (behaviour-identical; not a mutant)"},
+        {"id": "R-M1 (control, planner-added, D-1)", "edit": "P2 reverted alone (wait 500)", "must_pass_test": "T7", "planner": "GREEN (P2 byte-identical at 500 ms)"}
+      ],
+      "commit": "fix(row 230 M1): pin execProbeHelloWait from both sides (T10); SILENT text names the wait",
+      "status": "planned"
+    },
+    {
+      "id": "M2",
+      "title": "F3 + record: T11 structural c.resume() pin (S6); P3 and P4 comments; CI gains T11; AC-STABLE; full gates",
+      "files": ["host/broker/exec_probe.go", "host/broker/exec_probe_test.go", ".github/workflows/ci.yml"],
+      "diff": "exec_probe.go +29/-1 (comments only, 0 non-comment lines); exec_probe_test.go +15/-0; ci.yml 1/1",
+      "steps": [
+        "cp $BANK/plan-M2-exec_probe.go.txt host/broker/exec_probe.go; cp $BANK/plan-M2-exec_probe_test.go.txt host/broker/exec_probe_test.go; cp $BANK/plan-M2-ci.yml.txt .github/workflows/ci.yml",
+        "shasum -a 256 -c $BANK/plan-M2-SHA256SUMS.txt => 3 OK"
+      ],
+      "tests": [
+        "TestExecProbeChildListenerDrainsTheHello (T11; exactly one net.createServer( in execProbeScript, and it is net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\\n')}))"
+      ],
+      "acceptance_commands": [
+        "G1", "G2", "G3", "G8",
+        "grep -c 'TestExecProbeReverseHelloWaitBounds TestExecProbeChildListenerDrainsTheHello\"' .github/workflows/ci.yml => 1",
+        "go test ./host/broker/ -run '^TestExecProbeReverse|^TestExecProbeChildListener|^TestExecProbeForeignListener' -count=1 -v => 11 top-level PASS, 34 subtest PASS, 0 FAIL, 0 SKIP",
+        "G5", "G6", "G4 => 335/0/30", "G7",
+        "bash $BANK/plan-run-mutants.sh.txt M2 => the 13 M1 '==' lines + control-T11 pass + K6 fail; restored sha256 96f33172...",
+        "G9"
+      ],
+      "mutations": [
+        {"id": "K6 (=O10)", "edit": "net.createServer(c=>{c.resume();c.end( -> net.createServer(c=>{c.end(", "must_fail_test": "TestExecProbeChildListenerDrainsTheHello", "planner": "RED 1 FAIL: exec_probe_test.go:931: the listen op's connection handler is not net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\\n')})"}
+      ],
+      "commit": "test(row 230 M2): pin the child listener's c.resume() (T11); document the wait bounds and net6 ordering",
+      "status": "planned"
+    }
+  ],
+  "evidence_commit": {
+    "files": ["$BANK/executor-M0-base.txt", "$BANK/executor-M1-mutants.txt", "$BANK/executor-M2-mutants.txt", "$BANK/executor-M2-stable.txt", "$BANK/executor-summary.txt"],
+    "message": "evidence(row 230): executor gates, mutation drill K1-K9, AC-STABLE, full package"
+  },
+  "non_vacuity": "Both milestones' production diffs are behaviour-identical by the design's terms (P1/P2 byte-identical at 500 ms; P3/P4 comments), so no test can red on their revert alone (measured: R-M1 GREEN, K8 GREEN, whole-M1 revert = build failure 'undefined: execProbePollEvery', M2 revert -> T11 PASS). Headline reds are measured against the production lines each test pins: T10 on K1, T7 extension on K7, T11 on K6 (D-1).",
+  "planner_measured": {
+    "toolchain": "go1.26.6 darwin/arm64; AILANG v0.41.0; actionlint present",
+    "m1_state": "gofmt empty; vet 0; fence 0; actionlint 0; focused 10/34/0/0; full host/broker 334/0/30 rc 0 217 s (load 5.85->6.76); verdict set = V3 + TestExecProbeReverseHelloWaitBounds",
+    "final_state_96f33172": "gofmt empty; vet 0; fence 0; actionlint 0; YAML ok; go build ./... 0; focused 11/34/0/0; -race 0 races 11 PASS; full host/broker 335/0/30 rc 0 216 s (load 9.91->9.23); verdict set = V3 + T10 + T11; reserve-after-before PASS 8.48 s; verify_ail.sh rc 0 (48 s)",
+    "stability": "AC-STABLE -count=20: 10 names x20, 0 FAIL, 95 s (b93120db: load 36.41->13.21; 96f33172: 9.23->11.18). T10 -count=3000: 3000/0 at 29.27 (no yes), 29.56 and 36.76-37.50 under 32 yes (b93120db); 19.37 and 16.15 under 32 yes (96f33172); yes-alive-after=0 every time",
+    "mutations": "every K red on its named killer with the listed assertion; every control green; restored sha after every mutant (plan-planner-mutants-M1.txt, plan-planner-mutants-M2.txt)"
+  },
+  "controller_only": [
+    "full ./scripts/verify_go.sh (plain and race legs; repo-wide go test ./...)",
+    "AC-CI: PR's linux step 8 must print '--- PASS: TestExecProbeReverseHelloWaitBounds ' and '--- PASS: TestExecProbeChildListenerDrainsTheHello '",
+    "AC-LINUX-F3 (design §3.3, non-blocking) on ubuntu-24.04, T11 excluded from the mutant step-8 run (or branch cut from the M1 commit)",
+    "file the net6-hoist successor row (design §3.4); carry §3.4/§3.5 verdicts + triggers into the charter row's closing note; move the design to implemented/"
+  ],
+  "deviations": [
+    "D-1 non-vacuity vs behaviour-identical production diffs: measured and recorded instead (R-M1, K8, whole-M1 compile error, M2 revert green); headline reds T10/K1, T7ext/K7, T11/K6",
+    "D-2 T10 concretised: firstDialReturns closure body, local ceiling var, t.Errorf for both checks (prototype form)",
+    "D-3 T7 extension is a separate t.Fatalf with the longer substring (V13 form) so K7 fires at :669",
+    "D-4 pollLoopback doc comment 'every 50 ms' -> 'every execProbePollEvery' (M1; not in design §7 site list)",
+    "D-5 P3 wording: c.resume() 'is not what avoids a reset at close', darwin-scoped, Linux unmeasured; the hello-wait doc comment lands in M2 per design §6",
+    "D-6 AC-GATE: executor runs go build ./... + full host/broker + fence + vet + verify_ail.sh; repo-wide go test ./... is the controller's verify_go.sh",
+    "D-7 LOC: exec_probe.go +35/-4 (code +6/-3) vs design +12/-3; tests +102 vs +90",
+    "D-8 the executor commits (per milestone + evidence), unlike row 232's controller-commits plan",
+    "D-9 K4's T6/silent wall-clock killer not re-run (design V4 is the record; T10 is the pin)",
+    "D-10 focused runs add ^TestExecProbeForeignListener (T6); AC-STABLE keeps the design's regex",
+    "D-11 P3's c.resume() paragraph re-worded after the first final-state runs (b93120db -> 96f33172, comment lines only); every check re-run on 96f33172 with the same results"
+  ],
+  "unmeasured": [
+    "all Linux behaviour: AC-LINUX-F3, CI step 8 PASS lines for T10/T11 (controller)",
+    "repo-wide go test ./... and verify_go.sh race leg (controller)",
+    "T6/silent under K4 at this head (design V4 only)",
+    "the executor's own reproduction (this plan predicts it)"
+  ],
+  "out_of_scope": "net6 hoist (successor row), cross-profile barrier, collision-rate infrastructure (R4 watch), any change to execProbeListenMS, cadence, dial timeout, judgeReverse or refusal bytes; QUICKSTART; .ail",
+  "status": "planned"
+}

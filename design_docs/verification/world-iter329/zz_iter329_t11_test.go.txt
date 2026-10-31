@@ -1,0 +1,20 @@
+package broker
+
+// iteration-329 designer scratch (row 230, F3): the prototype of T11, a STRUCTURAL
+// pin (S6-labelled: it pins the text of the child's connection handler; it does not
+// discharge a behavioural claim). Copied into host/broker, run, deleted.
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestZZIter329ChildListenerDrainsTheHello(t *testing.T) {
+	const handler = "net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\\n')})"
+	if n := strings.Count(execProbeScript, "net.createServer("); n != 1 {
+		t.Fatalf("execProbeScript has %d net.createServer( calls, want exactly 1 (the listen op)", n)
+	}
+	if !strings.Contains(execProbeScript, handler) {
+		t.Fatalf("the listen op's connection handler is not %s", handler)
+	}
+}

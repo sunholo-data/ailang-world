@@ -1,0 +1,7 @@
+base sha 390c74e841f26a12
+control rc=0
+110:const execProbeHelloWait = 5 * time.Millisecond
+f2-5ms rc=0
+restored sha 390c74e841f26a12
+design_docs/verification/world-iter329/out/fullpkg-control.txt PASS=333 FAIL=0 SKIP=30 tail=ok  	github.com/sunholo-data/ailang-world/host/broker	235.024s
+design_docs/verification/world-iter329/out/fullpkg-f2-5ms.txt PASS=333 FAIL=0 SKIP=30 tail=ok  	github.com/sunholo-data/ailang-world/host/broker	224.279s

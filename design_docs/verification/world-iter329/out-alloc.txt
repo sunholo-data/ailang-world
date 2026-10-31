@@ -1,0 +1,7 @@
+    zz_iter329_alloc_test.go:43: ZZALLOC picks=200000 per phase; held=64: hits-on-LIVE-ports=0 (distinct ports 16290); same 64 released: hits=768 (distinct 16354)
+--- PASS: TestZZIter329AllocatorSkipsLivePorts (6.06s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	6.415s
+net.inet.ip.portrange.first: 49152
+net.inet.ip.portrange.last: 65535
+net.inet.ip.portrange.hifirst: 49152
+net.inet.ip.portrange.hilast: 65535

@@ -1,0 +1,92 @@
+--- a/host/broker/exec_probe.go
++++ b/host/broker/exec_probe.go
+@@ -65,6 +65,15 @@
+ // srt's proxy environment (a direct dial when there is none, as curl would);
+ // listen binds 127.0.0.1:<port> for <ms> (arg "<port>:<ms>:<nonce>"), and
+ // answers every accept with "WORLD-PROBE-NONCE <nonce>".
++//
++// The listen op's c.resume() is socket hygiene in the child (row 230 §2): it
++// consumes World's hello, so the accepted socket's 'end' and 'close' fire and
++// it is released before the process exits. It is not what avoids a reset at
++// close (the earlier reading): node reads the hello out of the kernel into its
++// own stream buffer whether or not anyone consumes it (measured on darwin), so
++// no unread kernel data is left at close. No host-visible difference was
++// measured on darwin; Linux is unmeasured (AC-LINUX-F3).
++// TestExecProbeChildListenerDrainsTheHello pins the handler.
+ const execProbeScript = `const fs=require('fs'),net=require('net');
+ const say=s=>process.stdout.write(s+'\n');const code=e=>(e&&e.code)||'EUNKNOWN';
+ function connect(port){return new Promise(r=>{const s=net.connect(+port,'127.0.0.1');
+@@ -106,7 +115,16 @@
+ // HTTP 400 (design V23); a listener that answers nothing is "silent".
+ const execProbeHello = "WORLD-PROBE-HELLO\n"
+ 
+-// execProbeHelloWait bounds the read of the answer to the hello.
++// execProbeHelloWait bounds the read of the answer to the hello. It has two
++// bounds (row 230 §2), pinned by TestExecProbeReverseHelloWaitBounds:
++//   - floor 250 ms: the wait must admit a legitimate answer. srt's mux
++//     answered in at most 229.6 ms at load; an answer after the deadline
++//     reads as silent, a sticky refusal, so startup would be refused falsely.
++//   - ceiling execProbeListenMS less execProbePollEvery (950 ms): the first
++//     connected dial lands at most one poll period after the child binds,
++//     and its deadline must fall inside the hold, or a silent holder's exit
++//     reads as a clean EOF (foreign, retried) instead of silent. The poll
++//     ignores ctx, so the ceiling also bounds stop()'s wait.
+ const execProbeHelloWait = 500 * time.Millisecond
+ 
+ // execProbePollEvery is the reverse leg's dial cadence (pollLoopback).
+@@ -226,6 +244,12 @@
+ 	var wg sync.WaitGroup
+ 	for i, p := range profiles {
+ 		wg.Add(1)
++		// Profiles probe concurrently. Every profile binds its arm-6 net6
++		// listener (in probe) before its own Run A, so no profile's reverse-leg
++		// pick can return another profile's live net6 port (bind(0) never
++		// returns a held port; row 230 V15). Moving that bind later, or adding
++		// a slow step before it, reopens the cross-profile collision (row 230
++		// §3.4, R1).
+ 		go func() {
+ 			defer wg.Done()
+ 			errs[i] = probeExecProfile(ctx, cfg, env, p)
+@@ -455,6 +479,10 @@
+ 
+ 	// Arm 6's live listener and its control (V37): an unsandboxed connect
+ 	// is accepted, so the listener is proved live before any refusal counts.
++	// It is bound here, before Run A, and held until probe returns: that
++	// ordering is what keeps a concurrent profile's reverse-leg pick off this
++	// port (row 230 §3.4, R1). Do not move the bind later or put a slow step
++	// before it.
+ 	net6 := newProbeListener()
+ 	defer net6.close()
+ 	netCtl := net6.control()
+--- a/host/broker/exec_probe_test.go
++++ b/host/broker/exec_probe_test.go
+@@ -916,3 +916,18 @@
+ 		})
+ 	}
+ }
++
++// T11 (row 230 design §3.2), S6 label: a STRUCTURAL pin of the child's socket
++// hygiene (execProbeScript's comment). It pins the text of the listen op's
++// connection handler; it does not discharge a behavioural claim, since no
++// host-visible effect of c.resume() was measured (design V5, V10, V12).
++// Removing c.resume() must be an explicit decision that deletes this test too.
++func TestExecProbeChildListenerDrainsTheHello(t *testing.T) {
++	const handler = "net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\\n')})"
++	if n := strings.Count(execProbeScript, "net.createServer("); n != 1 {
++		t.Fatalf("execProbeScript has %d net.createServer( calls, want exactly 1 (the listen op)", n)
++	}
++	if !strings.Contains(execProbeScript, handler) {
++		t.Fatalf("the listen op's connection handler is not %s", handler)
++	}
++}
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -244,7 +244,7 @@
+           [ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }
+           tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"
+           tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"
+-          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvivesAForeignAttempt TestExecProbeReverseLegNoTokenIsNotRetried TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds"
++          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvivesAForeignAttempt TestExecProbeReverseLegNoTokenIsNotRetried TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds TestExecProbeChildListenerDrainsTheHello"
+           tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual TestExecSrtWorktreeDelta"
+           log="$RUNNER_TEMP/exec-srt-verbose.log"
+           rc=0

@@ -1,0 +1,84 @@
+# Row 230 planner validation (iteration 329). Scratch: git worktree add --detach ../.planner-scratch-iter329 762d8cb4 (sibling of the repo, removed after).
+# go1.26.6 darwin/arm64; AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); 16 cores.
+
+## M1 state (banked plan-M1-*: exec_probe.go 6e9c8315..., exec_probe_test.go 008c2a8d..., ci.yml f511dd8e...)
+gofmt -l host/broker/: empty; go vet ./host/broker/: rc 0; go test -run '^$': rc 0; actionlint rc 0; ci anchor count 1
+focused (^TestExecProbeReverse|^TestExecProbeChildListener|^TestExecProbeForeignListener, -count=1 -v): rc 0, 10 top PASS, 34 subtest PASS, 0 FAIL, 0 SKIP
+full go test -count=1 -v ./host/broker/: rc=0 secs=217; PASS=334 FAIL=0 SKIP=30; ok  	github.com/sunholo-data/ailang-world/host/broker	216.586s
+  uptime before/after:
+     6:32  up 4 days, 13:27, 4 users, load averages: 5.85 9.70 12.57
+     6:36  up 4 days, 13:31, 4 users, load averages: 6.76 7.57 10.96
+  top-level verdict diff vs design V3 control summary (333/0/30):
+    94a95
+    > --- PASS: TestExecProbeReverseHelloWaitBounds
+base exec_probe.go + M1 test file: host/broker/exec_probe_test.go:896:28: undefined: execProbePollEvery (build failed: whole-M1-prod revert is a compile error, not a red)
+mutation drill M1: plan-planner-mutants-M1.txt
+
+## M2 state, first final candidate (exec_probe.go b93120db..., exec_probe_test.go e35784db..., ci.yml daf57b6e...)
+# The banked plan-M2-exec_probe.go.txt is 96f33172...: P3's c.resume() paragraph re-worded after these runs (comment lines only).
+gofmt empty; vet rc 0; fence rc 0; actionlint rc 0; YAML ok; ci anchor count 1; go build ./... rc 0
+M1->M2 exec_probe.go: 29 changed lines, 0 non-comment (diff | grep -v '^[<>][[:space:]]*//' is empty)
+M1 exec_probe.go + M2 test file (M2 prod revert alone): --- PASS: TestExecProbeChildListenerDrainsTheHello (0.00s) (comment-only diff; T11 is non-vacuous only against K6)
+focused: rc 0, 11 top PASS, 34 subtest PASS, 0 FAIL, 0 SKIP
+full go test -count=1 -v ./host/broker/: rc=0 secs=202; PASS=335 FAIL=0 SKIP=30; ok  	github.com/sunholo-data/ailang-world/host/broker	200.577s
+  uptime before/after:
+     6:27  up 4 days, 13:21, 4 users, load averages: 12.47 19.02 16.23
+     6:30  up 4 days, 13:25, 4 users, load averages: 5.83 12.20 13.87
+  top-level verdict diff vs design V3 control summary:
+    87a88
+    > --- PASS: TestExecProbeChildListenerDrainsTheHello
+    94a96
+    > --- PASS: TestExecProbeReverseHelloWaitBounds
+  TestExecProtectedCheckTimeout/reserve-after-before: --- PASS (8.42s) (M1 state: --- PASS 8.54s); the known load-sensitive local red did not occur
+race (-race -count=1 same focused regex): rc 0, DATA RACE 0, 11 top PASS; ok  	github.com/sunholo-data/ailang-world/host/broker	12.499s
+verify_ail.sh: rc 0, 47 s; ✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+mutation drill M2 (all K): plan-planner-mutants-M2.txt
+
+## Stability (on b93120db, the comment-only predecessor of the banked 96f33172)
+T10 -count=3000 -v, host already loaded by other work (uptime 6:24 load 29.27): rc 0, 3000 PASS, 0 FAIL
+T10 -count=3000 under run-load.sh.txt (32 yes), started 2 s after the yes: load averages: 29.56 20.20 15.84; 3000 PASS, 0 FAIL; load runner rc=0 yes-alive-after=0
+T10 -count=3000 under 32 yes after a 20 s warm-up: start load averages: 36.76 22.90 16.99, end load averages: 37.50 23.28 17.16; 3000 PASS, 6000 subtest PASS, 0 FAIL; load runner rc=0 yes-alive-after=0
+AC-STABLE go test -run '^TestExecProbeReverse|^TestExecProbeChildListener' -count=20 -v: rc 0, 95 s, load 36.41 at start, 13.21 at end; 0 FAIL, 0 SKIP:
+    TestExecProbeChildListenerDrainsTheHello PASS=20
+    TestExecProbeReverseDialErrIsSilent PASS=20
+    TestExecProbeReverseHelloWaitBounds PASS=20
+    TestExecProbeReverseLegChattyForeignHolderIsRetried PASS=20
+    TestExecProbeReverseLegExhaustionRefusesDistinctly PASS=20
+    TestExecProbeReverseLegJudge PASS=20
+    TestExecProbeReverseLegNoTokenIsNotRetried PASS=20
+    TestExecProbeReverseLegRealReachSurvivesAForeignAttempt PASS=20
+    TestExecProbeReverseLegSilentHolderRefusesSticky PASS=20
+    TestExecProbeReversePollRecordsConnectReset PASS=20
+
+## Final sha re-runs (banked plan-M2-exec_probe.go.txt 96f33172..., test e35784db..., ci daf57b6e...)
+gofmt empty; vet rc 0; fence rc 0; focused rc 0: 11 top PASS, 34 subtest PASS, 0 FAIL
+M1->M2 exec_probe.go non-comment changed lines: 0
+M1 exec_probe.go + M2 test file: --- PASS: TestExecProbeChildListenerDrainsTheHello (M2 prod revert alone stays green)
+mutation drill M2: plan-planner-mutants-M2.txt (restored 96f33172...)
+full go test -count=1 -v ./host/broker/: rc=0 secs=216; PASS=335 FAIL=0 SKIP=30; ok  	github.com/sunholo-data/ailang-world/host/broker	214.822s
+  uptime before/after:
+     6:39  up 4 days, 13:34, 4 users, load averages: 9.91 8.38 10.58
+     6:43  up 4 days, 13:37, 4 users, load averages: 9.23 8.11 9.92
+  top-level verdict diff vs design V3 control summary:
+    87a88
+    > --- PASS: TestExecProbeChildListenerDrainsTheHello
+    94a96
+    > --- PASS: TestExecProbeReverseHelloWaitBounds
+  --- PASS: TestExecProtectedCheckTimeout/reserve-after-before (8.48s)
+AC-STABLE -count=20: rc=0 secs=95; 0 FAIL, 0 SKIP; uptime before/after:
+     6:43  up 4 days, 13:37, 4 users, load averages: 9.23 8.11 9.92
+     6:44  up 4 days, 13:39, 4 users, load averages: 11.18 8.91 10.03
+    TestExecProbeChildListenerDrainsTheHello PASS=20
+    TestExecProbeReverseDialErrIsSilent PASS=20
+    TestExecProbeReverseHelloWaitBounds PASS=20
+    TestExecProbeReverseLegChattyForeignHolderIsRetried PASS=20
+    TestExecProbeReverseLegExhaustionRefusesDistinctly PASS=20
+    TestExecProbeReverseLegJudge PASS=20
+    TestExecProbeReverseLegNoTokenIsNotRetried PASS=20
+    TestExecProbeReverseLegRealReachSurvivesAForeignAttempt PASS=20
+    TestExecProbeReverseLegSilentHolderRefusesSticky PASS=20
+    TestExecProbeReversePollRecordsConnectReset PASS=20
+T10 -count=3000 under 32 yes after a 20 s warm-up: rc=0; start load averages: 19.37 10.95 10.72, end load averages: 19.37 10.95 10.72; 3000 PASS, 0 FAIL; load runner rc=0 yes-alive-after=0
+Executor's exact M2 load snippet (no warm-up) rehearsed: load averages: 16.15 10.95 10.72; 3000 PASS, 0 FAIL; load runner rc=0 yes-alive-after=0; pgrep -x yes after: 0
+race on 96f33172: rc 0, DATA RACE 0, 11 top PASS, 0 FAIL; ok  	github.com/sunholo-data/ailang-world/host/broker	12.142s
+verify_ail.sh on 96f33172: rc 0, 48 s; ✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass

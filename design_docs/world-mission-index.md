@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 329 | 2026-10-31 | row 230 built: arm 6's hello wait pinned from both sides by a deterministic test, the SILENT text derived from the wait, a structural pin on the child's c.re... |
 | 328 | 2026-10-31 | row 231 built: the P0/P3 position and phone predicates become CI-gated marketingcheck subcommands with a parity oracle and generated fixtures; judg... |
 | 327 | 2026-10-30 | dev red at Gate 1 → row 236 built: the finish route's scope-expiry test raced two wall-clock reads across a second edge; daemon clock seam + exact-... |
 | 326 | 2026-10-30 | no pick: rule (d) block report 9; release rows 150/151 still wait on attended steps; dev green at b49ce51a [ADMIN] |

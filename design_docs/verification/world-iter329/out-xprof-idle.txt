@@ -1,0 +1,46 @@
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 89.763875ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=0 n=8 runA=8 picks=8 elapsed=2.988s margin(minPick-maxRunAStart)=821.9ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 68.890875ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=1 n=8 runA=8 picks=8 elapsed=2.849s margin(minPick-maxRunAStart)=655.5ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 94.531875ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=2 n=8 runA=8 picks=8 elapsed=3.072s margin(minPick-maxRunAStart)=710.2ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 84.146291ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=3 n=8 runA=8 picks=8 elapsed=3.019s margin(minPick-maxRunAStart)=572.6ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 102.990333ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=4 n=8 runA=8 picks=8 elapsed=2.812s margin(minPick-maxRunAStart)=649.3ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 73.814667ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=5 n=8 runA=8 picks=8 elapsed=2.929s margin(minPick-maxRunAStart)=662.5ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 87.1395ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=6 n=8 runA=8 picks=8 elapsed=2.992s margin(minPick-maxRunAStart)=998.7ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 98.9255ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=7 n=8 runA=8 picks=8 elapsed=2.973s margin(minPick-maxRunAStart)=578.0ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 124.262708ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=8 n=8 runA=8 picks=8 elapsed=2.803s margin(minPick-maxRunAStart)=578.9ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 105.075208ms
+zz_iter329_xprof_test.go:150: ZZXP mode=passthrough iter=9 n=8 runA=8 picks=8 elapsed=2.978s margin(minPick-maxRunAStart)=791.7ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:153: ZZXP SUMMARY mode=passthrough iters=10 n=8 worst-margin=572.6ms collisions=0
+--- PASS: TestZZIter329CrossProfileOrdering (30.44s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	30.682s
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 104.897125ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=0 n=8 runA=8 picks=8 elapsed=1.094s margin(minPick-maxRunAStart)=226.6ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 121.952125ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=1 n=8 runA=8 picks=8 elapsed=1.318s margin(minPick-maxRunAStart)=275.4ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 124.440709ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=2 n=8 runA=8 picks=8 elapsed=1.715s margin(minPick-maxRunAStart)=344.1ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 117.577166ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=3 n=8 runA=8 picks=8 elapsed=1.452s margin(minPick-maxRunAStart)=332.9ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 93.935083ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=4 n=8 runA=8 picks=8 elapsed=1.842s margin(minPick-maxRunAStart)=516.3ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 91.3785ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=5 n=8 runA=8 picks=8 elapsed=1.698s margin(minPick-maxRunAStart)=349.4ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 104.787708ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=6 n=8 runA=8 picks=8 elapsed=1.63s margin(minPick-maxRunAStart)=216.9ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 80.590417ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=7 n=8 runA=8 picks=8 elapsed=1.492s margin(minPick-maxRunAStart)=220.4ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 97.191ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=8 n=8 runA=8 picks=8 elapsed=1.326s margin(minPick-maxRunAStart)=302.6ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:92: TIMING ArchiveExecSandbox took 75.71275ms
+zz_iter329_xprof_test.go:150: ZZXP mode=noop iter=9 n=8 runA=8 picks=8 elapsed=1.409s margin(minPick-maxRunAStart)=324.2ms pick∩net6=0 profiles-with-accepts>=2=0
+zz_iter329_xprof_test.go:153: ZZXP SUMMARY mode=noop iters=10 n=8 worst-margin=216.9ms collisions=0
+--- PASS: TestZZIter329CrossProfileOrdering (16.07s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	16.329s

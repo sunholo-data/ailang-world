@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Row 230 F2: each hello-wait mutant against the T10 prototype (zz_iter329_f2_test.go), then restore.
+set -u
+cd "$(git rev-parse --show-toplevel)"
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+F=host/broker/exec_probe.go
+orig=$(shasum -a 256 $F | cut -c1-16)
+run() { # $1 label, $2 sed expression or "" for control
+  [ -n "$2" ] && sed -i '' "$2" $F
+  out=$(go test -count=1 -run '^TestZZIter329HelloWait' -v ./host/broker/ 2>&1); rc=$?
+  echo "== $1 rc=$rc :: $(grep -m1 '^const execProbeHelloWait\|SetDeadline(time.Now' $F | head -1 | tr -s ' ')"
+  echo "$out" | grep -E '^(--- |ok|FAIL)|zz_iter329_f2_test.go:[0-9]+:' | sed 's/^/   /'
+  git checkout -- $F
+}
+run control ""
+run "wait-5ms" 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 5 * time.Millisecond/'
+run "wait-249ms" 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 249 * time.Millisecond/'
+run "wait-250ms" 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 250 * time.Millisecond/'
+run "wait-950ms" 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 950 * time.Millisecond/'
+run "wait-951ms" 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 951 * time.Millisecond/'
+run "wait-60s" 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 60 * time.Second/'
+run "no-deadline" 's/^	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))$/	\/\/ no deadline (mutant)/'
+echo "restored sha $(shasum -a 256 $F | cut -c1-16) (base $orig)"

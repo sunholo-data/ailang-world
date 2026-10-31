@@ -1,0 +1,7 @@
+    zz_iter329_f3_test.go:66: ZZF3 variant=resume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:false} : 40
+--- PASS: TestZZIter329RealChildUnderPoll (43.06s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	43.312s
+    zz_iter329_f3_test.go:66: ZZF3 variant=noresume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:false} : 39
+    zz_iter329_f3_test.go:66: ZZF3 variant=noresume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:true} : 1
+--- PASS: TestZZIter329RealChildUnderPoll (44.78s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	45.050s

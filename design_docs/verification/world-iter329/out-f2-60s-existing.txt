@@ -1,0 +1,108 @@
+=== RUN   TestExecProbeReverseLegJudge
+--- PASS: TestExecProbeReverseLegJudge (0.00s)
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 6.683833ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 5.173208ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 6.000083ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 6.153125ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 7.003125ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 5.098917ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 5.498708ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 7.44825ms
+--- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried (1.56s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400 (0.31s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce (0.16s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage (0.16s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close (0.15s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400 (0.29s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce (0.16s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage (0.16s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close (0.17s)
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time
+    exec_probe_test.go:612: TIMING ArchiveExecSandbox took 5.198792ms
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse
+    exec_probe_test.go:612: TIMING ArchiveExecSandbox took 3.111625ms
+--- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly (0.47s)
+    --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time (0.19s)
+    --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse (0.28s)
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/silent-client
+    exec_probe_test.go:631: TIMING ArchiveExecSandbox took 6.154375ms
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/clean
+    exec_probe_test.go:631: TIMING ArchiveExecSandbox took 5.506167ms
+--- PASS: TestExecProbeReverseLegNoTokenIsNotRetried (0.38s)
+    --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried/silent-client (0.25s)
+    --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried/clean (0.14s)
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 6.119917ms
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 6.643083ms
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 5.652084ms
+--- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky (120.42s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (60.03s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (60.21s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.17s)
+=== RUN   TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+    exec_probe_test.go:676: TIMING ArchiveExecSandbox took 74.886083ms
+--- PASS: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (1.36s)
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty
+    exec_probe_test.go:714: TIMING ArchiveExecSandbox took 85.612958ms
+    exec_probe_test.go:725: chatty: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 1; stderr \"node:events:505\\n    throw er; // Unhandled 'error' event\\n    ^\\n\\nError: read ECONNRESET\\n    at TCP.onStreamRead (node:internal/stream_base_commons:221:20)\\nEmitted 'error' event on Socket instance at:\\n    at emitErrorNT (node:internal/streams…\")"
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent
+    exec_probe_test.go:714: TIMING ArchiveExecSandbox took 68.276458ms
+    exec_probe_test.go:725: silent: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\")"
+    exec_probe_test.go:733: silent: arm 6 must carry the silent refusal, not the reached text: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 0; stderr "")
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control
+    exec_probe_test.go:714: TIMING ArchiveExecSandbox took 53.084917ms
+    exec_probe_test.go:725: control: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\")"
+--- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (6.81s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (2.05s)
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent (2.95s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control (1.81s)
+=== RUN   TestExecProbeReverseDialErrIsSilent
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-reset
+=== RUN   TestExecProbeReverseDialErrIsSilent/bare-reset
+=== RUN   TestExecProbeReverseDialErrIsSilent/wrapped-reset
+=== RUN   TestExecProbeReverseDialErrIsSilent/nil
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-refused
+=== RUN   TestExecProbeReverseDialErrIsSilent/real-refused
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-einval
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-aborted
+=== RUN   TestExecProbeReverseDialErrIsSilent/addrnotavail
+=== RUN   TestExecProbeReverseDialErrIsSilent/timeout
+=== RUN   TestExecProbeReverseDialErrIsSilent/deadline-exceeded
+--- PASS: TestExecProbeReverseDialErrIsSilent (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/bare-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/wrapped-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/nil (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-refused (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/real-refused (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-einval (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-aborted (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/addrnotavail (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/timeout (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/deadline-exceeded (0.00s)
+=== RUN   TestExecProbeReversePollRecordsConnectReset
+=== RUN   TestExecProbeReversePollRecordsConnectReset/connect-reset
+=== RUN   TestExecProbeReversePollRecordsConnectReset/refused-only
+=== RUN   TestExecProbeReversePollRecordsConnectReset/einval-then-refused
+--- PASS: TestExecProbeReversePollRecordsConnectReset (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/connect-reset (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/refused-only (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/einval-then-refused (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	131.255s
+FAIL

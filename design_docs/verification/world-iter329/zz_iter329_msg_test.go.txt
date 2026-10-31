@@ -1,0 +1,20 @@
+package broker
+
+// iteration-329 designer scratch (row 230): the SILENT refusal must name the wait it
+// actually used. Today's text hard-codes "500 ms" (exec_probe.go:582). Copied into
+// host/broker, run at control and with execProbeHelloWait = 400 ms, deleted.
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+)
+
+func TestZZIter329SilentTextNamesTheWait(t *testing.T) {
+	p := newRevPicker(t, "silent", "free", "free")
+	why := runReverseLeg(t, revFixture(t, "WORLD-PROBE-BOUND", p))
+	want := fmt.Sprintf("answered nothing to World's hello within %d ms;", execProbeHelloWait.Milliseconds())
+	if !strings.Contains(why, want) {
+		t.Fatalf("Why = %q; want it to contain %q", why, want)
+	}
+}

@@ -1,0 +1,154 @@
+package broker
+
+// iteration-329 designer scratch (row 230, F3 and the F2 floor): World's real
+// child listener (execProbeScript's listen op, run by node UNSANDBOXED, so the
+// host can reach it — the pass-through position), dialled by the production
+// pollLoopback. ZZ_F3_VARIANT=resume|noresume picks the script; noresume removes
+// exactly "c.resume();". ZZ_F3_CYCLES (default 30), ZZ_F3_HOLD ms (default
+// execProbeListenMS). Copied into host/broker, run, deleted.
+
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"os/exec"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+)
+
+func zzScript(t *testing.T) string {
+	s := execProbeScript
+	if os.Getenv("ZZ_F3_VARIANT") == "noresume" {
+		if strings.Count(s, "c.resume();") != 1 {
+			t.Fatalf("want exactly one c.resume(); in execProbeScript")
+		}
+		s = strings.Replace(s, "c.resume();", "", 1)
+	}
+	return s
+}
+
+func zzEnvInt(k string, d int) int {
+	if v, err := strconv.Atoi(os.Getenv(k)); err == nil {
+		return v
+	}
+	return d
+}
+
+func TestZZIter329RealChildUnderPoll(t *testing.T) {
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script, cycles, hold := zzScript(t), zzEnvInt("ZZ_F3_CYCLES", 30), zzEnvInt("ZZ_F3_HOLD", execProbeListenMS)
+	tally := map[string]int{}
+	for i := 0; i < cycles; i++ {
+		port, err := freeLoopbackPort()
+		if err != nil {
+			t.Fatal(err)
+		}
+		nonce, _ := randomHex(16)
+		poll := pollLoopback(port, "WORLD-PROBE-NONCE "+nonce, nil)
+		out, err := exec.Command(node, "-e", script, "--", "listen", fmt.Sprintf("%d:%d:%s", port, hold, nonce)).Output()
+		seen := poll()
+		tok := strings.TrimSpace(string(out))
+		tally[fmt.Sprintf("tok=%s err=%v seen=%+v", tok, err, seen)]++
+	}
+	keys := make([]string, 0, len(tally))
+	for k := range tally {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		t.Logf("ZZF3 variant=%s hold=%d %s : %d", os.Getenv("ZZ_F3_VARIANT"), hold, k, tally[k])
+	}
+}
+
+// The child's answer latency to World's hello: dial, hello, read the nonce
+// line; ZZ_F3_DIALS dials per child (default 500). Reports max and p99.
+func TestZZIter329ChildAnswerLatency(t *testing.T) {
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dials := zzEnvInt("ZZ_F3_DIALS", 500)
+	port, err := freeLoopbackPort()
+	if err != nil {
+		t.Fatal(err)
+	}
+	nonce, _ := randomHex(16)
+	cmd := exec.Command(node, "-e", zzScript(t), "--", "listen", fmt.Sprintf("%d:%d:%s", port, 120000, nonce))
+	stdout, _ := cmd.StdoutPipe()
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
+	if l, _ := bufio.NewReader(stdout).ReadString('\n'); strings.TrimSpace(l) != "WORLD-PROBE-BOUND" {
+		t.Fatalf("child said %q", l)
+	}
+	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+	want := "WORLD-PROBE-NONCE " + nonce + "\n"
+	var lat []time.Duration
+	bad := 0
+	for i := 0; i < dials; i++ {
+		c, err := net.DialTimeout("tcp", addr, 2*time.Second)
+		if err != nil {
+			bad++
+			continue
+		}
+		t0 := time.Now()
+		_ = c.SetDeadline(t0.Add(5 * time.Second))
+		_, _ = c.Write([]byte(execProbeHello))
+		l, err := bufio.NewReader(c).ReadString('\n')
+		d := time.Since(t0)
+		_ = c.Close()
+		if err != nil || l != want {
+			bad++
+			continue
+		}
+		lat = append(lat, d)
+	}
+	sort.Slice(lat, func(i, j int) bool { return lat[i] < lat[j] })
+	if len(lat) == 0 {
+		t.Fatalf("no answers, bad %d", bad)
+	}
+	t.Logf("ZZLAT variant=%s dials=%d ok=%d bad=%d p50=%s p99=%s max=%s", os.Getenv("ZZ_F3_VARIANT"), dials, len(lat), bad,
+		lat[len(lat)/2], lat[len(lat)*99/100], lat[len(lat)-1])
+}
+
+// srt's mux answer latency to World's hello (ZZ_MUX_PORT, a running mux-server.mjs).
+func TestZZIter329MuxAnswerLatency(t *testing.T) {
+	port := os.Getenv("ZZ_MUX_PORT")
+	if port == "" {
+		t.Skip("ZZ_MUX_PORT unset")
+	}
+	dials := zzEnvInt("ZZ_F3_DIALS", 500)
+	var lat []time.Duration
+	bad := 0
+	for i := 0; i < dials; i++ {
+		c, err := net.DialTimeout("tcp", "127.0.0.1:"+port, 2*time.Second)
+		if err != nil {
+			bad++
+			continue
+		}
+		t0 := time.Now()
+		_ = c.SetDeadline(t0.Add(5 * time.Second))
+		_, _ = c.Write([]byte(execProbeHello))
+		l, err := bufio.NewReader(c).ReadString('\n')
+		d := time.Since(t0)
+		_ = c.Close()
+		if err != nil || !strings.HasPrefix(l, "HTTP/1.1 400") {
+			bad++
+			continue
+		}
+		lat = append(lat, d)
+	}
+	sort.Slice(lat, func(i, j int) bool { return lat[i] < lat[j] })
+	if len(lat) == 0 {
+		t.Fatalf("no answers, bad %d", bad)
+	}
+	t.Logf("ZZMUX dials=%d ok=%d bad=%d p50=%s p99=%s max=%s", dials, len(lat), bad, lat[len(lat)/2], lat[len(lat)*99/100], lat[len(lat)-1])
+}

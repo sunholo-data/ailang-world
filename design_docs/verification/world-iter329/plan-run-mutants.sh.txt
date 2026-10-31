@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Row 230 sprint (iteration 329): the mutation drill. Run from the worktree root, AFTER the
+# milestone's banked files are copied into place and sha-checked:
+#   bash design_docs/verification/world-iter329/plan-run-mutants.sh.txt M1 > OUT 2>&1
+#   bash design_docs/verification/world-iter329/plan-run-mutants.sh.txt M2 > OUT 2>&1
+# M1 runs K1-K5, K7, K9 and the in-table controls; M2 (the final state) runs those again plus K6.
+# Each mutant edits ONLY host/broker/exec_probe.go with sed, runs ONLY its killer test, and the
+# file is restored by cp from the milestone's banked copy (plan-<M>-exec_probe.go.txt); the
+# sha256 is re-checked after every mutant and the script exits 3 if it ever differs. It exits 2
+# without touching anything if the file does not start equal to the banked copy. A mutant
+# that fails to compile prints BUILD-FAILED: a protocol error, never a kill.
+set -u
+cd "$(git rev-parse --show-toplevel)" || exit 2
+export AILANG_BIN=${AILANG_BIN:-$HOME/.pinned-ailang/ailang}
+F=host/broker/exec_probe.go
+MS=${1:?usage: plan-run-mutants.sh.txt M1|M2}
+SNAP=design_docs/verification/world-iter329/plan-$MS-exec_probe.go.txt
+[ -f "$SNAP" ] || { echo "no banked copy $SNAP"; exit 2; }
+cmp -s "$F" "$SNAP" || { echo "$F is not the banked $SNAP: copy it into place first"; exit 2; }
+base=$(shasum -a 256 "$F" | cut -d' ' -f1)
+echo "start sha256 $base"
+T10='^TestExecProbeReverseHelloWaitBounds$'
+T7='^TestExecProbeReverseLegSilentHolderRefusesSticky$'
+T11='^TestExecProbeChildListenerDrainsTheHello$'
+WAIT='s/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = '
+run() { # $1 id, $2 killer -run regex, $3.. sed expressions applied in order
+  id=$1; rx=$2; shift 2
+  for e in "$@"; do sed -i '' "$e" "$F"; done
+  if [ $# -gt 0 ] && cmp -s "$F" "$SNAP"; then echo "== $id NOT-APPLIED (sed matched nothing)"; return; fi
+  out=$(go test -count=1 -run "$rx" -v ./host/broker/ 2>&1); rc=$?
+  if echo "$out" | grep -q 'build failed\|\[setup failed\]\|cannot use\|undefined:\|imported and not used'; then
+    echo "== $id BUILD-FAILED rc=$rc"; echo "$out" | head -5 | sed 's/^/   /'
+  else
+    echo "== $id rc=$rc fail=$(echo "$out" | grep -c -- '--- FAIL') pass=$(echo "$out" | grep -c -- '--- PASS')"
+    echo "$out" | grep -E '^(--- |    --- )|exec_probe_test\.go:[0-9]+:' | grep -v 'TIMING ' | sed 's/^/   /'
+  fi
+  cp "$SNAP" "$F"
+  now=$(shasum -a 256 "$F" | cut -d' ' -f1)
+  [ "$now" = "$base" ] || { echo "RESTORE MISMATCH $now != $base"; exit 3; }
+}
+if [ "$MS" = M1 ] || [ "$MS" = M2 ]; then
+  run control-T10 "$T10"
+  run K1-wait-5ms "$T10" "${WAIT}5 * time.Millisecond/"
+  run K2-wait-249ms "$T10" "${WAIT}249 * time.Millisecond/"
+  run K2c-wait-250ms "$T10" "${WAIT}250 * time.Millisecond/"
+  run K2c-wait-950ms "$T10" "${WAIT}950 * time.Millisecond/"
+  run K3-wait-951ms "$T10" "${WAIT}951 * time.Millisecond/"
+  run K4-wait-60s "$T10" "${WAIT}60 * time.Second/"
+  run K5-no-deadline "$T10" 's/^	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))$/	\/\/ no deadline (mutant K5)/'
+  run K9-hold-500 "$T10" 's/^const execProbeListenMS = 1000$/const execProbeListenMS = 500/'
+  run K8-poll-literal "$T10" 's/case <-time.After(execProbePollEvery):/case <-time.After(50 * time.Millisecond):/'
+  run control-T7 "$T7"
+  run K7-literal-text-wait-400ms "$T7" \
+    "s/within %d ms; World cannot tell it from the child's listener, so it refuses\", port, execProbeHelloWait.Milliseconds())/within 500 ms; World cannot tell it from the child's listener, so it refuses\", port)/" \
+    "${WAIT}400 * time.Millisecond/"
+  run R-M1-P2-reverted-alone "$T7" \
+    "s/within %d ms; World cannot tell it from the child's listener, so it refuses\", port, execProbeHelloWait.Milliseconds())/within 500 ms; World cannot tell it from the child's listener, so it refuses\", port)/"
+fi
+if [ "$MS" = M2 ]; then
+  run control-T11 "$T11"
+  run K6-no-resume "$T11" "s/net.createServer(c=>{c.resume();c.end(/net.createServer(c=>{c.end(/"
+fi
+echo "restored sha256 $(shasum -a 256 "$F" | cut -d' ' -f1) (start $base)"

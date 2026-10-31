@@ -1,0 +1,18 @@
+// F3 probe: run World's execProbeScript `listen` op verbatim (extracted from exec_probe.go) with and
+// without c.resume(), dial it like pollLoopback (hello, read the nonce line, close), and time the
+// child's exit relative to its listen window. Usage: node <this> <exec_probe.go> resume|noresume N holdms
+const fs=require('fs'),net=require('net'),{spawn}=require('child_process');
+const src=fs.readFileSync(process.argv[2],'utf8');const mode=process.argv[3];const N=+process.argv[4];const hold=+process.argv[5];
+let script=src.split('const execProbeScript = `')[1].split('`\n')[0];
+if(mode==='noresume'){if(!script.includes('c.resume();'))throw new Error('no c.resume() to remove');script=script.replace('c.resume();','')}
+function cycle(){return new Promise(done=>{const srv=net.createServer();srv.listen(0,'127.0.0.1',()=>{const port=srv.address().port;srv.close(()=>{
+ const t0=Date.now();const ch=spawn(process.execPath,['-e',script,'--','listen',port+':'+hold+':abc'],{stdio:['ignore','pipe','pipe']});
+ let out='',res={nonce:0,other:0,err:{},exitMs:0,tokens:''};
+ ch.stdout.on('data',d=>{out+=d;if(out.includes('WORLD-PROBE-BOUND')&&!res.dialed){res.dialed=1;const s=net.connect(port,'127.0.0.1');let b='';
+   s.on('connect',()=>s.write('WORLD-PROBE-HELLO\n'));
+   s.on('data',d=>{b+=d;if(b.includes('\n')){if(b==='WORLD-PROBE-NONCE abc\n')res.nonce++;else res.other++;s.destroy()}});
+   s.on('error',e=>{res.err[e.code]=(res.err[e.code]||0)+1})}});
+ ch.on('exit',()=>{res.exitMs=Date.now()-t0;res.tokens=out.trim().split('\n').join('|');done(res)})})})})}
+(async()=>{const exits=[];let nonce=0,other=0,err={},toks={};for(let i=0;i<N;i++){const r=await cycle();exits.push(r.exitMs);nonce+=r.nonce;other+=r.other;
+ for(const k in r.err)err[k]=(err[k]||0)+r.err[k];toks[r.tokens]=(toks[r.tokens]||0)+1}
+ exits.sort((a,b)=>a-b);console.log(JSON.stringify({mode,N,hold,nonce,other,err,tokens:toks,exitMsMin:exits[0],exitMsMax:exits[exits.length-1]}))})();

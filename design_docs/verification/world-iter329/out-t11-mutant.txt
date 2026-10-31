@@ -1,0 +1,10 @@
+== control
+--- PASS: TestZZIter329ChildListenerDrainsTheHello (0.00s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.342s
+== mutant F3 (c.resume() removed): 0 occurrences left
+    zz_iter329_t11_test.go:18: the listen op's connection handler is not net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')})
+--- FAIL: TestZZIter329ChildListenerDrainsTheHello (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.339s
+FAIL
+restored 390c74e841f26a12

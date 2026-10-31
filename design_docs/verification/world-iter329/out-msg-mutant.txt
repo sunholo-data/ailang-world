@@ -1,0 +1,12 @@
+== control (500 ms)
+    zz_iter329_msg_test.go:15: TIMING ArchiveExecSandbox took 3.76675ms
+--- PASS: TestZZIter329SilentTextNamesTheWait (0.53s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.869s
+== wait 400 ms, literal text kept: const execProbeHelloWait = 400 * time.Millisecond
+    zz_iter329_msg_test.go:15: TIMING ArchiveExecSandbox took 5.853791ms
+    zz_iter329_msg_test.go:18: Why = "reverse leg: a listener on 127.0.0.1:53407 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to World's hello within 400 ms;"
+--- FAIL: TestZZIter329SilentTextNamesTheWait (0.43s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.781s
+FAIL
+restored 390c74e841f26a12; porcelain-go=0

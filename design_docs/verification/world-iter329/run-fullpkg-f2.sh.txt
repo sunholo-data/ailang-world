@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Full host/broker package: control, then F2 mutant (execProbeHelloWait 500ms -> 5ms). Restores the tree.
+set -u
+cd "$(git rev-parse --show-toplevel)"
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+F=host/broker/exec_probe.go
+OUT=design_docs/verification/world-iter329/out
+mkdir -p $OUT
+orig=$(shasum -a 256 $F | cut -c1-16)
+echo "base sha $orig"
+go test -timeout 580s -count=1 -v ./host/broker/ > $OUT/fullpkg-control.txt 2>&1; echo "control rc=$?"
+sed -i '' 's/^const execProbeHelloWait = 500 \* time.Millisecond$/const execProbeHelloWait = 5 * time.Millisecond/' $F
+grep -n '^const execProbeHelloWait' $F
+go test -timeout 580s -count=1 -v ./host/broker/ > $OUT/fullpkg-f2-5ms.txt 2>&1; echo "f2-5ms rc=$?"
+git checkout -- $F
+echo "restored sha $(shasum -a 256 $F | cut -c1-16)"
+for f in $OUT/fullpkg-control.txt $OUT/fullpkg-f2-5ms.txt; do
+  echo "$f PASS=$(grep -c -- '^--- PASS' $f) FAIL=$(grep -c -- '^--- FAIL' $f) SKIP=$(grep -c -- '^--- SKIP' $f) tail=$(tail -1 $f)"
+done

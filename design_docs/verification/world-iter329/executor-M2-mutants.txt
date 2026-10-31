@@ -1,0 +1,77 @@
+start sha256 96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4
+== control-T10 rc=0 fail=0 pass=3
+   --- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K1-wait-5ms rc=1 fail=3 pass=0
+       exec_probe_test.go:911: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+       exec_probe_test.go:911: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   --- FAIL: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K2-wait-249ms rc=1 fail=3 pass=0
+       exec_probe_test.go:911: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+       exec_probe_test.go:911: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   --- FAIL: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K2c-wait-250ms rc=0 fail=0 pass=3
+   --- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K2c-wait-950ms rc=0 fail=0 pass=3
+   --- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K3-wait-951ms rc=1 fail=3 pass=0
+       exec_probe_test.go:914: hello deadline at stop+950.899875ms (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+       exec_probe_test.go:914: hello deadline at stop+950.996167ms (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+   --- FAIL: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K4-wait-60s rc=1 fail=3 pass=0
+       exec_probe_test.go:914: hello deadline at stop+59.999899417s (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+       exec_probe_test.go:914: hello deadline at stop+59.999996666s (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+   --- FAIL: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K5-no-deadline rc=1 fail=3 pass=0
+       exec_probe_test.go:914: hello deadline at stop+-2562047h47m16.854775808s (sets 0); want a deadline no later than stop+950ms (listen window less one poll period)
+       exec_probe_test.go:914: hello deadline at stop+-2562047h47m16.854775808s (sets 0); want a deadline no later than stop+950ms (listen window less one poll period)
+   --- FAIL: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K9-hold-500 rc=1 fail=3 pass=0
+       exec_probe_test.go:914: hello deadline at stop+499.89875ms (sets 1); want a deadline no later than stop+450ms (listen window less one poll period)
+       exec_probe_test.go:914: hello deadline at stop+499.996042ms (sets 1); want a deadline no later than stop+450ms (listen window less one poll period)
+   --- FAIL: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== K8-poll-literal rc=0 fail=0 pass=3
+   --- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+       --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+== control-T7 rc=0 fail=0 pass=4
+   --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky (1.37s)
+       --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.53s)
+       --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.67s)
+       --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.17s)
+== K7-literal-text-wait-400ms rc=1 fail=4 pass=0
+       exec_probe_test.go:669: Why = "reverse leg: a listener on 127.0.0.1:55721 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to World's hello within 400 ms;"
+       exec_probe_test.go:669: Why = "reverse leg: a listener on 127.0.0.1:55727 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to World's hello within 400 ms;"
+       exec_probe_test.go:669: Why = "reverse leg: a listener on 127.0.0.1:55729 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to World's hello within 400 ms;"
+   --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (1.16s)
+       --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.43s)
+       --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.56s)
+       --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.16s)
+== R-M1-P2-reverted-alone rc=0 fail=0 pass=4
+   --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky (1.35s)
+       --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.53s)
+       --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.66s)
+       --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.16s)
+== control-T11 rc=0 fail=0 pass=1
+   --- PASS: TestExecProbeChildListenerDrainsTheHello (0.00s)
+== K6-no-resume rc=1 fail=1 pass=0
+       exec_probe_test.go:931: the listen op's connection handler is not net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')})
+   --- FAIL: TestExecProbeChildListenerDrainsTheHello (0.00s)
+restored sha256 96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4 (start 96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4)

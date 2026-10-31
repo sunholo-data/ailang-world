@@ -1,0 +1,5 @@
+base sha 390c74e841f26a12
+c.resume() occurrences after mutation: 0
+f3-noresume rc=0
+restored sha 390c74e841f26a12
+design_docs/verification/world-iter329/out/fullpkg-f3-noresume.txt PASS=333 FAIL=0 SKIP=30 tail=ok  	github.com/sunholo-data/ailang-world/host/broker	221.705s

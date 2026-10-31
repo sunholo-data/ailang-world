@@ -1,0 +1,503 @@
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+  workflow_dispatch:
+
+# The z3 pin is declared ONCE, at workflow scope, because BOTH jobs must install the SAME solver.
+# Job 1 runs `ai-check` directly; job 2 runs it THROUGH host/verifygate's shim arms, which drive
+# scripts/verify_ail.sh end to end. Two job-local literals would let the lanes drift silently —
+# the same "two lanes resolve different things" defect 9/CF-A-2 was. Ratified: 9/OD-11.
+env:
+  Z3_VER: 4.16.0
+  Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+
+jobs:
+  ailang-verify:
+    name: ailang-code verify gate
+    runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.26.6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Contract exemption ratchet may only decrease
+        env:
+          RATCHET_EVENT: ${{ github.event_name }}
+          RATCHET_PR_BASE: ${{ github.event.pull_request.base.sha }}
+          RATCHET_PUSH_BEFORE: ${{ github.event.before }}
+        run: python3 scripts/check_world_contract_quality.py --event "$RATCHET_EVENT"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.6'
+
+      - name: Install released ailang binary
+        run: |
+          set -euo pipefail
+          base="https://github.com/sunholo-data/ailang/releases/latest/download"
+          curl -fsSL -o linux.x64.ailang.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o linux.x64.ailang.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          sha256sum -c linux.x64.ailang.tar.gz.sha256
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf linux.x64.ailang.tar.gz -C "$HOME/.local/bin" ailang
+          chmod +x "$HOME/.local/bin/ailang"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install Z3 ${{ env.Z3_VER }} (ai-check's SMT solver — the workflow-level pin)
+        run: |
+          set -euo pipefail
+          # The released ailang binary shells out to `z3` (searches PATH +
+          # /usr/bin, /usr/local/bin, /snap/bin). ubuntu-latest ships none, so
+          # every contract silently SKIPS (vanishes from verify.results[]) and
+          # the required-check manifest gate is meaningless without it.
+          Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
+          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+          echo "${Z3_SHA}  z3.zip" | sha256sum -c -
+          unzip -q z3.zip
+          sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3
+          z3 --version
+
+      - name: ailang version
+        run: ailang --version
+
+      # The step above installs `releases/latest`, which moved to v0.33.0 on 2026-08-04 — so the
+      # two existing legs verify against an UNPINNED compiler. That gap is queue item 9's and is
+      # human-gated, so it is deliberately left alone here. The world-package leg, however, is a
+      # byte-exact gate: it recomputes package hashes and cross-checks them against the CLI's own,
+      # so it must have the PINNED compiler or it is comparing two different algorithms. v0.33.0
+      # also fails that gate's own package-test step (measured on the rig: "5 properties never
+      # ran (no generator)"). This installs the pin to a SEPARATE path and hands it to that leg
+      # alone via WORLD_PKG_AILANG_BIN, leaving PATH `ailang` — and thus legs 1-2 — untouched.
+      - name: Install PINNED v0.41.0 ailang for the world-package leg only
+        run: |
+          set -euo pipefail
+          # v0.41.0 since 2026-09-21. The registry grew publish quality gates after
+          # world/core froze, and v0.30.0 does not put CHANGELOG.md in the tarball
+          # (9156 bytes vs 9785 for the same tree), so PUB001 was unsatisfiable.
+          # Both legs are on v0.41.0 as of 2026-09-22: the replay goldens were
+          # re-verified byte-exact on that tag, so the old v0.30.0 replay pin is gone.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+          curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          # the published checksum names the release asset, not our local filename
+          echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/.pinned-ailang"
+          tar -xzf pinned.tar.gz -C "$HOME/.pinned-ailang" ailang
+          chmod +x "$HOME/.pinned-ailang/ailang"
+          # NO PIPE. `cmd --version | grep -q` under `set -o pipefail` is a RACE:
+          # `grep -q` exits on its first match while `--version` still has 6 of its
+          # 7 lines to write, so the writer takes SIGPIPE and the pipeline reports
+          # 141. Measured on the rig: the piped form failed 3/40 runs, the form
+          # below 0/200. It took dev red on a6cc473 — a DOCS-ONLY commit — while
+          # passing on e24a6f0, 1856bfb and both PR runs, which is exactly what an
+          # intermittent race looks like from the outside: a red with no cause in
+          # the diff. Capturing first is not sufficient on its own; `echo "$big" |
+          # grep -q` reproduces 141 too. The fix is to use no pipe at all.
+          pinned_ver="$("$HOME/.pinned-ailang/ailang" --version)"
+          echo "$pinned_ver"
+          case "$pinned_ver" in
+            *'AILANG v0.41.0'*) ;;
+            *) echo "✗ pinned world-package binary is not v0.41.0" >&2; exit 1 ;;
+          esac
+          echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
+
+      - name: Kernel contract and PUB011 mutation controls
+        run: AILANG_BIN="$WORLD_PKG_AILANG_BIN" python3 scripts/test_kernel_contracts.py
+
+      - name: Verify all .ail modules (ai-check = check + Z3 verify)
+        run: ./scripts/verify_ail.sh
+
+  go-verify:
+    name: go host build + test gate
+    # Pinned 2026-10-26 (World iteration 304): ubuntu-latest moved to Linux 7.0 / glibc 2.43 /
+    # bubblewrap 0.11.1, where srt 0.0.78 returns PARTIAL token=None on every confinement arm,
+    # control included. 24.04 is the image every green run measured. Unpin under queue row 203.
+    runs-on: ubuntu-24.04
+    env:
+      GOTOOLCHAIN: go1.26.6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.6'
+
+      - name: go version
+        run: |
+          go version
+          go env GOVERSION
+
+      - name: Install PINNED v0.41.0 ailang (AILANG_BIN — one pin, current AILANG)
+        run: |
+          set -euo pipefail
+          # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+          # replay tests drive the released ailang as a subprocess and byte-compare its
+          # output against goldens (testdata/recorded_result.bytes, recorded_world_hash.txt)
+          # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+          # MEASURED 2026-09-22: it is not. All 10 replay tests reproduce the goldens
+          # byte-exactly under v0.41.0, with a discriminating control (binary unset -> 13
+          # SKIPs, so the arms really do drive the subprocess). The goldens are stable
+          # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+          # world eleven releases of drift against the language it exists to exercise.
+          #
+          # Pin the TAG, not `latest`: a silent bump is how a goldens mismatch or a
+          # world-package hash break arrives without a red step naming it. Moving this pin
+          # is a deliberate edit, and host/replay re-verifies the goldens on the new tag.
+          # Without AILANG_BIN, host/replay's pinnedBinary and verifygate's requirePinned
+          # t.Skip() and CI is false-green — hence the loud assert below.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+          curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          # the published checksum names the release asset, not our local filename
+          echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf pinned.tar.gz -C "$HOME/.local/bin" ailang
+          chmod +x "$HOME/.local/bin/ailang"
+          # Assert the pinned version loudly so a tag drift is a red step here,
+          # not a silent goldens mismatch downstream.
+          # Same no-pipe form as the world-package install above. This site has
+          # never gone red, but only by ACCIDENT OF SIZE: `--version` is 167 bytes,
+          # which fits the 64 KiB pipe buffer, so `echo` never blocks and never
+          # takes SIGPIPE. That is a property of the output length, not of the
+          # shape — the shape is the same race, one verbose release away.
+          ver="$("$HOME/.local/bin/ailang" --version)"
+          echo "$ver"
+          case "$ver" in
+            *'AILANG v0.41.0'*) ;;
+            *) echo "✗ AILANG_BIN is not v0.41.0" >&2; exit 1 ;;
+          esac
+          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+
+      - name: Install Z3 ${{ env.Z3_VER }} (host/verifygate drives the REAL .ail gate under go test)
+        run: |
+          set -euo pipefail
+          # 9/OD-11, RATIFIED: "Yes you can install z3 on cicd".
+          # host/verifygate's shim arms run scripts/verify_ail.sh end to end. Without a solver
+          # `ai-check` reports verify.available=false and every contract vanishes from
+          # verify.results[] (V20/V27), so the gate reds at leg 1 and the accept-arms could only
+          # assert markers emitted BEFORE Z3 matters — they were green in a lane where the gate
+          # they drive was red. Same version and sha as job 1, from the workflow-level pin above.
+          Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
+          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+          echo "${Z3_SHA}  z3.zip" | sha256sum -c -
+          unzip -q z3.zip
+          sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3
+          z3 --version
+
+      # Row 140 M0 (w-workspace-exec-toolchain-effect §6 AC0.2, V43–V49): srt's confinement under
+      # bubblewrap, measured with the same matrix the macOS rig runs. The pin (version + cli.js
+      # sha256) is design_docs/verification/world-row140-m0/pin.json; node is the runner's own.
+      # Rendering = the amended §4.4 (only srt's in-sandbox seccomp helper dir re-allowed for read).
+      - name: Row 140 srt confinement matrix (linux bubblewrap)
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat ripgrep
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          PIN=design_docs/verification/world-row140-m0/pin.json
+          V=$(jq -r .version "$PIN"); WANT=$(jq -r .cli_sha256 "$PIN")
+          mkdir -p "$RUNNER_TEMP/srt"
+          ( cd "$RUNNER_TEMP/srt" && npm init -y >/dev/null && npm install --no-audit --no-fund "@anthropic-ai/sandbox-runtime@$V" )
+          GOT=$(sha256sum "$RUNNER_TEMP/srt/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js" | cut -d' ' -f1)
+          echo "srt $V cli.js sha256 $GOT (pinned $WANT)"
+          [ "$GOT" = "$WANT" ] || { echo "::error::srt cli.js digest drifted from pin.json"; exit 1; }
+          python3 design_docs/verification/world-row140-m0/m0_matrix.py --protected-self-test
+          # Row 156 M0b: measure protected writes with the verified srt install.
+          mkdir -p "$GITHUB_WORKSPACE/.row156-ci"
+          python3 design_docs/verification/world-row140-m0/m0_matrix.py --protected-only \
+            --srt-node-modules "$RUNNER_TEMP/srt/node_modules" --node "$(command -v node)" --seccomp-read allowread \
+            --scratch-root "$GITHUB_WORKSPACE/.row156-ci/matrix" --json "$GITHUB_WORKSPACE/.row156-ci/protected-linux.json"
+          # The fixture trees hold .go files that the repo-wide Go scans below would parse.
+          [ ! -e "$GITHUB_WORKSPACE/.row156-ci/matrix" ] || { echo "::error::row156 matrix fixtures left in the workspace"; exit 1; }
+          python3 design_docs/verification/world-row140-m0/m0_matrix.py \
+            --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
+            --node "$(command -v node)" --seccomp-read allowread
+          # Row 140 M2: the real-srt handler tests read the same pinned install and node, in
+          # every later step (verify_go.sh's go test included).
+          echo "WORLD_EXEC_SRT_NODE_MODULES=$RUNNER_TEMP/srt/node_modules" >> "$GITHUB_ENV"
+          echo "WORLD_EXEC_NODE=$(command -v node)" >> "$GITHUB_ENV"
+
+      # Row 140 M2 (w-workspace-exec-toolchain-effect §6 AC2.2–AC2.10, sprint plan M2 "CI"): the
+      # Workspace.Exec handler against the REAL pinned srt under bubblewrap. Those tests skip when
+      # WORLD_EXEC_SRT_NODE_MODULES is unset, and verify_go.sh has no -v, so a SKIP would read as a
+      # PASS there: run them verbosely and fail unless each one prints --- PASS (the fork-lock
+      # step's pass-line pattern).
+      # Row 140 M3 (§6 AC3.1–AC3.5) adds the startup probe against srt shims and the real srt,
+      # the QUICKSTART §10 refusal table (whose probe-package-only row needs the real srt, so its
+      # subtest PASS is checked too), §10's profile script, and the /mcp/ + replay end to end
+      # (AILANG_BIN, set above, runs the plan).
+      - name: Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          [ -n "${WORLD_EXEC_SRT_NODE_MODULES:-}" ] || { echo "::error::WORLD_EXEC_SRT_NODE_MODULES is unset"; exit 1; }
+          [ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }
+          tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"
+          tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"
+          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvivesAForeignAttempt TestExecProbeReverseLegNoTokenIsNotRetried TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds TestExecProbeChildListenerDrainsTheHello"
+          tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual TestExecSrtWorktreeDelta"
+          log="$RUNNER_TEMP/exec-srt-verbose.log"
+          rc=0
+          go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v \
+            -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?
+          cat "$log"
+          [ "$rc" -eq 0 ] || exit "$rc"
+          for t in $tests; do
+            grep -q -- "^--- PASS: $t " "$log" \
+              || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }
+          done
+          grep -q -- "^    --- PASS: TestExecStartupRefusalTable/probe-package-only " "$log" \
+            || { echo "::error::TestExecStartupRefusalTable/probe-package-only did not PASS on linux (SKIP?)"; exit 1; }
+
+      - name: Row 149 workbench live script tests, verbose (node required)
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          : "${WORLD_EXEC_NODE:?WORLD_EXEC_NODE is required}"
+          [ -x "$WORLD_EXEC_NODE" ]
+          log="$RUNNER_TEMP/workbench-live-verbose.log"
+          go test -race -count=1 -timeout 60s -v ./host/workbench ./host/daemon -run '^(TestLiveScriptPure|TestLiveScriptAssetNonEmpty|TestLiveScriptContract)$' >"$log" 2>&1
+          cat "$log"
+          for t in TestLiveScriptPure TestLiveScriptAssetNonEmpty TestLiveScriptContract; do
+            grep -q -- "^--- PASS: $t " "$log" || { echo "$t did not PASS (SKIP or zero tests)"; exit 1; }
+          done
+
+      - name: go build + test gate (replay tests run against pinned AILANG_BIN)
+        # Expiry is RED; route an overrun to 4e/OD-4, never silently raise this ceiling.
+        # Row 181: the -race leg runs in the go-race-verify job below, in parallel.
+        timeout-minutes: 25
+        env:
+          VERIFY_GO_LEGS: plain
+        run: ./scripts/verify_go.sh
+
+      # w-verifygate-etxtbsy (design_docs/planned/w-verifygate-etxtbsy.md): verify_go.sh has no -v
+      # (V16), so a SKIP of the Linux-only kernel control is indistinguishable from a PASS there.
+      # Run the fork-locked write tests verbosely so TestKernelRefusesExecOfWriterOpenFile is seen
+      # to PASS (not SKIP) on linux (AC6/V18).
+      # row 142: PASS loop, fail-loud linux precondition.
+      - name: Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          # Assumes linux: fail loud, never skip (a skip guard reopens the SKIP hole).
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          tests="TestForkLockedWriteBlocksConcurrentFork TestForkLockedWrappersHoldLockThroughClose TestKernelRefusesExecOfWriterOpenFile TestVerifygateTestWritesAreForkLocked TestNoParallelWriteForkPackagesOutsideVerifygate"
+          log="$RUNNER_TEMP/forklock-verbose.log"
+          rc=0
+          go test ./host/verifygate/ -count=1 -p 1 -timeout 120s -v \
+            -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?
+          cat "$log"
+          [ "$rc" -eq 0 ] || exit "$rc"
+          for t in $tests; do
+            grep -q -- "^--- PASS: $t " "$log" \
+              || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }
+          done
+
+      # Row 24 linux merge gate (w-host-subprocess-cleanup-boundary plan §7, design §11 r2):
+      # verify_go.sh runs these tests without -v, so a PASS is indistinguishable from a SKIP
+      # and the return/reap timings are invisible. Run the cleanup tests verbosely here so
+      # V34 (joined-error text, no ESRCH residue on linux) and V35 (AC7 timings) can be read
+      # from this log, and AC4's escapee test is seen to PASS rather than SKIP.
+      - name: Subprocess cleanup tests, verbose (row 24 linux merge gate)
+        timeout-minutes: 6
+        run: >-
+          go test ./host/procbound/ ./host/proctest/ ./host/capsule/ ./host/broker/
+          -count=1 -p 1 -timeout 300s -v
+          -run '^(TestAbandonedWaiters|TestAdmitIsExact|TestFailedKillBounds|TestFullCleanupBacklog|TestOrdinaryOverflow|TestOverflowKill|TestPipeCloseBounds|TestReleaseIsIdempotent|TestReservationIsExact|TestSignalRefuses|TestStartFailureReleases|TestWaitReturnsResult|TestZombieGroupKill)'
+
+      # Platform-conditional and GATED (row 44): darwin/arm64 must reproduce the defect;
+      # linux/amd64 (here) must NOT (measured, iteration-46 AC6); every configured
+      # known-bad probe must run to completion and both known-good controls must fire.
+      # Any other host refuses — the verified contract set is exactly two pairs.
+      # exit 1 is a refusal again, not evidence nobody reads.
+      # Design: design_docs/implemented/w-miscompile-instrument-inert-in-ci.md
+      - name: Measure compiler reproducer (platform-conditional, gated)
+        timeout-minutes: 15
+        run: ./design_docs/verification/w-race-gate-blindspot/run.sh
+
+      - name: worldd benchmark smoke gate
+        run: ./scripts/bench_worldd.sh --smoke
+
+      - name: worldd bench claim-structure gate
+        timeout-minutes: 2
+        run: ./scripts/bench_worldd.sh --check-claims
+
+      - name: worldd bench recorder refuses off-rig
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          err="$(mktemp)"
+          if ./scripts/bench_worldd.sh --record-pair --variant . --control . 2>"$err"; then
+            printf '%s\n' 'recorder unexpectedly succeeded on the off-rig runner' >&2
+            exit 1
+          fi
+          if grep -Fq 'probe FAILED: sysctl -n hw.ncpu' "$err"; then
+            :
+          else
+            printf '%s\n' 'recorder did not refuse at the expected hw.ncpu probe' >&2
+            sed -n '1,80p' "$err" >&2
+            exit 1
+          fi
+
+      - name: Gate-1 range instrument suite
+        timeout-minutes: 2
+        run: bash scripts/test_gate1_range_check.sh
+
+      - name: Queue census instrument suite
+        timeout-minutes: 2
+        run: bash scripts/test_queue_census.sh
+
+      - name: Queue census (live charter, controlled)
+        timeout-minutes: 2
+        run: bash scripts/queue_census.sh --doc design_docs/world-mission.md --control-closed 1 --control-open 79
+
+      - name: Gate-0 self-notice instrument suite
+        timeout-minutes: 2
+        run: bash scripts/test_gate0_self_notices.sh
+
+      - name: Refuse a personal email in the loop-written surface
+        timeout-minutes: 2
+        run: bash scripts/check_no_personal_email.sh
+
+      - name: Personal-email gate self-test
+        timeout-minutes: 2
+        run: bash scripts/test_check_no_personal_email.sh
+
+      # Row 93 (w-resident-agent-non-inferiority-floor-run) M1+M3: the clause-4 floor harness —
+      # corpus loader, prompt renderer, grader port, classifier, exact statistics, sealed report.
+      # The grader's real-binary arms run the World TOOL binary (the manifest's tool role: v0.54.15
+      # since row 139 D7, v0.52.1 before it from row 135 M0; the binary the World arm and the grader
+      # both use, design V21/P12), installed to its own path and never put on PATH.
+      # FLOOR_REQUIRE_TOOL=1 turns a missing binary into a red, not a skip. Besides the release's own
+      # .sha256, the tarball and the extracted binary are checked against the manifest's linux/amd64
+      # digests (host/pins TestCIInstallsMatchManifest binds them).
+      - name: Install PINNED v0.54.15 ailang tool binary (floor grader $TOOL)
+        run: |
+          set -euo pipefail
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.54.15"
+          curl -fsSL -o tool.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o tool.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          echo "$(cut -d' ' -f1 tool.tar.gz.sha256)  tool.tar.gz" | sha256sum -c -
+          echo "877316981bdbf108dacacafc733720333e718a912e0d215564baa37c4cac4945  tool.tar.gz" | sha256sum -c -
+          dir="$HOME/.pinned-ailang-tools/v0.54.15"
+          mkdir -p "$dir"
+          tar -xzf tool.tar.gz -C "$dir" ailang
+          chmod +x "$dir/ailang"
+          echo "db0f9dac038fbc99212c2d3effc30d1e8a98496c6a481384c1c21a8091ddd63c  $dir/ailang" | sha256sum -c -
+          # no pipe (see the SIGPIPE note on the world-package install above)
+          tool_ver="$("$dir/ailang" --version)"
+          echo "$tool_ver"
+          case "$tool_ver" in
+            *'AILANG v0.54.15'*) ;;
+            *) echo "✗ floor tool binary is not v0.54.15" >&2; exit 1 ;;
+          esac
+
+      - name: Floor harness suite (row 93 M1+M3)
+        timeout-minutes: 3
+        env:
+          FLOOR_REQUIRE_TOOL: '1'
+        run: python3 -m unittest discover -s scripts/floor -p 'test_*.py' -v
+
+      - name: Trial runner suite (row 183)
+        timeout-minutes: 3
+        run: python3 -m unittest discover -s scripts/trial -p 'test_*.py' -v
+
+  # Row 181 (attended 2026-10-16): the -race leg needs ~1,000 s wall on the 2-core runner
+  # (measured: broker 343 s, verifygate 308 s, daemon 307 s under -race), over its old 600 s cap
+  # inside the go-verify job, so it runs here in parallel with a measured, still-loud bound.
+  go-race-verify:
+    name: go race gate (go test -race, own job)
+    # Pinned 2026-10-26 (World iteration 304): ubuntu-latest moved to Linux 7.0 / glibc 2.43 /
+    # bubblewrap 0.11.1, where srt 0.0.78 returns PARTIAL token=None on every confinement arm,
+    # control included. 24.04 is the image every green run measured. Unpin under queue row 203.
+    runs-on: ubuntu-24.04
+    env:
+      GOTOOLCHAIN: go1.26.6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.6'
+
+      - name: go version
+        run: |
+          go version
+          go env GOVERSION
+
+      - name: Install PINNED v0.41.0 ailang (AILANG_BIN — one pin, current AILANG)
+        run: |
+          set -euo pipefail
+          # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+          # replay tests drive the released ailang as a subprocess and byte-compare its
+          # output against goldens (testdata/recorded_result.bytes, recorded_world_hash.txt)
+          # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+          # MEASURED 2026-09-22: it is not. All 10 replay tests reproduce the goldens
+          # byte-exactly under v0.41.0, with a discriminating control (binary unset -> 13
+          # SKIPs, so the arms really do drive the subprocess). The goldens are stable
+          # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+          # world eleven releases of drift against the language it exists to exercise.
+          #
+          # Pin the TAG, not `latest`: a silent bump is how a goldens mismatch or a
+          # world-package hash break arrives without a red step naming it. Moving this pin
+          # is a deliberate edit, and host/replay re-verifies the goldens on the new tag.
+          # Without AILANG_BIN, host/replay's pinnedBinary and verifygate's requirePinned
+          # t.Skip() and CI is false-green — hence the loud assert below.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+          curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          # the published checksum names the release asset, not our local filename
+          echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf pinned.tar.gz -C "$HOME/.local/bin" ailang
+          chmod +x "$HOME/.local/bin/ailang"
+          # Assert the pinned version loudly so a tag drift is a red step here,
+          # not a silent goldens mismatch downstream.
+          # Same no-pipe form as the world-package install above. This site has
+          # never gone red, but only by ACCIDENT OF SIZE: `--version` is 167 bytes,
+          # which fits the 64 KiB pipe buffer, so `echo` never blocks and never
+          # takes SIGPIPE. That is a property of the output length, not of the
+          # shape — the shape is the same race, one verbose release away.
+          ver="$("$HOME/.local/bin/ailang" --version)"
+          echo "$ver"
+          case "$ver" in
+            *'AILANG v0.41.0'*) ;;
+            *) echo "✗ AILANG_BIN is not v0.41.0" >&2; exit 1 ;;
+          esac
+          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+
+      - name: Install Z3 ${{ env.Z3_VER }} (host/verifygate drives the REAL .ail gate under go test)
+        run: |
+          set -euo pipefail
+          # 9/OD-11, RATIFIED: "Yes you can install z3 on cicd".
+          # host/verifygate's shim arms run scripts/verify_ail.sh end to end. Without a solver
+          # `ai-check` reports verify.available=false and every contract vanishes from
+          # verify.results[] (V20/V27), so the gate reds at leg 1 and the accept-arms could only
+          # assert markers emitted BEFORE Z3 matters — they were green in a lane where the gate
+          # they drive was red. Same version and sha as job 1, from the workflow-level pin above.
+          Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
+          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+          echo "${Z3_SHA}  z3.zip" | sha256sum -c -
+          unzip -q z3.zip
+          sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3
+          z3 --version
+
+
+      - name: go -race gate (replay tests run against pinned AILANG_BIN)
+        # The leg bound (VERIFY_GO_RACE_TIMEOUT_S) is loud on overrun; this ceiling sits above it.
+        timeout-minutes: 35
+        env:
+          VERIFY_GO_LEGS: race
+          VERIFY_GO_RACE_TIMEOUT_S: "1500"
+        run: ./scripts/verify_go.sh

@@ -65,6 +65,15 @@ const ExecProbeArmProtectedWrite = "arm8-protected-write"
 // srt's proxy environment (a direct dial when there is none, as curl would);
 // listen binds 127.0.0.1:<port> for <ms> (arg "<port>:<ms>:<nonce>"), and
 // answers every accept with "WORLD-PROBE-NONCE <nonce>".
+//
+// The listen op's c.resume() is socket hygiene in the child (row 230 §2): it
+// consumes World's hello, so the accepted socket's 'end' and 'close' fire and
+// it is released before the process exits. It is not what avoids a reset at
+// close (the earlier reading): node reads the hello out of the kernel into its
+// own stream buffer whether or not anyone consumes it (measured on darwin), so
+// no unread kernel data is left at close. No host-visible difference was
+// measured on darwin; Linux is unmeasured (AC-LINUX-F3).
+// TestExecProbeChildListenerDrainsTheHello pins the handler.
 const execProbeScript = `const fs=require('fs'),net=require('net');
 const say=s=>process.stdout.write(s+'\n');const code=e=>(e&&e.code)||'EUNKNOWN';
 function connect(port){return new Promise(r=>{const s=net.connect(+port,'127.0.0.1');
@@ -106,8 +115,20 @@ const execProbeReverseAttempts = 3
 // HTTP 400 (design V23); a listener that answers nothing is "silent".
 const execProbeHello = "WORLD-PROBE-HELLO\n"
 
-// execProbeHelloWait bounds the read of the answer to the hello.
+// execProbeHelloWait bounds the read of the answer to the hello. It has two
+// bounds (row 230 §2), pinned by TestExecProbeReverseHelloWaitBounds:
+//   - floor 250 ms: the wait must admit a legitimate answer. srt's mux
+//     answered in at most 229.6 ms at load; an answer after the deadline
+//     reads as silent, a sticky refusal, so startup would be refused falsely.
+//   - ceiling execProbeListenMS less execProbePollEvery (950 ms): the first
+//     connected dial lands at most one poll period after the child binds,
+//     and its deadline must fall inside the hold, or a silent holder's exit
+//     reads as a clean EOF (foreign, retried) instead of silent. The poll
+//     ignores ctx, so the ceiling also bounds stop()'s wait.
 const execProbeHelloWait = 500 * time.Millisecond
+
+// execProbePollEvery is the reverse leg's dial cadence (pollLoopback).
+const execProbePollEvery = 50 * time.Millisecond
 
 // reverseSeen is what one reverse-leg attempt's dials observed.
 type reverseSeen struct{ child, foreign, silent bool }
@@ -223,6 +244,12 @@ func ProbeExecProfilesEach(ctx context.Context, cfg ExecProbeConfig, profiles []
 	var wg sync.WaitGroup
 	for i, p := range profiles {
 		wg.Add(1)
+		// Profiles probe concurrently. Every profile binds its arm-6 net6
+		// listener (in probe) before its own Run A, so no profile's reverse-leg
+		// pick can return another profile's live net6 port (bind(0) never
+		// returns a held port; row 230 V15). Moving that bind later, or adding
+		// a slow step before it, reopens the cross-profile collision (row 230
+		// §3.4, R1).
 		go func() {
 			defer wg.Done()
 			errs[i] = probeExecProfile(ctx, cfg, env, p)
@@ -452,6 +479,10 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, si
 
 	// Arm 6's live listener and its control (V37): an unsandboxed connect
 	// is accepted, so the listener is proved live before any refusal counts.
+	// It is bound here, before Run A, and held until probe returns: that
+	// ordering is what keeps a concurrent profile's reverse-leg pick off this
+	// port (row 230 §3.4, R1). Do not move the bind later or put a slow step
+	// before it.
 	net6 := newProbeListener()
 	defer net6.close()
 	netCtl := net6.control()
@@ -579,7 +610,7 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
 		case revNoToken:
 			return first, fmt.Sprintf("reverse leg: no token from the child's listener (%q; %s)", tok, r.describe())
 		case revSilent:
-			return first, fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses", port)
+			return first, fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing to World's hello within %d ms; World cannot tell it from the child's listener, so it refuses", port, execProbeHelloWait.Milliseconds())
 		}
 		what := "foreign reach"
 		if !seen.foreign {
@@ -693,7 +724,7 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
 // (seen on darwin with nothing listening), timeouts and local errors record nothing.
 func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }
 
-// pollLoopback dials 127.0.0.1:port every 50 ms until stopped and
+// pollLoopback dials 127.0.0.1:port every execProbePollEvery until stopped and
 // classifies every connected dial (classifyReverseDial); a dial that fails
 // with ECONNRESET is silent (dialErrIsSilent). The returned stop function
 // reports what the dials saw. It dials once before it first checks for
@@ -729,7 +760,7 @@ func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error
 			select {
 			case <-done:
 				return
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(execProbePollEvery):
 			}
 		}
 	}()

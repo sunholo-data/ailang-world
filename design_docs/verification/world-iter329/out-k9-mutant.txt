@@ -1,0 +1,11 @@
+== K9 control
+--- PASS: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.381s
+== K9 mutant: const execProbeListenMS = 500
+    zz_iter329_f2_test.go:79: hello deadline at stop+499.903833ms (sets 1); want a deadline no later than stop+450ms (listen window less one poll period)
+    zz_iter329_f2_test.go:79: hello deadline at stop+499.997042ms (sets 1); want a deadline no later than stop+450ms (listen window less one poll period)
+--- FAIL: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.349s
+FAIL
+restored 390c74e841f26a12; porcelain-go=0

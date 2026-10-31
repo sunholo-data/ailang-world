@@ -1,0 +1,45 @@
+package broker
+
+// iteration-329 designer scratch (row 230, item 3): does freeLoopbackPort (bind
+// 127.0.0.1:0, read, close) ever return a port a live 127.0.0.1 listener holds?
+// Phase 1 holds 64 listeners (the shape of 64 profiles' net6) and picks
+// ZZ_ALLOC_PICKS times; phase 2 is the paired positive control: the same 64 ports,
+// released, then picked the same number of times. Copied into host/broker, run, deleted.
+
+import (
+	"net"
+	"testing"
+)
+
+func TestZZIter329AllocatorSkipsLivePorts(t *testing.T) {
+	picks := zzEnvInt("ZZ_ALLOC_PICKS", 200000)
+	held := map[int]net.Listener{}
+	for len(held) < 64 {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		held[ln.Addr().(*net.TCPAddr).Port] = ln
+	}
+	count := func() (hits, distinct int) {
+		seen := map[int]bool{}
+		for i := 0; i < picks; i++ {
+			p, err := freeLoopbackPort()
+			if err != nil {
+				t.Fatal(err)
+			}
+			seen[p] = true
+			if _, ok := held[p]; ok {
+				hits++
+			}
+		}
+		return hits, len(seen)
+	}
+	liveHits, liveDistinct := count()
+	for _, ln := range held {
+		_ = ln.Close()
+	}
+	freedHits, freedDistinct := count()
+	t.Logf("ZZALLOC picks=%d per phase; held=64: hits-on-LIVE-ports=%d (distinct ports %d); same 64 released: hits=%d (distinct %d)",
+		picks, liveHits, liveDistinct, freedHits, freedDistinct)
+}

@@ -1909,3 +1909,92 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 231 lands on merge CI green (landing note). Then row 230 → 233 under D-WORLD-102 = A, stopping when a release row is routable; a dev red still outranks. Row 150's P0/P3 now invoke `marketingcheck position`/`phone` (orchestration §4.4) in the A1 window Mark schedules.
 
 **Landing (iteration 328):** PR #440 merged as `6641df63` (merge commit, `--match-head-commit 5b5ee8f1`). Head `5b5ee8f1` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `cec48f69`, right before the merge. **Merge CI:** `commits/6641df63/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. The local `host/broker` `reserve-after-before` red did not occur in CI on either head. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 329 — 2026-10-31 — row 230 built: arm 6's hello wait pinned from both sides by a deterministic test, the SILENT text derived from the wait, a labelled structural pin on the child's c.resume(); cross-profile reach refuted at HEAD with its hoist filed; judge PASS 88 [PRODUCT-HYGIENE]
+
+**Kind:** the second pick under D-WORLD-102 = A (order 231 → 230 → 233). Full inner loop: designer → quorum ×2 → carve-out → planner → executor → independent judge. The record is in the same PR as the code (#442). A landing note will record merge CI.
+
+**Pick and why:** row 230 `w-exec-probe-reverse-leg-pins`.
+- **Clause map at `e5c1867f`:** 1–7 MET; no UNMET clause.
+- **Release rows not routable.** Row 150 waits only on the attended A1. Row 151 needs row 188 N2d/N4a: 0 matching commit subjects on `origin/dev` since 2026-10-01 (N2c control 2). The only commits since iteration 328's base are 328's own record and landing.
+- So D-WORLD-102 = A applies; 231 is LANDED, so 230 is next.
+- **Premise checked first-party** on a scratch worktree at `e5c1867f`: `go test -count=1 -run ExecProbe ./host/broker/` control rc 0 (`ok … 26.1s`); with `execProbeHelloWait = 5 * time.Millisecond` rc 0 (`ok … 24.1s`). Tree restored.
+- Index grep: no earlier attempt at row 230. No design doc, no PR. Claim message `inbox_1793420970038_48e4e5cb` sent before routing.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (29 comments, LEGACY watermark); nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 1 on the 2026-10-22 rc=1 notice `6345079873`, already credited (24 mentions in the live log). Control 107:4 ok. Died-mid-flight traces: no open PR, no residue for 328; `.wt-world-iter306-r0` is the known residue.
+- Inbox: `mission-world` holds only this loop's own claim and report messages.
+- Ledger: 0 OPEN rows.
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `e5c1867f717c8e01b4dc5ccc63bbb24adc9ad348`. Base recorded `e5c1867f…@2026-10-31T04:27:17Z`; re-read before the worktree with no drift.
+- Skill: `SKILL.md` and all 13 `resources/*.md` `cmp`-identical to `origin/dev`, per file; rules read from the resolved symlink target.
+- Dev CI: `e5c1867f` check-runs 3/3 success; the last 5 CI runs on dev success.
+
+**Design** (`w-exec-probe-reverse-leg-pins`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–328 precedent; rotation pointer unchanged, codex over ration):
+- **r0** `f39703f7`: 377 lines, 22 V-rows, 31 evidence files. Verdicts:
+  - (1) F2 confirmed on the whole package (333/0/30 both arms). New: nothing pins the upper side either; a 60 s wait reds only T6/`silent`, a wall-clock path.
+  - (2) F3 survival confirmed; the stated RST mechanism refuted on darwin (node reads the hello into its own buffer, `readableLength` 18; server `end`/`close` 0/20 vs 20/20; host sees no difference). Structural pin chosen; a Linux arm would be predicted vacuous.
+  - (3) Cross-profile reach refuted in-process: `bind(0)` 0/200,000 onto live ports (paired control 768); 0 collisions; a forced collision refuses both profiles.
+  - (4) R4 unchanged.
+- **Quorum r1 BLOCKED** ($0.4075). Seats gemini-4-argon PASS, oc-glm-5-3 REJECT, oc-kimi-k3 REJECT; claude benched; reserve gpt6-1-sol; no absentees.
+  - **The controller measured every disputed premise before routing (rule 3f).** "Three packages probe": TRUE (`5 cmd/ailang-worldd`, `5 host/broker`, `2 host/daemon`), V19 had dropped `host/daemon`, so both reviewers' "two" was itself a misreading. "80 runs": FALSE, 4 cells × 10 = 40. srt pin equality: TRUE (`world-row140-m0/pin.json` 0.0.78, `cli_sha256 3c3092bd26b3924…`), unlogged. `:680-689` and `:736-741` read as claimed.
+- **r1** `c2b9c62b` (the one mandated revision, designer resumed): 410 lines, 27 V-rows; `listenWindow` derived from `execProbeListenMS`; K9 (hold halved) measured red, documented as the intended coupling; AC-LINUX-F3 excludes T11 and is non-blocking.
+- **Quorum r2 BLOCKED** ($0.3281; same seats and verdicts; no absentees).
+  - glm: r1 pasted V19b into §1 row 4 (7 cells, evidence `V19b`) instead of §10 — controller-confirmed; `:657` unclassified (a comment); the 60 s claim generalised from a `-run` subset.
+  - kimi: item 3 closed as REFUTED with no enforcement and no successor; offered (a) hoist `net6` in this sprint or (b) demote the verdict, file a successor, comment the invariant.
+  - Both carry concrete fixes and neither disputes direction → **narrow-refinement carve-out r2 `762d8cb4`**, applied by the controller: glm (1)–(3) verbatim; kimi option (b); T11's string-match trade acknowledged in §3.2. Recorded in the doc's §12.
+- Artifacts: `verification/world-iter329/quorum-r1.json`, `quorum-r2.json`.
+
+**Plan** (opus; `derive-planner-lane.sh` → `opus fail-closed:env-pin`, resolver `agent-tool opus`), `d908403c`:
+- 2 milestones (M1 F2: P1 constant, P2 derived text, T10, T7 extension; M2 F3: P3/P4 comments, T11), each with banked final files and `SHA256SUMS`; a mutation runner that self-checks and restores.
+- Mutants: K1 5 ms, K2 249 ms, K3 951 ms, K4 60 s, K5 no deadline, K7 literal text at 400 ms, K9 hold 500 ms, K6 no `c.resume()` — all red with the named assertion; K2c (250/950 ms), K8, R-M1 green controls.
+- T10 `-count=3000` under 32 `yes`: 3000/0 at load 16–19. Reverse-leg group `-count=20`: 20/20. Full package 335/0/30 (216 s).
+- D-1: no milestone production revert can red a test, because both milestones are behaviour-neutral at today's values (P2 byte-identical at 500 ms, M2 comments only); the K-mutants are the kills. Judge-adjudicated true by measurement.
+
+**Executor** (haiku; resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`, Agent `haiku`):
+- Commits: M1 `fda78271` · M2 `5ddc93d3` · evidence `d6665670`. Every checksum `OK`, every acceptance as planned, all 15 mutation lines matched. `host/broker` 334/0/30 at M1, 335/0/30 at M2. `verify_ail.sh` rc 0. The co-author line followed the directive: the Haiku-attribution deviation of 327 and 328 did not recur once the directive named the exact line.
+
+**Controller checks before the judge:**
+- Diff scope: `host/broker/exec_probe.go` (+35/−4; three non-comment lines: `execProbePollEvery`, its use at `time.After`, the `%d ms` derivation), `exec_probe_test.go` (+102), `ci.yml` (one list line, +T10 +T11).
+- `./scripts/verify_go.sh` at `5ddc93d3` (load ~11–14): rc 1. Binary gate, ledger, toolchain, race known-positive control (2 races, intended), evidence manifest and plain `go test ./...` all green (`host/broker` ok 345 s). Race leg: `host/daemon` (`TestWorkspacePackageCacheUnsetLeavesHomeAlone` running) and `host/verifygate` (`TestSeToolsGateArmsAreLoadBearing`) hit the 8-min package timeout.
+- Negative control: both alone under `-race -timeout 8m` at the same head: `host/daemon` rc 0 (319 s), `host/verifygate` rc 0 (262 s). `host/verifygate` does not depend on `host/broker` (`go list -deps -test`: 0); `host/daemon` does, but the running test is unrelated. Classified as load; CI arbitrates. Same class as iteration 327's `host/daemon` timeout.
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), own worktree `.wt-world-iter329-eval` (branch `eval/world-iter329-r1` at `d6665670`), foreground, run after `verify_go.sh` and the negative control finished.
+- **PASS 88/100, zero blocking** (31/21/24/12).
+- Verified: gofmt/vet clean; `host/broker` 335/0/30; T10 `-count=500` under 32 `yes`; base and final sha256s; the plan's K1–K5 reproduced; own mutants on the poll constant, the `Milliseconds()` derivation (µs, s, ÷10 all red) and T10's arithmetic; D-1 confirmed by milestone reverts; CI list gained exactly T10 and T11 with the PASS guard intact.
+- **Survivors, filed as row 241:** `time.After(execProbePollEvery)` → literal 500 ms stays green; literal message with argument dropped (equivalent at 500, vet flags it); T10's 951 ms kill margin ~0.9 ms; T10 arithmetic mutants each equivalent alone.
+- **The controller reproduced survivor 1 and one kill** on the eval worktree: cadence literal control `ok 9.8s`, mutant `ok 10.5s`; `execProbePollEvery = 600 ms` → T10 red at `exec_probe_test.go:914` (`stop+499.9ms … no later than stop+400ms`). Restored (`status` shows only the judge's report).
+- Report: `verification/world-iter329/evaluator-sprint-r1.md`.
+
+**Routing evidence:** base=e5c1867f717c8e01b4dc5ccc63bbb24adc9ad348@2026-10-31T04:27:17Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Tokens and time per role:
+  - controller `claude:claude-opus-5-5`: tok not reported;
+  - designer Agent `opus`: 242,131 tok / 2,281 s; revision resume 262,015 tok / 106 s, as reported;
+  - planner Agent `opus`: 224,851 tok / 1,964 s;
+  - executor Agent `haiku`: 70,577 tok / 1,114 s;
+  - evaluator Agent `sonnet`: 55,191 tok / 824 s.
+- Generator ≠ judge: opus/haiku vs sonnet (judge-independence: same-vendor, different model). All five roles were spawned; none fell back.
+- Designer diet: 1 doc, 2 runs (author + mandated revision). The r2 fixes were the controller's, not a third run.
+- Metered $0.7356 (quorum r1 $0.4075 + r2 $0.3281).
+
+**Ruled out:**
+- Hoisting the `net6` bind in this sprint (quorum r2 kimi option (a)): it changes probe structure on a fail-closed startup gate and needs its own design and quorum. Row 242.
+- A Linux-CI behavioural arm for F3: predicted vacuous on its own platform by the darwin measurement; T4 is already the behavioural arm in step 8.
+- The row's "~100 ms" floor: below srt's measured 229.6 ms worst answer under load; 250 ms used.
+- Fixing the judge survivors here: non-blocking, and a change would need a re-judge. Row 241.
+- Treating the race-leg timeouts as a regression: both packages pass alone under `-race`, one has no dependency on the diff.
+- A third design run: the carve-out conditions held.
+
+**Retro:**
+1. **A revision introduced the next round's objection.** r1 fixed glm's census point by pasting the new row into the wrong table, and r2 blocked on exactly that. The carve-out absorbed it cheaply, but a revision directive should ask the designer to re-read the diff of its own edit. Instance 1; watch.
+2. **Both reviewers misread a correct claim as wrong** ("three packages") because the doc's own V-row under-reported it. The controller's measurement was what separated "doc wrong" from "evidence row wrong". Rule 3f earned its keep again.
+3. **The race leg's 8-min package bound reds under co-load** (`host/daemon`, `host/verifygate` this time; `host/daemon` in 327). Second instance of the class at this bound; if CI ever reds on it, it gets a row. Watch-item.
+4. **D-WORLD-102's scope ends at row 233.** After the next pick, the loop returns to rule-(d) block reports unless a release row becomes routable or Mark extends the scope. Rows 235 and 237–242 sit outside it.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 230 BUILT in PR #442; rows 241–242 filed.
+**Next:** row 230 lands on merge CI green (landing note). Then row 233, the last row in D-WORLD-102's scope; a dev red still outranks.

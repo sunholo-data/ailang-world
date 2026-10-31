@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-reverse-leg-pins.md",
+  "iso_ts": "2026-10-31T05:09:43Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.058044,
+      "tokens_in": 13286,
+      "tokens_out": 245,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §5, K8 (`execProbePollEvery` not used by `pollLoopback`, keeping the literal 50 ms) is dismissed as having no killer because it is behavior-identical, leaving P1's usage in `pollLoopback` unpinned by any automated test.",
+        "catch": "In §3.1, the T10 snippet references `listenWindow` (`after.Add(listenWindow - execProbePollEvery)`), whereas §2 and V2 verify the production constant is named `execProbeListenMS` (an untyped millisecond int `1000` that must be multiplied by `time.Millisecond`). Ensure the test uses `execProbeListenMS*time.Millisecond` rather than introducing a duplicate constant.",
+        "proposed_fix": "In §3.1, replace `listenWindow` in the T10 snippet with `execProbeListenMS*time.Millisecond` so the ceiling derives directly from both production constants without an intermediate alias."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1007384,
+      "tokens_in": 11830,
+      "tokens_out": 19131,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate 1 premise failure with a broken citation: §8 R2 asserts 'three packages probe (V19)', but V19's recorded observation names probing test files in only two packages (cmd/ailang-worldd and host/broker) and gives no third package anywhere in the row. The premise that scopes the cross-process collision exposure — the residual this doc keeps as a watch while asking the reader to accept R1's unenforced, measurement-only refutation — is cited to a verification row that does not contain it, so the audit chain the doc relies on is broken at the exact point it is load-bearing. The same section carries further unlogged premises: the silent-classification block at :680-688 and the claim that stop() waits for an in-flight classify at :736-739 are asserted with no log row (V4's 60 s rows corroborate the behavior but do not verify the lines), and V11's 'cli.js sha256 prefix 3c3092bd26b3 = World's pin' is an asserted equality with no command comparing it to World's actual pin — yet the new 250 ms floor derives from that binary's measured worst case.",
+        "catch": "AC-LINUX-F3's decision rule is self-corrupting as sequenced: §3.3 step 3 runs step 8's test list with the F3 mutant applied and treats 'a step-8 red' as a host-visible difference signal, but the controller runs AC-LINUX-F3 inside M2 — the same milestone that adds T11 to that list — and T11 reds structurally under the mutant on every platform, so the criterion fires unconditionally and the differs/no-difference decision becomes arbitrary. The branch base must be pinned before this measurement can settle anything.",
+        "proposed_fix": "1) Add a V19b census row: grep -rln 'ProbeExecProfiles\\|ExecStartupConfig\\|ExecProfileFlags\\|exec-profile' --include='*.go' host cmd | xargs -n1 dirname | sort -u, record the package list, and rewrite §8 R2 to 'N packages probe (V19b)' with the measured N — if N=2, correct the sentence; if N=3, name the third package in the observed column. 2) Add grep-hit log rows for the silent classification at :680-688 and the stop/in-flight wait at :736-739 so the ceiling's liveness argument is measured rather than asserted. 3) Log the pin equality: show where World pins srt's cli.js (lockfile or vendored path) and the command whose output matches 3c3092bd26b3. 4) Amend §3.3 step 3 to read: 'branch from the pre-M2 commit so T11 is absent from the step-8 list, or exclude TestExecProbeChildListenerDrainsTheHello from the mutant-applied run', so 'step-8 red' remains a behavioral signal rather than a structural certainty."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.248757,
+      "tokens_in": 11624,
+      "tokens_out": 14259,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The body's load-bearing measurement claims contradict the doc's own verification log. §8 R2 says the race gate is exposed because \"three packages probe (V19)\", but V19's observed column names exactly two probe-bearing test packages (cmd/ailang-worldd and host/broker, 5 files each). §1 row 3(c) and §2 assert \"80 runs of 8 concurrent profiles\" behind the 216.9 ms worst cross-profile margin, but V16/V17 log ZZ_XP_ITERS=10 across 4 shim/load cells — 40 sessions, not 80, with no row accounting for the other 40. In a doc whose headline Item-3 verdict (\"REFUTED in-process at HEAD, by measurement, not by enforcement\") and whose deliberate refusal to build a cross-profile barrier (§8 R1) rest entirely on measurement-not-enforcement, an evidence base that overstates N by 2× and miscounts the probing packages fails premise verification: the barrier-abstention decision is only as credible as these numbers, and as written they cannot be reproduced from the artifacts cited.",
+        "catch": "Reconcile three specific log/body mismatches before this proceeds: (1) §1(c)/§2 \"80 runs of 8 profiles\" vs V16/V17 logged ITERS=10 × 2 shims × {idle,load} = 40 sessions — either attach the missing 40 as V16b/V17b artifacts or restate the statistic over 40 sessions; (2) §8 R2 \"three packages probe\" vs V19's two; (3) §3.1's T10 spec leaves `listenWindow` undefined — if the executor implements it as a test-side literal instead of aliasing `execProbeListenMS`, T10's ceiling stops deriving from code, re-creating the exact literal-drift class P1/K7 exist to kill (the doc's relegated T6 is the only backstop, and the doc explicitly refuses to rely on it). Also resolve §3.3's self-contradictory heading \"before merge (non-blocking)\": its own decision rule says a missing Linux run leaves the cell UNMEASURED without blocking, so one of the two phrases is false.",
+        "proposed_fix": "① Replace §8 R2's sentence with: \"These are possible in the race gate, where go test ./... runs package binaries in parallel (verify_go.sh:350), and the two probe-bearing test packages, cmd/ailang-worldd and host/broker, can execute concurrently (V19).\" ② Replace \"Across 80 runs of 8 profiles\" (§1(c) and §2) with \"Across 40 sessions of 8 profiles (10 iterations × {noop, passthrough} × {idle, load}; V16, V17), the lag never came closer than 216.9 ms, with 0 collisions\" — or, if a second batch was run, add it to the log as V16b/V17b with commands and outputs so the 80 is derivable. ③ Add to §3.1's T10 snippet: `listenWindow := execProbeListenMS` with a comment \"ceiling derives from both production constants; if the hold is ever shortened the ceiling tightens automatically, and T6's wall-clock holder is the backstop\", and add K9 to §5 (`execProbeListenMS` halved) noting the expected, still-green T10 result at wait=500 plus the tightened bound (idle-exact). ④ Retitle §3.3 to \"the controller's Linux measurement (non-blocking)\" and delete \"before merge\", or invert the decision rule and list AC-LINUX-F3 as a merge blocker — state one position."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller pass: every codebase claim carries a V-row with command+output and paired controls; T10 is deterministic (simulated arrival, injected dial); item 3 refuted by paired-control measurement; spot-checked exec_probe.go:582 literal and ci.yml:121 ubuntu-24.04 first-party."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: Gate 1 premise failure with a broken citation: §8 R2 asserts 'three packages probe (V19)', but V19's recorded observation names probing test files in only two packages (cmd/ailang-worldd and host/broker) and gives no third package anywhere in the row. The premise that scopes the cross-process collision exposure — the residual this doc keeps as a watch while asking the reader to accept R1's unenforced, measurement-only refutation — is cited to a verification row that does not contain it, so the audit chain the doc relies on is broken at the exact point it is load-bearing. The same section carries further unlogged premises: the silent-classification block at :680-688 and the claim that stop() waits for an in-flight classify at :736-739 are asserted with no log row (V4's 60 s rows corroborate the behavior but do not verify the lines), and V11's 'cli.js sha256 prefix 3c3092bd26b3 = World's pin' is an asserted equality with no command comparing it to World's actual pin — yet the new 250 ms floor derives from that binary's measured worst case.",
+      "oc-kimi-k3: The body's load-bearing measurement claims contradict the doc's own verification log. §8 R2 says the race gate is exposed because \"three packages probe (V19)\", but V19's observed column names exactly two probe-bearing test packages (cmd/ailang-worldd and host/broker, 5 files each). §1 row 3(c) and §2 assert \"80 runs of 8 concurrent profiles\" behind the 216.9 ms worst cross-profile margin, but V16/V17 log ZZ_XP_ITERS=10 across 4 shim/load cells — 40 sessions, not 80, with no row accounting for the other 40. In a doc whose headline Item-3 verdict (\"REFUTED in-process at HEAD, by measurement, not by enforcement\") and whose deliberate refusal to build a cross-profile barrier (§8 R1) rest entirely on measurement-not-enforcement, an evidence base that overstates N by 2× and miscounts the probing packages fails premise verification: the barrier-abstention decision is only as credible as these numbers, and as written they cannot be reproduced from the artifacts cited."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.4075394,
+    "total_tokens_in": 36740,
+    "total_tokens_out": 33635
+  }
+}

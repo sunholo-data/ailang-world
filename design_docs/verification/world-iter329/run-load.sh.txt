@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Runs "$@" under 32 spinning `yes` on a 16-core box (load ~32), then kills exactly those PIDs.
+set -u
+pids=()
+for i in $(seq 1 32); do yes > /dev/null & pids+=($!); done
+trap 'kill "${pids[@]}" 2>/dev/null' EXIT
+sleep 2
+uptime
+"$@"
+rc=$?
+kill "${pids[@]}" 2>/dev/null; wait 2>/dev/null
+alive=0; for p in "${pids[@]}"; do kill -0 $p 2>/dev/null && alive=$((alive+1)); done
+echo "load runner rc=$rc yes-alive-after=$alive"
