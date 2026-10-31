@@ -1,0 +1,21 @@
+# repo gate (plan 10.2), worktree HEAD 03fe5a1a (before evidence commit)
+# uptime at start:
+ 3:30  up 4 days, 10:25, 4 users, load averages: 20.54 11.48 9.21
+# uptime before go test ./...:
+ 3:32  up 4 days, 10:27, 4 users, load averages: 24.21 15.53 11.08
+# uptime before capday:
+ 3:42  up 4 days, 10:36, 4 users, load averages: 9.12 15.69 14.80
+verify_ail.sh rc=0
+go build ./... rc=0
+go test -count=1 -timeout 20m ./... rc=1
+grep -c ^FAIL test-all.log = 3
+ok packages = 34
+red package: host/broker TestExecProtectedCheckTimeout/reserve-after-before (timing assertion, load ~20)
+capday rc=0 SKIP=0 PASS-RealCorpus=1
+# isolated re-runs of host/broker (directive: package and failing test alone, 3 times each)
+test-alone run1: 1 PASS, 0 FAIL, 0 top-level FAIL
+test-alone run2: 1 PASS, 0 FAIL, 0 top-level FAIL
+test-alone run3: 1 PASS, 0 FAIL, 0 top-level FAIL
+package-alone run1: rc=0 ok  	github.com/sunholo-data/ailang-world/host/broker	233.723s
+package-alone run2: rc=0 ok  	github.com/sunholo-data/ailang-world/host/broker	251.010s
+package-alone run3: rc=0 ok  	github.com/sunholo-data/ailang-world/host/broker	226.531s

@@ -1,0 +1,284 @@
+=== RUN   TestMarketingPhoneSkeleton
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-v50-reference-phone
+--- PASS: TestMarketingPhoneSkeleton (0.24s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-v50-reference-phone (0.03s)
+=== RUN   TestMarketingPhoneArms
+=== RUN   TestMarketingPhoneArms/seed5-render
+=== RUN   TestMarketingPhoneArms/seed2-render
+=== RUN   TestMarketingPhoneArms/v67/no-scrollbar
+=== RUN   TestMarketingPhoneArms/v67/title-unclipped
+=== RUN   TestMarketingPhoneArms/v67/no-overflow
+=== RUN   TestMarketingPhoneArms/v67/crop-370
+=== RUN   TestMarketingPhoneArms/v67/pad-370
+=== RUN   TestMarketingPhoneArms/v67/full-thumb
+=== RUN   TestMarketingPhoneArms/v67/shift-2
+=== RUN   TestMarketingPhoneArms/v67/shift-4
+=== RUN   TestMarketingPhoneArms/v67/shift-5
+=== RUN   TestMarketingPhoneArms/v67/shift-10
+=== RUN   TestMarketingPhoneArms/v67/timeline-only
+=== RUN   TestMarketingPhoneArms/v67/blank
+=== RUN   TestMarketingPhoneArms/judge/title-right-386
+=== RUN   TestMarketingPhoneArms/judge/title-right-387
+=== RUN   TestMarketingPhoneArms/judge/B1-thumb-split-px150
+=== RUN   TestMarketingPhoneArms/judge/B1b-thumb-split-px250
+=== RUN   TestMarketingPhoneArms/judge/B1c-thumb-split-px8
+=== RUN   TestMarketingPhoneArms/judge/B3-grey-bar-x0-300-no-thumb
+=== RUN   TestMarketingPhoneArms/judge/B3b-grey-bar-full-width
+=== RUN   TestMarketingPhoneArms/judge/B4-run-100px
+=== RUN   TestMarketingPhoneArms/judge/B4b-run-101px
+=== RUN   TestMarketingPhoneArms/judge/B5-two-pieces-rows-differ
+=== RUN   TestMarketingPhoneArms/judge/title-right-385
+=== RUN   TestMarketingPhoneArms/judge/short-thumb-x20
+=== RUN   TestMarketingPhoneArms/judge/short-thumb-x6-130
+=== RUN   TestMarketingPhoneArms/judge/short-thumb-x6-90
+=== RUN   TestMarketingPhoneArms/judge/thumb-x9
+=== RUN   TestMarketingPhoneArms/judge/thumb-x8
+=== RUN   TestMarketingPhoneArms/judge/thumb-end384
+=== RUN   TestMarketingPhoneArms/judge/thumb-end385
+=== RUN   TestMarketingPhoneArms/judge/scattered-pixels-no-thumb
+=== RUN   TestMarketingPhoneArms/judge/thumb-above-bottom20
+=== RUN   TestMarketingPhoneArms/judge/thumb-dark-luma100
+=== RUN   TestMarketingPhoneArms/judge/tall-image-844-ok-but-thumb-1row
+=== RUN   TestMarketingPhoneArms/judge/title-ink-spoof-pixel-388
+=== RUN   TestMarketingPhoneArms/new/header-solid-ink
+=== RUN   TestMarketingPhoneArms/new/entry-solid-ink
+=== RUN   TestMarketingPhoneArms/new/tall-845
+=== RUN   TestMarketingPhoneArms/new/header-15px
+--- PASS: TestMarketingPhoneArms (0.79s)
+    --- PASS: TestMarketingPhoneArms/seed5-render (0.02s)
+    --- PASS: TestMarketingPhoneArms/seed2-render (0.02s)
+    --- PASS: TestMarketingPhoneArms/v67/no-scrollbar (0.02s)
+    --- PASS: TestMarketingPhoneArms/v67/title-unclipped (0.02s)
+    --- PASS: TestMarketingPhoneArms/v67/no-overflow (0.02s)
+    --- PASS: TestMarketingPhoneArms/v67/crop-370 (0.02s)
+    --- PASS: TestMarketingPhoneArms/v67/pad-370 (0.02s)
+    --- PASS: TestMarketingPhoneArms/v67/full-thumb (0.01s)
+    --- PASS: TestMarketingPhoneArms/v67/shift-2 (0.01s)
+    --- PASS: TestMarketingPhoneArms/v67/shift-4 (0.00s)
+    --- PASS: TestMarketingPhoneArms/v67/shift-5 (0.00s)
+    --- PASS: TestMarketingPhoneArms/v67/shift-10 (0.00s)
+    --- PASS: TestMarketingPhoneArms/v67/timeline-only (0.00s)
+    --- PASS: TestMarketingPhoneArms/v67/blank (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/title-right-386 (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/title-right-387 (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/B1-thumb-split-px150 (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/B1b-thumb-split-px250 (0.01s)
+    --- PASS: TestMarketingPhoneArms/judge/B1c-thumb-split-px8 (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/B3-grey-bar-x0-300-no-thumb (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/B3b-grey-bar-full-width (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/B4-run-100px (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/B4b-run-101px (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/B5-two-pieces-rows-differ (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/title-right-385 (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/short-thumb-x20 (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/short-thumb-x6-130 (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/short-thumb-x6-90 (0.02s)
+    --- PASS: TestMarketingPhoneArms/judge/thumb-x9 (0.01s)
+    --- PASS: TestMarketingPhoneArms/judge/thumb-x8 (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/thumb-end384 (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/thumb-end385 (0.01s)
+    --- PASS: TestMarketingPhoneArms/judge/scattered-pixels-no-thumb (0.01s)
+    --- PASS: TestMarketingPhoneArms/judge/thumb-above-bottom20 (0.01s)
+    --- PASS: TestMarketingPhoneArms/judge/thumb-dark-luma100 (0.01s)
+    --- PASS: TestMarketingPhoneArms/judge/tall-image-844-ok-but-thumb-1row (0.00s)
+    --- PASS: TestMarketingPhoneArms/judge/title-ink-spoof-pixel-388 (0.01s)
+    --- PASS: TestMarketingPhoneArms/new/header-solid-ink (0.01s)
+    --- PASS: TestMarketingPhoneArms/new/entry-solid-ink (0.02s)
+    --- PASS: TestMarketingPhoneArms/new/tall-845 (0.01s)
+    --- PASS: TestMarketingPhoneArms/new/header-15px (0.01s)
+=== RUN   TestMarketingPhoneParity
+=== RUN   TestMarketingPhoneParity/pin-registry
+=== NAME  TestMarketingPhoneParity
+    phone_test.go:557: PARITY phone: inputs=41 diffs=0 ledger=1
+--- PASS: TestMarketingPhoneParity (1.65s)
+    --- PASS: TestMarketingPhoneParity/pin-registry (0.00s)
+=== RUN   TestMarketingPhoneCLI
+=== RUN   TestMarketingPhoneCLI/accept-rc
+=== RUN   TestMarketingPhoneCLI/refuse-rc
+=== RUN   TestMarketingPhoneCLI/blank
+=== RUN   TestMarketingPhoneCLI/decode-failed
+=== RUN   TestMarketingPhoneCLI/missing-file
+=== RUN   TestMarketingPhoneCLI/no-candidates
+=== RUN   TestMarketingPhoneCLI/bad-token
+=== RUN   TestMarketingPhoneCLI/duplicate-label
+=== RUN   TestMarketingPhoneCLI/empty-label
+=== RUN   TestMarketingPhoneCLI/bad-flag
+=== RUN   TestMarketingPhoneCLI/help
+=== RUN   TestMarketingPhoneCLI/dispatch
+marketingcheck: no candidates
+usage: marketingcheck phone LABEL=PNG...
+--- PASS: TestMarketingPhoneCLI (0.04s)
+    --- PASS: TestMarketingPhoneCLI/accept-rc (0.01s)
+    --- PASS: TestMarketingPhoneCLI/refuse-rc (0.01s)
+    --- PASS: TestMarketingPhoneCLI/blank (0.01s)
+    --- PASS: TestMarketingPhoneCLI/decode-failed (0.00s)
+    --- PASS: TestMarketingPhoneCLI/missing-file (0.00s)
+    --- PASS: TestMarketingPhoneCLI/no-candidates (0.00s)
+    --- PASS: TestMarketingPhoneCLI/bad-token (0.00s)
+    --- PASS: TestMarketingPhoneCLI/duplicate-label (0.00s)
+    --- PASS: TestMarketingPhoneCLI/empty-label (0.00s)
+    --- PASS: TestMarketingPhoneCLI/bad-flag (0.00s)
+    --- PASS: TestMarketingPhoneCLI/help (0.00s)
+    --- PASS: TestMarketingPhoneCLI/dispatch (0.00s)
+=== RUN   TestMarketingPhoneRealCorpus
+    phone_test.go:743: PARITY phone: inputs=59 diffs=0 ledger=1
+    phone_test.go:744: CHECK images=10 byte-equal=10; real arms=39; parity inputs=59
+--- PASS: TestMarketingPhoneRealCorpus (3.16s)
+=== RUN   TestMarketingPositionFixtures
+--- PASS: TestMarketingPositionFixtures (0.02s)
+=== RUN   TestMarketingPositionCorpus
+=== RUN   TestMarketingPositionCorpus/stores/r1-seed1
+=== RUN   TestMarketingPositionCorpus/stores/r1-seed2
+=== RUN   TestMarketingPositionCorpus/stores/r1-seed1-blockconverted
+=== RUN   TestMarketingPositionCorpus/stores/r1-seed2-blockconverted
+=== RUN   TestMarketingPositionCorpus/stores/r1b-seed3
+=== RUN   TestMarketingPositionCorpus/stores/r1b-seed4
+=== RUN   TestMarketingPositionCorpus/stores/r1c-seed5
+=== RUN   TestMarketingPositionCorpus/stores/r1c-seed6
+=== RUN   TestMarketingPositionCorpus/stores/eval-p1
+=== RUN   TestMarketingPositionCorpus/stores/eval-p2
+=== RUN   TestMarketingPositionCorpus/stores/eval-p3
+=== RUN   TestMarketingPositionCorpus/v65/neg-attested+14
+=== RUN   TestMarketingPositionCorpus/v65/neg-attested-dropped
+=== RUN   TestMarketingPositionCorpus/v65/neg-background-over-content
+=== RUN   TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24
+=== RUN   TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline
+=== RUN   TestMarketingPositionCorpus/v65/neg-light-header+40
+=== RUN   TestMarketingPositionCorpus/v65/neg-light-header-whole-view
+=== RUN   TestMarketingPositionCorpus/v65/neg-packet-all+14
+=== RUN   TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines
+=== RUN   TestMarketingPositionCorpus/v65/neg-payload+14
+=== RUN   TestMarketingPositionCorpus/v65/neg-proven-grows-6-lines-below-fold
+=== RUN   TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed
+=== RUN   TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs
+=== RUN   TestMarketingPositionCorpus/v65/neg-tested-at-attested-row
+=== RUN   TestMarketingPositionCorpus/v65/neg-tested-at-proven-row
+=== RUN   TestMarketingPositionCorpus/v65/neg-tested-height+14
+=== RUN   TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps
+=== RUN   TestMarketingPositionCorpus/v65/syn-pos-proven-5-lines
+=== RUN   TestMarketingPositionCorpus/v65/syn-pos-tested-wraps-3-lines
+=== RUN   TestMarketingPositionCorpus/v65-p1/neg-packet-all+14
+=== RUN   TestMarketingPositionCorpus/v65-p1/neg-proven-grows-6-lines-below-fold
+=== RUN   TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row
+=== RUN   TestMarketingPositionCorpus/v65-p1/syn-pos-tested-wraps-3-lines
+=== RUN   TestMarketingPositionCorpus/new/iso-a1-tested-w-3
+=== RUN   TestMarketingPositionCorpus/new/iso-freegap-validation-h+240
+=== RUN   TestMarketingPositionCorpus/new/iso-minh-approvals-h-1
+=== RUN   TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24
+=== RUN   TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24
+=== RUN   TestMarketingPositionCorpus/new/acc-tested-w-2
+=== RUN   TestMarketingPositionCorpus/new/perm-approvals-y+48
+=== RUN   TestMarketingPositionCorpus/new/perm-approvals-y-48
+=== RUN   TestMarketingPositionCorpus/new/perm-validation-h+216
+=== RUN   TestMarketingPositionCorpus/new/perm-roster-drift-2px
+--- PASS: TestMarketingPositionCorpus (0.01s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1-seed1 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1-seed2 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1-seed1-blockconverted (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1-seed2-blockconverted (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1b-seed3 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1b-seed4 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1c-seed5 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/r1c-seed6 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/eval-p1 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/eval-p2 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/stores/eval-p3 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-attested+14 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-attested-dropped (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-background-over-content (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-light-header+40 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-light-header-whole-view (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-packet-all+14 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-payload+14 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-proven-grows-6-lines-below-fold (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-tested-at-attested-row (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-tested-at-proven-row (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/neg-tested-height+14 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/syn-pos-proven-5-lines (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65/syn-pos-tested-wraps-3-lines (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65-p1/neg-packet-all+14 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65-p1/neg-proven-grows-6-lines-below-fold (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row (0.00s)
+    --- PASS: TestMarketingPositionCorpus/v65-p1/syn-pos-tested-wraps-3-lines (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/iso-a1-tested-w-3 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/iso-freegap-validation-h+240 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/iso-minh-approvals-h-1 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/acc-tested-w-2 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/perm-approvals-y+48 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/perm-approvals-y-48 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/perm-validation-h+216 (0.00s)
+    --- PASS: TestMarketingPositionCorpus/new/perm-roster-drift-2px (0.00s)
+=== RUN   TestMarketingPositionParity
+=== RUN   TestMarketingPositionParity/pin-registry
+=== NAME  TestMarketingPositionParity
+    position_test.go:577: PARITY position: inputs=44 verdict-diffs=0 reason-diffs=0
+--- PASS: TestMarketingPositionParity (0.62s)
+    --- PASS: TestMarketingPositionParity/pin-registry (0.00s)
+=== RUN   TestMarketingPositionCLI
+=== RUN   TestMarketingPositionCLI/accept-rc
+=== RUN   TestMarketingPositionCLI/refuse-rc
+=== RUN   TestMarketingPositionCLI/baseline-empty-content
+=== RUN   TestMarketingPositionCLI/candidate-zero-regions
+=== RUN   TestMarketingPositionCLI/candidate-wrong-schema
+=== RUN   TestMarketingPositionCLI/candidate-unparsable
+=== RUN   TestMarketingPositionCLI/candidate-missing-file
+=== RUN   TestMarketingPositionCLI/no-candidates
+=== RUN   TestMarketingPositionCLI/missing-baseline
+=== RUN   TestMarketingPositionCLI/bad-token
+=== RUN   TestMarketingPositionCLI/duplicate-label
+=== RUN   TestMarketingPositionCLI/empty-label
+=== RUN   TestMarketingPositionCLI/empty-path
+=== RUN   TestMarketingPositionCLI/bad-flag
+=== RUN   TestMarketingPositionCLI/help
+=== RUN   TestMarketingPositionCLI/dispatch
+marketingcheck: --baseline is required
+usage: marketingcheck position --baseline RECTS LABEL=RECTS...
+  -baseline string
+    	R1 baseline rectangles JSON (design_docs/verification/world-iter312/r1-rects.json)
+--- PASS: TestMarketingPositionCLI (0.00s)
+    --- PASS: TestMarketingPositionCLI/accept-rc (0.00s)
+    --- PASS: TestMarketingPositionCLI/refuse-rc (0.00s)
+    --- PASS: TestMarketingPositionCLI/baseline-empty-content (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-zero-regions (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-wrong-schema (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-unparsable (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-missing-file (0.00s)
+    --- PASS: TestMarketingPositionCLI/no-candidates (0.00s)
+    --- PASS: TestMarketingPositionCLI/missing-baseline (0.00s)
+    --- PASS: TestMarketingPositionCLI/bad-token (0.00s)
+    --- PASS: TestMarketingPositionCLI/duplicate-label (0.00s)
+    --- PASS: TestMarketingPositionCLI/empty-label (0.00s)
+    --- PASS: TestMarketingPositionCLI/empty-path (0.00s)
+    --- PASS: TestMarketingPositionCLI/bad-flag (0.00s)
+    --- PASS: TestMarketingPositionCLI/help (0.00s)
+    --- PASS: TestMarketingPositionCLI/dispatch (0.00s)
+=== RUN   TestMarketingPositionGeometryMatchesOracle
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	6.820s

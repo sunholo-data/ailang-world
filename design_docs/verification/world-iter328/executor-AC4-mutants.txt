@@ -1,0 +1,72 @@
+P1: KILLED rc=1 6.9s red=6 TestMarketingPositionCorpus/stores/r1-seed1 TestMarketingPositionCorpus/stores/r1-seed2 TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs TestMarketingPositionCorpus/new/iso-a1-tested-w-3 TestMarketingPositionParity
+    first: want "REFUSE (a1),(a2),(a3),(a4)", got "REFUSE (a2),(a3),(a4)" (reasons ["packet.png/validation: (a4) height 43 vs 49 not whole lines" "packet.png/validation: (
+P2: KILLED rc=1 6.7s red=2 TestMarketingPositionCorpus/new/iso-minh-approvals-h-1 TestMarketingPositionParity
+    first: want "REFUSE (a4)", got "ACCEPT" (reasons [])
+P3: KILLED rc=1 6.7s red=5 TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24 TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24 TestMarketingPositionParity
+    first: want "REFUSE (a2),(a4)", got "REFUSE (a2)" (reasons ["graph.png/graph-svg: (a2) stack-head top 466 vs 1746"])
+P4: KILLED rc=1 7.6s red=2 TestMarketingPositionCorpus/new/iso-freegap-validation-h+240 TestMarketingPositionParity
+    first: want "REFUSE (a3)", got "ACCEPT" (reasons [])
+P5: KILLED rc=1 7.0s red=10 TestMarketingPositionCorpus/stores/r1-seed1 TestMarketingPositionCorpus/stores/r1-seed2 TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline TestMarketingPositionCorpus/v65/neg-light-header+40 TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/v65/neg-packet-all+14 TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines TestMarketingPositionCorpus/v65/neg-payload+14 TestMarketingPositionCorpus/v65-p1/neg-packet-all+14 TestMarketingPositionParity
+    first: want "REFUSE (a1),(a2),(a3),(a4)", got "REFUSE (a1),(a3),(a4)" (reasons ["packet.png/validation: (a1) left/right 106..1285 vs 106..1319" "packet.png/validation:
+P6: KILLED rc=1 6.4s red=14 TestMarketingPositionCorpus/stores/r1-seed1 TestMarketingPositionCorpus/stores/r1-seed2 TestMarketingPositionCorpus/v65/neg-attested+14 TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24 TestMarketingPositionCorpus/v65/neg-light-header+40 TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs TestMarketingPositionCorpus/v65/neg-tested-at-attested-row TestMarketingPositionCorpus/v65/neg-tested-at-proven-row TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row TestMarketingPositionCorpus/new/iso-freegap-validation-h+240 TestMarketingPositionParity TestMarketingPositionCLI/refuse-rc
+    first: want "REFUSE (a1),(a2),(a3),(a4)", got "REFUSE (a1),(a2),(a4)" (reasons ["packet.png/validation: (a1) left/right 106..1285 vs 106..1319" "packet.png/validation:
+P7: KILLED rc=1 6.3s red=4 TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines TestMarketingPositionCorpus/v65/neg-proven-grows-6-lines-below-fold TestMarketingPositionParity
+    first: want "REFUSE (a1),(a2),(a3),(a4),(b)", got "REFUSE (a1),(a2),(a3),(a4)" (reasons ["workbench-light.png/header: (a1) left/right 0..1440 vs 0..1425" "workbench-li
+P8: KILLED rc=1 6.7s red=2 TestMarketingPositionCorpus/v65/neg-background-over-content TestMarketingPositionParity
+    first: want "REFUSE background", got "ACCEPT" (reasons [])
+P9: KILLED rc=1 6.7s red=1 TestMarketingPositionCLI/baseline-empty-content
+    first: rc 0, want 1
+P10: KILLED rc=1 6.9s red=3 TestMarketingPhoneCLI/no-candidates TestMarketingPhoneCLI/dispatch TestMarketingPositionCLI/no-candidates
+    first: rc 0, want 2
+P11: KILLED rc=1 6.8s red=1 TestMarketingPositionCLI/refuse-rc
+    first: rc 0, want 1
+P12: KILLED rc=1 6.7s red=2 TestMarketingPositionParity TestMarketingPositionCLI/refuse-rc
+    first: stores/r1-seed1: reasons differ
+P13: KILLED rc=1 8.8s red=1 TestMarketingPositionFixtures
+    first: v65/neg-attested+14.json: sha256 b9d7e43a248fb573cadbd6d7c67860995be6f017ee2003349ff42fd9c9d5a54a, SHA256SUMS f3ee8b69cbb2ff5d443e655c34c19181eb598aa0bda9151946
+P14: KILLED rc=1 8.8s red=3 TestMarketingPNGContent/canonical-shots TestMarketingShotGeometry/graph.png TestMarketingPositionGeometryMatchesOracle
+    first: canonical shot graph.png: got {Name:graph.png Width:1440 Height:2101 Scheme:light} want {Name:graph.png Width:1440 Height:2100 Scheme:light}
+P15: KILLED rc=1 6.8s red=43 TestMarketingPositionCorpus/stores/r1-seed1 TestMarketingPositionCorpus/stores/r1-seed2 TestMarketingPositionCorpus/stores/r1-seed1-blockconverted TestMarketingPositionCorpus/stores/r1-seed2-blockconverted TestMarketingPositionCorpus/stores/r1b-seed3 TestMarketingPositionCorpus/stores/r1b-seed4 TestMarketingPositionCorpus/stores/r1c-seed5 TestMarketingPositionCorpus/stores/r1c-seed6 TestMarketingPositionCorpus/stores/eval-p1 TestMarketingPositionCorpus/stores/eval-p2 TestMarketingPositionCorpus/stores/eval-p3 TestMarketingPositionCorpus/v65/neg-attested+14 TestMarketingPositionCorpus/v65/neg-attested-dropped TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24 TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline TestMarketingPositionCorpus/v65/neg-light-header+40 TestMarketingPositionCorpus/v65/neg-packet-all+14 TestMarketingPositionCorpus/v65/neg-payload+14 TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs TestMarketingPositionCorpus/v65/neg-tested-at-attested-row TestMarketingPositionCorpus/v65/neg-tested-at-proven-row TestMarketingPositionCorpus/v65/neg-tested-height+14 TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps TestMarketingPositionCorpus/v65/syn-pos-proven-5-lines TestMarketingPositionCorpus/v65/syn-pos-tested-wraps-3-lines TestMarketingPositionCorpus/v65-p1/neg-packet-all+14 TestMarketingPositionCorpus/v65-p1/neg-proven-grows-6-lines-below-fold TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row TestMarketingPositionCorpus/v65-p1/syn-pos-tested-wraps-3-lines TestMarketingPositionCorpus/new/iso-a1-tested-w-3 TestMarketingPositionCorpus/new/iso-freegap-validation-h+240 TestMarketingPositionCorpus/new/iso-minh-approvals-h-1 TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24 TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24 TestMarketingPositionCorpus/new/acc-tested-w-2 TestMarketingPositionCorpus/new/perm-approvals-y+48 TestMarketingPositionCorpus/new/perm-approvals-y-48 TestMarketingPositionCorpus/new/perm-validation-h+216 TestMarketingPositionCorpus/new/perm-roster-drift-2px TestMarketingPositionParity TestMarketingPositionCLI/accept-rc TestMarketingPositionGeometryMatchesOracle
+    first: want "REFUSE (a1),(a2),(a3),(a4)", got "REFUSE (a1),(a2),(a3),(a4),(b)" (reasons ["packet.png/validation: (a1) left/right 106..1285 vs 106..1319" "packet.png/va
+P16: KILLED rc=1 2.9s red=2 TestMarketingPhoneParity/pin-registry TestMarketingPositionParity/pin-registry
+    first: ../../design_docs/planned/w-marketing-capture-orchestration.md: want the v66-phonecheck-main.go.txt pin 31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0f
+P17: KILLED rc=1 21.8s red=1 TestMarketingSubprocessDeadline
+    first: want a subprocess-timeout failure naming /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestMarketingSubprocessDeadline2936505986/001/hang.sh, got <nil> after
+P17b: KILLED rc=1 11.4s red=1 TestMarketingSubprocessDeadline
+    first: grandchild 70527 survived the process-group kill
+O1: KILLED rc=1 0.7s red=1 TestMarketingPositionParity
+    first: v64-p0check-main.go.txt: sha256 34835d2fa5c01f59122f330508d3e5ef1928c57694042527c3ca95529a38618d, pin 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b48754
+O2: KILLED rc=1 0.7s red=1 TestMarketingPhoneParity
+    first: v66-phonecheck-main.go.txt: sha256 1c8e29459374dc8d6472c7ef5ca9834180b6fc771e4a4901472d88486706eb8d, pin 31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0
+F1: KILLED rc=1 6.9s red=5 TestMarketingPhoneArms/v67/timeline-only TestMarketingPhoneArms/v67/blank TestMarketingPhoneArms/new/header-solid-ink TestMarketingPhoneArms/new/header-15px TestMarketingPhoneParity
+    first: want "REFUSE (i),(ii),thumb,title-right", got "REFUSE (i),thumb,title-right" (reasons ["(i) header {42 50 135 68} entry {0 0 0 0} vs R1 {25 45 370 68} {41 428 3
+F2: KILLED rc=1 7.0s red=3 TestMarketingPhoneArms/v67/crop-370 TestMarketingPhoneArms/new/tall-845 TestMarketingPhoneParity
+    first: want "REFUSE dims,title-right", got "REFUSE title-right" (reasons ["(iii′) title-right 369"])
+F3: KILLED rc=1 7.0s red=2 TestMarketingPhoneArms/new/header-15px TestMarketingPhoneParity
+    first: want "REFUSE (ii)", got "ACCEPT" (reasons [])
+F4: KILLED rc=1 7.6s red=6 TestMarketingPhoneArms/judge/B1-thumb-split-px150 TestMarketingPhoneArms/judge/B1c-thumb-split-px8 TestMarketingPhoneArms/judge/B5-two-pieces-rows-differ TestMarketingPhoneArms/judge/short-thumb-x20 TestMarketingPhoneArms/judge/thumb-x9 TestMarketingPhoneParity
+    first: want "REFUSE thumb", got "ACCEPT" (reasons [])
+F5: KILLED rc=1 6.4s red=10 TestMarketingPhoneArms/v67/no-scrollbar TestMarketingPhoneArms/v67/no-overflow TestMarketingPhoneArms/v67/timeline-only TestMarketingPhoneArms/v67/blank TestMarketingPhoneArms/judge/B4-run-100px TestMarketingPhoneArms/judge/short-thumb-x6-90 TestMarketingPhoneArms/judge/scattered-pixels-no-thumb TestMarketingPhoneArms/judge/thumb-above-bottom20 TestMarketingPhoneArms/judge/thumb-dark-luma100 TestMarketingPhoneParity
+    first: want "REFUSE thumb", got "ACCEPT" (reasons [])
+F6: KILLED rc=1 6.5s red=4 TestMarketingPhoneArms/v67/full-thumb TestMarketingPhoneArms/judge/B3b-grey-bar-full-width TestMarketingPhoneArms/judge/thumb-end385 TestMarketingPhoneParity
+    first: want "REFUSE thumb", got "ACCEPT" (reasons [])
+F7: KILLED rc=1 6.4s red=9 TestMarketingPhoneArms/v67/title-unclipped TestMarketingPhoneArms/v67/no-overflow TestMarketingPhoneArms/v67/crop-370 TestMarketingPhoneArms/v67/pad-370 TestMarketingPhoneArms/v67/timeline-only TestMarketingPhoneArms/v67/blank TestMarketingPhoneArms/judge/title-right-386 TestMarketingPhoneArms/judge/title-right-385 TestMarketingPhoneParity
+    first: want "REFUSE title-right", got "ACCEPT" (reasons [])
+F8: KILLED rc=1 6.6s red=7 TestMarketingPhoneArms/v67/shift-5 TestMarketingPhoneArms/v67/shift-10 TestMarketingPhoneArms/v67/timeline-only TestMarketingPhoneArms/v67/blank TestMarketingPhoneArms/judge/title-ink-spoof-pixel-388 TestMarketingPhoneArms/new/entry-solid-ink TestMarketingPhoneParity
+    first: want "REFUSE (i)", got "ACCEPT" (reasons [])
+F9: KILLED rc=1 6.5s red=4 TestMarketingPhoneArms/judge/B1-thumb-split-px150 TestMarketingPhoneArms/judge/B1c-thumb-split-px8 TestMarketingPhoneArms/judge/scattered-pixels-no-thumb TestMarketingPhoneParity
+    first: want "REFUSE thumb", got "ACCEPT" (reasons [])
+F10: KILLED rc=1 6.6s red=11 TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone TestMarketingPhoneSkeleton/skeleton-v50-reference-phone TestMarketingPhoneArms/judge/title-right-387
+    first: render_pix_sha256: got 2d5fadcf3803fbc1738c77b4600ff01e629bbc2f916ce9926a025d8f73577e89, recorded c1cf162e979e7ce425251870deb3e84a14d83a5a993392bf3446fc95f5cfc2
+F11: KILLED rc=1 7.1s red=2 TestMarketingPhoneArms/v67/blank TestMarketingPhoneCLI/blank
+    first: want "REFUSE (i),(ii),thumb,title-right,zero-bands", got "REFUSE (i),(ii),thumb,title-right" (reasons ["(i) header {0 0 0 0} entry {0 0 0 0} vs R1 {25 45 370 68
+D1: KILLED rc=1 6.7s red=2 TestMarketingRunbookMatchesHelp/rects-value TestMarketingRunbookMatchesHelp/position-lines
+    first: §13 must hold exactly one `export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json`, got ["export WORLD_MARKETING_RECTS=design_docs/verification/world-iter312/r1-rect
+D2: KILLED rc=1 2.9s red=2 TestMarketingRunbookMatchesHelp/rects-value TestMarketingRunbookMatchesHelp/position-lines
+    first: the release position line must pass release="$WORLD_MARKETING_RECTS": "go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter31
+D3: KILLED rc=1 3.5s red=1 TestMarketingRunbookMatchesHelp/position-lines
+    first: documented line "go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json refuse=scripts/marketingcheck/testdata
+G1: KILLED rc=1 4.1s red=1 TestProductionGoSurface
+    first: non-test Go file outside context-root scan and explicit reproducer allow-list: scripts/marketingcheck/position.go
+G2: KILLED rc=1 3.5s red=1 TestProductionGoSurface
+    first: non-test Go file outside context-root scan and explicit reproducer allow-list: scripts/marketingcheck/phone.go
