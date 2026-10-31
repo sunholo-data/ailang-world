@@ -916,3 +916,18 @@ func TestExecProbeReverseHelloWaitBounds(t *testing.T) {
 		})
 	}
 }
+
+// T11 (row 230 design §3.2), S6 label: a STRUCTURAL pin of the child's socket
+// hygiene (execProbeScript's comment). It pins the text of the listen op's
+// connection handler; it does not discharge a behavioural claim, since no
+// host-visible effect of c.resume() was measured (design V5, V10, V12).
+// Removing c.resume() must be an explicit decision that deletes this test too.
+func TestExecProbeChildListenerDrainsTheHello(t *testing.T) {
+	const handler = "net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\\n')})"
+	if n := strings.Count(execProbeScript, "net.createServer("); n != 1 {
+		t.Fatalf("execProbeScript has %d net.createServer( calls, want exactly 1 (the listen op)", n)
+	}
+	if !strings.Contains(execProbeScript, handler) {
+		t.Fatalf("the listen op's connection handler is not %s", handler)
+	}
+}
