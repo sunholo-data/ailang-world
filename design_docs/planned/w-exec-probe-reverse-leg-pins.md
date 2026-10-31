@@ -1,6 +1,6 @@
 # w-exec-probe-reverse-leg-pins — bound arm 6's hello wait from both sides, pin the child listener's drain, and settle the cross-profile and collision-rate residuals of row 229
 
-- **Status**: Planned (designed iteration 329, r0). Queue row 230. An amendment to
+- **Status**: Planned (designed iteration 329, r1: quorum r1 fixes, §11). Queue row 230. An amendment to
   `design_docs/implemented/w-exec-probe-reverse-leg-port-race.md` (row 229, the parent; its §4.1,
   §4.2, §5 R2 and R4) and a sibling of `design_docs/implemented/w-exec-probe-reset-holder-false-pass.md`
   (row 232).
@@ -15,7 +15,7 @@
   `yes` on 16 cores, with the PIDs killed by a trap and 0 alive afterwards. The load average read
   15.08–24.42 at the start of the loaded runs (V12, V17). There is no Linux tool locally (V1). Every
   Linux statement below is either sourced from CI (V20) or marked **UNMEASURED** and handed to
-  AC-LINUX-F3 (§4.3). The scratch sources, runners and raw outputs are checked in under
+  AC-LINUX-F3 (§3.3). The scratch sources, runners and raw outputs are checked in under
   `design_docs/verification/world-iter329/` as `.txt` files. Scratch tests were copied into
   `host/broker/` as `zz_iter329_*_test.go`, run, and deleted. After the deletion,
   `git status --porcelain -- host cmd world` printed 0 lines and `exec_probe.go` hashed to its
@@ -29,8 +29,9 @@
 |---|---|---|---|
 | 1 | F2: `execProbeHelloWait` (500 ms) is pinned by no test, and 5 ms keeps every test green | **CONFIRMED for the whole `host/broker` package, not only `-run ExecProbe`.** Control and the 5 ms mutant give the same 363 verdict lines (333 PASS, 0 FAIL, 30 SKIP), both `ok`. The 30 SKIPs are the real-srt and tool-binary tests, so they are unmeasured locally. **New: there is also no deterministic pin in the other direction.** At 60 s, the existing suite reds only through T6/`silent`, a wall-clock path (§3.1) | V2, V3, V4 |
 | 2 | F3: `c.resume()` "avoids a RST on close with an unread hello" and is pinned by no test | **Survival CONFIRMED** on the whole package: 363 identical verdict lines with `c.resume()` removed. **The stated mechanism is REFUTED on darwin.** Without `resume`, node still reads the 18-byte hello out of the kernel into its own buffer (`readableLength` 18), so no unread kernel data is left to cause a reset. What `resume` changes is node's server-side socket lifecycle: `end`/`close` fire 20/20 with it and 0/20 without it. **No host-visible difference was found**: the nonce arrived 20/20 in both variants and the child exited in the same time; under the production poll, REACHED 40/40 per variant, idle and loaded. On Linux this is **UNMEASURED** | V5, V6, V7, V10, V11, V12 |
-| 3 | R2: one profile's poll can land on another profile's live counted listener and raise its accept count to 2 | **REFUTED in-process at HEAD, by measurement, not by enforcement.** Profiles do run concurrently. But (a) every profile's `net6` is bound before its own Run A and held through Run C, (b) `freeLoopbackPort` never returned a port a live listener holds (0 of 200,000 picks; the paired control, with the same ports released, gave 768), and (c) in 80 runs of 8 concurrent profiles, every Run A started 216.9 ms or more before any profile's first pick, idle or loaded (0 collisions). **If forced, the consequence is real and worse than the row says:** the owner's proxy leg refuses with `accepts 9`, *and* the poller's own leg refuses as SILENT, not foreign. There is a cross-process residual of the same class as R4 | V14, V15, V16, V17, V18 |
-| 4 | R4: no Linux measurement of the in-window collision rate exists | **Status unchanged: still none.** Watch item only. In the 8 failed CI runs since 2026-10-28, `inconclusive after` appears 0 times. The only `answered nothing to World's hello` lines are T6's deliberate `t.Logf`. Runs re-run to green were not scanned | V20 |
+| 3 | R2: one profile's poll can land on another profile's live counted listener and raise its accept count to 2 | **REFUTED in-process at HEAD, by measurement, not by enforcement.** Profiles do run concurrently. But (a) every profile's `net6` is bound before its own Run A and held through Run C, (b) `freeLoopbackPort` never returned a port a live listener holds (0 of 200,000 picks; the paired control, with the same ports released, gave 768), and (c) in 40 runs of 8 concurrent profiles (10 iterations × {noop, passthrough} × {idle, load}), every Run A started at least 216.9 ms before any profile's first pick (0 collisions). **If forced, the consequence is real and worse than the row says:** the owner's proxy leg refuses with `accepts 9`, *and* the poller's own leg refuses as SILENT, not foreign. There is a cross-process residual of the same class as R4 | V14, V15, V16, V17, V18 |
+| 4 | R4: no Linux measurement of the in-window collision rate exists | **Status unchanged: still none.** Watch item only. In the 8 failed CI runs since 2026-10-28, `inconclusive after` appears 0 times. The only `answered nothing to World's hello` lines are T6's deliberate `t.Logf`. Runs re-run to green were not scanned | V19b | **[r1] Census of probe-bearing test packages** (controller-measured at `e5c1867f`, re-run first-party) | `grep -rln 'ProbeExecProfiles\|ExecStartupConfig\|ExecProfileFlags\|exec-profile' --include='*_test.go' . \| xargs -n1 dirname \| sort \| uniq -c` | `5 cmd/ailang-worldd`, `5 host/broker`, `2 host/daemon`: three packages |
+| V20 |
 
 ## 2. The mechanisms
 
@@ -40,7 +41,7 @@ under that deadline. The read ends in one of three ways:
 
 - the nonce line, which is **child**;
 - other bytes or a clean EOF, which is **foreign**;
-- zero bytes at the deadline or on a reset, which is **silent** (`:680-688`).
+- zero bytes at the deadline or on a reset, which is **silent** (`:680-689`, V23).
 
 The wait therefore decides two things:
 
@@ -60,7 +61,7 @@ The wait therefore decides two things:
   - For a breached child that accepts and never answers, the same conversion weakens P20: a silent
     reach becomes a retry.
   - The ceiling has a second, liveness reason. The poll ignores `ctx`, and `stop()` waits for an
-    in-flight classify (`:736-739`). With a 60 s wait, each T7 silent row took 60 s and still
+    in-flight classify (`:736-741`, V24). With a 60 s wait, each T7 silent row took 60 s and still
     passed (V4). Inside the daemon's 9 s startup context (parent V16), that is a 51 s overrun.
   - The ceiling is therefore **`execProbeListenMS` less one poll period, 950 ms**: the first
     connected dial lands at most one poll period after the bind, and its deadline must fall inside
@@ -94,9 +95,10 @@ until `probe()` returns (`:456`). A port held by a live listener is never return
 (V15).
 
 So profile X's pick can equal profile Y's `net6` port only if Y binds `net6` **after** X's pick.
-That needs Y's setup to lag X's Run A and Run B together. Across 80 runs of 8 profiles, the lag
-never came closer than 216.9 ms to that point (noop shim, the fastest Run A and Run B), and it was
-572.6 ms with the pass-through shim. Load widened the margin to 280.5 / 933.8 ms (V16, V17). The
+That needs Y's setup to lag X's Run A and Run B together. Across 40 runs of 8 profiles (10 iterations
+× {noop, passthrough} × {idle, load}), the lag never came closer than 216.9 ms to that point.
+Idle (20 runs) the worst margin was 216.9 ms with the noop shim (the fastest Run A and Run B) and
+572.6 ms with the pass-through shim. Loaded (20 runs) it was 280.5 / 933.8 ms (V16, V17). The
 runtime re-check path is single-flight (`exec_tools.go:344-346`), and no `host/broker` or
 `host/daemon` test calls `t.Parallel()` (V19).
 
@@ -136,6 +138,9 @@ const execProbeHelloFloor = 250 * time.Millisecond // > the 229.6 ms worst mux a
 
 func TestExecProbeReverseHelloWaitBounds(t *testing.T) {
 	// rows: slow-child (want+"\n" → {child}), slow-mux ("HTTP/1.1 400 Bad Request\r\n" → {foreign})
+	// The ceiling derives from BOTH production constants, never a test literal: shorten the hold
+	// or lengthen the poll period and the ceiling tightens with it (K9).
+	listenWindow := time.Duration(execProbeListenMS) * time.Millisecond
 	before := time.Now()
 	conn := &helloConn{arrival: before.Add(execProbeHelloFloor), answer: []byte(row.answer)}
 	seen := pollLoopback(40000, want, firstDialReturns(conn, refused))() // dials once before stop
@@ -184,7 +189,7 @@ host-visible effect, so an arm could not be non-vacuous.
 does **not** discharge a behavioural claim, and the doc makes none for it. It is killed by K6
 (V9). It is pure, so it runs and passes on every platform, with no skip.
 
-### 3.3 AC-LINUX-F3: the controller's Linux measurement, before merge (non-blocking)
+### 3.3 AC-LINUX-F3: the controller's Linux measurement (non-blocking)
 
 Use a throwaway branch with row 232's V14 workflow pattern, on **`ubuntu-24.04`** (the `go-verify`
 image, `ci.yml:121`; *not* `ubuntu-latest`). Copy in this session's scratch sources unchanged and
@@ -195,7 +200,11 @@ run three things:
    `noresume`.
 3. `zz_iter329_f3_test.go.txt` as a package test: `TestZZIter329RealChildUnderPoll` with
    `ZZ_F3_VARIANT=resume|noresume ZZ_F3_CYCLES=40`, and `TestZZIter329ChildAnswerLatency`. Run both
-   idle and under 2×nproc `yes`. Then run step 8's test list with the F3 mutant applied.
+   idle and under 2×nproc `yes`. Then run step 8's test list with the F3 mutant applied, **with
+   `TestExecProbeChildListenerDrainsTheHello` (T11) excluded** from that run, or with the throwaway
+   branch cut from the pre-M2 commit, where T11 does not exist yet. T11 reds structurally under
+   the mutant on every platform, so leaving it in would make "a step-8 red" certain rather than a
+   behavioural signal.
 
 **Decision rule.** If `noresume` differs on Linux in any host-visible way, T4, already in step 8,
 is the Linux arm that kills K6, and §3.2's rationale is amended. Host-visible means any of:
@@ -203,11 +212,12 @@ is the Linux arm that kills K6, and §3.2's rationale is amended. Host-visible m
 - a cycle that is not REACHED;
 - a client error before the nonce;
 - a child exit more than 100 ms later than `resume`'s maximum;
-- a step-8 red.
+- a step-8 red from any test other than T11 (T11 is excluded from that run).
 
 If `noresume` shows no difference, record "no difference" and T11 stands as the only pin. **Either
-way the sprint's code is the same.** AC-LINUX-F3 settles a claim, not a code path, so a missing
-run leaves §1 row 2's Linux cell UNMEASURED rather than blocking the merge.
+way the sprint's code is the same.** AC-LINUX-F3 settles a claim, not a code path. It is
+**non-blocking**: the controller may run it before or after the merge, and a missing run leaves §1
+row 2's Linux cell UNMEASURED.
 
 ### 3.4 Item 3: no code; the verdict and its trigger
 
@@ -246,13 +256,13 @@ against this session's prototype of the test, at `e5c1867f`.
 
 | Test | Kind | Needs node? | Kills | Measured? |
 |---|---|---|---|---|
-| **T10** `TestExecProbeReverseHelloWaitBounds` (new; rows `slow-child`, `slow-mux`) | deterministic, injected dial + simulated arrival | no | K1 (5 ms), K2 (249 ms), K3 (951 ms), K4 (60 s), K5 (no deadline) | **yes**: V8 (control green; each mutant red with the named assertion) |
+| **T10** `TestExecProbeReverseHelloWaitBounds` (new; rows `slow-child`, `slow-mux`) | deterministic, injected dial + simulated arrival | no | K1 (5 ms), K2 (249 ms), K3 (951 ms), K4 (60 s), K5 (no deadline), K9 (hold halved) | **yes**: V8, V25 (control green; each mutant red with the named assertion) |
 | **T11** `TestExecProbeChildListenerDrainsTheHello` (new) | structural, S6-labelled | no | K6 (`c.resume()` removed) | **yes**: V9 |
 | **T7** `TestExecProbeReverseLegSilentHolderRefusesSticky` (extended: also want `within <execProbeHelloWait.Milliseconds()> ms;`) | existing fixture | no | K7 (the SILENT text not derived from the wait) | **yes, on today's code**: V13. With wait 400 ms and the literal kept, it is red; at 500 it is green. After P2, K7 is the planner's revert-P2-and-set-400 mutant, **to be re-proven by the executor** |
 | **T6** `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse` (unchanged) | wall-clock (stand-in holder lifetime) | yes | K4 as a side effect only | yes: V4 (60 s → `silent` red). Not relied on: it is timing-bound, and T10 is the pin |
 | **T4** (unchanged; CI step 8) | real node child, pass-through | yes | K6 on Linux **only if** AC-LINUX-F3 shows a difference | darwin: survives K6 (V3). Linux: UNMEASURED |
 
-**AC-MUT.** Apply K1–K7 one at a time. Each reds its named killer, and the tree is restored
+**AC-MUT.** Apply K1–K7 and K9 one at a time. Each reds its named killer, and the tree is restored
 byte-identical (sha256 of both Go files). **AC-GATE**: `gofmt -l` is empty, `go vet ./host/broker/`
 is clean (clean at base, V1), `go build ./... && go test ./...` passes, and
 `./scripts/verify_ail.sh` passes. No `.ail` is touched. **AC-CI**: T10 and T11 join step 8's
@@ -274,14 +284,15 @@ baseline.
 | K5 | the `SetDeadline` line removed from `classifyReverseDial` | T10: `sets 0` | V8 red |
 | K6 (= O10) | `c.resume();` removed from the listen op | T11: `the listen op's connection handler is not …` | V9 red; the full package stays green (V3) |
 | K7 | the SILENT text keeps a literal while the wait changes (500 → 400 ms) | T7 extension: `want it to contain "… within 400 ms;"` | V13 red (on today's code) |
+| K9 | `execProbeListenMS = 500` (the hold halved; wait stays 500 ms) | T10 ceiling: the bound becomes 500 − 50 = 450 ms, and a 500 ms wait exceeds it: `hello deadline at stop+499.9ms … want … no later than stop+450ms`. **This red is the intended coupling**: with a 500 ms hold, a 500 ms wait outlives the hold for a dial landing one poll period after the bind, so a silent holder's exit would read as foreign, which is retried (§2's ceiling). Whoever shortens the hold must shorten the wait too | V25 red (prototype; ceiling derived from `execProbeListenMS`) |
 | K8 | `execProbePollEvery` not used by `pollLoopback` (the literal 50 ms kept) | **none**: behaviour-identical, so it is no mutant. P1's constant is checked by code review; T10 derives its ceiling from it | n/a |
 
 ## 6. Milestones
 
 - **M1, F2.** P1 and P2, then T10 (with `helloConn` and `execProbeHelloFloor`), then the T7
-  extension. Prove K1–K5 and K7 red one at a time. A `ci.yml:247` gain of T10.
+  extension. Prove K1–K5, K7 and K9 red one at a time. A `ci.yml:247` gain of T10.
 - **M2, F3 and record.** P3's two comments, then T11. Prove K6 red. A `ci.yml:247` gain of T11. The
-  controller runs AC-LINUX-F3 (§3.3) and records it under `design_docs/verification/world-iter329/`.
+  controller runs AC-LINUX-F3 (§3.3, non-blocking) and records it under `design_docs/verification/world-iter329/`.
   Items 3 and 4 need no code. The controller's record carries §3.4 and §3.5's verdicts and
   triggers into the charter row's closing note. That is the controller's edit, not the sprint's.
 
@@ -313,7 +324,7 @@ plus comments), with `execProbeListenMS`'s census as the control (V2). No test r
 `execProbeScript` or `c.resume` (V7). Arms 1–5, 7 and 8 are untouched.
 
 - **R1, the cross-profile exclusion is measured, not enforced.** It rests on "every profile binds
-  `net6` before any profile's first pick". The worst margin seen was 216.9 ms, in 80 runs (V16).
+  `net6` before any profile's first pick". The worst margin seen was 216.9 ms, in 40 runs (20 idle, 20 loaded; V16, V17).
   - **What could reopen it:** a future edit that moves `newProbeListener` later in `probe()`, or
     that adds a slow, stall-prone step before it.
   - **Not proposed:** a barrier across profiles, where every profile signals after binding `net6`
@@ -323,7 +334,7 @@ plus comments), with `execProbeListenMS`'s census as the control (V2). No test r
   - The R4 trigger (§3.5) catches it if it ever happens.
 - **R2, cross-process collisions** (another process's `bind(0)` returns the port a poll just
   freed). These are possible in the race gate, where `go test ./...` runs package binaries in
-  parallel (`verify_go.sh:350`), and three packages probe (V19). The darwin rate is about 1/16,384
+  parallel (`verify_go.sh:350`), and three test packages probe: `cmd/ailang-worldd` (5 files), `host/broker` (5) and `host/daemon` (2) (V19b). The darwin rate is about 1/16,384
   per bind (V15). The Linux rate is UNMEASURED. This is the R4 class.
 - **R3, F3 on Linux is UNMEASURED.** §3.3's decision rule handles both outcomes. If Linux
   *does* reset, T4 already sits on the CI platform as the killer.
@@ -363,7 +374,7 @@ The base for every row is `e5c1867f`. `V=design_docs/verification/world-iter329`
 | V8 | **T10 prototype vs K1–K5 and the bound controls** | `bash $V/run-f2-mutants.sh.txt` over `$V/zz_iter329_f2_test.go.txt` (sha256 prefix `f7d26a0ea751`) → `$V/out-f2-mutants.txt` | control PASS. 5 ms FAIL: `zz_iter329_f2_test.go:76: an answer 250ms after the hello: seen {… silent:true} … want {child:true …}` and the `{foreign:true}` row. 249 ms FAIL (the same). 250 ms PASS. 950 ms PASS. 951 ms FAIL `:79: hello deadline at stop+950.876541ms (sets 1); want … no later than stop+950ms`. 60 s FAIL `stop+59.999914875s`. no-deadline FAIL `(sets 0)`. `restored sha 390c74e841f26a12` |
 | V9 | **T11 prototype vs K6** | `$V/zz_iter329_t11_test.go.txt` copied in; control, then `sed 's/net.createServer(c=>{c.resume();c.end(/net.createServer(c=>{c.end(/'` → `$V/out-t11-mutant.txt` | control `--- PASS`. Mutant (`0 occurrences left`) `zz_iter329_t11_test.go:18: the listen op's connection handler is not net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')})`, `--- FAIL`. `restored 390c74e841f26a12` |
 | V10 | The production poll against World's real child, idle | `ZZ_F3_VARIANT={resume,noresume} ZZ_F3_CYCLES=40 go test -run '^TestZZIter329RealChildUnderPoll$' -v ./host/broker/` (`$V/zz_iter329_f3_test.go.txt`, prefix `c113a97f494a`) → `$V/out-f3-realchild-idle.txt` | resume `seen={child:true …}` 40/40. noresume `{child:true}` 39 + `{child:true … silent:true}` 1. Every cycle REACHED (child-first). The stray silent is row 232's close-time reset (its §3 reading 1), seen in both variants under load (V12) |
-| V11 | Answer latency to the hello: child and srt's mux, idle and at load (the floor's basis) | `$V/mux-server.mjs.txt` on srt 0.0.78 (`cli.js` sha256 prefix `3c3092bd26b3` = World's pin) plus `TestZZIter329MuxAnswerLatency` and `TestZZIter329ChildAnswerLatency`, 2,000 dials each, idle then under `$V/run-load.sh.txt` → `$V/out-mux-latency.txt`; 500-dial child runs → `$V/out-latency-idle.txt`, `$V/out-load.txt` | idle: mux `max=7.059916ms` (p99 0.82 ms), child `max=2.791041ms`. Load (avg 24.42): mux `ok=2000 … p99=9.149333ms max=229.593916ms`, child `max=125.657417ms`. 500-dial runs: idle max 1.50 / 2.26 ms (resume / noresume); load max 125.26 / 160.07 ms. `bad=0` everywhere |
+| V11 | Answer latency to the hello: child and srt's mux, idle and at load (the floor's basis) | `$V/mux-server.mjs.txt` on srt 0.0.78 (`cli.js` sha256 prefix `3c3092bd26b3`, equal to World's pin by V26) plus `TestZZIter329MuxAnswerLatency` and `TestZZIter329ChildAnswerLatency`, 2,000 dials each, idle then under `$V/run-load.sh.txt` → `$V/out-mux-latency.txt`; 500-dial child runs → `$V/out-latency-idle.txt`, `$V/out-load.txt` | idle: mux `max=7.059916ms` (p99 0.82 ms), child `max=2.791041ms`. Load (avg 24.42): mux `ok=2000 … p99=9.149333ms max=229.593916ms`, child `max=125.657417ms`. 500-dial runs: idle max 1.50 / 2.26 ms (resume / noresume); load max 125.26 / 160.07 ms. `bad=0` everywhere |
 | V12 | V10 and V11 under load; the T10 prototype (100 ms floor) at load | `$V/run-load.sh.txt` wrapping the latency, real-child and `-test.count=3000 -test.run '^TestZZIter329HelloWait'` runs → `$V/out-load.txt` | `load averages: 16.78`. Real child, load: resume `{child}` 39 + `{child,silent}` 1; noresume 38 + 2; all REACHED. `-count=3000` `PASS`. `load runner rc=0 yes-alive-after=0` |
 | V13 | The SILENT text is a literal | `$V/zz_iter329_msg_test.go.txt` (T7's fixture, `silent` holder) at control, then with wait `400 * time.Millisecond` → `$V/out-msg-mutant.txt` | control `--- PASS`. 400 ms: `Why = "reverse leg: a listener on 127.0.0.1:53407 … within 500 ms; …"; want it to contain "…within 400 ms;"`, `--- FAIL`. `restored 390c74e841f26a12; porcelain-go=0` |
 | V14 | Profiles are probed concurrently; `net6` is bound before Run A and Run B, held through the reverse leg, and the pick comes after | `grep -n 'for i, p := range profiles {\|go func() {$\|errs\[i\] = probeExecProfile' host/broker/exec_probe.go`; `grep -n 'net6 := newProbeListener()\|defer net6.close()\|a := pp.run(ctx, argv, true…\|b := pp.run(ctx, \[\]string{"/bin/sh"\|c, revWhy := pp.reverseLeg\|port, err := pick()\|poll := pollLoopback(port\|r := pp.run(ctx, argv, false\|seen := poll()\|acceptsA :=\|acceptsC :=' …` | `:224` loop, `:226` `go func() {`, `:228` probeExecProfile. `:455` net6, `:456` defer close, `:465` Run A, `:467` acceptsA, `:496` Run B, `:506` reverseLeg, `:508` acceptsC, `:551` pick, `:567` poll, `:568` run, `:569` stop |
@@ -371,7 +382,29 @@ The base for every row is `e5c1867f`. `V=design_docs/verification/world-iter329`
 | V16 | **Ordering margin, idle**: every Run A starts before any first pick (8 profiles × 10 runs per shim) | `$V/zz_iter329_xprof_test.go.txt` (prefix `2c0652c45a99`; a logging shim that rewrites the client's connect/proxy target to port 1, so `net6` is never dialled by World's own legs). `ZZ_XP_MODE={passthrough,noop} ZZ_XP_N=8 ZZ_XP_ITERS=10 go test -run '^TestZZIter329CrossProfileOrdering$' -v` → `$V/out-xprof-idle.txt` | passthrough: margins 572.6–998.7 ms, `worst-margin=572.6ms collisions=0`, `profiles-with-accepts>=2=0` in every run. noop: 216.9–516.3 ms, `worst-margin=216.9ms collisions=0`, accepts≥2 0 in every run |
 | V17 | The same at load; the T10 prototype (250 ms floor) `-count=3000` at load | `$V/run-load.sh.txt` wrapping noop/passthrough ×10 and `-test.count=3000 -test.run '^TestZZIter329HelloWait'` → `$V/out-xprof-load.txt` | `load averages: 15.08 19.21`. noop `worst-margin=280.5ms collisions=0`; passthrough `worst-margin=933.8ms collisions=0`. `-count=3000` `PASS`. `yes-alive-after=0` |
 | V18 | **A forced collision's consequence** (the picker returns the first-logged `net6` port) | `ZZ_XP_MODE=forced ZZ_XP_N=2 ZZ_XP_ITERS=3 go test -run '^TestZZIter329CrossProfileOrdering$' -v` → `$V/out-xprof-forced.txt` | Each of the 3 runs: `pick∩net6=2 profiles-with-accepts>=2=1`. The owner: `arm6-network: a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 9 …; reverse leg: a listener on 127.0.0.1:60308 … answered nothing to World's hello within 500 ms`. The other profile: `arm6-network: reverse leg: a listener on 127.0.0.1:60308 … answered nothing …` (SILENT, not foreign) |
-| V19 | Callers, single flight, `t.Parallel`, probing packages | `grep -rn "ProbeExecProfiles\|probeExecProfile(" --include='*.go' host cmd \| grep -v _test.go`; `grep -n 'cfg.Probe(\|s.cfg.Probe = ProbeExecProfilesEach' host/broker/exec_tools.go`; `grep -n 's.flight = flight$\|if flight == nil {$\|A shared flight' host/broker/exec_tools.go`; `grep -rn 't.Parallel()' --include='*_test.go' host/broker host/daemon \| wc -l`; control `grep -rln 't.Parallel()' --include='*_test.go' . \| wc -l`; `grep -rln 'ProbeExecProfiles\|ExecStartupConfig\|ExecProfileFlags\|exec-profile' --include='*_test.go' .`; `grep -n 'go test ./... -count=1 -race' scripts/verify_go.sh` | Callers of `ProbeExecProfilesEach`: `exec_probe.go:201` (the `ProbeExecProfiles` wrapper), `exec_startup.go:235` (startup), and `exec_tools.go:134` `s.cfg.Probe = ProbeExecProfilesEach`, called at `:616` `errs, err := s.cfg.Probe(probeCtx, cfg, order)`. `probeExecProfile` has its only call at `:228`. `:106` "A shared flight serializes re-checks", `:344` `if flight == nil {`, `:346` `s.flight = flight`. `0`; control `3`. Probing test files in `cmd/ailang-worldd` (5) and `host/broker` (5). `verify_go.sh:350` `go test ./... -count=1 -race` (no `-p`, so packages run in parallel) |
+| V19 | Callers, single flight, `t.Parallel`, probing packages | `grep -rn "ProbeExecProfiles\|probeExecProfile(" --include='*.go' host cmd \| grep -v _test.go`; `grep -n 'cfg.Probe(\|s.cfg.Probe = ProbeExecProfilesEach' host/broker/exec_tools.go`; `grep -n 's.flight = flight$\|if flight == nil {$\|A shared flight' host/broker/exec_tools.go`; `grep -rn 't.Parallel()' --include='*_test.go' host/broker host/daemon \| wc -l`; control `grep -rln 't.Parallel()' --include='*_test.go' . \| wc -l`; `grep -n 'go test ./... -count=1 -race' scripts/verify_go.sh` | Callers of `ProbeExecProfilesEach`: `exec_probe.go:201` (the `ProbeExecProfiles` wrapper), `exec_startup.go:235` (startup), and `exec_tools.go:134` `s.cfg.Probe = ProbeExecProfilesEach`, called at `:616` `errs, err := s.cfg.Probe(probeCtx, cfg, order)`. `probeExecProfile` has its only call at `:228`. `:106` "A shared flight serializes re-checks", `:344` `if flight == nil {`, `:346` `s.flight = flight`. `0`; control `3`. (r0 listed probing test files here from a `\| head`-truncated grep that dropped `host/daemon`; r1 moves the census to V19b.) `verify_go.sh:350` `go test ./... -count=1 -race` (no `-p`, so packages run in parallel) |
 | V20 | CI status for R4 since the parent landed | `gh run list --repo sunholo-data/ailang-world --workflow ci.yml --status failure --limit 40 …`; for the 8 runs since 2026-10-28: `gh run view <id> --log-failed`, counting `inconclusive after`, `answered nothing to World's hello`, `the host reached the listener`, `accepts [2-9]`; context lines for the hits → `$V/out-ci-scan.txt` | `inconclusive=0` in all 8. `silent=1` only in 40851432834 and 40769031350, each `exec_probe_test.go:724: silent: arm 6 = "a raw connect … accepts 2 …"` (T6's deliberate `t.Logf`); their failure is row 232's `TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder`. The other 6: all 0. **Limitation:** runs whose later attempt went green are listed as success and were not scanned |
 | V21 | QUICKSTART §10 never quotes the wait | `grep -c '500 ms' docs/QUICKSTART.md`; control `grep -c "answered nothing to World" docs/QUICKSTART.md` | `0`; control `1` (`:1168`) |
 | V22 | CI step 8: image, list, PASS guard | `grep -n 'runs-on: ubuntu-24.04\|name: go host build + test gate\|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt' .github/workflows/ci.yml`; `grep -n 'did not PASS on linux (SKIP?)' .github/workflows/ci.yml` | `:117` `name: go host build + test gate`, `:121` `runs-on: ubuntu-24.04`, `:247` the list carrying T4 and every reverse-leg test; `:257` `…$t did not PASS on linux (SKIP?)` |
+| V23 | **[r1]** The classification switch reads as §2 claims | `sed -n 680,689p host/broker/exec_probe.go` (controller-measured, re-run first-party) | `switch {` / `case string(buf) == want+"\n":` / `return true, false` / `case len(buf) > 0:` / `return false, true` / `case werr == nil && errors.Is(rerr, io.EOF):` / `return false, true` / `}` / `return false, false // silent` / `}` |
+| V24 | **[r1]** `stop()` waits for the in-flight poll goroutine | `sed -n 736,741p host/broker/exec_probe.go` (controller-measured, re-run first-party) | `return func() reverseSeen {` / `close(done)` / `<-finished` / `return reverseSeen{child: child.Load(), foreign: foreign.Load(), silent: silent.Load()}` / `}` / `}`. The goroutine closes `finished` only on return (`:710`, `defer close(finished)`), after any classify in progress |
+| V25 | **[r1] K9: the hold halved against the T10 prototype**, whose ceiling is `time.Duration(execProbeListenMS)*time.Millisecond - 50*time.Millisecond` | `$V/zz_iter329_f2_test.go.txt` copied in; control; then `sed 's/^const execProbeListenMS = 1000$/const execProbeListenMS = 500/'` → `$V/out-k9-mutant.txt` | control `--- PASS`. Mutant: `zz_iter329_f2_test.go:79: hello deadline at stop+499.903833ms (sets 1); want a deadline no later than stop+450ms (listen window less one poll period)` (both rows), `--- FAIL`. `restored 390c74e841f26a12; porcelain-go=0` |
+| V26 | **[r1] srt pin equality** behind V11's mux | `jq -r '.version, .cli_sha256' design_docs/verification/world-row140-m0/pin.json`; `shasum -a 256 $S/dist/cli.js` and `jq -r .version $S/package.json` (`S` as in V11); `sed -n 206,212p .github/workflows/ci.yml` | pin `0.0.78`, `3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e`; local copy `3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e 0.0.78`, equal. CI enforces it: `PIN=design_docs/verification/world-row140-m0/pin.json` … `[ "$GOT" = "$WANT" ] \|\| { echo "::error::srt cli.js digest drifted from pin.json"; exit 1; }` |
+
+## 11. Quorum r1
+
+Artifact: `design_docs/verification/world-iter329/quorum-r1.json`. **BLOCKED**: `gemini-4-argon`
+PASS; `oc-glm-5-3` REJECT; `oc-kimi-k3` REJECT. Neither reject disputes the design's direction.
+Both are evidence-consistency objections. The controller measured items 1–4 first-party at
+`e5c1867f` before this revision, and each resolution cites that measurement.
+
+| # | Objection (seat) | Resolution |
+|---|---|---|
+| 1 | §8 R2 "three packages probe" cites V19, which names two (glm, kimi) | The claim was true and the log was wrong: r0's census came from a `\| head`-truncated grep that dropped `host/daemon`. **Source: the controller's census**, re-run as V19b: `5 cmd/ailang-worldd`, `5 host/broker`, `2 host/daemon`. §8 R2 now names all three and cites V19b; V19's observed column no longer carries a census |
+| 2 | "80 runs of 8 concurrent profiles" vs the logged 10 iterations × 4 cells (kimi) | **False in r0.** Source: the controller's count, 2 `ZZXP SUMMARY` lines (iters=10) in each of `out-xprof-idle.txt` and `out-xprof-load.txt`, so 40 runs. §1 row 3, §2 and R1 now say 40 (20 idle: worst 216.9 / 572.6 ms; 20 loaded: 280.5 / 933.8 ms). No second batch was run |
+| 3 | V11's "= World's pin" is unlogged (glm) | True, now logged. **Source: the controller's `jq` on `pin.json`**, re-run as V26 with the local `cli.js` digest and the CI enforcement lines (`ci.yml:206-212`) |
+| 4 | `:680-688` and `:736-739` are asserted without log rows (glm) | Both read as claimed. **Source: the controller's reads**, re-run as V23 (`:680-689`) and V24 (`:736-741`); §2's citations now point at them |
+| 5 | T10's `listenWindow` is undefined, so a test literal could recreate the drift class (kimi ③) | §3.1's snippet now defines `listenWindow := time.Duration(execProbeListenMS) * time.Millisecond`. K9 (`execProbeListenMS = 500`) is added and **measured red**, not green as kimi's sketch expected: the ceiling becomes 450 ms < 500 ms (V25). §5 states that this red is the intended coupling |
+| 6 | §3.3 step 3's mutant-applied step-8 run includes T11, so "a step-8 red" fires unconditionally (glm catch); the heading says both "before merge" and "non-blocking" (kimi ④) | Step 3 now excludes T11 from that run (or cuts the branch from the pre-M2 commit), and the decision rule's step-8 criterion excludes T11. The heading drops "before merge". One position, **non-blocking**, is stated in §3.3 and M2 |
+
+Also fixed in passing: the header's "AC-LINUX-F3 (§4.3)" now reads §3.3.
