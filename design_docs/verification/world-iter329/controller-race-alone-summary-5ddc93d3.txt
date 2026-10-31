@@ -1,0 +1,3 @@
+host/daemon rc=0 319s ok  	github.com/sunholo-data/ailang-world/host/daemon	317.576s
+host/verifygate rc=0 262s ok  	github.com/sunholo-data/ailang-world/host/verifygate	261.201s
+done

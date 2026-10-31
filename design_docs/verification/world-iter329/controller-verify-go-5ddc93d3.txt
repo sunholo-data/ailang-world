@@ -1,0 +1,381 @@
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── legs: all (race bound 1500s)
+── tracked-binary hygiene gate
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+ok 16-pinned-font-in-dir
+ok 17-renamed-binary-pinned (bad-signature)
+ok 18-unpinned-font (not-allowlisted)
+ok 19-pinned-name-other-bytes (sha256-mismatch)
+ok 20-font-over-file-cap (file-cap-exceeded)
+ok 21-font-outside-dir (not-allowlisted)
+ok 22-font-in-subdirectory (not-allowlisted)
+ok 23-font-dir-cap (dir-cap-exceeded)
+ok 24-png-and-font-together
+test_tracked_binary_gate: 24 passed, 0 failed
+   ✓ 3 pinned font(s) validated, 1017220 bytes (host/surfacepage/fonts/)
+   ✓ 0 other binary blobs among 5357 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 91 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c000114048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c000114048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 6 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 9 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c000114048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c000114048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 6 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 40000
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (64 exact top-level tests)
+   ✓ all 64 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	252.586s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	82.443s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	35.195s
+ok  	github.com/sunholo-data/ailang-world/host/agui	15.439s
+ok  	github.com/sunholo-data/ailang-world/host/archive	32.706s
+ok  	github.com/sunholo-data/ailang-world/host/authority	2.176s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	6.730s
+ok  	github.com/sunholo-data/ailang-world/host/broker	344.967s
+ok  	github.com/sunholo-data/ailang-world/host/canon	3.026s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	91.209s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	0.773s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	1.045s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	141.989s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	379.026s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	39.396s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	2.445s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	4.478s
+ok  	github.com/sunholo-data/ailang-world/host/pins	4.200s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	49.963s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	3.860s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.463s
+ok  	github.com/sunholo-data/ailang-world/host/projection	15.751s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.016s
+ok  	github.com/sunholo-data/ailang-world/host/registry	1.453s
+ok  	github.com/sunholo-data/ailang-world/host/replay	50.603s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	6.623s
+ok  	github.com/sunholo-data/ailang-world/host/store	19.883s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.793s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	4.252s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.622s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	57.392s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	443.919s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	2.864s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	13.489s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	138.050s
+── go test ./... -count=1 -race -timeout 8m (leg bound 1500s)
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	329.162s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	115.893s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	34.346s
+ok  	github.com/sunholo-data/ailang-world/host/agui	24.846s
+ok  	github.com/sunholo-data/ailang-world/host/archive	29.146s
+ok  	github.com/sunholo-data/ailang-world/host/authority	6.584s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	13.922s
+ok  	github.com/sunholo-data/ailang-world/host/broker	457.546s
+ok  	github.com/sunholo-data/ailang-world/host/canon	3.332s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	97.872s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	6.812s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.201s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	186.643s
+ailang-worldd: internal error: POST /agui/: failure
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: database is closed
+2026/10/31 07:22:43 http: panic serving 127.0.0.1:61184: close of closed channel
+goroutine 34774 [running]:
+net/http.(*conn).serve.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/server.go:1897 +0xe8
+panic({0x1047c9480?, 0x1048d53c0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+github.com/sunholo-data/ailang-world/host/daemon.TestMCPLateBodySocketResidual.func1({0x1048dff38, 0xc000ca4ff0}, 0xc000718c80)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/mcp_budget_test.go:281 +0x9c
+net/http.HandlerFunc.ServeHTTP(0xc000253c40, {0x1048dff38, 0xc000ca4ff0}, 0xc000718c80)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/server.go:2284 +0x4c
+net/http.serverHandler.ServeHTTP({0x1048dd940?}, {0x1048dff38, 0xc000ca4ff0}, 0xc000718c80)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/server.go:3309 +0x26c
+net/http.(*conn).serve(0xc000771680, {0x1048e13b8, 0xc000d40390})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/server.go:2067 +0xa34
+created by net/http.(*Server).Serve in goroutine 34876
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/server.go:3462 +0x5ec
+ailang-worldd: internal error: GET /v1/objects/by-semantic-id/x: host-secret-detail
+ailang-worldd: internal error: GET /workbench: private commit read detail
+ailang-worldd: internal error: GET /workbench: private table detail
+ailang-worldd: internal error: GET /workbench: SECRET approval I/O
+ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+ailang-worldd: internal error: GET /workbench: reference source relation mismatch
+panic: test timed out after 8m0s
+	running tests:
+		TestWorkspacePackageCacheUnsetLeavesHomeAlone (1s)
+		TestWorkspacePackageCacheUnsetLeavesHomeAlone/stale_symlink_removed,_target_intact (0s)
+
+goroutine 217267 [running]:
+testing.(*M).startAlarm.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2802 +0x498
+created by time.goFunc
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/time/sleep.go:215 +0x44
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0xc000174fc8, {0x103d9aa1d, 0x2d}, 0x1048cf170)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2109 +0x7dc
+testing.runTests.func1(0xc000174fc8)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2585 +0x78
+testing.tRunner(0xc000174fc8, 0xc0002c5ab8)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+testing.runTests({0x103d8dc93, 0x24}, {0x103d9e8f5, 0x30}, 0xc000010318, {0x1049bb840, 0x133, 0x133}, {0xc000600a00?, 0xc0004b1060?, ...})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2583 +0x7a4
+testing.(*M).Run(0xc0002cda40)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2443 +0xb3c
+main.main()
+	_testmain.go:676 +0x104
+
+goroutine 217043 [runnable]:
+modernc.org/sqlite/lib._sqlite3VdbeReset(0xc002766000, 0x136078368)
+	/Users/voightkampff/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_g_000000000001ffff.go:11800 +0x1f4
+modernc.org/sqlite/lib.Xsqlite3_finalize(0xc002766000, 0x136078368)
+	/Users/voightkampff/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite.go:11075 +0x228
+modernc.org/sqlite.(*conn).finalize(0xc0006e8960, 0x136078368)
+	/Users/voightkampff/go/pkg/mod/modernc.org/sqlite@v1.54.0/conn.go:661 +0x4c
+modernc.org/sqlite.(*rows).Close(0xc000060b00)
+	/Users/voightkampff/go/pkg/mod/modernc.org/sqlite@v1.54.0/rows.go:97 +0x1d0
+database/sql.(*Rows).close.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:3456 +0x4c
+database/sql.withLock({0x1048de2c0, 0xc0002ca280}, 0xc0007fa758)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:3572 +0x90
+database/sql.(*Rows).close(0xc002898a00, {0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:3455 +0x1b0
+database/sql.(*Rows).Close(0xc002898a00)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:3439 +0x70
+database/sql.(*Rows).Next(0xc002898a00)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:3044 +0x100
+github.com/sunholo-data/ailang-world/host/store.(*Store).ScanUnreadableWorlds(0xc000600540, {0x1048e1460, 0xc0004e4000}, {0x0, 0x0}, 0x40)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/store/scan.go:118 +0x604
+github.com/sunholo-data/ailang-world/host/daemon.(*Daemon).scanIntegrity(0xc0007f2008, {0x1048e1460, 0xc0004e4000})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/daemon.go:994 +0x2f4
+github.com/sunholo-data/ailang-world/host/daemon.New({_, _}, {{0xc000684280, 0x95}, {0x0, 0x0}, {0x103d67240, 0x9}, 0x0, {0x0, ...}, ...})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/daemon.go:870 +0x2740
+github.com/sunholo-data/ailang-world/host/daemon.newWSDaemon(_, {{0xc000684280, 0x95}, {0x0, 0x0}, {0x103d67240, 0x9}, 0x0, {0x0, 0x0}, ...})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/workspace_test.go:150 +0xb4
+github.com/sunholo-data/ailang-world/host/daemon.mustWSDaemon(_, {{0xc000684280, 0x95}, {0x0, 0x0}, {0x0, 0x0}, 0x0, {0x0, 0x0}, ...})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/workspace_test.go:163 +0x7c
+github.com/sunholo-data/ailang-world/host/daemon.TestWorkspacePackageCacheUnsetLeavesHomeAlone.func9(0xc0006f8008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/workspace_layout_test.go:804 +0x164
+testing.tRunner(0xc0006f8008, 0xc000832150)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 216997
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+
+goroutine 217309 [runnable]:
+modernc.org/sqlite.interruptOnDone.func1()
+	/Users/voightkampff/go/pkg/mod/modernc.org/sqlite@v1.54.0/sqlite.go:94 +0x9c
+created by modernc.org/sqlite.interruptOnDone in goroutine 217043
+	/Users/voightkampff/go/pkg/mod/modernc.org/sqlite@v1.54.0/sqlite.go:93 +0x1d4
+
+goroutine 216997 [chan receive]:
+testing.(*T).Run(0xc000174248, {0x103d8e3bf, 0x24}, 0xc000832150)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2109 +0x7dc
+github.com/sunholo-data/ailang-world/host/daemon.TestWorkspacePackageCacheUnsetLeavesHomeAlone(0xc000174248)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/daemon/workspace_layout_test.go:802 +0x168
+testing.tRunner(0xc000174248, 0x1048cf170)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+
+goroutine 217310 [runnable]:
+database/sql.(*Rows).initContextClose.gowrap1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:2996
+runtime.goexit({})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/asm_arm64.s:1447 +0x4
+created by database/sql.(*Rows).initContextClose in goroutine 217043
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:2996 +0x1fc
+
+goroutine 217044 [select]:
+database/sql.(*DB).connectionOpener(0xc0005ea4e0, {0x1048e13f0, 0xc003222050})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:1261 +0xbc
+created by database/sql.OpenDB in goroutine 217043
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/database/sql/sql.go:841 +0x250
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	483.440s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	106.949s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.109s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	6.644s
+ok  	github.com/sunholo-data/ailang-world/host/pins	6.854s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	41.214s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	3.367s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.507s
+ok  	github.com/sunholo-data/ailang-world/host/projection	39.121s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.781s
+ok  	github.com/sunholo-data/ailang-world/host/registry	5.091s
+ok  	github.com/sunholo-data/ailang-world/host/replay	59.918s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	8.565s
+ok  	github.com/sunholo-data/ailang-world/host/store	97.245s
+ok  	github.com/sunholo-data/ailang-world/host/surface	8.902s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	4.910s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	15.789s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	28.976s
+panic: test timed out after 8m0s
+	running tests:
+		TestSeToolsGateArmsAreLoadBearing/plan-bytes (1m8s)
+
+goroutine 9464 [running]:
+testing.(*M).startAlarm.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2802 +0x498
+created by time.goFunc
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/time/sleep.go:215 +0x44
+
+goroutine 1 [chan receive]:
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1993 +0x66c
+testing.tRunner(0xc00016c488, 0xc00013bab8)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2042 +0x190
+testing.runTests({0x100b2306a, 0x24}, {0x100b2b6e0, 0x34}, 0xc000132048, {0x100e74300, 0x40, 0x40}, {0xc000112e00?, 0xc000118600?, ...})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2583 +0x7a4
+testing.(*M).Run(0xc000122b40)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2443 +0xb3c
+main.main()
+	_testmain.go:174 +0x104
+
+goroutine 9493 [chan receive]:
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1993 +0x66c
+testing.tRunner(0xc000218b48, 0x100e32850)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2042 +0x190
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+
+goroutine 8218 [IO wait]:
+internal/poll.runtime_pollWait(0x131d5c800, 0x72)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/netpoll.go:351 +0xa0
+internal/poll.(*pollDesc).wait(0xc000330020, 0x72, 0x1)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_poll_runtime.go:84 +0xb8
+internal/poll.(*pollDesc).waitRead(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0xc000330000, {0xc000380664, 0x99c, 0x99c})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/internal/poll/fd_unix.go:165 +0x34c
+os.(*File).read(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file_posix.go:30
+os.(*File).Read(0xc000a9e008, {0xc000380664, 0x99c, 0x99c})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:144 +0xb0
+bytes.(*Buffer).ReadFrom(0xc000482150, {0x100e36178, 0xc000a9e008})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/bytes/buffer.go:229 +0xf0
+io.copyBuffer({0x100e36320, 0xc000482150}, {0x100e36178, 0xc000a9e008}, {0x0, 0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:415 +0x1c0
+io.Copy(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:388
+os.genericWriteTo(0xc000a9e008, {0x100e36320, 0xc000482150})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:295 +0x50
+os.(*File).WriteTo(0xc000a9e008, {0x100e36320, 0xc000482150})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file.go:273 +0x90
+io.copyBuffer({0x100e36320, 0xc000482150}, {0x100e36260, 0xc000a9e008}, {0x0, 0x0, 0x0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:411 +0xac
+io.Copy(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:602 +0x5c
+os/exec.(*Cmd).Start.func2(0xc0001cc020)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:757 +0x3c
+created by os/exec.(*Cmd).Start in goroutine 9336
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:756 +0xb20
+
+goroutine 9336 [syscall]:
+syscall.syscalln(0x10082ca20, {0xc0004a1598, 0x6, 0x6})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/sys_darwin.go:38 +0x20
+syscall.syscall6(0x10082ca20, 0x56f0, 0xc0004a1668, 0x0, 0xc0001645a0, 0x0, 0x0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/syscall/syscall_darwin.go:407 +0xb4
+syscall.wait4(0x56f0, 0xc0004a1668, 0x0, 0xc0001645a0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/syscall/zsyscall_darwin_arm64.go:44 +0x60
+syscall.Wait4(0x56f0, 0xc0004a16c0, 0x0, 0xc0001645a0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/syscall/syscall_bsd.go:144 +0x48
+os.(*Process).pidWait.func1(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec_unix.go:64
+os.ignoringEINTR2[...](...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/file_posix.go:273
+os.(*Process).pidWait(0xc000318040)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec_unix.go:63 +0xe8
+os.(*Process).wait(0xc000318040)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec_unix.go:28 +0x44
+os.(*Process).Wait(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0xc0003b81a0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:930 +0x74
+os/exec.(*Cmd).Run(0xc0003b81a0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/os/exec/exec.go:632 +0x58
+github.com/sunholo-data/ailang-world/host/verifygate.runGateAtErr({0xc00038c310, 0x6e}, 0xc0004a1da0)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/verifygate/module_manifest_gate_test.go:159 +0x6c4
+github.com/sunholo-data/ailang-world/host/verifygate.runGateAt(0xc00029c248, {0xc00038c310, 0x6e}, 0xc0004a1da0)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/verifygate/module_manifest_gate_test.go:133 +0x4c
+github.com/sunholo-data/ailang-world/host/verifygate.TestSeToolsGateArmsAreLoadBearing.func1(0xc00029c248)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter329-reverse-leg-pins/host/verifygate/module_manifest_gate_test.go:475 +0x4ac
+testing.tRunner(0xc00029c248, 0xc000208000)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 9493
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	482.289s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	5.152s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	10.302s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	278.006s
+FAIL
+rc=1 for 5ddc93d3
