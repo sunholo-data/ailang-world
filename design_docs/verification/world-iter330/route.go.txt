@@ -1,0 +1,56 @@
+// Row 233 designer probe: when a wildcard listener and a 127.0.0.1 listener
+// co-hold one port (darwin allows it with SO_REUSEADDR, which Go and libuv
+// set), which one does a dial to 127.0.0.1:port reach? Each listener answers
+// its own tag. 20 dials per order.
+package main
+
+import (
+	"fmt"
+	"io"
+	"net"
+	"strconv"
+)
+
+func serve(l net.Listener, tag string) {
+	for {
+		c, err := l.Accept()
+		if err != nil {
+			return
+		}
+		_, _ = io.WriteString(c, tag)
+		_ = c.Close()
+	}
+}
+
+func main() {
+	for _, order := range [][2]string{{"0.0.0.0", "127.0.0.1"}, {"127.0.0.1", "0.0.0.0"}} {
+		l1, err := net.Listen("tcp", order[0]+":0")
+		if err != nil {
+			fmt.Println("first", err)
+			continue
+		}
+		port := l1.Addr().(*net.TCPAddr).Port
+		l2, err := net.Listen("tcp", net.JoinHostPort(order[1], strconv.Itoa(port)))
+		if err != nil {
+			fmt.Printf("ROUTE first=%s second=%s co-bind refused: %v\n", order[0], order[1], err)
+			_ = l1.Close()
+			continue
+		}
+		go serve(l1, "first:"+order[0])
+		go serve(l2, "second:"+order[1])
+		got := map[string]int{}
+		for i := 0; i < 20; i++ {
+			c, err := net.Dial("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)))
+			if err != nil {
+				got["err "+err.Error()]++
+				continue
+			}
+			b, _ := io.ReadAll(c)
+			_ = c.Close()
+			got[string(b)]++
+		}
+		fmt.Printf("ROUTE first=%s second=%s dial 127.0.0.1 x20 -> %v\n", order[0], order[1], got)
+		_ = l1.Close()
+		_ = l2.Close()
+	}
+}

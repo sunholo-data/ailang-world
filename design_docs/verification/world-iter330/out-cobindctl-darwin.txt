@@ -1,0 +1,9 @@
+COBINDCTL go default-then-default -> listen tcp 127.0.0.1:61093: bind: address already in use
+COBINDCTL go default-then-reuseport -> listen tcp 127.0.0.1:61094: bind: address already in use
+COBINDCTL go reuseport-then-default -> listen tcp 127.0.0.1:61095: bind: address already in use
+COBINDCTL go reuseport-then-reuseport -> CO-BOUND
+COBINDCTL go wildcard-default-then-loopback-default -> CO-BOUND
+COBINDCTL go loopback-default-then-wildcard-default -> CO-BOUND
+COBINDCTL node reusePort first=0 second=0 -> second EADDRINUSE (err <nil>)
+COBINDCTL node reusePort first=1 second=1 -> first ENOTSUP (err <nil>)
+COBINDCTL node reusePort first=0 second=1 -> second ENOTSUP (err <nil>)

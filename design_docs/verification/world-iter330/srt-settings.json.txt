@@ -1,0 +1,1 @@
+{"filesystem":{"denyRead":[],"allowRead":[],"allowWrite":["/private/tmp/w330-scratch"],"denyWrite":[]},"network":{"allowedDomains":[],"deniedDomains":[],"allowLocalBinding":false,"allowAllUnixSockets":false},"enableWeakerNetworkIsolation":false,"allowAppleEvents":false}

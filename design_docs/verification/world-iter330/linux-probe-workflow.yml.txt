@@ -1,0 +1,43 @@
+name: w330 holder-exit probe
+on:
+  push:
+    branches: ['probe/world-iter330-*']
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.6'
+      - name: probe
+        run: |
+          set -uo pipefail
+          uname -a; nproc; go version; node --version
+          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          mkdir -p "$RUNNER_TEMP/srt"
+          ( cd "$RUNNER_TEMP/srt" && npm init -y >/dev/null && npm install --no-audit --no-fund "@anthropic-ai/sandbox-runtime@0.0.78" )
+          S="$RUNNER_TEMP/srt/node_modules/@anthropic-ai/sandbox-runtime"
+          GOT=$(sha256sum "$S/dist/cli.js" | cut -d' ' -f1)
+          echo "srt cli.js sha256 $GOT (pin 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e)"
+          [ "$GOT" = 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e ] || exit 1
+          mkdir -p /tmp/w330-scratch
+          printf '%s' '{"filesystem":{"denyRead":[],"allowRead":[],"allowWrite":["/tmp/w330-scratch"],"denyWrite":[]},"network":{"allowedDomains":[],"deniedDomains":[],"allowLocalBinding":false,"allowAllUnixSockets":false},"enableWeakerNetworkIsolation":false,"allowAppleEvents":false}' > /tmp/w330-settings.json
+          cd probe && go build -o /tmp/srtexit . && cd ..
+          node "$S/dist/cli.js" --settings /tmp/w330-settings.json -- /bin/sh -c 'echo "PX:$HTTP_PROXY"; echo inside-ok'; echo "smoke rc=$?"
+          echo "=== COBINDCTL"; /tmp/srtexit -mode cobindctl
+          echo "=== IDLE srt hold=1 n=100"; /tmp/srtexit -srt "$S" -settings /tmp/w330-settings.json -n 100 -hold 1
+          echo "=== IDLE srt hold=0 n=100"; /tmp/srtexit -srt "$S" -settings /tmp/w330-settings.json -n 100 -hold 0 -cobind=false
+          echo "=== IDLE standin hold=1 n=100"; /tmp/srtexit -mode standin -standin probe/mux-server.mjs -srt "$S" -n 100 -hold 1 -cobind=false
+          pids=(); for i in $(seq $((2*$(nproc)))); do yes > /dev/null & pids+=($!); done
+          sleep 2; echo "load: $(cat /proc/loadavg)"
+          echo "=== LOAD srt hold=1 n=100"; /tmp/srtexit -srt "$S" -settings /tmp/w330-settings.json -n 100 -hold 1 -cobind=false
+          echo "=== LOAD srt hold=0 n=100"; /tmp/srtexit -srt "$S" -settings /tmp/w330-settings.json -n 100 -hold 0 -cobind=false
+          echo "=== LOAD standin hold=1 n=100"; /tmp/srtexit -mode standin -standin probe/mux-server.mjs -srt "$S" -n 100 -hold 1 -cobind=false
+          echo "load-end: $(cat /proc/loadavg)"
+          kill "${pids[@]}"; sleep 1
+          alive=0; for p in "${pids[@]}"; do kill -0 "$p" 2>/dev/null && alive=$((alive+1)); done
+          echo "yes-alive-after=$alive"
+          echo PROBE-DONE

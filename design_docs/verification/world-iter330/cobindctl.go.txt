@@ -1,0 +1,66 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"os/exec"
+	"strconv"
+	"strings"
+	"syscall"
+)
+
+// coBindControls: the positive and negative controls for coBindReport. A
+// probe that reports EADDRINUSE for the mux means nothing unless the same
+// probe CAN co-bind when both sockets set SO_REUSEPORT.
+func coBindControls() {
+	reuse := net.ListenConfig{Control: func(_, _ string, c syscall.RawConn) error {
+		var serr error
+		_ = c.Control(func(fd uintptr) { serr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, soReusePort, 1) })
+		return serr
+	}}
+	ctx := context.Background()
+	for _, row := range []struct {
+		name          string
+		first, second bool
+		host1, host2  string
+	}{
+		{"default-then-default", false, false, "127.0.0.1", "127.0.0.1"},
+		{"default-then-reuseport", false, true, "127.0.0.1", "127.0.0.1"},
+		{"reuseport-then-default", true, false, "127.0.0.1", "127.0.0.1"},
+		{"reuseport-then-reuseport", true, true, "127.0.0.1", "127.0.0.1"},
+		{"wildcard-default-then-loopback-default", false, false, "0.0.0.0", "127.0.0.1"},
+		{"loopback-default-then-wildcard-default", false, false, "127.0.0.1", "0.0.0.0"},
+	} {
+		lc1, lc2 := net.ListenConfig{}, net.ListenConfig{}
+		if row.first {
+			lc1 = reuse
+		}
+		if row.second {
+			lc2 = reuse
+		}
+		l1, err := lc1.Listen(ctx, "tcp", row.host1+":0")
+		if err != nil {
+			fmt.Println("COBINDCTL", row.name, "first:", err)
+			continue
+		}
+		port := l1.Addr().(*net.TCPAddr).Port
+		l2, err := lc2.Listen(ctx, "tcp", net.JoinHostPort(row.host2, strconv.Itoa(port)))
+		res := "CO-BOUND"
+		if err != nil {
+			res = err.Error()
+		} else {
+			_ = l2.Close()
+		}
+		fmt.Printf("COBINDCTL go %s -> %s\n", row.name, res)
+		_ = l1.Close()
+	}
+	js := `const net=require('net');const [a,b]=[process.argv[1]==='1',process.argv[2]==='1'];
+const s1=net.createServer();s1.on('error',e=>{console.log('first '+e.code);process.exit(0)});
+s1.listen({port:0,host:'127.0.0.1',reusePort:a},()=>{const p=s1.address().port;const s2=net.createServer();
+s2.on('error',e=>{console.log('second '+e.code);process.exit(0)});s2.listen({port:p,host:'127.0.0.1',reusePort:b},()=>{console.log('CO-BOUND');process.exit(0)})})`
+	for _, ab := range [][2]string{{"0", "0"}, {"1", "1"}, {"0", "1"}} {
+		out, err := exec.Command("node", "-e", js, ab[0], ab[1]).CombinedOutput()
+		fmt.Printf("COBINDCTL node reusePort first=%s second=%s -> %s (err %v)\n", ab[0], ab[1], strings.TrimSpace(string(out)), err)
+	}
+}

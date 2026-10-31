@@ -1,0 +1,21 @@
+package broker
+
+// Row 233 designer premise check (iteration 330): today's judge on the R5
+// combination. Copied into host/broker as zz_iter330_judge_test.go, run, deleted.
+
+import "testing"
+
+func TestZZIter330JudgePremise(t *testing.T) {
+	for _, row := range []struct {
+		name string
+		seen reverseSeen
+	}{
+		{"foreign-only", reverseSeen{foreign: true}},
+		{"foreign+silent", reverseSeen{foreign: true, silent: true}},
+		{"silent-only", reverseSeen{silent: true}},
+		{"control-none", reverseSeen{}},
+	} {
+		t.Logf("ZZ330 %s => %d", row.name, judgeReverse("WORLD-PROBE-BOUND", row.seen))
+	}
+	t.Logf("ZZ330 consts revPass=%d revReached=%d revNoToken=%d revSilent=%d revInconclusive=%d", revPass, revReached, revNoToken, revSilent, revInconclusive)
+}

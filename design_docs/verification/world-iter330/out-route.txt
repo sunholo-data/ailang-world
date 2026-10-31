@@ -1,0 +1,2 @@
+ROUTE first=0.0.0.0 second=127.0.0.1 dial 127.0.0.1 x20 -> map[second:127.0.0.1:20]
+ROUTE first=127.0.0.1 second=0.0.0.0 dial 127.0.0.1 x20 -> map[first:127.0.0.1:20]

@@ -1,0 +1,312 @@
+// Row 233 designer probe (iteration 330): does REAL srt 0.0.78's mux, which
+// exits with srt, leave a zero-byte reset on a dial the reverse leg's poll has
+// in flight, after the same port answered World's hello as foreign?
+//
+// Each cycle runs `node <srt cli.js> --settings <s> -- /bin/sh -c 'echo PX:$HTTP_PROXY; sleep H'`,
+// reads the mux port from the child's proxy env, then runs pollLoopback's exact
+// loop (200 ms dial, hello, 500 ms read deadline, read up to len(want)+1 bytes
+// to '\n', 50 ms cadence) against that port until srt has EXITED, then stops it
+// the way reverseLeg does (stop after run returns; an in-flight classify
+// completes). Every dial is recorded with its class and its time relative to
+// srt's exit. -mode standin runs the same against iter329's mux-server.mjs
+// (srt's own mux module in a plain node process that exits after H).
+//
+// Classes: R refused(connect) | C connect-reset | E other connect error |
+// N child nonce | F foreign bytes | f foreign clean EOF | D silent at deadline |
+// S silent on read reset | W silent, hello write failed | O silent, other read error.
+package main
+
+import (
+	"bufio"
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"net"
+	"net/url"
+	"os"
+	"os/exec"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+)
+
+const hello = "WORLD-PROBE-HELLO\n"
+
+type obs struct {
+	cls byte
+	t   time.Time
+	err string
+}
+
+func classify(c net.Conn, want string, wait time.Duration) obs {
+	_ = c.SetDeadline(time.Now().Add(wait))
+	_, werr := io.WriteString(c, hello)
+	buf := make([]byte, 0, len(want)+1)
+	one := make([]byte, 1)
+	var rerr error
+	for len(buf) < len(want)+1 {
+		var n int
+		n, rerr = c.Read(one)
+		if n == 1 {
+			buf = append(buf, one[0])
+			if one[0] == '\n' {
+				break
+			}
+		}
+		if rerr != nil {
+			break
+		}
+	}
+	o := obs{t: time.Now()}
+	switch {
+	case string(buf) == want+"\n":
+		o.cls = 'N'
+	case len(buf) > 0:
+		o.cls = 'F'
+	case werr == nil && errors.Is(rerr, io.EOF):
+		o.cls = 'f'
+	case werr != nil:
+		o.cls, o.err = 'W', fmt.Sprintf("w=%v r=%v", werr, rerr)
+	case errors.Is(rerr, os.ErrDeadlineExceeded):
+		o.cls = 'D'
+	case errors.Is(rerr, syscall.ECONNRESET):
+		o.cls = 'S'
+	default:
+		o.cls, o.err = 'O', fmt.Sprint(rerr)
+	}
+	return o
+}
+
+func poll(port int, want string, wait time.Duration) (stop func() []obs) {
+	var mu sync.Mutex
+	var out []obs
+	done, finished := make(chan struct{}), make(chan struct{})
+	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+	go func() {
+		defer close(finished)
+		for {
+			c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
+			var o obs
+			if err == nil {
+				o = classify(c, want, wait)
+				_ = c.Close()
+			} else {
+				o = obs{t: time.Now(), cls: 'E', err: err.Error()}
+				if errors.Is(err, syscall.ECONNREFUSED) {
+					o.cls, o.err = 'R', ""
+				} else if errors.Is(err, syscall.ECONNRESET) {
+					o.cls, o.err = 'C', ""
+				}
+			}
+			mu.Lock()
+			out = append(out, o)
+			mu.Unlock()
+			select {
+			case <-done:
+				return
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+	}()
+	return func() []obs {
+		close(done)
+		<-finished
+		return out
+	}
+}
+
+func main() {
+	mode := flag.String("mode", "srt", "srt | standin")
+	srtDir := flag.String("srt", "", "srt package dir")
+	settings := flag.String("settings", "settings.json", "srt settings")
+	standin := flag.String("standin", "", "mux-server.mjs path (mode standin)")
+	n := flag.Int("n", 100, "cycles")
+	hold := flag.String("hold", "1", "child hold, seconds (sleep arg)")
+	coBind := flag.Bool("cobind", true, "on cycle 1, try to co-bind the live mux port")
+	flag.Parse()
+	if *mode == "cobindctl" {
+		coBindControls()
+		return
+	}
+	want := "WORLD-PROBE-NONCE " + strings.Repeat("0", 32)
+	counts := map[string]int{}
+	var cyc struct{ total, anyF, anyS, sAfterF, sBeforeF, silentOnly, connAfterExitSilent, multiS, deadlineAfterF int }
+	var verdict struct{ today, ruleA, ruleB, ruleD int } // cycles judged SILENT (sticky refusal)
+	for i := 1; i <= *n; i++ {
+		var cmd *exec.Cmd
+		if *mode == "srt" {
+			cmd = exec.Command("node", *srtDir+"/dist/cli.js", "--settings", *settings, "--", "/bin/sh", "-c", `echo "PX:$HTTP_PROXY"; sleep `+*hold)
+		} else {
+			ms, _ := strconv.ParseFloat(*hold, 64)
+			cmd = exec.Command("node", *standin, *srtDir, strconv.Itoa(int(ms*1000)))
+		}
+		stdout, _ := cmd.StdoutPipe()
+		cmd.Stderr = os.Stderr
+		if err := cmd.Start(); err != nil {
+			fmt.Println("START", err)
+			os.Exit(1)
+		}
+		sc := bufio.NewScanner(stdout)
+		port := 0
+		for sc.Scan() {
+			l := sc.Text()
+			if p, ok := strings.CutPrefix(l, "PX:"); ok {
+				u, err := url.Parse(p)
+				if err == nil {
+					port, _ = strconv.Atoi(u.Port())
+				}
+				break
+			}
+			if p, ok := strings.CutPrefix(l, "MUX-PORT "); ok {
+				port, _ = strconv.Atoi(p)
+				break
+			}
+		}
+		if *mode == "srt" && runtime.GOOS == "linux" {
+			// Inside bwrap HTTP_PROXY names the in-namespace bridge (:3128); the
+			// host mux is srt's own 127.0.0.1:<ephemeral> listener, found by pid.
+			port = hostListenPort(cmd.Process.Pid)
+		}
+		if port == 0 {
+			fmt.Println("NO-PORT cycle", i)
+			_ = cmd.Wait()
+			continue
+		}
+		stop := poll(port, want, 500*time.Millisecond)
+		if *coBind && i == 1 {
+			coBindReport(port)
+		}
+		go io.Copy(io.Discard, stdout)
+		_ = cmd.Wait()
+		exitAt := time.Now()
+		seq := stop()
+		var b strings.Builder
+		firstF, firstS := -1, -1
+		nS, lastConnIdx, deadlineAfterF := 0, -1, false
+		for k, o := range seq {
+			counts[string(o.cls)]++
+			b.WriteByte(o.cls)
+			if o.cls == 'F' || o.cls == 'f' {
+				if firstF < 0 {
+					firstF = k
+				}
+			}
+			silent := o.cls == 'D' || o.cls == 'S' || o.cls == 'W' || o.cls == 'O' || o.cls == 'C'
+			if silent {
+				nS++
+				if firstS < 0 {
+					firstS = k
+				}
+				if firstF >= 0 && o.cls == 'D' {
+					deadlineAfterF = true
+				}
+				fmt.Printf("  cycle %d silent %c at exit%+.1fms %s\n", i, o.cls, float64(o.t.Sub(exitAt).Microseconds())/1000, o.err)
+			}
+			if o.cls != 'R' && o.cls != 'E' {
+				lastConnIdx = k
+			}
+			if o.cls == 'E' {
+				fmt.Printf("  cycle %d connect-error %s\n", i, o.err)
+			}
+		}
+		cyc.total++
+		anyF, anyS := firstF >= 0, firstS >= 0
+		if anyF {
+			cyc.anyF++
+		}
+		if anyS {
+			cyc.anyS++
+			verdict.today++
+			if !anyF {
+				cyc.silentOnly++
+			}
+			if anyF && firstS > firstF {
+				cyc.sAfterF++
+			}
+			if anyF && firstS < firstF {
+				cyc.sBeforeF++
+			}
+			if nS > 1 {
+				cyc.multiS++
+			}
+			if lastConnIdx > firstS {
+				cyc.connAfterExitSilent++
+			}
+			if deadlineAfterF {
+				cyc.deadlineAfterF++
+			}
+			// Rule A: foreign anywhere excuses every silent. Rule B: silents after the
+			// first foreign are foreign. Rule D: only reset-class silents (S, C, W)
+			// after the first foreign are foreign; a deadline silent still refuses.
+			if !anyF {
+				verdict.ruleA++
+			}
+			stillB, stillD := false, false
+			for k, o := range seq {
+				silent := o.cls == 'D' || o.cls == 'S' || o.cls == 'W' || o.cls == 'O' || o.cls == 'C'
+				if !silent {
+					continue
+				}
+				if firstF < 0 || k < firstF {
+					stillB, stillD = true, true
+				} else if o.cls == 'D' || o.cls == 'O' {
+					stillD = true
+				}
+			}
+			if stillB {
+				verdict.ruleB++
+			}
+			if stillD {
+				verdict.ruleD++
+			}
+		}
+		fmt.Printf("CYCLE %d port %d seq %s\n", i, port, b.String())
+	}
+	fmt.Printf("CLASSES %v\n", counts)
+	fmt.Printf("CYCLES total=%d anyForeign=%d anySilent=%d silentAfterForeign=%d silentBeforeForeign=%d silentOnly=%d multiSilent=%d connectedAfterFirstSilent=%d deadlineSilentAfterForeign=%d\n",
+		cyc.total, cyc.anyF, cyc.anyS, cyc.sAfterF, cyc.sBeforeF, cyc.silentOnly, cyc.multiS, cyc.connAfterExitSilent, cyc.deadlineAfterF)
+	fmt.Printf("STICKY-SILENT-CYCLES today=%d ruleA(order-free)=%d ruleB(after-foreign)=%d ruleD(reset-after-foreign)=%d\n", verdict.today, verdict.ruleA, verdict.ruleB, verdict.ruleD)
+}
+
+// coBindReport tries to bind the live mux port three ways and also runs the
+// child's exact listen-op shape (node net.createServer().listen(port,'127.0.0.1')).
+func coBindReport(port int) {
+	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+	_, err := net.Listen("tcp", addr)
+	fmt.Printf("COBIND go-default 127.0.0.1:%d -> %v\n", port, err)
+	lc := net.ListenConfig{Control: func(_, _ string, c syscall.RawConn) error {
+		var serr error
+		_ = c.Control(func(fd uintptr) { serr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, soReusePort, 1) })
+		return serr
+	}}
+	l, err := lc.Listen(context.Background(), "tcp", addr)
+	fmt.Printf("COBIND go-SO_REUSEPORT 127.0.0.1:%d -> %v\n", port, err)
+	if l != nil {
+		_ = l.Close()
+	}
+	out, err := exec.Command("node", "-e", `const net=require('net');const s=net.createServer(()=>{});s.on('error',e=>{console.log('node-child-shape '+e.code);process.exit(0)});s.listen(+process.argv[1],'127.0.0.1',()=>{console.log('node-child-shape BOUND');s.close()})`, strconv.Itoa(port)).CombinedOutput()
+	fmt.Printf("COBIND %s (err %v)\n", strings.TrimSpace(string(out)), err)
+}
+
+// hostListenPort is the 127.0.0.1 TCP port pid listens on (ss -Hltnp), or 0.
+func hostListenPort(pid int) int {
+	out, _ := exec.Command("ss", "-Hltnp").Output()
+	for _, l := range strings.Split(string(out), "\n") {
+		if !strings.Contains(l, "pid="+strconv.Itoa(pid)+",") {
+			continue
+		}
+		for _, f := range strings.Fields(l) {
+			if a, ok := strings.CutPrefix(f, "127.0.0.1:"); ok {
+				if n, err := strconv.Atoi(a); err == nil {
+					return n
+				}
+			}
+		}
+	}
+	return 0
+}
