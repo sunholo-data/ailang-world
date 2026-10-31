@@ -5,7 +5,7 @@
   - Fixtures are generated: 34 JSON files and 10 phone skeletons.
   - A bounded subprocess runner; exit codes carry the verdict.
   - PR #440; judge sonnet PASS 90, zero blocking.
-- **Dev:** green at `cec48f69` (3/3). Row 231 lands when PR #440's merge commit is green.
+- **Dev:** green. Row 231 LANDED: #440 merged as `6641df63`, merge check-runs 3/3 success on attempt 1.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**. P0/P3 now run `marketingcheck position`/`phone` (orchestration §4.4). They need the host-local phone corpus at `~/.ailang/state/world-iter328-phone-corpus/`; if it is missing, that is BLOCKED.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
