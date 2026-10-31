@@ -1,0 +1,232 @@
+=== RUN   TestExecProbeArm8
+    exec_probe_srt_test.go:70: SKIP TestExecProbeArm8: real srt absent: WORLD_EXEC_SRT_NODE_MODULES is unset (point it at a node_modules holding @anthropic-ai/sandbox-runtime@0.0.78)
+--- SKIP: TestExecProbeArm8 (0.00s)
+=== RUN   TestExecProbeArmNames
+--- PASS: TestExecProbeArmNames (0.00s)
+=== RUN   TestExecProbePassThroughShimFailsEveryConfinementArm
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 176.445167ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecProbePassThroughShimFailsEveryConfinementArm1857506323/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-62eb593514b92cfd: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:59831
+--- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm (2.73s)
+=== RUN   TestExecProbeNoopShimFailsArm1
+    exec_probe_test.go:217: TIMING ArchiveExecSandbox took 149.697ms
+--- PASS: TestExecProbeNoopShimFailsArm1 (1.08s)
+=== RUN   TestExecProbeZeroShimFailsArm5
+    exec_probe_test.go:230: TIMING ArchiveExecSandbox took 120.102958ms
+--- PASS: TestExecProbeZeroShimFailsArm5 (2.72s)
+=== RUN   TestExecProbeFailingToolchainFailsArm7
+    exec_probe_test.go:238: TIMING ArchiveExecSandbox took 69.796583ms
+--- PASS: TestExecProbeFailingToolchainFailsArm7 (2.48s)
+=== RUN   TestExecProbeMissingClientFailsTheRefusalArms
+    exec_probe_test.go:251: TIMING ArchiveExecSandbox took 126.996375ms
+--- PASS: TestExecProbeMissingClientFailsTheRefusalArms (1.44s)
+=== RUN   TestExecProbeArm8Wired
+    exec_probe_test.go:296: TIMING ArchiveExecSandbox took 144.431792ms
+=== RUN   TestExecProbeArm8Wired/protected
+    exec_probe_test.go:316: startup failed arms [arm2-write-outside arm3-read-fence arm4-srt-default-write arm6-network arm8-protected-write]; of 8 arms
+=== RUN   TestExecProbeArm8Wired/without-protected
+    exec_probe_test.go:316: startup failed arms [arm2-write-outside arm3-read-fence arm4-srt-default-write arm6-network]; of 7 arms
+--- PASS: TestExecProbeArm8Wired (5.97s)
+    --- PASS: TestExecProbeArm8Wired/protected (3.23s)
+    --- PASS: TestExecProbeArm8Wired/without-protected (2.59s)
+=== RUN   TestExecProbeArm8FailsUnsandboxed
+=== RUN   TestExecProbeArm8FailsUnsandboxed/pass-through
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 2.903167ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/missing-client
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 6.253709ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/forged-token
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 12.146583ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/linux-detect
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 4.339167ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/linux-no-token
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 4.664833ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/linux-checker-error
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 10.654416ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/linux-directory-write
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 9.273584ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/linux-ebusy-passes
+    exec_probe_test.go:361: execFileRefusal uses the host GOOS; EBUSY/EXDEV rows run on linux hosts (CI)
+=== RUN   TestExecProbeArm8FailsUnsandboxed/linux-exdev-passes
+    exec_probe_test.go:361: execFileRefusal uses the host GOOS; EBUSY/EXDEV rows run on linux hosts (CI)
+=== RUN   TestExecProbeArm8FailsUnsandboxed/darwin-create
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 2.978459ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/darwin-create-forged
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 6.148083ms
+=== RUN   TestExecProbeArm8FailsUnsandboxed/darwin-refuses-all
+    exec_probe_test.go:363: TIMING ArchiveExecSandbox took 6.678125ms
+--- PASS: TestExecProbeArm8FailsUnsandboxed (4.28s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/pass-through (0.45s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/missing-client (0.20s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/forged-token (0.43s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/linux-detect (0.44s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/linux-no-token (0.44s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/linux-checker-error (0.60s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/linux-directory-write (0.34s)
+    --- SKIP: TestExecProbeArm8FailsUnsandboxed/linux-ebusy-passes (0.00s)
+    --- SKIP: TestExecProbeArm8FailsUnsandboxed/linux-exdev-passes (0.00s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/darwin-create (0.45s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/darwin-create-forged (0.46s)
+    --- PASS: TestExecProbeArm8FailsUnsandboxed/darwin-refuses-all (0.47s)
+=== RUN   TestExecProbeArm8Absent
+    exec_probe_test.go:401: TIMING ArchiveExecSandbox took 5.488792ms
+    exec_probe_test.go:401: TIMING ArchiveExecSandbox took 7.508708ms
+--- PASS: TestExecProbeArm8Absent (0.06s)
+=== RUN   TestExecProbeProtectedSample
+=== RUN   TestExecProbeProtectedSample/class
+=== RUN   TestExecProbeProtectedSample/class-star
+=== RUN   TestExecProbeProtectedSample/class-question
+=== RUN   TestExecProbeProtectedSample/unicode
+=== RUN   TestExecProbeProtectedSample/negated
+=== RUN   TestExecProbeProtectedSample/mixed-case
+=== RUN   TestExecProbeProtectedSample/directory
+=== RUN   TestExecProbeProtectedSample/literal
+=== RUN   TestExecProbeProtectedSample/star
+=== RUN   TestExecProbeProtectedSample/question
+=== RUN   TestExecProbeProtectedSample/nested
+--- PASS: TestExecProbeProtectedSample (0.00s)
+    --- PASS: TestExecProbeProtectedSample/class (0.00s)
+    --- PASS: TestExecProbeProtectedSample/class-star (0.00s)
+    --- PASS: TestExecProbeProtectedSample/class-question (0.00s)
+    --- PASS: TestExecProbeProtectedSample/unicode (0.00s)
+    --- PASS: TestExecProbeProtectedSample/negated (0.00s)
+    --- PASS: TestExecProbeProtectedSample/mixed-case (0.00s)
+    --- PASS: TestExecProbeProtectedSample/directory (0.00s)
+    --- PASS: TestExecProbeProtectedSample/literal (0.00s)
+    --- PASS: TestExecProbeProtectedSample/star (0.00s)
+    --- PASS: TestExecProbeProtectedSample/question (0.00s)
+    --- PASS: TestExecProbeProtectedSample/nested (0.00s)
+=== RUN   TestExecProbeReverseLegJudge
+--- PASS: TestExecProbeReverseLegJudge (0.00s)
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 7.610792ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 8.500792ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 3.974ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 17.26075ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 6.333042ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 11.475833ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 8.930417ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 27.447833ms
+--- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried (1.55s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400 (0.18s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce (0.17s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage (0.17s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close (0.19s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400 (0.18s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce (0.19s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage (0.20s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close (0.27s)
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time
+    exec_probe_test.go:612: TIMING ArchiveExecSandbox took 4.967542ms
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse
+    exec_probe_test.go:612: TIMING ArchiveExecSandbox took 7.562917ms
+--- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly (0.57s)
+    --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time (0.18s)
+    --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse (0.39s)
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/silent-client
+    exec_probe_test.go:631: TIMING ArchiveExecSandbox took 2.66425ms
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/clean
+    exec_probe_test.go:631: TIMING ArchiveExecSandbox took 6.425042ms
+--- PASS: TestExecProbeReverseLegNoTokenIsNotRetried (0.41s)
+    --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried/silent-client (0.25s)
+    --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried/clean (0.16s)
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 3.353ms
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.458333ms
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 23.337583ms
+--- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky (1.42s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.53s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.67s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.21s)
+=== RUN   TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+    exec_probe_test.go:680: TIMING ArchiveExecSandbox took 295.106667ms
+--- PASS: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (2.84s)
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty
+    exec_probe_test.go:718: TIMING ArchiveExecSandbox took 148.010209ms
+    exec_probe_test.go:729: chatty: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 1; stderr \"node:events:505\\n    throw er; // Unhandled 'error' event\\n    ^\\n\\nError: read ECONNRESET\\n    at TCP.onStreamRead (node:internal/stream_base_commons:221:20)\\nEmitted 'error' event on Socket instance at:\\n    at emitErrorNT (node:internal/streams…\")"
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent
+    exec_probe_test.go:718: TIMING ArchiveExecSandbox took 148.244792ms
+    exec_probe_test.go:729: silent: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: a listener on 127.0.0.1:60571 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control
+    exec_probe_test.go:718: TIMING ArchiveExecSandbox took 134.568416ms
+    exec_probe_test.go:729: control: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\", accepts 2 (want a refusal and still 1; exit 0; stderr \"\")"
+--- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (7.78s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (2.38s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent (2.57s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control (2.83s)
+=== RUN   TestExecProbeReverseDialErrIsSilent
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-reset
+=== RUN   TestExecProbeReverseDialErrIsSilent/bare-reset
+=== RUN   TestExecProbeReverseDialErrIsSilent/wrapped-reset
+=== RUN   TestExecProbeReverseDialErrIsSilent/nil
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-refused
+=== RUN   TestExecProbeReverseDialErrIsSilent/real-refused
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-einval
+=== RUN   TestExecProbeReverseDialErrIsSilent/op-aborted
+=== RUN   TestExecProbeReverseDialErrIsSilent/addrnotavail
+=== RUN   TestExecProbeReverseDialErrIsSilent/timeout
+=== RUN   TestExecProbeReverseDialErrIsSilent/deadline-exceeded
+--- PASS: TestExecProbeReverseDialErrIsSilent (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/bare-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/wrapped-reset (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/nil (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-refused (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/real-refused (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-einval (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/op-aborted (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/addrnotavail (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/timeout (0.00s)
+    --- PASS: TestExecProbeReverseDialErrIsSilent/deadline-exceeded (0.00s)
+=== RUN   TestExecProbeReversePollRecordsConnectReset
+=== RUN   TestExecProbeReversePollRecordsConnectReset/connect-reset
+=== RUN   TestExecProbeReversePollRecordsConnectReset/refused-only
+=== RUN   TestExecProbeReversePollRecordsConnectReset/einval-then-refused
+--- PASS: TestExecProbeReversePollRecordsConnectReset (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/connect-reset (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/refused-only (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/einval-then-refused (0.00s)
+=== RUN   TestExecProbeReverseHelloWaitBounds
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-child
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-mux
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+=== RUN   TestExecProbeChildListenerDrainsTheHello
+--- PASS: TestExecProbeChildListenerDrainsTheHello (0.00s)
+=== RUN   TestZZIter330HolderExitAfterForeign
+=== RUN   TestZZIter330HolderExitAfterForeign/FS
+=== RUN   TestZZIter330HolderExitAfterForeign/FC
+=== RUN   TestZZIter330HolderExitAfterForeign/FW
+=== RUN   TestZZIter330HolderExitAfterForeign/fS
+=== RUN   TestZZIter330HolderExitAfterForeign/FD
+=== RUN   TestZZIter330HolderExitAfterForeign/SF
+=== RUN   TestZZIter330HolderExitAfterForeign/CF
+=== RUN   TestZZIter330HolderExitAfterForeign/S
+=== RUN   TestZZIter330HolderExitAfterForeign/FSD
+=== RUN   TestZZIter330HolderExitAfterForeign/FSN
+--- PASS: TestZZIter330HolderExitAfterForeign (0.57s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/FS (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/FC (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/FW (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/fS (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/FD (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/SF (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/CF (0.05s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/S (0.00s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/FSD (0.10s)
+    --- PASS: TestZZIter330HolderExitAfterForeign/FSN (0.10s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	36.160s

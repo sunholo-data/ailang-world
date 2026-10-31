@@ -1,0 +1,21 @@
+#!/bin/bash
+# Row 233 designer runner: real srt 0.0.78 mux exit, idle then under 32 `yes`.
+set -u
+S=$HOME/.ailang/state/world-iter330-srt/node_modules/@anthropic-ai/sandbox-runtime
+P=$HOME/.ailang/state/world-iter330-srt/probe
+cd "$P"
+echo "srt cli.js $(shasum -a 256 $S/dist/cli.js | cut -c1-16) version $(jq -r .version $S/package.json); node $(node --version); $(uname -sr)"
+echo "=== IDLE hold=1 n=100"; ./srtexit -srt "$S" -n 100 -hold 1
+echo "=== IDLE hold=0 n=100"; ./srtexit -srt "$S" -n 100 -hold 0 -cobind=false
+pids=()
+for i in $(seq 32); do yes > /dev/null & pids+=($!); done
+trap 'kill "${pids[@]}" 2>/dev/null' EXIT
+sleep 2
+echo "load: $(sysctl -n vm.loadavg)"
+echo "=== LOAD hold=1 n=100"; ./srtexit -srt "$S" -n 100 -hold 1 -cobind=false
+echo "=== LOAD hold=0 n=100"; ./srtexit -srt "$S" -n 100 -hold 0 -cobind=false
+echo "load-end: $(sysctl -n vm.loadavg)"
+kill "${pids[@]}" 2>/dev/null; sleep 1
+alive=0; for p in "${pids[@]}"; do kill -0 "$p" 2>/dev/null && alive=$((alive+1)); done
+echo "yes-alive-after=$alive"
+echo "RUN-DONE"

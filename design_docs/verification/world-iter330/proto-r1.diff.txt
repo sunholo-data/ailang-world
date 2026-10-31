@@ -1,0 +1,145 @@
+diff --git a/host/broker/exec_probe.go b/host/broker/exec_probe.go
+index 904ab3ca..8336e812 100644
+--- a/host/broker/exec_probe.go
++++ b/host/broker/exec_probe.go
+@@ -597,7 +597,7 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
+ 		argv = append(argv, "listen", fmt.Sprintf("%d:%d:%s", port, execProbeListenMS, nonce))
+ 		poll := pollLoopback(port, "WORLD-PROBE-NONCE "+nonce, nil)
+ 		r := pp.run(ctx, argv, false, execProbeRunBudget)
+-		seen := poll()
++		seen := poll(r.err == nil)
+ 		tok := r.token(0)
+ 		if attempt == 1 {
+ 			first, tok = r, r.token(1)
+@@ -684,12 +684,23 @@ func freeLoopbackPort() (int, error) {
+ 	return port, ln.Close()
+ }
+ 
++// revDial is what one reverse-leg dial observed.
++type revDial int
++
++const (
++	revDialNone    revDial = iota // the dial failed and proves no listener (ECONNREFUSED, EINVAL, timeout, ...)
++	revDialChild                  // the child's nonce line
++	revDialForeign                // other bytes, or a clean EOF after a written hello
++	revDialSilent                 // zero bytes at the deadline, or another zero-byte error
++	revDialReset                  // zero bytes, then ECONNRESET: at connect, on the hello write or on the read
++)
++
+ // classifyReverseDial writes World's hello on a connected dial, then reads
+ // at most len(want)+1 bytes up to '\n' within execProbeHelloWait. The line
+ // want+"\n" is the child; any other bytes, or a clean EOF after a written
+-// hello, is foreign; zero bytes otherwise (deadline, reset, a failed hello
+-// write) is silent.
+-func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
++// hello, is foreign; zero bytes ending in ECONNRESET (on the write or the
++// read) is a reset; zero bytes otherwise (the deadline, any other error) is silent.
++func classifyReverseDial(c net.Conn, want string) revDial {
+ 	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))
+ 	_, werr := io.WriteString(c, execProbeHello)
+ 	buf := make([]byte, 0, len(want)+1)
+@@ -710,13 +721,15 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+ 	}
+ 	switch {
+ 	case string(buf) == want+"\n":
+-		return true, false
++		return revDialChild
+ 	case len(buf) > 0:
+-		return false, true
++		return revDialForeign
+ 	case werr == nil && errors.Is(rerr, io.EOF):
+-		return false, true
++		return revDialForeign
++	case errors.Is(werr, syscall.ECONNRESET) || errors.Is(rerr, syscall.ECONNRESET):
++		return revDialReset
+ 	}
+-	return false, false // silent
++	return revDialSilent
+ }
+ 
+ // dialErrIsSilent reports whether a failed reverse-leg dial proves a listener accepted the
+@@ -730,11 +743,13 @@ func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET)
+ // reports what the dials saw. It dials once before it first checks for
+ // stop, so an attempt always observes at least one dial. dial nil means
+ // net.DialTimeout("tcp", addr, 200ms); tests inject dial errors through it.
+-func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error)) func() reverseSeen {
++func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error)) func(runClean bool) reverseSeen {
+ 	if dial == nil {
+ 		dial = func(addr string) (net.Conn, error) { return net.DialTimeout("tcp", addr, 200*time.Millisecond) }
+ 	}
+ 	var child, foreign, silent atomic.Bool
++	var exitReset bool        // written by the poll goroutine only; read after <-finished
++	var lastForeign time.Time // the START of the latest dial that read a foreign answer
+ 	done := make(chan struct{})
+ 	finished := make(chan struct{})
+ 	go func() {
+@@ -744,17 +759,26 @@ func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error
+ 		}
+ 		addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+ 		for {
++			d := revDialNone
++			start := time.Now() // before the SYN: never later than the true start
+ 			if c, err := dial(addr); err == nil {
+-				switch isChild, isForeign := classifyReverseDial(c, want); {
+-				case isChild:
+-					child.Store(true)
+-				case isForeign:
+-					foreign.Store(true)
+-				default:
+-					silent.Store(true)
+-				}
++				d = classifyReverseDial(c, want)
+ 				_ = c.Close()
+ 			} else if dialErrIsSilent(err) {
++				d = revDialReset
++			}
++			switch {
++			case d == revDialChild:
++				child.Store(true)
++			case d == revDialForeign:
++				foreign.Store(true)
++				lastForeign = start
++			case d == revDialReset && !lastForeign.IsZero() && time.Since(lastForeign) < time.Duration(execProbeListenMS)*time.Millisecond:
++				exitReset = true
++				// Row 233: a reset AFTER a foreign answer on this attempt's port is
++				// that holder's exit (a child cannot co-hold a port a listener
++				// answered on), so it records nothing. A deadline still refuses.
++			case d == revDialReset || d == revDialSilent:
+ 				silent.Store(true)
+ 			}
+ 			select {
+@@ -764,10 +788,10 @@ func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error
+ 			}
+ 		}
+ 	}()
+-	return func() reverseSeen {
++	return func(runClean bool) reverseSeen {
+ 		close(done)
+ 		<-finished
+-		return reverseSeen{child: child.Load(), foreign: foreign.Load(), silent: silent.Load()}
++		return reverseSeen{child: child.Load(), foreign: foreign.Load(), silent: silent.Load() || (exitReset && !runClean)}
+ 	}
+ }
+ 
+diff --git a/host/broker/exec_probe_test.go b/host/broker/exec_probe_test.go
+index 9bcf0bd9..8f2fddf3 100644
+--- a/host/broker/exec_probe_test.go
++++ b/host/broker/exec_probe_test.go
+@@ -826,7 +826,7 @@ func TestExecProbeReversePollRecordsConnectReset(t *testing.T) {
+ 				}
+ 				return nil, refused
+ 			}
+-			got := pollLoopback(port, "WORLD-PROBE-NONCE "+strings.Repeat("0", 32), fake)()
++			got := pollLoopback(port, "WORLD-PROBE-NONCE "+strings.Repeat("0", 32), fake)(true)
+ 			if got != row.want || calls.Load() < 1 || badAddr.Load() {
+ 				t.Fatalf("seen = %+v after %d dials (bad addr %v); want %+v after >=1 dial to %s", got, calls.Load(), badAddr.Load(), row.want, wantAddr)
+ 			}
+@@ -905,7 +905,7 @@ func TestExecProbeReverseHelloWaitBounds(t *testing.T) {
+ 		t.Run(row.name, func(t *testing.T) {
+ 			before := time.Now()
+ 			conn := &helloConn{arrival: before.Add(execProbeHelloFloor), answer: []byte(row.answer)}
+-			seen := pollLoopback(40000, want, firstDialReturns(conn, refused))()
++			seen := pollLoopback(40000, want, firstDialReturns(conn, refused))(true)
+ 			after := time.Now()
+ 			if seen != row.want || conn.wrote != execProbeHello {
+ 				t.Errorf("an answer %s after the hello: seen %+v (wrote %q); want %+v, not silent", execProbeHelloFloor, seen, conn.wrote, row.want)

@@ -1,0 +1,44 @@
+CONTROL (prototype): 44 PASS lines
+MUTANT M30-revert: 6 FAIL lines; FAIL
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FC
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FS
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FSN
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FW
+        --- FAIL: TestZZIter330HolderExitAfterForeign/fS
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+        zz_iter330_t12_test.go:117: dials FS: seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+        zz_iter330_t12_test.go:117: dials FC: seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+        zz_iter330_t12_test.go:117: dials FW: seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+MUTANT M31-order-free: 3 FAIL lines; FAIL
+        --- FAIL: TestZZIter330HolderExitAfterForeign/CF
+        --- FAIL: TestZZIter330HolderExitAfterForeign/SF
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+        zz_iter330_t12_test.go:117: dials SF: seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+        zz_iter330_t12_test.go:117: dials CF: seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M32-deadline-excused: 3 FAIL lines; FAIL
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FD
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FSD
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+        zz_iter330_t12_test.go:117: dials FD: seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+        zz_iter330_t12_test.go:117: dials FSD: seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+MUTANT M33-every-reset-excused: 8 FAIL lines; FAIL
+        --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+        --- FAIL: TestExecProbeReversePollRecordsConnectReset/connect-reset
+        --- FAIL: TestZZIter330HolderExitAfterForeign/CF
+        --- FAIL: TestZZIter330HolderExitAfterForeign/S
+        --- FAIL: TestZZIter330HolderExitAfterForeign/SF
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+    --- FAIL: TestExecProbeReversePollRecordsConnectReset
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+        zz_iter330_t12_test.go:117: dials SF: seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+        zz_iter330_t12_test.go:117: dials CF: seen {child:false foreign:true silent:false} verdict 4; want {child:false foreign:true silent:true} verdict 3
+        zz_iter330_t12_test.go:117: dials S: seen {child:false foreign:false silent:false} verdict 0; want {child:false foreign:false silent:true} verdict 3
+MUTANT M34-connect-reset-not-reset: 2 FAIL lines; FAIL
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FC
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+        zz_iter330_t12_test.go:117: dials FC: seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+MUTANT M35-write-reset-not-reset: 2 FAIL lines; FAIL
+        --- FAIL: TestZZIter330HolderExitAfterForeign/FW
+    --- FAIL: TestZZIter330HolderExitAfterForeign
+        zz_iter330_t12_test.go:117: dials FW: seen {child:false foreign:true silent:true} verdict 3; want {child:false foreign:true silent:false} verdict 4
+restored-to-prototype a3568e76a6709599

@@ -1,0 +1,121 @@
+package broker
+
+// Row 233 designer prototype of T12 (iteration 330), run against the
+// prototype production change (proto-exec_probe.diff.txt) and its mutants.
+// Copied into host/broker as zz_iter330_t12_test.go, run, deleted.
+
+import (
+	"io"
+	"net"
+	"os"
+	"strings"
+	"sync"
+	"syscall"
+	"testing"
+	"time"
+)
+
+// scriptConn is one scripted connected dial: Write returns werr; Read hands
+// over answer one byte per call, then returns rerr (io.EOF when nil).
+type scriptConn struct {
+	net.Conn
+	answer []byte
+	werr   error
+	rerr   error
+}
+
+func (c *scriptConn) SetDeadline(time.Time) error     { return nil }
+func (c *scriptConn) SetReadDeadline(time.Time) error { return nil }
+func (c *scriptConn) Close() error                    { return nil }
+func (c *scriptConn) Write(b []byte) (int, error) {
+	if c.werr != nil {
+		return 0, c.werr
+	}
+	return len(b), nil
+}
+func (c *scriptConn) Read(b []byte) (int, error) {
+	if len(c.answer) > 0 {
+		n := copy(b, c.answer[:1])
+		c.answer = c.answer[n:]
+		return n, nil
+	}
+	if c.rerr != nil {
+		return 0, c.rerr
+	}
+	return 0, io.EOF
+}
+
+func zzOpErr(op string, err error) error {
+	return &net.OpError{Op: op, Net: "tcp", Err: os.NewSyscallError(op, err)}
+}
+
+// scriptedDial returns the steps in order, then ECONNREFUSED; all is closed
+// once every step has been handed out, so the test stops the poll only after
+// the whole script ran (no sleep: the poll's own 50 ms cadence paces it).
+func scriptedDial(steps []byte, want string) (func(string) (net.Conn, error), chan struct{}) {
+	all := make(chan struct{})
+	var once sync.Once
+	i := 0
+	return func(string) (net.Conn, error) {
+		if i >= len(steps) {
+			once.Do(func() { close(all) })
+			return nil, revDialErr(syscall.ECONNREFUSED)
+		}
+		s := steps[i]
+		i++
+		if i == len(steps) {
+			defer once.Do(func() { close(all) })
+		}
+		switch s {
+		case 'N':
+			return &scriptConn{answer: []byte(want + "\n")}, nil
+		case 'F':
+			return &scriptConn{answer: []byte("HTTP/1.1 400 Bad Request\r\n")}, nil
+		case 'f':
+			return &scriptConn{}, nil // clean EOF after the hello
+		case 'S':
+			return &scriptConn{rerr: zzOpErr("read", syscall.ECONNRESET)}, nil
+		case 'W':
+			return &scriptConn{werr: zzOpErr("write", syscall.ECONNRESET)}, nil // read then EOF
+		case 'D':
+			return &scriptConn{rerr: &net.OpError{Op: "read", Net: "tcp", Err: os.ErrDeadlineExceeded}}, nil
+		case 'C':
+			return nil, revDialErr(syscall.ECONNRESET)
+		}
+		panic("bad step")
+	}, all
+}
+
+func TestZZIter330HolderExitAfterForeign(t *testing.T) {
+	want := "WORLD-PROBE-NONCE " + strings.Repeat("b", 32)
+	for _, row := range []struct {
+		steps string
+		seen  reverseSeen
+		v     revVerdict
+	}{
+		{"FS", reverseSeen{foreign: true}, revInconclusive},
+		{"FC", reverseSeen{foreign: true}, revInconclusive},
+		{"FW", reverseSeen{foreign: true}, revInconclusive},
+		{"fS", reverseSeen{foreign: true}, revInconclusive},
+		{"FD", reverseSeen{foreign: true, silent: true}, revSilent},
+		{"SF", reverseSeen{foreign: true, silent: true}, revSilent},
+		{"CF", reverseSeen{foreign: true, silent: true}, revSilent},
+		{"S", reverseSeen{silent: true}, revSilent},
+		{"FSD", reverseSeen{foreign: true, silent: true}, revSilent},
+		{"FSN", reverseSeen{child: true, foreign: true}, revReached},
+	} {
+		t.Run(row.steps, func(t *testing.T) {
+			dial, all := scriptedDial([]byte(row.steps), want)
+			stop := pollLoopback(40000, want, dial)
+			select {
+			case <-all:
+			case <-time.After(10 * time.Second):
+				t.Fatal("the poll did not run the script within 10 s")
+			}
+			seen := stop()
+			if v := judgeReverse("WORLD-PROBE-BOUND", seen); seen != row.seen || v != row.v {
+				t.Fatalf("dials %s: seen %+v verdict %d; want %+v verdict %d", row.steps, seen, v, row.seen, row.v)
+			}
+		})
+	}
+}

@@ -1,0 +1,142 @@
+srt cli.js 3c3092bd26b39240; node v26.12.1; Darwin 25.6.0
+load: { 4.35 5.96 9.01 }
+=== LOAD hold=1 n=100 (r1)
+CYCLE 1 port 63641 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 2 port 63664 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 3 port 63687 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 4 port 63715 seq FFFFFFFFFFFFFFFFFFFF
+CYCLE 5 port 63738 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 6 port 63765 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 7 port 63829 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 8 port 63854 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 9 port 63877 seq FFFFFFFFFFFFFFFFFFFF
+CYCLE 10 port 63902 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 11 port 63926 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 12 port 63949 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 13 port 63974 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 14 port 63999 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 15 port 64027 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 16 port 64052 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 17 port 64075 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 18 port 64105 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 19 port 64130 seq FFFFFFFFFFFFFFFFFFFFR
+CYCLE 20 port 64157 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 21 port 64182 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 22 port 64207 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 23 port 64279 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 24 port 64302 seq FFFFFFFFFFFFFFFFFF
+CYCLE 25 port 64324 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 26 port 64346 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 27 port 64369 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 28 port 64392 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 29 port 64415 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 30 port 64441 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 31 port 64469 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 32 port 64492 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 33 port 64515 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 34 port 64537 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 35 port 64560 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 36 port 64583 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 37 port 64606 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 38 port 64629 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 39 port 64652 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 40 port 64678 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 41 port 64742 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 42 port 64765 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 43 port 64793 seq FFFFFFFFFFFFFFFFFFFFR
+CYCLE 44 port 64816 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 45 port 64840 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 46 port 64863 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 47 port 64888 seq FFFFFFFFFFFFFFFFFFFFFf
+CYCLE 48 port 64912 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 49 port 64938 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 50 port 64962 seq FFFFFFFFFFFFFFFFFFFF
+CYCLE 51 port 64986 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 52 port 65014 seq FFFFFFFFFFFFFFFFFFFFR
+CYCLE 53 port 65038 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 54 port 65065 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 55 port 65089 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 56 port 65143 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 57 port 65179 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 58 port 65202 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 59 port 65225 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 60 port 65257 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 61 port 65328 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 62 port 65364 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 63 port 65387 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 64 port 65410 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 65 port 65435 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 66 port 65459 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 67 port 65482 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 68 port 65526 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 69 port 49210 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 70 port 49233 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 71 port 49259 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 72 port 49282 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 73 port 49346 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 74 port 49368 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 75 port 49402 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 76 port 49475 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 77 port 49505 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 78 port 49528 seq FFFFFFFFFFFFFFFFFFFFF
+  cycle 79 silent S at exit-3.8ms sinceLastForeignDialStart=57.7ms cleanExit=true 
+CYCLE 79 port 49551 seq FFFFFFFFFFFFFFFFFFFFFS
+CYCLE 80 port 49576 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 81 port 49601 seq FFFFFFFFFFFFFFFFFFFFFR
+CYCLE 82 port 49641 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 83 port 49705 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 84 port 49736 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 85 port 49759 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 86 port 49782 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 87 port 49809 seq FFFFFFFFFFFFFFFFFFFR
+CYCLE 88 port 49876 seq FFFFFFFFFFFFFFFFFFFF
+CYCLE 89 port 49897 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 90 port 49940 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 91 port 50004 seq FFFFFFFFFFFFFFFFFFFF
+CYCLE 92 port 50032 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 93 port 50055 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 94 port 50078 seq FFFFFFFFFFFFFFFFFFFF
+CYCLE 95 port 50102 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 96 port 50126 seq FFFFFFFFFFFFFFFFFFFFF
+CYCLE 97 port 50153 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 98 port 50221 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 99 port 50257 seq FFFFFFFFFFFFFFFFFFFFFF
+CYCLE 100 port 50280 seq FFFFFFFFFFFFFFFFFFFFFF
+CLASSES map[F:2152 R:11 S:1 f:1]
+CYCLES total=100 anyForeign=100 anySilent=1 silentAfterForeign=1 silentBeforeForeign=0 silentOnly=0 multiSilent=0 connectedAfterFirstSilent=0 deadlineSilentAfterForeign=0
+STICKY-SILENT-CYCLES today=1 ruleA(order-free)=0 ruleB(after-foreign)=0 ruleD(reset-after-foreign)=0 ruleE(timed+clean,r1)=0
+load-end: { 50.25 27.44 17.50 }
+./run-darwin-r1.sh: line 12: 71097 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71098 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71099 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71100 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71101 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71102 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71103 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71104 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71105 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71106 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71107 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71108 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71109 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71110 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71111 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71112 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71113 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71114 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71115 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71116 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71117 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71118 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71119 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71120 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71123 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71124 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71125 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71126 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71127 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71128 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71129 Terminated: 15          yes > /dev/null
+./run-darwin-r1.sh: line 12: 71130 Terminated: 15          yes > /dev/null
+yes-alive-after=0
+RUN-DONE

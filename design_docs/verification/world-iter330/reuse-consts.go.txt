@@ -1,0 +1,10 @@
+//go:build darwin
+
+package main
+
+const soReusePort = 0x200 // <sys/socket.h> SO_REUSEPORT on darwin
+//go:build linux
+
+package main
+
+const soReusePort = 0xf // <asm-generic/socket.h> SO_REUSEPORT on linux

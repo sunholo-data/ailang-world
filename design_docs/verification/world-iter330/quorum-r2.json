@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-holder-exit-reset.md",
+  "iso_ts": "2026-10-31T09:11:13Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1131938,
+      "tokens_in": 15761,
+      "tokens_out": 20711,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is M41: the single production line that enforces condition (ii) of the r1 rule — `reverseLeg` passing `r.err == nil` at `:600` — is the one mutant exempted from the doc's own mutation discipline (AC-MUT: every mutant reds a named killer), and its stated justification is imprecise. The claim that a fixture 'would need a real exit reset timed against the run, which is wall-clock' is contradicted by the doc's own evidence: T12 already scripts exit resets deterministically at the poll's injectable dial seam (V14 shows `pollLoopback` takes a `dial` func with two test call sites). The real barrier is that `reverseLeg`'s `pp.run` and dialer are not injectable, which is a different (and more defensible) argument the doc does not make. Worse, the doc never bounds M41's shipped impact: if it lands, an unclean run's in-window foreign+reset attempt becomes INCONCLUSIVE instead of SILENT, and the §3.3 theorem's applicability silently degrades with no test or impact analysis catching it.",
+        "catch": "Fix the M41 entry: state the actual barrier to pinning it (non-injectable `pp.run`/dialer in `reverseLeg`, not wall-clock timing) and add the shipped-impact bound (an unclean-run FS drifts SILENT→INCONCLUSIVE, still refuses at 3 attempts per `:621`/`:111`, so the accept set cannot grow). Secondarily, R7's 'not attributed to this rule' rests on 5/5 re-runs at base — too thin to establish a rare flake's base rate; measure it before merge.",
+        "proposed_fix": "Replace the M41 row and its §5/§6 mentions with: 'M41 (wiring, review-only): `reverseLeg` passes `true` instead of `r.err == nil`. No deterministic killer: T12 shows exit resets can be scripted deterministically at the poll's dial seam, but `reverseLeg` hardwires `pp.run` and the real dialer, and faking a run result would require a new seam whose cost exceeds one line (S2). Shipped impact if M41 lands: an unclean run's in-window exit reset classifies INCONCLUSIVE instead of SILENT; INCONCLUSIVE still refuses after `execProbeReverseAttempts` (`:621`, `:111`), and an unclean run fails the arm independently of the leg verdict, so the accept set cannot grow — the drift is bounded to retry count. Review checks exactly that `:600` reads `seen := poll(r.err == nil)`.' Additionally, add a V25 row: run `TestExecProbePassThroughShimFailsEveryConfinementArm` at base `-count=50` (and once under load) to measure the row-230-R2 flake's base rate, so R7's attribution is measured rather than asserted."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.205266,
+      "tokens_in": 15512,
+      "tokens_out": 10582,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Condition (ii) — the clean-exit gate — is the load-bearing premise of the whole soundness case: §3.3 lemma step 1 only holds because r.err == nil forces the child's listener to live ≥ L = execProbeListenMS; without it the child can die before B+L and the step-4 inequality (e − s_f \u003e L) collapses, so a child-owned reset after a foreign answer can fall inside the 1000 ms window and be wrongly excused. That condition reaches production through exactly one line, reverseLeg's `poll(r.err == nil)` at :600, and the doc itself concedes (M41) that this line has no deterministic killer: passing a constant `true` leaves the entire suite — T12 and M30–M40 included — green while the safety property is silently void. The justification offered for leaving it unpinned ('a reverse-leg fixture would need a real exit reset timed against the run, which is wall-clock') is mistaken as stated: T12 already proves dial timing is fully scriptable through pollLoopback's injected `dial` seam with no real clocks and no sockets; the only missing piece is an equally small injectable seam at the reverseLeg level for `dial` and `run`. A change whose correctness rests on a condition the mutation suite structurally cannot observe being wired is precisely what this mission's mutation discipline exists to reject — 'checked by review' is the definition of an unverified premise for production wiring.",
+        "catch": "Flag to the author: (1) drop or fix the wall-clock rationale for M41 — the T12 dial seam refutes it — and pin the :600 wiring via a reverseLeg seam plus one unclean-run test (or, if genuinely refused, a CI grep-guard on the call expression, not reviewer memory); (2) lemma step 1 asserts the probe script's hold equals execProbeListenMS, but V17/V20 show only the script body (:94) and the constant (:108) — no V-row shows the call site passing execProbeListenMS as the script's `ms`, so cite the parent's measure or grep it; (3) premise (d) ('a listening socket does not reset queued connections before close') is unmeasured on darwin and proof load-bearing — R6 discloses it but understates the residual: it must state explicitly that on darwin a violation is only reachable inside an already-broken sandbox and costs at most one retry, or go measure the darwin analogue of V22's tcp_abort_on_overflow check.",
+        "proposed_fix": "(a) In §3.2 extract `reverseLegRun(port int, want string, dial func(string) (net.Conn, error), run func() error) reverseSeen`; reverseLeg becomes a one-line delegate passing the real dialer and `pp.run`, and `poll(r.err == nil)` lives inside the testable function. (b) §4 gains T13 `TestExecProbeReverseLegUncleanRunKeepsExitResetSilent`: scripted dials `F` then `S` delivered instantly (no sleeps, no sockets) with `run` stubbed to return a non-nil error must yield `reverseSeen{foreign:true, silent:true}` and a SILENT verdict; the control with `run` returning nil yields `{foreign:true}`/INCONCLUSIVE. Re-run AC-MUT: M41 (delegate passes `true`) now reds on T13 — row V25. (c) Add a V-row: `grep -n 'execProbeListenMS' host/broker/exec_probe.go` at the script-generation call site proving the script's timeout argument is the same constant the excuse window uses (lemma step 1's equality), so a future edit cannot silently diverge the two despite the §9 note. (d) Replace R6's last sentence with: 'On darwin this is reachable only when the sandbox is already broken (a host-reachable child listener still queued a connection at abort time within 1000 ms of a foreign answer in a clean run); the cost of a violation is bounded — the excused attempt becomes one INCONCLUSIVE retry on a fresh port, where a reachable child answers the nonce and refuses — never a PASS', or run the pre-close-reset probe on the darwin runner and log it as a V-row. Cost: ≈ +5 production LOC, +25 test LOC, inside the 0.25-day estimate."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.034852,
+      "tokens_in": 15646,
+      "tokens_out": 356,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The fail-closed proof depends on §3.3(d)—that a reachable child listener cannot reset a connection before its listener closes—but this premise is explicitly unverified on Darwin and supported on Linux only by one runner's tcp_abort_on_overflow setting. The proposed code does not enforce either prerequisite. An early child-origin reset within the foreign-answer window could therefore be discarded, changing SILENT into INCONCLUSIVE and permitting a later attempt to pass. R6's assertion that this cannot happen in a correct sandbox is circular: this gate must detect an incorrect sandbox.",
+        "catch": "Do not treat the measured absence of early resets, or a runner-local sysctl value, as a platform-wide socket invariant. Verify the full claim for connect-, write-, and read-side resets, including accepted sockets as well as the listening queue. The current evidence does not establish the theorem that every execution observing the child retains its verdict.",
+        "proposed_fix": "Replace §3.3(d) and R6 with an explicit blocking prerequisite: 'Reset suppression remains disabled, preserving SILENT, unless supported-platform evidence establishes that the exact child script cannot cause any zero-byte ECONNRESET before B + execProbeListenMS. Evidence must cover listening-queue overflow, accepted-socket teardown, and relevant runtime/kernel configurations; required configuration must be enforced, not merely measured on CI.' Add verification-log rows for those cases and a deterministic regression fixture for an early child-origin reset after a foreign answer, requiring SILENT. If the invariant cannot be established, remove the timing-based suppression and require independent evidence excluding the child as the reset source."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r1 answers r1 objections: dialErrIsSilent body + T8 rows re-run (controller also measured :725 = ECONNRESET only); rule tightened to a 1000 ms window from a foreign dial's start plus clean child exit, with a lemma that no dial reaching a host-reachable child is excused; candidates (a) and (b) rejected with measurements; M30-M40 each run with named killers."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: Condition (ii) — the clean-exit gate — is the load-bearing premise of the whole soundness case: §3.3 lemma step 1 only holds because r.err == nil forces the child's listener to live ≥ L = execProbeListenMS; without it the child can die before B+L and the step-4 inequality (e − s_f \u003e L) collapses, so a child-owned reset after a foreign answer can fall inside the 1000 ms window and be wrongly excused. That condition reaches production through exactly one line, reverseLeg's `poll(r.err == nil)` at :600, and the doc itself concedes (M41) that this line has no deterministic killer: passing a constant `true` leaves the entire suite — T12 and M30–M40 included — green while the safety property is silently void. The justification offered for leaving it unpinned ('a reverse-leg fixture would need a real exit reset timed against the run, which is wall-clock') is mistaken as stated: T12 already proves dial timing is fully scriptable through pollLoopback's injected `dial` seam with no real clocks and no sockets; the only missing piece is an equally small injectable seam at the reverseLeg level for `dial` and `run`. A change whose correctness rests on a condition the mutation suite structurally cannot observe being wired is precisely what this mission's mutation discipline exists to reject — 'checked by review' is the definition of an unverified premise for production wiring.",
+      "gpt6-1-sol: The fail-closed proof depends on §3.3(d)—that a reachable child listener cannot reset a connection before its listener closes—but this premise is explicitly unverified on Darwin and supported on Linux only by one runner's tcp_abort_on_overflow setting. The proposed code does not enforce either prerequisite. An early child-origin reset within the foreign-answer window could therefore be discarded, changing SILENT into INCONCLUSIVE and permitting a later attempt to pass. R6's assertion that this cannot happen in a correct sandbox is circular: this gate must detect an incorrect sandbox."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3533118,
+    "total_tokens_in": 46919,
+    "total_tokens_out": 31649
+  }
+}

@@ -1,0 +1,6 @@
+    zz_iter330_judge_test.go:18: ZZ330 foreign-only => 4
+    zz_iter330_judge_test.go:18: ZZ330 foreign+silent => 3
+    zz_iter330_judge_test.go:18: ZZ330 silent-only => 3
+    zz_iter330_judge_test.go:18: ZZ330 control-none => 0
+    zz_iter330_judge_test.go:20: ZZ330 consts revPass=0 revReached=1 revNoToken=2 revSilent=3 revInconclusive=4
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.331s

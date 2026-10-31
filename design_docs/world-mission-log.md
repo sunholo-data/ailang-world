@@ -2000,3 +2000,70 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 230 lands on merge CI green (landing note). Then row 233, the last row in D-WORLD-102's scope; a dev red still outranks.
 
 **Landing (iteration 329):** PR #442 merged as `9e562235` (merge commit, `--match-head-commit 707ca1ba`). Head `707ca1ba` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `e5c1867f`, right before the merge. **Merge CI:** `commits/9e562235/check-runs` → 3, all success on attempt 1 (run 41180204408: verify gate, go race gate, go host build + test gate). Dev green. The local race-leg package timeouts (`host/daemon`, `host/verifygate`) did not occur in CI. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 330 — 2026-10-31 — row 233 designed and parked: the holder-exit-reset excuse is blocked at quorum r2 on the fail-closed premise; real-srt Linux 49–54/100 under load; D-WORLD-105 asks Mark [ADMIN]
+
+**Kind:** the third and last pick under D-WORLD-102 = A (order 231 → 230 → 233). Designer → quorum ×2 → park. No planner, executor or judge: nothing was built. The record lands with the design and evidence in one docs-only PR.
+
+**Pick and why:** row 233 `w-exec-probe-holder-exit-reset`.
+- **Clause map at `a6af0cd4`:** 1–7 MET; no UNMET clause.
+- **Release rows not routable.** Row 150 waits only on the attended A1. Row 151 needs row 188 N2d/N4a: 0 matching commit subjects on `origin/dev` since 2026-10-01 (N2c control 2). The only commits since iteration 329's base are 329's own build, record and landing.
+- So D-WORLD-102 = A applies; 231 and 230 are LANDED, so 233 is next.
+- **Premise checked first-party** on a scratch worktree at `a6af0cd4`: a scratch test printed `judgeReverse("WORLD-PROBE-BOUND", {foreign})` = 4 (INCONCLUSIVE, the control), `{foreign, silent}` = 3 (SILENT), `{silent}` = 3; rc 0. Tree removed.
+- Index grep: no earlier attempt at row 233; no design doc, no PR. Claim message `inbox_1793435311567_4812a6f1` sent before routing.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (30 comments, LEGACY watermark); nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 1 on the 2026-10-22 rc=1 notice `6345079873`, already credited (25 mentions in the live log). Control 107:4 ok. Died-mid-flight traces: no open PR from this account; no new worktree residue.
+- Inbox: `mission-world` holds only this loop's own claim messages.
+- Ledger: 0 OPEN rows at Gate 0 (91 rows valid).
+- No thread rotation due: #366 created 2026-10-26, 30 comments.
+
+**Gate 1:**
+- Local `dev` fast-forwarded to `origin/dev` = `a6af0cd42b1db7ccf912df88dec3bbaade95fd9a`. Base recorded `a6af0cd4…@2026-10-31T08:27:06Z`; re-read before the worktree with no drift.
+- Skill: `SKILL.md` and all 13 `resources/*.md` `cmp`-identical to `origin/dev`, per file; rules read from the resolved symlink target.
+- Dev CI: `a6af0cd4` check-runs 3/3 success; the last 3 CI runs on dev success.
+
+**Design** (`w-exec-probe-holder-exit-reset`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–329 precedent; rotation pointer unchanged, codex over ration):
+- **r0** `e0f42390`: 364 lines, 18 V-rows. Rule: a zero-byte reset after a foreign answer in the same attempt records nothing; `judgeReverse` unchanged; T12 (10 rows) and M30–M35, each killed against a prototype.
+  - **Real srt** 0.0.78 (cli.js sha256 = pin), installed outside the repo. darwin 1000 ms hold: 0/100 idle, 2/100 under 32 `yes`. **Linux** (throwaway branch `probe/world-iter330-holderexit`, run 41185322456, deleted): 0/100 idle, **54/100 under 8 `yes`** [real srt]; stand-in 49/100. The inherited 3–13% [stand-in, darwin] understated Linux.
+  - srt never sets `reusePort` (0 hits; control 9 `listen(`); the live mux port refuses the child's exact bind, a Go default bind and a Go `SO_REUSEPORT` bind on both platforms (control: two `SO_REUSEPORT` sockets co-bind).
+- **Quorum r1 BLOCKED** ($0.3150). Seats oc-glm-5-3, oc-kimi-k3, gpt6-1-sol, all REJECT; reserve gemini-4-argon; claude benched; no absentees.
+  - glm and kimi: `dialErrIsSilent`'s match set had no V-row and no test exercised a non-ECONNRESET connect error after a foreign answer. **Controller measured before routing (rule 3f):** `exec_probe.go:725` is `errors.Is(err, syscall.ECONNRESET)`, one caller (`:757`); T8 pins ECONNABORTED, ECONNREFUSED, EINVAL and a real timeout as false. Handed to the designer as a measurement.
+  - gpt6-1-sol: the rule enlarges the accept set; "a different execution already escapes" is no proof.
+- **r1** `a9d3307e` (the one mandated revision, designer resumed): 455 lines, 24 V-rows. Rule tightened: a reset is excused only if a foreign dial STARTED < `execProbeListenMS` (1000 ms) before it AND the run exited cleanly (`r.err == nil`). Largest observed gap 94.4 ms Linux (131 resets), 57.7 ms darwin; availability unchanged on the banked data. A lemma and theorem in §3.3. T12 18 rows; M30–M40 each killed; M41 (wiring passes `true`) has no deterministic killer. The controller's candidates (a) token gate and (b) adjacency were both rejected with measurements ((a) recovers 0 of 49 on Linux, where the correct child reports BOUND).
+- **Quorum r2 BLOCKED** ($0.3533; same seats; no absentees). glm PASS. kimi REJECT: M41 leaves the safety condition's only production line unpinned; concrete fix (a `reverseLegRun` seam, T13, a constant-equality V-row). gpt6-1-sol REJECT: the proof needs "a reachable child never resets before its listener closes", unmeasured on darwin and resting on an unenforced `tcp_abort_on_overflow` on Linux; fix = keep the suppression disabled unless that is established AND enforced, otherwise remove it.
+- **Disposition: PARKED needs-human-review (D-WORLD-105).** gpt's objection disputes whether a timing-based suppression belongs in a fail-closed gate, so the narrow-refinement carve-out (every objection fixable verbatim and none disputing direction) does not hold. A split was considered: the reviewer-clean remainder (T12 rows pinning today's classification) does not move the row. Round count 2.
+- Artifacts: `verification/world-iter330/quorum-r1.json`, `quorum-r2.json`; designer evidence (30+ `.txt` files) in the same directory.
+
+**Plan / Executor / Independent evaluator:** not spawned — the design parked at quorum, so there was no plan to execute and no executor output to judge. Nothing in this iteration lands on the controller's verdict except bookkeeping (design doc, evidence, record). The generator ≠ judge requirement is therefore vacuous this fire rather than waived; it binds the build if D-WORLD-105 = A.
+
+**Routing evidence:** base=a6af0cd42b1db7ccf912df88dec3bbaade95fd9a@2026-10-31T09:16:49Z (Gate 4).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Resolver: designer `recipe claude:claude-opus-5-5 declared:provider-pin`; planner `agent-tool opus fail-closed:env-pin`; executor `recipe claude:claude-haiku-5-5 declared:provider-pin`; evaluator `agent-tool sonnet declared:alias-pin`.
+- Tokens and time per role:
+  - controller `claude:claude-opus-5-5`: tok not reported;
+  - designer Agent `opus`: 210,746 tok / 1,108 s; revision resume 277,699 tok / 957 s, as reported;
+  - planner, executor, evaluator: not spawned (design parked).
+- Designer diet: 1 doc, 2 runs (author + mandated revision).
+- Quorum CLI note: the first r1 invocation exited rc 2 (`--controller-note is required when --controller-verdict is set`), $0; re-run with a note.
+- Two Linux CI probe runs on throwaway branches (`probe/world-iter330-holderexit`, `…-r1`), both deleted (`git ls-remote` 0, `dev` control 1); Actions minutes, $0 metered.
+- Metered $0.6683 (quorum r1 $0.3150 + r2 $0.3533).
+
+**Ruled out:**
+- Applying gpt6-1-sol's fix under the carve-out: it disables or removes the mechanism unless an enforced invariant exists, i.e. it disputes direction; a controller-chosen resolution is not allowed there.
+- Applying kimi's fix alone and proceeding: gpt's objection would still stand.
+- The controller's candidate (a), gating on the child's token: recovers 0 of 49 Linux refusals (the correct child reports BOUND in its netns).
+- The controller's candidate (b), adjacency plus a constant bound: a 750 ms worst inter-dial gap still admits a child reset next to a foreign answer (designer counter-example).
+- A third design round: the one revision and one re-quorum are spent.
+
+**Retro:**
+1. **A fail-closed gate is where a quorum is most likely to dispute direction rather than detail.** Rows 229, 232 and 230 passed via the carve-out because their objections were evidence gaps; this one changed which executions the gate accepts, and the OpenAI seat held it. Instance 1 of "an availability fix to a security gate parks on soundness"; watch.
+2. **Real-tool measurement moved an inherited number by ~4–15×** (3–13% [stand-in, darwin] → 49–54/100 [real srt, Linux, load]). The throwaway-branch Linux recipe (instance 2 after iteration 318) was again the cheapest way to settle a "needs Linux" premise.
+3. **The quorum CLI requires `--controller-note` beside `--controller-verdict`;** the skill's Gate 2 text shows only the verdict flag. One wasted invocation at $0. Instance 1; no skill edit.
+4. **D-WORLD-102's scope is exhausted.** Next fires return to rule-(d) block reports unless Mark answers D-WORLD-105 = A/B, widens the scope (rows 235, 237–242), or a release row becomes routable.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 233 PARKED (D-WORLD-105).
+**Next:** rule-(d) block report unless D-WORLD-105 is answered A or B, Mark widens D-WORLD-102's scope, or a release row (150, 151) becomes routable; a dev red still outranks.

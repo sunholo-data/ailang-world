@@ -1,0 +1,83 @@
+diff --git a/host/broker/exec_probe.go b/host/broker/exec_probe.go
+index 904ab3ca..030d9641 100644
+--- a/host/broker/exec_probe.go
++++ b/host/broker/exec_probe.go
+@@ -684,12 +684,23 @@ func freeLoopbackPort() (int, error) {
+ 	return port, ln.Close()
+ }
+ 
++// revDial is what one reverse-leg dial observed.
++type revDial int
++
++const (
++	revDialNone    revDial = iota // the dial failed and proves no listener (ECONNREFUSED, EINVAL, timeout, ...)
++	revDialChild                  // the child's nonce line
++	revDialForeign                // other bytes, or a clean EOF after a written hello
++	revDialSilent                 // zero bytes at the deadline, or another zero-byte error
++	revDialReset                  // zero bytes, then ECONNRESET: at connect, on the hello write or on the read
++)
++
+ // classifyReverseDial writes World's hello on a connected dial, then reads
+ // at most len(want)+1 bytes up to '\n' within execProbeHelloWait. The line
+ // want+"\n" is the child; any other bytes, or a clean EOF after a written
+-// hello, is foreign; zero bytes otherwise (deadline, reset, a failed hello
+-// write) is silent.
+-func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
++// hello, is foreign; zero bytes ending in ECONNRESET (on the write or the
++// read) is a reset; zero bytes otherwise (the deadline, any other error) is silent.
++func classifyReverseDial(c net.Conn, want string) revDial {
+ 	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))
+ 	_, werr := io.WriteString(c, execProbeHello)
+ 	buf := make([]byte, 0, len(want)+1)
+@@ -710,13 +721,15 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+ 	}
+ 	switch {
+ 	case string(buf) == want+"\n":
+-		return true, false
++		return revDialChild
+ 	case len(buf) > 0:
+-		return false, true
++		return revDialForeign
+ 	case werr == nil && errors.Is(rerr, io.EOF):
+-		return false, true
++		return revDialForeign
++	case errors.Is(werr, syscall.ECONNRESET) || errors.Is(rerr, syscall.ECONNRESET):
++		return revDialReset
+ 	}
+-	return false, false // silent
++	return revDialSilent
+ }
+ 
+ // dialErrIsSilent reports whether a failed reverse-leg dial proves a listener accepted the
+@@ -744,17 +757,23 @@ func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error
+ 		}
+ 		addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(port))
+ 		for {
++			d := revDialNone
+ 			if c, err := dial(addr); err == nil {
+-				switch isChild, isForeign := classifyReverseDial(c, want); {
+-				case isChild:
+-					child.Store(true)
+-				case isForeign:
+-					foreign.Store(true)
+-				default:
+-					silent.Store(true)
+-				}
++				d = classifyReverseDial(c, want)
+ 				_ = c.Close()
+ 			} else if dialErrIsSilent(err) {
++				d = revDialReset
++			}
++			switch {
++			case d == revDialChild:
++				child.Store(true)
++			case d == revDialForeign:
++				foreign.Store(true)
++			case d == revDialReset && foreign.Load():
++				// Row 233: a reset AFTER a foreign answer on this attempt's port is
++				// that holder's exit (a child cannot co-hold a port a listener
++				// answered on), so it records nothing. A deadline still refuses.
++			case d == revDialReset || d == revDialSilent:
+ 				silent.Store(true)
+ 			}
+ 			select {

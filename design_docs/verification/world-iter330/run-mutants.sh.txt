@@ -1,0 +1,44 @@
+#!/bin/bash
+# Row 233 designer mutant runner (iteration 330). Applies each mutant to the
+# PROTOTYPE exec_probe.go (proto-exec_probe.diff.txt on a6af0cd4), runs the
+# reverse-leg tests plus the T12 prototype, prints the failing subtests, and
+# restores the prototype byte-identically. Run from the worktree root.
+set -u
+PROTO=$HOME/.ailang/state/world-iter330-srt/proto-exec_probe.go
+F=host/broker/exec_probe.go
+RUN='^(TestZZIter330HolderExitAfterForeign|TestExecProbeReverseLegJudge|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReverseLegChattyForeignHolderIsRetried|TestExecProbeReverseDialErrIsSilent|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseHelloWaitBounds)$'
+mut() { # name, python replacement (old, new)
+  cp "$PROTO" "$F"
+  python3 -I -c "import sys;p='$F';s=open(p).read();o,n=sys.argv[1],sys.argv[2];assert o in s,'mutant site missing';open(p,'w').write(s.replace(o,n,1))" "$2" "$3" || { echo "MUTANT $1: SITE MISSING"; return; }
+  out=$(AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run "$RUN" -count=1 -v 2>&1)
+  echo "MUTANT $1: $(echo "$out" | grep -c -e '--- FAIL') FAIL lines; $(echo "$out" | tail -1)"
+  echo "$out" | grep -e '--- FAIL' | sed 's/ (.*//' | sort -u | sed 's/^/    /'
+  echo "$out" | grep -e 'zz_iter330_t12_test.go:[0-9]*: dials' | head -3 | sed 's/^/    /'
+}
+cp "$PROTO" "$F"
+echo "CONTROL (prototype): $(AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run "$RUN" -count=1 -v 2>&1 | grep -c -e '--- PASS') PASS lines"
+mut M30-revert 'case d == revDialReset && foreign.Load():' 'case false:'
+mut3() { # M31: three sites (order-free: a reset is excused if the attempt EVER saw foreign)
+  cp "$PROTO" "$F"
+  python3 -I -c "
+p='$F';s=open(p).read()
+for o,n in [('var child, foreign, silent atomic.Bool','var child, foreign, silent atomic.Bool\n\tvar resetSeen bool'),
+            ('case d == revDialReset && foreign.Load():','case d == revDialReset:\n\t\t\t\tresetSeen = true'),
+            ('silent: silent.Load()}','silent: silent.Load() || (resetSeen \u0026\u0026 !foreign.Load())}')]:
+    assert o in s, o
+    s=s.replace(o,n,1)
+open(p,'w').write(s)"
+  out=$(AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run "$RUN" -count=1 -v 2>&1)
+  echo "MUTANT M31-order-free: $(echo "$out" | grep -c -e '--- FAIL') FAIL lines; $(echo "$out" | tail -1)"
+  echo "$out" | grep -e '--- FAIL' | sed 's/ (.*//' | sort -u | sed 's/^/    /'
+  echo "$out" | grep -e 'zz_iter330_t12_test.go:[0-9]*: dials' | head -3 | sed 's/^/    /'
+}
+mut3
+mut M32-deadline-excused 'case d == revDialReset && foreign.Load():' 'case (d == revDialReset || d == revDialSilent) && foreign.Load():'
+mut M33-every-reset-excused 'case d == revDialReset && foreign.Load():' 'case d == revDialReset:'
+mut M34-connect-reset-not-reset '			} else if dialErrIsSilent(err) {
+				d = revDialReset' '			} else if dialErrIsSilent(err) {
+				d = revDialSilent'
+mut M35-write-reset-not-reset 'case errors.Is(werr, syscall.ECONNRESET) || errors.Is(rerr, syscall.ECONNRESET):' 'case errors.Is(rerr, syscall.ECONNRESET):'
+cp "$PROTO" "$F"
+echo "restored-to-prototype $(shasum -a 256 $F | cut -c1-16)"
