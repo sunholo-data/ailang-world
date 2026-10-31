@@ -1,0 +1,10 @@
+mux port 59746
+    zz_iter329_f3_test.go:153: ZZMUX dials=2000 ok=2000 bad=0 p50=72.292µs p99=823.875µs max=7.059916ms
+    zz_iter329_f3_test.go:118: ZZLAT variant= dials=2000 ok=2000 bad=0 p50=19.792µs p99=286.209µs max=2.791041ms
+design_docs/verification/world-iter329/zz-mux-body.sh: line 9: 13310 Terminated: 15          node $W/mux-server.mjs $S 100000 > $W/mux.port
+ 5:54  up 4 days, 12:48, 4 users, load averages: 24.42 21.45 13.23
+mux port 63786
+    zz_iter329_f3_test.go:153: ZZMUX dials=2000 ok=2000 bad=0 p50=160.875µs p99=9.149333ms max=229.593916ms
+    zz_iter329_f3_test.go:118: ZZLAT variant= dials=2000 ok=2000 bad=0 p50=34.209µs p99=1.80025ms max=125.657417ms
+design_docs/verification/world-iter329/zz-mux-body.sh: line 9: 13445 Terminated: 15          node $W/mux-server.mjs $S 100000 > $W/mux.port
+load runner rc=0 yes-alive-after=0

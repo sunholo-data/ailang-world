@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Full host/broker package with the F3 mutant (c.resume() removed from the child's listen op). Restores the tree.
+set -u
+cd "$(git rev-parse --show-toplevel)"
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+F=host/broker/exec_probe.go
+OUT=design_docs/verification/world-iter329/out
+orig=$(shasum -a 256 $F | cut -c1-16); echo "base sha $orig"
+sed -i '' 's/net.createServer(c=>{c.resume();c.end(/net.createServer(c=>{c.end(/' $F
+echo "c.resume() occurrences after mutation: $(grep -c 'c.resume()' $F)"
+go test -timeout 580s -count=1 -v ./host/broker/ > $OUT/fullpkg-f3-noresume.txt 2>&1; echo "f3-noresume rc=$?"
+git checkout -- $F
+echo "restored sha $(shasum -a 256 $F | cut -c1-16)"
+f=$OUT/fullpkg-f3-noresume.txt
+echo "$f PASS=$(grep -c -- '^--- PASS' $f) FAIL=$(grep -c -- '^--- FAIL' $f) SKIP=$(grep -c -- '^--- SKIP' $f) tail=$(tail -1 $f)"

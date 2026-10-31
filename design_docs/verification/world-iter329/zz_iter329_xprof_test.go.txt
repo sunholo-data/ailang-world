@@ -1,0 +1,156 @@
+package broker
+
+// iteration-329 designer scratch (row 230, item 3): can one profile's reverse-leg
+// poll land on ANOTHER profile's live counted listener (net6) inside one
+// ProbeExecProfilesEach call? A logging srt shim stamps every sandboxed run's start
+// (wall ms) and argv; the reversePort seam stamps every pick. Run A's argv carries
+// `connect <net6 port>`, and net6 is bound BEFORE Run A starts (exec_probe.go
+// probe()), so "every Run A start precedes every pick" implies "every net6 bind
+// precedes every pick". ZZ_XP_MODE: passthrough (default) | noop (fastest Run A/B,
+// the worst case for the margin) | forced (the picker returns the first-logged
+// net6 port: a deliberate collision, to show the consequence). The shim rewrites
+// the client's connect/proxy target to port 1 (refused), so World's own raw and
+// proxy legs never touch net6 and an accept count >= 2 can only come from a
+// reverse-leg poll. Copied into
+// host/broker, run, deleted.
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+)
+
+const zzXPShim = `const fs=require('fs');const {spawnSync}=require('child_process');const os=require('os');
+const a=process.argv.slice(2);
+fs.appendFileSync(LOG,(performance.timeOrigin+performance.now()).toFixed(3)+' '+JSON.stringify(a.slice(3))+'\n');
+if(MODE==='noop')process.exit(0);
+const v=a.slice(3);for(let i=0;i<v.length-1;i++)if(v[i]==='connect'||v[i]==='proxy')v[i+1]='1';
+const r=spawnSync(v[0],v.slice(1),{stdio:'inherit'});
+if(r.error){console.error('SHIM: '+r.error.code);process.exit(127)}
+process.exit(r.status===null?128+os.constants.signals[r.signal]:r.status);
+`
+
+type zzRun struct {
+	at   float64
+	argv []string
+}
+
+func zzReadLog(t *testing.T, p string) []zzRun {
+	b, err := os.ReadFile(p)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		t.Fatal(err)
+	}
+	var out []zzRun
+	for _, l := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		sp := strings.IndexByte(l, ' ')
+		if sp < 0 {
+			continue
+		}
+		at, _ := strconv.ParseFloat(l[:sp], 64)
+		var argv []string
+		if json.Unmarshal([]byte(l[sp+1:]), &argv) == nil {
+			out = append(out, zzRun{at, argv})
+		}
+	}
+	return out
+}
+
+func zzArg(argv []string, op string) (int, bool) {
+	for i, a := range argv {
+		if a == op && i+1 < len(argv) {
+			n, err := strconv.Atoi(strings.SplitN(argv[i+1], ":", 2)[0])
+			return n, err == nil
+		}
+	}
+	return 0, false
+}
+
+func TestZZIter329CrossProfileOrdering(t *testing.T) {
+	mode := os.Getenv("ZZ_XP_MODE")
+	if mode == "" {
+		mode = "passthrough"
+	}
+	iters, n := zzEnvInt("ZZ_XP_ITERS", 10), zzEnvInt("ZZ_XP_N", 8)
+	logDir := canonicalTempDir(t)
+	worst := 1e18
+	collisions := 0
+	for it := 0; it < iters; it++ {
+		iterCollisions := collisions
+		logPath := filepath.Join(logDir, fmt.Sprintf("runs-%d.log", it))
+		shimMode := mode
+		if mode == "forced" {
+			shimMode = "passthrough"
+		}
+		cli := strings.NewReplacer("LOG", strconv.Quote(logPath), "MODE", strconv.Quote(shimMode)).Replace(zzXPShim)
+		f := newProbeFixture(t, fakeSrtTree(t, "0.0.0-test", cli), nil, "", []any{"sh", "-c", "exit 0"})
+		profiles := []*ExecProfile{f.profile}
+		for i := 1; i < n; i++ {
+			m := map[string]any{"profile": ExecProfileVersion, "project": fmt.Sprintf("proj%d", i), "path": []any{filepath.Dir(f.node), "/usr/bin", "/bin"},
+				"timeout_ms": 9000, "probe": []any{"sh", "-c", "exit 0"},
+				"commands": map[string]any{"true": map[string]any{"argv": []any{"sh", "-c", "exit 0"}}}}
+			profiles = append(profiles, mustParseProfile(t, m))
+		}
+		var mu sync.Mutex
+		var picks []zzRun
+		pick := func() (int, error) {
+			port, err := freeLoopbackPort()
+			if mode == "forced" {
+				for _, r := range zzReadLog(t, logPath) {
+					if p, ok := zzArg(r.argv, "connect"); ok {
+						port = p
+						break
+					}
+				}
+			}
+			mu.Lock()
+			picks = append(picks, zzRun{float64(time.Now().UnixMicro()) / 1000, []string{strconv.Itoa(port)}})
+			mu.Unlock()
+			return port, err
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+		start := time.Now()
+		errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: f.sandbox, Paths: f.paths, reversePort: pick}, profiles)
+		cancel()
+		if err != nil {
+			t.Fatal(err)
+		}
+		runs := zzReadLog(t, logPath)
+		net6 := map[int]bool{}
+		maxRunA, minPick := 0.0, 1e18
+		for _, r := range runs {
+			if p, ok := zzArg(r.argv, "connect"); ok {
+				net6[p] = true
+				maxRunA = max(maxRunA, r.at)
+			}
+		}
+		for _, p := range picks {
+			minPick = min(minPick, p.at)
+			if port, _ := strconv.Atoi(p.argv[0]); net6[port] {
+				collisions++
+			}
+		}
+		margin := minPick - maxRunA
+		worst = min(worst, margin)
+		accepts := 0
+		for i, e := range errs {
+			if mode == "forced" {
+				t.Logf("ZZXP forced profile %d (%s): %v", i, profiles[i].Project, e)
+			}
+			if e != nil && regexp.MustCompile(`accepts ([2-9]|[1-9][0-9]+) `).MatchString(e.Error()) {
+				accepts++
+			}
+		}
+		t.Logf("ZZXP mode=%s iter=%d n=%d runA=%d picks=%d elapsed=%s margin(minPick-maxRunAStart)=%.1fms pick∩net6=%d profiles-with-accepts>=2=%d",
+			mode, it, n, len(net6), len(picks), time.Since(start).Round(time.Millisecond), margin, collisions-iterCollisions, accepts)
+	}
+	t.Logf("ZZXP SUMMARY mode=%s iters=%d n=%d worst-margin=%.1fms collisions=%d", mode, iters, n, worst, collisions)
+}

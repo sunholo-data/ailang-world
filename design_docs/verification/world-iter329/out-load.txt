@@ -1,0 +1,11 @@
+ 5:51  up 4 days, 12:45, 4 users, load averages: 16.78 9.39 7.47
+    zz_iter329_f3_test.go:118: ZZLAT variant=resume dials=500 ok=500 bad=0 p50=44.042µs p99=9.500708ms max=125.259125ms
+    zz_iter329_f3_test.go:118: ZZLAT variant=noresume dials=500 ok=500 bad=0 p50=31.875µs p99=2.087667ms max=160.069875ms
+    zz_iter329_f3_test.go:66: ZZF3 variant=resume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:false} : 39
+    zz_iter329_f3_test.go:66: ZZF3 variant=resume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:true} : 1
+--- PASS: TestZZIter329RealChildUnderPoll (62.37s)
+    zz_iter329_f3_test.go:66: ZZF3 variant=noresume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:false} : 38
+    zz_iter329_f3_test.go:66: ZZF3 variant=noresume hold=1000 tok=WORLD-PROBE-BOUND err=<nil> seen={child:true foreign:false silent:true} : 2
+--- PASS: TestZZIter329RealChildUnderPoll (59.92s)
+PASS
+load runner rc=0 yes-alive-after=0

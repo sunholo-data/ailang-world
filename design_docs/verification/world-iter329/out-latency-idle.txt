@@ -1,0 +1,4 @@
+    zz_iter329_f3_test.go:118: ZZLAT variant=resume dials=500 ok=500 bad=0 p50=42.166µs p99=352.333µs max=1.498166ms
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.553s
+    zz_iter329_f3_test.go:118: ZZLAT variant=noresume dials=500 ok=500 bad=0 p50=40.666µs p99=369.541µs max=2.26375ms
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.449s

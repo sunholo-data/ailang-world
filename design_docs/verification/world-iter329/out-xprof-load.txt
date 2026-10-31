@@ -1,0 +1,8 @@
+ 5:56  up 4 days, 12:50, 4 users, load averages: 15.08 19.21 13.49
+    zz_iter329_xprof_test.go:153: ZZXP SUMMARY mode=noop iters=10 n=8 worst-margin=280.5ms collisions=0
+--- PASS: TestZZIter329CrossProfileOrdering (32.08s)
+    zz_iter329_xprof_test.go:153: ZZXP SUMMARY mode=passthrough iters=10 n=8 worst-margin=933.8ms collisions=0
+--- PASS: TestZZIter329CrossProfileOrdering (60.48s)
+PASS
+design_docs/verification/world-iter329/run-load.sh.txt: line 12: 22005 Terminated: 15          yes > /dev/null
+load runner rc=0 yes-alive-after=0

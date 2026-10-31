@@ -1,0 +1,83 @@
+package broker
+
+// iteration-329 designer scratch (row 230, F2): the prototype of T10. Copied into
+// host/broker as zz_iter329_f2_test.go, run against control and mutants, deleted.
+// The sprint's T10 names the poll period execProbePollEvery (a new constant);
+// this prototype, run at e5c1867f where the period is a literal, spells it 50 ms.
+
+import (
+	"io"
+	"net"
+	"os"
+	"strings"
+	"syscall"
+	"testing"
+	"time"
+)
+
+// helloConn is a net.Conn whose peer's answer ARRIVES at a fixed instant on the
+// test's clock: Read hands the answer over only when the deadline the classifier
+// set is at or after that instant, and otherwise reports the deadline as passed.
+// No sleep and no socket, so the verdict does not depend on scheduling.
+type helloConn struct {
+	net.Conn // nil: only the methods below are reachable
+	arrival  time.Time
+	answer   []byte
+	deadline time.Time
+	sets     int
+	wrote    string
+}
+
+func (c *helloConn) SetDeadline(t time.Time) error     { c.deadline, c.sets = t, c.sets+1; return nil }
+func (c *helloConn) SetReadDeadline(t time.Time) error { return c.SetDeadline(t) }
+func (c *helloConn) Write(b []byte) (int, error)       { c.wrote += string(b); return len(b), nil }
+func (c *helloConn) Close() error                      { return nil }
+func (c *helloConn) Read(b []byte) (int, error) {
+	if !c.deadline.IsZero() && c.deadline.Before(c.arrival) {
+		return 0, os.ErrDeadlineExceeded
+	}
+	if len(c.answer) == 0 {
+		return 0, io.EOF
+	}
+	n := copy(b, c.answer[:1])
+	c.answer = c.answer[n:]
+	return n, nil
+}
+
+// execProbeHelloFloor is the slowest legitimate answer the hello wait must admit:
+// above the 230 ms worst srt-mux answer measured at load ~24 on 16 cores (V-rows).
+const execProbeHelloFloor = 250 * time.Millisecond
+
+func TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow(t *testing.T) {
+	want := "WORLD-PROBE-NONCE " + strings.Repeat("a", 32)
+	refused := revDialErr(syscall.ECONNREFUSED)
+	window := time.Duration(execProbeListenMS)*time.Millisecond - 50*time.Millisecond
+	for _, row := range []struct {
+		name   string
+		answer string
+		want   reverseSeen
+	}{
+		{"slow-child", want + "\n", reverseSeen{child: true}},
+		{"slow-mux", "HTTP/1.1 400 Bad Request\r\n", reverseSeen{foreign: true}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			before := time.Now()
+			conn := &helloConn{arrival: before.Add(execProbeHelloFloor), answer: []byte(row.answer)}
+			calls := 0
+			seen := pollLoopback(40000, want, func(string) (net.Conn, error) {
+				calls++
+				if calls == 1 {
+					return conn, nil
+				}
+				return nil, refused
+			})()
+			after := time.Now()
+			if seen != row.want || conn.wrote != execProbeHello {
+				t.Errorf("an answer %s after the hello: seen %+v (wrote %q); want %+v, not silent", execProbeHelloFloor, seen, conn.wrote, row.want)
+			}
+			if conn.sets == 0 || conn.deadline.IsZero() || conn.deadline.After(after.Add(window)) {
+				t.Errorf("hello deadline at stop+%v (sets %d); want a deadline no later than stop+%v (listen window less one poll period)", conn.deadline.Sub(after), conn.sets, window)
+			}
+		})
+	}
+}

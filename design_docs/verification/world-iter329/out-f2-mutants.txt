@@ -1,0 +1,45 @@
+== control rc=0 :: const execProbeHelloWait = 500 * time.Millisecond
+   --- PASS: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   ok  	github.com/sunholo-data/ailang-world/host/broker	0.360s
+== wait-5ms rc=1 :: const execProbeHelloWait = 5 * time.Millisecond
+       zz_iter329_f2_test.go:76: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+       zz_iter329_f2_test.go:76: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   --- FAIL: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   FAIL
+   FAIL	github.com/sunholo-data/ailang-world/host/broker	0.344s
+   FAIL
+== wait-249ms rc=1 :: const execProbeHelloWait = 249 * time.Millisecond
+       zz_iter329_f2_test.go:76: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+       zz_iter329_f2_test.go:76: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   --- FAIL: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   FAIL
+   FAIL	github.com/sunholo-data/ailang-world/host/broker	0.334s
+   FAIL
+== wait-250ms rc=0 :: const execProbeHelloWait = 250 * time.Millisecond
+   --- PASS: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   ok  	github.com/sunholo-data/ailang-world/host/broker	0.334s
+== wait-950ms rc=0 :: const execProbeHelloWait = 950 * time.Millisecond
+   --- PASS: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   ok  	github.com/sunholo-data/ailang-world/host/broker	0.397s
+== wait-951ms rc=1 :: const execProbeHelloWait = 951 * time.Millisecond
+       zz_iter329_f2_test.go:79: hello deadline at stop+950.876541ms (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+       zz_iter329_f2_test.go:79: hello deadline at stop+950.997708ms (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+   --- FAIL: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   FAIL
+   FAIL	github.com/sunholo-data/ailang-world/host/broker	0.351s
+   FAIL
+== wait-60s rc=1 :: const execProbeHelloWait = 60 * time.Second
+       zz_iter329_f2_test.go:79: hello deadline at stop+59.999914875s (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+       zz_iter329_f2_test.go:79: hello deadline at stop+59.999997333s (sets 1); want a deadline no later than stop+950ms (listen window less one poll period)
+   --- FAIL: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   FAIL
+   FAIL	github.com/sunholo-data/ailang-world/host/broker	0.343s
+   FAIL
+== no-deadline rc=1 :: const execProbeHelloWait = 500 * time.Millisecond
+       zz_iter329_f2_test.go:79: hello deadline at stop+-2562047h47m16.854775808s (sets 0); want a deadline no later than stop+950ms (listen window less one poll period)
+       zz_iter329_f2_test.go:79: hello deadline at stop+-2562047h47m16.854775808s (sets 0); want a deadline no later than stop+950ms (listen window less one poll period)
+   --- FAIL: TestZZIter329HelloWaitAdmitsASlowChildAndStaysInsideTheListenWindow (0.00s)
+   FAIL
+   FAIL	github.com/sunholo-data/ailang-world/host/broker	0.358s
+   FAIL
+restored sha 390c74e841f26a12 (base 390c74e841f26a12)
