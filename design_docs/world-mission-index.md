@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 332 | 2026-10-31 | no pick: rule (d) block report 11; nothing moved since 331 but its own record and landing; row 233 parked on D-WORLD-105; release rows 150/151 stil... |
 | 331 | 2026-10-31 | no pick: rule (d) block report 10, the first since D-WORLD-102's scope ran out; row 233 parked on D-WORLD-105; release rows 150/151 still wait on a... |
 | 330 | 2026-10-31 | row 233 designed and parked: the holder-exit-reset excuse is blocked at quorum r2 on the fail-closed premise; real-srt Linux 49–54/100 under load; ... |
 | 329 | 2026-10-31 | row 230 built: arm 6's hello wait pinned from both sides by a deterministic test, the SILENT text derived from the wait, a labelled structural pin ... |

@@ -1,7 +1,7 @@
-# World mission dashboard — iteration 331 (2026-10-31)
+# World mission dashboard — iteration 332 (2026-10-31)
 
-- **This fire:** no pick — rule (d) block report 10, the first since D-WORLD-102's scope (231 → 230 → 233) ran out. Nothing was built.
-- **Dev:** green at `cb85eb2b` (3/3; last five CI runs success on attempt 1).
+- **This fire:** no pick — rule (d) block report 11, the second since D-WORLD-102's scope (231 → 230 → 233) ran out. Nothing moved since 331 except its own record and landing. Nothing was built.
+- **Dev:** green at `85a7bd5c` (3/3; last five CI runs success on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**. P0/P3 run `marketingcheck position`/`phone`; they need `~/.ailang/state/world-iter328-phone-corpus/`.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218 (all still `[NEXT]`).
@@ -11,4 +11,4 @@
 - **Attended actions:** schedule row 150's A1; the 219 → 217 → 218 track unblocks 151.
 - **Roles this fire:** controller opus; independent judge sonnet (Agent, foreground) on the record. Designer, planner, executor not spawned (no pick).
 - **Cost:** $0 metered.
-- **Record and evidence:** world-mission-log.md entry 331; verification/world-iter331/gate1-2-readings.txt.
+- **Record and evidence:** world-mission-log.md entry 332; verification/world-iter332/gate1-2-readings.txt.
