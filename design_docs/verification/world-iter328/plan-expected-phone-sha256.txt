@@ -1,0 +1,11 @@
+904f4024cf9444c0313315e2832c59ee6905c57a284256e7fe559fe70ab61253  skeleton-eval-p1-pass-a-phone.json
+0480ba8df9029af925feefe54b7ecf6dc34ad5c131175e7bfb27625eeabcc9cc  skeleton-eval-p2-pass-a-phone.json
+9ff15c893c993af49e26a24b952a4c8c515762b87c819fcbb449c77a008b3776  skeleton-eval-p3-pass-a-phone.json
+8d3ee5b08b8d51121f06a00102355776d1cd46238ecbc5b8f58be308881842ea  skeleton-r1-seed1-pass-a-phone.json
+f1418d521e059cfcc7eb25d3832d253db6e050230a261e476b3a3bb9677fa27b  skeleton-r1-seed2-pass-a-phone.json
+75e62b7eb29bb6d6c5cb947189c38c44c08b606a6504a19a0b2b04b693cc4b72  skeleton-r1b-seed3-pass-a-phone.json
+1c6716c686e7ba207efdb6b0d481bb5ae7cbc62c841adf1f37f21273550926c5  skeleton-r1b-seed4-pass-a-phone.json
+91b9ab24b12ea2c1cbb33c9e2681c1e07072757d316652778ff3d6b4982160ff  skeleton-r1c-seed5-pass-a-phone.json
+cae82e77cdcdfe45c3921b8e0bcb4d57eddd9e4933f4ec20553d8de62cabf5b6  skeleton-r1c-seed6-pass-a-phone.json
+2a1a6dd9304981fc313659b47eeb078b068625602aacb149c2f28aa5c15d936a  skeleton-v50-reference-phone.json
+476d971ab75bd33ccb7450405c43c5dac2c38cddeb08b7ac18f0236e489b2ddf  corpus-SHA256SUMS

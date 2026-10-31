@@ -1,0 +1,221 @@
+# Planner validation run (iteration 328): validate.sh output (per-milestone cumulative tree), then the repo gate on the final tree in a git clone (gitcopy), then the verifygate rerun.
+## validate.sh (banked sources applied milestone by milestone to a git-archive copy of 08dc31be)
+== M1a 2026-10-31T01:19:53Z  2:19  up 4 days,  9:14, 4 users, load averages: 3.81 5.60 5.10
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 38s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	37.323s
+race rc=0 89s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	88.454s
+acceptance [^TestMarketingSubprocessDeadline$] rc=0 PASS=1 SKIP=0 FAIL=0 subPASS=0
+--- PASS: TestMarketingSubprocessDeadline (2.00s)
+files=34
+gen rc=0
+SHA256SUMS == prototype
+SHA256SUMS sha256 d8963a3c2245d491c18883da68c1f74eb1f0dad9c79503af324fa100352d300a
+== M1b 2026-10-31T01:22:13Z  2:22  up 4 days,  9:16, 4 users, load averages: 5.66 5.48 5.12
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 41s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	39.978s
+race rc=0 105s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	104.269s
+acceptance [^TestMarketingPosition] rc=0 PASS=2 SKIP=0 FAIL=0 subPASS=16
+--- PASS: TestMarketingPositionCLI (0.00s)
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+position --help rc=0
+== M1c 2026-10-31T01:24:52Z  2:24  up 4 days,  9:19, 4 users, load averages: 4.33 5.37 5.17
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 46s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	45.664s
+race rc=0 95s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	93.596s
+acceptance [^TestMarketingPosition] rc=0 PASS=4 SKIP=0 FAIL=0 subPASS=60
+--- PASS: TestMarketingPositionFixtures (0.01s)
+--- PASS: TestMarketingPositionCorpus (0.00s)
+--- PASS: TestMarketingPositionCLI (0.00s)
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+== M1d 2026-10-31T01:27:22Z  2:27  up 4 days,  9:21, 4 users, load averages: 5.42 5.65 5.34
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 38s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	38.004s
+race rc=0 93s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	91.151s
+acceptance [^TestMarketingPosition] rc=0 PASS=5 SKIP=0 FAIL=0 subPASS=61
+--- PASS: TestMarketingPositionFixtures (0.01s)
+--- PASS: TestMarketingPositionCorpus (0.00s)
+--- PASS: TestMarketingPositionParity (0.44s)
+--- PASS: TestMarketingPositionCLI (0.00s)
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+acceptance [^TestMarketingSubprocessDeadline$] rc=0 PASS=1 SKIP=0 FAIL=0 subPASS=0
+--- PASS: TestMarketingSubprocessDeadline (2.01s)
+skeleton write rc=0 ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.422s
+skeletons == prototype
+== M2a 2026-10-31T01:29:48Z  2:29  up 4 days,  9:24, 4 users, load averages: 6.14 5.84 5.46
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 37s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	36.671s
+race rc=0 99s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	98.439s
+acceptance [^TestMarketingPhone] rc=0 PASS=2 SKIP=1 FAIL=0 subPASS=22
+--- PASS: TestMarketingPhoneSkeleton (0.12s)
+--- PASS: TestMarketingPhoneCLI (0.03s)
+--- SKIP: TestMarketingPhoneRealCorpus (0.00s)
+acceptance [^TestMarketingPhone] rc=0 PASS=3 SKIP=0 FAIL=0 subPASS=22
+--- PASS: TestMarketingPhoneSkeleton (0.11s)
+--- PASS: TestMarketingPhoneCLI (0.03s)
+--- PASS: TestMarketingPhoneRealCorpus (0.13s)
+phone --help rc=0
+== M2b 2026-10-31T01:32:12Z  2:32  up 4 days,  9:26, 4 users, load averages: 4.34 5.14 5.22
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 37s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	37.482s
+race rc=0 117s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	115.343s
+acceptance [^TestMarketingPhone] rc=0 PASS=4 SKIP=1 FAIL=0 subPASS=64
+--- PASS: TestMarketingPhoneSkeleton (0.12s)
+--- PASS: TestMarketingPhoneArms (0.33s)
+--- PASS: TestMarketingPhoneParity (0.92s)
+--- PASS: TestMarketingPhoneCLI (0.03s)
+--- SKIP: TestMarketingPhoneRealCorpus (0.00s)
+acceptance [^TestMarketingPhone] rc=0 PASS=5 SKIP=0 FAIL=0 subPASS=64
+--- PASS: TestMarketingPhoneSkeleton (0.11s)
+--- PASS: TestMarketingPhoneArms (0.32s)
+--- PASS: TestMarketingPhoneParity (0.92s)
+--- PASS: TestMarketingPhoneCLI (0.03s)
+--- PASS: TestMarketingPhoneRealCorpus (1.64s)
+applied: QUICKSTART 3 edits, orchestration 9 edits
+docs apply rc=0
+== M3 2026-10-31T01:35:00Z  2:35  up 4 days,  9:29, 4 users, load averages: 5.22 5.25 5.23
+gofmt: []
+vet rc=0
+compile-fence rc=0 fails=0
+plain rc=0 38s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	38.133s
+race rc=0 118s ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	116.110s
+acceptance [TestMarketingRunbookMatchesHelp|TestMarketingDocsLinks] rc=0 PASS=2 SKIP=0 FAIL=0 subPASS=22
+--- PASS: TestMarketingDocsLinks (0.16s)
+--- PASS: TestMarketingRunbookMatchesHelp (1.31s)
+    --- PASS: TestMarketingRunbookMatchesHelp/rects-value (0.00s)
+    --- PASS: TestMarketingRunbookMatchesHelp/position-lines (0.45s)
+    --- PASS: TestMarketingRunbookMatchesHelp/phone-lines (0.03s)
+V34 grep -c 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c = 1
+V34 grep -c 31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c = 1
+acceptance [^TestMarketing(Position|Phone)] rc=0 PASS=10 SKIP=0 FAIL=0 subPASS=125
+--- PASS: TestMarketingPhoneSkeleton (0.12s)
+--- PASS: TestMarketingPhoneArms (0.33s)
+--- PASS: TestMarketingPhoneParity (1.25s)
+--- PASS: TestMarketingPhoneCLI (0.03s)
+--- PASS: TestMarketingPhoneRealCorpus (2.55s)
+--- PASS: TestMarketingPositionFixtures (0.01s)
+--- PASS: TestMarketingPositionCorpus (0.01s)
+--- PASS: TestMarketingPositionParity (0.44s)
+--- PASS: TestMarketingPositionCLI (0.00s)
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+capture-day step1: SKIP=0 RealCorpusPASS=1
+AC-3 t.Skip grep: scripts/marketingcheck/phone_test.go:639:		t.Skip("WORLD_PHONE_CORPUS unset: the real phone corpus is host-local (design §2.3); capture-day step 1 runs this test")
+== done 2026-10-31T01:37:52Z
+
+## repo gate run 1 (git-archive copy, before D-15's allow-list lines and D-11's sentence)
+== start 2026-10-31T01:38:07Z  2:38  up 4 days,  9:32, 4 users, load averages: 3.98 4.62 4.96
+verify_ail rc=0
+build rc=0
+test-all rc=1 367s
+FAIL lines: 5 ok lines: 33
+== end 2026-10-31T01:44:55Z  2:44  up 4 days,  9:39, 4 users, load averages: 7.27 8.79 7.26
+--- FAIL: TestReleaseLiteralsExplainedByManifest (0.04s)
+    scan_test.go:256: git ls-files: exit status 128
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/pins	2.200s
+--- FAIL: TestProductionGoSurface (0.22s)
+    context_roots_test.go:245: non-test Go file outside context-root scan and explicit reproducer allow-list: scripts/marketingcheck/phone.go
+    context_roots_test.go:245: non-test Go file outside context-root scan and explicit reproducer allow-list: scripts/marketingcheck/position.go
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/store	14.621s
+FAIL
+
+## repo gate run 2 (git clone with the final tree committed)
+== start 2026-10-31T01:45:56Z  2:45  up 4 days,  9:40, 4 users, load averages: 4.97 7.83 7.00
+verify_ail rc=0
+build rc=0
+test-all rc=1 410s
+FAIL lines: 3 ok lines: 34
+== end 2026-10-31T01:53:31Z  2:53  up 4 days,  9:48, 4 users, load averages: 10.59 10.44 8.82
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	228.736s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	82.996s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	44.435s
+ok  	github.com/sunholo-data/ailang-world/host/agui	7.674s
+ok  	github.com/sunholo-data/ailang-world/host/archive	46.050s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.747s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	12.591s
+ok  	github.com/sunholo-data/ailang-world/host/broker	330.696s
+ok  	github.com/sunholo-data/ailang-world/host/canon	2.781s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	94.808s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	2.780s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	0.832s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	109.767s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	374.331s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	32.551s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	1.262s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	3.932s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.859s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	55.360s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.854s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.013s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.154s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.924s
+ok  	github.com/sunholo-data/ailang-world/host/registry	2.324s
+ok  	github.com/sunholo-data/ailang-world/host/replay	57.321s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	6.695s
+ok  	github.com/sunholo-data/ailang-world/host/store	14.923s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.514s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.359s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	3.082s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	65.119s
+--- FAIL: TestMissionConfigDefaultFlowIntegration (17.96s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	385.158s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	3.549s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	13.099s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	128.854s
+FAIL
+
+## verifygate rerun alone
+--- PASS: TestMissionConfigDefaultFlowIntegration (8.28s)
+    --- PASS: TestMissionConfigDefaultFlowIntegration/valid_ledger (4.13s)
+    --- PASS: TestMissionConfigDefaultFlowIntegration/invalid_ledger (4.15s)
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	8.540s
+
+## S7 runbook script on the final tree
+accept-seed5                           ACCEPT regions=17
+accept-eval-p1                         ACCEPT regions=17
+TOTAL candidates=2 accept=2 refuse=0
+rc=0
+refuse                                 REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+TOTAL candidates=1 accept=0 refuse=1
+exit status 1
+rc=1
+release                                ACCEPT regions=17
+TOTAL candidates=1 accept=1 refuse=0
+rc=0
+refuse                       REFUSE 1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} thumb={-1 -1 -1 -1} titleRight=413
+    (i) header {25 45 370 68} entry {90 428 370 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) dims 1440x1100
+    (iii′) thumb {-1 -1 -1 -1}
+TOTAL candidates=1 accept=0 refuse=1
+exit status 1
+rc=1
+release                      ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+TOTAL candidates=1 accept=1 refuse=0
+rc=0
+
+## phone arm port fidelity (plan-fidelity-test.go.txt on the final phone_test.go)
+    zz_fidelity_test.go:53: FIDELITY render: arms=39 pixel-equal=39
+    zz_fidelity_test.go:53: FIDELITY real: arms=39 pixel-equal=39
+
+## M1b / M2a surface allow-list snapshots on the base tree (TestProductionGoSurface)
+    context_roots_test.go:260: Go surface: host/cmd=206 allow-listed reproducers=5
+--- PASS: TestProductionGoSurface (0.12s)
+ok  	github.com/sunholo-data/ailang-world/host/store	0.594s
+    context_roots_test.go:262: Go surface: host/cmd=206 allow-listed reproducers=6
+--- PASS: TestProductionGoSurface (0.03s)
+ok  	github.com/sunholo-data/ailang-world/host/store	0.333s

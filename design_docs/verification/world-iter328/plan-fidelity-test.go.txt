@@ -1,0 +1,55 @@
+package main
+
+// Planner instrument (iteration 328), NOT committed into the package: proves the in-test phone arm
+// ports (phone_test.go phoneArms) are pixel-equal to the banked generators run on the same base.
+// FIDDIR/<render|real>/base.png is the seed-5 skeleton render (v31 `skel render`) or the real
+// seed-5 pass-A capture; FIDDIR/<base>/{v67,judge,new}/<arm>.png are the outputs of
+// world-iter315/v67-phoneneg-main.go.txt, v67b-judge-phone-arms-main.go.txt,
+// world-iter328/v14-newarms-main.go.txt and v11-h15-main.go.txt on that base.
+// Measured: "FIDELITY render: arms=39 pixel-equal=39", "FIDELITY real: arms=39 pixel-equal=39".
+
+import (
+	"bytes"
+	"image"
+	"image/draw"
+	"image/png"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func fidRGBA(t *testing.T, p string) *image.RGBA {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	im, err := png.Decode(bytes.NewReader(b))
+	if err != nil {
+		t.Fatal(err)
+	}
+	o := image.NewRGBA(im.Bounds())
+	draw.Draw(o, o.Bounds(), im, im.Bounds().Min, draw.Src)
+	return o
+}
+
+func TestZZFidelity(t *testing.T) {
+	for _, base := range []string{"render", "real"} {
+		dir := filepath.Join(os.Getenv("FIDDIR"), base)
+		src := fidRGBA(t, filepath.Join(dir, "base.png"))
+		eq := 0
+		for _, a := range phoneArms {
+			want := fidRGBA(t, filepath.Join(dir, a.Name+".png"))
+			var buf bytes.Buffer
+			png.Encode(&buf, a.Make(src))
+			gotIm, _ := png.Decode(bytes.NewReader(buf.Bytes()))
+			got := image.NewRGBA(gotIm.Bounds())
+			draw.Draw(got, got.Bounds(), gotIm, gotIm.Bounds().Min, draw.Src)
+			if got.Bounds() == want.Bounds() && bytes.Equal(got.Pix, want.Pix) {
+				eq++
+			} else {
+				t.Errorf("%s %s: pixels differ from the banked generator", base, a.Name)
+			}
+		}
+		t.Logf("FIDELITY %s: arms=%d pixel-equal=%d", base, len(phoneArms), eq)
+	}
+}

@@ -1,0 +1,18 @@
+#!/bin/bash
+# Row 231 M3 (S7): runs QUICKSTART §13's five new marketingcheck lines verbatim from the repo root.
+# usage (from the repo root): bash plan-m3-s7-runbook.sh.txt <scratch-dir-outside-the-repo> <phone-corpus-dir>
+# Expected: five "rc=" lines, in order rc=0 rc=1 rc=0 rc=1 rc=0.
+set -u
+export DEMO_DIR=$1/s7
+CORPUS=$2
+rm -rf "$DEMO_DIR"; mkdir -p "$DEMO_DIR/capture/pass-a"
+export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json
+export CAPTURE_OUT=$DEMO_DIR/capture
+cp scripts/marketingcheck/testdata/position/stores/eval-p1.json "$WORLD_MARKETING_RECTS"
+cp "$CORPUS/r1c-seed5-pass-a-phone.png" "$CAPTURE_OUT/pass-a/phone.png"
+cp "$CORPUS/r1c-seed5-pass-a-workbench-light.png" "$CAPTURE_OUT/pass-a/workbench-light.png"
+go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json accept-seed5=scripts/marketingcheck/testdata/position/stores/r1c-seed5.json accept-eval-p1=scripts/marketingcheck/testdata/position/stores/eval-p1.json; echo "rc=$?"
+go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json refuse=scripts/marketingcheck/testdata/position/v65/neg-attested+14.json; echo "rc=$?"
+go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json release="$WORLD_MARKETING_RECTS"; echo "rc=$?"
+go run ./scripts/marketingcheck phone refuse="$CAPTURE_OUT/pass-a/workbench-light.png"; echo "rc=$?"
+go run ./scripts/marketingcheck phone release="$CAPTURE_OUT/pass-a/phone.png"; echo "rc=$?"

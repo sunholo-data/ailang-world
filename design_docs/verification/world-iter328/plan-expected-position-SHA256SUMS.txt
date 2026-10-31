@@ -1,0 +1,41 @@
+# Row 231 position fixtures. Written by design_docs/planned/w-marketing-position-checker-sprint-plan.md §M1b
+# (bash gen-position-fixtures.sh <repo> <scratch>), never by hand. Sources (design §2.3):
+# stores/<store>.json: cp design_docs/verification/world-iter315/v64-rects-<store>.json
+# stores/r1-seed{1,2}-blockconverted.json: p0check fromlayouts v64-layouts-<s>.json v64-rects-<s>.json <out>
+# v65/*.json: p0check mutate v64-rects-r1c-seed5.json v65/
+# v65-p1/*.json: p0check mutate v64-rects-eval-p1.json <dir>, 4 arms copied
+# p0check = design_docs/verification/world-iter315/v64-p0check-main.go.txt sha256 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c
+2d7ce1b6d7a90a157ad898d11ff0f9d4f73a17a146a40e7b7b86d4f5d76aae6d  stores/eval-p1.json
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  stores/eval-p2.json
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  stores/eval-p3.json
+89aa914caff11e8e97b9524b8403a2d90be76a2c425093dae0492e3ddda949e1  stores/r1-seed1-blockconverted.json
+8c18d44a720717fa95838c550eed8d7a6f04ab333e1f9b5b082acc104bf89f54  stores/r1-seed1.json
+89aa914caff11e8e97b9524b8403a2d90be76a2c425093dae0492e3ddda949e1  stores/r1-seed2-blockconverted.json
+f0aa0767ec96a97634e1ba33f88c19e0ca8e74cee909392408d4e4cb1ea56821  stores/r1-seed2.json
+89aa914caff11e8e97b9524b8403a2d90be76a2c425093dae0492e3ddda949e1  stores/r1b-seed3.json
+89aa914caff11e8e97b9524b8403a2d90be76a2c425093dae0492e3ddda949e1  stores/r1b-seed4.json
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  stores/r1c-seed5.json
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  stores/r1c-seed6.json
+eca0cc6d81804327057ac2cd198b18ed55af8835600aa271f8f52cedb5c946c4  v65-p1/neg-packet-all+14.json
+d321e4ad5de3701e80b546f10135d65c63a13cae86c429a3cb23a681ca40f2c1  v65-p1/neg-proven-grows-6-lines-below-fold.json
+59577fff4d9cdfc38273a8f5087128783ee106241f0117de01a014c5896950bf  v65-p1/neg-tested-at-attested-row.json
+d75ddc6eaff066242513a8c7720c39329d04f0d36eddcc289b837ed874a654cb  v65-p1/syn-pos-tested-wraps-3-lines.json
+f3ee8b69cbb2ff5d443e655c34c19181eb598aa0bda915194656556058ee664f  v65/neg-attested+14.json
+94ace73c2b3fbdb18594d8e32f5a813cea71d915775208470266f8ba0440b2a4  v65/neg-attested-dropped.json
+4c779b9e1b318690c1e5fcbcffb8db52ee71b04dc5b33e49d2020cb177b19a58  v65/neg-background-over-content.json
+c9148ddb4273fdf553083620558368b3517b28b39c75f672438c0f7c3e515c7a  v65/neg-dark-timeline-first+24.json
+e032611a4ebc4d021c407aafd5cdf911be7a849937d4423325cb02b3963e58a6  v65/neg-graph-svg-at-timeline.json
+004790601dd30bac22d62969678e038fa50c6df12844f520f39f05bfcf8b41f7  v65/neg-light-header+40.json
+db87111e8de6e1cfccd8e7e27c1cad860d0f68999c1a932904ad9900ed48e9e0  v65/neg-light-header-whole-view.json
+add302b1f8b65b704d56a068e57b9b1f90bfe2874b03f69dc51f3947be302278  v65/neg-packet-all+14.json
+b4bb97e3661c3c00460b17a90a6c19e935b2febbc6386c9ce532084c62eedec8  v65/neg-packet-stack-down-6-lines.json
+03a66cab71d518557f596ba56248e350a6f565139cdb206606cf9bde9dc98d54  v65/neg-payload+14.json
+aacc4c1bff4a6c8dc5de05bb6515bce2164bcdce6fe5b6b9a01514e3313edf1a  v65/neg-proven-grows-6-lines-below-fold.json
+16b9a0b32468684a26be0ba5a05bab4b3cd933d9042e2eb37cb744f4f0d5338e  v65/neg-rows-reordered-tested-claimed.json
+00da5f33cc6f0252ac2a52c139b2701da0b9b8a64ea1aec3dd2f2ea2ecea4fd1  v65/neg-tested-64x16-glyphs.json
+97260efa447bf03e27b6a833511cdc2113186097d283981210b4c6f126491a69  v65/neg-tested-at-attested-row.json
+000973cc1bb3f5512942383aa35c48ab292657827f263d3d0c1dd4205eb2a88e  v65/neg-tested-at-proven-row.json
+7d2d48cea01f472c325256cbb9a477aa85b92a8e761a5df2b73364a72db569a6  v65/neg-tested-height+14.json
+a8de881a2ef65f4ac2a5753a9819ef15a24fad638906639cd720bf4922175344  v65/syn-pos-createdAt-wraps.json
+b32e86462a9964267cb8eed0fc9d3b638343817f833f4cfbf33362f1ff7f9cef  v65/syn-pos-proven-5-lines.json
+96a7cdb505461e3df78a36519b6b59d4ade416c299e57e487584411eb31549b6  v65/syn-pos-tested-wraps-3-lines.json
