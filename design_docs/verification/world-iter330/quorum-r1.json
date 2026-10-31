@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-holder-exit-reset.md",
+  "iso_ts": "2026-10-31T08:49:28Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1132484,
+      "tokens_in": 11598,
+      "tokens_out": 22048,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The change's entire behavioral delta on the dial-error path is exactly the match set of dialErrIsSilent: today every error it matches records silent; after the change, every error it matches becomes dialReset, excused once a foreign answer precedes it. Yet the doc only asserts its meaning inline ('dialErrIsSilent keeps its name and meaning: a connect-time ECONNRESET proves a listener completed the handshake') with no V-row showing the body — V3 greps only the call site at :757 — and, unlike its own citation practice for every other borrowed mechanism (row 229 §4.3, row 230 V24, row 232 §3 reading 1 and §4(a), V18's read of row 232 V5/V6), no cross-doc V-row pointer either. §3.1's claims that 'everything else is unchanged' and that 'any other zero-byte error is silent wherever it falls' therefore rest on an unverified premise about code behavior: if dialErrIsSilent matches anything besides connect-time ECONNRESET (a connect deadline, ECONNABORTED, a wrapped context error), the sprint silently widens the excused class beyond the rule as written, and no test, mutant, or verification row covers any non-ECONNRESET member of that set — M34 and T9 guard only the ECONNRESET direction.",
+        "catch": "Pin dialErrIsSilent's exact predicate at a6af0cd4 before the sprint: enumerate its match set with a banked scratch test (ECONNRESET → true; ECONNREFUSED, EINVAL, os.ErrDeadlineExceeded at dial, context.Canceled → false), or cite the row-232 verification row that defined its body. Secondarily, the :154 token-check shape is asserted ('any WORLD-PROBE-REFUSED \u003cerrno\u003e') but V3 only shows the exact-match 'WORLD-PROBE-REFUSED EADDRINUSE' at :158, so the §3.3 sentence 'That holds for … any WORLD-PROBE-REFUSED \u003cerrno\u003e' is also unverified.",
+        "proposed_fix": "Add V19 at a6af0cd4: grep -n -A8 'func dialErrIsSilent' host/broker/exec_probe.go banked to $V, plus a scratch match-set test copied in, run, and deleted exactly like V2 (ECONNRESET → true; ECONNREFUSED/EINVAL/os.ErrDeadlineExceeded/context.Canceled → false), and grep the :154 token check for how the WORLD-PROBE-REFUSED family is recognized; then either cite that row in §3.2 where the meaning is asserted, or remove the ambiguity in code by having the poll's dial-error branch test errors.Is(err, syscall.ECONNRESET) directly and add one T12 sub-assertion pinning dialErrIsSilent as ECONNRESET-only, so the excused class is provably co-extensive with §3.1's 'a reset means ECONNRESET at connect, on the hello write, or on the read'. Re-run V12/V13 unchanged after the edit. Minor: reword the QUICKSTART clause to 'is treated as that process exiting, and is retried' — §3.3 point 3 itself concedes a live holder that answers foreign and then resets is indistinguishable, so 'is that process exiting' overclaims the inference."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.175476,
+      "tokens_in": 11452,
+      "tokens_out": 9408,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The rule's fail-closed boundary on the connect path rests on an unverified premise: `dialErrIsSilent` becomes the sole arbiter of which connect-time errors are reclassified as the new excusable `dialReset`, yet its body appears nowhere in V1–V18 (V3 greps only the call site at `:757`). The doc's own soundness table claims 'any other zero-byte error is silent wherever it falls,' but the poll's `else if dialErrIsSilent(err) { d = dialReset }` wholesale maps that function's entire match set to `dialReset`, excusable after any earlier foreign answer. If the match set contains anything beyond ECONNRESET (a connect timeout, ECONNABORTED, EHOSTUNREACH — plausibly folded into a 'silent' helper by row 232), those classes silently change from sticky refusal to retry, weakening the exact property §3.3 claims exactly one row of. The doc asserts the helper 'keeps its name and meaning' instead of showing it, and no T12 row or mutant (M30–M35) exercises a non-ECONNRESET connect error falling after a foreign answer — the script alphabet's only connect-failure step is `C`=ECONNRESET, so a too-broad helper would pass every planned test.",
+        "catch": "Verify and pin the full body of `dialErrIsSilent` at base a6af0cd4 and state its complete match set in the log; then either prove it is exactly ECONNRESET or add a negative test/mutant for every other connect error it accepts when it arrives after a foreign answer. Also reconcile the header's 'One QUICKSTART clause (§7)' with the Files table's §10 arm 6 (`:1168-1170`, V15) — one of them is wrong.",
+        "proposed_fix": "Add a verification-log row, e.g. V19: `grep -n -A8 'func dialErrIsSilent' host/broker/exec_probe.go` at a6af0cd4, pasting the body and enumerating its match set. (a) If the set is exactly `errors.Is(err, syscall.ECONNRESET)`, record it and add one sentence to §3.2: 'the connect arm is ECONNRESET-only; V19 pastes the body.' (b) If it matches more, split the arm so only ECONNRESET is excusable — `} else if errors.Is(err, syscall.ECONNRESET) { d = dialReset } else if dialErrIsSilent(err) { d = dialSilent }` — extend T12's script alphabet with one such connect error, add a row asserting `{foreign, silent}`/SILENT when it follows an `F`, and add mutant M36 (a non-reset connect error mapped to `dialReset`) with that row as its killer. Change the header to 'One QUICKSTART clause (§10)' to match V15."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.02625,
+      "tokens_in": 11545,
+      "tokens_out": 316,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§3.3 does not establish that downgrading a sticky refusal to a retry preserves the fail-closed gate. A foreign answer identifies neither the owner of a later connection nor the cause of its reset. The document explicitly admits a reachable child observed only through resets after a foreign answer; the proposed rule makes that attempt INCONCLUSIVE, allowing a later empty attempt to PASS. Today's code refuses that execution. Showing that some different, uncollided execution could already escape detection does not prove this change introduces no new accepted executions.",
+        "catch": "The claim that the rule 'cannot turn a refusal into a pass' considers only the changed attempt, not the complete three-attempt gate. The 100/100 nonce observations do not establish a universal invariant, and the proposed QUICKSTART sentence incorrectly presents inferred process identity and exit as fact.",
+        "proposed_fix": "Keep unattributed resets sticky. Replace the foreign-before-reset exception with a requirement for independently verified holder ownership and lifecycle evidence sufficient to exclude the child's listener; if that evidence cannot be obtained, retain SILENT. Add a whole-gate scripted regression where attempt 1 observes foreign followed by a child-attributable zero-byte reset and attempt 2 observes no connections with a valid sandbox token; require overall refusal. Revise §3.3 to analyze complete retry sequences, and remove the unconditional claim that a reset after a foreign answer is that process exiting."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller re-measured the premise first-party at a6af0cd4: judgeReverse(BOUND,{foreign,silent}) = revSilent vs {foreign} = revInconclusive. Design changes exactly one verdict shape (foreign then zero-byte reset -\u003e inconclusive), leaves judgeReverse and every deadline/silent-first shape unchanged, and each rejected alternative has a named killer row in T12. Linux probe run 41185322456 confirmed to exist on the deleted probe branch."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The change's entire behavioral delta on the dial-error path is exactly the match set of dialErrIsSilent: today every error it matches records silent; after the change, every error it matches becomes dialReset, excused once a foreign answer precedes it. Yet the doc only asserts its meaning inline ('dialErrIsSilent keeps its name and meaning: a connect-time ECONNRESET proves a listener completed the handshake') with no V-row showing the body — V3 greps only the call site at :757 — and, unlike its own citation practice for every other borrowed mechanism (row 229 §4.3, row 230 V24, row 232 §3 reading 1 and §4(a), V18's read of row 232 V5/V6), no cross-doc V-row pointer either. §3.1's claims that 'everything else is unchanged' and that 'any other zero-byte error is silent wherever it falls' therefore rest on an unverified premise about code behavior: if dialErrIsSilent matches anything besides connect-time ECONNRESET (a connect deadline, ECONNABORTED, a wrapped context error), the sprint silently widens the excused class beyond the rule as written, and no test, mutant, or verification row covers any non-ECONNRESET member of that set — M34 and T9 guard only the ECONNRESET direction.",
+      "oc-kimi-k3: The rule's fail-closed boundary on the connect path rests on an unverified premise: `dialErrIsSilent` becomes the sole arbiter of which connect-time errors are reclassified as the new excusable `dialReset`, yet its body appears nowhere in V1–V18 (V3 greps only the call site at `:757`). The doc's own soundness table claims 'any other zero-byte error is silent wherever it falls,' but the poll's `else if dialErrIsSilent(err) { d = dialReset }` wholesale maps that function's entire match set to `dialReset`, excusable after any earlier foreign answer. If the match set contains anything beyond ECONNRESET (a connect timeout, ECONNABORTED, EHOSTUNREACH — plausibly folded into a 'silent' helper by row 232), those classes silently change from sticky refusal to retry, weakening the exact property §3.3 claims exactly one row of. The doc asserts the helper 'keeps its name and meaning' instead of showing it, and no T12 row or mutant (M30–M35) exercises a non-ECONNRESET connect error falling after a foreign answer — the script alphabet's only connect-failure step is `C`=ECONNRESET, so a too-broad helper would pass every planned test.",
+      "gpt6-1-sol: §3.3 does not establish that downgrading a sticky refusal to a retry preserves the fail-closed gate. A foreign answer identifies neither the owner of a later connection nor the cause of its reset. The document explicitly admits a reachable child observed only through resets after a foreign answer; the proposed rule makes that attempt INCONCLUSIVE, allowing a later empty attempt to PASS. Today's code refuses that execution. Showing that some different, uncollided execution could already escape detection does not prove this change introduces no new accepted executions."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3149744,
+    "total_tokens_in": 34595,
+    "total_tokens_out": 31772
+  }
+}
