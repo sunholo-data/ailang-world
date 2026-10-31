@@ -2126,3 +2126,55 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: one instrument citation added.
 
 **Landing (iteration 331):** PR #445 merged as `558fea49` (merge commit, `--match-head-commit 6c4ed241`). The PR head `6c4ed241` was 3/3 green before the merge, and origin/dev was re-read right before it (`cb85eb2b`, MERGEABLE/CLEAN). The merge tree is byte-identical to the head tree. **Merge CI:** `commits/558fea49/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. Both CI pollers ran under `/bin/bash` from a script file with the subject SHA in each verdict line; three of the four bounded polls hit their ~9-minute deadline while the race gate ran and were re-issued against the same SHA with a fresh deadline.
+
+## 332 — 2026-10-31 — no pick: rule (d) block report 11; nothing moved since 331 but its own record and landing; row 233 parked on D-WORLD-105; release rows 150/151 still wait on attended steps; dev green at 85a7bd5c [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). There is no design, plan, code or product acceptance. The record is the STATUS stamp (329 rotated to the archive), the CURRENT GOAL line, a D-WORLD-105 evidence note, this entry, the regenerated index, the dashboard, and `verification/world-iter332/gate1-2-readings.txt`. An independent judge reviews it before merge.
+
+**Pick and why:** none.
+- **Clause map at `85a7bd5c`:** clauses 1–7 MET. There is no UNMET clause and no critical-path row.
+- **What moved since iteration 331's base:** only 331's own work. `git log cb85eb2b..origin/dev` lists 5 commits (`07bd28ef`, the record; `6c4ed241`, the judge fix; merge `558fea49` of #445; `91fc5137`, the landing note; merge `85a7bd5c` of #446).
+- **D-WORLD-81 release rows, blockers re-measured this iteration:**
+  - **150** waits only on the attended A1. Over commit subjects `cb85eb2b..85a7bd5c`, `grep -ciE 'row ?150|A1\b|marketing'` → **0**; the control `grep -ciE 'iteration|record|merge|row 233|landed'` → **5** of 5 commits.
+  - **151** needs row 188's N2d and N4a. `git log origin/dev --since=2026-10-01 --format='%h %s' | grep -ciE 'N2d|N4a'` → **0**; control `N2c` → **2**. The full-message form returns the same four record or design commits as iterations 320–331 (`fe9c891e`, `92495b60`, `be184351`, `dc719822`). Rows 217, 218 and 219 are still `[NEXT]` on the attended track, so neither milestone is loop-routable.
+- **D-WORLD-102 = A** covered rows 231 → 230 → 233 only. 231 and 230 are LANDED; 233 is `[PARKED iteration 330]` on **D-WORLD-105**, still OPEN with default C (nothing built). Rows 235 and 237–242 are hygiene outside that scope, so rule (d) bars them.
+- **External predicates re-read** with the whole-charter pattern under `/bin/bash` from a script file: **29** distinct upstream numbers, `results=29`, **all 29 closed**. Controls: row 53's `ailang#941` matched, and `gh issue list -R sunholo-data/ailang --state open --limit 3` returned 3. Still a lower bound (bare `#N` not counted).
+- **Weekly external-issue sweep (Gate 0 step 5):** iteration 305 ran this week's sweep. Re-checked: 1 open issue, #366, the bookkeeping thread (charter 3 / log 67 / status archive 8 / dashboard 0 before this record). **0 orphans of 1 enumerated.**
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent). gh `sunholo-voight-kampff`. Billing tripwire CLEAN.
+- `mission_directives.sh` (driver pin copy): 0 allowlisted directives on #366 since `2026-10-27T09:03:42Z` (32 comments) and 0 on #313 since `2026-10-22T01:34:42Z` (44 comments). Nothing to mark.
+- `mission_gate0_self_notices.sh`: verdict "1 crash notice". It is the same 2026-10-22 rc=1 notice `6345079873`, already credited (`grep -c` → 27 in the live log and 3 in the log archive before this entry). Control 107:4 ok. No crash notice on #366 (32 self, 0 crash).
+- Unread inbox: nothing addressed to World. The 39 unread `mission-world` messages all come from `mission-world`: this loop's own claims and reports. The iteration-332 claim was sent (`inbox_1793464127436_08543c29`).
+- `mission_decisions.sh --check`: valid, 92 rows, 1 OPEN (D-WORLD-105). The only ledger diff in `cb85eb2b..85a7bd5c` is 331's own D-WORLD-105 evidence note (one `-`/`+` pair, commit `07bd28ef`).
+
+**Gate 1:**
+- Local `dev` equalled `origin/dev` (`85a7bd5c`), 0 ahead / 0 behind, with only untracked residue in the tree. Gate-1 base `85a7bd5cb11c786157a14e0b4fa80271fe8e6677@2026-10-31T16:28:05Z`.
+- Skill drift: per-file `cmp` of `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target against `origin/dev` in the freshly fetched driver clone: every file identical. Rules read from the resolved target.
+- Dev CI: `commits/85a7bd5c/check-runs` → 3, all success. The last five dev CI runs (`85a7bd5c`, `558fea49`, `cb85eb2b`, `a6af0cd4`, `9e562235`) all read success on attempt 1.
+- Open PRs: none. Died-mid-flight traces: no iteration-332 branch or worktree existed before this one. `.wt-world-iter306-r0` is the known residue.
+
+**Designer / planner / executor:** not spawned. There is no pick, so the routing table has nothing to send them (precedent 257–264, 317, 319–326, 331). No spawn was attempted, so none failed. The operator's standing request for Agent-tool roles is honoured through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (driver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=85a7bd5cb11c786157a14e0b4fa80271fe8e6677@2026-10-31T16:28:05Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=opus`, `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=codex`. `MISSION_ROUTING_NOTE`: planner and executor codex `gpt-6.1-sol` unusable (probe rc 75, over daily ration).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet`, tokens recorded in the follow-through. Generator ≠ judge: opus controller vs sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150 (attended A1) or 151 (row 188 N2d/N4a absent, measured above).
+- Picking 233: PARKED on D-WORLD-105, whose default C builds nothing.
+- Picking 235 or 237–242 under rule (d): outside D-WORLD-102's scope and D-WORLD-64's exception.
+- Re-asking D-WORLD-105 or filing a second scope-widening ask: the digest already carries both (see 331's Ruled out).
+- Rotating the log: 27 live entries with this one, below the ~40 threshold. The index was regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. **CURRENT GOAL growth stopped for this fire.** Iterations 326 and 331 each recorded that the line grows by one clause per fire. A block report that repeats the previous one adds no new fact, so this record widened the existing clause to "iterations 331–332 … block reports 10–11" and refreshed its dev SHA instead of prepending a new one. The line is 7,744 bytes, up from 7,731 (`wc -c`, newline included), and still has 20 earlier-iteration clauses (`grep -o 'Earlier (iteration' | wc -l` on that line). Older clauses are not trimmed, for the reason 326 gives.
+2. **Gate-0 instrument fault, mine: the first env read printed a secret into the local transcript.** Before reading `resources/gate-0-preflight.md`, the controller listed the driver env with `env | grep -E '^(MISSION|AILANG|CLAUDE_CODE)'`. That matched `CLAUDE_CODE_OAUTH_TOKEN` and printed its value into this fire's local transcript. Nothing was sent anywhere: the value appears in no commit, message or issue. This is the class fleet iterations 51 and 52 hit, and Gate 0's "read the environment by NAME" rule covers it, but the controller read that rule only after its first env call. The call came while it checked SKILL.md's `MISSION_WORKDIR` and pin sections, which name env vars and come before any gate file. Proposal (World cannot edit the shared skill, so this goes to Mark/V1): move the one-line rule, `env | cut -d= -f1 | grep -E '^(MISSION_|AILANG_)'`, into SKILL.md above the Repo Profile, where the first env-reading prompt appears. Rotating the token is Mark's call; the exposure is local to this rig's transcript store.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105).
+**Next:** rule (d) block report unless D-WORLD-105 is answered A or B, Mark widens D-WORLD-102's scope, or a release row (150, 151) becomes routable; a dev red still outranks.
