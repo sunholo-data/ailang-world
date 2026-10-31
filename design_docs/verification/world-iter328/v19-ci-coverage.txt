@@ -1,0 +1,27 @@
+# V19 does CI run marketingcheck's tests? Measured on the base commit's CI run
+$ gh run list --repo sunholo-data/ailang-world --branch dev --limit 1 --json databaseId,headSha,conclusion
+[{"conclusion":"success","databaseId":41146815448,"headSha":"cec48f69af6da7fe4817d9a1bf3e9f01b0274cb0"}]
+$ gh run view 41146815448 --json jobs --jq '.jobs[]|...'
+124373735268 go host build + test gate success
+124373735471 ailang-code verify gate success
+124373735480 go race gate (go test -race, own job) success
+$ gh run view 41146815448 --job 124373735268 --log | grep -n 'scripts/marketingcheck'   (plain leg, verify_go.sh)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	26.907s
+  control: ok lines for any package in the same log: 45; the leg header: ── go test ./... -count=1
+$ gh run view 41146815448 --job 124373735480 --log | grep -n 'scripts/marketingcheck'   (race job)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	157.042s
+$ grep -rn WORLD_CHROME .github/ scripts/verify_go.sh
+rc=1 (1 = no match)
+  control: grep -c AILANG_BIN .github/workflows/ci.yml = 15
+$ grep -rn 'TestMarketing\|scripts/marketingcheck' .github scripts/*.sh
+rc=1 (1 = no match)
+  control: grep -c 'TestExecProbe\|TestLiveScript' .github/workflows/ci.yml = 4
+$ grep -n 'Skip' cmd/ailang-worldd/marketing_chrome_test.go
+54:		t.Skip("WORLD_CHROME unset: controller runs the real Chrome drill")
+$ grep -n 'go test ./... -count=1$\|"-race", "-timeout", "8m"' scripts/verify_go.sh
+339:go test ./... -count=1
+355:cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]
+$ grep -n GOTOOLCHAIN .github/workflows/ci.yml
+22:      GOTOOLCHAIN: go1.26.6
+123:      GOTOOLCHAIN: go1.26.6
+425:      GOTOOLCHAIN: go1.26.6

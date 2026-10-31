@@ -1,0 +1,16 @@
+# V03 source/input sha256 pins vs orchestration §4.4
+$ shasum -a 256 /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter315/v64-p0check-main.go.txt /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter315/v66-phonecheck-main.go.txt /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter315/v64-rects-r1c-seed5.json /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter312/r1-rects.json /Users/voightkampff/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c  /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter315/v64-p0check-main.go.txt
+31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c  /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter315/v66-phonecheck-main.go.txt
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter315/v64-rects-r1c-seed5.json
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter312/r1-rects.json
+999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8  /Users/voightkampff/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+rc=0
+$ grep -o <each full hash> design_docs/planned/w-marketing-capture-orchestration.md | sort | uniq -c
+   1 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c
+   1 31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c
+   1 999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8
+   1 ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333
+# negative control: a hash that is not in the doc
+$ grep -c 7077dcb5 (the V74 tampered hash, cited only truncated) ...
+0

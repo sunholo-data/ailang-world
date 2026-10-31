@@ -1,0 +1,129 @@
+# Row 231 M3: applies design §2.7's document edits to docs/QUICKSTART.md and
+# design_docs/planned/w-marketing-capture-orchestration.md. Every replacement must match exactly
+# once, or the script exits 1 and writes nothing.
+# usage: python3 -I plan-m3-apply-docs.py.txt <repo-root>
+import sys, os
+
+root = sys.argv[1]
+R1 = "design_docs/verification/world-iter312/r1-rects.json"
+TD = "scripts/marketingcheck/testdata/position"
+MC = "go run ./scripts/marketingcheck"
+
+def apply(rel, edits):
+    p = os.path.join(root, rel)
+    s = open(p, encoding="utf-8").read()
+    for i, (old, new) in enumerate(edits):
+        n = s.count(old)
+        if n != 1:
+            sys.exit(f"{rel}: edit {i + 1} matches {n} times, want 1: {old[:80]!r}")
+        s = s.replace(old, new)
+    return p, s
+
+# ---- QUICKSTART §13 ----
+q_inputs_old = """export CAPTURE_OUT=$DEMO_DIR/capture
+```
+"""
+q_inputs_new = q_inputs_old + f"""
+Check the release store's rectangles against the R1 baseline before the capture (P3,
+orchestration §4.4), from the repository root. The two accept controls on the first line must
+exit 0 and the refuse control must exit 1. The release line must print `release ACCEPT` and exit 0.
+
+```bash
+{MC} position --baseline {R1} accept-seed5={TD}/stores/r1c-seed5.json accept-eval-p1={TD}/stores/eval-p1.json
+{MC} position --baseline {R1} refuse={TD}/v65/neg-attested+14.json
+{MC} position --baseline {R1} release="$WORLD_MARKETING_RECTS"
+```
+"""
+q_capture_old = """  --marketingcheck-bin "$DEMO_DIR/marketingcheck"
+```
+"""
+q_capture_new = q_capture_old + f"""
+Then check the phone shot of the first pass. The refuse control must exit 1, and the release
+line must print `release ACCEPT` and exit 0. The phone accept controls read images held outside
+the repository, so they stay in orchestration §4.4's capture-day control step.
+
+```bash
+{MC} phone refuse="$CAPTURE_OUT/pass-a/workbench-light.png"
+{MC} phone release="$CAPTURE_OUT/pass-a/phone.png"
+```
+"""
+q_checkers_old = """Use the sha256-pinned `.txt` checkers in `design_docs/verification/world-iter315/`,
+following orchestration §4.4 (r5) for the exact invocations and capture-day accept/refuse
+controls before reading either capture-store verdict. Read `p0check`'s `r3` column and
+`phonecheck`'s `r3` field: both print ACCEPT/REFUSE and exit 0 either way."""
+q_checkers_new = """Both checks are `marketingcheck` subcommands, tested in CI against the iteration-315 corpora.
+Each exits 0 only when every label is ACCEPT, 1 when any label is REFUSE or an input is refused,
+and 2 on a usage error; read the exit code and the label's line together. Under `go run`, any
+non-zero exit is reported as 1, with `exit status 2` on stderr for a usage error."""
+
+# ---- orchestration §4.4, §9 ----
+o220_old = "asserting byte-identical HTML and `script_tags=0`. The result is a required P0 record."
+o220_new = o220_old + (
+    " Command (row 231), run in a scratch copy made with `git archive HEAD`, never the worktree:"
+    " `cp design_docs/verification/world-iter305/iter305-seeded-still-chrome-probe_test.go.txt cmd/ailang-worldd/zz_iter305_probe_test.go"
+    " && WORLD_CHROME=<Chrome> PROBE_OUT=<dir> go test -count=1 -timeout 540s -v -run '^TestIter305SeededStillCaptureProbe$' ./cmd/ailang-worldd > <log> 2>&1`."
+    " It passes only if all of these hold: rc 0; one `--- PASS: TestIter305SeededStillCaptureProbe`;"
+    " `grep -cE 'STILL .* repeat_equal=true script_tags=0 '` = 4; and"
+    " `grep -cE 'STILL .* (repeat_equal=false|script_tags=[1-9])'` = 0 (row 231 V22)."
+)
+o223_old = "  4. **Verdicts.** `p0check` and `phonecheck` exactly per"
+o223_new = "  4. **Verdicts.** `marketingcheck position` and `marketingcheck phone` exactly per"
+o235_old = ("**Exact controller invocations (r4, Gemini's fix; V71).** Both checkers are built from their"
+            " banked source in a scratch directory outside the repo, never inside the worktree:")
+o235_new = ("**Exact controller invocations (row 231; r4/V71 before it).** Both checks are subcommands of"
+            " the committed `scripts/marketingcheck`, run from the repository root at a commit whose CI run is green:")
+
+def whole_line(prefix):
+    return prefix  # resolved below against the file text
+
+o236_prefix = "  - P0 (a): `mkdir -p /tmp/p0check"
+o236_new = (f"  - P0 (a): `{MC} position --baseline {R1} <label>=<store-rects.json>`, where `<store-rects.json>` is the"
+            " V60 probe's `rects.json` for the store being captured. The verdict is `<label> ACCEPT` or `<label> REFUSE`"
+            " with one indented line per failing clause, read together with the exit code (§2.1 of row 231's design)."
+            " r2 is no longer printed.")
+o237_prefix = "  - Phone: `mkdir -p /tmp/phonecheck"
+o237_new = (f"  - Phone: `{MC} phone <label>=<capture pass-a/phone.png>`; (i), (ii), (iii′), with (ii) = `CheckRegion`."
+            " No reference image is an argument.")
+o238_prefix = "  - **Source pins and capture-day control step**"
+o238_new = "\n".join([
+    "  - **Capture-day control step** (row 231 §2.5; replaces r5's controller invocations and V72's controls; the two oracle source pins are retained). Run from the repository root at the capture commit, and record that commit's green CI run id. Any deviation below is BLOCKED and escalated before a capture-store verdict is read. No step is piped (a pipe hides the exit code).",
+    "    1. `WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck > \"$LOG\" 2>&1; echo rc=$?` gives `rc=0`. Then `grep -c '^--- SKIP' \"$LOG\"` gives `0`, and `grep -c '^--- PASS: TestMarketingPhoneRealCorpus' \"$LOG\"` gives `1`. The corpus is host-local, unversioned disk state: if the directory is missing, or any file's sha256 differs from `scripts/marketingcheck/testdata/phone/corpus-SHA256SUMS`, the step is BLOCKED and escalated to Mark; it is never skipped. The only rebuild is `cp -p` of the 9 store images from `/tmp/world-iter312/<store>/capture/pass-a/phone.png` (volatile, wiped on boot) and of V50 from `~/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png`; a fresh seed produces different bytes (D-WORLD-75).",
+    f"    2. **Position accepts**: `{MC} position --baseline {R1} accept-seed5={TD}/stores/r1c-seed5.json accept-eval-p1={TD}/stores/eval-p1.json` gives rc 0 and two ACCEPT lines. The seed-5 file (sha256 `ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333`) equals R1; eval-p1 is a real store that differs from R1 (`roster-proven` dh −24, V73), so this control is non-identity.",
+    f"    3. **Position refuse**: `{MC} position --baseline {R1} refuse={TD}/v65/neg-attested+14.json` gives rc 1 and `refuse REFUSE` with `packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15`.",
+    f"    4. **Phone accepts**: `{MC} phone accept-v50=$HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png accept-seed2=$HOME/.ailang/state/world-iter328-phone-corpus/r1-seed2-pass-a-phone.png` gives rc 0. The V50 image's sha256 is `999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8`. Seed 2's thumb X1 is 340 against V50's 329, and no image is a reference any more, so neither accept is an identity comparison.",
+    f"    5. **Phone refuse**: `{MC} phone refuse=<capture day's pass-a/workbench-light.png>` gives rc 1.",
+    "",
+    "    Parity-oracle sources (row 231): design_docs/verification/world-iter315/v64-p0check-main.go.txt sha256 `0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c`; v66-phonecheck-main.go.txt sha256 `31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c`.",
+])
+o239_prefix = "  - **Why the committed checker is not extended here**"
+o239_new = ("  - **Committed (row 231).** The banked `.txt` programs remain the parity oracle that CI builds from the"
+            " pinned sources; a change to either source, or any verdict difference outside the one-entry ledger, is a red.")
+o248_old = ("Both are checked with the §4.4 invocations: `p0check check design_docs/verification/world-iter312/r1-rects.json"
+            " release=<release-store rects.json>` and `phonecheck <V50 phone.png> release=<A1 pass-a/phone.png>`;")
+o248_new = (f"Both are checked with the §4.4 invocations: `{MC} position --baseline {R1} release=<release-store rects.json>`"
+            f" and `{MC} phone release=<A1 pass-a/phone.png>`;")
+o9_old = "\n## 10. Verification Log"
+o9_new = """
+### Row 231 (iteration 328, `w-marketing-position-checker`)
+
+The §4.4 invocations switch to the committed binary: `marketingcheck position` and `marketingcheck phone`, in P0 item (4), the exact invocations, the capture-day control step and P3. The rules are unchanged except carried finding (6): phone (ii) is now `CheckRegion`, the M7b region gate, which refuses a 15 px header band that the std-dev stand-in accepted (the parity ledger's one entry, `header-15px`). The evidence is that design's V-rows, under `design_docs/verification/world-iter328/`.
+""" + o9_old
+
+def line_edit(text, prefix, new):
+    lines = text.split("\n")
+    hits = [i for i, l in enumerate(lines) if l.startswith(prefix)]
+    if len(hits) != 1:
+        sys.exit(f"orchestration: line prefix {prefix!r} matches {len(hits)} lines, want 1")
+    return (lines[hits[0]], new)
+
+qp, qs = apply("docs/QUICKSTART.md", [(q_inputs_old, q_inputs_new), (q_capture_old, q_capture_new), (q_checkers_old, q_checkers_new)])
+orel = "design_docs/planned/w-marketing-capture-orchestration.md"
+otext = open(os.path.join(root, orel), encoding="utf-8").read()
+edits = [(o220_old, o220_new), (o223_old, o223_new), (o235_old, o235_new)]
+for prefix, new in [(o236_prefix, o236_new), (o237_prefix, o237_new), (o238_prefix, o238_new), (o239_prefix, o239_new)]:
+    edits.append(line_edit(otext, prefix, new))
+edits += [(o248_old, o248_new), (o9_old, o9_new)]
+op, os_ = apply(orel, edits)
+open(qp, "w", encoding="utf-8").write(qs)
+open(op, "w", encoding="utf-8").write(os_)
+print("applied: QUICKSTART 3 edits, orchestration", len(edits), "edits")

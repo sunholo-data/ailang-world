@@ -1,0 +1,73 @@
+// Iteration-328 designer: P0 arms that isolate the four p0check clauses V65 leaves unisolated
+// (iteration-315 judge, evaluator-r1 (b)), plus the judge's documented-permissive arms, each
+// applied to one input rects.json. usage: isoarms <in-rects.json> <outdir>
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+)
+
+type Rect struct {
+	Name string `json:"name"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
+	W    int    `json:"w"`
+	H    int    `json:"h"`
+}
+type Shot struct {
+	Background Rect   `json:"background"`
+	Content    []Rect `json:"content"`
+}
+type Doc struct {
+	Schema string          `json:"schema"`
+	Shots  map[string]Shot `json:"shots"`
+}
+
+func idx(sh Shot, n string) int {
+	for i, c := range sh.Content {
+		if c.Name == n {
+			return i
+		}
+	}
+	panic(n)
+}
+
+func main() {
+	b, _ := os.ReadFile(os.Args[1])
+	arms := map[string]func(d *Doc){
+		// isolating arms (one clause each)
+		"iso-a1-tested-w-3":            func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "roster-tested")].W -= 3 },
+		"iso-freegap-validation-h+240": func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "validation")].H += 240 },
+		"iso-minh-approvals-h-1":       func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "approvals-chain")].H = 1 },
+		"iso-nonpara-graph-svg-h+24":   func(d *Doc) { d.Shots["graph.png"].Content[0].H += 24 },
+		"iso-nonpara-payload-h+24":     func(d *Doc) { d.Shots["provenance.png"].Content[0].H += 24 },
+		// boundary companion of iso-a1 (must ACCEPT)
+		"acc-tested-w-2": func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "roster-tested")].W -= 2 },
+		// documented-permissive arms (carried (1), (2)): ACCEPT today
+		"perm-approvals-y+48": func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "approvals-chain")].Y += 48 },
+		"perm-approvals-y-48": func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "approvals-chain")].Y -= 48 },
+		"perm-validation-h+216": func(d *Doc) { sh := d.Shots["packet.png"]; sh.Content[idx(sh, "validation")].H += 216 },
+		"perm-roster-drift-2px": func(d *Doc) {
+			sh := d.Shots["packet.png"]
+			shift := 0
+			for _, n := range []string{"roster-tested", "roster-attested", "roster-claimed", "roster-proven"} {
+				i := idx(sh, n)
+				shift += 2
+				sh.Content[i].Y += shift
+				sh.Content[i].H += 2
+				shift += 2
+			}
+		},
+	}
+	for name, f := range arms {
+		var d Doc
+		if err := json.Unmarshal(b, &d); err != nil {
+			panic(err)
+		}
+		f(&d)
+		out, _ := json.MarshalIndent(d, "", "  ")
+		os.WriteFile(filepath.Join(os.Args[2], name+".json"), append(out, '\n'), 0o644)
+	}
+}

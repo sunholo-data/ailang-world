@@ -1,0 +1,4 @@
+P17: KILLED rc=1 21.8s red=1 TestMarketingSubprocessDeadline
+    first: want a subprocess-timeout failure naming /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestMarketingSubprocessDeadline2936505986/001/hang.sh, got <nil> after
+P17b: KILLED rc=1 11.4s red=1 TestMarketingSubprocessDeadline
+    first: grandchild 70527 survived the process-group kill

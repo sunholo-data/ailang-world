@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# V32 (r1, fix B): how the V10 parity prototype was built, the geometry values side by side, and the
+# geometry-pin test with its mutants. Throwaway trees only (/tmp/w328d/solo, /tmp/w328d/geo).
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231; E=$WT/design_docs/verification/world-iter328
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+cd /tmp/w328d
+echo "# (1) the prototype is in-package by construction"
+rm -rf solo && mkdir solo && cp $E/v10-prototype-position.go.txt solo/p.go
+echo "\$ cd solo && go build -o x p.go   (the prototype alone, empty dir)"; (cd solo && go build -o x p.go 2>&1; echo "rc=$?")
+echo "\$ (git archive HEAD tree + v10-prototype-position.go.txt as scripts/marketingcheck/position.go, v11 as phone.go, 2 cases in main.go) go build ./scripts/marketingcheck"; (cd geo && go build -o /tmp/w328d/mc-geo ./scripts/marketingcheck; echo "rc=$?")
+echo "\$ grep -n 'shotByName' v10-prototype-position.go.txt"; grep -n 'shotByName' $E/v10-prototype-position.go.txt
+echo "\$ grep -n 'func shotByName' scripts/marketingcheck/png.go"; grep -n 'func shotByName' $WT/scripts/marketingcheck/png.go
+echo "# (2) the values, printed from the files"
+echo "\$ sed -n '49,53p' scripts/marketingcheck/png.go"; sed -n '49,53p' $WT/scripts/marketingcheck/png.go
+echo "\$ sed -n '57,58p;93p' design_docs/verification/world-iter315/v64-p0check-main.go.txt"; sed -n '57,58p;93p' $WT/design_docs/verification/world-iter315/v64-p0check-main.go.txt
+echo "\$ python3: the five position shots, png.go Shots vs p0check heights/width"
+python3 -I - $WT/scripts/marketingcheck/png.go $WT/design_docs/verification/world-iter315/v64-p0check-main.go.txt <<'PY'
+import re,sys
+png=open(sys.argv[1]).read(); p0=open(sys.argv[2]).read()
+shots={m[0]:(int(m[1]),int(m[2])) for m in re.findall(r'\{"([a-z-]+\.png)", (\d+), (\d+), "\w+"\}', png)}
+h={m[0]:int(m[1]) for m in re.findall(r'"([a-z-]+\.png)": (\d+)', re.search(r'var heights = map\[string\]int\{(.*)\}', p0)[1])}
+w=int(re.search(r'c\.X\+c\.W <= (\d+) &&', p0)[1])
+a=[(k,)+shots[k] for k in h]; b=[(k,w,h[k]) for k in h]
+for x,y in zip(a,b): print('png.go', x, ' p0check', y, 'EQUAL' if x==y else 'DIFF')
+print('phone.png in Shots only:', shots['phone.png'])
+print('ALL EQUAL' if a==b else 'MISMATCH')
+PY
+echo "# (3) the geometry-pin test (prototype position_geom_test.go = v32-position-geom-test.go.txt) and its mutants"
+PKG=geo/scripts/marketingcheck
+cp $PKG/png.go /tmp/w328d/png.go.orig
+run() { (cd geo && go test -count=1 -timeout 20m -run "$1" ./scripts/marketingcheck 2>&1 | grep -E -- '--- FAIL|position_geom_test|^ok|^FAIL' | head -8); }
+echo "\$ go test -run '^TestMarketingPositionGeometryMatchesOracle\$' (unmutated)"; run '^TestMarketingPositionGeometryMatchesOracle$'
+for m in 'packet.png", 1440, 3700:packet.png", 1440, 3660' 'graph.png", 1440, 2100:graph.png", 1440, 2101'; do
+  a=${m%%:*}; b=${m#*:}; cp /tmp/w328d/png.go.orig $PKG/png.go; sed -i '' "s/$a/$b/" $PKG/png.go
+  echo "== MUTANT Shots {\"$a} -> {\"$b}: $(grep -c "$b" $PKG/png.go) line(s) changed"
+  echo "\$ go test -run '^TestMarketingPositionGeometryMatchesOracle\$'"; run '^TestMarketingPositionGeometryMatchesOracle$'
+  (cd geo && go build -o /tmp/w328d/mc-geo-mut ./scripts/marketingcheck)
+  echo "\$ parity_position.sh with this mutant build (is it verdict-neutral on the 44 inputs?)"; MC=/tmp/w328d/mc-geo-mut EXTRA_DIR=/tmp/w328d/iso-pos bash scripts/parity_position.sh | grep -E 'PARITY|^DIFF' | cut -c1-160
+  echo "\$ the other position/phone/PNG tests of the package under this mutant: go test -run 'TestMarketingPNG|TestMarketingShotGeometry|TestMarketingTwoPass'"; run 'TestMarketingPNG|TestMarketingShotGeometry|TestMarketingTwoPass'
+done
+cp /tmp/w328d/png.go.orig $PKG/png.go; echo "restored: $(cmp $PKG/png.go $WT/scripts/marketingcheck/png.go && echo png.go cmp-identical to base)"
+echo "\$ go test -run '^TestMarketingPositionGeometryMatchesOracle\$' (restored)"; run '^TestMarketingPositionGeometryMatchesOracle$'

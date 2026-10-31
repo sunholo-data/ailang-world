@@ -1,0 +1,42 @@
+=== RUN   TestMarketingPositionCLI
+=== RUN   TestMarketingPositionCLI/accept-rc
+=== RUN   TestMarketingPositionCLI/refuse-rc
+=== RUN   TestMarketingPositionCLI/baseline-empty-content
+=== RUN   TestMarketingPositionCLI/candidate-zero-regions
+=== RUN   TestMarketingPositionCLI/candidate-wrong-schema
+=== RUN   TestMarketingPositionCLI/candidate-unparsable
+=== RUN   TestMarketingPositionCLI/candidate-missing-file
+=== RUN   TestMarketingPositionCLI/no-candidates
+=== RUN   TestMarketingPositionCLI/missing-baseline
+=== RUN   TestMarketingPositionCLI/bad-token
+=== RUN   TestMarketingPositionCLI/duplicate-label
+=== RUN   TestMarketingPositionCLI/empty-label
+=== RUN   TestMarketingPositionCLI/empty-path
+=== RUN   TestMarketingPositionCLI/bad-flag
+=== RUN   TestMarketingPositionCLI/help
+=== RUN   TestMarketingPositionCLI/dispatch
+marketingcheck: --baseline is required
+usage: marketingcheck position --baseline RECTS LABEL=RECTS...
+  -baseline string
+    	R1 baseline rectangles JSON (design_docs/verification/world-iter312/r1-rects.json)
+--- PASS: TestMarketingPositionCLI (0.01s)
+    --- PASS: TestMarketingPositionCLI/accept-rc (0.00s)
+    --- PASS: TestMarketingPositionCLI/refuse-rc (0.00s)
+    --- PASS: TestMarketingPositionCLI/baseline-empty-content (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-zero-regions (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-wrong-schema (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-unparsable (0.00s)
+    --- PASS: TestMarketingPositionCLI/candidate-missing-file (0.00s)
+    --- PASS: TestMarketingPositionCLI/no-candidates (0.00s)
+    --- PASS: TestMarketingPositionCLI/missing-baseline (0.00s)
+    --- PASS: TestMarketingPositionCLI/bad-token (0.00s)
+    --- PASS: TestMarketingPositionCLI/duplicate-label (0.00s)
+    --- PASS: TestMarketingPositionCLI/empty-label (0.00s)
+    --- PASS: TestMarketingPositionCLI/empty-path (0.00s)
+    --- PASS: TestMarketingPositionCLI/bad-flag (0.00s)
+    --- PASS: TestMarketingPositionCLI/help (0.00s)
+    --- PASS: TestMarketingPositionCLI/dispatch (0.00s)
+=== RUN   TestMarketingPositionGeometryMatchesOracle
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.389s

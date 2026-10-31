@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-position-checker.md",
+  "iso_ts": "2026-10-31T00:42:30Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.03099,
+      "tokens_in": 13915,
+      "tokens_out": 316,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The mandatory real-corpus acceptance test is unsatisfiable as specified. §2.3 requires a fresh skeleton derived from each of 10 distinct real phone images to be byte-equal to a committed skeleton, but M2 commits only two skeletons. Because each skeleton includes its source-image sha256, the other eight images cannot match either committed fixture. This blocks the capture-day control step rather than providing the claimed verification.",
+        "catch": "Resolve the mismatch between §2.3's 'each real image' assertion and the two-fixture inventory in §§2.3, 3, and 6. The reported fidelity measurement in V15 covers only the seed-5 and seed-2 skeletons; it does not establish the specified ten-image byte-equality check.",
+        "proposed_fix": "Replace the final real-corpus assertion with: 'For seed-5 pass A and r1-seed2 pass A only, regenerate the corresponding skeleton using the recorded derivation command and require byte equality with its committed fixture. Assert that exactly two skeleton comparisons ran. For all 10 real phone images, independently verify corpus hashes, expected scan geometry, verdicts, and oracle parity as specified above; no committed-skeleton equality is required for the remaining eight images.' Update M2 and AC-2 accordingly, and add a verification-log row measuring the two regeneration comparisons with a changed-source-hash negative control."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.068424,
+      "tokens_in": 15546,
+      "tokens_out": 312,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The real phone corpus is not checked into git due to tracked_binary_gate.sh and instead resides solely in a host-local state directory (~/.ailang/state/world-iter328-phone-corpus/), leaving CI reliant on synthetic skeleton renders and making capture-day step 1 dependent on unversioned host disk state.",
+        "catch": "In §2.2, TestMarketingPositionParity and TestMarketingPhoneParity invoke `go build` subprocesses inside `go test` without a bounded context timeout on `exec.Command`, and in §8, if ~/.ailang/state/world-iter328-phone-corpus/ is lost, there is no documented command to regenerate the 11 pinned PNGs from their iteration-312 seeds.",
+        "proposed_fix": "In M1/M2 parity tests, wrap the `go build` and oracle `exec.CommandContext` calls with a 30s timeout context (`context.WithTimeout`). In §2.3 / §8, record the exact iteration-312 regeneration command (or backup archive path) required to reconstruct `~/.ailang/state/world-iter328-phone-corpus/` matching `corpus-SHA256SUMS` if the local state directory is wiped."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.11257840000000001,
+      "tokens_in": 13948,
+      "tokens_out": 21148,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§2.1's load-bearing port premise — that `position` may take image geometry from png.go's `Shots` table (`png.go:49`) because its values are 'the same 1440 and 1100/1100/3700/2100/3000 as p0check's constants, V27' — is asserted, not verified: no verification row records either the png.go table values or p0check's constants (V27's observed output lists only that Rect/Rectangles/LoadRectangles/CheckRegion are 'present', and a type-and-func grep cannot capture a data table at :49), and the doc never states whether the V10 prototype was built inside the git-archive tree importing scripts/marketingcheck/png.go or standalone with inlined geometry, so it is not established that the 44-input parity result (0 diffs) exercised the package's actual table rather than the prototype's own constants. A mismatch that is verdict-neutral on the 44 fixtures would make `position` silently diverge from the trusted banked oracle on real capture-day stores — reopening exactly the trust-by-pin gap §1 says this row exists to close.",
+        "catch": "The claimed equivalence 'png.go Shots table == p0check's hardcoded dimensions' has no evidence row, and the doc's oracle-parity safety net only reds if a mismatch happens to flip one of the 44 fixtures. Verify the equivalence explicitly or eliminate the premise. Secondary, also fix: AC-5's 'git diff --stat touches only §6's files' contradicts M2/M3/S7, which require banking new executor outputs under design_docs/verification/world-iter328/, outside §6's table.",
+        "proposed_fix": "Add a verification row (e.g., V31): record `sed -n '40,70p' scripts/marketingcheck/png.go` and the dimension constants grepped from the banked `world-iter315/v64-p0check-main.go.txt` as two value lists with a cmp/diff showing exact equality (1440; 1100/1100/3700/2100/3000), and re-cite §2.1 to V31 instead of V27; in the same row record how the V10 prototype was built (inside the `git archive HEAD` copy importing the package's png.go, or standalone with inlined constants). If the prototype was standalone, remove the premise: port p0check's constants verbatim into position.go so oracle equivalence holds by construction, and demote the Shots-table read to a cross-check that TestMarketingPositionFixtures pins (assert the package's Shots dimensions equal the recorded values, so a future edit to either side reds). Also amend AC-5 to 'touches only §6's files plus banked evidence under design_docs/verification/world-iter328/' to remove the contradiction with M2/M3/S7 banking."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read r0 sections 1-2.2 and spot-checked: commit 9abc25b5 exists, tracked_binary_gate.sh is the PNG barrier the doc cites; direction (port banked p0check/phonecheck as marketingcheck subcommands, parity oracle in CI, text fixtures) is sound."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-1-sol: The mandatory real-corpus acceptance test is unsatisfiable as specified. §2.3 requires a fresh skeleton derived from each of 10 distinct real phone images to be byte-equal to a committed skeleton, but M2 commits only two skeletons. Because each skeleton includes its source-image sha256, the other eight images cannot match either committed fixture. This blocks the capture-day control step rather than providing the claimed verification.",
+      "oc-glm-5-3: §2.1's load-bearing port premise — that `position` may take image geometry from png.go's `Shots` table (`png.go:49`) because its values are 'the same 1440 and 1100/1100/3700/2100/3000 as p0check's constants, V27' — is asserted, not verified: no verification row records either the png.go table values or p0check's constants (V27's observed output lists only that Rect/Rectangles/LoadRectangles/CheckRegion are 'present', and a type-and-func grep cannot capture a data table at :49), and the doc never states whether the V10 prototype was built inside the git-archive tree importing scripts/marketingcheck/png.go or standalone with inlined geometry, so it is not established that the 44-input parity result (0 diffs) exercised the package's actual table rather than the prototype's own constants. A mismatch that is verdict-neutral on the 44 fixtures would make `position` silently diverge from the trusted banked oracle on real capture-day stores — reopening exactly the trust-by-pin gap §1 says this row exists to close."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.21199240000000003,
+    "total_tokens_in": 43409,
+    "total_tokens_out": 21776
+  }
+}

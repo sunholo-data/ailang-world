@@ -1,0 +1,17 @@
+# V22 carried (4): the iter305 still probe at base — compile/discovery, and the read rule over its banked output
+$ (copy nb2) cp design_docs/verification/world-iter305/iter305-seeded-still-chrome-probe_test.go.txt cmd/ailang-worldd/zz_iter305_probe_test.go && env -u WORLD_CHROME -u PROBE_OUT go test -count=1 -timeout 540s -v -run '^TestIter305SeededStillCaptureProbe$' ./cmd/ailang-worldd
+    zz_iter305_probe_test.go:57: probe env unset
+--- SKIP: TestIter305SeededStillCaptureProbe (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.386s
+$ grep -n 't.Logf("STILL\|t.Errorf("STILL\|t.Skip' iter305-seeded-still-chrome-probe_test.go.txt
+57:		t.Skip("probe env unset")
+241:			t.Errorf("STILL %s status %d", p, code)
+249:		t.Logf("STILL %s bytes=%d repeat_equal=%v script_tags=%d style_tags=%d equals_default_minus_tag=%v html_sha256=%x",
+$ read rule on the banked V40 output (/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231/design_docs/verification/world-iter305/iter305-seeded-still-chrome-probe-output.txt):
+  grep -cE 'STILL .* repeat_equal=true script_tags=0 ' = 4
+  grep -cE 'STILL .* (repeat_equal=false|script_tags=[1-9])' = 0
+  control grep -cE 'DEFAULT .* script_tags=[1-9]' = 4
+  grep -c '^--- PASS: TestIter305SeededStillCaptureProbe' = 1
+$ grep -n 'V40' orchestration doc (the command line already recorded)
+479:| V40 (re-runs V24 on the real flag, seeded store) | `iter305-seeded-still-chrome-probe_test.go.txt` run as `cmd/ailang-worldd/zz_iter305_probe_test.go` with `WORLD_CHROME=<Chrome> PROBE_OUT=~/.ailang/state/world-iter305/probe-seeded go test -count=1 -timeout 540s -v -run '^TestIter305SeededStillCaptureProbe$' ./cmd/ailang-worldd` (both pins). Output `iter305-seeded-still-chrome-probe-output.txt` | rc 0, wall 15 

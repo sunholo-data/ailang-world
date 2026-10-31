@@ -1,0 +1,105 @@
+# Row 231 mutation drill (design §4, AC-4): each mutant applied alone to a throwaway copy of the
+# final tree, the named tests run, the red (sub)tests recorded, the file restored and cmp-checked.
+# usage: python3 -I plan-mutants.py.txt <throwaway-tree> [ID ...]     (never the worktree)
+import os, re, subprocess, sys, time, shutil
+
+T = sys.argv[1]
+only = set(sys.argv[2:])
+MC = "scripts/marketingcheck"
+CORE = "^TestMarketing(Position|Phone|Subprocess)"
+RUNBOOK = "^TestMarketingRunbookMatchesHelp$"
+
+STD = '''
+func mutStd(im image.Image, r Rect) float64 {
+	var s, ss, n float64
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			v := phoneLuma(im, x, y)
+			s += v
+			ss += v * v
+			n++
+		}
+	}
+	if n == 0 {
+		return 0
+	}
+	m := s / n
+	return math.Sqrt(ss/n - m*m)
+}
+'''
+
+P = MC + "/position.go"; H = MC + "/phone.go"; PT = MC + "/position_test.go"
+Q = "docs/QUICKSTART.md"; O = "design_docs/planned/w-marketing-capture-orchestration.md"
+MUTANTS = [
+ ("P1", P, "if !(posAbs(c.X-b.X) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2) {", "if false {", CORE),
+ ("P2", P, "if !(posLineStep(dh) && c.H >= positionLine) {", "if !(posLineStep(dh)) {", CORE),
+ ("P3", P, "} else if posAbs(dh) > 2 {", "} else if false {", CORE),
+ ("P4", P, "okGap = gc >= 0 && posLineStep(e)", "okGap = posLineStep(e)", CORE),
+ ("P5", P, "if posAbs(c.Y-b.Y) > 2 {", "if false {", CORE),
+ ("P6", P, "if !okGap {", "if !okGap && false {", CORE),
+ ("P7", P, '\t\t\tif !posInside(c, W, H) {\n\t\t\t\treasons = append(reasons, fmt.Sprintf("%s/%s: (b) bottom', '\t\t\tif false {\n\t\t\t\treasons = append(reasons, fmt.Sprintf("%s/%s: (b) bottom', CORE),
+ ("P8", P, "if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {", "if false && !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {", CORE),
+ ("P9", P, "base, err := LoadRectangles(*baseline)", "base, err := func() (Rectangles, error) {\n\t\tvar r Rectangles\n\t\tb, err := os.ReadFile(*baseline)\n\t\tif err == nil {\n\t\t\terr = json.Unmarshal(b, &r)\n\t\t}\n\t\treturn r, err\n\t}()", CORE),
+ ("P10", P, '\tif len(out) == 0 {\n\t\treturn nil, errors.New("no candidates")\n\t}\n', "", CORE),
+ ("P11", P, "\tif refused > 0 {\n\t\treturn 1\n\t}\n\treturn 0\n}", "\tif refused > 0 {\n\t\treturn 0\n\t}\n\treturn 0\n}", CORE),
+ ("P12", P, '"%s/%s: (a3) gap after %s %d vs R1 %d"', '"%s/%s: (a3) gap %s %d vs R1 %d"', CORE),
+ ("P13", MC + "/testdata/position/v65/neg-attested+14.json", None, " ", CORE),
+ ("P14", MC + "/png.go", '{"graph.png", 1440, 2100, "light"}', '{"graph.png", 1440, 2101, "light"}', CORE + "|^TestMarketingShotGeometry$|^TestMarketingPNGContent$"),
+ ("P15", MC + "/png.go", '{"packet.png", 1440, 3700, "light"}', '{"packet.png", 1440, 3660, "light"}', CORE),
+ ("P16", O, "\n    Parity-oracle sources (row 231): design_docs/verification/world-iter315/v64-p0check-main.go.txt sha256 `0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c`; v66-phonecheck-main.go.txt sha256 `31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c`.", "", "^TestMarketing(Position|Phone)Parity$"),
+ ("P17", PT, "ctx, cancel := context.WithTimeout(context.Background(), limit)", "ctx, cancel := context.WithCancel(context.Background())", "^TestMarketingSubprocessDeadline$"),
+ ("P17b", PT, "\tcmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}\n", "", "^TestMarketingSubprocessDeadline$"),
+ ("O1", "design_docs/verification/world-iter315/v64-p0check-main.go.txt", None, "\n", "^TestMarketingPositionParity$"),
+ ("O2", "design_docs/verification/world-iter315/v66-phonecheck-main.go.txt", None, "\n", "^TestMarketingPhoneParity$"),
+ ("F1", H, 'if err := CheckRegion("phone.png", im, r); err != nil {', 'if err := CheckRegion("phone.png", im, r); false && err != nil {', CORE),
+ ("F2", H, "if !(s.W == 390 && s.H == 844) {", "if false {", CORE),
+ ("F3", H, 'if err := CheckRegion("phone.png", im, r); err != nil {\n\t\t\twhy = append(why, "(ii) "+err.Error())\n\t\t}', 'if mutStd(im, r) < 4.0 {\n\t\t\twhy = append(why, "(ii) std-dev")\n\t\t}', CORE),
+ ("F4", H, "if !(s.Scrollbar.Y0 >= 0 && s.Scrollbar.X0 <= 8 && s.Scrollbar.X1 <= 384) {", "if !(s.Scrollbar.Y0 >= 0 && s.Scrollbar.X1 <= 384) {", CORE),
+ ("F5", H, "if !(s.Scrollbar.Y0 >= 0 && s.Scrollbar.X0 <= 8 && s.Scrollbar.X1 <= 384) {", "if !(s.Scrollbar.X0 <= 8 && s.Scrollbar.X1 <= 384) {", CORE),
+ ("F6", H, "if !(s.Scrollbar.Y0 >= 0 && s.Scrollbar.X0 <= 8 && s.Scrollbar.X1 <= 384) {", "if !(s.Scrollbar.Y0 >= 0 && s.Scrollbar.X0 <= 8) {", CORE),
+ ("F7", H, "if !(s.TitleRight >= 387) {", "if false {", CORE),
+ ("F8", H, "if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 4)) {", "if false {", CORE),
+ ("F9", H, "\t\t\t\tif x0 < 0 || (x-1)-start > x1-x0 {\n\t\t\t\t\tx0, x1 = start, x-1\n\t\t\t\t}\n", "\t\t\t\tif x0 < 0 {\n\t\t\t\t\tx0 = start\n\t\t\t\t}\n\t\t\t\tx1 = x - 1\n", CORE),
+ ("F10", MC + "/phone_test.go", "if (x-b.X0)%2 == 0 ||", "if (x-b.X0)%3 == 0 ||", CORE),
+ ("F11", H, '\tif s.Bands == 0 {\n\t\twhy = append(why, "zero-bands: no ink rows read")\n\t}\n', "", CORE),
+ ("D1", Q, "export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json", "export WORLD_MARKETING_RECTS=design_docs/verification/world-iter312/r1-rects.json", RUNBOOK),
+ ("D2", Q, 'release="$WORLD_MARKETING_RECTS"', "release=design_docs/verification/world-iter312/r1-rects.json", RUNBOOK),
+ ("D3", Q, "refuse=scripts/marketingcheck/testdata/position/v65/neg-attested+14.json", "refuse=scripts/marketingcheck/testdata/position/v65/neg-atested+14.json", RUNBOOK),
+ ("G1", "host/store/context_roots_test.go", '\t\t"scripts/marketingcheck/position.go": false,\n', "", "^TestProductionGoSurface$", "./host/store"),
+ ("G2", "host/store/context_roots_test.go", '\t\t"scripts/marketingcheck/phone.go": false,\n', "", "^TestProductionGoSurface$", "./host/store"),
+]
+
+env = dict(os.environ, AILANG_BIN=os.path.expanduser("~/.pinned-ailang/ailang"))
+for row in MUTANTS:
+    mid, rel, old, new, regex = row[:5]
+    pkg = row[5] if len(row) > 5 else "./" + MC
+    if only and mid not in only:
+        continue
+    path = os.path.join(T, rel)
+    orig = open(path, "rb").read()
+    s = orig.decode()
+    if old is None:
+        mutated = s + new
+    else:
+        if s.count(old) != 1:
+            print(f"{mid}: SETUP-ERROR {old[:60]!r} matches {s.count(old)}"); continue
+        mutated = s.replace(old, new)
+        if mid == "F3":
+            mutated = mutated.replace('import (\n', 'import (\n\t"math"\n', 1) + STD
+    open(path, "w").write(mutated)
+    t0 = time.time()
+    r = subprocess.run(["go", "test", "-count=1", "-timeout", "20m", "-v", "-run", regex, pkg], cwd=T, env=env, capture_output=True, text=True)
+    dt = time.time() - t0
+    open(path, "wb").write(orig)
+    assert open(path, "rb").read() == orig
+    out = r.stdout + r.stderr
+    fails = re.findall(r"^\s*--- FAIL: (\S+)", out, re.M)
+    leaf = [f for f in fails if not any(g.startswith(f + "/") for g in fails)]
+    first = ""
+    m = re.search(r"^\s+\S+_test\.go:\d+: (?!PARITY|subprocess-timeout after|unminted seed refusal|WORLD_PHONE_CORPUS unset)(.*)$", out, re.M)
+    if m: first = m.group(1)[:160]
+    build = "BUILD-FAILED " if "[build failed]" in out or "build failed" in out else ""
+    verdict = "KILLED" if r.returncode != 0 and fails else ("BUILD-FAILED" if build else "SURVIVED")
+    print(f"{mid}: {verdict} rc={r.returncode} {dt:.1f}s red={len(leaf)} {' '.join(leaf)}")
+    if first: print(f"    first: {first}")
+    sys.stdout.flush()

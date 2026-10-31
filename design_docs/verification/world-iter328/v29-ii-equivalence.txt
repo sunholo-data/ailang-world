@@ -1,0 +1,51 @@
+# V29 (ii): the banked stand-in vs marketingcheck's M7b region gate
+$ grep -n 'ii := \|func stddev' world-iter315/v66-phonecheck-main.go.txt
+66:func stddev(im image.Image, r Rect) float64 {
+205:		ii := c.HeaderSD >= 4.0 && c.EntrySD >= 4.0
+$ sed -n '202,210p;254,271p;281,290p' scripts/marketingcheck/png.go   (CheckRectBounds, rectStats, CheckRegion)
+func CheckRectBounds(name string, r Rect, bounds image.Rectangle, content bool) error {
+	if r.X < bounds.Min.X || r.Y < bounds.Min.Y || r.W <= 0 || r.H <= 0 || r.X > bounds.Max.X || r.Y > bounds.Max.Y || r.W > bounds.Max.X-r.X || r.H > bounds.Max.Y-r.Y {
+		return refuse("rect-out-of-bounds", name, r.Name)
+	}
+	if content && (r.W < MinRectW || r.H < MinRectH) {
+		return refuse("rect-too-small", name, r.Name)
+	}
+	return nil
+}
+func rectStats(im image.Image, r Rect) (float64, float64, int) {
+	var sum, sum2 float64
+	colors := map[uint32]bool{}
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			red, g, b := rgbAt(im, x, y)
+			v := luminance(red, g, b)
+			sum += v
+			sum2 += v * v
+			if len(colors) < 2 {
+				colors[uint32(red)<<16|uint32(g)<<8|uint32(b)] = true
+			}
+		}
+	}
+	n := float64(r.W * r.H)
+	mean := sum / n
+	return mean, math.Sqrt(math.Max(0, sum2/n-mean*mean)), len(colors)
+}
+func CheckRegion(name string, im image.Image, r Rect) error {
+	if err := CheckRectBounds(name, r, im.Bounds(), true); err != nil {
+		return err
+	}
+	_, std, colors := rectStats(im, r)
+	if std < MinRectStdDev || colors < 2 {
+		return refuse("blank-region", name, r.Name)
+	}
+	return nil
+}
+$ grep -n 'MinRectW\|MinRectH\|MinRectStdDev' png.go
+33:	MinRectW          = 64
+34:	MinRectH          = 16
+35:	MinRectStdDev     = 4.0
+206:	if content && (r.W < MinRectW || r.H < MinRectH) {
+286:	if std < MinRectStdDev || colors < 2 {
+# (i) holds => header within ±4 px per edge of R1 {25 45 370 68} (345 x 23): smallest height 23-8 = 15 < MinRectH 16; entry {41 428 364 610} (323 x 182): smallest 315 x 174 >= 64 x 16.
+# sd >= 4 implies >= 2 distinct luma values, hence >= 2 distinct RGB colours; band rectangles lie inside the image by construction.
+# So, given (i), CheckRegion differs from 'sd >= 4' only for a header 15 px tall. Measured: V11 (59 inputs, 1 divergence = header-15px), V14 (mutant standin killed only by header-15px).

@@ -1,0 +1,340 @@
+{
+  "id": "w-marketing-position-checker",
+  "iteration": 328,
+  "row": "231",
+  "clause": "release hygiene (V02): commit the P0/P3 position and phone predicates as CI-gated marketingcheck subcommands; moves no clause; row 150 does not depend on it",
+  "authority": [
+    "design_docs/planned/w-marketing-position-checker.md r2 (08dc31be; controller narrow-refinement carve-out after quorum r2)",
+    "design_docs/planned/w-marketing-position-checker-sprint-plan.md"
+  ],
+  "estimate": "about 0.5 executor day; 7 milestone commits + 1 evidence commit; wall dominated by -race package runs (~1.5-2 min each) and the repo gate",
+  "scope": "The executor writes no Go code: it copies planner-validated banked sources (design_docs/verification/world-iter328/plan-*.txt) into scripts/marketingcheck/, checks sha256, runs the generators (position fixtures; phone skeletons from the host-local corpus), the gates and the AC-4 drill, banks executor-*.txt evidence, and commits per milestone. Files: scripts/marketingcheck/{main.go,position.go,phone.go,position_test.go,phone_test.go,docs_test.go,testdata/position/**,testdata/phone/**}, docs/QUICKSTART.md (§13 only), design_docs/planned/w-marketing-capture-orchestration.md (§4.4, §9), design_docs/verification/world-iter328/executor-*.txt, and host/store/context_roots_test.go (two allow-list lines, D-15).",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231",
+    "branch": "sprint/world-iter328-marketing-position-checker",
+    "head": "08dc31be",
+    "go_tree_equals": "cec48f69",
+    "sha256": {
+      "scripts/marketingcheck/main.go": "bfc99a8da3e0bd97a38b1d30193ecc2fa58b5319b433deaffd7fb77f7fa8feef",
+      "scripts/marketingcheck/docs_test.go": "17c9b520fd3c99f61a7a656814b7732c780528eb100ab78a967dde730022fed8",
+      "docs/QUICKSTART.md": "64b05ab526c939671b5c33920fa31ef2d296ea2b09a6d9526beb988b7c3ca386",
+      "design_docs/planned/w-marketing-capture-orchestration.md": "a57995e638f108ea503ad40fe2583e80632527cdb6f7d7673c5bf2abfd3769c1",
+      "host/store/context_roots_test.go": "8a63b34104171a88417f2d19441c1e4ff0df53ebff9dc6d572881f774f41c6b3"
+    },
+    "oracle_pins": {
+      "design_docs/verification/world-iter315/v64-p0check-main.go.txt": "0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c",
+      "design_docs/verification/world-iter315/v66-phonecheck-main.go.txt": "31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c",
+      "design_docs/verification/world-iter312/r1-rects.json": "ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333"
+    }
+  },
+  "environment": [
+    "cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0)",
+    "BANK=design_docs/verification/world-iter328",
+    "MC=scripts/marketingcheck",
+    "SCR=/Users/voightkampff/dev/sunholo-data/.exec-w328 (sibling of the repo; never /tmp, never inside the worktree)",
+    "CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus (read only)"
+  ],
+  "executor_constraints": [
+    "write no Go code, fixture or doc by hand: cp banked plan-*.txt, then sha256-check against plan §2; a mismatch is a STOP",
+    "base sha256 check before overwriting main.go (M1b), main.go again (M2a, must equal the M1b banked sha), QUICKSTART/orchestration/docs_test (M3); a mismatch is a STOP",
+    "never run tests under nohup or any SIGHUP-ignoring wrapper (measured: reds TestMarketingSupervisorFakeDaemonCleanup/shell-hup)",
+    "one package-scale go test at a time; every go test carries -timeout 20m",
+    "instrument rule: redirect to a file, echo rc on the same line, count expected --- PASS lines; never pipe into tail before reading rc",
+    "commit once per milestone with git add of named files only; no push, no PR, no amend, no rebase",
+    "do not edit design_docs/world-mission*.md, the design doc, the plan, the JSON, plan-*.txt, tools/launchd/*, .github/, go.mod; do not move docs; never touch the main checkout or ~/.ailang/state/mission-v1*",
+    "the mutation drill runs only in $SCR/mut (git archive HEAD), never in the worktree",
+    "if the phone corpus is missing or a hash differs: STOP (BLOCKED, design §2.5 step 1); never regenerate the corpus"
+  ],
+  "controller_only": [
+    "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh (CI's gate: plain + race -timeout 8m per package + binary gate)",
+    "push, PR, CI read (all jobs green), merge",
+    "charter/STATUS/log entries for row 231; move design + plan to implemented/; file successors S-a (w-marketing-predicate-tolerances) and S-b (w-marketing-still-probe-commit)"
+  ],
+  "banked_sources_sha256": {
+    "design_docs/verification/world-iter328/plan-M1a-position_test.go.txt": "ef839701fcc9cc6489182eafe34c59b4440aa67288a2460b097d432411d7cacc",
+    "design_docs/verification/world-iter328/plan-M1b-main.go.txt": "2f9864e0776b0829b832f5fa72e83f4983fef58f6fd9c71143510c8b363992b9",
+    "design_docs/verification/world-iter328/plan-M1b-position.go.txt": "7512337137e3eb08fc7930247c89ee1e6b1f392fe9014069823b22aabfaac6ac",
+    "design_docs/verification/world-iter328/plan-M1b-position_test.go.txt": "6002ade7f023e13355675d0e13b1a266d6a795277fde47e3836ae2bbd2b65ab3",
+    "design_docs/verification/world-iter328/plan-M1b-context_roots_test.go.txt": "6365fa4f98f6977bb002e41b3400cf695a4c0748d642f11d003771eaf11227b8",
+    "design_docs/verification/world-iter328/plan-gen-position-fixtures.sh.txt": "41ed23322bf58acaa7bb430b737f05968a722a93471dbb9e30bdb37f7cd9b4c7",
+    "design_docs/verification/world-iter328/plan-expected-position-SHA256SUMS.txt": "d8963a3c2245d491c18883da68c1f74eb1f0dad9c79503af324fa100352d300a",
+    "design_docs/verification/world-iter328/plan-M1c-position_test.go.txt": "33126f459e979ea1220e3dac60937425259bc840d06eeb029903021f63a956c9",
+    "design_docs/verification/world-iter328/plan-M1d-position_test.go.txt": "8e86c2563e24ab03dc188d4818081023c7a65f73dd97d8bd188b94507e328a0d",
+    "design_docs/verification/world-iter328/plan-M2a-main.go.txt": "24448bb78265726f66085833b8b61ec5b28f16f9743cf6926a5c12e4cd189268",
+    "design_docs/verification/world-iter328/plan-M2a-phone.go.txt": "e3b8db55c53cf6d69c31c0f908b8302b81dc24277e80af6b887473358f28c4b5",
+    "design_docs/verification/world-iter328/plan-M2a-phone_test.go.txt": "e91ec24c18bd9416d91339e288f1e6da5f34a7a33e77b8f8e23c0b5e0e4b47a5",
+    "design_docs/verification/world-iter328/plan-M2a-context_roots_test.go.txt": "b7ed3067a862ecc0402eb791804e138443a04e8c3b6af5711548f30b029106cc",
+    "design_docs/verification/world-iter328/plan-expected-phone-sha256.txt": "7eb9e00945d500a66d274fd927143c41f739ab37a5076264f9aa6de9d75f8b20",
+    "design_docs/verification/world-iter328/plan-M2b-phone_test.go.txt": "0bce70c4f72784d4fea1437abd636c76e90874301b2fc97453d8e006cf0f71a8",
+    "design_docs/verification/world-iter328/plan-m3-apply-docs.py.txt": "0681ce7ed4e26a40be7a4768c0b309fcf33daf6a971dfb2bd989973a27761529",
+    "design_docs/verification/world-iter328/plan-M3-docs_test.go.txt": "b7420a6d8dfca7652efda94caf8d846bac3b89f28dbc159ebd93aafa407200a7",
+    "design_docs/verification/world-iter328/plan-m3-s7-runbook.sh.txt": "f7935fd680a753519b5f95db3b5831eee1e5ff9052af4faa174468fa854dfcd8",
+    "design_docs/verification/world-iter328/plan-mutants.py.txt": "1f9b6072a15bf9d53f5310fdebdd4b6c38cdc8a1b3adcf707bb549bf2430e8cf",
+    "design_docs/verification/world-iter328/plan-mutants-planner-run.txt": "f19eaeeb88a257f1dc5323353e2eb259265aa174967a9aec32286e1c56fe70fb",
+    "design_docs/verification/world-iter328/plan-fidelity-test.go.txt": "d6ebed50668e7cb77a195a21390b060231d30e49e7434b9b65d73be747c56a5c",
+    "design_docs/verification/world-iter328/plan-validation-run.txt": "1533167c5de5191d35c16291d63c9907e4a027687a866b69a640baf3bf8bc9d5"
+  },
+  "milestones": [
+    {
+      "id": "M1a",
+      "commit_message": "test(row 231 M1a): deadline-enforcing subprocess runner for marketingcheck oracle tests",
+      "est_loc": 131,
+      "copy": {
+        "scripts/marketingcheck/position_test.go": "design_docs/verification/world-iter328/plan-M1a-position_test.go.txt"
+      },
+      "generate": [],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run '^TestMarketingSubprocessDeadline$' ./scripts/marketingcheck -> 1 PASS, 'subprocess-timeout after 2.00xs; grandchild <pid> reaped'"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "P17",
+        "P17b"
+      ]
+    },
+    {
+      "id": "M1b",
+      "commit_message": "feat(row 231 M1b): marketingcheck position (P0/P3 r3 predicate) with V64/V65 fixtures",
+      "est_loc": 386,
+      "copy": {
+        "scripts/marketingcheck/main.go": "design_docs/verification/world-iter328/plan-M1b-main.go.txt",
+        "scripts/marketingcheck/position.go": "design_docs/verification/world-iter328/plan-M1b-position.go.txt",
+        "scripts/marketingcheck/position_test.go": "design_docs/verification/world-iter328/plan-M1b-position_test.go.txt",
+        "host/store/context_roots_test.go": "design_docs/verification/world-iter328/plan-M1b-context_roots_test.go.txt"
+      },
+      "generate": [
+        "bash $BANK/plan-gen-position-fixtures.sh.txt \"$PWD\" \"$SCR/gen\" -> rc 0, files=34; cmp testdata/position/SHA256SUMS $BANK/plan-expected-position-SHA256SUMS.txt (sha256 d8963a3c2245d491c18883da68c1f74eb1f0dad9c79503af324fa100352d300a)"
+      ],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run '^TestMarketingPosition' ./scripts/marketingcheck -> 2 PASS (CLI 16 subtests, GeometryMatchesOracle), 0 FAIL",
+        "go run ./scripts/marketingcheck position --help -> rc 0"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "P9",
+        "P10",
+        "P11",
+        "P14",
+        "P15",
+        "G1"
+      ]
+    },
+    {
+      "id": "M1c",
+      "commit_message": "test(row 231 M1c): position fixture pins and the 44-row V64/V65/iso-arm corpus",
+      "est_loc": 314,
+      "copy": {
+        "scripts/marketingcheck/position_test.go": "design_docs/verification/world-iter328/plan-M1c-position_test.go.txt"
+      },
+      "generate": [],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run '^TestMarketingPosition' ./scripts/marketingcheck -> 4 PASS, 44 Corpus subtests PASS, 0 FAIL"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "P8",
+        "P13"
+      ]
+    },
+    {
+      "id": "M1d",
+      "commit_message": "test(row 231 M1d): position parity against the pinned banked p0check oracle",
+      "est_loc": 108,
+      "copy": {
+        "scripts/marketingcheck/position_test.go": "design_docs/verification/world-iter328/plan-M1d-position_test.go.txt"
+      },
+      "generate": [],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run '^TestMarketingPosition' ./scripts/marketingcheck -> 5 PASS, 0 SKIP, 0 FAIL; 'PARITY position: inputs=44 verdict-diffs=0 reason-diffs=0'"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "P12",
+        "P16",
+        "O1"
+      ]
+    },
+    {
+      "id": "M2a",
+      "commit_message": "feat(row 231 M2a): marketingcheck phone with 10 real-geometry skeleton fixtures",
+      "est_loc": 570,
+      "copy": {
+        "scripts/marketingcheck/main.go": "design_docs/verification/world-iter328/plan-M2a-main.go.txt",
+        "scripts/marketingcheck/phone.go": "design_docs/verification/world-iter328/plan-M2a-phone.go.txt",
+        "scripts/marketingcheck/phone_test.go": "design_docs/verification/world-iter328/plan-M2a-phone_test.go.txt",
+        "host/store/context_roots_test.go": "design_docs/verification/world-iter328/plan-M2a-context_roots_test.go.txt"
+      },
+      "generate": [
+        "(cd $CORPUS && shasum -a 256 -c SHA256SUMS) -> 11 OK",
+        "cp -p $CORPUS/SHA256SUMS scripts/marketingcheck/testdata/phone/corpus-SHA256SUMS (sha256 476d971ab75bd33ccb7450405c43c5dac2c38cddeb08b7ac18f0236e489b2ddf)",
+        "WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus WORLD_PHONE_SKELETON_WRITE=1 go test -count=1 -timeout 20m -run '^TestMarketingPhoneRealCorpus$' ./scripts/marketingcheck -> rc 0; skeleton sha list == $BANK/plan-expected-phone-sha256.txt"
+      ],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run '^TestMarketingPhone' ./scripts/marketingcheck -> 2 PASS, 1 SKIP",
+        "same with WORLD_PHONE_CORPUS=$CORPUS -> 3 PASS, 0 SKIP",
+        "go run ./scripts/marketingcheck phone --help -> rc 0"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "F10",
+        "F11",
+        "G2"
+      ]
+    },
+    {
+      "id": "M2b",
+      "commit_message": "test(row 231 M2b): phone arms, oracle parity (ledger header-15px) and real-corpus parity",
+      "est_loc": 404,
+      "copy": {
+        "scripts/marketingcheck/phone_test.go": "design_docs/verification/world-iter328/plan-M2b-phone_test.go.txt"
+      },
+      "generate": [],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run '^TestMarketingPhone' ./scripts/marketingcheck -> 4 PASS, 1 SKIP; 'PARITY phone: inputs=41 diffs=0 ledger=1'",
+        "same with WORLD_PHONE_CORPUS=$CORPUS -> 5 PASS, 0 SKIP; 'PARITY phone: inputs=59 diffs=0 ledger=1'; 'CHECK images=10 byte-equal=10; real arms=39; parity inputs=59'"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "O2"
+      ]
+    },
+    {
+      "id": "M3",
+      "commit_message": "docs(row 231 M3): orchestration §4.4 and QUICKSTART §13 switch to marketingcheck position/phone; NB2 pinned",
+      "est_loc": 213,
+      "copy": {
+        "scripts/marketingcheck/docs_test.go": "design_docs/verification/world-iter328/plan-M3-docs_test.go.txt"
+      },
+      "generate": [
+        "python3 -I $BANK/plan-m3-apply-docs.py.txt \"$PWD\" -> 'applied: QUICKSTART 3 edits, orchestration 9 edits'"
+      ],
+      "acceptance": [
+        "go test -count=1 -timeout 20m -v -run 'TestMarketingRunbookMatchesHelp|TestMarketingDocsLinks' ./scripts/marketingcheck -> 0 FAIL; rects-value, position-lines, phone-lines PASS",
+        "grep -c <each oracle hash> orchestration doc -> 1 and 1 (V34)",
+        "bash $BANK/plan-m3-s7-runbook.sh.txt \"$SCR\" \"$CORPUS\" -> rc lines 0,1,0,1,0",
+        "expected sha256 after M3: docs/QUICKSTART.md 92378af24c73f46107d1f5ae7a42667b74d7fb3d312eea8a528857609749133e, orchestration 0b2ee85987beac8d95b82d6a36a61e28b6b8f269dc3d3b0ff100817091db0e9c, docs_test.go b7420a6d8dfca7652efda94caf8d846bac3b89f28dbc159ebd93aafa407200a7"
+      ],
+      "gate": "plan §10.1",
+      "mutants_owned": [
+        "D1",
+        "D2",
+        "D3",
+        "P16"
+      ],
+      "order": "gate 10.1 -> M3 commit -> repo gate 10.2 -> mutation drill 8 (git archive HEAD) -> evidence commit"
+    }
+  ],
+  "gates": {
+    "per_milestone": [
+      "gofmt -l scripts/marketingcheck (prints nothing)",
+      "go vet ./scripts/marketingcheck && go test -count=1 -timeout 20m ./scripts/marketingcheck",
+      "go test -count=1 -race -timeout 20m ./scripts/marketingcheck",
+      "go test -count=1 -timeout 20m -run '^$' ./... (compile fence for _test.go)",
+      "go test -count=1 -timeout 20m -run '^TestProductionGoSurface$' ./host/store"
+    ],
+    "repo": [
+      "./scripts/verify_ail.sh",
+      "go build ./...",
+      "go test -count=1 -timeout 20m ./...",
+      "WORLD_PHONE_CORPUS=$CORPUS go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck (0 SKIP, 1 PASS RealCorpus)"
+    ],
+    "controller": [
+      "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh"
+    ],
+    "repo_note": "run in the git worktree (host/pins uses git ls-files); a red in a package the row does not touch is re-run alone once: green alone = load flake (record), red alone = STOP"
+  },
+  "mutation_drill": {
+    "command": "rm -rf $SCR/mut && mkdir -p $SCR/mut && git archive HEAD | tar -x -C $SCR/mut && python3 -I $BANK/plan-mutants.py.txt $SCR/mut > $SCR/mutants.txt 2>&1",
+    "expected": "36 KILLED, 0 SURVIVED/BUILD-FAILED/SETUP-ERROR",
+    "ids": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "P7",
+      "P8",
+      "P9",
+      "P10",
+      "P11",
+      "P12",
+      "P13",
+      "P14",
+      "P15",
+      "P16",
+      "P17",
+      "P17b",
+      "O1",
+      "O2",
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7",
+      "F8",
+      "F9",
+      "F10",
+      "F11",
+      "D1",
+      "D2",
+      "D3",
+      "G1",
+      "G2"
+    ]
+  },
+  "evidence_files": [
+    "executor-M1a-acceptance.txt",
+    "executor-M1b-acceptance.txt",
+    "executor-M1c-acceptance.txt",
+    "executor-M1d-acceptance.txt",
+    "executor-M2a-acceptance.txt",
+    "executor-M2b-acceptance.txt",
+    "executor-M3-acceptance.txt",
+    "executor-V34-pins-after-M3.txt",
+    "executor-M3-s7-runbook.txt",
+    "executor-AC4-mutants.txt",
+    "executor-V35-hanging-control.txt",
+    "executor-repo-gate.txt",
+    "executor-capture-day-step1.txt"
+  ],
+  "deviations": "plan §11 D-1..D-15 (no STOP)",
+  "status": "planned (planner-validated on a prototype; executor pending)",
+  "planner_validation": {
+    "per_milestone": "all 7 cumulative trees: gofmt empty, vet 0, compile fence 0, package plain rc 0 (37-46 s) and -race rc 0 (89-118 s) at load 3.8-6.1",
+    "acceptance": {
+      "M1d": "^TestMarketingPosition 5 PASS 0 SKIP; PARITY position inputs=44 verdict-diffs=0 reason-diffs=0",
+      "M2b": "^TestMarketingPhone 4 PASS + 1 SKIP; with corpus 5 PASS 0 SKIP; PARITY phone 41/0 and 59/0, ledger=1; CHECK images=10 byte-equal=10",
+      "M3": "3 new Runbook subtests PASS; V34 grep -c 1/1; capture-day step 1 10 PASS 0 SKIP"
+    },
+    "repo_gate": "verify_ail rc 0; go build rc 0; go test ./... in a git clone of the final tree: 34 ok, 1 red host/verifygate TestMissionConfigDefaultFlowIntegration/invalid_ledger (10 s fixture bound at load ~10), green alone (4.15 s)",
+    "mutants": "36/36 KILLED",
+    "fidelity": "phone arm ports pixel-equal 39/39 on render and real; position iso arms byte-equal V13 10/10; V23 arm hashes equal"
+  },
+  "out_of_scope": [
+    "S-a w-marketing-predicate-tolerances (findings 1, 2, 7)",
+    "S-b w-marketing-still-probe-commit (second half of finding 4)",
+    "verify_go.sh (controller)",
+    "any CI workflow change"
+  ]
+}

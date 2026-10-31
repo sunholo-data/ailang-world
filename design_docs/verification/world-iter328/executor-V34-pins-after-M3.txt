@@ -1,0 +1,16 @@
+=== RUN   TestMarketingPhoneParity
+=== RUN   TestMarketingPhoneParity/pin-registry
+=== NAME  TestMarketingPhoneParity
+    phone_test.go:557: PARITY phone: inputs=41 diffs=0 ledger=1
+--- PASS: TestMarketingPhoneParity (1.51s)
+    --- PASS: TestMarketingPhoneParity/pin-registry (0.00s)
+=== RUN   TestMarketingPositionParity
+=== RUN   TestMarketingPositionParity/pin-registry
+=== NAME  TestMarketingPositionParity
+    position_test.go:577: PARITY position: inputs=44 verdict-diffs=0 reason-diffs=0
+--- PASS: TestMarketingPositionParity (0.53s)
+    --- PASS: TestMarketingPositionParity/pin-registry (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.231s
+1
+1

@@ -1,0 +1,23 @@
+accept-seed5                           ACCEPT regions=17
+accept-eval-p1                         ACCEPT regions=17
+TOTAL candidates=2 accept=2 refuse=0
+rc=0
+refuse                                 REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+TOTAL candidates=1 accept=0 refuse=1
+exit status 1
+rc=1
+release                                ACCEPT regions=17
+TOTAL candidates=1 accept=1 refuse=0
+rc=0
+refuse                       REFUSE 1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} thumb={-1 -1 -1 -1} titleRight=413
+    (i) header {25 45 370 68} entry {90 428 370 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) dims 1440x1100
+    (iii′) thumb {-1 -1 -1 -1}
+TOTAL candidates=1 accept=0 refuse=1
+exit status 1
+rc=1
+release                      ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+TOTAL candidates=1 accept=1 refuse=0
+rc=0

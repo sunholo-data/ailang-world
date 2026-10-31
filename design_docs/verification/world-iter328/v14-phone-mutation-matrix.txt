@@ -1,0 +1,12 @@
+# V14 phone mutation matrix on the SKELETON-RENDER arm set (the CI fixture shape): 2 renders + 12 phoneneg + 23 judge + 4 new arms
+# Script v14-phmatrix.sh.txt; mutant 'standin' = (ii) reverted to the banked std-dev>=4 stand-in
+baseline: 12 accept / 29 refuse of       41
+mutant i: v67/shift-10 v67/shift-5 judge/title-ink-spoof-pixel-388 new/entry-solid-ink 
+mutant ii: new/header-15px new/header-solid-ink 
+mutant standin: new/header-15px 
+mutant dims: new/tall-845 
+mutant present: v67/no-scrollbar judge/B4-run-100px judge/scattered-pixels-no-thumb judge/short-thumb-x6-90 judge/thumb-above-bottom20 judge/thumb-dark-luma100 
+mutant x0: judge/B1-thumb-split-px150 judge/B1c-thumb-split-px8 judge/B5-two-pieces-rows-differ judge/short-thumb-x20 judge/thumb-x9 
+mutant x1: v67/full-thumb judge/B3b-grey-bar-full-width judge/thumb-end385 
+mutant clip: v67/pad-370 v67/title-unclipped judge/title-right-385 judge/title-right-386 
+mutant span: judge/B1-thumb-split-px150 judge/B1c-thumb-split-px8 judge/scattered-pixels-no-thumb 

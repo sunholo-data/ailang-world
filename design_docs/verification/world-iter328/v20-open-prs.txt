@@ -1,0 +1,8 @@
+# V20 open PRs (conflict surface)
+$ gh pr list --repo sunholo-data/ailang-world --state open --json number,headRefName,files
+[]
+rc=0
+$ control: gh pr list --state merged --limit 2 --json number,headRefName,files --jq '...files|length'
+#439 mission/world-iter327-landed files=3
+#438 trial/row217c-interactive-resume files=28
+2026-10-31T00:31:22Z

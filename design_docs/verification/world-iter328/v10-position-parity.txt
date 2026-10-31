@@ -1,0 +1,115 @@
+# V10 position parity: banked p0check (r3 verdict + r3 reason lines) vs prototype `marketingcheck position` (prototype source: v10-prototype-position.go.txt)
+# inputs: V64 11 + V65 23 (banked mutate arms) + 10 new arms (generator v13-isoarms-main.go.txt)
+$ EXTRA_DIR=/tmp/w328d/iso-pos bash parity_position.sh   (script: v10-parity-position.sh.txt)
+banked rc=0
+committed rc=1
+PARITY position: inputs=44 banked-accept=19 verdict-diffs=0 reason-diffs=0
+# positive control: same harness, prototype with (a1) neutered (POS_MUT=a1)
+PARITY position: inputs=44 banked-accept=19 verdict-diffs=1 reason-diffs=5
+DIFF extra/iso-a1-tested-w-3 ['REFUSE', ['packet.png/roster-tested: (a1) left/right 106..1316 vs 106..1319']] ['ACCEPT', []]
+# prototype output (committed side):
+r1-seed1/own-rangebox                  REFUSE regions=17
+    packet.png/validation: (a4) height 43 vs 49 not whole lines
+    packet.png/validation: (a2) stack-head top 2862 vs 2859
+    packet.png/approvals-chain: (a4) height 19 vs 25 not whole lines
+    packet.png/approvals-chain: (a3) gap after validation 245 vs R1 239
+    packet.png/roster-tested: (a4) height 43 vs 49 not whole lines
+    packet.png/roster-tested: (a3) gap after approvals-chain 101 vs R1 95
+    packet.png/roster-attested: (a4) height 19 vs 25 not whole lines
+    packet.png/roster-attested: (a3) gap after roster-tested 21 vs R1 15
+    packet.png/roster-claimed: (a4) height 43 vs 49 not whole lines
+    packet.png/roster-claimed: (a3) gap after roster-attested 21 vs R1 15
+    packet.png/roster-proven: (a4) height 91 vs 97 not whole lines
+    packet.png/roster-proven: (a3) gap after roster-claimed 21 vs R1 15
+r1-seed2/own-rangebox                  REFUSE regions=17
+    packet.png/validation: (a4) height 43 vs 49 not whole lines
+    packet.png/validation: (a2) stack-head top 2862 vs 2859
+    packet.png/approvals-chain: (a4) height 19 vs 25 not whole lines
+    packet.png/approvals-chain: (a3) gap after validation 245 vs R1 239
+    packet.png/roster-tested: (a4) height 43 vs 49 not whole lines
+    packet.png/roster-tested: (a3) gap after approvals-chain 101 vs R1 95
+    packet.png/roster-attested: (a4) height 19 vs 25 not whole lines
+    packet.png/roster-attested: (a3) gap after roster-tested 21 vs R1 15
+    packet.png/roster-claimed: (a4) height 43 vs 49 not whole lines
+    packet.png/roster-claimed: (a3) gap after roster-attested 21 vs R1 15
+    packet.png/roster-proven: (a4) height 91 vs 97 not whole lines
+    packet.png/roster-proven: (a3) gap after roster-claimed 21 vs R1 15
+r1-seed1/block-converted               ACCEPT regions=17
+r1-seed2/block-converted               ACCEPT regions=17
+r1b-seed3                              ACCEPT regions=17
+r1b-seed4                              ACCEPT regions=17
+r1c-seed5                              ACCEPT regions=17
+r1c-seed6                              ACCEPT regions=17
+eval-p1                                ACCEPT regions=17
+eval-p2                                ACCEPT regions=17
+eval-p3                                ACCEPT regions=17
+seed5/neg-attested+14                  REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+seed5/neg-attested-dropped             REFUSE regions=17
+    packet.png/roster-attested: missing
+seed5/neg-background-over-content      REFUSE regions=17
+    packet.png/background: edge >2px
+seed5/neg-dark-timeline-first+24       REFUSE regions=17
+    workbench-dark.png/timeline-first: (a3) gap after header 124 vs R1 100
+seed5/neg-graph-svg-at-timeline        REFUSE regions=17
+    graph.png/graph-svg: (a4) height 190 vs 274
+    graph.png/graph-svg: (a2) stack-head top 466 vs 1746
+seed5/neg-light-header+40              REFUSE regions=17
+    workbench-light.png/header: (a2) stack-head top 154 vs 114
+    workbench-light.png/timeline-first: (a3) gap after header 60 vs R1 100
+seed5/neg-light-header-whole-view      REFUSE regions=17
+    workbench-light.png/header: (b) bottom 1100 > H-40 1060 or outside
+    workbench-light.png/header: (a4) height 1100 vs 209
+    workbench-light.png/header: (a2) stack-head top 0 vs 114
+    workbench-light.png/timeline-first: (a3) gap after header -677 vs R1 100
+seed5/neg-packet-all+14                REFUSE regions=17
+    packet.png/validation: (a2) stack-head top 2873 vs 2859
+seed5/neg-packet-stack-down-6-lines    REFUSE regions=17
+    packet.png/validation: (a2) stack-head top 3003 vs 2859
+    packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside
+seed5/neg-payload+14                   REFUSE regions=17
+    provenance.png/payload: (a2) stack-head top 2836 vs 2822
+seed5/neg-proven-grows-6-lines-below-fold REFUSE regions=17
+    packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside
+seed5/neg-rows-reordered-tested-claimed REFUSE regions=17
+    packet.png/roster-tested: (a3) gap after approvals-chain 199 vs R1 95
+    packet.png/roster-attested: (a3) gap after roster-tested -89 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested -89 vs R1 15
+    packet.png/roster-proven: (a3) gap after roster-claimed 119 vs R1 15
+seed5/neg-tested-64x16-glyphs          REFUSE regions=17
+    packet.png/roster-tested: (a4) height 16 vs 49 not whole lines
+    packet.png/roster-tested: (a3) gap after approvals-chain 98 vs R1 95
+    packet.png/roster-attested: (a3) gap after roster-tested 45 vs R1 15
+seed5/neg-tested-at-attested-row       REFUSE regions=17
+    packet.png/roster-tested: (a3) gap after approvals-chain 159 vs R1 95
+    packet.png/roster-attested: (a3) gap after roster-tested -25 vs R1 15
+seed5/neg-tested-at-proven-row         REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested -201 vs R1 15
+seed5/neg-tested-height+14             REFUSE regions=17
+    packet.png/roster-tested: (a4) height 63 vs 49 not whole lines
+seed5/syn-pos-createdAt-wraps          ACCEPT regions=17
+seed5/syn-pos-proven-5-lines           ACCEPT regions=17
+seed5/syn-pos-tested-wraps-3-lines     ACCEPT regions=17
+p1/neg-tested-at-attested-row          REFUSE regions=17
+    packet.png/roster-tested: (a3) gap after approvals-chain 159 vs R1 95
+    packet.png/roster-attested: (a3) gap after roster-tested -25 vs R1 15
+p1/neg-packet-all+14                   REFUSE regions=17
+    packet.png/validation: (a2) stack-head top 2873 vs 2859
+p1/syn-pos-tested-wraps-3-lines        ACCEPT regions=17
+p1/boundary-proven+6lines-bottom3652   ACCEPT regions=17
+extra/acc-tested-w-2                   ACCEPT regions=17
+extra/iso-a1-tested-w-3                ACCEPT regions=17
+extra/iso-freegap-validation-h+240     REFUSE regions=17
+    packet.png/approvals-chain: (a3) gap after validation -1 vs R1 239
+extra/iso-minh-approvals-h-1           REFUSE regions=17
+    packet.png/approvals-chain: (a4) height 1 vs 25 not whole lines
+extra/iso-nonpara-graph-svg-h+24       REFUSE regions=17
+    graph.png/graph-svg: (a4) height 298 vs 274
+extra/iso-nonpara-payload-h+24         REFUSE regions=17
+    provenance.png/payload: (a4) height 84 vs 60
+extra/perm-approvals-y+48              ACCEPT regions=17
+extra/perm-approvals-y-48              ACCEPT regions=17
+extra/perm-roster-drift-2px            ACCEPT regions=17
+extra/perm-validation-h+216            ACCEPT regions=17
+TOTAL candidates=44 accept=20 refuse=24

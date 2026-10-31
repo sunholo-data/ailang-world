@@ -1,0 +1,37 @@
+#!/bin/bash
+# Row 231 M1: writes scripts/marketingcheck/testdata/position/** (34 JSON files + SHA256SUMS)
+# from the banked iteration-315 inputs with the banked p0check. Never hand-edit the output.
+# usage: bash gen-position-fixtures.sh <repo-root> <scratch-dir-outside-the-repo>
+set -euo pipefail
+ROOT=$1; SCR=$2
+V=$ROOT/design_docs/verification/world-iter315
+T=$ROOT/scripts/marketingcheck/testdata/position
+test "$(shasum -a 256 "$V/v64-p0check-main.go.txt" | cut -d' ' -f1)" = 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c
+mkdir -p "$SCR/p0check" "$SCR/neg-p1" "$SCR/conv"
+cp "$V/v64-p0check-main.go.txt" "$SCR/p0check/main.go"
+(cd "$SCR/p0check" && go build -o p0check main.go)
+P=$SCR/p0check/p0check
+rm -rf "$T"; mkdir -p "$T/stores" "$T/v65" "$T/v65-p1"
+for s in r1-seed1 r1-seed2 r1b-seed3 r1b-seed4 r1c-seed5 r1c-seed6 eval-p1 eval-p2 eval-p3; do
+  cp "$V/v64-rects-$s.json" "$T/stores/$s.json"
+done
+for s in r1-seed1 r1-seed2; do
+  "$P" fromlayouts "$V/v64-layouts-$s.json" "$V/v64-rects-$s.json" "$T/stores/$s-blockconverted.json" >/dev/null
+  cmp "$T/stores/$s-blockconverted.json" "$V/v64-rects-$s-blockconverted.json"
+done
+"$P" mutate "$V/v64-rects-r1c-seed5.json" "$T/v65" >/dev/null
+"$P" mutate "$V/v64-rects-eval-p1.json" "$SCR/neg-p1" >/dev/null
+for a in neg-tested-at-attested-row neg-packet-all+14 syn-pos-tested-wraps-3-lines neg-proven-grows-6-lines-below-fold; do
+  cp "$SCR/neg-p1/$a.json" "$T/v65-p1/$a.json"
+done
+{
+  echo "# Row 231 position fixtures. Written by design_docs/planned/w-marketing-position-checker-sprint-plan.md §M1b"
+  echo "# (bash gen-position-fixtures.sh <repo> <scratch>), never by hand. Sources (design §2.3):"
+  echo "# stores/<store>.json: cp design_docs/verification/world-iter315/v64-rects-<store>.json"
+  echo "# stores/r1-seed{1,2}-blockconverted.json: p0check fromlayouts v64-layouts-<s>.json v64-rects-<s>.json <out>"
+  echo "# v65/*.json: p0check mutate v64-rects-r1c-seed5.json v65/"
+  echo "# v65-p1/*.json: p0check mutate v64-rects-eval-p1.json <dir>, 4 arms copied"
+  echo "# p0check = design_docs/verification/world-iter315/v64-p0check-main.go.txt sha256 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c"
+  (cd "$T" && find stores v65 v65-p1 -name '*.json' | LC_ALL=C sort | xargs shasum -a 256)
+} > "$T/SHA256SUMS"
+echo "files=$(find "$T" -name '*.json' | wc -l | tr -d ' ')"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Measures WHY a phone PNG fixture cannot be committed: run the repo's own tracked-binary gate,
+# with verify_go.sh's exact allowance flags, on a throwaway commit of the base tree (control) and
+# then with a real phone.png added under scripts/marketingcheck/testdata/ (arm), and under the
+# release allowance dir with a subdirectory (arm 2).
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231; G=/tmp/w328d/gate
+rm -rf $G && mkdir -p $G && git -C $WT archive HEAD | tar -x -C $G && cd $G
+git init -q && git add -A && git -c user.email=gate-demo@example.invalid -c user.name=x commit -qm base
+flags=(--allow-png 'website/static/img/v1/' --png-file-cap 1048576 --png-dir-cap 8388608 --allow-font 'host/surfacepage/fonts/' --font-file-cap 1048576 --font-dir-cap 2097152 --font-pin 'Montserrat-Variable.ttf=0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7' --font-pin 'IBMPlexMono-Regular.ttf=6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46' --font-pin 'IBMPlexMono-Medium.ttf=a9b4c49bb299e05b5f6c481e7fb5e78943d2793249a0c8874ab574a2d1ea6755')
+grep -c "allow-png 'website/static/img/v1/'" $WT/scripts/verify_go.sh | sed 's/^/verify_go.sh lines carrying this allowance: /'
+echo "== control (base tree):"; bash scripts/tracked_binary_gate.sh "${flags[@]}"; echo "rc=$?"
+mkdir -p scripts/marketingcheck/testdata/phone && cp /tmp/world-iter312/r1c-seed5/capture/pass-a/phone.png scripts/marketingcheck/testdata/phone/seed5-pass-a.png
+git add -A && git -c user.email=gate-demo@example.invalid -c user.name=x commit -qm arm1
+echo "== arm 1 (real phone.png under scripts/marketingcheck/testdata/phone/):"; bash scripts/tracked_binary_gate.sh "${flags[@]}"; echo "rc=$?"
+git rm -q -r scripts/marketingcheck/testdata && mkdir -p website/static/img/v1/fixtures && cp /tmp/world-iter312/r1c-seed5/capture/pass-a/phone.png website/static/img/v1/fixtures/seed5.png
+git add -A && git -c user.email=gate-demo@example.invalid -c user.name=x commit -qm arm2
+echo "== arm 2 (under the release allowance, in a subdirectory):"; bash scripts/tracked_binary_gate.sh "${flags[@]}"; echo "rc=$?"

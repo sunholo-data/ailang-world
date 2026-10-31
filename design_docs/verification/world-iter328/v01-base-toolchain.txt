@@ -1,0 +1,11 @@
+# V01 base + toolchains
+$ git -C /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231 rev-parse HEAD
+cec48f69af6da7fe4817d9a1bf3e9f01b0274cb0
+rc=0
+$ git -C /Users/voightkampff/dev/sunholo-data/.wt-world-iter328-row231 branch --show-current
+sprint/world-iter328-marketing-position-checker
+rc=0
+$ (in repo copy) go version
+go version go1.26.6 darwin/arm64
+$ (in /tmp, outside any module) go version
+go version go1.26.4 darwin/arm64

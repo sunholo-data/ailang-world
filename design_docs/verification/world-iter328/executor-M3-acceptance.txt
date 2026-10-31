@@ -1,0 +1,106 @@
+=== RUN   TestMarketingDocsLinks
+=== RUN   TestMarketingDocsLinks/real-repo
+=== RUN   TestMarketingDocsLinks/promoted-dir
+=== RUN   TestMarketingDocsLinks/M8a-filename
+=== RUN   TestMarketingDocsLinks/refuse-readme-embed
+=== RUN   TestMarketingDocsLinks/refuse-alt-route
+=== RUN   TestMarketingDocsLinks/refuse-captions-disclosure
+=== RUN   TestMarketingDocsLinks/refuse-page-disclosure
+=== RUN   TestMarketingDocsLinks/refuse-readme-live-claim
+=== RUN   TestMarketingDocsLinks/refuse-schema-hash
+=== RUN   TestMarketingDocsLinks/refuse-readme-broken-link
+=== RUN   TestMarketingDocsLinks/refuse-page-markdown-image
+=== RUN   TestMarketingDocsLinks/cli
+Usage of docs:
+  -assets string
+    	promoted six-PNG directory to check
+  -capture-manifest string
+    	attended capture-manifest.json (requires --require-assets)
+  -require-assets
+    	release mode: the PNG bytes must match the capture manifest
+  -root string
+    	repository root (read-only)
+Usage of docs:
+  -assets string
+    	promoted six-PNG directory to check
+  -capture-manifest string
+    	attended capture-manifest.json (requires --require-assets)
+  -require-assets
+    	release mode: the PNG bytes must match the capture manifest
+  -root string
+    	repository root (read-only)
+Usage of docs:
+  -assets string
+    	promoted six-PNG directory to check
+  -capture-manifest string
+    	attended capture-manifest.json (requires --require-assets)
+  -require-assets
+    	release mode: the PNG bytes must match the capture manifest
+  -root string
+    	repository root (read-only)
+flag provided but not defined: -bogus
+Usage of docs:
+  -assets string
+    	promoted six-PNG directory to check
+  -capture-manifest string
+    	attended capture-manifest.json (requires --require-assets)
+  -require-assets
+    	release mode: the PNG bytes must match the capture manifest
+  -root string
+    	repository root (read-only)
+Usage of docs:
+  -assets string
+    	promoted six-PNG directory to check
+  -capture-manifest string
+    	attended capture-manifest.json (requires --require-assets)
+  -require-assets
+    	release mode: the PNG bytes must match the capture manifest
+  -root string
+    	repository root (read-only)
+Usage of docs:
+  -assets string
+    	promoted six-PNG directory to check
+  -capture-manifest string
+    	attended capture-manifest.json (requires --require-assets)
+  -require-assets
+    	release mode: the PNG bytes must match the capture manifest
+  -root string
+    	repository root (read-only)
+--- PASS: TestMarketingDocsLinks (0.20s)
+    --- PASS: TestMarketingDocsLinks/real-repo (0.00s)
+    --- PASS: TestMarketingDocsLinks/promoted-dir (0.20s)
+    --- PASS: TestMarketingDocsLinks/M8a-filename (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-readme-embed (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-alt-route (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-captions-disclosure (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-page-disclosure (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-readme-live-claim (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-schema-hash (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-readme-broken-link (0.00s)
+    --- PASS: TestMarketingDocsLinks/refuse-page-markdown-image (0.00s)
+    --- PASS: TestMarketingDocsLinks/cli (0.00s)
+=== RUN   TestMarketingRunbookMatchesHelp
+=== RUN   TestMarketingRunbookMatchesHelp/capture
+=== RUN   TestMarketingRunbookMatchesHelp/M8a-flag
+=== RUN   TestMarketingRunbookMatchesHelp/serve-preview
+=== RUN   TestMarketingRunbookMatchesHelp/marketingcheck-lines
+=== RUN   TestMarketingRunbookMatchesHelp/rects-value
+=== RUN   TestMarketingRunbookMatchesHelp/position-lines
+=== RUN   TestMarketingRunbookMatchesHelp/phone-lines
+=== RUN   TestMarketingRunbookMatchesHelp/seed
+=== RUN   TestMarketingRunbookMatchesHelp/attended-only
+=== RUN   TestMarketingRunbookMatchesHelp/unminted-seed-refuses
+    docs_test.go:682: unminted seed refusal (exit status 1): ailang-worldd demo seed: --session is neither a 64-hex session token nor a readable file: no such file or directory
+--- PASS: TestMarketingRunbookMatchesHelp (1.95s)
+    --- PASS: TestMarketingRunbookMatchesHelp/capture (0.01s)
+    --- PASS: TestMarketingRunbookMatchesHelp/M8a-flag (0.34s)
+    --- PASS: TestMarketingRunbookMatchesHelp/serve-preview (0.03s)
+    --- PASS: TestMarketingRunbookMatchesHelp/marketingcheck-lines (0.00s)
+    --- PASS: TestMarketingRunbookMatchesHelp/rects-value (0.00s)
+    --- PASS: TestMarketingRunbookMatchesHelp/position-lines (0.66s)
+    --- PASS: TestMarketingRunbookMatchesHelp/phone-lines (0.05s)
+    --- PASS: TestMarketingRunbookMatchesHelp/seed (0.01s)
+    --- PASS: TestMarketingRunbookMatchesHelp/attended-only (0.00s)
+    --- PASS: TestMarketingRunbookMatchesHelp/unminted-seed-refuses (0.02s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.451s

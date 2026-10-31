@@ -1,0 +1,123 @@
+# (1) the prototype is in-package by construction
+$ cd solo && go build -o x p.go   (the prototype alone, empty dir)
+# command-line-arguments
+./p.go:34:18: undefined: Rect
+./p.go:38:31: undefined: Rectangles
+./p.go:41:14: undefined: shotByName
+./p.go:48:20: undefined: Rect
+./p.go:107:42: undefined: Rectangles
+./p.go:108:8: undefined: Rectangles
+./p.go:111:13: undefined: refuse
+./p.go:114:13: undefined: refuse
+./p.go:117:13: undefined: refuse
+./p.go:124:13: undefined: refuse
+./p.go:124:13: too many errors
+rc=1
+$ (git archive HEAD tree + v10-prototype-position.go.txt as scripts/marketingcheck/position.go, v11 as phone.go, 2 cases in main.go) go build ./scripts/marketingcheck
+rc=0
+$ grep -n 'shotByName' v10-prototype-position.go.txt
+41:		shot, _ := shotByName(s)
+$ grep -n 'func shotByName' scripts/marketingcheck/png.go
+55:func shotByName(name string) (Shot, bool) {
+# (2) the values, printed from the files
+$ sed -n '49,53p' scripts/marketingcheck/png.go
+var Shots = []Shot{
+	{"workbench-light.png", 1440, 1100, "light"}, {"workbench-dark.png", 1440, 1100, "dark"},
+	{"packet.png", 1440, 3700, "light"}, {"graph.png", 1440, 2100, "light"},
+	{"provenance.png", 1440, 3000, "light"}, {"phone.png", 390, 844, "light"},
+}
+$ sed -n '57,58p;93p' design_docs/verification/world-iter315/v64-p0check-main.go.txt
+var heights = map[string]int{"workbench-light.png": 1100, "workbench-dark.png": 1100, "packet.png": 3700, "graph.png": 2100, "provenance.png": 3000}
+var order = []string{"workbench-light.png", "workbench-dark.png", "packet.png", "graph.png", "provenance.png"}
+func inside(c Rect, H int) bool { return c.X >= 0 && c.Y >= 0 && c.X+c.W <= 1440 && c.Y+c.H <= H-40 }
+$ python3: the five position shots, png.go Shots vs p0check heights/width
+png.go ('workbench-light.png', 1440, 1100)  p0check ('workbench-light.png', 1440, 1100) EQUAL
+png.go ('workbench-dark.png', 1440, 1100)  p0check ('workbench-dark.png', 1440, 1100) EQUAL
+png.go ('packet.png', 1440, 3700)  p0check ('packet.png', 1440, 3700) EQUAL
+png.go ('graph.png', 1440, 2100)  p0check ('graph.png', 1440, 2100) EQUAL
+png.go ('provenance.png', 1440, 3000)  p0check ('provenance.png', 1440, 3000) EQUAL
+phone.png in Shots only: (390, 844)
+ALL EQUAL
+# (3) the geometry-pin test (prototype position_geom_test.go = v32-position-geom-test.go.txt) and its mutants
+$ go test -run '^TestMarketingPositionGeometryMatchesOracle$' (unmutated)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.311s
+== MUTANT Shots {"packet.png", 1440, 3700} -> {"packet.png", 1440, 3660}: 1 line(s) changed
+$ go test -run '^TestMarketingPositionGeometryMatchesOracle$'
+--- FAIL: TestMarketingPositionGeometryMatchesOracle (0.00s)
+    position_geom_test.go:51: packet.png: Shots 1440x3660, oracle 1440x3700
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.285s
+FAIL
+$ parity_position.sh with this mutant build (is it verdict-neutral on the 44 inputs?)
+PARITY position: inputs=44 banked-accept=19 verdict-diffs=19 reason-diffs=43
+DIFF r1-seed1/own-rangebox ['REFUSE', ['packet.png/validation: (a1) left/right 106..1285 vs 106..1319', 'packet.png/validation: (a4) height 43 vs 49 not whole l
+DIFF r1-seed2/own-rangebox ['REFUSE', ['packet.png/validation: (a1) left/right 106..1285 vs 106..1319', 'packet.png/validation: (a4) height 43 vs 49 not whole l
+DIFF r1-seed1/block-converted ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF r1-seed2/block-converted ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF r1b-seed3 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF r1b-seed4 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF r1c-seed5 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF r1c-seed6 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF eval-p1 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF eval-p2 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF eval-p3 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF seed5/neg-attested+14 ['REFUSE', ['packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15', 'packet.png/roster-claimed: (a3) gap after roster
+DIFF seed5/neg-attested-dropped ['REFUSE', ['packet.png/roster-attested: missing']] ['REFUSE', ['packet.png/roster-attested: missing', 'packet.png/background: (
+DIFF seed5/neg-dark-timeline-first+24 ['REFUSE', ['workbench-dark.png/timeline-first: (a3) gap after header 124 vs R1 100']] ['REFUSE', ['workbench-dark.png/tim
+DIFF seed5/neg-graph-svg-at-timeline ['REFUSE', ['graph.png/graph-svg: (a4) height 190 vs 274', 'graph.png/graph-svg: (a2) stack-head top 466 vs 1746']] ['REFUS
+DIFF seed5/neg-light-header+40 ['REFUSE', ['workbench-light.png/header: (a2) stack-head top 154 vs 114', 'workbench-light.png/timeline-first: (a3) gap after hea
+DIFF seed5/neg-light-header-whole-view ['REFUSE', ['workbench-light.png/header: (b) bottom 1100 > H-40 1060 or outside', 'workbench-light.png/header: (a1) left/
+DIFF seed5/neg-packet-all+14 ['REFUSE', ['packet.png/validation: (a2) stack-head top 2873 vs 2859']] ['REFUSE', ['packet.png/validation: (a2) stack-head top 287
+DIFF seed5/neg-packet-stack-down-6-lines ['REFUSE', ['packet.png/validation: (a2) stack-head top 3003 vs 2859', 'packet.png/roster-proven: (b) bottom 3676 > H-4
+DIFF seed5/neg-payload+14 ['REFUSE', ['provenance.png/payload: (a2) stack-head top 2836 vs 2822']] ['REFUSE', ['packet.png/background: (b)', 'provenance.png/pay
+DIFF seed5/neg-proven-grows-6-lines-below-fold ['REFUSE', ['packet.png/roster-proven: (b) bottom 3676 > H-40 3660 or outside']] ['REFUSE', ['packet.png/roster-p
+DIFF seed5/neg-rows-reordered-tested-claimed ['REFUSE', ['packet.png/roster-tested: (a3) gap after approvals-chain 199 vs R1 95', 'packet.png/roster-attested: (
+DIFF seed5/neg-tested-64x16-glyphs ['REFUSE', ['packet.png/roster-tested: (a1) left/right 106..170 vs 106..1319', 'packet.png/roster-tested: (a4) height 16 vs 4
+DIFF seed5/neg-tested-at-attested-row ['REFUSE', ['packet.png/roster-tested: (a3) gap after approvals-chain 159 vs R1 95', 'packet.png/roster-attested: (a3) gap
+DIFF seed5/neg-tested-at-proven-row ['REFUSE', ['packet.png/roster-attested: (a3) gap after roster-tested -201 vs R1 15']] ['REFUSE', ['packet.png/roster-attest
+DIFF seed5/neg-tested-height+14 ['REFUSE', ['packet.png/roster-tested: (a4) height 63 vs 49 not whole lines']] ['REFUSE', ['packet.png/roster-tested: (a4) heigh
+DIFF seed5/syn-pos-createdAt-wraps ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF seed5/syn-pos-proven-5-lines ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF seed5/syn-pos-tested-wraps-3-lines ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF p1/neg-tested-at-attested-row ['REFUSE', ['packet.png/roster-tested: (a3) gap after approvals-chain 159 vs R1 95', 'packet.png/roster-attested: (a3) gap af
+DIFF p1/neg-packet-all+14 ['REFUSE', ['packet.png/validation: (a2) stack-head top 2873 vs 2859']] ['REFUSE', ['packet.png/validation: (a2) stack-head top 2873 v
+DIFF p1/syn-pos-tested-wraps-3-lines ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF p1/boundary-proven+6lines-bottom3652 ['ACCEPT', []] ['REFUSE', ['packet.png/roster-proven: (b) bottom 3652 > H-40 3620 or outside', 'packet.png/background:
+DIFF extra/acc-tested-w-2 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF extra/iso-a1-tested-w-3 ['REFUSE', ['packet.png/roster-tested: (a1) left/right 106..1316 vs 106..1319']] ['REFUSE', ['packet.png/roster-tested: (a1) left/r
+DIFF extra/iso-freegap-validation-h+240 ['REFUSE', ['packet.png/approvals-chain: (a3) gap after validation -1 vs R1 239']] ['REFUSE', ['packet.png/approvals-cha
+DIFF extra/iso-minh-approvals-h-1 ['REFUSE', ['packet.png/approvals-chain: (a4) height 1 vs 25 not whole lines']] ['REFUSE', ['packet.png/approvals-chain: (a4) 
+DIFF extra/iso-nonpara-graph-svg-h+24 ['REFUSE', ['graph.png/graph-svg: (a4) height 298 vs 274']] ['REFUSE', ['packet.png/background: (b)', 'graph.png/graph-svg
+DIFF extra/iso-nonpara-payload-h+24 ['REFUSE', ['provenance.png/payload: (a4) height 84 vs 60']] ['REFUSE', ['packet.png/background: (b)', 'provenance.png/paylo
+DIFF extra/perm-approvals-y+48 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF extra/perm-approvals-y-48 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF extra/perm-roster-drift-2px ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+DIFF extra/perm-validation-h+216 ['ACCEPT', []] ['REFUSE', ['packet.png/background: (b)']]
+$ the other position/phone/PNG tests of the package under this mutant: go test -run 'TestMarketingPNG|TestMarketingShotGeometry|TestMarketingTwoPass'
+--- FAIL: TestMarketingPNGContent (0.35s)
+    --- FAIL: TestMarketingPNGContent/canonical-shots (0.00s)
+--- FAIL: TestMarketingShotGeometry (0.00s)
+    --- FAIL: TestMarketingShotGeometry/packet.png (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.112s
+FAIL
+== MUTANT Shots {"graph.png", 1440, 2100} -> {"graph.png", 1440, 2101}: 1 line(s) changed
+$ go test -run '^TestMarketingPositionGeometryMatchesOracle$'
+--- FAIL: TestMarketingPositionGeometryMatchesOracle (0.00s)
+    position_geom_test.go:51: graph.png: Shots 1440x2101, oracle 1440x2100
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.282s
+FAIL
+$ parity_position.sh with this mutant build (is it verdict-neutral on the 44 inputs?)
+PARITY position: inputs=44 banked-accept=19 verdict-diffs=0 reason-diffs=0
+$ the other position/phone/PNG tests of the package under this mutant: go test -run 'TestMarketingPNG|TestMarketingShotGeometry|TestMarketingTwoPass'
+--- FAIL: TestMarketingPNGContent (0.36s)
+    --- FAIL: TestMarketingPNGContent/canonical-shots (0.00s)
+--- FAIL: TestMarketingShotGeometry (0.00s)
+    --- FAIL: TestMarketingShotGeometry/graph.png (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.220s
+FAIL
+restored: png.go cmp-identical to base
+$ go test -run '^TestMarketingPositionGeometryMatchesOracle$' (restored)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.183s
