@@ -1,0 +1,94 @@
+# World iteration 331 — Gate 0–2 readings (controller, 2026-10-31T12:30:03Z)
+# Every line below was produced by the command printed above it, in this run (bash, not zsh).
+
+## origin/dev
+$ git rev-parse origin/dev
+cb85eb2b3a7730f23df73dbb558f92c48e87626f
+
+## What moved since iteration 330's base (a6af0cd4)
+$ git log --format="%h %s" a6af0cd4..origin/dev
+cb85eb2b Merge pull request #444 from sunholo-data/sprint/world-iter330-exec-probe-holder-exit-reset
+c59fab19 docs(mission): iteration 330 record — row 233 designed and parked at quorum r2; D-WORLD-105 filed
+a9d3307e docs(row 233): w-exec-probe-holder-exit-reset design r1 (quorum r1 fixes)
+e0f42390 docs(row 233): w-exec-probe-holder-exit-reset design r0
+
+## Row 150 blocker (attended A1) — commit subjects in range
+$ git log --format=%s a6af0cd4..origin/dev | grep -ciE "row ?150|A1\b|marketing"
+0
+$ (control) ... | grep -ciE "iteration|record|merge|row 233"
+4
+$ (range size) ... | wc -l
+4
+
+## Row 151 blocker (row 188 N2d + N4a)
+$ git log origin/dev --since=2026-10-01 --format="%h %s" | grep -ciE "N2d|N4a"
+0
+$ (control) ... | grep -ciE "N2c"
+2
+$ git log origin/dev --since=2026-10-01 -i -E --grep="N2d|N4a" --format="%h %s"
+fe9c891e docs(mission): record World iteration 319 — no pick (rule (d) block report 2); release rows wait on attended steps; dev green
+92495b60 docs(mission): record World iteration 317 — no pick (rule (d) block report); row 232 premise re-measured; D-WORLD-102 filed
+be184351 roadmap: all of Mark's agent work through World — goal doc, rows 217-222 NEXT; file D-WORLD-94/95 OPEN
+dc719822 docs(design): w-world-surface-outputs r0 — the front card's outputs, every file type, and work in other programs
+
+## Attended-track rows 217/218/219 tags
+217. **[NEXT
+218. **[NEXT
+219. **[NEXT
+
+## Queue tags for release rows 150/151 and parked 233
+150. **[IN-SPRINT 
+151. **[v1
+233. **[PARKED iteration 330 
+
+## External predicates: every upstream ailang issue/PR number the charter names (all spellings)
+$ grep -oE "(ailang ?#|ailang/(issues|pull)/|upstream (issue )?#)[0-9]+" design_docs/world-mission.md | grep -oE "[0-9]+$" | sort -un
+count=29
+476:closed 477:closed 486:closed 493:closed 498:closed 517:closed 611:closed 633:closed 764:closed 885:closed 941:closed 984:closed 1036:closed 1037:closed 1042:closed 1043:closed 1096:closed 1160:closed 1424:closed 1542:closed 1547:closed 1557:closed 1558:closed 1559:closed 1580:closed 1602:closed 1607:closed 1635:closed 1843:closed 
+results=29 not-closed=0
+$ (positive control: row 53 names ailang#941)
+ailang#941
+$ (instrument control) gh issue list -R sunholo-data/ailang --state open --limit 3 --json number --jq length
+3
+
+## Dev CI at origin/dev
+checks=3
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+  go host build + test gate: success
+$ gh run list -R sunholo-data/ailang-world --branch dev --workflow CI --limit 5 --json headSha,conclusion,attempt
+cb85eb2b success attempt=1
+a6af0cd4 success attempt=1
+9e562235 success attempt=1
+e5c1867f success attempt=1
+6641df63 success attempt=1
+
+## Open PRs (repo)
+0
+
+## Directives (allowlisted) on #366 and #313
+[1;33m⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it[0m
+[1;33mmission_directives: #366 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 31 comments; the rest are public feedback, never directives)[0m
+[1;33m⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-313-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it[0m
+[1;33mmission_directives: #313 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-22T01:34:42Z inclusive, 0 new, 0 already processed (of 44 comments; the rest are public feedback, never directives)[0m
+
+## Self crash notices (Gate 0 step 6a)
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 2026-10-22T01:34:42Z on #366,#313 — A FIRE DIED (newest rc=1 at 2026-10-22T15:52:55Z on #313): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the log; "the queue is untouched" describes the charter, not the work [mission_gate0_self_notices.sh, control 107:4, watermarks 2/2]
+$ grep -c 6345079873 design_docs/world-mission-log.md design_docs/world-mission-log-archive.md   # already credited
+design_docs/world-mission-log.md:26
+design_docs/world-mission-log-archive.md:3
+
+## Decision ledger
+decision ledger valid: 92 rows
+D-WORLD-105	OPEN
+$ git diff a6af0cd4 origin/dev -- design_docs/world-mission.md | grep -c "^[-+]| D-WORLD"
+1
+
+## Weekly external-issue sweep — re-checked
+$ gh issue list -R sunholo-data/ailang-world --state open --limit 200 --json number --jq length
+1
+#366 charter=1 log=63 archive=8 dashboard=0
+
+## Live log entries before this record
+25

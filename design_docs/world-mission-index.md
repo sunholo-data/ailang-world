@@ -12,8 +12,9 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 330 | 2026-10-31 | row 233 designed and parked: holder-exit-reset excuse blocked at quorum r2 on the fail-closed premise; real-srt Linux 49-54/100 under load; D-WORLD-105... |
-| 329 | 2026-10-31 | row 230 built: arm 6's hello wait pinned from both sides by a deterministic test, the SILENT text derived from the wait, a structural pin on the child's c.re... |
+| 331 | 2026-10-31 | no pick: rule (d) block report 10, the first since D-WORLD-102's scope ran out; row 233 parked on D-WORLD-105; release rows 150/151 still wait on a... |
+| 330 | 2026-10-31 | row 233 designed and parked: the holder-exit-reset excuse is blocked at quorum r2 on the fail-closed premise; real-srt Linux 49–54/100 under load; ... |
+| 329 | 2026-10-31 | row 230 built: arm 6's hello wait pinned from both sides by a deterministic test, the SILENT text derived from the wait, a labelled structural pin ... |
 | 328 | 2026-10-31 | row 231 built: the P0/P3 position and phone predicates become CI-gated marketingcheck subcommands with a parity oracle and generated fixtures; judg... |
 | 327 | 2026-10-30 | dev red at Gate 1 → row 236 built: the finish route's scope-expiry test raced two wall-clock reads across a second edge; daemon clock seam + exact-... |
 | 326 | 2026-10-30 | no pick: rule (d) block report 9; release rows 150/151 still wait on attended steps; dev green at b49ce51a [ADMIN] |
