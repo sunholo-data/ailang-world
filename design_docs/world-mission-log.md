@@ -1907,3 +1907,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 231 BUILT in PR #440; rows 238–240 filed.
 **Next:** row 231 lands on merge CI green (landing note). Then row 230 → 233 under D-WORLD-102 = A, stopping when a release row is routable; a dev red still outranks. Row 150's P0/P3 now invoke `marketingcheck position`/`phone` (orchestration §4.4) in the A1 window Mark schedules.
+
+**Landing (iteration 328):** PR #440 merged as `6641df63` (merge commit, `--match-head-commit 5b5ee8f1`). Head `5b5ee8f1` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `cec48f69`, right before the merge. **Merge CI:** `commits/6641df63/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. The local `host/broker` `reserve-after-before` red did not occur in CI on either head. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
