@@ -1,0 +1,19 @@
+== G1 gofmt
+== G2 vet
+rc=0
+== G3 fence
+rc=0
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.344s [no tests to run]
+== G8
+rc=0
+yaml ok
+anchor (want 1): 1
+== focused
+rc=0
+top PASS (want 11): 11
+sub PASS (want 34): 34
+FAIL/SKIP (want 0): 0
+== G5 race
+DATA RACE count (want 0): 0
+PASS count (want 11): 11
+ok  	github.com/sunholo-data/ailang-world/host/broker	12.113s

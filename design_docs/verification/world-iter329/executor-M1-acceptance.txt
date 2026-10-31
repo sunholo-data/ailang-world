@@ -1,0 +1,19 @@
+== G1 gofmt
+== G2 vet
+rc=0
+== G3 fence
+rc=0
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.366s [no tests to run]
+== G8 actionlint
+rc=0
+yaml ok
+== anchor
+1
+== focused
+rc=0
+top PASS (want 10): 10
+sub PASS (want 34): 34
+FAIL/SKIP (want 0): 0
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)

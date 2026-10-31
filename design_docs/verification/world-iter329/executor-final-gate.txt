@@ -1,0 +1,8 @@
+== final-state repo gate
+HEAD=5ddc93d3
+go build rc=0
+go vet rc=0
+verify_ail rc=0
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+go test -count=1 ./host/broker/ rc=0
+ok  	github.com/sunholo-data/ailang-world/host/broker	213.918s

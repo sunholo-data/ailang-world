@@ -1,0 +1,19 @@
+== m1-focus
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	11.351s
+== m1-g4
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	222.751s
+== m2-focus
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	11.211s
+== m2-race
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	12.113s
+== m2-g4
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	221.562s
+== m2-g7
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+M1 G4: PASS=334 FAIL=0 SKIP=30
+M2 G4: PASS=335 FAIL=0 SKIP=30
