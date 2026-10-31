@@ -1998,3 +1998,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 230 BUILT in PR #442; rows 241–242 filed.
 **Next:** row 230 lands on merge CI green (landing note). Then row 233, the last row in D-WORLD-102's scope; a dev red still outranks.
+
+**Landing (iteration 329):** PR #442 merged as `9e562235` (merge commit, `--match-head-commit 707ca1ba`). Head `707ca1ba` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `e5c1867f`, right before the merge. **Merge CI:** `commits/9e562235/check-runs` → 3, all success on attempt 1 (run 41180204408: verify gate, go race gate, go host build + test gate). Dev green. The local race-leg package timeouts (`host/daemon`, `host/verifygate`) did not occur in CI. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
