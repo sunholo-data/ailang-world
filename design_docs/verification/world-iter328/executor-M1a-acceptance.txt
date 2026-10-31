@@ -1,0 +1,5 @@
+=== RUN   TestMarketingSubprocessDeadline
+    position_test.go:130: subprocess-timeout after 2.003s; grandchild 60251 reaped
+--- PASS: TestMarketingSubprocessDeadline (2.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.331s
