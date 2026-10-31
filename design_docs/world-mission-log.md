@@ -2184,3 +2184,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **NB2** (the token in the local transcript may merit rotation): this is already retro item 2, and the rotation is Mark's call.
 - **NB3** (CI runs `9e562235`/`a6af0cd4` taken from the readings file): the readings file prints the `gh run list` output that produced them. No change.
 - No r2: nothing to fix.
+
+**Landing (iteration 332):** PR #447 merged as `73514080` (merge commit, `--match-head-commit a63a8c45`). The PR head `a63a8c45` was 3/3 green before the merge, and origin/dev was re-read right before it (`85a7bd5c`, MERGEABLE/CLEAN). The merge tree is byte-identical to the head tree. **Merge CI:** `commits/73514080/check-runs` → 3, all success on attempt 1 (verify gate, go race gate, go host build + test gate). Dev green. The first head poller (on `6ad80117`) was stopped when the judge commit superseded that head. Every poll ran under `/bin/bash` from a script file, carried the subject SHA in each verdict line, and had a ~9-minute deadline; two of them hit it while the race gate ran and were re-issued against the same SHA.
