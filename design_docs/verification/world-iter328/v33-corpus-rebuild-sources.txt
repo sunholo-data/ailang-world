@@ -1,0 +1,26 @@
+# V33 (r1, fix C) where the real phone corpus can be rebuilt from
+$ ls ~/.ailang/state/world-iter328-phone-corpus/
+SHA256SUMS
+eval-p1-pass-a-phone.png
+eval-p2-pass-a-phone.png
+eval-p3-pass-a-phone.png
+r1-seed1-pass-a-phone.png
+r1-seed2-pass-a-phone.png
+r1b-seed3-pass-a-phone.png
+r1b-seed4-pass-a-phone.png
+r1c-seed5-pass-a-phone.png
+r1c-seed5-pass-a-workbench-light.png
+r1c-seed6-pass-a-phone.png
+v50-reference-phone.png
+$ find ~/.ailang/state -name '*.png' -path '*312*' | wc -l   (any durable copy of the iteration-312 captures?)
+0
+control: find ~/.ailang/state -name '*.png' -path '*world-iter305*' | wc -l = 36
+$ ls -d /tmp/world-iter312/*/capture/pass-a/phone.png | wc -l   (the volatile originals, still present today)
+9
+$ ls -la ~/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png (the V50 original, durable)
+56838 ~/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+$ grep -n 'D-WORLD-75' design_docs/world-mission.md | head -2 (a fresh seed gives different bytes)
+994:| D-WORLD-75 | RESOLVED | **Row 150: accept "deterministic demo world" as BYTE-IDENTICAL CAPTURES OF ONE FROZEN SEEDED STORE, with fresh-seed hash equality NOT claimed?** The umbrella acceptance 150(a)–(c) asks for normal-path commits + a `why` walk, two
+6193:150. **[IN-SPRINT — iteration 266: unparked on the fleet `harness-resolved` reply (row 173 fixed `2d14dbd`); design r4 + sprint plan (`planned/w-marketing-capture-sprint-plan.md`, 17 milestones M1a–M8b) + **M1a LANDED `28ff4db`** (PR #264; `packages/w
+$ grep -n 'different bytes' docs/QUICKSTART.md
+1714:passes over one frozen store. A fresh seed produces a different store and different bytes

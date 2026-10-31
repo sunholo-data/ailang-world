@@ -1,0 +1,241 @@
+# V31 (r1, fix A) ten committed skeletons: the real-corpus check is satisfiable, and fails on one edited byte
+# prototype: v31-skel-main.go.txt (derive / render / check; check = the logic of M2's TestMarketingPhoneRealCorpus skeleton half)
+$ for p in $CORPUS/*-phone.png; do skel derive $p skel10/skeleton-$(basename $p .png).json; done   # CORPUS=~/.ailang/state/world-iter328-phone-corpus
+skeleton-eval-p1-pass-a-phone.json
+skeleton-eval-p2-pass-a-phone.json
+skeleton-eval-p3-pass-a-phone.json
+skeleton-r1-seed1-pass-a-phone.json
+skeleton-r1-seed2-pass-a-phone.json
+skeleton-r1b-seed3-pass-a-phone.json
+skeleton-r1b-seed4-pass-a-phone.json
+skeleton-r1c-seed5-pass-a-phone.json
+skeleton-r1c-seed6-pass-a-phone.json
+skeleton-v50-reference-phone.json
+$ wc -c skel10/*.json | tail -1
+   23649 total
+$ skel check $CORPUS skel10
+eval-p1-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 338 841} titleRight=389 bands=21
+eval-p2-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389 bands=21
+eval-p3-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 326 841} titleRight=389 bands=21
+r1-seed1-pass-a-phone.png                hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389 bands=21
+r1-seed2-pass-a-phone.png                hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389 bands=21
+r1b-seed3-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389 bands=21
+r1b-seed4-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 332 841} titleRight=389 bands=21
+r1c-seed5-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389 bands=21
+r1c-seed6-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 334 841} titleRight=389 bands=21
+v50-reference-phone.png                  hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389 bands=21
+CHECK images=10 byte-equal=10 geometry-equal=10
+rc=0
+--- negative control 1: one byte edited (skeleton-r1c-seed5 title_right 389 -> 388); cmp -l:
+  2193  71  70
+$ skel check $CORPUS skel10-neg
+eval-p1-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 338 841} titleRight=389 bands=21
+eval-p2-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389 bands=21
+eval-p3-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 326 841} titleRight=389 bands=21
+r1-seed1-pass-a-phone.png                hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389 bands=21
+r1-seed2-pass-a-phone.png                hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389 bands=21
+r1b-seed3-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389 bands=21
+r1b-seed4-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 332 841} titleRight=389 bands=21
+r1c-seed5-pass-a-phone.png               hash=true byte-equal=false geometry-equal=false pix+roundtrip=false header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389 bands=21
+r1c-seed6-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 334 841} titleRight=389 bands=21
+v50-reference-phone.png                  hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389 bands=21
+CHECK images=10 byte-equal=9 geometry-equal=9
+rc=1
+--- negative control 2: corpus directory missing
+$ skel check /nonexistent-corpus skel10
+BLOCKED: corpus SHA256SUMS: open /nonexistent-corpus/SHA256SUMS: no such file or directory
+rc=1
+--- negative control 3: one SHA256SUMS line changed (r1-seed2 ff61fd2d -> 00000000)
+eval-p1-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 338 841} titleRight=389 bands=21
+eval-p2-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389 bands=21
+eval-p3-pass-a-phone.png                 hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 326 841} titleRight=389 bands=21
+r1-seed1-pass-a-phone.png                hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389 bands=21
+r1-seed2-pass-a-phone.png                hash=false byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389 bands=21
+r1b-seed3-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389 bands=21
+r1b-seed4-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 332 841} titleRight=389 bands=21
+r1c-seed5-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389 bands=21
+r1c-seed6-pass-a-phone.png               hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 334 841} titleRight=389 bands=21
+v50-reference-phone.png                  hash=true byte-equal=true geometry-equal=true pix+roundtrip=true header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389 bands=21
+CHECK images=10 byte-equal=10 geometry-equal=10
+rc=1
+--- render fidelity on all 10: phone (prototype) and the banked oracle on the 10 renders
+eval-p1-pass-a-phone         ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 338 841} titleRight=389
+eval-p2-pass-a-phone         ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389
+eval-p3-pass-a-phone         ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 326 841} titleRight=389
+r1-seed1-pass-a-phone        ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 324 841} titleRight=389
+r1-seed2-pass-a-phone        ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389
+r1b-seed3-pass-a-phone       ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+r1b-seed4-pass-a-phone       ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 332 841} titleRight=389
+r1c-seed5-pass-a-phone       ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+r1c-seed6-pass-a-phone       ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 334 841} titleRight=389
+v50-reference-phone          ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389
+TOTAL candidates=10 accept=10 refuse=0
+prototype rc=0
+eval-p1-pass-a-phone	-> r3 ACCEPT
+eval-p2-pass-a-phone	-> r3 ACCEPT
+eval-p3-pass-a-phone	-> r3 ACCEPT
+r1-seed1-pass-a-phone	-> r3 ACCEPT
+r1-seed2-pass-a-phone	-> r3 ACCEPT
+r1b-seed3-pass-a-phone	-> r3 ACCEPT
+r1b-seed4-pass-a-phone	-> r3 ACCEPT
+r1c-seed5-pass-a-phone	-> r3 ACCEPT
+r1c-seed6-pass-a-phone	-> r3 ACCEPT
+v50-reference-phone	-> r3 ACCEPT
+TOTAL	
+--- the r0 renders are unchanged by the r1 skeleton format (source basename, generated_by, render_pix_sha256 added). seed5: cmp-identical, measured before skel/r1c-seed5-render.png was replaced by the r1 render (output line: "new seed5 render byte-identical to the r0 render"); seed2:
+seed2 render cmp-identical to r0's
+--- sample skeleton:
+{
+  "schema": "world/marketingcheck/phone-skeleton/v1",
+  "generated_by": "WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus WORLD_PHONE_SKELETON_WRITE=1 go test -count=1 -run '^TestMarketingPhoneRealCorpus$' ./scripts/marketingcheck",
+  "source": "r1c-seed5-pass-a-phone.png",
+  "source_sha256": "94b14d0f403130ac812a5cbebd22919d6d68a0548dbd0078f735b7008ae8cd1c",
+  "w": 390,
+  "h": 844,
+  "background": [
+    250,
+    249,
+    245
+  ],
+  "thumb": [
+    193,
+    193,
+    193
+  ],
+  "bands": [
+    {
+      "X0": 25,
+      "Y0": 45,
+      "X1": 370,
+      "Y1": 68
+    },
+    {
+      "X0": 25,
+      "Y0": 136,
+      "X1": 103,
+      "Y1": 148
+    },
+    {
+      "X0": 24,
+      "Y0": 149,
+      "X1": 104,
+      "Y1": 150
+    },
+    {
+      "X0": 25,
+      "Y0": 176,
+      "X1": 277,
+      "Y1": 188
+    },
+    {
+      "X0": 25,
+      "Y0": 204,
+      "X1": 155,
+      "Y1": 216
+    },
+    {
+      "X0": 25,
+      "Y0": 232,
+      "X1": 284,
+      "Y1": 247
+    },
+    {
+      "X0": 25,
+      "Y0": 272,
+      "X1": 234,
+      "Y1": 284
+    },
+    {
+      "X0": 103,
+      "Y0": 285,
+      "X1": 222,
+      "Y1": 286
+    },
+    {
+      "X0": 42,
+      "Y0": 380,
+      "X1": 135,
+      "Y1": 398
+    },
+    {
+      "X0": 42,
+      "Y0": 428,
+      "X1": 104,
+      "Y1": 445
+    },
+    {
+      "X0": 42,
+      "Y0": 471,
+      "X1": 360,
+      "Y1": 486
+    },
+    {
+      "X0": 42,
+      "Y0": 499,
+      "X1": 364,
+      "Y1": 514
+    },
+    {
+      "X0": 42,
+      "Y0": 527,
+      "X1": 234,
+      "Y1": 542
+    },
+    {
+      "X0": 42,
+      "Y0": 555,
+      "X1": 269,
+      "Y1": 570
+    },
+    {
+      "X0": 41,
+      "Y0": 595,
+      "X1": 140,
+      "Y1": 610
+    },
+    {
+      "X0": 42,
+      "Y0": 637,
+      "X1": 100,
+      "Y1": 653
+    },
+    {
+      "X0": 42,
+      "Y0": 679,
+      "X1": 359,
+      "Y1": 694
+    },
+    {
+      "X0": 42,
+      "Y0": 707,
+      "X1": 360,
+      "Y1": 722
+    },
+    {
+      "X0": 42,
+      "Y0": 735,
+      "X1": 234,
+      "Y1": 750
+    },
+    {
+      "X0": 42,
+      "Y0": 763,
+      "X1": 269,
+      "Y1": 778
+    },
+    {
+      "X0": 41,
+      "Y0": 803,
+      "X1": 137,
+      "Y1": 818
+    }
+  ],
+  "title_right": 389,
+  "scrollbar": {
+    "X0": 6,
+    "Y0": 833,
+    "X1": 333,
+    "Y1": 841
+  },
+  "render_pix_sha256": "80e612e608ebbdd9cc1a0678c08ba58ece9bff61661fb0cc907beef2d1c43450"
+}

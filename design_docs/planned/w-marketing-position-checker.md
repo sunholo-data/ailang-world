@@ -1,6 +1,7 @@
 # w-marketing-position-checker: commit the P0/P3 position and phone predicates as CI-gated `marketingcheck` subcommands
 
-- **Status**: r0, designed iteration 328 (unattended). No quorum round yet (§10).
+- **Status**: r1, iteration 328 (unattended): the one mandated revision after quorum r1 on r0
+  (`9abc25b5`) was BLOCKED. r1 applies fixes A, B and C (§10) and changes nothing else.
 - **Item**: queue row 231 (V02). The P0/P3 position predicate (`p0check`) and the phone predicate
   (`phonecheck`) exist only as banked controller programs,
   `design_docs/verification/world-iter315/v64-p0check-main.go.txt` and `v66-phonecheck-main.go.txt`.
@@ -12,7 +13,7 @@
   run yet (V30), so the orchestration doc's §4.4 invocations switch to the binary (§2.7).
 - **Estimated**: about 1 executor day in 3 milestones. Production: about +400 LOC in two new files
   (the prototype is 196 + 207 lines, V28) plus +4 lines in `main.go`. Tests: about +700 LOC.
-  Fixtures: 34 JSON files and 2 skeleton JSON files, all text (§2.3). Prototype sources: V10/V11.
+  Fixtures: 34 JSON files and 10 skeleton JSON files, all text (§2.3). Prototype sources: V10/V11.
 - **Measurement base**: `cec48f69af6da7fe4817d9a1bf3e9f01b0274cb0` (origin/dev), worktree branch
   `sprint/world-iter328-marketing-position-checker` (V01).
 - **Instruments**: `go1.26.6 darwin/arm64` inside the repo (GOTOOLCHAIN auto) and `go1.26.4`
@@ -20,7 +21,7 @@
   banked programs, the prototype port, the arm generators and every mutant were built in
   throwaway copies under `/tmp/w328d` (`git archive HEAD`), never in the worktree. Every evidence
   file is `design_docs/verification/world-iter328/vNN-*.txt`, and every program used is banked
-  beside its output as `.txt`. **Row numbering**: V01–V30 are this doc's rows (§9). V40 and
+  beside its output as `.txt`. **Row numbering**: V01–V33 are this doc's rows (§9; V31–V33 added in r1). V40 and
   V50–V74 are the orchestration doc's rows; the corpora keep their orchestration names
   (the V64–V67 corpora).
 
@@ -59,8 +60,13 @@ marketingcheck phone LABEL=PNG...
 - **`position`** is the r3 `check` mode of `p0check`, ported verbatim (§2.2). It loads the baseline
   with the package's `LoadRectangles`, which already refuses an empty content list, a missing shot
   or a wrong schema (`png.go:174`, V27). It reuses `Rect`/`Rectangles` and takes the image width and
-  height from the `Shots` table (`png.go:49`; the same 1440 and 1100/1100/3700/2100/3000 as
-  p0check's constants, V27).
+  height from the `Shots` table (`png.go:49`). **[r1]** Its values equal p0check's: 1440 wide and
+  1100/1100/3700/2100/3000 tall, both lists printed from the files (V32). The V10 parity
+  prototype was built **in-package**. Alone in an empty directory it does not compile
+  (`undefined: Rect`, `undefined: Rectangles`, rc 1). As `scripts/marketingcheck/position.go` in a
+  `git archive HEAD` tree it builds (rc 0), and its `shotByName` (`:41`) reads `png.go`'s `Shots`
+  (V32). So V10's parity ran against the package's real table. A geometry change that no fixture
+  notices is pinned separately by `TestMarketingPositionGeometryMatchesOracle` (§3 M1, §4 P14).
 - **`phone`** is the r3 verdict of `phonecheck`. The V58 scan functions are copied unchanged. The
   reference-image argument is dropped, because it fed only the withdrawn r2 field and the
   `CONTROL` line. The new real-corpus test takes over the `CONTROL` line's job: it asserts exact R1
@@ -143,7 +149,9 @@ form alone. That is the same move as the classifier steering in the gate's own h
 
 **Phone: skeleton fixtures.** A skeleton is the scan's own geometry of one real capture: band
 rectangles, thumb rectangle and colour, title right, page colour, plus the source sha256 and the
-generating command. It is about 2.1 KB of JSON (V15). A committed renderer (`phone_test.go`) draws
+generating command. **[r1]** The source is recorded by file basename, so the bytes do not depend
+on the host path, and the skeleton also carries `render_pix_sha256`. Each is about 2.4 KB of JSON
+(V15, V31). A committed renderer (`phone_test.go`) draws
 it back as an `image.RGBA`:
 - page colour;
 - each band as alternating ink columns, with its end columns inked;
@@ -151,14 +159,16 @@ it back as an `image.RGBA`:
 - the thumb filled.
 
 Measured on the prototype (V15):
-- the seed-5 and seed-2 renders scan to exactly their real images' header, entry, thumb and
-  title-right;
+- **[r1]** all 10 renders scan to exactly their real images' header, entry, band count, thumb and
+  title-right, and all 10 ACCEPT on both `phone` and the oracle (V31);
 - all 39 arm generators (12 phoneneg, 23 judge, 4 new) give the **same banked verdict on the
   render as on the real image** (0 differences).
 
-So arms derived from the render stand in for arms derived from the capture. The two skeletons are
-seed 5 pass A (the V67 arm base, thumb X1 333) and r1-seed2 pass A (a different real invocation,
-iteration-312 r1, and the widest thumb, X1 340, V08). They are written by
+So arms derived from the render stand in for arms derived from the capture. **[r1, fix A]** M2
+commits **one skeleton per distinct real image, 10 in all**:
+`testdata/phone/skeleton-<corpus name>.json` for the 9 iteration-312 stores' pass A and V50, about
+23.6 KB in total (V31). That puts all 10 real geometries in CI: thumb X1 runs from 324 to 340.
+Seed 5 pass A (thumb X1 333) stays the base the arms are generated from. They are written by
 `WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus WORLD_PHONE_SKELETON_WRITE=1
 go test -count=1 -run '^TestMarketingPhoneRealCorpus$' ./scripts/marketingcheck`. They are
 checked in as written and never edited by hand.
@@ -187,7 +197,11 @@ checks every hash, then asserts:
 - desktop REFUSE;
 - every arm regenerated from the real seed 5 has its V15 column-1 verdict, except `header-15px`;
 - oracle parity with the same one-entry ledger;
-- a fresh skeleton derived from each real image is byte-equal to the committed one.
+- **[r1]** a fresh skeleton derived from each of the 10 real images is byte-equal to the committed
+  skeleton of the same name. Exactly 10 comparisons must run. On the prototype this check gives
+  `CHECK images=10 byte-equal=10 geometry-equal=10`, rc 0. Each of three controls makes it fail:
+  one edited skeleton byte (rc 1, `byte-equal=9`), a missing corpus directory (rc 1, `BLOCKED`)
+  and one changed `SHA256SUMS` line (rc 1, `hash=false` on that image) (V31).
 
 Without the env the test skips. That is the one CI-path skip, and §2.5 makes the capture-day step
 run it.
@@ -214,6 +228,17 @@ deviation below is BLOCKED and escalated before a capture-store verdict is read.
 (a pipe hides the exit code).
 1. `WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck > "$LOG" 2>&1; echo rc=$?`
    gives `rc=0`. Then `grep -c '^--- SKIP' "$LOG"` gives `0`, and `grep -c '^--- PASS: TestMarketingPhoneRealCorpus' "$LOG"` gives `1`.
+   **[r1, fix C]** The corpus is host-local, unversioned disk state. If the directory is missing,
+   or any file's sha256 differs from `testdata/phone/corpus-SHA256SUMS`, the step is BLOCKED and
+   escalated to Mark; it is never skipped.
+   - The only rebuild is `cp -p`: the 9 store images from
+     `/tmp/world-iter312/<store>/capture/pass-a/phone.png` (volatile, wiped on boot) and V50 from
+     `~/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png` (durable). The result must
+     match the committed hashes.
+   - No other durable copy of the iteration-312 images exists (V33).
+   - A fresh seed produces different bytes (D-WORLD-75), so a lost corpus cannot be regenerated.
+   - With the corpus lost, CI's real-geometry coverage is the 10 committed skeletons alone.
+     Whether to capture on that basis is Mark's call.
 2. **Position accepts**: `position --baseline <R1> accept-seed5=…/stores/r1c-seed5.json
    accept-eval-p1=…/stores/eval-p1.json` gives rc 0 and two ACCEPT lines. eval-p1 is a real
    store that differs from R1 (`roster-proven` dh −24, orchestration V73), so this control is **non-identity**.
@@ -306,13 +331,19 @@ files). Each test row's sole killer is in §4.
 - `TestMarketingPositionParity`: the oracle (§2.2) over the same 44 inputs, with an empty ledger. It
   asserts it compared 44 labels.
 - `TestMarketingPositionCLI`: exit codes 0/1/2 and every §2.4 position case.
+- **[r1, fix B]** `TestMarketingPositionGeometryMatchesOracle`. It reads the oracle's `heights`,
+  `order` and `inside()` width from `world-iter315/v64-p0check-main.go.txt` and asserts that
+  `positionShots` equals `order` and that each shot's `Shots` width × height equals the oracle's.
+  It fails if any of the three is not found. Prototype: `v32-position-geom-test.go.txt`, green
+  unmutated (V32).
 - Acceptance: `go test -count=1 -timeout 20m -v -run '^TestMarketingPosition' ./scripts/marketingcheck`
-  gives 4 `--- PASS` lines, 0 `--- SKIP` and 0 `--- FAIL`. `go run ./scripts/marketingcheck
+  gives 5 `--- PASS` lines, 0 `--- SKIP` and 0 `--- FAIL`. `go run ./scripts/marketingcheck
   position --help` exits 0.
 
 **M2: `phone`** (`phone.go`, `phone_test.go`, `testdata/phone/**`).
-- `TestMarketingPhoneSkeleton`: for each skeleton, the render's scan equals the recorded geometry,
-  `render_pix_sha256` matches, and the PNG round trip is lossless.
+- `TestMarketingPhoneSkeleton`: for each of the **10** skeletons, the render's scan equals the
+  recorded geometry, `render_pix_sha256` matches, the PNG round trip is lossless, and the render
+  ACCEPTs (V31).
 - `TestMarketingPhoneArms`: in-test Go ports of the 12 phoneneg, 23 judge and 4 new generators on
   the seed-5 render, plus both renders. 41 rows, 12 ACCEPT (V14 baseline; per-arm list V15 column
   3).
@@ -375,6 +406,8 @@ the same arm.
 | P11 | `return 1` on REFUSE → `return 0` | `TestMarketingPositionCLI/refuse-rc` | V17 |
 | P12 | one reason string changed (`(a3) gap after` → `(a3) gap`) | `TestMarketingPositionParity`: reason difference. Corpus tags still match, so only parity reds | V10 control |
 | P13 | one byte appended to `testdata/position/v65/neg-attested+14.json` | `TestMarketingPositionFixtures`: sha256 mismatch | — |
+| P14 | **[r1]** `Shots` `graph.png` 2100 → 2101 (verdict-neutral) | `TestMarketingPositionGeometryMatchesOracle`: `graph.png: Shots 1440x2101, oracle 1440x2100`. It is the sole killer among the position tests: parity over the 44 inputs shows 0 verdict and 0 reason differences. Outside them, the existing `TestMarketingShotGeometry/graph.png` and `TestMarketingPNGContent/canonical-shots` also red, but they pin `Shots` to their own tables, not to the oracle | V32 |
+| P15 | **[r1]** `Shots` `packet.png` 3700 → 3660 | `TestMarketingPositionGeometryMatchesOracle`: `packet.png: Shots 1440x3660, oracle 1440x3700`. Not verdict-neutral: parity also reds (19 verdict and 43 reason differences, via `packet.png/background: (b)`) | V32 |
 | F1 | (ii) removed | `TestMarketingPhoneArms/new/header-solid-ink` (also `header-15px`) | V14 |
 | F2 | dims removed | `…/new/tall-845` | V14 |
 | F3 | (ii) back to the std-dev stand-in | `…/new/header-15px` only; also the parity ledger entry stops differing | V14, V11 |
@@ -418,7 +451,7 @@ The rows with "—" are mechanical. The executor measures them in the sprint.
 | `scripts/marketingcheck/position_test.go`, `phone_test.go` | new |
 | `scripts/marketingcheck/docs_test.go` | 3 subtests in `TestMarketingRunbookMatchesHelp` |
 | `scripts/marketingcheck/testdata/position/**` | 34 JSON files and `SHA256SUMS` (new directory; none exists today, V27) |
-| `scripts/marketingcheck/testdata/phone/**` | 2 skeleton JSON files and `corpus-SHA256SUMS` |
+| `scripts/marketingcheck/testdata/phone/**` | 10 skeleton JSON files (one per distinct real image) and `corpus-SHA256SUMS` |
 | `docs/QUICKSTART.md` | §13 only |
 | `design_docs/planned/w-marketing-capture-orchestration.md` | §4.4 :220/:223/:235/:236–239/:248 and §9 |
 
@@ -447,15 +480,18 @@ Open PRs at measurement: none. `gh pr list --state open` gives `[]`, and the mer
 
 ## 8. Residuals (unmeasured or not covered)
 
-- **CI never sees a real Chrome phone image.** The skeleton stands in, and its fidelity is measured
-  on 39 arms and 2 images (V15), not proven in general. The real-corpus test covers the real images
+- **CI never sees a real Chrome phone image.** The 10 skeletons stand in. Their fidelity is
+  measured on 39 arms (V15) and 10 images (V31), not proven in general. The real-corpus test covers the real images
   only when the capture-day step runs it.
 - **`verify_go.sh` runs without `-v`**, so a future `t.Skip` in these tests would pass unseen
   (V19). AC-3 is the only guard, and it is a grep. A named-PASS manifest for the package (like CI's
   `-v` steps for other packages) is not added here.
-- **The skeleton lives on in its JSON alone.** If the corpus copy in `~/.ailang/state` is lost, it
-  can no longer be re-derived. The capture-day step would then BLOCK on step 1 rather than pass
-  silently.
+- **[r1, fix C] The real corpus is host-local.** It lives only in
+  `~/.ailang/state/world-iter328-phone-corpus/`, unversioned disk state on this host. CI never
+  reads it: CI's coverage of real geometry is the 10 committed skeletons. If the directory is lost
+  or a hash differs, capture-day step 1 is BLOCKED and escalated (§2.5). It can be rebuilt only
+  while `/tmp/world-iter312` survives, and no durable copy of those images exists (V33). This row
+  adds no new storage mechanism.
 - **Untested paths.** The `perm-*` pins record permissiveness and do not judge it. P0 still never
   measures a stack-head move on a real store (orchestration §9 r3 residual, unchanged).
 
@@ -480,7 +516,7 @@ negative control in the same file.
 | V12 | position mutation matrix | `posmatrix.sh` (`v12-posmatrix.sh.txt`, `v12-position-mutation-matrix.txt`) | a1, minh, nonpara, freegc: `flips(v65+v65p1)=0`, each killed only by its new arm; a2 3, a3 6 (+iso-freegap), b 1, bg 1 |
 | V13 | new P0 arms on the banked oracle | `isoarms v64-rects-r1c-seed5.json` (`v13-isoarms-main.go.txt`); `p0check check` (`v13-new-p0-arms.txt`) | each iso arm fails exactly one clause (`(a1) 106..1316 vs 106..1319`; `(a3) gap after validation -1 vs R1 239`; `(a4) height 1 vs 25 not whole lines`; `(a4) height 298 vs 274`; `(a4) height 84 vs 60`); `acc-tested-w-2` and the 4 `perm-*` arms `r3 ACCEPT`; drift arm offsets `roster-tested dy 2 … roster-proven dy 14`, `dh 2` each |
 | V14 | phone mutation matrix (render arms) | `phmatrix.sh` (`v14-phmatrix.sh.txt`) with arms from `v14-newarms-main.go.txt` (`v14-phone-mutation-matrix.txt`) | baseline `12 accept / 29 refuse of 41`. `ii`: header-15px, header-solid-ink; `standin`: header-15px only; `dims`: tall-845 only; x0/present/x1/clip/i/span each ≥1 kill |
-| V15 | skeleton fidelity | `skel derive/render` (`v15-skel-main.go.txt`); prototype on renders and real images; `skelcmp.sh` (`v15-skelcmp.sh.txt`, `v15-phone-skeleton.txt`) | renders: header `{25 45 370 68}`, entry `{41 428 364 610}`, thumb `{6 833 333 841}` / `{6 833 340 841}`, titleRight 389, equal to the real images; skeleton 2105/2106 bytes; `arms: 39`, `real-vs-render (banked) diffs: 0` |
+| V15 | skeleton fidelity (**re-run in r1** on the final skeleton format) | `skel derive/render` (`v31-skel-main.go.txt`; the r0 program `v15-skel-main.go.txt` is kept as history); prototype on renders and real images; arms regenerated from the r1 seed-5 render; `skelcmp.sh` (`v15-skelcmp.sh.txt`, `v15-phone-skeleton.txt`) | renders: header `{25 45 370 68}`, entry `{41 428 364 610}`, thumb `{6 833 333 841}` / `{6 833 340 841}`, titleRight 389, equal to the real images; skeletons 2366/2365 bytes; `arms: 39`, `real-vs-render (banked) diffs: 0`, `render banked-vs-committed diffs: 1` (header-15px). The r1 seed-2 render is cmp-identical to r0's (V31), and the V14 matrix's mutant lines re-run identical on it |
 | V16 | vacuity | the banked programs and the prototype on `vac/*.json` and zero candidates (`v16-v17-vacuity-exit-codes.txt`) | banked: empty-content baseline `same r3 ACCEPT` rc 0; zero candidates rc 0 (both). Prototype: `bad-rectangles graph.png: content rectangles required` rc 1; `zero-regions` rc 1 ×2; zero candidates rc 2 (both); blank `zero-bands` REFUSE rc 1; non-PNG `decode-failed` rc 1 |
 | V17 | exit codes | same file | banked REFUSE arm rc 0. Prototype REFUSE rc 1, `accept … ACCEPT regions=17` rc 0, V50 `ACCEPT` rc 0 |
 | V18 | why no PNG | `gate-demo.sh` (`v18-gate-demo.sh.txt`): the gate with `verify_go.sh`'s flags on a scratch commit; `marketingcheck docs --assets` (`v18-png-fixture-gate.txt`) | control rc 0 (`0 other binary blobs among 5159`); testdata PNG rc 1 `not-allowlisted`; allowance subdir rc 1 `not-allowlisted`; flat fixture `extra-shot` rc 1 (+ctl empty dir `missing-shot`); `:22 BINARY iff … NUL`; tracked PNGs 0 (+ctl JSON 1255) |
@@ -496,7 +532,52 @@ negative control in the same file.
 | V28 | lines to change | greps of QUICKSTART and orchestration for the checker names; §7 vs §4.4 counts; headings (`v28-doc-lines.txt`) | QUICKSTART :1722–1723; orchestration :223, :235–238, :248; §7 0 hits (+ctl §4.4 7); C8′ "(ii) the M7b content-variance gate inside those rectangles"; §13 heading :1663; `main.go:853` `heading absent:` refusal; switch at `main.go:36`; gate `:13 HISTORY`, `:17 STEERABLE`, `:22 BINARY iff`; prototype 196 + 207 lines |
 | V29 | (ii) equivalence | `grep` / `sed` of phonecheck `ii :=` and png.go `CheckRectBounds`/`rectStats`/`CheckRegion`/thresholds (`v29-ii-equivalence.txt`) | stand-in `ii := c.HeaderSD >= 4.0 && c.EntrySD >= 4.0` (`:205`); `MinRectH 16`; the R1 header 23 ±4 per edge gives a minimum of 15 |
 | V30 | A1 not run | orchestration `:4`; charter greps; `ls website/static/img/v1/` (`v30-a1-status.txt`) | "the controller steps P0 and P3 and the attended A1 remain"; `A1 LANDED\|captured\|PASS` 0 (+ctl `attended A1` 5); v1 dir holds `captions.md` only |
+| V31 | **[r1, fix A]** 10 skeletons: the real-corpus check is satisfiable | `skel derive` on each `*-phone.png` of `~/.ailang/state/world-iter328-phone-corpus`; `skel check <corpus> skel10`; three controls; `marketingcheck phone` (prototype) and the banked oracle on the 10 renders (`v31-skel-main.go.txt`, `v31-ten-skeletons.txt`) | 10 files, 23649 bytes; `CHECK images=10 byte-equal=10 geometry-equal=10` rc 0, every line `hash=true … pix+roundtrip=true`. Controls: (1) one byte edited (`cmp -l`: `2193 71 70`) → `byte-equal=9`, rc 1; (2) missing corpus → `BLOCKED: corpus SHA256SUMS: … no such file or directory`, rc 1; (3) one SHA256SUMS line changed → `hash=false` on r1-seed2, rc 1. Renders: `TOTAL candidates=10 accept=10 refuse=0`, rc 0; oracle 10× `-> r3 ACCEPT`; thumb X1 324–340 |
+| V32 | **[r1, fix B]** how the V10 prototype was built; the geometry values; the geometry pin and its mutants | `v32-geometry.sh.txt`: `go build -o x p.go` on the prototype alone; `go build ./scripts/marketingcheck` in a `git archive HEAD` tree with the prototype in-package; `sed -n '49,53p' png.go`; `sed -n '57,58p;93p' v64-p0check-main.go.txt`; a python comparison; prototype test `v32-position-geom-test.go.txt` unmutated and under two `Shots` mutants, plus parity and the existing PNG tests under each (`v32-geometry-premise.txt`) | alone: `./p.go:34:18: undefined: Rect`, `./p.go:38:31: undefined: Rectangles`, rc 1; in-tree rc 0; prototype `:41 shot, _ := shotByName(s)`, `png.go:55 func shotByName`. Shots: light/dark 1440×1100, packet 1440×3700, graph 1440×2100, provenance 1440×3000 (phone 390×844); p0check `:57` heights 1100/1100/3700/2100/3000, `:93` `c.X+c.W <= 1440`; `ALL EQUAL`. Test: unmutated `ok`. graph 2101: `FAIL … graph.png: Shots 1440x2101, oracle 1440x2100`, parity `verdict-diffs=0 reason-diffs=0`, `TestMarketingShotGeometry/graph.png` and `TestMarketingPNGContent/canonical-shots` FAIL. packet 3660: `FAIL … packet.png: Shots 1440x3660, oracle 1440x3700`, parity `verdict-diffs=19 reason-diffs=43`. Restored: `png.go` cmp-identical, `ok` |
+| V33 | **[r1, fix C]** where the corpus can be rebuilt from | `ls` the corpus; `find ~/.ailang/state -name '*.png' -path '*312*' \| wc -l`; `ls /tmp/world-iter312/*/capture/pass-a/phone.png`; `ls -la` V50; `grep D-WORLD-75` (`v33-corpus-rebuild-sources.txt`) | 11 PNGs + SHA256SUMS; durable iteration-312 copies 0 (+ctl world-iter305 PNGs 36); `/tmp` originals 9 (present today); V50 56838 bytes in `~/.ailang/state/world-iter305`; `QUICKSTART.md:1714` "A fresh seed produces a different store and different bytes" |
 
 ## 10. Quorum verification log
 
-*(Placeholder: no round yet.)*
+**Round 1** on r0 (`9abc25b5`). Artifact `verification/world-iter328/quorum-r1.json`, a byte copy of
+`~/.ailang/state/mission-quorum-world/w-marketing-position-checker-2026-10-31T00-42-30Z.json`:
+iso_ts `2026-10-31T00:42:30Z`, $0.2120, **BLOCKED**.
+- Seats: `gpt6-1-sol` REJECT, `oc-glm-5-3` REJECT, `gemini-4-argon` PASS.
+- Claude was benched as the author vendor; no seat was absent.
+- Neither reject disputes the direction.
+
+r1 is the one mandated revision. It changes only what is listed here.
+
+- **A. gpt6-1-sol (REJECT).**
+  - Verbatim: "The mandatory real-corpus acceptance test is unsatisfiable as specified. §2.3 requires
+    a fresh skeleton derived from each of 10 distinct real phone images to be byte-equal to a
+    committed skeleton, but M2 commits only two skeletons. Because each skeleton includes its
+    source-image sha256, the other eight images cannot match either committed fixture. This blocks
+    the capture-day control step rather than providing the claimed verification."
+  - **Fix:** commit one skeleton per distinct real image, 10 in all, recorded by basename. That
+    covers all 10 real geometries in CI, and byte-equality is per image against its own skeleton.
+    This is the recommended route; the two-image restriction was not taken.
+  - Proven on the prototype, with three failing controls, and render fidelity re-run on all 10
+    (V31, V15). §2.3, §3 M2, §6, §8.
+- **B. oc-glm-5-3 (REJECT).**
+  - Verbatim: "§2.1's load-bearing port premise — that `position` may take image geometry from
+    png.go's `Shots` table (`png.go:49`) because its values are 'the same … as p0check's constants,
+    V27' — is asserted, not verified … the doc never states whether the V10 prototype was built
+    inside the git-archive tree importing scripts/marketingcheck/png.go or standalone with inlined
+    geometry …"
+  - **Fix:** the controller's measurements were re-run first-party (V32). The prototype is
+    in-package, and the two value lists are printed from the files and are equal.
+  - New test row `TestMarketingPositionGeometryMatchesOracle` (§3 M1), with mutation rows P14 and
+    P15 (§4). P14 is the verdict-neutral case glm names: parity shows 0 differences, and the new
+    test is the sole killer among the position tests.
+  - §2.1 now states how the prototype was built.
+- **C. gemini-4-argon (PASS, non-blocking).**
+  - Verbatim: "The real phone corpus is not checked into git due to tracked_binary_gate.sh and
+    instead resides solely in a host-local state directory
+    (~/.ailang/state/world-iter328-phone-corpus/), leaving CI reliant on synthetic skeleton renders
+    and making capture-day step 1 dependent on unversioned host disk state."
+  - **Fix:** §2.5 step 1 and §8 now say so plainly. A missing directory or a differing hash is
+    BLOCKED and escalated. The only rebuild is `cp -p` from `/tmp/world-iter312` while it survives
+    plus V50 from `~/.ailang/state/world-iter305`. No durable copy of the iteration-312 images
+    exists (V33). CI's real-geometry coverage is the 10 skeletons.
+  - No storage mechanism is added. Gemini's catch about a `go build` timeout is not in the r1
+    directive and is not applied.

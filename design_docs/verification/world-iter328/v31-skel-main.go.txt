@@ -1,0 +1,269 @@
+// Iteration-328 designer prototype (r1): phone "skeletons" — the V58 scan's geometry of one real
+// Chrome phone.png — and the real-corpus check that M2's TestMarketingPhoneRealCorpus performs.
+//
+//   skel derive <real phone.png> <out.json>        write one skeleton (source = file basename)
+//   skel render <skeleton.json> <out.png>           draw it back (image.RGBA, png.Encode)
+//   skel check  <corpus dir> <skeleton dir>         for every *-phone.png in the corpus:
+//        sha256 must be listed in <corpus dir>/SHA256SUMS; a fresh derive must be byte-equal to
+//        <skeleton dir>/skeleton-<name>.json; scan(render(skeleton)) must equal scan(real) in
+//        header, entry, band count, thumb, title-right and dims; render_pix_sha256 must match.
+//        Prints one line per image and "CHECK images=N byte-equal=B geometry-equal=G"; rc 1 on any miss.
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+)
+
+type R struct{ X0, Y0, X1, Y1 int }
+type Skel struct {
+	Schema          string   `json:"schema"`
+	GeneratedBy     string   `json:"generated_by"`
+	Source          string   `json:"source"`
+	SourceSHA256    string   `json:"source_sha256"`
+	W               int      `json:"w"`
+	H               int      `json:"h"`
+	Background      [3]uint8 `json:"background"`
+	Thumb           [3]uint8 `json:"thumb"`
+	Bands           []R      `json:"bands"`
+	TitleRight      int      `json:"title_right"`
+	Scrollbar       R        `json:"scrollbar"`
+	RenderPixSHA256 string   `json:"render_pix_sha256"`
+}
+
+const gen = "WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus WORLD_PHONE_SKELETON_WRITE=1 go test -count=1 -run '^TestMarketingPhoneRealCorpus$' ./scripts/marketingcheck"
+
+func luma(im image.Image, x, y int) float64 {
+	r, g, b, _ := im.At(x, y).RGBA()
+	return 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(b>>8)
+}
+func bands(im image.Image) []R {
+	bd := im.Bounds()
+	var out []R
+	in := false
+	var cur R
+	for y := bd.Min.Y; y < bd.Max.Y-20; y++ {
+		x0, x1 := -1, -1
+		for x := bd.Min.X; x < bd.Min.X+370 && x < bd.Max.X; x++ {
+			if luma(im, x, y) < 110 {
+				if x0 < 0 {
+					x0 = x
+				}
+				x1 = x
+			}
+		}
+		if x0 >= 0 {
+			if !in {
+				cur = R{x0, y, x1 + 1, y + 1}
+				in = true
+			} else {
+				cur.X0 = min(cur.X0, x0)
+				cur.X1 = max(cur.X1, x1+1)
+				cur.Y1 = y + 1
+			}
+		} else if in {
+			out = append(out, cur)
+			in = false
+		}
+	}
+	if in {
+		out = append(out, cur)
+	}
+	return out
+}
+func scrollbar(im image.Image) R {
+	bd := im.Bounds()
+	r := R{-1, -1, -1, -1}
+	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+		x0, x1 := -1, -1
+		for x, start := 0, -1; x <= bd.Max.X; x++ {
+			in := false
+			if x < bd.Max.X {
+				l := luma(im, x, y)
+				in = l >= 120 && l <= 200
+			}
+			if in && start < 0 {
+				start = x
+			}
+			if !in && start >= 0 {
+				if x0 < 0 || (x-1)-start > x1-x0 {
+					x0, x1 = start, x-1
+				}
+				start = -1
+			}
+		}
+		if x0 >= 0 && x1-x0 >= 100 {
+			if r.Y0 < 0 {
+				r = R{x0, y, x1 + 1, y + 1}
+			} else {
+				r.Y1 = y + 1
+			}
+		}
+	}
+	return r
+}
+func titleRight(im image.Image, h R) int {
+	right := -1
+	for y := h.Y0; y < h.Y1; y++ {
+		for x := 0; x < im.Bounds().Max.X; x++ {
+			if luma(im, x, y) < 110 && x > right {
+				right = x
+			}
+		}
+	}
+	return right
+}
+func rgb(im image.Image, x, y int) [3]uint8 {
+	c := color.RGBAModel.Convert(im.At(x, y)).(color.RGBA)
+	return [3]uint8{c.R, c.G, c.B}
+}
+
+type Geo struct {
+	W, H, Bands       int
+	Header, Entry, Th R
+	TitleRight        int
+}
+
+func geo(im image.Image) Geo {
+	b := bands(im)
+	g := Geo{W: im.Bounds().Dx(), H: im.Bounds().Dy(), Bands: len(b), Th: scrollbar(im), TitleRight: -1}
+	if len(b) > 0 {
+		g.Header = b[0]
+		g.TitleRight = titleRight(im, b[0])
+	}
+	if len(b) >= 15 {
+		u := b[9]
+		for _, r := range b[9:15] {
+			u = R{min(u.X0, r.X0), min(u.Y0, r.Y0), max(u.X1, r.X1), max(u.Y1, r.Y1)}
+		}
+		g.Entry = u
+	}
+	return g
+}
+
+func render(s Skel) *image.RGBA {
+	im := image.NewRGBA(image.Rect(0, 0, s.W, s.H))
+	bg := color.RGBA{s.Background[0], s.Background[1], s.Background[2], 255}
+	ink := color.RGBA{0, 0, 0, 255}
+	draw.Draw(im, im.Bounds(), &image.Uniform{bg}, image.Point{}, draw.Src)
+	for i, b := range s.Bands {
+		x1 := b.X1
+		if i == 0 {
+			x1 = s.TitleRight + 1
+		}
+		for y := b.Y0; y < b.Y1; y++ {
+			for x := b.X0; x < x1; x++ {
+				if (x-b.X0)%2 == 0 || x == b.X1-1 || x == x1-1 {
+					im.Set(x, y, ink)
+				}
+			}
+		}
+	}
+	t := color.RGBA{s.Thumb[0], s.Thumb[1], s.Thumb[2], 255}
+	draw.Draw(im, image.Rect(s.Scrollbar.X0, s.Scrollbar.Y0, s.Scrollbar.X1, s.Scrollbar.Y1), &image.Uniform{t}, image.Point{}, draw.Src)
+	return im
+}
+
+func decode(b []byte) image.Image {
+	im, err := png.Decode(bytes.NewReader(b))
+	if err != nil {
+		panic(err)
+	}
+	return im
+}
+
+func derive(path string) ([]byte, image.Image) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	im := decode(raw)
+	b := bands(im)
+	s := Skel{Schema: "world/marketingcheck/phone-skeleton/v1", GeneratedBy: gen, Source: filepath.Base(path), SourceSHA256: fmt.Sprintf("%x", sha256.Sum256(raw)),
+		W: im.Bounds().Dx(), H: im.Bounds().Dy(), Background: rgb(im, 389, 30), Bands: b, TitleRight: titleRight(im, b[0]), Scrollbar: scrollbar(im)}
+	s.Thumb = rgb(im, (s.Scrollbar.X0+s.Scrollbar.X1)/2, s.Scrollbar.Y0)
+	s.RenderPixSHA256 = fmt.Sprintf("%x", sha256.Sum256(render(s).Pix))
+	j, _ := json.MarshalIndent(s, "", "  ")
+	return append(j, '\n'), im
+}
+
+func skelName(png string) string { return "skeleton-" + strings.TrimSuffix(filepath.Base(png), ".png") + ".json" }
+
+func main() {
+	switch os.Args[1] {
+	case "derive":
+		j, _ := derive(os.Args[2])
+		os.WriteFile(os.Args[3], j, 0o644)
+	case "render":
+		var s Skel
+		j, _ := os.ReadFile(os.Args[2])
+		if err := json.Unmarshal(j, &s); err != nil {
+			panic(err)
+		}
+		o, _ := os.Create(os.Args[3])
+		png.Encode(o, render(s))
+		o.Close()
+	case "check":
+		dir, sk := os.Args[2], os.Args[3]
+		sums := map[string]string{}
+		f, err := os.Open(filepath.Join(dir, "SHA256SUMS"))
+		if err != nil {
+			fmt.Println("BLOCKED: corpus SHA256SUMS:", err)
+			os.Exit(1)
+		}
+		sc := bufio.NewScanner(f)
+		for sc.Scan() {
+			if fs := strings.Fields(sc.Text()); len(fs) == 2 {
+				sums[fs[1]] = fs[0]
+			}
+		}
+		pngs, _ := filepath.Glob(filepath.Join(dir, "*-phone.png"))
+		sort.Strings(pngs)
+		n, be, ge, bad := 0, 0, 0, false
+		for _, p := range pngs {
+			n++
+			raw, _ := os.ReadFile(p)
+			h := fmt.Sprintf("%x", sha256.Sum256(raw))
+			hashOK := sums[filepath.Base(p)] == h
+			fresh, real := derive(p)
+			committed, err := os.ReadFile(filepath.Join(sk, skelName(p)))
+			byteEq := err == nil && bytes.Equal(fresh, committed)
+			var s Skel
+			geoEq, pixOK := false, false
+			if err == nil && json.Unmarshal(committed, &s) == nil {
+				r := render(s)
+				var buf bytes.Buffer
+				png.Encode(&buf, r)
+				rt := decode(buf.Bytes())
+				geoEq = geo(rt) == geo(real)
+				pixOK = fmt.Sprintf("%x", sha256.Sum256(r.Pix)) == s.RenderPixSHA256 && bytes.Equal(rt.(*image.RGBA).Pix, r.Pix)
+			}
+			if byteEq {
+				be++
+			}
+			if geoEq {
+				ge++
+			}
+			if !(hashOK && byteEq && geoEq && pixOK) {
+				bad = true
+			}
+			g := geo(real)
+			fmt.Printf("%-40s hash=%v byte-equal=%v geometry-equal=%v pix+roundtrip=%v header=%v entry=%v thumb=%v titleRight=%d bands=%d\n", filepath.Base(p), hashOK, byteEq, geoEq, pixOK, g.Header, g.Entry, g.Th, g.TitleRight, g.Bands)
+		}
+		fmt.Printf("CHECK images=%d byte-equal=%d geometry-equal=%d\n", n, be, ge)
+		if bad || n == 0 {
+			os.Exit(1)
+		}
+	}
+}
