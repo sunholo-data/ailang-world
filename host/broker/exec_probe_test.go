@@ -664,6 +664,10 @@ func TestExecProbeReverseLegSilentHolderRefusesSticky(t *testing.T) {
 				strings.Contains(why, revReachedText) || p.calls.Load() != row.calls {
 				t.Fatalf("Why = %q, picker calls %d; want the sticky silent refusal on attempt %d, calls %d", why, p.calls.Load(), row.at+1, row.calls)
 			}
+			// Row 230 P2: the text names the wait the classifier used, never a literal.
+			if w := fmt.Sprintf("answered nothing to World's hello within %d ms;", execProbeHelloWait.Milliseconds()); !strings.Contains(why, w) {
+				t.Fatalf("Why = %q; want it to contain %q", why, w)
+			}
 		})
 	}
 }
@@ -825,6 +829,89 @@ func TestExecProbeReversePollRecordsConnectReset(t *testing.T) {
 			got := pollLoopback(port, "WORLD-PROBE-NONCE "+strings.Repeat("0", 32), fake)()
 			if got != row.want || calls.Load() < 1 || badAddr.Load() {
 				t.Fatalf("seen = %+v after %d dials (bad addr %v); want %+v after >=1 dial to %s", got, calls.Load(), badAddr.Load(), row.want, wantAddr)
+			}
+		})
+	}
+}
+
+// helloConn is a net.Conn whose peer's answer ARRIVES at a fixed instant on the
+// test's clock (row 230 T10): Read hands the answer over, one byte per call, only
+// when the deadline the classifier set is at or after that instant, and otherwise
+// reports the deadline as passed. No sleep and no socket, so the verdict does not
+// depend on scheduling.
+type helloConn struct {
+	net.Conn // nil: only the methods below are reachable
+	arrival  time.Time
+	answer   []byte
+	deadline time.Time
+	sets     int
+	wrote    string
+}
+
+func (c *helloConn) SetDeadline(t time.Time) error     { c.deadline, c.sets = t, c.sets+1; return nil }
+func (c *helloConn) SetReadDeadline(t time.Time) error { return c.SetDeadline(t) }
+func (c *helloConn) Write(b []byte) (int, error)       { c.wrote += string(b); return len(b), nil }
+func (c *helloConn) Close() error                      { return nil }
+func (c *helloConn) Read(b []byte) (int, error) {
+	if !c.deadline.IsZero() && c.deadline.Before(c.arrival) {
+		return 0, os.ErrDeadlineExceeded
+	}
+	if len(c.answer) == 0 {
+		return 0, io.EOF
+	}
+	n := copy(b, c.answer[:1])
+	c.answer = c.answer[n:]
+	return n, nil
+}
+
+// firstDialReturns is a pollLoopback dial seam: the first dial returns conn,
+// every later dial returns err. It runs only on the poll's goroutine.
+func firstDialReturns(conn net.Conn, err error) func(string) (net.Conn, error) {
+	calls := 0
+	return func(string) (net.Conn, error) {
+		calls++
+		if calls == 1 {
+			return conn, nil
+		}
+		return nil, err
+	}
+}
+
+// execProbeHelloFloor is the slowest legitimate answer the hello wait must
+// admit: above the 229.6 ms worst srt-mux answer measured at load on 16 cores
+// (row 230 design V11).
+const execProbeHelloFloor = 250 * time.Millisecond
+
+// T10 (row 230 design §3.1): execProbeHelloWait is pinned from both sides.
+// Floor: an answer arriving execProbeHelloFloor after the hello is still read
+// (the child's nonce is child, srt's mux HTTP 400 is foreign, neither silent).
+// Ceiling: the hello deadline falls inside the child's hold less one poll
+// period, so a silent holder is observed while it still holds. The ceiling
+// derives from BOTH production constants, never a test literal: shorten the
+// hold or lengthen the poll period and the ceiling tightens with it (K9).
+func TestExecProbeReverseHelloWaitBounds(t *testing.T) {
+	want := "WORLD-PROBE-NONCE " + strings.Repeat("a", 32)
+	refused := revDialErr(syscall.ECONNREFUSED)
+	listenWindow := time.Duration(execProbeListenMS) * time.Millisecond
+	ceiling := listenWindow - execProbePollEvery
+	for _, row := range []struct {
+		name   string
+		answer string
+		want   reverseSeen
+	}{
+		{"slow-child", want + "\n", reverseSeen{child: true}},
+		{"slow-mux", "HTTP/1.1 400 Bad Request\r\n", reverseSeen{foreign: true}},
+	} {
+		t.Run(row.name, func(t *testing.T) {
+			before := time.Now()
+			conn := &helloConn{arrival: before.Add(execProbeHelloFloor), answer: []byte(row.answer)}
+			seen := pollLoopback(40000, want, firstDialReturns(conn, refused))()
+			after := time.Now()
+			if seen != row.want || conn.wrote != execProbeHello {
+				t.Errorf("an answer %s after the hello: seen %+v (wrote %q); want %+v, not silent", execProbeHelloFloor, seen, conn.wrote, row.want)
+			}
+			if conn.sets == 0 || conn.deadline.IsZero() || conn.deadline.After(after.Add(ceiling)) {
+				t.Errorf("hello deadline at stop+%v (sets %d); want a deadline no later than stop+%v (listen window less one poll period)", conn.deadline.Sub(after), conn.sets, ceiling)
 			}
 		})
 	}

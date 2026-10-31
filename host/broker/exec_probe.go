@@ -109,6 +109,9 @@ const execProbeHello = "WORLD-PROBE-HELLO\n"
 // execProbeHelloWait bounds the read of the answer to the hello.
 const execProbeHelloWait = 500 * time.Millisecond
 
+// execProbePollEvery is the reverse leg's dial cadence (pollLoopback).
+const execProbePollEvery = 50 * time.Millisecond
+
 // reverseSeen is what one reverse-leg attempt's dials observed.
 type reverseSeen struct{ child, foreign, silent bool }
 
@@ -579,7 +582,7 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
 		case revNoToken:
 			return first, fmt.Sprintf("reverse leg: no token from the child's listener (%q; %s)", tok, r.describe())
 		case revSilent:
-			return first, fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses", port)
+			return first, fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing to World's hello within %d ms; World cannot tell it from the child's listener, so it refuses", port, execProbeHelloWait.Milliseconds())
 		}
 		what := "foreign reach"
 		if !seen.foreign {
@@ -693,7 +696,7 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
 // (seen on darwin with nothing listening), timeouts and local errors record nothing.
 func dialErrIsSilent(err error) bool { return errors.Is(err, syscall.ECONNRESET) }
 
-// pollLoopback dials 127.0.0.1:port every 50 ms until stopped and
+// pollLoopback dials 127.0.0.1:port every execProbePollEvery until stopped and
 // classifies every connected dial (classifyReverseDial); a dial that fails
 // with ECONNRESET is silent (dialErrIsSilent). The returned stop function
 // reports what the dials saw. It dials once before it first checks for
@@ -729,7 +732,7 @@ func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error
 			select {
 			case <-done:
 				return
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(execProbePollEvery):
 			}
 		}
 	}()
