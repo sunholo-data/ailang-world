@@ -1,0 +1,111 @@
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.575s
+=== RUN   TestMarketingPhoneSkeleton
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-v50-reference-phone
+--- PASS: TestMarketingPhoneSkeleton (0.22s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone (0.01s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone (0.01s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone (0.01s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone (0.04s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-v50-reference-phone (0.02s)
+=== RUN   TestMarketingPhoneCLI
+=== RUN   TestMarketingPhoneCLI/accept-rc
+=== RUN   TestMarketingPhoneCLI/refuse-rc
+=== RUN   TestMarketingPhoneCLI/blank
+=== RUN   TestMarketingPhoneCLI/decode-failed
+=== RUN   TestMarketingPhoneCLI/missing-file
+=== RUN   TestMarketingPhoneCLI/no-candidates
+=== RUN   TestMarketingPhoneCLI/bad-token
+=== RUN   TestMarketingPhoneCLI/duplicate-label
+=== RUN   TestMarketingPhoneCLI/empty-label
+=== RUN   TestMarketingPhoneCLI/bad-flag
+=== RUN   TestMarketingPhoneCLI/help
+=== RUN   TestMarketingPhoneCLI/dispatch
+marketingcheck: no candidates
+usage: marketingcheck phone LABEL=PNG...
+--- PASS: TestMarketingPhoneCLI (0.06s)
+    --- PASS: TestMarketingPhoneCLI/accept-rc (0.01s)
+    --- PASS: TestMarketingPhoneCLI/refuse-rc (0.03s)
+    --- PASS: TestMarketingPhoneCLI/blank (0.01s)
+    --- PASS: TestMarketingPhoneCLI/decode-failed (0.00s)
+    --- PASS: TestMarketingPhoneCLI/missing-file (0.00s)
+    --- PASS: TestMarketingPhoneCLI/no-candidates (0.00s)
+    --- PASS: TestMarketingPhoneCLI/bad-token (0.00s)
+    --- PASS: TestMarketingPhoneCLI/duplicate-label (0.00s)
+    --- PASS: TestMarketingPhoneCLI/empty-label (0.00s)
+    --- PASS: TestMarketingPhoneCLI/bad-flag (0.00s)
+    --- PASS: TestMarketingPhoneCLI/help (0.00s)
+    --- PASS: TestMarketingPhoneCLI/dispatch (0.00s)
+=== RUN   TestMarketingPhoneRealCorpus
+    phone_test.go:269: WORLD_PHONE_CORPUS unset: the real phone corpus is host-local (design §2.3); capture-day step 1 runs this test
+--- SKIP: TestMarketingPhoneRealCorpus (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.474s
+=== RUN   TestMarketingPhoneSkeleton
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone
+=== RUN   TestMarketingPhoneSkeleton/skeleton-v50-reference-phone
+--- PASS: TestMarketingPhoneSkeleton (0.20s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p1-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p2-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-eval-p3-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1-seed1-pass-a-phone (0.01s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1-seed2-pass-a-phone (0.02s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1b-seed3-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1b-seed4-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1c-seed5-pass-a-phone (0.03s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-r1c-seed6-pass-a-phone (0.01s)
+    --- PASS: TestMarketingPhoneSkeleton/skeleton-v50-reference-phone (0.01s)
+=== RUN   TestMarketingPhoneCLI
+=== RUN   TestMarketingPhoneCLI/accept-rc
+=== RUN   TestMarketingPhoneCLI/refuse-rc
+=== RUN   TestMarketingPhoneCLI/blank
+=== RUN   TestMarketingPhoneCLI/decode-failed
+=== RUN   TestMarketingPhoneCLI/missing-file
+=== RUN   TestMarketingPhoneCLI/no-candidates
+=== RUN   TestMarketingPhoneCLI/bad-token
+=== RUN   TestMarketingPhoneCLI/duplicate-label
+=== RUN   TestMarketingPhoneCLI/empty-label
+=== RUN   TestMarketingPhoneCLI/bad-flag
+=== RUN   TestMarketingPhoneCLI/help
+=== RUN   TestMarketingPhoneCLI/dispatch
+marketingcheck: no candidates
+usage: marketingcheck phone LABEL=PNG...
+--- PASS: TestMarketingPhoneCLI (0.04s)
+    --- PASS: TestMarketingPhoneCLI/accept-rc (0.00s)
+    --- PASS: TestMarketingPhoneCLI/refuse-rc (0.02s)
+    --- PASS: TestMarketingPhoneCLI/blank (0.01s)
+    --- PASS: TestMarketingPhoneCLI/decode-failed (0.00s)
+    --- PASS: TestMarketingPhoneCLI/missing-file (0.00s)
+    --- PASS: TestMarketingPhoneCLI/no-candidates (0.00s)
+    --- PASS: TestMarketingPhoneCLI/bad-token (0.00s)
+    --- PASS: TestMarketingPhoneCLI/duplicate-label (0.00s)
+    --- PASS: TestMarketingPhoneCLI/empty-label (0.00s)
+    --- PASS: TestMarketingPhoneCLI/bad-flag (0.00s)
+    --- PASS: TestMarketingPhoneCLI/help (0.00s)
+    --- PASS: TestMarketingPhoneCLI/dispatch (0.00s)
+=== RUN   TestMarketingPhoneRealCorpus
+    phone_test.go:340: CHECK images=10 byte-equal=10
+--- PASS: TestMarketingPhoneRealCorpus (0.26s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.696s

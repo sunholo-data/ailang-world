@@ -219,6 +219,8 @@ func TestProductionGoSurface(t *testing.T) {
 		// Row 231 (w-marketing-position-checker): the P0/P3 position predicate,
 		// `marketingcheck position`, ported from the banked p0check oracle.
 		"scripts/marketingcheck/position.go": false,
+		// Row 231: the phone predicate, `marketingcheck phone`, ported from the banked phonecheck oracle.
+		"scripts/marketingcheck/phone.go": false,
 	}
 	scanned, reproducers := 0, 0
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
