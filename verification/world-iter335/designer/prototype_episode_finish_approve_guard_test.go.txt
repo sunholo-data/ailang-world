@@ -1,0 +1,61 @@
+package daemon
+
+import (
+	"encoding/json"
+	"strings"
+	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/broker"
+)
+
+// approvalWrites reports what broker.RecordOperatorApproval leaves behind: the
+// approvals head and the request and decision objects it puts.
+func approvalWrites(t *testing.T, d *Daemon) (head bool, requests, decisions []string) {
+	t.Helper()
+	ctx := boundedTestContext(t)
+	_, head, err := d.store.GetRegistryHead(ctx, broker.ApprovalsV1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for id, out := range map[string]*[]string{broker.ApprovalRequestV1: &requests, broker.ApprovalDecisionV1: &decisions} {
+		objs, err := d.store.ObjectsBySemanticID(ctx, id, "", 10)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, o := range objs {
+			*out = append(*out, o.Hash.String())
+		}
+	}
+	return head, requests, decisions
+}
+
+// TestEpisodeFinishApproveRefusesRecord pins the approve guard's
+// `|| input.Record != nil` arm (row 237): an approve request that also carries a
+// record is refused and records no approval. The control is the identical
+// request without the record, on the same clock and scope, which is approved.
+// Each arm mints a fresh proof: the route consumes it before the guard runs.
+func TestEpisodeFinishApproveRefusesRecord(t *testing.T) {
+	d := newHandlerDaemon(t)
+	pinFinishClock(d, finishClockAt)
+	scope := finishScopeAt(finishClockAt + 900)
+
+	proof := finishProofFile(t, d, "approve", finishClockAt+100, 0o600)
+	w := finishRoute(t, d, FinishRequest{Phase: "approve", Scope: scope, Record: &EpisodeFinish{Episode: "ep1"}}, proof, "")
+	if w.Code != 403 || !strings.Contains(w.Body.String(), "operator route: invalid or expired finish scope") {
+		t.Fatalf("approve with record: %d %s", w.Code, w.Body.String())
+	}
+	if head, requests, decisions := approvalWrites(t, d); head || len(requests) != 0 || len(decisions) != 0 {
+		t.Fatalf("refused approve recorded an approval: head=%v requests=%v decisions=%v", head, requests, decisions)
+	}
+
+	proof = finishProofFile(t, d, "approve", finishClockAt+100, 0o600)
+	w = finishRoute(t, d, FinishRequest{Phase: "approve", Scope: scope}, proof, "")
+	var approval FinishApproval
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &approval) != nil {
+		t.Fatalf("control approve without record: %d %s", w.Code, w.Body.String())
+	}
+	head, requests, decisions := approvalWrites(t, d)
+	if !head || len(requests) != 1 || requests[0] != approval.Request || len(decisions) != 1 || decisions[0] != approval.Approval {
+		t.Fatalf("control recorded head=%v requests=%v decisions=%v, want %+v", head, requests, decisions, approval)
+	}
+}

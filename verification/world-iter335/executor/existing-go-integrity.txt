@@ -1,0 +1,1 @@
+All 600 pre-existing Go files match their observed pre-execution SHA-256.

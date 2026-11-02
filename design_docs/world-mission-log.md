@@ -2327,3 +2327,83 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 235 lands on merge CI green (landing note). Then row 237 under D-WORLD-106 = A, then 238 → 242, stopping as soon as a release row is routable; a dev red still outranks.
 
 **Landing (iteration 334):** PR #457 merged as `436e65c3` (merge commit, `--match-head-commit f56ef38d`). Head `f56ef38d` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `388001c2`, right before the merge. **Merge CI:** `commits/436e65c3/check-runs` → 3, all success on attempt 1 (run 41461154725: ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 335 — 2026-11-02 — row 237 built: a new host/daemon test pins the finish approve guard's Record != nil arm (403, no approval written, a 200 control); judge PASS 92 [PRODUCT-HYGIENE]
+
+**Kind:** the second pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02: rows 235 and 237 → 242, in queue order, stopping as soon as a release row is routable). Full inner loop: designer → quorum → planner → executor → independent judge. The record is in the same PR as the code (#459). A landing note will record merge CI.
+
+**Pick and why:** row 237 `w-finish-approve-record-guard-pin`.
+- **Clause map at `77e0dd7c`:** 1–7 MET; no UNMET clause, so the attended exception governs. Row 235 LANDED at iteration 334, so the queue order inside it picks 237.
+- **Release rows not routable.** Row 150 waits only on the attended A1: commit subjects `388001c2..77e0dd7c` matching `row ?150|A1\b|marketing` → 0 of 7. Row 151 needs row 188 N2d/N4a: `git log origin/dev --since=2026-10-01 -i -E --grep="N2d|N4a"` → the same 4 hits as iteration 334 (`fe9c891e`, `92495b60`, `be184351`, `dc719822`), all records or designs; N2c control 4.
+- **Premise checked first-party before routing** (`verification/world-iter335/premise-measure.txt`): with `s/ || input.Record != nil {/ {/` applied at `77e0dd7c`, `-run Finish` in `./host/daemon/` and `./cmd/ailang-worldd/` stay `ok`, as does the whole `./host/daemon/` package.
+- **An instrument failure, caught:** the same wide run showed `host/broker` FAIL. It failed identically on the clean control: `TestEpisodeLiveReplayThreeArmsAndEvidence` reported "AILANG_BIN must name the pinned released interpreter". With `AILANG_BIN=$HOME/.pinned-ailang/ailang` (v0.41.0, the CI pin) it is `ok`. This was not a dev red.
+- Index grep: no earlier attempt at row 237. No design doc, no PR. Claim message `inbox_1793635897987_90e9e89b`.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #449 (3 comments; no watermark file yet) and #366 (35 comments, LEGACY watermark). Nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 0, 0 crash notices on #449/#366 since `2026-10-27T09:03:42Z`; control 107:4 ok. Died-mid-flight traces: no open PR of this mission; `.wt-world-iter306-r0` is the known residue.
+- Ledger valid, 94 rows; D-WORLD-105 the only OPEN row. The inbox unread list is fleet-wide; nothing addressed to this mission needed action. The weekly sweep already ran at iteration 333.
+
+**Gate 1:**
+- Local `dev` was 7 behind and fast-forwarded to `origin/dev` = `77e0dd7ce0af80c5a32cab869df393bd140ed296`. Base recorded `77e0dd7c…@2026-11-02T15:57:36Z`; re-read before the worktree with no drift.
+- Skill: `SKILL.md` and all 13 `resources/*.md` are `cmp`-identical to `origin/dev`, per file; rules were read from the resolved symlink target.
+- Dev CI: `77e0dd7c` check-runs 3/3 success.
+
+**Design** (`w-finish-approve-record-guard-pin`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–334 precedent; rotation pointer unchanged, the lane that ran):
+- **r1** (207 lines, 10 V-rows, 563 s): one new file holding the test and an `approvalWrites` helper that reads the store directly. Arm 1 is refused and runs first on an empty store; arm 2 is the control with a fresh proof. The refused-first order is load-bearing: under the mutant, both arms write byte-identical content-addressed objects.
+- **Drills** (designer, first-party): M1 killed; M3a (write-then-refuse) killed only by the no-write check; M3c (always refuse) killed only by the control. Deleting the control lets M3c survive, and deleting the no-write check lets M3a survive.
+- **Quorum r1 PROCEED** ($0.1441; seats oc-kimi-k3, gpt6-1-sol and gemini-4-argon all pass; claude benched; `.synthesis.absent_reviewers` `[]`). Three non-blocking notes:
+  - kimi: the ordering is unenforced;
+  - gpt: the evidence is for the prototype hash;
+  - gemini: new file vs append.
+- Controller re-ran M1 on the prototype before the quorum: `:45 approve with record: 200`.
+
+**Plan** (`derive-planner-lane.sh` → `codex:gpt-6.1-sol declared:planner-lane-default-pin`; resolver `recipe codex:gpt-6.1-sol`; probe rc 0), `b94766d1`:
+- One milestone; final test pinned at 67 lines, sha256 `c9e279de…`.
+- kimi's note: a pristine-store precondition assertion and a no-parallel comment. gpt's: every drill re-run on the final bytes. gemini's: a new file.
+- **Controller re-verified outside the sandbox before the executor:** the extracted block hashes to the pin; vet and gofmt are clean; the test is ok; M1 is killed at `:51`; production restored to `4e320c53…`.
+
+**Executor** (`recipe codex:gpt-6.1-sol declared:provider-pin`); uncommitted diff, committed by the controller as `c75c9408`:
+- File byte-exact to the pin; production sha unchanged.
+- Drills: M1, M3a, M3c and M2b killed; M1-existing, M2-clean, M2+M3c and M4+M3a survive as designed.
+- Clean gates rc 0: single run, `-count=20`, `-race -count=5`, 7 Finish PASS. Nothing UNINFORMATIVE UNDER SANDBOX.
+- Deviation: its first attempt used Go 1.26.4 (an instrument failure); it switched to 1.26.6 and re-ran everything.
+- **Housekeeping:** the plan's environment block put the Go build and module caches under `verification/world-iter335/executor/` (4.6 GB). The controller deleted the cache directories before committing; the 71 raw logs (308 KB) are kept.
+
+**Controller checks before the judge** (outside the sandbox, at `c75c9408`'s tree): `go build ./...` rc 0; `go test -timeout 1800s ./...` rc 0 with `AILANG_BIN` v0.41.0; `go test -race -count=1 ./host/daemon/` rc 0; Finish top-level PASS 7; `verify_ail.sh` rc 0 (`verification/world-iter335/controller-fullgate.txt`).
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`) in its own detached worktree `.judge-wt-iter335` at `c75c9408`, foreground.
+- **PASS 92/100, zero blocking** (33/24/15/12/8).
+- Verified: M1, M3a and M3c killed; its own M6 (different refusal text), M7 (`&& false`) and M9 (refuse only if `Scope == ""`) killed. Stable at `-count=20` and `-race -count=5`. Production sha unchanged, and the new test is the only Go change.
+- **NB1, NB2 reproduced by the controller and filed as row 245:**
+  - M5: a guard narrowed to `Record.Episode != ""` stays green (`ok 0.399s`).
+  - M8: dropping the record phase's `input.Scope != ""` at `:182` stays green in both packages' Finish tests (`ok 0.529s`, `ok 29.922s`).
+- Report: `verification/world-iter335/evaluator-r1.md`. Judge worktree removed with its `status` clean apart from the report.
+
+**Routing evidence:** base=77e0dd7ce0af80c5a32cab869df393bd140ed296@2026-11-02T15:57:36Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION` empty; `MISSION_ROUTING_NOTE` empty.
+- Tokens and time per role:
+  - controller `claude:claude-opus-5-5`: tok not reported;
+  - designer Agent `opus`: 81,995 tok / 563 s;
+  - planner `codex:gpt-6.1-sol` (recipe): 76,422 tok / ~9 min;
+  - executor `codex:gpt-6.1-sol` (recipe): 64,024 tok / ~17 min;
+  - evaluator Agent `sonnet`: 34,694 tok / 502 s.
+- Generator ≠ judge: opus designer and codex planner/executor vs the sonnet judge (judge-independence: cross-vendor to the generator). All five roles spawned; none fell back.
+- Designer diet: 1 doc, 1 run.
+- Metered $0.1441 (quorum r1).
+
+**Ruled out:**
+- Treating the `host/broker` FAIL in the wide premise run as a dev red or a mutant effect: it fails identically on the clean control without `AILANG_BIN`, and is `ok` with the pin.
+- Fixing the judge's NB1 in this sprint: non-blocking, and a change would need a re-judge (the iteration-334 precedent). It goes to row 245 with NB2.
+- An arm in `TestEpisodeFinishScopeExpiry`'s table: that table shares one daemon whose 200 arms write approvals, so it cannot assert that no approval was written.
+- Committing the executor's local Go caches as evidence: they are 4.6 GB of build output, not measurements.
+
+**Retro:**
+1. **A plan-pinned environment block wrote 4.6 GB of caches into the evidence tree.** It honoured "no writes outside the worktree" by cloning the module cache into `verification/`. The controller caught it before `git add`. Instance 1; watch. A planner directive should name a non-evidence scratch path inside the worktree for caches.
+2. **The bare-`go test` instrument trap:** whole-package runs need `AILANG_BIN`, and the absent pin reads as a red in an unrelated package. The prior evidence (`world-iter330` scripts) carries the pin. This is a controller habit, not a skill gap.
+3. **D-WORLD-106 is working as intended:** two picks and two landings-in-flight, against three idle fires before it.
+- Harness share 0 of the last 20. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 237 BUILT in PR #459; row 245 filed.
+**Next:** row 237 lands on merge CI green (landing note). Then row 238 under D-WORLD-106 = A, then 239 → 242, stopping as soon as a release row is routable; a dev red still outranks. Row 238 needs the orchestration doc's own quorum round and a re-measure of the iteration-312 stores, so it is the heaviest row in the scope.

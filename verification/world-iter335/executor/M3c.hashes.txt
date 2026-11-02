@@ -1,0 +1,2 @@
+d49bcc14bf896949474ab6128b9f57279420009b334884298918eb2ec7770f07  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go

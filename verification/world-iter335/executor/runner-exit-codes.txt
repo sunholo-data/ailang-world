@@ -1,0 +1,2 @@
+Initial runner: rc=1 (Go 1.26.4 below required 1.26.6; restoration trap succeeded)
+Final runner: rc=0 (Go 1.26.6; pinned blocks and all clean gates complete)

@@ -1,0 +1,38 @@
+## V-count: Finish tests at base (excluding prototype)
+host/daemon/episode_finish_m3_test.go:11:func TestEpisodeFinishRecordReuseAndSingleUse(t *testing.T) {
+host/daemon/episode_finish_test.go:61:func TestEpisodeFinishOperatorProofAC11(t *testing.T) {
+host/daemon/episode_finish_test.go:177:func TestEpisodeFinishScopeExpiry(t *testing.T) {
+host/daemon/episode_finish_test.go:194:func TestEpisodeFinishOperatorProofExpiryBoundary(t *testing.T) {
+host/daemon/episode_finish_test.go:213:func TestEpisodeFinishRecordRechecksScopeExpiry(t *testing.T) {
+host/daemon/episode_finish_test.go:246:func TestEpisodeFinishAuthorizationPrecedesBody(t *testing.T) {
+head: illegal line count -- 0
+## -v top-level PASS lines, prototype skipped
+--- PASS: TestEpisodeFinishRecordReuseAndSingleUse (0.04s)
+--- PASS: TestEpisodeFinishOperatorProofAC11 (0.03s)
+--- PASS: TestEpisodeFinishScopeExpiry (0.01s)
+--- PASS: TestEpisodeFinishOperatorProofExpiryBoundary (0.01s)
+--- PASS: TestEpisodeFinishRecordRechecksScopeExpiry (0.01s)
+--- PASS: TestEpisodeFinishAuthorizationPrecedesBody (0.01s)
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.373s
+## cmd/ailang-worldd Finish tests
+cmd/ailang-worldd/episode_finish_m2_test.go
+cmd/ailang-worldd/episode_finish_m3_test.go
+cmd/ailang-worldd/episode_finish_r2_test.go
+cmd/ailang-worldd/episode_markdown_test.go
+cmd/ailang-worldd/episode_finish_test.go
+## charter row
+6309:237. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 327 from the row-236 judge's NB1, reproduced] w-finish-approve-record-guard-pin** · clause-3 (MET; hygiene) · **T
+## gofmt/vet
+VET_OK
+## sha
+f5df08b346dd833250ea444ed15427fb4cec1fe818f05273e0fde5187134d2e5  host/daemon/episode_finish_approve_guard_test.go
+      61 host/daemon/episode_finish_approve_guard_test.go
+## proto x20
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.621s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	2.017s
+## refused arm consumes the proof (order)
+92:func (d *Daemon) consumeOperatorProof(episode, phase, proof string) error {
+129:	if err := os.Remove(path); err != nil {
+160:	if err := d.consumeOperatorProof(episode, input.Phase, r.Header.Get("X-World-Operator-Proof")); err != nil {
+169:		if err != nil || scope.ExpiresAt <= now || scope.ExpiresAt > now+3600 || input.Record != nil {
+7

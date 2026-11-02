@@ -1,0 +1,1 @@
+Final Go test and all four extracted Bash blocks are byte-identical to the plan fences.

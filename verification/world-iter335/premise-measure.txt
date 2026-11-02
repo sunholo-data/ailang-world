@@ -1,0 +1,18 @@
+# Row 237 premise, controller-measured first-party, iteration 335, 2026-11-02
+# Tree: throwaway detached worktree at origin/dev 77e0dd7ce0af80c5a32cab869df393bd140ed296 (since removed)
+# Mutant: sed 's/ || input.Record != nil {/ {/' host/daemon/episode_finish.go   (1 line changed; git diff --stat 1+/1-)
+
+CONTROL (unmutated):
+  go test -count=1 -run 'Finish' ./host/daemon/ ./cmd/ailang-worldd/
+  ok  host/daemon 0.486s ; ok cmd/ailang-worldd 25.340s ; rc=0
+MUTANT:
+  go test -count=1 -run 'Finish' ./host/daemon/ ./cmd/ailang-worldd/
+  ok  host/daemon 0.807s ; ok cmd/ailang-worldd 25.399s ; rc=0      -> SURVIVES
+  positive control: go test -run Finish -v ./host/daemon/ | grep -c '^--- PASS' -> 6
+MUTANT, wider:
+  go test -count=1 ./host/daemon/  -> ok (whole package, mutant survives)
+  ./host/broker/ FAILED in the same call, and FAILED identically on the clean control:
+    TestEpisodeLiveReplayThreeArmsAndEvidence: "AILANG_BIN must name the pinned released interpreter"
+  => INSTRUMENT, not a verdict: AILANG_BIN was unset. With AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0,
+     the CI pin) host/broker is ok. host/broker does not import the daemon guard; not relevant to the mutant.
+Restored: git checkout -- . ; git status --porcelain | wc -l -> 0

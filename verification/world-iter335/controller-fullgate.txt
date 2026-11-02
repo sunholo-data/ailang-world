@@ -1,0 +1,47 @@
+# controller full gate, tree = b94766d1 + new test (sha c9e279de), Mon Nov  2 17:39:00 CET 2026
+AILANG_BIN=AILANG v0.41.0
+go build rc=0
+go vet host/daemon rc=0
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	284.958s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	113.276s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	29.682s
+ok  	github.com/sunholo-data/ailang-world/host/agui	24.319s
+ok  	github.com/sunholo-data/ailang-world/host/archive	26.907s
+ok  	github.com/sunholo-data/ailang-world/host/authority	3.088s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	16.608s
+ok  	github.com/sunholo-data/ailang-world/host/broker	382.986s
+ok  	github.com/sunholo-data/ailang-world/host/canon	0.820s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	97.688s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	3.702s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.824s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	185.949s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	425.130s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	66.565s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	1.588s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	4.967s
+ok  	github.com/sunholo-data/ailang-world/host/pins	4.843s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	44.320s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.244s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.417s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.264s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	1.350s
+ok  	github.com/sunholo-data/ailang-world/host/registry	1.581s
+ok  	github.com/sunholo-data/ailang-world/host/replay	60.073s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	7.334s
+ok  	github.com/sunholo-data/ailang-world/host/store	32.146s
+ok  	github.com/sunholo-data/ailang-world/host/surface	1.571s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	5.495s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	5.455s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	26.299s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	458.651s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.283s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	13.695s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	156.110s
+go test ./... rc=0
+ok  	github.com/sunholo-data/ailang-world/host/daemon	366.513s
+go test -race host/daemon rc=0
+Finish top-level PASS: 7
+verify_ail.sh rc=0
+DONE for c9e279de

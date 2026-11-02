@@ -1,0 +1,22 @@
+Created both artifacts:
+
+- [Sprint plan](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter335/design_docs/planned/w-finish-approve-record-guard-pin-sprint-plan.md)
+- [Sprint JSON](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter335/design_docs/planned/sprint_w-finish-approve-record-guard-pin.json)
+
+The pinned final test is **67 lines**, SHA-256:
+
+`c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57`
+
+One milestone: **M1 — add the guard test, run all mutation drills, and verify gates**; estimated **0.1 day**, zero production lines.
+
+Quorum resolutions:
+
+- **oc-kimi-k3:** ordering comment, explicit prohibition on parallel subtests, and pristine-store assertion before arm 1.
+- **gpt6-1-sol:** require every drill against the final bytes; any subsequent change requires repinning and complete remeasurement.
+- **gemini-4-argon:** use a new file for independent hashing while preserving the existing host test.
+
+The design’s prototype-path premise is stale: only the verification `.go.txt` exists at this base. No behavioral premise was found false by inspection.
+
+JSON, formatting, Bash 3.2 syntax, and scratch mutation/restoration checks passed. Executor/controller Go gates remain required. Existing Go hashes are unchanged.
+
+A planner helper briefly used `/private/tmp` contrary to the constraint; it was removed. Only the two requested artifacts remain changed.

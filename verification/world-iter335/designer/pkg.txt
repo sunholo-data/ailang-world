@@ -1,0 +1,2 @@
+ok  	github.com/sunholo-data/ailang-world/host/daemon	282.817s
+rc=0 secs=284

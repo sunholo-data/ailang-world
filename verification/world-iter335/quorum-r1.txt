@@ -1,0 +1,12 @@
+design-quorum: author claude:claude-opus-5-5 — seated oc-kimi-k3,gpt6-1-sol,gemini-4-argon; reserve oc-glm-5-3; sitting out claude-sonnet-5@claude-p
+models registry: source=embedded version=eb09d5484d206a68
+GOOGLE_CLOUD_LOCATION is unset; using deprecated default global. Set GOOGLE_CLOUD_LOCATION. v1.0.0 will refuse to start without it.
+quorum artifact: /Users/voightkampff/.ailang/state/mission-quorum-world/w-finish-approve-record-guard-pin-2026-11-02T16-22-19Z.json
+#### Design-quorum review — `design_docs/planned/w-finish-approve-record-guard-pin.md` (2026-11-02T16:22:19Z)
+
+- **Synthesis: PROCEED** (total $0.1441, 16543 in / 6262 out tok)
+- `oc-kimi-k3` → **pass** ($0.1043, 5298/5895 tok) — The no-write arm is sound only under an execution-order precondition — arm 1 must run before the control against a pristine store — because under M1 the refused request and the clean control produce byte-identical content-addressed hashes (drills.txt shows sha256:9d1d…/ff79… in both). The doc's own §2.2/§6 analysis admits that with the control moved first, only the head's PreviousHead wire could distinguish write from no-write. This constraint exists only in design-doc prose, not in the test: a later refactor to t.Run+t.Parallel subtests would make arm 1's 'absent/empty' assertion flaky rather than deterministically red, and a naive reorder would fail clean with a misleading message that invites weakening arm 1 instead of restoring order. Not a blocker for the planned code, but the load-bearing invariant is unenforced.
+- `gpt6-1-sol` → **pass** ($0.0126, 5300/198 tok) — The mutation and stability evidence applies to the prototype hash, not yet to the final fix. Moving or editing the test could invalidate that evidence, particularly the refused-first ordering and the shared no-write/control observer.
+- `gemini-4-argon` → **pass** ($0.0272, 5945/169 tok) — The new test is proposed in a dedicated file (`host/daemon/episode_finish_approve_guard_test.go`) rather than being appended to `host/daemon/episode_finish_test.go`, though §2.1 explicitly justifies this for diff isolation and notes the planner may consolidate it.
+- controller (in-session, not an API call) → **pass** — Controller re-ran M1 first-party at 77e0dd7c: prototype passes clean, M1 reds at :45 approve with record: 200. Test-only, 0 production lines; three assertions each with a sole killer mutant.
+rc=0

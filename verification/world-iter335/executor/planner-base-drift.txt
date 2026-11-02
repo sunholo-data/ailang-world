@@ -1,0 +1,3 @@
+A	design_docs/planned/sprint_w-finish-approve-record-guard-pin.json
+A	design_docs/planned/w-finish-approve-record-guard-pin-sprint-plan.md
+A	verification/world-iter335/planner-final-message.txt

@@ -1,0 +1,134 @@
+environment rc=0
+clean-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.04s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.438s
+clean rc=0 expected=0
+M1-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+    episode_finish_approve_guard_test.go:51: approve with record: 200 {"request":"sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c","approval":"sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f"}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.412s
+FAIL
+M1 rc=1 expected=1
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.389s
+M1-existing rc=0 expected=0
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+M3a-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+    episode_finish_approve_guard_test.go:54: refused approve recorded an approval: head=true requests=[sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c] decisions=[sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f]
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.426s
+FAIL
+M3a rc=1 expected=1
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+M3c-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+    episode_finish_approve_guard_test.go:61: control approve without record: 403 {"error":{"class":"Forbidden","message":"operator route: invalid or expired finish scope\nwhy: the agent holds the episode's session, so a session-gated write is one the agent could make\nnext: run ailang-worldd episode finish at a terminal"}}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.408s
+FAIL
+M3c rc=1 expected=1
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+M2-clean-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.416s
+M2-clean rc=0 expected=0
+M2+M3c-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.411s
+M2+M3c rc=0 expected=0
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+M2b-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+    episode_finish_approve_guard_test.go:61: control approve without record: 200 {"request":"sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c","approval":"sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f"}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.418s
+FAIL
+M2b rc=1 expected=1
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+M4+M3a-vet rc=0 expected=0
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.424s
+M4+M3a rc=0 expected=0
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+mutation-block rc=0
+clean-01 rc=0 command=go vet ./host/daemon/
+clean-02 rc=0 command=gofmt -l host/daemon/ > "$E/gofmt.txt"
+clean-03 rc=0 command=cat "$E/gofmt.txt"
+clean-04 rc=0 command=test ! -s "$E/gofmt.txt"
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.318s
+clean-05 rc=0 command=go test -count=1 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.509s
+clean-06 rc=0 command=go test -count=20 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/
+ok  	github.com/sunholo-data/ailang-world/host/daemon	1.913s
+clean-07 rc=0 command=go test -race -count=5 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.411s
+clean-08 rc=0 command=go test -count=1 -run Finish ./host/daemon/
+clean-09 rc=0 command=go test -count=1 -v -run Finish ./host/daemon/ > "$E/finish-verbose.txt" 2>&1
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.02s)
+=== RUN   TestEpisodeFinishRecordReuseAndSingleUse
+--- PASS: TestEpisodeFinishRecordReuseAndSingleUse (0.03s)
+=== RUN   TestEpisodeFinishOperatorProofAC11
+=== RUN   TestEpisodeFinishOperatorProofAC11/session
+=== RUN   TestEpisodeFinishOperatorProofAC11/missing
+=== RUN   TestEpisodeFinishOperatorProofAC11/wrong
+=== RUN   TestEpisodeFinishOperatorProofAC11/expired
+=== RUN   TestEpisodeFinishOperatorProofAC11/future
+=== RUN   TestEpisodeFinishOperatorProofAC11/readable
+=== RUN   TestEpisodeFinishOperatorProofAC11/world-readable
+=== RUN   TestEpisodeFinishOperatorProofAC11/symlink
+=== RUN   TestEpisodeFinishOperatorProofAC11/phase
+--- PASS: TestEpisodeFinishOperatorProofAC11 (0.02s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/session (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/missing (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/wrong (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/expired (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/future (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/readable (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/world-readable (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/symlink (0.00s)
+    --- PASS: TestEpisodeFinishOperatorProofAC11/phase (0.00s)
+=== RUN   TestEpisodeFinishScopeExpiry
+--- PASS: TestEpisodeFinishScopeExpiry (0.01s)
+=== RUN   TestEpisodeFinishOperatorProofExpiryBoundary
+--- PASS: TestEpisodeFinishOperatorProofExpiryBoundary (0.01s)
+=== RUN   TestEpisodeFinishRecordRechecksScopeExpiry
+--- PASS: TestEpisodeFinishRecordRechecksScopeExpiry (0.01s)
+=== RUN   TestEpisodeFinishAuthorizationPrecedesBody
+--- PASS: TestEpisodeFinishAuthorizationPrecedesBody (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.410s
+clean-10 rc=0 command=cat "$E/finish-verbose.txt"
+clean-11 rc=0 command=test "$(grep -c '^--- PASS:' "$E/finish-verbose.txt")" -eq 7
+4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf  host/daemon/episode_finish.go
+b872a38cc091e250e570d1bba16afa17044c57ff1d9a69cc63484400429b9d67  host/daemon/episode_finish_test.go
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+clean-12 rc=0 command=shasum -a 256 host/daemon/episode_finish.go host/daemon/episode_finish_test.go host/daemon/episode_finish_approve_guard_test.go
+     280 host/daemon/episode_finish.go
+     258 host/daemon/episode_finish_test.go
+      67 host/daemon/episode_finish_approve_guard_test.go
+     605 total
+clean-13 rc=0 command=wc -l host/daemon/episode_finish.go host/daemon/episode_finish_test.go host/daemon/episode_finish_approve_guard_test.go
+clean-14 rc=0 command=git diff --exit-code -- host/daemon/episode_finish.go host/daemon/episode_finish_test.go
+?? host/daemon/episode_finish_approve_guard_test.go
+?? verification/world-iter335/executor/
+clean-15 rc=0 command=git status --short

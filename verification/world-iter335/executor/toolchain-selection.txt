@@ -1,0 +1,3 @@
+go version go1.26.6 darwin/arm64
+Existing read-only toolchain selected: /Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64
+Initial runner rc=1 (clean-vet rc=1, toolchain mismatch)

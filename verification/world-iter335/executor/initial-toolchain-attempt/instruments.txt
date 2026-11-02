@@ -1,0 +1,14 @@
+GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)
+Copyright (C) 2007 Free Software Foundation, Inc.
+go version go1.26.4 darwin/arm64
+local
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter335-row237/verification/world-iter335/executor/go-build
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter335-row237/verification/world-iter335/executor/modules
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter335-row237/verification/world-iter335/executor/go
+
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter335-row237/verification/world-iter335/executor/tmp
+off
+off
+-mod=readonly
+c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57  host/daemon/episode_finish_approve_guard_test.go
+      67 host/daemon/episode_finish_approve_guard_test.go
