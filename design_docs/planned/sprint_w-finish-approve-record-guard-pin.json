@@ -1,0 +1,118 @@
+{
+  "id": "w-finish-approve-record-guard-pin",
+  "iteration": 335,
+  "row": "237",
+  "authority": {
+    "path": "design_docs/planned/w-finish-approve-record-guard-pin.md",
+    "revision": "r1",
+    "quorum": "r1 PROCEED 3/3: oc-kimi-k3, gpt6-1-sol, gemini-4-argon",
+    "standards": "design_docs/coding-standards.md"
+  },
+  "estimate": {
+    "days": 0.1,
+    "new_test_lines": 67,
+    "production_lines": 0
+  },
+  "scope": {
+    "new_files": [
+      "host/daemon/episode_finish_approve_guard_test.go"
+    ],
+    "modified_existing_go_files": [],
+    "evidence_directory": "verification/world-iter335/executor/",
+    "excluded": [
+      "production changes",
+      "existing helper changes",
+      "CLI changes",
+      ".ail changes",
+      "dependency changes",
+      "CI changes",
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-log.md",
+      "tools/launchd/"
+    ]
+  },
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter335",
+    "head": "936edb59ee3b3a022a6f1bdc1e9565c23c619dfe",
+    "detached": true,
+    "files": {
+      "host/daemon/episode_finish.go": {
+        "sha256": "4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf",
+        "lines": 280
+      },
+      "host/daemon/episode_finish_test.go": {
+        "sha256": "b872a38cc091e250e570d1bba16afa17044c57ff1d9a69cc63484400429b9d67",
+        "lines": 258
+      }
+    },
+    "final_test_path": "host/daemon/episode_finish_approve_guard_test.go",
+    "final_test_sha256": "c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57",
+    "final_test_lines": 67,
+    "prototype_path": "verification/world-iter335/designer/prototype_episode_finish_approve_guard_test.go.txt",
+    "prototype_sha256": "f5df08b346dd833250ea444ed15427fb4cec1fe818f05273e0fde5187134d2e5",
+    "prototype_lines": 61,
+    "controller_observations": [
+      "Outside sandbox: go vet passes; gofmt empty; Finish passes six top-level tests.",
+      "M1 survives all six existing tests and prototype kills it."
+    ]
+  },
+  "plan": "design_docs/planned/w-finish-approve-record-guard-pin-sprint-plan.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Add the approve-record guard pin and verify its three assertions",
+      "estimate_days": 0.1,
+      "steps": [
+        "Observe base HEAD, hashes, line counts, gate findings and absence of naming collisions.",
+        "Create the exact 67-line final file from the plan Go block; require the pinned hash and clean gofmt.",
+        "Run every final-file drill using the plan exact Bash 3.2 sed/restore block: M1, M1-existing, M3a, M3c, M2-clean, M2+M3c, M2b, M4+M3a.",
+        "Run clean local gates, observe restored production/existing-test bytes, and report evidence under the worktree.",
+        "Controller runs outside-sandbox package/full gates and records CI on the fix head."
+      ],
+      "acceptance": [
+        "AC-1: M1 fails at approve with record: 200; M1-existing survives.",
+        "AC-2: M3a fails at post-refusal no-write assertion; M4+M3a survives.",
+        "AC-3: M3c fails at control 403; M2-clean and M2+M3c survive; M2b fails at control 200.",
+        "AC-4: clean once/count=20/race count=5, seven Finish PASS, vet and gofmt clean.",
+        "AC-5: controller outside-sandbox package/full gates and CI on fix head, with released AILANG v0.41.0.",
+        "AC-6: production and existing host test full hashes and line counts unchanged by observation; only final new Go file added."
+      ],
+      "gates": [
+        "go vet ./host/daemon/",
+        "gofmt -l host/daemon/",
+        "go test -count=1 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/",
+        "go test -count=20 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/",
+        "go test -race -count=5 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/",
+        "go test -count=1 -run Finish ./host/daemon/",
+        "go test -count=1 -v -run Finish ./host/daemon/ (seven top-level PASS)",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 ./host/daemon/",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 ./host/broker/",
+        "go build ./... && go test ./... (AILANG_BIN exported)",
+        "./scripts/verify_ail.sh (AILANG_BIN exported)",
+        "Observe original file hashes and line counts plus final hash/67 lines; inspect diff/status."
+      ]
+    }
+  ],
+  "quorum_resolutions": {
+    "oc-kimi-k3": "Final test lines 42-46 encode refused-first pristine-store ordering and prohibit parallel subtests; assert head/request/decision absence before posting.",
+    "gpt6-1-sol": "Final bytes differ from prototype; every drill must be rerun against final hash, and any subsequent byte change requires repinning and all drills again.",
+    "gemini-4-argon": "Use one new file to independently hash entire change and leave existing 258-line host test untouched."
+  },
+  "execution_constraints": [
+    "All pinned scripts use /bin/bash 3.2 on macOS; no possibly-empty array expansion under set -u.",
+    "No git writes; controller commits.",
+    "All writes, temporary files, caches, state and logs stay under worktree; external caches/binary are read-only inputs.",
+    "Mutations use saved originals, EXIT/signal restoration, and full production/final-test SHA-256 comparisons after every drill.",
+    "Any inside-sandbox gate failure on a socket bind or a path outside worktree is UNINFORMATIVE UNDER SANDBOX, never pass or fail.",
+    "Report a red at base; never work around it.",
+    "Establish unchanged claims by observed hashes/line counts/diffs, never a seeded write.",
+    "Run in foreground and poll any returned session to completion in a bounded loop; no unfinished background work.",
+    "Do not split test into parallel subtests or reorder control before refused arm."
+  ],
+  "premise_findings": [
+    "Design prototype host path is stale at this base: only verification .go.txt evidence exists.",
+    "Design measurement HEAD 77e0dd7c is historical; planner base is 936edb59ee3b3a022a6f1bdc1e9565c23c619dfe.",
+    "No behavioral premise found false by source/evidence inspection; design already corrects five existing Finish tests to six."
+  ],
+  "validation_status": "planned; planner checks artifacts and scratch mutation mechanics, executor final-file Go drills and gates still required"
+}
