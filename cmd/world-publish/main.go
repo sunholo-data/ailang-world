@@ -298,6 +298,11 @@ func runApprove(opts options, in io.Reader, out, errw io.Writer, env environment
 	defer cancelActive()
 	db, err := store.Open(opts.store)
 	if err != nil {
+		if store.IsWriterAlreadyActive(err) {
+			for _, line := range writerLockHelp("approve", opts.store) {
+				fmt.Fprintln(errw, line)
+			}
+		}
 		return report(errw, storeOpenFailed(opts.store, err))
 	}
 	defer func() { _ = db.Close() }()
@@ -330,6 +335,11 @@ func runPublish(opts options, in io.Reader, out, errw io.Writer, env environment
 	// type an irreversible confirmation phrase.
 	db, err := store.Open(opts.store)
 	if err != nil {
+		if store.IsWriterAlreadyActive(err) {
+			for _, line := range writerLockHelp("publish", opts.store) {
+				fmt.Fprintln(errw, line)
+			}
+		}
 		return report(errw, storeOpenFailed(opts.store, err))
 	}
 	defer func() { _ = db.Close() }()
@@ -496,6 +506,11 @@ func runReconcile(opts options, out, errw io.Writer) int {
 	}
 	db, err := store.Open(opts.store)
 	if err != nil {
+		if store.IsWriterAlreadyActive(err) {
+			for _, line := range writerLockHelp("reconcile", opts.store) {
+				fmt.Fprintln(errw, line)
+			}
+		}
 		return report(errw, storeOpenFailed(opts.store, err))
 	}
 	defer func() { _ = db.Close() }()

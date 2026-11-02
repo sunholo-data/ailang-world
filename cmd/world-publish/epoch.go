@@ -107,8 +107,9 @@ func runEpochNominateWith(opts options, manifest pins.Manifest, manifestName str
 	db, err := store.Open(opts.store)
 	if err != nil {
 		if store.IsWriterAlreadyActive(err) {
-			fmt.Fprintln(errw, "world-publish epoch nominate: "+err.Error()+
-				" — the epoch registry is written under single-writer authority; stop the daemon first")
+			for _, line := range writerLockHelp("epoch nominate", opts.store) {
+				fmt.Fprintln(errw, line)
+			}
 		}
 		return report(errw, storeOpenFailed(opts.store, err))
 	}
