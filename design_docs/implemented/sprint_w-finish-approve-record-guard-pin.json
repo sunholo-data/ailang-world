@@ -3,7 +3,7 @@
   "iteration": 335,
   "row": "237",
   "authority": {
-    "path": "design_docs/planned/w-finish-approve-record-guard-pin.md",
+    "path": "design_docs/implemented/w-finish-approve-record-guard-pin.md",
     "revision": "r1",
     "quorum": "r1 PROCEED 3/3: oc-kimi-k3, gpt6-1-sol, gemini-4-argon",
     "standards": "design_docs/coding-standards.md"
@@ -56,7 +56,7 @@
       "M1 survives all six existing tests and prototype kills it."
     ]
   },
-  "plan": "design_docs/planned/w-finish-approve-record-guard-pin-sprint-plan.md",
+  "plan": "design_docs/implemented/w-finish-approve-record-guard-pin-sprint-plan.md",
   "milestones": [
     {
       "id": "M1",
