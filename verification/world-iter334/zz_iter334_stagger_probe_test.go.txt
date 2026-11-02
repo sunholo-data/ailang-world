@@ -1,0 +1,69 @@
+package daemon
+
+import (
+	"os"
+	"sync"
+	"testing"
+	"time"
+
+	"context"
+	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
+	"github.com/sunholo-data/ailang-world/host/hashref"
+)
+
+// Controller probe, iteration 334 (never committed): stagger the second
+// dispatch of the UNWRAPPED control arm and read probe.max.
+func TestZZIter334ControlStagger(t *testing.T) {
+	stagger, err := time.ParseDuration(os.Getenv("ITER334_STAGGER"))
+	if err != nil {
+		t.Skip("ITER334_STAGGER unset")
+	}
+	d := newHandlerDaemon(t)
+	publishHumanTool(t, d)
+	probe := &longProbe{second: make(chan struct{})}
+	d.human = probe
+	c := humanCoordinator(t, d, d.binder, humanPlan("e1"))
+	calls := []coordinator.Call{humanCall(t, d, "epC", "c"), humanCall(t, d, "epD", "d")}
+	ctx := boundedTestContext(t)
+	var wg sync.WaitGroup
+	var errs [2]error
+	for i := range calls {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			if i == 1 {
+				time.Sleep(stagger)
+			}
+			_, errs[i] = c.Dispatch(ctx, calls[i])
+		}(i)
+	}
+	wg.Wait()
+	t.Logf("stagger=%s unwrapped probe max=%d errs=%v", stagger, probe.max, errs)
+}
+
+type longProbe struct {
+	mu       sync.Mutex
+	cur, max int
+	second   chan struct{}
+	once     sync.Once
+}
+
+func (p *longProbe) Execute(ctx context.Context, _ broker.EffectRequest, _ []byte) ([]byte, error) {
+	p.mu.Lock()
+	p.cur++
+	p.max = max(p.max, p.cur)
+	if p.cur == 2 {
+		p.once.Do(func() { close(p.second) })
+	}
+	p.mu.Unlock()
+	select {
+	case <-p.second:
+	case <-time.After(10 * time.Second):
+	case <-ctx.Done():
+	}
+	p.mu.Lock()
+	p.cur--
+	p.mu.Unlock()
+	return []byte(`{"status":"pending","requestRef":"` + hashref.SumSHA256([]byte("ac8")).String() + `"}`), nil
+}

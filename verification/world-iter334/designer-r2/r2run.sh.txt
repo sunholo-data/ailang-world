@@ -1,0 +1,46 @@
+#!/bin/bash
+D2=/tmp/world-iter334/designer-r2; P=$D2/proto2; G=host/daemon/daemon.go; T=host/daemon/decisionpacket_daemon_test.go
+R='^TestHumanApproveIsSerializedAcrossEpisodes$'
+MD3='s/\ts\.mu\.Lock\(\)         \/\/ MD3 target\n\tdefer s\.mu\.Unlock\(\) \/\/ MD3 target\n//'
+MD3B='s/defer s\.mu\.Unlock\(\) \/\/ MD3 target/s.mu.Unlock() \/\/ MD3 target/'
+M2='s/gate\.h = serializedHandler\{mu: sh\.mu, h: probe\}/gate.h = probe/'
+M3='s/\t\tp\.awaitSecond\(ctx\)\n/\t\tselect {\n\t\tcase <-p.inside2:\n\t\tcase <-time.After(200 * time.Millisecond):\n\t\tcase <-ctx.Done():\n\t\t}\n/'
+M5='s/const probeWaitBound = 10 \* time\.Second/const probeWaitBound = 100 * time.Millisecond/'
+{
+echo "== mutants $(date)"
+for r in 0 1; do
+ $D2/runmut.sh $P $G M1-MD3 20 $r "$MD3"
+ $D2/runmut.sh $P $T M2-bare-probe 20 $r "$M2"
+ $D2/runmut.sh $P $T M3-fixed-200ms 20 $r "$M3"
+done
+$D2/runmut.sh $P $G M1b-unlock-early 20 1 "$MD3B"
+$D2/runmut.sh $P $T M5-bound-100ms 3 0 "$M5"
+(cd $P && cp $T $D2/.saveT && perl -0pi -e "$M5" $T && go test ./host/daemon -run "$R" -count=1 -v 2>&1 | grep -E 'measured nothing' | cut -c1-220; cp $D2/.saveT $T; shasum -a 256 $T | cut -c1-12)
+cp $P/$G $D2/.saveG; perl -0pi -e "$MD3" $P/$G
+$D2/runmut.sh $P $T M6-MD3+no-TryLock 20 1 's/unheld := p\.held != nil && p\.held\.TryLock\(\)/unheld := false \&\& p.held != nil \&\& p.held.TryLock()/'
+cp $D2/.saveG $P/$G; shasum -a 256 $P/$G | cut -c1-12
+echo "== M3 race x20 under 32 burners"
+pids=(); for i in $(seq 32); do yes > /dev/null & pids+=($!); done; trap 'kill ${pids[@]} 2>/dev/null' EXIT; sleep 5
+echo "load $(sysctl -n vm.loadavg)"; $D2/runmut.sh $P $T M3-fixed-200ms-loaded 20 1 "$M3"; echo "load $(sysctl -n vm.loadavg)"
+kill ${pids[@]} 2>/dev/null; trap - EXIT; wait 2>/dev/null; echo "yes left: $(pgrep -x yes | wc -l)"
+cd $P; export AILANG_BIN=$HOME/.pinned-ailang/ailang
+echo "== idle race count=200 $(date)"; s=$(date +%s)
+go test -race -timeout 900s ./host/daemon -run "$R" -count=200 -v > $D2/soak-idle.out 2>&1; echo "rc=$? secs=$(( $(date +%s)-s ))"
+echo "PASS $(grep -c '^--- PASS: TestHumanApprove' $D2/soak-idle.out) FAIL $(grep -c -- '--- FAIL' $D2/soak-idle.out)"; grep -E '^(ok|FAIL)\s' $D2/soak-idle.out
+grep -E '^--- PASS: TestHumanApprove' $D2/soak-idle.out | sed -E 's/.*\(([0-9.]+)s\)/\1/' | sort -n | tail -1 | sed 's/^/slowest whole test /'
+echo "== 32 burners race count=200"
+pids=(); for i in $(seq 32); do yes > /dev/null & pids+=($!); done; trap 'kill ${pids[@]} 2>/dev/null' EXIT; sleep 5
+echo "load $(sysctl -n vm.loadavg)"; s=$(date +%s)
+go test -race -timeout 1500s ./host/daemon -run "$R" -count=200 -v > $D2/soak-load.out 2>&1; echo "rc=$? secs=$(( $(date +%s)-s ))"; echo "load $(sysctl -n vm.loadavg)"
+kill ${pids[@]} 2>/dev/null; trap - EXIT; wait 2>/dev/null; echo "yes left: $(pgrep -x yes | wc -l)"
+echo "PASS $(grep -c '^--- PASS: TestHumanApprove' $D2/soak-load.out) FAIL $(grep -c -- '--- FAIL' $D2/soak-load.out)"; grep -E '^(ok|FAIL)\s' $D2/soak-load.out
+grep -E '^--- PASS: TestHumanApprove' $D2/soak-load.out | sed -E 's/.*\(([0-9.]+)s\)/\1/' | sort -n | tail -1 | sed 's/^/slowest whole test /'
+echo "== package race $(date)"; s=$(date +%s); go test -race -timeout 1500s ./host/daemon -count=1 2>&1 | grep -E '^(ok|FAIL|---)'; echo "rc=${PIPESTATUS[0]} secs=$(( $(date +%s)-s ))"
+cd $D2/gate
+echo "== FULL GATE go build ./... && go test -timeout 1800s ./... $(date)"; s=$(date +%s)
+( go build ./... && go test -timeout 1800s ./... ) > $D2/fullgate.out 2>&1; rc=$?; echo "rc=$rc secs=$(( $(date +%s)-s ))"
+echo "ok pkgs $(grep -c '^ok' $D2/fullgate.out) FAIL lines $(grep -c '^FAIL' $D2/fullgate.out) no-test $(grep -c 'no test files' $D2/fullgate.out)"; grep -E '^(FAIL|--- FAIL)' $D2/fullgate.out | head -20; grep 'host/daemon' $D2/fullgate.out
+echo "== verify_ail.sh $(date)"; s=$(date +%s)
+( unset AILANG_BIN; export PATH=$HOME/.ailang/state/ailang-release-v0.55.0/x:$PATH WORLD_PKG_AILANG_BIN=$HOME/.ailang/state/ailang-release-v0.41.0/x/ailang; echo "ailang on PATH: $(command -v ailang) $(ailang --version | head -1)"; ./scripts/verify_ail.sh ) > $D2/verify_ail.out 2>&1; rc=$?; echo "rc=$rc secs=$(( $(date +%s)-s ))"; head -2 $D2/verify_ail.out; tail -5 $D2/verify_ail.out
+echo DONE
+} > $D2/r2run.txt 2>&1

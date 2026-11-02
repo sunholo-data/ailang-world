@@ -1,0 +1,14 @@
+#!/bin/bash
+D2=/tmp/world-iter334/designer-r2; cd $D2/gate
+{
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+echo "== FULL GATE (git-initialised copy) $(date)"; s=$(date +%s)
+( go build ./... && go test -timeout 1800s ./... ) > $D2/fullgate2.out 2>&1; rc=$?; echo "rc=$rc secs=$(( $(date +%s)-s ))"
+echo "ok pkgs $(grep -c '^ok' $D2/fullgate2.out) FAIL lines $(grep -c '^FAIL' $D2/fullgate2.out) no-test $(grep -c 'no test files' $D2/fullgate2.out)"; grep -E '^(FAIL|--- FAIL)' $D2/fullgate2.out | head; grep -E 'host/daemon|host/pins' $D2/fullgate2.out
+unset AILANG_BIN
+echo "== verify_ail.sh $(date)"; s=$(date +%s)
+( export PATH=$HOME/.ailang/state/ailang-release-v0.55.0/x:$PATH WORLD_PKG_AILANG_BIN=$HOME/.ailang/state/ailang-release-v0.41.0/x/ailang; echo "AILANG_BIN=${AILANG_BIN-unset}; ailang on PATH: $(command -v ailang) $(ailang --version | head -1)"; ./scripts/verify_ail.sh ) > $D2/verify_ail2.out 2>&1; rc=$?; echo "rc=$rc secs=$(( $(date +%s)-s ))"; head -2 $D2/verify_ail2.out; tail -4 $D2/verify_ail2.out
+echo "== final-file check $(date)"; cd $D2/proto2; export AILANG_BIN=$HOME/.pinned-ailang/ailang
+go test -race ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=20 -v 2>&1 | grep -E '^(--- |ok|FAIL)' | sed -E 's/\([0-9.]+s\)//' | sort | uniq -c
+echo DONE
+} > $D2/gate2.txt 2>&1

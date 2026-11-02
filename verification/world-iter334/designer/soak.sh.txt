@@ -1,0 +1,24 @@
+#!/bin/bash
+cd /tmp/world-iter334/designer/proto || exit 9
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+R='^TestHumanApproveIsSerializedAcrossEpisodes$'
+{
+echo "== vet"; go vet ./host/daemon/; echo "vet rc=$?"
+echo "== idle race count=200"; s=$(date +%s)
+go test -race -timeout 900s ./host/daemon -run "$R" -count=200 -v > soak-idle.out 2>&1; echo "rc=$? secs=$(( $(date +%s)-s ))"
+grep -c '^--- PASS: TestHumanApprove' soak-idle.out; grep -c -- '--- FAIL' soak-idle.out; grep -E '^(ok|FAIL)\s' soak-idle.out
+grep -E '^    --- PASS: .*late-second' soak-idle.out | sed -E 's/.*\(([0-9.]+)s\)/\1/' | sort -n | tail -1 | sed 's/^/slowest late-second /'
+echo "== 32 burners race count=200"
+pids=(); for i in $(seq 32); do yes > /dev/null & pids+=($!); done
+trap 'kill ${pids[@]} 2>/dev/null' EXIT
+sleep 5; echo "load: $(sysctl -n vm.loadavg)"; s=$(date +%s)
+go test -race -timeout 1500s ./host/daemon -run "$R" -count=200 -v > soak-load.out 2>&1; echo "rc=$? secs=$(( $(date +%s)-s ))"
+echo "load: $(sysctl -n vm.loadavg)"
+kill ${pids[@]} 2>/dev/null; trap - EXIT
+grep -c '^--- PASS: TestHumanApprove' soak-load.out; grep -c -- '--- FAIL' soak-load.out; grep -E '^(ok|FAIL)\s' soak-load.out
+grep -E '^--- PASS: TestHumanApprove' soak-load.out | sed -E 's/.*\(([0-9.]+)s\)/\1/' | sort -n | tail -1 | sed 's/^/slowest whole test /'
+echo "== package plain"; s=$(date +%s); go test -timeout 1200s ./host/daemon -count=1 2>&1 | grep -E '^(ok|FAIL|---)' ; echo "rc=${PIPESTATUS[0]} secs=$(( $(date +%s)-s ))"
+echo "== package race"; s=$(date +%s); go test -race -timeout 1500s ./host/daemon -count=1 2>&1 | grep -E '^(ok|FAIL|---)' ; echo "rc=${PIPESTATUS[0]} secs=$(( $(date +%s)-s ))"
+echo "== build"; go build ./... ; echo "build rc=$?"
+echo DONE
+} > /tmp/world-iter334/designer/soak.txt 2>&1

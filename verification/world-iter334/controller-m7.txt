@@ -1,0 +1,51 @@
+base shas test=bb75420d0713 daemon=e6b70d7e3f3f
+M7 daemon sha d505619bdefc
+M7 rc=1 FAIL-subtests=40
+  40 decisionpacket_daemon_test.go:367: serialized probe ran 2 of 2 executions without the daemon mutex held
+restored daemon sha e6b70d7e3f3f
+M7b test sha eaeccba40d5e
+M7b rc=1 PASS-top=0 FAIL=0
+FAIL	github.com/sunholo-data/ailang-world/host/daemon [build failed]
+FAIL
+restored test sha bb75420d0713
+--- V17 (kimi): context scope in the prototype
+325:		ctx := boundedTestContext(t)
+	dispatchPair := func(entered <-chan struct{}, episodeA, episodeB, taskA, taskB string) [2]error {
+		c := humanCoordinator(t, d, d.binder, humanPlan("e1"))
+		calls := []coordinator.Call{humanCall(t, d, episodeA, taskA), humanCall(t, d, episodeB, taskB)}
+		ctx := boundedTestContext(t)
+		var wg sync.WaitGroup
+--- glm: base requireOneCommitted citation (base 388001c2, worktree)
+func requireOneCommitted(t *testing.T, errs [2]error) {
+	t.Helper()
+	committed := 0
+	for _, err := range errs {
+		switch {
+		case err == nil:
+			committed++
+		case store.IsConflict(err):
+			t.Logf("world-head conflict (expected for one of two concurrent commits): %v", err)
+		default:
+			t.Error(err)
+		}
+	}
+(M7b attempt 1 above = build failure 'declared and not used: sh' — instrument failure, not a verdict; attempt 2 adds _ = sh)
+M7b test sha 35fd94132de6
+M7b rc=0 PASS-top=20 PASS-sub=40 FAIL=0
+ok  	github.com/sunholo-data/ailang-world/host/daemon	20.088s
+restored test sha bb75420d0713
+--- M1/M3 on final sha bb75420d0713 (controller, race x20)
+M1-MD3-final count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha e6b70d7e3f3f->3737b1ed8187->e6b70d7e3f3f
+   7     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.37s)
+  13     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+   7     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.05s)
+  12     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.08s)
+  40 decisionpacket_daemon_test.go:367: serialized probe ran 2 of 2 executions without the daemon mutex held
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.154s
+M3-fixed-200ms-final count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha bb75420d0713->9e3a768cb8ae->bb75420d0713
+  10     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.71s)
+   8     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.72s)
+   2     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.73s)
+  20 decisionpacket_daemon_test.go:387: unwrapped probe max = 1, want 2
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	20.804s

@@ -1,0 +1,112 @@
+== mutants Mon Nov  2 13:30:06 CET 2026
+M1-MD3 count=20 race=0 rc=1 top-level PASS=0 FAIL=20 sha e6b70d7e3f3f->3737b1ed8187->e6b70d7e3f3f
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.31s)
+   6     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.32s)
+  12     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.33s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.34s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.01s)
+  19     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.02s)
+  40 decisionpacket_daemon_test.go:366: serialized probe ran 2 of 2 executions without the daemon mutex held
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	7.479s
+M2-bare-probe count=20 race=0 rc=1 top-level PASS=0 FAIL=20 sha 9862b1662185->7224de1423de->9862b1662185
+   6     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.32s)
+  14     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.33s)
+  19     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.02s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.03s)
+  40 decisionpacket_daemon_test.go:366: serialized probe ran 2 of 2 executions without the daemon mutex held
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	7.348s
+M3-fixed-200ms count=20 race=0 rc=1 top-level PASS=0 FAIL=20 sha 9862b1662185->98dd2f7aadc2->9862b1662185
+   4     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.63s)
+  16     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.64s)
+  20 decisionpacket_daemon_test.go:386: unwrapped probe max = 1, want 2
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	17.975s
+M1-MD3 count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha e6b70d7e3f3f->3737b1ed8187->e6b70d7e3f3f
+   5     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.37s)
+  15     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+  17     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.05s)
+   2     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.08s)
+  40 decisionpacket_daemon_test.go:366: serialized probe ran 2 of 2 executions without the daemon mutex held
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.071s
+M2-bare-probe count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha 9862b1662185->7224de1423de->9862b1662185
+   8     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.37s)
+  12     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+  19     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.05s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.07s)
+  40 decisionpacket_daemon_test.go:366: serialized probe ran 2 of 2 executions without the daemon mutex held
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.047s
+M3-fixed-200ms count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha 9862b1662185->98dd2f7aadc2->9862b1662185
+  15     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.71s)
+   5     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.72s)
+  20 decisionpacket_daemon_test.go:386: unwrapped probe max = 1, want 2
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	20.661s
+M1b-unlock-early count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha e6b70d7e3f3f->66076a39d936->e6b70d7e3f3f
+   8     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.37s)
+  12     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+  15     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.05s)
+   4     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.08s)
+  40 decisionpacket_daemon_test.go:366: serialized probe ran 2 of 2 executions without the daemon mutex held
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.088s
+M5-bound-100ms count=3 race=0 rc=1 top-level PASS=0 FAIL=3 sha 9862b1662185->ac99914cc639->9862b1662185
+   2     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.32s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.33s)
+   3 decisionpacket_daemon_test.go:363: serialized arm measured nothing: second Human.Approve dispatch did not arrive within 100ms (dispatch errors [<nil> <nil>])
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	1.626s
+    decisionpacket_daemon_test.go:363: serialized arm measured nothing: second Human.Approve dispatch did not arrive within 100ms (dispatch errors [<nil> <nil>])
+9862b1662185
+M6-MD3+no-TryLock count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha 9862b1662185->98de015c853b->9862b1662185
+   5     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.37s)
+  14     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.41s)
+  18     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.05s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+   1     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.08s)
+  40 decisionpacket_daemon_test.go:369: serialized probe max = 2, want 1
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.104s
+e6b70d7e3f3f
+== M3 race x20 under 32 burners
+load { 5.38 3.76 4.85 }
+M3-fixed-200ms-loaded count=20 race=1 rc=1 top-level PASS=0 FAIL=20 sha 9862b1662185->98dd2f7aadc2->9862b1662185
+  10     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.68s)
+   5     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.69s)
+   3     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.70s)
+   2     --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.72s)
+  20 decisionpacket_daemon_test.go:386: unwrapped probe max = 1, want 2
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	20.338s
+load { 13.87 5.80 5.56 }
+yes left:        0
+== idle race count=200 Mon Nov  2 13:32:26 CET 2026
+rc=0 secs=187
+PASS 200 FAIL 0
+ok  	github.com/sunholo-data/ailang-world/host/daemon	185.121s
+slowest whole test 0.97
+== 32 burners race count=200
+load { 4.75 4.46 5.00 }
+rc=0 secs=187
+load { 35.25 19.07 11.05 }
+yes left:        0
+PASS 200 FAIL 0
+ok  	github.com/sunholo-data/ailang-world/host/daemon	187.257s
+slowest whole test 1.00
+== package race Mon Nov  2 13:38:46 CET 2026
+ok  	github.com/sunholo-data/ailang-world/host/daemon	309.210s
+rc=0 secs=311
+== FULL GATE go build ./... && go test -timeout 1800s ./... Mon Nov  2 13:43:57 CET 2026
+rc=1 secs=337
+ok pkgs 34 FAIL lines 3 no-test 2
+--- FAIL: TestReleaseLiteralsExplainedByManifest (0.01s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/pins	3.813s
+FAIL
+ok  	github.com/sunholo-data/ailang-world/host/daemon	330.595s
+== verify_ail.sh Mon Nov  2 13:49:34 CET 2026
+rc=0 secs=11
+ailang on PATH: /Users/voightkampff/.ailang/state/ailang-release-v0.55.0/x/ailang AILANG v0.55.0
+── legs 1-2 AILANG_BIN=/Users/voightkampff/.ailang/state/ailang-release-v0.55.0/x/ailang (AILANG v0.55.0)
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+DONE

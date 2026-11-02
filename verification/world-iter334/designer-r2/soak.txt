@@ -1,0 +1,57 @@
+== vet
+vet rc=0
+== idle race count=200
+rc=0 secs=186
+200
+0
+ok  	github.com/sunholo-data/ailang-world/host/daemon	184.054s
+slowest late-second 0.82
+== 32 burners race count=200
+load: { 5.54 3.10 2.63 }
+rc=0 secs=185
+load: { 36.32 18.63 9.25 }
+200
+/tmp/world-iter334/designer/soak.sh: line 24: 90951 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90952 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90953 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90954 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90955 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90956 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90957 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90958 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90959 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90960 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90961 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90962 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90963 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90964 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90965 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90966 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90967 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90968 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90969 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90970 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90971 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90972 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90973 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90974 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90975 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90976 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90977 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90978 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90979 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90980 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90981 Terminated: 15          yes > /dev/null
+/tmp/world-iter334/designer/soak.sh: line 24: 90982 Terminated: 15          yes > /dev/null
+0
+ok  	github.com/sunholo-data/ailang-world/host/daemon	183.995s
+slowest whole test 1.00
+== package plain
+ok  	github.com/sunholo-data/ailang-world/host/daemon	253.811s
+rc=0 secs=255
+== package race
+ok  	github.com/sunholo-data/ailang-world/host/daemon	308.358s
+rc=0 secs=309
+== build
+build rc=0
+DONE

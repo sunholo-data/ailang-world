@@ -1,0 +1,41 @@
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	170.968s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	80.669s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	48.563s
+ok  	github.com/sunholo-data/ailang-world/host/agui	3.649s
+ok  	github.com/sunholo-data/ailang-world/host/archive	51.509s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.916s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	1.999s
+ok  	github.com/sunholo-data/ailang-world/host/broker	258.247s
+ok  	github.com/sunholo-data/ailang-world/host/canon	4.384s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	94.509s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	3.764s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.035s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	76.838s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	330.595s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	31.891s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	0.656s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	4.211s
+--- FAIL: TestReleaseLiteralsExplainedByManifest (0.01s)
+    scan_test.go:256: git ls-files: exit status 128
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/pins	3.813s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	58.863s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	4.130s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.710s
+ok  	github.com/sunholo-data/ailang-world/host/projection	17.181s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	3.485s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.232s
+ok  	github.com/sunholo-data/ailang-world/host/replay	62.381s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	6.014s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.772s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.708s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.142s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	4.108s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	77.490s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	200.512s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.490s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	13.129s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	111.126s
+FAIL
