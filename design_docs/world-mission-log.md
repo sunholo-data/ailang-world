@@ -2325,3 +2325,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 235 BUILT in PR #457; row 244 filed.
 **Next:** row 235 lands on merge CI green (landing note). Then row 237 under D-WORLD-106 = A, then 238 → 242, stopping as soon as a release row is routable; a dev red still outranks.
+
+**Landing (iteration 334):** PR #457 merged as `436e65c3` (merge commit, `--match-head-commit f56ef38d`). Head `f56ef38d` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `388001c2`, right before the merge. **Merge CI:** `commits/436e65c3/check-runs` → 3, all success on attempt 1 (run 41461154725: ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.

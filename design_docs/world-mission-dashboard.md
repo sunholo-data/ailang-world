@@ -1,7 +1,7 @@
 # World mission dashboard — iteration 334 (2026-11-02)
 
-- **This fire:** row 235 BUILT (PR #457), the first pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). AC8's Human.Approve serialization test now waits on events, proves the daemon mutex held with `TryLock`, and replays the CI gap. Judge sonnet PASS 88, zero blocking. Lands on merge CI (landing note).
-- **Dev:** green at `388001c2` (3/3). The `67af13e9` red was row 200's filter-control flake, superseded green at HEAD.
+- **This fire:** row 235 BUILT (PR #457), the first pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). AC8's Human.Approve serialization test now waits on events, proves the daemon mutex held with `TryLock`, and replays the CI gap. Judge sonnet PASS 88, zero blocking. **LANDED:** merge `436e65c3`, merge CI 3/3.
+- **Dev:** green at `436e65c3` (3/3, the row-235 merge). The `67af13e9` red was row 200's filter-control flake, superseded green at HEAD.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
