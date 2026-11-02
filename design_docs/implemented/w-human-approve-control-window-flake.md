@@ -1,11 +1,16 @@
 # w-human-approve-control-window-flake: AC8's probe reads a slow second dispatch as "max = 1"
 
-- **Status**: Planned. Designed iteration 334, unattended. **r3** (controller narrow-refinement
+- **Status**: Implemented (iteration 334, PR pending). Was: Planned. Designed iteration 334, unattended. **r3** (controller narrow-refinement
   carve-out after quorum r2 BLOCKED, reviewers' verbatim fixes, §10). **r2**: r1 after quorum r1 BLOCKED
   (§10). The `late-second` stagger is now anchored on the first probe entry. The stagger checks are
   labelled empirical. CONTROL's probe wiring is stated. The full gate has been run (V16).
 - **Item**: queue row 235, a test defect in row 176's AC8 (`8511badd`, 2026-10-14, PR #261). The
   production serialization is correct. The fix is test-only: one file.
+- **As landed (iteration 334, judge NB3)**: the landed diff is the r2 prototype (+126/−17, sha
+  `bb75420d0713`) plus §2.5's timeout seam and `TestConcurrencyProbeNamesAMissedArrival`: **+177/−17**,
+  file sha `877013b8…` (plan diff `8dee6916…`). Line numbers in §4 and V17 are the prototype's. On the
+  landed file the killers measured by the executor and the judge are `:372` (`unheld`), `:375`
+  (serialized `max`), `:392` (M3, with the mutant's +4 lines) and `:422`/`:426` (the handshake test).
 - **Estimated**: ~0.1 day. About +126/−17 LOC in `host/daemon/decisionpacket_daemon_test.go`, 0
   production. Prototype diff: V10.
 - **Measurement base**: `388001c2` (worktree `sprint/world-iter334-human-approve-control-window`, V1).

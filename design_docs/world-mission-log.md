@@ -2249,3 +2249,79 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - No r2: nothing to fix.
 
 **Landing (iteration 333):** PR #450 merged as `22989014` (merge commit, `--match-head-commit 3138f12f`). The PR head `3138f12f` was 3/3 green before the merge, and origin/dev was re-read right before it (`d3fc70b5`, MERGEABLE/CLEAN; 0 directives on the new thread #449). The merge tree is byte-identical to the head tree. **Merge CI:** `commits/22989014/check-runs` → 3, all success on attempt 1 (CI run list: `22989014 success attempt=1`). Dev green. The first head poller (on `3e00555e`) was stopped when the judge commit superseded that head. Every poll ran under `/bin/bash` from a script file, wrote to a per-SHA log, carried the subject SHA in each verdict line, and had a ~9.5-minute deadline; two of them hit it while the race gate ran and were re-issued against the same SHA.
+
+## 334 — 2026-11-02 — row 235 built: AC8's probe waits on events, proves the daemon mutex held with TryLock, and replays the CI gap anchored on the first probe entry; the serialized arm's vacuity closed; judge PASS 88 [PRODUCT-HYGIENE]
+
+**Kind:** the first pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02: extend D-WORLD-64's exception to rows 235 and 237 → 242, in queue order, stopping as soon as a release row is routable). Full inner loop: designer → quorum ×2 → carve-out → planner → executor → independent judge. The record is in the same PR as the code (#457). A landing note will record merge CI.
+
+**Pick and why:** row 235 `w-human-approve-control-window-flake`.
+- **Clause map at `388001c2`:** 1–7 MET; no UNMET clause, so the attended exception governs and the queue order inside it picks 235.
+- **Release rows not routable.** Row 150 waits only on the attended A1: commit subjects `f396a009..388001c2` matching `row ?150|A1\b|marketing` → 0 of 12. Row 151 needs row 188 N2d/N4a: `git log origin/dev --since=2026-10-01 -i -E --grep="N2d|N4a"` → 4 hits, all mission records or designs (`fe9c891e`, `92495b60`, `be184351`, `dc719822`), no N2d/N4a work.
+- **Premise checked first-party before routing** (`verification/world-iter334/mechanism-measure.txt`): a throwaway test staggering the unwrapped arm's second dispatch gave max 2 at 0 and 150 ms, max 1 at 250 and 400 ms (the CI symptom); a probe waiting for the second arrival gave max 2 at 0 ms, 400 ms and 2 s. No Linux or load needed.
+- Index grep: no earlier attempt at row 235. No design doc, no PR. Claim message `inbox_1793628237812_a035ef15`.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- `mission_directives.sh`: 0 allowlisted directives on #449 (2 comments; no watermark file yet) and #366 (35 comments, LEGACY watermark); nothing to mark.
+- `mission_gate0_self_notices.sh`: rc 0, 0 crash notices on #449/#366 since `2026-10-27T09:03:42Z`; control 107:4 ok. Died-mid-flight traces: no open PR of this mission; `.wt-world-iter306-r0` is the known residue.
+- **Attended rulings since iteration 333, acknowledged:** D-WORLD-106 = A (`mission_ledger_provenance.sh` → `attended`, flip `7d8ba51d`, creation `a19027e9`) and D-WORLD-107 = A (`attended`, flip `b096d7d6`, creation `2fbe0e27`; row 243, attended track). Ledger valid, 94 rows; D-WORLD-105 the only OPEN row.
+- Inbox: the unread list is fleet-wide; nothing addressed to this mission needing action.
+
+**Gate 1:**
+- Local `dev` = `origin/dev` = `388001c23f821515a2d0957ed012863bd95f12a4`. Base recorded `388001c2…@2026-11-02T11:57:27Z`; re-read before the worktree with no drift.
+- Skill: `SKILL.md` and all 13 `resources/*.md` `cmp`-identical to `origin/dev`, per file; rules read from the resolved symlink target.
+- Dev CI: `388001c2` check-runs 3/3 success. **`67af13e9` (#455 merge) was red** on the go host build + test gate: `TestWorktreeSnapshotRefusesAConfiguredFilter` control arm (`worktree_delta_test.go:432`, row 200's known flake, non-race leg this time); superseded green at HEAD, so not a dev red. One more instance for row 200.
+
+**Design** (`w-human-approve-control-window-flake`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–330 precedent; rotation pointer unchanged, the lane that ran):
+- **r1** (271 lines, 13 V-rows): H1 is the CI red; **H2, new:** the serialized arm has the same 200 ms window, so mutex removal plus a 300 ms gap passes the serialized arm 20/20. Design: event-driven waits bounded at 10 s, an outer `arrivalGate` plus a `TryLock` held-mutex check, subtests `together`/`late-second`.
+- **Quorum r1 BLOCKED** ($0.2409; seats oc-glm-5-3 PASS, oc-kimi-k3 PASS, gpt6-1-sol REJECT; claude benched; no absentees). gpt: a sleep before the second dispatch does not guarantee the >200 ms Execute gap. glm/kimi: CONTROL's `held == nil` unstated; full gate unrun.
+- **r2** (the one mandated revision, designer resumed; 362 lines): stagger anchored on the first probe entry; AC-1/AC-3 relabelled empirical; gate reworded to "arrival while active"; V14–V16 incl. the full gate (rc 0 in a git-initialised copy; the first attempt's `host/pins` red was `git ls-files` exit 128 in a copy without `.git`; the controller confirmed that test green at base in the real worktree, 0.30 s).
+- **Quorum r2 BLOCKED** ($0.3083; same seats; no absentees). glm REJECT: R3's "max == 1 would still catch a wrong-mutex mutant" was false and unmeasured. gpt REJECT: M5's 100 ms bound is scheduling-dependent too. kimi PASS with an adjudication rule and a context-scope row.
+- **r3 = controller narrow-refinement carve-out** (both rejects carried concrete fixes; neither disputed direction; objections in both rounds on one surface, the labels of the oracles, so not a split). The controller measured what the fixes asked for (`verification/world-iter334/controller-m7.txt`): M7 (production locks another mutex) killed 20/20 by `unheld` at `:367`; M7b (consistent rewiring of wrapper and `held`) survives 20/20, as glm predicted (first attempt was a build failure, recorded as an instrument failure); M1/M3 re-measured on the final prototype sha. Applied verbatim: glm's R3 and §1 texts, gpt's test-only timeout seam (§2.5), kimi's adjudication text. No third designer run.
+
+**Plan** (`derive-planner-lane.sh` → `codex:gpt-6.1-sol declared:planner-lane-default-pin`; resolver `recipe codex:gpt-6.1-sol`; probe rc 0), `a0439a2b`:
+- One pinned diff (sha256 `8dee6916…`, +177/−17, test file only), fixed sha `877013b8…`; M1 apply + mutation drill, M2 soak + package + full gate.
+- **Controller re-verified outside the sandbox before the executor:** the diff applies, the file hashes to the pin, both tests 5/5 under `-race`.
+
+**Executor** (`recipe codex:gpt-6.1-sol declared:provider-pin`), uncommitted diff, committed by the controller as `065c58cb`:
+- Pins and scope exact; `daemon.go` unchanged. Race mutants as planned: A killed at `:270`; M1/M1b/M2/M7 at `:372` (`unheld`); M3 at `:392`, `late-second` only; M6 at `:375`; M7b survives (expected); handshake mutants H1/H2 at `:426`, H3 at `:422`.
+- **Instrument error:** every PLAIN mutant run stopped before `go test` — the plan's `runmut.sh` expands an empty `flags[@]` under `set -u`, which bash 3.2 (`/bin/bash` on macOS) rejects. Not a kill and not a survival. The judge ran plain mutants itself.
+- Loaded soak, package and full gate were sandbox-uninformative (labelled as such).
+
+**Controller checks before the judge** (outside the sandbox, at `a0439a2b` + the diff): `go build ./... && go test -timeout 1800s ./...` rc 0 (310 s); `go test -race ./host/daemon/` ok (310 s); loaded soak `-race -count=200` under 32 `yes` 200/0, load 2.95 → 34.42, slowest 1.00 s, 0 burners left; `verify_ail.sh` rc 0 (v0.55.0 on PATH, package pin v0.41.0).
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), own detached worktree `.judge-wt-iter334` at `065c58cb`, foreground, spawned after the controller's heavy runs finished.
+- **PASS 88/100, zero blocking** (32/26/12/9/9).
+- Verified: CI mode reproduced on base (20/20 at `:270`) and fixed (20/20 plain and race; still passes at a 3 s gap); 8 own mutants of the serialization and probe, plain and race, all killed (`:372` `unheld` or `:375` `max`); file sha equals the plan's; only file changed under `host/`.
+- **NB1, NB2 reproduced by the controller and filed as row 244:** the arm-level "measured nothing" `Fatalf` → `Logf` stays green (`ok 2.767s`); deleting `time.Sleep(stagger)` stays green (`ok 0.773s`). Judge worktree restored to `877013b8`, `status` empty.
+- **NB3 fixed:** the doc's stale "+126/−17" and prototype line numbers now carry an "as landed" note.
+- NB4/NB5 (failure text under a mutated timer; unlocked reads after `wg.Wait`, race-clean): no action.
+- Report: `verification/world-iter334/evaluator-r1.md`.
+
+**Routing evidence:** base=388001c23f821515a2d0957ed012863bd95f12a4@2026-11-02T11:57:27Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION` empty; `MISSION_ROUTING_NOTE` empty.
+- Tokens and time per role:
+  - controller `claude:claude-opus-5-5`: tok not reported;
+  - designer Agent `opus`: 121,933 tok / 1,492 s; revision resume 181,510 tok / 1,733 s, as reported;
+  - planner `codex:gpt-6.1-sol` (recipe): 113,025 tok / ~13 min;
+  - executor `codex:gpt-6.1-sol` (recipe): 125,164 tok / ~19 min;
+  - evaluator Agent `sonnet`: 61,997 tok / 487 s.
+- Generator ≠ judge: opus designer, codex planner/executor vs sonnet judge (judge-independence: cross-vendor to the generator). All five roles spawned; none fell back.
+- Designer diet: 1 doc, 2 runs (author + mandated revision). The r3 fixes were the controller's, not a third run.
+- Metered $0.5492 (quorum r1 $0.2409 + r2 $0.3083).
+
+**Ruled out:**
+- A Linux pre-measurement via a throwaway branch (row 235's suggestion): the mechanism reproduces deterministically on darwin with an injected gap, and the fix removes the timing dependence; CI on the PR is the Linux check.
+- The row's candidate as written (separate budgets, serialized arm keeping its 200 ms timer): leaves H2, measured.
+- A barrier/controllable-timer seam for M3's old-window kill: it tests the test's own window; M3 stays empirical with the residual stated. The seam was adopted only for the named-failure check (gpt r2).
+- Fixing the judge's NB1/NB2 in this sprint: non-blocking, and a change would need a re-judge. Row 244.
+- Treating `67af13e9`'s red as a dev red: it is row 200's flake, superseded green at HEAD.
+
+**Retro:**
+1. **A plan-authored mutation runner failed on the rig's own shell** (empty array under `set -u`, bash 3.2). The executor correctly called it an instrument error instead of a result; the judge covered the plain runs. A planner directive should name `/bin/bash` 3.2 as the target shell for any script it pins. Instance 1; watch.
+2. **The quorum pushed on claim strength, not design**: both rounds blocked on how the doc labelled its oracles (deterministic vs empirical), and the controller's two cheap measurements (M7, M7b) settled the r2 dispute exactly as the reviewer predicted. Rule 3f again.
+3. **D-WORLD-106 converted three idle fires a week into work.** The attended ruling was the lever; the loop could not widen its own scope.
+- Harness share 0. No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 235 BUILT in PR #457; row 244 filed.
+**Next:** row 235 lands on merge CI green (landing note). Then row 237 under D-WORLD-106 = A, then 238 → 242, stopping as soon as a release row is routable; a dev red still outranks.
