@@ -1,6 +1,6 @@
 # w-human-approve-control-window-flake: AC8's probe reads a slow second dispatch as "max = 1"
 
-- **Status**: Implemented (iteration 334, PR pending). Was: Planned. Designed iteration 334, unattended. **r3** (controller narrow-refinement
+- **Status**: Implemented (iteration 334, PR #457, merge `436e65c3`). Was: Planned. Designed iteration 334, unattended. **r3** (controller narrow-refinement
   carve-out after quorum r2 BLOCKED, reviewers' verbatim fixes, §10). **r2**: r1 after quorum r1 BLOCKED
   (§10). The `late-second` stagger is now anchored on the first probe entry. The stagger checks are
   labelled empirical. CONTROL's probe wiring is stated. The full gate has been run (V16).
