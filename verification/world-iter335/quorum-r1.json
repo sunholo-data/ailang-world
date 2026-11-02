@@ -1,0 +1,59 @@
+{
+  "doc": "design_docs/planned/w-finish-approve-record-guard-pin.md",
+  "iso_ts": "2026-11-02T16:22:19Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.104319,
+      "tokens_in": 5298,
+      "tokens_out": 5895,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The no-write arm is sound only under an execution-order precondition — arm 1 must run before the control against a pristine store — because under M1 the refused request and the clean control produce byte-identical content-addressed hashes (drills.txt shows sha256:9d1d…/ff79… in both). The doc's own §2.2/§6 analysis admits that with the control moved first, only the head's PreviousHead wire could distinguish write from no-write. This constraint exists only in design-doc prose, not in the test: a later refactor to t.Run+t.Parallel subtests would make arm 1's 'absent/empty' assertion flaky rather than deterministically red, and a naive reorder would fail clean with a misleading message that invites weakening arm 1 instead of restoring order. Not a blocker for the planned code, but the load-bearing invariant is unenforced.",
+        "catch": "Nothing in the planned 61-line test mechanically pins the arm-ordering/pristine-store precondition the no-write assertion depends on. Verify the final implementation keeps both arms as sequential statements in one function (no t.Parallel), and add a checked precondition plus a comment so a future reorder/parallelization fails with correct attribution instead of silently degrading the assertion that kills M3a.",
+        "proposed_fix": "In the planner-pinned file, add at the top of TestEpisodeFinishApproveRefusesRecord: (1) a doc comment: '// Arms are order-dependent. Arm 1 must observe a store with zero approval writes; the control intentionally reproduces arm 1\\'s content-addressed hashes (M1 shows they collide). Do not reorder, do not convert to parallel subtests.' (2) an explicit precondition assertion before arm 1, e.g. if h, reqs, decs := approvalWrites(t, ctx, d); h || len(reqs) != 0 || len(decs) != 0 { t.Fatalf(\"precondition: store must be write-empty, got head=%v requests=%v decisions=%v\", h, reqs, decs) } — this makes any reorder fail loudly on the clean tree with correct attribution, and -count=20 in AC-4 then also guards the parallel-refactor case. Optionally, give the control a distinct-but-valid expiry (e.g. +901) to break the hash collision entirely, noting in the comment that this trades away the single-variable (Record-only) attribution property."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.012580000000000001,
+      "tokens_in": 5300,
+      "tokens_out": 198,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The mutation and stability evidence applies to the prototype hash, not yet to the final fix. Moving or editing the test could invalidate that evidence, particularly the refused-first ordering and the shared no-write/control observer.",
+        "catch": "At implementation review, verify the final test against the measured prototype and inspect approvalWrites for fatal handling of every store-read error and use of boundedTestContext. Compilation and mutation results alone do not establish those helper properties.",
+        "proposed_fix": "Add a final verification-log row recording the fix commit, final test-file hash, inspection of approvalWrites error handling and bounded context, the production-untouched diff, and full-gate results. If the test differs from the measured prototype beyond relocation, rerun M1, M3a, M3c, and the stability checks against the final version."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.027160000000000004,
+      "tokens_in": 5945,
+      "tokens_out": 169,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The new test is proposed in a dedicated file (`host/daemon/episode_finish_approve_guard_test.go`) rather than being appended to `host/daemon/episode_finish_test.go`, though §2.1 explicitly justifies this for diff isolation and notes the planner may consolidate it.",
+        "catch": "Section 5 leaves the mirror guard arm on the record phase (`input.Scope != \"\"` at `:182`) unmeasured; verify whether it also survives mutation when closing out this row so a follow-up hygiene row is not missed if unpinned."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller re-ran M1 first-party at 77e0dd7c: prototype passes clean, M1 reds at :45 approve with record: 200. Test-only, 0 production lines; three assertions each with a sole killer mutant."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [],
+    "total_cost_usd": 0.144059,
+    "total_tokens_in": 16543,
+    "total_tokens_out": 6262
+  }
+}

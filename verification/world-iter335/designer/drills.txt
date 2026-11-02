@@ -1,0 +1,78 @@
+== base: prod 4e320c537e68 test f5df08b346dd ==
+---- CONTROL-new: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.02s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.313s
+rc=0
+---- CONTROL-finish-all: go test -count=1 -run Finish ./host/daemon/
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.391s
+rc=0
+== M1: prod 4e320c537e68 -> ecea3925d549; diff lines: 1	1	host/daemon/episode_finish.go
+vet ok
+---- M1-new: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+    episode_finish_approve_guard_test.go:45: approve with record: 200 {"request":"sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c","approval":"sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f"}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.422s
+FAIL
+rc=1
+---- M1-existing-finish: go test -count=1 -run Finish -skip ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.403s
+rc=0
+restored prod 4e320c537e68
+== M3a: prod 4e320c537e68 -> 9bc229ffd85d; diff lines: 5	1	host/daemon/episode_finish.go
+vet ok
+---- M3a-new: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+    episode_finish_approve_guard_test.go:48: refused approve recorded an approval: head=true requests=[sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c] decisions=[sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f]
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.411s
+FAIL
+rc=1
+restored prod 4e320c537e68
+== M3c: prod 4e320c537e68 -> d49bcc14bf89; diff lines: 1	1	host/daemon/episode_finish.go
+vet ok
+---- M3c-new: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+    episode_finish_approve_guard_test.go:55: control approve without record: 403 {"error":{"class":"Forbidden","message":"operator route: invalid or expired finish scope\nwhy: the agent holds the episode's session, so a session-gated write is one the agent could make\nnext: run ailang-worldd episode finish at a terminal"}}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.600s
+FAIL
+rc=1
+restored prod 4e320c537e68
+== M2: test f5df08b346dd -> 291ad48aec44; lines       50
+vet ok
+---- M2-clean: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.02s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.415s
+rc=0
+== M2+M3c: prod 4e320c537e68 -> d49bcc14bf89; diff lines: 1	1	host/daemon/episode_finish.go
+vet ok
+---- M2+M3c-new: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.04s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.430s
+rc=0
+restored prod 4e320c537e68
+== M2b: test f5df08b346dd -> e52ef5e1b6e8
+---- M2b-clean: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+    episode_finish_approve_guard_test.go:55: control approve without record: 200 {"request":"sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c","approval":"sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f"}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.04s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.432s
+FAIL
+rc=1
+== M4: test f5df08b346dd -> db6652990448
+vet ok
+== M4+M3a: prod 4e320c537e68 -> 9bc229ffd85d; diff lines: 5	1	host/daemon/episode_finish.go
+vet ok
+---- M4+M3a-new: go test -count=1 -v -run ^TestEpisodeFinishApproveRefusesRecord$ ./host/daemon/
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.426s
+rc=0
+restored prod 4e320c537e68
+== restored: prod 4e320c537e68 test f5df08b346dd ==
+?? host/daemon/episode_finish_approve_guard_test.go
+?? verification/world-iter335/
