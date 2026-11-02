@@ -418,7 +418,7 @@ stores with the same history. So:
 
 ## §10 Milestones
 
-M0/M1 built in episode `w219a` (Go implementation and fake-supervisor tests; real macOS installation remains attended).
+M0/M1 built in episode `w219a` (Go implementation and fake-supervisor tests; real macOS installation remains attended). M2–M4 built in w219b, w219c and w219d. **M5: the cutover ran attended on 2026-11-02**: rig frozen at entry 7280, home genesis at entry 0, service reinstalled with Workspace.Exec, launchers on 7644 (`episodes.md`); ACs 5 (reboot) and 6 (`brew upgrade`) remain attended.
 
 | M | what | gate |
 |---|---|---|
