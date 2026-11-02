@@ -1,0 +1,49 @@
+# plan-M2-acceptance.txt — iteration 336 planner, 2026-11-02T20:49:25Z
+# Tree: git archive b9f67a27 + plan-M1.diff.txt, then plan-M2.diff.txt (sha256 08e9838f84f3eaaa9f7aef6f1e6ad8fbea2fe18450c11c738806a2e2219818e9); D = design_docs/planned/w-marketing-capture-orchestration.md
+# Anchors: grep -cF -- '<anchor>' "$D"; parity: bash run_bounded.sh 600 <log> go test -count=1 -timeout 300s -v -run '^TestMarketing(Position|Phone)Parity$' ./scripts/marketingcheck
+# M238-doc-pin-dup: append " Oracle pin `<hash>`." after "This amendment was reviewed as that design's §4, as row 231's was." (one hash per run), run parity, restore from the pristine copy.
+# Deviation from design §4/§5 text, measured (B7 adds a 4th phone ledger entry, design §2.3 pre-authorised): A3 reads 'phone 4' and A7 reads '(position 8, phone 4)'; acceptance grep is 'position 8 entries, phone 4'.
+== pre-paste anchors (each must be 1)
+1	the gap may instead differ from the R1 gap by a whole number of 24 px body lines, ±2 px;
+1	Every other region's height is within ±2 px of R1;
+1	or any verdict difference outside the one-entry ledger, is a red.
+1	moved by anything other than whole lines in the two body-text gaps
+1	(a luma 120–200 run of at least 100 px)
+1	and packet paragraph heights and the two body-text gaps in whole 24 px lines ±2 px (§4.4, r3)
+1	## 10. Verification Log
+== controls
+6	(a3)
+0	misspelled
+== pre sha 0b2ee85987beac8d95b82d6a36a61e28b6b8f269dc3d3b0ff100817091db0e9c  -
+apply rc=0
+== post sha e66293d11e303218b3e1259872064b311b9cef4917e7f67e064cc59754b4ccc2  -
+== acceptance greps (each must be 1)
+1	(a5) (row 238) cumulative drift
+1	exactly one off-range pixel
+1	### Row 238 (iteration 336
+1	position 8 entries, phone 4
+== must be 0
+0	outside the one-entry ledger
+0	position 8 entries, phone 3
+0	(position 8, phone 3)
+== oracle pins (each must be 1)
+1	0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c
+1	31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c
+== M2 parity rc=0
+    phone_test.go:589: PARITY phone: inputs=45 diffs=0 ledger=4
+--- PASS: TestMarketingPhoneParity
+    --- PASS: TestMarketingPhoneParity/pin-registry
+    position_test.go:653: PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8
+--- PASS: TestMarketingPositionParity
+    --- PASS: TestMarketingPositionParity/pin-registry
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	10.388s
+== M238-doc-pin-dup (0a9a6795) rc=1
+--- FAIL: TestMarketingPositionParity
+    --- FAIL: TestMarketingPositionParity/pin-registry
+    position_test.go:579: ../../design_docs/planned/w-marketing-capture-orchestration.md: want the v64-p0check-main.go.txt pin 0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c exactly 
+   restored: e66293d11e303218b3e1259872064b311b9cef4917e7f67e064cc59754b4ccc2  -
+== M238-doc-pin-dup (31576922) rc=1
+--- FAIL: TestMarketingPhoneParity
+    --- FAIL: TestMarketingPhoneParity/pin-registry
+    phone_test.go:586: ../../design_docs/planned/w-marketing-capture-orchestration.md: want the v66-phonecheck-main.go.txt pin 31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c exactly 
+   restored: e66293d11e303218b3e1259872064b311b9cef4917e7f67e064cc59754b4ccc2  -

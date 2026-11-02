@@ -1,0 +1,111 @@
+{
+  "id": "w-marketing-predicate-tolerances",
+  "iteration": 336,
+  "row": "238",
+  "clause": "release hygiene: bound the P0/P3 free gaps to one whole line (a3), add cumulative drift (a5), and let the phone thumb run bridge one 1 px gap (iii'); carried findings (1), (2), (7) of row 231; moves no clause",
+  "status": "planned",
+  "authority": [
+    "design_docs/planned/w-marketing-predicate-tolerances.md r3 (b9f67a27; controller narrow-refinement carve-out after quorum r2)",
+    "design_docs/planned/w-marketing-predicate-tolerances-sprint-plan.md"
+  ],
+  "estimate": "2 executor runs (M1 about 25 min wall, dominated by go test ./... 376 s and verify_ail.sh under 6.5 min; M2 about 3 min)",
+  "scope": "The executor writes no Go code and no doc text: it applies two planner-banked unified diffs (plan-M1.diff.txt, plan-M2.diff.txt), checks sha256, runs the gates under run_bounded.sh, runs the 14 M1 mutants and the M2 pin-dup mutant in scratch, banks executor-*.txt evidence, commits M1 only, and leaves M2 uncommitted for the controller's sign-off and orchestration quorum.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter336-predicate-tolerances",
+    "branch": "sprint/world-iter336-marketing-predicate-tolerances",
+    "head": "b9f67a27",
+    "code_base": "37100a432e1b8af9d234396cb8fee7ad627ecbc3",
+    "sha256": {
+      "scripts/marketingcheck/position.go": "7512337137e3eb08fc7930247c89ee1e6b1f392fe9014069823b22aabfaac6ac",
+      "scripts/marketingcheck/phone.go": "e3b8db55c53cf6d69c31c0f908b8302b81dc24277e80af6b887473358f28c4b5",
+      "scripts/marketingcheck/position_test.go": "8e86c2563e24ab03dc188d4818081023c7a65f73dd97d8bd188b94507e328a0d",
+      "scripts/marketingcheck/phone_test.go": "0bce70c4f72784d4fea1437abd636c76e90874301b2fc97453d8e006cf0f71a8",
+      "design_docs/planned/w-marketing-capture-orchestration.md": "0b2ee85987beac8d95b82d6a36a61e28b6b8f269dc3d3b0ff100817091db0e9c"
+    },
+    "oracle_pins_unchanged": {
+      "design_docs/verification/world-iter315/v64-p0check-main.go.txt": "0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c",
+      "design_docs/verification/world-iter315/v66-phonecheck-main.go.txt": "31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c"
+    }
+  },
+  "environment": [
+    "X=/Users/voightkampff/dev/sunholo-data/.scratch-iter336-executor (never inside the worktree)",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export GOCACHE=$X/gocache GOMODCACHE=$X/gomodcache GOFLAGS=-modcacherw",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0, as iteration 335's controller gate and scripts/verify_go.sh)",
+    "export WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus (read only)",
+    "RB=$X/run_bounded.sh (copy of world-iter336/run_bounded.sh.txt, sha256 1635f8d7308e03a6bc02eeacd4bd6eb723ce76405c4c1d28f2c45ef93d8e2082)"
+  ],
+  "limits_s": {
+    "go_vet": 600, "gofmt": 600, "go_build": 600,
+    "go_test_all": 2400, "verify_ail": 1200,
+    "marketingcheck_acceptance": 1500, "mutation_each": 600, "capture_day_control_each": 300
+  },
+  "banked_sources_sha256": {
+    "design_docs/verification/world-iter336/plan-M1.diff.txt": "7da36f3006efca03e0b49249d60e577097df799e09b8186ce9525217dc585d74",
+    "design_docs/verification/world-iter336/plan-M2.diff.txt": "08e9838f84f3eaaa9f7aef6f1e6ad8fbea2fe18450c11c738806a2e2219818e9",
+    "design_docs/verification/world-iter336/plan-mutate.py.txt": "95206757b724bfd95e86e9a253831ac840d73635a86877f4bd06f49f6754d749",
+    "design_docs/verification/world-iter336/plan-mutants-expected.txt": "fa71baedaacc7dfb9064d3ab8b86f3339cf516f61d57e2b05beeedacc147833b",
+    "design_docs/verification/world-iter336/run_bounded.sh.txt": "1635f8d7308e03a6bc02eeacd4bd6eb723ce76405c4c1d28f2c45ef93d8e2082"
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "predicates and tests",
+      "files": [
+        "scripts/marketingcheck/position.go",
+        "scripts/marketingcheck/phone.go",
+        "scripts/marketingcheck/position_test.go",
+        "scripts/marketingcheck/phone_test.go",
+        "design_docs/verification/world-iter336/executor-M1-acceptance.txt",
+        "design_docs/verification/world-iter336/executor-M1-mutants.txt"
+      ],
+      "apply": "git apply --check then git apply design_docs/verification/world-iter336/plan-M1.diff.txt (4 files, +248/-60)",
+      "post_sha256": {
+        "scripts/marketingcheck/position.go": "9029dbabd574761050399864cdd45f399ae9a3682ff1523e547479e75f8c669d",
+        "scripts/marketingcheck/phone.go": "9540d55a323640edab4933e0a4d8f8445be5046a5f8d6c1b0596035b1f0c0770",
+        "scripts/marketingcheck/position_test.go": "7e9b1cc6e91aacb785ca3f32533d0dbf45f966b34d6e2920dd5b1e95c05cc35c",
+        "scripts/marketingcheck/phone_test.go": "e777985d087d882f3d4bd6ace1d6ed0580f8efd41a5914ba19a1db10798db2a0"
+      },
+      "acceptance": [
+        "bash $RB 1500 LOG go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck -> rc 0, 0 SKIP, 0 FAIL, TestMarketingPhoneRealCorpus PASS, B7 PASS",
+        "log contains exactly once: 'PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8'",
+        "log contains exactly once: 'PARITY phone: inputs=45 diffs=0 ledger=4'",
+        "log contains exactly once: 'PARITY phone: inputs=63 diffs=0 ledger=4'",
+        "log contains exactly once: 'CHECK images=10 byte-equal=10; real arms=43; parity inputs=63'",
+        "go vet ./scripts/marketingcheck rc 0; gofmt -l scripts/marketingcheck rc 0 and empty; go build ./... rc 0",
+        "git diff --exit-code 37100a43 -- design_docs/verification/world-iter315/ scripts/marketingcheck/testdata/ rc 0",
+        "capture-day steps 2-5 rc 0/1/0/1 with the plan M1.4 outputs",
+        "go test ./... rc 0 (in the worktree, AILANG_BIN set; Bash run_in_background, never nohup); ./scripts/verify_ail.sh rc 0"
+      ],
+      "mutants": {
+        "run": "each alone in $X/mut: python3 -I mutate.py <id> $X/mut; bash $RB 600 LOG go test -count=1 -timeout 300s -v -run '^TestMarketing(Position|Phone)(Corpus|Arms|Parity)$' ./scripts/marketingcheck; restore pristine and sha256-check",
+        "ids": ["M238-a3-unbounded", "M238-a3-bound2", "M238-a3-bound0", "M238-a5-off", "M238-a5-tol3", "M238-a5-tol1", "M238-a5-nonpara-zero", "M238-a5-accumulate-failed", "M238-run-nobridge", "M238-run-gap2px", "M238-run-chain-bridges", "M238-run-rightmost-tie", "F4", "F9"],
+        "expect": "every id rc 1 and its --- FAIL set equals plan-mutants-expected.txt exactly (planner: 14/14 EXACT, P08)"
+      },
+      "commit": "executor, named files only, no push"
+    },
+    {
+      "id": "M2",
+      "title": "orchestration text A1-A7",
+      "files": [
+        "design_docs/planned/w-marketing-capture-orchestration.md",
+        "design_docs/verification/world-iter336/executor-M2-acceptance.txt"
+      ],
+      "precheck": "grep -cF each of the 7 design-§4 anchors = 1; controls (a3)=6, misspelled=0; doc sha256 0b2ee859...",
+      "apply": "git apply --check then git apply design_docs/verification/world-iter336/plan-M2.diff.txt (+10/-5); post sha256 e66293d11e303218b3e1259872064b311b9cef4917e7f67e064cc59754b4ccc2",
+      "acceptance": [
+        "bash $RB 600 LOG go test -count=1 -timeout 300s -v -run '^TestMarketing(Position|Phone)Parity$' ./scripts/marketingcheck -> rc 0, both pin-registry subtests PASS",
+        "grep -cF = 1: '(a5) (row 238) cumulative drift', 'exactly one off-range pixel', '### Row 238 (iteration 336', 'position 8 entries, phone 4'",
+        "grep -cF = 0: 'outside the one-entry ledger'; each oracle pin still occurs once",
+        "M238-doc-pin-dup (each pin appended to the Row 238 subsection) -> rc 1, reds the matching TestMarketing(Position|Phone)Parity/pin-registry; restore sha256 e66293d1..."
+      ],
+      "commit": "NOT by the executor: controller sign-off (m2-signoff.txt; the only allowed deltas vs design §4 are 'phone 3' -> 'phone 4' in A3 and A7), orchestration quorum, then controller commit; M1 and M2 land together or not at all"
+    }
+  ],
+  "measured_deviations_from_design": [
+    "B7 measured ACCEPT with thumb {6 833 139 841}; oracle REFUSE; phone ledger 4 (design pre-authorised)",
+    "phone PARITY inputs 45 and 63 (design text: 44 and 62); arms 43, phoneWant 45 rows / 15 ACCEPT",
+    "M238-run-nobridge also reds judge/B7-thumb-two-equal-bridged-runs",
+    "M2 A3/A7 and the acceptance grep read 'phone 4'"
+  ]
+}

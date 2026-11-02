@@ -1,0 +1,32 @@
+# plan-mutate.py — row 238 (iteration 336) sprint plan: apply ONE named mutant to the M1 tree.
+# Usage: python3 -I plan-mutate.py <mutant-id> <repo-root>
+# Each mutant is one exact string replacement in scripts/marketingcheck/<file>; the old string must
+# occur exactly once (else exit 2, nothing written). Restore = copy the pristine file back.
+import sys
+M = {
+ "M238-a3-unbounded": ("position.go", "posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines", "posLineStep(e)"),
+ "M238-a3-bound2": ("position.go", "positionFreeGapLines = 1", "positionFreeGapLines = 2"),
+ "M238-a3-bound0": ("position.go", "positionFreeGapLines = 1", "positionFreeGapLines = 0"),
+ "M238-a5-off": ("position.go", "\t\t\tif chain {\n\t\t\t\tdrift += prevRes", "\t\t\tif chain && false {\n\t\t\t\tdrift += prevRes"),
+ "M238-a5-tol3": ("position.go", "positionDriftTol     = 2", "positionDriftTol     = 3"),
+ "M238-a5-tol1": ("position.go", "positionDriftTol     = 2", "positionDriftTol     = 1"),
+ "M238-a5-nonpara-zero": ("position.go", "hOK, hRes := true, dh", "hOK, hRes := true, 0"),
+ "M238-a5-accumulate-failed": ("position.go", "\t\t\t\tif okGap {\n\t\t\t\t\tdrift += gRes\n\t\t\t\t}", "\t\t\t\tdrift += gRes"),
+ "M238-run-nobridge": ("phone.go", "segs[i+1][0]-sg[1] == 2", "segs[i+1][0]-sg[1] == -1"),
+ "M238-run-gap2px": ("phone.go", "segs[i+1][0]-sg[1] == 2", "segs[i+1][0]-sg[1] <= 3"),
+ "M238-run-chain-bridges": ("phone.go", "\t\t\tif i+1 < len(segs) && segs[i+1][0]-sg[1] == 2 {\n\t\t\t\tend = segs[i+1][1]\n\t\t\t}",
+                            "\t\t\tfor j := i; j+1 < len(segs) && segs[j+1][0]-segs[j][1] == 2; j++ {\n\t\t\t\tend = segs[j+1][1]\n\t\t\t}"),
+ "M238-run-rightmost-tie": ("phone.go", "if x0 < 0 || end-sg[0] > x1-x0 {", "if x0 < 0 || end-sg[0] >= x1-x0 {"),
+ "F4": ("phone.go", "s.Scrollbar.Y0 >= 0 && s.Scrollbar.X0 <= 8 && ", "s.Scrollbar.Y0 >= 0 && "),
+ "F9": ("phone.go", "\t\tx0, x1 := -1, -1\n\t\tfor i, sg := range segs {",
+        "\t\tx0, x1 := -1, -1\n\t\tif len(segs) > 0 {\n\t\t\tsegs = [][2]int{{segs[0][0], segs[len(segs)-1][1]}}\n\t\t}\n\t\tfor i, sg := range segs {"),
+}
+if len(sys.argv) != 3 or sys.argv[1] not in M:
+    sys.stderr.write("usage: plan-mutate.py <id> <repo-root>; ids: " + " ".join(M) + "\n"); sys.exit(2)
+f, old, new = M[sys.argv[1]]
+p = sys.argv[2] + "/scripts/marketingcheck/" + f
+s = open(p).read()
+if s.count(old) != 1:
+    sys.stderr.write("NOT APPLIED %s: old string occurs %d times in %s\n" % (sys.argv[1], s.count(old), f)); sys.exit(2)
+open(p, "w").write(s.replace(old, new))
+print("applied", sys.argv[1], "to", f)
