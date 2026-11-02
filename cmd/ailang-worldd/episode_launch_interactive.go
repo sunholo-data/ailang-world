@@ -17,7 +17,27 @@ import (
 
 // Tests supply a private read-write file; production requires a controlling tty.
 var openLaunchTerminal = func() (*os.File, error) {
-	return os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	return launchTerminal(os.Stdin, func() (*os.File, error) { return os.OpenFile("/dev/tty", os.O_RDWR, 0) })
+}
+
+// launchTerminal picks the terminal an interactive agent inherits. Opening
+// /dev/tty proves there is a controlling terminal (an agent harness, cron or CI
+// has none and is refused). But macOS kqueue cannot poll a descriptor opened
+// from /dev/tty (EV_ERROR EINVAL), so a TUI agent such as Codex panics with
+// "reader source not set". When our own stdin is a terminal, the agent gets a
+// duplicate of it instead: the same pty, which kqueue accepts.
+func launchTerminal(stdin *os.File, open func() (*os.File, error)) (*os.File, error) {
+	tty, err := open()
+	if err != nil {
+		return nil, err
+	}
+	if stdin != nil && isTerminal(stdin.Fd()) {
+		if fd, err := syscall.Dup(int(stdin.Fd())); err == nil {
+			_ = tty.Close()
+			return os.NewFile(uintptr(fd), stdin.Name()), nil
+		}
+	}
+	return tty, nil
 }
 
 func launchLauncher(agent, hostsDir, addr string) (string, error) {
