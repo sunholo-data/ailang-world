@@ -1,0 +1,818 @@
+{
+  "id": "w-human-approve-control-window-flake",
+  "iteration": 334,
+  "row": "235",
+  "authority": [
+    "design_docs/planned/w-human-approve-control-window-flake.md r3 (\u00a72.1\u2013\u00a72.5, \u00a74, \u00a75, \u00a710)",
+    "design_docs/coding-standards.md",
+    "design_docs/planned/w-human-approve-control-window-flake-sprint-plan.md"
+  ],
+  "estimate": "0.1 day of change; executor wall dominated by soak and package gates",
+  "scope": "Two independently green milestones. Apply the single plan diff to host/daemon/decisionpacket_daemon_test.go only. daemon.go unchanged; mutations in scratch archives only. Executor report/raw logs under verification/world-iter334/. No git writes or mission-document edits.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter334",
+    "head": "cf79a7a92199eb65ddda4bf724167ba9c8c092e1",
+    "go_tree_equals": "388001c2",
+    "sha256": {
+      "host/daemon/decisionpacket_daemon_test.go": "53a708a5264fafe53217d59c58dafa7e25eeabe7f5ef9debc554912fa30a0445",
+      "host/daemon/daemon.go": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+    },
+    "fixed_sha256_prototype": {
+      "host/daemon/decisionpacket_daemon_test.go": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+      "host/daemon/daemon.go": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+    },
+    "prototype_test_sha256": "bb75420d0713188621a111bb2079e66a2f4ab91f0529d00e2bc106d1a483d3ee",
+    "plan_diff_sha256": "8dee691695d632d8afa3f775629d213bf4769606072a0225140e9ec9f66c6d51",
+    "plan_diff_stat": "1 file changed, 177 insertions(+), 17 deletions(-)",
+    "plan_diff_numstat": {
+      "host/daemon/decisionpacket_daemon_test.go": {
+        "insertions": 177,
+        "deletions": 17
+      }
+    },
+    "diff_extract": "x '```diff' > \"$WX/plan.diff\"; patch -p1 --dry-run < \"$WX/plan.diff\"; patch -p1 < \"$WX/plan.diff\""
+  },
+  "environment": [
+    "# Run from the executor's assigned repo root (pwd recorded in the report).",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "export WX=$(mktemp -d /tmp/world-iter334-executor.XXXXXX)",
+    "mkdir -p \"$WX/tools\" \"$WX/logs\" \"$WX/base\" \"$WX/mutants\"",
+    "PLAN=design_docs/planned/w-human-approve-control-window-flake-sprint-plan.md",
+    "x() { awk -v h=\"$1\" '$0==h{f=1;next} f&&/^```$/{f=0} f' \"$PLAN\"; }",
+    "x '```bash runmut.sh' > \"$WX/tools/runmut.sh\"",
+    "x '```bash loaded-soak.sh' > \"$WX/tools/loaded-soak.sh\"",
+    "chmod +x \"$WX/tools/\"*.sh",
+    "git rev-parse HEAD",
+    "git status --porcelain",
+    "go version",
+    "\"$AILANG_BIN\" --version"
+  ],
+  "executor_constraints": [
+    "No git writes of any kind: no add/commit/stash/checkout/reset/restore/apply/init/worktree; the controller commits. Read-only git archive/status/diff/show/rev-parse are allowed.",
+    "Apply only the plan single diff with patch -p1 after clean dry-run, full diff SHA256 and base-file checks. Final code touches only host/daemon/decisionpacket_daemon_test.go. daemon.go stays byte-identical to its base pin.",
+    "Run base and mutation drills only in git archive scratch copies. Temporary daemon.go edits for M1/M1b/M6/M7 must never enter the executor worktree. Restore both target files for every drill and check full before/edited/restored SHA256s.",
+    "Executor creates verification/world-iter334/executor-report.md and executor-*.txt. Tools, snapshots, temporary copies go under $WX outside the repo. Preserve existing verification evidence and both plan deliverables.",
+    "Do not edit design_docs/world-mission*.md; do not move plans/designs or touch main checkout, launchd files, or mission state. Controller handles queue/log/commit/PR/CI.",
+    "Every go test has -timeout; bound other long commands with alarm. Run package-scale gates sequentially; capture raw output and rc without a masking pipeline. Never finish by announcing a wait.",
+    "Copy exact commands from fenced blocks. Run shell loops/scripts with bash (interactive shell is zsh). No t.Parallel, no additional code or timing changes, no mutant gofmt.",
+    "A substitution that did not apply, missing test discovery, SKIP, build error, race detector finding, or Go timeout is an instrument/gate error, never a mutation kill. Require named killers and measured line numbers.",
+    "Any gate red at base is a finding to REPORT, not to work around. Do not fix unrelated issues, change binaries, relax timeouts, initialize git in copies, or claim acceptance green. Baseline read-only in an archive if needed; missing .git can itself fail host/pins and must be reported.",
+    "Socket-touching results from inside a sandbox are labelled UNINFORMATIVE UNDER SANDBOX; a bind permission failure is neither pass nor fail for the sprint. Executor must obtain informative gates in its authorized environment or report them unverified.",
+    "Load, if used, consists solely of yes > /dev/null burners. Track and kill every burner you start before returning, including on red/interrupt; never kill unrelated processes. pgrep -x yes must have no PID output; pgrep -x yes | wc -l must print 0."
+  ],
+  "controller_only": [
+    "git writes/commit/PR/merge",
+    "mission documents and moves to implemented/",
+    "all 3 CI jobs green on final fix head, daemon ok in race gate"
+  ],
+  "gates": [
+    {
+      "id": "G1",
+      "cmd": "gofmt -l host/daemon/",
+      "pass_condition": "empty output"
+    },
+    {
+      "id": "G2",
+      "cmd": "go vet ./host/daemon/",
+      "pass_condition": "rc 0, test compilation fence"
+    },
+    {
+      "id": "G3",
+      "cmd": "go test -timeout 180s -run '^$' ./host/daemon/",
+      "pass_condition": "rc 0, compile only"
+    },
+    {
+      "id": "AC-1",
+      "name": "Base reproduction",
+      "kind": "EMPIRICAL",
+      "milestone": "M1",
+      "commands": [
+        "git archive HEAD | tar -x -C \"$WX/base\"\n# A inserts exactly the three-line 300 ms sleep before the base second Dispatch.\n\"$WX/tools/runmut.sh\" \"$WX/base\" A plain 20 > \"$WX/logs/A-plain-protocol.txt\" 2>&1\n\"$WX/tools/runmut.sh\" \"$WX/base\" A race 20 > \"$WX/logs/A-race-protocol.txt\" 2>&1"
+      ],
+      "pass_condition": "Demonstration only: want 20/20 FAIL plain and race at base harness line 270: unwrapped probe max = 1, want 2; restore exactly. Survival is empirical evidence, never a gate on the fix."
+    },
+    {
+      "id": "AC-2",
+      "name": "Mutex removal",
+      "kind": "DETERMINISTIC",
+      "milestone": "M1",
+      "commands": [
+        "# Fixed mutation copy: all production mutations are temporary here, not in the worktree.\ngit archive HEAD | tar -x -C \"$WX/mutants\"\npatch -d \"$WX/mutants\" -p1 < \"$WX/plan.diff\"\nfor id in M1 M1b M2; do\n    for mode in plain race; do\n        \"$WX/tools/runmut.sh\" \"$WX/mutants\" \"$id\" \"$mode\" 20 > \"$WX/logs/$id-$mode-protocol.txt\" 2>&1 || exit $?\n    done\ndone"
+      ],
+      "pass_condition": "20/20 top-level FAIL and 40/40 subtest FAIL per mutant/mode; sole killer unheld at final test line 372. No build errors, races, or skips; hashes restored."
+    },
+    {
+      "id": "AC-3",
+      "name": "Old 200 ms window",
+      "kind": "EMPIRICAL",
+      "milestone": "M1",
+      "commands": [
+        "\"$WX/tools/runmut.sh\" \"$WX/mutants\" M3 plain 20 > \"$WX/logs/M3-plain-protocol.txt\" 2>&1\n\"$WX/tools/runmut.sh\" \"$WX/mutants\" M3 race 20 > \"$WX/logs/M3-race-protocol.txt\" 2>&1"
+      ],
+      "pass_condition": "Want 20/20 FAIL in late-second only; together passes. Sole killer CONTROL max at mutant line 392. Apply the exact r3 adjudication rule below for a lone evidenced residual; a second survival fails the row."
+    },
+    {
+      "id": "AC-4",
+      "name": "Named-failure handshake",
+      "kind": "DETERMINISTIC",
+      "milestone": "M1",
+      "commands": [
+        "go test -timeout 600s ./host/daemon -run '^TestConcurrencyProbeNamesAMissedArrival$' -count=200 -v > \"$WX/logs/handshake-plain.txt\" 2>&1\ngo test -race -timeout 600s ./host/daemon -run '^TestConcurrencyProbeNamesAMissedArrival$' -count=200 -v > \"$WX/logs/handshake-race.txt\" 2>&1\nfor id in H1 H2 H3; do\n    for mode in plain race; do\n        \"$WX/tools/runmut.sh\" \"$WX/mutants\" \"$id\" \"$mode\" 3 > \"$WX/logs/$id-$mode-protocol.txt\" 2>&1 || exit $?\n    done\ndone"
+      ],
+      "pass_condition": "Control 200/200 PASS each mode; H1/H2/H3 fail 3/3 each mode by their sole killers. H3 fails by the test own 5s bound at line 422, never the 600s Go timeout. H1/H2 line 426 checks the complete constant-bearing message; entries == 1 line 429. M5 is empirical only, not deterministic acceptance."
+    },
+    {
+      "id": "AC-5",
+      "name": "Idle and loaded soak",
+      "kind": "GATE",
+      "milestone": "M2",
+      "commands": [
+        "go test -race -timeout 900s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=200 > \"$WX/logs/soak-idle.txt\" 2>&1\n\"$WX/tools/loaded-soak.sh\" \"$PWD\" > \"$WX/logs/soak-loaded.txt\" 2>&1"
+      ],
+      "pass_condition": "Both ok, 0 FAIL, 0 DATA RACE; count=200 each. Loaded run has exactly 32 yes burners, all killed before return; pgrep -x yes produces no PIDs and its count prints 0."
+    },
+    {
+      "id": "AC-6",
+      "name": "Package and full gate",
+      "kind": "GATE",
+      "milestone": "M2",
+      "commands": [
+        "perl -e 'alarm 300; exec @ARGV' go vet ./host/daemon/ > \"$WX/logs/package-vet.txt\" 2>&1\ngo test -timeout 900s ./host/daemon/ -count=1 > \"$WX/logs/package-plain.txt\" 2>&1\ngo test -race -timeout 1500s ./host/daemon/ -count=1 > \"$WX/logs/package-race.txt\" 2>&1\nperl -e 'alarm 2400; exec @ARGV' bash > \"$WX/logs/full-gate.txt\" 2>&1 <<'FULL'\ngo build ./... && go test -timeout 1800s ./...\nFULL\n(\n    unset AILANG_BIN\n    export PATH=$HOME/.ailang/state/ailang-release-v0.55.0/x:$PATH\n    export WORLD_PKG_AILANG_BIN=$HOME/.ailang/state/ailang-release-v0.41.0/x/ailang\n    perl -e 'alarm 600; exec @ARGV' ./scripts/verify_ail.sh\n) > \"$WX/logs/verify-ail.txt\" 2>&1"
+      ],
+      "pass_condition": "All rc 0, no skips from missing binaries, no DATA RACE; verify_ail.sh required identity manifests pass. CI on fix head all 3 jobs green with ok host/daemon in race gate is controller-only follow-up. A base-red gate is a finding to REPORT, never work around."
+    },
+    {
+      "id": "AC-7",
+      "name": "Idle wall time",
+      "kind": "GATE",
+      "milestone": "M1",
+      "commands": [
+        "go test -timeout 600s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=1 -v > \"$WX/logs/wall-time.txt\" 2>&1"
+      ],
+      "pass_condition": "The whole top-level test elapsed time in its --- PASS line is under 1.2s in one idle run, both subtests discovered. Designer measured 0.78-0.80s; planner scratch measured 0.79s. Record measured elapsed; no load burners during this check."
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Apply the single diff; gofmt/vet/compile; target and handshake tests; AC-1/2/3/4/7 plus mutation table",
+      "est_loc": 194,
+      "files": [
+        "host/daemon/decisionpacket_daemon_test.go"
+      ],
+      "edits": [
+        "Record environment and base pins; extract the two scripts and the one diff; AC-1 on a base archive.",
+        "Apply patch -p1 to executor worktree, verify fixed pins; gofmt/vet/compile-only and target plain/race count=3.",
+        "Create fixed mutation archive; run AC-2, AC-3, AC-4, M6, M7, M7b; verify each restoration.",
+        "Run AC-7 idle; save all raw logs and SHA manifests."
+      ],
+      "tests": [
+        "TestHumanApproveIsSerializedAcrossEpisodes/together and /late-second",
+        "TestConcurrencyProbeNamesAMissedArrival",
+        "gofmt/vet and compile-only"
+      ],
+      "acceptance_commands": [
+        "M1 apply block",
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "M6/M7/M7b block",
+        "AC-7"
+      ],
+      "green": "Only the planned test file differs, daemon.go pin unchanged; compile fence and tests green; all deterministic mutants killed by named sole assertions, M7b PASS; empirical checks recorded/adjudicated per authority; all drill hashes restored.",
+      "mutations": [
+        {
+          "id": "M1",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/daemon.go": "s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//"
+          },
+          "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+          "line": 372,
+          "sha256": {
+            "host/daemon/daemon.go": {
+              "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+              "edited": "3737b1ed8187fdb92efee6ba71f36761068739736a226104324ffc73b92a1be3",
+              "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//' \"$G\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "FAIL",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+        },
+        {
+          "id": "M1b",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/daemon.go": "s/defer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/s.mu.Unlock() \\/\\/ MD3 target/"
+          },
+          "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+          "line": 372,
+          "sha256": {
+            "host/daemon/daemon.go": {
+              "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+              "edited": "66076a39d936863f431cc74e814d14395e59e8c3869656129432383c8b4b5ffd",
+              "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/defer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/s.mu.Unlock() \\/\\/ MD3 target/' \"$G\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "FAIL",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+        },
+        {
+          "id": "M2",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/decisionpacket_daemon_test.go": "s/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = probe/"
+          },
+          "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+          "line": 372,
+          "sha256": {
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "3dc59ab26e2a7e56d89a175602d84e3bc1f043508e275da352dd4c7ce4d1f041",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = probe/' \"$T\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "FAIL",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+        },
+        {
+          "id": "M3",
+          "kind": "EMPIRICAL",
+          "edits": {
+            "host/daemon/decisionpacket_daemon_test.go": "s/\\t\\tp\\.awaitSecond\\(ctx\\)\\n/\\t\\tselect {\\n\\t\\tcase <-p.inside2:\\n\\t\\tcase <-time.After(200 * time.Millisecond):\\n\\t\\tcase <-ctx.Done():\\n\\t\\t}\\n/"
+          },
+          "killer": "unwrapped probe max = 1, want 2",
+          "line": 392,
+          "sha256": {
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "092a2b0bb9879673d38ae2870e84299836ef50bb23c1fe35881e2d9ce40b9c80",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/\\t\\tp\\.awaitSecond\\(ctx\\)\\n/\\t\\tselect {\\n\\t\\tcase <-p.inside2:\\n\\t\\tcase <-time.After(200 * time.Millisecond):\\n\\t\\tcase <-ctx.Done():\\n\\t\\t}\\n/' \"$T\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "FAIL",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/late-second:392"
+        },
+        {
+          "id": "M6",
+          "kind": "EMPIRICAL",
+          "edits": {
+            "host/daemon/daemon.go": "s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//",
+            "host/daemon/decisionpacket_daemon_test.go": "s/unheld := p\\.held != nil && p\\.held\\.TryLock\\(\\)/unheld := false \\&\\& p.held != nil \\&\\& p.held.TryLock()/"
+          },
+          "killer": "serialized probe max = 2, want 1",
+          "line": 375,
+          "sha256": {
+            "host/daemon/daemon.go": {
+              "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+              "edited": "3737b1ed8187fdb92efee6ba71f36761068739736a226104324ffc73b92a1be3",
+              "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+            },
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "0914d8a6d150d48a11ddcbce1eeb91132453f0cc8a3a94774d6a10a9f8336b2a",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//' \"$G\"",
+            "perl -0pi -e 's/unheld := p\\.held != nil && p\\.held\\.TryLock\\(\\)/unheld := false \\&\\& p.held != nil \\&\\& p.held.TryLock()/' \"$T\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "FAIL",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:375"
+        },
+        {
+          "id": "M7",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/daemon.go": "s/func \\(s serializedHandler\\) Execute/var otherMu sync.Mutex\\n\\nfunc (s serializedHandler) Execute/; s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/\\totherMu.Lock()         \\/\\/ MD3 target\\n\\tdefer otherMu.Unlock() \\/\\/ MD3 target/"
+          },
+          "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+          "line": 372,
+          "sha256": {
+            "host/daemon/daemon.go": {
+              "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+              "edited": "682bf08e8e8d240835fcb96626d70d505a40a8299172d82252eda5afee5f059b",
+              "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/func \\(s serializedHandler\\) Execute/var otherMu sync.Mutex\\n\\nfunc (s serializedHandler) Execute/; s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/\\totherMu.Lock()         \\/\\/ MD3 target\\n\\tdefer otherMu.Unlock() \\/\\/ MD3 target/' \"$G\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "FAIL",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+        },
+        {
+          "id": "M7b",
+          "kind": "BOUNDARY_EXPECT_PASS",
+          "edits": {
+            "host/daemon/decisionpacket_daemon_test.go": "s/\\tsh := d\\.human\\.\\(serializedHandler\\)\\n/\\tsh := d.human.(serializedHandler)\\n\\t_ = sh\\n\\totherMu := \\&sync.Mutex{}\\n/; s/held: sh\\.mu/held: otherMu/; s/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = serializedHandler{mu: otherMu, h: probe}/"
+          },
+          "killer": null,
+          "line": null,
+          "sha256": {
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "2311eafcf5b56b71460006d2b5de9c81ee5347b1944895bc4de73b7da406ee8b",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/\\tsh := d\\.human\\.\\(serializedHandler\\)\\n/\\tsh := d.human.(serializedHandler)\\n\\t_ = sh\\n\\totherMu := \\&sync.Mutex{}\\n/; s/held: sh\\.mu/held: otherMu/; s/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = serializedHandler{mu: otherMu, h: probe}/' \"$T\""
+          ],
+          "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+          "expected": "PASS",
+          "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}: none (expected PASS)"
+        },
+        {
+          "id": "H1",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/decisionpacket_daemon_test.go": "s/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"\"/"
+          },
+          "killer": "missed = \"\", want \"second Human.Approve dispatch did not arrive within 10s\"",
+          "line": 426,
+          "sha256": {
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "5c836e58172ca1896728af59b371d347a4547e1626af42198f30fd975d3ef7ff",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"\"/' \"$T\""
+          ],
+          "run_regex": "^TestConcurrencyProbeNamesAMissedArrival$",
+          "expected": "FAIL",
+          "sole_killer": "TestConcurrencyProbeNamesAMissedArrival:426"
+        },
+        {
+          "id": "H2",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/decisionpacket_daemon_test.go": "s/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"second Human.Approve dispatch did not arrive\"/"
+          },
+          "killer": "missed = \"second Human.Approve dispatch did not arrive\", want \"second Human.Approve dispatch did not arrive within 10s\"",
+          "line": 426,
+          "sha256": {
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "d16c35e5f270f12c36c52b23763742efe73e393e6e930292f661fd4f13b98153",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"second Human.Approve dispatch did not arrive\"/' \"$T\""
+          ],
+          "run_regex": "^TestConcurrencyProbeNamesAMissedArrival$",
+          "expected": "FAIL",
+          "sole_killer": "TestConcurrencyProbeNamesAMissedArrival:426"
+        },
+        {
+          "id": "H3",
+          "kind": "DETERMINISTIC",
+          "edits": {
+            "host/daemon/decisionpacket_daemon_test.go": "s/timeout := p\\.timeout/var timeout <-chan time.Time/"
+          },
+          "killer": "TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s",
+          "line": 422,
+          "sha256": {
+            "host/daemon/decisionpacket_daemon_test.go": {
+              "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+              "edited": "7f98f9f8e890b7da6c9e00dc03346bf1d72593505b0fd1e81d14142632b0b604",
+              "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+            }
+          },
+          "perl_commands": [
+            "perl -0pi -e 's/timeout := p\\.timeout/var timeout <-chan time.Time/' \"$T\""
+          ],
+          "run_regex": "^TestConcurrencyProbeNamesAMissedArrival$",
+          "expected": "FAIL",
+          "sole_killer": "TestConcurrencyProbeNamesAMissedArrival:422"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2",
+      "title": "AC-5 soak; AC-6 package and full gate; executor report",
+      "est_loc": 0,
+      "files": [
+        "verification/world-iter334/executor-report.md",
+        "verification/world-iter334/executor-*.txt"
+      ],
+      "edits": [
+        "Run idle and loaded soaks, clean up all burners.",
+        "Run package vet/plain/race sequentially, full Go gate, then verify_ail.sh with released binaries.",
+        "Copy raw outputs and protocol manifests; write executor-report.md; verify final pins/scope/process cleanup."
+      ],
+      "tests": [
+        "target idle/loaded race soak count=200",
+        "host/daemon package plain and race",
+        "full Go suite",
+        "verify_ail.sh"
+      ],
+      "acceptance_commands": [
+        "AC-5",
+        "AC-6",
+        "final evidence block"
+      ],
+      "green": "All informative local gates green, no burner processes, fixed pins unchanged and report complete. Base failures and sandbox limitations are explicitly findings, not accepted passes; controller verifies CI separately.",
+      "mutations": [],
+      "status": "planned"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "name": "Base reproduction",
+      "kind": "EMPIRICAL",
+      "milestone": "M1",
+      "commands": [
+        "git archive HEAD | tar -x -C \"$WX/base\"\n# A inserts exactly the three-line 300 ms sleep before the base second Dispatch.\n\"$WX/tools/runmut.sh\" \"$WX/base\" A plain 20 > \"$WX/logs/A-plain-protocol.txt\" 2>&1\n\"$WX/tools/runmut.sh\" \"$WX/base\" A race 20 > \"$WX/logs/A-race-protocol.txt\" 2>&1"
+      ],
+      "pass_condition": "Demonstration only: want 20/20 FAIL plain and race at base harness line 270: unwrapped probe max = 1, want 2; restore exactly. Survival is empirical evidence, never a gate on the fix."
+    },
+    {
+      "id": "AC-2",
+      "name": "Mutex removal",
+      "kind": "DETERMINISTIC",
+      "milestone": "M1",
+      "commands": [
+        "# Fixed mutation copy: all production mutations are temporary here, not in the worktree.\ngit archive HEAD | tar -x -C \"$WX/mutants\"\npatch -d \"$WX/mutants\" -p1 < \"$WX/plan.diff\"\nfor id in M1 M1b M2; do\n    for mode in plain race; do\n        \"$WX/tools/runmut.sh\" \"$WX/mutants\" \"$id\" \"$mode\" 20 > \"$WX/logs/$id-$mode-protocol.txt\" 2>&1 || exit $?\n    done\ndone"
+      ],
+      "pass_condition": "20/20 top-level FAIL and 40/40 subtest FAIL per mutant/mode; sole killer unheld at final test line 372. No build errors, races, or skips; hashes restored."
+    },
+    {
+      "id": "AC-3",
+      "name": "Old 200 ms window",
+      "kind": "EMPIRICAL",
+      "milestone": "M1",
+      "commands": [
+        "\"$WX/tools/runmut.sh\" \"$WX/mutants\" M3 plain 20 > \"$WX/logs/M3-plain-protocol.txt\" 2>&1\n\"$WX/tools/runmut.sh\" \"$WX/mutants\" M3 race 20 > \"$WX/logs/M3-race-protocol.txt\" 2>&1"
+      ],
+      "pass_condition": "Want 20/20 FAIL in late-second only; together passes. Sole killer CONTROL max at mutant line 392. Apply the exact r3 adjudication rule below for a lone evidenced residual; a second survival fails the row."
+    },
+    {
+      "id": "AC-4",
+      "name": "Named-failure handshake",
+      "kind": "DETERMINISTIC",
+      "milestone": "M1",
+      "commands": [
+        "go test -timeout 600s ./host/daemon -run '^TestConcurrencyProbeNamesAMissedArrival$' -count=200 -v > \"$WX/logs/handshake-plain.txt\" 2>&1\ngo test -race -timeout 600s ./host/daemon -run '^TestConcurrencyProbeNamesAMissedArrival$' -count=200 -v > \"$WX/logs/handshake-race.txt\" 2>&1\nfor id in H1 H2 H3; do\n    for mode in plain race; do\n        \"$WX/tools/runmut.sh\" \"$WX/mutants\" \"$id\" \"$mode\" 3 > \"$WX/logs/$id-$mode-protocol.txt\" 2>&1 || exit $?\n    done\ndone"
+      ],
+      "pass_condition": "Control 200/200 PASS each mode; H1/H2/H3 fail 3/3 each mode by their sole killers. H3 fails by the test own 5s bound at line 422, never the 600s Go timeout. H1/H2 line 426 checks the complete constant-bearing message; entries == 1 line 429. M5 is empirical only, not deterministic acceptance."
+    },
+    {
+      "id": "AC-5",
+      "name": "Idle and loaded soak",
+      "kind": "GATE",
+      "milestone": "M2",
+      "commands": [
+        "go test -race -timeout 900s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=200 > \"$WX/logs/soak-idle.txt\" 2>&1\n\"$WX/tools/loaded-soak.sh\" \"$PWD\" > \"$WX/logs/soak-loaded.txt\" 2>&1"
+      ],
+      "pass_condition": "Both ok, 0 FAIL, 0 DATA RACE; count=200 each. Loaded run has exactly 32 yes burners, all killed before return; pgrep -x yes produces no PIDs and its count prints 0."
+    },
+    {
+      "id": "AC-6",
+      "name": "Package and full gate",
+      "kind": "GATE",
+      "milestone": "M2",
+      "commands": [
+        "perl -e 'alarm 300; exec @ARGV' go vet ./host/daemon/ > \"$WX/logs/package-vet.txt\" 2>&1\ngo test -timeout 900s ./host/daemon/ -count=1 > \"$WX/logs/package-plain.txt\" 2>&1\ngo test -race -timeout 1500s ./host/daemon/ -count=1 > \"$WX/logs/package-race.txt\" 2>&1\nperl -e 'alarm 2400; exec @ARGV' bash > \"$WX/logs/full-gate.txt\" 2>&1 <<'FULL'\ngo build ./... && go test -timeout 1800s ./...\nFULL\n(\n    unset AILANG_BIN\n    export PATH=$HOME/.ailang/state/ailang-release-v0.55.0/x:$PATH\n    export WORLD_PKG_AILANG_BIN=$HOME/.ailang/state/ailang-release-v0.41.0/x/ailang\n    perl -e 'alarm 600; exec @ARGV' ./scripts/verify_ail.sh\n) > \"$WX/logs/verify-ail.txt\" 2>&1"
+      ],
+      "pass_condition": "All rc 0, no skips from missing binaries, no DATA RACE; verify_ail.sh required identity manifests pass. CI on fix head all 3 jobs green with ok host/daemon in race gate is controller-only follow-up. A base-red gate is a finding to REPORT, never work around."
+    },
+    {
+      "id": "AC-7",
+      "name": "Idle wall time",
+      "kind": "GATE",
+      "milestone": "M1",
+      "commands": [
+        "go test -timeout 600s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=1 -v > \"$WX/logs/wall-time.txt\" 2>&1"
+      ],
+      "pass_condition": "The whole top-level test elapsed time in its --- PASS line is under 1.2s in one idle run, both subtests discovered. Designer measured 0.78-0.80s; planner scratch measured 0.79s. Record measured elapsed; no load burners during this check."
+    }
+  ],
+  "mutation_commands": [
+    {
+      "id": "A",
+      "kind": "EMPIRICAL",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/(\\t\\t\\t\\t_, errs\\[i\\] = c\\.Dispatch\\(ctx, calls\\[i\\]\\))/\\t\\t\\t\\tif i == 1 {\\n\\t\\t\\t\\t\\ttime.Sleep(300 * time.Millisecond)\\n\\t\\t\\t\\t}\\n$1/"
+      },
+      "killer": "unwrapped probe max = 1, want 2",
+      "line": 270,
+      "base": true,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "53a708a5264fafe53217d59c58dafa7e25eeabe7f5ef9debc554912fa30a0445",
+          "edited": "2c4d47bc3e89e7b488e7998d1708173cbfef6b83573eb285dc79ea44ed2f8722",
+          "restored": "53a708a5264fafe53217d59c58dafa7e25eeabe7f5ef9debc554912fa30a0445"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/(\\t\\t\\t\\t_, errs\\[i\\] = c\\.Dispatch\\(ctx, calls\\[i\\]\\))/\\t\\t\\t\\tif i == 1 {\\n\\t\\t\\t\\t\\ttime.Sleep(300 * time.Millisecond)\\n\\t\\t\\t\\t}\\n$1/' \"$T\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:270"
+    },
+    {
+      "id": "M1",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/daemon.go": "s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//"
+      },
+      "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+      "line": 372,
+      "sha256": {
+        "host/daemon/daemon.go": {
+          "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+          "edited": "3737b1ed8187fdb92efee6ba71f36761068739736a226104324ffc73b92a1be3",
+          "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//' \"$G\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+    },
+    {
+      "id": "M1b",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/daemon.go": "s/defer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/s.mu.Unlock() \\/\\/ MD3 target/"
+      },
+      "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+      "line": 372,
+      "sha256": {
+        "host/daemon/daemon.go": {
+          "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+          "edited": "66076a39d936863f431cc74e814d14395e59e8c3869656129432383c8b4b5ffd",
+          "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/defer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/s.mu.Unlock() \\/\\/ MD3 target/' \"$G\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+    },
+    {
+      "id": "M2",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = probe/"
+      },
+      "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+      "line": 372,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "3dc59ab26e2a7e56d89a175602d84e3bc1f043508e275da352dd4c7ce4d1f041",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = probe/' \"$T\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+    },
+    {
+      "id": "M3",
+      "kind": "EMPIRICAL",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/\\t\\tp\\.awaitSecond\\(ctx\\)\\n/\\t\\tselect {\\n\\t\\tcase <-p.inside2:\\n\\t\\tcase <-time.After(200 * time.Millisecond):\\n\\t\\tcase <-ctx.Done():\\n\\t\\t}\\n/"
+      },
+      "killer": "unwrapped probe max = 1, want 2",
+      "line": 392,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "092a2b0bb9879673d38ae2870e84299836ef50bb23c1fe35881e2d9ce40b9c80",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/\\t\\tp\\.awaitSecond\\(ctx\\)\\n/\\t\\tselect {\\n\\t\\tcase <-p.inside2:\\n\\t\\tcase <-time.After(200 * time.Millisecond):\\n\\t\\tcase <-ctx.Done():\\n\\t\\t}\\n/' \"$T\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/late-second:392"
+    },
+    {
+      "id": "M6",
+      "kind": "EMPIRICAL",
+      "edits": {
+        "host/daemon/daemon.go": "s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//",
+        "host/daemon/decisionpacket_daemon_test.go": "s/unheld := p\\.held != nil && p\\.held\\.TryLock\\(\\)/unheld := false \\&\\& p.held != nil \\&\\& p.held.TryLock()/"
+      },
+      "killer": "serialized probe max = 2, want 1",
+      "line": 375,
+      "sha256": {
+        "host/daemon/daemon.go": {
+          "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+          "edited": "3737b1ed8187fdb92efee6ba71f36761068739736a226104324ffc73b92a1be3",
+          "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+        },
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "0914d8a6d150d48a11ddcbce1eeb91132453f0cc8a3a94774d6a10a9f8336b2a",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target\\n//' \"$G\"",
+        "perl -0pi -e 's/unheld := p\\.held != nil && p\\.held\\.TryLock\\(\\)/unheld := false \\&\\& p.held != nil \\&\\& p.held.TryLock()/' \"$T\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:375"
+    },
+    {
+      "id": "M7",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/daemon.go": "s/func \\(s serializedHandler\\) Execute/var otherMu sync.Mutex\\n\\nfunc (s serializedHandler) Execute/; s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/\\totherMu.Lock()         \\/\\/ MD3 target\\n\\tdefer otherMu.Unlock() \\/\\/ MD3 target/"
+      },
+      "killer": "serialized probe ran 2 of 2 executions without the daemon mutex held",
+      "line": 372,
+      "sha256": {
+        "host/daemon/daemon.go": {
+          "before": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+          "edited": "682bf08e8e8d240835fcb96626d70d505a40a8299172d82252eda5afee5f059b",
+          "restored": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/func \\(s serializedHandler\\) Execute/var otherMu sync.Mutex\\n\\nfunc (s serializedHandler) Execute/; s/\\ts\\.mu\\.Lock\\(\\)         \\/\\/ MD3 target\\n\\tdefer s\\.mu\\.Unlock\\(\\) \\/\\/ MD3 target/\\totherMu.Lock()         \\/\\/ MD3 target\\n\\tdefer otherMu.Unlock() \\/\\/ MD3 target/' \"$G\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "FAIL",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}:372"
+    },
+    {
+      "id": "M7b",
+      "kind": "BOUNDARY_EXPECT_PASS",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/\\tsh := d\\.human\\.\\(serializedHandler\\)\\n/\\tsh := d.human.(serializedHandler)\\n\\t_ = sh\\n\\totherMu := \\&sync.Mutex{}\\n/; s/held: sh\\.mu/held: otherMu/; s/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = serializedHandler{mu: otherMu, h: probe}/"
+      },
+      "killer": null,
+      "line": null,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "2311eafcf5b56b71460006d2b5de9c81ee5347b1944895bc4de73b7da406ee8b",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/\\tsh := d\\.human\\.\\(serializedHandler\\)\\n/\\tsh := d.human.(serializedHandler)\\n\\t_ = sh\\n\\totherMu := \\&sync.Mutex{}\\n/; s/held: sh\\.mu/held: otherMu/; s/gate\\.h = serializedHandler\\{mu: sh\\.mu, h: probe\\}/gate.h = serializedHandler{mu: otherMu, h: probe}/' \"$T\""
+      ],
+      "run_regex": "^TestHumanApproveIsSerializedAcrossEpisodes$",
+      "expected": "PASS",
+      "sole_killer": "TestHumanApproveIsSerializedAcrossEpisodes/{together,late-second}: none (expected PASS)"
+    },
+    {
+      "id": "H1",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"\"/"
+      },
+      "killer": "missed = \"\", want \"second Human.Approve dispatch did not arrive within 10s\"",
+      "line": 426,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "5c836e58172ca1896728af59b371d347a4547e1626af42198f30fd975d3ef7ff",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"\"/' \"$T\""
+      ],
+      "run_regex": "^TestConcurrencyProbeNamesAMissedArrival$",
+      "expected": "FAIL",
+      "sole_killer": "TestConcurrencyProbeNamesAMissedArrival:426"
+    },
+    {
+      "id": "H2",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"second Human.Approve dispatch did not arrive\"/"
+      },
+      "killer": "missed = \"second Human.Approve dispatch did not arrive\", want \"second Human.Approve dispatch did not arrive within 10s\"",
+      "line": 426,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "d16c35e5f270f12c36c52b23763742efe73e393e6e930292f661fd4f13b98153",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/(case <-timeout:\\n\\t\\t)why = fmt\\.Sprintf\\(\"second Human\\.Approve dispatch did not arrive within %s\", probeWaitBound\\)/$1why = \"second Human.Approve dispatch did not arrive\"/' \"$T\""
+      ],
+      "run_regex": "^TestConcurrencyProbeNamesAMissedArrival$",
+      "expected": "FAIL",
+      "sole_killer": "TestConcurrencyProbeNamesAMissedArrival:426"
+    },
+    {
+      "id": "H3",
+      "kind": "DETERMINISTIC",
+      "edits": {
+        "host/daemon/decisionpacket_daemon_test.go": "s/timeout := p\\.timeout/var timeout <-chan time.Time/"
+      },
+      "killer": "TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s",
+      "line": 422,
+      "sha256": {
+        "host/daemon/decisionpacket_daemon_test.go": {
+          "before": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383",
+          "edited": "7f98f9f8e890b7da6c9e00dc03346bf1d72593505b0fd1e81d14142632b0b604",
+          "restored": "877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383"
+        }
+      },
+      "perl_commands": [
+        "perl -0pi -e 's/timeout := p\\.timeout/var timeout <-chan time.Time/' \"$T\""
+      ],
+      "run_regex": "^TestConcurrencyProbeNamesAMissedArrival$",
+      "expected": "FAIL",
+      "sole_killer": "TestConcurrencyProbeNamesAMissedArrival:422"
+    }
+  ],
+  "mutation_revert": "runmut.sh snapshots both files; exact perl -0pi -e; targeted file edited SHA differs; trap restores via cp; print full before/edited/restored SHA256; require equality on restore. JSON edited hashes are computed on final bytes, not runtime verdicts.",
+  "mutation_lines": "Computed on final file: serialized missed/unheld/max 369/372/375; CONTROL missed/max 385/388. M3 adds 4 lines: killer 392. H1/H2 message 426; H3 own 5s bound 422; entries 429. Executor records measured lines.",
+  "empirical_adjudication": "a lone M3 survival whose log shows the second dispatch entering only after the first goroutine resumed (>100 ms deschedule past its expired timer) is the R2 residual, not a regression \u2014 re-run once at -count=20; a second survival fails the row. AC-1 is a demonstration on the base tree, not a gate on the fix.",
+  "additional_mutation_commands": "for id in M6 M7 M7b; do\n    for mode in plain race; do\n        \"$WX/tools/runmut.sh\" \"$WX/mutants\" \"$id\" \"$mode\" 20 > \"$WX/logs/$id-$mode-protocol.txt\" 2>&1 || exit $?\n    done\ndone\nshasum -a 256 -c \"$WX/fixed.sha\"\n# Snapshot equality proves daemon.go remained unchanged in the executor worktree.\ngit diff --name-only\ngit diff --stat\n",
+  "planner_verification": {
+    "environment": "workspace-write sandbox; socket-touching results must be UNINFORMATIVE UNDER SANDBOX",
+    "results": {
+      "Environment": "workspace-write sandbox; go1.26.6 darwin/arm64; AILANG_BIN=$HOME/.pinned-ailang/ailang reports v0.41.0. All following results are sandbox-local, not the executor full gate.",
+      "Base and scope": "Both worktree Go files equal their HEAD SHA256 pins after every check. No worktree Go file was edited; scratch Go edits occurred only under .planner-scratch/. No git write operation was run.",
+      "Prototype provenance": "Normalized designer r2 headers, applied in scratch, obtained bb75420d0713188621a111bb2079e66a2f4ab91f0529d00e2bc106d1a483d3ee before adding \u00a72.5.",
+      "Exact diff round trip": "PASS in sandbox: extracted the unique diff and both tool blocks byte-identically; patch -p1 --dry-run clean against this worktree; applied the extracted final diff to a fresh git archive HEAD in .planner-scratch/roundtrip; both resulting file pins match. Stat: 1 file changed, 177 insertions(+), 17 deletions(-).",
+      "Formatting and compile fence": "PASS in sandbox: gofmt -l host/daemon/ empty (rc 0), go vet ./host/daemon/ rc 0, go test -timeout 180s -run ^$ ./host/daemon/ rc 0. gofmt/vet externally bounded at 180s/300s.",
+      "Target tests": "PASS in sandbox: go test -timeout 180s ./host/daemon -run the two exact named tests -count=3 -v, plain and -race: 3/3 top-level PASS for each named test and 6 serialization subtest PASS each mode; no DATA RACE, socket/bind error, or SKIP. Plain whole serialization test 0.79s in each run.",
+      "AC-4 controls": "PASS in sandbox: go test -timeout 600s ./host/daemon -run ^TestConcurrencyProbeNamesAMissedArrival$ -count=200 -v, plain and -race; 200/200 PASS each mode.",
+      "Mutation smoke drill": "PASS in sandbox, race count=1 per row: M1/M1b/M2/M7 killed solely at unheld :372; M3 killed late-second only at CONTROL max :392; M6 killed at serialized max :375; M7b expected PASS; H1/H2 killed at exact message :426; H3 killed by own 5s bound :422 (not Go timeout). All before/edited/restored full digests matched the JSON computed values; every restoration byte-identical. This smoke drill does not substitute for executor count=20 or AC-4 mutant count=3 plain/race.",
+      "Static mutation and document checks": "All 11 exact Perl row substitutions change the intended pinned files; computed assertion lines verified on final/mutated bytes. bash -n passes for both extracted scripts. jq -e . passes for the JSON; exactly one diff block and only the intended test path.",
+      "Not run by planner": "AC-1 base demonstration, full mutation repetition budgets, AC-5 soaks/load generation, AC-6 package/full/AILANG gates and CI remain executor/controller work. No load processes were started. Socket-touching results inside this sandbox would be UNINFORMATIVE UNDER SANDBOX; no socket gate result is claimed.",
+      "Process enumeration": "No burners were started. A read-only pgrep -x yes check cannot enumerate processes in this sandbox (sysmond service not found / Cannot get process list); the piped count 0 is UNINFORMATIVE UNDER SANDBOX, not cleanup proof. The planned load script refuses to start burners if enumeration is unavailable and reports an unverified cleanup count on enumeration failure. Extracted loaded-soak.sh preflight verified rc=7 with UNINFORMATIVE UNDER SANDBOX before launching any burner."
+    }
+  },
+  "tools": {
+    "runmut.sh": {
+      "extract": "x '```bash runmut.sh'",
+      "sha256": "b57087f5da63c4919633a17c53ba41d932832ead606de9456f2c2ade8af2b55e"
+    },
+    "loaded-soak.sh": {
+      "extract": "x '```bash loaded-soak.sh'",
+      "sha256": "a7ac51611eb53e3e3be4bdee51afd217d3303e53a38d7b26f6ef9296268e837c"
+    }
+  },
+  "failure_classification": "Base-red gate is a finding to REPORT, never work around. Missing .git in git archives is an artifact, do not git init/commit. Socket-touching sandbox results UNINFORMATIVE UNDER SANDBOX. Never count missing test discovery/build errors/races/timeouts/SKIP as mutation kills.",
+  "report": {
+    "path": "verification/world-iter334/executor-report.md",
+    "raw_outputs": "verification/world-iter334/executor-*.txt",
+    "commands": "mkdir -p verification/world-iter334\nfor file in \"$WX/logs/\"*.txt; do\n    cp \"$file\" \"verification/world-iter334/executor-$(basename \"$file\")\"\ndone\nshasum -a 256 -c \"$WX/fixed.sha\"\ngit diff --name-only\ngit diff --stat\ngit status --porcelain\nscan_rc=0\npgrep -x yes > \"$WX/logs/final-yes.txt\" 2> \"$WX/logs/final-yes-error.txt\" || scan_rc=$?\nif [ \"$scan_rc\" -le 1 ]; then\n    wc -l < \"$WX/logs/final-yes.txt\"\nelse\n    echo 'UNINFORMATIVE UNDER SANDBOX: process count unavailable'\nfi\n"
+  },
+  "design_discrepancies": [
+    "Prototype headers normalized for patch -p1; prototype bytes verified before \u00a72.5 extension.",
+    "Added timeout field and fallback plus bounded direct handshake test per r3; all existing arms keep nil timeout.",
+    "All final and mutant line references recomputed; executor must record measured ones.",
+    "M7b is expected PASS; M3/AC-1 and M6 are empirical; M5 is not deterministic named-failure evidence."
+  ],
+  "out_of_scope": [
+    "production code changes",
+    "sibling broker filter-refusal flake row 200",
+    "kernel/.ail/package/UI/CI edits",
+    "mission documents/git writes by executor"
+  ],
+  "status": "planned"
+}
