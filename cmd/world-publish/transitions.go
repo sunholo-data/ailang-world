@@ -70,8 +70,9 @@ func runTransitions(opts options, in io.Reader, out, errw io.Writer, env environ
 	db, err := store.Open(opts.store)
 	if err != nil {
 		if store.IsWriterAlreadyActive(err) {
-			fmt.Fprintln(errw, "world-publish transitions: "+err.Error()+
-				" — the transition registry is written under single-writer authority; stop the daemon first")
+			for _, line := range writerLockHelp("transitions", opts.store) {
+				fmt.Fprintln(errw, line)
+			}
 		}
 		return report(errw, storeOpenFailed(opts.store, err))
 	}
