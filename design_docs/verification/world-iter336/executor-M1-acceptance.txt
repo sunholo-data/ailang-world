@@ -1,0 +1,42 @@
+# executor M1 acceptance (iteration 336 row 238). Worktree HEAD 3f502709 + plan-M1.diff.txt applied, uncommitted.
+# Env: AILANG_BIN=$HOME/.pinned-ailang/ailang -> AILANG v0.41.0; go version go1.26.6 darwin/arm64
+
+## M1.1 apply: git apply --check rc=0; git apply rc=0; 4 files +248/-60
+sha256 position.go 9029dbab..., phone.go 9540d55a..., position_test.go 7e9b1cc6..., phone_test.go e777985d... (all match plan)
+
+## M1.2 acceptance: go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck (runner rc)
+  rc=0
+  skip=0
+  fail=0
+  realcorpus=1
+  b7=1
+  1 PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8
+  1 PARITY phone: inputs=45 diffs=0 ledger=4
+  1 PARITY phone: inputs=63 diffs=0 ledger=4
+  1 CHECK images=10 byte-equal=10; real arms=43; parity inputs=63
+  ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	4.917s
+  (ok line time 4.917s is the actual runtime; plan had a <time> placeholder)
+
+## M1.3: go vet ./scripts/marketingcheck; gofmt -l scripts/marketingcheck; go build ./...; fixtures diff -r vs 37100a43
+  vet rc=0  gofmt rc=0 lines=0  build rc=0  fixtures rc=0
+
+## M1.4 capture-day controls (steps 2-5; step 3 and 5 rc=1 expected, REFUSE)
+step 2:
+  accept-seed5                           ACCEPT regions=17
+  accept-eval-p1                         ACCEPT regions=17
+  TOTAL candidates=2 accept=2 refuse=0
+step 3:
+  refuse                                 REFUSE regions=17
+      packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+      packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+  TOTAL candidates=1 accept=0 refuse=1
+step 4:
+  accept-v50                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389
+  accept-seed2                 ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389
+  TOTAL candidates=2 accept=2 refuse=0
+step 5:
+  refuse                       REFUSE 1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} thumb={-1 -1 -1 -1} titleRight=413
+      (i) header {25 45 370 68} entry {90 428 370 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+      (iii′) dims 1440x1100
+      (iii′) thumb {-1 -1 -1 -1}
+  TOTAL candidates=1 accept=0 refuse=1

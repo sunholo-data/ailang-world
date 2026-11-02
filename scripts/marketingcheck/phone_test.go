@@ -1,8 +1,9 @@
 package main
 
 // Row 231 M2 (design_docs/planned/w-marketing-position-checker.md §2.2–§2.4, §3 M2, §4 F1–F11):
-// `marketingcheck phone` on skeleton renders of the 10 real phone captures and 39 arms derived
-// from the seed-5 render, its parity with the banked oracle (ledger: header-15px), its exit codes,
+// `marketingcheck phone` on skeleton renders of the 10 real phone captures and 43 arms derived
+// from the seed-5 render, its parity with the banked oracle (ledger: header-15px; row 238 adds
+// B1-thumb-split-px150, B1c-thumb-split-px8 and B7-thumb-two-equal-bridged-runs), its exit codes,
 // and the env-gated real-corpus check.
 
 import (
@@ -177,7 +178,7 @@ func phoneJudgeArm(name string, f func(im *image.RGBA)) phoneArm {
 	return phoneArm{"judge/" + name, func(src image.Image) image.Image { im := phoneCloneRGBA(src); f(im); return im }}
 }
 
-// phoneArms: 12 phoneneg (world-iter315/v67-phoneneg-main.go.txt), 23 judge
+// phoneArms: 12 phoneneg (world-iter315/v67-phoneneg-main.go.txt), 23 + 4 judge (the 4 from row 238)
 // (world-iter315/v67b-judge-phone-arms-main.go.txt) and 4 new (world-iter328/v14-newarms-main.go.txt,
 // v11-h15-main.go.txt).
 var phoneArms = func() []phoneArm {
@@ -264,6 +265,24 @@ var phoneArms = func() []phoneArm {
 		phoneJudgeArm("thumb-dark-luma100", func(im *image.RGBA) { phoneNoThumb(im); phoneFill(im, 6, 833, 330, 841, 100) }),
 		phoneJudgeArm("tall-image-844-ok-but-thumb-1row", func(im *image.RGBA) { phoneNoThumb(im); phoneFill(im, 6, 840, 330, 841, 190) }),
 		phoneJudgeArm("title-ink-spoof-pixel-388", func(im *image.RGBA) { phoneFill(im, 360, 45, 390, 68, 250); phoneFill(im, 388, 50, 389, 51, 0) }),
+		// Row 238 (w-marketing-predicate-tolerances §2.3): the bridge's three limits.
+		phoneJudgeArm("B1d-thumb-two-splits-px100-px200", func(im *image.RGBA) {
+			phoneFill(im, 100, 833, 101, 841, 250)
+			phoneFill(im, 200, 833, 201, 841, 250)
+		}),
+		phoneJudgeArm("B1e-thumb-gap-2px-at-150", func(im *image.RGBA) { phoneFill(im, 150, 833, 152, 841, 250) }),
+		phoneJudgeArm("B6-alternating-pixels-no-thumb", func(im *image.RGBA) {
+			phoneNoThumb(im)
+			for x := 6; x < 330; x += 2 {
+				phoneFill(im, x, 833, x+1, 841, 190)
+			}
+		}),
+		// Row 238 r3 (quorum r2, oc-kimi-k3): two bridged runs of equal span; the leftmost wins.
+		phoneJudgeArm("B7-thumb-two-equal-bridged-runs", func(im *image.RGBA) {
+			phoneFill(im, 61, 833, 62, 841, 250)
+			phoneFill(im, 139, 833, 200, 841, 250)
+			phoneFill(im, 260, 833, 261, 841, 250)
+		}),
 	}
 	solid := func(name string, r image.Rectangle) phoneArm {
 		return phoneArm{"new/" + name, func(src image.Image) image.Image {
@@ -315,8 +334,8 @@ func phoneArmInputs(t *testing.T, dir string, base image.Image) []labelledPath {
 	return in
 }
 
-// phoneRenderInputs is the CI arm set: the seed-5 and seed-2 base renders plus the 39 arms of
-// the seed-5 render (41 PNGs in dir).
+// phoneRenderInputs is the CI arm set: the seed-5 and seed-2 base renders plus the 43 arms of
+// the seed-5 render (45 PNGs in dir).
 func phoneRenderInputs(t *testing.T, dir string) []labelledPath {
 	t.Helper()
 	seed5 := renderPhoneSkeleton(loadPhoneSkeleton(t, filepath.Join(phoneTestdata, "skeleton-r1c-seed5-pass-a-phone.json")))
@@ -325,8 +344,8 @@ func phoneRenderInputs(t *testing.T, dir string) []labelledPath {
 	writePhonePNG(t, in[0].Path, seed5)
 	writePhonePNG(t, in[1].Path, seed2)
 	in = append(in, phoneArmInputs(t, dir, seed5)...)
-	if len(in) != 41 {
-		t.Fatalf("phone inputs: %d, want 41", len(in))
+	if len(in) != 45 {
+		t.Fatalf("phone inputs: %d, want 45", len(in))
 	}
 	return in
 }
@@ -381,7 +400,7 @@ func judgePhoneFile(t *testing.T, path string) ([]string, PhoneScan) {
 	return PhoneJudge(im, s), s
 }
 
-// phoneWant is the 41-row verdict table (design §3 M2; V14, V15 column 3): 12 ACCEPT.
+// phoneWant is the 45-row verdict table (design §3 M2; V14, V15 column 3; row 238 §2.3): 15 ACCEPT.
 var phoneWant = map[string]string{
 	"seed5-render":                           "ACCEPT",
 	"seed2-render":                           "ACCEPT",
@@ -399,9 +418,9 @@ var phoneWant = map[string]string{
 	"v67/blank":                              "REFUSE (i),(ii),thumb,title-right,zero-bands",
 	"judge/title-right-386":                  "REFUSE title-right",
 	"judge/title-right-387":                  "ACCEPT",
-	"judge/B1-thumb-split-px150":             "REFUSE thumb",
+	"judge/B1-thumb-split-px150":             "ACCEPT",
 	"judge/B1b-thumb-split-px250":            "ACCEPT",
-	"judge/B1c-thumb-split-px8":              "REFUSE thumb",
+	"judge/B1c-thumb-split-px8":              "ACCEPT",
 	"judge/B3-grey-bar-x0-300-no-thumb":      "ACCEPT",
 	"judge/B3b-grey-bar-full-width":          "REFUSE thumb",
 	"judge/B4-run-100px":                     "REFUSE thumb",
@@ -424,6 +443,10 @@ var phoneWant = map[string]string{
 	"new/entry-solid-ink":                    "REFUSE (i)",
 	"new/tall-845":                           "REFUSE dims",
 	"new/header-15px":                        "REFUSE (ii)",
+	"judge/B1d-thumb-two-splits-px100-px200": "REFUSE thumb",
+	"judge/B1e-thumb-gap-2px-at-150":         "REFUSE thumb",
+	"judge/B6-alternating-pixels-no-thumb":   "REFUSE thumb",
+	"judge/B7-thumb-two-equal-bridged-runs":  "ACCEPT",
 }
 
 func TestMarketingPhoneSkeleton(t *testing.T) {
@@ -487,8 +510,8 @@ func TestMarketingPhoneArms(t *testing.T) {
 			accept++
 		}
 	}
-	if len(phoneWant) != 41 || accept != 12 {
-		t.Errorf("verdict table: %d rows, %d ACCEPT; want 41 and 12", len(phoneWant), accept)
+	if len(phoneWant) != 45 || accept != 15 {
+		t.Errorf("verdict table: %d rows, %d ACCEPT; want 45 and 15", len(phoneWant), accept)
 	}
 }
 
@@ -496,7 +519,8 @@ var phoneOracleLine = regexp.MustCompile(`^(\S+)\s.*\| \(i\)=(\w+) \(ii\)=(\w+) 
 
 // phoneParity runs the oracle over inputs (ref only feeds its r2 field) and compares each
 // label's r3 verdict and clause pass/fail with the subcommand's reasons. The only allowed
-// difference is the ledger's: header-15px, oracle ACCEPT, phone REFUSE (design §2.2).
+// differences are the ledger's: header-15px, oracle ACCEPT, phone REFUSE (row 231 design §2.2);
+// B1, B1c and B7, oracle REFUSE, phone ACCEPT (row 238 design §2.5).
 func phoneParity(t *testing.T, oracle, ref string, inputs []labelledPath) {
 	t.Helper()
 	args := []string{ref}
@@ -517,8 +541,15 @@ func phoneParity(t *testing.T, oracle, ref string, inputs []labelledPath) {
 			oracleOut[m[1]] = row{m[7], [5]bool{m[2] == "true", m[3] == "true", m[4] == "true", m[5] == "true", m[6] == "true"}}
 		}
 	}
-	ledger := map[string]bool{"new/header-15px": true}
-	compared, diffs := 0, 0
+	// Row 238 (w-marketing-predicate-tolerances §2.5): oracle verdict, phone verdict and the reason
+	// substring phone must carry ("" = phone ACCEPT).
+	ledger := map[string][3]string{
+		"new/header-15px":                       {"ACCEPT", "REFUSE", "(ii) rect-too-small phone.png: header"},
+		"judge/B1-thumb-split-px150":            {"REFUSE", "ACCEPT", ""},
+		"judge/B1c-thumb-split-px8":             {"REFUSE", "ACCEPT", ""},
+		"judge/B7-thumb-two-equal-bridged-runs": {"REFUSE", "ACCEPT", ""},
+	}
+	compared, diffs, ledgerSeen := 0, 0, 0
 	for _, in := range inputs {
 		o, ok := oracleOut[in.Label]
 		if !ok {
@@ -533,9 +564,10 @@ func phoneParity(t *testing.T, oracle, ref string, inputs []labelledPath) {
 		joined := strings.Join(reasons, "\n")
 		clauses := [5]bool{!strings.Contains(joined, "(i) "), !strings.Contains(joined, "(ii) "), !strings.Contains(joined, "(iii′) dims"), !strings.Contains(joined, "(iii′) thumb"), !strings.Contains(joined, "(iii′) title-right")}
 		compared++
-		if ledger[in.Label] {
-			if o.verdict != "ACCEPT" || v != "REFUSE" || !strings.Contains(joined, "(ii) rect-too-small phone.png: header") {
-				t.Errorf("ledger %s: want oracle ACCEPT, phone REFUSE (ii) rect-too-small phone.png: header; got oracle %s, phone %s %q", in.Label, o.verdict, v, reasons)
+		if le, ok := ledger[in.Label]; ok {
+			ledgerSeen++
+			if o.verdict != le[0] || v != le[1] || !strings.Contains(joined, le[2]) {
+				t.Errorf("ledger %s: want oracle %s, phone %s %q; got oracle %s, phone %s %q", in.Label, le[0], le[1], le[2], o.verdict, v, reasons)
 			}
 			continue
 		}
@@ -544,8 +576,8 @@ func phoneParity(t *testing.T, oracle, ref string, inputs []labelledPath) {
 			t.Errorf("%s: oracle %s %v, phone %s %v %q", in.Label, o.verdict, o.clauses, v, clauses, reasons)
 		}
 	}
-	if compared != len(inputs) || len(oracleOut) != len(inputs) {
-		t.Fatalf("compared %d labels (oracle printed %d), want %d", compared, len(oracleOut), len(inputs))
+	if compared != len(inputs) || len(oracleOut) != len(inputs) || ledgerSeen != len(ledger) {
+		t.Fatalf("compared %d labels (oracle printed %d, ledger %d of %d), want %d", compared, len(oracleOut), ledgerSeen, len(ledger), len(inputs))
 	}
 	t.Logf("PARITY phone: inputs=%d diffs=%d ledger=%d", compared, diffs, len(ledger))
 }
@@ -736,8 +768,8 @@ func TestMarketingPhoneRealCorpus(t *testing.T) {
 		}
 	}
 	realInputs = append(realInputs, arms...)
-	if len(realInputs) != 59 {
-		t.Fatalf("real parity inputs %d, want 59", len(realInputs))
+	if len(realInputs) != 63 {
+		t.Fatalf("real parity inputs %d, want 63", len(realInputs))
 	}
 	oracle := buildOracle(t, phoneOracleSource, phoneOraclePin)
 	phoneParity(t, oracle, filepath.Join(corpus, "v50-reference-phone.png"), realInputs)

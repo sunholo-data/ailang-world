@@ -1,0 +1,13 @@
+# executor full gate, run at M1 applied (M1.5 gate, before M2 was applied); M2 applied later, uncommitted. 2026-11-02T21:09:39Z
+# go version: go version go1.26.6 darwin/arm64
+## go build ./...   (M1.3 run, runner)
+  rc=0
+## AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./...   (M1.5 run, runner, limit 2400s)
+start 2026-11-02T21:01:23Z AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0)
+go test ./... rc=0
+verify_ail.sh rc=0
+DONE 2026-11-02T21:07:59Z
+  ok packages=35 FAIL lines=0
+  ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	121.668s
+## ./scripts/verify_ail.sh   (M1.5 run, limit 1200s)
+  last line: ✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
