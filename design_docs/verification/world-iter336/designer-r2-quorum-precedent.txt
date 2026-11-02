@@ -1,0 +1,15 @@
+$ ls ~/.ailang/state/mission-quorum-world/ | grep -c w-marketing-capture-orchestration; ls ... | grep w-marketing-capture-orchestration
+4
+w-marketing-capture-orchestration-2026-10-26T11-47-05Z.json
+w-marketing-capture-orchestration-2026-10-26T12-00-33Z.json
+w-marketing-capture-orchestration-2026-10-28T20-18-43Z.json
+w-marketing-capture-orchestration-2026-10-28T20-27-47Z.json
+$ (control) ls ~/.ailang/state/mission-quorum-world/ | grep w-marketing-position-checker
+w-marketing-position-checker-2026-10-31T00-42-30Z.json
+w-marketing-position-checker-2026-10-31T00-51-18Z.json
+$ git log -1 --format="%h %ci %s" 03fe5a1a
+03fe5a1a 2026-10-31 03:26:01 +0100 docs(row 231 M3): orchestration §4.4 and QUICKSTART §13 switch to marketingcheck position/phone; NB2 pinned
+$ git log --format="%h %ci" -- design_docs/planned/w-marketing-capture-orchestration.md | head -3
+03fe5a1a 2026-10-31 03:26:01 +0100 docs(row 231 M3): orchestration §4.4 and QUICKSTART §13 switch to marketingcheck position/phone; NB2 pinned
+205589d9 2026-10-29 01:59:46 +0100 docs(mission): record World iteration 316 — row 150 M8b built (final gates outside the sandbox; C11 unchanged; judge r1 PASS 93 → r2 PASS 93); rows 231/232 notes
+e5cd4673 2026-10-28 21:46:42 +0100 docs(design): orchestration r5 — per-fix acceptance criteria and named mutations (V74); judge r2 PASS 84 (row 150)

@@ -1,0 +1,115 @@
+$ cd $SCRATCH/tree && WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus go test -count=1 -timeout 300s -v -run '^TestIter336ProtoPhone$' ./scripts/marketingcheck   (rc=0)
+=== RUN   TestIter336ProtoPhone
+label                                                | committed r3                   | r4 proto                       | thumb r3 -> r4
+seed5-render                                         | ACCEPT                         | ACCEPT                         | {6 833 333 841} -> {6 833 333 841}
+seed2-render                                         | ACCEPT                         | ACCEPT                         | {6 833 340 841} -> {6 833 340 841}
+v67/no-scrollbar                                     | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+v67/title-unclipped                                  | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+v67/no-overflow                                      | REFUSE thumb,title-right       | REFUSE thumb,title-right       | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+v67/crop-370                                         | REFUSE dims,title-right        | REFUSE dims,title-right        | {6 833 333 841} -> {6 833 333 841}
+v67/pad-370                                          | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+v67/full-thumb                                       | REFUSE thumb                   | REFUSE thumb                   | {3 833 388 841} -> {3 833 388 841}
+v67/shift-2                                          | ACCEPT                         | ACCEPT                         | {6 835 333 843} -> {6 835 333 843}
+v67/shift-4                                          | ACCEPT                         | ACCEPT                         | {6 837 333 844} -> {6 837 333 844}
+v67/shift-5                                          | REFUSE (i)                     | REFUSE (i)                     | {6 838 333 844} -> {6 838 333 844}
+v67/shift-10                                         | REFUSE (i)                     | REFUSE (i)                     | {6 843 333 844} -> {6 843 333 844}
+v67/timeline-only                                    | REFUSE (i),(ii),thumb,title-right | REFUSE (i),(ii),thumb,title-right | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+v67/blank                                            | REFUSE (i),(ii),thumb,title-right,zero-bands | REFUSE (i),(ii),thumb,title-right,zero-bands | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+judge/title-right-386                                | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+judge/title-right-387                                | ACCEPT                         | ACCEPT                         | {6 833 333 841} -> {6 833 333 841}
+judge/B1-thumb-split-px150                           | REFUSE thumb                   | ACCEPT                         | {151 833 333 841} -> {6 833 333 841} FLIP
+    MUTANT-FLIPS judge/B1-thumb-split-px150: M-run-nobridge->REFUSE thumb
+judge/B1b-thumb-split-px250                          | ACCEPT                         | ACCEPT                         | {6 833 250 841} -> {6 833 333 841}
+judge/B1c-thumb-split-px8                            | REFUSE thumb                   | ACCEPT                         | {9 833 333 841} -> {6 833 333 841} FLIP
+    MUTANT-FLIPS judge/B1c-thumb-split-px8: M-run-nobridge->REFUSE thumb
+judge/B3-grey-bar-x0-300-no-thumb                    | ACCEPT                         | ACCEPT                         | {0 830 300 835} -> {0 830 300 835}
+judge/B3b-grey-bar-full-width                        | REFUSE thumb                   | REFUSE thumb                   | {0 830 390 835} -> {0 830 390 835}
+judge/B4-run-100px                                   | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+judge/B4b-run-101px                                  | ACCEPT                         | ACCEPT                         | {6 833 107 841} -> {6 833 107 841}
+judge/B5-two-pieces-rows-differ                      | REFUSE thumb                   | REFUSE thumb                   | {200 837 330 841} -> {200 837 330 841}
+judge/title-right-385                                | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+judge/short-thumb-x20                                | REFUSE thumb                   | REFUSE thumb                   | {20 833 300 841} -> {20 833 300 841}
+judge/short-thumb-x6-130                             | ACCEPT                         | ACCEPT                         | {6 833 130 841} -> {6 833 130 841}
+judge/short-thumb-x6-90                              | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+judge/thumb-x9                                       | REFUSE thumb                   | REFUSE thumb                   | {9 833 330 841} -> {9 833 330 841}
+judge/thumb-x8                                       | ACCEPT                         | ACCEPT                         | {8 833 330 841} -> {8 833 330 841}
+judge/thumb-end384                                   | ACCEPT                         | ACCEPT                         | {6 833 384 841} -> {6 833 384 841}
+judge/thumb-end385                                   | REFUSE thumb                   | REFUSE thumb                   | {6 833 385 841} -> {6 833 385 841}
+judge/scattered-pixels-no-thumb                      | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+judge/thumb-above-bottom20                           | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+judge/thumb-dark-luma100                             | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+judge/tall-image-844-ok-but-thumb-1row               | ACCEPT                         | ACCEPT                         | {6 840 330 841} -> {6 840 330 841}
+judge/title-ink-spoof-pixel-388                      | REFUSE (i)                     | REFUSE (i)                     | {6 833 333 841} -> {6 833 333 841}
+new/header-solid-ink                                 | REFUSE (ii)                    | REFUSE (ii)                    | {6 833 333 841} -> {6 833 333 841}
+new/entry-solid-ink                                  | REFUSE (i)                     | REFUSE (i)                     | {6 833 333 841} -> {6 833 333 841}
+new/tall-845                                         | REFUSE dims                    | REFUSE dims                    | {6 833 333 841} -> {6 833 333 841}
+new/header-15px                                      | REFUSE (ii)                    | REFUSE (ii)                    | {6 833 333 841} -> {6 833 333 841}
+proto/judge/B1d-thumb-two-splits-px100-px200         | REFUSE thumb                   | REFUSE thumb                   | {201 833 333 841} -> {101 833 333 841}
+    MUTANT-FLIPS proto/judge/B1d-thumb-two-splits-px100-px200: M-run-2bridges->ACCEPT; M-run-unlimited-bridges->ACCEPT
+proto/judge/B1e-thumb-gap-2px-at-150                 | REFUSE thumb                   | REFUSE thumb                   | {152 833 333 841} -> {152 833 333 841}
+    MUTANT-FLIPS proto/judge/B1e-thumb-gap-2px-at-150: M-run-gap2px->ACCEPT
+proto/judge/B6-alternating-pixels-no-thumb           | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+    MUTANT-FLIPS proto/judge/B6-alternating-pixels-no-thumb: M-run-unlimited-bridges->ACCEPT
+real/eval-p1-pass-a-phone.png                        | ACCEPT                         | ACCEPT                         | {6 833 338 841} -> {6 833 338 841}
+real/eval-p2-pass-a-phone.png                        | ACCEPT                         | ACCEPT                         | {6 833 324 841} -> {6 833 324 841}
+real/eval-p3-pass-a-phone.png                        | ACCEPT                         | ACCEPT                         | {6 833 326 841} -> {6 833 326 841}
+real/r1-seed1-pass-a-phone.png                       | ACCEPT                         | ACCEPT                         | {6 833 324 841} -> {6 833 324 841}
+real/r1-seed2-pass-a-phone.png                       | ACCEPT                         | ACCEPT                         | {6 833 340 841} -> {6 833 340 841}
+real/r1b-seed3-pass-a-phone.png                      | ACCEPT                         | ACCEPT                         | {6 833 333 841} -> {6 833 333 841}
+real/r1b-seed4-pass-a-phone.png                      | ACCEPT                         | ACCEPT                         | {6 833 332 841} -> {6 833 332 841}
+real/r1c-seed5-pass-a-phone.png                      | ACCEPT                         | ACCEPT                         | {6 833 333 841} -> {6 833 333 841}
+real/r1c-seed5-pass-a-workbench-light.png            | REFUSE (i),dims,thumb          | REFUSE (i),dims,thumb          | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+real/r1c-seed6-pass-a-phone.png                      | ACCEPT                         | ACCEPT                         | {6 833 334 841} -> {6 833 334 841}
+real/v50-reference-phone.png                         | ACCEPT                         | ACCEPT                         | {6 833 329 841} -> {6 833 329 841}
+realseed5/v67/no-scrollbar                           | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/v67/title-unclipped                        | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+realseed5/v67/no-overflow                            | REFUSE thumb,title-right       | REFUSE thumb,title-right       | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/v67/crop-370                               | REFUSE dims,title-right        | REFUSE dims,title-right        | {6 833 333 841} -> {6 833 333 841}
+realseed5/v67/pad-370                                | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+realseed5/v67/full-thumb                             | REFUSE thumb                   | REFUSE thumb                   | {3 833 388 841} -> {3 833 388 841}
+realseed5/v67/shift-2                                | ACCEPT                         | ACCEPT                         | {6 835 333 843} -> {6 835 333 843}
+realseed5/v67/shift-4                                | ACCEPT                         | ACCEPT                         | {6 837 333 844} -> {6 837 333 844}
+realseed5/v67/shift-5                                | REFUSE (i)                     | REFUSE (i)                     | {6 838 333 844} -> {6 838 333 844}
+realseed5/v67/shift-10                               | REFUSE (i)                     | REFUSE (i)                     | {6 843 333 844} -> {6 843 333 844}
+realseed5/v67/timeline-only                          | REFUSE (i),(ii),thumb,title-right | REFUSE (i),(ii),thumb,title-right | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/v67/blank                                  | REFUSE (i),(ii),thumb,title-right,zero-bands | REFUSE (i),(ii),thumb,title-right,zero-bands | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/judge/title-right-386                      | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+realseed5/judge/title-right-387                      | ACCEPT                         | ACCEPT                         | {6 833 333 841} -> {6 833 333 841}
+realseed5/judge/B1-thumb-split-px150                 | REFUSE thumb                   | ACCEPT                         | {151 833 333 841} -> {6 833 333 841} FLIP
+    MUTANT-FLIPS realseed5/judge/B1-thumb-split-px150: M-run-nobridge->REFUSE thumb
+realseed5/judge/B1b-thumb-split-px250                | ACCEPT                         | ACCEPT                         | {6 833 250 841} -> {6 833 333 841}
+realseed5/judge/B1c-thumb-split-px8                  | REFUSE thumb                   | ACCEPT                         | {9 833 333 841} -> {6 833 333 841} FLIP
+    MUTANT-FLIPS realseed5/judge/B1c-thumb-split-px8: M-run-nobridge->REFUSE thumb
+realseed5/judge/B3-grey-bar-x0-300-no-thumb          | ACCEPT                         | ACCEPT                         | {0 830 300 835} -> {0 830 300 835}
+realseed5/judge/B3b-grey-bar-full-width              | REFUSE thumb                   | REFUSE thumb                   | {0 830 390 835} -> {0 830 390 835}
+realseed5/judge/B4-run-100px                         | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/judge/B4b-run-101px                        | ACCEPT                         | ACCEPT                         | {6 833 107 841} -> {6 833 107 841}
+realseed5/judge/B5-two-pieces-rows-differ            | REFUSE thumb                   | REFUSE thumb                   | {200 837 330 841} -> {200 837 330 841}
+realseed5/judge/title-right-385                      | REFUSE title-right             | REFUSE title-right             | {6 833 333 841} -> {6 833 333 841}
+realseed5/judge/short-thumb-x20                      | REFUSE thumb                   | REFUSE thumb                   | {20 833 300 841} -> {20 833 300 841}
+realseed5/judge/short-thumb-x6-130                   | ACCEPT                         | ACCEPT                         | {6 833 130 841} -> {6 833 130 841}
+realseed5/judge/short-thumb-x6-90                    | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/judge/thumb-x9                             | REFUSE thumb                   | REFUSE thumb                   | {9 833 330 841} -> {9 833 330 841}
+realseed5/judge/thumb-x8                             | ACCEPT                         | ACCEPT                         | {8 833 330 841} -> {8 833 330 841}
+realseed5/judge/thumb-end384                         | ACCEPT                         | ACCEPT                         | {6 833 384 841} -> {6 833 384 841}
+realseed5/judge/thumb-end385                         | REFUSE thumb                   | REFUSE thumb                   | {6 833 385 841} -> {6 833 385 841}
+realseed5/judge/scattered-pixels-no-thumb            | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/judge/thumb-above-bottom20                 | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/judge/thumb-dark-luma100                   | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+realseed5/judge/tall-image-844-ok-but-thumb-1row     | ACCEPT                         | ACCEPT                         | {6 840 330 841} -> {6 840 330 841}
+realseed5/judge/title-ink-spoof-pixel-388            | REFUSE (i)                     | REFUSE (i)                     | {6 833 333 841} -> {6 833 333 841}
+realseed5/new/header-solid-ink                       | REFUSE (ii)                    | REFUSE (ii)                    | {6 833 333 841} -> {6 833 333 841}
+realseed5/new/entry-solid-ink                        | REFUSE (i)                     | REFUSE (i)                     | {6 833 333 841} -> {6 833 333 841}
+realseed5/new/tall-845                               | REFUSE dims                    | REFUSE dims                    | {6 833 333 841} -> {6 833 333 841}
+realseed5/new/header-15px                            | REFUSE (ii)                    | REFUSE (ii)                    | {6 833 333 841} -> {6 833 333 841}
+realseed5/judge/B1d-thumb-two-splits-px100-px200     | REFUSE thumb                   | REFUSE thumb                   | {201 833 333 841} -> {101 833 333 841}
+    MUTANT-FLIPS realseed5/judge/B1d-thumb-two-splits-px100-px200: M-run-2bridges->ACCEPT; M-run-unlimited-bridges->ACCEPT
+realseed5/judge/B1e-thumb-gap-2px-at-150             | REFUSE thumb                   | REFUSE thumb                   | {152 833 333 841} -> {152 833 333 841}
+    MUTANT-FLIPS realseed5/judge/B1e-thumb-gap-2px-at-150: M-run-gap2px->ACCEPT
+realseed5/judge/B6-alternating-pixels-no-thumb       | REFUSE thumb                   | REFUSE thumb                   | {-1 -1 -1 -1} -> {-1 -1 -1 -1}
+    MUTANT-FLIPS realseed5/judge/B6-alternating-pixels-no-thumb: M-run-unlimited-bridges->ACCEPT
+CONTROL proto-with-r3-options vs committed phone: 0 of 97 differ
+THUMB-RECT changed r3->r4 on 8 of 97 inputs
+--- PASS: TestIter336ProtoPhone (3.11s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	3.297s

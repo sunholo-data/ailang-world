@@ -1,0 +1,43 @@
+$ git rev-parse HEAD
+5381e7e2f1de8b216b45a7c1fce12db96c8eed11
+$ /opt/homebrew/bin/gh pr view 405 --repo sunholo-data/ailang-world --json number,state,mergedAt,mergeCommit,title,headRefName
+{"headRefName":"sprint/world-iter316-row150-m8b","mergeCommit":{"oid":"23940015ebeba61e56334580b2848b19a1a7315b"},"mergedAt":"2026-10-29T01:14:06Z","number":405,"state":"MERGED","title":"docs(row 150 M8b): final gates; QUICKSTART §13 states the r5 P0/phone rules"}
+rc=0
+$ git merge-base --is-ancestor 23940015ebeba61e56334580b2848b19a1a7315b HEAD; echo rc=$?
+rc=0
+$ git merge-base --is-ancestor 09ff28215176d5c09b36ecffba85ee04660ba238 HEAD; echo rc=$?
+rc=0
+$ git merge-base --is-ancestor 3f185a9a HEAD; echo rc=$?
+rc=0
+$ (control, reversed) git merge-base --is-ancestor HEAD 23940015; echo rc=$?
+rc=1
+$ git log -1 --format="%H %ci %P %s" 23940015
+23940015ebeba61e56334580b2848b19a1a7315b 2026-10-29 02:14:05 +0100 8bfaa1ab28000937234aececa2ccd818e2b522a9 205589d9bdf9f054d59c8f2b1547ecbf584ce30f Merge pull request #405 from sunholo-data/sprint/world-iter316-row150-m8b
+$ git log -1 --format="%H %ci %s" 3f185a9a
+3f185a9afcc91e0ee3c6c166eab0f01b147e565c 2026-10-29 01:22:32 +0100 docs(row 150 M8b): QUICKSTART §13 states the r5 P0/phone rules; README row-156 status
+$ git merge-base --is-ancestor 3f185a9a 23940015; echo rc=$?  (is the controller-run commit inside the merged PR?)
+rc=0
+$ git merge-base --is-ancestor 09ff2821 3f185a9a; echo rc=$?
+rc=0
+$ grep -n "^## 316" design_docs/world-mission-log.md
+986:## 316 — 2026-10-29 — row 150: M8b built — final repository gates and C11 protected-path observation; QUICKSTART §13 states the r5 P0/phone rules; judge r1 PASS 93 → r2 PASS 93 [PRODUCT]
+$ sed -n "986,1000p" design_docs/world-mission-log.md | grep -n -o -E "(r1|r2) PASS [0-9]+[^.;]{0,60}|judge[^.;]{0,120}" | head
+1:r1 PASS 93 → r2 PASS 93 [PRODUCT]
+$ git log -1 --format="%h %s" --grep "iteration 316" origin/dev
+205589d9 docs(mission): record World iteration 316 — row 150 M8b built (final gates outside the sandbox; C11 unchanged; judge r1 PASS 93 → r2 PASS 93); rows 231/232 notes
+
+$ sed -n "1020,1023p;1036p" design_docs/world-mission-log.md   (iteration-316 record: gate results as recorded, NOT re-run here)
+- `verify_ail.sh` rc 0 (65 s); `go build ./...` rc 0; `go test -race ./host/daemon` rc 0 (477 s); `go test -race` coordinator/workbench/evidence/marketingcheck rc 0 (188 s).
+- **`go test ./...` rc 1, red only in `host/broker`:** `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty` (arm 6, `accepts 2`) and `TestExecProtectedCheckTimeout/reserve-after-before` (a deadline overrun). The package took 524 s while the judge ran heavy focused tests concurrently.
+- Attribution: each test passed 3/3 isolated at head AND at base `8bfaa1ab`. The package passed uncontended (rc 0, 231 s). Neither test file reads the changed docs (grep 0). So the reds are intermittent under CPU load and inherited, not this diff.
+- The `chatty` arm is a row-229 probe test, so it is added to row 232 as instance 2 (macOS, under load; instance 1 was `reset-holder` on Linux CI). Banked at `verification/world-iter316/m8b-host-broker-load-reds.txt`. That file sits under the plan's "and its scratch snapshots" clause, not the five-file allowlist (judge r2 note).
+  - It spot-checked the broker attribution (both PASS once at head; grep 0) and called it plausible, not proven (no contended re-run).
+$ ls -la design_docs/verification/world-iter316/m8b-host-broker-load-reds.txt
+-rw-r--r--@ 1 voightkampff  staff  4085 Nov  2 21:00 design_docs/verification/world-iter316/m8b-host-broker-load-reds.txt
+$ grep -n -E "Pick and why|Quorum: none" (iteration-316 block, design_docs/world-mission-log.md lines 986-1060)
+990: **Pick and why:** the iteration-315 **Next** and the queue head under D-WORLD-81 (150 → 151): row 150 M8b, the last executor milestone. Dev CI at `8bfaa1ab` was green (CI 1/1 success on the head), so row 232 did not outrank it.
+1053: - Quorum: none (no doc). Metered $0.00.
+$ git merge-base --is-ancestor 3f185a9a 8bfaa1ab; echo rc=$?   (first parent = dev before the merge; rc 1 means 3f185a9a came in through the PR side)
+rc=1
+$ git merge-base --is-ancestor 3f185a9a 205589d9; echo rc=$?   (second parent = PR head)
+rc=0

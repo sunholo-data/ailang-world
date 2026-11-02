@@ -1,0 +1,62 @@
+{
+  "doc": "design_docs/planned/w-marketing-predicate-tolerances.md",
+  "iso_ts": "2026-11-02T20:29:21Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.23891099999999998,
+      "tokens_in": 11307,
+      "tokens_out": 13666,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The premise that eliminates M2's second quorum — \"Row 231 set the precedent: its design's quorum covered its §4.4 amendment, and the orchestration doc was not re-quorumed\" — is only timestamp-verified, not content-verified. V26 records that orchestration quorum artifacts are dated 10-26/10-28, row 231's design quorum artifacts are dated 10-31T00:42/00:51, and commit 03fe5a1a is 10-31 03:26. Those timestamps permit the inference, but nothing diffs what the 00:42–00:51 quorum artifacts actually reviewed against the §4.4 amendment text committed at 03:26. If the design quorum reviewed a draft whose amendment text later changed (or did not yet contain the final §4.4), the precedent is false and M2 as planned lands orchestration prose that was quorumed only as a design-doc byproduct — the exact process gate r1 disposition #4 deleted. Gate 1 treats load-bearing-but-asserted premises as grounds to reject, and this one is load-bearing for the only artifact in the mission that ships human-facing normative text.",
+        "catch": "Verify the precedent by content, not by date: diff the reviewed text inside the row-231 quorum artifacts (`w-marketing-position-checker-2026-10-31T00-42-30Z`/`…51-18Z` under `~/.ailang/state/mission-quorum-world/`) against the §4.4 additions in commit `03fe5a1a`. Two outcomes: (a) identical — record it and the precedent holds; (b) any delta — the precedent fails, and r2 must either reinstate a narrow M2 quorum/sign-off on the A1–A7 paste text or obtain an explicit controller ruling that design-quorum coverage of verbatim amendment text satisfies the orchestration quorum requirement. While you are in there: no arm or mutant exercises the \"leftmost longest run\" tie-break in the new bridged-run state space (B1/B1b/B1c all win by length, never by tie), so a tie-order regression in run selection is currently unkillable — consider adding an equal-length two-run arm and a rightmost-tie mutant.",
+        "proposed_fix": "1) Add V27 to §7: \"V27 | `diff \u003c(sed -n '/§4.4/,/^## /p' \u003cquorum-artifact-00-42\u003e) \u003c(git show 03fe5a1a:design_docs/planned/w-marketing-capture-orchestration.md | sed -n '/§4.4/,/^## /p')` (`designer-r2-quorum-content.txt`) | diff empty: the 10-31 design quorum reviewed the committed §4.4 amendment text byte-for-byte; precedent confirmed. Control: diff against the 10-26 orchestration artifact shows the expected amendment delta.\" 2) Rewrite the header sentence to cite content, not inference: \"Row 231 set the precedent — V27 shows its design quorum reviewed the committed §4.4 text byte-for-byte, and the orchestration doc was not re-quorumed (V26).\" If V27 instead shows a delta, replace the sentence with: \"No content-verified precedent exists; M2 therefore requires a one-page controller sign-off diffing the pasted A1–A7 against this design's §4 before commit,\" and add that sign-off to §5 M2 acceptance. 3) Optional but cheap: add arm `B7-thumb-two-equal-bridged-runs` (two identical 1 px-bridged runs, leftmost at X0 ≤ 8) pinned ACCEPT-selecting-left, plus mutant M238-run-rightmost-tie red-ing it."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.025276,
+      "tokens_in": 11293,
+      "tokens_out": 269,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The execution plan does not satisfy the bounded-waits axiom. M1 acceptance step 2 runs `go vet`, `go build ./...`, and `./scripts/verify_ail.sh` without process-level deadlines or evidence that they enforce internal bounds. The `go test -timeout` settings elsewhere do not bound these commands or Go's build phase.",
+        "catch": "Add bounded execution to the actual acceptance commands, mutation runs, and capture-day controls—not merely to test binaries. Specify deadline expiry as a hard failure, with no continuation to M2.",
+        "proposed_fix": "Add an execution rule to §5: 'Every executor command runs under a process-group deadline. Use a checked-in or explicitly verified runner that terminates the command and its descendants on expiry, records a nonzero timeout result, and stops the milestone. Set explicit limits for build/vet/full-suite verification, each mutation run, and each capture-day control. `go test -timeout` remains an additional test-binary limit, not the outer deadline.' Include the runner invocation in each acceptance command and add a verification-log row demonstrating that an intentionally hanging child process is terminated and prevents subsequent steps."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.055188,
+      "tokens_in": 12837,
+      "tokens_out": 192,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §4 A2, the invariant summary sentence ('While every term passes, each region therefore lies within ±2 px of its R1 top plus the stack head's measured shift plus the whole-line steps above it...') assumes all regions between the stack head and the current region are present; if an intermediate region is missing, the walk stops at that missing region rather than evaluating later regions.",
+        "catch": "Ensure the M1 executor updates all stale count comments in `position_test.go` and `phone_test.go` to reflect the new 51-row and 44-row tables (specifically changing '49' from r1 draft remnants to '51')."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 applies all three r1 fixes verbatim (sol a5 text + nonpara boundary arm/mutant; kimi V22 sweep measured by controller, string anchors, enumerated reds; gemini roster-fixed wording)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The premise that eliminates M2's second quorum — \"Row 231 set the precedent: its design's quorum covered its §4.4 amendment, and the orchestration doc was not re-quorumed\" — is only timestamp-verified, not content-verified. V26 records that orchestration quorum artifacts are dated 10-26/10-28, row 231's design quorum artifacts are dated 10-31T00:42/00:51, and commit 03fe5a1a is 10-31 03:26. Those timestamps permit the inference, but nothing diffs what the 00:42–00:51 quorum artifacts actually reviewed against the §4.4 amendment text committed at 03:26. If the design quorum reviewed a draft whose amendment text later changed (or did not yet contain the final §4.4), the precedent is false and M2 as planned lands orchestration prose that was quorumed only as a design-doc byproduct — the exact process gate r1 disposition #4 deleted. Gate 1 treats load-bearing-but-asserted premises as grounds to reject, and this one is load-bearing for the only artifact in the mission that ships human-facing normative text.",
+      "gpt6-1-sol: The execution plan does not satisfy the bounded-waits axiom. M1 acceptance step 2 runs `go vet`, `go build ./...`, and `./scripts/verify_ail.sh` without process-level deadlines or evidence that they enforce internal bounds. The `go test -timeout` settings elsewhere do not bound these commands or Go's build phase."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.319375,
+    "total_tokens_in": 35437,
+    "total_tokens_out": 14127
+  }
+}

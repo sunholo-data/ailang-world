@@ -2,10 +2,12 @@ package main
 
 // Row 231 (design_docs/planned/w-marketing-position-checker.md §2.1–§2.2): the P0/P3 phone
 // predicate (orchestration §4.4 phone (i), (ii), (iii′)), ported from the banked oracle
-// design_docs/verification/world-iter315/v66-phonecheck-main.go.txt, r3 only. The V58 scan
-// functions are copied unchanged. The one deliberate change: (ii) is CheckRegion (the M7b region
-// gate), not the oracle's std-dev stand-in, so a 15 px header band is refused (the parity
-// ledger's one entry, header-15px).
+// design_docs/verification/world-iter315/v66-phonecheck-main.go.txt, r3. The V58 scan functions
+// are copied unchanged except phoneScrollbar's run, which row 238
+// (design_docs/planned/w-marketing-predicate-tolerances.md §2.3) lets bridge one 1 px gap. The
+// other deliberate change: (ii) is CheckRegion (the M7b region gate), not the oracle's std-dev
+// stand-in, so a 15 px header band is refused. The parity ledger names each difference:
+// header-15px, and the bridged thumbs B1, B1c and B7.
 
 import (
 	"bytes"
@@ -64,13 +66,14 @@ func phoneBands(im image.Image) []phoneRect {
 	return out
 }
 
-// phoneScrollbar finds the thumb: rows in the bottom 20 px whose longest contiguous luma
-// 120..200 run is at least 100 px long.
+// phoneScrollbar finds the thumb: rows in the bottom 20 px whose longest luma 120..200 run is
+// at least 100 px long. Row 238: a run is one contiguous segment, or two segments separated by
+// exactly one off-range pixel (at most one such bridge per run); the leftmost longest wins.
 func phoneScrollbar(im image.Image) phoneRect {
 	bd := im.Bounds()
 	r := phoneRect{-1, -1, -1, -1}
 	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
-		x0, x1 := -1, -1
+		var segs [][2]int
 		for x, start := 0, -1; x <= bd.Max.X; x++ {
 			in := false
 			if x < bd.Max.X {
@@ -81,10 +84,18 @@ func phoneScrollbar(im image.Image) phoneRect {
 				start = x
 			}
 			if !in && start >= 0 {
-				if x0 < 0 || (x-1)-start > x1-x0 {
-					x0, x1 = start, x-1
-				}
+				segs = append(segs, [2]int{start, x - 1})
 				start = -1
+			}
+		}
+		x0, x1 := -1, -1
+		for i, sg := range segs {
+			end := sg[1]
+			if i+1 < len(segs) && segs[i+1][0]-sg[1] == 2 {
+				end = segs[i+1][1]
+			}
+			if x0 < 0 || end-sg[0] > x1-x0 {
+				x0, x1 = sg[0], end
 			}
 		}
 		if x0 >= 0 && x1-x0 >= 100 {

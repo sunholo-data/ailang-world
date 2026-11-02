@@ -1,0 +1,11 @@
+# M2 pre-paste anchors: grep -cF '<anchor>' design_docs/planned/w-marketing-capture-orchestration.md must equal 1 for each (base 37100a43)
+1	the gap may instead differ from the R1 gap by a whole number of 24 px body lines, ±2 px;
+1	Every other region's height is within ±2 px of R1;
+1	or any verdict difference outside the one-entry ledger, is a red.
+1	moved by anything other than whole lines in the two body-text gaps
+1	(a luma 120–200 run of at least 100 px)
+1	and packet paragraph heights and the two body-text gaps in whole 24 px lines ±2 px (§4.4, r3)
+1	## 10. Verification Log
+# controls: a non-unique string and an absent string
+6	(a3)
+0	the gap may instead differ from the R1 gap by a whole number of 25 px

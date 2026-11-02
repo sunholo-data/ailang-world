@@ -1,0 +1,61 @@
+$ grep -n -E "hOK, hRes := true, dh|hRes = dh - posLines|setPrev\(\)|if i == 0 \{|drift \+= prevRes" scripts/marketingcheck/position.go   (r2 prototype, $SCRATCH/tree-r4)
+90:			hOK, hRes := true, dh
+92:				hRes = dh - posLines(dh)*positionLine
+109:			if i == 0 {
+113:				setPrev()
+134:				drift += prevRes
+142:			setPrev()
+$ sed -n "/hOK, hRes := true, dh/,/drift += prevRes/p" scripts/marketingcheck/position.go
+			hOK, hRes := true, dh
+			if posPara(s) {
+				hRes = dh - posLines(dh)*positionLine
+				if !(posLineStep(dh) && c.H >= positionLine) {
+					hOK = false
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d not whole lines", s, b.Name, c.H, b.H))
+				}
+			} else if posAbs(dh) > 2 {
+				hOK = false
+				reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d", s, b.Name, c.H, b.H))
+			}
+			// prevRes carries this region's height residual to the next region's (a5); a height
+			// that failed (a4) is already a refusal and contributes nothing.
+			setPrev := func() {
+				prevRes = 0
+				if hOK {
+					prevRes = hRes
+				}
+			}
+			if i == 0 {
+				if posAbs(c.Y-b.Y) > 2 {
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a2) stack-head top %d vs %d", s, b.Name, c.Y, b.Y))
+				}
+				setPrev()
+				continue
+			}
+			pb := bs.Content[i-1]
+			pc, ok := cm[pb.Name]
+			if !ok {
+				chain = false
+				continue
+			}
+			gb := b.Y - (pb.Y + pb.H)
+			gc := c.Y - (pc.Y + pc.H)
+			e := gc - gb
+			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+			if posFreeGap(s, b.Name) {
+				okGap = gc >= 0 && posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines
+				gRes = e - posLines(e)*positionLine
+			}
+			if !okGap {
+				reasons = append(reasons, fmt.Sprintf("%s/%s: (a3) gap after %s %d vs R1 %d", s, b.Name, pb.Name, gc, gb))
+			}
+			if chain {
+				drift += prevRes
+				if okGap {
+					drift += gRes
+				}
+				if posAbs(drift) > positionDriftTol {
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a5) top %d drifts %+d px from R1 %d after whole-line steps", s, b.Name, c.Y, drift, b.Y))
+				}
+			}
+			setPrev()

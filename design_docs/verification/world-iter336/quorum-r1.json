@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-predicate-tolerances.md",
+  "iso_ts": "2026-11-02T20:17:47Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.284712,
+      "tokens_in": 8594,
+      "tokens_out": 17262,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The conflict-surface analysis (§6) names the conflict *class* (\"open work touching position*_test.go or phone*_test.go conflicts in the verdict maps\") but never verifies the conflict *instance*: no evidence row surveys the queue (`design_docs/world-mission.md` rows after 238), open branches, or sibling successors of row 231 for other in-flight missions touching the same five files — or, more critically, `design_docs/planned/w-marketing-capture-orchestration.md`. M2's correctness depends entirely on six exact source strings at absolute line numbers 230/246/248/250/314 of that live document (executor instructions say \"replace the whole bullet (line 230)\"), and the M1 patch rewrites shared verdict maps and ledger shapes. Any concurrent amendment landing between designer snapshot (V20, base-only) and executor runs silently invalidates the paste targets or the ledger counts baked into the quorum-reviewed §4 text and the grep-based acceptance. A conflict-surface section that asserts a risk category without checking whether that risk currently exists does not satisfy the conflict-surface gate, and the premise \"no other work conflicts\" is asserted, not verified.",
+        "catch": "Two things to fix before resubmission: (1) Add a verification row that proves no concurrent interlocutor exists: grep open/queued rows in `world-mission.md` for `marketingcheck`, `position_test`, `phone_test`, and `capture-orchestration`; list open `sprint/*` branches; confirm row 231 has no other pending successor touching §4.4/§7/§9. Record it as a V-row. (2) De-fragile M2: change the paste instructions from absolute line anchors (\"line 230\", \"line 246\") to unique-string anchors with a pre-paste acceptance step (`grep -c '\u003cexact source string\u003e'` = 1 for each of the six targets), so a shifted document reds the step instead of corrupting the amendment. Also remove the ellipses from the M1 acceptance table — M238-a5-accumulate-failed's \"and 10 others\" and F4's \"B5-…\" leave the mutation-acceptance subtest lists under-specified in the spec itself (V10's \"adds lines to 10 refused arms\" vs the mutant's \"11\" named reds is never reconciled in the doc); enumerate every must-red subtest or reference a committed machine-readable list.",
+        "proposed_fix": "Add to §6: \"**Concurrent-work sweep (V22).** `grep -nE 'marketingcheck|position_test|phone_test|capture-orchestration' design_docs/world-mission.md` over all rows not in status done/executed, plus `git branch -a --list 'sprint/*'` and the worktree list, run at hand-off. Observed: no open row or branch touches `scripts/marketingcheck/position*.go`, `phone*.go`, their tests, or `w-marketing-capture-orchestration.md` other than this mission; row 231 lists no successor besides S-a. If any appears before M1/M2 executes, this mission re-bases and re-runs V20.\" Amend M2 instructions: replace \"line 230\"/\"line 246\"/\"line 248\"/\"line 250\"/\"line 314\" with \"the bullet containing `\u003cexact unique source string\u003e` (pre-paste: `grep -c '\u003cstring\u003e'` must equal 1 for each of the six targets; any mismatch is a hard stop and re-base, matching the pin-registry discipline already used for oracle hashes)\". Amend the §5 mutation table: replace \"and 10 others\" and the F4/F9 ellipsis entries with the full subtest list from `designer-r4-mutants.txt`, and add one sentence reconciling V10's 10 line-adding arms with the mutant's 11 corpus reds (state which refused arm changes verdict-adjacent output under the gap-only accumulation that the full variant does not, or correct one of the two counts)."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.020416,
+      "tokens_in": 8573,
+      "tokens_out": 327,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The normative (a5) amendment in §4 does not unambiguously specify the algorithm in §2.2. Its phrase “height change less its whole 24 px lines (packet paragraphs) or its whole height change (other regions)” can mean subtracting the entire height change for nonparagraph regions, yielding zero. §2.2 instead requires those regions to contribute dh. M2 pastes this wording verbatim, leaving two materially different cumulative-drift predicates consistent with the governing text.",
+        "catch": "Verify that nonparagraph height residuals contribute their full signed dh, including the stack head’s height residual. The existing described boundary arms change roster tops, so they do not directly establish this distinction.",
+        "proposed_fix": "Replace the residual-definition sentence in §4 with: “For each earlier region, the height residual is dh − 24·round(dh/24) if it is a packet paragraph, and dh otherwise. For each gap through the current region’s incoming gap, the gap residual is e − 24·round(e/24) for either designated body-text gap, and e otherwise. Here dh and e are signed differences from R1. Include only terms whose own (a4) or (a3), respectively, passed.” Add a boundary test in which individually permitted nonparagraph height and gap residuals accumulate beyond 2 px, and require a mutant that replaces nonparagraph height residuals with zero to fail that test."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.045936000000000005,
+      "tokens_in": 9794,
+      "tokens_out": 338,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §2.4, the mutation description for `perm-approvals-y+24` and `perm-approvals-y-24` says 'approvals-chain Y±24' without explicitly stating whether downstream regions (`roster-*`) are also shifted or remain fixed, whereas §6 clarifies 'with the other rows fixed'. If an executor shifted `approvals-chain` onward (like `bnd-createdAt-wraps-2-lines` does), the second gap (`approvals-chain` -\u003e `roster-tested`) would stay at delta 0 rather than testing the Simultaneous +24/-24 gap compensation.",
+        "catch": "In §2.4 table, clarify that `perm-approvals-y+24` and `perm-approvals-y-24` mutate *only* `approvals-chain` Y±24 (leaving downstream roster regions at R1 Y), matching the sha256 pins and §6.",
+        "proposed_fix": "In the §2.4 table, change the Mutation cell for `perm-approvals-y+24` and `perm-approvals-y-24` from `approvals-chain Y+24` / `Y−24` to `approvals-chain only Y+24 (roster fixed)` / `approvals-chain only Y−24 (roster fixed)`."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller re-ran the current checker on all 10 store files: 9 ACCEPT (incl. 2 block-converted), raw r1-seed1 REFUSE, matching V-rows; design scope matches row 238 findings (1),(2),(7)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The conflict-surface analysis (§6) names the conflict *class* (\"open work touching position*_test.go or phone*_test.go conflicts in the verdict maps\") but never verifies the conflict *instance*: no evidence row surveys the queue (`design_docs/world-mission.md` rows after 238), open branches, or sibling successors of row 231 for other in-flight missions touching the same five files — or, more critically, `design_docs/planned/w-marketing-capture-orchestration.md`. M2's correctness depends entirely on six exact source strings at absolute line numbers 230/246/248/250/314 of that live document (executor instructions say \"replace the whole bullet (line 230)\"), and the M1 patch rewrites shared verdict maps and ledger shapes. Any concurrent amendment landing between designer snapshot (V20, base-only) and executor runs silently invalidates the paste targets or the ledger counts baked into the quorum-reviewed §4 text and the grep-based acceptance. A conflict-surface section that asserts a risk category without checking whether that risk currently exists does not satisfy the conflict-surface gate, and the premise \"no other work conflicts\" is asserted, not verified.",
+      "gpt6-1-sol: The normative (a5) amendment in §4 does not unambiguously specify the algorithm in §2.2. Its phrase “height change less its whole 24 px lines (packet paragraphs) or its whole height change (other regions)” can mean subtracting the entire height change for nonparagraph regions, yielding zero. §2.2 instead requires those regions to contribute dh. M2 pastes this wording verbatim, leaving two materially different cumulative-drift predicates consistent with the governing text."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.35106400000000004,
+    "total_tokens_in": 26961,
+    "total_tokens_out": 17927
+  }
+}

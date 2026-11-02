@@ -1,0 +1,70 @@
+"""M2 sign-off: rebuild the orchestration doc from the BASE text by applying design §4 A1–A7,
+then compare with the executor's applied file. The only allowed delta is the planner-measured
+phone ledger 3 -> 4 (design §2.3, r3). Usage: python3 -I m2_signoff.py <design.md> <base-orch.md> <applied-orch.md>"""
+import re, sys, difflib
+
+design, base, applied = (open(p, encoding="utf-8").read() for p in sys.argv[1:4])
+sec = design.split("## 4. Orchestration amendment", 1)[1].split("\n## 5. Milestones", 1)[0]
+blocks = re.split(r"\n(?=\*\*A[1-7][,.])", sec)
+A = {}
+for b in blocks:
+    m = re.match(r"\*\*(A[1-7])", b)
+    if m:
+        A[m.group(1)] = b
+
+def quoted(b):
+    lines = [l[2:] if l.startswith("> ") else ("" if l == ">" else None) for l in b.split("\n")]
+    return "\n".join(l for l in lines if l is not None).strip("\n")
+
+def anchor(b, pat):
+    m = re.search(pat, b, re.S)
+    if not m:
+        sys.exit("INSTRUMENT FAILURE: cannot parse " + b[:60])
+    return m.group(1)
+
+doc = base
+report = []
+def must_once(s, what):
+    c = doc.count(s)
+    report.append(f"{what}: anchor count {c}")
+    if c != 1:
+        sys.exit(f"STOP {what}: anchor count {c}")
+
+# A1: replace the whole bullet line containing the anchor with the quoted text.
+a1_anchor = anchor(A["A1"], r"contains `(.+?)` with:")
+must_once(a1_anchor, "A1")
+lines = doc.split("\n")
+i = next(k for k, l in enumerate(lines) if a1_anchor in l)
+lines[i] = quoted(A["A1"])
+doc = "\n".join(lines)
+# A2: insert the quoted bullet after the line containing the anchor.
+a2_anchor = anchor(A["A2"], r"contains `(.+?)`:")
+must_once(a2_anchor, "A2")
+lines = doc.split("\n")
+i = next(k for k, l in enumerate(lines) if a2_anchor in l)
+lines.insert(i + 1, quoted(A["A2"]))
+doc = "\n".join(lines)
+# A3-A6: inline replace `X` with `Y` (Y runs to the last backtick on the line).
+for k in ("A3", "A4", "A5", "A6"):
+    m = re.search(r"Replace `(.+?)` with `(.+)`", A[k])
+    if not m:
+        sys.exit("INSTRUMENT FAILURE: cannot parse " + k)
+    must_once(m.group(1), k)
+    doc = doc.replace(m.group(1), m.group(2))
+# A7: insert quoted block before "## 10. Verification Log".
+must_once("\n## 10. Verification Log", "A7")
+doc = doc.replace("\n## 10. Verification Log", "\n" + quoted(A["A7"]) + "\n\n## 10. Verification Log")
+
+for r in report:
+    print(r)
+exp = doc.split("\n")
+got = applied.split("\n")
+diff = [d for d in difflib.unified_diff(exp, got, "expected-from-design-§4", "executor-applied", n=0, lineterm="")]
+print(f"expected lines {len(exp)}, applied lines {len(got)}, diff lines {len(diff)}")
+for d in diff:
+    print(d)
+# Allowed delta: phone 3 -> 4 only.
+norm = lambda s: s.lstrip().replace("phone 4", "phone 3")
+diff2 = [d for d in difflib.unified_diff([norm(x) for x in exp], [norm(x) for x in got], n=0, lineterm="")]
+print("AFTER phone 4->3 normalisation: diff lines", len(diff2))
+print("VERDICT:", "SIGN-OFF OK (only the measured phone-ledger delta)" if not diff2 else "DELTA - HARD STOP")

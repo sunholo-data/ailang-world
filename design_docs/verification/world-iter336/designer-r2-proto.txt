@@ -1,0 +1,127 @@
+$ cd $SCRATCH/tree && go test -count=1 -timeout 300s -v -run '^TestIter336Proto(R2|Position)$' ./scripts/marketingcheck   (rc=0)
+=== RUN   TestIter336ProtoPosition
+ARMSHA proto/bnd-drift-sum-2 65ce8108706c685153f4d0c2b5a98104d7961fabe9ae395da28b7ac8269210f1
+ARMSHA proto/bnd-drift-sum-3 da4b9cf1199daeadc7e497b747b1499d687b82e7fc13104b38006c029185a520
+ARMSHA proto/perm-approvals-y+24 79601062a36ca3ea4a827a18e863ff54f446753308c41d198caa1835d9af4895
+ARMSHA proto/perm-approvals-y-24 1860035bd84a026039dfdb1021756d5c0b01ee8d93fa289f3f2a8f38d981e7ef
+ARMSHA proto/bnd-nonpara-drift-3 44e4cbd0d7f0e5ca47e317c5561c03a49aeeab3a8fd07e4f4957a954f9679ed9
+ARMSHA proto/bnd-nonpara-drift-2 400d3c1987ce6eb5993b7136dcac101fa6436cf0be57dff27cfe52899b40d98b
+ARMSHA proto/bnd-createdAt-wraps-2-lines 032e1b0bcd66019af0cd1aa70a60c7afcb51fae75c7e977a8dc9762089183b88
+label                                            | committed r3 (PositionJudge) | r4 proto                     | r4 reason lines added vs r3
+stores/r1-seed1                                  | REFUSE (a1),(a2),(a3),(a4)   | REFUSE (a1),(a2),(a3),(a4)   | +[] -[]
+stores/r1-seed2                                  | REFUSE (a1),(a2),(a3),(a4)   | REFUSE (a1),(a2),(a3),(a4)   | +[] -[]
+stores/r1-seed1-blockconverted                   | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/r1-seed2-blockconverted                   | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/r1b-seed3                                 | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/r1b-seed4                                 | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/r1c-seed5                                 | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/r1c-seed6                                 | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/eval-p1                                   | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/eval-p2                                   | ACCEPT                       | ACCEPT                       | +[] -[]
+stores/eval-p3                                   | ACCEPT                       | ACCEPT                       | +[] -[]
+v65/neg-attested+14                              | REFUSE (a3)                  | REFUSE (a3)                  | +[] -[]
+    FULL-VARIANT v65/neg-attested+14: 1 more reason lines, verdict REFUSE (a3),(a5)
+v65/neg-attested-dropped                         | REFUSE missing               | REFUSE missing               | +[] -[]
+v65/neg-background-over-content                  | REFUSE background            | REFUSE background            | +[] -[]
+v65/neg-dark-timeline-first+24                   | REFUSE (a3)                  | REFUSE (a3)                  | +[] -[]
+    FULL-VARIANT v65/neg-dark-timeline-first+24: 1 more reason lines, verdict REFUSE (a3),(a5)
+v65/neg-graph-svg-at-timeline                    | REFUSE (a2),(a4)             | REFUSE (a2),(a4)             | +[] -[]
+v65/neg-light-header+40                          | REFUSE (a2),(a3)             | REFUSE (a2),(a3)             | +[] -[]
+    FULL-VARIANT v65/neg-light-header+40: 1 more reason lines, verdict REFUSE (a2),(a3),(a5)
+v65/neg-light-header-whole-view                  | REFUSE (a1),(a2),(a3),(a4),(b) | REFUSE (a1),(a2),(a3),(a4),(b) | +[] -[]
+    FULL-VARIANT v65/neg-light-header-whole-view: 1 more reason lines, verdict REFUSE (a1),(a2),(a3),(a4),(a5),(b)
+v65/neg-packet-all+14                            | REFUSE (a2)                  | REFUSE (a2)                  | +[] -[]
+v65/neg-packet-stack-down-6-lines                | REFUSE (a2),(b)              | REFUSE (a2),(b)              | +[] -[]
+v65/neg-payload+14                               | REFUSE (a2)                  | REFUSE (a2)                  | +[] -[]
+v65/neg-proven-grows-6-lines-below-fold          | REFUSE (b)                   | REFUSE (b)                   | +[] -[]
+v65/neg-rows-reordered-tested-claimed            | REFUSE (a3)                  | REFUSE (a3)                  | +[] -[]
+    FULL-VARIANT v65/neg-rows-reordered-tested-claimed: 4 more reason lines, verdict REFUSE (a3),(a5)
+v65/neg-tested-64x16-glyphs                      | REFUSE (a1),(a3),(a4)        | REFUSE (a1),(a3),(a4)        | +[] -[]
+    FULL-VARIANT v65/neg-tested-64x16-glyphs: 4 more reason lines, verdict REFUSE (a1),(a3),(a4),(a5)
+v65/neg-tested-at-attested-row                   | REFUSE (a3)                  | REFUSE (a3)                  | +[] -[]
+    FULL-VARIANT v65/neg-tested-at-attested-row: 4 more reason lines, verdict REFUSE (a3),(a5)
+v65/neg-tested-at-proven-row                     | REFUSE (a3)                  | REFUSE (a3)                  | +["packet.png/roster-tested: (a3) gap after approvals-chain 263 vs R1 95"] -[]
+    FULL-VARIANT v65/neg-tested-at-proven-row: 3 more reason lines, verdict REFUSE (a3),(a5)
+v65/neg-tested-height+14                         | REFUSE (a4)                  | REFUSE (a4)                  | +[] -[]
+    FULL-VARIANT v65/neg-tested-height+14: 3 more reason lines, verdict REFUSE (a4),(a5)
+v65/syn-pos-createdAt-wraps                      | ACCEPT                       | ACCEPT                       | +[] -[]
+    MUTANT-FLIPS v65/syn-pos-createdAt-wraps: M-a3-bound0->REFUSE (a3)
+v65/syn-pos-proven-5-lines                       | ACCEPT                       | ACCEPT                       | +[] -[]
+v65/syn-pos-tested-wraps-3-lines                 | ACCEPT                       | ACCEPT                       | +[] -[]
+v65-p1/neg-packet-all+14                         | REFUSE (a2)                  | REFUSE (a2)                  | +[] -[]
+v65-p1/neg-proven-grows-6-lines-below-fold       | ACCEPT                       | ACCEPT                       | +[] -[]
+v65-p1/neg-tested-at-attested-row                | REFUSE (a3)                  | REFUSE (a3)                  | +[] -[]
+    FULL-VARIANT v65-p1/neg-tested-at-attested-row: 4 more reason lines, verdict REFUSE (a3),(a5)
+v65-p1/syn-pos-tested-wraps-3-lines              | ACCEPT                       | ACCEPT                       | +[] -[]
+new/iso-a1-tested-w-3                            | REFUSE (a1)                  | REFUSE (a1)                  | +[] -[]
+new/iso-freegap-validation-h+240                 | REFUSE (a3)                  | REFUSE (a3)                  | +[] -[]
+new/iso-minh-approvals-h-1                       | REFUSE (a4)                  | REFUSE (a4)                  | +[] -[]
+new/iso-nonpara-graph-svg-h+24                   | REFUSE (a4)                  | REFUSE (a4)                  | +[] -[]
+new/iso-nonpara-payload-h+24                     | REFUSE (a4)                  | REFUSE (a4)                  | +[] -[]
+new/acc-tested-w-2                               | ACCEPT                       | ACCEPT                       | +[] -[]
+new/perm-approvals-y+48                          | ACCEPT                       | REFUSE (a3)                  | +["packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239" "packet.png/roster-tested: (a3) gap after approvals-chain 47 vs R1 95"] -[] FLIP
+    MUTANT-FLIPS new/perm-approvals-y+48: M-a3-unbounded->ACCEPT; M-a3-bound2->ACCEPT
+new/perm-approvals-y-48                          | ACCEPT                       | REFUSE (a3)                  | +["packet.png/approvals-chain: (a3) gap after validation 191 vs R1 239" "packet.png/roster-tested: (a3) gap after approvals-chain 143 vs R1 95"] -[] FLIP
+    MUTANT-FLIPS new/perm-approvals-y-48: M-a3-unbounded->ACCEPT; M-a3-bound2->ACCEPT
+new/perm-validation-h+216                        | ACCEPT                       | REFUSE (a3)                  | +["packet.png/approvals-chain: (a3) gap after validation 23 vs R1 239"] -[] FLIP
+    MUTANT-FLIPS new/perm-validation-h+216: M-a3-unbounded->ACCEPT
+new/perm-roster-drift-2px                        | ACCEPT                       | REFUSE (a5)                  | +["packet.png/roster-attested: (a5) top 3337 drifts +6 px from R1 3331 after whole-line steps" "packet.png/roster-claimed: (a5) top 3381 drifts +10 px from R1 3371 after whole-line steps" "packet.png/roster-proven: (a5) top 3449 drifts +14 px from R1 3435 after whole-line steps"] -[] FLIP
+    MUTANT-FLIPS new/perm-roster-drift-2px: M-a5-off->ACCEPT
+proto/bnd-drift-sum-2                            | ACCEPT                       | ACCEPT                       | +[] -[]
+    MUTANT-FLIPS proto/bnd-drift-sum-2: M-a5-tol1->REFUSE (a5)
+proto/bnd-drift-sum-3                            | ACCEPT                       | REFUSE (a5)                  | +["packet.png/roster-proven: (a5) top 3438 drifts +3 px from R1 3435 after whole-line steps"] -[] FLIP
+    MUTANT-FLIPS proto/bnd-drift-sum-3: M-a5-off->ACCEPT; M-a5-tol3->ACCEPT
+proto/perm-approvals-y+24                        | ACCEPT                       | ACCEPT                       | +[] -[]
+    MUTANT-FLIPS proto/perm-approvals-y+24: M-a3-bound0->REFUSE (a3)
+proto/perm-approvals-y-24                        | ACCEPT                       | ACCEPT                       | +[] -[]
+    MUTANT-FLIPS proto/perm-approvals-y-24: M-a3-bound0->REFUSE (a3)
+proto/bnd-nonpara-drift-3                        | ACCEPT                       | REFUSE (a5)                  | +["workbench-light.png/timeline-first: (a5) top 426 drifts +3 px from R1 423 after whole-line steps"] -[] FLIP
+    MUTANT-FLIPS proto/bnd-nonpara-drift-3: M-a5-off->ACCEPT; M-a5-tol3->ACCEPT
+proto/bnd-nonpara-drift-2                        | ACCEPT                       | ACCEPT                       | +[] -[]
+    MUTANT-FLIPS proto/bnd-nonpara-drift-2: M-a5-tol1->REFUSE (a5)
+proto/bnd-createdAt-wraps-2-lines                | ACCEPT                       | REFUSE (a3)                  | +["packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239"] -[] FLIP
+    MUTANT-FLIPS proto/bnd-createdAt-wraps-2-lines: M-a3-unbounded->ACCEPT; M-a3-bound2->ACCEPT
+CONTROL proto-with-r3-options vs committed PositionJudge: 0 of 51 differ
+FULL vs ORTHOGONAL (a5): accept/refuse differs on 0 of 51
+GEOM r1-seed1-blockconverted  workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM r1-seed2-blockconverted  workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM r1b-seed3                workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM r1b-seed4                workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM r1c-seed5                workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM r1c-seed6                workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM eval-p1                  workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 roster-proven:dh=-24 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM eval-p2                  workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+GEOM eval-p3                  workbench-light:maxTopDrift=0 workbench-dark:maxTopDrift=0 approvals-chain:e=0,k=0 roster-tested:e=0,k=0 packet:maxTopDrift=0 graph:maxTopDrift=0 provenance:maxTopDrift=0
+R1-AS-CANDIDATE r3=ACCEPT r4=ACCEPT
+--- PASS: TestIter336ProtoPosition (0.02s)
+=== RUN   TestIter336ProtoR2
+ARMSHA proto/bnd-drift-sum-2 65ce8108706c685153f4d0c2b5a98104d7961fabe9ae395da28b7ac8269210f1
+ARMSHA proto/bnd-drift-sum-3 da4b9cf1199daeadc7e497b747b1499d687b82e7fc13104b38006c029185a520
+ARMSHA proto/perm-approvals-y+24 79601062a36ca3ea4a827a18e863ff54f446753308c41d198caa1835d9af4895
+ARMSHA proto/perm-approvals-y-24 1860035bd84a026039dfdb1021756d5c0b01ee8d93fa289f3f2a8f38d981e7ef
+ARMSHA proto/bnd-nonpara-drift-3 44e4cbd0d7f0e5ca47e317c5561c03a49aeeab3a8fd07e4f4957a954f9679ed9
+ARMSHA proto/bnd-nonpara-drift-2 400d3c1987ce6eb5993b7136dcac101fa6436cf0be57dff27cfe52899b40d98b
+ARMSHA proto/bnd-createdAt-wraps-2-lines 032e1b0bcd66019af0cd1aa70a60c7afcb51fae75c7e977a8dc9762089183b88
+A5LINES stores/r1-seed1                              r4=0 full=0 gap-only=5 height-only=5 r4-verdict=REFUSE (a1),(a2),(a3),(a4) gap-only-verdict=REFUSE (a1),(a2),(a3),(a4),(a5)
+A5LINES stores/r1-seed2                              r4=0 full=0 gap-only=5 height-only=5 r4-verdict=REFUSE (a1),(a2),(a3),(a4) gap-only-verdict=REFUSE (a1),(a2),(a3),(a4),(a5)
+A5LINES v65/neg-attested+14                          r4=0 full=1 gap-only=1 height-only=0 r4-verdict=REFUSE (a3) gap-only-verdict=REFUSE (a3),(a5)
+A5LINES v65/neg-dark-timeline-first+24               r4=0 full=1 gap-only=1 height-only=0 r4-verdict=REFUSE (a3) gap-only-verdict=REFUSE (a3),(a5)
+A5LINES v65/neg-light-header+40                      r4=0 full=1 gap-only=1 height-only=0 r4-verdict=REFUSE (a2),(a3) gap-only-verdict=REFUSE (a2),(a3),(a5)
+A5LINES v65/neg-light-header-whole-view              r4=0 full=1 gap-only=1 height-only=1 r4-verdict=REFUSE (a1),(a2),(a3),(a4),(b) gap-only-verdict=REFUSE (a1),(a2),(a3),(a4),(a5),(b)
+A5LINES v65/neg-rows-reordered-tested-claimed        r4=0 full=4 gap-only=4 height-only=0 r4-verdict=REFUSE (a3) gap-only-verdict=REFUSE (a3),(a5)
+A5LINES v65/neg-tested-64x16-glyphs                  r4=0 full=4 gap-only=4 height-only=3 r4-verdict=REFUSE (a1),(a3),(a4) gap-only-verdict=REFUSE (a1),(a3),(a4),(a5)
+A5LINES v65/neg-tested-at-attested-row               r4=0 full=4 gap-only=4 height-only=0 r4-verdict=REFUSE (a3) gap-only-verdict=REFUSE (a3),(a5)
+A5LINES v65/neg-tested-at-proven-row                 r4=0 full=3 gap-only=3 height-only=0 r4-verdict=REFUSE (a3) gap-only-verdict=REFUSE (a3),(a5)
+A5LINES v65/neg-tested-height+14                     r4=0 full=3 gap-only=0 height-only=3 r4-verdict=REFUSE (a4) gap-only-verdict=REFUSE (a4)
+A5LINES v65-p1/neg-tested-at-attested-row            r4=0 full=4 gap-only=4 height-only=0 r4-verdict=REFUSE (a3) gap-only-verdict=REFUSE (a3),(a5)
+NONPARA new/iso-nonpara-graph-svg-h+24 r3=REFUSE (a4) r4=REFUSE (a4) nonpara-zero-mutant=REFUSE (a4) reasons=["graph.png/graph-svg: (a4) height 298 vs 274"]
+NONPARA new/iso-nonpara-payload-h+24   r3=REFUSE (a4) r4=REFUSE (a4) nonpara-zero-mutant=REFUSE (a4) reasons=["provenance.png/payload: (a4) height 84 vs 60"]
+NONPARA proto/bnd-nonpara-drift-3      r3=ACCEPT r4=REFUSE (a5) nonpara-zero-mutant=ACCEPT reasons=["workbench-light.png/timeline-first: (a5) top 426 drifts +3 px from R1 423 after whole-line steps"]
+NONPARA proto/bnd-nonpara-drift-2      r3=ACCEPT r4=ACCEPT nonpara-zero-mutant=ACCEPT reasons=[]
+FULL adds (a5) lines on 10 arms: [v65/neg-attested+14 v65/neg-dark-timeline-first+24 v65/neg-light-header+40 v65/neg-light-header-whole-view v65/neg-rows-reordered-tested-claimed v65/neg-tested-64x16-glyphs v65/neg-tested-at-attested-row v65/neg-tested-at-proven-row v65/neg-tested-height+14 v65-p1/neg-tested-at-attested-row]
+GAP-ONLY adds (a5) lines on 11 arms: [stores/r1-seed1 stores/r1-seed2 v65/neg-attested+14 v65/neg-dark-timeline-first+24 v65/neg-light-header+40 v65/neg-light-header-whole-view v65/neg-rows-reordered-tested-claimed v65/neg-tested-64x16-glyphs v65/neg-tested-at-attested-row v65/neg-tested-at-proven-row v65-p1/neg-tested-at-attested-row]
+RAW r1-seed1 packet reasons under r4: ["packet.png/validation: (a1) left/right 106..1285 vs 106..1319" "packet.png/validation: (a4) height 43 vs 49 not whole lines" "packet.png/validation: (a2) stack-head top 2862 vs 2859" "packet.png/approvals-chain: (a1) left/right 106..288 vs 106..1319" "packet.png/approvals-chain: (a4) height 19 vs 25 not whole lines" "packet.png/approvals-chain: (a3) gap after validation 245 vs R1 239" "packet.png/roster-tested: (a1) left/right 106..1315 vs 106..1319" "packet.png/roster-tested: (a4) height 43 vs 49 not whole lines" "packet.png/roster-tested: (a3) gap after approvals-chain 101 vs R1 95" "packet.png/roster-attested: (a1) left/right 106..1237 vs 106..1319" "packet.png/roster-attested: (a4) height 19 vs 25 not whole lines" "packet.png/roster-attested: (a3) gap after roster-tested 21 vs R1 15" "packet.png/roster-claimed: (a1) left/right 106..757 vs 106..1319" "packet.png/roster-claimed: (a4) height 43 vs 49 not whole lines" "packet.png/roster-claimed: (a3) gap after roster-attested 21 vs R1 15" "packet.png/roster-proven: (a1) left/right 106..927 vs 106..1319" "packet.png/roster-proven: (a4) height 91 vs 97 not whole lines" "packet.png/roster-proven: (a3) gap after roster-claimed 21 vs R1 15"]
+RAW r1-seed2 packet reasons under r4: ["packet.png/validation: (a1) left/right 106..1285 vs 106..1319" "packet.png/validation: (a4) height 43 vs 49 not whole lines" "packet.png/validation: (a2) stack-head top 2862 vs 2859" "packet.png/approvals-chain: (a1) left/right 106..288 vs 106..1319" "packet.png/approvals-chain: (a4) height 19 vs 25 not whole lines" "packet.png/approvals-chain: (a3) gap after validation 245 vs R1 239" "packet.png/roster-tested: (a1) left/right 106..1313 vs 106..1319" "packet.png/roster-tested: (a4) height 43 vs 49 not whole lines" "packet.png/roster-tested: (a3) gap after approvals-chain 101 vs R1 95" "packet.png/roster-attested: (a1) left/right 106..1221 vs 106..1319" "packet.png/roster-attested: (a4) height 19 vs 25 not whole lines" "packet.png/roster-attested: (a3) gap after roster-tested 21 vs R1 15" "packet.png/roster-claimed: (a1) left/right 106..757 vs 106..1319" "packet.png/roster-claimed: (a4) height 43 vs 49 not whole lines" "packet.png/roster-claimed: (a3) gap after roster-attested 21 vs R1 15" "packet.png/roster-proven: (a1) left/right 106..927 vs 106..1319" "packet.png/roster-proven: (a4) height 91 vs 97 not whole lines" "packet.png/roster-proven: (a3) gap after roster-claimed 21 vs R1 15"]
+--- PASS: TestIter336ProtoR2 (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.346s

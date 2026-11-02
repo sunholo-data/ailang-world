@@ -1,0 +1,96 @@
+# plan-M1-acceptance.txt — iteration 336 planner, 2026-11-02T20:57:56Z
+# Scratch $S=/Users/voightkampff/dev/sunholo-data/.scratch-iter336-planner; git archive b9f67a27 copies; GOCACHE/GOMODCACHE under $S; go1.26.6 darwin/arm64; AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus
+# Runner: run_bounded.sh.txt sha256 1635f8d7308e03a6bc02eeacd4bd6eb723ce76405c4c1d28f2c45ef93d8e2082
+
+## P01 designer r2 patch alone: bash RB 1500 LOG go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck
+rc=0 skip=0
+    phone_test.go:579: PARITY phone: inputs=44 diffs=0 ledger=3
+    phone_test.go:765: PARITY phone: inputs=62 diffs=0 ledger=3
+    phone_test.go:766: CHECK images=10 byte-equal=10; real arms=42; parity inputs=62
+    position_test.go:652: PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8
+
+## P03 B7 probe (scratch-only test, not committed): ScanPhone on phoneArmByName(n).Make(base); render = seed-5 skeleton render, real = corpus r1c-seed5-pass-a-phone.png
+PROBE render base thumb {6 833 333 841}
+PROBE render judge/B1-thumb-split-px150 thumb {6 833 333 841} verdict ACCEPT reasons []
+PROBE render judge/B1c-thumb-split-px8 thumb {6 833 333 841} verdict ACCEPT reasons []
+PROBE render judge/B1b-thumb-split-px250 thumb {6 833 333 841} verdict ACCEPT reasons []
+PROBE render judge/B7-thumb-two-equal-bridged-runs thumb {6 833 139 841} verdict ACCEPT reasons []
+PROBE real base thumb {6 833 333 841}
+PROBE real judge/B1-thumb-split-px150 thumb {6 833 333 841} verdict ACCEPT reasons []
+PROBE real judge/B1c-thumb-split-px8 thumb {6 833 333 841} verdict ACCEPT reasons []
+PROBE real judge/B1b-thumb-split-px250 thumb {6 833 333 841} verdict ACCEPT reasons []
+PROBE real judge/B7-thumb-two-equal-bridged-runs thumb {6 833 139 841} verdict ACCEPT reasons []
+
+## P04 phone oracle (v66-phonecheck-main.go.txt sha256 31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c) on the B7 PNGs: phonecheck <V50> b7-render=<png> b7-real=<png>
+CONTROL v50-ref header==R1 true entry==R1 true
+b7-render                    390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} sd=124.4/90.8 thumb={-1 -1 -1 -1} titleRight=389 | (i)=true (ii)=true | r2(iii)=false -> r2 REFUSE | r3(iii′): dims=true thumb=false clip=true -> r3 REFUSE
+b7-real                      390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} sd=104.2/51.7 thumb={-1 -1 -1 -1} titleRight=389 | (i)=true (ii)=true | r2(iii)=false -> r2 REFUSE | r3(iii′): dims=true thumb=false clip=true -> r3 REFUSE
+TOTAL candidates=2 r2-accept=0 r3-accept=0
+
+## P05 final tree (git archive b9f67a27 + plan-M1.diff.txt sha256 7da36f30...5d74): M1 acceptance 1
+rc=0 skip=0 fail=0
+    phone_test.go:589: PARITY phone: inputs=45 diffs=0 ledger=4
+    phone_test.go:775: PARITY phone: inputs=63 diffs=0 ledger=4
+    phone_test.go:776: CHECK images=10 byte-equal=10; real arms=43; parity inputs=63
+    position_test.go:653: PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	4.317s
+--- PASS: TestMarketingPhoneSkeleton
+--- PASS: TestMarketingPhoneArms
+--- PASS: TestMarketingPhoneParity
+--- PASS: TestMarketingPhoneCLI
+--- PASS: TestMarketingPhoneRealCorpus
+--- PASS: TestMarketingPositionFixtures
+--- PASS: TestMarketingPositionCorpus
+--- PASS: TestMarketingPositionParity
+--- PASS: TestMarketingPositionCLI
+--- PASS: TestMarketingPositionGeometryMatchesOracle
+    --- PASS: TestMarketingPhoneArms/judge/B7-thumb-two-equal-bridged-runs
+
+## P09 vet / gofmt / build / fixtures (final tree)
+go vet ./scripts/marketingcheck rc=0; gofmt -l scripts/marketingcheck rc=0 output-lines=0; go build ./... rc=0
+diff -r base vs final: design_docs/verification/world-iter315 and scripts/marketingcheck/testdata identical (rc=0)
+
+## P09 capture-day controls, steps 2-5 (go run under RB 300 each)
+-- step 2 rc=0
+accept-seed5                           ACCEPT regions=17
+accept-eval-p1                         ACCEPT regions=17
+TOTAL candidates=2 accept=2 refuse=0
+-- step 3 rc=1
+refuse                                 REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+TOTAL candidates=1 accept=0 refuse=1
+-- step 4 rc=0
+accept-v50                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389
+accept-seed2                 ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389
+TOTAL candidates=2 accept=2 refuse=0
+-- step 5 rc=1
+refuse                       REFUSE 1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} thumb={-1 -1 -1 -1} titleRight=413
+    (i) header {25 45 370 68} entry {90 428 370 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) dims 1440x1100
+    (iii′) thumb {-1 -1 -1 -1}
+TOTAL candidates=1 accept=0 refuse=1
+
+## P10 go test ./... (RB 2400)
+-- in a git archive copy (no .git): rc=1, 34 ok; non-ok lines:
+--- FAIL: TestReleaseLiteralsExplainedByManifest (0.02s)
+    scan_test.go:256: git ls-files: exit status 128
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/pins	0.847s
+FAIL
+-- in a local git clone at b9f67a27 + plan-M1.diff.txt (uncommitted):
+start 2026-11-02T20:49:18Z b9f67a27 dirty=4 AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0)
+go build ./... rc=0
+go test ./... rc=0 elapsed=376s
+DONE
+35 ok, 0 FAIL
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	123.674s
+
+## P11 ./scripts/verify_ail.sh (RB 1200) on the final tree (git archive copy): rc=0, finished 2026-11-02T20:49:11Z
+── legs 1-2 AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0)
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+
+## P14 executor-plan dry run: the plan's bash blocks §2, M1.0-M1.4, M1.6, M2.1-M2.4 extracted verbatim and run in a scratch git clone at b9f67a27 (X and WT substituted)
+every block printed exactly its 'Expected' output (M1.6: 14 x rc=1 match=EXACT, restores byte-identical, 42 s; M2.4: rc=1/rc=1, restores e66293d11e303218)

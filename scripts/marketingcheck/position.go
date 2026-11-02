@@ -2,8 +2,11 @@ package main
 
 // Row 231 (design_docs/planned/w-marketing-position-checker.md §2.1–§2.2): the P0/P3 position
 // predicate, ported from the banked oracle design_docs/verification/world-iter315/v64-p0check-main.go.txt
-// (`check` mode, r3 only). The reason strings are byte-identical to the oracle's `r3:` lines;
-// TestMarketingPositionParity holds them to it. Image geometry comes from the Shots table, which
+// (`check` mode, r3), tightened by row 238 (design_docs/planned/w-marketing-predicate-tolerances.md
+// §2.1–§2.2): a body-text gap may move by at most one whole line, and the new (a5) bounds the
+// cumulative drift below each stack head. The reason strings are byte-identical to the oracle's
+// `r3:` lines except the row 238 additions, which TestMarketingPositionParity's ledger names one
+// by one. Image geometry comes from the Shots table, which
 // TestMarketingPositionGeometryMatchesOracle pins to the oracle's constants.
 
 import (
@@ -30,10 +33,20 @@ func posAbs(a int) int {
 	return a
 }
 
+// posLines is d's nearest whole number of 24 px body lines.
+func posLines(d int) int { return int(math.Round(float64(d) / positionLine)) }
+
 func posLineStep(d int) bool {
-	k := int(math.Round(float64(d) / positionLine))
-	return posAbs(d-k*positionLine) <= 2
+	return posAbs(d-posLines(d)*positionLine) <= 2
 }
+
+// Row 238 (design_docs/planned/w-marketing-predicate-tolerances.md): a free gap may move by at
+// most positionFreeGapLines whole body lines, and (a5) bounds the drift that the per-gap and
+// per-height ±2 px residuals accumulate below a stack head.
+const (
+	positionFreeGapLines = 1
+	positionDriftTol     = 2
+)
 
 func posPara(shot string) bool { return shot == "packet.png" }
 
@@ -45,8 +58,9 @@ func posInside(c Rect, w, h int) bool {
 	return c.X >= 0 && c.Y >= 0 && c.X+c.W <= w && c.Y+c.H <= h-40
 }
 
-// PositionJudge returns the r3 refusal reasons (empty = ACCEPT) and the number of baseline
-// regions it compared (content plus one background per shot).
+// PositionJudge returns the r3 refusal reasons with row 238's (a3) bound and (a5) drift lines
+// (empty = ACCEPT) and the number of baseline regions it compared (content plus one background
+// per shot).
 func PositionJudge(base, cand Rectangles) (reasons []string, regions int) {
 	for _, s := range positionShots {
 		bs := base.Shots[s]
@@ -61,11 +75,13 @@ func PositionJudge(base, cand Rectangles) (reasons []string, regions int) {
 		for _, c := range cs.Content {
 			cm[c.Name] = c
 		}
+		drift, prevRes, chain := 0, 0, true
 		for i, b := range bs.Content {
 			regions++
 			c, ok := cm[b.Name]
 			if !ok {
 				reasons = append(reasons, s+"/"+b.Name+": missing")
+				chain = false
 				continue
 			}
 			if !posInside(c, W, H) {
@@ -75,34 +91,59 @@ func PositionJudge(base, cand Rectangles) (reasons []string, regions int) {
 				reasons = append(reasons, fmt.Sprintf("%s/%s: (a1) left/right %d..%d vs %d..%d", s, b.Name, c.X, c.X+c.W, b.X, b.X+b.W))
 			}
 			dh := c.H - b.H
+			hOK, hRes := true, dh
 			if posPara(s) {
+				hRes = dh - posLines(dh)*positionLine
 				if !(posLineStep(dh) && c.H >= positionLine) {
+					hOK = false
 					reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d not whole lines", s, b.Name, c.H, b.H))
 				}
 			} else if posAbs(dh) > 2 {
+				hOK = false
 				reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d", s, b.Name, c.H, b.H))
+			}
+			// prevRes carries this region's height residual to the next region's (a5); a height
+			// that failed (a4) is already a refusal and contributes nothing.
+			setPrev := func() {
+				prevRes = 0
+				if hOK {
+					prevRes = hRes
+				}
 			}
 			if i == 0 {
 				if posAbs(c.Y-b.Y) > 2 {
 					reasons = append(reasons, fmt.Sprintf("%s/%s: (a2) stack-head top %d vs %d", s, b.Name, c.Y, b.Y))
 				}
+				setPrev()
 				continue
 			}
 			pb := bs.Content[i-1]
 			pc, ok := cm[pb.Name]
 			if !ok {
+				chain = false
 				continue
 			}
 			gb := b.Y - (pb.Y + pb.H)
 			gc := c.Y - (pc.Y + pc.H)
 			e := gc - gb
-			okGap := gc >= 0 && posAbs(e) <= 2
+			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
 			if posFreeGap(s, b.Name) {
-				okGap = gc >= 0 && posLineStep(e)
+				okGap = gc >= 0 && posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines
+				gRes = e - posLines(e)*positionLine
 			}
 			if !okGap {
 				reasons = append(reasons, fmt.Sprintf("%s/%s: (a3) gap after %s %d vs R1 %d", s, b.Name, pb.Name, gc, gb))
 			}
+			if chain {
+				drift += prevRes
+				if okGap {
+					drift += gRes
+				}
+				if posAbs(drift) > positionDriftTol {
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a5) top %d drifts %+d px from R1 %d after whole-line steps", s, b.Name, c.Y, drift, b.Y))
+				}
+			}
+			setPrev()
 		}
 		regions++
 		b, c := bs.Background, cs.Background

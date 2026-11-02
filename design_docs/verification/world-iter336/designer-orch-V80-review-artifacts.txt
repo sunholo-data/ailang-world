@@ -1,0 +1,46 @@
+$ python3 -I (doc, iso_ts, per-seat model/present/verdict, synthesis.verdict) $Q/w-marketing-position-checker-2026-10-31T00-42-30Z.json
+ doc= design_docs/planned/w-marketing-position-checker.md  iso_ts= 2026-10-31T00:42:30Z  synthesis= blocked  cost= 0.21
+   gpt6-1-sol present= True verdict= reject
+   gemini-4-argon present= True verdict= pass
+   oc-glm-5-3 present= True verdict= reject
+$ python3 -I (doc, iso_ts, per-seat model/present/verdict, synthesis.verdict) $Q/w-marketing-position-checker-2026-10-31T00-51-18Z.json
+ doc= design_docs/planned/w-marketing-position-checker.md  iso_ts= 2026-10-31T00:51:18Z  synthesis= blocked  cost= 0.19
+   gpt6-1-sol present= True verdict= reject
+   gemini-4-argon present= True verdict= pass
+   oc-glm-5-3 present= True verdict= reject
+$ python3 -I (doc, iso_ts, per-seat model/present/verdict, synthesis.verdict) $Q/w-marketing-predicate-tolerances-2026-11-02T20-17-47Z.json
+ doc= design_docs/planned/w-marketing-predicate-tolerances.md  iso_ts= 2026-11-02T20:17:47Z  synthesis= blocked  cost= 0.35
+   oc-kimi-k3 present= True verdict= reject
+   gpt6-1-sol present= True verdict= reject
+   gemini-4-argon present= True verdict= pass
+$ python3 -I (doc, iso_ts, per-seat model/present/verdict, synthesis.verdict) $Q/w-marketing-predicate-tolerances-2026-11-02T20-29-21Z.json
+ doc= design_docs/planned/w-marketing-predicate-tolerances.md  iso_ts= 2026-11-02T20:29:21Z  synthesis= blocked  cost= 0.32
+   oc-kimi-k3 present= True verdict= reject
+   gpt6-1-sol present= True verdict= reject
+   gemini-4-argon present= True verdict= pass
+$ python3 -I (doc, iso_ts, per-seat model/present/verdict, synthesis.verdict) $Q/w-marketing-capture-orchestration-2026-11-02T21-12-40Z.json
+ doc= design_docs/planned/w-marketing-capture-orchestration.md  iso_ts= 2026-11-02T21:12:40Z  synthesis= blocked  cost= 0.53
+   gemini-4-argon present= True verdict= reject
+   oc-glm-5-3 present= True verdict= reject
+   oc-kimi-k3 present= True verdict= reject
+$ cmp (repo copies vs the state artifacts)
+cmp: EOF on $HOME/.ailang/state/mission-quorum-world/w-marketing-capture-orchestration-2026-11-02T21-12-40Z.json
+cmp: EOF on $HOME/.ailang/state/mission-quorum-world/w-marketing-predicate-tolerances-2026-11-02T20-17-47Z.json
+design_docs/verification/world-iter336/quorum-r2.json
+cmp: EOF on $HOME/.ailang/state/mission-quorum-world/w-marketing-predicate-tolerances-2026-11-02T20-29-21Z.json
+$ git log -1 --format="%h %ci %s" 08dc31be; git log -1 --format="%h %ci %s" 03fe5a1a
+08dc31be 2026-10-31 01:53:21 +0100 design(row 231): w-marketing-position-checker r2 — quorum r2 fixes (narrow-refinement carve-out)
+03fe5a1a 2026-10-31 03:26:01 +0100 docs(row 231 M3): orchestration §4.4 and QUICKSTART §13 switch to marketingcheck position/phone; NB2 pinned
+$ ls -la design_docs/verification/world-iter336/v27-precedent-content-check.txt; head -5 of it
+-rw-r--r--@ 1 voightkampff  staff  1092 Nov  2 21:32 design_docs/verification/world-iter336/v27-precedent-content-check.txt
+V27 (controller, iteration 336, 2026-11-02T20:32:45Z): content check of the row-231 precedent.
+Quorum artifacts ~/.ailang/state/mission-quorum-world/w-marketing-position-checker-2026-10-31T00-42-30Z.json and ...T00-51-18Z.json have keys controller_in_session,doc,iso_ts,reviewers,synthesis; .doc is the PATH design_docs/planned/w-marketing-posit
+Reviewed versions: r0 9abc25b5 (01:41 CET = 00:41Z, quorum r1 00:42Z), r1 3aaee4d0 (01:50 CET, quorum r2 00:51Z); carve-out r2 08dc31be 01:53 CET.
+Lines added to orchestration by 03fe5a1a (row 231 M3):       19 (+ lines), 16 non-empty.
+Found verbatim in design r1 (reviewed by quorum r2): 0 of 16. In carve-out r2 08dc31be: 0 of 16. Control: in orchestration at 03fe5a1a: 16 of 16.
+$ ls $Q | grep -c w-marketing-capture-orchestration   (positive control: the 4 iteration-305/315 rounds + the iteration-336 round)
+5
+$ python3 -I: json.load(repo copy) == json.load(state artifact)   (cmp above differs in bytes only)
+quorum-orchestration-r1.json == w-marketing-capture-orchestration-2026-11-02T21-12-40Z.json : True
+quorum-r1.json == w-marketing-predicate-tolerances-2026-11-02T20-17-47Z.json : True
+quorum-r2.json == w-marketing-predicate-tolerances-2026-11-02T20-29-21Z.json : True

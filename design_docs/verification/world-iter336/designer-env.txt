@@ -1,0 +1,51 @@
+$ git -C $WT rev-parse HEAD; git -C $WT branch --show-current
+37100a432e1b8af9d234396cb8fee7ad627ecbc3
+sprint/world-iter336-marketing-predicate-tolerances
+$ cd $WT && go version; grep -n '^go ' go.mod; grep -n "go-version: '1.26.6'" .github/workflows/ci.yml
+go version go1.26.6 darwin/arm64
+3:go 1.26.6
+38:          go-version: '1.26.6'
+130:          go-version: '1.26.6'
+432:          go-version: '1.26.6'
+$ shasum -a 256 (oracle sources, R1 baseline, seed-5 store)
+0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c  design_docs/verification/world-iter315/v64-p0check-main.go.txt
+31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c  design_docs/verification/world-iter315/v66-phonecheck-main.go.txt
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  design_docs/verification/world-iter312/r1-rects.json
+ba7c83ce4e31c86a79ac54c2189f00605d05d757186421371681c6d78cc53333  scripts/marketingcheck/testdata/position/stores/r1c-seed5.json
+$ grep -c (each oracle pin in the orchestration doc; must be 1)
+0a9a6795d9d711f99d77030e0491cd1c5e254c61fc7434898a80b4875404927c        1
+31576922bc566ff9d6c2c40b4cfa41e71f234fc706d013377f657a0ffd010b4c        1
+$ (cd $HOME/.ailang/state/world-iter328-phone-corpus && shasum -a 256 -c $WT/scripts/marketingcheck/testdata/phone/corpus-SHA256SUMS)
+eval-p1-pass-a-phone.png: OK
+eval-p2-pass-a-phone.png: OK
+eval-p3-pass-a-phone.png: OK
+r1-seed1-pass-a-phone.png: OK
+r1-seed2-pass-a-phone.png: OK
+r1b-seed3-pass-a-phone.png: OK
+r1b-seed4-pass-a-phone.png: OK
+r1c-seed5-pass-a-phone.png: OK
+r1c-seed5-pass-a-workbench-light.png: OK
+r1c-seed6-pass-a-phone.png: OK
+v50-reference-phone.png: OK
+rc=0
+$ shasum -a 256 $HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+999125ff43bdbe5857fc053aa35b55fdfa1a6440447830ee539a43e7f6994be8  $HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png
+$ grep -n 'ledger' scripts/marketingcheck/position_test.go scripts/marketingcheck/phone_test.go (base: position ledger empty, phone ledger one entry)
+scripts/marketingcheck/position_test.go:543:	ledger := map[string]bool{} // design §2.2: the position ledger is empty
+scripts/marketingcheck/phone_test.go:520:	ledger := map[string]bool{"new/header-15px": true}
+$ grep -n -E 'perm-|B1' scripts/marketingcheck/position_test.go scripts/marketingcheck/phone_test.go | grep -E 'ACCEPT|REFUSE'
+scripts/marketingcheck/position_test.go:390:	"new/perm-approvals-y+48":                    "ACCEPT",
+scripts/marketingcheck/position_test.go:391:	"new/perm-approvals-y-48":                    "ACCEPT",
+scripts/marketingcheck/position_test.go:392:	"new/perm-validation-h+216":                  "ACCEPT",
+scripts/marketingcheck/position_test.go:393:	"new/perm-roster-drift-2px":                  "ACCEPT",
+scripts/marketingcheck/phone_test.go:402:	"judge/B1-thumb-split-px150":             "REFUSE thumb",
+scripts/marketingcheck/phone_test.go:403:	"judge/B1b-thumb-split-px250":            "ACCEPT",
+scripts/marketingcheck/phone_test.go:404:	"judge/B1c-thumb-split-px8":              "REFUSE thumb",
+$ git grep -n 'w-marketing-capture-orchestration.md' -- '*.go'  (the only test that reads the orchestration doc)
+scripts/marketingcheck/position_test.go:148:	oraclePinRegistry    = "../../design_docs/planned/w-marketing-capture-orchestration.md"
+$ git log --oneline -3 -- scripts/marketingcheck/position.go scripts/marketingcheck/phone.go scripts/marketingcheck/position_test.go scripts/marketingcheck/phone_test.go
+9ddab47c test(row 231 M2b): phone arms, oracle parity (ledger header-15px) and real-corpus parity
+c6a12dc9 feat(row 231 M2a): marketingcheck phone with 10 real-geometry skeleton fixtures
+c4b129b0 test(row 231 M1d): position parity against the pinned banked p0check oracle
+$ sed -n 6310p design_docs/world-mission.md | grep -o 'Pickable only[^.]*\.'
+Pickable only if D-WORLD-102's scope is widened, or on a Gate-1 red.

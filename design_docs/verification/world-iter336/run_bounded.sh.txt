@@ -1,0 +1,18 @@
+#!/bin/bash
+# run_bounded.sh — process-group deadline runner for row 238 (iteration 336).
+# Same idiom as run_bounded() in scripts/verify_ail.sh:214 and scripts/bench_worldd.sh:18.
+# Usage: bash run_bounded.sh <timeout_s> <out_file> <cmd...>
+# Runs <cmd> in a NEW session (its own process group); stdout -> <out_file>, stderr -> <out_file>.err.
+# Exit: the command's own rc, or 124 with "TIMEOUT after Ns" on stderr after SIGKILLing the whole group.
+t="$1"; out="$2"; shift 2
+exec python3 -I -c '
+import os, signal, subprocess, sys
+t = int(sys.argv[1]); out = sys.argv[2]; cmd = sys.argv[3:]
+with open(out, "wb") as f, open(out + ".err", "wb") as e:
+    p = subprocess.Popen(cmd, stdout=f, stderr=e, start_new_session=True)
+    try:
+        sys.exit(p.wait(timeout=t))
+    except subprocess.TimeoutExpired:
+        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+        sys.stderr.write("TIMEOUT after %ds: %s\n" % (t, " ".join(cmd))); sys.exit(124)
+' "$t" "$out" "$@"

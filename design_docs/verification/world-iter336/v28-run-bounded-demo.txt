@@ -1,0 +1,12 @@
+== V28 run_bounded demo 2026-11-02T20:32:29Z runner sha256 1635f8d7308e03a6
+-- arm 1: hanging child (sh starts a grandchild sleep 300 and waits), deadline 3 s
+TIMEOUT after 3s: sh -c sleep 300 & echo grandchild=$!; wait
+rc=124 elapsed=3s stderr=
+grandchild 70193 dead (group killed)
+-- arm 1b: the next step in an && chain does not run after a timeout
+TIMEOUT after 2s: sleep 30
+next step skipped, rc=124
+-- arm 2 (control): a command that finishes keeps its own rc
+rc=7 out=hi
+-- arm 3 (control): success
+rc=0

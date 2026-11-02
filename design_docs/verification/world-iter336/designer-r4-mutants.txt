@@ -1,0 +1,155 @@
+# mutants applied one at a time to $SCRATCH/tree-mut (copy of tree-r4); each run: go test -count=1 -timeout 300s -v -run '^TestMarketing(Position|Phone)(Corpus|Arms|Parity)$' ./scripts/marketingcheck
+# mutate.py:
+#   # Iteration 336 designer: apply one named mutant to the r4 prototype (position.go / phone.go).
+#   import sys
+#   name, root = sys.argv[1], sys.argv[2]
+#   M = {
+#    "M238-a3-unbounded": ("position.go", "posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines", "posLineStep(e)"),
+#    "M238-a3-bound2":    ("position.go", "positionFreeGapLines = 1", "positionFreeGapLines = 2"),
+#    "M238-a3-bound0":    ("position.go", "positionFreeGapLines = 1", "positionFreeGapLines = 0"),
+#    "M238-a5-off":       ("position.go", "\t\t\tif chain {\n\t\t\t\tdrift += prevRes", "\t\t\tif chain && false {\n\t\t\t\tdrift += prevRes"),
+#    "M238-a5-tol3":      ("position.go", "positionDriftTol     = 2", "positionDriftTol     = 3"),
+#    "M238-a5-tol1":      ("position.go", "positionDriftTol     = 2", "positionDriftTol     = 1"),
+#    "M238-a5-accumulate-failed": ("position.go", "\t\t\t\tif okGap {\n\t\t\t\t\tdrift += gRes\n\t\t\t\t}", "\t\t\t\tdrift += gRes"),
+#    "M238-run-nobridge": ("phone.go", "segs[i+1][0]-sg[1] == 2", "segs[i+1][0]-sg[1] == -1"),
+#    "M238-run-gap2px":   ("phone.go", "segs[i+1][0]-sg[1] == 2", "segs[i+1][0]-sg[1] <= 3"),
+#    "M238-run-chain-bridges": ("phone.go", "\t\t\tif i+1 < len(segs) && segs[i+1][0]-sg[1] == 2 {\n\t\t\t\tend = segs[i+1][1]\n\t\t\t}",
+#                               "\t\t\tfor j := i; j+1 < len(segs) && segs[j+1][0]-segs[j][1] == 2; j++ {\n\t\t\t\tend = segs[j+1][1]\n\t\t\t}"),
+#   }
+#   f, old, new = M[name]
+#   p = root + "/scripts/marketingcheck/" + f
+#   s = open(p).read()
+#   assert s.count(old) == 1, (name, s.count(old))
+#   open(p, "w").write(s.replace(old, new))
+#   print("applied", name, "to", f)
+applied M238-a3-unbounded to position.go
+MUTANT M238-a3-unbounded rc=1
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/new/perm-approvals-y+48
+    --- FAIL: TestMarketingPositionCorpus/new/perm-approvals-y-48
+    --- FAIL: TestMarketingPositionCorpus/new/perm-validation-h+216
+    --- FAIL: TestMarketingPositionCorpus/new/bnd-createdAt-wraps-2-lines
+--- FAIL: TestMarketingPositionParity
+position_test.go:619: ledger v65/neg-tested-at-proven-row: want oracle REFUSE, position REFUSE adding ["packet.png/roster-tested: (a3) gap after approvals-chain 263 vs R1 95"]; got oracle REFUSE, position REFUSE, added [
+position_test.go:619: ledger new/perm-approvals-y+48: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239" "packet.png/roster-tested: (a3) gap after approvals-
+position_test.go:619: ledger new/perm-approvals-y-48: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 191 vs R1 239" "packet.png/roster-tested: (a3) gap after approvals-
+position_test.go:619: ledger new/perm-validation-h+216: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 23 vs R1 239"]; got oracle ACCEPT, position ACCEPT, added [] (rea
+position_test.go:619: ledger new/bnd-createdAt-wraps-2-lines: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239"]; got oracle ACCEPT, position ACCEPT, added 
+applied M238-a3-bound2 to position.go
+MUTANT M238-a3-bound2 rc=1
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/new/perm-approvals-y+48
+    --- FAIL: TestMarketingPositionCorpus/new/perm-approvals-y-48
+    --- FAIL: TestMarketingPositionCorpus/new/bnd-createdAt-wraps-2-lines
+--- FAIL: TestMarketingPositionParity
+position_test.go:619: ledger new/perm-approvals-y+48: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239" "packet.png/roster-tested: (a3) gap after approvals-
+position_test.go:619: ledger new/perm-approvals-y-48: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 191 vs R1 239" "packet.png/roster-tested: (a3) gap after approvals-
+position_test.go:619: ledger new/bnd-createdAt-wraps-2-lines: want oracle ACCEPT, position REFUSE adding ["packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239"]; got oracle ACCEPT, position ACCEPT, added 
+applied M238-a3-bound0 to position.go
+MUTANT M238-a3-bound0 rc=1
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps
+    --- FAIL: TestMarketingPositionCorpus/new/iso-minh-approvals-h-1
+    --- FAIL: TestMarketingPositionCorpus/new/perm-approvals-y+24
+    --- FAIL: TestMarketingPositionCorpus/new/perm-approvals-y-24
+--- FAIL: TestMarketingPositionParity
+position_test.go:625: v65/syn-pos-createdAt-wraps: oracle ACCEPT, position REFUSE
+position_test.go:629: v65/syn-pos-createdAt-wraps: reasons differ
+position_test.go:629: new/iso-minh-approvals-h-1: reasons differ
+position_test.go:625: new/perm-approvals-y+24: oracle ACCEPT, position REFUSE
+position_test.go:629: new/perm-approvals-y+24: reasons differ
+position_test.go:625: new/perm-approvals-y-24: oracle ACCEPT, position REFUSE
+position_test.go:629: new/perm-approvals-y-24: reasons differ
+applied M238-a5-off to position.go
+MUTANT M238-a5-off rc=1 (rerun: the first form 'if false' did not compile: declared and not used: chain)
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/new/perm-roster-drift-2px
+    --- FAIL: TestMarketingPositionCorpus/new/bnd-drift-sum-3
+--- FAIL: TestMarketingPositionParity
+position_test.go:619: ledger new/perm-roster-drift-2px: want oracle ACCEPT, position REFUSE adding ["packet.png/roster-attested: (a5) top 3337 drifts +6 px from R1 3331 after whole-line steps" "packet.png/roster-claimed:
+position_test.go:619: ledger new/bnd-drift-sum-3: want oracle ACCEPT, position REFUSE adding ["packet.png/roster-proven: (a5) top 3438 drifts +3 px from R1 3435 after whole-line steps"]; got oracle ACCEPT, position ACCEP
+applied M238-a5-tol3 to position.go
+MUTANT M238-a5-tol3 rc=1
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/new/bnd-drift-sum-3
+--- FAIL: TestMarketingPositionParity
+position_test.go:619: ledger new/bnd-drift-sum-3: want oracle ACCEPT, position REFUSE adding ["packet.png/roster-proven: (a5) top 3438 drifts +3 px from R1 3435 after whole-line steps"]; got oracle ACCEPT, position ACCEP
+applied M238-a5-tol1 to position.go
+MUTANT M238-a5-tol1 rc=1
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/new/bnd-drift-sum-2
+--- FAIL: TestMarketingPositionParity
+position_test.go:619: ledger new/perm-roster-drift-2px: want oracle ACCEPT, position REFUSE adding ["packet.png/roster-attested: (a5) top 3337 drifts +6 px from R1 3331 after whole-line steps" "packet.png/roster-claimed:
+position_test.go:625: new/bnd-drift-sum-2: oracle ACCEPT, position REFUSE
+position_test.go:629: new/bnd-drift-sum-2: reasons differ
+position_test.go:619: ledger new/bnd-drift-sum-3: want oracle ACCEPT, position REFUSE adding ["packet.png/roster-proven: (a5) top 3438 drifts +3 px from R1 3435 after whole-line steps"]; got oracle ACCEPT, position REFUS
+applied M238-a5-accumulate-failed to position.go
+MUTANT M238-a5-accumulate-failed rc=1
+--- FAIL: TestMarketingPositionCorpus
+    --- FAIL: TestMarketingPositionCorpus/stores/r1-seed1
+    --- FAIL: TestMarketingPositionCorpus/stores/r1-seed2
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-attested+14
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-light-header+40
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-light-header-whole-view
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-tested-at-attested-row
+    --- FAIL: TestMarketingPositionCorpus/v65/neg-tested-at-proven-row
+    --- FAIL: TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row
+--- FAIL: TestMarketingPositionParity
+position_test.go:629: stores/r1-seed1: reasons differ
+position_test.go:629: stores/r1-seed2: reasons differ
+position_test.go:629: v65/neg-attested+14: reasons differ
+position_test.go:629: v65/neg-dark-timeline-first+24: reasons differ
+position_test.go:629: v65/neg-light-header+40: reasons differ
+position_test.go:629: v65/neg-light-header-whole-view: reasons differ
+position_test.go:629: v65/neg-rows-reordered-tested-claimed: reasons differ
+position_test.go:629: v65/neg-tested-64x16-glyphs: reasons differ
+position_test.go:629: v65/neg-tested-at-attested-row: reasons differ
+position_test.go:619: ledger v65/neg-tested-at-proven-row: want oracle REFUSE, position REFUSE adding ["packet.png/roster-tested: (a3) gap after approvals-chain 263 vs R1 95"]; got oracle REFUSE, position REFUSE, added [
+position_test.go:629: v65-p1/neg-tested-at-attested-row: reasons differ
+applied M238-run-nobridge to phone.go
+MUTANT M238-run-nobridge rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/judge/B1-thumb-split-px150
+    --- FAIL: TestMarketingPhoneArms/judge/B1c-thumb-split-px8
+--- FAIL: TestMarketingPhoneParity
+phone_test.go:579: ledger judge/B1-thumb-split-px150: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {151 833 333 841}"]
+phone_test.go:579: ledger judge/B1c-thumb-split-px8: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {9 833 333 841}"]
+applied M238-run-gap2px to phone.go
+MUTANT M238-run-gap2px rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/judge/B1e-thumb-gap-2px-at-150
+--- FAIL: TestMarketingPhoneParity
+phone_test.go:579: judge/B1e-thumb-gap-2px-at-150: oracle REFUSE [true true true false true], phone ACCEPT [true true true true true] []
+applied M238-run-chain-bridges to phone.go
+MUTANT M238-run-chain-bridges rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/judge/B1d-thumb-two-splits-px100-px200
+    --- FAIL: TestMarketingPhoneArms/judge/B6-alternating-pixels-no-thumb
+--- FAIL: TestMarketingPhoneParity
+phone_test.go:579: judge/B1d-thumb-two-splits-px100-px200: oracle REFUSE [true true true false true], phone ACCEPT [true true true true true] []
+phone_test.go:579: judge/B6-alternating-pixels-no-thumb: oracle REFUSE [true true true false true], phone ACCEPT [true true true true true] []
+
+# row-231 mutants F4 and F9 re-run on the r4 prototype (B1/B1c no longer kill them; other arms do)
+# mutate.py additions:
+#    "F4-r4-X0-bound-removed": ("phone.go", "s.Scrollbar.Y0 >= 0 && s.Scrollbar.X0 <= 8 && ", "s.Scrollbar.Y0 >= 0 && "),
+#    "F9-r4-span": ("phone.go", "\t\tx0, x1 := -1, -1\n\t\tfor i, sg := range segs {", "\t\tx0, x1 := -1, -1\n\t\tif len(segs) > 0 {\n\t\t\tsegs = [][2]int{{segs[0][0], segs[len(segs)-1][1]}}\n\t\t}\n\t\tfor i, sg := range segs {"),
+applied F4-r4-X0-bound-removed to phone.go
+MUTANT F4-r4-X0-bound-removed rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/judge/B5-two-pieces-rows-differ
+    --- FAIL: TestMarketingPhoneArms/judge/short-thumb-x20
+    --- FAIL: TestMarketingPhoneArms/judge/thumb-x9
+    --- FAIL: TestMarketingPhoneArms/judge/B1d-thumb-two-splits-px100-px200
+    --- FAIL: TestMarketingPhoneArms/judge/B1e-thumb-gap-2px-at-150
+--- FAIL: TestMarketingPhoneParity
+applied F9-r4-span to phone.go
+MUTANT F9-r4-span rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/judge/scattered-pixels-no-thumb
+    --- FAIL: TestMarketingPhoneArms/judge/B1d-thumb-two-splits-px100-px200
+    --- FAIL: TestMarketingPhoneArms/judge/B1e-thumb-gap-2px-at-150
+    --- FAIL: TestMarketingPhoneArms/judge/B6-alternating-pixels-no-thumb
+--- FAIL: TestMarketingPhoneParity

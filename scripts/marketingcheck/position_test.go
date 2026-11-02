@@ -1,8 +1,9 @@
 package main
 
 // Row 231 M1 (design_docs/planned/w-marketing-position-checker.md §2.2–§2.4, §3 M1, §4 P1–P17):
-// `marketingcheck position` on the V64/V65 corpora and ten in-test arms, its parity with the
-// banked oracle, its exit codes, and the deadline-enforcing subprocess runner both parity tests use.
+// `marketingcheck position` on the V64/V65 corpora and 17 in-test arms (ten from row 231, seven
+// from row 238), its parity with the banked oracle (an eight-entry ledger since row 238), its exit
+// codes, and the deadline-enforcing subprocess runner both parity tests use.
 
 import (
 	"bufio"
@@ -191,7 +192,7 @@ func buildOracle(t *testing.T, source, pin string) string {
 	return bin
 }
 
-// ---- the 44 position inputs (design §2.3, §3 M1) ----
+// ---- the 51 position inputs (design §2.3, §3 M1; row 238 §2.4) ----
 
 type labelledPath struct{ Label, Path string }
 
@@ -232,6 +233,39 @@ var positionNewArms = []struct {
 			shift += 2
 		}
 	}},
+	// Row 238 (w-marketing-predicate-tolerances §2.4): (a5) boundary pair, the (a3) whole-line
+	// bound's two-line arm, and the two one-line approvals moves the bound still admits.
+	{"bnd-drift-sum-2", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		sh.Content[posIdx(sh, "roster-attested")].Y += 1
+		sh.Content[posIdx(sh, "roster-claimed")].Y += 2
+		sh.Content[posIdx(sh, "roster-proven")].Y += 2
+	}},
+	{"bnd-drift-sum-3", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		sh.Content[posIdx(sh, "roster-attested")].Y += 1
+		sh.Content[posIdx(sh, "roster-claimed")].Y += 2
+		sh.Content[posIdx(sh, "roster-proven")].Y += 3
+	}},
+	{"bnd-createdAt-wraps-2-lines", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		for j := posIdx(sh, "approvals-chain"); j < len(sh.Content); j++ {
+			sh.Content[j].Y += 48
+		}
+	}},
+	{"perm-approvals-y+24", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y += 24 }},
+	{"perm-approvals-y-24", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y -= 24 }},
+	// Row 238 r2 (quorum r1, gpt6-1-sol): a non-paragraph stack head's height residual counts in (a5).
+	{"bnd-nonpara-drift-2", func(d *Rectangles) {
+		sh := d.Shots["workbench-light.png"]
+		sh.Content[posIdx(sh, "header")].H += 2
+		sh.Content[posIdx(sh, "timeline-first")].Y += 2
+	}},
+	{"bnd-nonpara-drift-3", func(d *Rectangles) {
+		sh := d.Shots["workbench-light.png"]
+		sh.Content[posIdx(sh, "header")].H += 2
+		sh.Content[posIdx(sh, "timeline-first")].Y += 3
+	}},
 }
 
 // positionNewArmSHA256 is the banked generator's output (V13), so the port is byte-pinned.
@@ -246,9 +280,16 @@ var positionNewArmSHA256 = map[string]string{
 	"perm-approvals-y-48":          "bc7a9fb2512d52418967d29e5619d901928bb8a621e6d817191fed1222aac08d",
 	"perm-roster-drift-2px":        "7e9a35bba5a59c36168113a971e4058ea061d6b9a938d232190e47785af73a70",
 	"perm-validation-h+216":        "6e4f9772de397ee47f7e3b953f1c69fdb044ee368cf15bb05060f1f15a2cd8bc",
+	"bnd-drift-sum-2":              "65ce8108706c685153f4d0c2b5a98104d7961fabe9ae395da28b7ac8269210f1",
+	"bnd-drift-sum-3":              "da4b9cf1199daeadc7e497b747b1499d687b82e7fc13104b38006c029185a520",
+	"bnd-createdAt-wraps-2-lines":  "032e1b0bcd66019af0cd1aa70a60c7afcb51fae75c7e977a8dc9762089183b88",
+	"perm-approvals-y+24":          "79601062a36ca3ea4a827a18e863ff54f446753308c41d198caa1835d9af4895",
+	"perm-approvals-y-24":          "1860035bd84a026039dfdb1021756d5c0b01ee8d93fa289f3f2a8f38d981e7ef",
+	"bnd-nonpara-drift-2":          "400d3c1987ce6eb5993b7136dcac101fa6436cf0be57dff27cfe52899b40d98b",
+	"bnd-nonpara-drift-3":          "44e4cbd0d7f0e5ca47e317c5561c03a49aeeab3a8fd07e4f4957a954f9679ed9",
 }
 
-// writePositionNewArms writes the ten in-test arms into dir and returns name -> path.
+// writePositionNewArms writes the 17 in-test arms into dir and returns name -> path.
 func writePositionNewArms(t *testing.T, dir string) map[string]string {
 	t.Helper()
 	src, err := os.ReadFile(filepath.Join(positionTestdata, "stores", "r1c-seed5.json"))
@@ -275,7 +316,7 @@ func writePositionNewArms(t *testing.T, dir string) map[string]string {
 	return out
 }
 
-// positionInputs returns the 44 labelled inputs: V64 (11), V65 (19 + 4), new (10).
+// positionInputs returns the 51 labelled inputs: V64 (11), V65 (19 + 4), new (17).
 func positionInputs(t *testing.T) []labelledPath {
 	t.Helper()
 	var in []labelledPath
@@ -299,8 +340,8 @@ func positionInputs(t *testing.T) []labelledPath {
 	for _, a := range positionNewArms {
 		in = append(in, labelledPath{"new/" + a.Name, arms[a.Name]})
 	}
-	if len(in) != 44 {
-		t.Fatalf("position inputs: %d, want 44", len(in))
+	if len(in) != 51 {
+		t.Fatalf("position inputs: %d, want 51", len(in))
 	}
 	return in
 }
@@ -345,7 +386,7 @@ func positionVerdict(reasons []string) string {
 	return "REFUSE " + strings.Join(tags, ",")
 }
 
-// positionWant is the 44-row verdict table (design §3 M1; V10, V13): 19 ACCEPT.
+// positionWant is the 51-row verdict table (design §3 M1; V10, V13; row 238 §3): 19 ACCEPT.
 var positionWant = map[string]string{
 	"stores/r1-seed1":                            "REFUSE (a1),(a2),(a3),(a4)",
 	"stores/r1-seed2":                            "REFUSE (a1),(a2),(a3),(a4)",
@@ -387,10 +428,17 @@ var positionWant = map[string]string{
 	"new/iso-nonpara-graph-svg-h+24":             "REFUSE (a4)",
 	"new/iso-nonpara-payload-h+24":               "REFUSE (a4)",
 	"new/acc-tested-w-2":                         "ACCEPT",
-	"new/perm-approvals-y+48":                    "ACCEPT",
-	"new/perm-approvals-y-48":                    "ACCEPT",
-	"new/perm-validation-h+216":                  "ACCEPT",
-	"new/perm-roster-drift-2px":                  "ACCEPT",
+	"new/perm-approvals-y+48":                    "REFUSE (a3)",
+	"new/perm-approvals-y-48":                    "REFUSE (a3)",
+	"new/perm-validation-h+216":                  "REFUSE (a3)",
+	"new/perm-roster-drift-2px":                  "REFUSE (a5)",
+	"new/bnd-drift-sum-2":                        "ACCEPT",
+	"new/bnd-drift-sum-3":                        "REFUSE (a5)",
+	"new/bnd-createdAt-wraps-2-lines":            "REFUSE (a3)",
+	"new/perm-approvals-y+24":                    "ACCEPT",
+	"new/perm-approvals-y-24":                    "ACCEPT",
+	"new/bnd-nonpara-drift-2":                    "ACCEPT",
+	"new/bnd-nonpara-drift-3":                    "REFUSE (a5)",
 }
 
 func TestMarketingPositionFixtures(t *testing.T) {
@@ -499,8 +547,8 @@ func TestMarketingPositionCorpus(t *testing.T) {
 			accept++
 		}
 	}
-	if len(positionWant) != 44 || accept != 19 {
-		t.Errorf("verdict table: %d rows, %d ACCEPT; want 44 and 19", len(positionWant), accept)
+	if len(positionWant) != 51 || accept != 19 {
+		t.Errorf("verdict table: %d rows, %d ACCEPT; want 51 and 19", len(positionWant), accept)
 	}
 }
 
@@ -540,9 +588,33 @@ func TestMarketingPositionParity(t *testing.T) {
 		t.Fatalf("oracle rc %d: %s%s", res.Code, res.Stdout, res.Stderr)
 	}
 	oracleOut := parseP0check(t, res.Stdout)
-	ledger := map[string]bool{} // design §2.2: the position ledger is empty
+	// Row 238 ledger (w-marketing-predicate-tolerances §2.5): each entry is the oracle's verdict,
+	// position's verdict and the exact reason lines position adds; the oracle's own lines must
+	// all still be present. Any other difference is a red, and so is an entry that stops differing.
+	ledger := map[string]positionLedgerEntry{
+		"new/perm-approvals-y+48": {"ACCEPT", "REFUSE", []string{
+			"packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239",
+			"packet.png/roster-tested: (a3) gap after approvals-chain 47 vs R1 95"}},
+		"new/perm-approvals-y-48": {"ACCEPT", "REFUSE", []string{
+			"packet.png/approvals-chain: (a3) gap after validation 191 vs R1 239",
+			"packet.png/roster-tested: (a3) gap after approvals-chain 143 vs R1 95"}},
+		"new/perm-validation-h+216": {"ACCEPT", "REFUSE", []string{
+			"packet.png/approvals-chain: (a3) gap after validation 23 vs R1 239"}},
+		"new/perm-roster-drift-2px": {"ACCEPT", "REFUSE", []string{
+			"packet.png/roster-attested: (a5) top 3337 drifts +6 px from R1 3331 after whole-line steps",
+			"packet.png/roster-claimed: (a5) top 3381 drifts +10 px from R1 3371 after whole-line steps",
+			"packet.png/roster-proven: (a5) top 3449 drifts +14 px from R1 3435 after whole-line steps"}},
+		"new/bnd-drift-sum-3": {"ACCEPT", "REFUSE", []string{
+			"packet.png/roster-proven: (a5) top 3438 drifts +3 px from R1 3435 after whole-line steps"}},
+		"new/bnd-createdAt-wraps-2-lines": {"ACCEPT", "REFUSE", []string{
+			"packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239"}},
+		"new/bnd-nonpara-drift-3": {"ACCEPT", "REFUSE", []string{
+			"workbench-light.png/timeline-first: (a5) top 426 drifts +3 px from R1 423 after whole-line steps"}},
+		"v65/neg-tested-at-proven-row": {"REFUSE", "REFUSE", []string{
+			"packet.png/roster-tested: (a3) gap after approvals-chain 263 vs R1 95"}},
+	}
 	base := loadPositionBaseline(t)
-	compared, verdictDiffs, reasonDiffs := 0, 0, 0
+	compared, verdictDiffs, reasonDiffs, ledgerSeen := 0, 0, 0, 0
 	for _, in := range inputs {
 		o, ok := oracleOut[in.Label]
 		if !ok {
@@ -559,7 +631,11 @@ func TestMarketingPositionParity(t *testing.T) {
 			v = "REFUSE"
 		}
 		compared++
-		if ledger[in.Label] {
+		if le, ok := ledger[in.Label]; ok {
+			ledgerSeen++
+			if got := positionAdded(o[1:], reasons); o[0] != le.Oracle || v != le.Position || got == nil || strings.Join(got, "\n") != strings.Join(le.Added, "\n") {
+				t.Errorf("ledger %s: want oracle %s, position %s adding %q; got oracle %s, position %s, added %q (reasons %q)", in.Label, le.Oracle, le.Position, le.Added, o[0], v, got, reasons)
+			}
 			continue
 		}
 		if v != o[0] {
@@ -571,10 +647,38 @@ func TestMarketingPositionParity(t *testing.T) {
 			t.Errorf("%s: reasons differ\n oracle   %q\n position %q", in.Label, o[1:], reasons)
 		}
 	}
-	if compared != 44 || len(oracleOut) != 44 {
-		t.Fatalf("compared %d labels (oracle printed %d), want 44", compared, len(oracleOut))
+	if compared != 51 || len(oracleOut) != 51 || ledgerSeen != len(ledger) {
+		t.Fatalf("compared %d labels (oracle printed %d, ledger %d of %d), want 51", compared, len(oracleOut), ledgerSeen, len(ledger))
 	}
-	t.Logf("PARITY position: inputs=%d verdict-diffs=%d reason-diffs=%d", compared, verdictDiffs, reasonDiffs)
+	t.Logf("PARITY position: inputs=%d verdict-diffs=%d reason-diffs=%d ledger=%d", compared, verdictDiffs, reasonDiffs, len(ledger))
+}
+
+type positionLedgerEntry struct {
+	Oracle, Position string
+	Added            []string
+}
+
+// positionAdded returns position's reasons that are not the oracle's, in position's order, or
+// nil when an oracle reason is missing from position's.
+func positionAdded(oracle, position []string) []string {
+	left := map[string]int{}
+	for _, r := range oracle {
+		left[r]++
+	}
+	added := []string{}
+	for _, r := range position {
+		if left[r] > 0 {
+			left[r]--
+			continue
+		}
+		added = append(added, r)
+	}
+	for _, n := range left {
+		if n > 0 {
+			return nil
+		}
+	}
+	return added
 }
 
 func TestMarketingPositionCLI(t *testing.T) {

@@ -1,0 +1,48 @@
+# iteration 336 designer (orchestration r6, kimi item 5): can a ledgered phone case's CHECKER verdict drift unnoticed by capture-day step 1?
+# tree: git archive 5381e7e2 + the uncommitted M2 orchestration doc, in $SCRATCH/head. Each mutant applied alone, then step 1 is run verbatim (with WORLD_PHONE_CORPUS).
+$ sed -n 546,551p scripts/marketingcheck/phone_test.go   (the ledger pins oracle verdict, checker verdict and a reason substring)
+	ledger := map[string][3]string{
+		"new/header-15px":                       {"ACCEPT", "REFUSE", "(ii) rect-too-small phone.png: header"},
+		"judge/B1-thumb-split-px150":            {"REFUSE", "ACCEPT", ""},
+		"judge/B1c-thumb-split-px8":             {"REFUSE", "ACCEPT", ""},
+		"judge/B7-thumb-two-equal-bridged-runs": {"REFUSE", "ACCEPT", ""},
+	}
+$ sed -n 567,572p scripts/marketingcheck/phone_test.go
+		if le, ok := ledger[in.Label]; ok {
+			ledgerSeen++
+			if o.verdict != le[0] || v != le[1] || !strings.Contains(joined, le[2]) {
+				t.Errorf("ledger %s: want oracle %s, phone %s %q; got oracle %s, phone %s %q", in.Label, le[0], le[1], le[2], o.verdict, v, reasons)
+			}
+			continue
+
+## control: unmutated
+step-1 rc=0
+
+## L1: bridging removed (phone.go:94 '== 2' -> '== -1'): drifts the checker verdict of ledgered B1, B1c, B7 back to the oracle's
+step-1 rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/judge/B1-thumb-split-px150
+    --- FAIL: TestMarketingPhoneArms/judge/B1c-thumb-split-px8
+    --- FAIL: TestMarketingPhoneArms/judge/B7-thumb-two-equal-bridged-runs
+--- FAIL: TestMarketingPhoneParity
+--- FAIL: TestMarketingPhoneRealCorpus
+phone_test.go:589: ledger judge/B1-thumb-split-px150: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {151 833 333 841}"]
+phone_test.go:589: ledger judge/B1c-thumb-split-px8: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {9 833 333 841}"]
+phone_test.go:589: ledger judge/B7-thumb-two-equal-bridged-runs: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {-1 -1 -1 -1}"]
+phone_test.go:775: ledger judge/B1-thumb-split-px150: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {151 833 333 841}"]
+phone_test.go:775: ledger judge/B1c-thumb-split-px8: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {9 833 333 841}"]
+phone_test.go:775: ledger judge/B7-thumb-two-equal-bridged-runs: want oracle REFUSE, phone ACCEPT ""; got oracle REFUSE, phone REFUSE ["(iii′) thumb {-1 -1 -1 -1}"]
+
+## L2: (ii) back to the std-dev stand-in (CheckRegion -> std-dev >= 4 only): drifts the checker verdict of ledgered header-15px back to the oracle's
+step-1 rc=1
+--- FAIL: TestMarketingPhoneArms
+    --- FAIL: TestMarketingPhoneArms/v67/timeline-only
+    --- FAIL: TestMarketingPhoneArms/v67/blank
+    --- FAIL: TestMarketingPhoneArms/new/header-15px
+--- FAIL: TestMarketingPhoneParity
+--- FAIL: TestMarketingPhoneRealCorpus
+phone_test.go:589: ledger new/header-15px: want oracle ACCEPT, phone REFUSE "(ii) rect-too-small phone.png: header"; got oracle ACCEPT, phone ACCEPT []
+phone_test.go:775: ledger new/header-15px: want oracle ACCEPT, phone REFUSE "(ii) rect-too-small phone.png: header"; got oracle ACCEPT, phone ACCEPT []
+
+$ cmp scripts/marketingcheck/phone.go (restored) against the 5381e7e2 blob
+restored-identical

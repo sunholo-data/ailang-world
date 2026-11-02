@@ -1,0 +1,553 @@
+# iteration 336 designer, r2: the option-based prototype after the quorum-r1 additions (FullGap/FullH/NonParaZero options, bnd-nonpara arms, TestIter336ProtoR2)
+package main
+
+// Iteration 336 designer prototype (row 238, w-marketing-predicate-tolerances). NOT production
+// code: it lives only in a git-archive scratch copy. It re-implements PositionJudge and
+// phoneScrollbar with the proposed r4 rules behind option structs, so the same harness can show
+// the current rules (options off) reproduce the committed checker exactly (control), the r4
+// verdicts, and each mutation's flips.
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/png"
+	"math"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"testing"
+)
+
+// ---------------- position r4 ----------------
+
+type posOpt struct {
+	FreeK     int  // max |whole lines| a free gap may move; -1 = unbounded (r3)
+	Drift     bool // (a5) on
+	DriftFull bool // (a5) also accumulates residuals of terms whose own clause failed
+	DriftTol  int
+	// r2 (quorum r1) variants
+	FullGap, FullH bool // accumulate failed gap / failed height residuals only
+	NonParaZero    bool // mutant: non-paragraph height residual counted as 0
+}
+
+var posR3 = posOpt{FreeK: -1}
+var posR4 = posOpt{FreeK: 1, Drift: true, DriftTol: 2}
+
+func posK(d int) int { return int(math.Round(float64(d) / positionLine)) }
+
+func posJudgeR4(base, cand Rectangles, o posOpt) (reasons []string) {
+	for _, s := range positionShots {
+		bs := base.Shots[s]
+		shot, _ := shotByName(s)
+		H, W := shot.Height, shot.Width
+		cs, ok := cand.Shots[s]
+		if !ok {
+			reasons = append(reasons, s+": shot missing")
+			continue
+		}
+		cm := map[string]Rect{}
+		for _, c := range cs.Content {
+			cm[c.Name] = c
+		}
+		drift, prevH, chain := 0, 0, true
+		for i, b := range bs.Content {
+			c, ok := cm[b.Name]
+			if !ok {
+				reasons = append(reasons, s+"/"+b.Name+": missing")
+				chain = false
+				continue
+			}
+			if !posInside(c, W, H) {
+				reasons = append(reasons, fmt.Sprintf("%s/%s: (b) bottom %d > H-40 %d or outside", s, b.Name, c.Y+c.H, H-40))
+			}
+			if !(posAbs(c.X-b.X) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2) {
+				reasons = append(reasons, fmt.Sprintf("%s/%s: (a1) left/right %d..%d vs %d..%d", s, b.Name, c.X, c.X+c.W, b.X, b.X+b.W))
+			}
+			dh := c.H - b.H
+			hOK, hRes := true, dh
+			if o.NonParaZero {
+				hRes = 0
+			}
+			if posPara(s) {
+				hOK = posLineStep(dh) && c.H >= positionLine
+				hRes = dh - posK(dh)*positionLine
+				if !hOK {
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d not whole lines", s, b.Name, c.H, b.H))
+				}
+			} else if posAbs(dh) > 2 {
+				hOK = false
+				reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d", s, b.Name, c.H, b.H))
+			}
+			if i == 0 {
+				if posAbs(c.Y-b.Y) > 2 {
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a2) stack-head top %d vs %d", s, b.Name, c.Y, b.Y))
+				}
+				prevH = 0
+				if hOK || o.DriftFull || o.FullH {
+					prevH = hRes
+				}
+				continue
+			}
+			pb := bs.Content[i-1]
+			pc, ok := cm[pb.Name]
+			if !ok {
+				chain = false
+				continue
+			}
+			gb := b.Y - (pb.Y + pb.H)
+			gc := c.Y - (pc.Y + pc.H)
+			e := gc - gb
+			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+			if posFreeGap(s, b.Name) {
+				k := posK(e)
+				okGap = gc >= 0 && posLineStep(e) && (o.FreeK < 0 || posAbs(k) <= o.FreeK)
+				gRes = e - k*positionLine
+			}
+			if !okGap {
+				reasons = append(reasons, fmt.Sprintf("%s/%s: (a3) gap after %s %d vs R1 %d", s, b.Name, pb.Name, gc, gb))
+			}
+			if o.Drift && chain {
+				drift += prevH
+				if okGap || o.DriftFull || o.FullGap {
+					drift += gRes
+				}
+				if posAbs(drift) > o.DriftTol {
+					reasons = append(reasons, fmt.Sprintf("%s/%s: (a5) top %d drifts %+d px from R1 %d after whole-line steps", s, b.Name, c.Y, drift, b.Y))
+				}
+			}
+			prevH = 0
+			if hOK || o.DriftFull || o.FullH {
+				prevH = hRes
+			}
+		}
+		b, c := bs.Background, cs.Background
+		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+			reasons = append(reasons, fmt.Sprintf("%s/background: edge >2px", s))
+		}
+		if !posInside(c, W, H) {
+			reasons = append(reasons, fmt.Sprintf("%s/background: (b)", s))
+		}
+	}
+	return reasons
+}
+
+// proposed new in-test position arms (mutations of stores/r1c-seed5.json)
+var posProtoArms = []struct {
+	Name string
+	Mut  func(d *Rectangles)
+}{
+	{"bnd-drift-sum-2", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		sh.Content[posIdx(sh, "roster-attested")].Y += 1
+		sh.Content[posIdx(sh, "roster-claimed")].Y += 2
+		sh.Content[posIdx(sh, "roster-proven")].Y += 2
+	}},
+	{"bnd-drift-sum-3", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		sh.Content[posIdx(sh, "roster-attested")].Y += 1
+		sh.Content[posIdx(sh, "roster-claimed")].Y += 2
+		sh.Content[posIdx(sh, "roster-proven")].Y += 3
+	}},
+	{"perm-approvals-y+24", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y += 24 }},
+	{"perm-approvals-y-24", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y -= 24 }},
+	{"bnd-nonpara-drift-3", func(d *Rectangles) {
+		sh := d.Shots["workbench-light.png"]
+		sh.Content[posIdx(sh, "header")].H += 2
+		sh.Content[posIdx(sh, "timeline-first")].Y += 3
+	}},
+	{"bnd-nonpara-drift-2", func(d *Rectangles) {
+		sh := d.Shots["workbench-light.png"]
+		sh.Content[posIdx(sh, "header")].H += 2
+		sh.Content[posIdx(sh, "timeline-first")].Y += 2
+	}},
+	{"bnd-createdAt-wraps-2-lines", func(d *Rectangles) {
+		sh := d.Shots["packet.png"]
+		for j := posIdx(sh, "approvals-chain"); j < len(sh.Content); j++ {
+			sh.Content[j].Y += 48
+		}
+	}},
+}
+
+func writePosProtoArms(t *testing.T, dir string) []labelledPath {
+	src, err := os.ReadFile(filepath.Join(positionTestdata, "stores", "r1c-seed5.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out []labelledPath
+	for _, a := range posProtoArms {
+		var d Rectangles
+		if err := json.Unmarshal(src, &d); err != nil {
+			t.Fatal(err)
+		}
+		a.Mut(&d)
+		b, _ := json.MarshalIndent(d, "", "  ")
+		b = append(b, '\n')
+		p := filepath.Join(dir, a.Name+".json")
+		if err := os.WriteFile(p, b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		fmt.Printf("ARMSHA proto/%s %s\n", a.Name, sha256Hex(b))
+		out = append(out, labelledPath{"proto/" + a.Name, p})
+	}
+	return out
+}
+
+// storeGeometry prints, per store, the free-gap e/k and every region's cumulative drift residual.
+func storeGeometry(base, cand Rectangles) string {
+	var parts []string
+	for _, s := range positionShots {
+		bs, cs := base.Shots[s], cand.Shots[s]
+		cm := map[string]Rect{}
+		for _, c := range cs.Content {
+			cm[c.Name] = c
+		}
+		drift, maxd := 0, 0
+		for i, b := range bs.Content {
+			c := cm[b.Name]
+			dh := c.H - b.H
+			hRes := dh
+			if posPara(s) {
+				hRes = dh - posK(dh)*positionLine
+			}
+			if i > 0 {
+				pb := bs.Content[i-1]
+				pc := cm[pb.Name]
+				e := (c.Y - (pc.Y + pc.H)) - (b.Y - (pb.Y + pb.H))
+				gRes := e
+				if posFreeGap(s, b.Name) {
+					gRes = e - posK(e)*positionLine
+					parts = append(parts, fmt.Sprintf("%s:e=%d,k=%d", b.Name, e, posK(e)))
+				}
+				drift += gRes
+				if posAbs(drift) > posAbs(maxd) {
+					maxd = drift
+				}
+			}
+			if posPara(s) && dh != 0 {
+				parts = append(parts, fmt.Sprintf("%s:dh=%d", b.Name, dh))
+			}
+			drift += hRes
+			_ = hRes
+		}
+		// drift above was advanced by the last region's height too; only tops matter
+		parts = append(parts, fmt.Sprintf("%s:maxTopDrift=%d", strings.TrimSuffix(s, ".png"), maxd))
+	}
+	return strings.Join(parts, " ")
+}
+
+func posV(reasons []string) string { return positionVerdict(reasons) }
+
+func TestIter336ProtoPosition(t *testing.T) {
+	base := loadPositionBaseline(t)
+	inputs := append(positionInputs(t), writePosProtoArms(t, t.TempDir())...)
+	full := posR4
+	full.DriftFull = true
+	mutNoBound := posR4
+	mutNoBound.FreeK = -1
+	mutBound2 := posR4
+	mutBound2.FreeK = 2
+	mutBound0 := posR4
+	mutBound0.FreeK = 0
+	mutNoDrift := posR4
+	mutNoDrift.Drift = false
+	mutTol3 := posR4
+	mutTol3.DriftTol = 3
+	mutTol1 := posR4
+	mutTol1.DriftTol = 1
+	muts := []struct {
+		n string
+		o posOpt
+	}{{"M-a3-unbounded", mutNoBound}, {"M-a3-bound2", mutBound2}, {"M-a3-bound0", mutBound0}, {"M-a5-off", mutNoDrift}, {"M-a5-tol3", mutTol3}, {"M-a5-tol1", mutTol1}}
+	ctrlDiff, fullDiff := 0, 0
+	fmt.Printf("%-48s | %-28s | %-28s | %s\n", "label", "committed r3 (PositionJudge)", "r4 proto", "r4 reason lines added vs r3")
+	for _, in := range inputs {
+		cand, err := loadPositionCandidate(in.Path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		committed, _ := PositionJudge(base, cand)
+		r3 := posJudgeR4(base, cand, posR3)
+		if strings.Join(r3, "\n") != strings.Join(committed, "\n") {
+			ctrlDiff++
+			t.Errorf("CONTROL %s: proto(r3 opts) != PositionJudge", in.Label)
+		}
+		r4 := posJudgeR4(base, cand, posR4)
+		rf := posJudgeR4(base, cand, full)
+		if posV(rf) != posV(r4) && (len(rf) == 0) != (len(r4) == 0) {
+			fullDiff++
+		}
+		added := []string{}
+		set := map[string]bool{}
+		for _, r := range committed {
+			set[r] = true
+		}
+		for _, r := range r4 {
+			if !set[r] {
+				added = append(added, r)
+			}
+		}
+		removed := []string{}
+		set4 := map[string]bool{}
+		for _, r := range r4 {
+			set4[r] = true
+		}
+		for _, r := range committed {
+			if !set4[r] {
+				removed = append(removed, r)
+			}
+		}
+		flag := ""
+		if (len(committed) == 0) != (len(r4) == 0) {
+			flag = " FLIP"
+		}
+		fmt.Printf("%-48s | %-28s | %-28s | +%q -%q%s\n", in.Label, posV(committed), posV(r4), added, removed, flag)
+		fullExtra := len(rf) - len(r4)
+		if fullExtra != 0 {
+			fmt.Printf("    FULL-VARIANT %s: %d more reason lines, verdict %s\n", in.Label, fullExtra, posV(rf))
+		}
+		var ms []string
+		for _, m := range muts {
+			v := posV(posJudgeR4(base, cand, m.o))
+			if (v == "ACCEPT") != (posV(r4) == "ACCEPT") {
+				ms = append(ms, m.n+"->"+v)
+			}
+		}
+		if len(ms) > 0 {
+			fmt.Printf("    MUTANT-FLIPS %s: %s\n", in.Label, strings.Join(ms, "; "))
+		}
+	}
+	fmt.Printf("CONTROL proto-with-r3-options vs committed PositionJudge: %d of %d differ\n", ctrlDiff, len(inputs))
+	fmt.Printf("FULL vs ORTHOGONAL (a5): accept/refuse differs on %d of %d\n", fullDiff, len(inputs))
+	for _, s := range []string{"r1-seed1-blockconverted", "r1-seed2-blockconverted", "r1b-seed3", "r1b-seed4", "r1c-seed5", "r1c-seed6", "eval-p1", "eval-p2", "eval-p3"} {
+		cand, _ := loadPositionCandidate(filepath.Join(positionTestdata, "stores", s+".json"))
+		fmt.Printf("GEOM %-24s %s\n", s, storeGeometry(base, cand))
+	}
+	// the R1 baseline itself as a candidate
+	r1, _ := loadPositionCandidate(positionBaseline)
+	fmt.Printf("R1-AS-CANDIDATE r3=%s r4=%s\n", posV(posJudgeR4(base, r1, posR3)), posV(posJudgeR4(base, r1, posR4)))
+}
+
+// ---------------- phone r4 ----------------
+
+type phoneOpt struct {
+	MaxBridges int // interior off-range gaps a run may bridge (0 = r3 contiguous run)
+	BridgeW    int // width of a bridgeable gap
+}
+
+var phoneR3 = phoneOpt{0, 1}
+var phoneR4 = phoneOpt{1, 1}
+
+type seg struct{ s, e int }
+
+func rowRun(im image.Image, y int, o phoneOpt) (int, int) {
+	bd := im.Bounds()
+	var segs []seg
+	start := -1
+	for x := 0; x <= bd.Max.X; x++ {
+		in := false
+		if x < bd.Max.X {
+			l := phoneLuma(im, x, y)
+			in = l >= 120 && l <= 200
+		}
+		if in && start < 0 {
+			start = x
+		}
+		if !in && start >= 0 {
+			segs = append(segs, seg{start, x - 1})
+			start = -1
+		}
+	}
+	x0, x1 := -1, -1
+	for i := range segs {
+		j := i
+		for j+1 < len(segs) && j-i < o.MaxBridges && segs[j+1].s-segs[j].e-1 <= o.BridgeW {
+			j++
+		}
+		// every window [i..j'] for j' in i..j is a candidate; the widest is [i..j]
+		if x0 < 0 || segs[j].e-segs[i].s > x1-x0 {
+			x0, x1 = segs[i].s, segs[j].e
+		}
+	}
+	return x0, x1
+}
+
+func phoneScrollbarR4(im image.Image, o phoneOpt) phoneRect {
+	bd := im.Bounds()
+	r := phoneRect{-1, -1, -1, -1}
+	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+		x0, x1 := rowRun(im, y, o)
+		if x0 >= 0 && x1-x0 >= 100 {
+			if r.Y0 < 0 {
+				r = phoneRect{x0, y, x1 + 1, y + 1}
+			} else {
+				r.Y1 = y + 1
+			}
+		}
+	}
+	return r
+}
+
+func phoneJudgeR4(im image.Image, o phoneOpt) ([]string, PhoneScan) {
+	s := ScanPhone(im)
+	s.Scrollbar = phoneScrollbarR4(im, o)
+	return PhoneJudge(im, s), s
+}
+
+var phoneProtoArms = []phoneArm{
+	phoneJudgeArm("B1d-thumb-two-splits-px100-px200", func(im *image.RGBA) {
+		phoneFill(im, 100, 833, 101, 841, 250)
+		phoneFill(im, 200, 833, 201, 841, 250)
+	}),
+	phoneJudgeArm("B1e-thumb-gap-2px-at-150", func(im *image.RGBA) { phoneFill(im, 150, 833, 152, 841, 250) }),
+	phoneJudgeArm("B6-alternating-pixels-no-thumb", func(im *image.RGBA) {
+		phoneNoThumb(im)
+		for x := 6; x < 330; x += 2 {
+			phoneFill(im, x, 833, x+1, 841, 190)
+		}
+	}),
+}
+
+func pngDecode(b []byte) (image.Image, error) { return png.Decode(bytes.NewReader(b)) }
+
+func TestIter336ProtoPhone(t *testing.T) {
+	dir := t.TempDir()
+	inputs := phoneRenderInputs(t, dir)
+	seed5 := renderPhoneSkeleton(loadPhoneSkeleton(t, filepath.Join(phoneTestdata, "skeleton-r1c-seed5-pass-a-phone.json")))
+	for _, a := range phoneProtoArms {
+		p := filepath.Join(dir, "proto_"+strings.ReplaceAll(a.Name, "/", "_")+".png")
+		writePhonePNG(t, p, a.Make(seed5))
+		inputs = append(inputs, labelledPath{"proto/" + a.Name, p})
+	}
+	corpus := os.Getenv("WORLD_PHONE_CORPUS")
+	if corpus != "" {
+		names, _ := filepath.Glob(filepath.Join(corpus, "*.png"))
+		sort.Strings(names)
+		for _, n := range names {
+			inputs = append(inputs, labelledPath{"real/" + filepath.Base(n), n})
+		}
+		raw, err := os.ReadFile(filepath.Join(corpus, "r1c-seed5-pass-a-phone.png"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		real5, err := pngDecode(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rd := t.TempDir()
+		for _, a := range append(append([]phoneArm{}, phoneArms...), phoneProtoArms...) {
+			p := filepath.Join(rd, strings.ReplaceAll(a.Name, "/", "_")+".png")
+			writePhonePNG(t, p, a.Make(real5))
+			inputs = append(inputs, labelledPath{"realseed5/" + a.Name, p})
+		}
+	}
+	mutNoBridge := phoneR4
+	mutNoBridge.MaxBridges = 0
+	mutTwo := phoneR4
+	mutTwo.MaxBridges = 2
+	mutW2 := phoneR4
+	mutW2.BridgeW = 2
+	mutUnl := phoneOpt{1000, 1}
+	ctrlDiff, scanDiff := 0, 0
+	fmt.Printf("%-52s | %-30s | %-30s | thumb r3 -> r4\n", "label", "committed r3", "r4 proto")
+	for _, in := range inputs {
+		b, err := os.ReadFile(in.Path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		im, err := pngDecode(b)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cs := ScanPhone(im)
+		committed := PhoneJudge(im, cs)
+		r3, s3 := phoneJudgeR4(im, phoneR3)
+		if strings.Join(r3, "\n") != strings.Join(committed, "\n") || s3.Scrollbar != cs.Scrollbar {
+			ctrlDiff++
+			t.Errorf("CONTROL %s: proto(r3 opts) != committed", in.Label)
+		}
+		r4, s4 := phoneJudgeR4(im, phoneR4)
+		flag := ""
+		if (len(committed) == 0) != (len(r4) == 0) {
+			flag = " FLIP"
+		}
+		if s4.Scrollbar != cs.Scrollbar {
+			scanDiff++
+		}
+		fmt.Printf("%-52s | %-30s | %-30s | %v -> %v%s\n", in.Label, phoneVerdict(committed), phoneVerdict(r4), cs.Scrollbar, s4.Scrollbar, flag)
+		var ms []string
+		for _, m := range []struct {
+			n string
+			o phoneOpt
+		}{{"M-run-nobridge", mutNoBridge}, {"M-run-2bridges", mutTwo}, {"M-run-gap2px", mutW2}, {"M-run-unlimited-bridges", mutUnl}} {
+			v, _ := phoneJudgeR4(im, m.o)
+			if (len(v) == 0) != (len(r4) == 0) {
+				ms = append(ms, m.n+"->"+phoneVerdict(v))
+			}
+		}
+		if len(ms) > 0 {
+			fmt.Printf("    MUTANT-FLIPS %s: %s\n", in.Label, strings.Join(ms, "; "))
+		}
+	}
+	fmt.Printf("CONTROL proto-with-r3-options vs committed phone: %d of %d differ\n", ctrlDiff, len(inputs))
+	fmt.Printf("THUMB-RECT changed r3->r4 on %d of %d inputs\n", scanDiff, len(inputs))
+}
+
+// r2: reconcile V10 (full variant) with M238-a5-accumulate-failed (gap-only), and measure the
+// non-paragraph boundary arm under r4 and under the NonParaZero mutant.
+func TestIter336ProtoR2(t *testing.T) {
+	base := loadPositionBaseline(t)
+	inputs := append(positionInputs(t), writePosProtoArms(t, t.TempDir())...)
+	full := posR4
+	full.DriftFull = true
+	gapOnly := posR4
+	gapOnly.FullGap = true
+	hOnly := posR4
+	hOnly.FullH = true
+	npz := posR4
+	npz.NonParaZero = true
+	a5 := func(r []string) int {
+		n := 0
+		for _, x := range r {
+			if strings.Contains(x, ": (a5) ") {
+				n++
+			}
+		}
+		return n
+	}
+	var fullSet, gapSet []string
+	for _, in := range inputs {
+		cand, err := loadPositionCandidate(in.Path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r4 := posJudgeR4(base, cand, posR4)
+		f, g, h := posJudgeR4(base, cand, full), posJudgeR4(base, cand, gapOnly), posJudgeR4(base, cand, hOnly)
+		if a5(f) > a5(r4) {
+			fullSet = append(fullSet, in.Label)
+		}
+		if a5(g) > a5(r4) {
+			gapSet = append(gapSet, in.Label)
+		}
+		if a5(f) > a5(r4) || a5(g) > a5(r4) || a5(h) > a5(r4) {
+			fmt.Printf("A5LINES %-44s r4=%d full=%d gap-only=%d height-only=%d r4-verdict=%s gap-only-verdict=%s\n", in.Label, a5(r4), a5(f), a5(g), a5(h), posV(r4), posV(g))
+		}
+		if strings.Contains(in.Label, "nonpara") {
+			fmt.Printf("NONPARA %-30s r3=%s r4=%s nonpara-zero-mutant=%s reasons=%q\n", in.Label, posV(posJudgeR4(base, cand, posR3)), posV(r4), posV(posJudgeR4(base, cand, npz)), r4)
+		}
+	}
+	fmt.Printf("FULL adds (a5) lines on %d arms: %v\n", len(fullSet), fullSet)
+	fmt.Printf("GAP-ONLY adds (a5) lines on %d arms: %v\n", len(gapSet), gapSet)
+	for _, s := range []string{"r1-seed1", "r1-seed2"} {
+		cand, _ := loadPositionCandidate(filepath.Join(positionTestdata, "stores", s+".json"))
+		var tags []string
+		for _, r := range posJudgeR4(base, cand, posR4) {
+			if strings.HasPrefix(r, "packet.png/") {
+				tags = append(tags, r)
+			}
+		}
+		fmt.Printf("RAW %s packet reasons under r4: %q\n", s, tags)
+	}
+}

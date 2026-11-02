@@ -1,0 +1,48 @@
+$ grep -n "func CheckRegion" -A9 scripts/marketingcheck/png.go
+281:func CheckRegion(name string, im image.Image, r Rect) error {
+282-	if err := CheckRectBounds(name, r, im.Bounds(), true); err != nil {
+283-		return err
+284-	}
+285-	_, std, colors := rectStats(im, r)
+286-	if std < MinRectStdDev || colors < 2 {
+287-		return refuse("blank-region", name, r.Name)
+288-	}
+289-	return nil
+290-}
+$ sed -n 195,215p scripts/marketingcheck/png.go   (CheckRectBounds)
+		}
+		if err = CheckShotRects(s.Name, sr); err != nil {
+			return r, err
+		}
+	}
+	return r, nil
+}
+func CheckRectBounds(name string, r Rect, bounds image.Rectangle, content bool) error {
+	if r.X < bounds.Min.X || r.Y < bounds.Min.Y || r.W <= 0 || r.H <= 0 || r.X > bounds.Max.X || r.Y > bounds.Max.Y || r.W > bounds.Max.X-r.X || r.H > bounds.Max.Y-r.Y {
+		return refuse("rect-out-of-bounds", name, r.Name)
+	}
+	if content && (r.W < MinRectW || r.H < MinRectH) {
+		return refuse("rect-too-small", name, r.Name)
+	}
+	return nil
+}
+func rgbAt(im image.Image, x, y int) (uint8, uint8, uint8) {
+	switch p := im.(type) {
+	case *image.RGBA:
+		i := p.PixOffset(x, y)
+		if p.Pix[i+3] == 255 {
+$ grep -n -E "MinRectW|MinRectH|MinRectStdDev" scripts/marketingcheck/png.go | head -4
+33:	MinRectW          = 64
+34:	MinRectH          = 16
+35:	MinRectStdDev     = 4.0
+$ grep -n "CheckRegion" scripts/marketingcheck/phone.go
+8:// other deliberate change: (ii) is CheckRegion (the M7b region gate), not the oracle's std-dev
+172:		if err := CheckRegion("phone.png", im, r); err != nil {
+$ grep -n -E "header-15px|header-solid-ink" scripts/marketingcheck/phone_test.go | grep REFUSE   (the two arms that isolate (ii) = CheckRegion)
+304:		phoneArm{"new/header-15px", func(src image.Image) image.Image {
+442:	"new/header-solid-ink":                   "REFUSE (ii)",
+445:	"new/header-15px":                        "REFUSE (ii)",
+547:		"new/header-15px":                       {"ACCEPT", "REFUSE", "(ii) rect-too-small phone.png: header"},
+$ grep -n "TestMarketingPhoneArms/new/header" $LOG   (step-1 log of V76)
+    --- PASS: TestMarketingPhoneArms/new/header-solid-ink (0.00s)
+    --- PASS: TestMarketingPhoneArms/new/header-15px (0.00s)
