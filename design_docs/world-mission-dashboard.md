@@ -1,7 +1,7 @@
 # World mission dashboard — iteration 336 (2026-11-02)
 
-- **This fire:** row 238 BUILT (PR #461), the third pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). `marketingcheck position` now bounds each body-text free gap to one whole line and adds (a5) cumulative drift ≤ 2 px. `marketingcheck phone` (iii′) bridges exactly one 1 px thumb gap. All 9 real stores and all 10 real phone images keep their verdicts. Orchestration §4.4/§7/§9 amended (r6 revision + r7 carve-out after two blocked rounds; no reviewer disputed the predicates). Judge sonnet PASS 89, zero blocking. **Landing:** waits on PR CI + merge CI (landing note).
-- **Dev:** green at `37100a43` (3/3).
+- **This fire:** row 238 LANDED (PR #461), the third pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). `marketingcheck position` now bounds each body-text free gap to one whole line and adds (a5) cumulative drift ≤ 2 px. `marketingcheck phone` (iii′) bridges exactly one 1 px thumb gap. All 9 real stores and all 10 real phone images keep their verdicts. Orchestration §4.4/§7/§9 amended (r6 revision + r7 carve-out after two blocked rounds; no reviewer disputed the predicates). Judge sonnet PASS 89, zero blocking. **LANDED:** merge `98934b0e`, merge CI 3/3.
+- **Dev:** green at `98934b0e` (3/3, the row-238 merge).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**. New P0 precondition (orchestration C13, r7): an independent judge PASS on row 231's 16 pasted §4.4 lines before P0.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
