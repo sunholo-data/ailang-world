@@ -1,0 +1,277 @@
+--- FAIL: TestCLIRealSubprocessEpisode (3.14s)
+    cli_test.go:206: read daemon announcement: <nil>; stderr=ailang-worldd: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestClientDeadlineAgainstAcceptingServer (0.00s)
+    cli_test.go:289: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestDemoProofHTTPProducerRoundTrip (3.63s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 39 [running]:
+testing.tRunner.func1.2({0x1053f56e0, 0x7f765737ce90})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1053f56e0?, 0x7f765737ce90?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x105517fa0, 0x7f76573c49a8})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.newDemoProofRig(0x7f7656f7ed88, {0x7f7656ec214b, 0x29})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/cmd/ailang-worldd/demo_proof_test.go:93 +0x9a8
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.TestDemoProofHTTPProducerRoundTrip(0x7f7656f7ed88)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/cmd/ailang-worldd/demo_proof_test.go:191 +0x38
+testing.tRunner(0x7f7656f7ed88, 0x10550d720)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	8.572s
+--- FAIL: TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull (0.01s)
+    tty_pty_test.go:167: ptytest: the pty closed before "publish 1 transitions to /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull3931692277/001/world.db" appeared; transcript ""
+        stdout ""
+        stderr "STOP fence=tty reason=no-controlling-terminal\n  opening /dev/tty failed: open /dev/tty: operation not permitted; there is no controlling terminal here (an agent harness, setsid, cron or CI). fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step\n"
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/world-publish	56.269s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	40.955s
+ok  	github.com/sunholo-data/ailang-world/host/agui	2.948s
+ok  	github.com/sunholo-data/ailang-world/host/archive	38.429s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.266s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	1.894s
+--- FAIL: TestOrdinaryOverflowCarriesNoESRCH (10.01s)
+    cleanup_test.go:230: group leader 20262 never became an unreaped zombie
+--- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm (0.77s)
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 50.206208ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecProbePassThroughShimFailsEveryConfinementArm1764302447/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-baadaae665a440f6: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2":
+        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3":
+        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "reverse leg: the host reached":
+        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried (0.11s)
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400 (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.451208ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.245834ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.262041ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.967375ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400 (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.567875ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce (0.02s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.506958ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.443208ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.221625ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly (0.97s)
+    --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time (0.01s)
+        exec_probe_test.go:612: TIMING ArchiveExecSandbox took 2.437458ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse (0.95s)
+        exec_probe_test.go:612: TIMING ArchiveExecSandbox took 2.529666ms
+        exec_probe_test.go:614: Why = "reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted", picker calls 1; want inconclusive after 3 attempts, no reach text, calls 3
+--- FAIL: TestExecProbeReverseLegNoTokenIsNotRetried (2.29s)
+    --- FAIL: TestExecProbeReverseLegNoTokenIsNotRetried/silent-client (1.09s)
+        exec_probe_test.go:631: TIMING ArchiveExecSandbox took 2.696375ms
+        exec_probe_test.go:639: Why = "reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted", picker calls 1; want no-token on attempt 1
+    --- FAIL: TestExecProbeReverseLegNoTokenIsNotRetried/clean (1.20s)
+        exec_probe_test.go:631: TIMING ArchiveExecSandbox took 3.972375ms
+        exec_probe_test.go:634: Why = "reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted", picker calls 1; want a pass on attempt 1
+--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.05s)
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.02s)
+        exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.377584ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.01s)
+        exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.509625ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.01s)
+        exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.314208ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (0.06s)
+    exec_probe_test.go:680: TIMING ArchiveExecSandbox took 48.305167ms
+    exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (2.33s)
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (0.79s)
+        exec_probe_test.go:718: TIMING ArchiveExecSandbox took 50.801542ms
+        exec_probe_test.go:729: chatty: arm 6 = "control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted"
+        exec_probe_test.go:733: chatty: arm 6 reports a reverse leg: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent (0.77s)
+        exec_probe_test.go:718: TIMING ArchiveExecSandbox took 46.08675ms
+        exec_probe_test.go:729: silent: arm 6 = "control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted"
+        exec_probe_test.go:737: silent: arm 6 must carry the silent refusal, not the reached text: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control (0.77s)
+        exec_probe_test.go:718: TIMING ArchiveExecSandbox took 48.800375ms
+        exec_probe_test.go:729: control: arm 6 = "control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted"
+        exec_probe_test.go:733: control: arm 6 reports a reverse leg: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseDialErrIsSilent (0.00s)
+    exec_probe_test.go:757: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReversePollRecordsConnectReset (0.00s)
+    exec_probe_test.go:804: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecHandlerTimeoutKillsTheGroup (2.70s)
+    handlers_exec_m2_test.go:612: full-trampoline elapsed=269.845459ms result={"exit_code":0,"timed_out":false,"limit":null,"duration_ms":267,"stdout":"EXEC-OUT\n","stdout_bytes":9,"stdout_truncated":false,"stdout_sha256":"abc91266459cb66487e78cf278f42e1e91e42bbcc34366a072eff1a4ca61f4f6","stderr":"EXEC-ERR\n","stderr_bytes":9,"stderr_truncated":false,"stderr_sha256":"2985a28a7a040381d620fb02b4e31ed9e6b70310d74ba35098ccb7263f634d79","argv":["/bin/sh","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/timeout-helper.sh","leader","TestExecHandlerTimeoutKillsTheGroup3274669343","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/hold","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-a.ready","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-b.ready"],"profile":{"argv0":"/bin/sh","argv0_target":"/bin/sh","project":"proj","digest":"sha256:89da4ca66753b166da5ee0aa941df5febb3cf8522a5598745b6937d295baa548","command":"sleep","argv0_sha256":"c0eaf44f9242d5bbc2e14f4e8b7dccc1eff7f2976d64dc18914d5ef9f373e100"},"sandbox":{"node":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_target":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_sha256":"b620bf69d70649173e3ab68ba1e4de50ba38787e7fd39bd77f4710c3a5dc04f8","runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:cec881c0530e25b91bea5e6753def707fa319c26409e5b1ea92936126921aed1","read_fence":true,"network":"none"},"worktree_delta":{"changes":[{"path":"child-a.ready","op":"created","size":54,"sha256":"d59c647c95e765e7f4efa050c66459019c53dcb0a1eb57efa3b626eea856474c"},{"path":"child-b.ready","op":"created","size":54,"sha256":"6bf6aba1fc1833ffbf50eb658140f910b47ce7ae01eb85d00e9381d18617b4ad"}],"truncated":false,"total":2,"basis":"walk"}} children=[39375 39376] readiness_err=<nil> Outstanding=0 baseline=0
+    handlers_exec_m2_test.go:622: short control 1 complete=269.845459ms
+    handlers_exec_m2_test.go:612: full-trampoline elapsed=59.718417ms result={"exit_code":0,"timed_out":false,"limit":null,"duration_ms":58,"stdout":"EXEC-OUT\n","stdout_bytes":9,"stdout_truncated":false,"stdout_sha256":"abc91266459cb66487e78cf278f42e1e91e42bbcc34366a072eff1a4ca61f4f6","stderr":"EXEC-ERR\n","stderr_bytes":9,"stderr_truncated":false,"stderr_sha256":"2985a28a7a040381d620fb02b4e31ed9e6b70310d74ba35098ccb7263f634d79","argv":["/bin/sh","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/timeout-helper.sh","leader","TestExecHandlerTimeoutKillsTheGroup3274669343","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/hold","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-a.ready","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-b.ready"],"profile":{"argv0":"/bin/sh","argv0_target":"/bin/sh","project":"proj","digest":"sha256:89da4ca66753b166da5ee0aa941df5febb3cf8522a5598745b6937d295baa548","command":"sleep","argv0_sha256":"c0eaf44f9242d5bbc2e14f4e8b7dccc1eff7f2976d64dc18914d5ef9f373e100"},"sandbox":{"node":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_target":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_sha256":"b620bf69d70649173e3ab68ba1e4de50ba38787e7fd39bd77f4710c3a5dc04f8","runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:cec881c0530e25b91bea5e6753def707fa319c26409e5b1ea92936126921aed1","read_fence":true,"network":"none"},"worktree_delta":{"changes":[{"path":"child-a.ready","op":"created","size":54,"sha256":"4fb8438a886a6b6a6b58dea542b7f1b35d0c2b073ba5a3d70a9e61b62dd13cc1"},{"path":"child-b.ready","op":"created","size":54,"sha256":"e072054a3c0f173c545316fff48427fed7cc943b57ab70fa77e5810abbf54b14"}],"truncated":false,"total":2,"basis":"walk"}} children=[39403 39405] readiness_err=<nil> Outstanding=0 baseline=0
+    handlers_exec_m2_test.go:622: short control 2 complete=59.718417ms
+    handlers_exec_m2_test.go:612: full-trampoline elapsed=76.746875ms result={"exit_code":0,"timed_out":false,"limit":null,"duration_ms":75,"stdout":"EXEC-OUT\n","stdout_bytes":9,"stdout_truncated":false,"stdout_sha256":"abc91266459cb66487e78cf278f42e1e91e42bbcc34366a072eff1a4ca61f4f6","stderr":"EXEC-ERR\n","stderr_bytes":9,"stderr_truncated":false,"stderr_sha256":"2985a28a7a040381d620fb02b4e31ed9e6b70310d74ba35098ccb7263f634d79","argv":["/bin/sh","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/timeout-helper.sh","leader","TestExecHandlerTimeoutKillsTheGroup3274669343","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/hold","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-a.ready","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-b.ready"],"profile":{"argv0":"/bin/sh","argv0_target":"/bin/sh","project":"proj","digest":"sha256:89da4ca66753b166da5ee0aa941df5febb3cf8522a5598745b6937d295baa548","command":"sleep","argv0_sha256":"c0eaf44f9242d5bbc2e14f4e8b7dccc1eff7f2976d64dc18914d5ef9f373e100"},"sandbox":{"node":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_target":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_sha256":"b620bf69d70649173e3ab68ba1e4de50ba38787e7fd39bd77f4710c3a5dc04f8","runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:cec881c0530e25b91bea5e6753def707fa319c26409e5b1ea92936126921aed1","read_fence":true,"network":"none"},"worktree_delta":{"changes":[{"path":"child-a.ready","op":"created","size":54,"sha256":"ca42095e27373de47d60c71d712eb6b1edc1d014a6111bc5102039bf9786791b"},{"path":"child-b.ready","op":"created","size":54,"sha256":"a2d1992b4b1d0764db2885a9117a562a360dd016e69104e802b0b4a74c32bee7"}],"truncated":false,"total":2,"basis":"walk"}} children=[39424 39425] readiness_err=<nil> Outstanding=0 baseline=0
+    handlers_exec_m2_test.go:622: short control 3 complete=76.746875ms
+    handlers_exec_m2_test.go:635: calibration C=269.845459ms B=2.27s H=9s R=29.582995084s grace=1s
+    handlers_exec_m2_test.go:674: full-trampoline elapsed=2.272996916s result={"exit_code":null,"timed_out":true,"limit":null,"duration_ms":2272,"stdout":"EXEC-OUT\n","stdout_bytes":9,"stdout_truncated":false,"stdout_sha256":"abc91266459cb66487e78cf278f42e1e91e42bbcc34366a072eff1a4ca61f4f6","stderr":"EXEC-ERR\n","stderr_bytes":9,"stderr_truncated":false,"stderr_sha256":"2985a28a7a040381d620fb02b4e31ed9e6b70310d74ba35098ccb7263f634d79","argv":["/bin/sh","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/timeout-helper.sh","leader","TestExecHandlerTimeoutKillsTheGroup3274669343","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/hold","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-a.ready","/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/workspace/ep1/child-b.ready"],"profile":{"argv0":"/bin/sh","argv0_target":"/bin/sh","project":"proj","digest":"sha256:ea1424e9e44f9ae0bfbeb304467c3d42a390f20314acaf536d81f0014b943e68","command":"sleep","argv0_sha256":"c0eaf44f9242d5bbc2e14f4e8b7dccc1eff7f2976d64dc18914d5ef9f373e100"},"sandbox":{"node":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_target":"/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecHandlerTimeoutKillsTheGroup3274669343/001/stub-node","node_sha256":"b620bf69d70649173e3ab68ba1e4de50ba38787e7fd39bd77f4710c3a5dc04f8","runtime":"@anthropic-ai/sandbox-runtime","version":"0.0.0-test","cli_sha256":"d6667140a53e6c2f76c9b6c043b63545d06cbcc55ae9e895394b0b6140974886","settings_digest":"sha256:cec881c0530e25b91bea5e6753def707fa319c26409e5b1ea92936126921aed1","read_fence":true,"network":"none"},"worktree_delta":{"changes":[{"path":"child-a.ready","op":"created","size":54,"sha256":"40d5d432106b71500313fa511c9adf412808c632ab58d32716becefbe031d0db"},{"path":"child-b.ready","op":"created","size":54,"sha256":"91faecd067003d1d2e8c04908c2573f0d7fedee680fdc70991bedce775f7bf8d"}],"truncated":false,"total":2,"basis":"walk"}} children=[39452 39453] readiness_err=<nil> Outstanding=0 baseline=0
+    handlers_exec_m2_test.go:678: deadline arm elapsed=2.272996916s timed_out=true exit=null observations=[{leader:39448 pids:[39452 39453] states:[ ] groups:[39448 0] err:0x4259ab3aa990 killErr:<nil>}]
+    handlers_exec_m2_test.go:687: specific child readiness before real kill: {leader:39448 pids:[39452 39453] states:[ ] groups:[39448 0] err:0x4259ab3aa990 killErr:<nil>}
+    handlers_exec_m2_test.go:573: cleanup specific fixture child 39452 confirmed not live
+    handlers_exec_m2_test.go:573: cleanup specific fixture child 39453 confirmed not live
+    handlers_exec_m2_test.go:578: cleanup actual reap baseline=0; 1 completed callbacks joined before seam restore
+--- FAIL: TestExecSrtConfinementMatrix (0.00s)
+    handlers_exec_srt_test.go:274: open /Users/voightkampff/.world-m2-exec-decoy-19528-1793626359421747000: operation not permitted
+--- FAIL: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 11805 [running]:
+testing.tRunner.func1.2({0x103c6e140, 0x4259ab47c170})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x103c6e140?, 0x4259ab47c170?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x103d41b80, 0x4259ab47c140})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/host/broker.newFakeValidator(0x4259aaf43b08, {0x10367cb15, 0x2})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/host/broker/registry_publish_test.go:115 +0xd4
+github.com/sunholo-data/ailang-world/host/broker.TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(0x4259aaf43b08)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/host/broker/publish_op_test.go:104 +0x34
+testing.tRunner(0x4259aaf43b08, 0x103d38bc0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/broker	149.713s
+ok  	github.com/sunholo-data/ailang-world/host/canon	3.531s
+--- FAIL: TestOrdinaryOverflowCarriesNoESRCH (10.22s)
+    cleanup_test.go:407: group leader 28443 never became an unreaped zombie
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/capsule	73.158s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	2.728s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.895s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	63.248s
+--- FAIL: TestAGUIShutdownEndsRuns (0.01s)
+    --- FAIL: TestAGUIShutdownEndsRuns/false (0.00s)
+        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestAGUIShutdownEndsRuns/true (0.00s)
+        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestAGUISeesDirectStoreCommit (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 4988 [running]:
+testing.tRunner.func1.2({0x101971ca0, 0x8d63bb5db30})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x101971ca0?, 0x8d63bb5db30?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x101a8d520, 0x8d63c393368})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/host/daemon.TestAGUISeesDirectStoreCommit(0x8d63c068d88)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/host/daemon/agui_test.go:684 +0xd4
+testing.tRunner(0x8d63c068d88, 0x101a82cd0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.986s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	27.673s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.724s
+--- FAIL: TestInstallGoodRelease (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 8 [running]:
+testing.tRunner.func1.2({0x102ff9820, 0x1853beb8c3d0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x102ff9820?, 0x1853beb8c3d0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewTLSServer({0x103089160, 0x1853becb6140})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:219 +0x28
+github.com/sunholo-data/ailang-world/host/pinfetch.serveRelease(0x1853becb0488, {{0x1853beb7e480, 0x75, 0x80}, {0x1853beb7c1e0, 0x5d}, {0x1853beb74140, 0x1b, 0x1b}})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/host/pinfetch/pinfetch_test.go:96 +0xc8
+github.com/sunholo-data/ailang-world/host/pinfetch.TestInstallGoodRelease(0x1853becb0488)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/host/pinfetch/pinfetch_test.go:140 +0xd0
+testing.tRunner(0x1853becb0488, 0x103084cc0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/pinfetch	3.069s
+ok  	github.com/sunholo-data/ailang-world/host/pins	2.480s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	42.500s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.507s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.680s
+ok  	github.com/sunholo-data/ailang-world/host/projection	15.730s
+--- FAIL: TestTheTwoShapesOfControllingTerminal (10.01s)
+    ptytest_test.go:32: ptytest: "prompt> " did not appear on the pty within 10s; transcript ""
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/ptytest	13.305s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.128s
+ok  	github.com/sunholo-data/ailang-world/host/replay	44.898s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.828s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.952s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.960s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	2.787s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.765s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	46.643s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	173.428s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	2.840s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	10.795s
+--- FAIL: TestMarketingCapturePassFakeChrome (21.03s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 84 [running]:
+testing.tRunner.func1.2({0x1027eba20, 0x7880647fe800})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1027eba20?, 0x7880647fe800?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x102882f20, 0x788064aa8108})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x788064ad2008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x788064ad2008, 0x10287e498)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	25.237s
+FAIL
+
+EXECUTOR COMMAND: perl -e 'alarm 2400; exec @ARGV' bash <<'FULL'
+go build ./... && go test -timeout 1800s ./...
+FULL
+EXECUTOR RC: 1
+EXECUTOR ELAPSED SECONDS: 190.65

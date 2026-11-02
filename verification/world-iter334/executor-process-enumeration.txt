@@ -1,0 +1,17 @@
+pgrep -x yes rc=3
+sysmon request failed with error: sysmond service not found
+pgrep: Cannot get process list
+UNINFORMATIVE UNDER SANDBOX: process count unavailable; no burners started by executor
+
+EXECUTOR COMMAND: scan_rc=0
+pgrep -x yes > "$WX/logs/final-yes.txt" 2> "$WX/logs/final-yes-error.txt" || scan_rc=$?
+printf 'pgrep -x yes rc=%s\n' "$scan_rc"
+if [ "$scan_rc" -le 1 ]; then
+    cat "$WX/logs/final-yes.txt"
+    wc -l < "$WX/logs/final-yes.txt"
+else
+    cat "$WX/logs/final-yes-error.txt"
+    echo 'UNINFORMATIVE UNDER SANDBOX: process count unavailable; no burners started by executor'
+fi
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.006

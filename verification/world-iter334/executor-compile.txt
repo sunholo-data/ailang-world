@@ -1,0 +1,5 @@
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.374s [no tests to run]
+
+EXECUTOR COMMAND: go test -timeout 180s -run '^$' ./host/daemon/
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 2.067

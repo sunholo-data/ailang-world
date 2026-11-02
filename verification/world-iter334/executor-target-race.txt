@@ -1,0 +1,54 @@
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:377: serialized probe max = 1, gate arrivals = 2
+    decisionpacket_daemon_test.go:378: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epB:b requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:63a8e33349cba89849d9177663e945ba8f2217ef7d0e9881073c4532c1853804"; selected head is "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"
+    decisionpacket_daemon_test.go:390: CONTROL unwrapped probe max = 2
+    decisionpacket_daemon_test.go:391: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epD:d requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"; selected head is "sha256:42c13e30712ebaa49a2a74fa571523982b3eed97fa7809355f728371889cb38d"
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:377: serialized probe max = 1, gate arrivals = 2
+    decisionpacket_daemon_test.go:378: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epB:b requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:63a8e33349cba89849d9177663e945ba8f2217ef7d0e9881073c4532c1853804"; selected head is "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"
+    decisionpacket_daemon_test.go:390: CONTROL unwrapped probe max = 2
+    decisionpacket_daemon_test.go:391: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epC:c requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"; selected head is "sha256:d7a648d9fe0afd491f9cc1709aca20be7a13e750a8ff67939b28f709f2cc58a6"
+--- PASS: TestHumanApproveIsSerializedAcrossEpisodes (0.95s)
+    --- PASS: TestHumanApproveIsSerializedAcrossEpisodes/together (0.15s)
+    --- PASS: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.80s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+--- PASS: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:377: serialized probe max = 1, gate arrivals = 2
+    decisionpacket_daemon_test.go:378: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epA:a requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:63a8e33349cba89849d9177663e945ba8f2217ef7d0e9881073c4532c1853804"; selected head is "sha256:49a18f6e8e3d50fff0c14835461b525ec38b8de6990af5fd22bdf27bea4b3317"
+    decisionpacket_daemon_test.go:390: CONTROL unwrapped probe max = 2
+    decisionpacket_daemon_test.go:391: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epD:d requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:49a18f6e8e3d50fff0c14835461b525ec38b8de6990af5fd22bdf27bea4b3317"; selected head is "sha256:e4151e74ee59d30064d300b87064520554619df34ea23403929e539ba3975218"
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:377: serialized probe max = 1, gate arrivals = 2
+    decisionpacket_daemon_test.go:378: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epB:b requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:63a8e33349cba89849d9177663e945ba8f2217ef7d0e9881073c4532c1853804"; selected head is "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"
+    decisionpacket_daemon_test.go:390: CONTROL unwrapped probe max = 2
+    decisionpacket_daemon_test.go:391: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epC:c requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"; selected head is "sha256:d7a648d9fe0afd491f9cc1709aca20be7a13e750a8ff67939b28f709f2cc58a6"
+--- PASS: TestHumanApproveIsSerializedAcrossEpisodes (0.93s)
+    --- PASS: TestHumanApproveIsSerializedAcrossEpisodes/together (0.14s)
+    --- PASS: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.79s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+--- PASS: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:377: serialized probe max = 1, gate arrivals = 2
+    decisionpacket_daemon_test.go:378: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epA:a requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:63a8e33349cba89849d9177663e945ba8f2217ef7d0e9881073c4532c1853804"; selected head is "sha256:49a18f6e8e3d50fff0c14835461b525ec38b8de6990af5fd22bdf27bea4b3317"
+    decisionpacket_daemon_test.go:390: CONTROL unwrapped probe max = 2
+    decisionpacket_daemon_test.go:391: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epD:d requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:49a18f6e8e3d50fff0c14835461b525ec38b8de6990af5fd22bdf27bea4b3317"; selected head is "sha256:e4151e74ee59d30064d300b87064520554619df34ea23403929e539ba3975218"
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:377: serialized probe max = 1, gate arrivals = 2
+    decisionpacket_daemon_test.go:378: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epB:b requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:63a8e33349cba89849d9177663e945ba8f2217ef7d0e9881073c4532c1853804"; selected head is "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"
+    decisionpacket_daemon_test.go:390: CONTROL unwrapped probe max = 2
+    decisionpacket_daemon_test.go:391: world-head conflict (expected for one of two concurrent commits): coordinator: invocation a2a:epC:c requested effects (records [sha256:d813a5d1365698ff66eea2409303bf7641d8ff962a8b6da321493c0acd8015f9]) but was not committed: store: stale observed world head "sha256:f3e6df2b2f316f385b360071b0227fac2f4c9fa57c72fb42cbf762ceb3bd7620"; selected head is "sha256:d7a648d9fe0afd491f9cc1709aca20be7a13e750a8ff67939b28f709f2cc58a6"
+--- PASS: TestHumanApproveIsSerializedAcrossEpisodes (0.94s)
+    --- PASS: TestHumanApproveIsSerializedAcrossEpisodes/together (0.14s)
+    --- PASS: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.80s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+--- PASS: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	4.602s
+
+EXECUTOR COMMAND: go test -race -timeout 600s ./host/daemon -run '^(TestHumanApproveIsSerializedAcrossEpisodes|TestConcurrencyProbeNamesAMissedArrival)$' -count=3 -v
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 7.97

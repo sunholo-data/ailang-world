@@ -1,0 +1,11 @@
+host/daemon/decisionpacket_daemon_test.go: OK
+host/daemon/daemon.go: OK
+host/daemon/decisionpacket_daemon_test.go
+ host/daemon/decisionpacket_daemon_test.go | 194 +++++++++++++++++++++++++++---
+ 1 file changed, 177 insertions(+), 17 deletions(-)
+
+EXECUTOR COMMAND: shasum -a 256 -c "$WX/fixed.sha"
+git diff --name-only
+git diff --stat
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.049

@@ -1,0 +1,17 @@
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:422: TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (5.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:422: TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (5.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:422: TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (5.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	15.463s
+FAIL
+
+EXECUTOR COMMAND: go test -race -timeout 600s ./host/daemon -run '^TestConcurrencyProbeNamesAMissedArrival$' -count=3 -v
+EXECUTOR GO TEST RC: 1
+EXECUTOR RUNNER RC: 0
+EXECUTOR RUNNER WALL SECONDS (test plus snapshot/restore): 17.823

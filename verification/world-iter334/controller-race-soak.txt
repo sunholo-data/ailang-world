@@ -1,0 +1,8 @@
+# controller: host/daemon -race package, then loaded soak; tree a0439a2b + test sha 877013b89be5344b; Mon Nov  2 14:45:27 CET 2026
+ok  	github.com/sunholo-data/ailang-world/host/daemon	310.566s
+package-race rc=0 secs=312
+burners started: 32; loadavg { 2.95 2.87 3.08 }
+loaded-soak rc=0 secs=188 loadavg-end { 34.42 18.43 9.66 }
+top PASS=200 FAIL=0
+slowest: 1.00s
+yes left: 0

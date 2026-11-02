@@ -1,0 +1,21 @@
+#!/bin/bash
+# runmut.sh <tree> <file> <id> <count> <race:0|1> <perl-substitution>
+# Applies one perl -0pi substitution, runs the test, restores the file, checks sha256.
+tree=$1 file=$2 id=$3 count=$4 race=$5 sub=$6
+cd "$tree" || exit 9
+cp "$file" /tmp/world-iter334/designer-r2/.save
+before=$(shasum -a 256 "$file" | cut -c1-12)
+perl -0pi -e "$sub" "$file"
+after_edit=$(shasum -a 256 "$file" | cut -c1-12)
+[ "$before" = "$after_edit" ] && { echo "$id: SUBSTITUTION DID NOT APPLY"; exit 8; }
+r=""; [ "$race" = 1 ] && r="-race"
+out=$(go test $r -timeout 600s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=$count -v 2>&1)
+rc=$?
+cp /tmp/world-iter334/designer-r2/.save "$file"
+restored=$(shasum -a 256 "$file" | cut -c1-12)
+pass=$(grep -c -- '^--- PASS: TestHumanApproveIsSerializedAcrossEpisodes ' <<<"$out")
+fail=$(grep -c -- '^--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes ' <<<"$out")
+echo "$id count=$count race=$race rc=$rc top-level PASS=$pass FAIL=$fail sha $before->$after_edit->$restored"
+grep -E '^    --- FAIL' <<<"$out" | sort | uniq -c
+grep -E 'decisionpacket_daemon_test.go:[0-9]+: (serialized|unwrapped|CONTROL measured|serialized arm measured)' <<<"$out" | grep -v 'serialized probe max = 1, gate' | sed -E 's/^ +//' | sort | uniq -c | head -5
+grep -E '^(ok|FAIL)\s' <<<"$out"

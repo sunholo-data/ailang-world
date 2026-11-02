@@ -1,0 +1,17 @@
+== FULL GATE (git-initialised copy) Mon Nov  2 13:50:26 CET 2026
+rc=0 secs=315
+ok pkgs 35 FAIL lines 0 no-test 2
+ok  	github.com/sunholo-data/ailang-world/host/daemon	308.931s
+ok  	github.com/sunholo-data/ailang-world/host/pins	0.276s
+== verify_ail.sh Mon Nov  2 13:55:41 CET 2026
+rc=0 secs=11
+AILANG_BIN=unset; ailang on PATH: /Users/voightkampff/.ailang/state/ailang-release-v0.55.0/x/ailang AILANG v0.55.0
+── legs 1-2 AILANG_BIN=/Users/voightkampff/.ailang/state/ailang-release-v0.55.0/x/ailang (AILANG v0.55.0)
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+== final-file check Mon Nov  2 13:55:52 CET 2026
+  20 --- PASS: TestHumanApproveIsSerializedAcrossEpisodes 
+   1 ok  	github.com/sunholo-data/ailang-world/host/daemon	19.856s
+DONE

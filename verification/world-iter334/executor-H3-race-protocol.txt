@@ -1,0 +1,28 @@
+7f98f9f8e890b7da6c9e00dc03346bf1d72593505b0fd1e81d14142632b0b604  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:422: TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (5.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:422: TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (5.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:422: TestConcurrencyProbeNamesAMissedArrival: Execute did not return after the injected timeout within 5s
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (5.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	15.463s
+FAIL
+H3 mode=race count=3 rc=1
+H3 race sha256 before:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+edited:
+7f98f9f8e890b7da6c9e00dc03346bf1d72593505b0fd1e81d14142632b0b604  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+restored:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+
+EXECUTOR COMMAND: "$WX/tools/runmut.sh" "/tmp/world-iter334-executor.desvqzr3/mutants" H3 race 3
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 17.823

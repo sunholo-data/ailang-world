@@ -1,0 +1,188 @@
+// probeWaitBound bounds how long the first Human.Approve execution waits for
+// the second dispatch (row 235). It returns on the arrival, so it costs nothing
+// when healthy; it sits below dispatchPair's bound (+5 s) and the test context
+// (30 s), so a missing second dispatch fails by name, never as "max = 1".
+const probeWaitBound = 10 * time.Second
+
+// serializedHold is how long the first holder keeps the mutex after the second
+// dispatch has reached the arrivalGate: a mutex-less wrapper lets the second
+// in, which the probe sees as max = 2 (secondary to the TryLock check).
+const serializedHold = 50 * time.Millisecond
+
+// lateSecond is the regression arm's stagger: the 250-400 ms gap that read as
+// "unwrapped probe max = 1" on the 200 ms probe (iteration 334 measurement).
+// It is measured from the first probe entry (entered), not from goroutine start.
+const lateSecond = 300 * time.Millisecond
+
+// arrivalGate counts Human.Approve arrivals OUTSIDE the serialization, so the
+// serialized arm can prove the second dispatch was waiting while the first held.
+type arrivalGate struct {
+	h      broker.Handler
+	n      atomic.Int32
+	second chan struct{}
+}
+
+func (g *arrivalGate) Execute(ctx context.Context, req broker.EffectRequest, payload []byte) ([]byte, error) {
+	if g.n.Add(1) == 2 {
+		close(g.second)
+	}
+	return g.h.Execute(ctx, req, payload)
+}
+
+// concurrencyProbe records how many executions overlap. Its first entry closes
+// entered and holds until the second dispatch arrives: inside the probe
+// (CONTROL, arrived nil) or at the gate (serialized, then serializedHold).
+// held is set only in the serialized arm: each entry then checks it is held
+// and counts in unheld any entry where TryLock succeeded. CONTROL's probe has
+// held == nil, so the check and the counter are off there.
+type concurrencyProbe struct {
+	mu                    sync.Mutex
+	cur, max, entries     int
+	unheld                int
+	missed                string
+	inside2               chan struct{}
+	entered               chan struct{}
+	once                  sync.Once
+	arrived               <-chan struct{}
+	held                  *sync.Mutex
+}
+
+func (p *concurrencyProbe) Execute(ctx context.Context, _ broker.EffectRequest, _ []byte) ([]byte, error) {
+	unheld := p.held != nil && p.held.TryLock()
+	if unheld {
+		p.held.Unlock()
+	}
+	p.mu.Lock()
+	if unheld {
+		p.unheld++
+	}
+	first := p.entries == 0
+	if first {
+		close(p.entered)
+	}
+	p.entries++
+	p.cur++
+	p.max = max(p.max, p.cur)
+	if p.cur == 2 {
+		p.once.Do(func() { close(p.inside2) })
+	}
+	p.mu.Unlock()
+	if first {
+		p.awaitSecond(ctx)
+	}
+	p.mu.Lock()
+	p.cur--
+	p.mu.Unlock()
+	return []byte(`{"status":"pending","requestRef":"` + hashref.SumSHA256([]byte("ac8")).String() + `"}`), nil
+}
+
+func (p *concurrencyProbe) awaitSecond(ctx context.Context) {
+	var wait <-chan struct{} = p.inside2
+	if p.arrived != nil {
+		wait = p.arrived
+	}
+	why := ""
+	select {
+	case <-wait:
+		if p.arrived != nil {
+			select {
+			case <-p.inside2:
+			case <-time.After(serializedHold):
+			case <-ctx.Done():
+			}
+		}
+		return
+	case <-time.After(probeWaitBound):
+		why = fmt.Sprintf("second Human.Approve dispatch did not arrive within %s", probeWaitBound)
+	case <-ctx.Done():
+		why = "test context ended before the second Human.Approve dispatch arrived: " + ctx.Err().Error()
+	}
+	p.mu.Lock()
+	p.missed = why
+	p.mu.Unlock()
+}
+
+// TestHumanApproveIsSerializedAcrossEpisodes (AC8): one daemon mutex covers every episode.
+// Row 235: each arm holds its first execution until the second dispatch arrives,
+// and "late-second" replays the CI gap: the second dispatch starts lateSecond
+// after the first has entered the probe.
+func TestHumanApproveIsSerializedAcrossEpisodes(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		stagger time.Duration
+	}{{"together", 0}, {"late-second", lateSecond}} {
+		t.Run(tc.name, func(t *testing.T) { humanApproveSerializedArms(t, tc.stagger) })
+	}
+}
+
+func humanApproveSerializedArms(t *testing.T, stagger time.Duration) {
+	d := newHandlerDaemon(t)
+	publishHumanTool(t, d)
+	sh := d.human.(serializedHandler)
+	dispatchPair := func(entered <-chan struct{}, episodeA, episodeB, taskA, taskB string) [2]error {
+		c := humanCoordinator(t, d, d.binder, humanPlan("e1"))
+		calls := []coordinator.Call{humanCall(t, d, episodeA, taskA), humanCall(t, d, episodeB, taskB)}
+		ctx := boundedTestContext(t)
+		var wg sync.WaitGroup
+		var errs [2]error
+		for i := range calls {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				if i == 1 && stagger > 0 {
+					select {
+					case <-entered:
+					case <-time.After(probeWaitBound):
+						errs[i] = fmt.Errorf("first dispatch did not enter the probe within %s", probeWaitBound)
+						return
+					case <-ctx.Done():
+						errs[i] = ctx.Err()
+						return
+					}
+					time.Sleep(stagger)
+				}
+				_, errs[i] = c.Dispatch(ctx, calls[i])
+			}(i)
+		}
+		done := make(chan struct{})
+		go func() { wg.Wait(); close(done) }()
+		select {
+		case <-done:
+		case <-time.After(probeWaitBound + 5*time.Second):
+			t.Fatal("concurrent Human.Approve dispatches did not finish")
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		}
+		return errs
+	}
+	gate := &arrivalGate{second: make(chan struct{})}
+	probe := &concurrencyProbe{inside2: make(chan struct{}), entered: make(chan struct{}), arrived: gate.second, held: sh.mu}
+	gate.h = serializedHandler{mu: sh.mu, h: probe}
+	d.human = gate
+	errs := dispatchPair(probe.entered, "epA", "epB", "a", "b")
+	if probe.missed != "" {
+		t.Fatalf("serialized arm measured nothing: %s (dispatch errors %v)", probe.missed, errs)
+	}
+	if probe.unheld != 0 {
+		t.Fatalf("serialized probe ran %d of %d executions without the daemon mutex held", probe.unheld, probe.entries)
+	}
+	if probe.max != 1 {
+		t.Fatalf("serialized probe max = %d, want 1", probe.max)
+	}
+	t.Logf("serialized probe max = %d, gate arrivals = %d", probe.max, gate.n.Load())
+	requireOneCommitted(t, errs)
+	// CONTROL: an unwrapped fresh probe must observe both episodes concurrently.
+	// held is nil here: no TryLock check, no unheld assertion; missed and max only.
+	probe2 := &concurrencyProbe{inside2: make(chan struct{}), entered: make(chan struct{})}
+	d.human = probe2
+	errs = dispatchPair(probe2.entered, "epC", "epD", "c", "d")
+	if probe2.missed != "" {
+		t.Fatalf("CONTROL measured nothing: %s (dispatch errors %v)", probe2.missed, errs)
+	}
+	if probe2.max != 2 {
+		t.Fatalf("unwrapped probe max = %d, want 2", probe2.max)
+	}
+	t.Logf("CONTROL unwrapped probe max = %d", probe2.max)
+	requireOneCommitted(t, errs)
+}
+

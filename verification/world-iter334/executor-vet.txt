@@ -1,0 +1,4 @@
+
+EXECUTOR COMMAND: perl -e 'alarm 300; exec @ARGV' go vet ./host/daemon/
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.404

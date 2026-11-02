@@ -1,0 +1,62 @@
+The execution is not an unqualified green result. M1 is unverified because all 11 plain mutation Go commands could not launch. M2 is unverified because the loaded soak could not launch, socket/TTY gates are sandbox-uninformative, other full-gate findings remain red at base, and process enumeration is unavailable.
+
+### Soak and load
+
+- Idle: prescribed `-race -timeout 900s -count=200` command rc 0; wrapper wall 189.297 s. Package output is `ok`; 0 FAIL markers and no DATA RACE. The command is non-verbose: 200 is the requested repetition count, and named PASS marker count is 0, not a separately measured 200 named PASS lines.
+- Loaded: approved script rc 7 at its enumeration preflight, before starting burners or Go. **UNINFORMATIVE UNDER SANDBOX**. Exactly 0 burners were started by this executor; no load processes were created or left by it.
+- Final `pgrep -x yes` rc 3: `sysmond service not found` / `Cannot get process list`. Stdout contains no PIDs, but a global count of zero is NOT established. No piped `wc` count is claimed as cleanup evidence. See executor-process-enumeration.txt, executor-final-yes.txt and executor-final-yes-error.txt.
+
+### Package baseline
+
+Fixed package plain rc 1 (9.306 s), race rc 1 (9.981 s); untouched base plain rc 1 (10.082 s), race rc 1 (12.736 s). Each emits 2 top-level FAIL and 2 subtest FAIL markers: `TestAGUIShutdownEndsRuns` (false/true) cannot bind `127.0.0.1:0` at agui_test.go:583; `TestAGUISeesDirectStoreCommit` panics on httptest listen `[::1]:0` at agui_test.go:684. **UNINFORMATIVE UNDER SANDBOX**, neither acceptance pass nor fail. The named sprint test is not claimed discovered in these early-aborted package runs.
+
+### Full baseline
+
+Fixed full command rc 1 in 190.650 s; 23 top-level and 21 subtest FAIL markers (44 total), 0 PASS/SKIP markers (non-verbose). Base exact command, same binaries and environment, rc 1 in 184.903 s; 24 top-level and 21 subtest FAIL markers (45 total). No build failure: the && reached go test in both commands.
+
+Package summaries:
+
+| Tree | ok packages | FAIL packages | no-test packages |
+|---|---:|---:|---:|
+| Fixed | 27 | 8 | 2 |
+| Base archive | 26 | 9 | 2 |
+
+The failing fixed packages are cmd/ailang-worldd, cmd/world-publish, host/broker, host/capsule, host/daemon, host/pinfetch, host/ptytest, and scripts/marketingcheck. Loopback bind denials, `/dev/tty` denial, confinement decoy write denial and dependent assertions are **UNINFORMATIVE UNDER SANDBOX**. Their raw nonzero rc and failure markers remain preserved.
+
+Other findings are reported without working around or attributing them to the fix: `TestOrdinaryOverflowCarriesNoESRCH` cannot observe an unreaped zombie in both broker and capsule; `TestExecHandlerTimeoutKillsTheGroup` fails at its specific-child-readiness observation; `TestTheTwoShapesOfControllingTerminal` does not observe the PTY prompt within 10 s. All of these are also red at base. The logs do not establish an unsandboxed outcome for these findings.
+
+Base-only failure: `TestReleaseLiteralsExplainedByManifest` in host/pins, scan_test.go:256, `git ls-files: exit status 128`. This is the documented missing-.git archive artifact; fixed worktree host/pins passed. No git repository was initialized and no workaround was attempted. Every named top-level fixed full failure is also present in the base run; this is a baseline comparison, not a claim that an unsandboxed gate passes.
+
+| Measured top-level failing test | Fixed | Base |
+|---|---|---|
+| `TestAGUISeesDirectStoreCommit` | red | red |
+| `TestAGUIShutdownEndsRuns` | red | red |
+| `TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce` | red | red |
+| `TestCLIRealSubprocessEpisode` | red | red |
+| `TestClientDeadlineAgainstAcceptingServer` | red | red |
+| `TestDemoProofHTTPProducerRoundTrip` | red | red |
+| `TestExecHandlerTimeoutKillsTheGroup` | red | red |
+| `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse` | red | red |
+| `TestExecProbePassThroughShimFailsEveryConfinementArm` | red | red |
+| `TestExecProbeReverseDialErrIsSilent` | red | red |
+| `TestExecProbeReverseLegChattyForeignHolderIsRetried` | red | red |
+| `TestExecProbeReverseLegExhaustionRefusesDistinctly` | red | red |
+| `TestExecProbeReverseLegNoTokenIsNotRetried` | red | red |
+| `TestExecProbeReverseLegRealReachSurvivesAForeignAttempt` | red | red |
+| `TestExecProbeReverseLegSilentHolderRefusesSticky` | red | red |
+| `TestExecProbeReversePollRecordsConnectReset` | red | red |
+| `TestExecSrtConfinementMatrix` | red | red |
+| `TestInstallGoodRelease` | red | red |
+| `TestMarketingCapturePassFakeChrome` | red | red |
+| `TestOrdinaryOverflowCarriesNoESRCH` | red | red |
+| `TestReleaseLiteralsExplainedByManifest` | not red | red |
+| `TestTheTwoShapesOfControllingTerminal` | red | red |
+| `TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull` | red | red |
+
+### AILANG gate
+
+`verify_ail.sh` rc 0 in 11.146 s under the exact prescribed release environment: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass, world package 9/9 steps performed nonzero work. The world-package output reports exactly 9 named no-generator skips, which are the documented cross-file derive gap; there are no skips caused by missing binaries. `UNRECOGNISED RELEASE` for legs 1–2 v0.55.0 is the prescribed environment’s informational warning; package compiler bytes are pinned to v0.41.0. No binary or manifest was changed.
+
+### Not reached and controller handoff
+
+Every planned acceptance command was attempted. The actual Go tests within all plain mutation invocations were not reached because the unchanged runner errored first; the loaded soak Go test and load creation were not reached because the unchanged preflight refused to proceed. No acceptance item was omitted for time. M5/M6b are explicitly not required. Controller-only commit/PR/CI, all three green CI jobs on the fix head, and unsandboxed reruns remain outstanding. All waits were bounded; execution and final evidence collection completed within the 30-minute cap.

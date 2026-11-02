@@ -1,0 +1,15 @@
+Created both deliverables:
+
+- [Sprint plan](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter334/design_docs/planned/w-human-approve-control-window-flake-sprint-plan.md)
+- [Sprint JSON](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter334/design_docs/planned/sprint_w-human-approve-control-window-flake.json)
+
+Diff SHA256: `8dee691695d632d8afa3f775629d213bf4769606072a0225140e9ec9f66c6d51`
+
+Stat: **1 file changed, 177 insertions(+), 17 deletions(-).**
+
+- **M1:** Apply diff; formatting, vet, compile fence, target/handshake tests and mutation drill.
+- **M2:** Soaks, package/full gates and executor report.
+
+Sandbox checks passed: patch dry-run and fresh-archive application, gofmt, vet, compile-only, both tests ×3 plain/race, handshake ×200 plain/race, mutation smoke drill, script syntax and `jq -e .`.
+
+Full gates and soaks remain for execution. Process enumeration was **UNINFORMATIVE UNDER SANDBOX**; load preflight stopped before starting burners. Repository Go files remain unchanged; no git writes occurred.

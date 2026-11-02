@@ -1,0 +1,2 @@
+Base pins, unique diff SHA256, and both extracted script SHA256 pins verified.
+rc=0

@@ -1,0 +1,17 @@
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:426: missed = "second Human.Approve dispatch did not arrive", want "second Human.Approve dispatch did not arrive within 10s"
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:426: missed = "second Human.Approve dispatch did not arrive", want "second Human.Approve dispatch did not arrive within 10s"
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:426: missed = "second Human.Approve dispatch did not arrive", want "second Human.Approve dispatch did not arrive within 10s"
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.458s
+FAIL
+
+EXECUTOR COMMAND: go test -race -timeout 600s ./host/daemon -run '^TestConcurrencyProbeNamesAMissedArrival$' -count=3 -v
+EXECUTOR GO TEST RC: 1
+EXECUTOR RUNNER RC: 0
+EXECUTOR RUNNER WALL SECONDS (test plus snapshot/restore): 2.783

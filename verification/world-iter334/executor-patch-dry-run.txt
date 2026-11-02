@@ -1,0 +1,5 @@
+patching file 'host/daemon/decisionpacket_daemon_test.go'
+
+EXECUTOR COMMAND: patch -p1 --dry-run < "$WX/plan.diff"
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.006

@@ -1,0 +1,9 @@
+53a708a5264fafe53217d59c58dafa7e25eeabe7f5ef9debc554912fa30a0445  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+8dee691695d632d8afa3f775629d213bf4769606072a0225140e9ec9f66c6d51  /tmp/world-iter334-executor.desvqzr3/plan.diff
+
+EXECUTOR COMMAND: shasum -a 256 host/daemon/decisionpacket_daemon_test.go host/daemon/daemon.go > "$WX/base.sha"
+cat "$WX/base.sha"
+shasum -a 256 "$WX/plan.diff"
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.026

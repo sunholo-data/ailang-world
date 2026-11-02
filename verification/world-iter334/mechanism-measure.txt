@@ -1,0 +1,23 @@
+# World iteration 334 — row 235 mechanism measurement (controller, darwin, 2026-11-02, tree 388001c2)
+# Probe file: a throwaway test in host/daemon (banked as zz_iter334_stagger_probe_test.go.txt; never committed).
+# It builds the UNWRAPPED control arm exactly as TestHumanApproveIsSerializedAcrossEpisodes does
+# (newHandlerDaemon, publishHumanTool, humanCoordinator(humanPlan("e1")), humanCall epC/c + epD/d,
+# boundedTestContext) and sleeps ITER334_STAGGER before dispatching call[1].
+# Command: ITER334_STAGGER=<s> go test ./host/daemon -run '^TestZZIter334ControlStagger$' -count=1 -v
+
+## A. Today's concurrencyProbe (200 ms wait for the second arrival)
+stagger=0s     unwrapped probe max=2   errs=[nil, stale observed world head]   (0.03 s)
+stagger=150ms  unwrapped probe max=2   errs=[stale observed world head, nil]   (0.19 s)
+stagger=250ms  unwrapped probe max=1   errs=[nil, nil]                         (0.49 s)   <- the CI symptom
+stagger=400ms  unwrapped probe max=1   errs=[nil, nil]                         (0.63 s)   <- the CI symptom
+
+## B. Same arm, probe waits for the second arrival up to 10 s (or ctx.Done)
+stagger=0s     unwrapped probe max=2   (0.04 s)
+stagger=400ms  unwrapped probe max=2   (0.45 s)
+stagger=2s     unwrapped probe max=2   (2.05 s)
+
+## Reading
+The CI failure "unwrapped probe max = 1, want 2" is reproduced deterministically by a >=250 ms gap between
+the two dispatches reaching Execute; no Linux or load is needed to show the mechanism. A probe whose wait
+returns on the second arrival (bounded by the test context) keeps max=2 at any measured gap.
+Note: with a >=250 ms gap both dispatches commit (errs nil, nil), i.e. they ran serially.

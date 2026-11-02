@@ -1,0 +1,33 @@
+--- FAIL: TestAGUIShutdownEndsRuns (0.05s)
+    --- FAIL: TestAGUIShutdownEndsRuns/false (0.02s)
+        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestAGUIShutdownEndsRuns/true (0.02s)
+        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestAGUISeesDirectStoreCommit (0.02s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 4525 [running]:
+testing.tRunner.func1.2({0x103c46ba0, 0xc00098b650})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x2b8
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x460
+panic({0x103c46ba0?, 0xc00098b650?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0x13c
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x103d95980, 0xc00069a000})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x30
+github.com/sunholo-data/ailang-world/host/daemon.TestAGUISeesDirectStoreCommit(0xc000178fc8)
+	/private/tmp/world-iter334-executor.desvqzr3/base/host/daemon/agui_test.go:684 +0x148
+testing.tRunner(0xc000178fc8, 0x103d8a8e0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	8.905s
+FAIL
+
+EXECUTOR COMMAND: go test -race -timeout 1500s ./host/daemon/ -count=1
+EXECUTOR RC: 1
+EXECUTOR ELAPSED SECONDS: 12.736

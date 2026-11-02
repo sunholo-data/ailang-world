@@ -1,0 +1,16 @@
+d16c35e5f270f12c36c52b23763742efe73e393e6e930292f661fd4f13b98153  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+/tmp/world-iter334-executor.desvqzr3/tools/runmut.sh: line 93: flags[@]: unbound variable
+H2 plain sha256 before:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+edited:
+d16c35e5f270f12c36c52b23763742efe73e393e6e930292f661fd4f13b98153  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+restored:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+
+EXECUTOR COMMAND: "$WX/tools/runmut.sh" "/tmp/world-iter334-executor.desvqzr3/mutants" H2 plain 3
+EXECUTOR RC: 1
+EXECUTOR ELAPSED SECONDS: 0.051

@@ -1,0 +1,88 @@
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.14s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.14s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.16s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.14s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.14s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.14s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+    decisionpacket_daemon_test.go:263: serialized probe max = 1
+    decisionpacket_daemon_test.go:270: unwrapped probe max = 1, want 2
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (1.15s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	23.459s
+FAIL
+
+EXECUTOR COMMAND: go test -race -timeout 600s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=20 -v
+EXECUTOR GO TEST RC: 1
+EXECUTOR RUNNER RC: 0
+EXECUTOR RUNNER WALL SECONDS (test plus snapshot/restore): 27.689
