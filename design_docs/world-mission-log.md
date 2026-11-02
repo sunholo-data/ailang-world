@@ -2409,3 +2409,129 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 237 lands on merge CI green (landing note). Then row 238 under D-WORLD-106 = A, then 239 → 242, stopping as soon as a release row is routable; a dev red still outranks. Row 238 needs the orchestration doc's own quorum round and a re-measure of the iteration-312 stores, so it is the heaviest row in the scope.
 
 **Landing (iteration 335):** PR #459 merged as `96d7489b` (merge commit, `--match-head-commit d0a04b96`). Head `d0a04b96` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `77e0dd7c`, right before the merge. **Merge CI:** `commits/96d7489b/check-runs` → 3, all success on attempt 1 (run 41489014106: ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 336 — 2026-11-02 — row 238 built: marketingcheck bounds free gaps to one line, adds (a5) cumulative drift, bridges a 1 px thumb split; orchestration §4.4 amended through r6 + an r7 carve-out; judge PASS 89 [RELEASE-HYGIENE]
+
+**Pick:** row 238 `w-marketing-predicate-tolerances`, next in queue order under D-WORLD-106 = A (attended 2026-11-02).
+- Clause map 1–7 MET, no UNMET clause.
+- Release rows not routable, re-measured at `37100a43`:
+  - Row 150 waits on the attended A1: subjects `77e0dd7c..37100a43` matching `row ?150|A1\b|marketing` → 0 of 7.
+  - Row 151 needs row 188 N2d/N4a: `-E --grep='N2d|N4a'` since 2026-10-01 → the same 4 records/designs. N2c control 4.
+- Dev green at `37100a43`: check-runs 3/3 (ailang-code verify gate, go race gate, go host build + test gate).
+- Gate 0:
+  - 0 allowlisted directives on #449 (watermark file absent, so every comment was read) or #366.
+  - Self-notice script rc 0 (control 107:4).
+  - Billing CLEAN.
+  - Running skill and all 13 resource files byte-identical to `origin/dev` (resolved symlink target).
+- Premise measured first-party before routing: the current checker ACCEPTs all 9 iteration-312 store files, including the 2 block-converted ones, and REFUSEs raw `r1-seed1`. The `perm-*` ACCEPT pins and the `B1` REFUSE pin exist.
+
+**Design** (`w-marketing-predicate-tolerances`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–335 precedent and the operator's standing request; rotation pointer unchanged):
+- **r1** (290 lines, 21 V-rows, 977 s). Bounds:
+  - (a3) free gaps may move at most one line;
+  - new (a5): residual drift sum ≤ 2 px below the stack head;
+  - (iii′): one 1 px bridge.
+  - A prototype passed both parity tests. 9 stores ACCEPT; perm arms flip to REFUSE, B1/B1c to ACCEPT.
+- **Quorum r1 BLOCKED** ($0.3511; seats oc-kimi-k3, gpt6-1-sol, gemini-4-argon; claude benched; `absent_reviewers` `[]`).
+  - kimi: concurrent-work sweep unverified, line-number anchors, ellipses;
+  - sol: (a5)'s wording could zero non-paragraph residuals;
+  - gemini (pass): the ±24 arms' wording.
+  - The controller measured kimi's sweep itself (0 open PRs; 0 branch diffs; control 15 files) and handed over the data.
+- **r2** (305 lines, 26 V-rows): sol's text verbatim; a `bnd-nonpara-drift-3` arm whose `M238-a5-nonpara-zero` mutant reds it; string anchors A1–A7; an enumerated red list.
+- **Quorum r2 BLOCKED** ($0.3194; same seats, none absent).
+  - kimi: the row-231 precedent was only timestamp-verified, plus an optional tie arm;
+  - sol: acceptance commands had no process-group deadlines.
+- **r3, controller narrow-refinement carve-out.** Every remaining objection had a reviewer fix and none disputed direction.
+  - **V27 refuted the precedent by content:** 0 of 16 lines `03fe5a1a` pasted into orchestration §4.4 occur in either reviewed design version (control 16 of 16), and row 231's own design said a §4.4 rule change "needs its own round". So M2 got a controller sign-off and the orchestration doc's own quorum.
+  - Added the banked runner `run_bounded.sh.txt`. V28: a hanging grandchild was killed in 3 s, rc 124, and the next `&&` step was skipped; controls rc 7 and 0.
+  - Added the B7 tie arm and the `M238-run-rightmost-tie` mutant.
+
+**Plan** (resolver `agent-tool opus fail-closed:env-pin`; `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`), `3f502709`:
+- B7 measured: ACCEPT `{6 833 139 841}`; oracle REFUSE, so the phone ledger is 4. The tie mutant is killed only by B7 (control: without B7 it survives).
+- `plan-M1.diff.txt` sha256 `7da36f30…`, `plan-M2.diff.txt` `08e9838f…`.
+- 14 mutants each rc 1 on exactly their listed subtests.
+- `AILANG_BIN` = `$HOME/.pinned-ailang/ailang` v0.41.0.
+
+**Executor** (resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku` per the operator's request):
+- Both patches applied byte-exact (the controller diffed applied vs plan: IDENTICAL).
+- M1 acceptance rc 0. 14/14 mutants `match=EXACT`, restores byte-identical.
+- Full gate:
+  - `go build ./...` rc 0;
+  - `go test ./...` rc 0 (35 ok);
+  - `verify_ail.sh` rc 0 (16 identities, 40 named tests, 503 se-tools).
+- Left uncommitted; the controller committed M1 as `5381e7e2`.
+
+**Controller checks before the judge:**
+- M1 acceptance re-run: rc 0, 0 SKIP, 146 PASS; `PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8`, `PARITY phone: inputs=45/63 diffs=0 ledger=4`, `CHECK images=10 byte-equal=10`.
+- vet clean; gofmt 0.
+- `M238-a5-nonpara-zero` run by the controller reds exactly `new/bnd-nonpara-drift-3` and the parity test; restore byte-identical.
+- **M2 sign-off** (`m2-signoff.txt`, `m2_signoff.py.txt`): rebuild the orchestration doc from the base by applying §4, then diff. The only delta is the measured phone 3→4. A one-word corruption control HARD-STOPs.
+  - The first instrument, a whole-line grep, read 1 of 8 because §4 quotes blocks; that was an instrument failure, recorded and replaced.
+  - The A7 sentence still carried the refuted precedent. It was corrected in both docs and re-signed.
+
+**Orchestration quorum** (the row's "own quorum round"):
+- **r1 BLOCKED 3/3** ($0.5316; gemini-4-argon, oc-glm-5-3, oc-kimi-k3; none absent). None disputed the predicates. All objected to the doc's record:
+  - the "own round" claim had no artifact;
+  - M8b had no provenance;
+  - no V-rows after iteration 315;
+  - C8′(ii)/C12 V66-era wording;
+  - the corpus is not reproducible after a reboot.
+- **r6, designer** (resumed Agent `opus`):
+  - "Amendments after r5" record with artifacts;
+  - V75: M8b PR #405 merged `23940015` (ancestor; judge r1/r2 PASS 93);
+  - V76–V80 at `5381e7e2`;
+  - `CheckRegion` wording;
+  - **V79 refuted kimi's "drift in the 4 ledgered cases is undetectable"**: reverting the bridge reds B1/B1c/B7 in both parity tests, and reverting (ii) reds `header-15px`.
+  - The A-block sign-off was re-run on the larger file: OK, with a firing control.
+- **r2 BLOCKED 3/3** ($0.5483; same seats, none absent):
+  - gemini: stale §9 opener; renderer drift unverified past `09ff2821`;
+  - glm: r2's result unrecorded; route implied;
+  - kimi: row 231's 16 pasted lines gate the release with no content review; GLM's M8b re-run was carried silently.
+- **r7, controller carve-out**, each reviewer's own fix:
+  - V81 (r2 artifact, per seat);
+  - V82: renderer/capture paths `09ff2821..5381e7e2` → 0 files (control 2);
+  - V83: `3f185a9a`→`23940015` touches 12 doc-only files (control 2), which closes the M8b re-run on a measured basis;
+  - C13 now makes **an independent judge PASS on row 231's 16 pasted lines a P0-blocking precondition**.
+- Round count for this doc this iteration: r1, r6, r2, r7.
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), in its own detached worktree `.judge-wt-iter336` at `95179277`, foreground.
+- **PASS 89/100, zero blocking** (33/19/14/14/9).
+- Re-ran the targeted run (rc 0, same PARITY lines) and the full `go test ./...` (rc 0, 35 ok).
+- ~38 mutants of its own, including unplanned ones (bridge width ==3/<=3/==1, (a5) sign, own-height in (a5)); ~30 killed by named subtests.
+- Process claims checked against the four quorum JSONs: recorded verdicts correct; "no objection disputed the predicates" fair.
+- NB survivors, all reproduced by the controller in the judge worktree (rc 0, 0 FAIL, restore byte-identical):
+  - (a5) `posAbs(drift)`→`drift`;
+  - `posLines` `Round`→`Floor`;
+  - both filed as **row 246**.
+  - The ±3 survivors in row-231 code (`posAbs(dh) > 2`→`3`, non-free `posAbs(e) <= 2`→`3`) are appended to **row 240**.
+- Report: `verification/world-iter336/evaluator-r1.md`.
+
+**Bookkeeping:**
+- Fleet `harness-resolved` replies (6 messages, fleet iteration 78; D-FLEET-24 option A, ailang #2053 `3d9112bb9`) → rows 129, 131, 133 RESOLVED.
+- The fleet `[fyi]` reports World iteration 332's env-by-name proposal landed as `c60fa199b` (confirmed: the rule is now at the top of the running SKILL.md).
+
+**Routing evidence:** base=37100a432e1b8af9d234396cb8fee7ad627ecbc3@2026-11-02T19:57:55Z (Gate 1); the sprint worktree's base re-read SAME.
+- Driver env:
+  - `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`;
+  - `MISSION_PLANNER_RESOLVED=opus` (codex `gpt-6.1-sol` over daily ration, probe rc 75);
+  - `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5` (codex over ration);
+  - `MISSION_EVALUATOR_RESOLVED=sonnet`;
+  - `MISSION_OVER_RATION=codex`.
+- Controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent `opus` (224,461 + 274,679 + 360,668 tok over three runs: r1, r2, orchestration r6) · planner Agent `opus` (228,717 tok) · executor Agent `haiku` (70,265 tok) · evaluator Agent `sonnet` (91,438 tok).
+- Generator ≠ judge: opus designer and planner and haiku executor vs the sonnet judge. All five roles spawned through the Agent tool; none fell back.
+- Designer diet: 1 doc + 1 protocol revision, plus one revision of the orchestration doc that the row requires. Opus, not Fable, so no Fable spend.
+- Metered **$1.7503**, all quorum (four rounds, `jq` sum of `cost_usd`), under the $5 budget.
+
+**Ruled out:**
+- Reading the controller's first M2 grep (1 of 8 lines verbatim) as a paste defect. §4 quotes blocks with `> ` and the base indentation differs. The rebuilt-from-base diff is the right instrument.
+- Treating row 231's precedent as valid on timestamps (V27, refuted by content).
+- Parking on the orchestration r2 block. Every objection carried a concrete fix and none disputed direction (the iteration-95 ratified carve-out); kimi's own fix made the content review a P0 precondition rather than a now-step.
+- Fixing the judge's survivors in this sprint: non-blocking, and a fix needs a re-judge (the iteration-334/335 precedent).
+
+**Retro:**
+1. **A "precedent" is a claim about content, and a date only permits it.** r2's precedent passed one quorum's eye and failed the next; V27's measurement took one command. Instance 1 here. The general rule (rule 3b(v), inherited claims) already covers it.
+2. **The row's "the orchestration doc's own quorum round" brought in the parent doc's whole review debt.** Two of its rounds objected only to pre-existing provenance (M8b, row 231). Row 239 also amends §4.4, so it will meet the same path. Watch it; if it recurs, the orchestration doc may want a standalone record-repair row rather than paying per amendment.
+3. **Agent-tool roles held up on a codex-over-ration fire.** Haiku as executor applied a byte-pinned patch exactly; the planner's byte-exact patch is what made a small executor safe.
+- No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 238 BUILT in PR #461; row 246 filed; row 240 extended.
+**Next:** row 238 lands on merge CI green (landing note). Then row 239 under D-WORLD-106 = A, then 240 → 242, stopping as soon as a release row is routable; a dev red still outranks.
