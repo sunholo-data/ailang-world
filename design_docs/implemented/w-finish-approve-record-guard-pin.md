@@ -1,6 +1,6 @@
 # w-finish-approve-record-guard-pin: no test pins the approve guard's `|| input.Record != nil` arm
 
-- **Status**: Implemented (iteration 335; PR pending merge CI). Designed iteration 335, unattended; r1, quorum r1 PROCEED 3/3; judge sonnet PASS 92.
+- **Status**: Implemented (iteration 335; PR #459, merge `96d7489b`, merge CI 3/3). Designed iteration 335, unattended; r1, quorum r1 PROCEED 3/3; judge sonnet PASS 92.
 - **Item**: queue row 237 (charter `design_docs/world-mission.md:6309`), clause-3 (MET; hygiene),
   controller-filed in iteration 327 from the row-236 judge's NB1. The guard arm is correct. Nothing
   tests it. The fix is test-only: one new `_test.go` file, **0 production lines**.
