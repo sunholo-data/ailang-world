@@ -1,0 +1,441 @@
+# r4 prototype patch: the executor's M1 applied in $SCRATCH/tree-r4 (a copy of the git archive), diffed against the worktree at 37100a43.
+--- a/scripts/marketingcheck/position.go
++++ b/scripts/marketingcheck/position.go
+@@ -30,11 +30,21 @@
+ 	return a
+ }
+ 
++// posLines is d's nearest whole number of 24 px body lines.
++func posLines(d int) int { return int(math.Round(float64(d) / positionLine)) }
++
+ func posLineStep(d int) bool {
+-	k := int(math.Round(float64(d) / positionLine))
+-	return posAbs(d-k*positionLine) <= 2
++	return posAbs(d-posLines(d)*positionLine) <= 2
+ }
+ 
++// Row 238 (design_docs/planned/w-marketing-predicate-tolerances.md): a free gap may move by at
++// most positionFreeGapLines whole body lines, and (a5) bounds the drift that the per-gap and
++// per-height ±2 px residuals accumulate below a stack head.
++const (
++	positionFreeGapLines = 1
++	positionDriftTol     = 2
++)
++
+ func posPara(shot string) bool { return shot == "packet.png" }
+ 
+ func posFreeGap(shot, name string) bool {
+@@ -61,11 +71,13 @@
+ 		for _, c := range cs.Content {
+ 			cm[c.Name] = c
+ 		}
++		drift, prevRes, chain := 0, 0, true
+ 		for i, b := range bs.Content {
+ 			regions++
+ 			c, ok := cm[b.Name]
+ 			if !ok {
+ 				reasons = append(reasons, s+"/"+b.Name+": missing")
++				chain = false
+ 				continue
+ 			}
+ 			if !posInside(c, W, H) {
+@@ -75,34 +87,59 @@
+ 				reasons = append(reasons, fmt.Sprintf("%s/%s: (a1) left/right %d..%d vs %d..%d", s, b.Name, c.X, c.X+c.W, b.X, b.X+b.W))
+ 			}
+ 			dh := c.H - b.H
++			hOK, hRes := true, dh
+ 			if posPara(s) {
++				hRes = dh - posLines(dh)*positionLine
+ 				if !(posLineStep(dh) && c.H >= positionLine) {
++					hOK = false
+ 					reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d not whole lines", s, b.Name, c.H, b.H))
+ 				}
+ 			} else if posAbs(dh) > 2 {
++				hOK = false
+ 				reasons = append(reasons, fmt.Sprintf("%s/%s: (a4) height %d vs %d", s, b.Name, c.H, b.H))
+ 			}
++			// prevRes carries this region's height residual to the next region's (a5); a height
++			// that failed (a4) is already a refusal and contributes nothing.
++			setPrev := func() {
++				prevRes = 0
++				if hOK {
++					prevRes = hRes
++				}
++			}
+ 			if i == 0 {
+ 				if posAbs(c.Y-b.Y) > 2 {
+ 					reasons = append(reasons, fmt.Sprintf("%s/%s: (a2) stack-head top %d vs %d", s, b.Name, c.Y, b.Y))
+ 				}
++				setPrev()
+ 				continue
+ 			}
+ 			pb := bs.Content[i-1]
+ 			pc, ok := cm[pb.Name]
+ 			if !ok {
++				chain = false
+ 				continue
+ 			}
+ 			gb := b.Y - (pb.Y + pb.H)
+ 			gc := c.Y - (pc.Y + pc.H)
+ 			e := gc - gb
+-			okGap := gc >= 0 && posAbs(e) <= 2
++			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+ 			if posFreeGap(s, b.Name) {
+-				okGap = gc >= 0 && posLineStep(e)
++				okGap = gc >= 0 && posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines
++				gRes = e - posLines(e)*positionLine
+ 			}
+ 			if !okGap {
+ 				reasons = append(reasons, fmt.Sprintf("%s/%s: (a3) gap after %s %d vs R1 %d", s, b.Name, pb.Name, gc, gb))
+ 			}
++			if chain {
++				drift += prevRes
++				if okGap {
++					drift += gRes
++				}
++				if posAbs(drift) > positionDriftTol {
++					reasons = append(reasons, fmt.Sprintf("%s/%s: (a5) top %d drifts %+d px from R1 %d after whole-line steps", s, b.Name, c.Y, drift, b.Y))
++				}
++			}
++			setPrev()
+ 		}
+ 		regions++
+ 		b, c := bs.Background, cs.Background
+--- a/scripts/marketingcheck/phone.go
++++ b/scripts/marketingcheck/phone.go
+@@ -64,13 +64,14 @@
+ 	return out
+ }
+ 
+-// phoneScrollbar finds the thumb: rows in the bottom 20 px whose longest contiguous luma
+-// 120..200 run is at least 100 px long.
++// phoneScrollbar finds the thumb: rows in the bottom 20 px whose longest luma 120..200 run is
++// at least 100 px long. Row 238: a run is one contiguous segment, or two segments separated by
++// exactly one off-range pixel (at most one such bridge per run); the leftmost longest wins.
+ func phoneScrollbar(im image.Image) phoneRect {
+ 	bd := im.Bounds()
+ 	r := phoneRect{-1, -1, -1, -1}
+ 	for y := bd.Max.Y - 20; y < bd.Max.Y; y++ {
+-		x0, x1 := -1, -1
++		var segs [][2]int
+ 		for x, start := 0, -1; x <= bd.Max.X; x++ {
+ 			in := false
+ 			if x < bd.Max.X {
+@@ -81,12 +82,20 @@
+ 				start = x
+ 			}
+ 			if !in && start >= 0 {
+-				if x0 < 0 || (x-1)-start > x1-x0 {
+-					x0, x1 = start, x-1
+-				}
++				segs = append(segs, [2]int{start, x - 1})
+ 				start = -1
+ 			}
+ 		}
++		x0, x1 := -1, -1
++		for i, sg := range segs {
++			end := sg[1]
++			if i+1 < len(segs) && segs[i+1][0]-sg[1] == 2 {
++				end = segs[i+1][1]
++			}
++			if x0 < 0 || end-sg[0] > x1-x0 {
++				x0, x1 = sg[0], end
++			}
++		}
+ 		if x0 >= 0 && x1-x0 >= 100 {
+ 			if r.Y0 < 0 {
+ 				r = phoneRect{x0, y, x1 + 1, y + 1}
+--- a/scripts/marketingcheck/position_test.go
++++ b/scripts/marketingcheck/position_test.go
+@@ -232,6 +232,28 @@
+ 			shift += 2
+ 		}
+ 	}},
++	// Row 238 (w-marketing-predicate-tolerances §3): (a5) boundary pair, the (a3) whole-line
++	// bound's two-line arm, and the two one-line approvals moves the bound still admits.
++	{"bnd-drift-sum-2", func(d *Rectangles) {
++		sh := d.Shots["packet.png"]
++		sh.Content[posIdx(sh, "roster-attested")].Y += 1
++		sh.Content[posIdx(sh, "roster-claimed")].Y += 2
++		sh.Content[posIdx(sh, "roster-proven")].Y += 2
++	}},
++	{"bnd-drift-sum-3", func(d *Rectangles) {
++		sh := d.Shots["packet.png"]
++		sh.Content[posIdx(sh, "roster-attested")].Y += 1
++		sh.Content[posIdx(sh, "roster-claimed")].Y += 2
++		sh.Content[posIdx(sh, "roster-proven")].Y += 3
++	}},
++	{"bnd-createdAt-wraps-2-lines", func(d *Rectangles) {
++		sh := d.Shots["packet.png"]
++		for j := posIdx(sh, "approvals-chain"); j < len(sh.Content); j++ {
++			sh.Content[j].Y += 48
++		}
++	}},
++	{"perm-approvals-y+24", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y += 24 }},
++	{"perm-approvals-y-24", func(d *Rectangles) { sh := d.Shots["packet.png"]; sh.Content[posIdx(sh, "approvals-chain")].Y -= 24 }},
+ }
+ 
+ // positionNewArmSHA256 is the banked generator's output (V13), so the port is byte-pinned.
+@@ -246,6 +268,11 @@
+ 	"perm-approvals-y-48":          "bc7a9fb2512d52418967d29e5619d901928bb8a621e6d817191fed1222aac08d",
+ 	"perm-roster-drift-2px":        "7e9a35bba5a59c36168113a971e4058ea061d6b9a938d232190e47785af73a70",
+ 	"perm-validation-h+216":        "6e4f9772de397ee47f7e3b953f1c69fdb044ee368cf15bb05060f1f15a2cd8bc",
++	"bnd-drift-sum-2":              "65ce8108706c685153f4d0c2b5a98104d7961fabe9ae395da28b7ac8269210f1",
++	"bnd-drift-sum-3":              "da4b9cf1199daeadc7e497b747b1499d687b82e7fc13104b38006c029185a520",
++	"bnd-createdAt-wraps-2-lines":  "032e1b0bcd66019af0cd1aa70a60c7afcb51fae75c7e977a8dc9762089183b88",
++	"perm-approvals-y+24":          "79601062a36ca3ea4a827a18e863ff54f446753308c41d198caa1835d9af4895",
++	"perm-approvals-y-24":          "1860035bd84a026039dfdb1021756d5c0b01ee8d93fa289f3f2a8f38d981e7ef",
+ }
+ 
+ // writePositionNewArms writes the ten in-test arms into dir and returns name -> path.
+@@ -299,8 +326,8 @@
+ 	for _, a := range positionNewArms {
+ 		in = append(in, labelledPath{"new/" + a.Name, arms[a.Name]})
+ 	}
+-	if len(in) != 44 {
+-		t.Fatalf("position inputs: %d, want 44", len(in))
++	if len(in) != 49 {
++		t.Fatalf("position inputs: %d, want 49", len(in))
+ 	}
+ 	return in
+ }
+@@ -387,10 +414,15 @@
+ 	"new/iso-nonpara-graph-svg-h+24":             "REFUSE (a4)",
+ 	"new/iso-nonpara-payload-h+24":               "REFUSE (a4)",
+ 	"new/acc-tested-w-2":                         "ACCEPT",
+-	"new/perm-approvals-y+48":                    "ACCEPT",
+-	"new/perm-approvals-y-48":                    "ACCEPT",
+-	"new/perm-validation-h+216":                  "ACCEPT",
+-	"new/perm-roster-drift-2px":                  "ACCEPT",
++	"new/perm-approvals-y+48":                    "REFUSE (a3)",
++	"new/perm-approvals-y-48":                    "REFUSE (a3)",
++	"new/perm-validation-h+216":                  "REFUSE (a3)",
++	"new/perm-roster-drift-2px":                  "REFUSE (a5)",
++	"new/bnd-drift-sum-2":                        "ACCEPT",
++	"new/bnd-drift-sum-3":                        "REFUSE (a5)",
++	"new/bnd-createdAt-wraps-2-lines":            "REFUSE (a3)",
++	"new/perm-approvals-y+24":                    "ACCEPT",
++	"new/perm-approvals-y-24":                    "ACCEPT",
+ }
+ 
+ func TestMarketingPositionFixtures(t *testing.T) {
+@@ -499,8 +531,8 @@
+ 			accept++
+ 		}
+ 	}
+-	if len(positionWant) != 44 || accept != 19 {
+-		t.Errorf("verdict table: %d rows, %d ACCEPT; want 44 and 19", len(positionWant), accept)
++	if len(positionWant) != 49 || accept != 18 {
++		t.Errorf("verdict table: %d rows, %d ACCEPT; want 49 and 18", len(positionWant), accept)
+ 	}
+ }
+ 
+@@ -540,9 +572,31 @@
+ 		t.Fatalf("oracle rc %d: %s%s", res.Code, res.Stdout, res.Stderr)
+ 	}
+ 	oracleOut := parseP0check(t, res.Stdout)
+-	ledger := map[string]bool{} // design §2.2: the position ledger is empty
++	// Row 238 ledger (w-marketing-predicate-tolerances §4): each entry is the oracle's verdict,
++	// position's verdict and the exact reason lines position adds; the oracle's own lines must
++	// all still be present. Any other difference is a red, and so is an entry that stops differing.
++	ledger := map[string]positionLedgerEntry{
++		"new/perm-approvals-y+48": {"ACCEPT", "REFUSE", []string{
++			"packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239",
++			"packet.png/roster-tested: (a3) gap after approvals-chain 47 vs R1 95"}},
++		"new/perm-approvals-y-48": {"ACCEPT", "REFUSE", []string{
++			"packet.png/approvals-chain: (a3) gap after validation 191 vs R1 239",
++			"packet.png/roster-tested: (a3) gap after approvals-chain 143 vs R1 95"}},
++		"new/perm-validation-h+216": {"ACCEPT", "REFUSE", []string{
++			"packet.png/approvals-chain: (a3) gap after validation 23 vs R1 239"}},
++		"new/perm-roster-drift-2px": {"ACCEPT", "REFUSE", []string{
++			"packet.png/roster-attested: (a5) top 3337 drifts +6 px from R1 3331 after whole-line steps",
++			"packet.png/roster-claimed: (a5) top 3381 drifts +10 px from R1 3371 after whole-line steps",
++			"packet.png/roster-proven: (a5) top 3449 drifts +14 px from R1 3435 after whole-line steps"}},
++		"new/bnd-drift-sum-3": {"ACCEPT", "REFUSE", []string{
++			"packet.png/roster-proven: (a5) top 3438 drifts +3 px from R1 3435 after whole-line steps"}},
++		"new/bnd-createdAt-wraps-2-lines": {"ACCEPT", "REFUSE", []string{
++			"packet.png/approvals-chain: (a3) gap after validation 287 vs R1 239"}},
++		"v65/neg-tested-at-proven-row": {"REFUSE", "REFUSE", []string{
++			"packet.png/roster-tested: (a3) gap after approvals-chain 263 vs R1 95"}},
++	}
+ 	base := loadPositionBaseline(t)
+-	compared, verdictDiffs, reasonDiffs := 0, 0, 0
++	compared, verdictDiffs, reasonDiffs, ledgerSeen := 0, 0, 0, 0
+ 	for _, in := range inputs {
+ 		o, ok := oracleOut[in.Label]
+ 		if !ok {
+@@ -559,7 +613,11 @@
+ 			v = "REFUSE"
+ 		}
+ 		compared++
+-		if ledger[in.Label] {
++		if le, ok := ledger[in.Label]; ok {
++			ledgerSeen++
++			if got := positionAdded(o[1:], reasons); o[0] != le.Oracle || v != le.Position || got == nil || strings.Join(got, "\n") != strings.Join(le.Added, "\n") {
++				t.Errorf("ledger %s: want oracle %s, position %s adding %q; got oracle %s, position %s, added %q (reasons %q)", in.Label, le.Oracle, le.Position, le.Added, o[0], v, got, reasons)
++			}
+ 			continue
+ 		}
+ 		if v != o[0] {
+@@ -571,12 +629,40 @@
+ 			t.Errorf("%s: reasons differ\n oracle   %q\n position %q", in.Label, o[1:], reasons)
+ 		}
+ 	}
+-	if compared != 44 || len(oracleOut) != 44 {
+-		t.Fatalf("compared %d labels (oracle printed %d), want 44", compared, len(oracleOut))
++	if compared != 49 || len(oracleOut) != 49 || ledgerSeen != len(ledger) {
++		t.Fatalf("compared %d labels (oracle printed %d, ledger %d of %d), want 49", compared, len(oracleOut), ledgerSeen, len(ledger))
+ 	}
+-	t.Logf("PARITY position: inputs=%d verdict-diffs=%d reason-diffs=%d", compared, verdictDiffs, reasonDiffs)
++	t.Logf("PARITY position: inputs=%d verdict-diffs=%d reason-diffs=%d ledger=%d", compared, verdictDiffs, reasonDiffs, len(ledger))
+ }
+ 
++type positionLedgerEntry struct {
++	Oracle, Position string
++	Added            []string
++}
++
++// positionAdded returns position's reasons that are not the oracle's, in position's order, or
++// nil when an oracle reason is missing from position's.
++func positionAdded(oracle, position []string) []string {
++	left := map[string]int{}
++	for _, r := range oracle {
++		left[r]++
++	}
++	added := []string{}
++	for _, r := range position {
++		if left[r] > 0 {
++			left[r]--
++			continue
++		}
++		added = append(added, r)
++	}
++	for _, n := range left {
++		if n > 0 {
++			return nil
++		}
++	}
++	return added
++}
++
+ func TestMarketingPositionCLI(t *testing.T) {
+ 	dir := t.TempDir()
+ 	td := func(rel string) string { return filepath.Join(positionTestdata, filepath.FromSlash(rel)) }
+--- a/scripts/marketingcheck/phone_test.go
++++ b/scripts/marketingcheck/phone_test.go
+@@ -264,6 +264,18 @@
+ 		phoneJudgeArm("thumb-dark-luma100", func(im *image.RGBA) { phoneNoThumb(im); phoneFill(im, 6, 833, 330, 841, 100) }),
+ 		phoneJudgeArm("tall-image-844-ok-but-thumb-1row", func(im *image.RGBA) { phoneNoThumb(im); phoneFill(im, 6, 840, 330, 841, 190) }),
+ 		phoneJudgeArm("title-ink-spoof-pixel-388", func(im *image.RGBA) { phoneFill(im, 360, 45, 390, 68, 250); phoneFill(im, 388, 50, 389, 51, 0) }),
++		// Row 238 (w-marketing-predicate-tolerances §3): the bridge's three limits.
++		phoneJudgeArm("B1d-thumb-two-splits-px100-px200", func(im *image.RGBA) {
++			phoneFill(im, 100, 833, 101, 841, 250)
++			phoneFill(im, 200, 833, 201, 841, 250)
++		}),
++		phoneJudgeArm("B1e-thumb-gap-2px-at-150", func(im *image.RGBA) { phoneFill(im, 150, 833, 152, 841, 250) }),
++		phoneJudgeArm("B6-alternating-pixels-no-thumb", func(im *image.RGBA) {
++			phoneNoThumb(im)
++			for x := 6; x < 330; x += 2 {
++				phoneFill(im, x, 833, x+1, 841, 190)
++			}
++		}),
+ 	}
+ 	solid := func(name string, r image.Rectangle) phoneArm {
+ 		return phoneArm{"new/" + name, func(src image.Image) image.Image {
+@@ -325,8 +337,8 @@
+ 	writePhonePNG(t, in[0].Path, seed5)
+ 	writePhonePNG(t, in[1].Path, seed2)
+ 	in = append(in, phoneArmInputs(t, dir, seed5)...)
+-	if len(in) != 41 {
+-		t.Fatalf("phone inputs: %d, want 41", len(in))
++	if len(in) != 44 {
++		t.Fatalf("phone inputs: %d, want 44", len(in))
+ 	}
+ 	return in
+ }
+@@ -399,9 +411,9 @@
+ 	"v67/blank":                              "REFUSE (i),(ii),thumb,title-right,zero-bands",
+ 	"judge/title-right-386":                  "REFUSE title-right",
+ 	"judge/title-right-387":                  "ACCEPT",
+-	"judge/B1-thumb-split-px150":             "REFUSE thumb",
++	"judge/B1-thumb-split-px150":             "ACCEPT",
+ 	"judge/B1b-thumb-split-px250":            "ACCEPT",
+-	"judge/B1c-thumb-split-px8":              "REFUSE thumb",
++	"judge/B1c-thumb-split-px8":              "ACCEPT",
+ 	"judge/B3-grey-bar-x0-300-no-thumb":      "ACCEPT",
+ 	"judge/B3b-grey-bar-full-width":          "REFUSE thumb",
+ 	"judge/B4-run-100px":                     "REFUSE thumb",
+@@ -424,6 +436,9 @@
+ 	"new/entry-solid-ink":                    "REFUSE (i)",
+ 	"new/tall-845":                           "REFUSE dims",
+ 	"new/header-15px":                        "REFUSE (ii)",
++	"judge/B1d-thumb-two-splits-px100-px200": "REFUSE thumb",
++	"judge/B1e-thumb-gap-2px-at-150":         "REFUSE thumb",
++	"judge/B6-alternating-pixels-no-thumb":   "REFUSE thumb",
+ }
+ 
+ func TestMarketingPhoneSkeleton(t *testing.T) {
+@@ -487,8 +502,8 @@
+ 			accept++
+ 		}
+ 	}
+-	if len(phoneWant) != 41 || accept != 12 {
+-		t.Errorf("verdict table: %d rows, %d ACCEPT; want 41 and 12", len(phoneWant), accept)
++	if len(phoneWant) != 44 || accept != 14 {
++		t.Errorf("verdict table: %d rows, %d ACCEPT; want 44 and 14", len(phoneWant), accept)
+ 	}
+ }
+ 
+@@ -517,8 +532,14 @@
+ 			oracleOut[m[1]] = row{m[7], [5]bool{m[2] == "true", m[3] == "true", m[4] == "true", m[5] == "true", m[6] == "true"}}
+ 		}
+ 	}
+-	ledger := map[string]bool{"new/header-15px": true}
+-	compared, diffs := 0, 0
++	// Row 238 (w-marketing-predicate-tolerances §4): oracle verdict, phone verdict and the reason
++	// substring phone must carry ("" = phone ACCEPT).
++	ledger := map[string][3]string{
++		"new/header-15px":            {"ACCEPT", "REFUSE", "(ii) rect-too-small phone.png: header"},
++		"judge/B1-thumb-split-px150": {"REFUSE", "ACCEPT", ""},
++		"judge/B1c-thumb-split-px8":  {"REFUSE", "ACCEPT", ""},
++	}
++	compared, diffs, ledgerSeen := 0, 0, 0
+ 	for _, in := range inputs {
+ 		o, ok := oracleOut[in.Label]
+ 		if !ok {
+@@ -533,9 +554,10 @@
+ 		joined := strings.Join(reasons, "\n")
+ 		clauses := [5]bool{!strings.Contains(joined, "(i) "), !strings.Contains(joined, "(ii) "), !strings.Contains(joined, "(iii′) dims"), !strings.Contains(joined, "(iii′) thumb"), !strings.Contains(joined, "(iii′) title-right")}
+ 		compared++
+-		if ledger[in.Label] {
+-			if o.verdict != "ACCEPT" || v != "REFUSE" || !strings.Contains(joined, "(ii) rect-too-small phone.png: header") {
+-				t.Errorf("ledger %s: want oracle ACCEPT, phone REFUSE (ii) rect-too-small phone.png: header; got oracle %s, phone %s %q", in.Label, o.verdict, v, reasons)
++		if le, ok := ledger[in.Label]; ok {
++			ledgerSeen++
++			if o.verdict != le[0] || v != le[1] || !strings.Contains(joined, le[2]) {
++				t.Errorf("ledger %s: want oracle %s, phone %s %q; got oracle %s, phone %s %q", in.Label, le[0], le[1], le[2], o.verdict, v, reasons)
+ 			}
+ 			continue
+ 		}
+@@ -544,8 +566,8 @@
+ 			t.Errorf("%s: oracle %s %v, phone %s %v %q", in.Label, o.verdict, o.clauses, v, clauses, reasons)
+ 		}
+ 	}
+-	if compared != len(inputs) || len(oracleOut) != len(inputs) {
+-		t.Fatalf("compared %d labels (oracle printed %d), want %d", compared, len(oracleOut), len(inputs))
++	if compared != len(inputs) || len(oracleOut) != len(inputs) || ledgerSeen != len(ledger) {
++		t.Fatalf("compared %d labels (oracle printed %d, ledger %d of %d), want %d", compared, len(oracleOut), ledgerSeen, len(ledger), len(inputs))
+ 	}
+ 	t.Logf("PARITY phone: inputs=%d diffs=%d ledger=%d", compared, diffs, len(ledger))
+ }
+@@ -736,8 +758,8 @@
+ 		}
+ 	}
+ 	realInputs = append(realInputs, arms...)
+-	if len(realInputs) != 59 {
+-		t.Fatalf("real parity inputs %d, want 59", len(realInputs))
++	if len(realInputs) != 62 {
++		t.Fatalf("real parity inputs %d, want 62", len(realInputs))
+ 	}
+ 	oracle := buildOracle(t, phoneOracleSource, phoneOraclePin)
+ 	phoneParity(t, oracle, filepath.Join(corpus, "v50-reference-phone.png"), realInputs)

@@ -1,0 +1,7 @@
+V27 (controller, iteration 336, 2026-11-02T20:32:45Z): content check of the row-231 precedent.
+Quorum artifacts ~/.ailang/state/mission-quorum-world/w-marketing-position-checker-2026-10-31T00-42-30Z.json and ...T00-51-18Z.json have keys controller_in_session,doc,iso_ts,reviewers,synthesis; .doc is the PATH design_docs/planned/w-marketing-position-checker.md (no content stored).
+Reviewed versions: r0 9abc25b5 (01:41 CET = 00:41Z, quorum r1 00:42Z), r1 3aaee4d0 (01:50 CET, quorum r2 00:51Z); carve-out r2 08dc31be 01:53 CET.
+Lines added to orchestration by 03fe5a1a (row 231 M3):       19 (+ lines), 16 non-empty.
+Found verbatim in design r1 (reviewed by quorum r2): 0 of 16. In carve-out r2 08dc31be: 0 of 16. Control: in orchestration at 03fe5a1a: 16 of 16.
+Row 231 design r1 line 257: "Tightening it amends §4.4 (a3)/(a4), a rule of a quorum-carved doc that needs its own round and a re-measure of all 9 stores."
+Verdict: the precedent is REFUTED by content: row 231 quorum never reviewed the §4.4 text it pasted, and its own design required an orchestration round for a rule change.

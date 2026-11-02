@@ -1,0 +1,18 @@
+# CONTROLLER-MEASURED (iteration 336), copied verbatim from /Users/voightkampff/dev/sunholo-data/.scratch-iter336-sweep.txt; not re-derived by the designer (coordinator instruction, quorum r1 kimi (a)).
+== open PRs (all authors)
+== remote branches touching the 5 files since base
+(control: a branch known to touch marketingcheck relative to an older base)
+       0
+03fe5a1a docs(row 231 M3): orchestration §4.4 and QUICKSTART §13 switch to marketingcheck position/phone; NB2 pinned
+9ddab47c test(row 231 M2b): phone arms, oracle parity (ledger header-15px) and real-corpus parity
+c6a12dc9 feat(row 231 M2a): marketingcheck phone with 10 real-geometry skeleton fixtures
+== NEXT/IN-SPRINT rows naming the files
+6196:150. **[IN-SPRINT — iteration 266: unparked on the fleet `harness-resolved` reply (row 173 fixed `2d14dbd`); design r4 + sprint plan 
+6310:238. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 328 from row 231's design §7 S-a] w-marketing-predicat
+6312:240. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 328 from the row-231 judge's survivors, one controller-
+== control: same grep without status filter
+4
+control branch-diff:       15 files
+     309
+239. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 328 from row 231's design §7 S-b] w-marketing-still-probe-commit** · release-hygiene (moves no clause) · **P0 ITEM (1)'S STILL PROBE LOGS `repeat_equal`/`script_tags` INSTEAD OF ASSERTING THEM.** Row 231 gave §4.4 item (1) the probe command and a count-based reading (text only). **THE ITEM:** commit the iter305 still probe as a `WORLD_CHROME`-gated test in `cmd/ailang-worldd` that `t.Errorf`s on `repeat_equal=false` or `script_tags>0`, and run item (1) on the same store as items (2)–(3) (iteration-315 judge NB4). Needs Chrome and a minted store. Pickable only if D-WORLD-102's scope is widened, or on a Gate-1 red. Rule (d) governs.
+240. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 328 from the row-231 judge's survivors, one controller-reproduced] w-marketing-checker-tolerance-pins** · release-hygiene (moves no clause) · **FIVE MUTANTS OF ROW 231'S CHECKERS SURVIVE EVERY TEST.** The judge (`verification/world-iter328/evaluator-sprint-r1.md`): `position` background-edge tolerances ±2 → ±200 (three mutants, Y, X0 and bottom, each alone) stay green; only removing the whole check (P8) is pinned. `phone` (i) first-entry tolerance 4 → 40 stays green; controller-reproduced on a copy of `96eae6cc`: `phoneNear(s.FirstEntry, phoneR1Entry, 40)` at `phone.go:157` → `go test ./scripts/marketingcheck` rc 0, control rc 0. Removing `gc >= 0` on the non-free-gap branch stays green; the judge thinks it is equivalent on this baseline. Also: the `main.go` `position`/`phone` cases are reached only by the docs subtests, and reverting §13's export reds `rects-value` but not `position-lines`. The banked oracle carries the same tolerances, so parity cannot see these. **Candidate:** one boundary arm per tolerance (just inside accepts, just outside refuses) for the background edges and the phone entry; settle `gc ≥ 0` as equivalent or pin it. ~0.2d. Pickable only if D-WORLD-102's scope is widened, or on a Gate-1 red. Rule (d) governs.

@@ -1,0 +1,50 @@
+$ sed -n 273p host/workbench/render.go | grep -o "<p>[^<]\{0,40\}" (decision packet paragraphs in document order)
+<p>{{.Sentence}}
+<p>createdAt {{.CreatedAt}} · deadlineAt {{
+<p>policy {{.Policy}} · escalationsRemainin
+<p>proposal: 
+<p>approval request: 
+<p>committed at: 
+<p>approvals chain: {{.ApprovalStatus}}
+<p>evidence: proposal 
+<p>evidence: transition function 
+<p>evidence roster UNAVAILABLE — {{.RosterU
+<p>{{.Kind}}: {{if .Unavailable}}UNAVAILABL
+$ python3 -I -c (R1 packet gaps from r1-rects.json)
+approvals-chain gap after validation = 239
+roster-tested gap after approvals-chain = 95
+roster-attested gap after roster-tested = 15
+roster-claimed gap after roster-attested = 15
+roster-proven gap after roster-claimed = 15
+$ grep -n -E "iii′|\(a3\)|\(a4\)|one-entry ledger|Committed \(row 231\)" design_docs/planned/w-marketing-capture-orchestration.md | cut -c1-110 (amendment targets)
+230:    - (a3) every later region's gap (its top minus the previous region's **measured** bottom) is ≥ 0 and
+231:    - (a4) a packet paragraph region's height (`validation`, `approvals-chain`, `roster-*`) is the R1 heig
+235:  r3 withdraws r2's "(a) equals the R1 baseline within ±2 px on every edge". A block box's left and right
+237:  - Phone: `go run ./scripts/marketingcheck phone <label>=<capture pass-a/phone.png>`; (i), (ii), (iii′)
+241:    3. **Position refuse**: `go run ./scripts/marketingcheck position --baseline design_docs/verification/
+246:  - **Committed (row 231).** The banked `.txt` programs remain the parity oracle that CI builds from the p
+250:  **Phone** (390 px; the dump-dom instrument cannot lay out at that width, V51) uses the V58 screenshot sc
+255:  - the P0 position assertion (r3 predicate, §4.4) must hold against the R1 baseline, and phone must pass
+314:- **C8′.** For the five 1440 px shots, every required region lies inside its image at the M7c0 geometry 
+315:- **C12.** P0 is recorded within 24 h before A1. It shows route-level still determinism (P0 item (1): byte
+326:- **Phone overflow** (V50). The phone page overflows horizontally and its title is clipped to "AILANG Worl
+393:| 3 | Phone (iii) "identical within ±2 px of V50" is replaced by (iii′): the defect is present. A thumb
+400:**Residuals (UNMEASURED).** First, no store measured so far moves a stack head or wraps a body-text paragr
+416:| 8 | Kimi, GLM: (iii′) makes the overflow defect a required property. Name the row-149 coupling so that
+431:**What r4 does not change.** The r3 rules (P0 (a), phone (iii′)), their evidence V64–V68, and every ac
+447:- **Fixed (instrument matched to the reviewed prose).** phonecheck's thumb test measured the first-to-last
+465:| Kimi: capture-day control step | The control pair prints `r3 ACCEPT` then `r3 REFUSE` | **M-r5-control**
+467:| GLM: R1 height reading | (a4) uses the stored integer height (97) | Covered by V64/V65: eval-p1's 73 is 
+516:| V65 (designer, iteration 315; r3 P0 (a), negative direction) | Same script. `p0check mutate <rects.json>
+517:| V66 (designer, iteration 315; r3 phone (iii′), positive direction) | Same script. `v66-phonecheck-main
+518:| V67 (designer, iteration 315; r3 phone (iii′), negative direction) | Same script. `v67-phoneneg-main.g
+523:| V72 (controller, iteration 315, r5; capture-day control step, answers Kimi r4-round) | Both checkers bui
+524:| V73 (controller, iteration 315, r5; R1 height reading, answers GLM r4-round) | `python3` over `/tmp/worl
+525:| V74 (controller, iteration 315, r5; named mutations for the carve-out fixes) | Scratch builds outside th
+$ grep -n -o "outside the one-entry ledger" design_docs/planned/w-marketing-capture-orchestration.md
+246:outside the one-entry ledger
+
+$ grep -n -o -E "moved by anything other than whole lines in the two body-text gaps|\(a luma 120–200 run of at least 100 px\)|and packet paragraph heights and the two body-text gaps in whole 24 px lines ±2 px \(§4.4, r3\)" design_docs/planned/w-marketing-capture-orchestration.md
+248:moved by anything other than whole lines in the two body-text gaps
+250:(a luma 120–200 run of at least 100 px)
+314:and packet paragraph heights and the two body-text gaps in whole 24 px lines ±2 px (§4.4, r3)
