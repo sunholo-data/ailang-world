@@ -1,7 +1,7 @@
 # World mission dashboard — iteration 335 (2026-11-02)
 
-- **This fire:** row 237 BUILT (PR #459), the second pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). A new `host/daemon` test pins the finish approve guard's `|| input.Record != nil` arm: 403, no approval written to the store, and a 200 control on the same clock. Judge sonnet PASS 92, zero blocking. Lands on merge CI.
-- **Dev:** green at `77e0dd7c` (3/3, iteration 334's landing note).
+- **This fire:** row 237 BUILT (PR #459), the second pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). A new `host/daemon` test pins the finish approve guard's `|| input.Record != nil` arm: 403, no approval written to the store, and a 200 control on the same clock. Judge sonnet PASS 92, zero blocking. **LANDED:** merge `96d7489b`, merge CI 3/3.
+- **Dev:** green at `96d7489b` (3/3, the row-237 merge).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
