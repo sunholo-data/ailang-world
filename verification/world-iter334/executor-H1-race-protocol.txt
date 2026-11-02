@@ -1,0 +1,28 @@
+5c836e58172ca1896728af59b371d347a4547e1626af42198f30fd975d3ef7ff  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:426: missed = "", want "second Human.Approve dispatch did not arrive within 10s"
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:426: missed = "", want "second Human.Approve dispatch did not arrive within 10s"
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+=== RUN   TestConcurrencyProbeNamesAMissedArrival
+    decisionpacket_daemon_test.go:426: missed = "", want "second Human.Approve dispatch did not arrive within 10s"
+--- FAIL: TestConcurrencyProbeNamesAMissedArrival (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.458s
+FAIL
+H1 mode=race count=3 rc=1
+H1 race sha256 before:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+edited:
+5c836e58172ca1896728af59b371d347a4547e1626af42198f30fd975d3ef7ff  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+restored:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+
+EXECUTOR COMMAND: "$WX/tools/runmut.sh" "/tmp/world-iter334-executor.desvqzr3/mutants" H1 race 3
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 2.922

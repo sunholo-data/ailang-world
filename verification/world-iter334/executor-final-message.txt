@@ -1,0 +1,32 @@
+Applied the pinned diff and left changes uncommitted. `daemon.go` is unchanged.
+
+- Diff SHA256: `8dee691695d632d8afa3f775629d213bf4769606072a0225140e9ec9f66c6d51`
+- Resulting file SHA256: `877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383`
+
+**M1: UNVERIFIED.** Formatting, vet, compilation, target tests, handshake controls, and wall-time check passed. Plain mutation tests could not launch because the unchanged runner errors under Bash 3.2.
+
+Measured race mutation results:
+
+| ID | Result | Killer line |
+|---|---|---:|
+| A | Killed 20/20 | 270 |
+| M1 | Killed 20/20 | 372 |
+| M1b | Killed 20/20 | 372 |
+| M2 | Killed 20/20 | 372 |
+| M3 | Killed 20/20 | 392 |
+| M6 | Killed 20/20 | 375 |
+| M7 | Killed 20/20 | 372 |
+| M7b | Survives 20/20, expected | — |
+| H1 | Killed 3/3 | 426 |
+| H2 | Killed 3/3 | 426 |
+| H3 | Killed 3/3 | 422 |
+
+All mutation hashes restored exactly.
+
+**M2: UNVERIFIED.** Idle soak (`count=200`) and AILANG verification passed. Loaded soak, package gates, and socket/TTY portions of the full gate were **UNINFORMATIVE UNDER SANDBOX**. Every named full-suite failure reproduced at base; the base archive additionally failed the documented missing-`.git` check.
+
+Not reached: plain mutant Go tests, loaded soak Go test, and controller-only CI. No burners started; final `pgrep` was denied.
+
+[Executor report](/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/verification/world-iter334/executor-report.md) contains commands, rc/counts, timings, deviations, and raw evidence.
+
+[`git status --porcelain`](/Users/voightkampff/dev/sunholo-data/.wt-world-iter334-row235/verification/world-iter334/executor-git-status.txt): one modified test file and 141 untracked executor evidence files.

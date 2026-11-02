@@ -1,0 +1,7 @@
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+
+EXECUTOR COMMAND: shasum -a 256 host/daemon/decisionpacket_daemon_test.go host/daemon/daemon.go > "$WX/fixed.sha"
+cat "$WX/fixed.sha"
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.011

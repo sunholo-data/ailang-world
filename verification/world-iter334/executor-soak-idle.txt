@@ -1,0 +1,5 @@
+ok  	github.com/sunholo-data/ailang-world/host/daemon	188.812s
+
+EXECUTOR COMMAND: go test -race -timeout 900s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=200
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 189.297

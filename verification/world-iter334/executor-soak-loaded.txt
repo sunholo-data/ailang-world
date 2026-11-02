@@ -1,0 +1,5 @@
+process enumeration unavailable: UNINFORMATIVE UNDER SANDBOX; no load started
+
+EXECUTOR COMMAND: "$WX/tools/loaded-soak.sh" "$PWD"
+EXECUTOR RC: 7
+EXECUTOR ELAPSED SECONDS: 0.298

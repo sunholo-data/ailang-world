@@ -1,0 +1,168 @@
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.46s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.08s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.39s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:375: serialized probe max = 2, want 1
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.346s
+FAIL
+
+EXECUTOR COMMAND: go test -race -timeout 600s ./host/daemon -run '^TestHumanApproveIsSerializedAcrossEpisodes$' -count=20 -v
+EXECUTOR GO TEST RC: 1
+EXECUTOR RUNNER RC: 0
+EXECUTOR RUNNER WALL SECONDS (test plus snapshot/restore): 11.691

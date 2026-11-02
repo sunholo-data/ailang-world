@@ -1,0 +1,6 @@
+patching file 'host/daemon/decisionpacket_daemon_test.go'
+
+EXECUTOR COMMAND: git archive HEAD | tar -x -C "$WX/mutants"
+patch -d "$WX/mutants" -p1 < "$WX/plan.diff"
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.558

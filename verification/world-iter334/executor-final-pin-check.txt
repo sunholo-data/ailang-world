@@ -1,0 +1,6 @@
+host/daemon/decisionpacket_daemon_test.go: OK
+host/daemon/daemon.go: OK
+
+EXECUTOR COMMAND: shasum -a 256 -c "$WX/fixed.sha"
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 0.026

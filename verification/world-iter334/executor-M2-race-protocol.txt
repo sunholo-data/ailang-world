@@ -1,0 +1,179 @@
+3dc59ab26e2a7e56d89a175602d84e3bc1f043508e275da352dd4c7ce4d1f041  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.46s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.08s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.39s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.42s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.36s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.43s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.05s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.44s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/together
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+=== RUN   TestHumanApproveIsSerializedAcrossEpisodes/late-second
+    decisionpacket_daemon_test.go:372: serialized probe ran 2 of 2 executions without the daemon mutex held
+--- FAIL: TestHumanApproveIsSerializedAcrossEpisodes (0.45s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/together (0.06s)
+    --- FAIL: TestHumanApproveIsSerializedAcrossEpisodes/late-second (0.38s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	9.306s
+FAIL
+M2 mode=race count=20 rc=1
+M2 race sha256 before:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+edited:
+3dc59ab26e2a7e56d89a175602d84e3bc1f043508e275da352dd4c7ce4d1f041  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+restored:
+877013b89be5344b39402b07dd498dbf404ffe2f9e5640c4853f355f3a450383  host/daemon/decisionpacket_daemon_test.go
+e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668  host/daemon/daemon.go
+
+EXECUTOR COMMAND: "$WX/tools/runmut.sh" "/tmp/world-iter334-executor.desvqzr3/mutants" M2 race 20
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 11.63

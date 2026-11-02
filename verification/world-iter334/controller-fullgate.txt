@@ -1,0 +1,39 @@
+# controller full gate, tree = a0439a2b + uncommitted test diff (sha 877013b8), Mon Nov  2 14:40:07 CET 2026
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	141.999s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	59.080s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	37.667s
+ok  	github.com/sunholo-data/ailang-world/host/agui	2.678s
+ok  	github.com/sunholo-data/ailang-world/host/archive	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/authority	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/boundary	4.975s
+ok  	github.com/sunholo-data/ailang-world/host/broker	230.360s
+ok  	github.com/sunholo-data/ailang-world/host/canon	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/capsule	73.227s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/childenv	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/daemon	306.340s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	25.593s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	2.226s
+ok  	github.com/sunholo-data/ailang-world/host/pins	2.409s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	43.355s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/proctest	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/projection	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.592s
+ok  	github.com/sunholo-data/ailang-world/host/registry	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/replay	46.265s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.987s
+ok  	github.com/sunholo-data/ailang-world/host/store	12.858s
+ok  	github.com/sunholo-data/ailang-world/host/surface	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.043s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.961s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	171.364s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	2.887s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	8.546s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	97.599s
+rc=0 secs=310

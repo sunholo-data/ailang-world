@@ -1,0 +1,4 @@
+
+EXECUTOR COMMAND: git archive HEAD | tar -x -C "$WX/base"
+EXECUTOR RC: 0
+EXECUTOR ELAPSED SECONDS: 1.523
