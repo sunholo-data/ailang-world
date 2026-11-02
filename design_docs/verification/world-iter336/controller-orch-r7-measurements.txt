@@ -1,0 +1,27 @@
+== V81 (controller, 2026-11-02T21:27:02Z): orchestration quorum r2 artifact
+iso_ts=2026-11-02T21:25:18Z verdict=blocked absent=[]
+  gemini-4-argon present=true verdict=reject cost=0.222148
+  oc-glm-5-3 present=true verdict=reject cost=0.12255880000000001
+  oc-kimi-k3 present=true verdict=reject cost=0.20357699999999998
+repo copy JSON-equal
+
+== V82 renderer/capture-path drift 09ff2821..5381e7e2
+count=0
+control (same pathspec, wider range 4e6e89dc..5381e7e2): 2
+
+== V83 3f185a9a vs merge 23940015
+design_docs/planned/sprint_w-marketing-capture.json
+design_docs/planned/w-marketing-capture-orchestration.md
+design_docs/planned/w-marketing-capture-sprint-plan.md
+design_docs/verification/world-iter316/evaluator-r1.md
+design_docs/verification/world-iter316/evaluator-r2.md
+design_docs/verification/world-iter316/m8b-host-broker-load-reds.txt
+design_docs/world-mission-dashboard.md
+design_docs/world-mission-index.md
+design_docs/world-mission-log.md
+design_docs/world-mission-status-archive.md
+design_docs/world-mission.md
+docs/QUICKSTART.md
+count=12
+merge parents: 8bfaa1ab28000937234aececa2ccd818e2b522a9 205589d9bdf9f054d59c8f2b1547ecbf584ce30f
+control: 3f185a9a^..3f185a9a files=2

@@ -1,0 +1,95 @@
+$ git rev-parse HEAD; git status --porcelain -- scripts/
+5381e7e2f1de8b216b45a7c1fce12db96c8eed11
+(empty = Go tree equals HEAD 5381e7e2; the orchestration doc carries the uncommitted M2 paste, which the pin-registry subtests read)
+$ go version
+go version go1.26.6 darwin/arm64
+$ (cd $HOME/.ailang/state/world-iter328-phone-corpus && shasum -a 256 -c $WT/scripts/marketingcheck/testdata/phone/corpus-SHA256SUMS); echo rc=$?
+eval-p1-pass-a-phone.png: OK
+eval-p2-pass-a-phone.png: OK
+eval-p3-pass-a-phone.png: OK
+r1-seed1-pass-a-phone.png: OK
+r1-seed2-pass-a-phone.png: OK
+r1b-seed3-pass-a-phone.png: OK
+r1b-seed4-pass-a-phone.png: OK
+r1c-seed5-pass-a-phone.png: OK
+r1c-seed5-pass-a-workbench-light.png: OK
+r1c-seed6-pass-a-phone.png: OK
+v50-reference-phone.png: OK
+rc=0
+$ (negative control) shasum -a 256 -c on a copy of corpus-SHA256SUMS with one hash byte flipped
+eval-p1-pass-a-phone.png: FAILED
+eval-p2-pass-a-phone.png: OK
+eval-p3-pass-a-phone.png: OK
+r1-seed1-pass-a-phone.png: OK
+r1-seed2-pass-a-phone.png: OK
+r1b-seed3-pass-a-phone.png: OK
+r1b-seed4-pass-a-phone.png: OK
+r1c-seed5-pass-a-phone.png: OK
+r1c-seed5-pass-a-workbench-light.png: OK
+r1c-seed6-pass-a-phone.png: OK
+v50-reference-phone.png: OK
+shasum: WARNING: 1 computed checksum did NOT match
+rc=1   (rerun under bash -c; the first attempt read the rc through zsh pipestatus and printed a meaningless rc=0)
+$ step 1: WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus go test -count=1 -timeout 20m -v -run '^TestMarketing(Position|Phone)' ./scripts/marketingcheck > "$LOG" 2>&1; echo rc=$?
+rc=0
+$ grep -c "^--- SKIP" "$LOG"
+0
+$ grep -c "^--- PASS: TestMarketingPhoneRealCorpus" "$LOG"
+1
+$ grep -E "^--- (PASS|FAIL)|PARITY|CHECK|^ok|pin-registry" "$LOG"
+--- PASS: TestMarketingPhoneSkeleton (0.13s)
+--- PASS: TestMarketingPhoneArms (0.37s)
+    phone_test.go:589: PARITY phone: inputs=45 diffs=0 ledger=4
+--- PASS: TestMarketingPhoneParity (1.03s)
+    --- PASS: TestMarketingPhoneParity/pin-registry (0.00s)
+--- PASS: TestMarketingPhoneCLI (0.03s)
+    phone_test.go:775: PARITY phone: inputs=63 diffs=0 ledger=4
+    phone_test.go:776: CHECK images=10 byte-equal=10; real arms=43; parity inputs=63
+--- PASS: TestMarketingPhoneRealCorpus (1.80s)
+--- PASS: TestMarketingPositionFixtures (0.01s)
+--- PASS: TestMarketingPositionCorpus (0.01s)
+    position_test.go:653: PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8
+--- PASS: TestMarketingPositionParity (0.42s)
+    --- PASS: TestMarketingPositionParity/pin-registry (0.00s)
+--- PASS: TestMarketingPositionCLI (0.00s)
+--- PASS: TestMarketingPositionGeometryMatchesOracle (0.00s)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	4.121s
+$ step 2: go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json accept-seed5=scripts/marketingcheck/testdata/position/stores/r1c-seed5.json accept-eval-p1=scripts/marketingcheck/testdata/position/stores/eval-p1.json
+accept-seed5                           ACCEPT regions=17
+accept-eval-p1                         ACCEPT regions=17
+TOTAL candidates=2 accept=2 refuse=0
+rc=0
+$ step 3: go run ./scripts/marketingcheck position --baseline design_docs/verification/world-iter312/r1-rects.json refuse=scripts/marketingcheck/testdata/position/v65/neg-attested+14.json
+refuse                                 REFUSE regions=17
+    packet.png/roster-attested: (a3) gap after roster-tested 29 vs R1 15
+    packet.png/roster-claimed: (a3) gap after roster-attested 1 vs R1 15
+TOTAL candidates=1 accept=0 refuse=1
+exit status 1
+rc=1
+$ step 4: go run ./scripts/marketingcheck phone accept-v50=$HOME/.ailang/state/world-iter305/probe-seeded/pass-a/phone.png accept-seed2=$HOME/.ailang/state/world-iter328-phone-corpus/r1-seed2-pass-a-phone.png
+accept-v50                   ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 329 841} titleRight=389
+accept-seed2                 ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 340 841} titleRight=389
+TOTAL candidates=2 accept=2 refuse=0
+rc=0
+$ step 5: go run ./scripts/marketingcheck phone refuse=$HOME/.ailang/state/world-iter328-phone-corpus/r1c-seed5-pass-a-workbench-light.png
+refuse                       REFUSE 1440x1100 bands=28 header={25 45 370 68} entry={90 428 370 610} thumb={-1 -1 -1 -1} titleRight=413
+    (i) header {25 45 370 68} entry {90 428 370 610} vs R1 {25 45 370 68} {41 428 364 610} ±4
+    (iii′) dims 1440x1100
+    (iii′) thumb {-1 -1 -1 -1}
+TOTAL candidates=1 accept=0 refuse=1
+exit status 1
+rc=1
+$ go run ./scripts/marketingcheck --help 2>&1 | grep -E "position|phone"   (both subcommands exist)
+       marketingcheck position --baseline RECTS LABEL=RECTS...
+       marketingcheck phone LABEL=PNG...
+
+# after the r6 edits to this orchestration doc (pin-registry reads it):
+$ go test -count=1 -timeout 300s -v -run '^TestMarketing(Position|Phone)Parity$' ./scripts/marketingcheck 2>&1 | grep -E "^(--- |ok|FAIL)|pin-registry|PARITY"
+rc=0
+    phone_test.go:589: PARITY phone: inputs=45 diffs=0 ledger=4
+--- PASS: TestMarketingPhoneParity (1.01s)
+    --- PASS: TestMarketingPhoneParity/pin-registry (0.00s)
+    position_test.go:653: PARITY position: inputs=51 verdict-diffs=0 reason-diffs=0 ledger=8
+--- PASS: TestMarketingPositionParity (0.41s)
+    --- PASS: TestMarketingPositionParity/pin-registry (0.00s)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	1.635s
