@@ -1,0 +1,4 @@
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+--- PASS: TestEpisodeFinishApproveRefusesRecord (0.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.424s

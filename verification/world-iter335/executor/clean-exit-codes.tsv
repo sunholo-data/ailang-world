@@ -1,0 +1,15 @@
+01	0	go vet ./host/daemon/
+02	0	gofmt -l host/daemon/ > "$E/gofmt.txt"
+03	0	cat "$E/gofmt.txt"
+04	0	test ! -s "$E/gofmt.txt"
+05	0	go test -count=1 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/
+06	0	go test -count=20 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/
+07	0	go test -race -count=5 -run '^TestEpisodeFinishApproveRefusesRecord$' ./host/daemon/
+08	0	go test -count=1 -run Finish ./host/daemon/
+09	0	go test -count=1 -v -run Finish ./host/daemon/ > "$E/finish-verbose.txt" 2>&1
+10	0	cat "$E/finish-verbose.txt"
+11	0	test "$(grep -c '^--- PASS:' "$E/finish-verbose.txt")" -eq 7
+12	0	shasum -a 256 host/daemon/episode_finish.go host/daemon/episode_finish_test.go host/daemon/episode_finish_approve_guard_test.go
+13	0	wc -l host/daemon/episode_finish.go host/daemon/episode_finish_test.go host/daemon/episode_finish_approve_guard_test.go
+14	0	git diff --exit-code -- host/daemon/episode_finish.go host/daemon/episode_finish_test.go
+15	0	git status --short

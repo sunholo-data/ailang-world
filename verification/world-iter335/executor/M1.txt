@@ -1,0 +1,6 @@
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+    episode_finish_approve_guard_test.go:51: approve with record: 200 {"request":"sha256:9d1d990a5a13ecf0940935d21390caf29fc27dd7f420ac3c5a0f28af64a6280c","approval":"sha256:ff79441f01048540ee8b1440d10781a55cc299c1ec995f0a079c5089d9bf4a7f"}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.412s
+FAIL

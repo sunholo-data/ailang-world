@@ -1,0 +1,6 @@
+=== RUN   TestEpisodeFinishApproveRefusesRecord
+    episode_finish_approve_guard_test.go:61: control approve without record: 403 {"error":{"class":"Forbidden","message":"operator route: invalid or expired finish scope\nwhy: the agent holds the episode's session, so a session-gated write is one the agent could make\nnext: run ailang-worldd episode finish at a terminal"}}
+--- FAIL: TestEpisodeFinishApproveRefusesRecord (0.02s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.408s
+FAIL

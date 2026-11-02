@@ -1,0 +1,24 @@
+Created the exact 67-line test. SHA-256:
+`c9e279de7c7ce87edf5fbc0e43e690253616d320b5585625062cda3d29cdec57`
+
+| Drill | rc / expected | Result |
+|---|---|---|
+| M1 | 1 / 1 | KILLED |
+| M1-existing | 0 / 0 | SURVIVED |
+| M3a | 1 / 1 | KILLED |
+| M3c | 1 / 1 | KILLED |
+| M2-clean | 0 / 0 | As expected |
+| M2+M3c | 0 / 0 | SURVIVED |
+| M2b | 1 / 1 | KILLED |
+| M4+M3a | 0 / 0 | SURVIVED |
+
+All clean-gate exit codes were **0**: vet, gofmt, single test, ×20, race ×5, Finish suite, seven-PASS assertion, hashes, line counts, diff and status.
+
+Production SHA-256 after:
+`4e320c537e689620480af2bdff9bdcd9d4d6febba43b4a5dd5b3bb09971973bf`
+
+**UNINFORMATIVE UNDER SANDBOX: none.**
+
+Deviation: initial Go 1.26.4 caused an instrument failure; selected the existing read-only Go 1.26.6 and reran all pinned blocks successfully. Historical planner-HEAD drift is documented. No git writes occurred. Controller package/full gates and CI remain pending.
+
+[Executor report](/Users/voightkampff/dev/sunholo-data/.wt-world-iter335-row237/verification/world-iter335/executor-report.md)
