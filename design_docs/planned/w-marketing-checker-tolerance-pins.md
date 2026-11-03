@@ -1,6 +1,10 @@
 # w-marketing-checker-tolerance-pins: one boundary pair per unpinned row-231 tolerance
 
-Status: Planned (iteration 338), **r2**: the one designer revision after design quorum r1 was BLOCKED
+Status: Planned (iteration 338), **r3**: a controller narrow-refinement carve-out after design quorum r2
+(`mission-quorum-world/w-marketing-checker-tolerance-pins-2026-11-03T05-23-14Z.json`: oc-kimi-k3 REJECT,
+gpt6-1-sol and gemini-4-argon PASS, no absentees, no direction dispute). r3 applies kimi's r2
+`proposed_fix` (the zero-production-diff option for (1) plus (2) verbatim); measured in V13. r2 was the one designer
+revision after design quorum r1 was BLOCKED
 (`mission-quorum-world/w-marketing-checker-tolerance-pins-2026-11-03T04-57-47Z.json`: oc-kimi-k3 and
 gpt6-1-sol REJECT, gemini-4-argon PASS, no absentees). The fixes are listed in §7.
 **Planner-Lane:** mission routing default
@@ -11,7 +15,7 @@ gpt6-1-sol REJECT, gemini-4-argon PASS, no absentees). The fixes are listed in �
   tolerance changes.
 - **Base**: `2c51c581` (= `origin/dev`), branch `sprint/world-iter338-tolerance-pins`; go1.26.6,
   AILANG v0.41.0, tool v0.54.15 (V01).
-- **Estimated**: ~0.2d, 1 executor run. One new test file (~135 lines); nothing else changes.
+- **Estimated**: ~0.2d, 1 executor run. One new test file (~150 lines) and, from r3, one trailing comment on `position.go:129` (§2.5); nothing else changes.
 - **Evidence**: `design_docs/verification/world-iter338/designer-*.txt`. Every measurement ran on a
   `git archive` scratch copy (`../.scratch-iter338-designer`), never in the worktree. Each mutant was
   applied to one line and restored from `git show HEAD:<file>`, then checked with `cmp`.
@@ -65,7 +69,7 @@ reuses the existing helpers and adds three test functions and one helper.
 ships it, with the final names and subtest structure, and every r2 measurement ran against it (V07b,
 V08). The executor copies it to `scripts/marketingcheck/tolerance_test.go` unchanged.
 
-### 2.2 Position: `TestMarketingPositionTolerancePins` (13 subtests: 12 arms + the §2.5 premise)
+### 2.2 Position: `TestMarketingPositionTolerancePins` (14 subtests: 12 arms + the §2.5 premise + the r3 clause pin)
 
 - **Builder.** Read `testdata/position/stores/r1c-seed5.json`, the same source
   `writePositionNewArms` uses. `json.Unmarshal` gives a fresh `Rectangles` for each subtest. Apply
@@ -85,6 +89,7 @@ V08). The executor copies it to `scripts/marketingcheck/tolerance_test.go` uncha
 | `a4-graph-svg-h+2` / `-h+3` | `graph.png` content[0] `H += k` | ACCEPT / `graph.png/graph-svg: (a4) height 277 vs 274` |
 | `a3-timeline-gap+2` / `+3` | workbench-light `header.H -= 1`; `timeline-first.Y += k-1` | ACCEPT / `workbench-light.png/timeline-first: (a3) gap after header 103 vs R1 100` |
 | `gc-premise-nonfree-gaps-ge-2` | none: it reads the R1 baseline only (§2.5) | `positionGapPremise(base) == nil` |
+| `gc-a3-conjunct-source-pin` (r3) | none: it reads `position.go` | exactly 1 occurrence of `okGap, gRes := gc >= 0 && posAbs(e) <= 2, e` (§2.5) |
 
 **How each arm reaches its line.**
 - *Background.* Each pair moves exactly one of the four edges by k and leaves the other three at
@@ -165,8 +170,19 @@ A deleted case falls through to usage and gives rc 2. A swapped case also fails:
   never sees in production, which §2's fixture rule excludes.
 - **Classification.** P-GC is recorded as equivalent on R1 at base `2c51c581`.
   - T18's expected rc 0 does not detect a loss of equivalence by itself. The premise subtest does.
-  - If the premise subtest ever reds, or the baseline or baseline-selection behaviour changes,
-    re-derive the non-free gaps and re-run V09b before keeping this classification.
+  - If the premise subtest ever reds, or the baseline, baseline-selection behaviour, OR the (a3)
+    clause / gap-walk / `posFreeGap` rule in `position.go` changes, re-derive the non-free gaps and
+    re-run V09b before keeping this classification (r3, kimi's r2 wording verbatim).
+  - **r3 clause pin (kimi r2, zero-production-diff option).** `positionGapPremise` walks the gaps in
+    the test file, so nothing ties it to `position.go`. The subtest `gc-a3-conjunct-source-pin` reads
+    `position.go` and requires exactly one occurrence of the (a3) clause
+    `okGap, gRes := gc >= 0 && posAbs(e) <= 2, e`. Deleting or rewriting the conjunct then fails loudly
+    instead of being absorbed by the equivalence classification. The reference code is
+    `controller-r3-tolerance_test.go.txt` (the r2 file plus this subtest).
+  - **r3 edit-site comment (kimi r2, verbatim intent).** `position.go:129` gains a **trailing**
+    comment, on the same line so no line number in §3 moves:
+    `// gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18`.
+    This is the row's only production-file byte change, and it is a comment.
   - If a distinguishing production-baseline case appears, add a regression pin and change T18 to
     require failure.
 
@@ -210,7 +226,7 @@ Restore after each mutant with `git checkout -- <file>`. Run the full package ea
 | T16 | `main.go:53` `case "phone":` → `case "phone-unrouted":` | `RunRoutesPositionPhone` | also `phone-lines` |
 | T17 | `main.go:52` `runPosition(args[1:], os.Stdout, os.Stderr)` → `runPhone(…)` | `RunRoutesPositionPhone` | also `position-lines` |
 | T17b | `main.go:54` `runPhone(args[1:], os.Stdout, os.Stderr)` → `runPosition(…)` | `RunRoutesPositionPhone` | also `phone-lines` |
-| T18 | `:129` `gc >= 0 && posAbs(e) <= 2` → `posAbs(e) <= 2` | **none**: expected rc 0 (§2.5) | survives, equivalent on R1; **guarded by** `gc-premise-nonfree-gaps-ge-2` |
+| T18 | `:129` `gc >= 0 && posAbs(e) <= 2` → `posAbs(e) <= 2` | `PositionTolerancePins/gc-a3-conjunct-source-pin` (r3) | sole killer (V13). Behaviourally still equivalent on R1 (V09/V09b); the premise is guarded by `gc-premise-nonfree-gaps-ge-2` |
 | PG | premise control, **scratch copy only**: `design_docs/verification/world-iter312/r1-rects.json:162` `"y": 423,` → `"y": 324,` (workbench-light `timeline-first`, gb 100 → 1) | `PositionTolerancePins/gc-premise-nonfree-gaps-ge-2` (`non-free baseline gap 1 < 2`) | red (V12). `"y": 325,` (gb 2) stays green |
 | C | `:150` `posAbs(c.Y-b.Y) <= 2` → `<= -1` (positive control) | 50 Corpus subtests, all 12 new position arms, and more | rc 1 |
 
@@ -227,17 +243,19 @@ M1 adds `scripts/marketingcheck/tolerance_test.go` with §2.2–§2.4. Every com
 `AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang`.
 
 1. `go test -count=1 -v -run '^TestMarketing(PositionTolerancePins|PhoneEntryTolerancePins|RunRoutesPositionPhone)$' ./scripts/marketingcheck/`
-   → rc 0; 18 `--- PASS` lines: 15 subtest lines (13 + 2), 3 top-level `--- PASS: TestMarketing…` lines.
-   0 `--- SKIP` and 0 `--- FAIL` (V07b lists all 18).
+   → rc 0; 19 `--- PASS` lines: 16 subtest lines (14 + 2), 3 top-level `--- PASS: TestMarketing…` lines.
+   0 `--- SKIP` and 0 `--- FAIL` (V13; V07b lists the r2 18).
 2. `go test -count=1 ./scripts/marketingcheck/` → rc 0.
-3. Every §3 row reproduces as listed. T18 stays rc 0. PG reds only the premise subtest (scratch copy).
+3. Every §3 row reproduces as listed. T18 reds only `gc-a3-conjunct-source-pin`. PG reds only the premise subtest (scratch copy).
    The positive control C is rc 1.
 4. `gofmt -l scripts/marketingcheck` prints nothing, and `go vet ./scripts/marketingcheck/` gives rc 0.
 5. `go build ./... && go test ./...` → rc 0; `./scripts/verify_ail.sh` → rc 0.
 6. `git diff --name-only 2c51c581 -- . ':!design_docs'` lists exactly
-   `scripts/marketingcheck/tolerance_test.go`.
-   `git diff --quiet 2c51c581 -- scripts/marketingcheck/position.go scripts/marketingcheck/phone.go scripts/marketingcheck/main.go`
-   → rc 0, so the production files are byte-unchanged.
+   `scripts/marketingcheck/position.go` and `scripts/marketingcheck/tolerance_test.go`.
+   `git diff 2c51c581 -- scripts/marketingcheck/position.go` is exactly one changed line, `:129`, whose
+   only difference is the §2.5 trailing comment (`--numstat` `1 1`; the line with the comment stripped
+   equals the base line). `git diff --quiet 2c51c581 -- scripts/marketingcheck/phone.go scripts/marketingcheck/main.go`
+   → rc 0.
 
 **Flake fence.** A single re-run is allowed only when **all** of these hold:
 - the FAIL list contains exactly `TestMarketingCaptureFakeChromeSixShots` and
@@ -250,8 +268,8 @@ twice, stops M1. Do not edit `capture_test.go`.
 
 ## 5. Conflict surface and residuals
 
-- **Files.** One new test file. No `.ail`, `go.mod`, `.github/`, `tools/launchd/*`, `host/`,
-  production `scripts/marketingcheck/*.go`, testdata or doc change.
+- **Files.** One new test file, plus (r3) one trailing comment on `position.go:129`. No `.ail`, `go.mod`, `.github/`, `tools/launchd/*`, `host/`,
+  other production `scripts/marketingcheck/*.go` byte, testdata or doc change.
 - **Concurrent work (V11).** There are 0 open PRs (control: merged #464/#463).
   - Row 246 (`w-a5-drift-sign-and-rounding-pins`) adds arms and ledger entries in
     `position_test.go`. This row does not touch that file, and no test name collides.
@@ -259,8 +277,9 @@ twice, stops M1. Do not edit `capture_test.go`.
 - **R1.** The pins are relative to R1 and to the seed-5 fixtures. If R1, the seed-5 store or the
   seed-5 skeleton changes, the expected reason strings in §2.2–§2.3 change with them. The existing
   `TestMarketingPositionFixtures` and `TestMarketingPhoneSkeleton` pins make such a change loud.
-  Updating those pins does not re-establish §2.5's equivalence. Any R1 change must pass
-  `gc-premise-nonfree-gaps-ge-2` and re-run V09b before T18 stays an expected survivor.
+  Updating those pins does not re-establish §2.5's equivalence. Any R1 change, or any change to the
+  (a3) clause / gap-walk / `posFreeGap` rule in `position.go`, must pass `gc-premise-nonfree-gaps-ge-2`
+  and re-run V09b before T18's equivalence classification is kept (r3).
 
 ## 6. Verification Log (base `2c51c581`; files under `design_docs/verification/world-iter338/`)
 
@@ -281,6 +300,8 @@ twice, stops M1. Do not edit `capture_test.go`.
 | V11 | `gh pr list --state open`; control `--state merged --limit 2`; grep of rows 246/247 (`designer-flake-and-concurrency.txt`) | no open PRs; control `#464`, `#463`; row 246 = `w-a5-drift-sign-and-rounding-pins`, row 247 = `w-capture-fakechrome-deadline-flake` |
 | V12 | premise subtest with the scratch R1 restored and edited: python rewrite of `y` to 423/325/324/323, then the executor's form `sed '162s/"y": 423,/"y": 325,/'` and `…324,`; `-run '^TestMarketingPositionTolerancePins$/^gc-premise'`; restore and cmp (`designer-r2-premise.txt`) | R1 (gb 100) PASS; gb 2 PASS (both forms); gb 1 FAIL `tolerance_test.go:44: workbench-light.png/timeline-first: non-free baseline gap 1 < 2 …` (both forms); gb 0 FAIL `… gap 0 < 2 …`; `restored byte-identical` |
 
+| V13 | r3 controller measurement on a scratch `git archive` of `a0cf32ae` with `controller-r3-tolerance_test.go.txt` and the `:129` trailing comment (`controller-r3-measure.txt`) | `gofmt -l` empty, `go vet` rc 0; the three functions `-v` rc 0, 19 `--- PASS`, 0 FAIL/SKIP; T18 full package rc 1, FAIL list only `TestMarketingPositionTolerancePins` and `/gc-a3-conjunct-source-pin`; `position.go` restored (cmp) and the full package rc 0 (37.9 s) |
+
 ## 7. Quorum log
 
 | Round | Seat | Verdict | Objection | r2 answer |
@@ -288,3 +309,6 @@ twice, stops M1. Do not edit `capture_test.go`.
 | r1 | oc-kimi-k3 | REJECT | V07's 15 `--- PASS` does not reconcile with §2's 12 + 2 subtests + 3 functions; also, fence the flake re-run | Re-ran the exact shipped file (V07b: 18 = 15 subtests + 3 top-level, with the new premise subtest) and the whole §3 round on it (V08). V07 now says what the 15 was: the r1 phone prototype looped without subtests. §2.1 makes the measured file the reference. §4's flake re-run is fenced to row 247's exact signature |
 | r1 | gpt6-1-sol | REJECT | §2.5's claim that keeping T18 as a survivor reveals a change to R1's gaps is false | Claim dropped. The premise is now pinned: subtest `gc-premise-nonfree-gaps-ge-2` asserts every non-free gb ≥ 2, the exact bound (V09b). It passes on R1 and reds on gb 1 / 0 copies (V12). §2.5 and §5 adopt the proposed re-validation wording |
 | r1 | gemini-4-argon | PASS | T13/T14 sed must match `phoneR1Entry, 4)`; suggest `io.Discard` for the routes test | §3's T13/T14 now match `phoneR1Entry, 4)`, and V08 applied them that way. `io.Discard` is not possible through `run`, which takes no writers; §2.4 says why and accepts four lines of `-v` output |
+| r2 | oc-kimi-k3 | REJECT | T18's equivalence is guarded against baseline drift, not judge-logic drift; `positionGapPremise` is a shadow walk; re-validation triggers omit a change to the (a3) clause / gap-walk / `posFreeGap` | **r3 (controller carve-out, kimi's own fix):** the zero-production-diff option of fix (1), a source-level pin of the (a3) conjunct (`gc-a3-conjunct-source-pin`, now T18's sole killer, V13), plus fix (2) verbatim: the extended re-validation sentence in §2.5 and §5 and the edit-site comment at `position.go:129` (trailing, so no §3 line moves) |
+| r2 | gpt6-1-sol | PASS | T18's classification is baseline-specific; revalidation is procedural | r3's clause pin makes one more trigger mechanical |
+| r2 | gemini-4-argon | PASS | PG edits a tracked fixture, so run it on a scratch copy | §3 and §4 already require a scratch copy; unchanged |
