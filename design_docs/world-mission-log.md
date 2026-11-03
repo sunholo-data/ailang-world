@@ -2959,3 +2959,5 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 - **NB3** (the dashboard was not compared line by line): it is a snapshot overwrite, as every fire does. No change.
 - **NB4** (the PR title was not scanned): it is `docs(mission): World iteration 341 — rule (d) block report 13`, with no secret and no closing keyword. No change.
 - No r2: nothing to fix.
+
+**Landing (iteration 341):** PR #471 merged as `5d78a8dd` (merge commit, `--match-head-commit 838d5fbd`). The PR head `838d5fbd` was 3/3 green before the merge. Right before it, origin/dev was re-read (`41298533`, MERGEABLE/CLEAN), and #449 still had 0 directives. The merge tree is byte-identical to the head tree (`git diff 838d5fbd 5d78a8dd` → empty). **Merge CI:** `commits/5d78a8dd/check-runs` → 3, all success. Dev green. Every poll ran under `/bin/bash` from a script file, wrote to a per-SHA log, carried the subject SHA in its verdict line, and had a ~9.5-minute deadline; one poll per SHA hit that deadline while the race gate ran and was re-issued against the same SHA.
