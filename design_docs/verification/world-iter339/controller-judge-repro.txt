@@ -1,0 +1,16 @@
+== mutant poll=500 * time.Millisecond
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    exec_probe_test.go:972: 3 dials while a reference waited execProbePollEvery (50ms) 20 times (1.034938791s); want at least 6: the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE dials=3 span=1.034938791s fastest=500.095334ms slowest=501.525083ms
+--- FAIL: TestExecProbeReversePollCadence (1.04s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	1.465s
+FAIL
+rc=1
+== mutant poll=60 * time.Millisecond
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    exec_probe_test.go:988: CADENCE dials=17 span=1.032310583s fastest=60.085833ms slowest=62.559083ms
+--- PASS: TestExecProbeReversePollCadence (1.03s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.363s
+rc=0
+RESTORED

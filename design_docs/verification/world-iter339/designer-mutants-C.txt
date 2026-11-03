@@ -1,0 +1,148 @@
+=================== TM1-nocount (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if dials < revCadencePeriods/4+1 {' -> 'if false && dials < revCadencePeriods/4+1 {'
+vet rc=0 
+TM1-nocount rc=0 wall=30s top-level PASS=5 FAIL=0 load: 48.65 74.04 107.72
+FAIL list (count x name):
+   CADENCE dials=21 span=1.95742125s fastest=80.886542ms slowest=150.256834ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	9.305s
+restored(cmp ok)
+=================== TM1-nocount+M1 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if dials < revCadencePeriods/4+1 {' -> 'if false && dials < revCadencePeriods/4+1 {'
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+vet rc=0 
+TM1-nocount+M1 rc=0 wall=144s top-level PASS=5 FAIL=0 load: 92.55 84.30 106.50
+FAIL list (count x name):
+   CADENCE dials=5 span=2.349147083s fastest=524.029125ms slowest=676.772042ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	17.755s
+restored(cmp ok)
+=================== TM2-countflip (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if dials < revCadencePeriods/4+1 {' -> 'if dials >= revCadencePeriods/4+1 {'
+vet rc=0 
+TM2-countflip rc=1 wall=188s top-level PASS=4 FAIL=1 load: 107.47 96.85 106.85
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:972: 21 dials while a reference waited execProbePollEvery (50ms) 20 times (2.537509375s); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=21 span=2.537509375s fastest=79.294417ms slowest=270.084ms
+   last: FAIL
+restored(cmp ok)
+=================== TM3-nofloor+div10 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if short > 0 {' -> 'if false && short > 0 {'
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(execProbePollEvery / 10):'
+vet rc=0 
+TM3-nofloor+div10 rc=1 wall=113s top-level PASS=4 FAIL=1 load: 136.13 107.61 109.34
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+      1 --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+   msg:    1 exec_probe_test.go:665: Why = "reverse leg: no token from the child's listener (\"\"; broker: handler subprocess timed out after 8s; stderr \"\")", picker calls 1; want the sticky silent refusal on attempt 1, calls 1
+   CADENCE dials=29 span=7.001639042s fastest=5.640875ms slowest=1.406675334s
+   last: FAIL
+restored(cmp ok)
+=================== TM3-floorflip (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if gap < execProbePollEvery {' -> 'if gap >= execProbePollEvery {'
+vet rc=0 
+TM3-floorflip rc=1 wall=17s top-level PASS=4 FAIL=1 load: 131.14 108.86 109.75
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:986: 20 of 20 dial gaps under execProbePollEvery (50ms), the fastest 50.281459ms; want none: the poll waits less than execProbePollEvery
+   CADENCE dials=21 span=1.097991584s fastest=50.281459ms slowest=65.929416ms
+   last: FAIL
+restored(cmp ok)
+=================== TM4-periods1+M1 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'const revCadencePeriods = 20' -> 'const revCadencePeriods = 1'
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+vet rc=0 
+TM4-periods1+M1 rc=0 wall=13s top-level PASS=5 FAIL=0 load: 124.20 108.48 109.60
+FAIL list (count x name):
+   CADENCE dials=1 span=124.244625ms fastest=0s slowest=0s
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	2.665s
+restored(cmp ok)
+=================== TM5-threshold+M1 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if dials < revCadencePeriods/4+1 {' -> 'if dials < revCadencePeriods/10 {'
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+vet rc=0 
+TM5-threshold+M1 rc=0 wall=15s top-level PASS=5 FAIL=0 load: 118.28 108.07 109.42
+FAIL list (count x name):
+   CADENCE dials=4 span=1.742149s fastest=515.274375ms slowest=593.04625ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	4.138s
+restored(cmp ok)
+=================== TM6-reflit (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: '<-time.After(execProbePollEvery)' -> '<-time.After(500 * time.Millisecond)'
+vet rc=0 
+TM6-reflit rc=0 wall=30s top-level PASS=5 FAIL=0 load: 112.66 107.90 109.31
+FAIL list (count x name):
+   CADENCE dials=122 span=12.311972625s fastest=50.058709ms slowest=369.670541ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	14.601s
+restored(cmp ok)
+=================== TM6-reflit+M1 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: '<-time.After(execProbePollEvery)' -> '<-time.After(500 * time.Millisecond)'
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+vet rc=0 
+TM6-reflit+M1 rc=0 wall=203s top-level PASS=5 FAIL=0 load: 134.92 128.66 118.42
+FAIL list (count x name):
+   CADENCE dials=21 span=11.927706s fastest=502.021042ms slowest=1.08550075s
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	18.457s
+restored(cmp ok)
+=================== TM8-cap1+div10 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'make([]time.Time, 0, 4*revCadencePeriods)' -> 'make([]time.Time, 0, 1)'
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(execProbePollEvery / 10):'
+vet rc=0 
+TM8-cap1+div10 rc=1 wall=30s top-level PASS=4 FAIL=1 load: 109.47 122.94 116.85
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+      1 --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+   msg:    1 exec_probe_test.go:663: picker handed out 1 ports, want at least 2
+   CADENCE dials=76 span=3.371640542s fastest=0s slowest=0s
+   last: FAIL
+restored(cmp ok)
+=================== TM7-noref (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'for range revCadencePeriods {' -> 'for range 0 {'
+vet rc=0 
+TM7-noref rc=1 wall=78s top-level PASS=4 FAIL=1 load: 106.56 117.27 115.18
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:972: 1 dials while a reference waited execProbePollEvery (50ms) 20 times (42ns); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=1 span=42ns fastest=0s slowest=0s
+   last: FAIL
+restored(cmp ok)
+=================== TM9-nosetAt (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' -> 'c.deadline, c.sets = t, c.sets+1'
+vet rc=0 
+TM9-nosetAt rc=1 wall=47s top-level PASS=4 FAIL=1 load: 92.65 111.36 113.15
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    2 exec_probe_test.go:917: hello deadline at set+2562047h47m16.854775807s (sets 1); want a deadline no later than set+950ms (listen window less one poll period)
+   CADENCE dials=20 span=1.503627667s fastest=50.082125ms slowest=120.789958ms
+   last: FAIL
+restored(cmp ok)
+=================== TM10-setAtIsDeadline (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' -> 'c.deadline, c.setAt, c.sets = t, t, c.sets+1'
+vet rc=0 
+TM10-setAtIsDeadline rc=0 wall=10s top-level PASS=5 FAIL=0 load: 86.55 109.43 112.44
+FAIL list (count x name):
+   CADENCE dials=21 span=1.818490625s fastest=50.566334ms slowest=260.319834ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	3.824s
+restored(cmp ok)
+=================== TM10-setAtIsDeadline+wait960 (tree=mutC count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' -> 'c.deadline, c.setAt, c.sets = t, t, c.sets+1'
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 960 * time.Millisecond'
+vet rc=0 
+TM10-setAtIsDeadline+wait960 rc=0 wall=14s top-level PASS=5 FAIL=0 load: 88.91 108.83 112.18
+FAIL list (count x name):
+   CADENCE dials=21 span=1.414461541s fastest=50.178083ms slowest=116.912375ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	5.322s
+restored(cmp ok)
+=================== TM11-stopref+wait951 (tree=mutC count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'conn.deadline.After(conn.setAt.Add(ceiling))' -> 'conn.deadline.After(time.Now().Add(ceiling))'
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 951 * time.Millisecond'
+vet rc=0 
+TM11-stopref+wait951 rc=1 wall=9s top-level PASS=0 FAIL=1 load: 91.02 108.61 112.06
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    1 exec_probe_test.go:917: hello deadline at set+950.999959ms (sets 1); want a deadline no later than set+950ms (listen window less one poll period)
+   msg:    1 exec_probe_test.go:917: hello deadline at set+950.999833ms (sets 1); want a deadline no later than set+950ms (listen window less one poll period)
+   last: FAIL
+restored(cmp ok)

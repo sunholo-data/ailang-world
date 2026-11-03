@@ -1,0 +1,64 @@
+=================== B-2x (tree=mutA count=30 regex=^TestExecProbeReversePollCadence$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(2 * execProbePollEvery):'
+vet rc=0 
+B-2x rc=0 wall=34s top-level PASS=30 FAIL=0 load: 49.41 91.53 105.13
+FAIL list (count x name):
+   CADENCE dials=11 span=1.017615958s fastest=100.161125ms slowest=102.086125ms
+   CADENCE dials=11 span=1.047165708s fastest=100.456666ms slowest=124.834167ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	32.549s
+restored(cmp ok)
+=================== B-3x (tree=mutA count=30 regex=^TestExecProbeReversePollCadence$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(3 * execProbePollEvery):'
+vet rc=0 
+B-3x rc=0 wall=33s top-level PASS=30 FAIL=0 load: 33.83 83.02 101.48
+FAIL list (count x name):
+   CADENCE dials=9 span=1.28980225s fastest=150.829375ms slowest=196.836959ms
+   CADENCE dials=8 span=1.071381958s fastest=150.885125ms slowest=152.052459ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	32.006s
+restored(cmp ok)
+=================== B-4x (tree=mutA count=30 regex=^TestExecProbeReversePollCadence$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(4 * execProbePollEvery):'
+vet rc=0 
+B-4x rc=0 wall=33s top-level PASS=30 FAIL=0 load: 24.68 76.05 98.31
+FAIL list (count x name):
+   CADENCE dials=6 span=1.035375333s fastest=202.041667ms slowest=202.069416ms
+   CADENCE dials=6 span=1.033252667s fastest=200.912667ms slowest=202.073917ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	31.598s
+restored(cmp ok)
+=================== B-5x (tree=mutA count=30 regex=^TestExecProbeReversePollCadence$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(5 * execProbePollEvery):'
+vet rc=0 
+B-5x rc=1 wall=33s top-level PASS=0 FAIL=30 load: 17.12 68.47 94.65
+FAIL list (count x name):
+     30 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:972: 5 dials while a reference waited execProbePollEvery (50ms) 20 times (1.04736975s); want at least 6: the poll does not wait execProbePollEvery
+   msg:    1 exec_probe_test.go:972: 5 dials while a reference waited execProbePollEvery (50ms) 20 times (1.046963s); want at least 6: the poll does not wait execProbePollEvery
+   msg:    1 exec_probe_test.go:972: 5 dials while a reference waited execProbePollEvery (50ms) 20 times (1.045402959s); want at least 6: the poll does not wait execProbePollEvery
+   msg:    1 exec_probe_test.go:972: 5 dials while a reference waited execProbePollEvery (50ms) 20 times (1.045216583s); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=5 span=1.029240333s fastest=251.869625ms slowest=254.737458ms
+   CADENCE dials=5 span=1.041199917s fastest=252.045292ms slowest=255.359958ms
+   last: FAIL
+restored(cmp ok)
+=================== B-45ms (tree=mutA count=30 regex=^TestExecProbeReversePollCadence$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(45 * time.Millisecond):'
+vet rc=0 
+B-45ms rc=1 wall=33s top-level PASS=0 FAIL=30 load: 11.97 61.51 91.05
+FAIL list (count x name):
+     30 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:986: 22 of 22 dial gaps under execProbePollEvery (50ms), the fastest 45.634708ms; want none: the poll waits less than execProbePollEvery
+   msg:    1 exec_probe_test.go:986: 22 of 22 dial gaps under execProbePollEvery (50ms), the fastest 45.419291ms; want none: the poll waits less than execProbePollEvery
+   msg:    1 exec_probe_test.go:986: 22 of 22 dial gaps under execProbePollEvery (50ms), the fastest 45.341333ms; want none: the poll waits less than execProbePollEvery
+   msg:    1 exec_probe_test.go:986: 22 of 22 dial gaps under execProbePollEvery (50ms), the fastest 45.328208ms; want none: the poll waits less than execProbePollEvery
+   CADENCE dials=23 span=1.033823083s fastest=45.419291ms slowest=49.321542ms
+   CADENCE dials=23 span=1.03086s fastest=45.231625ms slowest=47.818625ms
+   last: FAIL
+restored(cmp ok)
+=================== B-const1ms (tree=mutA count=30 regex=^TestExecProbeReversePollCadence$)
+applied: 'const execProbePollEvery = 50 * time.Millisecond' -> 'const execProbePollEvery = 1 * time.Millisecond'
+vet rc=0 
+B-const1ms rc=0 wall=2s top-level PASS=30 FAIL=0 load: 11.97 61.51 91.05
+FAIL list (count x name):
+   CADENCE dials=20 span=27.567167ms fastest=1.0815ms slowest=3.886542ms
+   CADENCE dials=21 span=25.79225ms fastest=1.101875ms slowest=1.701791ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	1.210s
+restored(cmp ok)

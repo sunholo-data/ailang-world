@@ -1,0 +1,68 @@
+NOTE: the first block's '(nominal 500ms)' label predates the summary parser's label fix; v3's nominal reference span is 20 x 50 ms = 1000 ms (v2's was 10 x 50 ms = 500 ms). Values are unaffected.
+
+== v3-ambient nyes=0 race=0 count=200 tree=/tmp/world-iter339/designer/proto
+start: 11:10  up 2 days, 16:29, 4 users, load averages: 24.15 59.22 89.04
+end:   11:13  up 2 days, 16:32, 4 users, load averages: 9.76 34.63 71.90
+rc=0 wall=209s
+PASS lines: 400  FAIL lines: 0
+CADENCE runs=200 dials: min=20 (gate >= 6) distribution={20: 81, 21: 119}
+  floor: fastest gap min=50.016ms (gate >= 50ms, margin 0.016ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=51.240ms, runs that would red=0
+  slowest single gap max=127.981ms ; reference span max=1162.489ms (nominal 500ms)
+yes-alive-after=0
+
+== v3-race-load32 nyes=32 race=1 count=200 tree=/tmp/world-iter339/designer/proto
+start: 11:13  up 2 days, 16:32, 4 users, load averages: 13.14 34.92 71.79
+end:   11:17  up 2 days, 16:36, 4 users, load averages: 53.29 45.16 67.52
+rc=0 wall=234s
+PASS lines: 400  FAIL lines: 0
+CADENCE runs=200 dials: min=18 (gate >= 6) distribution={18: 1, 20: 69, 21: 130}
+  floor: fastest gap min=50.023ms (gate >= 50ms, margin 0.023ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=52.688ms, runs that would red=0
+  slowest single gap max=1291.140ms ; reference span max=6140.451ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)
+yes-alive-after=0
+
+== v3-race-load64-gmp2 nyes=64 race=1 count=200 tree=/tmp/world-iter339/designer/proto
+start: 11:17  up 2 days, 16:36, 4 users, load averages: 52.23 45.08 67.35
+end:   11:21  up 2 days, 16:40, 4 users, load averages: 86.50 65.07 70.92
+rc=0 wall=213s
+PASS lines: 400  FAIL lines: 0
+CADENCE runs=200 dials: min=20 (gate >= 6) distribution={20: 82, 21: 118}
+  floor: fastest gap min=50.023ms (gate >= 50ms, margin 0.023ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=51.953ms, runs that would red=0
+  slowest single gap max=396.125ms ; reference span max=1544.648ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)
+yes-alive-after=0
+
+== v3-race-load160-gmp2 nyes=160 race=1 count=100 tree=/tmp/world-iter339/designer/proto
+start: 11:22  up 2 days, 16:41, 4 users, load averages: 145.48 86.19 78.43
+end:   11:24  up 2 days, 16:43, 4 users, load averages: 186.62 120.38 92.92
+rc=0 wall=112s
+PASS lines: 200  FAIL lines: 0
+CADENCE runs=100 dials: min=20 (gate >= 6) distribution={20: 40, 21: 60}
+  floor: fastest gap min=50.022ms (gate >= 50ms, margin 0.022ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=51.549ms, runs that would red=0
+  slowest single gap max=98.803ms ; reference span max=1193.211ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)
+yes-alive-after=0
+
+== v3-load160 nyes=160 race=0 count=100 tree=/tmp/world-iter339/designer/proto
+start: 11:24  up 2 days, 16:43, 4 users, load averages: 188.57 121.89 93.61
+end:   11:26  up 2 days, 16:45, 4 users, load averages: 194.18 145.91 106.73
+rc=0 wall=115s
+PASS lines: 200  FAIL lines: 0
+CADENCE runs=100 dials: min=20 (gate >= 6) distribution={20: 29, 21: 70, 22: 1}
+  floor: fastest gap min=50.013ms (gate >= 50ms, margin 0.013ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=51.345ms, runs that would red=0
+  slowest single gap max=110.180ms ; reference span max=1275.052ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)
+yes-alive-after=0
+
+== worst lag ratio (reference periods per poll gap) across v2 and v3 runs (worst_ratio.py, designer-worst_ratio.py.txt)
+v2-load-idle.txt.raw: runs=300 min dials=10 worst lag ratio=1.11 (gate admits 2.0)
+v2-load-32.txt.raw: runs=300 min dials=8 worst lag ratio=1.43 (gate admits 2.0)
+v2-load-race-idle.txt.raw: runs=300 min dials=9 worst lag ratio=1.25 (gate admits 2.0)
+v2-load-race-32-ambient-partial.raw: runs=78 min dials=6 worst lag ratio=2.00 (gate admits 2.0)
+v2-load-race-64-gmp2.txt.raw: runs=200 min dials=9 worst lag ratio=1.25 (gate admits 2.0)
+v3-load-ambient.txt.raw: runs=200 min dials=20 worst lag ratio=1.05 (gate admits 4.0)
+v3-load-race-32.txt.raw: runs=200 min dials=18 worst lag ratio=1.18 (gate admits 4.0)
+v3-load-race-64-gmp2.txt.raw: runs=200 min dials=20 worst lag ratio=1.05 (gate admits 4.0)
+v3-load-race-160-gmp2.txt.raw: runs=100 min dials=20 worst lag ratio=1.05 (gate admits 4.0)
+v3-load-160.txt.raw: runs=100 min dials=20 worst lag ratio=1.05 (gate admits 4.0)

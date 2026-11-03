@@ -1,0 +1,6 @@
+iteration 339 controller triage of the planner sandbox reds, outside the sandbox, base dcb2366e, worktree .wt-world-iter339-row241, 2026-11-03 11:53 CET, load 26.66
+AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 -timeout 10m -v -run '^(TestOrdinaryOverflowCarriesNoESRCH|TestExecHandlerTimeoutKillsTheGroup)$' ./host/broker/
+--- PASS: TestOrdinaryOverflowCarriesNoESRCH (0.02s)
+--- PASS: TestExecHandlerTimeoutKillsTheGroup (2.99s)
+ok  github.com/sunholo-data/ailang-world/host/broker 3.396s
+Verdict: both reds in the planner run were UNINFORMATIVE UNDER SANDBOX (process-group signalling denied); green outside at base.

@@ -1,0 +1,14 @@
+#!/bin/bash
+set -u
+S=/tmp/world-iter339/judge-repro; rm -rf $S; mkdir -p $S
+git -C /Users/voightkampff/dev/sunholo-data/.wt-world-iter339-row241 archive e2d418d0 host go.mod go.sum | tar -x -C $S
+cd $S; export AILANG_BIN=$HOME/.pinned-ailang/ailang
+F=host/broker/exec_probe.go; cp $F /tmp/world-iter339/ep.orig
+RUN='^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$'
+for lit in "500 * time.Millisecond" "60 * time.Millisecond"; do
+  cp /tmp/world-iter339/ep.orig $F
+  n=$(grep -c 'case <-time.After(execProbePollEvery):' $F); [ "$n" = 1 ] || { echo "site count $n"; exit 3; }
+  sed -i '' "s/case <-time.After(execProbePollEvery):/case <-time.After($lit):/" $F
+  echo "== mutant poll=$lit"; go test -count=1 -v -run "$RUN" ./host/broker/ 2>&1 | grep -E "^(--- |ok|FAIL)|CADENCE|dials while"; echo "rc=${PIPESTATUS[0]}"
+done
+cp /tmp/world-iter339/ep.orig $F; cmp $F /tmp/world-iter339/ep.orig && echo RESTORED

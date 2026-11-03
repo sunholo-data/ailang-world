@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 339 | 2026-11-03 | row 241 built: T12 pins pollLoopback's real dial cadence to execProbePollEvery through the dial seam; T10's ceiling measured from setAt; one CI nam... |
 | 338 | 2026-11-03 | row 240 built: one boundary pair per unpinned row-231 tolerance, a premise pin and a clause pin for gc >= 0, and run routes; design r3 via a contro... |
 | 337 | 2026-11-03 | row 239 built: P0 item (1) becomes a committed, asserting still check (TestMarketingStillRoutes + the six-shot drill on its own store); design r3 v... |
 | 336 | 2026-11-02 | row 238 built: marketingcheck bounds free gaps to one line, adds (a5) cumulative drift, bridges a 1 px thumb split; orchestration §4.4 amended thro... |

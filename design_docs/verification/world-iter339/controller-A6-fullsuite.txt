@@ -1,0 +1,37 @@
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	188.719s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	88.419s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	63.352s
+ok  	github.com/sunholo-data/ailang-world/host/agui	4.588s
+ok  	github.com/sunholo-data/ailang-world/host/archive	61.883s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.394s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	3.537s
+ok  	github.com/sunholo-data/ailang-world/host/broker	267.668s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.984s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	102.772s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	1.987s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.402s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	88.900s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	342.716s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	37.688s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.648s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	3.087s
+ok  	github.com/sunholo-data/ailang-world/host/pins	2.686s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	65.717s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.851s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.753s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.125s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	3.239s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.373s
+ok  	github.com/sunholo-data/ailang-world/host/replay	73.580s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	7.349s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.192s
+ok  	github.com/sunholo-data/ailang-world/host/surface	3.451s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.936s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	5.337s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	86.407s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	216.181s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	6.053s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	17.974s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	121.560s

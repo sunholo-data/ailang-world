@@ -1,0 +1,56 @@
+$ git rev-parse HEAD; go version; $HOME/.pinned-ailang/ailang --version; sysctl -n hw.ncpu
+dcb2366e49d2c93cc83c23c78606397c9b6cf4a2
+go version go1.26.6 darwin/arm64
+AILANG v0.41.0
+16
+
+$ grep -n -F (production sites) host/broker/exec_probe.go
+108:const execProbeListenMS = 1000
+128:const execProbeHelloWait = 500 * time.Millisecond
+131:const execProbePollEvery = 50 * time.Millisecond
+613:			return first, fmt.Sprintf("reverse leg: a listener on 127.0.0.1:%d accepted the host's dial and answered nothing to World's hello within %d ms; World cannot tell it from the child's listener, so it refuses", port, execProbeHelloWait.Milliseconds())
+693:	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))
+694:	_, werr := io.WriteString(c, execProbeHello)
+735:		dial = func(addr string) (net.Conn, error) { return net.DialTimeout("tcp", addr, 200*time.Millisecond) }
+763:			case <-time.After(execProbePollEvery):
+
+$ grep -c -F "time.After(" host/broker/exec_probe.go   # pollLoopback is the only timer site
+1
+
+$ grep -rn execProbePollEvery --include=*.go .   # who reads the constant
+host/broker/exec_probe.go:123://   - ceiling execProbeListenMS less execProbePollEvery (950 ms): the first
+host/broker/exec_probe.go:130:// execProbePollEvery is the reverse leg's dial cadence (pollLoopback).
+host/broker/exec_probe.go:131:const execProbePollEvery = 50 * time.Millisecond
+host/broker/exec_probe.go:727:// pollLoopback dials 127.0.0.1:port every execProbePollEvery until stopped and
+host/broker/exec_probe.go:763:			case <-time.After(execProbePollEvery):
+host/broker/exec_probe_test.go:896:	ceiling := listenWindow - execProbePollEvery
+
+$ grep -rn "dial(addr)\|pollLoopback(" --include=*.go host/broker   # seam users
+host/broker/exec_probe.go:598:		poll := pollLoopback(port, "WORLD-PROBE-NONCE "+nonce, nil)
+host/broker/exec_probe.go:733:func pollLoopback(port int, want string, dial func(addr string) (net.Conn, error)) func() reverseSeen {
+host/broker/exec_probe.go:747:			if c, err := dial(addr); err == nil {
+host/broker/exec_probe_test.go:829:			got := pollLoopback(port, "WORLD-PROBE-NONCE "+strings.Repeat("0", 32), fake)()
+host/broker/exec_probe_test.go:908:			seen := pollLoopback(40000, want, firstDialReturns(conn, refused))()
+
+$ grep -n -F (T10 sites) host/broker/exec_probe_test.go
+668:			if w := fmt.Sprintf("answered nothing to World's hello within %d ms;", execProbeHelloWait.Milliseconds()); !strings.Contains(why, w) {
+851:func (c *helloConn) SetDeadline(t time.Time) error     { c.deadline, c.sets = t, c.sets+1; return nil }
+883:const execProbeHelloFloor = 250 * time.Millisecond
+892:func TestExecProbeReverseHelloWaitBounds(t *testing.T) {
+896:	ceiling := listenWindow - execProbePollEvery
+909:			after := time.Now()
+910:			if seen != row.want || conn.wrote != execProbeHello {
+913:			if conn.sets == 0 || conn.deadline.IsZero() || conn.deadline.After(after.Add(ceiling)) {
+
+$ grep -c "t.Parallel" host/broker/*_test.go | grep -v ":0" | wc -l   (control: total test funcs)
+       0
+21
+
+$ grep -n "TestExecProbeReverseHelloWaitBounds\|TestExecProbeReversePollCadence\|VERIFY_GO_LEGS: race\|go test ./... -count=1 -race" .github/workflows/ci.yml scripts/verify_go.sh
+247:          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhausti
+501:          VERIFY_GO_LEGS: race
+355:cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]
+
+$ gh pr list --state open; control: --state merged --limit 2
+466	docs(mission): iteration 338 landed — row 240 merge 13d3a3fb	mission/world-iter338-landed	MERGED	2026-11-03T06:56:06Z
+465	row 240: pin row 231's unpinned marketingcheck tolerances (iteration 338)	sprint/world-iter338-tolerance-pins	MERGED	2026-11-03T06:23:30Z

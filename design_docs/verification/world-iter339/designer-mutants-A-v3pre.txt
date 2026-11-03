@@ -1,0 +1,79 @@
+=================== C0-broad (tree=mutA count=1 regex=^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener))
+vet rc=0 
+C0-broad rc=0 wall=40s top-level PASS=12 FAIL=0 load: 104.82 119.23 132.30
+FAIL list (count x name):
+   CADENCE dials=21 span=2.127918292s fastest=54.529916ms slowest=274.312333ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	25.825s
+restored(cmp ok)
+=================== M1-broad (tree=mutA count=1 regex=^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener))
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+vet rc=0 
+M1-broad rc=1 wall=51s top-level PASS=11 FAIL=1 load: 94.39 115.02 129.92
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:970: 3 dials while a reference waited execProbePollEvery (50ms) 20 times (1.041755833s); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=3 span=1.041755833s fastest=500.822166ms slowest=501.624584ms
+   last: FAIL
+restored(cmp ok)
+=================== M1 (tree=mutA count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+vet rc=0 
+M1 rc=1 wall=3s top-level PASS=4 FAIL=1 load: 88.84 113.53 129.31
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:970: 3 dials while a reference waited execProbePollEvery (50ms) 20 times (1.049796375s); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=3 span=1.049796375s fastest=500.597042ms slowest=502.040542ms
+   last: FAIL
+restored(cmp ok)
+=================== M1-10x (tree=mutA count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(10 * execProbePollEvery):'
+vet rc=0 
+M1-10x rc=1 wall=4s top-level PASS=4 FAIL=1 load: 88.84 113.53 129.31
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:970: 3 dials while a reference waited execProbePollEvery (50ms) 20 times (1.06815475s); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=3 span=1.06815475s fastest=500.658042ms slowest=502.3225ms
+   last: FAIL
+restored(cmp ok)
+=================== M1-60s (tree=mutA count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(60 * time.Second):'
+vet rc=0 
+M1-60s rc=1 wall=5s top-level PASS=4 FAIL=1 load: 80.89 111.01 128.23
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:970: 1 dials while a reference waited execProbePollEvery (50ms) 20 times (1.051264959s); want at least 6: the poll does not wait execProbePollEvery
+   CADENCE dials=1 span=1.051264959s fastest=0s slowest=0s
+   last: FAIL
+restored(cmp ok)
+=================== M1-div10 (tree=mutA count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(execProbePollEvery / 10):'
+vet rc=0 
+M1-div10 rc=1 wall=5s top-level PASS=4 FAIL=1 load: 79.77 110.28 127.87
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:980: dial 99 followed dial 98 after 6.277791ms; want no gap under execProbePollEvery (50ms)
+   msg:    1 exec_probe_test.go:980: dial 98 followed dial 97 after 7.366834ms; want no gap under execProbePollEvery (50ms)
+   msg:    1 exec_probe_test.go:980: dial 97 followed dial 96 after 6.274583ms; want no gap under execProbePollEvery (50ms)
+   msg:    1 exec_probe_test.go:980: dial 96 followed dial 95 after 5.161ms; want no gap under execProbePollEvery (50ms)
+   CADENCE dials=150 span=1.038503291s fastest=5.028708ms slowest=17.696625ms
+   last: FAIL
+restored(cmp ok)
+=================== M1-1ms (tree=mutA count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(time.Millisecond):'
+vet rc=0 
+M1-1ms rc=1 wall=5s top-level PASS=4 FAIL=1 load: 74.91 108.76 127.23
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence
+   msg:    1 exec_probe_test.go:980: dial 99 followed dial 98 after 1.261291ms; want no gap under execProbePollEvery (50ms)
+   msg:    1 exec_probe_test.go:980: dial 98 followed dial 97 after 1.261959ms; want no gap under execProbePollEvery (50ms)
+   msg:    1 exec_probe_test.go:980: dial 97 followed dial 96 after 1.261666ms; want no gap under execProbePollEvery (50ms)
+   msg:    1 exec_probe_test.go:980: dial 96 followed dial 95 after 1.261792ms; want no gap under execProbePollEvery (50ms)
+   CADENCE dials=583 span=1.019149834s fastest=1.007917ms slowest=11.1725ms
+   last: FAIL
+restored(cmp ok)
+=================== M1-busy (tree=mutA count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'case <-time.After(execProbePollEvery):' -> 'default:'
+vet rc=0 
+M1-busy rc=1 wall=63s top-level PASS=4 FAIL=1 load: 43.20 92.96 119.94
+FAIL list (count x name):
+      1 --- FAIL: TestExecProbeReversePollCadence

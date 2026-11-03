@@ -1,0 +1,15 @@
+== survivor 3, nyes=32, start: 11:09  up 2 days, 16:28, 4 users, load averages: 15.58 61.44 90.85
+tree=base (T10 stop-referenced, HEAD) wait=500ms rc=0 subtests: PASS=400 FAIL=0  survived(subtest)=400/400  no red runs
+tree=base (T10 stop-referenced, HEAD) wait=950ms rc=0 subtests: PASS=400 FAIL=0  survived(subtest)=400/400  no red runs
+tree=base (T10 stop-referenced, HEAD) wait=951ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=950.8973ms max=950.9996ms
+tree=base (T10 stop-referenced, HEAD) wait=952ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=951.9252ms max=951.9996ms
+tree=base (T10 stop-referenced, HEAD) wait=955ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=954.8899ms max=954.9996ms
+tree=base (T10 stop-referenced, HEAD) wait=960ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=959.9270ms max=959.9996ms
+tree=mut (T10 setAt-referenced, proposed) wait=500ms rc=0 subtests: PASS=400 FAIL=0  survived(subtest)=400/400  no red runs
+tree=mut (T10 setAt-referenced, proposed) wait=950ms rc=0 subtests: PASS=400 FAIL=0  survived(subtest)=400/400  no red runs
+tree=mut (T10 setAt-referenced, proposed) wait=951ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=950.9997ms max=951.0000ms
+tree=mut (T10 setAt-referenced, proposed) wait=952ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=951.9997ms max=952.0000ms
+tree=mut (T10 setAt-referenced, proposed) wait=955ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=954.9997ms max=955.0000ms
+tree=mut (T10 setAt-referenced, proposed) wait=960ms rc=1 subtests: PASS=0 FAIL=400  survived(subtest)=0/400  reported deadline-minus-reference in red runs: n=400 min=959.9997ms max=960.0000ms
+end: 11:10  up 2 days, 16:29, 4 users, load averages: 25.56 60.09 89.51
+yes-alive-after=0

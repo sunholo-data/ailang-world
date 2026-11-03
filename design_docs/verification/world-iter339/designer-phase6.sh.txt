@@ -1,0 +1,18 @@
+#!/bin/bash
+# Final T12 (v3, single floor message, capped record): mutation round in three parallel trees, survivor-3
+# kill rates under load, the load matrix.
+D=/tmp/world-iter339/designer
+R='^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$'
+( /bin/bash $D/scripts/mutants.sh A mutA > $D/out/mutants-A.txt 2>&1; /bin/bash $D/scripts/mutants.sh borderline mutA > $D/out/mutants-borderline.txt 2>&1 ) &
+/bin/bash $D/scripts/mutants.sh B mutB > $D/out/mutants-B.txt 2>&1 &
+/bin/bash $D/scripts/mutants.sh C mutC > $D/out/mutants-C.txt 2>&1 &
+wait
+echo MUTANTS-DONE > $D/out/phase6-mutants.done
+/bin/bash $D/scripts/s3.sh 32
+/bin/bash $D/scripts/run_load.sh v3-ambient 0 0 200 $D/proto "$R" $D/out/v3-load-ambient.txt
+/bin/bash $D/scripts/run_load.sh v3-race-load32 32 1 200 $D/proto "$R" $D/out/v3-load-race-32.txt
+GOMAXPROCS=2 /bin/bash $D/scripts/run_load.sh v3-race-load64-gmp2 64 1 200 $D/proto "$R" $D/out/v3-load-race-64-gmp2.txt
+/bin/bash $D/scripts/s3.sh 160
+GOMAXPROCS=2 /bin/bash $D/scripts/run_load.sh v3-race-load160-gmp2 160 1 100 $D/proto "$R" $D/out/v3-load-race-160-gmp2.txt
+/bin/bash $D/scripts/run_load.sh v3-load160 160 0 100 $D/proto "$R" $D/out/v3-load-160.txt
+echo DONE > $D/out/phase6.done

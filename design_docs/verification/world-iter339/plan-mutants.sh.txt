@@ -1,0 +1,490 @@
+#!/bin/bash
+# Bash 3.2. Run: /bin/bash plan-mutants.sh.txt POST_M1_TREE OUTPUT_DIR
+# SITES_ONLY=1 validates all replacement counts/restores without running tests.
+# ONLY=ID optionally selects one row for a supplemental measurement.
+# Expectation authority: approved design §3; known load flakes are reported, not whitelisted.
+set -eu
+set -o pipefail
+SOURCE=$(cd "$1" && pwd -P)
+mkdir -p "$2"
+OUT=$(cd "$2" && pwd -P)
+ROOT=$(mktemp -d /tmp/world-iter339-mutants.XXXXXX)
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+P=host/broker/exec_probe.go
+T=host/broker/exec_probe_test.go
+RF='^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$'
+RREV='^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)'
+RT10='^TestExecProbeReverseHelloWaitBounds$'
+python3 - "$SOURCE" <<'CHECK'
+from pathlib import Path
+import hashlib,sys
+p=Path(sys.argv[1]); expected={'host/broker/exec_probe_test.go':'bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0','host/broker/exec_probe.go':'96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4','.github/workflows/ci.yml':'a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f'}
+for f,h in expected.items(): assert hashlib.sha256((p/f).read_bytes()).hexdigest()==h,f
+CHECK
+mkdir "$ROOT/pristine" "$ROOT/tree"
+(cd "$SOURCE" && tar --exclude=.git -cf - .) | (cd "$ROOT/pristine" && tar -xf -)
+(cd "$ROOT/pristine" && tar -cf - .) | (cd "$ROOT/tree" && tar -xf -)
+active=0
+restore() {
+  cp "$ROOT/pristine/$P" "$ROOT/tree/$P"
+  cp "$ROOT/pristine/$T" "$ROOT/tree/$T"
+  cmp "$ROOT/pristine/$P" "$ROOT/tree/$P"
+  cmp "$ROOT/pristine/$T" "$ROOT/tree/$T"
+  active=0
+  echo 'restored(cmp ok)'
+}
+cleanup() {
+  if [ "$active" -eq 1 ]; then restore; fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+cat > "$OUT/expected.json" <<'EXPECTED'
+{
+  "C0-broad": {
+    "rc": 0,
+    "fail": []
+  },
+  "M1-broad": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1-10x": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1-60s": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1-div10": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1-1ms": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1-busy": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "M1-ctl50": {
+    "rc": 0,
+    "fail": []
+  },
+  "M1-ctl50+const100": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "PC-const2s": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "K-const100": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-const25": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-listen1100": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-wait950": {
+    "rc": 0,
+    "fail": []
+  },
+  "C1-broad": {
+    "rc": 0,
+    "fail": []
+  },
+  "S2-msg": {
+    "rc": 0,
+    "fail": []
+  },
+  "S2-wait600": {
+    "rc": 0,
+    "fail": []
+  },
+  "S2-msg+wait600": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseLegSilentHolderRefusesSticky",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1"
+    ]
+  },
+  "S2-argdrop": {
+    "rc": 1,
+    "fail": [],
+    "build": "fmt.Sprintf format %d reads arg #2, but call has 1 arg"
+  },
+  "S4-ceil": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-wait960": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "S4-ceil+wait960": {
+    "rc": 0,
+    "fail": []
+  },
+  "S4-ceil2poll": {
+    "rc": 0,
+    "fail": []
+  },
+  "S4-floor100": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-wait249": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "S4-floor100+wait249": {
+    "rc": 0,
+    "fail": []
+  },
+  "S4-floor500": {
+    "rc": 0,
+    "fail": []
+  },
+  "S4-floor600": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "S4-arrival": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-wait5": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "S4-arrival+wait5": {
+    "rc": 0,
+    "fail": []
+  },
+  "S4-nowrote": {
+    "rc": 0,
+    "fail": []
+  },
+  "P-nohello": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"
+    ]
+  },
+  "S4-nowrote+nohello": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseLegSilentHolderRefusesSticky",
+      "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"
+    ]
+  },
+  "S4-nosets": {
+    "rc": 0,
+    "fail": []
+  },
+  "P-nodeadline": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "S4-nosets+nodeadline": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "S4-nosetsnozero+nodeadline": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM1-nocount": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM1-nocount+M1": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM2-countflip": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "TM3-nofloor+div10": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM3-floorflip": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "TM4-periods1+M1": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM5-threshold+M1": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM6-reflit": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM6-reflit+M1": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM8-cap1+div10": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM7-noref": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "TM9-nosetAt": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "TM10-setAtIsDeadline": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM10-setAtIsDeadline+wait960": {
+    "rc": 0,
+    "fail": []
+  },
+  "TM11-stopref+wait951": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  },
+  "B-2x": {
+    "rc": 0,
+    "fail": []
+  },
+  "B-3x": {
+    "rc": 0,
+    "fail": []
+  },
+  "B-4x": {
+    "rc": 0,
+    "fail": []
+  },
+  "B-5x": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "B-45ms": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReversePollCadence"
+    ]
+  },
+  "B-const1ms": {
+    "rc": 0,
+    "fail": []
+  },
+  "K-wait951": {
+    "rc": 1,
+    "fail": [
+      "TestExecProbeReverseHelloWaitBounds",
+      "TestExecProbeReverseHelloWaitBounds/slow-child",
+      "TestExecProbeReverseHelloWaitBounds/slow-mux"
+    ]
+  }
+}
+EXPECTED
+overall=0
+m() {
+  local id=$1 regex=$2 count=$3
+  shift 3
+  if [ -n "${ONLY:-}" ] && [ "$ONLY" != "$id" ]; then return; fi
+  echo "ROW $id count=$count regex=$regex"
+  uptime
+  local changed=0
+  if [ "$#" -gt 0 ]; then active=1; changed=1; fi
+  while [ "$#" -gt 0 ]; do
+    python3 - "$ROOT/tree/$1" "$2" "$3" <<'MUTATE'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1]); old,new=sys.argv[2:]; s=p.read_text(); n=s.count(old)
+if n!=1: sys.exit('SITE ERROR: count %d != 1 for %r' % (n,old))
+p.write_text(s.replace(old,new))
+print('single-occurrence replacement:',repr(old),'->',repr(new))
+MUTATE
+    shift 3
+  done
+  if [ "${SITES_ONLY:-0}" = 1 ]; then
+    if [ "$changed" -eq 1 ]; then restore; fi
+    echo "$id SITES OK"
+    return
+  fi
+  local rc=0 verdict=0
+  (cd "$ROOT/tree" && perl -e 'alarm 2100; exec @ARGV' go test -timeout 30m -count="$count" -v -run "$regex" ./host/broker/) > "$OUT/$id.log" 2>&1 || rc=$?
+  echo "$id rc=$rc"
+  python3 - "$OUT/expected.json" "$OUT/$id.log" "$id" "$rc" <<'REPORT' || verdict=$?
+from pathlib import Path
+import sys,json,re
+exp=json.loads(Path(sys.argv[1]).read_text())[sys.argv[3]]
+s=Path(sys.argv[2]).read_text(errors='replace'); rc=int(sys.argv[4])
+fails=sorted(set(re.findall(r'--- FAIL: (\S+)',s)))
+print('expected:',json.dumps(exp,sort_keys=True)); print('FAIL list:',json.dumps(fails))
+print('top-level PASS=%d SKIP=%d FAIL=%d' % tuple(len(re.findall(r'^--- '+k+':',s,re.M)) for k in ['PASS','SKIP','FAIL']))
+if re.search(r'operation not permitted|bind:|listen tcp|listen unix',s):
+    print('UNINFORMATIVE UNDER SANDBOX'); sys.exit(2)
+ok=rc==exp['rc'] and fails==sorted(exp['fail'])
+if 'build' in exp: ok=ok and exp['build'] in s and '[build failed]' in s
+print('EXPECTATION MATCH' if ok else 'EXPECTATION MISMATCH: controller triage required')
+sys.exit(0 if ok else 1)
+REPORT
+  if [ "$changed" -eq 1 ]; then restore; fi
+  if [ "$verdict" -eq 1 ]; then overall=1
+  elif [ "$verdict" -ne 0 ] && [ "$overall" -eq 0 ]; then overall=2; fi
+}
+AFTER='case <-time.After(execProbePollEvery):'
+WAIT='const execProbeHelloWait = 500 * time.Millisecond'
+CONST='const execProbePollEvery = 50 * time.Millisecond'
+MSG_OLD="World's hello within %d ms; World cannot tell it from the child's listener, so it refuses\", port, execProbeHelloWait.Milliseconds())"
+MSG_NEW="World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses\", port)"
+m C0-broad "$RREV" 1
+m M1-broad "$RREV" 1 $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m M1 "$RF" 1 $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m M1-10x "$RF" 1 $P "$AFTER" 'case <-time.After(10 * execProbePollEvery):'
+m M1-60s "$RF" 1 $P "$AFTER" 'case <-time.After(60 * time.Second):'
+m M1-div10 "$RF" 1 $P "$AFTER" 'case <-time.After(execProbePollEvery / 10):'
+m M1-1ms "$RF" 1 $P "$AFTER" 'case <-time.After(time.Millisecond):'
+m M1-busy "$RF" 1 $P "$AFTER" 'default:'
+m M1-ctl50 "$RF" 1 $P "$AFTER" 'case <-time.After(50 * time.Millisecond):'
+m M1-ctl50+const100 "$RF" 1 $P "$AFTER" 'case <-time.After(50 * time.Millisecond):' $P "$CONST" 'const execProbePollEvery = 100 * time.Millisecond'
+m PC-const2s "$RF" 1 $P "$CONST" 'const execProbePollEvery = 2000 * time.Millisecond'
+m K-const100 "$RF" 1 $P "$CONST" 'const execProbePollEvery = 100 * time.Millisecond'
+m K-const25 "$RF" 1 $P "$CONST" 'const execProbePollEvery = 25 * time.Millisecond'
+m K-listen1100 "$RF" 1 $P 'const execProbeListenMS = 1000' 'const execProbeListenMS = 1100'
+m K-wait950 "$RF" 1 $P "$WAIT" 'const execProbeHelloWait = 950 * time.Millisecond'
+m C1-broad "$RREV" 1
+m S2-msg "$RF" 1 $P "$MSG_OLD" "$MSG_NEW"
+m S2-wait600 "$RF" 1 $P "$WAIT" 'const execProbeHelloWait = 600 * time.Millisecond'
+m S2-msg+wait600 "$RF" 1 $P "$MSG_OLD" "$MSG_NEW" $P "$WAIT" 'const execProbeHelloWait = 600 * time.Millisecond'
+m S2-argdrop "$RF" 1 $P "so it refuses\", port, execProbeHelloWait.Milliseconds())" "so it refuses\", port)"
+m S4-ceil "$RT10" 1 $T 'ceiling := listenWindow - execProbePollEvery' 'ceiling := listenWindow'
+m K-wait960 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 960 * time.Millisecond'
+m S4-ceil+wait960 "$RT10" 1 $T 'ceiling := listenWindow - execProbePollEvery' 'ceiling := listenWindow' $P "$WAIT" 'const execProbeHelloWait = 960 * time.Millisecond'
+m S4-ceil2poll "$RT10" 1 $T 'ceiling := listenWindow - execProbePollEvery' 'ceiling := listenWindow - 2*execProbePollEvery'
+m S4-floor100 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 100 * time.Millisecond'
+m K-wait249 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 249 * time.Millisecond'
+m S4-floor100+wait249 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 100 * time.Millisecond' $P "$WAIT" 'const execProbeHelloWait = 249 * time.Millisecond'
+m S4-floor500 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 500 * time.Millisecond'
+m S4-floor600 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 600 * time.Millisecond'
+m S4-arrival "$RT10" 1 $T 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' 'conn := &helloConn{arrival: before,'
+m K-wait5 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 5 * time.Millisecond'
+m S4-arrival+wait5 "$RT10" 1 $T 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' 'conn := &helloConn{arrival: before,' $P "$WAIT" 'const execProbeHelloWait = 5 * time.Millisecond'
+m S4-nowrote "$RT10" 1 $T 'if seen != row.want || conn.wrote != execProbeHello {' 'if seen != row.want {'
+m P-nohello "$RF" 1 $P '_, werr := io.WriteString(c, execProbeHello)' '_, werr := io.WriteString(c, "")'
+m S4-nowrote+nohello "$RF" 1 $T 'if seen != row.want || conn.wrote != execProbeHello {' 'if seen != row.want {' $P '_, werr := io.WriteString(c, execProbeHello)' '_, werr := io.WriteString(c, "")'
+m S4-nosets "$RT10" 1 $T 'if conn.sets == 0 || conn.deadline.IsZero() ||' 'if conn.deadline.IsZero() ||'
+m P-nodeadline "$RT10" 1 $P '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' '_ = 0'
+m S4-nosets+nodeadline "$RT10" 1 $T 'if conn.sets == 0 || conn.deadline.IsZero() ||' 'if conn.deadline.IsZero() ||' $P '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' '_ = 0'
+m S4-nosetsnozero+nodeadline "$RT10" 1 $T 'if conn.sets == 0 || conn.deadline.IsZero() ||' 'if' $P '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' '_ = 0'
+m TM1-nocount "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if false && dials < revCadencePeriods/4+1 {'
+m TM1-nocount+M1 "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if false && dials < revCadencePeriods/4+1 {' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM2-countflip "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if dials >= revCadencePeriods/4+1 {'
+m TM3-nofloor+div10 "$RF" 1 $T 'if short > 0 {' 'if false && short > 0 {' $P "$AFTER" 'case <-time.After(execProbePollEvery / 10):'
+m TM3-floorflip "$RF" 1 $T 'if gap < execProbePollEvery {' 'if gap >= execProbePollEvery {'
+m TM4-periods1+M1 "$RF" 1 $T 'const revCadencePeriods = 20' 'const revCadencePeriods = 1' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM5-threshold+M1 "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if dials < revCadencePeriods/10 {' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM6-reflit "$RF" 1 $T '<-time.After(execProbePollEvery)' '<-time.After(500 * time.Millisecond)'
+m TM6-reflit+M1 "$RF" 1 $T '<-time.After(execProbePollEvery)' '<-time.After(500 * time.Millisecond)' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM8-cap1+div10 "$RF" 1 $T 'make([]time.Time, 0, 4*revCadencePeriods)' 'make([]time.Time, 0, 1)' $P "$AFTER" 'case <-time.After(execProbePollEvery / 10):'
+m TM7-noref "$RF" 1 $T 'for range revCadencePeriods {' 'for range 0 {'
+m TM9-nosetAt "$RF" 1 $T 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' 'c.deadline, c.sets = t, c.sets+1'
+m TM10-setAtIsDeadline "$RF" 1 $T 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' 'c.deadline, c.setAt, c.sets = t, t, c.sets+1'
+m TM10-setAtIsDeadline+wait960 "$RF" 1 $T 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' 'c.deadline, c.setAt, c.sets = t, t, c.sets+1' $P "$WAIT" 'const execProbeHelloWait = 960 * time.Millisecond'
+m TM11-stopref+wait951 "$RT10" 1 $T 'conn.deadline.After(conn.setAt.Add(ceiling))' 'conn.deadline.After(time.Now().Add(ceiling))' $P "$WAIT" 'const execProbeHelloWait = 951 * time.Millisecond'
+CR='^TestExecProbeReversePollCadence$'
+m B-2x "$CR" 30 $P "$AFTER" 'case <-time.After(2 * execProbePollEvery):'
+m B-3x "$CR" 30 $P "$AFTER" 'case <-time.After(3 * execProbePollEvery):'
+m B-4x "$CR" 30 $P "$AFTER" 'case <-time.After(4 * execProbePollEvery):'
+m B-5x "$CR" 30 $P "$AFTER" 'case <-time.After(5 * execProbePollEvery):'
+m B-45ms "$CR" 30 $P "$AFTER" 'case <-time.After(45 * time.Millisecond):'
+m B-const1ms "$CR" 30 $P "$CONST" 'const execProbePollEvery = 1 * time.Millisecond'
+
+m K-wait951 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 951 * time.Millisecond'
+
+cleanup
+trap - EXIT INT TERM
+echo "round result=$overall; logs=$OUT; scratch=$ROOT (retained for audit)"
+exit "$overall"

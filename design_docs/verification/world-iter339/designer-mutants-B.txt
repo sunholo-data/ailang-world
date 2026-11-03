@@ -1,0 +1,220 @@
+=================== S2-msg (tree=mutB count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'World\'s hello within %d ms; World cannot tell it from the child\'s listener, so it refuses", port, execProbeHelloWait.Milliseconds())' -> 'World\'s hello within 500 ms; World cannot tell it from the child\'s listener, so it refuses", port)'
+vet rc=0 
+S2-msg rc=0 wall=29s top-level PASS=5 FAIL=0 load: 48.65 74.04 107.72
+FAIL list (count x name):
+   CADENCE dials=20 span=1.664281542s fastest=51.483916ms slowest=150.494292ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	8.327s
+restored(cmp ok)
+=================== S2-wait600 (tree=mutB count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 600 * time.Millisecond'
+vet rc=0 
+S2-wait600 rc=0 wall=141s top-level PASS=5 FAIL=0 load: 93.99 84.44 106.68
+FAIL list (count x name):
+   CADENCE dials=20 span=2.439238709s fastest=50.922792ms slowest=418.366625ms
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	16.331s
+restored(cmp ok)
+=================== S2-msg+wait600 (tree=mutB count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'World\'s hello within %d ms; World cannot tell it from the child\'s listener, so it refuses", port, execProbeHelloWait.Milliseconds())' -> 'World\'s hello within 500 ms; World cannot tell it from the child\'s listener, so it refuses", port)'
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 600 * time.Millisecond'
+vet rc=0 
+S2-msg+wait600 rc=1 wall=188s top-level PASS=4 FAIL=1 load: 107.47 96.85 106.85
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1
+      1 --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+   msg:    1 exec_probe_test.go:669: Why = "reverse leg: a listener on 127.0.0.1:59077 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to
+   msg:    1 exec_probe_test.go:669: Why = "reverse leg: a listener on 127.0.0.1:59060 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to
+   msg:    1 exec_probe_test.go:669: Why = "reverse leg: a listener on 127.0.0.1:59028 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"; want it to contain "answered nothing to
+   CADENCE dials=21 span=2.513713042s fastest=50.672125ms slowest=269.913208ms
+   last: FAIL
+restored(cmp ok)
+=================== S2-argdrop (tree=mutB count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'so it refuses", port, execProbeHelloWait.Milliseconds())' -> 'so it refuses", port)'
+vet rc=1 host/broker/exec_probe.go:613:141: fmt.Sprintf format %d reads arg #2, but call has 1 arg
+S2-argdrop rc=1 wall=78s top-level PASS=0 FAIL=0 load: 112.92 100.44 106.99
+FAIL list (count x name):
+   msg:    1 FAIL	github.com/sunholo-data/ailang-world/host/broker [build failed]
+   last: FAIL
+restored(cmp ok)
+=================== S4-ceil (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'ceiling := listenWindow - execProbePollEvery' -> 'ceiling := listenWindow'
+vet rc=0 
+S4-ceil rc=0 wall=17s top-level PASS=1 FAIL=0 load: 132.80 108.81 109.73
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.476s
+restored(cmp ok)
+=================== K-wait960 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 960 * time.Millisecond'
+vet rc=0 
+K-wait960 rc=1 wall=8s top-level PASS=0 FAIL=1 load: 129.44 108.88 109.75
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    1 exec_probe_test.go:917: hello deadline at set+959.999958ms (sets 1); want a deadline no later than set+950ms (listen window less one poll period)
+   msg:    1 exec_probe_test.go:917: hello deadline at set+959.999791ms (sets 1); want a deadline no later than set+950ms (listen window less one poll period)
+   last: FAIL
+restored(cmp ok)
+=================== S4-ceil+wait960 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'ceiling := listenWindow - execProbePollEvery' -> 'ceiling := listenWindow'
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 960 * time.Millisecond'
+vet rc=0 
+S4-ceil+wait960 rc=0 wall=11s top-level PASS=1 FAIL=0 load: 120.50 107.97 109.41
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.396s
+restored(cmp ok)
+=================== S4-ceil2poll (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'ceiling := listenWindow - execProbePollEvery' -> 'ceiling := listenWindow - 2*execProbePollEvery'
+vet rc=0 
+S4-ceil2poll rc=0 wall=13s top-level PASS=1 FAIL=0 load: 118.28 108.07 109.42
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.434s
+restored(cmp ok)
+=================== S4-floor100 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 100 * time.Millisecond'
+vet rc=0 
+S4-floor100 rc=0 wall=14s top-level PASS=1 FAIL=0 load: 120.29 108.96 109.71
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.389s
+restored(cmp ok)
+=================== K-wait249 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 249 * time.Millisecond'
+vet rc=0 
+K-wait249 rc=1 wall=65s top-level PASS=0 FAIL=1 load: 126.17 112.65 111.00
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    1 exec_probe_test.go:914: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+   msg:    1 exec_probe_test.go:914: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   last: FAIL
+restored(cmp ok)
+=================== S4-floor100+wait249 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 100 * time.Millisecond'
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 249 * time.Millisecond'
+vet rc=0 
+S4-floor100+wait249 rc=0 wall=123s top-level PASS=1 FAIL=0 load: 144.48 130.26 118.85
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	1.022s
+restored(cmp ok)
+=================== S4-floor500 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 500 * time.Millisecond'
+vet rc=0 
+S4-floor500 rc=0 wall=25s top-level PASS=1 FAIL=0 load: 123.50 126.51 117.89
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.701s
+restored(cmp ok)
+=================== S4-floor600 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 600 * time.Millisecond'
+vet rc=0 
+S4-floor600 rc=1 wall=30s top-level PASS=0 FAIL=1 load: 103.10 121.12 116.27
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    1 exec_probe_test.go:914: an answer 600ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+   msg:    1 exec_probe_test.go:914: an answer 600ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   last: FAIL
+restored(cmp ok)
+=================== S4-arrival (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' -> 'conn := &helloConn{arrival: before,'
+vet rc=0 
+S4-arrival rc=0 wall=71s top-level PASS=1 FAIL=0 load: 105.72 116.91 115.07
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.783s
+restored(cmp ok)
+=================== K-wait5 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 5 * time.Millisecond'
+vet rc=0 
+K-wait5 rc=1 wall=38s top-level PASS=0 FAIL=1 load: 96.39 112.70 113.64
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    1 exec_probe_test.go:914: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+   msg:    1 exec_probe_test.go:914: an answer 250ms after the hello: seen {child:false foreign:false silent:true} (wrote "WORLD-PROBE-HELLO\n"); want {child:false foreign:true silent:false}, not silent
+   last: FAIL
+restored(cmp ok)
+=================== S4-arrival+wait5 (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' -> 'conn := &helloConn{arrival: before,'
+applied: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 5 * time.Millisecond'
+vet rc=0 
+S4-arrival+wait5 rc=0 wall=6s top-level PASS=1 FAIL=0 load: 88.51 110.19 112.73
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.511s
+restored(cmp ok)
+=================== S4-nowrote (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'if seen != row.want || conn.wrote != execProbeHello {' -> 'if seen != row.want {'
+vet rc=0 
+S4-nowrote rc=0 wall=7s top-level PASS=1 FAIL=0 load: 88.26 109.40 112.41
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	1.049s
+restored(cmp ok)
+=================== P-nohello (tree=mutB count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: '_, werr := io.WriteString(c, execProbeHello)' -> '_, werr := io.WriteString(c, "")'
+vet rc=0 
+P-nohello rc=1 wall=12s top-level PASS=3 FAIL=2 load: 88.91 108.83 112.18
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+      1 --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+   msg:    1 exec_probe_test.go:914: an answer 250ms after the hello: seen {child:true foreign:false silent:false} (wrote ""); want {child:true foreign:false silent:false}, not silent
+   msg:    1 exec_probe_test.go:914: an answer 250ms after the hello: seen {child:false foreign:true silent:false} (wrote ""); want {child:false foreign:true silent:false}, not silent
+   msg:    1 exec_probe_test.go:663: picker handed out 1 ports, want at least 2
+   CADENCE dials=19 span=1.461627125s fastest=50.708833ms slowest=139.144208ms
+   last: FAIL
+restored(cmp ok)
+=================== S4-nowrote+nohello (tree=mutB count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$)
+applied: 'if seen != row.want || conn.wrote != execProbeHello {' -> 'if seen != row.want {'
+applied: '_, werr := io.WriteString(c, execProbeHello)' -> '_, werr := io.WriteString(c, "")'
+vet rc=0 
+S4-nowrote+nohello rc=1 wall=12s top-level PASS=4 FAIL=1 load: 92.38 108.60 112.03
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+      1 --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+   msg:    1 exec_probe_test.go:663: picker handed out 1 ports, want at least 2
+   CADENCE dials=22 span=1.544585458s fastest=50.162458ms slowest=180.941875ms
+   last: FAIL
+restored(cmp ok)
+=================== S4-nosets (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'if conn.sets == 0 || conn.deadline.IsZero() ||' -> 'if conn.deadline.IsZero() ||'
+vet rc=0 
+S4-nosets rc=0 wall=7s top-level PASS=1 FAIL=0 load: 96.52 108.96 112.12
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.427s
+restored(cmp ok)
+=================== P-nodeadline (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' -> '_ = 0'
+vet rc=0 
+P-nodeadline rc=1 wall=5s top-level PASS=0 FAIL=1 load: 98.48 109.16 112.17
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    2 exec_probe_test.go:917: hello deadline at set+0s (sets 0); want a deadline no later than set+950ms (listen window less one poll period)
+   last: FAIL
+restored(cmp ok)
+=================== S4-nosets+nodeadline (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'if conn.sets == 0 || conn.deadline.IsZero() ||' -> 'if conn.deadline.IsZero() ||'
+applied: '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' -> '_ = 0'
+vet rc=0 
+S4-nosets+nodeadline rc=1 wall=4s top-level PASS=0 FAIL=1 load: 97.96 108.87 112.05
+FAIL list (count x name):
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+      1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+      1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   msg:    2 exec_probe_test.go:917: hello deadline at set+0s (sets 0); want a deadline no later than set+950ms (listen window less one poll period)
+   last: FAIL
+restored(cmp ok)
+=================== S4-nosetsnozero+nodeadline (tree=mutB count=1 regex=^TestExecProbeReverseHelloWaitBounds$)
+applied: 'if conn.sets == 0 || conn.deadline.IsZero() ||' -> 'if'
+applied: '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' -> '_ = 0'
+vet rc=0 
+S4-nosetsnozero+nodeadline rc=0 wall=4s top-level PASS=1 FAIL=0 load: 92.36 107.53 111.56
+FAIL list (count x name):
+   last: ok  	github.com/sunholo-data/ailang-world/host/broker	0.433s
+restored(cmp ok)

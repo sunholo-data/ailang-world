@@ -1,0 +1,33 @@
+#!/bin/bash
+# usage: run_load.sh LABEL NYES RACE(0|1) COUNT TREE REGEX OUTFILE
+# Runs go test -v -count=COUNT on host/broker in TREE with NYES spinning `yes` processes
+# (killed by a trap; the alive count afterwards is printed), then summarises T12's CADENCE lines.
+set -u
+LABEL=$1 NYES=$2 RACE=$3 COUNT=$4 TREE=$5 REGEX=$6 OUT=$7
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+pids=()
+cleanup(){ for p in "${pids[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done; wait 2>/dev/null; }
+trap cleanup EXIT
+for ((i=0;i<NYES;i++)); do yes >/dev/null & pids+=($!); done
+sleep 3
+{
+echo "== $LABEL nyes=$NYES race=$RACE count=$COUNT tree=$TREE"
+echo "start: $(uptime)"
+cd "$TREE"
+flags=(-count="$COUNT" -v -timeout 40m -run "$REGEX")
+[ "$RACE" = 1 ] && flags+=(-race)
+t0=$(date +%s)
+go test ./host/broker/ "${flags[@]}" > "$OUT.raw" 2>&1
+rc=$?
+t1=$(date +%s)
+echo "end:   $(uptime)"
+echo "rc=$rc wall=$((t1-t0))s"
+echo "PASS lines: $(grep -c -- '^--- PASS' "$OUT.raw")  FAIL lines: $(grep -c -- '^--- FAIL' "$OUT.raw")"
+grep -- '--- FAIL' "$OUT.raw" | sort | uniq -c | head
+grep -o 'CADENCE .*' "$OUT.raw" | python3 /tmp/world-iter339/designer/scripts/cadence_summary.py
+grep -o 'hello deadline at [a-z]*+[^ ]*' "$OUT.raw" | head -3
+} | tee "$OUT"
+cleanup
+trap - EXIT
+sleep 1
+echo "yes-alive-after=$(pgrep -x yes | wc -l | tr -d ' ')" | tee -a "$OUT"

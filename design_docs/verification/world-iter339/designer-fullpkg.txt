@@ -1,0 +1,18 @@
+tree: proto (full git archive incl. design_docs + the final patch); start: 11:30  up 2 days, 16:49, 4 users, load averages: 16.82 73.55 84.13
+rc=0 wall=202s end: 11:33  up 2 days, 16:52, 4 users, load averages: 12.45 43.21 68.78
+--- PASS lines (all levels)=1094 --- FAIL=0 --- SKIP=39; top-level PASS=336
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+--- PASS: TestExecProbeReversePollCadence (1.04s)
+--- PASS: TestExecArgsSketchDrift (0.00s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	200.153s
+top-level SKIP=30
+
+== instrument control (not a verdict): the same command on a scratch copy WITHOUT design_docs (mutB) was rc 1, one FAIL, a CWD-shape artifact:
+start: 11:26  up 2 days, 16:45, 4 users, load averages: 142.34 137.22 104.52
+rc=1 wall=205s end: 11:29  up 2 days, 16:48, 4 users, load averages: 18.15 75.73 85.01
+PASS(all levels)=1093 FAIL=1 SKIP=39
+--- FAIL: TestExecArgsSketchDrift (0.00s)
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+--- PASS: TestExecProbeReversePollCadence (1.04s)
+FAIL
+    execargs_drift_test.go:106: read sketch: open ../../design_docs/sketches/execargs.ail: no such file or directory

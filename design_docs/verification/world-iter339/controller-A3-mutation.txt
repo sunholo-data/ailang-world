@@ -1,0 +1,562 @@
+ROW C0-broad count=1 regex=^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)
+12:02  up 2 days, 17:21, 4 users, load averages: 28.44 26.57 30.32
+C0-broad rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=12 SKIP=0 FAIL=0
+EXPECTATION MATCH
+ROW M1-broad count=1 regex=^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)
+12:03  up 2 days, 17:22, 4 users, load averages: 30.14 27.15 30.42
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+M1-broad rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=11 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:03  up 2 days, 17:22, 4 users, load averages: 32.29 27.79 30.58
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+M1 rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-10x count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:03  up 2 days, 17:22, 4 users, load averages: 32.51 27.91 30.60
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(10 * execProbePollEvery):'
+M1-10x rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-60s count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:03  up 2 days, 17:22, 4 users, load averages: 30.86 27.72 30.50
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(60 * time.Second):'
+M1-60s rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-div10 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:03  up 2 days, 17:22, 4 users, load averages: 30.66 27.79 30.49
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(execProbePollEvery / 10):'
+M1-div10 rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-1ms count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:04  up 2 days, 17:23, 4 users, load averages: 30.85 27.87 30.51
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(time.Millisecond):'
+M1-1ms rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-busy count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:04  up 2 days, 17:23, 4 users, load averages: 31.62 28.14 30.57
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'default:'
+M1-busy rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-ctl50 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:04  up 2 days, 17:23, 4 users, load averages: 32.77 28.44 30.66
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(50 * time.Millisecond):'
+M1-ctl50 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW M1-ctl50+const100 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:04  up 2 days, 17:23, 4 users, load averages: 33.35 28.63 30.72
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(50 * time.Millisecond):'
+single-occurrence replacement: 'const execProbePollEvery = 50 * time.Millisecond' -> 'const execProbePollEvery = 100 * time.Millisecond'
+M1-ctl50+const100 rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW PC-const2s count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:04  up 2 days, 17:23, 4 users, load averages: 30.98 28.28 30.57
+single-occurrence replacement: 'const execProbePollEvery = 50 * time.Millisecond' -> 'const execProbePollEvery = 2000 * time.Millisecond'
+PC-const2s rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-const100 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:24, 4 users, load averages: 29.37 28.03 30.34
+single-occurrence replacement: 'const execProbePollEvery = 50 * time.Millisecond' -> 'const execProbePollEvery = 100 * time.Millisecond'
+K-const100 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-const25 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:24, 4 users, load averages: 28.14 27.79 30.25
+single-occurrence replacement: 'const execProbePollEvery = 50 * time.Millisecond' -> 'const execProbePollEvery = 25 * time.Millisecond'
+K-const25 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-listen1100 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:24, 4 users, load averages: 28.69 27.91 30.27
+single-occurrence replacement: 'const execProbeListenMS = 1000' -> 'const execProbeListenMS = 1100'
+K-listen1100 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-wait950 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:24, 4 users, load averages: 29.43 28.08 30.32
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 950 * time.Millisecond'
+K-wait950 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW C1-broad count=1 regex=^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)
+12:05  up 2 days, 17:24, 4 users, load averages: 29.96 28.21 30.35
+C1-broad rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=12 SKIP=0 FAIL=0
+EXPECTATION MATCH
+ROW S2-msg count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:24, 4 users, load averages: 26.43 27.51 30.07
+single-occurrence replacement: 'World\'s hello within %d ms; World cannot tell it from the child\'s listener, so it refuses", port, execProbeHelloWait.Milliseconds())' -> 'World\'s hello within 500 ms; World cannot tell it from the child\'s listener, so it refuses", port)'
+S2-msg rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S2-wait600 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:24, 4 users, load averages: 25.44 27.29 29.97
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 600 * time.Millisecond'
+S2-wait600 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S2-msg+wait600 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:05  up 2 days, 17:25, 4 users, load averages: 24.52 27.07 29.88
+single-occurrence replacement: 'World\'s hello within %d ms; World cannot tell it from the child\'s listener, so it refuses", port, execProbeHelloWait.Milliseconds())' -> 'World\'s hello within 500 ms; World cannot tell it from the child\'s listener, so it refuses", port)'
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 600 * time.Millisecond'
+S2-msg+wait600 rc=1
+expected: {"fail": ["TestExecProbeReverseLegSilentHolderRefusesSticky", "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1"], "rc": 1}
+FAIL list: ["TestExecProbeReverseLegSilentHolderRefusesSticky", "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S2-argdrop count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.44 26.80 29.77
+single-occurrence replacement: 'so it refuses", port, execProbeHelloWait.Milliseconds())' -> 'so it refuses", port)'
+S2-argdrop rc=1
+expected: {"build": "fmt.Sprintf format %d reads arg #2, but call has 1 arg", "fail": [], "rc": 1}
+FAIL list: []
+top-level PASS=0 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-ceil count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.44 26.80 29.77
+single-occurrence replacement: 'ceiling := listenWindow - execProbePollEvery' -> 'ceiling := listenWindow'
+S4-ceil rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-wait960 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.32 26.72 29.72
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 960 * time.Millisecond'
+K-wait960 rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-ceil+wait960 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.32 26.72 29.72
+single-occurrence replacement: 'ceiling := listenWindow - execProbePollEvery' -> 'ceiling := listenWindow'
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 960 * time.Millisecond'
+S4-ceil+wait960 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-ceil2poll count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 24.10 26.83 29.74
+single-occurrence replacement: 'ceiling := listenWindow - execProbePollEvery' -> 'ceiling := listenWindow - 2*execProbePollEvery'
+S4-ceil2poll rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-floor100 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 24.10 26.83 29.74
+single-occurrence replacement: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 100 * time.Millisecond'
+S4-floor100 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-wait249 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 24.33 26.83 29.72
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 249 * time.Millisecond'
+K-wait249 rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-floor100+wait249 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 24.33 26.83 29.72
+single-occurrence replacement: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 100 * time.Millisecond'
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 249 * time.Millisecond'
+S4-floor100+wait249 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-floor500 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.10 26.53 29.60
+single-occurrence replacement: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 500 * time.Millisecond'
+S4-floor500 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-floor600 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.10 26.53 29.60
+single-occurrence replacement: 'const execProbeHelloFloor = 250 * time.Millisecond' -> 'const execProbeHelloFloor = 600 * time.Millisecond'
+S4-floor600 rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-arrival count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 23.10 26.53 29.60
+single-occurrence replacement: 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' -> 'conn := &helloConn{arrival: before,'
+S4-arrival rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-wait5 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 21.81 26.21 29.47
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 5 * time.Millisecond'
+K-wait5 rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-arrival+wait5 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 21.81 26.21 29.47
+single-occurrence replacement: 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' -> 'conn := &helloConn{arrival: before,'
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 5 * time.Millisecond'
+S4-arrival+wait5 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-nowrote count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 21.81 26.21 29.47
+single-occurrence replacement: 'if seen != row.want || conn.wrote != execProbeHello {' -> 'if seen != row.want {'
+S4-nowrote rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW P-nohello count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:25, 4 users, load averages: 20.71 25.90 29.34
+single-occurrence replacement: '_, werr := io.WriteString(c, execProbeHello)' -> '_, werr := io.WriteString(c, "")'
+P-nohello rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux", "TestExecProbeReverseLegSilentHolderRefusesSticky", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux", "TestExecProbeReverseLegSilentHolderRefusesSticky", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"]
+top-level PASS=3 SKIP=0 FAIL=2
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-nowrote+nohello count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:25, 4 users, load averages: 20.71 25.90 29.34
+single-occurrence replacement: 'if seen != row.want || conn.wrote != execProbeHello {' -> 'if seen != row.want {'
+single-occurrence replacement: '_, werr := io.WriteString(c, execProbeHello)' -> '_, werr := io.WriteString(c, "")'
+S4-nowrote+nohello rc=1
+expected: {"fail": ["TestExecProbeReverseLegSilentHolderRefusesSticky", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"], "rc": 1}
+FAIL list: ["TestExecProbeReverseLegSilentHolderRefusesSticky", "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-nosets count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 20.33 25.74 29.27
+single-occurrence replacement: 'if conn.sets == 0 || conn.deadline.IsZero() ||' -> 'if conn.deadline.IsZero() ||'
+S4-nosets rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW P-nodeadline count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 19.18 25.41 29.13
+single-occurrence replacement: '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' -> '_ = 0'
+P-nodeadline rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-nosets+nodeadline count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 19.18 25.41 29.13
+single-occurrence replacement: 'if conn.sets == 0 || conn.deadline.IsZero() ||' -> 'if conn.deadline.IsZero() ||'
+single-occurrence replacement: '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' -> '_ = 0'
+S4-nosets+nodeadline rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW S4-nosetsnozero+nodeadline count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:06  up 2 days, 17:25, 4 users, load averages: 19.18 25.41 29.13
+single-occurrence replacement: 'if conn.sets == 0 || conn.deadline.IsZero() ||' -> 'if'
+single-occurrence replacement: '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' -> '_ = 0'
+S4-nosetsnozero+nodeadline rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=1 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM1-nocount count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:25, 4 users, load averages: 18.05 25.07 28.99
+single-occurrence replacement: 'if dials < revCadencePeriods/4+1 {' -> 'if false && dials < revCadencePeriods/4+1 {'
+TM1-nocount rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM1-nocount+M1 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:25, 4 users, load averages: 18.05 25.07 28.99
+single-occurrence replacement: 'if dials < revCadencePeriods/4+1 {' -> 'if false && dials < revCadencePeriods/4+1 {'
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+TM1-nocount+M1 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM2-countflip count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:26, 4 users, load averages: 18.52 25.05 28.96
+single-occurrence replacement: 'if dials < revCadencePeriods/4+1 {' -> 'if dials >= revCadencePeriods/4+1 {'
+TM2-countflip rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM3-nofloor+div10 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:06  up 2 days, 17:26, 4 users, load averages: 17.68 24.77 28.83
+single-occurrence replacement: 'if short > 0 {' -> 'if false && short > 0 {'
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(execProbePollEvery / 10):'
+TM3-nofloor+div10 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM3-floorflip count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:26, 4 users, load averages: 16.90 24.49 28.71
+single-occurrence replacement: 'if gap < execProbePollEvery {' -> 'if gap >= execProbePollEvery {'
+TM3-floorflip rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM4-periods1+M1 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:26, 4 users, load averages: 16.83 24.35 28.64
+single-occurrence replacement: 'const revCadencePeriods = 20' -> 'const revCadencePeriods = 1'
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+TM4-periods1+M1 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM5-threshold+M1 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:26, 4 users, load averages: 16.20 24.10 28.52
+single-occurrence replacement: 'if dials < revCadencePeriods/4+1 {' -> 'if dials < revCadencePeriods/10 {'
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+TM5-threshold+M1 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM6-reflit count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:26, 4 users, load averages: 16.27 23.98 28.45
+single-occurrence replacement: '<-time.After(execProbePollEvery)' -> '<-time.After(500 * time.Millisecond)'
+TM6-reflit rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM6-reflit+M1 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:26, 4 users, load averages: 16.33 23.62 28.25
+single-occurrence replacement: '<-time.After(execProbePollEvery)' -> '<-time.After(500 * time.Millisecond)'
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(500 * time.Millisecond):'
+TM6-reflit+M1 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM8-cap1+div10 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:26, 4 users, load averages: 17.22 23.46 28.11
+single-occurrence replacement: 'make([]time.Time, 0, 4*revCadencePeriods)' -> 'make([]time.Time, 0, 1)'
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(execProbePollEvery / 10):'
+TM8-cap1+div10 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM7-noref count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:27, 4 users, load averages: 17.20 23.35 28.04
+single-occurrence replacement: 'for range revCadencePeriods {' -> 'for range 0 {'
+TM7-noref rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM9-nosetAt count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:07  up 2 days, 17:27, 4 users, load averages: 17.98 23.41 28.04
+single-occurrence replacement: 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' -> 'c.deadline, c.sets = t, c.sets+1'
+TM9-nosetAt rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=4 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM10-setAtIsDeadline count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:08  up 2 days, 17:27, 4 users, load averages: 17.50 23.22 27.94
+single-occurrence replacement: 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' -> 'c.deadline, c.setAt, c.sets = t, t, c.sets+1'
+TM10-setAtIsDeadline rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM10-setAtIsDeadline+wait960 count=1 regex=^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$
+12:08  up 2 days, 17:27, 4 users, load averages: 18.50 23.33 27.96
+single-occurrence replacement: 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' -> 'c.deadline, c.setAt, c.sets = t, t, c.sets+1'
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 960 * time.Millisecond'
+TM10-setAtIsDeadline+wait960 rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=5 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW TM11-stopref+wait951 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:08  up 2 days, 17:27, 4 users, load averages: 17.50 22.96 27.77
+single-occurrence replacement: 'conn.deadline.After(conn.setAt.Add(ceiling))' -> 'conn.deadline.After(time.Now().Add(ceiling))'
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 951 * time.Millisecond'
+TM11-stopref+wait951 rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+ROW B-2x count=30 regex=^TestExecProbeReversePollCadence$
+12:08  up 2 days, 17:27, 4 users, load averages: 17.50 22.96 27.77
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(2 * execProbePollEvery):'
+B-2x rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=30 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW B-3x count=30 regex=^TestExecProbeReversePollCadence$
+12:08  up 2 days, 17:28, 4 users, load averages: 24.26 24.57 28.19
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(3 * execProbePollEvery):'
+B-3x rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=30 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW B-4x count=30 regex=^TestExecProbeReversePollCadence$
+12:09  up 2 days, 17:28, 4 users, load averages: 18.30 23.06 27.50
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(4 * execProbePollEvery):'
+B-4x rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=30 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW B-5x count=30 regex=^TestExecProbeReversePollCadence$
+12:10  up 2 days, 17:29, 4 users, load averages: 17.13 22.29 27.04
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(5 * execProbePollEvery):'
+B-5x rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=0 SKIP=0 FAIL=30
+EXPECTATION MATCH
+restored(cmp ok)
+ROW B-45ms count=30 regex=^TestExecProbeReversePollCadence$
+12:10  up 2 days, 17:29, 4 users, load averages: 14.44 21.08 26.41
+single-occurrence replacement: 'case <-time.After(execProbePollEvery):' -> 'case <-time.After(45 * time.Millisecond):'
+B-45ms rc=1
+expected: {"fail": ["TestExecProbeReversePollCadence"], "rc": 1}
+FAIL list: ["TestExecProbeReversePollCadence"]
+top-level PASS=0 SKIP=0 FAIL=30
+EXPECTATION MATCH
+restored(cmp ok)
+ROW B-const1ms count=30 regex=^TestExecProbeReversePollCadence$
+12:11  up 2 days, 17:30, 4 users, load averages: 12.00 19.85 25.78
+single-occurrence replacement: 'const execProbePollEvery = 50 * time.Millisecond' -> 'const execProbePollEvery = 1 * time.Millisecond'
+B-const1ms rc=0
+expected: {"fail": [], "rc": 0}
+FAIL list: []
+top-level PASS=30 SKIP=0 FAIL=0
+EXPECTATION MATCH
+restored(cmp ok)
+ROW K-wait951 count=1 regex=^TestExecProbeReverseHelloWaitBounds$
+12:11  up 2 days, 17:30, 4 users, load averages: 11.92 19.71 25.69
+single-occurrence replacement: 'const execProbeHelloWait = 500 * time.Millisecond' -> 'const execProbeHelloWait = 951 * time.Millisecond'
+K-wait951 rc=1
+expected: {"fail": ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"], "rc": 1}
+FAIL list: ["TestExecProbeReverseHelloWaitBounds", "TestExecProbeReverseHelloWaitBounds/slow-child", "TestExecProbeReverseHelloWaitBounds/slow-mux"]
+top-level PASS=0 SKIP=0 FAIL=1
+EXPECTATION MATCH
+restored(cmp ok)
+round result=0; logs=/private/tmp/world-iter339/gates/mutants; scratch=/tmp/world-iter339-mutants.P82Rpp (retained for audit)

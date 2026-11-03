@@ -1,0 +1,73 @@
+== v2-idle nyes=0 race=0 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:47  up 2 days, 15:07, 4 users, load averages: 26.38 103.99 119.96
+end:    9:50  up 2 days, 15:09, 4 users, load averages: 11.86 66.60 101.95
+rc=0 wall=158s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 dials: min=10 (gate >= 6) distribution={10: 117, 11: 183}
+  floor: fastest gap min=50.024ms (gate >= 50ms, margin 0.024ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=52.031ms, runs that would red=0
+  slowest single gap max=230.984ms ; reference span max=761.884ms (nominal 500ms)
+yes-alive-after=0
+
+== v2-load32 nyes=32 race=0 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:50  up 2 days, 15:09, 4 users, load averages: 11.39 65.60 101.38
+end:    9:53  up 2 days, 15:12, 4 users, load averages: 51.68 60.45 92.22
+rc=0 wall=183s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 dials: min=8 (gate >= 6) distribution={8: 1, 9: 2, 10: 98, 11: 198, 13: 1}
+  floor: fastest gap min=50.013ms (gate >= 50ms, margin 0.013ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=79.739ms, runs that would red=0
+  slowest single gap max=2613.704ms ; reference span max=9203.339ms (nominal 500ms)
+yes-alive-after=0
+
+== v2-race-idle nyes=0 race=1 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:53  up 2 days, 15:12, 4 users, load averages: 50.26 60.01 91.88
+end:    9:56  up 2 days, 15:15, 4 users, load averages: 30.00 43.77 79.17
+rc=0 wall=172s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 dials: min=9 (gate >= 6) distribution={9: 2, 10: 103, 11: 192, 12: 2, 13: 1}
+  floor: fastest gap min=50.036ms (gate >= 50ms, margin 0.036ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=55.958ms, runs that would red=0
+  slowest single gap max=298.048ms ; reference span max=1393.836ms (nominal 500ms)
+yes-alive-after=0
+
+== v2-race-load32 (32 yes + ambient load 150-214, -race): the harness's 10 m binary timeout fired during run 79 (a 500 ms reference took 32.6 s); summary of the 78 complete runs:
+== v2-race-load32 nyes=32 race=1 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:56  up 2 days, 15:15, 4 users, load averages: 31.68 43.89 79.00
+end:   10:07  up 2 days, 15:26, 4 users, load averages: 202.42 175.35 135.45
+rc=1 wall=621s
+CADENCE runs=78 dials: min=6 (gate >= 6) distribution={6: 1, 7: 1, 9: 5, 10: 19, 11: 34, 12: 8, 13: 2, 14: 6, 16: 1, 19: 1}
+  floor: fastest gap min=50.067ms (gate >= 50ms, margin 0.067ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=116.526ms, runs that would red=2
+  slowest single gap max=29120.839ms ; reference span max=62601.507ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)
+--- FAIL lines: 0
+=== RUN   TestExecProbeReversePollCadence
+    exec_probe_test.go:983: CADENCE dials=10 span=32.619544167s fastest=51.1095ms slowest=14.229204375s
+--- PASS: TestExecProbeReversePollCadence (32.62s)
+=== RUN   TestExecProbeReverseHelloWaitBounds
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-child
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-mux
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+=== RUN   TestExecProbeReversePollCadence
+panic: test timed out after 10m0s
+	running tests:
+		TestExecProbeReversePollCadence (27s)
+
+== v2-race-load64-gmp2 (64 yes + ambient ~206, -race, GOMAXPROCS=2): the runner's summary step was cut short when phase3 was stopped, but the test binary finished; summary computed from the raw
+== v2-race-load64-gmp2 nyes=64 race=1 count=200 tree=/tmp/world-iter339/designer/proto
+start: 10:09  up 2 days, 15:28, 4 users, load averages: 205.85 183.29 144.29
+end:   10:19  up 2 days, 15:38, 4 users, load averages: 156.98 157.41 147.77
+rc=0 wall=589s
+PASS lines: 400  FAIL lines: 0
+CADENCE runs=200 dials: min=9 (gate >= 6) distribution={9: 6, 10: 30, 11: 155, 12: 7, 13: 2}
+  floor: fastest gap min=50.090ms (gate >= 50ms, margin 0.090ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=354.307ms, runs that would red=4
+  slowest single gap max=8285.839ms ; reference span max=28012.134ms (nominal 500ms)
+T12 --- PASS: 200  --- FAIL lines: 0
+ok  	github.com/sunholo-data/ailang-world/host/broker	486.787s
+CADENCE runs=200 dials: min=9 (gate >= 6) distribution={9: 6, 10: 30, 11: 155, 12: 7, 13: 2}
+  floor: fastest gap min=50.090ms (gate >= 50ms, margin 0.090ms)
+  rejected absolute check (fastest gap < 100ms): max fastest=354.307ms, runs that would red=4
+  slowest single gap max=8285.839ms ; reference span max=28012.134ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)

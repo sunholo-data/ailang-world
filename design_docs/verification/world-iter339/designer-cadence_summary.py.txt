@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+# Summarise T12 v2 CADENCE log lines (stdin): dial-count gate, floor margin, the rejected absolute check.
+import sys,re
+from collections import Counter
+def d(s):
+    tot=0.0
+    for v,u in re.findall(r"([0-9.]+)(h|ms|µs|us|ns|m|s)", s):
+        tot+=float(v)*{"h":3.6e6,"m":6e4,"s":1000,"ms":1,"µs":1e-3,"us":1e-3,"ns":1e-6}[u]
+    return tot
+rows=[dict(kv.split("=") for kv in l.split()[1:]) for l in sys.stdin if l.startswith("CADENCE")]
+if not rows: print("no CADENCE lines"); sys.exit()
+n=[int(r["dials"]) for r in rows]; f=[d(r["fastest"]) for r in rows]; s=[d(r["slowest"]) for r in rows]; sp=[d(r["span"]) for r in rows]
+print(f"CADENCE runs={len(rows)} dials: min={min(n)} (gate >= 6) distribution={dict(sorted(Counter(n).items()))}")
+print(f"  floor: fastest gap min={min(f):.3f}ms (gate >= 50ms, margin {min(f)-50:.3f}ms)")
+print(f"  rejected absolute check (fastest gap < 100ms): max fastest={max(f):.3f}ms, runs that would red={sum(1 for x in f if x>=100)}")
+print(f"  slowest single gap max={max(s):.3f}ms ; reference span max={max(sp):.3f}ms (nominal: v2 10 x 50 ms = 500 ms; v3 20 x 50 ms = 1000 ms)")

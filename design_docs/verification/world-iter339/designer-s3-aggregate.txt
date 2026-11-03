@@ -1,0 +1,7 @@
+Survivor 3 aggregate: per tree and load, the largest (wait - reported excess) = the reference's lag behind the classifier's clock read, over every red subtest
+tree=base (T10 at HEAD, stop-referenced) yes=  0: red subtests=1600 worst lag=80.0 us  -> a 1 ms over-ceiling mutant survives iff lag > 1000 us
+tree=base (T10 at HEAD, stop-referenced) yes= 32: red subtests=1600 worst lag=110.1 us  -> a 1 ms over-ceiling mutant survives iff lag > 1000 us
+tree=base (T10 at HEAD, stop-referenced) yes=160: red subtests=1600 worst lag=1713.3 us  -> a 1 ms over-ceiling mutant survives iff lag > 1000 us
+tree=mut  (proposed, setAt-referenced) yes=  0: red subtests=1600 worst lag=0.3 us  -> a 1 ms over-ceiling mutant survives iff lag > 1000 us
+tree=mut  (proposed, setAt-referenced) yes= 32: red subtests=1600 worst lag=0.3 us  -> a 1 ms over-ceiling mutant survives iff lag > 1000 us
+tree=mut  (proposed, setAt-referenced) yes=160: red subtests=1600 worst lag=0.5 us  -> a 1 ms over-ceiling mutant survives iff lag > 1000 us

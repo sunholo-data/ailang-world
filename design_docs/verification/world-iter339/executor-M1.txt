@@ -1,0 +1,136 @@
+Executor M1 transcript: iteration 339, queue row 241
+All steps run sequentially in this /bin/bash session from the worktree root.
+Pre-existing status:
+?? design_docs/verification/world-iter339/controller-planner-sandbox-reds.txt
+?? design_docs/verification/world-iter339/executor-M1.txt
+Controller-only package/full suite, mutations, heavy-load and other unrequested gates are not run.
+
+STEP 1-payload
+COMMANDS:
+set -eu
+set -o pipefail
+WT=$(pwd -P)
+X=$(mktemp -d /tmp/world-iter339-executor.XXXXXX)
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+D=design_docs/verification/world-iter339/plan-M1.diff.txt
+python3 - "$D" <<'HASH'
+from pathlib import Path
+import hashlib,sys
+assert hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest() == 'b75e4cf0517633d71e70c88468a93748e58c95cfedfe9ef257d244b4dde146de'
+HASH
+# Refuse unrelated code drift, including pre-existing changes, before applying.
+git diff --quiet dcb2366e -- . ':!design_docs'
+python3 - <<'BASE'
+from pathlib import Path
+import hashlib
+expected={'.github/workflows/ci.yml': 'daf57b6e168f616cd99e370df8ded5c853df72207c3cc5ec248110702c0ecead', 'host/broker/exec_probe_test.go': 'e35784db17623df899e573096edf41ea4b205dbb4975701380594082e8181c5e', 'host/broker/exec_probe.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4'}
+for p,h in expected.items(): assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+BASE
+git apply --check "$D"
+git apply "$D"
+python3 - <<'POST'
+from pathlib import Path
+import hashlib
+expected={'.github/workflows/ci.yml': 'a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f', 'host/broker/exec_probe_test.go': 'bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0', 'host/broker/exec_probe.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4'}
+for p,h in expected.items(): assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+print('post hashes OK')
+POST
+
+OUTPUT (stdout/stderr):
+post hashes OK
+
+rc=0
+
+STEP 2-A1
+COMMANDS:
+perl -e 'alarm 2100; exec @ARGV' go test -timeout 30m -count=1 -v -run '^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$' ./host/broker/
+
+OUTPUT (stdout/stderr):
+=== RUN   TestExecProbeReverseHelloWaitBounds
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-child
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-mux
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+=== RUN   TestExecProbeReversePollCadence
+    exec_probe_test.go:988: CADENCE dials=21 span=1.116856625s fastest=50.394625ms slowest=75.159333ms
+--- PASS: TestExecProbeReversePollCadence (1.12s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.509s
+
+rc=0
+
+STEP 3-A5a
+COMMANDS:
+perl -e 'alarm 600; exec @ARGV' gofmt -l host/broker
+
+OUTPUT (stdout/stderr):
+
+rc=0
+
+STEP 3-A5b
+COMMANDS:
+perl -e 'alarm 600; exec @ARGV' go vet ./host/broker/
+
+OUTPUT (stdout/stderr):
+
+rc=0
+
+STEP 4-build
+COMMANDS:
+perl -e 'alarm 600; exec @ARGV' go build ./...
+
+OUTPUT (stdout/stderr):
+
+rc=0
+
+STEP 5-A7
+COMMANDS:
+git ls-files --others --exclude-standard -- . ':!design_docs' > "$X/untracked.txt"
+[ ! -s "$X/untracked.txt" ]
+git diff --name-only dcb2366e -- . ':!design_docs' > "$X/shape.txt"
+python3 - "$X/shape.txt" <<'SHAPE'
+from pathlib import Path
+import sys
+assert Path(sys.argv[1]).read_text().splitlines()==['.github/workflows/ci.yml','host/broker/exec_probe_test.go']
+SHAPE
+git diff --quiet dcb2366e -- host/broker/exec_probe.go
+git show dcb2366e:host/broker/exec_probe.go > "$X/base-exec_probe.go"
+cmp "$X/base-exec_probe.go" host/broker/exec_probe.go
+git diff --numstat dcb2366e -- .github/workflows/ci.yml
+# Exactly: 1<TAB>1<TAB>.github/workflows/ci.yml
+git diff dcb2366e -- .github/workflows/ci.yml
+# One changed tests= line in the Row 140 step, only the required appended name.
+python3 - <<'POSTCHECK'
+from pathlib import Path
+import hashlib
+expected={'.github/workflows/ci.yml': 'a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f', 'host/broker/exec_probe_test.go': 'bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0', 'host/broker/exec_probe.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4'}
+for f,h in expected.items(): assert hashlib.sha256(Path(f).read_bytes()).hexdigest()==h,f
+print('post hashes OK')
+POSTCHECK
+
+OUTPUT (stdout/stderr):
+1	1	.github/workflows/ci.yml
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index b6bf752f..6dc536c9 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -244,7 +244,7 @@ jobs:
+           [ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }
+           tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"
+           tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"
+-          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvivesAForeignAttempt TestExecProbeReverseLegNoTokenIsNotRetried TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds TestExecProbeChildListenerDrainsTheHello"
++          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvivesAForeignAttempt TestExecProbeReverseLegNoTokenIsNotRetried TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds TestExecProbeReversePollCadence TestExecProbeChildListenerDrainsTheHello"
+           tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual TestExecSrtWorktreeDelta"
+           log="$RUNNER_TEMP/exec-srt-verbose.log"
+           rc=0
+post hashes OK
+
+rc=0
+
+Final command: git status --porcelain
+ M .github/workflows/ci.yml
+ M host/broker/exec_probe_test.go
+?? design_docs/verification/world-iter339/controller-planner-sandbox-reds.txt
+?? design_docs/verification/world-iter339/executor-M1.txt
+git status --porcelain rc=0
