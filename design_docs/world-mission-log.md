@@ -2704,3 +2704,90 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 240 lands on PR CI + merge CI green (landing note). Then row 241 under D-WORLD-106 = A, then 242, stopping as soon as a release row is routable; a dev red still outranks.
 
 **Landing (iteration 338):** PR #465 merged as `13d3a3fb` (merge commit, `--match-head-commit 6839c767`). Head `6839c767` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `2c51c581`, right before the merge. **Merge CI:** `commits/13d3a3fb/check-runs` → 3, all success on attempt 1 (ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 339 — 2026-11-03 — row 241 built: T12 pins pollLoopback's real dial cadence to execProbePollEvery through the dial seam; T10's ceiling measured from setAt; one CI name; design r1 PROCEED 3/3; judge PASS 88 [CLAUSE-3 HYGIENE]
+
+**Pick:** row 241 `w-exec-probe-hello-wait-pin-survivors`, next in queue order under D-WORLD-106 = A (attended 2026-11-02), the sixth pick.
+- Clause map 1–7 MET, no UNMET clause.
+- Release rows not routable, re-measured at `dcb2366e`:
+  - Row 150 waits on the attended A1: subjects `2c51c581..dcb2366e` matching `row ?150|A1\b|marketing` → 5 of 11, all row 240's own commits.
+  - Row 151 needs row 188 N2d/N4a: `-E --grep='N2d|N4a'` since 2026-10-01 → the same 4 records/designs. N2c control 4.
+- Dev green at `dcb2366e`: check-runs 3, none not-green.
+- Gate 0:
+  - 0 allowlisted directives on #449 (watermark file absent, so all 7 comments were read; none allowlisted) or #366.
+  - Self-notice script rc 0 (control 107:4); no crash notices.
+  - Billing CLEAN.
+  - Running skill and every resource file byte-identical to `origin/dev`, in both the resolved symlink target and the pin worktree (14 files each; the two are different inodes).
+- Gate 2 died-mid-flight traces: 0 open PRs; no iteration-339 worktree or branch existed. The main checkout briefly showed an untracked `cmd/ailang-worldd/zz_iter305_bottoms_test.go` that was gone a minute later (another session's probe; not this loop's). All work ran in worktrees.
+- Premise measured first-party on a `git archive` copy of `dcb2366e` (`controller-premise.txt`): the row's mutant (`time.After(execProbePollEvery)` → `time.After(500 * time.Millisecond)`) rc 0 on `-run '^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)'`; control rc 0; positive control (constant 2 s) rc 1 (T10 slow-mux).
+
+**Design** (`w-exec-probe-hello-wait-pin-survivors`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–338 precedent and the operator's standing request; rotation pointer unchanged):
+- **r1** (436 lines), one run, 2.6 h. Test-only:
+  - T12 `TestExecProbeReversePollCadence` counts dials through the dial seam while a reference loop waits `time.After(execProbePollEvery)` 20 times (gate ≥ 6 of about 21), and floors every dial gap at the constant.
+  - T10 measures the hello deadline from `setAt` (recorded in `helloConn.SetDeadline`), not from when the poll stops. A correct tree cannot red, and the check is strictly stronger than before.
+  - One CI list name in the real-srt verbose step.
+- Why the reference clock: another session's release builds held the rig at load 80–214 during the run, and a wall-clock prototype false-redded 76 of 200 correct-tree runs. A second prototype bottomed out exactly at its gate, so the final one uses 20 periods and a ¼ ratio.
+- Survivors 1–5 dispositioned:
+  1. Killed by T12.
+  2. Equivalent at 500 ms; the paired change reds T7.
+  3. Real at HEAD (lag 1.713 ms under 160 `yes`); closed by the `setAt` reference (≤ 0.5 µs).
+  4. Each clause pinned in a pair.
+  5. In-bounds equivalents.
+  The 2×–4× cadence band is explicitly accepted (30/30 survive each).
+- **Quorum r1 PROCEED, 3 of 3 present** ($0.3840; seats gemini-4-argon, oc-glm-5-3, oc-kimi-k3; claude benched as the author's vendor; `absent_reviewers` `[]`). glm and kimi passed but noted the shipped T12 was never run under the heavy ambient load. The controller turned that into an acceptance gate (below) rather than a revision.
+
+**Plan** (resolver `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; `derive-planner-lane.sh` agrees; codex probe rc 0), `68580b0a`:
+- Detached planner worktree `.planner-wt-iter339` at `82305a9e`, removed after.
+- `plan-M1.diff.txt` sha256 `b75e4cf0…`; post shas: test file `bbfccede…`, `ci.yml` `a11ff4ab…`, `exec_probe.go` unchanged `96f33172…`.
+- 61-execution mutation runner (`plan-mutants.sh.txt`, bash 3.2); a heavy-load gate at 160 `yes` replacing the design's 32.
+- The planner caught that the design header attaches the patched file's sha to the patch's name (the patch hashes `43221064…`).
+- Two of its sandboxed runs red at base and patched: `TestOrdinaryOverflowCarriesNoESRCH` and `TestExecHandlerTimeoutKillsTheGroup`. Controller re-ran both outside the sandbox at base: PASS (`controller-planner-sandbox-reds.txt`). Sandbox artifacts.
+
+**Executor** (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; 30-min cap): applied the diff and checked every hash; A1 rc 0 (T10 both subtests, T12 `CADENCE dials=21 fastest=50.39ms`); gofmt/vet clean; `go build ./...` rc 0; A7 shape rc 0. The directive skipped the in-sandbox package and mutation runs (iteration 338 retro 2). Left uncommitted; the controller committed M1 `51622b82`.
+
+**Controller checks before the judge** (outside the sandbox, on `51622b82`, sequenced; `controller-gates-summary.txt`):
+- A2 package: rc 0, 336 PASS / 30 SKIP / 0 FAIL (285.9 s), as the design's V15 predicted.
+- A3 mutation round: 61 of 61 rows `EXPECTATION MATCH`, 59 restores `cmp ok`.
+- A4 heavy load: 160 `yes`, load rose to 170.
+  - 100/100 PASS of each test, minimum 19 dials (gate 6), smallest gap 50.023 ms (floor 50 ms).
+  - `yes-alive-after=0`.
+- A6: `go build ./...` rc 0; `go test -timeout 40m ./...` rc 0 (35 ok, 0 FAIL); `verify_ail.sh` rc 0 (16 identities, 40 named tests, 503 se-tools).
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), in its own detached worktree `.judge-wt-iter339` at `e2d418d0`, foreground.
+- **PASS 88/100, zero blocking.**
+- Re-ran the row's mutant: killed (3 dials). Its own mutants: 25 ms, waits 960/1000 ms and 200 ms all killed.
+- Its survivors:
+  - cadence 60/150/200 ms;
+  - a 951 ms wait if the classifier-to-`SetDeadline` gap exceeds 1 ms;
+  - a 1 ms floor slack.
+- `-count=100` of both tests, no load, green. Scope confirmed (`exec_probe.go` byte-identical).
+- Report: `evaluator-r1.md` (44 lines, 8 tool calls). The controller reproduced two claims on a scratch copy (`controller-judge-repro.txt`): 500 ms → 3 dials rc 1; 60 ms → 17 dials rc 0.
+- Disposition: all three survivors fall inside the design's accepted residuals (the sub-5× band; the measured ≤ 0.5 µs gap; timers never fire early), so no row was filed.
+
+**Routing evidence:** base=dcb2366e49d2c93cc83c23c78606397c9b6cf4a2@2026-11-03T11:25:14Z (Gate 4 record; Gate 1 and Gate 3's snap read the same SHA).
+- Driver env:
+  - `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`;
+  - `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`;
+  - `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`;
+  - `MISSION_EVALUATOR_RESOLVED=sonnet`;
+  - `MISSION_OVER_RATION` empty.
+  - Codex ration 76.0% used / 83.2% allowed at the executor's spawn.
+- Controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent `opus` (340,291 tok) · planner `codex:gpt-6.1-sol` (113,601 tok) · executor `codex:gpt-6.1-sol` (52,365 tok) · evaluator Agent `sonnet` (42,087 tok).
+- Generator ≠ judge: opus designer and codex planner/executor vs the sonnet judge. Designer and judge spawned through the Agent tool; planner and executor through the codex recipe, as the routing table specifies for a `provider:model` pin. None fell back.
+- Designer diet: 1 doc, 1 run, no revision.
+- Metered **$0.3840**, all quorum r1, under the $5 budget.
+
+**Ruled out:**
+- A revision for glm's and kimi's heavy-load note: both passed. It was a missing measurement, not a design defect, so the controller measured it (A4).
+- A production timer seam for the cadence (design §2.4): a test that injects its own timer cannot see the default, so the row's mutant would move into the seam.
+- Filing the judge's survivors: each sits inside a residual the design measured and accepted.
+- Treating the planner's two sandbox reds as regressions: both pass outside the sandbox at base.
+
+**Retro:**
+1. **Ambient load from another session is a design input, not noise.** The designer's first prototype false-redded 76/200 under someone else's release builds, and the redesign (a reference loop that shares the poll's timer) is strictly better. The cost was 2.6 h of designer wall time. Instance 1 of "a timing test designed while the rig is loaded comes out more robust and much slower".
+2. **A quorum reviewer's "never measured under X" is cheapest closed as an acceptance gate.** Making the 160-`yes` run a planner-scripted, controller-run gate cost about 3 minutes and turned two reviewers' residual into a measured margin (19 dials against 6). Same shape as iteration 337's and 338's retro (measure the premise, don't revise).
+3. **Byte-pinned diff from the codex planner, applied by the codex executor, worked again** (iterations 336, 338, 339). The executor run took about 5 minutes.
+- No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 241 BUILT in PR #467.
+**Next:** row 241 lands on PR CI + merge CI green (landing note). Then row 242, the LAST row in D-WORLD-106's scope; it changes probe structure on a fail-closed startup gate, so it needs its own design and quorum. After 242 the scope is used up: rule-(d) block reports resume unless D-WORLD-105 is answered A/B, Mark widens the scope (rows 244–248 are hygiene outside it), or a release row becomes routable. A dev red still outranks.
