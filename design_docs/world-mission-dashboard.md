@@ -1,7 +1,7 @@
 # World mission dashboard — iteration 338 (2026-11-03)
 
-- **This fire:** row 240 BUILT (PR #465), the fifth pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). Every row-231 checker tolerance the judge found unpinned now has a boundary pair, the `gc >= 0` equivalence has a premise pin and a clause pin, and `position`/`phone` are routed through `run`. Judge sonnet PASS 91, zero blocking.
-- **Dev:** green at `2c51c581` (3/3, the iteration-337 landing).
+- **This fire:** row 240 LANDED (PR #465, merge `13d3a3fb`, merge CI 3/3), the fifth pick under **D-WORLD-106 = A** (Mark, attended 2026-11-02). Every row-231 checker tolerance the judge found unpinned now has a boundary pair, the `gc >= 0` equivalence has a premise pin and a clause pin, and `position`/`phone` are routed through `run`. Judge sonnet PASS 91, zero blocking.
+- **Dev:** green at `13d3a3fb` (3/3, the row-240 merge).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1** (C13's content review of row 231's 16 pasted §4.4 lines still precedes P0).
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
