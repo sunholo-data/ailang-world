@@ -844,11 +844,15 @@ type helloConn struct {
 	arrival  time.Time
 	answer   []byte
 	deadline time.Time
+	setAt    time.Time // when the last deadline was set, read after the classifier's time.Now()
 	sets     int
 	wrote    string
 }
 
-func (c *helloConn) SetDeadline(t time.Time) error     { c.deadline, c.sets = t, c.sets+1; return nil }
+func (c *helloConn) SetDeadline(t time.Time) error {
+	c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1
+	return nil
+}
 func (c *helloConn) SetReadDeadline(t time.Time) error { return c.SetDeadline(t) }
 func (c *helloConn) Write(b []byte) (int, error)       { c.wrote += string(b); return len(b), nil }
 func (c *helloConn) Close() error                      { return nil }
@@ -906,12 +910,11 @@ func TestExecProbeReverseHelloWaitBounds(t *testing.T) {
 			before := time.Now()
 			conn := &helloConn{arrival: before.Add(execProbeHelloFloor), answer: []byte(row.answer)}
 			seen := pollLoopback(40000, want, firstDialReturns(conn, refused))()
-			after := time.Now()
 			if seen != row.want || conn.wrote != execProbeHello {
 				t.Errorf("an answer %s after the hello: seen %+v (wrote %q); want %+v, not silent", execProbeHelloFloor, seen, conn.wrote, row.want)
 			}
-			if conn.sets == 0 || conn.deadline.IsZero() || conn.deadline.After(after.Add(ceiling)) {
-				t.Errorf("hello deadline at stop+%v (sets %d); want a deadline no later than stop+%v (listen window less one poll period)", conn.deadline.Sub(after), conn.sets, ceiling)
+			if conn.sets == 0 || conn.deadline.IsZero() || conn.deadline.After(conn.setAt.Add(ceiling)) {
+				t.Errorf("hello deadline at set+%v (sets %d); want a deadline no later than set+%v (listen window less one poll period)", conn.deadline.Sub(conn.setAt), conn.sets, ceiling)
 			}
 		})
 	}
@@ -930,4 +933,57 @@ func TestExecProbeChildListenerDrainsTheHello(t *testing.T) {
 	if !strings.Contains(execProbeScript, handler) {
 		t.Fatalf("the listen op's connection handler is not %s", handler)
 	}
+}
+
+// T12 (row 241 design §2.1): pollLoopback's REAL dial cadence is
+// execProbePollEvery, observed through the dial seam, so T10's ceiling (the
+// listen window less one poll period) derives from the interval the poll
+// actually waits. The clock is a reference loop on this goroutine that waits
+// execProbePollEvery revCadencePeriods times: the timer the poll should run,
+// so load that delays the poll's wake-ups delays the reference too.
+//   - count: the poll dials once at the start and then once per period, so
+//     about revCadencePeriods+1 times while the reference runs. Fewer than
+//     revCadencePeriods/4+1 means it waits about four periods or more per dial.
+//   - floor: every gap between dials is at least execProbePollEvery. A Go
+//     timer never fires early and the next dial follows it, so load cannot
+//     red this check.
+func TestExecProbeReversePollCadence(t *testing.T) {
+	const revCadencePeriods = 20
+	refused := revDialErr(syscall.ECONNREFUSED)
+	var mu sync.Mutex
+	dials, at := 0, make([]time.Time, 0, 4*revCadencePeriods)
+	stop := pollLoopback(40000, "WORLD-PROBE-NONCE "+strings.Repeat("a", 32), func(string) (net.Conn, error) {
+		mu.Lock()
+		if dials++; len(at) < cap(at) { // a runaway mutant must not grow the slice without bound
+			at = append(at, time.Now())
+		}
+		mu.Unlock()
+		return nil, refused
+	})
+	start := time.Now()
+	for range revCadencePeriods {
+		<-time.After(execProbePollEvery)
+	}
+	span := time.Since(start)
+	stop()
+	mu.Lock()
+	defer mu.Unlock()
+	if dials < revCadencePeriods/4+1 {
+		t.Errorf("%d dials while a reference waited execProbePollEvery (%v) %d times (%v); want at least %d: the poll does not wait execProbePollEvery", dials, execProbePollEvery, revCadencePeriods, span, revCadencePeriods/4+1)
+	}
+	short, fastest, slowest := 0, time.Duration(0), time.Duration(0)
+	for i := 1; i < len(at); i++ {
+		gap := at[i].Sub(at[i-1])
+		if i == 1 || gap < fastest {
+			fastest = gap
+		}
+		slowest = max(slowest, gap)
+		if gap < execProbePollEvery {
+			short++
+		}
+	}
+	if short > 0 {
+		t.Errorf("%d of %d dial gaps under execProbePollEvery (%v), the fastest %v; want none: the poll waits less than execProbePollEvery", short, len(at)-1, execProbePollEvery, fastest)
+	}
+	t.Logf("CADENCE dials=%d span=%v fastest=%v slowest=%v", dials, span, fastest, slowest)
 }
