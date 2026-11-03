@@ -1,0 +1,33 @@
+# designer-r2-gc-sweep: TestProtoGapSweepR2 (designer-r2-gc-sweep_test.go.txt) = the r1 sweep plus instrument controls with gb = 0, 1, 2; base judge, then position.go:129 'gc >= 0 && posAbs(e) <= 2' -> 'posAbs(e) <= 2' (restored + cmp)
+base rc=0; mutant rc=0
+$ tail -1 sweep2-base.txt
+SWEEP cases=300 min-nonfree-gb=15
+$ grep -c "^ctl-gb" sweep2-base.txt
+33
+$ diff sweep2-base.txt sweep2-gc.txt
+304,305c304,305
+< ctl-gb0 gc=-2: ["workbench-light.png/timeline-first: (a3) gap after header -2 vs R1 0"]
+< ctl-gb0 gc=-1: ["workbench-light.png/timeline-first: (a3) gap after header -1 vs R1 0"]
+---
+> ctl-gb0 gc=-2: []
+> ctl-gb0 gc=-1: []
+315c315
+< ctl-gb1 gc=-1: ["workbench-light.png/timeline-first: (a3) gap after header -1 vs R1 1"]
+---
+> ctl-gb1 gc=-1: []
+diff rc=1
+$ grep -E "^ctl-gb2 gc=(-1|0|1|2|3|4|5):" sweep2-base.txt sweep2-gc.txt   (gb=2: no difference, the boundary)
+sweep2-gc.txt:ctl-gb2 gc=-1: ["workbench-light.png/timeline-first: (a3) gap after header -1 vs R1 2"]
+sweep2-gc.txt:ctl-gb2 gc=0: []
+sweep2-gc.txt:ctl-gb2 gc=1: []
+sweep2-gc.txt:ctl-gb2 gc=2: []
+sweep2-gc.txt:ctl-gb2 gc=3: []
+sweep2-gc.txt:ctl-gb2 gc=4: []
+sweep2-gc.txt:ctl-gb2 gc=5: ["workbench-light.png/timeline-first: (a3) gap after header 5 vs R1 2"]
+sweep2-base.txt:ctl-gb2 gc=-1: ["workbench-light.png/timeline-first: (a3) gap after header -1 vs R1 2"]
+sweep2-base.txt:ctl-gb2 gc=0: []
+sweep2-base.txt:ctl-gb2 gc=1: []
+sweep2-base.txt:ctl-gb2 gc=2: []
+sweep2-base.txt:ctl-gb2 gc=3: []
+sweep2-base.txt:ctl-gb2 gc=4: []
+sweep2-base.txt:ctl-gb2 gc=5: ["workbench-light.png/timeline-first: (a3) gap after header 5 vs R1 2"]

@@ -2626,3 +2626,79 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 239 lands on PR CI + merge CI green (landing note). Then row 240 under D-WORLD-106 = A, then 241 → 242, stopping as soon as a release row is routable; a dev red still outranks.
 
 **Landing (iteration 337):** PR #463 merged as `248f902c` (merge commit, `--match-head-commit 6df1e3c6`). Head `6df1e3c6` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `2f293570`, right before the merge. **Merge CI:** `commits/248f902c/check-runs` → 3, all success on attempt 1 (run 41563052841: ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
+
+## 338 — 2026-11-03 — row 240 built: one boundary pair per unpinned row-231 tolerance, a premise pin and a clause pin for gc >= 0, and run routes; design r3 via a controller carve-out; judge PASS 91 [RELEASE-HYGIENE]
+
+**Pick:** row 240 `w-marketing-checker-tolerance-pins`, next in queue order under D-WORLD-106 = A (attended 2026-11-02), the fifth pick.
+- Clause map 1–7 MET, no UNMET clause.
+- Release rows not routable, re-measured at `2c51c581`:
+  - Row 150 waits on the attended A1: subjects `2f293570..2c51c581` matching `row ?150|A1\b|marketing` → 5 of 11, all row 239's own commits.
+  - Row 151 needs row 188 N2d/N4a: `-E --grep='N2d|N4a'` since 2026-10-01 → the same 4 records/designs. N2c control 4.
+- Dev green at `2c51c581`: check-runs 3, none not-green.
+- Gate 0:
+  - 0 allowlisted directives on #449 (watermark file absent, so every comment was read; 6 comments, none allowlisted) or #366.
+  - Self-notice script rc 0 (control 107:4); no crash notices.
+  - Billing CLEAN.
+  - Running skill and all 13 resource files byte-identical to `origin/dev` (resolved symlink target).
+- Gate 2 died-mid-flight traces: 0 open PRs; no iteration-338 worktree or branch existed; main checkout carries only the two long-standing untracked dirs.
+- Premise measured first-party on a `git archive` copy of `2c51c581`: `position.go:150` bg-Y `<= 200`, `phone.go:168` entry tolerance 40 and `:101` `dh > 3` each rc 0; unmutated control rc 0; positive control `<= -1` rc 1. The row's `phone.go:157` citation is stale (now `:168`).
+
+**Design** (`w-marketing-checker-tolerance-pins`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–337 precedent and the operator's standing request; rotation pointer unchanged):
+- **r1** (235 lines). One new test file; boundary pairs from the real seed-5 store and phone skeleton; the right background edge (not in the row) also survives; `gc >= 0` settled equivalent on R1 by a 300-case sweep with a firing `gb = 0` control; `main.go` routes in scope (the `dispatch` subtests cannot fail on their own null case); the §13 export observation out of scope (no longer reproduces).
+- **Quorum r1 BLOCKED** ($0.1683; seats oc-kimi-k3, gpt6-1-sol, gemini-4-argon; claude benched; `absent_reviewers` `[]`).
+  - kimi: V07's 15 `--- PASS` does not reconcile with the design's 17. The controller measured it: the r1 phone prototype looped dy 4/5 inside one function with no subtests, so 12 + 1 + 1 + 1 = 15. Handed over as a measurement.
+  - sol: keeping T18 as a survivor cannot reveal a change to R1's gaps.
+  - gemini (pass): T13/T14's sed must match `phoneR1Entry, 4)`.
+- **r2** (290 lines): the shipped file re-measured (18 PASS) and the whole §3 round re-run on it; the premise pinned as a subtest (every non-free gap ≥ 2, the exact bound by a gap-0/1/2 sweep; reds on a scratch R1 with gap 1 or 0).
+- **Quorum r2 BLOCKED** ($0.2428; same seats, none absent): sol and gemini PASS; kimi rejects: the premise helper is a shadow walk and the re-validation triggers omit a change to the (a3) clause, with its own two-part fix.
+- **r3, controller narrow-refinement carve-out.** The one remaining objection carried a reviewer-authored fix and did not dispute direction. Applied kimi's zero-production-diff option: subtest `gc-a3-conjunct-source-pin` (exactly one occurrence of the (a3) clause text in `position.go`), its re-validation sentence verbatim in §2.5 and §5, and its edit-site comment at `position.go:129` (trailing, so no §3 line moves). Measured before commit on a scratch copy: 19 PASS, T18 rc 1 with only the new pin red, full package rc 0 (`controller-r3-measure.txt`, V13). The pin string and comment wording are controller-authored and were not re-quorumed (the judge noted this).
+
+**Plan** (resolver `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; `derive-planner-lane.sh` agrees; codex probe rc 0), `7cdef714`:
+- Detached planner worktree `.planner-wt-iter338` at `572e177d`, removed after (its three deliverables `cmp`-identical to the committed copies).
+- `plan-M1.diff.txt` sha256 `733b40d1…`, `git apply --check` rc 0; post sha256 `c6e5fb0b…` (test) / `af0429fd…` (position.go), identical to the controller's r3 measurement files.
+- Measured deviation, accepted by the controller: T11/T12 rewrite the same `:129` clause, so the r3 source pin co-reds them; each keeps its behavioural killer.
+
+**Executor** (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; 60-min cap, since the mutation round plus the full suite exceeds 30 min on the rig):
+- Patch sha verified and applied with `patch -p1`; both post shas match.
+- Three-function run rc 0, 19 PASS; gofmt/vet clean; `go build` rc 0; diff check passed.
+- Its package and mutation runs were all UNINFORMATIVE UNDER SANDBOX: an `httptest` bind panic in `TestMarketingCapturePassFakeChrome` aborts the whole test binary (0 tests passed per run), which the executor labelled correctly.
+- Left uncommitted; the controller committed M1 `e091d27d`.
+
+**Controller checks before the judge** (outside the sandbox; `controller-M1-gates.txt`, round script banked):
+- 22-row mutation round on a scratch copy at the M1 content: control rc 0; T1–T9, T13, T18 each sole-killed by the named new subtest; T10, T12, T14 add the design's listed existing reds; T11/T12 add the source pin as dispositioned; T15–T17b red the routes test plus the docs subtest; positive control rc 1. One instrument artifact: the control's backup of a dummy path printed `RESTORE-FAIL` (nothing was mutated).
+- In the worktree: three-function run 19 PASS / 0 FAIL / 0 SKIP; gofmt empty; vet rc 0; `go build ./...` rc 0; `go test ./...` rc 0 (35 ok, 0 FAIL); `verify_ail.sh` rc 0 (16 identities, 40 named tests, 503 se-tools).
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), in its own detached worktree `.judge-wt-iter338` at `e091d27d`, foreground.
+- **PASS 91/100, zero blocking** (33/17/15/13/13).
+- Re-ran acceptance (19 PASS, full package ok 40.6 s, gofmt/vet clean, production diff = the one comment line); did not re-run the full suite or `verify_ail.sh`.
+- Design mutants T1–T4, T9, T11–T13, T15, T18 and C all matched; its own diff-derived mutants: routes `rc != 99` and the +3 compensation removal killed; a semantics-preserving `&& true` on `:129` reds the source pin (conservative tripwire); survivors: premise helper `gb < 1`, free-gap skip removed, `n == 0` guard removed, `regions != 17` dropped, phone header check dropped, source pin `n < 1`, +2 compensation removed (harmless).
+- Process: recorded quorum verdicts match both artifacts; the carve-out stayed within its rule.
+- Report: `verification/world-iter338/evaluator-r1.md`.
+- Controller reproduced two survivors on a scratch copy (`gb < 1` rc 0; `regions != 17 ||` removed rc 0) → row 248.
+
+**Routing evidence:** base=2c51c581577eef0ffb8227c9f949d5456902674e@2026-11-03T03:57:38Z (Gate 1; Gate 3's snap read the same SHA at 04:02:14Z).
+- Driver env:
+  - `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`;
+  - `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`;
+  - `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`;
+  - `MISSION_EVALUATOR_RESOLVED=sonnet`;
+  - `MISSION_OVER_RATION` empty.
+- Controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent `opus` (185,281 + 233,894 tok over two runs: r1, r2) · planner `codex:gpt-6.1-sol` (98,178 tok) · executor `codex:gpt-6.1-sol` (122,920 tok) · evaluator Agent `sonnet` (59,840 tok).
+- Generator ≠ judge: opus designer and codex planner/executor vs the sonnet judge. Designer and judge spawned through the Agent tool; planner and executor through the codex recipe, as the routing table specifies for a `provider:model` pin. None fell back.
+- Designer diet: 1 doc, initial run + 1 protocol-mandated revision; r3 was the controller's carve-out, not a designer run. Opus, not Fable.
+- Metered **$0.4111**, all quorum (r1 $0.1683 + r2 $0.2428), under the $5 budget.
+
+**Ruled out:**
+- A third quorum round on r3: the only r2 objection carried its own fix and did not dispute direction (iteration-95 carve-out).
+- Kimi's other fix option (extract the gap walk into a `position.go` helper): it changes production code in a test-only row; the zero-production-diff option was the reviewer's own alternative.
+- Treating the executor's all-F mutation table as a regression or an instrument fault in the tests: the sandbox's httptest panic kills the binary before any other test runs.
+- Pinning `gc >= 0` directly: needs a synthetic baseline the checker never sees in production (design §2.5).
+
+**Retro:**
+1. **A controller carve-out is a design change, and the planner is the first reader who can see its side effects.** r3's exact-text pin also reds T11/T12 because they rewrite the same line; the designer's r2 measurements predated it and the controller's r3 measurement only ran T18. Reading the planner's deviation list before the executor caught it. Instance 1.
+2. **In this repo, a sandboxed executor's full-package mutation round is never informative**: one `httptest` panic aborts the binary. The controller's out-of-sandbox round is the real one. Same class as the codex false-green (3); recorded so the next codex executor directive can skip the in-sandbox round and save its time.
+3. **Measured premises again closed a count objection in one round** (Gate 3 designer rule (b)), as at iteration 337.
+- No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 240 BUILT in PR #465.
+**Next:** row 240 lands on PR CI + merge CI green (landing note). Then row 241 under D-WORLD-106 = A, then 242, stopping as soon as a release row is routable; a dev red still outranks.

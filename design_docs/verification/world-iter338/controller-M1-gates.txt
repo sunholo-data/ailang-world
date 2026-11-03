@@ -1,0 +1,75 @@
+# controller out-of-sandbox gate round (iteration 338). Mutations on scratch git-archive of 7cdef714 + the two M1 files (shas c6e5fb0b…/af0429fd…, identical to e091d27d); final gates in the sprint worktree at the M1 content. 'control RESTORE-FAIL' is an instrument artifact: the control has no file to back up (script passed a dummy path 'x').
+round for 7cdef714+M1 start 05:44:53
+control rc=0 FAILS: 
+control RESTORE-FAIL
+T1 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-x0+3 
+T2 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-y+3 
+T3 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-right-3 
+T4 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-bottom-3 
+T5 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-x0+2 
+T6 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-y+2 
+T7 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-right-2 
+T8 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-bottom-2 
+T9 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a4-graph-svg-h+3 
+T10 rc=1 FAILS: TestMarketingPositionCorpus TestMarketingPositionCorpus/new/bnd-nonpara-drift-2 TestMarketingPositionCorpus/new/bnd-nonpara-drift-3 TestMarketingPositionParity TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a4-graph-svg-h+2 
+T11 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a3-timeline-gap+3 TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin 
+T12 rc=1 FAILS: TestMarketingPositionCorpus TestMarketingPositionCorpus/new/perm-roster-drift-2px TestMarketingPositionParity TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a3-timeline-gap+2 TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin 
+T13 rc=1 FAILS: TestMarketingPhoneEntryTolerancePins TestMarketingPhoneEntryTolerancePins/entry+5 
+T14 rc=1 FAILS: TestMarketingPhoneArms TestMarketingPhoneArms/v67/shift-4 TestMarketingPhoneEntryTolerancePins TestMarketingPhoneEntryTolerancePins/entry+4 TestMarketingPhoneParity 
+T15 rc=1 FAILS: TestMarketingRunRoutesPositionPhone TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/position-lines 
+T16 rc=1 FAILS: TestMarketingRunRoutesPositionPhone TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/phone-lines 
+T17 rc=1 FAILS: TestMarketingRunRoutesPositionPhone TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/position-lines 
+T17b rc=1 FAILS: TestMarketingRunRoutesPositionPhone TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/phone-lines 
+T18 rc=1 FAILS: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin 
+C rc=1 FAILS: TestMarketingPositionCLI TestMarketingPositionCLI/accept-rc TestMarketingPositionCorpus TestMarketingPositionCorpus/new/acc-tested-w-2 TestMarketingPositionCorpus/new/bnd-createdAt-wraps-2-lines TestMarketingPositionCorpus/new/bnd-drift-sum-2 TestMarketingPositionCorpus/new/bnd-drift-sum-3 TestMarketingPositionCorpus/new/bnd-nonpara-drift-2 TestMarketingPositionCorpus/new/bnd-nonpara-drift-3 TestMarketingPositionCorpus/new/iso-a1-tested-w-3 TestMarketingPositionCorpus/new/iso-freegap-validation-h+240 TestMarketingPositionCorpus/new/iso-minh-approvals-h-1 TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24 TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24 TestMarketingPositionCorpus/new/perm-approvals-y+24 TestMarketingPositionCorpus/new/perm-approvals-y+48 TestMarketingPositionCorpus/new/perm-approvals-y-24 TestMarketingPositionCorpus/new/perm-approvals-y-48 TestMarketingPositionCorpus/new/perm-roster-drift-2px TestMarketingPositionCorpus/new/perm-validation-h+216 TestMarketingPositionCorpus/stores/eval-p1 TestMarketingPositionCorpus/stores/eval-p2 TestMarketingPositionCorpus/stores/eval-p3 TestMarketingPositionCorpus/stores/r1-seed1 TestMarketingPositionCorpus/stores/r1-seed1-blockconverted TestMarketingPositionCorpus/stores/r1-seed2 TestMarketingPositionCorpus/stores/r1-seed2-blockconverted TestMarketingPositionCorpus/stores/r1b-seed3 TestMarketingPositionCorpus/stores/r1b-seed4 TestMarketingPositionCorpus/stores/r1c-seed5 TestMarketingPositionCorpus/stores/r1c-seed6 TestMarketingPositionCorpus/v65-p1/neg-packet-all+14 TestMarketingPositionCorpus/v65-p1/neg-proven-grows-6-lines-below-fold TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row TestMarketingPositionCorpus/v65-p1/syn-pos-tested-wraps-3-lines TestMarketingPositionCorpus/v65/neg-attested+14 TestMarketingPositionCorpus/v65/neg-attested-dropped TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24 TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline TestMarketingPositionCorpus/v65/neg-light-header+40 TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/v65/neg-packet-all+14 TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines TestMarketingPositionCorpus/v65/neg-payload+14 TestMarketingPositionCorpus/v65/neg-proven-grows-6-lines-below-fold TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs TestMarketingPositionCorpus/v65/neg-tested-at-attested-row TestMarketingPositionCorpus/v65/neg-tested-at-proven-row TestMarketingPositionCorpus/v65/neg-tested-height+14 TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps TestMarketingPositionCorpus/v65/syn-pos-proven-5-lines TestMarketingPositionCorpus/v65/syn-pos-tested-wraps-3-lines TestMarketingPositionParity TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a3-timeline-gap+2 TestMarketingPositionTolerancePins/a3-timeline-gap+3 TestMarketingPositionTolerancePins/a4-graph-svg-h+2 TestMarketingPositionTolerancePins/a4-graph-svg-h+3 TestMarketingPositionTolerancePins/bg-bottom-2 TestMarketingPositionTolerancePins/bg-bottom-3 TestMarketingPositionTolerancePins/bg-right-2 TestMarketingPositionTolerancePins/bg-right-3 TestMarketingPositionTolerancePins/bg-x0+2 TestMarketingPositionTolerancePins/bg-x0+3 TestMarketingPositionTolerancePins/bg-y+2 TestMarketingPositionTolerancePins/bg-y+3 TestMarketingRunRoutesPositionPhone TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/position-lines 
+round end 05:58:01
+final gates cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+ACC1 rc=0 PASS=19 FAIL=0 SKIP=0
+GOFMT []
+VET rc=0
+BUILD rc=0
+GOTEST rc=0 ok=35 FAIL=0
+VERIFY_AIL rc=0
+ALL DONE for 7cdef714+M1 06:05:13
+## go test ./... summary
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	254.780s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	59.901s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	37.188s
+ok  	github.com/sunholo-data/ailang-world/host/agui	2.761s
+ok  	github.com/sunholo-data/ailang-world/host/archive	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/authority	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/boundary	4.935s
+ok  	github.com/sunholo-data/ailang-world/host/broker	278.709s
+ok  	github.com/sunholo-data/ailang-world/host/canon	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/capsule	74.321s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/childenv	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/daemon	401.680s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	25.543s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	1.794s
+ok  	github.com/sunholo-data/ailang-world/host/pins	2.517s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	42.930s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/proctest	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/projection	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.289s
+ok  	github.com/sunholo-data/ailang-world/host/registry	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/replay	45.759s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.943s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.296s
+ok  	github.com/sunholo-data/ailang-world/host/surface	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	2.986s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	3.064s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	184.282s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	2.827s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	8.137s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	102.805s
+## verify_ail.sh tail
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass

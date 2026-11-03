@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# usage: mut.sh ID FILE LINE OLD NEW  (ID=control -> no mutation)
+set -u
+S=/Users/voightkampff/dev/sunholo-data/.scratch-iter338-designer
+W=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+R=$S/pristine
+id=$1; f=$2; ln=$3; old=$4; new=$5
+ROUND=${ROUND:?}; mkdir -p $S/out/$ROUND
+exec > >(tee -a $S/out/$ROUND-summary.txt) 2>&1
+cd "$R"
+if [ "$id" != control ]; then
+  before=$(sed -n "${ln}p" "$f")
+  python3 -I - "$f" "$ln" "$old" "$new" <<'PY'
+import sys
+f,ln,old,new=sys.argv[1],int(sys.argv[2]),sys.argv[3],sys.argv[4]
+L=open(f).read().split("\n")
+assert L[ln-1].count(old)==1, ("old not exactly once on line", ln, L[ln-1])
+L[ln-1]=L[ln-1].replace(old,new)
+open(f,"w").write("\n".join(L))
+PY
+  [ $? -eq 0 ] || { echo "$id APPLY-FAILED"; exit 9; }
+  echo "== $id $f:$ln"; echo "   before: $before"; echo "   after : $(sed -n "${ln}p" "$f")"
+else
+  echo "== control (unmutated)"
+fi
+start=$(date +%s)
+perl -e 'alarm 420; exec @ARGV' go test -count=1 ./scripts/marketingcheck/ > $S/out/$ROUND/$id.log 2>&1
+rc=$?
+end=$(date +%s)
+fails=$(perl -ne 'print "$1 " if /^\s*--- FAIL: (\S+)/' $S/out/$ROUND/$id.log)
+echo "   rc=$rc ($((end-start)) s) FAIL: ${fails:-none}"
+if [ "$id" != control ]; then
+  git -C "$W" show HEAD:"$f" > "$f"
+  git -C "$W" show HEAD:"$f" | cmp -s - "$f" && echo "   restored byte-identical: $f"
+fi

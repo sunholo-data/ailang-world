@@ -1,0 +1,47 @@
+# designer-geometry: R1 baseline vs the fixture stores; seed-5 phone skeleton bands
+$ python3 -I <dump below> (reads design_docs/verification/world-iter312/r1-rects.json and testdata/position/stores/*.json)
+workbench-light.png background {'name': 'gutter', 'x': 2, 'y': 343, 'w': 24, 'h': 717}
+   0 header           x=0 y=114 w=1425 h=209 gb=None head
+   1 timeline-first   x=89 y=423 w=1247 h=191 gb=100 non-free
+workbench-dark.png background {'name': 'gutter', 'x': 2, 'y': 343, 'w': 24, 'h': 717}
+   0 header           x=0 y=114 w=1425 h=209 gb=None head
+   1 timeline-first   x=89 y=423 w=1247 h=191 gb=100 non-free
+packet.png background {'name': 'gutter', 'x': 2, 'y': 343, 'w': 24, 'h': 3317}
+   0 validation       x=106 y=2859 w=1213 h=49 gb=None head
+   1 approvals-chain  x=106 y=3147 w=1213 h=25 gb=239 free
+   2 roster-tested    x=106 y=3267 w=1213 h=49 gb=95 free
+   3 roster-attested  x=106 y=3331 w=1213 h=25 gb=15 non-free
+   4 roster-claimed   x=106 y=3371 w=1213 h=49 gb=15 non-free
+   5 roster-proven    x=106 y=3435 w=1213 h=97 gb=15 non-free
+graph.png background {'name': 'gutter', 'x': 2, 'y': 343, 'w': 24, 'h': 1717}
+   0 graph-svg        x=89 y=1746 w=1247 h=274 gb=None head
+provenance.png background {'name': 'gutter', 'x': 2, 'y': 343, 'w': 24, 'h': 2617}
+   0 payload          x=89 y=2822 w=1336 h=60 gb=None head
+non-free baseline gaps: [100, 100, 15, 15, 15] min 15
+store r1c-seed5 geometry == R1 baseline geometry: True
+store r1-seed1 geometry == R1 baseline geometry: False
+
+$ python3 -I <dump> testdata/phone/skeleton-r1c-seed5-pass-a-phone.json
+w h 390 844 title_right 389 scrollbar {'X0': 6, 'Y0': 833, 'X1': 333, 'Y1': 841}
+  band  0 {'X0': 25, 'Y0': 45, 'X1': 370, 'Y1': 68} <- header (band 0)
+  band  1 {'X0': 25, 'Y0': 136, 'X1': 103, 'Y1': 148}
+  band  2 {'X0': 24, 'Y0': 149, 'X1': 104, 'Y1': 150}
+  band  3 {'X0': 25, 'Y0': 176, 'X1': 277, 'Y1': 188}
+  band  4 {'X0': 25, 'Y0': 204, 'X1': 155, 'Y1': 216}
+  band  5 {'X0': 25, 'Y0': 232, 'X1': 284, 'Y1': 247}
+  band  6 {'X0': 25, 'Y0': 272, 'X1': 234, 'Y1': 284}
+  band  7 {'X0': 103, 'Y0': 285, 'X1': 222, 'Y1': 286}
+  band  8 {'X0': 42, 'Y0': 380, 'X1': 135, 'Y1': 398}
+  band  9 {'X0': 42, 'Y0': 428, 'X1': 104, 'Y1': 445} <- first entry (phoneEntryStart=9 .. 14)
+  band 10 {'X0': 42, 'Y0': 471, 'X1': 360, 'Y1': 486} <- first entry (phoneEntryStart=9 .. 14)
+  band 11 {'X0': 42, 'Y0': 499, 'X1': 364, 'Y1': 514} <- first entry (phoneEntryStart=9 .. 14)
+  band 12 {'X0': 42, 'Y0': 527, 'X1': 234, 'Y1': 542} <- first entry (phoneEntryStart=9 .. 14)
+  band 13 {'X0': 42, 'Y0': 555, 'X1': 269, 'Y1': 570} <- first entry (phoneEntryStart=9 .. 14)
+  band 14 {'X0': 41, 'Y0': 595, 'X1': 140, 'Y1': 610} <- first entry (phoneEntryStart=9 .. 14)
+  band 15 {'X0': 42, 'Y0': 637, 'X1': 100, 'Y1': 653}
+  band 16 {'X0': 42, 'Y0': 679, 'X1': 359, 'Y1': 694}
+  band 17 {'X0': 42, 'Y0': 707, 'X1': 360, 'Y1': 722}
+  band 18 {'X0': 42, 'Y0': 735, 'X1': 234, 'Y1': 750}
+  band 19 {'X0': 42, 'Y0': 763, 'X1': 269, 'Y1': 778}
+  band 20 {'X0': 41, 'Y0': 803, 'X1': 137, 'Y1': 818}
+gap band14->band15 rows: 27 ; gap band8->band9 rows: 30

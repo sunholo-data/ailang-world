@@ -1,0 +1,24 @@
+# designer-flake-and-concurrency
+## first (unlogged-round) D-EXP run; its log survived at scratch out/D-EXP.log
+$ grep -n -A1 -e "--- FAIL" out/D-EXP.log | head -8
+1:--- FAIL: TestMarketingCaptureFakeChromeSixShots (129.54s)
+2:    --- FAIL: TestMarketingCaptureFakeChromeSixShots/version-changed (120.01s)
+3-        capture_test.go:410: a Chrome version change during capture must refuse: rc=-1 stderr="progress: 1/6 workbench-light.png ok\nprogress: 2/6 workbench-dark.png ok\nprogress: 3/6 packet.png ok\nprogress: 4/6 graph
+--
+59:--- FAIL: TestMarketingRunbookMatchesHelp (2.17s)
+60:    --- FAIL: TestMarketingRunbookMatchesHelp/rects-value (0.00s)
+61-        docs_test.go:535: §13 must hold exactly one `export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json`, got ["export WORLD_MARKETING_RECTS=design_docs/verification/world-iter312/r1-rects.json"]
+62:    --- FAIL: TestMarketingRunbookMatchesHelp/position-lines (0.00s)
+$ tail -2 out/D-EXP.log
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	157.334s
+FAIL
+
+## concurrent work (run from the worktree)
+$ gh pr list --state open --limit 20
+(end open list)
+$ gh pr list --state merged --limit 2   # control
+464	docs(mission): iteration 337 landed — row 239 merge 248f902c	mission/world-iter337-landed	MERGED	2026-11-03T02:13:13Z
+463	row 239: commit P0 item (1) still check as an asserting test (iteration 337)	sprint/world-iter337-still-probe-commit	MERGED	2026-11-03T01:39:28Z
+$ grep -n -o "^24[67]\. \*\*\[[^]]*\] [a-z0-9-]*" design_docs/world-mission.md
+6318:246. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 336 from the row-238 judge's surviving mutants, both controller-reproduced] w-a5-drift-sign-and-rounding-pins
+6319:247. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 336 from a PR-branch CI red, attributed by measurement] w-capture-fakechrome-deadline-flake

@@ -1,0 +1,29 @@
+# designer-gc-sweep: TestProtoGapSweep (designer-gc-sweep_test.go.txt) under the base judge, then with position.go:129 'gc >= 0 && posAbs(e) <= 2' -> 'posAbs(e) <= 2' (restored + cmp after)
+# base: rc 0; mutant: rc 0; the sweep moves each non-free region's top so gc runs from -5 to gb+5
+$ tail -1 sweep-base.txt
+SWEEP cases=300 min-nonfree-gb=15
+$ wc -l sweep-base.txt sweep-gc.txt
+     312 sweep-base.txt
+     312 sweep-gc.txt
+     624 total
+$ diff sweep-base.txt sweep-gc.txt   (rc 1; the only differing lines are the labelled gb=0 instrument control)
+304,305c304,305
+< ctl-gb0 gc=-2: ["workbench-light.png/timeline-first: (a3) gap after header -2 vs R1 0"]
+< ctl-gb0 gc=-1: ["workbench-light.png/timeline-first: (a3) gap after header -1 vs R1 0"]
+---
+> ctl-gb0 gc=-2: []
+> ctl-gb0 gc=-1: []
+diff rc=1
+$ grep -c "^workbench-\|^packet" sweep-base.txt  (R1 sweep lines, all identical under the mutant)
+300
+$ grep -E "gc=(-1|0|13|14|15|17|18):" sweep-base.txt | grep roster-attested  (sample: base judge at and around the boundary)
+packet.png/roster-attested gb=15 gc=-1: ["packet.png/roster-attested: (a3) gap after roster-tested -1 vs R1 15" "packet.png/roster-claimed: (a3) gap after roster-attested 31 vs R1 15"]
+packet.png/roster-attested gb=15 gc=0: ["packet.png/roster-attested: (a3) gap after roster-tested 0 vs R1 15" "packet.png/roster-claimed: (a3) gap after roster-attested 30 vs R1 15"]
+packet.png/roster-attested gb=15 gc=12: ["packet.png/roster-attested: (a3) gap after roster-tested 12 vs R1 15" "packet.png/roster-claimed: (a3) gap after roster-attested 18 vs R1 15"]
+packet.png/roster-attested gb=15 gc=13: []
+packet.png/roster-attested gb=15 gc=17: []
+packet.png/roster-attested gb=15 gc=18: ["packet.png/roster-attested: (a3) gap after roster-tested 18 vs R1 15" "packet.png/roster-claimed: (a3) gap after roster-attested 12 vs R1 15"]
+packet.png/roster-claimed gb=15 gc=-1: ["packet.png/roster-claimed: (a3) gap after roster-attested -1 vs R1 15" "packet.png/roster-proven: (a3) gap after roster-claimed 31 vs R1 15"]
+packet.png/roster-claimed gb=15 gc=0: ["packet.png/roster-claimed: (a3) gap after roster-attested 0 vs R1 15" "packet.png/roster-proven: (a3) gap after roster-claimed 30 vs R1 15"]
+packet.png/roster-claimed gb=15 gc=12: ["packet.png/roster-claimed: (a3) gap after roster-attested 12 vs R1 15" "packet.png/roster-proven: (a3) gap after roster-claimed 18 vs R1 15"]
+packet.png/roster-claimed gb=15 gc=18: ["packet.png/roster-claimed: (a3) gap after roster-attested 18 vs R1 15" "packet.png/roster-proven: (a3) gap after roster-claimed 12 vs R1 15"]

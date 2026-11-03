@@ -1,0 +1,46 @@
+# designer-r2-premise: positionGapPremise subtest against R1 and two scratch-only R1 copies (the scratch copy's r1-rects.json is edited, then restored from git show + cmp; worktree testdata untouched)
+== R1 copy: workbench-light timeline-first y=423 (non-free gb=100)
+$ go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise' ./scripts/marketingcheck/
+--- PASS: TestMarketingPositionTolerancePins (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.186s
+== R1 copy: workbench-light timeline-first y=325 (non-free gb=2)
+$ go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise' ./scripts/marketingcheck/
+--- PASS: TestMarketingPositionTolerancePins (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.188s
+== R1 copy: workbench-light timeline-first y=324 (non-free gb=1)
+$ go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise' ./scripts/marketingcheck/
+    tolerance_test.go:44: workbench-light.png/timeline-first: non-free baseline gap 1 < 2; `gc >= 0` is no longer implied (re-derive design §2.5)
+--- FAIL: TestMarketingPositionTolerancePins (0.00s)
+    --- FAIL: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.192s
+FAIL
+== R1 copy: workbench-light timeline-first y=323 (non-free gb=0)
+$ go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise' ./scripts/marketingcheck/
+    tolerance_test.go:44: workbench-light.png/timeline-first: non-free baseline gap 0 < 2; `gc >= 0` is no longer implied (re-derive design §2.5)
+--- FAIL: TestMarketingPositionTolerancePins (0.00s)
+    --- FAIL: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.176s
+FAIL
+restored byte-identical: design_docs/verification/world-iter312/r1-rects.json
+
+## the executor's form: one line-addressed sed on the scratch copy's R1 (line 162 = workbench-light timeline-first y), then restore
+$ sed -i '' '162s/"y": 423,/"y": 325,/' design_docs/verification/world-iter312/r1-rects.json; sed -n 162p design_docs/verification/world-iter312/r1-rects.json
+          "y": 325,
+$ go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise' ./scripts/marketingcheck/
+--- PASS: TestMarketingPositionTolerancePins (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.300s
+$ sed -i '' '162s/"y": 423,/"y": 324,/' design_docs/verification/world-iter312/r1-rects.json; sed -n 162p design_docs/verification/world-iter312/r1-rects.json
+          "y": 324,
+$ go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise' ./scripts/marketingcheck/
+    tolerance_test.go:44: workbench-light.png/timeline-first: non-free baseline gap 1 < 2; `gc >= 0` is no longer implied (re-derive design §2.5)
+--- FAIL: TestMarketingPositionTolerancePins (0.00s)
+    --- FAIL: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.177s
+FAIL
+restored byte-identical: design_docs/verification/world-iter312/r1-rects.json

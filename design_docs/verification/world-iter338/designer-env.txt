@@ -1,0 +1,9 @@
+# designer-env (iteration 338, row 240)
+$ git -C <wt> rev-parse HEAD origin/dev; git -C <wt> branch --show-current; go version
+2c51c581577eef0ffb8227c9f949d5456902674e
+2c51c581577eef0ffb8227c9f949d5456902674e
+sprint/world-iter338-tolerance-pins
+go version go1.26.6 darwin/arm64
+$ $HOME/.pinned-ailang/ailang --version | head -1; $HOME/.pinned-ailang-tools/v0.54.15/ailang --version
+AILANG v0.41.0
+AILANG v0.54.15

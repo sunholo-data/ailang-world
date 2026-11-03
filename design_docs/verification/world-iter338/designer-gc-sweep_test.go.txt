@@ -1,0 +1,67 @@
+package main
+
+// Designer instrument (iteration 338, row 240), scratch only: sweep every non-free, non-head
+// region's top through gc < 0 .. gb+5 and print PositionJudge's reasons; diff the output under
+// the base judge and under the `gc >= 0`-removed mutant. The ctl- lines use an R1 copy whose
+// workbench-light timeline-first abuts the header (gb = 0): a labelled instrument-health control.
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestProtoGapSweep(t *testing.T) {
+	out := os.Getenv("SWEEP_OUT")
+	if out == "" {
+		t.Skip("SWEEP_OUT unset")
+	}
+	base := loadPositionBaseline(t)
+	src, err := os.ReadFile(filepath.Join(positionTestdata, "stores", "r1c-seed5.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh := func() Rectangles {
+		var d Rectangles
+		if err := json.Unmarshal(src, &d); err != nil {
+			t.Fatal(err)
+		}
+		return d
+	}
+	var b strings.Builder
+	cases, minGb := 0, 1<<30
+	for _, s := range positionShots {
+		bs := base.Shots[s].Content
+		for j := 1; j < len(bs); j++ {
+			if posFreeGap(s, bs[j].Name) {
+				continue
+			}
+			gb := bs[j].Y - (bs[j-1].Y + bs[j-1].H)
+			minGb = min(minGb, gb)
+			for dy := -gb - 5; dy <= 5; dy++ {
+				d := fresh()
+				d.Shots[s].Content[j].Y += dy
+				r, _ := PositionJudge(base, d)
+				fmt.Fprintf(&b, "%s/%s gb=%d gc=%d: %q\n", s, bs[j].Name, gb, gb+dy, r)
+				cases++
+			}
+		}
+	}
+	// instrument-health control: a baseline with gb = 0 (not a production baseline)
+	ctl := loadPositionBaseline(t)
+	sh := ctl.Shots["workbench-light.png"]
+	sh.Content[1].Y = sh.Content[0].Y + sh.Content[0].H
+	for dy := -5; dy <= 5; dy++ {
+		d := fresh()
+		d.Shots["workbench-light.png"].Content[1].Y = sh.Content[1].Y + dy
+		r, _ := PositionJudge(ctl, d)
+		fmt.Fprintf(&b, "ctl-gb0 gc=%d: %q\n", dy, r)
+	}
+	fmt.Fprintf(&b, "SWEEP cases=%d min-nonfree-gb=%d\n", cases, minGb)
+	if err := os.WriteFile(out, []byte(b.String()), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}

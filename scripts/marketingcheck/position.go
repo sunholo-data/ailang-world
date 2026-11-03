@@ -126,7 +126,7 @@ func PositionJudge(base, cand Rectangles) (reasons []string, regions int) {
 			gb := b.Y - (pb.Y + pb.H)
 			gc := c.Y - (pc.Y + pc.H)
 			e := gc - gb
-			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
 			if posFreeGap(s, b.Name) {
 				okGap = gc >= 0 && posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines
 				gRes = e - posLines(e)*positionLine
