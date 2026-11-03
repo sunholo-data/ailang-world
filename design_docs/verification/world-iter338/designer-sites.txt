@@ -1,0 +1,33 @@
+# designer-sites: every tolerance site at base 2c51c581, with a known-positive control in the same call
+$ grep -n -F -e "posAbs(dh) > 2" -e "gc >= 0 && posAbs(e) <= 2" -e "posAbs(c.Y-b.Y) <= 2" -e "posAbs(c.Y+c.H-b.Y-b.H) <= 2" scripts/marketingcheck/position.go
+101:			} else if posAbs(dh) > 2 {
+129:			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+150:		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+$ grep -n -F -e "posAbs(c.X-b.X) <= 2" -e "posAbs(c.X+c.W-b.X-b.W) <= 2" scripts/marketingcheck/position.go   # both also on :90 (a1): mutants must be line-addressed
+90:			if !(posAbs(c.X-b.X) <= 2 && posAbs(c.X+c.W-b.X-b.W) <
+150:		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && p
+$ grep -n -F -e "phoneNear(s.FirstEntry, phoneR1Entry, 4)" -e "phoneNear(s.Header, phoneR1Header, 4)" scripts/marketingcheck/phone.go
+168:	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 4)) {
+$ grep -n -F -e "phoneNear(s.FirstEntry, phoneR1Entry, 4)" scripts/marketingcheck/phone.go | cut -d: -f1   # row text cites :157
+168
+$ grep -n -e "case \"position\":" -e "case \"phone\":" -e "case \"docs\":" -e "return runPosition" scripts/marketingcheck/main.go   # docs = control
+49:	case "docs":
+51:	case "position":
+52:		return runPosition(args[1:], os.Stdout, os.Stderr)
+53:	case "phone":
+$ grep -n -e "run(\[\]string{\"position\"})" -e "run(\[\]string{\"phone\"})" -e "func TestMarketingPositionCLI" scripts/marketingcheck/*_test.go   # the dispatch subtests; func line = control
+scripts/marketingcheck/phone_test.go:642:		if rc := run([]string{"phone"}); rc != 2 {
+scripts/marketingcheck/position_test.go:684:func TestMarketingPositionCLI(t *testing.T) {
+scripts/marketingcheck/position_test.go:758:		if rc := run([]string{"position"}); rc != 2 {
+$ grep -n "^export WORLD_MARKETING_RECTS=" docs/QUICKSTART.md; grep -c "^export DEMO_DIR=" docs/QUICKSTART.md   # second = control
+1682:export WORLD_MARKETING_RECTS=$DEMO_DIR/rects.json
+1
+$ grep -n -e "func posFreeGap" -A2 scripts/marketingcheck/position.go
+53:func posFreeGap(shot, name string) bool {
+54-	return shot == "packet.png" && (name == "approvals-chain" || name == "roster-tested")
+55-}
+$ grep -n -e "len(positionWant) != 51" -e "len(phoneWant) != 45" -e "len(realInputs) != 63" -e "len(sums) != 34" scripts/marketingcheck/*_test.go
+scripts/marketingcheck/phone_test.go:513:	if len(phoneWant) != 45 || accept != 15 {
+scripts/marketingcheck/phone_test.go:771:	if len(realInputs) != 63 {
+scripts/marketingcheck/position_test.go:463:	if len(sums) != 34 {
+scripts/marketingcheck/position_test.go:550:	if len(positionWant) != 51 || accept != 19 {

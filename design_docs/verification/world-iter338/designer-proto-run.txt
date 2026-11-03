@@ -1,0 +1,49 @@
+# designer-proto-run: the prototype alone, unmutated scratch copy (2c51c581 + the proto file)
+$ go test -count=1 -v -run '^TestProto' ./scripts/marketingcheck/
+=== RUN   TestProtoPositionTolerancePins
+=== RUN   TestProtoPositionTolerancePins/bg-x0+2
+=== RUN   TestProtoPositionTolerancePins/bg-x0+3
+=== RUN   TestProtoPositionTolerancePins/bg-y+2
+=== RUN   TestProtoPositionTolerancePins/bg-y+3
+=== RUN   TestProtoPositionTolerancePins/bg-right-2
+=== RUN   TestProtoPositionTolerancePins/bg-right-3
+=== RUN   TestProtoPositionTolerancePins/bg-bottom-2
+=== RUN   TestProtoPositionTolerancePins/bg-bottom-3
+=== RUN   TestProtoPositionTolerancePins/a4-graph-svg-h+2
+=== RUN   TestProtoPositionTolerancePins/a4-graph-svg-h+3
+=== RUN   TestProtoPositionTolerancePins/a3-timeline-gap+2
+=== RUN   TestProtoPositionTolerancePins/a3-timeline-gap+3
+--- PASS: TestProtoPositionTolerancePins (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-x0+2 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-x0+3 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-y+2 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-y+3 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-right-2 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-right-3 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-bottom-2 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/bg-bottom-3 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/a4-graph-svg-h+2 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/a4-graph-svg-h+3 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/a3-timeline-gap+2 (0.00s)
+    --- PASS: TestProtoPositionTolerancePins/a3-timeline-gap+3 (0.00s)
+=== RUN   TestProtoPhoneTolerancePins
+    tolerance_pins_proto_test.go:87: entry+4: entry {41 432 364 614} ACCEPT []
+    tolerance_pins_proto_test.go:87: entry+5: entry {41 433 364 615} REFUSE (i) ["(i) header {25 45 370 68} entry {41 433 364 615} vs R1 {25 45 370 68} {41 428 364 610} ±4"]
+--- PASS: TestProtoPhoneTolerancePins (0.02s)
+=== RUN   TestProtoDispatch
+a                                      ACCEPT regions=17
+TOTAL candidates=1 accept=1 refuse=0
+a                            ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+TOTAL candidates=1 accept=1 refuse=0
+--- PASS: TestProtoDispatch (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.331s
+rc=0
+
+$ gofmt -l scripts/marketingcheck; echo rc=$?   (proto present)
+rc=0
+$ go vet ./scripts/marketingcheck/
+rc=0
+$ diff -r <fresh git archive of 2c51c581> <scratch copy>
+Only in /Users/voightkampff/dev/sunholo-data/.scratch-iter338-designer/pristine/scripts/marketingcheck: tolerance_pins_proto_test.go
+rc=1
