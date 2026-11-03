@@ -3016,3 +3016,12 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105). Rows 250, 244–249: wait on D-WORLD-108.
 **Next:** rule (d) block report unless D-WORLD-108 is answered A or B, D-WORLD-105 is answered A or B, or a release row (150, 151) becomes routable; a dev red still outranks. Monday 2026-11-09's first fire also runs the weekly sweep and thread rotation.
+
+**Record follow-through (iteration 342):** the independent evaluator judged record commit `5c92bc2e` on `05b5b05e`: **r1 PASS 94/100, zero blocking** (33/24/24/13). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context on a detached worktree at the record commit (37,721 tok, 31 s, 4 tool uses). It re-ran the no-pick premise: `41298533..05b5b05e` = 5 commits, all 341's own; `MarkEdmondson1234` has 0 comments on #449 (control: 10 by the loop's account) and none on #366; D-WORLD-105 and D-WORLD-108 OPEN; ledger valid at 95 rows; dev 3/3 green at `05b5b05e`. It re-ran edit integrity: 3 stamps (342, 341, 340); the 339 stamp's md5 matches at the parent and in the archive; archive +2; index +1 with the 342 row matching the log heading; log append-only with 37 live entries; dashboard 27 lines; the readings figures match the record; no closing keyword in the diff, commit message or PR #473. It confirmed that main `dev` = `origin/dev` with only the known untracked residue, and it re-derived "no pick" from D-WORLD-46, D-WORLD-106 (scope spent) and D-WORLD-108 (OPEN, default C).
+- **NB1** (degraded single-watermark read on #449): known and disclosed; it fails safe. No change.
+- **NB2** (positive control 10): confirmation, not a finding.
+- **NB3** (the "read by NAME" log line matched the secret grep): a false positive; no value was printed. No change.
+- **NB4** (the "Claude Opus 5.5" trailer): rejected. The trailer names the controller, which is opus (as the judge's own NB notes the dashboard says). Iteration 333 recorded that judges flag this. No change.
+- **NB5** (the 30/30 upstream sweep and row 150's 23/23 were not re-run): they are the controller's readings, printed with their commands in `verification/world-iter342/gate1-2-readings.txt`. No change.
+- **NB6** (log and dashboard consistent): confirmation. No r2: nothing to fix.
+- Gate stamps after the record: `gate-3b` and `gate-5` run as those gates begin; confirmed in the landing note.
