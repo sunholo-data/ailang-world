@@ -1,0 +1,13 @@
+# gemini R4: what loopbackListenPorts matches on darwin (TestZZR2FdScanFalseMatch, -count=5, both copies)
+== head 14:44  up 2 days, 20:03, 4 users, load averages: 3.78 4.61 4.97
+   1 ZZR2 fdscan listener(52662)=true bound-not-listening(52663)=true connected-client(52664)=false unbound-socket-ports=false all=map[52662:true 52663:true]
+   1 ZZR2 fdscan listener(52679)=true bound-not-listening(52680)=true connected-client(52681)=false unbound-socket-ports=false all=map[52679:true 52680:true]
+   1 ZZR2 fdscan listener(52696)=true bound-not-listening(52697)=true connected-client(52698)=false unbound-socket-ports=false all=map[52696:true 52697:true]
+   1 ZZR2 fdscan listener(52714)=true bound-not-listening(52715)=true connected-client(52716)=false unbound-socket-ports=false all=map[52714:true 52715:true]
+   1 ZZR2 fdscan listener(52732)=true bound-not-listening(52733)=true connected-client(52734)=false unbound-socket-ports=false all=map[52732:true 52733:true]
+== proto 14:44  up 2 days, 20:03, 4 users, load averages: 3.35 4.49 4.93
+   1 ZZR2 fdscan listener(52846)=true bound-not-listening(52847)=true connected-client(52848)=false unbound-socket-ports=false all=map[52846:true 52847:true]
+   1 ZZR2 fdscan listener(52864)=true bound-not-listening(52865)=true connected-client(52866)=false unbound-socket-ports=false all=map[52864:true 52865:true]
+   1 ZZR2 fdscan listener(52885)=true bound-not-listening(52886)=true connected-client(52887)=false unbound-socket-ports=false all=map[52885:true 52886:true]
+   1 ZZR2 fdscan listener(52907)=true bound-not-listening(52908)=true connected-client(52909)=false unbound-socket-ports=false all=map[52907:true 52908:true]
+   1 ZZR2 fdscan listener(52925)=true bound-not-listening(52926)=true connected-client(52927)=false unbound-socket-ports=false all=map[52925:true 52926:true]

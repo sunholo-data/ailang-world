@@ -1,0 +1,10 @@
+# kimi 3 baseline: unsolicited accepts on idle loopback listeners (TestZZR2IdleForeignAccepts: 64 newProbeListener, one known dial to ls[0], hold 120 s)
+# $ go test -count=1 -timeout 300s -run '^TestZZR2IdleForeignAccepts$' -v ./host/broker/
+14:44  up 2 days, 20:03, 4 users, load averages: 3.67 4.61 4.97
+ZZR2 idle listeners=64 hold=2m0s positive-control-accepts=5 unsolicited-accepts=256 (listener-seconds=7680)
+--- PASS: TestZZR2IdleForeignAccepts (120.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	120.399s
+rc=0
+14:46  up 2 days, 20:05, 4 users, load averages: 3.71 4.21 4.76
+79864 /Users/voightkampff/.ailang-world/bin/ailang-worldd se

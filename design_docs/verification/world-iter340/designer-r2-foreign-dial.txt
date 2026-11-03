@@ -1,0 +1,29 @@
+# r2 foreign accept before control() (kimi 3). Scratch test TestZZR2ForeignDial (designer-r2-zz_test.go.txt) in sibling git-archive copies of e22e0794: HEAD and HEAD+designer-proto.patch.txt (proto exec_probe.go sha256 19de369381579387).
+# setup: one protected profile (tests/**), pass-through shim, a FORGING probe client that prints a confining sandbox's tokens (so arm 6 passes when nothing else touches net6), worktreeGit hook (an existing seam, called by NewExecHandler: AFTER the bind on proto, BEFORE it on HEAD) that, in subtest 'dial', dials every loopback listener the call created once and waits 100 ms.
+# $ go test -count=5 -run '^(TestZZR2ForeignDial)$' -v ./host/broker/   (per copy; output grouped with sort|uniq -c)
+== head 14:44  up 2 days, 20:03, 4 users, load averages: 3.45 4.41 4.88
+   1 ZZR2 dial=false dialed=0 failed-arms=[arm6-network,arm8-protected-write] arm6=a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 0; stderr "")
+   4 ZZR2 dial=false dialed=0 failed-arms=[arm8-protected-write] arm6=PASS
+   5 ZZR2 dial=true dialed=0 failed-arms=[arm8-protected-write] arm6=PASS
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	10.688s
+== proto 14:45  up 2 days, 20:04, 4 users, load averages: 3.19 4.31 4.84
+   5 ZZR2 dial=false dialed=0 failed-arms=[arm8-protected-write] arm6=PASS
+   5 ZZR2 dial=true dialed=1 failed-arms=[arm6-network,arm8-protected-write] arm6=a raw connect to World's live listener: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 0; stderr "")
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker	10.578s
+
+# first attempt (same command, subtests named dial=false/dial=true): VOID — the '=' in t.TempDir()'s name made /usr/bin/env -i (execTrampoline) read the client path as an assignment ('env: -e: No such file or directory'); kept for the record:
+   5 ZZR2 dial=false dialed=0 failed-arms=[arm1-write-inside,arm2-write-outside,arm3-read-fence,arm4-srt-default-write,arm6-network,arm8-protected-write] arm6=a raw connect to World's live listener: token "", accepts 1 (want a refusal and still 1; exit 127; stderr "env: -e: No such file or directory")
+   5 ZZR2 dial=true dialed=0 failed-arms=[arm1-write-inside,arm2-write-outside,arm3-read-fence,arm4-srt-default-write,arm6-network,arm8-protected-write] arm6=a raw connect to World's live listener: token "", accepts 1 (want a refusal and still 1; exit 127; stderr "env: -e: No such file or directory")
+   5 ZZR2 dial=false dialed=0 failed-arms=[arm1-write-inside,arm2-write-outside,arm3-read-fence,arm4-srt-default-write,arm6-network,arm8-protected-write] arm6=a raw connect to World's live listener: token "", accepts 1 (want a refusal and still 1; exit 127; stderr "env: -e: No such file or directory")
+   5 ZZR2 dial=true dialed=1 failed-arms=[arm1-write-inside,arm2-write-outside,arm3-read-fence,arm4-srt-default-write,arm6-network,arm8-protected-write] arm6=a raw connect to World's live listener: token "", accepts 2 (want a refusal and still 1; exit 127; stderr "env: -e: No such file or directory"); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 2 (want a refusal and still 1; exit 0; stderr "")
+
+# T1/T2 on the unchanged proto copy afterwards: $ go test -count=3 -run '^TestExecProbeNet6' -v ./host/broker/
+19de369381579387
+== 14:48  up 2 days, 20:07, 4 users, load averages: 4.27 4.08 4.62
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.79s)
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.78s)
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.80s)
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	8.662s
