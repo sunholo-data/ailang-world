@@ -1,0 +1,9 @@
+205:<body>
+1
+rc=1
+   1     marketing_still_test.go:140: P0 item (1) /workbench: still HTML is not the default minus exactly the live.js tag
+   1     marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: still HTML is not the default minus exactly the live.js tag
+   1     marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:9a5282f30e717dc9fbd651091c14d7560387f84cafc7d4a891f29b45552260b7&payload=1: still HTML is 
+   1     marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:d240889897372ac9e609f9f0c6e0b74fb0f108fc8042c6c6109d79c749933b33: still HTML is not the de
+   1 --- FAIL: TestMarketingStillRoutes (7.88s)
+render.go restored identical

@@ -124,6 +124,11 @@ func TestMarketingChromeSixShots(t *testing.T) {
 	worldd, check := filepath.Join(dir, "ailang-worldd"), filepath.Join(dir, "marketingcheck")
 	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", worldd, ".")
 	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", check, filepath.Join(root, "scripts", "marketingcheck"))
+	// P0 item (1) on this store, before capture (row 239).
+	checkMarketingStill(t, rig, marketingStillRoutes(t, check, rig.manifest))
+	if t.Failed() {
+		t.FailNow()
+	}
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
