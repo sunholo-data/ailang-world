@@ -1,0 +1,31 @@
+import sys
+p, mut = sys.argv[1], sys.argv[2]
+s = open(p).read()
+def rep(old, new):
+    global s
+    assert s.count(old) == 1, (mut, old)
+    s = s.replace(old, new)
+BIND = "\tfor i := range profiles {\n\t\tnet6[i] = newProbeListener()\n\t}\n"
+CTL = "\tnetCtl := net6.control()\n"
+if mut == "MUT-1":   # slow pre-bind step in the parent, bind still before the fan-out
+    rep(BIND, "\ttime.Sleep(2 * time.Second) // MUTANT\n" + BIND)
+elif mut == "MUT-1b":  # the controller's 2 s sleep at the old bind site in probe()
+    rep(CTL, "\ttime.Sleep(2 * time.Second) // MUTANT\n" + CTL)
+elif mut == "MUT-2":   # bind moved back into probe() (old site)
+    rep(CTL, "\tnet6 = newProbeListener() // MUTANT\n\tdefer net6.close()\n" + CTL)
+elif mut == "MUT-3":   # bind moved into the goroutine, first statement
+    rep(BIND, "")
+    rep("\t\t\tdefer wg.Done()\n\t\t\terrs[i]", "\t\t\tdefer wg.Done()\n\t\t\tnet6[i] = newProbeListener() // MUTANT\n\t\t\terrs[i]")
+elif mut == "MUT-3b":  # bind moved into probeExecProfile after NewExecHandler (the protected Git)
+    rep("\tcwd := filepath.Join(worktree, p.Root)\n", "\tnet6 = newProbeListener() // MUTANT\n\tdefer net6.close()\n\tcwd := filepath.Join(worktree, p.Root)\n")
+elif mut == "MUT-4":   # the parent never closes
+    rep("\t\t\tl.close()\n", "\t\t\t_ = l // MUTANT\n")
+elif mut == "MUT-5":   # every profile gets profile 0's listener
+    rep("probeExecProfile(ctx, cfg, env, p, net6[i])", "probeExecProfile(ctx, cfg, env, p, net6[0])")
+elif mut == "MUT-6":   # closed before the owners finish
+    rep("\twg.Wait()\n\treturn errs, nil", "\tfor _, l := range net6 {\n\t\tl.close() // MUTANT\n\t}\n\twg.Wait()\n\treturn errs, nil")
+elif mut == "HEAD-SLEEP":  # controller premise on HEAD
+    rep("\tnet6 := newProbeListener()\n", "\ttime.Sleep(2 * time.Second) // MUTANT iter340: slow pre-bind step\n\tnet6 := newProbeListener()\n")
+else:
+    sys.exit("unknown mutant " + mut)
+open(p, "w").write(s)

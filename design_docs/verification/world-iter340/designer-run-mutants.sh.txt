@@ -1,0 +1,37 @@
+#!/bin/bash
+# Mutation table for row 242. Each mutant is applied to a pristine copy of the
+# prototype's exec_probe.go, then each named test is run on its own, then the
+# ExecProbe subset.
+set -u
+R=/Users/voightkampff/dev/sunholo-data
+P=$R/.scratch-iter340-designer-proto
+H=$R/.scratch-iter340-designer-head
+T=$R/.scratch-iter340-designer-tools
+OUT=$T/mutants.txt
+: > $OUT
+cp $P/host/broker/exec_probe.go $T/proto.exec_probe.go
+cp $H/host/broker/exec_probe.go $T/head.exec_probe.go
+run() { # dir label test
+  ( cd "$1" && go test -count=1 -run "$3" ./host/broker/ > $T/last.txt 2>&1 ); rc=$?
+  echo "$2 test=$3 rc=$rc :: $(grep -E '^\s+exec_probe.*\.go:[0-9]+:' $T/last.txt | grep -v TIMING | head -1 | cut -c1-220)" >> $OUT
+}
+T1='^TestExecProbeNet6BoundBeforeAnyPick$'; T2='^TestExecProbeNet6BindSiteIsBeforeTheFanOut$'; TP='^TestExecProbePassThroughShimFailsEveryConfinementArm$'
+echo "# uptime: $(uptime)" >> $OUT
+for m in CONTROL MUT-1 MUT-1b MUT-2 MUT-3 MUT-3b MUT-4 MUT-5 MUT-6; do
+  cp $T/proto.exec_probe.go $P/host/broker/exec_probe.go
+  [ $m != CONTROL ] && python3 -I $T/mutate.py $P/host/broker/exec_probe.go $m
+  ( cd $P && go vet ./host/broker/ ) >> $OUT 2>&1 || echo "$m VET-FAIL" >> $OUT
+  for t in "$T1" "$T2" "$TP"; do run $P "$m" "$t"; done
+  run $P "$m" 'ExecProbe'
+done
+cp $T/proto.exec_probe.go $P/host/broker/exec_probe.go
+# HEAD (unhoisted) = positive control; HEAD+controller sleep = row's own mutant at HEAD
+for m in HEAD HEAD-SLEEP; do
+  cp $T/head.exec_probe.go $H/host/broker/exec_probe.go
+  [ $m != HEAD ] && python3 -I $T/mutate.py $H/host/broker/exec_probe.go $m
+  for t in "$T1" "$T2"; do run $H "$m" "$t"; done
+  ( cd $H && go test -count=1 -run 'ExecProbe' -skip 'TestExecProbeNet6' ./host/broker/ > $T/last.txt 2>&1 ); echo "$m test=ExecProbe-minus-Net6 (controller premise) rc=$? :: $(grep -c -- '--- FAIL' $T/last.txt) FAIL lines" >> $OUT
+done
+cp $T/head.exec_probe.go $H/host/broker/exec_probe.go
+cmp $P/host/broker/exec_probe.go $T/proto.exec_probe.go && cmp $H/host/broker/exec_probe.go $T/head.exec_probe.go && echo "# restored both copies" >> $OUT
+echo DONE >> $OUT

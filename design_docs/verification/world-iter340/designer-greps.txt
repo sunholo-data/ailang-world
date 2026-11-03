@@ -1,0 +1,71 @@
+# designer greps at e22e0794 (Tue Nov  3 14:04:34 CET 2026)
+$ grep -n "net6 := newProbeListener()\|defer net6.close()\|netCtl := net6.control()\|a := pp.run(ctx, argv, true\|c, revWhy := pp.reverseLeg\|port, err := pick()\|func ProbeExecProfilesEach\|env, err := plantExecProbe\|errs\[i\] = probeExecProfile\|go func() {\|wg.Wait()\|func probeExecProfile\|func (pp \*execProber) probe(\|func newProbeListener\|func freeLoopbackPort\|func (l \*probeListener) control\|func (l \*probeListener) close" host/broker/exec_probe.go
+234:func ProbeExecProfilesEach(ctx context.Context, cfg ExecProbeConfig, profiles []*ExecProfile) (errs []error, err error) {
+238:	env, err := plantExecProbe(cfg.Paths)
+253:		go func() {
+255:			errs[i] = probeExecProfile(ctx, cfg, env, p)
+258:	wg.Wait()
+395:func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEnv, p *ExecProfile) error {
+466:func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, sibling, id string) {
+486:	net6 := newProbeListener()
+487:	defer net6.close()
+488:	netCtl := net6.control()
+496:	a := pp.run(ctx, argv, true, execProbeRunBudget)
+537:	c, revWhy := pp.reverseLeg(ctx, net6.port)
+582:		port, err := pick()
+632:func newProbeListener() *probeListener {
+640:	go func() {
+654:func (l *probeListener) control() error {
+671:func (l *probeListener) close() {
+678:func freeLoopbackPort() (int, error) {
+740:	go func() {
+
+# newProbeListener call sites (all .go under host/ cmd/), with the func definition as the known positive
+$ grep -rn "newProbeListener" --include=*.go host cmd
+host/broker/exec_probe.go:486:	net6 := newProbeListener()
+host/broker/exec_probe.go:632:func newProbeListener() *probeListener {
+
+# callers of ProbeExecProfilesEach / ProbeExecProfiles / probeExecProfile outside the definition
+$ grep -rn "ProbeExecProfilesEach\|ProbeExecProfiles(\|probeExecProfile(" --include=*.go host cmd
+host/broker/exec_probe.go:221:func ProbeExecProfiles(ctx context.Context, cfg ExecProbeConfig, profiles []*ExecProfile) error {
+host/broker/exec_probe.go:222:	errs, err := ProbeExecProfilesEach(ctx, cfg, profiles)
+host/broker/exec_probe.go:229:// ProbeExecProfilesEach runs the startup probe for every profile,
+host/broker/exec_probe.go:234:func ProbeExecProfilesEach(ctx context.Context, cfg ExecProbeConfig, profiles []*ExecProfile) (errs []error, err error) {
+host/broker/exec_probe.go:255:			errs[i] = probeExecProfile(ctx, cfg, env, p)
+host/broker/exec_probe.go:395:func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEnv, p *ExecProfile) error {
+host/broker/exec_startup.go:235:	errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: st.Sandbox, Paths: paths, MaxOutputBytes: maxOut,
+host/broker/exec_probe_test.go:137:	return ProbeExecProfiles(ctx, ExecProbeConfig{Sandbox: f.sandbox, Paths: f.paths, Client: client}, []*ExecProfile{f.profile})
+host/broker/exec_tools.go:24:	Probe       ExecToolProbe // nil means all arms of ProbeExecProfilesEach
+host/broker/exec_tools.go:134:		s.cfg.Probe = ProbeExecProfilesEach
+
+# tests calling pp.probe( directly (want 0) vs probeProtected( (known positive)
+$ grep -c "\.probe(ctx" host/broker/*_test.go | grep -v ":0"; grep -c "probeProtected(" host/broker/*_test.go | grep -v ":0"
+(no .probe(ctx in any test file)
+host/broker/exec_probe_srt_test.go:1
+host/broker/exec_probe_test.go:2
+
+# probeExecProfile early returns (randomHex, Mkdir, NewExecHandler, MkdirAll)
+$ awk "NR>=395 && NR<=434 && /return/" with line numbers
+398: 		return err
+404: 			return fmt.Errorf("broker: exec probe for profile %q: scratch episode: %w", p.Project, err)
+412: 		return fmt.Errorf("broker: exec probe for profile %q: %w", p.Project, err)
+426: 			return err
+
+# protected baseline Git runs inside NewExecHandler (pre-bind at HEAD)
+$ grep -n "captureProtectedBaseline(ctx" host/broker/handlers_exec.go; grep -n "worktreeGit()\|protectedGitPreflight(ctx, git, root)" host/broker/exec_protected_record.go; grep -n "^var worktreeGit\|worktreeGit *=" host/broker/*.go | grep -v _test
+200:		baseline := captureProtectedBaseline(ctx, "", cfg.Worktree, cfg.Profile.Protected)
+36:		if git, b.err = worktreeGit(); b.err != nil {
+40:	if b.err = protectedGitPreflight(ctx, git, root); b.err != nil {
+host/broker/worktree_delta.go:72:var worktreeGit = func() (string, error) { return exec.LookPath("git") }
+
+# t.Parallel in host/broker tests (want 0) and the guard test that pins it
+$ grep -l "t.Parallel()" host/broker/*_test.go | wc -l; grep -n "func TestBrokerTestsDoNotCallParallel" host/broker/*_test.go
+       0
+host/broker/handlers_parallel_guard_test.go:15:func TestBrokerTestsDoNotCallParallel(t *testing.T) {
+
+# go/parser source-AST tests already in host/broker (precedent)
+$ grep -l "go/parser" host/broker/*_test.go
+host/broker/handlers_exec_test.go
+host/broker/handlers_parallel_guard_test.go
+host/broker/invoke_boundary_test.go
+host/broker/registry_publish_test.go

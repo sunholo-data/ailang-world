@@ -1,0 +1,9 @@
+14:12  up 2 days, 19:31, 4 users, load averages: 5.64 5.81 5.45
+proto -count=20 rc=0
+head T1 -count=10 rc=1
+stab-proto: PASS=20 FAIL=0 T2PASS=20
+stab-head: PASS=0 FAIL=10 T2PASS=0
+proto T1 durations s: min=2.67 max=2.97
+# commands: (proto) go test -count=20 -run '^TestExecProbeNet6' -v ./host/broker/ ; (head + the new test file) go test -count=10 -run '^TestExecProbeNet6BoundBeforeAnyPick$' -v ./host/broker/
+# head first failure line:
+    exec_probe_net6_test.go:123: pick 0: net6 port 61029 was not a live listener (slow profile in flight=true; live map[61023:true])

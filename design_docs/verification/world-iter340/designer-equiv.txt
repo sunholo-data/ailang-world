@@ -1,0 +1,25 @@
+# failure-path equivalence: HEAD vs proto, each with a SCRATCH-ONLY bind-failure injection in newProbeListener (atomic flag) and the harness below; normalised (wep id, 127.0.0.1 ports, temp dir)
+# eqhead rc / eqproto rc:
+ok  	github.com/sunholo-data/ailang-world/host/broker	4.610s
+ok  	github.com/sunholo-data/ailang-world/host/broker	4.585s
+# diff of normalised ZZ lines: IDENTICAL (8 lines)
+## proto ZZ lines
+ZZ bind-ok top-err=<nil> n=2
+ZZ bind-ok errs[0] *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ bind-ok errs[1] *fmt.wrapError: broker: exec probe for profile "badroot": broker: exec handler: read_root "/nonexistent-zz-iter340": lstat /nonexistent-zz-iter340: no such file or directory
+ZZ bind-ok listeners-left=0
+ZZ bind-fails top-err=<nil> n=2
+ZZ bind-fails errs[0] *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: control: World's live listener did not accept an unsandboxed connect: zz injected bind failure; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EADDRNOTAVAIL", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EADDRNOTAVAIL", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ bind-fails errs[1] *fmt.wrapError: broker: exec probe for profile "badroot": broker: exec handler: read_root "/nonexistent-zz-iter340": lstat /nonexistent-zz-iter340: no such file or directory
+ZZ bind-fails listeners-left=0
+## injection (both copies)
+637:var zzFailListen atomic.Bool
+638-
+639-func newProbeListener() *probeListener {
+640-	l := &probeListener{}
+641-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+642:	if zzFailListen.Load() { // SCRATCH-ONLY injection (row 242 designer equivalence)
+643-		_ = ln.Close()
+644-		ln, err = nil, errors.New("zz injected bind failure")
+645-	}
+646-	if err != nil {

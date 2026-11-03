@@ -1,0 +1,11 @@
+# widened T2 (all non-test package files), proto + mutant, -count=1 -v each; HEAD = unhoisted e22e0794 + the test file
+CONTROL T2(all-files) rc=0 :: 
+MUT-2 T2(all-files) rc=1 ::     exec_probe_net6_test.go:214: newProbeListener call sites = ["ProbeExecProfilesEach at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/exec_probe.go:257:13" "probe (not before a go sta
+MUT-3 T2(all-files) rc=1 ::     exec_probe_net6_test.go:214: newProbeListener call sites = ["ProbeExecProfilesEach (in a func literal) (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/e
+MUT-3b T2(all-files) rc=1 ::     exec_probe_net6_test.go:214: newProbeListener call sites = ["ProbeExecProfilesEach at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/exec_probe.go:257:13" "probeExecProfile (not befo
+# restored
+HEAD T2(all-files) rc=1 ::     exec_probe_net6_test.go:214: newProbeListener call sites = ["probe (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-head/host/broker/exec_probe.go:486:10"], want exactly o
+MUT-7 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=1 ::     exec_probe_net6_test.go:214: newProbeListener call sites = ["bindNet6Late (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/zz_mut7.go
+MUT-7 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=0 :: 
+# restored after MUT-7
+APPLY-OK: git apply on an e22e0794 archive reproduces both prototype files

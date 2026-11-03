@@ -1,0 +1,6 @@
+git version 2.54.0
+go version go1.26.6 darwin/arm64
+v26.12.1
+16
+net.inet.ip.portrange.first: 49152
+net.inet.ip.portrange.last: 65535
