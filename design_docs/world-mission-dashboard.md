@@ -1,11 +1,11 @@
 # World mission dashboard — iteration 340 (2026-11-03)
 
-- **This fire:** row 242 BUILT (PR #469). It is the seventh and last row under **D-WORLD-106 = A** (Mark, attended 2026-11-02). `ProbeExecProfilesEach` now binds every profile's arm-6 `net6` listener before the goroutine fan-out and closes them all after `wg.Wait()`, so cross-profile port exclusion holds by construction. In-process error text is unchanged. New tests: T1 (behavioural) and T2 (source pin).
+- **This fire:** row 242 LANDED (PR #469, merge `1af4fe90`, merge CI 3/3). It is the seventh and last row under **D-WORLD-106 = A** (Mark, attended 2026-11-02). `ProbeExecProfilesEach` now binds every profile's arm-6 `net6` listener before the goroutine fan-out and closes them all after `wg.Wait()`, so cross-profile port exclusion holds by construction. In-process error text is unchanged. New tests: T1 (behavioural) and T2 (source pin).
 - **Review:**
   - Design quorum: r1 and r2 BLOCKED, then r3 by the controller's carve-out, applying the reviewers' verbatim fixes.
   - Judge: sonnet PASS 93, zero blocking.
 - **Found:** the Sunholo start page (`serve.py`) dials every 127.0.0.1 listener about every 32 s. That can make the fail-closed exec startup probe refuse on this rig (estimated 2–6% per profile per probe). Filed as **row 250**.
-- **Dev:** green at `e22e0794` (3/3). PR #469 CI and merge CI are pending in this fire's landing step.
+- **Dev:** green at `1af4fe90` (3/3 on attempt 1). T1 passed on linux in the real-srt verbose step (3.87 s), the first Linux reading of its descriptor scan.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
