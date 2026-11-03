@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 341 | 2026-11-03 | no pick: rule (d) block report 13; D-WORLD-106's scope used up at 340, rows 250 and 244–249 wait on D-WORLD-108; row 233 parked on D-WORLD-105; rel... |
 | 340 | 2026-11-03 | row 242 built: every profile's net6 listener bound before the exec-probe fan-out (exclusion by construction), T1 behavioural + T2 source pin; desig... |
 | 339 | 2026-11-03 | row 241 built: T12 pins pollLoopback's real dial cadence to execProbePollEvery through the dial seam; T10's ceiling measured from setAt; one CI nam... |
 | 338 | 2026-11-03 | row 240 built: one boundary pair per unpinned row-231 tolerance, a premise pin and a clause pin for gc >= 0, and run routes; design r3 via a contro... |
