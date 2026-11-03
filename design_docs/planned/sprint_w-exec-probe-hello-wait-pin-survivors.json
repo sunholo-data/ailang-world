@@ -1,0 +1,1622 @@
+{
+  "authority": [
+    "design_docs/planned/w-exec-probe-hello-wait-pin-survivors.md r1 (\u00a72\u2013\u00a74, \u00a76, \u00a77); quorum r1 PROCEED 3/3",
+    "design_docs/planned/w-exec-probe-hello-wait-pin-survivors-sprint-plan.md"
+  ],
+  "banked_sources_sha256": {
+    "design_docs/planned/w-exec-probe-hello-wait-pin-survivors.md": "8c9927ce6b318733160351525c280956080728f8e8cefb28ba8f6945f10f53d2",
+    "design_docs/verification/world-iter339/designer-proto_test.go.patch.txt": "43221064d23bebcf830e38d261eb1a9d0c6153c1106dc409617dee7b4185f040",
+    "design_docs/verification/world-iter339/plan-M1.diff.txt": "b75e4cf0517633d71e70c88468a93748e58c95cfedfe9ef257d244b4dde146de",
+    "design_docs/verification/world-iter339/plan-mutants.sh.txt": "6854f0190ee5361b666f1674e9c9316e7b97462f79b7ed3d2c2ee555dcd03f5d"
+  },
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter339",
+    "branch": "(detached HEAD)",
+    "head": "82305a9e633a104d9597aebc5ba03c2cbe4bf2b9",
+    "code_base": "dcb2366e",
+    "sha256": {
+      ".github/workflows/ci.yml": "daf57b6e168f616cd99e370df8ded5c853df72207c3cc5ec248110702c0ecead",
+      "host/broker/exec_probe_test.go": "e35784db17623df899e573096edf41ea4b205dbb4975701380594082e8181c5e",
+      "host/broker/exec_probe.go": "96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4"
+    }
+  },
+  "clause": "clause-3 hygiene (MET); moves no clause; test-only cadence and hello-wait bounds pins",
+  "environment": [
+    "Run exact prose blocks in one macOS /bin/bash 3.2 session at executor root; no git metadata writes.",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang for every broker and full-suite test",
+    "go1.26.6 darwin/arm64; pinned AILANG v0.41.0; Python3 and Perl; no timeout binary; no associative or empty arrays.",
+    "Every go test uses explicit -timeout 30m, outer alarm 2100; heavy gate controller-run outside sandbox only.",
+    "Socket-denied results are UNINFORMATIVE UNDER SANDBOX, never pass/fail; all load-bearing gates controller-rerun outside sandbox."
+  ],
+  "estimate": "~0.15d; one milestone M1, one executor run",
+  "id": "w-exec-probe-hello-wait-pin-survivors",
+  "iteration": 339,
+  "limits_s": {
+    "package_tests": 2100,
+    "mutation_each": 2100,
+    "heavy_load": 2100,
+    "gofmt": 600,
+    "go_vet": 600,
+    "go_build": 600,
+    "go_test_all": 2100,
+    "verify_ail": 1200
+  },
+  "measured_deviations_from_design": [
+    "The design header assigns bbfccede\u2026 to the patch name, but measured patch sha is 43221064d23bebcf830e38d261eb1a9d0c6153c1106dc409617dee7b4185f040; bbfccede\u2026 is the post-patch file.",
+    "Pristine-base and post-M1 targeted broker checks both rc 1 with exact FAIL set TestOrdinaryOverflowCarriesNoESRCH and TestExecHandlerTimeoutKillsTheGroup; no sockets in that targeted run. Controller triage required; no unrelated fixes or weakened gates.",
+    "Package/full-suite runs are UNINFORMATIVE UNDER SANDBOX due denied loopback binds; raw rc/counts retained. Full package aborts before design census.",
+    "host/pins archive git-ls-files rc128 reproduced on base; targeted read-only existing GIT_DIR/GIT_WORK_TREE diagnosis rc0 on base and post.",
+    "Eight required mutation behaviors remeasured with socket-free T10/T12 regex and match design; exact F/W executions remain sandbox-uninformative.",
+    "HEAVY-LOAD not run in planner sandbox; controller must run exact banked prose script outside sandbox."
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Exact T12 cadence test, setAt-based T10, and one CI test-list name",
+      "files": [
+        "host/broker/exec_probe_test.go",
+        ".github/workflows/ci.yml"
+      ],
+      "apply": "```bash\nset -eu\nset -o pipefail\nWT=$(pwd -P)\nX=$(mktemp -d /tmp/world-iter339-executor.XXXXXX)\nexport AILANG_BIN=$HOME/.pinned-ailang/ailang\nD=design_docs/verification/world-iter339/plan-M1.diff.txt\npython3 - \"$D\" <<'HASH'\nfrom pathlib import Path\nimport hashlib,sys\nassert hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest() == 'b75e4cf0517633d71e70c88468a93748e58c95cfedfe9ef257d244b4dde146de'\nHASH\n# Refuse unrelated code drift, including pre-existing changes, before applying.\ngit diff --quiet dcb2366e -- . ':!design_docs'\npython3 - <<'BASE'\nfrom pathlib import Path\nimport hashlib\nexpected={'.github/workflows/ci.yml': 'daf57b6e168f616cd99e370df8ded5c853df72207c3cc5ec248110702c0ecead', 'host/broker/exec_probe_test.go': 'e35784db17623df899e573096edf41ea4b205dbb4975701380594082e8181c5e', 'host/broker/exec_probe.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4'}\nfor p,h in expected.items(): assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p\nBASE\ngit apply --check \"$D\"\ngit apply \"$D\"\npython3 - <<'POST'\nfrom pathlib import Path\nimport hashlib\nexpected={'.github/workflows/ci.yml': 'a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f', 'host/broker/exec_probe_test.go': 'bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0', 'host/broker/exec_probe.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4'}\nfor p,h in expected.items(): assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p\nprint('post hashes OK')\nPOST\n```\n",
+      "commit": "Controller only; executor performs no git metadata writes",
+      "post_sha256": {
+        ".github/workflows/ci.yml": "a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f",
+        "host/broker/exec_probe_test.go": "bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0",
+        "host/broker/exec_probe.go": "96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4"
+      },
+      "acceptance": [
+        "A1 focused: perl -e 'alarm 2100; exec @ARGV' go test -timeout 30m -count=1 -v -run '^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$' ./host/broker/ -> rc 0; exactly 2 top-level PASS, T10 slow-child and slow-mux PASS (4 PASS at all levels), one CADENCE line, 0 FAIL/SKIP; dials >= 6; fastest >= execProbePollEvery = 50 ms.",
+        "A2 package: perl -e 'alarm 2100; exec @ARGV' go test -timeout 30m -count=1 -v ./host/broker/ -> rc 0; 336 top-level PASS, 30 top-level SKIP, 0 FAIL (design V15). -v is added to the \u00a74 step-2 command so the census is observable.",
+        "A3 mutation: /bin/bash \"$WT/design_docs/verification/world-iter339/plan-mutants.sh.txt\" \"$WT\" \"$X/mutants\" > \"$X/mutation-round.log\" 2>&1 -> rc 0; all 61 execution rows match their exact rc and FAIL set, all 59 mutated executions restored(cmp ok), no site count other than 1. 58 distinct configurations: 29 production + 29 test/pairs; controls C0/C1 and duplicate M1-broad account for remaining executions. See full table and expected.json generated by script. A socket-denied row has no verdict and must be rerun outside sandbox.",
+        "A4 HEAVY-LOAD: /bin/bash \"$X/heavy-load.sh\" \"$X/heavy-load.log\" > \"$X/heavy-load-summary.log\" 2>&1 -> CONTROLLER-RUN OUTSIDE SANDBOX, rc 0; yes-alive-before=160, yes-alive-after=0; 100 T12 and 100 T10 top-level PASS, 100 CADENCE samples, minimum dials >= 6, smallest fastest >= 50 ms; uptime before and after. Use the exact script below, replacing design \u00a74 step 4 (32 yes).",
+        "A5a format: perl -e 'alarm 600; exec @ARGV' gofmt -l host/broker -> rc 0; no output.",
+        "A5b vet: perl -e 'alarm 600; exec @ARGV' go vet ./host/broker/ -> rc 0; no output.",
+        "A6a build and full suite: perl -e 'alarm 600; exec @ARGV' go build ./... && perl -e 'alarm 2100; exec @ARGV' go test -timeout 30m ./... -> both rc 0; no FAIL. Full suite has explicit -timeout 30m; never rely on the default 10m timeout.",
+        "A6b AILANG: perl -e 'alarm 1200; exec @ARGV' ./scripts/verify_ail.sh -> rc 0; final verify gate PASSED banner, all required manifest identities and named tests accepted.",
+        "A7 shape and hashes: git ls-files --others --exclude-standard -- . ':!design_docs' > \"$X/untracked.txt\"\n[ ! -s \"$X/untracked.txt\" ]\ngit diff --name-only dcb2366e -- . ':!design_docs' > \"$X/shape.txt\"\npython3 - \"$X/shape.txt\" <<'SHAPE'\nfrom pathlib import Path\nimport sys\nassert Path(sys.argv[1]).read_text().splitlines()==['.github/workflows/ci.yml','host/broker/exec_probe_test.go']\nSHAPE\ngit diff --quiet dcb2366e -- host/broker/exec_probe.go\ngit show dcb2366e:host/broker/exec_probe.go > \"$X/base-exec_probe.go\"\ncmp \"$X/base-exec_probe.go\" host/broker/exec_probe.go\ngit diff --numstat dcb2366e -- .github/workflows/ci.yml\n# Exactly: 1<TAB>1<TAB>.github/workflows/ci.yml\ngit diff dcb2366e -- .github/workflows/ci.yml\n# One changed tests= line in the Row 140 step, only the required appended name. -> rc 0; exactly two named paths, production cmp identical, CI numstat 1/1, all exact post hashes."
+      ],
+      "mutants": {
+        "run": "/bin/bash \"$WT/design_docs/verification/world-iter339/plan-mutants.sh.txt\" \"$WT\" \"$X/mutants\" > \"$X/mutation-round.log\" 2>&1",
+        "script": "design_docs/verification/world-iter339/plan-mutants.sh.txt",
+        "script_sha256": "6854f0190ee5361b666f1674e9c9316e7b97462f79b7ed3d2c2ee555dcd03f5d",
+        "distinct_configurations": 58,
+        "production": 29,
+        "test_code_and_pairs": 29,
+        "executions": 61,
+        "controls": [
+          "C0-broad",
+          "C1-broad"
+        ],
+        "additional_repeat": "M1-broad repeats M1 under W",
+        "ids": [
+          "C0-broad",
+          "M1-broad",
+          "M1",
+          "M1-10x",
+          "M1-60s",
+          "M1-div10",
+          "M1-1ms",
+          "M1-busy",
+          "M1-ctl50",
+          "M1-ctl50+const100",
+          "PC-const2s",
+          "K-const100",
+          "K-const25",
+          "K-listen1100",
+          "K-wait950",
+          "C1-broad",
+          "S2-msg",
+          "S2-wait600",
+          "S2-msg+wait600",
+          "S2-argdrop",
+          "S4-ceil",
+          "K-wait960",
+          "S4-ceil+wait960",
+          "S4-ceil2poll",
+          "S4-floor100",
+          "K-wait249",
+          "S4-floor100+wait249",
+          "S4-floor500",
+          "S4-floor600",
+          "S4-arrival",
+          "K-wait5",
+          "S4-arrival+wait5",
+          "S4-nowrote",
+          "P-nohello",
+          "S4-nowrote+nohello",
+          "S4-nosets",
+          "P-nodeadline",
+          "S4-nosets+nodeadline",
+          "S4-nosetsnozero+nodeadline",
+          "TM1-nocount",
+          "TM1-nocount+M1",
+          "TM2-countflip",
+          "TM3-nofloor+div10",
+          "TM3-floorflip",
+          "TM4-periods1+M1",
+          "TM5-threshold+M1",
+          "TM6-reflit",
+          "TM6-reflit+M1",
+          "TM8-cap1+div10",
+          "TM7-noref",
+          "TM9-nosetAt",
+          "TM10-setAtIsDeadline",
+          "TM10-setAtIsDeadline+wait960",
+          "TM11-stopref+wait951",
+          "B-2x",
+          "B-3x",
+          "B-4x",
+          "B-5x",
+          "B-45ms",
+          "B-const1ms",
+          "K-wait951"
+        ],
+        "expectations": {
+          "C0-broad": {
+            "rc": 0,
+            "fail": []
+          },
+          "M1-broad": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1-10x": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1-60s": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1-div10": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1-1ms": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1-busy": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "M1-ctl50": {
+            "rc": 0,
+            "fail": []
+          },
+          "M1-ctl50+const100": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "PC-const2s": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "K-const100": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-const25": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-listen1100": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-wait950": {
+            "rc": 0,
+            "fail": []
+          },
+          "C1-broad": {
+            "rc": 0,
+            "fail": []
+          },
+          "S2-msg": {
+            "rc": 0,
+            "fail": []
+          },
+          "S2-wait600": {
+            "rc": 0,
+            "fail": []
+          },
+          "S2-msg+wait600": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1"
+            ]
+          },
+          "S2-argdrop": {
+            "rc": 1,
+            "fail": [],
+            "build": "fmt.Sprintf format %d reads arg #2, but call has 1 arg"
+          },
+          "S4-ceil": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-wait960": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "S4-ceil+wait960": {
+            "rc": 0,
+            "fail": []
+          },
+          "S4-ceil2poll": {
+            "rc": 0,
+            "fail": []
+          },
+          "S4-floor100": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-wait249": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "S4-floor100+wait249": {
+            "rc": 0,
+            "fail": []
+          },
+          "S4-floor500": {
+            "rc": 0,
+            "fail": []
+          },
+          "S4-floor600": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "S4-arrival": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-wait5": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "S4-arrival+wait5": {
+            "rc": 0,
+            "fail": []
+          },
+          "S4-nowrote": {
+            "rc": 0,
+            "fail": []
+          },
+          "P-nohello": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"
+            ]
+          },
+          "S4-nowrote+nohello": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty"
+            ]
+          },
+          "S4-nosets": {
+            "rc": 0,
+            "fail": []
+          },
+          "P-nodeadline": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "S4-nosets+nodeadline": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "S4-nosetsnozero+nodeadline": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM1-nocount": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM1-nocount+M1": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM2-countflip": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "TM3-nofloor+div10": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM3-floorflip": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "TM4-periods1+M1": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM5-threshold+M1": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM6-reflit": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM6-reflit+M1": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM8-cap1+div10": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM7-noref": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "TM9-nosetAt": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "TM10-setAtIsDeadline": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM10-setAtIsDeadline+wait960": {
+            "rc": 0,
+            "fail": []
+          },
+          "TM11-stopref+wait951": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          },
+          "B-2x": {
+            "rc": 0,
+            "fail": []
+          },
+          "B-3x": {
+            "rc": 0,
+            "fail": []
+          },
+          "B-4x": {
+            "rc": 0,
+            "fail": []
+          },
+          "B-5x": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "B-45ms": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReversePollCadence"
+            ]
+          },
+          "B-const1ms": {
+            "rc": 0,
+            "fail": []
+          },
+          "K-wait951": {
+            "rc": 1,
+            "fail": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ]
+          }
+        },
+        "sites": "Exact single-occurrence replacements in banked Bash 3.2 script; all 61 site checks and 59 mutated restores measured rc 0.",
+        "expect": "Design \u00a73 causal FAIL sets including parent names; extra load reds or socket denials never accepted as matches.",
+        "planner_measurements": [
+          {
+            "id": "C0-broad",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent",
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse",
+              "TestExecProbeReverseLegNoTokenIsNotRetried",
+              "TestExecProbeReverseLegNoTokenIsNotRetried/clean",
+              "TestExecProbeReverseLegNoTokenIsNotRetried/silent-client",
+              "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": false
+          },
+          {
+            "id": "M1-broad",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent",
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse",
+              "TestExecProbeReverseLegNoTokenIsNotRetried",
+              "TestExecProbeReverseLegNoTokenIsNotRetried/clean",
+              "TestExecProbeReverseLegNoTokenIsNotRetried/silent-client",
+              "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-10x",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-60s",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-div10",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-1ms",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-busy",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-ctl50",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "M1-ctl50+const100",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "PC-const2s",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "K-const100",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "K-const25",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "K-listen1100",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "K-wait950",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "C1-broad",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control",
+              "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent",
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage",
+              "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time",
+              "TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse",
+              "TestExecProbeReverseLegNoTokenIsNotRetried",
+              "TestExecProbeReverseLegNoTokenIsNotRetried/clean",
+              "TestExecProbeReverseLegNoTokenIsNotRetried/silent-client",
+              "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": false
+          },
+          {
+            "id": "S2-msg",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "S2-wait600",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "S2-msg+wait600",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "S2-argdrop",
+            "rc": 1,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-ceil",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "K-wait960",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-ceil+wait960",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-ceil2poll",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-floor100",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "K-wait249",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-floor100+wait249",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-floor500",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-floor600",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-arrival",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "K-wait5",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-arrival+wait5",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-nowrote",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "P-nohello",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "S4-nowrote+nohello",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "S4-nosets",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "P-nodeadline",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-nosets+nodeadline",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "S4-nosetsnozero+nodeadline",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "TM1-nocount",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM1-nocount+M1",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM2-countflip",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM3-nofloor+div10",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM3-floorflip",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM4-periods1+M1",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM5-threshold+M1",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM6-reflit",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM6-reflit+M1",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM8-cap1+div10",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM7-noref",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollCadence",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM9-nosetAt",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM10-setAtIsDeadline",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM10-setAtIsDeadline+wait960",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseDialErrIsSilent",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+              "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+              "TestExecProbeReversePollRecordsConnectReset"
+            ],
+            "classification": "UNINFORMATIVE UNDER SANDBOX",
+            "restored": true
+          },
+          {
+            "id": "TM11-stopref+wait951",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "B-2x",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "B-3x",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "B-4x",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "B-5x",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReversePollCadence"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "B-45ms",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReversePollCadence"
+            ],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "B-const1ms",
+            "rc": 0,
+            "fail_list": [],
+            "classification": "matched",
+            "restored": true
+          },
+          {
+            "id": "K-wait951",
+            "rc": 1,
+            "fail_list": [
+              "TestExecProbeReverseHelloWaitBounds",
+              "TestExecProbeReverseHelloWaitBounds/slow-child",
+              "TestExecProbeReverseHelloWaitBounds/slow-mux"
+            ],
+            "classification": "matched",
+            "restored": true
+          }
+        ],
+        "planner_socketfree_supplement": {
+          "command": "export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -timeout 30m -count=1 -v -run '^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$' ./host/broker/",
+          "results": [
+            {
+              "id": "M1",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReversePollCadence"
+              ],
+              "cadence": [
+                "CADENCE dials=3 span=1.017072083s fastest=501.028875ms slowest=501.031958ms"
+              ]
+            },
+            {
+              "id": "M1-div10",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReversePollCadence"
+              ],
+              "cadence": [
+                "CADENCE dials=178 span=1.012444291s fastest=5.029208ms slowest=9.166917ms"
+              ]
+            },
+            {
+              "id": "M1-ctl50+const100",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReversePollCadence"
+              ],
+              "cadence": [
+                "CADENCE dials=40 span=2.036669916s fastest=50.020417ms slowest=68.301625ms"
+              ]
+            },
+            {
+              "id": "PC-const2s",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReverseHelloWaitBounds",
+                "TestExecProbeReverseHelloWaitBounds/slow-child",
+                "TestExecProbeReverseHelloWaitBounds/slow-mux"
+              ],
+              "cadence": [
+                "CADENCE dials=21 span=40.040428833s fastest=2.000080166s slowest=2.006423667s"
+              ]
+            },
+            {
+              "id": "K-wait951",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReverseHelloWaitBounds",
+                "TestExecProbeReverseHelloWaitBounds/slow-child",
+                "TestExecProbeReverseHelloWaitBounds/slow-mux"
+              ],
+              "cadence": [
+                "CADENCE dials=20 span=1.02971325s fastest=50.022333ms slowest=56.273125ms"
+              ]
+            },
+            {
+              "id": "K-wait950",
+              "rc": 0,
+              "fail_list": [],
+              "cadence": [
+                "CADENCE dials=21 span=1.035919708s fastest=50.052917ms slowest=56.328584ms"
+              ]
+            },
+            {
+              "id": "TM2-countflip",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReversePollCadence"
+              ],
+              "cadence": [
+                "CADENCE dials=21 span=1.019665958s fastest=50.259041ms slowest=53.887ms"
+              ]
+            },
+            {
+              "id": "TM9-nosetAt",
+              "rc": 1,
+              "fail_list": [
+                "TestExecProbeReverseHelloWaitBounds",
+                "TestExecProbeReverseHelloWaitBounds/slow-child",
+                "TestExecProbeReverseHelloWaitBounds/slow-mux"
+              ],
+              "cadence": [
+                "CADENCE dials=20 span=1.029208625s fastest=50.055625ms slowest=56.395042ms"
+              ]
+            }
+          ],
+          "acceptance_substitute": false
+        }
+      },
+      "heavy_load_script": "#!/bin/bash\n# Controller only, outside the sandbox. CWD is the post-M1 executor tree.\nset -eu\nset -o pipefail\nexport AILANG_BIN=$HOME/.pinned-ailang/ailang\nLOG=${1:?give an absolute log pathname}\npids=''\ncleaned=0\ncleanup() {\n  if [ \"$cleaned\" -eq 1 ]; then return; fi\n  local pid alive=0\n  for pid in $pids; do kill \"$pid\" 2>/dev/null || :; done\n  local until_s=$(( $(date +%s)+10 )) running\n  while :; do\n    running=0\n    for pid in $pids; do\n      if kill -0 \"$pid\" 2>/dev/null; then running=$((running+1)); fi\n    done\n    if [ \"$running\" -eq 0 ]; then break; fi\n    if [ \"$(date +%s)\" -ge \"$until_s\" ]; then\n      for pid in $pids; do kill -KILL \"$pid\" 2>/dev/null || :; done\n      break\n    fi\n    sleep 0.1\n  done\n  for pid in $pids; do wait \"$pid\" 2>/dev/null || :; done\n  for pid in $pids; do\n    if kill -0 \"$pid\" 2>/dev/null; then alive=$((alive+1)); fi\n  done\n  echo \"yes-alive-after=$alive\"\n  uptime\n  cleaned=1\n  [ \"$alive\" -eq 0 ]\n}\ntrap cleanup EXIT\ntrap 'exit 130' INT\ntrap 'exit 143' TERM\nuptime\nn=0\nwhile [ \"$n\" -lt 160 ]; do\n  yes > /dev/null &\n  pids=\"$pids $!\"\n  n=$((n+1))\ndone\nalive=0\nfor pid in $pids; do\n  if kill -0 \"$pid\" 2>/dev/null; then alive=$((alive+1)); fi\ndone\necho \"yes-alive-before=$alive\"\n[ \"$alive\" -eq 160 ]\nrc=0\nperl -e 'alarm 2100; exec @ARGV' go test -timeout 30m -count=100 -race -v -run '^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$' ./host/broker/ > \"$LOG\" 2>&1 || rc=$?\necho \"heavy-load rc=$rc\"\ncleanup\ntrap - EXIT INT TERM\npython3 - \"$LOG\" \"$rc\" <<'PY'\nfrom pathlib import Path\nfrom decimal import Decimal\nimport re,sys\ns=Path(sys.argv[1]).read_text(errors='replace')\nrows=re.findall(r'CADENCE dials=(\\d+) span=\\S+ fastest=(\\S+) slowest=\\S+',s)\nunits={'h':Decimal(3600),'m':Decimal(60),'s':Decimal(1),'ms':Decimal('.001'),'\u00b5s':Decimal('.000001'),'\u03bcs':Decimal('.000001'),'us':Decimal('.000001'),'ns':Decimal('.000000001')}\ndef duration(s):\n    parts=re.findall(r'(\\d+(?:\\.\\d+)?)(ns|\u00b5s|\u03bcs|us|ms|s|m|h)',s)\n    assert ''.join(n+u for n,u in parts)==s,s\n    return sum((Decimal(n)*units[u] for n,u in parts),Decimal(0))\nif re.search(r'operation not permitted|bind:|listen tcp|listen unix',s):\n    sys.exit('UNINFORMATIVE UNDER SANDBOX; controller must rerun outside sandbox')\nassert int(sys.argv[2])==0,sys.argv[2]\nassert len(rows)==100,len(rows)\nminimum=min(int(d) for d,f in rows)\nfastest=min(duration(f) for d,f in rows)\nprint('CADENCE samples=%d minimum-dials=%d (gate 6) smallest-fastest=%s ms (execProbePollEvery floor 50 ms)' % (len(rows),minimum,fastest*1000))\nassert minimum>=6 and fastest>=Decimal('.050')\nfor name in ['TestExecProbeReversePollCadence','TestExecProbeReverseHelloWaitBounds']:\n    assert len(re.findall(r'^--- PASS: '+name+r' ',s,re.M))==100,name\nassert not re.search(r'--- (FAIL|SKIP):',s)\nPY\n",
+      "shape": "```bash\ngit ls-files --others --exclude-standard -- . ':!design_docs' > \"$X/untracked.txt\"\n[ ! -s \"$X/untracked.txt\" ]\ngit diff --name-only dcb2366e -- . ':!design_docs' > \"$X/shape.txt\"\npython3 - \"$X/shape.txt\" <<'SHAPE'\nfrom pathlib import Path\nimport sys\nassert Path(sys.argv[1]).read_text().splitlines()==['.github/workflows/ci.yml','host/broker/exec_probe_test.go']\nSHAPE\ngit diff --quiet dcb2366e -- host/broker/exec_probe.go\ngit show dcb2366e:host/broker/exec_probe.go > \"$X/base-exec_probe.go\"\ncmp \"$X/base-exec_probe.go\" host/broker/exec_probe.go\ngit diff --numstat dcb2366e -- .github/workflows/ci.yml\n# Exactly: 1<TAB>1<TAB>.github/workflows/ci.yml\ngit diff dcb2366e -- .github/workflows/ci.yml\n# One changed tests= line in the Row 140 step, only the required appended name.\npython3 - <<'POSTCHECK'\nfrom pathlib import Path\nimport hashlib\nexpected={'.github/workflows/ci.yml': 'a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f', 'host/broker/exec_probe_test.go': 'bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0', 'host/broker/exec_probe.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4'}\nfor f,h in expected.items(): assert hashlib.sha256(Path(f).read_bytes()).hexdigest()==h,f\nprint('post hashes OK')\nPOSTCHECK\n```\n",
+      "application_proof": {
+        "git_apply_check_rc": 0,
+        "git_apply_rc": 0,
+        "diff_sha256": "b75e4cf0517633d71e70c88468a93748e58c95cfedfe9ef257d244b4dde146de",
+        "diff_name_only": [
+          ".github/workflows/ci.yml",
+          "host/broker/exec_probe_test.go"
+        ],
+        "production_identical": true,
+        "post_sha256": {
+          ".github/workflows/ci.yml": "a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f",
+          "host/broker/exec_probe_test.go": "bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0",
+          "host/broker/exec_probe.go": "96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4"
+        }
+      },
+      "planner_acceptance_measurements": [
+        {
+          "id": "focus",
+          "command": [
+            "go",
+            "test",
+            "-timeout",
+            "30m",
+            "-count=1",
+            "-v",
+            "-run",
+            "^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$",
+            "./host/broker/"
+          ],
+          "rc": 0,
+          "seconds": 4.33,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/focus.log",
+          "top_pass": 2,
+          "top_skip": 0,
+          "top_fail": 0,
+          "fail_list": [],
+          "classification": "measured"
+        },
+        {
+          "id": "package",
+          "command": [
+            "go",
+            "test",
+            "-timeout",
+            "30m",
+            "-count=1",
+            "-v",
+            "./host/broker/"
+          ],
+          "rc": 1,
+          "seconds": 140.6,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/package.log",
+          "top_pass": 240,
+          "top_skip": 25,
+          "top_fail": 13,
+          "fail_list": [
+            "TestOrdinaryOverflowCarriesNoESRCH",
+            "TestExecProbePassThroughShimFailsEveryConfinementArm",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close",
+            "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+            "TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time",
+            "TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse",
+            "TestExecProbeReverseLegNoTokenIsNotRetried",
+            "TestExecProbeReverseLegNoTokenIsNotRetried/silent-client",
+            "TestExecProbeReverseLegNoTokenIsNotRetried/clean",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+            "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control",
+            "TestExecProbeReverseDialErrIsSilent",
+            "TestExecProbeReversePollRecordsConnectReset",
+            "TestExecHandlerTimeoutKillsTheGroup",
+            "TestExecSrtConfinementMatrix",
+            "TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce"
+          ],
+          "classification": "UNINFORMATIVE UNDER SANDBOX"
+        },
+        {
+          "id": "gofmt",
+          "command": [
+            "gofmt",
+            "-l",
+            "host/broker"
+          ],
+          "rc": 0,
+          "seconds": 0.05,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/gofmt.log",
+          "top_pass": 0,
+          "top_skip": 0,
+          "top_fail": 0,
+          "fail_list": [],
+          "classification": "measured"
+        },
+        {
+          "id": "vet",
+          "command": [
+            "go",
+            "vet",
+            "./host/broker/"
+          ],
+          "rc": 0,
+          "seconds": 0.51,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/vet.log",
+          "top_pass": 0,
+          "top_skip": 0,
+          "top_fail": 0,
+          "fail_list": [],
+          "classification": "measured"
+        },
+        {
+          "id": "build",
+          "command": [
+            "go",
+            "build",
+            "./..."
+          ],
+          "rc": 0,
+          "seconds": 1.74,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/build.log",
+          "top_pass": 0,
+          "top_skip": 0,
+          "top_fail": 0,
+          "fail_list": [],
+          "classification": "measured"
+        },
+        {
+          "id": "suite",
+          "command": [
+            "go",
+            "test",
+            "-timeout",
+            "30m",
+            "./..."
+          ],
+          "rc": 1,
+          "seconds": 392.08,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/suite.log",
+          "top_pass": 0,
+          "top_skip": 0,
+          "top_fail": 24,
+          "fail_list": [
+            "TestCLIRealSubprocessEpisode",
+            "TestClientDeadlineAgainstAcceptingServer",
+            "TestDemoProofHTTPProducerRoundTrip",
+            "TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull",
+            "TestOrdinaryOverflowCarriesNoESRCH",
+            "TestExecProbePassThroughShimFailsEveryConfinementArm",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage",
+            "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close",
+            "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+            "TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time",
+            "TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse",
+            "TestExecProbeReverseLegNoTokenIsNotRetried",
+            "TestExecProbeReverseLegNoTokenIsNotRetried/silent-client",
+            "TestExecProbeReverseLegNoTokenIsNotRetried/clean",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+            "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+            "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent",
+            "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control",
+            "TestExecProbeReverseDialErrIsSilent",
+            "TestExecProbeReversePollRecordsConnectReset",
+            "TestExecHandlerTimeoutKillsTheGroup",
+            "TestExecSrtConfinementMatrix",
+            "TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce",
+            "TestOrdinaryOverflowCarriesNoESRCH",
+            "TestAGUIShutdownEndsRuns",
+            "TestAGUIShutdownEndsRuns/false",
+            "TestAGUIShutdownEndsRuns/true",
+            "TestAGUISeesDirectStoreCommit",
+            "TestInstallGoodRelease",
+            "TestReleaseLiteralsExplainedByManifest",
+            "TestTheTwoShapesOfControllingTerminal",
+            "TestMarketingCapturePassFakeChrome",
+            "TestMarketingCapturePassFakeChrome/ready"
+          ],
+          "classification": "UNINFORMATIVE UNDER SANDBOX"
+        },
+        {
+          "id": "ail",
+          "command": [
+            "./scripts/verify_ail.sh"
+          ],
+          "rc": 0,
+          "seconds": 63.57,
+          "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world-iter339-plan.hoibo5j4/gates/ail.log",
+          "top_pass": 0,
+          "top_skip": 0,
+          "top_fail": 0,
+          "fail_list": [],
+          "classification": "measured"
+        }
+      ],
+      "planner_base_findings": [
+        {
+          "tree": "base",
+          "rc": 1,
+          "fail_list": [
+            "TestOrdinaryOverflowCarriesNoESRCH",
+            "TestExecHandlerTimeoutKillsTheGroup"
+          ],
+          "socket": false
+        },
+        {
+          "tree": "post",
+          "rc": 1,
+          "fail_list": [
+            "TestOrdinaryOverflowCarriesNoESRCH",
+            "TestExecHandlerTimeoutKillsTheGroup"
+          ],
+          "socket": false
+        }
+      ],
+      "planner_archive_artifact_diagnostics": [
+        {
+          "tree": "base-archive",
+          "rc": 1
+        },
+        {
+          "tree": "base-metadata",
+          "rc": 0
+        },
+        {
+          "tree": "post-metadata",
+          "rc": 0
+        }
+      ]
+    }
+  ],
+  "row": "241",
+  "scope": "ONE M1, test-only. Exact banked test and one CI line. No production bytes, other tests, .ail, go.mod or row-242 edits; planner artifacts only in design_docs.",
+  "status": "planned"
+}
