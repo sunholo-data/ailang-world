@@ -1,12 +1,12 @@
 # w-exec-probe-cross-profile-net6-hoist — bind every profile's arm-6 listener before the fan-out, so cross-profile port exclusion holds by construction
 
-- **Status**: Planned (designed iteration 340, r2: answers quorum r1, §11). Queue row 242. The successor row named in
+- **Status**: Planned (designed iteration 340, r3: r2 answers quorum r1; r3 is the controller's narrow-refinement carve-out applying quorum r2's verbatim fixes, §11). Queue row 242. The successor row named in
   `design_docs/planned/w-exec-probe-reverse-leg-pins.md` §3.4 (row 230, the parent: its R2 row,
   V14–V18 and P4). It does not touch the reverse leg's retry or reset semantics, which row 233
   (`w-exec-probe-holder-exit-reset.md`, parked, D-WORLD-105 OPEN, default C) owns.
 - **Item**: Clause 3 (the Workspace.Exec fail-closed startup probe). This is a structure change on a
   fail-closed startup gate, so it needs its own quorum.
-- **Estimated**: ~0.25 day. Production +23/−18 lines. No in-process behaviour change on any failure path (§3.3); one cross-process failure window widens (§6 R1): a foreign accept landing between the hoisted bind and its owner's control() now produces a fail-closed refusal where HEAD's ~µs bind→control() adjacency made it practically unreachable. It cannot produce a false pass. [r2, quorum r1 kimi fix 1, verbatim; measured in V16: the refusal comes through arm 6's raw and proxy legs.] One new test file,
+- **Estimated**: ~0.25 day. Production +23/−18 lines. No in-process behaviour change on any failure path (§3.3); one cross-process failure window widens (§6 R1): a foreign accept landing between the hoisted bind and its owner's control() now produces a fail-closed refusal where HEAD's ~µs bind→control() adjacency made it practically unreachable. It cannot produce a false pass. [r2, quorum r1 kimi fix 1, verbatim; measured in V16: the refusal comes through arm 6's raw and proxy legs. r3: the full-suite differences are both reproduced green on rerun (V21), and the mixed failure compositions are byte-equal HEAD vs proto (V22).] One new test file,
   `host/broker/exec_probe_net6_test.go` (216 lines, two tests), and two names added to the `tests=` list at
   `ci.yml:247`. The byte-exact prototype is `design_docs/verification/world-iter340/designer-proto.patch.txt`
   (V11).
@@ -103,8 +103,8 @@ close loop is total.
 |---|---|---|---|---|
 | `cfg.Sandbox == nil` (`:235`) | none | — | — | read: the return precedes the bind loop |
 | `plantExecProbe` fails (`:240`) | none | — | — | read: the bind loop follows `return nil, err`. **UNMEASURED dynamically** |
-| `newProbeListener` fails for profile k while 0..k−1 succeed | k carries `err`; the others are live | the parent `defer` (k's close is a no-op) | after `wg.Wait()` | V8 (failure injected into every bind) |
-| `probeExecProfile` early return: `randomHex` (`:398`), `os.Mkdir` (`:404`), `NewExecHandler` (`:412`), `MkdirAll` (`:426`) | that profile's, unused | the parent `defer` | after `wg.Wait()` | V8 (the `NewExecHandler` return, via a missing `read_root`): `listeners-left=0` |
+| `newProbeListener` fails for profile k while 0..k−1 succeed | k carries `err`; the others are live | the parent `defer` (k's close is a no-op) | after `wg.Wait()` | V22(a) (mixed injection); V8 (all-fail homogeneous) |
+| `probeExecProfile` early return: `randomHex` (`:398`), `os.Mkdir` (`:404`), `NewExecHandler` (`:412`), `MkdirAll` (`:426`) | that profile's, unused | the parent `defer` | after `wg.Wait()` | V22(b); V8 (single early return) (the `NewExecHandler` return, via a missing `read_root`): `listeners-left=0` |
 | Normal path | all | the parent `defer` | after `wg.Wait()`, so after every owner's Run C, Run D and arm 8 | V6 (T1's after-return check), V7 (MUT-4 reds it) |
 | A goroutine panics | — | the process dies, as today (no `recover` anywhere in the path) | — | read |
 
@@ -116,7 +116,7 @@ existing pass-through test (V7).
 
 | Failure | Before (HEAD) | After (hoist) |
 |---|---|---|
-| Profile k's bind fails | `errs[k]` is an `*ExecProbeError` whose `arm6-network` names `control: World's live listener did not accept an unsandboxed connect: <err>` first, followed by the raw, proxy and reverse legs | **identical** (V8: normalised texts byte-equal; the arm set and the `N of 7` count are equal) |
+| Profile k's bind fails | `errs[k]` is an `*ExecProbeError` whose `arm6-network` names `control: World's live listener did not accept an unsandboxed connect: <err>` first, followed by the raw, proxy and reverse legs | **identical** (V8 all-fail; V22(a) mixed, byte-equal; the arm set and the `N of 7` count are equal) |
 | An early return in `probeExecProfile` | a plain wrapped `error` (for example `broker: exec probe for profile "badroot": broker: exec handler: read_root …`), with no arm list | **identical** (V8) |
 | `plantExecProbe` fails | `(nil, err)` | identical (the bind loop is never reached) |
 | A pass, or any arm failure | `nil`, or `*ExecProbeError` with arms in `execProbeOrder` | identical; the arm code is untouched |
@@ -295,11 +295,10 @@ stays green.
     not measured. Against it, T1 reds MUT-2 and MUT-3b on every measured run (V7), and HEAD 10 of 10
     times (V5).
 
-  **Linux UNMEASURED.** `SO_ACCEPTCONN` exists there and would make the match exact. The executor
-  may add it under `runtime.GOOS == "linux"`, but it is not part of the pinned patch. CI's verbose
+  **Linux UNMEASURED.** `SO_ACCEPTCONN` exists there and would make the match exact. It is not part of the pinned patch; the executor must apply V11 byte-exact and only open a follow-up if Linux CI reveals a false match. [r3, quorum r2 gemini fix, verbatim] CI's verbose
   list (§5) is the first Linux run.
 - **R5, holding listeners longer.** At most N loopback ports are held for the whole probe instead of
-  each owner's span. N is the profile count. The full-suite comparison (V14) found no failure that the hoist could explain. Each side had one load-timed difference, and the proto one was green on rerun.
+  each owner's span. N is the profile count. The full-suite comparison (V14) found no failure that the hoist could explain. each side had one load-timed difference, both reproduced green on rerun (TestDoctorQuickIsFast V14 rerun; TestWorktreeSnapshotRefusesAConfiguredFilter V21). [r3, quorum r2 glm fix, verbatim; V21: HEAD 3/3 PASS, proto 3/3 PASS]
 
 ## 7. Milestones
 
@@ -351,6 +350,8 @@ existing `worktreeGit` and `cfg.reversePort`.
 | V18 | Who dials [r2] | `$V/designer-r2-attribution.txt`: HEAD copy, a scratch-only accept-loop `lsof` instrumentation (diff in the file, removed afterwards and checked with `cmp`), 4 listeners held 65 s; `ps -o pid,ppid,lstart,command -p 45693` | 8 unsolicited accepts at `14:47:01.904` (×4, one per listener) and `14:47:33.699–.703` (×4). Each `lsof` names `python3.1 45693` (plus our own `broker.te`). pid 45693 = `…/python3.12 /Users/voightkampff/.config/sunholo-platform/homepage/serve.py`, started Mon Nov 2 10:26:55. The same instrumentation over 20 no-dial forging runs saw 0 unsolicited accepts |
 | V19 | What `loopbackListenPorts` matches on darwin [r2, gemini] | `TestZZR2FdScanFalseMatch`, `-count=5`, both copies → `$V/designer-r2-fdscan.txt` | 10 of 10: `listener=true bound-not-listening=true connected-client=false unbound-socket-ports=false` |
 | V20 | T1 and T2 stay green on the unchanged proto after r2 [r2] | proto copy (sha256 `19de369381579387`), `go test -count=3 -run '^TestExecProbeNet6' -v ./host/broker/` → the tail of `$V/designer-r2-foreign-dial.txt` | 3 × `PASS: TestExecProbeNet6BoundBeforeAnyPick` (2.78–2.80 s), 3 × `PASS: …BindSiteIsBeforeTheFanOut`, `ok`, load 4.27 |
+| V21 | The V14 HEAD-only red is transient on both sides [r3, quorum r2 glm fix] | pristine `git archive` of `e22e0794` and the same + `designer-proto.patch.txt`; `AILANG_BIN=~/.pinned-ailang/ailang`; `go test -count=3 -run '^TestWorktreeSnapshotRefusesAConfiguredFilter$' -v ./...` per copy, load logged → `$V/controller-v21-glm.txt` | HEAD rc 0, `--- PASS` ×3 (3.61 / 1.76 / 0.28 s), load 6.73; proto rc 0, `--- PASS` ×3 (3.57 / 2.41 / 0.27 s), load 7.02 |
+| V22 | Mixed failure compositions under one parent defer [r3, quorum r2 kimi fix (its "V21"; renumbered because glm's fix also claimed V21)] | HEAD and proto copies, each with a scratch-only `zzInjectBindFail(listener, project)` placed right after that copy's own bind site, and the harness `TestZZV21Mixed`: (a) two pass-through profiles, the bind fails for index 1 (`proj2`) only; (b) three profiles, index 0 returns early (missing `read_root`), indices 1–2 run to completion. `go test -count=3 -run '^TestZZV21Mixed$' -v ./host/broker/` → `$V/controller-v22-kimi.txt` | both rc 0; raw `ZZ` lines **IDENTICAL** HEAD vs proto (27 each); `listeners-left=0` in all 6 cases per side; (a) `errs[1]` (`proj2`) carries `arm6-network: control: World's live listener did not accept an unsandboxed connect: zz injected bind failure for proj2` and `errs[0]` (`proj`) does not; (b) `errs[0]` is the identical plain wrapped `read_root` error and `errs[1..2]` are the pass-through shim's ordinary `*ExecProbeError` (the reviewer's `== nil` expectation cannot hold under a pass-through shim; the assertion is HEAD-vs-proto equality). Positive control: injection hit `proj2` 3/3 per side, `proj` 0, case (b) 0 |
 
 ## 11. Quorum log
 
@@ -379,3 +380,25 @@ The design direction is unchanged. No measurement contradicted it, and moving `c
 parent would not shrink the bind→`acceptsC` window (§6 R1). The pinned patch is byte-identical to
 r1's (V11, V20).
 
+### r2 (iteration 340): BLOCKED
+
+The seats stayed the same: gemini-4-argon (**pass**, $0.0571), oc-glm-5-3 (**reject**, $0.0587) and
+oc-kimi-k3 (**reject**, $0.2128). None was absent. The total was $0.3286. The artifact is
+`$V/quorum-r2.json`. Surfaces per objection (gate-2 rule (a), round 2): glm on the V14 full-suite
+signal (an unattributed HEAD-only red); kimi on the evidence behind §3.2 rows 3–4 and §3.3 row 1
+(mixed failure compositions never constructed); gemini (non-blocking) on R4's executor option
+against the byte-exact instruction. None disputes the design direction, and each carries a
+concrete `proposed_fix`.
+
+### r3 (iteration 340): the controller's narrow-refinement carve-out
+
+Applied by the controller, verbatim where the reviewers supplied text, after running the
+measurements their fixes specify:
+
+| Item | What r3 changed | Evidence |
+|---|---|---|
+| gemini | §6 R4's executor-option sentence replaced with the reviewer's text | — |
+| glm | V21 added; R5's sentence replaced with the reviewer's text; the Item bracket cites V21. HEAD was green 3/3, so the reviewer's first branch applies | V21 |
+| kimi | V22 added (the reviewer's "V21"); §3.2 rows 3 and 4 and §3.3 row 1 cite it as the reviewer specified. The reviewer's expectation `errs[1]==errs[2]==nil` in (b) cannot hold with a pass-through shim, so the measured assertion is HEAD-vs-proto byte equality plus `listeners-left=0`, which is what the reviewer's (a) asks for | V22 |
+
+The design and the pinned patch are unchanged (V11).

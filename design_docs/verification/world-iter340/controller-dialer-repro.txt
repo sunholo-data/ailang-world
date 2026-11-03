@@ -1,0 +1,89 @@
+# iter-340 controller first-party reproduction of the designer's idle-listener dialer finding (V17): 16 idle 127.0.0.1 listeners held 75 s, accept logger (source below), no client of ours
+package main
+
+import (
+	"fmt"
+	"net"
+	"sync/atomic"
+	"time"
+)
+
+func main() {
+	var total atomic.Int64
+	const n = 16
+	lns := make([]net.Listener, n)
+	for i := range lns {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			panic(err)
+		}
+		lns[i] = ln
+		go func() {
+			for {
+				c, err := ln.Accept()
+				if err != nil {
+					return
+				}
+				total.Add(1)
+				fmt.Printf("%s accept on %s from %s\n", time.Now().Format("15:04:05.000"), ln.Addr(), c.RemoteAddr())
+				c.Close()
+			}
+		}()
+	}
+	fmt.Printf("holding %d listeners for 75s from %s\n", n, time.Now().Format("15:04:05"))
+	time.Sleep(75 * time.Second)
+	fmt.Printf("TOTAL unsolicited accepts=%d over %d listeners\n", total.Load(), n)
+}
+# output:
+holding 16 listeners for 75s from 14:51:11
+14:51:16.161 accept on 127.0.0.1:54106 from 127.0.0.1:54139
+14:51:16.162 accept on 127.0.0.1:54105 from 127.0.0.1:54138
+14:51:16.162 accept on 127.0.0.1:54109 from 127.0.0.1:54142
+14:51:16.163 accept on 127.0.0.1:54108 from 127.0.0.1:54141
+14:51:16.163 accept on 127.0.0.1:54104 from 127.0.0.1:54137
+14:51:16.163 accept on 127.0.0.1:54107 from 127.0.0.1:54140
+14:51:16.163 accept on 127.0.0.1:54111 from 127.0.0.1:54144
+14:51:16.163 accept on 127.0.0.1:54112 from 127.0.0.1:54146
+14:51:16.163 accept on 127.0.0.1:54110 from 127.0.0.1:54143
+14:51:16.164 accept on 127.0.0.1:54115 from 127.0.0.1:54149
+14:51:16.164 accept on 127.0.0.1:54116 from 127.0.0.1:54150
+14:51:16.164 accept on 127.0.0.1:54113 from 127.0.0.1:54147
+14:51:16.164 accept on 127.0.0.1:54114 from 127.0.0.1:54148
+14:51:16.164 accept on 127.0.0.1:54118 from 127.0.0.1:54152
+14:51:16.164 accept on 127.0.0.1:54117 from 127.0.0.1:54151
+14:51:16.164 accept on 127.0.0.1:54119 from 127.0.0.1:54153
+14:51:47.970 accept on 127.0.0.1:54106 from 127.0.0.1:54192
+14:51:47.971 accept on 127.0.0.1:54104 from 127.0.0.1:54190
+14:51:47.971 accept on 127.0.0.1:54105 from 127.0.0.1:54189
+14:51:47.971 accept on 127.0.0.1:54107 from 127.0.0.1:54193
+14:51:47.972 accept on 127.0.0.1:54112 from 127.0.0.1:54198
+14:51:47.972 accept on 127.0.0.1:54111 from 127.0.0.1:54197
+14:51:47.972 accept on 127.0.0.1:54110 from 127.0.0.1:54196
+14:51:47.972 accept on 127.0.0.1:54109 from 127.0.0.1:54195
+14:51:47.972 accept on 127.0.0.1:54108 from 127.0.0.1:54194
+14:51:47.973 accept on 127.0.0.1:54115 from 127.0.0.1:54201
+14:51:47.973 accept on 127.0.0.1:54113 from 127.0.0.1:54199
+14:51:47.973 accept on 127.0.0.1:54114 from 127.0.0.1:54200
+14:51:47.974 accept on 127.0.0.1:54119 from 127.0.0.1:54205
+14:51:47.974 accept on 127.0.0.1:54118 from 127.0.0.1:54204
+14:51:47.974 accept on 127.0.0.1:54117 from 127.0.0.1:54203
+14:51:47.974 accept on 127.0.0.1:54116 from 127.0.0.1:54202
+14:52:19.758 accept on 127.0.0.1:54106 from 127.0.0.1:54263
+14:52:19.758 accept on 127.0.0.1:54105 from 127.0.0.1:54262
+14:52:19.758 accept on 127.0.0.1:54104 from 127.0.0.1:54260
+14:52:19.758 accept on 127.0.0.1:54109 from 127.0.0.1:54266
+14:52:19.758 accept on 127.0.0.1:54108 from 127.0.0.1:54265
+14:52:19.759 accept on 127.0.0.1:54107 from 127.0.0.1:54264
+14:52:19.759 accept on 127.0.0.1:54112 from 127.0.0.1:54269
+14:52:19.759 accept on 127.0.0.1:54110 from 127.0.0.1:54267
+14:52:19.759 accept on 127.0.0.1:54114 from 127.0.0.1:54272
+14:52:19.759 accept on 127.0.0.1:54111 from 127.0.0.1:54268
+14:52:19.759 accept on 127.0.0.1:54113 from 127.0.0.1:54270
+14:52:19.759 accept on 127.0.0.1:54115 from 127.0.0.1:54273
+14:52:19.760 accept on 127.0.0.1:54118 from 127.0.0.1:54276
+14:52:19.760 accept on 127.0.0.1:54116 from 127.0.0.1:54274
+14:52:19.760 accept on 127.0.0.1:54117 from 127.0.0.1:54275
+14:52:19.760 accept on 127.0.0.1:54119 from 127.0.0.1:54277
+TOTAL unsolicited accepts=48 over 16 listeners
+rc=0
+# process present at the time (ps): 45693 python3.12 .../.config/sunholo-platform/homepage/serve.py (attribution by lsof is the designer's V18, not re-run here)

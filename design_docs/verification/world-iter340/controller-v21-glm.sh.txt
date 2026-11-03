@@ -1,0 +1,8 @@
+#!/bin/bash
+S=/Users/voightkampff/dev/sunholo-data
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+for d in v21head v21proto; do
+  cd $S/.scratch-iter340-$d
+  { echo "== $d $(uptime)"; go test -count=3 -run "^TestWorktreeSnapshotRefusesAConfiguredFilter\$" -v ./... 2>&1 | grep -E "^(=== RUN|--- |ok|FAIL|PASS)" | grep -v "no test files"; echo "$d rc=${PIPESTATUS[0]}"; } >> /tmp/iter340/v21glm.txt
+done
+echo DONE > /tmp/iter340/v21glm.done
