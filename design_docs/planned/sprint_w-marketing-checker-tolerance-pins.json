@@ -1,0 +1,297 @@
+{
+  "authority": [
+    "design_docs/planned/w-marketing-checker-tolerance-pins.md r3 (controller narrow-refinement carve-out after design quorum r2; §2–§4, §6 V13, §7)",
+    "design_docs/planned/w-marketing-checker-tolerance-pins-sprint-plan.md"
+  ],
+  "banked_sources_sha256": {
+    "design_docs/planned/w-marketing-checker-tolerance-pins.md": "59ae0dc3bf666cd92fb84e9cd971e2357cfb15cb47b076f2ae8a5609c6d4aab1",
+    "design_docs/verification/world-iter338/controller-r3-tolerance_test.go.txt": "c6e5fb0ba113886c0e1f05015425552cdecc122fb17c6911fc409c66e51b27ed"
+  },
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter338",
+    "branch": "(detached HEAD)",
+    "head": "572e177d741abe8bd6eddf0215284bbbdae7ca00",
+    "code_base": "2c51c581",
+    "sha256": {
+      "scripts/marketingcheck/position.go": "9029dbabd574761050399864cdd45f399ae9a3682ff1523e547479e75f8c669d",
+      "scripts/marketingcheck/phone.go": "9540d55a323640edab4933e0a4d8f8445be5046a5f8d6c1b0596035b1f0c0770",
+      "scripts/marketingcheck/main.go": "24448bb78265726f66085833b8b61ec5b28f16f9743cf6926a5c12e4cd189268"
+    }
+  },
+  "clause": "release hygiene: row-240 boundary pins for row-231 tolerances, R1 non-free-gap premise and r3 exact (a3) source pin, and position/phone run routes; moves no clause",
+  "environment": [
+    "Run from the executor worktree root in one Bash session; WT=$(pwd -P)",
+    "X=$(mktemp -d /tmp/world-iter338-executor.XXXXXX); logs, pre-mutation backups and complete mutation scratch copy under X",
+    "RB=$X/run_bounded.sh; copy design_docs/verification/world-iter336/run_bounded.sh.txt; all gates use bash \"$RB\" LIMIT LOG COMMAND",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang",
+    "go1.26.6 darwin/arm64; AILANG v0.41.0; tool AILANG v0.54.15 (design V01)",
+    "export WORLD_PHONE_CORPUS=$HOME/.ailang/state/world-iter328-phone-corpus (read-only)",
+    "Use existing writable Go caches. Planner measurements used perl alarm 600 in .plan-scratch/measure; planner scratch removed before handoff.",
+    "Sandbox infrastructure reds mentioning bind/listen/operation not permitted, fake Chrome or a 120 s capture deadline are UNINFORMATIVE UNDER SANDBOX. None encountered by planner; controller reruns outside sandbox."
+  ],
+  "estimate": "~0.2d; one milestone M1; one executor run",
+  "id": "w-marketing-checker-tolerance-pins",
+  "iteration": 338,
+  "limits_s": {
+    "package_tests": 600,
+    "mutation_each": 600,
+    "gofmt": 600,
+    "go_vet": 600,
+    "go_build": 600,
+    "go_test_all": 2400,
+    "verify_ail": 1200
+  },
+  "measured_deviations_from_design": [
+    "T11: bounded scratch go test -count=1 -v -run '^TestMarketingPositionTolerancePins$' returned rc 1 with parent TestMarketingPositionTolerancePins and leaves gc-a3-conjunct-source-pin plus a3-timeline-gap+3. Design §3 calls a3-timeline-gap+3 the sole killer; the r3 exact-clause pin also reds. Full-package T11 was not measured by the planner.",
+    "T12: bounded scratch go test -count=1 -v -run '^TestMarketingPositionTolerancePins$' returned rc 1 with parent TestMarketingPositionTolerancePins and leaves gc-a3-conjunct-source-pin plus a3-timeline-gap+2. Design §3 lists a3-timeline-gap+2 plus Corpus/new/perm-roster-drift-2px and Parity; the r3 exact-clause pin also reds. Full-package T12 was not measured by the planner."
+  ],
+  "milestones": [
+    {
+      "acceptance": [
+        "go test -count=1 -v -run '^TestMarketing(PositionTolerancePins|PhoneEntryTolerancePins|RunRoutesPositionPhone)$' ./scripts/marketingcheck/ -> rc 0; exactly 19 --- PASS (16 subtests: 14 position + 2 phone, 3 top-level); 0 --- SKIP and 0 --- FAIL",
+        "go test -count=1 ./scripts/marketingcheck/ -> rc 0",
+        "Every design §3 row reproduces as listed in the plan authority table; T18 reds only TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin (and parent). PG reds only the premise subtest, scratch-only and -run-limited; C rc 1. Measured T11/T12 extra source-pin reds require controller disposition; literal mutation gate is unresolved.",
+        "gofmt -l scripts/marketingcheck -> no output; go vet ./scripts/marketingcheck/ -> rc 0",
+        "go build ./... && go test ./... -> rc 0; ./scripts/verify_ail.sh -> rc 0 (bounded separately at 600/2400/1200 seconds)",
+        "git diff --name-only 2c51c581 -- . ':!design_docs' -> exactly scripts/marketingcheck/position.go and scripts/marketingcheck/tolerance_test.go at controller checkpoint after controller staging/commit; executor checks union with git ls-files --others because new file remains untracked",
+        "git diff 2c51c581 -- scripts/marketingcheck/position.go -> exactly one changed line, :129; git diff --numstat -> 1 1; strip the exact trailing comment and compare to the base bytes; three leading tabs preserved",
+        "git diff --quiet 2c51c581 -- scripts/marketingcheck/phone.go scripts/marketingcheck/main.go -> rc 0; cmp reference test and installed test -> rc 0; both post_sha256 exact",
+        "Row-247 fence: one rerun only if FAIL list exactly TestMarketingCaptureFakeChromeSixShots plus TestMarketingCaptureFakeChromeSixShots/version-changed, duration (120.0…s), message rc=-1. Record both runs. Any other red or second occurrence stops M1; do not edit capture_test.go. Sandbox-uninformative results are not acceptance outcomes."
+      ],
+      "apply": "Verify banked/base hashes and git apply --check design_docs/verification/world-iter338/plan-M1.diff.txt (planner rc 0; patch sha256 733b40d11d7be70cdf5a0dfbade0a79e46ea7652fa9929390d733f2efc2201e0); copy design_docs/verification/world-iter338/controller-r3-tolerance_test.go.txt unchanged to scripts/marketingcheck/tolerance_test.go and copy scratch-generated position.go with only the required :129 comment, using the plan's exact Python/cp block. No git apply without --check. Verify cmp and post_sha256.",
+      "commit": "Commits are the controller's job; the executor performs NO git write operations",
+      "files": [
+        "scripts/marketingcheck/tolerance_test.go",
+        "scripts/marketingcheck/position.go"
+      ],
+      "id": "M1",
+      "mutants": {
+        "run": "All 21 table rows: independent one-line BSD sed commands from plan, full-package bounded go test -count=1 -v ./scripts/marketingcheck/ except PG. Before each row copy pre-mutation backup; restore with cp and cmp even on red. All mutations occur only in $X/mut. Compare complete FAIL list to design expectations, include parents, record measured discrepancies. Planner validated all 21 sed commands change only their addressed line and restore identically.",
+        "ids": [
+          "T1",
+          "T2",
+          "T3",
+          "T4",
+          "T5",
+          "T6",
+          "T7",
+          "T8",
+          "T9",
+          "T10",
+          "T11",
+          "T12",
+          "T13",
+          "T14",
+          "T15",
+          "T16",
+          "T17",
+          "T17b",
+          "T18",
+          "PG",
+          "C"
+        ],
+        "rows": [
+          {
+            "id": "T1",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.X-b.X) <= 2/posAbs(c.X-b.X) <= 200/",
+            "must_red": "PositionTolerancePins/bg-x0+3",
+            "design_measured": "sole killer",
+            "command": "sed -i '' '150s/posAbs(c.X-b.X) <= 2/posAbs(c.X-b.X) <= 200/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T2",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= 200/",
+            "must_red": "bg-y+3",
+            "design_measured": "sole",
+            "command": "sed -i '' '150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= 200/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T3",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.X+c.W-b.X-b.W) <= 2/posAbs(c.X+c.W-b.X-b.W) <= 200/",
+            "must_red": "bg-right-3",
+            "design_measured": "sole",
+            "command": "sed -i '' '150s/posAbs(c.X+c.W-b.X-b.W) <= 2/posAbs(c.X+c.W-b.X-b.W) <= 200/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T4",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.Y+c.H-b.Y-b.H) <= 2/posAbs(c.Y+c.H-b.Y-b.H) <= 200/",
+            "must_red": "bg-bottom-3",
+            "design_measured": "sole",
+            "command": "sed -i '' '150s/posAbs(c.Y+c.H-b.Y-b.H) <= 2/posAbs(c.Y+c.H-b.Y-b.H) <= 200/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T5",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.X-b.X) <= 2/posAbs(c.X-b.X) <= 1/",
+            "must_red": "bg-x0+2",
+            "design_measured": "each sole",
+            "command": "sed -i '' '150s/posAbs(c.X-b.X) <= 2/posAbs(c.X-b.X) <= 1/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T6",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= 1/",
+            "must_red": "bg-y+2",
+            "design_measured": "each sole",
+            "command": "sed -i '' '150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= 1/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T7",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.X+c.W-b.X-b.W) <= 2/posAbs(c.X+c.W-b.X-b.W) <= 1/",
+            "must_red": "bg-right-2",
+            "design_measured": "each sole",
+            "command": "sed -i '' '150s/posAbs(c.X+c.W-b.X-b.W) <= 2/posAbs(c.X+c.W-b.X-b.W) <= 1/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T8",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.Y+c.H-b.Y-b.H) <= 2/posAbs(c.Y+c.H-b.Y-b.H) <= 1/",
+            "must_red": "bg-bottom-2",
+            "design_measured": "each sole",
+            "command": "sed -i '' '150s/posAbs(c.Y+c.H-b.Y-b.H) <= 2/posAbs(c.Y+c.H-b.Y-b.H) <= 1/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T9",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 101,
+            "expression": "101s/posAbs(dh) > 2/posAbs(dh) > 3/",
+            "must_red": "a4-graph-svg-h+3",
+            "design_measured": "sole",
+            "command": "sed -i '' '101s/posAbs(dh) > 2/posAbs(dh) > 3/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T10",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 101,
+            "expression": "101s/posAbs(dh) > 2/posAbs(dh) > 1/",
+            "must_red": "a4-graph-svg-h+2",
+            "design_measured": "also `Corpus/new/bnd-nonpara-drift-2/-3`, Parity",
+            "command": "sed -i '' '101s/posAbs(dh) > 2/posAbs(dh) > 1/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T11",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 129,
+            "expression": "129s/posAbs(e) <= 2/posAbs(e) <= 3/",
+            "must_red": "a3-timeline-gap+3",
+            "design_measured": "sole",
+            "command": "sed -i '' '129s/posAbs(e) <= 2/posAbs(e) <= 3/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T12",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 129,
+            "expression": "129s/posAbs(e) <= 2/posAbs(e) <= 1/",
+            "must_red": "a3-timeline-gap+2",
+            "design_measured": "also `Corpus/new/perm-roster-drift-2px`, Parity",
+            "command": "sed -i '' '129s/posAbs(e) <= 2/posAbs(e) <= 1/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "T13",
+            "file": "scripts/marketingcheck/phone.go",
+            "line": 168,
+            "expression": "168s/phoneR1Entry, 4)/phoneR1Entry, 40)/",
+            "must_red": "PhoneEntryTolerancePins/entry+5",
+            "design_measured": "sole",
+            "command": "sed -i '' '168s/phoneR1Entry, 4)/phoneR1Entry, 40)/' scripts/marketingcheck/phone.go"
+          },
+          {
+            "id": "T14",
+            "file": "scripts/marketingcheck/phone.go",
+            "line": 168,
+            "expression": "168s/phoneR1Entry, 4)/phoneR1Entry, 3)/",
+            "must_red": "entry+4",
+            "design_measured": "also `PhoneArms/v67/shift-4`, Parity",
+            "command": "sed -i '' '168s/phoneR1Entry, 4)/phoneR1Entry, 3)/' scripts/marketingcheck/phone.go"
+          },
+          {
+            "id": "T15",
+            "file": "scripts/marketingcheck/main.go",
+            "line": 51,
+            "expression": "51s/case \"position\":/case \"position-unrouted\":/",
+            "must_red": "RunRoutesPositionPhone",
+            "design_measured": "also `RunbookMatchesHelp/position-lines`",
+            "command": "sed -i '' '51s/case \"position\":/case \"position-unrouted\":/' scripts/marketingcheck/main.go"
+          },
+          {
+            "id": "T16",
+            "file": "scripts/marketingcheck/main.go",
+            "line": 53,
+            "expression": "53s/case \"phone\":/case \"phone-unrouted\":/",
+            "must_red": "RunRoutesPositionPhone",
+            "design_measured": "also `phone-lines`",
+            "command": "sed -i '' '53s/case \"phone\":/case \"phone-unrouted\":/' scripts/marketingcheck/main.go"
+          },
+          {
+            "id": "T17",
+            "file": "scripts/marketingcheck/main.go",
+            "line": 52,
+            "expression": "52s/runPosition(args\\[1:\\], os\\.Stdout, os\\.Stderr)/runPhone(args[1:], os.Stdout, os.Stderr)/",
+            "must_red": "RunRoutesPositionPhone",
+            "design_measured": "also `position-lines`",
+            "command": "sed -i '' '52s/runPosition(args\\[1:\\], os\\.Stdout, os\\.Stderr)/runPhone(args[1:], os.Stdout, os.Stderr)/' scripts/marketingcheck/main.go"
+          },
+          {
+            "id": "T17b",
+            "file": "scripts/marketingcheck/main.go",
+            "line": 54,
+            "expression": "54s/runPhone(args\\[1:\\], os\\.Stdout, os\\.Stderr)/runPosition(args[1:], os.Stdout, os.Stderr)/",
+            "must_red": "RunRoutesPositionPhone",
+            "design_measured": "also `phone-lines`",
+            "command": "sed -i '' '54s/runPhone(args\\[1:\\], os\\.Stdout, os\\.Stderr)/runPosition(args[1:], os.Stdout, os.Stderr)/' scripts/marketingcheck/main.go"
+          },
+          {
+            "id": "T18",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 129,
+            "expression": "129s/gc >= 0 && posAbs(e) <= 2/posAbs(e) <= 2/",
+            "must_red": "PositionTolerancePins/gc-a3-conjunct-source-pin",
+            "design_measured": "sole killer (V13). Behaviourally still equivalent on R1 (V09/V09b); premise guarded by `gc-premise-nonfree-gaps-ge-2`",
+            "command": "sed -i '' '129s/gc >= 0 && posAbs(e) <= 2/posAbs(e) <= 2/' scripts/marketingcheck/position.go"
+          },
+          {
+            "id": "PG",
+            "file": "design_docs/verification/world-iter312/r1-rects.json",
+            "line": 162,
+            "expression": "162s/\"y\": 423,/\"y\": 324,/",
+            "must_red": "PositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (`non-free baseline gap 1 < 2`)",
+            "design_measured": "red (V12). `\"y\": 325,` (gb 2) stays green",
+            "command": "sed -i '' '162s/\"y\": 423,/\"y\": 324,/' design_docs/verification/world-iter312/r1-rects.json"
+          },
+          {
+            "id": "C",
+            "file": "scripts/marketingcheck/position.go",
+            "line": 150,
+            "expression": "150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= -1/",
+            "must_red": "50 Corpus subtests, all 12 new position arms, and more",
+            "design_measured": "rc 1",
+            "command": "sed -i '' '150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= -1/' scripts/marketingcheck/position.go"
+          }
+        ],
+        "PG": "Scratch fixture only. go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise-nonfree-gaps-ge-2$' ./scripts/marketingcheck/; gb 1 (y=324) rc 1 and premise only; gb 2 (y=325) rc 0; restore cp and cmp each. Never full package on mutated baseline.",
+        "expect": "Design §3 sets are preserved exactly in the prose table; r3 T18 source pin is sole killer. T11/T12 measured source-pin additions are recorded in measured_deviations_from_design and require controller disposition before literal item-3 acceptance."
+      },
+      "post_sha256": {
+        "scripts/marketingcheck/tolerance_test.go": "c6e5fb0ba113886c0e1f05015425552cdecc122fb17c6911fc409c66e51b27ed",
+        "scripts/marketingcheck/position.go": "af0429fd70cdce9843c04bba18f800b7216f4a778234a7bbb2a158b4ef1fdb3a"
+      },
+      "title": "Boundary, premise, clause and route tests plus the r3 line-129 trailing comment"
+    }
+  ],
+  "row": "240",
+  "scope": "ONE milestone M1: exact r3 reference as a new test file, and only the specified trailing comment on position.go:129. Planner writes only prose plan, JSON and banked diff. Executor makes no git writes. No fixture/oracle changes, no tolerance changes, no other production edits. T11/T12 measured deviations are explicit; controller owns disposition and outside-sandbox full gates.",
+  "status": "planned"
+}
