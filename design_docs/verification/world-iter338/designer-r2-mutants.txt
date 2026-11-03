@@ -1,0 +1,103 @@
+# designer-r2-mutants: round 'r2' = archive of 2c51c581 PLUS designer-r2-tolerance_test.go.txt as scripts/marketingcheck/tolerance_test.go; runner designer-mut.sh.txt; each row full package go test -count=1
+== control (unmutated)
+   rc=0 (39 s) FAIL: none
+== T1 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 200 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (39 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-x0+3 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T2 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 200 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (42 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-y+3 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T3 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 200 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (38 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-right-3 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T4 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 200) {
+   rc=1 (38 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-bottom-3 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T5 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 1 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (40 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-x0+2 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T6 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 1 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (38 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-y+2 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T7 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 1 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (39 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-right-2 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T8 scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 1) {
+   rc=1 (40 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-bottom-2 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T9 scripts/marketingcheck/position.go:101
+   before: 			} else if posAbs(dh) > 2 {
+   after : 			} else if posAbs(dh) > 3 {
+   rc=1 (39 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a4-graph-svg-h+3 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T10 scripts/marketingcheck/position.go:101
+   before: 			} else if posAbs(dh) > 2 {
+   after : 			} else if posAbs(dh) > 1 {
+   rc=1 (49 s) FAIL: TestMarketingPositionCorpus TestMarketingPositionCorpus/new/bnd-nonpara-drift-2 TestMarketingPositionCorpus/new/bnd-nonpara-drift-3 TestMarketingPositionParity TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a4-graph-svg-h+2 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T11 scripts/marketingcheck/position.go:129
+   before: 			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+   after : 			okGap, gRes := gc >= 0 && posAbs(e) <= 3, e
+   rc=1 (41 s) FAIL: TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a3-timeline-gap+3 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T12 scripts/marketingcheck/position.go:129
+   before: 			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+   after : 			okGap, gRes := gc >= 0 && posAbs(e) <= 1, e
+   rc=1 (38 s) FAIL: TestMarketingPositionCorpus TestMarketingPositionCorpus/new/perm-roster-drift-2px TestMarketingPositionParity TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/a3-timeline-gap+2 
+   restored byte-identical: scripts/marketingcheck/position.go
+== T13 scripts/marketingcheck/phone.go:168
+   before: 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 4)) {
+   after : 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 40)) {
+   rc=1 (39 s) FAIL: TestMarketingPhoneEntryTolerancePins TestMarketingPhoneEntryTolerancePins/entry+5 
+   restored byte-identical: scripts/marketingcheck/phone.go
+== T14 scripts/marketingcheck/phone.go:168
+   before: 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 4)) {
+   after : 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 3)) {
+   rc=1 (41 s) FAIL: TestMarketingPhoneArms TestMarketingPhoneArms/v67/shift-4 TestMarketingPhoneParity TestMarketingPhoneEntryTolerancePins TestMarketingPhoneEntryTolerancePins/entry+4 
+   restored byte-identical: scripts/marketingcheck/phone.go
+== T15 scripts/marketingcheck/main.go:51
+   before: 	case "position":
+   after : 	case "position-unrouted":
+   rc=1 (39 s) FAIL: TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/position-lines TestMarketingRunRoutesPositionPhone 
+   restored byte-identical: scripts/marketingcheck/main.go
+== T16 scripts/marketingcheck/main.go:53
+   before: 	case "phone":
+   after : 	case "phone-unrouted":
+   rc=1 (40 s) FAIL: TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/phone-lines TestMarketingRunRoutesPositionPhone 
+   restored byte-identical: scripts/marketingcheck/main.go
+== T17 scripts/marketingcheck/main.go:52
+   before: 		return runPosition(args[1:], os.Stdout, os.Stderr)
+   after : 		return runPhone(args[1:], os.Stdout, os.Stderr)
+   rc=1 (40 s) FAIL: TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/position-lines TestMarketingRunRoutesPositionPhone 
+   restored byte-identical: scripts/marketingcheck/main.go
+== T17b scripts/marketingcheck/main.go:54
+   before: 		return runPhone(args[1:], os.Stdout, os.Stderr)
+   after : 		return runPosition(args[1:], os.Stdout, os.Stderr)
+   rc=1 (46 s) FAIL: TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/phone-lines TestMarketingRunRoutesPositionPhone 
+   restored byte-identical: scripts/marketingcheck/main.go
+== T18 scripts/marketingcheck/position.go:129
+   before: 			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
+   after : 			okGap, gRes := posAbs(e) <= 2, e
+   rc=0 (39 s) FAIL: none
+   restored byte-identical: scripts/marketingcheck/position.go
+== C scripts/marketingcheck/position.go:150
+   before: 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   after : 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= -1 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+   rc=1 (41 s) FAIL: TestMarketingRunbookMatchesHelp TestMarketingRunbookMatchesHelp/position-lines TestMarketingPositionCorpus TestMarketingPositionCorpus/stores/r1-seed1 TestMarketingPositionCorpus/stores/r1-seed2 TestMarketingPositionCorpus/stores/r1-seed1-blockconverted TestMarketingPositionCorpus/stores/r1-seed2-blockconverted TestMarketingPositionCorpus/stores/r1b-seed3 TestMarketingPositionCorpus/stores/r1b-seed4 TestMarketingPositionCorpus/stores/r1c-seed5 TestMarketingPositionCorpus/stores/r1c-seed6 TestMarketingPositionCorpus/stores/eval-p1 TestMarketingPositionCorpus/stores/eval-p2 TestMarketingPositionCorpus/stores/eval-p3 TestMarketingPositionCorpus/v65/neg-attested+14 TestMarketingPositionCorpus/v65/neg-attested-dropped TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24 TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline TestMarketingPositionCorpus/v65/neg-light-header+40 TestMarketingPositionCorpus/v65/neg-light-header-whole-view TestMarketingPositionCorpus/v65/neg-packet-all+14 TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines TestMarketingPositionCorpus/v65/neg-payload+14 TestMarketingPositionCorpus/v65/neg-proven-grows-6-lines-below-fold TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs TestMarketingPositionCorpus/v65/neg-tested-at-attested-row TestMarketingPositionCorpus/v65/neg-tested-at-proven-row TestMarketingPositionCorpus/v65/neg-tested-height+14 TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps TestMarketingPositionCorpus/v65/syn-pos-proven-5-lines TestMarketingPositionCorpus/v65/syn-pos-tested-wraps-3-lines TestMarketingPositionCorpus/v65-p1/neg-packet-all+14 TestMarketingPositionCorpus/v65-p1/neg-proven-grows-6-lines-below-fold TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row TestMarketingPositionCorpus/v65-p1/syn-pos-tested-wraps-3-lines TestMarketingPositionCorpus/new/iso-a1-tested-w-3 TestMarketingPositionCorpus/new/iso-freegap-validation-h+240 TestMarketingPositionCorpus/new/iso-minh-approvals-h-1 TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24 TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24 TestMarketingPositionCorpus/new/acc-tested-w-2 TestMarketingPositionCorpus/new/perm-approvals-y+48 TestMarketingPositionCorpus/new/perm-approvals-y-48 TestMarketingPositionCorpus/new/perm-validation-h+216 TestMarketingPositionCorpus/new/perm-roster-drift-2px TestMarketingPositionCorpus/new/bnd-drift-sum-2 TestMarketingPositionCorpus/new/bnd-drift-sum-3 TestMarketingPositionCorpus/new/bnd-createdAt-wraps-2-lines TestMarketingPositionCorpus/new/perm-approvals-y+24 TestMarketingPositionCorpus/new/perm-approvals-y-24 TestMarketingPositionCorpus/new/bnd-nonpara-drift-2 TestMarketingPositionCorpus/new/bnd-nonpara-drift-3 TestMarketingPositionParity TestMarketingPositionCLI TestMarketingPositionCLI/accept-rc TestMarketingPositionTolerancePins TestMarketingPositionTolerancePins/bg-x0+2 TestMarketingPositionTolerancePins/bg-x0+3 TestMarketingPositionTolerancePins/bg-y+2 TestMarketingPositionTolerancePins/bg-y+3 TestMarketingPositionTolerancePins/bg-right-2 TestMarketingPositionTolerancePins/bg-right-3 TestMarketingPositionTolerancePins/bg-bottom-2 TestMarketingPositionTolerancePins/bg-bottom-3 TestMarketingPositionTolerancePins/a4-graph-svg-h+2 TestMarketingPositionTolerancePins/a4-graph-svg-h+3 TestMarketingPositionTolerancePins/a3-timeline-gap+2 TestMarketingPositionTolerancePins/a3-timeline-gap+3 TestMarketingRunRoutesPositionPhone 
+   restored byte-identical: scripts/marketingcheck/position.go
