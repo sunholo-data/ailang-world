@@ -1,0 +1,40 @@
+## V15 concurrent-work sweep at 2f293570 (run under bash -c: a first zsh run did not word-split $P and its control came back empty, so it was discarded)
+$ gh pr list --repo sunholo-data/ailang-world --state open
+rc=0 (empty list)
+$ control: gh pr list --repo sunholo-data/ailang-world --state merged --limit 2
+462	docs(mission): iteration 336 landed — row 238 merge 98934b0e	mission/world-iter336-landed
+461	Row 238: bound free gaps and cumulative drift, bridge a 1 px thumb split (World iteration 336)	sprint/world-iter336-marketing-predicate-tolerances
+$ for each origin branch b: git diff --name-only 2f293570...$b -- cmd/ailang-worldd/marketing_chrome_test.go cmd/ailang-worldd/marketing_still_test.go host/workbench/render.go design_docs/planned/w-marketing-capture-orchestration.md  (print non-empty)
+origin/design/w-decision-packet-production-projection 1
+origin/sprint/row149-workbench-live-and-polish 1
+origin/sprint/w-store-commit-object-membership 1
+origin/sprint/w-store-object-reference-index 1
+origin/sprint/w-workbench-object-provenance-and-grade 1
+origin/sprint/w-workbench-timeline-seam 1
+origin/sprint/w-workbench-world-pane-checked 1
+branches scanned=311
+$ control (same diff form on a commit known to touch them): git diff --name-only 95179277^...95179277 -- $P
+design_docs/planned/w-marketing-capture-orchestration.md
+$ git log -3 --format="%h %ad %s" --date=short -- $P
+95179277 2026-11-02 docs(row 238 M2): orchestration §4.4/§7/§9 amendment (A1–A7) + r6 designer revision + r7 contro
+03fe5a1a 2026-10-31 docs(row 231 M3): orchestration §4.4 and QUICKSTART §13 switch to marketingcheck position/phone; N
+205589d9 2026-10-29 docs(mission): record World iteration 316 — row 150 M8b built (final gates outside the sandbox; C1
+$ grep -n -E "marketing_chrome_test|marketing_still_test|w-marketing-still-probe-commit" design_docs/world-mission.md | cut -c1-90
+6311:239. **[NEXT — below every D-WORLD-81 release row; controller-filed iteration 328 f
+$ rows 246/247 (lines 6318/6319) named files
+`scripts/marketingcheck/position.go:142`  (line 6318)
+`scripts/marketingcheck/capture_test.go`  (line 6319)
+origin/design/w-decision-packet-production-projection | host/workbench/render.go | last 2026-10-13 | merge-base e869bfe4 | PR: #249 MERGED 
+origin/sprint/row149-workbench-live-and-polish | host/workbench/render.go | last 2026-10-08 | merge-base b702d734 | PR: #234 MERGED 
+origin/sprint/w-store-commit-object-membership | host/workbench/render.go | last 2026-09-28 | merge-base 36c5af1c | PR: #158 MERGED 
+origin/sprint/w-store-object-reference-index | host/workbench/render.go | last 2026-09-27 | merge-base 7fc05de1 | PR: #157 MERGED 
+origin/sprint/w-workbench-object-provenance-and-grade | host/workbench/render.go | last 2026-09-25 | merge-base 6127ff32 | PR: #145 MERGED 
+origin/sprint/w-workbench-timeline-seam | host/workbench/render.go | last 2026-09-24 | merge-base 82e36306 | PR: #143 MERGED 
+origin/sprint/w-workbench-world-pane-checked | host/workbench/render.go | last 2026-09-28 | merge-base aa3e36a4 | PR: #160 MERGED 
+
+## V15b row 240 named files and the rig base dir
+$ sed -n 6312p design_docs/world-mission.md | grep -o -E "(scripts|cmd)/[A-Za-z_./]+|`[a-z_]+\.go[^`]*`" | sort -u; sed -n 162p cmd/ailang-worldd/marketing_chrome_test.go
+`main.go`
+`phone.go:157`
+scripts/marketingcheck
+	base, err := filepath.EvalSymlinks(t.TempDir())

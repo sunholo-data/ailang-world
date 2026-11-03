@@ -1,0 +1,19 @@
+## V16 M2 dry run in a git-archive scratch copy (/tmp/iter337-scratch): paste the fenced line over the one anchor line
+pasted at line 221
+$ git diff --no-index --numstat <base doc> <pasted doc>
+1	1	design_docs/planned/w-marketing-capture-orchestration.md
+$ grep -cF for checkMarketingStill / zz_iter305_probe_test.go / TestIter305SeededStillCaptureProbe / "  2. **Six-shot two-pass.**" in the pasted doc
+1 1 1 1
+$ go test -count=1 -timeout 240s -v -run '^TestMarketing(Position|Phone)Parity$' ./scripts/marketingcheck  (scratch)
+rc=0
+--- PASS: TestMarketingPhoneParity (1.00s)
+    --- PASS: TestMarketingPhoneParity/pin-registry (0.00s)
+--- PASS: TestMarketingPositionParity (0.42s)
+    --- PASS: TestMarketingPositionParity/pin-registry (0.00s)
+
+## V17 the M2 pass rule applied to the V12 drill log (and to the V08 standalone log)
+$ grep -cE 'STILL .* repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 ' <V12 log>; grep -c '^--- PASS: TestMarketingChromeSixShots' <V12 log>
+4
+1
+$ same STILL count on the MS1 mutant log (control: must not be 4)
+0

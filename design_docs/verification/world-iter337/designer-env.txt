@@ -1,0 +1,92 @@
+## V01 base + toolchain
+$ git rev-parse HEAD origin/dev; go version; $AILANG_BIN --version | head -1; $WORLD_TOOL_AILANG_BIN --version | head -1
+2f2935701959f4c727d4974db057ce7d9e6dd3d3
+2f2935701959f4c727d4974db057ce7d9e6dd3d3
+go version go1.26.6 darwin/arm64
+AILANG v0.41.0
+AILANG v0.54.15
+Google Chrome 156.0.8078.80 
+
+## V02 no committed Go asserts repeat_equal/script_tags (control: requireProofPin)
+$ git grep -n -E "repeat_equal|script_tags" 2f293570 -- "*.go" | wc -l ; git grep -n requireProofPin 2f293570 -- "*.go" | wc -l
+       0
+      13
+
+## V03 SixShots gate, rig, builds, capture call (marketing_chrome_test.go)
+$ grep -n -E "WORLD_CHROME|newMarketingChromeRig|go\", \"build|capture_marketing.sh|WORLD_MARKETING_RECTS\"|func newMarketingChromeRig|return marketingChromeRig" cmd/ailang-worldd/marketing_chrome_test.go
+52:	chrome := os.Getenv("WORLD_CHROME")
+54:		t.Skip("WORLD_CHROME unset: controller runs the real Chrome drill")
+58:		t.Fatalf("WORLD_CHROME must be an executable file: %q (%v)", chrome, err)
+73:	rectangles := os.Getenv("WORLD_MARKETING_RECTS")
+122:	rig := newMarketingChromeRig(t, interp, tool)
+125:	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", worldd, ".")
+126:	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", check, filepath.Join(root, "scripts", "marketingcheck"))
+136:	marketingChromeCommand(t, 660*time.Second, "bash", filepath.Join(root, "scripts", "capture_marketing.sh"),
+155:type marketingChromeRig struct{ db, manifest, key, ws, interp, tool string }
+159:func newMarketingChromeRig(t *testing.T, interp, tool string) marketingChromeRig {
+245:	return marketingChromeRig{db: db, manifest: manifest, key: keyPath, ws: ws, interp: interp, tool: tool}
+
+## V04 capture script: still daemon on --db, routes from marketingcheck routes
+$ grep -n -E "workbench-still|step routes|--rectangles" scripts/capture_marketing.sh; grep -n "func ShotRoutes\|func runRoutes" scripts/marketingcheck/main.go
+116:    "$worldd_bin" serve --db "$db" --bind "$bind" --workbench-still \
+129:step routes "$marketingcheck_bin" routes --manifest "$manifest" > "$out/routes.json"
+141:step check "$marketingcheck_bin" check --pass-a "$out/pass-a" --pass-b "$out/pass-b" --manifest "$manifest" --rectangles "$rectangles" --out "$out/capture-manifest.json"
+228:func ShotRoutes(d DemoManifest) ([]RouteRow, error) {
+240:func runRoutes(args []string) int {
+
+## V05 CI: AILANG_BIN exported to GITHUB_ENV before the go gate; tool pin installed AFTER it and never exported
+$ grep -n -E "GITHUB_ENV|verify_go.sh|Install PINNED v0.54.15|WORLD_TOOL_AILANG_BIN" .github/workflows/ci.yml
+108:          echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
+176:          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+225:          # every later step (verify_go.sh's go test included).
+226:          echo "WORLD_EXEC_SRT_NODE_MODULES=$RUNNER_TEMP/srt/node_modules" >> "$GITHUB_ENV"
+227:          echo "WORLD_EXEC_NODE=$(command -v node)" >> "$GITHUB_ENV"
+231:      # WORLD_EXEC_SRT_NODE_MODULES is unset, and verify_go.sh has no -v, so a SKIP would read as a
+281:        run: ./scripts/verify_go.sh
+283:      # w-verifygate-etxtbsy (design_docs/planned/w-verifygate-etxtbsy.md): verify_go.sh has no -v
+307:      # verify_go.sh runs these tests without -v, so a PASS is indistinguishable from a SKIP
+384:      - name: Install PINNED v0.54.15 ailang tool binary (floor grader $TOOL)
+478:          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+503:        run: ./scripts/verify_go.sh
+$ grep -n -A8 "func cliSeBins" cmd/ailang-worldd/cliwalk_e2e_test.go; grep -n toolBinEnvVar cmd/ailang-worldd/cliwalk_e2e_test.go | head -1
+37:func cliSeBins(t *testing.T) (string, string) {
+38-	t.Helper()
+39-	interp, tool := os.Getenv("AILANG_BIN"), os.Getenv(toolBinEnvVar)
+40-	if interp == "" || tool == "" {
+41-		t.Skipf("the CLI se-tools e2e needs both real binaries: AILANG_BIN (pinned AILANG v0.41.0) and %s (%s); "+
+42-			"AILANG_BIN set=%t, %s set=%t; skipping", toolBinEnvVar, daemon.ToolBinaryRelease, interp != "", toolBinEnvVar, tool != "")
+43-	}
+44-	return interp, tool
+45-}
+33:const toolBinEnvVar = "WORLD_TOOL_AILANG_BIN"
+$ grep -n -B1 -A3 "func demoM5cRealSeed" cmd/ailang-worldd/demo_test.go
+1727:func demoM5cRealSeed(t *testing.T) (worldReader, demoPublicManifest, string) {
+1728-	t.Helper()
+1729-	t.Setenv("TMPDIR", t.TempDir())
+1730-	interp := requireProofPin(t)
+1731-	_, tool := cliSeBins(t)
+1732-	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+
+## V06 workbench render path reads no clock (control: daemon.go does)
+$ git grep -n -E "time\.(Now|Since)" -- host/workbench/*.go host/daemon/workbench*.go | grep -v _test.go | wc -l; git grep -c -E "time\.(Now|Since)" -- host/daemon/daemon.go
+       0
+host/daemon/daemon.go:7
+$ sed -n 203p host/workbench/render.go; sed -n 281p host/workbench/render.go
+{{if .Still}}{{else}}<script src="/workbench/live.js" defer></script>{{end}}
+func Render(w io.Writer, p Page) error { return pageTemplate.Execute(w, p) }
+$ grep -n -E "time.Sleep|no injectable request clock" host/daemon/workbench_still_test.go
+95:	// The daemon has no injectable request clock. Sleep after all first GETs,
+98:	time.Sleep(2 * time.Second)
+
+## V07 M2 anchors in the orchestration doc (control: a misspelled anchor = 0)
+1	grep -cF \ \ 1.\ \*\*Route-level\ still\ determinism.\*\*
+1	grep -cF \ \ 2.\ \*\*Six-shot\ two-pass.\*\*
+2	grep -cF zz_iter305_probe_test.go
+2	grep -cF TestIter305SeededStillCaptureProbe
+0	grep -cF checkMarketingStill
+0	grep -cF \*\*Route-level\ still\ determinsm.\*\*
+221:  1. **Route-level still determinism.** Serve the store under WorkbenchStill
+221:ome-probe_test.go.txt cmd/ailang-worldd/zz_iter305_probe_test.go && WORLD_
+558:_test.go.txt` run as `cmd/ailang-worldd/zz_iter305_probe_test.go` with `WO
+$ grep -n oraclePinRegistry scripts/marketingcheck/position_test.go | head -1
+149:	oraclePinRegistry    = "../../design_docs/planned/w-marketing-capture-orchestration.md"
