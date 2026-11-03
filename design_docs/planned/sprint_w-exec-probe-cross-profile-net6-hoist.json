@@ -1,0 +1,27 @@
+{
+  "sprint_id": "w-exec-probe-cross-profile-net6-hoist",
+  "design_doc": "design_docs/planned/w-exec-probe-cross-profile-net6-hoist.md",
+  "base_commit": "45bbc95af54bb41c622f469c0cd2c8e40af5f331",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Apply byte-exact net6 hoist and tests; add both names to Linux verbose CI",
+      "files": [
+        "host/broker/exec_probe.go",
+        "host/broker/exec_probe_net6_test.go",
+        ".github/workflows/ci.yml"
+      ],
+      "acceptance": [
+        "test \"$(git rev-parse 45bbc95af54bb41c622f469c0cd2c8e40af5f331^{commit})\" = 45bbc95af54bb41c622f469c0cd2c8e40af5f331\ntest ! -e host/broker/exec_probe_net6_test.go\nshasum -a 256 -c <<'SHA'\n96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4  host/broker/exec_probe.go\na11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f  .github/workflows/ci.yml\nSHA",
+        "shasum -a 256 -c <<'SHA'\n3d08d627134fd1062e066ce287ec64a96f038f108dea67faee96537eddf708a2  design_docs/verification/world-iter340/plan-M1.diff.txt\nSHA\npython3 -I - <<'PYCODE'\nfrom pathlib import Path\nb = Path('design_docs/verification/world-iter340')\np = (b / 'designer-proto.patch.txt').read_bytes()\ns = (b / 'plan-M1.diff.txt').read_bytes()\nassert s.startswith(p), 'designer patch bytes changed'\nassert s[len(p):].startswith(b'--- a/.github/workflows/ci.yml\\n')\nassert s[len(p):].count(b'@@ ') == 1, 'expected exactly one CI hunk'\nPYCODE\ngit apply --check design_docs/verification/world-iter340/plan-M1.diff.txt\ngit apply design_docs/verification/world-iter340/plan-M1.diff.txt",
+        "shasum -a 256 -c <<'SHA'\n19de369381579387bd9d83aceae28a5912717dab00b283454ca0067d41d087bd  host/broker/exec_probe.go\n400faf0ffc25a3f0a79302cc9436349da6e445b998744b5767f6d706475a64aa  host/broker/exec_probe_net6_test.go\n41a0a58611565fe148faaac0327dc34793550f12ddef74e7cc3c33a250c4697d  .github/workflows/ci.yml\nSHA",
+        "gofmt -l host/broker/exec_probe.go host/broker/exec_probe_net6_test.go > \"$EVIDENCE/gofmt.log\"\ntest ! -s \"$EVIDENCE/gofmt.log\"\ngo vet ./host/broker/\ngo build ./...\nbash -n design_docs/verification/world-iter340/plan-mutants.sh.txt",
+        "for name in TestExecProbeNet6BoundBeforeAnyPick TestExecProbeNet6BindSiteIsBeforeTheFanOut; do\n  log=\"$EVIDENCE/$name.log\"\n  rc=0\n  go test -count=1 -run \"^${name}$\" ./host/broker/ -v -timeout 120s > \"$log\" 2>&1 || rc=$?\n  cat \"$log\"\n  test \"$rc\" -eq 0\n  /usr/bin/grep -Fq -- \"--- PASS: $name \" \"$log\"\n  if /usr/bin/grep -q -- '^--- SKIP:' \"$log\"; then exit 1; fi\ndone",
+        "bash design_docs/verification/world-iter340/plan-mutants.sh.txt \"$PWD\" > \"$EVIDENCE/mutants.log\" 2>&1\ncat \"$EVIDENCE/mutants.log\"\ntest \"$(/usr/bin/grep -c '^EXPECTATION MATCH:' \"$EVIDENCE/mutants.log\")\" -eq 27\nif /usr/bin/grep -q '^EXPECTATION MISMATCH:' \"$EVIDENCE/mutants.log\"; then exit 1; fi\ntest \"$(/usr/bin/grep -c '^RESTORE cmp ok: .*TestExecProbe' \"$EVIDENCE/mutants.log\")\" -eq 27",
+        "go test -count=1 -timeout 600s ./host/broker/ > \"$EVIDENCE/broker.log\" 2>&1\ncat \"$EVIDENCE/broker.log\"\n./scripts/verify_ail.sh > \"$EVIDENCE/verify-ail.log\" 2>&1\ncat \"$EVIDENCE/verify-ail.log\"\n./scripts/verify_go.sh > \"$EVIDENCE/verify-go.log\" 2>&1\ncat \"$EVIDENCE/verify-go.log\"",
+        "python3 -I - <<'PYCODE'\nfrom pathlib import Path\ns = Path('.github/workflows/ci.yml').read_text()\nstart = s.index('      - name: Row 140 Workspace.Exec real-srt tests, verbose')\nstop = s.index('      - name:', start + 1)\nblock = s[start:stop]\nlines = [l for l in block.splitlines() if l.lstrip().startswith('tests=')]\nfor name in ('TestExecProbeNet6BoundBeforeAnyPick', 'TestExecProbeNet6BindSiteIsBeforeTheFanOut'):\n    assert sum(l.count(name) for l in lines) == 1, name\nassert 'for t in $tests; do' in block\nassert '^--- PASS: $t ' in block\nassert 'go test ./host/broker/ ./host/daemon/' in block\nPYCODE"
+      ],
+      "status": "planned"
+    }
+  ]
+}

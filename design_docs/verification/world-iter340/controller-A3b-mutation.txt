@@ -1,0 +1,57 @@
+EXPECTATION MATCH: CONTROL TestExecProbeNet6BoundBeforeAnyPick expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: CONTROL TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: HEAD-positive-control TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: HEAD-positive-control TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: HEAD-positive-control TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=1 actual_rc=1
+RESTORE cmp ok: HEAD-positive-control TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: HEAD-SLEEP TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: HEAD-SLEEP TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: HEAD-SLEEP TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=1 actual_rc=1
+RESTORE cmp ok: HEAD-SLEEP TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-1 TestExecProbeNet6BoundBeforeAnyPick expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-1 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-1 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-1 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-1b TestExecProbeNet6BoundBeforeAnyPick expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-1b TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-1b TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-1b TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-2 TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-2 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-2 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-2 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-3 TestExecProbeNet6BoundBeforeAnyPick expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-3 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-3 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-3 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-3b TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-3b TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-3b TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-3b TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-4 TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-4 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-4 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-4 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-5 TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-5 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-5 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-5 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-6 TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-6 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-6 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-6 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-6 TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-6 TestExecProbePassThroughShimFailsEveryConfinementArm (source, test, helper absent)
+EXPECTATION MATCH: MUT-7 TestExecProbeNet6BoundBeforeAnyPick expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-7 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-7 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-7 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+EXPECTATION MATCH: MUT-8 TestExecProbeNet6BoundBeforeAnyPick expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-8 TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+EXPECTATION MATCH: MUT-8 TestExecProbeNet6BindSiteIsBeforeTheFanOut expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-8 TestExecProbeNet6BindSiteIsBeforeTheFanOut (source, test, helper absent)
+Mutation summary: 27 named-test rows; 0 mismatches; 13 scenarios
+RESTORE cmp ok: exit cleanup
+Mutation evidence: /Users/voightkampff/dev/sunholo-data/.mut-wt-iter340/.plan-mutants.LcdRR9

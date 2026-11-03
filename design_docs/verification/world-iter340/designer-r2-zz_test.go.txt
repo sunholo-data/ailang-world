@@ -1,0 +1,184 @@
+package broker
+
+// SCRATCH-ONLY (row 242 designer r2, quorum r1 answers). Never committed as code;
+// banked as design_docs/verification/world-iter340/designer-r2-zz_test.go.txt.
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
+	"syscall"
+	"testing"
+	"time"
+)
+
+// forgingClient answers every probe op as a confining sandbox would, so arm 6
+// passes unless something else touches World's live listener.
+const forgingClient = `#!/bin/sh
+while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done; shift
+first=1
+while [ "$#" -ge 2 ]; do op=$1; x=$2; shift 2
+  case $op in
+    write) if [ $first = 1 ]; then printf WORLD-PROBE > "$x"; echo WORLD-PROBE-WROTE; else echo "WORLD-PROBE-REFUSED EPERM"; fi; first=0;;
+    read) echo "WORLD-PROBE-REFUSED EPERM";;
+    connect|proxy) echo "WORLD-PROBE-REFUSED ECONNREFUSED";;
+    listen) echo WORLD-PROBE-BOUND;;
+  esac
+done
+`
+
+// kimi (3): a foreign accept between the bind and control(). The only
+// existing seam that runs there on the prototype is worktreeGit, which a
+// protected profile's NewExecHandler calls; on HEAD it runs before the bind.
+func TestZZR2ForeignDial(t *testing.T) {
+	for _, dial := range []bool{false, true} {
+		t.Run(map[bool]string{false: "nodial", true: "dial"}[dial], func(t *testing.T) {
+			f := newProbeFixture(t, shimSrtTree(t, "passthrough"), nil, "", []any{"sh", "-c", "exit 0"})
+			f.profile.Protected = []string{"tests/**"}
+			client := filepath.Join(canonicalTempDir(t), "forging.sh")
+			mustWrite(t, client, forgingClient)
+			if err := os.Chmod(client, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			before := loopbackListenPorts()
+			var dialed []int
+			old := worktreeGit
+			worktreeGit = func() (string, error) {
+				if dial {
+					for p := range loopbackListenPorts() {
+						if before[p] {
+							continue
+						}
+						if c, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", p), time.Second); err == nil {
+							_ = c.Close()
+							dialed = append(dialed, p)
+						}
+					}
+					time.Sleep(100 * time.Millisecond) // let the accept loop count it
+				}
+				return exec.LookPath("git")
+			}
+			t.Cleanup(func() { worktreeGit = old })
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: f.sandbox, Paths: f.paths, Client: client}, []*ExecProfile{f.profile})
+			if err != nil {
+				t.Fatal(err)
+			}
+			arms, arm6 := "none", "PASS"
+			if perr, ok := errs[0].(*ExecProbeError); ok {
+				arms = strings.Join(perr.FailedArms(), ",")
+				for _, fl := range perr.Failed {
+					if fl.Arm == ExecProbeArmNetwork {
+						arm6 = fl.Why
+					}
+				}
+			} else if errs[0] != nil {
+				arms = "non-probe error: " + errs[0].Error()
+			}
+			fmt.Printf("ZZR2 dial=%t dialed=%d failed-arms=[%s] arm6=%s\n", dial, len(dialed), arms, arm6)
+		})
+	}
+}
+
+// glm / kimi (5): the real protected pre-bind work, through production code.
+func TestZZR2PreBindTiming(t *testing.T) {
+	f := newProbeFixture(t, shimSrtTree(t, "passthrough"), nil, "", []any{"sh", "-c", "exit 0"})
+	git, err := worktreeGit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ms := func(ds []time.Duration) string {
+		sort.Slice(ds, func(i, j int) bool { return ds[i] < ds[j] })
+		return fmt.Sprintf("n=%d min=%.1fms med=%.1fms max=%.1fms", len(ds), float64(ds[0].Microseconds())/1000,
+			float64(ds[len(ds)/2].Microseconds())/1000, float64(ds[len(ds)-1].Microseconds())/1000)
+	}
+	var pre []time.Duration
+	nh := map[bool][]time.Duration{}
+	for i := 0; i < 30; i++ {
+		for _, protected := range []bool{false, true} {
+			id := fmt.Sprintf("wep-%016x", i*2+map[bool]int{false: 0, true: 1}[protected])
+			wt := filepath.Join(f.paths.WorkspaceRoot, id)
+			mustMkdir(t, wt)
+			p := *f.profile
+			p.Protected = nil
+			if protected {
+				p.Protected = []string{"tests/**"}
+			}
+			start := time.Now()
+			h, err := NewExecHandler(ExecHandlerConfig{Profile: &p, Sandbox: f.sandbox, Episode: id, Worktree: wt,
+				WorkspaceRoot: f.paths.WorkspaceRoot, StateDir: f.paths.StateDir, OperatorHome: f.paths.OperatorHome})
+			nh[protected] = append(nh[protected], time.Since(start))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if protected && i == 0 {
+				fmt.Printf("ZZR2 baseline err (expected, scratch episode is not a checkout): %v\n", h.baseline.err)
+			}
+			if protected {
+				start = time.Now()
+				perr := protectedGitPreflight(context.Background(), git, wt)
+				pre = append(pre, time.Since(start))
+				if i == 0 {
+					fmt.Printf("ZZR2 preflight git=%s dir=%s err=%v\n", git, wt, perr)
+				}
+			}
+		}
+	}
+	fmt.Printf("ZZR2 NewExecHandler unprotected %s\n", ms(nh[false]))
+	fmt.Printf("ZZR2 NewExecHandler protected   %s\n", ms(nh[true]))
+	fmt.Printf("ZZR2 protectedGitPreflight alone %s\n", ms(pre))
+	fmt.Printf("ZZR2 gitEnv=%q\n", gitEnv())
+}
+
+// gemini: what loopbackListenPorts matches on darwin.
+func TestZZR2FdScanFalseMatch(t *testing.T) {
+	ln, _ := net.Listen("tcp", "127.0.0.1:0")
+	defer ln.Close()
+	lport := ln.Addr().(*net.TCPAddr).Port
+	fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer syscall.Close(fd)
+	if err := syscall.Bind(fd, &syscall.SockaddrInet4{Addr: [4]byte{127, 0, 0, 1}}); err != nil {
+		t.Fatal(err)
+	}
+	sa, _ := syscall.Getsockname(fd)
+	bport := sa.(*syscall.SockaddrInet4).Port
+	c, err := net.Dial("tcp", ln.Addr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	cport := c.LocalAddr().(*net.TCPAddr).Port
+	unbound, _ := syscall.Socket(syscall.AF_INET, syscall.SOCK_STREAM, 0)
+	defer syscall.Close(unbound)
+	got := loopbackListenPorts()
+	fmt.Printf("ZZR2 fdscan listener(%d)=%t bound-not-listening(%d)=%t connected-client(%d)=%t unbound-socket-ports=%v all=%v\n",
+		lport, got[lport], bport, got[bport], cport, got[cport], got[0], got)
+}
+
+// kimi (3) baseline: unsolicited accepts on idle loopback listeners on this rig.
+func TestZZR2IdleForeignAccepts(t *testing.T) {
+	const n, hold = 64, 120 * time.Second
+	var ls []*probeListener
+	for i := 0; i < n; i++ {
+		ls = append(ls, newProbeListener())
+	}
+	if c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", ls[0].port)); err == nil { // the known positive: one accept
+		_ = c.Close()
+	}
+	time.Sleep(hold)
+	total := int64(0)
+	for _, l := range ls {
+		total += l.accepts.Load()
+		l.close()
+	}
+	fmt.Printf("ZZR2 idle listeners=%d hold=%s positive-control-accepts=%d unsolicited-accepts=%d (listener-seconds=%d)\n", n, hold, ls[0].accepts.Load(), total-1, n*int(hold.Seconds()))
+}

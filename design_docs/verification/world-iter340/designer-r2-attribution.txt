@@ -1,0 +1,100 @@
+# attribution of the idle accepts: HEAD copy with a SCRATCH-ONLY accept-loop instrumentation (diff below) printing lsof for every accept after the first; TestZZR2Attribute holds 4 listeners 65 s after one known dial each
+# $ go test -count=1 -run '^TestZZR2Attribute$' -v ./host/broker/
+== 14:46  up 2 days, 20:05, 4 users, load averages: 3.54 4.11 4.69
+ZZACC self-pid=32138 accept#2 on net6 53537 from 127.0.0.1:53556 at 14:47:01.904; lsof -iTCP:53556:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff   18u  IPv4 0x840e3db3da0f2d11      0t0  TCP 127.0.0.1:53537->127.0.0.1:53556 (ESTABLISHED)
+python3.1 45693 voightkampff    7u  IPv4 0x4074c95e06f4305c      0t0  TCP 127.0.0.1:53556->127.0.0.1:53537 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#2 on net6 53535 from 127.0.0.1:53555 at 14:47:01.904; lsof -iTCP:53555:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff    8u  IPv4  0x95f7a858849399e      0t0  TCP 127.0.0.1:53535->127.0.0.1:53555 (ESTABLISHED)
+python3.1 45693 voightkampff   13u  IPv4 0x7d9eaad1585eb39b      0t0  TCP 127.0.0.1:53555->127.0.0.1:53535 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#2 on net6 53541 from 127.0.0.1:53558 at 14:47:01.904; lsof -iTCP:53558:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff    9u  IPv4 0x51d1502d2ddf5153      0t0  TCP 127.0.0.1:53541->127.0.0.1:53558 (ESTABLISHED)
+python3.1 45693 voightkampff    9u  IPv4 0x222e81c93c1f9f40      0t0  TCP 127.0.0.1:53558->127.0.0.1:53541 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#2 on net6 53539 from 127.0.0.1:53557 at 14:47:01.904; lsof -iTCP:53557:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff   16u  IPv4 0xcbff0531c90063fe      0t0  TCP 127.0.0.1:53539->127.0.0.1:53557 (ESTABLISHED)
+python3.1 45693 voightkampff    8u  IPv4 0x8c309d7e2118e36c      0t0  TCP 127.0.0.1:53557->127.0.0.1:53539 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#3 on net6 53539 from 127.0.0.1:53593 at 14:47:33.699; lsof -iTCP:53593:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff   17u  IPv4 0xd89f4062b837f9db      0t0  TCP 127.0.0.1:53539->127.0.0.1:53593 (ESTABLISHED)
+python3.1 45693 voightkampff   13u  IPv4 0xee0cb5d92c224114      0t0  TCP 127.0.0.1:53593->127.0.0.1:53539 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#3 on net6 53535 from 127.0.0.1:53591 at 14:47:33.699; lsof -iTCP:53591:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff    8u  IPv4 0xfc34279f8e03f656      0t0  TCP 127.0.0.1:53535->127.0.0.1:53591 (ESTABLISHED)
+python3.1 45693 voightkampff   12u  IPv4 0xd038401d1906eeb5      0t0  TCP 127.0.0.1:53591->127.0.0.1:53535 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#3 on net6 53537 from 127.0.0.1:53595 at 14:47:33.699; lsof -iTCP:53595:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff    9u  IPv4  0x66e1e486cf4142c      0t0  TCP 127.0.0.1:53537->127.0.0.1:53595 (ESTABLISHED)
+python3.1 45693 voightkampff    8u  IPv4 0xd8c7649fbd4b7ff6      0t0  TCP 127.0.0.1:53595->127.0.0.1:53537 (ESTABLISHED)
+
+ZZACC self-pid=32138 accept#3 on net6 53541 from 127.0.0.1:53594 at 14:47:33.703; lsof -iTCP:53594:
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+broker.te 32138 voightkampff   16u  IPv4 0xbe3abb48ea3a1463      0t0  TCP 127.0.0.1:53541->127.0.0.1:53594 (ESTABLISHED)
+python3.1 45693 voightkampff    9u  IPv4 0x1a09ef23260a1ac9      0t0  TCP 127.0.0.1:53594->127.0.0.1:53541 (ESTABLISHED)
+
+ZZR2B port=53535 accepts=3
+ZZR2B port=53537 accepts=3
+ZZR2B port=53539 accepts=3
+ZZR2B port=53541 accepts=3
+--- PASS: TestZZR2Attribute (65.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	65.359s
+
+# $ ps -o pid,ppid,lstart,command -p 45693
+  PID  PPID STARTED                      COMMAND
+45693 45688 Mon Nov  2 10:26:55 2026     /Users/voightkampff/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 /Users/voightkampff/.config/sunholo-platform/homepage/serve.py --website-root /Users/voightkampff/dev/sunholo-data/website --preview-helper /Users/voightkampff/.config/s
+
+# the earlier 20-run nodial attempt with the same instrumentation (0 unsolicited accepts in 20 single-profile runs):
+20
+## instrumentation diff
+--- .scratch-iter340-designer-r2-head.exec_probe.go.orig	2026-11-03 14:46:02
++++ .scratch-iter340-designer-r2-head/host/broker/exec_probe.go	2026-11-03 14:46:02
+@@ -643,7 +643,11 @@
+ 			if err != nil {
+ 				return
+ 			}
+-			l.accepts.Add(1)
++			if n := l.accepts.Add(1); n > 1 { // SCRATCH-ONLY attribution (row 242 designer r2)
++				rp := c.RemoteAddr().(*net.TCPAddr).Port
++				out, _ := exec.Command("/usr/sbin/lsof", "-nP", "-iTCP:"+strconv.Itoa(rp)).CombinedOutput()
++				fmt.Fprintf(os.Stderr, "ZZACC self-pid=%d accept#%d on net6 %d from %v at %s; lsof -iTCP:%d:\n%s\n", os.Getpid(), n, l.port, c.RemoteAddr(), time.Now().Format("15:04:05.000"), rp, out)
++			}
+ 			_ = c.Close()
+ 		}
+ 	}()
+## test
+package broker
+
+import (
+	"fmt"
+	"net"
+	"testing"
+	"time"
+)
+
+// SCRATCH-ONLY (row 242 designer r2): who dials idle loopback listeners. The
+// instrumented accept loop prints lsof for every accept after the first.
+func TestZZR2Attribute(t *testing.T) {
+	var ls []*probeListener
+	for i := 0; i < 4; i++ {
+		l := newProbeListener()
+		if c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", l.port)); err == nil { // accept #1 is ours
+			_ = c.Close()
+		}
+		ls = append(ls, l)
+	}
+	time.Sleep(65 * time.Second)
+	for _, l := range ls {
+		fmt.Printf("ZZR2B port=%d accepts=%d\n", l.port, l.accepts.Load())
+		l.close()
+	}
+}

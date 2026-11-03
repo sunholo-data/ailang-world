@@ -1,0 +1,8 @@
+#!/bin/bash
+S=/Users/voightkampff/dev/sunholo-data
+for d in head proto; do
+  cd $S/.scratch-iter340-ctl-$d
+  uptime > /tmp/iter340/expo-$d.txt
+  go test -count=10 -v -run '^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNoopShimFailsArm1)$' ./host/broker/ >> /tmp/iter340/expo-$d.txt 2>&1; echo "$d rc=$?" >> /tmp/iter340/expo.rc
+done
+echo DONE > /tmp/iter340/expo.done

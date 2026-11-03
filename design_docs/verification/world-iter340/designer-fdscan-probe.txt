@@ -1,0 +1,7 @@
+# $ go test -count=1 -run '^TestZZDbgFD$' -v ./host/broker/  (scratch-only file, deleted after)
+    zz_dbg_test.go:13: listen 127.0.0.1:50208
+    zz_dbg_test.go:22: fd 4 sockname 50208 SO_ACCEPTCONN=0 err=protocol not available SO_TYPE=1 err=<nil> getpeername err=socket is not connected
+    zz_dbg_test.go:27: loopbackListenPorts = map[50208:true] (contains the live listener)
+--- PASS: TestZZDbgFD (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.680s

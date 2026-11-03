@@ -1,0 +1,11 @@
+# glm / kimi 5: the production pre-bind work, through production code (TestZZR2PreBindTiming in designer-r2-zz_test.go.txt, HEAD copy)
+# NewExecHandler with the probe's own config shape (scratch episode wep-<hex> under WorkspaceRoot, not a checkout) x30 per kind; protectedGitPreflight(ctx, git, worktree) = runBounded(git, '-c core.fsmonitor=false config --null --get-regexp ^filter\.', dir=worktree, env=gitEnv()) [exec_protected_check.go:11-14] x30
+# $ go test -count=1 -run '^TestZZR2PreBindTiming$' -v ./host/broker/
+== 14:45  up 2 days, 20:04, 4 users, load averages: 2.95 4.12 4.74
+ZZR2 baseline err (expected, scratch episode is not a checkout): worktree is not a git checkout
+ZZR2 preflight git=/opt/homebrew/bin/git dir=/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestZZR2PreBindTiming785435214/002/workspace/wep-0000000000000001 err=<nil>
+ZZR2 NewExecHandler unprotected n=30 min=4.0ms med=4.9ms max=11.4ms
+ZZR2 NewExecHandler protected   n=30 min=9.8ms med=11.3ms max=13.3ms
+ZZR2 protectedGitPreflight alone n=30 min=5.5ms med=5.9ms max=9.3ms
+ZZR2 gitEnv=["PATH=/usr/bin:/bin" "LC_ALL=C" "GIT_CONFIG_NOSYSTEM=1" "GIT_CONFIG_GLOBAL=/dev/null" "GIT_OPTIONAL_LOCKS=0" "GIT_TERMINAL_PROMPT=0"]
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.993s

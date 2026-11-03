@@ -1,0 +1,18 @@
+# full suite without AILANG_BIN (environmental reds expected): proto = hoisted prototype + new tests; head = e22e0794 + the new test file, run with -skip TestExecProbeNet6
+# proto: (go build ./... && go vet ./host/broker/ && go test -count=1 ./...)  head: go test -count=1 -skip 'TestExecProbeNet6' ./...
+# proto start: 14:14  up 2 days, 19:33, 4 users, load averages: 5.79 6.02 5.59
+# head  start: 14:30  up 2 days, 19:49, 4 users, load averages: 7.39 4.43 4.61
+# proto: full rc=1; head: head full rc=1
+proto failing top-level tests: 79  head: 79
+only in proto: ['cmd/ailang-worldd TestDoctorQuickIsFast']
+only in head: ['host/broker TestWorktreeSnapshotRefusesAConfiguredFilter']
+AILANG_BIN-message lines: proto 119 head 119
+--- FAIL: TestDoctorQuickIsFast (2.18s)
+    doctor_hosts_test.go:189: quick took 2.172219667s
+# proto-only TestDoctorQuickIsFast rerun on proto, -count=3:
+14:34  up 2 days, 19:53, 4 users, load averages: 6.21 6.54 5.65
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.793s
+rc=0
+# host/broker package lines:
+.scratch-iter340-designer-tools/full-suite-head.txt:FAIL	github.com/sunholo-data/ailang-world/host/broker	224.509s
+.scratch-iter340-designer-tools/full-suite.txt:FAIL	github.com/sunholo-data/ailang-world/host/broker	203.583s

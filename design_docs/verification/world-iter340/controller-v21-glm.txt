@@ -1,0 +1,20 @@
+# iter-340 controller V21 (quorum r2 oc-glm-5-3 fix): pristine git archive of e22e0794 (.scratch-iter340-v21head) vs the same + designer-proto.patch.txt (.scratch-iter340-v21proto); AILANG_BIN=~/.pinned-ailang/ailang (v0.41.0)
+# command per copy: go test -count=3 -run '^TestWorktreeSnapshotRefusesAConfiguredFilter$' -v ./...  (filtered to RUN/---/ok/FAIL/PASS lines; packages with no matching test elided below)
+== v21head 14:53  up 2 days, 20:12, 4 users, load averages: 6.73 5.08 4.82
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (3.61s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (1.76s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.28s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	8.912s
+v21head rc=0
+== v21proto 14:54  up 2 days, 20:13, 4 users, load averages: 7.02 5.27 4.89
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (3.57s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (2.41s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.27s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	8.987s
+v21proto rc=0

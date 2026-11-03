@@ -1,0 +1,5 @@
+# iter-340 controller reproduction of the judge's M8 survivor (judge worktree /Users/voightkampff/dev/sunholo-data/.judge-wt-iter340 at c1706638)
+# M8: move the bind loop above plantExecProbe, keep the close defer after it (so a plant-error return leaks every listener)
+# go test -count=1 -run '^TestExecProbeNet6' ./host/broker/ → ok (rc 0): SURVIVES, as the judge reported
+# restore: cp pristine + cmp → identical; git status shows only the judge's untracked report
+# disposition: the plantExecProbe failure path is design §3.2 'UNMEASURED dynamically' (accepted residual); production code is correct as written; no row filed

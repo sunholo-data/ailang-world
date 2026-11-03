@@ -1,0 +1,6 @@
+# $ python3 -I (30x subprocess git -c core.fsmonitor=false config --null --get-regexp '^filter\.' in a non-repo dir, PATH=/usr/bin:/bin)
+git preflight (config --get-regexp ^filter.) in a non-repo dir, 30 runs: rc=1 min=8.5ms median=11.1ms max=14.0ms
+/opt/homebrew/bin/git (PATH git 2.54.0; the harness used /usr/bin/git via PATH=/usr/bin:/bin)
+uptime at measurement: 14:14 load averages: 6.21 6.10 5.63 (full suite starting concurrently)
+# live daemon on the rig at the time:
+79864 /Users/voightkampff/.ailang-world/bin/ailang-worldd serve --db /Users/voightkampff/.

@@ -1,0 +1,26 @@
+MISSION-ROLE: executor
+
+You are the SPRINT EXECUTOR for Ailang World mission iteration 340, running unattended under a codex workspace-write sandbox. Your working directory is the sprint worktree on branch sprint/world-iter340-net6-hoist at commit edd13a65. Execute milestone M1 of design_docs/planned/w-exec-probe-cross-profile-net6-hoist-sprint-plan.md. Design: design_docs/planned/w-exec-probe-cross-profile-net6-hoist.md (r3).
+
+GIT: run NO git write operations (no add, commit, stash, checkout, reset, restore, or apply --index). Leave every change UNCOMMITTED; the controller commits. You may use `git apply` (working tree only), `git diff` and `git status`.
+
+STEPS (do exactly these; do not explore beyond them)
+1. Verify the pre-change hashes. `shasum -a 256 host/broker/exec_probe.go` must start with 96f33172667d27de. host/broker/exec_probe_net6_test.go must not exist. Record the ci.yml pre-hash.
+2. `shasum -a 256 design_docs/verification/world-iter340/plan-M1.diff.txt` must start with 3d08d627134fd106. If it does not, STOP and report.
+3. `git apply design_docs/verification/world-iter340/plan-M1.diff.txt`, then verify the post-change sha256 of each file:
+   - host/broker/exec_probe.go → 19de369381579387…
+   - host/broker/exec_probe_net6_test.go → 400faf0ffc25a3f0…
+   - .github/workflows/ci.yml → 41a0a58611565fe1…
+   Any mismatch: STOP and report. Do NOT hand-edit to make a hash match. The patch is byte-pinned on purpose (design §6 R4: apply byte-exact).
+4. Sandbox-safe gates. Report each rc:
+   - `gofmt -l host/broker/` (must print nothing)
+   - `go vet ./host/broker/`
+   - `go build ./...`
+   - `go test -count=1 -run '^TestExecProbeNet6BindSiteIsBeforeTheFanOut$' -v ./host/broker/` (T2 is a pure source check and needs no sockets)
+   - `git diff --stat`, which must show exactly those three files.
+5. Do NOT run T1, the package suite or the mutation runner. They bind loopback sockets, and inside this sandbox they are UNINFORMATIVE UNDER SANDBOX. The controller runs them outside. If you run anything that touches sockets anyway, label its result exactly "UNINFORMATIVE UNDER SANDBOX", never pass or fail.
+6. A gate that is red is a finding to REPORT, not an obstacle to work around. Do not edit any file beyond what the patch does.
+
+Write nothing outside this worktree except Go's build caches.
+
+FINAL MESSAGE: each step's result with its hashes and rc values, `git status --porcelain`, and any finding.

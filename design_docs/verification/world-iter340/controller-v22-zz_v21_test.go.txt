@@ -1,0 +1,62 @@
+package broker
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"regexp"
+	"testing"
+	"time"
+)
+
+// SCRATCH-ONLY (iter-340 controller V21, quorum r2 oc-kimi-k3 fix): mixed failure
+// compositions under one ProbeExecProfilesEach call, normalised, HEAD vs proto.
+//
+//	(a) two live profiles, the bind fails for index 1 ONLY (index 0's listener live)
+//	(b) three profiles, index 0 returns early (missing read_root), 1 and 2 run to completion
+func TestZZV21Mixed(t *testing.T) {
+	norm := func(s string) string {
+		s = regexp.MustCompile(`wep-[0-9a-f]{16}`).ReplaceAllString(s, "wep-X")
+		s = regexp.MustCompile(`127\.0\.0\.1:\d+`).ReplaceAllString(s, "127.0.0.1:P")
+		s = regexp.MustCompile(`/(private/)?var/folders/[^ "]*?/T/TestZZV21Mixed[^/]*/`).ReplaceAllString(s, "TMP/")
+		return s
+	}
+	for _, row := range []struct {
+		name string
+		fail string // project whose net6 bind fails, "" = none
+		bad  bool   // prepend an early-returning profile at index 0
+		n    int
+	}{{"a-bind-fails-index1-only", "proj2", false, 2}, {"b-early-return-index0", "", true, 3}} {
+		t.Run(row.name, func(t *testing.T) {
+			f := newProbeFixture(t, shimSrtTree(t, "passthrough"), nil, "", []any{"sh", "-c", "echo toolchain-ok"})
+			p2 := *f.profile
+			p2.Project = "proj2"
+			profiles := []*ExecProfile{f.profile, &p2}
+			if row.bad {
+				bad := mustParseProfile(t, map[string]any{"profile": ExecProfileVersion, "project": "badroot",
+					"path": []any{"/usr/bin", "/bin"}, "timeout_ms": 9000, "probe": []any{"sh", "-c", "exit 0"},
+					"read_roots": []any{"/nonexistent-zz-iter340"}, "commands": map[string]any{"true": map[string]any{"argv": []any{"sh", "-c", "exit 0"}}}})
+				profiles = append([]*ExecProfile{bad}, profiles...)
+			}
+			zzFailProject.Store(row.fail)
+			defer zzFailProject.Store("")
+			before := loopbackListenPorts()
+			ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+			defer cancel()
+			errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: f.sandbox, Paths: f.paths}, profiles)
+			fmt.Fprintf(os.Stdout, "ZZ %s top-err=%v n=%d (want %d)\n", row.name, err, len(errs), row.n)
+			for i, e := range errs {
+				fmt.Fprintf(os.Stdout, "ZZ %s errs[%d] project=%s %T: %s\n", row.name, i, profiles[i].Project, e, norm(fmt.Sprint(e)))
+			}
+			time.Sleep(300 * time.Millisecond)
+			left := 0
+			for p := range loopbackListenPorts() {
+				if !before[p] {
+					left++
+				}
+			}
+			fmt.Fprintf(os.Stdout, "ZZ %s listeners-left=%d\n", row.name, left)
+			f.assertProbeCleaned(t)
+		})
+	}
+}

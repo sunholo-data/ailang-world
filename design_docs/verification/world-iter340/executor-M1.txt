@@ -1,0 +1,30 @@
+1. Pre-checks: rc=0. Test file absent. SHA-256:
+   - `exec_probe.go`: `96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4`
+   - `ci.yml`: `a11ff4ab05a41c9864299edb8f636675e3abb5dcdcba974d43fb6a405940710f`
+
+2. Patch hash check: rc=0, matched:
+   `3d08d627134fd1062e066ce287ec64a96f038f108dea67faee96537eddf708a2`
+
+3. `git apply`: rc=0. Post-hash check: rc=0; all matched:
+   - `exec_probe.go`: `19de369381579387bd9d83aceae28a5912717dab00b283454ca0067d41d087bd`
+   - `exec_probe_net6_test.go`: `400faf0ffc25a3f0a79302cc9436349da6e445b998744b5767f6d706475a64aa`
+   - `ci.yml`: `41a0a58611565fe148faaac0327dc34793550f12ddef74e7cc3c33a250c4697d`
+
+4. Gates:
+   - `gofmt -l host/broker/`: rc=0, no output.
+   - `go vet ./host/broker/`: rc=0.
+   - `go build ./...`: rc=0.
+   - Specified T2 test: rc=0, PASS.
+   - `git diff --stat`: rc=0, **finding:** shows two files, not the required three, because the new test file is untracked.
+
+5. T1, package suite, and mutation runner were not run.
+
+6. No edits beyond the patch; all changes remain uncommitted.
+
+`git status --porcelain` (rc=0):
+
+```text
+ M .github/workflows/ci.yml
+ M host/broker/exec_probe.go
+?? host/broker/exec_probe_net6_test.go
+```

@@ -2793,3 +2793,108 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 **Next:** row 241 lands on PR CI + merge CI green (landing note). Then row 242, the LAST row in D-WORLD-106's scope; it changes probe structure on a fail-closed startup gate, so it needs its own design and quorum. After 242 the scope is used up: rule-(d) block reports resume unless D-WORLD-105 is answered A/B, Mark widens the scope (rows 244–248 are hygiene outside it), or a release row becomes routable. A dev red still outranks.
 
 **Landing (iteration 339):** PR #467 merged as `a1a1bc6a` (merge commit, `--match-head-commit e4e3990c`). Head `e4e3990c` was 3/3 green (the real-srt verbose step logged `--- PASS: TestExecProbeReversePollCadence` with `CADENCE dials=21 fastest=50.18ms` on linux) and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `dcb2366e`, right before the merge. **Merge CI attempt 1:** `commits/a1a1bc6a/check-runs` → 3; the race gate failed: `host/verifygate` hit `-timeout 8m` (480.045 s) under `-race`. The two DATA RACE blocks in that log are the gate's known-positive control, not a finding. Attributed by measurement: the merge tree is byte-identical to the green head (`git diff e4e3990c a1a1bc6a` → 0 lines); this change touches only `host/broker`; verifygate's race-leg time on the four previous green runs was 259.0–399.5 s. **Attempt 2** (`gh run rerun --failed`, same SHA): 3/3 success, verifygate 403.1 s. Dev green at `a1a1bc6a`. Filed row 249 (`w-verifygate-race-package-timeout-headroom`, instance 1). Pollers ran under `/bin/bash` from a script file, one verdict path per SHA and attempt, each verdict line naming its SHA.
+
+## 340 — 2026-11-03 — row 242 built: every profile's net6 listener bound before the exec-probe fan-out (exclusion by construction), T1 behavioural + T2 source pin; design r3 via a controller carve-out; judge PASS 93 [PRODUCT-HYGIENE]
+
+**Pick:** row 242 `w-exec-probe-cross-profile-net6-hoist`, next in queue order under D-WORLD-106 = A (attended 2026-11-02), the seventh and last pick in that scope.
+- Clause map: 1–7 MET, no UNMET clause.
+- Release rows are not routable, re-measured at `e22e0794`:
+  - Row 150 waits on the attended A1. Subjects `dcb2366e..e22e0794` matching `row ?150|A1\b|marketing`: 0 of 11.
+  - Row 151 needs row 188 N2d/N4a. `-E --grep='N2d|N4a'` since 2026-10-01 returns the same 4 records/designs. N2c control: 4.
+- Dev green at `e22e0794`: check-runs 3, none not-green.
+- Gate 0:
+  - Directives: 0 allowlisted on #449 (watermark file absent, so all 8 comments were read) or on #366.
+  - Self-notice script rc 0 (control 107:4).
+  - Billing CLEAN.
+  - Skill drift: none. Running skill plus all 12 resource files are byte-identical to `origin/dev` in both the resolved symlink target and the pin worktree.
+  - Inbox: 43 unread, all `mission-world` self-claims.
+- Gate 2 died-mid-flight traces: 0 open PRs; no iteration-340 worktree or branch. The `.wt-world-iter242-*` worktrees are World iteration 242's and are old.
+- Premise, measured first-party on a `git archive` copy of `e22e0794` (`controller-premise.txt`):
+  - Adding `time.Sleep(2 * time.Second)` before `net6 := newProbeListener()` left `-run ExecProbe` at rc 0. No test guards the order.
+  - The unmutated control red once with `accepts 4` in `TestExecProbePassThroughShimFailsEveryConfinementArm`. A `-count=40` run of that test alone red once more (2/43). No `t.Parallel` in the package. This led to the dialer finding below.
+
+**Design** (`w-exec-probe-cross-profile-net6-hoist`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–339 precedent and the operator's standing request; rotation pointer unchanged):
+- **r1** (306 lines, 38 min):
+  - Hoist all N binds into `ProbeExecProfilesEach` before the first `go` statement, with one parent `defer` after `wg.Wait()`; `control()` stays in `probe()`.
+  - T1 (holds a protected profile's real preflight Git open through the existing `worktreeGit` seam and scans the process's own listening descriptors at each pick) and T2 (a `go/parser` source pin).
+  - 11-row measured mutation table.
+  - New finding: a protected profile already runs Git before its own bind at HEAD, which is a real slow pre-bind step.
+- **Quorum r1 BLOCKED** ($0.2331; seats gemini-4-argon pass, oc-glm-5-3 pass, oc-kimi-k3 reject; claude benched; `absent_reviewers` `[]`).
+  - kimi: the "no behaviour change on any failure path" claim is falsified by the doc's own R1, because a foreign accept between the hoisted bind and `control()` now refuses.
+  - The controller measured it before routing (`controller-exposure.txt`, n=20 per side):
+    - bind→`control()`: HEAD 43/50/136 µs, hoist 6.7/7.2/18.4 ms;
+    - `control()`→`acceptsC`: 0.56–1.79 s on both sides, so the hoist adds roughly +1.2%.
+  - The HEAD copy hit `accepts 4` a third time (3/63).
+- **r2** (381 lines, 9 min): kimi's 5 verbatim items, glm's V9-proxy note and gemini's descriptor-scan note.
+  - The designer measured that a foreign accept refuses through the raw and proxy legs (`accepts 2`), not the control leg (kimi's expected assertion corrected).
+  - The designer found the dialer (V17/V18).
+- **Quorum r2 BLOCKED** ($0.3286; same seats, none absent; gemini pass).
+  - glm: V14's HEAD-only red was asserted away without a rerun.
+  - kimi: the mixed live/failed listener compositions were never constructed.
+  - Both carried concrete `proposed_fix` text; neither disputed the direction.
+- **r3**, the controller's narrow-refinement carve-out, applying their verbatim text after running the measurements they named:
+  - V21 (glm): `TestWorktreeSnapshotRefusesAConfiguredFilter` 3/3 PASS on HEAD and on the hoist.
+  - V22 (kimi, renumbered because glm also claimed V21): (a) bind fails for index 1 only, and (b) index 0 returns early while 1–2 complete. Normalised output byte-identical HEAD vs hoist, `listeners-left=0`, injection control 3/3 on `proj2`, 0 elsewhere.
+  - gemini's R4 sentence was replaced with the reviewer's text.
+  - Rounds and surfaces recorded in §11.
+
+**Plan** (resolver `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; `derive-planner-lane.sh` agrees; codex probe rc 0), `edd13a65`:
+- Detached planner worktree `.planner-wt-iter340` at `45bbc95a`, removed after.
+- `plan-M1.diff.txt` sha256 `3d08d627…`, consisting of the designer patch byte-exact plus two ci.yml names. Post-apply hashes: `exec_probe.go` `19de3693…`, test `400faf0f…`, `ci.yml` `41a0a586…`. The controller re-applied it on an archive and every hash matched.
+- 13-scenario / 27-row mutation runner, including a new MUT-8.
+- Planner findings: T2 skips package-variable initializers; MUT-2/3b keep the parent bind; existing tests write `/tmp/claude`.
+
+**Executor** (resolver `recipe codex:gpt-6.1-sol declared:provider-pin`; 30-min cap):
+- Applied the diff and checked every hash.
+- gofmt, vet, `go build ./...` and T2 all rc 0. No socket tests run inside the sandbox.
+- Left uncommitted; the controller committed M1 `758c66ad`.
+
+**Controller checks before the judge** (outside the sandbox, on `758c66ad`, sequenced; `controller-gates-summary.txt`):
+- A1: T1 + T2 `-count=10` → 20/20 PASS.
+- A2: `host/broker` 1096 PASS / 39 SKIP / 0 FAIL.
+- A3: mutation runner.
+  - Attempt 1: 27/27 MISMATCH in 1 s. INSTRUMENT FAILURE: the runner pins `GOTOOLCHAIN=local`, and PATH go is 1.26.4 while go.mod needs 1.26.6.
+  - Attempt 2 (A3b), in its own detached worktree with go1.26.6 first on PATH: 27/27 EXPECTATION MATCH, 28 restores `cmp ok`, 0 tree changes.
+- A4: `TestProductionContextRoots` rc 0.
+- A5: `go build ./...` rc 0.
+  - `go test -timeout 40m ./...`: 34 ok, plus one red, `host/store` `TestProductionGoSurface`. It flagged attempt 1's own leftover `.go` evidence copies in the tree. Re-run after moving them out: rc 0.
+- A6: `verify_ail.sh` rc 0 (16 identities, 40 named tests, 503 se-tools).
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), in its own detached worktree `.judge-wt-iter340` at `c1706638`, foreground.
+- **PASS 93/100, zero blocking.**
+- Its own 8 mutants: 6 killed. M4 (close each listener after its own probe) is equivalent. M8 (bind before `plantExecProbe`, so a plant-error return leaks) survives.
+- Vacuity: T1 and T2 both red with base `exec_probe.go` and the new test file.
+- Re-derived the broker census (1096/39/0).
+- Saw `accepts 4` in 2 of about 8 runs of the pass-through test (R2).
+- Report: `evaluator-r1.md` (53 lines, 12 tool calls).
+- The controller reproduced M8 (`controller-judge-repro.txt`): `-run '^TestExecProbeNet6'` rc 0. It sits inside the design's "UNMEASURED dynamically" plant-failure residual and production is correct, so no row was filed.
+
+**Routing evidence:** base=e22e0794635ea18b7505cf775775521cb04692e0@2026-11-03T12:50:01Z. Gate 1 record; Gate 3's snap read the same SHA.
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`; `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`; `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`; `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION` empty.
+- Codex ration: 77.0% used / 86.3% allowed after the executor.
+- Tokens: controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent `opus` (r1 179,965 tok; r2 238,890 tok as reported) · planner `codex:gpt-6.1-sol` (108,680 tok) · executor `codex:gpt-6.1-sol` (32,442 tok) · evaluator Agent `sonnet` (55,766 tok).
+- Generator ≠ judge: opus designer and codex planner/executor vs the sonnet judge. None fell back.
+- Designer diet: 1 doc, initial run plus one protocol-mandated revision. r3 was the controller's carve-out, not a third designer run.
+- Metered **$0.5617** (quorum r1 $0.2331 + r2 $0.3286), under the $5 budget.
+
+**Found:** the Sunholo start page (`~/.config/sunholo-platform/homepage/serve.py`) dials every 127.0.0.1 listener about every 32 s.
+- Designer V17/V18: 64 × 120 s → 256 unsolicited accepts, with `lsof`.
+- Controller reproduction: 16 idle listeners × 75 s → 48 (`controller-dialer-repro.txt`).
+- That explains the pass-through `accepts 4` flake. It implies a fail-closed false refusal of the exec startup probe on this rig, estimated at 2–6% per profile per probe (designer estimate, unmeasured directly).
+- Filed as row 250. D-WORLD-108 (OPEN, default C) asks whether the loop may take 250 and 244–249 now that D-WORLD-106's scope is used up.
+
+**Ruled out:**
+- Moving `control()` into the parent to answer kimi r1: the `control()`→`acceptsC` exposure would remain, so it shrinks nothing.
+- A third designer run for quorum r2: both objections came with verbatim fixes and named measurements, so the carve-out applies and the designer diet stops at one revision.
+- Treating attempt 1's 27/27 MISMATCH, or the `host/store` red, as code findings: both were the controller's instrument, attributed by command.
+- Filing M4 or M8: equivalent, or inside a measured and accepted residual.
+- Fixing the dialer flake inside row 242: out of scope, and the hoist does not change it (design R2).
+
+**Retro:**
+1. **A premise control that reds is data, not noise.** The one `accepts 4` red in the unmutated control turned into the iteration's most useful finding: an outside dialer that makes a fail-closed gate refuse on this rig. Three runs and an idle-listener capture attributed it. Instance 1 of "the control arm found a real defect the row wasn't about".
+2. **A mutation runner's evidence directory lives inside the tree it mutates, so every later gate sees it.** Attempt 1 left `.go` copies that reddened `TestProductionGoSurface`. Fix applied: run the runner in its own detached worktree, never in the sprint worktree. A runner that pins `GOTOOLCHAIN=local` also needs the go.mod toolchain on PATH. Instance 1 for World; noted for the planner directive next time ("the runner must not leave `.go` files under the root" / "do not pin GOTOOLCHAIN=local").
+3. **Quorum r2 objections moved to new surfaces rather than repeating r1's**, and each named the measurement that would close it, so the carve-out closed both for about 10 minutes of controller time. Same shape as iterations 334, 336–338.
+- No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 242 BUILT in PR #469. D-WORLD-106's scope is used up.
+**Next:** row 242 lands on PR CI + merge CI green (landing note). After that, nothing is loop-routable. Rule-(d) block reports resume unless D-WORLD-108 is answered A/B (rows 250, 244–249), D-WORLD-105 is answered A/B, or a release row becomes routable. A dev red still outranks.

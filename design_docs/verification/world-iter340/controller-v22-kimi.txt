@@ -1,0 +1,130 @@
+# iter-340 controller V22 (quorum r2 oc-kimi-k3 fix, its 'V21'): mixed failure compositions under one ProbeExecProfilesEach, HEAD (.scratch-iter340-v21kh = e22e0794 + exec_probe_net6_test.go for loopbackListenPorts) vs proto (.scratch-iter340-v21kp = e22e0794 + designer-proto.patch.txt)
+# injection: zzInjectBindFail(listener, project) placed immediately after each copy's own bind site (HEAD probe():486; proto ProbeExecProfilesEach bind loop :257) — fails exactly the named profile's bind
+# setup script:
+#!/bin/bash
+# iter-340 controller V21 (kimi r2 fix): copies with a per-profile net6 bind-failure injection
+set -e
+S=/Users/voightkampff/dev/sunholo-data; WT=$S/.wt-world-iter340-net6-hoist
+for d in kh kp; do mkdir "$S/.scratch-iter340-v21$d"; git -C "$WT" archive e22e0794 | tar -x -C "$S/.scratch-iter340-v21$d"; done
+(cd "$S/.scratch-iter340-v21kp" && git apply "$WT/design_docs/verification/world-iter340/designer-proto.patch.txt" && echo APPLY-OK)
+# HEAD injection: right after the bind in probe()
+perl -0pi -e 's/(\tnet6 := newProbeListener\(\)\n)/$1\tzzInjectBindFail(net6, pp.h.profile.Project) \/\/ SCRATCH-ONLY iter340 V21\n/ or die' "$S/.scratch-iter340-v21kh/host/broker/exec_probe.go"
+# proto injection: right after each bind in the parent loop
+perl -0pi -e 's/(\t\tnet6\[i\] = newProbeListener\(\)\n)/$1\t\tzzInjectBindFail(net6[i], profiles[i].Project) \/\/ SCRATCH-ONLY iter340 V21\n/ or die' "$S/.scratch-iter340-v21kp/host/broker/exec_probe.go"
+for d in kh kp; do
+cat > "$S/.scratch-iter340-v21$d/host/broker/zz_inject.go" <<'EOF'
+package broker
+
+import (
+	"errors"
+	"sync/atomic"
+)
+
+// SCRATCH-ONLY (iter-340 controller V21): fail exactly one named profile's net6 bind.
+var zzFailProject atomic.Value // string
+
+func zzInjectBindFail(l *probeListener, project string) {
+	if v, _ := zzFailProject.Load().(string); v != "" && v == project && l.ln != nil {
+		_ = l.ln.Close()
+		l.ln, l.err = nil, errors.New("zz injected bind failure for "+project)
+	}
+}
+EOF
+cp /tmp/iter340/zz_v21_test.go "$S/.scratch-iter340-v21$d/host/broker/zz_v21_test.go"
+done
+grep -n "zzInjectBindFail" "$S/.scratch-iter340-v21kh/host/broker/exec_probe.go" "$S/.scratch-iter340-v21kp/host/broker/exec_probe.go"
+cp "$S/.scratch-iter340-v21kp/host/broker/exec_probe_net6_test.go" "$S/.scratch-iter340-v21kh/host/broker/exec_probe_net6_test.go"; for d in kh kp; do (cd "$S/.scratch-iter340-v21$d" && go vet ./host/broker/ && echo "$d vet ok"); done
+# harness zz_v21_test.go:
+package broker
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"regexp"
+	"testing"
+	"time"
+)
+
+// SCRATCH-ONLY (iter-340 controller V21, quorum r2 oc-kimi-k3 fix): mixed failure
+// compositions under one ProbeExecProfilesEach call, normalised, HEAD vs proto.
+//
+//	(a) two live profiles, the bind fails for index 1 ONLY (index 0's listener live)
+//	(b) three profiles, index 0 returns early (missing read_root), 1 and 2 run to completion
+func TestZZV21Mixed(t *testing.T) {
+	norm := func(s string) string {
+		s = regexp.MustCompile(`wep-[0-9a-f]{16}`).ReplaceAllString(s, "wep-X")
+		s = regexp.MustCompile(`127\.0\.0\.1:\d+`).ReplaceAllString(s, "127.0.0.1:P")
+		s = regexp.MustCompile(`/(private/)?var/folders/[^ "]*?/T/TestZZV21Mixed[^/]*/`).ReplaceAllString(s, "TMP/")
+		return s
+	}
+	for _, row := range []struct {
+		name string
+		fail string // project whose net6 bind fails, "" = none
+		bad  bool   // prepend an early-returning profile at index 0
+		n    int
+	}{{"a-bind-fails-index1-only", "proj2", false, 2}, {"b-early-return-index0", "", true, 3}} {
+		t.Run(row.name, func(t *testing.T) {
+			f := newProbeFixture(t, shimSrtTree(t, "passthrough"), nil, "", []any{"sh", "-c", "echo toolchain-ok"})
+			p2 := *f.profile
+			p2.Project = "proj2"
+			profiles := []*ExecProfile{f.profile, &p2}
+			if row.bad {
+				bad := mustParseProfile(t, map[string]any{"profile": ExecProfileVersion, "project": "badroot",
+					"path": []any{"/usr/bin", "/bin"}, "timeout_ms": 9000, "probe": []any{"sh", "-c", "exit 0"},
+					"read_roots": []any{"/nonexistent-zz-iter340"}, "commands": map[string]any{"true": map[string]any{"argv": []any{"sh", "-c", "exit 0"}}}})
+				profiles = append([]*ExecProfile{bad}, profiles...)
+			}
+			zzFailProject.Store(row.fail)
+			defer zzFailProject.Store("")
+			before := loopbackListenPorts()
+			ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+			defer cancel()
+			errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: f.sandbox, Paths: f.paths}, profiles)
+			fmt.Fprintf(os.Stdout, "ZZ %s top-err=%v n=%d (want %d)\n", row.name, err, len(errs), row.n)
+			for i, e := range errs {
+				fmt.Fprintf(os.Stdout, "ZZ %s errs[%d] project=%s %T: %s\n", row.name, i, profiles[i].Project, e, norm(fmt.Sprint(e)))
+			}
+			time.Sleep(300 * time.Millisecond)
+			left := 0
+			for p := range loopbackListenPorts() {
+				if !before[p] {
+					left++
+				}
+			}
+			fmt.Fprintf(os.Stdout, "ZZ %s listeners-left=%d\n", row.name, left)
+			f.assertProbeCleaned(t)
+		})
+	}
+}
+# command: go test -count=3 -run '^TestZZV21Mixed$' -v ./host/broker/  → kh rc=0, kp rc=0
+# diff of raw ZZ lines kh vs kp: IDENTICAL (27 lines each)
+# positive control: kh proj2-injected=3 proj-injected=0 b-injected=0; kp proj2-injected=3 proj-injected=0 b-injected=0
+## proto ZZ lines
+ZZ a-bind-fails-index1-only top-err=<nil> n=2 (want 2)
+ZZ a-bind-fails-index1-only errs[0] project=proj *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ a-bind-fails-index1-only errs[1] project=proj2 *broker.ExecProbeError: exec startup probe failed for profile "proj2" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: control: World's live listener did not accept an unsandboxed connect: zz injected bind failure for proj2; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ a-bind-fails-index1-only listeners-left=0
+ZZ b-early-return-index0 top-err=<nil> n=3 (want 3)
+ZZ b-early-return-index0 errs[0] project=badroot *fmt.wrapError: broker: exec probe for profile "badroot": broker: exec handler: read_root "/nonexistent-zz-iter340": lstat /nonexistent-zz-iter340: no such file or directory
+ZZ b-early-return-index0 errs[1] project=proj *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ b-early-return-index0 errs[2] project=proj2 *broker.ExecProbeError: exec startup probe failed for profile "proj2" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ b-early-return-index0 listeners-left=0
+ZZ a-bind-fails-index1-only top-err=<nil> n=2 (want 2)
+ZZ a-bind-fails-index1-only errs[0] project=proj *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ a-bind-fails-index1-only errs[1] project=proj2 *broker.ExecProbeError: exec startup probe failed for profile "proj2" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: control: World's live listener did not accept an unsandboxed connect: zz injected bind failure for proj2; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ a-bind-fails-index1-only listeners-left=0
+ZZ b-early-return-index0 top-err=<nil> n=3 (want 3)
+ZZ b-early-return-index0 errs[0] project=badroot *fmt.wrapError: broker: exec probe for profile "badroot": broker: exec handler: read_root "/nonexistent-zz-iter340": lstat /nonexistent-zz-iter340: no such file or directory
+ZZ b-early-return-index0 errs[1] project=proj *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ b-early-return-index0 errs[2] project=proj2 *broker.ExecProbeError: exec startup probe failed for profile "proj2" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ b-early-return-index0 listeners-left=0
+ZZ a-bind-fails-index1-only top-err=<nil> n=2 (want 2)
+ZZ a-bind-fails-index1-only errs[0] project=proj *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ a-bind-fails-index1-only errs[1] project=proj2 *broker.ExecProbeError: exec startup probe failed for profile "proj2" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: control: World's live listener did not accept an unsandboxed connect: zz injected bind failure for proj2; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED ECONNREFUSED", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ a-bind-fails-index1-only listeners-left=0
+ZZ b-early-return-index0 top-err=<nil> n=3 (want 3)
+ZZ b-early-return-index0 errs[0] project=badroot *fmt.wrapError: broker: exec probe for profile "badroot": broker: exec handler: read_root "/nonexistent-zz-iter340": lstat /nonexistent-zz-iter340: no such file or directory
+ZZ b-early-return-index0 errs[1] project=proj *broker.ExecProbeError: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ b-early-return-index0 errs[2] project=proj2 *broker.ExecProbeError: exec startup probe failed for profile "proj2" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy TMP/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-X: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 3 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:P
+ZZ b-early-return-index0 listeners-left=0

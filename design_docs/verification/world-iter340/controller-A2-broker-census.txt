@@ -1,0 +1,5 @@
+# go test -count=1 -v ./host/broker/ on 758c66ad, AILANG_BIN v0.41.0: census
+ 338 --- PASS
+  30 --- SKIP
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	196.996s

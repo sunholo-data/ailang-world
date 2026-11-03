@@ -1,0 +1,62 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-cross-profile-net6-hoist.md",
+  "iso_ts": "2026-11-03T13:36:29Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.04158,
+      "tokens_in": 8900,
+      "tokens_out": 299,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §6 R4, the `loopbackListenPorts` test helper relies on `getsockname` + `SO_TYPE == SOCK_STREAM` + `getpeername == ENOTCONN` to identify listening sockets because `SO_ACCEPTCONN` is unavailable on darwin, which is unmeasured on Linux and theoretically matches an unbound/unconnected stream socket to `127.0.0.1` before `listen()` or `connect()`.",
+        "catch": "Verify during the first Linux CI run (or via `SO_ACCEPTCONN` when available on Linux) that `loopbackListenPorts` in `host/broker/exec_probe_net6_test.go` behaves identically across platforms, and ensure the executor captures the pinned-`AILANG_BIN` full suite run noted as unmeasured in V14.",
+        "proposed_fix": "In `loopbackListenPorts` (or §6 R4), note that `getsockname` port \u003e 0 combined with `getpeername` == `ENOTCONN` only occurs if `bind()` was explicitly called without `connect()`, which in this process only happens for listeners or during the brief window inside `freeLoopbackPort` before `close()`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0788634,
+      "tokens_in": 8129,
+      "tokens_out": 15337,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The one quantitative premise stated as directly measured is not: §1 claim 4 and R1 cite V9 as 'the real preflight Git' (8.5/11.1/14.0 ms), but V9's command — git -c core.fsmonitor=false config --null --get-regexp '^filter.' run in a NON-repo dir — is a proxy never shown to match the production protectedGitPreflight invocation (V3 logs only seam line numbers at exec_protected_record.go:36-40, not the command body or cwd). Production runs inside a planted worktree (a repo, with real filter config and fsmonitor not disabled), so the '20x slower' headroom and R1's '~11 ms' window rest on an unvalidated stand-in. This does not overturn the change — the hoist removes the latency dependency by construction, and V15 is correctly identified as the only inherited assumption — but it is the closest gap in an otherwise banked premise chain, and it feeds the doc's only margin-based reasoning.",
+        "catch": "Verify or relabel V9: quote protectedGitPreflight's actual git command, cwd, and env from exec_protected_record.go and re-measure 30x under those exact conditions, or reword §1 claim 4 and R1 to say 'proxy for the preflight'. Secondarily, two asserted premises have no verification-log row: the tests= list location at ci.yml:247 and the probeNode skip seam that T1 depends on.",
+        "proposed_fix": "Split V9 into V9a/V9b. V9a: read and quote protectedGitPreflight's git invocation (command line, cwd, env) from exec_protected_record.go:36-40, banked in designer-greps.txt. V9b: 30x latency run of that exact command in a planted probe worktree at e22e0794 (repo dir, no core.fsmonitor override unless production passes one), banked as designer-git-preflight-prod.txt. Then update §1 claim 4's 'about 20x slower' and R1's 'about 11 ms of Git' to the new figures, or relabel both as proxy measurements. Append two rows to V2: grep -n 'tests=' .github/workflows/ci.yml (expect :247) and grep -rn 'probeNode' host/broker (expect the skip seam). No design change: the hoist's correctness proof depends only on the Go memory model ordering plus inherited V15, not on V9."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.112617,
+      "tokens_in": 8089,
+      "tokens_out": 5890,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's headline premise — 'no behaviour change on any failure path (§3)' in the Item line, reinforced by §3.3's table claiming 'identical' failure semantics on every path — is falsified by the doc's own §6 R1. Before the hoist, a foreign process dialing a profile's net6 between bind and control() had a ~microsecond window (bind and control() are adjacent at HEAD); after the hoist that window equals the profile's entire pre-bind work (randomHex, two Mkdirs, NewExecHandler, plus ~8.5–14 ms of measured Git for protected profiles, V9). A foreign accept inside that widened window now makes control() observe 2 accepts and refuse startup ('accept count 2 after one connect, want 1') — a failure-path outcome that is unreachable-in-practice at HEAD but reachable after the hoist. There exist executions that pass at HEAD and refuse after the hoist: that is a behaviour change on a failure path, on a fail-closed startup gate, and it is asserted away rather than measured (the foreign-dial rate is explicitly UNMEASURED, on a rig that had a live ailang-worldd running, V13). The refusal is fail-closed and never a false pass, so the design may still be right — but the premise as written is false, and §3.3's table omits the one row that would show it.",
+        "catch": "Reconcile the Item bullet and §3.3 with §6 R1: either (a) scope the equivalence claim to in-process behavior and add the missing §3.3 row for the cross-process control-leg window, or (b) actually measure it. Also fix the small factual slip in §3.1: per-iteration loop-variable capture is Go 1.22 semantics, not a Go 1.26 feature (go.mod ≥1.22 suffices; the behavior claim is correct, the attribution is wrong). Separately, V9's 'real preflight Git latency' was measured with a failing `git config --get-regexp '^filter\\.'` in a NON-repo dir (rc=1); the doc never quotes the actual command protectedGitPreflight runs or measures it inside a real worktree, so the '§1 row 4: ~20× margin' verdict rests on an unverified proxy — re-measure the real preflight in a populated repo or downgrade the claim.",
+        "proposed_fix": "1) Rewrite the Item claim to: 'Production +23/−18 lines. No in-process behaviour change on any failure path (§3.3); one cross-process failure window widens (§6 R1): a foreign accept landing between the hoisted bind and its owner's control() now produces a fail-closed refusal where HEAD's ~µs bind→control() adjacency made it practically unreachable. It cannot produce a false pass.' 2) Add a §3.3 table row: 'Foreign accept before control() | pass (window ≈ µs) | fail-closed refusal, error text unchanged (window = pre-bind work, incl. measured 8.5–14 ms protected Git, V9) — refuse-closed, never false-pass'. 3) Add a verification-log row that turns R1's UNMEASURED into measured: on the prototype, use the existing cfg.reversePort snapshot to obtain profile k's net6 port and dial it once before that profile's Run A; assert the resulting ExecProbeError is the arm6-network control-leg refusal exactly as HEAD would phrase it, and assert T1/T2 stay green; plus a baseline foreign-dial rate observation against the live daemon (V13) or an explicit UNMEASURED with rationale. 4) Correct §3.1 to 'Go ≥1.22 loop semantics (go.mod 1.26)'. 5) Re-run V9 inside a real profile worktree quoting the exact protectedGitPreflight invocation, or relabel the 20× margin as proxy-derived."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller re-measured the premise first-party (2 s pre-bind sleep leaves -run ExecProbe rc 0 at e22e0794). Doc's proof is sound on the in-process claim; failure-path table matches code; T1/T2 mutation table measured. Residual: T1 blind to MUT-3/MUT-7 (T2 only), Linux unmeasured."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The doc's headline premise — 'no behaviour change on any failure path (§3)' in the Item line, reinforced by §3.3's table claiming 'identical' failure semantics on every path — is falsified by the doc's own §6 R1. Before the hoist, a foreign process dialing a profile's net6 between bind and control() had a ~microsecond window (bind and control() are adjacent at HEAD); after the hoist that window equals the profile's entire pre-bind work (randomHex, two Mkdirs, NewExecHandler, plus ~8.5–14 ms of measured Git for protected profiles, V9). A foreign accept inside that widened window now makes control() observe 2 accepts and refuse startup ('accept count 2 after one connect, want 1') — a failure-path outcome that is unreachable-in-practice at HEAD but reachable after the hoist. There exist executions that pass at HEAD and refuse after the hoist: that is a behaviour change on a failure path, on a fail-closed startup gate, and it is asserted away rather than measured (the foreign-dial rate is explicitly UNMEASURED, on a rig that had a live ailang-worldd running, V13). The refusal is fail-closed and never a false pass, so the design may still be right — but the premise as written is false, and §3.3's table omits the one row that would show it."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2330604,
+    "total_tokens_in": 25118,
+    "total_tokens_out": 21526
+  }
+}

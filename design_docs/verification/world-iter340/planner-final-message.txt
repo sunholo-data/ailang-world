@@ -1,0 +1,28 @@
+Created the four artifacts:
+
+| Path | Lines |
+|---|---:|
+| [Sprint plan](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter340/design_docs/planned/w-exec-probe-cross-profile-net6-hoist-sprint-plan.md) | 321 |
+| [Sprint JSON](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter340/design_docs/planned/sprint_w-exec-probe-cross-profile-net6-hoist.json) | 27 |
+| [plan-M1.diff.txt](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter340/design_docs/verification/world-iter340/plan-M1.diff.txt) | 313 |
+| [plan-mutants.sh.txt](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter340/design_docs/verification/world-iter340/plan-mutants.sh.txt) | 195 |
+
+SHA256:
+
+```text
+plan-M1.diff.txt
+3d08d627134fd1062e066ce287ec64a96f038f108dea67faee96537eddf708a2
+
+Post-apply host/broker/exec_probe.go
+19de369381579387bd9d83aceae28a5912717dab00b283454ca0067d41d087bd
+
+Post-apply host/broker/exec_probe_net6_test.go
+400faf0ffc25a3f0a79302cc9436349da6e445b998744b5767f6d706475a64aa
+
+Post-apply .github/workflows/ci.yml
+41a0a58611565fe148faaac0327dc34793550f12ddef74e7cc3c33a250c4697d
+```
+
+Mutation runner: **13 scenarios, 27 named-test rows**. Apply-check, base/patched vet and build, formatting, and Bash 3.2 syntax checks returned rc 0. Scratch deleted; runtime tests and runner remain unexecuted.
+
+Findings: T2 skips package-variable initializers; MUT-2/3b retain parent binds despite being described as moves; existing tests write `/tmp/claude`, preventing literal child-process write confinement to the supplied root.

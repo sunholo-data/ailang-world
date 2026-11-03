@@ -1,0 +1,195 @@
+#!/bin/bash
+# Controller only, OUTSIDE the planner sandbox. Bash 3.2 compatible.
+# Usage: bash /path/to/plan-mutants.sh.txt /absolute/path/to/applied/tree
+# 13 scenarios, 27 independently mutated, named-test executions and restores.
+# All runner-owned files, Go temporary files and writable caches stay under $1.
+# Existing probe code still writes its fixed /tmp/claude targets: see plan finding F3.
+# TP is deliberately absent except for MUT-6 (design R2's pre-existing flake).
+set -euo pipefail
+if [ "$#" -ne 1 ]; then
+  echo "usage: bash plan-mutants.sh.txt TREE_ROOT" >&2
+  exit 2
+fi
+root=$(cd "$1" && pwd -P)
+cd "$root"
+src=host/broker/exec_probe.go
+testsrc=host/broker/exec_probe_net6_test.go
+helper=host/broker/zz_plan_net6_mutant.go
+base=45bbc95af54bb41c622f469c0cd2c8e40af5f331
+command -v python3 >/dev/null
+command -v go >/dev/null
+[ -f "$src" ] && [ -f "$testsrc" ] && [ ! -e "$helper" ]
+# Refuse a symlinked target; mutation/restoration must stay inside this tree.
+[ ! -L host ] && [ ! -L host/broker ] && [ ! -L "$src" ] && [ ! -L "$testsrc" ]
+state=$(mktemp -d "$root/.plan-mutants.XXXXXX")
+cp "$src" "$state/pristine.go"
+cp "$testsrc" "$state/pristine-test.go"
+armed=1
+restore() {
+  cp "$state/pristine.go" "$src" || return 1
+  cp "$state/pristine-test.go" "$testsrc" || return 1
+  rm -f "$helper" || return 1
+  cmp "$state/pristine.go" "$src" || return 1
+  cmp "$state/pristine-test.go" "$testsrc" || return 1
+  [ ! -e "$helper" ] || return 1
+}
+finish() {
+  saved_rc=$?
+  trap - EXIT HUP INT TERM
+  if [ "$armed" -eq 1 ]; then
+    if restore; then
+      echo "RESTORE cmp ok: exit cleanup"
+    else
+      echo "RESTORE MISMATCH: exit cleanup" >&2
+      saved_rc=3
+    fi
+  fi
+  echo "Mutation evidence: $state"
+  exit "$saved_rc"
+}
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+# Do not let compiler/test temporaries or newly downloaded modules escape $root.
+mkdir "$state/tmp" "$state/gocache" "$state/modcache" "$state/gopath"
+export TMPDIR="$state/tmp"
+export GOCACHE="$state/gocache"
+export GOMODCACHE="$state/modcache"
+export GOPATH="$state/gopath"
+# Ignore a caller's alternate module/workspace/build overlay settings.
+export GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=local
+git show "$base:$src" > "$state/base.go"
+python3 -I - "$state" <<'PY'
+from pathlib import Path
+import hashlib, sys
+p = Path(sys.argv[1])
+pins = {
+    'base.go': '96f33172667d27defa0c52735d5cff1ad74d4e907ab00a4c056c4e5a26f698a4',
+    'pristine.go': '19de369381579387bd9d83aceae28a5912717dab00b283454ca0067d41d087bd',
+    'pristine-test.go': '400faf0ffc25a3f0a79302cc9436349da6e445b998744b5767f6d706475a64aa',
+}
+for name, want in pins.items():
+    got = hashlib.sha256((p / name).read_bytes()).hexdigest()
+    if got != want:
+        raise SystemExit('input hash mismatch: %s got %s want %s' % (name, got, want))
+PY
+mutate() {
+  python3 -I - "$root" "$state" "$1" <<'PY'
+from pathlib import Path
+import sys
+root, state, mut = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+p = root / 'host/broker/exec_probe.go'
+s = p.read_text()
+def rep(old, new):
+    global s
+    if s.count(old) != 1:
+        raise SystemExit('mutation anchor mismatch: %s %r count=%d' % (mut, old, s.count(old)))
+    s = s.replace(old, new)
+BIND = '\tfor i := range profiles {\n\t\tnet6[i] = newProbeListener()\n\t}\n'
+CTL = '\tnetCtl := net6.control()\n'
+if mut == 'CONTROL':
+    pass
+elif mut in ('HEAD-positive-control', 'HEAD-SLEEP'):
+    s = (state / 'base.go').read_text()
+    if mut == 'HEAD-SLEEP':
+        rep('\tnet6 := newProbeListener()\n', '\ttime.Sleep(2 * time.Second) // MUTANT\n\tnet6 := newProbeListener()\n')
+elif mut == 'MUT-1':
+    rep(BIND, '\ttime.Sleep(2 * time.Second) // MUTANT\n' + BIND)
+elif mut == 'MUT-1b':
+    rep(CTL, '\ttime.Sleep(2 * time.Second) // MUTANT\n' + CTL)
+elif mut == 'MUT-2':
+    # Match designer-mutate.py exactly: retain the unused parent listeners.
+    rep(CTL, '\tnet6 = newProbeListener() // MUTANT\n\tdefer net6.close()\n' + CTL)
+elif mut == 'MUT-3':
+    rep(BIND, '')
+    rep('\t\t\tdefer wg.Done()\n\t\t\terrs[i]', '\t\t\tdefer wg.Done()\n\t\t\tnet6[i] = newProbeListener() // MUTANT\n\t\t\terrs[i]')
+elif mut == 'MUT-3b':
+    # As measured by designer, retain unused parent listeners here too.
+    rep('\tcwd := filepath.Join(worktree, p.Root)\n', '\tnet6 = newProbeListener() // MUTANT\n\tdefer net6.close()\n\tcwd := filepath.Join(worktree, p.Root)\n')
+elif mut == 'MUT-4':
+    rep('\t\t\tl.close()\n', '\t\t\t_ = l // MUTANT\n')
+elif mut == 'MUT-5':
+    rep('probeExecProfile(ctx, cfg, env, p, net6[i])', 'probeExecProfile(ctx, cfg, env, p, net6[0])')
+elif mut == 'MUT-6':
+    rep('\twg.Wait()\n\treturn errs, nil', '\tfor _, l := range net6 {\n\t\tl.close() // MUTANT\n\t}\n\twg.Wait()\n\treturn errs, nil')
+elif mut == 'MUT-7':
+    rep(BIND, '')
+    rep('\t\t\tdefer wg.Done()\n\t\t\terrs[i]', '\t\t\tdefer wg.Done()\n\t\t\tnet6[i] = bindNet6Late() // MUTANT\n\t\t\terrs[i]')
+    (root / 'host/broker/zz_plan_net6_mutant.go').write_text('package broker\n\nfunc bindNet6Late() *probeListener { return newProbeListener() }\n')
+elif mut == 'MUT-8':
+    # T2 skips GenDecl, so this factory's CallExpr is invisible to its scan.
+    # Retain the legal parent bind; replace its listener at the old late site.
+    rep(CTL, '\tnet6 = planLateNet6() // MUTANT\n\tdefer net6.close()\n' + CTL)
+    (root / 'host/broker/zz_plan_net6_mutant.go').write_text('package broker\n\nvar planLateNet6 = func() *probeListener { return newProbeListener() }\n')
+else:
+    raise SystemExit('unknown mutation: ' + mut)
+p.write_text(s)
+PY
+}
+T1=TestExecProbeNet6BoundBeforeAnyPick
+T2=TestExecProbeNet6BindSiteIsBeforeTheFanOut
+TP=TestExecProbePassThroughShimFailsEveryConfinementArm
+rows=0
+mismatches=0
+run_row() { # mutation, one exact test name, expected rc, required failure evidence
+  mut=$1
+  name=$2
+  expected=$3
+  needle=$4
+  restore || { echo "RESTORE MISMATCH: $mut $name precondition" >&2; exit 3; }
+  mutate "$mut"
+  log="$state/$mut.$name.log"
+  rc=0
+  # -v supports non-vacuity checks; the test selection and count remain exact.
+  go test -count=1 -run "^${name}$" ./host/broker/ -v -timeout 120s > "$log" 2>&1 || rc=$?
+  matched=1
+  [ "$rc" -eq "$expected" ] || matched=0
+  if [ "$expected" -eq 0 ]; then
+    /usr/bin/grep -Fq -- "--- PASS: $name " "$log" || matched=0
+  else
+    /usr/bin/grep -Fq -- "--- FAIL: $name " "$log" || matched=0
+    /usr/bin/grep -Fq -- "$needle" "$log" || matched=0
+  fi
+  # A skip, zero-test match, compile failure or panic is not an expected red.
+  if /usr/bin/grep -Eq -- '^--- SKIP:|\[build failed\]|^panic:|^fatal error:' "$log"; then
+    matched=0
+  fi
+  rows=$((rows + 1))
+  if [ "$matched" -eq 1 ]; then
+    echo "EXPECTATION MATCH: $mut $name expected_rc=$expected actual_rc=$rc"
+  else
+    mismatches=$((mismatches + 1))
+    echo "EXPECTATION MISMATCH: $mut $name expected_rc=$expected actual_rc=$rc log=$log"
+    cat "$log"
+  fi
+  restore || { echo "RESTORE MISMATCH: $mut $name" >&2; exit 3; }
+  echo "RESTORE cmp ok: $mut $name (source, test, helper absent)"
+}
+for mut in CONTROL HEAD-positive-control HEAD-SLEEP MUT-1 MUT-1b MUT-2 MUT-3 MUT-3b MUT-4 MUT-5 MUT-6 MUT-7 MUT-8; do
+  red1=0
+  red2=0
+  diagnostic=''
+  case "$mut" in
+    HEAD-positive-control|HEAD-SLEEP|MUT-2|MUT-3b)
+      red1=1; red2=1; diagnostic='was not a live listener' ;;
+    MUT-3|MUT-7)
+      red2=1 ;;
+    MUT-4)
+      red1=1; diagnostic='listeners left after ProbeExecProfilesEach returned' ;;
+    MUT-5)
+      red1=1; diagnostic='want two distinct ports' ;;
+    MUT-6)
+      red1=1; diagnostic='was not a live listener' ;;
+    MUT-8)
+      red1=1; diagnostic='was not a live listener' ;;
+  esac
+  run_row "$mut" "$T1" "$red1" "$diagnostic"
+  run_row "$mut" "$T2" "$red2" 'newProbeListener call sites ='
+  if [ "$mut" = MUT-6 ]; then
+    run_row "$mut" "$TP" 1 'does not report'
+  fi
+done
+[ "$rows" -eq 27 ]
+echo "Mutation summary: $rows named-test rows; $mismatches mismatches; 13 scenarios"
+if [ "$mismatches" -ne 0 ]; then exit 1; fi

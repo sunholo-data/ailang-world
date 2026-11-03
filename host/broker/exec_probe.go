@@ -241,18 +241,27 @@ func ProbeExecProfilesEach(ctx context.Context, cfg ExecProbeConfig, profiles []
 		return nil, err
 	}
 	errs = make([]error, len(profiles))
+	// Every profile's arm-6 net6 listener is bound here, before any profile
+	// starts (row 242): bind(0) never returns a held port (row 230 V15), so
+	// no profile's reverse-leg pick can return a port a net6 listener takes
+	// later, whatever a profile does before its Run A. A bind failure is
+	// carried in the listener and judged by its owner's arm-6 control leg.
+	// All of them close here, after every profile's probe has returned.
+	net6 := make([]*probeListener, len(profiles))
+	defer func() {
+		for _, l := range net6 {
+			l.close()
+		}
+	}()
+	for i := range profiles {
+		net6[i] = newProbeListener()
+	}
 	var wg sync.WaitGroup
 	for i, p := range profiles {
 		wg.Add(1)
-		// Profiles probe concurrently. Every profile binds its arm-6 net6
-		// listener (in probe) before its own Run A, so no profile's reverse-leg
-		// pick can return another profile's live net6 port (bind(0) never
-		// returns a held port; row 230 V15). Moving that bind later, or adding
-		// a slow step before it, reopens the cross-profile collision (row 230
-		// §3.4, R1).
 		go func() {
 			defer wg.Done()
-			errs[i] = probeExecProfile(ctx, cfg, env, p)
+			errs[i] = probeExecProfile(ctx, cfg, env, p, net6[i])
 		}()
 	}
 	wg.Wait()
@@ -392,7 +401,7 @@ func randomHex(n int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEnv, p *ExecProfile) error {
+func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEnv, p *ExecProfile, net6 *probeListener) error {
 	tag, err := randomHex(8)
 	if err != nil {
 		return err
@@ -431,7 +440,7 @@ func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEn
 		client = cfg.Sandbox.Node
 	}
 	pp := &execProber{h: h, cwd: cwd, client: client, pickPort: cfg.reversePort}
-	pp.probe(ctx, env, worktree, sibling, id)
+	pp.probe(ctx, env, net6, worktree, sibling, id)
 	pp.probeProtected(ctx, hostGOOS())
 	if len(pp.failed) > 0 {
 		order := execProbeOrder(p)
@@ -463,7 +472,7 @@ func controlWrite(p string) error {
 	return os.Remove(p)
 }
 
-func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, sibling, id string) {
+func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeListener, worktree, sibling, id string) {
 	inside := filepath.Join(worktree, "world-exec-probe-inside")
 	outside := filepath.Join(sibling, "world-exec-probe-outside")
 	tmpClaude := filepath.Join("/tmp/claude", "world-exec-probe-"+id)
@@ -477,14 +486,10 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, si
 		outsideCtl = errors.New("a probe target already exists")
 	}
 
-	// Arm 6's live listener and its control (V37): an unsandboxed connect
-	// is accepted, so the listener is proved live before any refusal counts.
-	// It is bound here, before Run A, and held until probe returns: that
-	// ordering is what keeps a concurrent profile's reverse-leg pick off this
-	// port (row 230 §3.4, R1). Do not move the bind later or put a slow step
-	// before it.
-	net6 := newProbeListener()
-	defer net6.close()
+	// Arm 6's live listener (bound by ProbeExecProfilesEach before any
+	// profile started, row 242) and its control (V37): an unsandboxed
+	// connect is accepted, so the listener is proved live before any refusal
+	// counts.
 	netCtl := net6.control()
 
 	// Run A, with the trampoline: arms 1–4 and arm 6's raw connect.

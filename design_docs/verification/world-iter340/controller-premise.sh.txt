@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /tmp/iter340/src && go test -count=1 -run 'ExecProbe' ./host/broker/ > /tmp/iter340/premise-control.txt 2>&1; echo "control rc=$?" > /tmp/iter340/premise-control.rc
+cd /tmp/iter340/mut && go test -count=1 -run 'ExecProbe' ./host/broker/ > /tmp/iter340/premise-mutant.txt 2>&1; echo "mutant rc=$?" > /tmp/iter340/premise-mutant.rc
+echo DONE > /tmp/iter340/premise.done

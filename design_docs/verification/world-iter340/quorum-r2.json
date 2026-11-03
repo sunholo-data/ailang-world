@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-cross-profile-net6-hoist.md",
+  "iso_ts": "2026-11-03T13:51:13Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.057064000000000004,
+      "tokens_in": 13136,
+      "tokens_out": 226,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §6 R4, the optional Linux refinement (`SO_ACCEPTCONN` under `runtime.GOOS == \"linux\"`) is offered to the executor outside the byte-pinned patch (V11), creating a mild ambiguity against §7 M1's instruction to apply `designer-proto.patch.txt` byte-exact.",
+        "catch": "In §7 M1, clarify that the executor must apply `designer-proto.patch.txt` byte-exact without the optional `SO_ACCEPTCONN` change unless Linux CI fails on `loopbackListenPorts`.",
+        "proposed_fix": "In §6 R4, replace 'The executor may add it under `runtime.GOOS == \"linux\"`, but it is not part of the pinned patch.' with 'It is not part of the pinned patch; the executor must apply V11 byte-exact and only open a follow-up if Linux CI reveals a false match.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.058682399999999996,
+      "tokens_in": 12106,
+      "tokens_out": 9485,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "V14 contains a measured, unexplained behavioral difference between HEAD and the patched tree that the doc waves off with an assertion instead of a measurement: TestWorktreeSnapshotRefusesAConfiguredFilter red on the HEAD run and green on the prototype run, and R5 labels it a 'load-timed difference' with no rerun — while the mirror-image proto-only red (TestDoctorQuickIsFast) was granted a -count=3 rerun to green. A failure that exists at HEAD and disappears under the patch is, until attributed, a counterexample to the Item-line claim 'No in-process behaviour change on any failure path,' which is otherwise grounded only in V8's four injected-path equivalences, not in any full-suite signal. The asymmetry in evidentiary standard (rerun the difference that flatters the design, assert away the one that does not) is exactly the premise-verification failure this rubric exists to catch.",
+        "catch": "The unattributed V14 asymmetry (TestWorktreeSnapshotRefusesAConfiguredFilter: HEAD-red / proto-green, never rerun), compounded by the fact that the entire V14 comparison ran without the pinned AILANG_BIN and produced 79 red tests per side — so the one clean differential signal the comparison yielded was left unverified. The author must either rerun that test on pristine HEAD under logged load or explicitly downgrade the R5 sentence from 'load-timed difference' to UNMEASURED.",
+        "proposed_fix": "Add a V21 row to §10 and amend R5: on a pristine `git archive` copy of `e22e0794`, run `go test -count=3 -run '^TestWorktreeSnapshotRefusesAConfiguredFilter$' -v ./...` with load logged per the V1 convention, and on a second copy apply designer-proto.patch.txt and run the identical command. If HEAD is green 3/3, replace R5's 'Each side had one load-timed difference' with 'each side had one load-timed difference, both reproduced green on rerun (TestDoctorQuickIsFast V14 rerun; TestWorktreeSnapshotRefusesAConfiguredFilter V21)' and cite V21 from the Item line's bracket. If HEAD reds 3/3, the red predates the patch but the prototype suppressing it is a real behavior difference the doc must explain before the no-behaviour-change claim stands. Do not relabel the row as verified 'load-timed' until one of these two runs exists."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.212835,
+      "tokens_in": 11955,
+      "tokens_out": 11798,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§3.2 row 3 and §3.3 row 1 assert 'Measured' status for failure compositions that the cited evidence never constructed. V8 is described in the doc's own words as 'failure injected into every bind' — a homogeneous all-fail injection. But §3.2 row 3 claims the mixed case: profile k's listener carries err while 0..k−1 are LIVE, all closed by the single parent defer, with k's failure judged by its own arm-6 control leg while siblings proceed. That exact state — a mixed live/err listener set traversing one defer, with per-profile error identity under concurrent live siblings — appears in no verification-log row. Similarly the early-return row's evidence ('the NewExecHandler return, via a missing read_root') does not demonstrate per-profile isolation with other profiles' listeners live, and §3.3's byte-equality claim for bind failure inherits the homogeneous-only injection. Everywhere else this doc is rigorous about stamping UNMEASURED (it does so for plantExecProbe, for Linux, for MUT-4's flake); here it labels unmeasured configurations as 'Measured'. Gate 1 (premise verification) rejects asserted-as-measured claims on a fail-closed startup gate, however plausible the behavior is by inspection.",
+        "catch": "Tell the author: V8's injection failed every bind, so it cannot witness §3.2 row 3's mixed live/err composition or §3.3's per-profile error identity under live siblings. Either run the selective-injection measurement (fail exactly one profile's bind in a ≥2-profile run; separately, force exactly one profile's NewExecHandler early-return while a sibling's listener stays live through its Run A–D) asserting per-profile errs identity and listeners-left=0, or re-label those two 'Measured' cells as 'reasoned from V8 (homogeneous all-fail) and V6/MUT-4 (all-live)'. Secondary flag for the same r3 pass: the first Linux execution of T1's fd-scan detector is CI itself (R4), so a Linux false-red will land on the executor without a dry-run.",
+        "proposed_fix": "Add verification-log row V21 and amend two cells. V21: 'Mixed failure compositions under one parent defer' — extend designer-equiv_test.go.txt with (a) two profiles, scratch injection failing newProbeListener for index 1 only (index 0's listener live), run in both HEAD-shaped and proto copies: assert errs[1]'s normalized arm6-network control text byte-equal HEAD vs proto, errs[0]==nil, post-return listeners-left=0; (b) three profiles, force index 0's NewExecHandler early return (missing read_root) while indices 1–2 run to completion with live listeners: assert errs[0] is the identical plain wrapped error HEAD vs proto, errs[1]==errs[2]==nil, listeners-left=0 after wg.Wait()+defer. Expected observed values mirror V8's normalized-text comparison. Then amend §3.2 row 3's Measured cell to 'V21 (mixed injection); V8 (all-fail homogeneous)' and row 4's to 'V21(b); V8 (single early return)', and amend §3.3 row 1's evidence citation from '(V8: normalised texts byte-equal…)' to '(V8 all-fail; V21(a) mixed, byte-equal)'. If V21 cannot be run in scope, replace those two 'Measured' cells with 'reasoned from V8/V6 — UNMEASURED dynamically' to match the standard the doc already applies to plantExecProbe."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 answers kimi's five verbatim items with measurements (V9b, V15-V20); the controller's exposure measurement (+~7 ms on a ~0.6 s existing window) is re-derived; direction and pinned patch unchanged."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: V14 contains a measured, unexplained behavioral difference between HEAD and the patched tree that the doc waves off with an assertion instead of a measurement: TestWorktreeSnapshotRefusesAConfiguredFilter red on the HEAD run and green on the prototype run, and R5 labels it a 'load-timed difference' with no rerun — while the mirror-image proto-only red (TestDoctorQuickIsFast) was granted a -count=3 rerun to green. A failure that exists at HEAD and disappears under the patch is, until attributed, a counterexample to the Item-line claim 'No in-process behaviour change on any failure path,' which is otherwise grounded only in V8's four injected-path equivalences, not in any full-suite signal. The asymmetry in evidentiary standard (rerun the difference that flatters the design, assert away the one that does not) is exactly the premise-verification failure this rubric exists to catch.",
+      "oc-kimi-k3: §3.2 row 3 and §3.3 row 1 assert 'Measured' status for failure compositions that the cited evidence never constructed. V8 is described in the doc's own words as 'failure injected into every bind' — a homogeneous all-fail injection. But §3.2 row 3 claims the mixed case: profile k's listener carries err while 0..k−1 are LIVE, all closed by the single parent defer, with k's failure judged by its own arm-6 control leg while siblings proceed. That exact state — a mixed live/err listener set traversing one defer, with per-profile error identity under concurrent live siblings — appears in no verification-log row. Similarly the early-return row's evidence ('the NewExecHandler return, via a missing read_root') does not demonstrate per-profile isolation with other profiles' listeners live, and §3.3's byte-equality claim for bind failure inherits the homogeneous-only injection. Everywhere else this doc is rigorous about stamping UNMEASURED (it does so for plantExecProbe, for Linux, for MUT-4's flake); here it labels unmeasured configurations as 'Measured'. Gate 1 (premise verification) rejects asserted-as-measured claims on a fail-closed startup gate, however plausible the behavior is by inspection."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3285814,
+    "total_tokens_in": 37197,
+    "total_tokens_out": 21509
+  }
+}

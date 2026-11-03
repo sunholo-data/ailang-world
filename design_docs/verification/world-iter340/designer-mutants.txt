@@ -1,0 +1,45 @@
+# uptime: 14:03  up 2 days, 19:22, 4 users, load averages: 5.01 4.78 4.88
+CONTROL test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=0 :: 
+CONTROL test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=0 :: 
+CONTROL test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+CONTROL test=ExecProbe rc=0 :: 
+MUT-1 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=0 :: 
+MUT-1 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=0 :: 
+MUT-1 test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+MUT-1 test=ExecProbe rc=0 :: 
+MUT-1b test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=0 :: 
+MUT-1b test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=0 :: 
+MUT-1b test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+MUT-1b test=ExecProbe rc=0 :: 
+MUT-2 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 55807 was not a live listener (slow profile in flight=true; live map[55799:true 55800:true 55801:true])
+MUT-2 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=1 ::     exec_probe_net6_test.go:198: newProbeListener call sites = ["ProbeExecProfilesEach at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/exec_probe.go:257:13" "probe (not before a go sta
+MUT-2 test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+MUT-2 test=ExecProbe rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 55891 was not a live listener (slow profile in flight=true; live map[55884:true 55885:true 55886:true])
+MUT-3 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=0 :: 
+MUT-3 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=1 ::     exec_probe_net6_test.go:198: newProbeListener call sites = ["ProbeExecProfilesEach (in a func literal) (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/e
+MUT-3 test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+MUT-3 test=ExecProbe rc=1 ::     exec_probe_net6_test.go:198: newProbeListener call sites = ["ProbeExecProfilesEach (in a func literal) (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/e
+MUT-3b test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 56803 was not a live listener (slow profile in flight=true; live map[56795:true 56796:true 56797:true])
+MUT-3b test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=1 ::     exec_probe_net6_test.go:198: newProbeListener call sites = ["ProbeExecProfilesEach at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-proto/host/broker/exec_probe.go:257:13" "probeExecProfile (not befo
+MUT-3b test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+MUT-3b test=ExecProbe rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 56896 was not a live listener (slow profile in flight=true; live map[56889:true 56890:true 56891:true])
+MUT-4 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:140: listeners left after ProbeExecProfilesEach returned: [57297 57298] (net6 map[57297:true 57298:true])
+MUT-4 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=0 :: 
+MUT-4 test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=1 ::     exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|ERO
+MUT-4 test=ExecProbe rc=1 ::     exec_probe_net6_test.go:140: listeners left after ProbeExecProfilesEach returned: [57413 57414] (net6 map[57413:true 57414:true])
+MUT-5 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:115: net6 ports from the two Run A connects = map[57795:true], want two distinct ports (client log:
+MUT-5 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=0 :: 
+MUT-5 test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=0 :: 
+MUT-5 test=ExecProbe rc=1 ::     exec_probe_net6_test.go:115: net6 ports from the two Run A connects = map[57914:true], want two distinct ports (client log:
+MUT-6 test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 58356 was not a live listener (slow profile in flight=true; live map[])
+MUT-6 test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=0 :: 
+MUT-6 test=^TestExecProbePassThroughShimFailsEveryConfinementArm$ rc=1 ::     exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|ERO
+MUT-6 test=ExecProbe rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 58437 was not a live listener (slow profile in flight=true; live map[])
+HEAD test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 58856 was not a live listener (slow profile in flight=true; live map[58850:true])
+HEAD test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=1 ::     exec_probe_net6_test.go:198: newProbeListener call sites = ["probe (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-head/host/broker/exec_probe.go:486:10"], want exactly o
+HEAD test=ExecProbe-minus-Net6 (controller premise) rc=0 :: 0 FAIL lines
+HEAD-SLEEP test=^TestExecProbeNet6BoundBeforeAnyPick$ rc=1 ::     exec_probe_net6_test.go:123: pick 0: net6 port 59277 was not a live listener (slow profile in flight=true; live map[59251:true])
+HEAD-SLEEP test=^TestExecProbeNet6BindSiteIsBeforeTheFanOut$ rc=1 ::     exec_probe_net6_test.go:198: newProbeListener call sites = ["probe (not before a go statement) at /Users/voightkampff/dev/sunholo-data/.scratch-iter340-designer-head/host/broker/exec_probe.go:487:10"], want exactly o
+HEAD-SLEEP test=ExecProbe-minus-Net6 (controller premise) rc=0 :: 0 FAIL lines
+# restored both copies
+DONE

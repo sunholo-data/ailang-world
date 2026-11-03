@@ -1,0 +1,7 @@
+# reruns of two mutation cells (proto + mutant, -run '^TestExecProbePassThroughShimFailsEveryConfinementArm$', -count=1 each)
+MUT-4 TP rerun 1: ok  	github.com/sunholo-data/ailang-world/host/broker	2.058s
+MUT-4 TP rerun 2: ok  	github.com/sunholo-data/ailang-world/host/broker	2.033s
+MUT-4 TP rerun 3: ok  	github.com/sunholo-data/ailang-world/host/broker	2.118s
+MUT-6 TP rerun 1: FAIL	github.com/sunholo-data/ailang-world/host/broker	2.137s ::     exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2":
+MUT-6 TP rerun 2: FAIL	github.com/sunholo-data/ailang-world/host/broker	2.100s ::     exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2":
+MUT-6 TP rerun 3: FAIL	github.com/sunholo-data/ailang-world/host/broker	2.079s ::     exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2":

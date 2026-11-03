@@ -1,0 +1,41 @@
+# go test -count=1 -timeout 40m ./... on 758c66ad (AILANG_BIN v0.41.0), ok/FAIL lines
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	218.788s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	81.048s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	42.666s
+ok  	github.com/sunholo-data/ailang-world/host/agui	12.558s
+ok  	github.com/sunholo-data/ailang-world/host/archive	41.719s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.437s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	10.696s
+ok  	github.com/sunholo-data/ailang-world/host/broker	313.395s
+ok  	github.com/sunholo-data/ailang-world/host/canon	0.706s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	93.188s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	2.381s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.073s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	103.749s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	357.844s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	32.519s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.837s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	3.924s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.945s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	55.778s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.274s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.702s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.054s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.707s
+ok  	github.com/sunholo-data/ailang-world/host/registry	2.830s
+ok  	github.com/sunholo-data/ailang-world/host/replay	57.275s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	6.688s
+--- FAIL: TestProductionGoSurface (0.42s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/store	15.696s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.040s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	2.724s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.800s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	67.256s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	348.552s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.202s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	16.084s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	120.258s
+FAIL
+# the only red: host/store TestProductionGoSurface flagged the CONTROLLER's own leftover mutation-runner evidence dir (.plan-mutants.QzZ7Yd/*.go, attempt 1, see controller-A3-attempt1-instrument-failure.txt) inside the tree — an instrument artifact; re-run after moving it out:
+ok  	github.com/sunholo-data/ailang-world/host/store	11.225s
