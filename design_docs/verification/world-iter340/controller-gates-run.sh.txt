@@ -1,0 +1,19 @@
+#!/bin/bash
+# iter-340 controller gates on 758c66ad, outside the sandbox, SEQUENCED (no judge running)
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter340-net6-hoist
+O=/tmp/iter340/gates; mkdir -p "$O"
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+cd "$WT" || exit 2
+log() { echo "$(date +%H:%M:%S) $*" >> "$O/summary.txt"; }
+log "subject=$(git rev-parse HEAD) AILANG_BIN=$($AILANG_BIN --version | head -1) $(uptime)"
+go test -count=10 -run '^TestExecProbeNet6' -v ./host/broker/ > "$O/A1-net6x10.txt" 2>&1; log "A1 T1+T2 -count=10 rc=$? PASS=$(grep -c -- '--- PASS: TestExecProbeNet6' $O/A1-net6x10.txt) FAIL=$(grep -c -- '--- FAIL' $O/A1-net6x10.txt)"
+go test -count=1 -v ./host/broker/ > "$O/A2-broker.txt" 2>&1; log "A2 host/broker rc=$? PASS=$(grep -c -- '--- PASS' $O/A2-broker.txt) SKIP=$(grep -c -- '--- SKIP' $O/A2-broker.txt) FAIL=$(grep -c -- '--- FAIL' $O/A2-broker.txt)"
+log "A3 start $(uptime)"
+bash design_docs/verification/world-iter340/plan-mutants.sh.txt "$WT" > "$O/A3-mutants.txt" 2>&1; log "A3 mutation runner rc=$? MATCH=$(grep -c '^EXPECTATION MATCH' $O/A3-mutants.txt) MISMATCH=$(grep -c '^EXPECTATION MISMATCH' $O/A3-mutants.txt) RESTORE_OK=$(grep -c '^RESTORE cmp ok' $O/A3-mutants.txt)"
+log "A3 tree after: $(git status --porcelain | grep -v '^?? .plan-mutants' | wc -l | tr -d ' ') non-evidence changes; sha exec_probe.go $(shasum -a 256 host/broker/exec_probe.go | cut -c1-16)"
+go test -count=1 -run '^TestProductionContextRoots$' -v ./host/store/ > "$O/A4-context-roots.txt" 2>&1; log "A4 TestProductionContextRoots rc=$?"
+go build ./... > "$O/A5-build.txt" 2>&1; log "A5 go build ./... rc=$?"
+go test -count=1 -timeout 40m ./... > "$O/A5-fullsuite.txt" 2>&1; log "A5 go test ./... rc=$? ok=$(grep -c '^ok' $O/A5-fullsuite.txt) FAIL=$(grep -c '^FAIL\|--- FAIL' $O/A5-fullsuite.txt)"
+./scripts/verify_ail.sh > "$O/A6-verify-ail.txt" 2>&1; log "A6 verify_ail.sh rc=$?"
+log "end $(uptime)"
+echo DONE > "$O/done"

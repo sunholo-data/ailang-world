@@ -1,0 +1,5 @@
+# attempt 1 of the planner's mutation runner in the sprint WT: 27/27 MISMATCH in 1 s — INSTRUMENT FAILURE, not a verdict
+EXPECTATION MISMATCH: CONTROL TestExecProbeNet6BoundBeforeAnyPick expected_rc=0 actual_rc=1 log=/Users/voightkampff/dev/sunholo-data/.wt-world-iter340-net6-hoist/.plan-mutants.QzZ7Yd/CONTROL.TestExecProbeNet6BoundBeforeAnyPick.log
+go: go.mod requires go >= 1.26.6 (running go 1.26.4; GOTOOLCHAIN=local)
+RESTORE cmp ok: CONTROL TestExecProbeNet6BoundBeforeAnyPick (source, test, helper absent)
+# cause: the runner exports GOTOOLCHAIN=local; PATH go is 1.26.4 while go.mod requires >= 1.26.6. Fix (no script edit): attempt 2 (A3b) runs in its own detached worktree .mut-wt-iter340 with the go1.26.6 toolchain first on PATH. Side effect: attempt 1 left its evidence dir (.go copies) in the sprint WT, which reddened host/store TestProductionGoSurface in A5.

@@ -1,0 +1,15 @@
+#!/bin/bash
+# iter-340 controller gates round 2 (sequenced): host/store re-run in the sprint WT (after removing the
+# runner's own leftover .plan-mutants dir), then the planner's mutation runner in its OWN detached
+# worktree at 758c66ad, with go1.26.6 first on PATH (the runner pins GOTOOLCHAIN=local).
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter340-net6-hoist
+MW=/Users/voightkampff/dev/sunholo-data/.mut-wt-iter340
+O=/tmp/iter340/gates; export AILANG_BIN=$HOME/.pinned-ailang/ailang
+log() { echo "$(date +%H:%M:%S) $*" >> "$O/summary.txt"; }
+cd "$WT" && go test -count=1 ./host/store/ > "$O/A5b-store.txt" 2>&1; log "A5b host/store re-run (leftover removed) rc=$? $(tail -1 $O/A5b-store.txt)"
+export PATH=/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/bin:$PATH
+log "A3b start go=$(go version) subject=$(git -C $MW rev-parse HEAD) $(uptime)"
+bash "$MW/design_docs/verification/world-iter340/plan-mutants.sh.txt" "$MW" > "$O/A3b-mutants.txt" 2>&1; log "A3b mutation runner rc=$? MATCH=$(grep -c '^EXPECTATION MATCH' $O/A3b-mutants.txt) MISMATCH=$(grep -c '^EXPECTATION MISMATCH' $O/A3b-mutants.txt) RESTORE_OK=$(grep -c '^RESTORE cmp ok' $O/A3b-mutants.txt) summary=[$(grep 'Mutation summary' $O/A3b-mutants.txt)]"
+log "A3b mut-wt after: $(git -C $MW status --porcelain | grep -v '^?? .plan-mutants' | wc -l | tr -d ' ') non-evidence changes"
+log "end2 $(uptime)"
+echo DONE > "$O/done2"

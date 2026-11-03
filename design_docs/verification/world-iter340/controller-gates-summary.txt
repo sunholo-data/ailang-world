@@ -1,0 +1,16 @@
+15:08:56 subject=758c66ad0e6160ee4f4d24669434c93d0103885d AILANG_BIN=AILANG v0.41.0 15:08  up 2 days, 20:28, 4 users, load averages: 2.97 4.14 4.52
+15:09:25 A1 T1+T2 -count=10 rc=0 PASS=20 FAIL=0
+15:12:44 A2 host/broker rc=0 PASS=1096 SKIP=39 FAIL=0
+15:12:44 A3 start 15:12  up 2 days, 20:31, 4 users, load averages: 4.96 4.36 4.50
+15:12:45 A3 mutation runner rc=1 MATCH=0 MISMATCH=27 RESTORE_OK=28
+15:12:45 A3 tree after: 0 non-evidence changes; sha exec_probe.go 19de369381579387
+15:12:47 A4 TestProductionContextRoots rc=0
+15:12:48 A5 go build ./... rc=0
+15:18:59 A5 go test ./... rc=1 ok=34 FAIL=4
+15:19:41 A6 verify_ail.sh rc=0
+15:19:41 end 15:19  up 2 days, 20:38, 4 users, load averages: 11.97 9.64 7.26
+15:20:19 A5b host/store re-run (leftover removed) rc=0 ok  	github.com/sunholo-data/ailang-world/host/store	11.225s
+15:20:19 A3b start go=go version go1.26.6 darwin/arm64 subject=758c66ad0e6160ee4f4d24669434c93d0103885d 15:20  up 2 days, 20:39, 4 users, load averages: 8.98 9.16 7.18
+15:22:12 A3b mutation runner rc=0 MATCH=27 MISMATCH=0 RESTORE_OK=28 summary=[Mutation summary: 27 named-test rows; 0 mismatches; 13 scenarios]
+15:22:12 A3b mut-wt after: 0 non-evidence changes
+15:22:12 end2 15:22  up 2 days, 20:41, 4 users, load averages: 4.58 7.62 6.83
