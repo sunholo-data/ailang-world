@@ -1,0 +1,49 @@
+MISSION-ROLE: planner
+
+You are the SPRINT PLANNER for Ailang World mission iteration 340, running unattended under a codex workspace-write sandbox. Your working directory is a detached planner worktree of the sprint branch at commit 45bbc95a. You produce a sprint plan. You do NOT implement it.
+
+GIT: run NO git write operations at all (no add, commit, stash, checkout, reset, or worktree changes). The controller commits. Read-only git (log, show, diff, status) is fine.
+
+READ FIRST
+- CLAUDE.md and design_docs/coding-standards.md.
+- The approved design: design_docs/planned/w-exec-probe-cross-profile-net6-hoist.md (r3). Read all of it, especially §3 (the change), §4 (the proof and the mutation property), §5 (test plan and mutation table), §7 (M1), §10 (Verification Log) and §11 (quorum log).
+- The byte-exact prototype patch: design_docs/verification/world-iter340/designer-proto.patch.txt. It modifies host/broker/exec_probe.go and adds host/broker/exec_probe_net6_test.go. The quorum approved this patch as-is: per §6 R4 (gemini's verbatim text), the executor must apply it byte-exact.
+- The mutation tooling the designer used: design_docs/verification/world-iter340/designer-run-mutants.sh.txt and designer-mutate.py.txt.
+- Code at HEAD: host/broker/exec_probe.go, host/broker/exec_probe_test.go, .github/workflows/ci.yml around line 247 (the verbose real-srt `tests=` list).
+- The previous iteration's plan as a shape reference: design_docs/planned/w-exec-probe-reverse-leg-pins-sprint-plan.md, and git show e4e3990c --stat to see how iteration 339 banked plan-M1.diff.txt and plan-mutants.sh.txt.
+
+DELIVERABLES (write each into this worktree at exactly these paths)
+1. design_docs/planned/w-exec-probe-cross-profile-net6-hoist-sprint-plan.md
+   A single milestone, M1, with:
+   - the exact file list;
+   - pre-change and post-change sha256 for every touched file (exec_probe.go pre must be 96f33172667d27de…);
+   - the acceptance gates as runnable commands;
+   - a mutation table mirroring design §5, plus any mutant you think the design missed, each marked expected red/green per named test;
+   - the residuals carried from design §6;
+   - an explicit list of what M1 must NOT touch.
+2. design_docs/planned/sprint_w-exec-probe-cross-profile-net6-hoist.json
+   Valid JSON with fields: sprint_id, design_doc, base_commit (45bbc95a…, full SHA from git rev-parse), milestones[] each with {id, title, files[], acceptance[], status:"planned"}.
+3. design_docs/verification/world-iter340/plan-M1.diff.txt
+   ONE unified diff, `git apply`-able at the repo root of the base commit. It must contain:
+   - the designer's patch byte-exact;
+   - one more hunk in .github/workflows/ci.yml adding TestExecProbeNet6BoundBeforeAnyPick and TestExecProbeNet6BindSiteIsBeforeTheFanOut to the verbose `tests=` list at ~:247, matching the list's existing format exactly.
+   Prove it applies: `git apply --check` on a scratch copy. Make the scratch copy with `git archive HEAD | tar -x -C <dir>`, where <dir> is a subdirectory of THIS worktree named .plan-scratch/ (delete it when done; never /tmp). Then record the post-apply sha256 of each touched file in the plan.
+4. design_docs/verification/world-iter340/plan-mutants.sh.txt
+   A bash-3.2-compatible mutation runner the CONTROLLER will execute OUTSIDE the sandbox on the applied tree. For each row it must:
+   - apply one mutation (sed/perl or python3 -I);
+   - run the named test(s) alone with -count=1;
+   - compare the result with the expected rc;
+   - print `EXPECTATION MATCH` or `EXPECTATION MISMATCH` with the subject (mutant id + test) in the line;
+   - restore the file and verify the restore with cmp against a saved pristine copy.
+   Rows: at least the design's HEAD-positive-control, MUT-1, MUT-1b, MUT-2, MUT-3, MUT-3b, MUT-4, MUT-5, MUT-6, MUT-7, plus an unmutated CONTROL row. Keep the pass-through test (TestExecProbePassThroughShimFailsEveryConfinementArm) OUT of the expected-red sets except where the design measured 3/3 (MUT-6). It has a known pre-existing cross-process flake (design R2) at about 5% on this rig, so give it no MISMATCH-on-red rows elsewhere. Use `go test -count=1 -run '^<name>$' ./host/broker/`. The script must take the tree root as $1, never assume CWD, and write nothing outside that root.
+
+SANDBOX RULES
+- Loopback socket binds are denied inside your sandbox, so every host/broker test that opens a listener is UNINFORMATIVE UNDER SANDBOX. Label any such result exactly that way, never as pass or fail. Do NOT run the package suite or the mutation runner; the controller runs both outside the sandbox. You MAY run gofmt, go vet ./host/broker/ and go build ./... on the scratch copy. Report their rc, and if any is red at base, report it as a finding rather than working around it.
+- Write nothing outside this worktree except Go's build caches.
+
+FINAL MESSAGE (short):
+- the four paths and their line counts;
+- the plan-M1.diff.txt sha256;
+- post-apply sha256 per file;
+- the mutation row count;
+- anything in the design you believe is wrong or under-specified (a finding, not a fix).
