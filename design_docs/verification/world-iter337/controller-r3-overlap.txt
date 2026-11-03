@@ -1,0 +1,22 @@
+funcs in workbench_still_test.go: 1
+control funcs in demo_proof_test.go: 33
+--- live tag literal occurrences (*.go):
+cmd/ailang-worldd/main_test.go:216:		if !explicit && strings.Count(body.String(), `<script src="/workbench/live.js" defer></script>`) != 1 {
+host/daemon/workbench_live_test.go:295:	if strings.Count(body, "<script") != 1 || !strings.Contains(body, `<script src="/workbench/live.js" 
+host/daemon/workbench_live_test.go:304:	if !strings.Contains(workbenchLiveBody(t, d, "/workbench"), `<script src="/workbench/live.js" defer>
+host/daemon/workbench_still_test.go:82:		if want := strings.Replace(defaults[i].Body.String(), `<script src="/workbench/live.js" defer></scr
+host/workbench/render.go:203:{{if .Still}}{{else}}<script src="/workbench/live.js" defer></script>{{end}}
+host/workbench/render_test.go:674:		} else if got := strings.Count(body.String(), `<script src="/workbench/live.js" defer></script>`); got !
+--- helpers used by AllRegions defined where:
+newHandlerDaemon: host/daemon/handlers_test.go
+requestRecorder: host/daemon/handlers_test.go
+workbenchLiveBody: host/daemon/workbench_live_test.go
+workbenchNamedSection: host/daemon/workbench_graph_test.go
+packetSection: host/daemon/workbench_packet_test.go
+--- non-test shared test-helper packages:
+host/proctest/proctest.go
+host/ptytest/pty_darwin.go
+host/ptytest/pty_linux.go
+host/ptytest/ptytest.go
+--- importers of proctest:
+       5

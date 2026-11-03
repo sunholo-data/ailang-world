@@ -1,6 +1,6 @@
 # w-marketing-still-probe-commit: make P0 item (1) a committed, asserting test on the capture store
 
-Status: Planned (iteration 337), **r2**: the one designer revision after design quorum r1 was BLOCKED
+Status: Planned (iteration 337), **r3**: a controller narrow-refinement carve-out after design quorum r2 (§7). r2 was the one designer revision after design quorum r1 was BLOCKED
 (`mission-quorum-world/w-marketing-still-probe-commit-2026-11-03T00-14-32Z.json`: gpt6-1-sol and
 oc-glm-5-3 REJECT, gemini-4-argon PASS, no absentees, no direction dispute). The fixes are in §6.
 **Planner-Lane:** mission routing default
@@ -170,6 +170,35 @@ Production mutants edit `host/workbench/render.go` (`:203`, the `{{if .Still}}` 
 | MT5 + MS5 | A0 disabled | **PASS**, so A0 is MS5's sole killer |
 | MI1 (Chrome) | delete the §2.2 call from the drill | the M2 pass-rule count `STILL … = 4` gives **0**, so item (1) fails. Derived, not run |
 
+### 2.6 Overlap with the existing still tests: a second caller, not a shared checker (r3)
+
+Added by the controller under the narrow-refinement carve-out, answering gpt6-1-sol's quorum-r2
+objection with its own proposed fix (§7). Measured in `controller-r3-overlap.txt` (V22).
+
+| Existing test | Package | What it shares with A0–A4 | Why `cmd/ailang-worldd` cannot call it |
+|---|---|---|---|
+| `TestWorkbenchStillAllRegions` (`host/daemon/workbench_still_test.go`) | `daemon` (internal test) | A1 (repeat equality after a 2 s sleep, `:95–107`), A2 (zero `<script`, `:52`), A3 (default minus the tag, `:82`) | The file declares **1** function, the test itself (control: `demo_proof_test.go` declares 33), so its assertions are inline, not a helper. It reaches the daemon through unexported package-`daemon` helpers (`newHandlerDaemon`, `requestRecorder` in `handlers_test.go`; `workbenchLiveBody`, `workbenchNamedSection`, `packetSection` in three other `_test.go` files), flips `d.cfg.WorkbenchStill` on one daemon and reads `d.store`. Go does not export `_test.go` code across packages. |
+| `TestWorkbenchStillDefaultLiveScript` (`host/workbench/render_test.go:655`) | `workbench` | A0, A2 on `Render` alone; no store, no HTTP | A test body in another package. |
+| `TestServeWorkbenchStillFlag` (`cmd/ailang-worldd/main_test.go:193`) | `main` | A0, A2 on `Render` with the parsed flag | Same package, but it renders an empty `Page`, not a served store; there is no helper to share. |
+
+**Decision: keep `checkMarketingStill` as a separate implementation.** Sharing would mean a new
+non-test helper package (the repo has the pattern: `host/proctest`, `host/ptytest`) holding the three
+byte comparisons (A1–A3, about 10 lines), plus rewriting `TestWorkbenchStillAllRegions` to call it.
+That widens this row from two `cmd/ailang-worldd` test files to `host/`, edits a CI-guarding test,
+and changes that test's failure semantics: it stops at the first failure with a byte-offset diff
+(`t.Fatalf`, `:103`), while this row requires one `t.Errorf` per route and assertion so the P0 record
+names every failing route. Ten shared lines do not pay for that.
+
+**What must stay synchronized**, and what catches drift:
+- **The live.js tag.** The literal appears at `render.go:203` and at 5 test sites (V22); the new file
+  adds a sixth as `marketingStillLiveTag`. If `render.go`'s tag changes, the new test's A0 control
+  fails (it requires the tag exactly once in the default page), and so does `workbench_still_test.go:82`.
+  MS5 (§2.5) shows A0 is the sole killer of a vacuous strip in the new test.
+- **The zero-`<script` predicate** (A2 here, `:52` there) and **the 2 s spacing** (§2.3 here,
+  `:95–98` there).
+- M1 adds a header comment to `marketing_still_test.go` naming these three invariants and the sibling
+  sites `host/workbench/render.go:203` and `host/daemon/workbench_still_test.go:52,82,95`.
+
 ## 3. Milestones
 
 Every command runs under a copy of `world-iter336/run_bounded.sh.txt` (process-group kill, rc 124
@@ -267,3 +296,19 @@ Acceptance (run all of these; pipe nothing):
 | 2c | oc-glm-5-3: the probe's log-only behaviour and own store rest on judge NB4 | Replaced by direct observation: `:241` is the only `t.Errorf`; `:219`/`:249` are `t.Logf`; the store comes from `:65` TempDir and the `:139` seed | §1, V20 |
 | 2d | oc-glm-5-3: V13 says 14 runs but enumerates 13 | All 14 are numbered, with which ones were void and why | V13 |
 | 3 | gemini-4-argon (PASS): the helper lives only in the sidecar; daemon teardown before capture is not required | §2.4 inlines the four signatures and **requires** per-mode `defer` closure of both daemons and both `httptest` servers before return (prototype `:56`/`:64`/`:70`). It is measured by V21 (a separate `serve` reopened `rig.db`) and V12 | §2.4 |
+
+## 7. Quorum r2 dispositions (r3, controller narrow-refinement carve-out)
+
+Quorum r2 (`quorum-r2.json`; artifact `w-marketing-still-probe-commit-2026-11-03T00-23-09Z.json`):
+gemini-4-argon PASS, oc-glm-5-3 PASS (its r1 objections closed), gpt6-1-sol REJECT, no absentees. The
+one remaining objection carries a concrete reviewer-authored fix and does not dispute the design
+direction (it accepts a separate implementation if justified), so the controller applied that fix and
+routes to the planner without a third quorum round.
+
+| Reviewer: objection | Change | Where |
+|---|---|---|
+| gpt6-1-sol (REJECT): the conflict surface does not justify re-implementing assertions that `TestWorkbenchStillAllRegions` and two other tests already make. Proposed fix: a verified machinery-overlap subsection mapping A0–A4; reuse a shared checker or justify separate code; name what must stay synchronized | §2.6: per-test sharing table; the measured reason none is callable from `package main`; the extraction cost; the decision to keep a separate implementation; the three synchronized invariants with their drift guards; an M1 header-comment requirement | §2.6, V22 |
+
+| V | Command | Observed |
+|---|---|---|
+| V22 | `grep -c "^func "` on `workbench_still_test.go` (control `demo_proof_test.go`); `git grep -n -F` the live.js tag over `*.go`; `git grep -l "^func <helper>("` for the five helpers; non-test helper packages (`controller-r3-overlap.txt`) | `1` (control `33`); tag at `render.go:203` + 5 test sites (`main_test.go:216`, `workbench_live_test.go:295,304`, `workbench_still_test.go:82`, `render_test.go:674`); helpers in `handlers_test.go` ×2, `workbench_live_test.go`, `workbench_graph_test.go`, `workbench_packet_test.go`; packages `host/proctest`, `host/ptytest` |
