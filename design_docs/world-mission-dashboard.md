@@ -1,16 +1,14 @@
-# World mission dashboard — iteration 340 (2026-11-03)
+# World mission dashboard — iteration 341 (2026-11-03)
 
-- **This fire:** row 242 LANDED (PR #469, merge `1af4fe90`, merge CI 3/3). It is the seventh and last row under **D-WORLD-106 = A** (Mark, attended 2026-11-02). `ProbeExecProfilesEach` now binds every profile's arm-6 `net6` listener before the goroutine fan-out and closes them all after `wg.Wait()`, so cross-profile port exclusion holds by construction. In-process error text is unchanged. New tests: T1 (behavioural) and T2 (source pin).
-- **Review:**
-  - Design quorum: r1 and r2 BLOCKED, then r3 by the controller's carve-out, applying the reviewers' verbatim fixes.
-  - Judge: sonnet PASS 93, zero blocking.
-- **Found:** the Sunholo start page (`serve.py`) dials every 127.0.0.1 listener about every 32 s. That can make the fail-closed exec startup probe refuse on this rig (estimated 2–6% per profile per probe). Filed as **row 250**.
-- **Dev:** green at `1af4fe90` (3/3 on attempt 1). T1 passed on linux in the real-srt verbose step (3.87 s), the first Linux reading of its descriptor scan.
+- **This fire:** no pick. This is a rule-(d) block report (the 13th overall, and the first since D-WORLD-106's scope ran out at iteration 340). Nothing moved since iteration 340 but its own work, and nothing is loop-routable.
+- **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
+- **Dev:** green at `41298533` (3/3). The last five dev CI runs were all success.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
-- **Loop's next row:** none. D-WORLD-106's scope is used up, so rule-(d) block reports resume unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
+- **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
+- **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
   - **D-WORLD-108:** may the loop take rows 250, then 244 → 249?
     - **A (recommended):** yes, in queue order.
@@ -23,8 +21,7 @@
 - **Attended actions:** schedule row 150's A1. The 219 → 217 → 218 track unblocks row 151.
 - **Roles this fire:**
   - controller: opus;
-  - designer: Agent opus (r1 plus one revision);
-  - planner and executor: codex `gpt-6.1-sol` (recipe);
+  - designer, planner and executor: not spawned (no pick);
   - independent judge: Agent sonnet.
-- **Cost:** $0.5617 metered (two design-quorum rounds).
-- **Record and evidence:** world-mission-log.md entry 340; design_docs/verification/world-iter340/.
+- **Cost:** $0 metered.
+- **Record and evidence:** world-mission-log.md entry 341; verification/world-iter341/gate1-2-readings.txt.
