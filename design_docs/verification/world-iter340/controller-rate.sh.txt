@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /tmp/iter340/src
+for k in 1 2 3; do go test -count=1 -run 'ExecProbe' ./host/broker/ > /tmp/iter340/rate-subset-$k.txt 2>&1; echo "subset$k rc=$?" >> /tmp/iter340/rate.rc; done
+go test -count=40 -run '^TestExecProbePassThroughShimFailsEveryConfinementArm$' ./host/broker/ > /tmp/iter340/rate-single40.txt 2>&1; echo "single40 rc=$?" >> /tmp/iter340/rate.rc
+echo DONE > /tmp/iter340/rate.done

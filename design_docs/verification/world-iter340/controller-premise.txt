@@ -1,0 +1,46 @@
+# iter-340 controller premise (git archive of e22e0794 at /tmp/iter340/src; mutant copy /tmp/iter340/mut)
+# mutant: time.Sleep(2 * time.Second) inserted immediately before 'net6 := newProbeListener()' in probe() (exec_probe.go:486)
+--- /tmp/iter340/src/host/broker/exec_probe.go	2026-11-03 13:33:12
++++ /tmp/iter340/mut/host/broker/exec_probe.go	2026-11-03 13:51:19
+@@ -483,6 +483,7 @@
+ 	// ordering is what keeps a concurrent profile's reverse-leg pick off this
+ 	// port (row 230 §3.4, R1). Do not move the bind later or put a slow step
+ 	// before it.
++	time.Sleep(2 * time.Second) // MUTANT iter340: slow pre-bind step
+ 	net6 := newProbeListener()
+ 	defer net6.close()
+ 	netCtl := net6.control()
+
+# command: go test -count=1 -run 'ExecProbe' ./host/broker/
+control rc=1
+mutant rc=0
+# control red detail:
+--- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm (2.10s)
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 52.611625ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecProbePassThroughShimFailsEveryConfinementArm4114131408/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-7455368b8151c33d: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 4 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:50172
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3":
+        a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 4 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:50172
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	24.610s
+
+# rate re-measure (same copy):
+subset1 rc=0
+subset2 rc=0
+subset3 rc=0
+single40 rc=1
+rate-single40.txt: FAIL lines=1
+rate-subset-1.txt: FAIL lines=0
+rate-subset-2.txt: FAIL lines=0
+rate-subset-3.txt: FAIL lines=0
+# single40 failing detail:
+--- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm (1.84s)
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 44.366125ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecProbePassThroughShimFailsEveryConfinementArm1040180334/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-60a995ae2c9dc0ea: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 4 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:52839
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3":
+        a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED", accepts 2 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED", accepts 4 (want a refusal and still 1; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:52839
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	73.839s
+
+# t.Parallel count in host/broker tests: 0 (grep -c over host/broker/*_test.go, all :0)
+# concurrent processes at measurement time:
+79864    02:45:46 /Users/voightkampff/.ailang-world/bin/ailang-worldd serve --db /Users/voightkampff/.ailang/world/world
