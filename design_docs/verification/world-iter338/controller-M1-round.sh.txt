@@ -1,0 +1,45 @@
+#!/bin/bash
+C=/Users/voightkampff/dev/sunholo-data/.scratch-iter338-ctlmut; cd $C || exit 2
+L=/tmp/w338_ctl_round_7cdef714.log; rm -f $L /tmp/w338_ctl_round_7cdef714.done
+export AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang
+P=scripts/marketingcheck
+run() { # id file line old new
+  id=$1; f=$P/$2; ln=$3; old=$4; new=$5
+  cp $f /tmp/w338_bak; 
+  if [ "$id" != control ]; then perl -i -pe "if (\$.==$ln) { \$c = s/\Q$old\E/$new/; die \"NOAPPLY\" unless \$c }" $f || { echo "$id NOAPPLY" >> $L; cp /tmp/w338_bak $f; return; }; fi
+  out=$(perl -e 'alarm 600; exec @ARGV' go test -count=1 ./scripts/marketingcheck/ 2>&1); rc=$?
+  fails=$(echo "$out" | grep -E -- '--- FAIL' | sed -E 's/.*--- FAIL: ([^ ]+).*/\1/' | sort | tr '\n' ' ')
+  echo "$id rc=$rc FAILS: $fails" >> $L
+  cp /tmp/w338_bak $f; cmp -s /tmp/w338_bak $f || echo "$id RESTORE-FAIL" >> $L
+}
+echo "round for 7cdef714+M1 start $(date -u +%T)" >> $L
+run control x 0 x x
+run T1 position.go 150 'posAbs(c.X-b.X) <= 2' 'posAbs(c.X-b.X) <= 200'
+run T2 position.go 150 'posAbs(c.Y-b.Y) <= 2' 'posAbs(c.Y-b.Y) <= 200'
+run T3 position.go 150 'posAbs(c.X+c.W-b.X-b.W) <= 2' 'posAbs(c.X+c.W-b.X-b.W) <= 200'
+run T4 position.go 150 'posAbs(c.Y+c.H-b.Y-b.H) <= 2' 'posAbs(c.Y+c.H-b.Y-b.H) <= 200'
+run T5 position.go 150 'posAbs(c.X-b.X) <= 2' 'posAbs(c.X-b.X) <= 1'
+run T6 position.go 150 'posAbs(c.Y-b.Y) <= 2' 'posAbs(c.Y-b.Y) <= 1'
+run T7 position.go 150 'posAbs(c.X+c.W-b.X-b.W) <= 2' 'posAbs(c.X+c.W-b.X-b.W) <= 1'
+run T8 position.go 150 'posAbs(c.Y+c.H-b.Y-b.H) <= 2' 'posAbs(c.Y+c.H-b.Y-b.H) <= 1'
+run T9 position.go 101 'posAbs(dh) > 2' 'posAbs(dh) > 3'
+run T10 position.go 101 'posAbs(dh) > 2' 'posAbs(dh) > 1'
+run T11 position.go 129 'posAbs(e) <= 2' 'posAbs(e) <= 3'
+run T12 position.go 129 'posAbs(e) <= 2' 'posAbs(e) <= 1'
+run T13 phone.go 168 'phoneR1Entry, 4)' 'phoneR1Entry, 40)'
+run T14 phone.go 168 'phoneR1Entry, 4)' 'phoneR1Entry, 3)'
+run T15 main.go 51 'case "position":' 'case "position-unrouted":'
+run T16 main.go 53 'case "phone":' 'case "phone-unrouted":'
+run T17 main.go 52 'runPosition(args[1:]' 'runPhone(args[1:]'
+run T17b main.go 54 'runPhone(args[1:]' 'runPosition(args[1:]'
+run T18 position.go 129 'gc >= 0 && posAbs(e) <= 2' 'posAbs(e) <= 2'
+run C position.go 150 'posAbs(c.Y-b.Y) <= 2' 'posAbs(c.Y-b.Y) <= -1'
+echo "round end $(date -u +%T)" >> $L
+cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240 || exit 3; echo "final gates cwd=$(pwd)" >> $L
+o=$(perl -e 'alarm 600; exec @ARGV' go test -count=1 -v -run '^TestMarketing(PositionTolerancePins|PhoneEntryTolerancePins|RunRoutesPositionPhone)$' ./scripts/marketingcheck/ 2>&1); echo "ACC1 rc=$? PASS=$(echo "$o" | grep -c -- '--- PASS') FAIL=$(echo "$o" | grep -c -- '--- FAIL') SKIP=$(echo "$o" | grep -c -- '--- SKIP')" >> $L
+o=$(gofmt -l scripts/marketingcheck); echo "GOFMT [$o]" >> $L
+go vet ./scripts/marketingcheck/ >/dev/null 2>&1; echo "VET rc=$?" >> $L
+perl -e 'alarm 600; exec @ARGV' go build ./... >/tmp/w338_build.txt 2>&1; echo "BUILD rc=$?" >> $L
+perl -e 'alarm 2400; exec @ARGV' go test ./... >/tmp/w338_fulltest_7cdef714.txt 2>&1; echo "GOTEST rc=$? ok=$(grep -c '^ok' /tmp/w338_fulltest_7cdef714.txt) FAIL=$(grep -c '^FAIL\|^--- FAIL' /tmp/w338_fulltest_7cdef714.txt)" >> $L
+perl -e 'alarm 1200; exec @ARGV' ./scripts/verify_ail.sh >/tmp/w338_verifyail_7cdef714.txt 2>&1; echo "VERIFY_AIL rc=$?" >> $L
+echo "ALL DONE for 7cdef714+M1 $(date -u +%T)" >> $L; echo done > /tmp/w338_ctl_round_7cdef714.done
