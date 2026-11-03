@@ -1,0 +1,18 @@
+#!/bin/bash
+# Controller out-of-sandbox gate round, iteration 339, row 241 M1. Subject = HEAD of the sprint worktree.
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter339-row241
+G=/tmp/world-iter339/gates
+cd "$WT" || exit 2
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+SUBJ=$(git rev-parse HEAD)
+echo "subject=$SUBJ start=$(date -u +%FT%TZ)" > $G/summary.txt
+step() { name=$1; shift; echo "== $name $(date -u +%T) $(uptime | sed 's/.*load/load/')" >> $G/summary.txt; "$@" > $G/$name.log 2>&1; rc=$?; echo "$name rc=$rc for $SUBJ $(date -u +%T)" >> $G/summary.txt; return 0; }
+step A2-package perl -e 'alarm 2100; exec @ARGV' go test -timeout 30m -count=1 -v ./host/broker/
+step A3-mutation /bin/bash "$WT/design_docs/verification/world-iter339/plan-mutants.sh.txt" "$WT" "$G/mutants"
+step A4-heavy /bin/bash $G/heavy-load.sh $G/heavy-load-gotest.log
+step A6-build go build ./...
+step A6-fullsuite perl -e 'alarm 2700; exec @ARGV' go test -timeout 40m ./...
+step A6-verify-ail perl -e 'alarm 1200; exec @ARGV' ./scripts/verify_ail.sh
+git status --porcelain > $G/status-after.txt
+echo "ALL DONE for $SUBJ $(date -u +%FT%TZ)" >> $G/summary.txt

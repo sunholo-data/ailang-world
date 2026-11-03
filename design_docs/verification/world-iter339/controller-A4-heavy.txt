@@ -1,0 +1,6 @@
+12:11  up 2 days, 17:30, 4 users, load averages: 11.92 19.71 25.69
+yes-alive-before=160
+heavy-load rc=0
+yes-alive-after=0
+12:14  up 2 days, 17:33, 4 users, load averages: 170.44 91.42 54.71
+CADENCE samples=100 minimum-dials=19 (gate 6) smallest-fastest=50.022917000 ms (execProbePollEvery floor 50 ms)
