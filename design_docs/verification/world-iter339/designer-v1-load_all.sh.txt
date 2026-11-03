@@ -1,0 +1,8 @@
+#!/bin/bash
+D=/tmp/world-iter339/designer
+R='^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$'
+/bin/bash $D/scripts/run_load.sh load32 32 0 300 $D/proto "$R" $D/out/load-32.txt
+/bin/bash $D/scripts/run_load.sh race-idle 0 1 300 $D/proto "$R" $D/out/load-race-idle.txt
+/bin/bash $D/scripts/run_load.sh race-load32 32 1 300 $D/proto "$R" $D/out/load-race-32.txt
+/bin/bash $D/scripts/run_load.sh load64 64 0 200 $D/proto "$R" $D/out/load-64.txt
+echo ALLDONE > $D/out/load-all.done

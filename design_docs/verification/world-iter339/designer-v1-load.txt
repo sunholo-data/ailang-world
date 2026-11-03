@@ -1,0 +1,54 @@
+== idle nyes=0 race=0 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:05  up 2 days, 14:24, 4 users, load averages: 2.85 3.21 3.31
+end:    9:07  up 2 days, 14:26, 4 users, load averages: 3.99 3.28 3.31
+rc=0 wall=127s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 gaps(min)=8 fastest: min=50.038ms median=50.373ms p99=51.881ms max=52.013ms  slowest gap max=107.336ms
+  floor margin (min fastest - 50ms) = 0.038ms ; ceiling margin (100ms - max fastest) = 47.987ms
+yes-alive-after=0
+
+== load32 nyes=32 race=0 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:07  up 2 days, 14:26, 4 users, load averages: 5.52 3.63 3.43
+end:    9:09  up 2 days, 14:29, 4 users, load averages: 35.77 16.08 8.43
+rc=0 wall=127s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 gaps(min)=8 fastest: min=50.033ms median=50.370ms p99=52.032ms max=52.038ms  slowest gap max=124.658ms
+  floor margin (min fastest - 50ms) = 0.033ms ; ceiling margin (100ms - max fastest) = 47.962ms
+yes-alive-after=0
+
+== race-idle nyes=0 race=1 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:10  up 2 days, 14:29, 4 users, load averages: 33.55 15.94 8.43
+end:    9:12  up 2 days, 14:31, 4 users, load averages: 7.32 11.64 7.75
+rc=0 wall=131s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 gaps(min)=8 fastest: min=50.052ms median=50.340ms p99=51.430ms max=51.618ms  slowest gap max=85.048ms
+  floor margin (min fastest - 50ms) = 0.052ms ; ceiling margin (100ms - max fastest) = 48.382ms
+yes-alive-after=0
+
+== race-load32 nyes=32 race=1 count=300 tree=/tmp/world-iter339/designer/proto
+start:  9:12  up 2 days, 14:31, 4 users, load averages: 6.81 11.46 7.71
+end:    9:14  up 2 days, 14:33, 4 users, load averages: 41.62 23.52 13.07
+rc=0 wall=128s
+PASS lines: 600  FAIL lines: 0
+CADENCE runs=300 gaps(min)=8 fastest: min=50.043ms median=50.322ms p99=51.830ms max=52.039ms  slowest gap max=154.468ms
+  floor margin (min fastest - 50ms) = 0.043ms ; ceiling margin (100ms - max fastest) = 47.961ms
+yes-alive-after=0
+
+== load64 nyes=64 race=0 count=200 tree=/tmp/world-iter339/designer/proto
+start:  9:14  up 2 days, 14:33, 4 users, load averages: 44.21 24.35 13.42
+end:    9:16  up 2 days, 14:35, 4 users, load averages: 76.05 39.46 20.24
+rc=0 wall=88s
+PASS lines: 400  FAIL lines: 0
+CADENCE runs=200 gaps(min)=8 fastest: min=50.032ms median=50.429ms p99=52.032ms max=52.037ms  slowest gap max=167.202ms
+  floor margin (min fastest - 50ms) = 0.032ms ; ceiling margin (100ms - max fastest) = 47.963ms
+yes-alive-after=0
+
+== race-load64-gomaxprocs2 nyes=64 race=1 count=200 tree=/tmp/world-iter339/designer/proto
+start:  9:16  up 2 days, 14:35, 4 users, load averages: 58.99 38.03 20.18
+end:    9:17  up 2 days, 14:36, 4 users, load averages: 77.17 49.15 26.23
+rc=0 wall=90s
+PASS lines: 400  FAIL lines: 0
+CADENCE runs=200 gaps(min)=8 fastest: min=50.047ms median=50.488ms p99=52.056ms max=52.080ms  slowest gap max=389.613ms
+  floor margin (min fastest - 50ms) = 0.047ms ; ceiling margin (100ms - max fastest) = 47.920ms
+yes-alive-after=0
+

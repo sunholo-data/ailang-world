@@ -1,0 +1,348 @@
+== ambient-race-gmp2-plus32yes nyes=32 race=1 count=200 tree=/tmp/world-iter339/designer/proto
+start:  9:28  up 2 days, 14:47, 4 users, load averages: 163.92 131.14 78.50
+end:    9:45  up 2 days, 15:04, 4 users, load averages: 198.53 167.06 141.62
+rc=1 wall=1007s
+PASS lines: 324  FAIL lines: 76
+   1 --- FAIL: TestExecProbeReversePollCadence (1.01s)
+   1 --- FAIL: TestExecProbeReversePollCadence (1.02s)
+   2 --- FAIL: TestExecProbeReversePollCadence (1.04s)
+   1 --- FAIL: TestExecProbeReversePollCadence (1.07s)
+   3 --- FAIL: TestExecProbeReversePollCadence (1.10s)
+   1 --- FAIL: TestExecProbeReversePollCadence (1.12s)
+   1 --- FAIL: TestExecProbeReversePollCadence (1.13s)
+   1 --- FAIL: TestExecProbeReversePollCadence (1.16s)
+   1 --- FAIL: TestExecProbeReversePollCadence (1.17s)
+   2 --- FAIL: TestExecProbeReversePollCadence (1.19s)
+CADENCE runs=165 gaps(min)=1 fastest: min=50.124ms median=56.946ms p99=951.780ms max=989.739ms  slowest gap max=4770.578ms
+  floor margin (min fastest - 50ms) = 0.124ms ; ceiling margin (100ms - max fastest) = -889.739ms
+yes-alive-after=0
+(run killed by the designer after 200 complete runs; summary below computed from the raw)
+T12 v1 --- PASS: 124  --- FAIL: 76   T10 --- PASS: 200  --- FAIL: 0
+failure messages (durations normalised to N):
+  35     exec_probe_test.go:975: 1 dial(s) in one listen window (N); want at least 2 to measure the cadence
+  24     exec_probe_test.go:986: fastest of 1 dial gaps N; want under two poll periods (N): the poll does not wait execProbePollEvery
+  12     exec_probe_test.go:986: fastest of 2 dial gaps N; want under two poll periods (N): the poll does not wait execProbePollEvery
+   1     exec_probe_test.go:986: fastest of 3 dial gaps N; want under two poll periods (N): the poll does not wait execProbePollEvery
+   3     exec_probe_test.go:986: fastest of 4 dial gaps N; want under two poll periods (N): the poll does not wait execProbePollEvery
+   1     exec_probe_test.go:986: fastest of 5 dial gaps N; want under two poll periods (N): the poll does not wait execProbePollEvery
+--- extracted lines:
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=74.308875ms slowest=201.646292ms excess=24.308875ms
+    exec_probe_test.go:986: fastest of 2 dial gaps 129.400292ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=129.400292ms slowest=247.284625ms excess=79.400292ms
+--- FAIL: TestExecProbeReversePollCadence (1.10s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (2.31s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 283.141291ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=283.141291ms slowest=283.141291ms excess=233.141291ms
+--- FAIL: TestExecProbeReversePollCadence (3.10s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=55.868583ms slowest=428.790334ms excess=5.868583ms
+    exec_probe_test.go:986: fastest of 2 dial gaps 207.08275ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=207.08275ms slowest=2.787588125s excess=157.08275ms
+--- FAIL: TestExecProbeReversePollCadence (3.01s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 646.108583ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=646.108583ms slowest=646.108583ms excess=596.108583ms
+--- FAIL: TestExecProbeReversePollCadence (1.97s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.7125ms slowest=555.154292ms excess=2.7125ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=52.933792ms slowest=739.277709ms excess=2.933792ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=51.67225ms slowest=696.102334ms excess=1.67225ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=50.245542ms slowest=3.156395583s excess=245.542µs
+    exec_probe_test.go:986: fastest of 2 dial gaps 139.44975ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=139.44975ms slowest=1.449796959s excess=89.44975ms
+--- FAIL: TestExecProbeReversePollCadence (1.59s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=98.058625ms slowest=840.835ms excess=48.058625ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.71s)
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=56.946083ms slowest=807.893833ms excess=6.946083ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=68.620792ms slowest=913.5255ms excess=18.620792ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=53.79875ms slowest=652.715166ms excess=3.79875ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (4.13s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (4.37s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=50.8045ms slowest=108.898833ms excess=804.5µs
+    exec_probe_test.go:986: fastest of 1 dial gaps 505.004916ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=505.004916ms slowest=505.004916ms excess=455.004916ms
+--- FAIL: TestExecProbeReversePollCadence (6.19s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=56.327542ms slowest=57.233333ms excess=6.327542ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (3.52s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=53.682458ms slowest=879.540042ms excess=3.682458ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (4.30s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (3.52s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 416.381458ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=416.381458ms slowest=416.381458ms excess=366.381458ms
+--- FAIL: TestExecProbeReversePollCadence (2.25s)
+    exec_probe_test.go:986: fastest of 2 dial gaps 288.217291ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=288.217291ms slowest=650.622792ms excess=238.217291ms
+--- FAIL: TestExecProbeReversePollCadence (1.24s)
+    exec_probe_test.go:986: fastest of 5 dial gaps 116.250625ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=116.250625ms slowest=224.466792ms excess=66.250625ms
+--- FAIL: TestExecProbeReversePollCadence (1.19s)
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=73.147708ms slowest=367.626875ms excess=23.147708ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=71.546583ms slowest=260.394209ms excess=21.546583ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=50.124167ms slowest=598.756667ms excess=124.167µs
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=58.386666ms slowest=401.177084ms excess=8.386666ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=72.083416ms slowest=154.415709ms excess=22.083416ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.199ms slowest=317.09075ms excess=2.199ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=95.241625ms slowest=278.403209ms excess=45.241625ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=56.220291ms slowest=825.707834ms excess=6.220291ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=52.150958ms slowest=310.793875ms excess=2.150958ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=52.223833ms slowest=411.895291ms excess=2.223833ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (2.52s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 551.165792ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=551.165792ms slowest=551.165792ms excess=501.165792ms
+--- FAIL: TestExecProbeReversePollCadence (1.90s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.65s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 176.819667ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=176.819667ms slowest=176.819667ms excess=126.819667ms
+--- FAIL: TestExecProbeReversePollCadence (1.30s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (2.60s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (5.49s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=86.01975ms slowest=374.296ms excess=36.01975ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 821.039375ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=821.039375ms slowest=821.039375ms excess=771.039375ms
+--- FAIL: TestExecProbeReversePollCadence (1.30s)
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=55.209291ms slowest=331.678ms excess=5.209291ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.211ms slowest=463.108792ms excess=2.211ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 710.492667ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=710.492667ms slowest=710.492667ms excess=660.492667ms
+--- FAIL: TestExecProbeReversePollCadence (1.10s)
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=51.474125ms slowest=388.384458ms excess=1.474125ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.038791ms slowest=412.351875ms excess=2.038791ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=50.188625ms slowest=85.782ms excess=188.625µs
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=51.403125ms slowest=364.586959ms excess=1.403125ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=59.5875ms slowest=399.226291ms excess=9.5875ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=54.736792ms slowest=156.267791ms excess=4.736792ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=50.928375ms slowest=339.346167ms excess=928.375µs
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=60.349708ms slowest=361.330542ms excess=10.349708ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=65.713625ms slowest=375.253667ms excess=15.713625ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=55.812333ms slowest=306.95575ms excess=5.812333ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.335625ms slowest=290.282042ms excess=2.335625ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=52.060041ms slowest=267.102ms excess=2.060041ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=52.048167ms slowest=317.781417ms excess=2.048167ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=56.354792ms slowest=260.414917ms excess=6.354792ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=52.169958ms slowest=377.02775ms excess=2.169958ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=50.332709ms slowest=408.072583ms excess=332.709µs
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.67s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 892.476ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=892.476ms slowest=892.476ms excess=842.476ms
+--- FAIL: TestExecProbeReversePollCadence (1.34s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=50.383958ms slowest=442.676125ms excess=383.958µs
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=56.502791ms slowest=56.502791ms excess=6.502791ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=55.999334ms slowest=510.555375ms excess=5.999334ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=50.2515ms slowest=344.403667ms excess=251.5µs
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=53.111042ms slowest=298.558ms excess=3.111042ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=57.806917ms slowest=131.210709ms excess=7.806917ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=51.977416ms slowest=824.820709ms excess=1.977416ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 918.252417ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=918.252417ms slowest=918.252417ms excess=868.252417ms
+--- FAIL: TestExecProbeReversePollCadence (1.30s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 743.00725ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=743.00725ms slowest=743.00725ms excess=693.00725ms
+--- FAIL: TestExecProbeReversePollCadence (1.17s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=95.357042ms slowest=563.429416ms excess=45.357042ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=51.468958ms slowest=514.122291ms excess=1.468958ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=52.140875ms slowest=457.577625ms excess=2.140875ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 951.779625ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=951.779625ms slowest=951.779625ms excess=901.779625ms
+--- FAIL: TestExecProbeReversePollCadence (1.44s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 236.649375ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=236.649375ms slowest=236.649375ms excess=186.649375ms
+--- FAIL: TestExecProbeReversePollCadence (1.97s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=54.221625ms slowest=89.284833ms excess=4.221625ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.31s)
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=52.0265ms slowest=402.773125ms excess=2.0265ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 110.457917ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=110.457917ms slowest=110.457917ms excess=60.457917ms
+--- FAIL: TestExecProbeReversePollCadence (1.28s)
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=50.769625ms slowest=487.614542ms excess=769.625µs
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=50.774875ms slowest=454.586166ms excess=774.875µs
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=59.15525ms slowest=216.722042ms excess=9.15525ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=53.720375ms slowest=309.680667ms excess=3.720375ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=58.365458ms slowest=531.160583ms excess=8.365458ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=85.764833ms slowest=326.943792ms excess=35.764833ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=78.847833ms slowest=192.043083ms excess=28.847833ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=50.597084ms slowest=234.623333ms excess=597.084µs
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=51.728625ms slowest=227.031458ms excess=1.728625ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.60s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (25.74s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (11.80s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (8.21s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (4.90s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 106.395833ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=106.395833ms slowest=106.395833ms excess=56.395833ms
+--- FAIL: TestExecProbeReversePollCadence (1.37s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.49s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 451.807292ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=451.807292ms slowest=451.807292ms excess=401.807292ms
+--- FAIL: TestExecProbeReversePollCadence (1.40s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.04s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.127542ms slowest=400.56625ms excess=2.127542ms
+    exec_probe_test.go:986: fastest of 2 dial gaps 214.553833ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=214.553833ms slowest=402.209459ms excess=164.553833ms
+--- FAIL: TestExecProbeReversePollCadence (1.22s)
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=50.671042ms slowest=292.539708ms excess=671.042µs
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=52.623041ms slowest=378.741917ms excess=2.623041ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=74.082541ms slowest=283.816209ms excess=24.082541ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=50.699167ms slowest=458.812333ms excess=699.167µs
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.61s)
+    exec_probe_test.go:986: fastest of 2 dial gaps 125.245541ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=125.245541ms slowest=364.61675ms excess=75.245541ms
+--- FAIL: TestExecProbeReversePollCadence (3.06s)
+    exec_probe_test.go:986: fastest of 2 dial gaps 471.802583ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=471.802583ms slowest=787.401875ms excess=421.802583ms
+--- FAIL: TestExecProbeReversePollCadence (1.58s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.446791ms slowest=473.492959ms excess=2.446791ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=81.276291ms slowest=796.893709ms excess=31.276291ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=55.465375ms slowest=487.949292ms excess=5.465375ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=51.518041ms slowest=454.113541ms excess=1.518041ms
+    exec_probe_test.go:986: fastest of 4 dial gaps 226.694708ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=226.694708ms slowest=617.151458ms excess=176.694708ms
+--- FAIL: TestExecProbeReversePollCadence (1.79s)
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=52.464458ms slowest=712.373792ms excess=2.464458ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=55.537917ms slowest=327.247708ms excess=5.537917ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=77.289208ms slowest=441.657292ms excess=27.289208ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=60.015083ms slowest=245.676959ms excess=10.015083ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=50.144084ms slowest=310.535417ms excess=144.084µs
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.37s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 644.390625ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=644.390625ms slowest=644.390625ms excess=594.390625ms
+--- FAIL: TestExecProbeReversePollCadence (1.60s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=52.559709ms slowest=769.270416ms excess=2.559709ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.007292ms slowest=454.242333ms excess=2.007292ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=64.514833ms slowest=533.9ms excess=14.514833ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=63.836334ms slowest=64.19525ms excess=13.836334ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.30s)
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=58.895542ms slowest=639.940541ms excess=8.895542ms
+    exec_probe_test.go:986: fastest of 2 dial gaps 315.246167ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=315.246167ms slowest=537.045292ms excess=265.246167ms
+--- FAIL: TestExecProbeReversePollCadence (1.35s)
+    exec_probe_test.go:986: fastest of 4 dial gaps 102.817667ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=102.817667ms slowest=324.283166ms excess=52.817667ms
+--- FAIL: TestExecProbeReversePollCadence (1.38s)
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=61.045542ms slowest=61.045542ms excess=11.045542ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 955.740958ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=955.740958ms slowest=955.740958ms excess=905.740958ms
+--- FAIL: TestExecProbeReversePollCadence (1.50s)
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=52.12125ms slowest=224.347417ms excess=2.12125ms
+    exec_probe_test.go:986: fastest of 3 dial gaps 107.814292ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=107.814292ms slowest=626.202875ms excess=57.814292ms
+--- FAIL: TestExecProbeReversePollCadence (1.01s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=55.719541ms slowest=437.344917ms excess=5.719541ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=56.050417ms slowest=176.1705ms excess=6.050417ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=63.644958ms slowest=305.007125ms excess=13.644958ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=61.816208ms slowest=671.631209ms excess=11.816208ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=63.958417ms slowest=781.006ms excess=13.958417ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=53.980917ms slowest=465.454208ms excess=3.980917ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 989.73925ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=989.73925ms slowest=989.73925ms excess=939.73925ms
+--- FAIL: TestExecProbeReversePollCadence (1.02s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 730.253125ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=730.253125ms slowest=730.253125ms excess=680.253125ms
+--- FAIL: TestExecProbeReversePollCadence (4.08s)
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=51.760958ms slowest=987.183958ms excess=1.760958ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=52.419583ms slowest=313.213833ms excess=2.419583ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=69.419708ms slowest=696.91ms excess=19.419708ms
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=56.811292ms slowest=688.719583ms excess=6.811292ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=71.900917ms slowest=368.203958ms excess=21.900917ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=51.821709ms slowest=378.259958ms excess=1.821709ms
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=62.744542ms slowest=379.809708ms excess=12.744542ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=62.882916ms slowest=348.176917ms excess=12.882916ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=53.430042ms slowest=243.679208ms excess=3.430042ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=54.139708ms slowest=97.356084ms excess=4.139708ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=50.955292ms slowest=135.582666ms excess=955.292µs
+    exec_probe_test.go:986: fastest of 2 dial gaps 116.62975ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=116.62975ms slowest=783.713166ms excess=66.62975ms
+--- FAIL: TestExecProbeReversePollCadence (1.29s)
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=52.184792ms slowest=119.287ms excess=2.184792ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=54.358041ms slowest=637.114292ms excess=4.358041ms
+    exec_probe_test.go:986: fastest of 2 dial gaps 105.188833ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=105.188833ms slowest=656.04125ms excess=55.188833ms
+--- FAIL: TestExecProbeReversePollCadence (1.10s)
+    exec_probe_test.go:988: CADENCE gaps=5 fastest=52.37675ms slowest=425.45175ms excess=2.37675ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 656.131583ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=656.131583ms slowest=656.131583ms excess=606.131583ms
+--- FAIL: TestExecProbeReversePollCadence (1.62s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.19s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (2.16s)
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=57.932708ms slowest=57.932708ms excess=7.932708ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=87.071667ms slowest=436.31575ms excess=37.071667ms
+    exec_probe_test.go:986: fastest of 4 dial gaps 126.239959ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=126.239959ms slowest=388.882416ms excess=76.239959ms
+--- FAIL: TestExecProbeReversePollCadence (1.16s)
+    exec_probe_test.go:986: fastest of 2 dial gaps 465.080666ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=465.080666ms slowest=507.086792ms excess=415.080666ms
+--- FAIL: TestExecProbeReversePollCadence (1.07s)
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=51.405333ms slowest=4.770578208s excess=1.405333ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (4.67s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (3.23s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (3.11s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=68.163708ms slowest=594.900708ms excess=18.163708ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (2.39s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 340.205708ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=340.205708ms slowest=340.205708ms excess=290.205708ms
+--- FAIL: TestExecProbeReversePollCadence (1.51s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (3.10s)
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=60.331291ms slowest=110.151959ms excess=10.331291ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=51.701791ms slowest=811.338667ms excess=1.701791ms
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=50.300167ms slowest=50.300167ms excess=300.167µs
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (2.16s)
+    exec_probe_test.go:986: fastest of 1 dial gaps 424.363ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=424.363ms slowest=424.363ms excess=374.363ms
+--- FAIL: TestExecProbeReversePollCadence (1.12s)
+    exec_probe_test.go:988: CADENCE gaps=3 fastest=70.059917ms slowest=510.776375ms excess=20.059917ms
+    exec_probe_test.go:986: fastest of 1 dial gaps 868.583375ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=868.583375ms slowest=868.583375ms excess=818.583375ms
+--- FAIL: TestExecProbeReversePollCadence (1.04s)
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=52.050291ms slowest=518.397583ms excess=2.050291ms
+    exec_probe_test.go:988: CADENCE gaps=4 fastest=52.421042ms slowest=612.057375ms excess=2.421042ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=65.62725ms slowest=92.339833ms excess=15.62725ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=52.125459ms slowest=583.251041ms excess=2.125459ms
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=57.391042ms slowest=584.148958ms excess=7.391042ms
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=53.214584ms slowest=644.921083ms excess=3.214584ms
+    exec_probe_test.go:988: CADENCE gaps=7 fastest=51.356708ms slowest=2.265297041s excess=1.356708ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (16.93s)
+    exec_probe_test.go:986: fastest of 2 dial gaps 100.138375ms; want under two poll periods (100ms): the poll does not wait execProbePollEvery
+    exec_probe_test.go:988: CADENCE gaps=2 fastest=100.138375ms slowest=145.386ms excess=50.138375ms
+--- FAIL: TestExecProbeReversePollCadence (9.71s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (4.94s)
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.33s)
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=52.244125ms slowest=301.5465ms excess=2.244125ms
+    exec_probe_test.go:988: CADENCE gaps=1 fastest=51.611416ms slowest=51.611416ms excess=1.611416ms
+    exec_probe_test.go:975: 1 dial(s) in one listen window (1s); want at least 2 to measure the cadence
+--- FAIL: TestExecProbeReversePollCadence (1.13s)
+    exec_probe_test.go:988: CADENCE gaps=6 fastest=85.579417ms slowest=209.609125ms excess=35.579417ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=53.823416ms slowest=280.197333ms excess=3.823416ms
+    exec_probe_test.go:988: CADENCE gaps=8 fastest=52.628042ms slowest=125.695ms excess=2.628042ms
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	479.909s
+FAIL

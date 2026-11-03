@@ -1,0 +1,21 @@
+#!/bin/bash
+# Row 241 premise: does a 500 ms literal poll cadence (10x execProbePollEvery) survive the reverse-leg tests?
+set -u
+B=/tmp/world-iter339/base
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+RUN='^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)'
+cd $B
+F=host/broker/exec_probe.go
+cp $F /tmp/world-iter339/exec_probe.go.orig
+echo "== control"; go test ./host/broker/ -count=1 -run "$RUN" 2>&1 | tail -3; echo "control rc=${PIPESTATUS[0]}"
+# mutant 1: literal 500 ms cadence
+sed -i '' 's/case <-time.After(execProbePollEvery):/case <-time.After(500 * time.Millisecond):/' $F
+grep -c 'time.After(500 \* time.Millisecond)' $F
+echo "== mutant M1 (500ms literal)"; go test ./host/broker/ -count=1 -run "$RUN" 2>&1 | tail -3; echo "M1 rc=${PIPESTATUS[0]}"
+cp /tmp/world-iter339/exec_probe.go.orig $F
+# positive control: constant pushed to 2 s (ceiling = 1000-2000 < 0) should red T10
+sed -i '' 's/^const execProbePollEvery = 50 \* time.Millisecond/const execProbePollEvery = 2000 * time.Millisecond/' $F
+grep -c 'execProbePollEvery = 2000' $F
+echo "== positive control (const 2000ms)"; go test ./host/broker/ -count=1 -run "$RUN" 2>&1 | tail -5; echo "PC rc=${PIPESTATUS[0]}"
+cp /tmp/world-iter339/exec_probe.go.orig $F
+cmp $F /tmp/world-iter339/exec_probe.go.orig && echo RESTORED

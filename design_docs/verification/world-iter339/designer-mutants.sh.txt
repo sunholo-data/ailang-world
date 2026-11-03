@@ -1,0 +1,112 @@
+#!/bin/bash
+# Row 241 designer mutation round on T12 v3 (proto). usage: mutants.sh SECTION TREE
+# Each mutant: exact single-occurrence replacement(s) via mut.py in scratch tree TREE (a copy of proto),
+# go test, FAIL list, restore from the pristine copy, cmp.
+set -u
+D=/tmp/world-iter339/designer
+SECTION=$1 MT=$2
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+# focused regex: the cadence pin, T10, T7 (the SILENT text), T8/T9 (the dial seam's other users)
+RF='^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseDialErrIsSilent)$'
+# the controller's broad regex (every reverse-leg test)
+RREV='^(TestExecProbeReverse|TestExecProbeForeignListener|TestExecProbeChildListener)'
+RT10='^TestExecProbeReverseHelloWaitBounds$'
+P=host/broker/exec_probe.go
+T=host/broker/exec_probe_test.go
+restore() {
+  cp $D/pristine/exec_probe.go $D/$MT/$P; cp $D/pristine/exec_probe_test.go $D/$MT/$T
+  cmp -s $D/$MT/$P $D/pristine/exec_probe.go && cmp -s $D/$MT/$T $D/pristine/exec_probe_test.go && echo "restored(cmp ok)" || echo "RESTORE FAILED"
+}
+# m ID REGEX COUNT [FILE OLD NEW]...
+m() {
+  local id=$1 regex=$2 count=$3; shift 3
+  echo "=================== $id (tree=$MT count=$count regex=$regex)"
+  local ok=1
+  while [ $# -gt 0 ]; do python3 $D/scripts/mut.py "$D/$MT/$1" "$2" "$3" || ok=0; shift 3; done
+  if [ $ok = 0 ]; then echo "$id: SITE ERROR"; restore; return; fi
+  ( cd $D/$MT && go vet ./host/broker/ > $D/out/vet-$id.log 2>&1; echo "vet rc=$? $(grep -m1 -E 'Sprintf|printf' $D/out/vet-$id.log | cut -c1-200)" )
+  local log=$D/out/mut-$id.log t0=$(date +%s)
+  ( cd $D/$MT && go test ./host/broker/ -count=$count -timeout 30m -v -run "$regex" > $log 2>&1 ); local rc=$?
+  echo "$id rc=$rc wall=$(( $(date +%s)-t0 ))s top-level PASS=$(grep -c -- '^--- PASS' $log) FAIL=$(grep -c -- '^--- FAIL' $log) load: $(uptime | sed 's/.*averages: //')"
+  echo "FAIL list (count x name):"; grep -E -- '--- FAIL' $log | sed -E 's/ \([0-9.]+s\)//' | sort | uniq -c | sed 's/^/   /' | head -20
+  grep -E 'exec_probe_test.go:[0-9]+: |panic:|build failed|\[setup failed\]|vet:' $log | grep -v -E 'TIMING|: (silent|chatty|control): arm 6 =|CADENCE' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -4 | cut -c1-260 | sed 's/^/   msg: /'
+  grep -o 'CADENCE .*' $log | head -2 | sed 's/^/   /'
+  tail -1 $log | sed 's/^/   last: /'
+  restore
+}
+AFTER='case <-time.After(execProbePollEvery):'
+WAIT='const execProbeHelloWait = 500 * time.Millisecond'
+CONST='const execProbePollEvery = 50 * time.Millisecond'
+MSG_OLD="World's hello within %d ms; World cannot tell it from the child's listener, so it refuses\", port, execProbeHelloWait.Milliseconds())"
+MSG_NEW="World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses\", port)"
+case "$SECTION" in
+A) # the cadence (row item 1), its controls, in-bounds constants (item 5)
+m C0-broad "$RREV" 1
+m M1-broad "$RREV" 1 $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m M1 "$RF" 1 $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m M1-10x "$RF" 1 $P "$AFTER" 'case <-time.After(10 * execProbePollEvery):'
+m M1-60s "$RF" 1 $P "$AFTER" 'case <-time.After(60 * time.Second):'
+m M1-div10 "$RF" 1 $P "$AFTER" 'case <-time.After(execProbePollEvery / 10):'
+m M1-1ms "$RF" 1 $P "$AFTER" 'case <-time.After(time.Millisecond):'
+m M1-busy "$RF" 1 $P "$AFTER" 'default:'
+m M1-ctl50 "$RF" 1 $P "$AFTER" 'case <-time.After(50 * time.Millisecond):'
+m M1-ctl50+const100 "$RF" 1 $P "$AFTER" 'case <-time.After(50 * time.Millisecond):' $P "$CONST" 'const execProbePollEvery = 100 * time.Millisecond'
+m PC-const2s "$RF" 1 $P "$CONST" 'const execProbePollEvery = 2000 * time.Millisecond'
+m K-const100 "$RF" 1 $P "$CONST" 'const execProbePollEvery = 100 * time.Millisecond'
+m K-const25 "$RF" 1 $P "$CONST" 'const execProbePollEvery = 25 * time.Millisecond'
+m K-listen1100 "$RF" 1 $P 'const execProbeListenMS = 1000' 'const execProbeListenMS = 1100'
+m K-wait950 "$RF" 1 $P "$WAIT" 'const execProbeHelloWait = 950 * time.Millisecond'
+m C1-broad "$RREV" 1
+;;
+B) # survivors 2 and 4
+m S2-msg "$RF" 1 $P "$MSG_OLD" "$MSG_NEW"
+m S2-wait600 "$RF" 1 $P "$WAIT" 'const execProbeHelloWait = 600 * time.Millisecond'
+m S2-msg+wait600 "$RF" 1 $P "$MSG_OLD" "$MSG_NEW" $P "$WAIT" 'const execProbeHelloWait = 600 * time.Millisecond'
+m S2-argdrop "$RF" 1 $P "so it refuses\", port, execProbeHelloWait.Milliseconds())" "so it refuses\", port)"
+m S4-ceil "$RT10" 1 $T 'ceiling := listenWindow - execProbePollEvery' 'ceiling := listenWindow'
+m K-wait960 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 960 * time.Millisecond'
+m S4-ceil+wait960 "$RT10" 1 $T 'ceiling := listenWindow - execProbePollEvery' 'ceiling := listenWindow' $P "$WAIT" 'const execProbeHelloWait = 960 * time.Millisecond'
+m S4-ceil2poll "$RT10" 1 $T 'ceiling := listenWindow - execProbePollEvery' 'ceiling := listenWindow - 2*execProbePollEvery'
+m S4-floor100 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 100 * time.Millisecond'
+m K-wait249 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 249 * time.Millisecond'
+m S4-floor100+wait249 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 100 * time.Millisecond' $P "$WAIT" 'const execProbeHelloWait = 249 * time.Millisecond'
+m S4-floor500 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 500 * time.Millisecond'
+m S4-floor600 "$RT10" 1 $T 'const execProbeHelloFloor = 250 * time.Millisecond' 'const execProbeHelloFloor = 600 * time.Millisecond'
+m S4-arrival "$RT10" 1 $T 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' 'conn := &helloConn{arrival: before,'
+m K-wait5 "$RT10" 1 $P "$WAIT" 'const execProbeHelloWait = 5 * time.Millisecond'
+m S4-arrival+wait5 "$RT10" 1 $T 'conn := &helloConn{arrival: before.Add(execProbeHelloFloor),' 'conn := &helloConn{arrival: before,' $P "$WAIT" 'const execProbeHelloWait = 5 * time.Millisecond'
+m S4-nowrote "$RT10" 1 $T 'if seen != row.want || conn.wrote != execProbeHello {' 'if seen != row.want {'
+m P-nohello "$RF" 1 $P '_, werr := io.WriteString(c, execProbeHello)' '_, werr := io.WriteString(c, "")'
+m S4-nowrote+nohello "$RF" 1 $T 'if seen != row.want || conn.wrote != execProbeHello {' 'if seen != row.want {' $P '_, werr := io.WriteString(c, execProbeHello)' '_, werr := io.WriteString(c, "")'
+m S4-nosets "$RT10" 1 $T 'if conn.sets == 0 || conn.deadline.IsZero() ||' 'if conn.deadline.IsZero() ||'
+m P-nodeadline "$RT10" 1 $P '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' '_ = 0'
+m S4-nosets+nodeadline "$RT10" 1 $T 'if conn.sets == 0 || conn.deadline.IsZero() ||' 'if conn.deadline.IsZero() ||' $P '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' '_ = 0'
+m S4-nosetsnozero+nodeadline "$RT10" 1 $T 'if conn.sets == 0 || conn.deadline.IsZero() ||' 'if' $P '_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))' '_ = 0'
+;;
+C) # mutants of the new and edited test code (T12 v3, T10 setAt)
+m TM1-nocount "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if false && dials < revCadencePeriods/4+1 {'
+m TM1-nocount+M1 "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if false && dials < revCadencePeriods/4+1 {' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM2-countflip "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if dials >= revCadencePeriods/4+1 {'
+m TM3-nofloor+div10 "$RF" 1 $T 'if short > 0 {' 'if false && short > 0 {' $P "$AFTER" 'case <-time.After(execProbePollEvery / 10):'
+m TM3-floorflip "$RF" 1 $T 'if gap < execProbePollEvery {' 'if gap >= execProbePollEvery {'
+m TM4-periods1+M1 "$RF" 1 $T 'const revCadencePeriods = 20' 'const revCadencePeriods = 1' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM5-threshold+M1 "$RF" 1 $T 'if dials < revCadencePeriods/4+1 {' 'if dials < revCadencePeriods/10 {' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM6-reflit "$RF" 1 $T '<-time.After(execProbePollEvery)' '<-time.After(500 * time.Millisecond)'
+m TM6-reflit+M1 "$RF" 1 $T '<-time.After(execProbePollEvery)' '<-time.After(500 * time.Millisecond)' $P "$AFTER" 'case <-time.After(500 * time.Millisecond):'
+m TM8-cap1+div10 "$RF" 1 $T 'make([]time.Time, 0, 4*revCadencePeriods)' 'make([]time.Time, 0, 1)' $P "$AFTER" 'case <-time.After(execProbePollEvery / 10):'
+m TM7-noref "$RF" 1 $T 'for range revCadencePeriods {' 'for range 0 {'
+m TM9-nosetAt "$RF" 1 $T 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' 'c.deadline, c.sets = t, c.sets+1'
+m TM10-setAtIsDeadline "$RF" 1 $T 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' 'c.deadline, c.setAt, c.sets = t, t, c.sets+1'
+m TM10-setAtIsDeadline+wait960 "$RF" 1 $T 'c.deadline, c.setAt, c.sets = t, time.Now(), c.sets+1' 'c.deadline, c.setAt, c.sets = t, t, c.sets+1' $P "$WAIT" 'const execProbeHelloWait = 960 * time.Millisecond'
+m TM11-stopref+wait951 "$RT10" 1 $T 'conn.deadline.After(conn.setAt.Add(ceiling))' 'conn.deadline.After(time.Now().Add(ceiling))' $P "$WAIT" 'const execProbeHelloWait = 951 * time.Millisecond'
+;;
+borderline)
+CR='^TestExecProbeReversePollCadence$'
+m B-2x "$CR" 30 $P "$AFTER" 'case <-time.After(2 * execProbePollEvery):'
+m B-3x "$CR" 30 $P "$AFTER" 'case <-time.After(3 * execProbePollEvery):'
+m B-4x "$CR" 30 $P "$AFTER" 'case <-time.After(4 * execProbePollEvery):'
+m B-5x "$CR" 30 $P "$AFTER" 'case <-time.After(5 * execProbePollEvery):'
+m B-45ms "$CR" 30 $P "$AFTER" 'case <-time.After(45 * time.Millisecond):'
+m B-const1ms "$CR" 30 $P "$CONST" 'const execProbePollEvery = 1 * time.Millisecond'
+;;
+esac

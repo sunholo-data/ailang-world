@@ -1,0 +1,16 @@
+== control
+ok  	github.com/sunholo-data/ailang-world/host/broker	10.965s
+control rc=0
+1
+== mutant M1 (500ms literal)
+ok  	github.com/sunholo-data/ailang-world/host/broker	10.856s
+M1 rc=0
+1
+== positive control (const 2000ms)
+    --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+        exec_probe_test.go:914: hello deadline at stop+499.999166ms (sets 1); want a deadline no later than stop+-1s (listen window less one poll period)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	11.123s
+FAIL
+PC rc=1
+RESTORED

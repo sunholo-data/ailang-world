@@ -1,0 +1,36 @@
+#!/bin/bash
+# Survivor 3: T10's kill margin for a just-over wait. Base T10 (ceiling vs stop time) against the
+# proposed T10 (ceiling vs the instant SetDeadline was called), each -count=200, idle or under NYES yes.
+set -u
+D=/tmp/world-iter339/designer; NYES=${1:-0}; OUT=$D/out/s3-load$NYES.txt
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+P=host/broker/exec_probe.go
+pids=(); cleanup(){ for p in "${pids[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null; done; wait 2>/dev/null; }
+trap cleanup EXIT
+for ((i=0;i<NYES;i++)); do yes >/dev/null & pids+=($!); done
+[ "$NYES" -gt 0 ] && sleep 5
+{
+echo "== survivor 3, nyes=$NYES, start: $(uptime)"
+for tree in base mut; do
+  for w in 500 950 951 952 955 960; do
+    src=$D/$tree/$P
+    pristine=$D/pristine/exec_probe.go; [ $tree = base ] && pristine=$D/basepristine/exec_probe.go
+    python3 $D/scripts/mut.py $src 'const execProbeHelloWait = 500 * time.Millisecond' "const execProbeHelloWait = $w * time.Millisecond" >/dev/null 2>&1 || [ $w = 500 ]
+    log=$D/out/s3-$tree-$w-load$NYES.log
+    ( cd $D/$tree && go test ./host/broker/ -count=200 -v -run '^TestExecProbeReverseHelloWaitBounds$' > $log 2>&1 )
+    rc=$?
+    sp=$(grep -c -- '    --- PASS: TestExecProbeReverseHelloWaitBounds/' $log); sf=$(grep -c -- '    --- FAIL: TestExecProbeReverseHelloWaitBounds/' $log)
+    marg=$(grep -o 'hello deadline at [a-z]*+[^ ]*' $log | sed -E 's/.*\+//' | python3 -c '
+import sys,re
+v=[]
+for l in sys.stdin:
+    m=re.match(r"([0-9.]+)(ns|µs|ms|s)$",l.strip()); 
+    if m: v.append(float(m.group(1))*{"ns":1e-6,"µs":1e-3,"ms":1,"s":1000}[m.group(2)])
+print(f"reported deadline-minus-reference in red runs: n={len(v)} min={min(v):.4f}ms max={max(v):.4f}ms" if v else "no red runs")')
+    echo "tree=$tree (T10 $([ $tree = base ] && echo 'stop-referenced, HEAD' || echo 'setAt-referenced, proposed')) wait=${w}ms rc=$rc subtests: PASS=$sp FAIL=$sf  survived(subtest)=$sp/400  $marg"
+    cp $pristine $src; cmp -s $src $pristine || echo RESTORE-FAILED
+  done
+done
+echo "end: $(uptime)"
+} | tee $OUT
+cleanup; trap - EXIT; sleep 1; echo "yes-alive-after=$(pgrep -x yes | wc -l | tr -d ' ')" | tee -a $OUT

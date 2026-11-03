@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+# usage: mut.py FILE OLD NEW  -- replace exactly one occurrence of OLD with NEW, or exit 3
+import sys
+f,old,new=sys.argv[1],sys.argv[2],sys.argv[3]
+s=open(f).read()
+n=s.count(old)
+if n!=1:
+    print(f"MUTANT-SITE-COUNT {n} != 1 for {old!r}"); sys.exit(3)
+open(f,'w').write(s.replace(old,new))
+print(f"applied: {old!r} -> {new!r}")

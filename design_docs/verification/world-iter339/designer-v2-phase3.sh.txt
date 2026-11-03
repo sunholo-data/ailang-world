@@ -1,0 +1,12 @@
+#!/bin/bash
+# Load matrix for T12 v2 (reference-clock count) and the setAt T10, on the proto tree.
+D=/tmp/world-iter339/designer
+R='^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$'
+/bin/bash $D/scripts/run_load.sh v2-idle 0 0 300 $D/proto "$R" $D/out/v2-load-idle.txt
+/bin/bash $D/scripts/run_load.sh v2-load32 32 0 300 $D/proto "$R" $D/out/v2-load-32.txt
+/bin/bash $D/scripts/run_load.sh v2-race-idle 0 1 300 $D/proto "$R" $D/out/v2-load-race-idle.txt
+/bin/bash $D/scripts/run_load.sh v2-race-load32 32 1 300 $D/proto "$R" $D/out/v2-load-race-32.txt
+GOMAXPROCS=2 /bin/bash $D/scripts/run_load.sh v2-race-load64-gmp2 64 1 200 $D/proto "$R" $D/out/v2-load-race-64-gmp2.txt
+GOMAXPROCS=2 /bin/bash $D/scripts/run_load.sh v2-race-load160-gmp2 160 1 200 $D/proto "$R" $D/out/v2-load-race-160-gmp2.txt
+/bin/bash $D/scripts/run_load.sh v2-load160 160 0 200 $D/proto "$R" $D/out/v2-load-160.txt
+echo DONE > $D/out/phase3.done

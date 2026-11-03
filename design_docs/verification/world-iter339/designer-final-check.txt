@@ -1,0 +1,29 @@
+$ git -C <worktree> show HEAD:host/broker/exec_probe_test.go > exec_probe_test.go; patch exec_probe_test.go < designer-proto_test.go.patch.txt; shasum -a 256
+patch rc=0
+bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0  exec_probe_test.go
+bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0  /tmp/world-iter339/designer/proto/host/broker/exec_probe_test.go
+
+$ diffstat-like count of the patch (+ / - lines)
++59 -4
+
+$ cmp proto exec_probe.go with HEAD (production unchanged)
+exec_probe.go identical to HEAD
+mutB == pristine (final file)
+
+$ gofmt -l host/broker
+gofmt rc=0 (empty list above)
+$ go vet ./host/broker/
+vet rc=0
+$ AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -count=2 -v -run ^(TestExecProbeReversePollCadence|TestExecProbeReverseHelloWaitBounds)$
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+    exec_probe_test.go:988: CADENCE dials=21 span=1.029151917s fastest=50.157167ms slowest=52.1355ms
+--- PASS: TestExecProbeReversePollCadence (1.03s)
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+    exec_probe_test.go:988: CADENCE dials=21 span=1.030065625s fastest=50.200958ms slowest=52.269042ms
+--- PASS: TestExecProbeReversePollCadence (1.03s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	2.430s
+uptime: 11:12  up 2 days, 16:31, 4 users, load averages: 12.01 40.46 76.54
