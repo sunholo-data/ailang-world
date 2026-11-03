@@ -1,6 +1,6 @@
 # w-exec-probe-hello-wait-pin-survivors: pin pollLoopback's real dial cadence to execProbePollEvery, and settle the row-230 judge's survivors
 
-Status: Planned (iteration 339), **r1**: designer draft, before design quorum.
+Status: Planned (iteration 339), **r1**: designer draft; design quorum r1 PROCEED 3/3 (§7).
 **Planner-Lane:** mission routing default
 - **Item**: queue row 241 (`design_docs/world-mission.md:6313`). Source: the row-230 judge
   (`verification/world-iter329/evaluator-sprint-r1.md`, non-blocking survivors 1–5 at lines 10–14 and its
@@ -433,4 +433,11 @@ listed name.
 
 ## 7. Quorum log
 
-None yet (r1).
+- **r1, 2026-11-03T10:34:29Z: PROCEED, 3 of 3 seats present** ($0.3840; author `claude:claude-opus-5-5`, so
+  the Claude seat sat out; seats `gemini-4-argon`, `oc-glm-5-3`, `oc-kimi-k3`; `absent_reviewers` `[]`;
+  artifact `~/.ailang/state/mission-quorum-world/w-exec-probe-hello-wait-pin-survivors-2026-11-03T10-34-29Z.json`).
+  All three passed. `oc-glm-5-3` and `oc-kimi-k3` both noted, without blocking, that the shipped T12 (v3)
+  was never run under the 150–214 ambient load that false-redded v1, and that §4 step 4's 32-`yes` load
+  gate is far below it. Controller disposition: the plan adds a heavy-load acceptance run of the shipped T12
+  (§4 step 4 at 160 `yes`, with `-race`), measured outside the sandbox before the judge, and records its
+  minimum dial count against the gate of 6.
