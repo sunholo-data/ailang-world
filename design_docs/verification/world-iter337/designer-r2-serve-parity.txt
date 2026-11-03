@@ -1,0 +1,120 @@
+## V21 serve parity: in-process helper still HTML vs the real `ailang-worldd serve` under capture_marketing.sh:116-118 flags, on the same rig db, opened after the helper returned
+Source: designer-r2-serve-parity-proto_test.go.txt (the r1 prototype + checkMarketingStill returning its first still bodies + TestIter337ServeParity; deleted after the run)
+$ AILANG_BIN=... WORLD_TOOL_AILANG_BIN=... bash run_bounded.sh 600 <log> go test -count=1 -timeout 540s -v -run "^(TestIter337ServeParity|TestIter337StillRoutes)$" ./cmd/ailang-worldd
+rc=0
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:69: LISTENER still=false addr=127.0.0.1:59766
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:69: LISTENER still=true addr=127.0.0.1:59784
+    zz_iter337_still_proto_test.go:136: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=c8ff57432a1074c2185cfd699f0517cd373c22badc01df591a5e774543356b34
+    zz_iter337_still_proto_test.go:136: STILL /workbench?object=sha256:07464f100d9677432477171043a89145ef33db808e9b1a3dc7ed68f401f41945 bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=87d4624dbafd3c05e0df5d6c2d9963ca2813f221163ff7a132a1c2ddaf5a00c1
+    zz_iter337_still_proto_test.go:136: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=6988b1d63cd1869eea6dec43044df62a9bb05221acdb5bb1955a8d8c43bfab43
+    zz_iter337_still_proto_test.go:136: STILL /workbench?object=sha256:d8c607ada9777c693eea3f439d89b4da71bb0813b1b6af649c3fa885ddacc136&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=88173458405d103440ab8f18d18bbf829413880ac370341b210aad4f4d3993c8
+    zz_iter337_still_proto_test.go:137: TIMING seed=8.02s build=0.49s still=2.94s total=11.44s
+--- PASS: TestIter337StillRoutes (11.48s)
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:69: LISTENER still=false addr=127.0.0.1:60302
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:69: LISTENER still=true addr=127.0.0.1:60316
+    zz_iter337_still_proto_test.go:153: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=c179209fdb46a36a0c2684be45c0bb559b84cd2159eea15aa1c21db37229bb89
+    zz_iter337_still_proto_test.go:153: STILL /workbench?object=sha256:03a7a4a9c430e75569a22f03d1253cff28afcf4adc56dd6852964b0d9e8af45d bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=415c31bab8e5f3e90cafb3e5599275f79a73ef1e8e454a6652e7d12266b93379
+    zz_iter337_still_proto_test.go:153: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=9d568a2bfbebecb04839dbea9fa3b9e1939881632c9bea8440e48ba620671ca8
+    zz_iter337_still_proto_test.go:153: STILL /workbench?object=sha256:c363257b25c093f4b18f6fbc1cc0231a90a8d1f798a66faca76e9d3a102b0522&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=896a48a4a614a8a62ceba5d667a60d0f3d0ba520fdf15947bfb10e3154d9933d
+    zz_iter337_still_proto_test.go:185: SERVE bind=127.0.0.1:60394
+    zz_iter337_still_proto_test.go:198: SERVE-PARITY /workbench status=200 bytes=19197 inproc_bytes=19197 equal=true contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:198: SERVE-PARITY /workbench?object=sha256:03a7a4a9c430e75569a22f03d1253cff28afcf4adc56dd6852964b0d9e8af45d status=200 bytes=18654 inproc_bytes=18654 equal=true contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:198: SERVE-PARITY /workbench?from=9&entry=9 status=200 bytes=10275 inproc_bytes=10275 equal=true contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:198: SERVE-PARITY /workbench?object=sha256:c363257b25c093f4b18f6fbc1cc0231a90a8d1f798a66faca76e9d3a102b0522&payload=1 status=200 bytes=16654 inproc_bytes=16654 equal=true contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:203: SERVE-PARITY SUMMARY 4/4 routes byte-equal
+--- PASS: TestIter337ServeParity (12.81s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	24.687s
+
+### control: the same run with PROTO_SERVE_DEFAULT=1 (serve WITHOUT --workbench-still): equality must fail
+(a first control attempt dropped argv[5] = the bind value instead of --workbench-still; serve never became ready, rc=1 after 41 s; the index was corrected to argv[6])
+rc=1
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:69: LISTENER still=false addr=127.0.0.1:63864
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:69: LISTENER still=true addr=127.0.0.1:63866
+    zz_iter337_still_proto_test.go:153: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=8c103830baf0ae5d5ef96b8e1b9495ca771213a7eb9d6d926e202a28e2e67437
+    zz_iter337_still_proto_test.go:153: STILL /workbench?object=sha256:1d2b46635224c2d65264dc51b0f039aa6f393cffe42d25c65ea22c9d74d7adc7 bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=1c6101f1b7b1a4bf86ee773abc51bdb682bf52984bb32103738054427c4c6127
+    zz_iter337_still_proto_test.go:153: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=537ff6b189b32ef51c9d313381316ccfdaa7a3c02e6dcd9d7d5734aebba58fdb
+    zz_iter337_still_proto_test.go:153: STILL /workbench?object=sha256:450ebf870f7b7ef87d73143c58cf4b3724b30ffb31cf27d84f08e7d5eaa275ce&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=9b8e2510b8c702b39a45cd2507c72085e33ab98691c68d5a793ed04298d551f3
+    zz_iter337_still_proto_test.go:168: CONTROL args=["--bind" "127.0.0.1:63897" "--ailang-bin" "/Users/voightkampff/.pinned-ailang/ailang"]
+    zz_iter337_still_proto_test.go:189: SERVE bind=127.0.0.1:63897
+    zz_iter337_still_proto_test.go:202: SERVE-PARITY /workbench status=200 bytes=19245 inproc_bytes=19197 equal=false contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:204: serve still HTML differs from in-process still HTML on /workbench
+    zz_iter337_still_proto_test.go:202: SERVE-PARITY /workbench?object=sha256:1d2b46635224c2d65264dc51b0f039aa6f393cffe42d25c65ea22c9d74d7adc7 status=200 bytes=18702 inproc_bytes=18654 equal=false contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:204: serve still HTML differs from in-process still HTML on /workbench?object=sha256:1d2b46635224c2d65264dc51b0f039aa6f393cffe42d25c65ea22c9d74d7adc7
+    zz_iter337_still_proto_test.go:202: SERVE-PARITY /workbench?from=9&entry=9 status=200 bytes=10323 inproc_bytes=10275 equal=false contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:204: serve still HTML differs from in-process still HTML on /workbench?from=9&entry=9
+    zz_iter337_still_proto_test.go:202: SERVE-PARITY /workbench?object=sha256:450ebf870f7b7ef87d73143c58cf4b3724b30ffb31cf27d84f08e7d5eaa275ce&payload=1 status=200 bytes=16702 inproc_bytes=16654 equal=false contains_bind=false contains_port=false
+    zz_iter337_still_proto_test.go:204: serve still HTML differs from in-process still HTML on /workbench?object=sha256:450ebf870f7b7ef87d73143c58cf4b3724b30ffb31cf27d84f08e7d5eaa275ce&payload=1
+    zz_iter337_still_proto_test.go:207: SERVE-PARITY SUMMARY 0/4 routes byte-equal
+--- FAIL: TestIter337ServeParity (12.44s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	12.825s
+FAIL
+$ printf %s "<script src=\"/workbench/live.js\" defer></script>" | wc -c
+      48
