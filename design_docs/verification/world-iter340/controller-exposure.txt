@@ -1,0 +1,33 @@
+# iter-340 controller exposure measurement (quorum r1 oc-kimi-k3 objection, rule 3f): bind->control() vs control()->acceptsC
+# copies: /Users/voightkampff/dev/sunholo-data/.scratch-iter340-ctl-{head,proto} = git archive e22e0794 (+ designer-proto.patch.txt applied for proto, sha256 prefix 19de369381579387 before instrumentation)
+# instrumentation (both copies, identical): probeListener gains zzBound=time.Now() at construction; probe() records zzPre=time.Since(zzBound) immediately before net6.control(), zzCtl=time.Now() immediately after, and prints 'ZZT pre_us post_us' right after acceptsC is sampled
+# instr.pl:
+undef $/; $_ = <STDIN>;
+s/(type probeListener struct \{\n)/$1\tzzBound time.Time\n/ or die "no struct";
+s/(func newProbeListener\(\) \*probeListener \{\n)/$1\tdefer func() {}()\n/ or die "no ctor";
+s/(\tnetCtl := net6\.control\(\)\n)/\tzzPre := time.Since(net6.zzBound)\n$1\tzzCtl := time.Now()\n/ or die "no ctl";
+s/(\tacceptsC := net6\.accepts\.Load\(\)\n)/$1\tfmt.Fprintf(os.Stderr, "ZZT pre_us=%d post_us=%d\\n", zzPre.Microseconds(), time.Since(zzCtl).Microseconds())\n/ or die "no accC";
+print;
+# plus: s/l := &probeListener{}/l := &probeListener{zzBound: time.Now()}/
+# runner:
+#!/bin/bash
+S=/Users/voightkampff/dev/sunholo-data
+for d in head proto; do
+  cd $S/.scratch-iter340-ctl-$d
+  uptime > /tmp/iter340/expo-$d.txt
+  go test -count=10 -v -run '^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNoopShimFailsArm1)$' ./host/broker/ >> /tmp/iter340/expo-$d.txt 2>&1; echo "$d rc=$?" >> /tmp/iter340/expo.rc
+done
+echo DONE > /tmp/iter340/expo.done
+# rc:
+head rc=1
+proto rc=0
+== head (14:40  up 2 days, 19:59, 4 users, load averages: 4.17 5.19 5.25)
+  pre_us n=20 min=43 med=50 max=136
+  post_us n=20 min=559419 med=617897 max=1792995
+  --- FAIL lines: 1
+== proto (14:40  up 2 days, 19:59, 4 users, load averages: 3.51 4.95 5.16)
+  pre_us n=20 min=6713 med=7178 max=18427
+  post_us n=20 min=561160 med=576042 max=1707630
+  --- FAIL lines: 0
+# head FAIL detail (3rd sighting of the pass-through accepts-4 control red; 1 of 10 TP runs here):
+# reading: profiles here are single, unprotected (pass-through, noop shims). Protected profiles add the preflight Git (designer V9 proxy 8.5-14 ms) to pre only.
