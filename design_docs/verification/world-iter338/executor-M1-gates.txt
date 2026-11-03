@@ -1,0 +1,563 @@
+
+===== gofmt =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=gofmt -l scripts/marketingcheck
+bound_s=600
+{
+  "id": "gofmt",
+  "rc": 0,
+  "status": "PASS",
+  "seconds": 0.07,
+  "fails": [],
+  "passes": 0,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+
+--- stderr ---
+
+===== END gofmt =====
+
+===== vet =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=go vet ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "vet",
+  "rc": 0,
+  "status": "PASS",
+  "seconds": 0.34,
+  "fails": [],
+  "passes": 0,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+
+--- stderr ---
+
+===== END vet =====
+
+===== build =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=go build ./...
+bound_s=600
+{
+  "id": "build",
+  "rc": 0,
+  "status": "PASS",
+  "seconds": 1.71,
+  "fails": [],
+  "passes": 0,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+
+--- stderr ---
+
+===== END build =====
+
+===== all-tests =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=go test ./...
+bound_s=2400
+{
+  "id": "all-tests",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 201.08,
+  "fails": [
+    "TestCLIRealSubprocessEpisode",
+    "TestClientDeadlineAgainstAcceptingServer",
+    "TestCLIAgainstSeToolsDaemon",
+    "TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull",
+    "TestOrdinaryOverflowCarriesNoESRCH",
+    "TestExecProbePassThroughShimFailsEveryConfinementArm",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage",
+    "TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close",
+    "TestExecProbeReverseLegExhaustionRefusesDistinctly",
+    "TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time",
+    "TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse",
+    "TestExecProbeReverseLegNoTokenIsNotRetried",
+    "TestExecProbeReverseLegNoTokenIsNotRetried/silent-client",
+    "TestExecProbeReverseLegNoTokenIsNotRetried/clean",
+    "TestExecProbeReverseLegSilentHolderRefusesSticky",
+    "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1",
+    "TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty",
+    "TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder",
+    "TestExecProbeReverseLegRealReachSurvivesAForeignAttempt",
+    "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse",
+    "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty",
+    "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent",
+    "TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control",
+    "TestExecProbeReverseDialErrIsSilent",
+    "TestExecProbeReversePollRecordsConnectReset",
+    "TestAilangRunCapsOnTheToolBinary",
+    "TestOrdinaryOverflowCarriesNoESRCH",
+    "TestAGUIShutdownEndsRuns",
+    "TestAGUIShutdownEndsRuns/false",
+    "TestAGUIShutdownEndsRuns/true",
+    "TestAGUISeesDirectStoreCommit",
+    "TestInstallGoodRelease",
+    "TestTheTwoShapesOfControllingTerminal",
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 0,
+  "skips": 0,
+  "evidence": [
+    "    cli_test.go:206: read daemon announcement: <nil>; stderr=ailang-worldd: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "    cli_test.go:289: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]",
+    "        stderr \"STOP fence=tty reason=no-controlling-terminal\\n  opening /dev/tty failed: open /dev/tty: operation not permitted; there is no controlling terminal here (an agent harness, setsid, cron or CI). fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step\\n\"",
+    "    exec_probe_test.go:190: pass-through: exec startup probe failed for profile \"proj\" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token \"WORLD-PROBE-WROTE\" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr \"\"); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecProbePassThroughShimFailsEveryConfinementArm2555145534/002/home/.ailang-worldd-exec-probe-decoy: token \"WORLD-PROBE-READ\", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr \"\"); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-4cc14e2b88584cf9: token \"WORLD-PROBE-WROTE\", on the host: present=true (exit 0; stderr \"\"); arm6-network: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:614: Why = \"reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted\", picker calls 1; want inconclusive after 3 attempts, no reach text, calls 3",
+    "        exec_probe_test.go:639: Why = \"reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted\", picker calls 1; want no-token on attempt 1",
+    "        exec_probe_test.go:634: Why = \"reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted\", picker calls 1; want a pass on attempt 1",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "    exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:729: chatty: arm 6 = \"control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \\\"WORLD-PROBE-REFUSED EPERM\\\", accepts 0 (want a refusal and still 1; exit 0; stderr \\\"\\\"); a connect through srt's proxy environment: token \\\"WORLD-PROBE-REFUSED EPERM\\\", accepts 0 (want a refusal and still 1; exit 0; stderr \\\"\\\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted\"",
+    "        exec_probe_test.go:733: chatty: arm 6 reports a reverse leg: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:729: silent: arm 6 = \"control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \\\"WORLD-PROBE-REFUSED EPERM\\\", accepts 0 (want a refusal and still 1; exit 0; stderr \\\"\\\"); a connect through srt's proxy environment: token \\\"WORLD-PROBE-REFUSED EPERM\\\", accepts 0 (want a refusal and still 1; exit 0; stderr \\\"\\\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted\"",
+    "        exec_probe_test.go:737: silent: arm 6 must carry the silent refusal, not the reached text: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        exec_probe_test.go:729: control: arm 6 = \"control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \\\"WORLD-PROBE-REFUSED EPERM\\\", accepts 0 (want a refusal and still 1; exit 0; stderr \\\"\\\"); a connect through srt's proxy environment: token \\\"WORLD-PROBE-REFUSED EPERM\\\", accepts 0 (want a refusal and still 1; exit 0; stderr \\\"\\\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted\"",
+    "        exec_probe_test.go:733: control: arm 6 reports a reverse leg: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "    exec_probe_test.go:757: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "    exec_probe_test.go:804: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]",
+    "        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted",
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]",
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]",
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+--- FAIL: TestCLIRealSubprocessEpisode (4.12s)
+    cli_test.go:206: read daemon announcement: <nil>; stderr=ailang-worldd: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestClientDeadlineAgainstAcceptingServer (0.00s)
+    cli_test.go:289: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestCLIAgainstSeToolsDaemon (6.22s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 27 [running]:
+testing.tRunner.func1.2({0x1032257c0, 0x3b1f79747ad0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1032257c0?, 0x3b1f79747ad0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x103348240, 0x3b1f79524ed0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.newCLISeRig(0x3b1f795de488, 0x1)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/cmd/ailang-worldd/cliwalk_e2e_test.go:77 +0x47c
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.TestCLIAgainstSeToolsDaemon(0x3b1f795de488)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/cmd/ailang-worldd/cliwalk_e2e_test.go:194 +0x2c
+testing.tRunner(0x3b1f795de488, 0x10333d938)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	10.731s
+--- FAIL: TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull (0.01s)
+    tty_pty_test.go:167: ptytest: the pty closed before "publish 1 transitions to /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestTransitionsReadsTheConfirmationFromThePtyWhenStdinIsDevNull3829782379/001/world.db" appeared; transcript ""
+        stdout ""
+        stderr "STOP fence=tty reason=no-controlling-terminal\n  opening /dev/tty failed: open /dev/tty: operation not permitted; there is no controlling terminal here (an agent harness, setsid, cron or CI). fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step\n"
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/world-publish	58.593s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	43.519s
+ok  	github.com/sunholo-data/ailang-world/host/agui	4.718s
+ok  	github.com/sunholo-data/ailang-world/host/archive	40.310s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.717s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	5.462s
+--- FAIL: TestOrdinaryOverflowCarriesNoESRCH (10.02s)
+    cleanup_test.go:230: group leader 41679 never became an unreaped zombie
+--- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm (0.79s)
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 52.673709ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestExecProbePassThroughShimFailsEveryConfinementArm2555145534/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-4cc14e2b88584cf9: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2":
+        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3":
+        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    exec_probe_test.go:207: arm 6 under a pass-through srt does not report "reverse leg: the host reached":
+        control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried (0.11s)
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400 (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.484292ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.675625ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.364792ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 3.055292ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400 (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.306709ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce (0.02s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.246375ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage (0.02s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.938041ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close (0.01s)
+        exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.356ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly (0.39s)
+    --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time (0.01s)
+        exec_probe_test.go:612: TIMING ArchiveExecSandbox took 3.018166ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse (0.38s)
+        exec_probe_test.go:612: TIMING ArchiveExecSandbox took 3.590709ms
+        exec_probe_test.go:614: Why = "reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted", picker calls 1; want inconclusive after 3 attempts, no reach text, calls 3
+--- FAIL: TestExecProbeReverseLegNoTokenIsNotRetried (2.18s)
+    --- FAIL: TestExecProbeReverseLegNoTokenIsNotRetried/silent-client (1.80s)
+        exec_probe_test.go:631: TIMING ArchiveExecSandbox took 2.272875ms
+        exec_probe_test.go:639: Why = "reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted", picker calls 1; want no-token on attempt 1
+    --- FAIL: TestExecProbeReverseLegNoTokenIsNotRetried/clean (0.37s)
+        exec_probe_test.go:631: TIMING ArchiveExecSandbox took 2.666125ms
+        exec_probe_test.go:634: Why = "reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted", picker calls 1; want a pass on attempt 1
+--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky (0.05s)
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.02s)
+        exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.7285ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.02s)
+        exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.2125ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.02s)
+        exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.552042ms
+        exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (0.06s)
+    exec_probe_test.go:680: TIMING ArchiveExecSandbox took 52.135542ms
+    exec_probe_test.go:544: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (2.33s)
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (0.77s)
+        exec_probe_test.go:718: TIMING ArchiveExecSandbox took 49.447291ms
+        exec_probe_test.go:729: chatty: arm 6 = "control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted"
+        exec_probe_test.go:733: chatty: arm 6 reports a reverse leg: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent (0.78s)
+        exec_probe_test.go:718: TIMING ArchiveExecSandbox took 49.347834ms
+        exec_probe_test.go:729: silent: arm 6 = "control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted"
+        exec_probe_test.go:737: silent: arm 6 must carry the silent refusal, not the reached text: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control (0.77s)
+        exec_probe_test.go:718: TIMING ArchiveExecSandbox took 50.620583ms
+        exec_probe_test.go:729: control: arm 6 = "control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED EPERM\", accepts 0 (want a refusal and still 1; exit 0; stderr \"\"); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted"
+        exec_probe_test.go:733: control: arm 6 reports a reverse leg: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-REFUSED EPERM", accepts 0 (want a refusal and still 1; exit 0; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReverseDialErrIsSilent (0.00s)
+    exec_probe_test.go:757: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestExecProbeReversePollRecordsConnectReset (0.00s)
+    exec_probe_test.go:804: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestAilangRunCapsOnTheToolBinary (0.12s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 10920 [running]:
+testing.tRunner.func1.2({0x1033b2140, 0x5c2bad910070})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1033b2140?, 0x5c2bad910070?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x103485b80, 0x5c2bad54c060})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/host/broker.newNetMock(0x5c2badba4b48, 0x0)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/host/broker/handlers_ailang_run_test.go:393 +0x8c
+github.com/sunholo-data/ailang-world/host/broker.newRunFixture(0x5c2badba4b48, {0x102dc335b, 0x8})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/host/broker/handlers_ailang_run_test.go:436 +0x54
+github.com/sunholo-data/ailang-world/host/broker.TestAilangRunCapsOnTheToolBinary(0x5c2badba4b48)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/host/broker/handlers_ailang_run_test.go:492 +0x34
+testing.tRunner(0x5c2badba4b48, 0x10347cad8)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/broker	143.436s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.295s
+--- FAIL: TestOrdinaryOverflowCarriesNoESRCH (10.56s)
+    cleanup_test.go:407: group leader 49952 never became an unreaped zombie
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/capsule	77.068s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	4.164s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.142s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	65.369s
+--- FAIL: TestAGUIShutdownEndsRuns (0.01s)
+    --- FAIL: TestAGUIShutdownEndsRuns/false (0.00s)
+        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+    --- FAIL: TestAGUIShutdownEndsRuns/true (0.01s)
+        agui_test.go:583: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+--- FAIL: TestAGUISeesDirectStoreCommit (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 5002 [running]:
+testing.tRunner.func1.2({0x105d91d80, 0x40e1bdb5550})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x105d91d80?, 0x40e1bdb5550?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x105ead7e0, 0x40e1bda6180})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/host/daemon.TestAGUISeesDirectStoreCommit(0x40e1c3a4008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/host/daemon/agui_test.go:684 +0xd4
+testing.tRunner(0x40e1c3a4008, 0x105ea2f90)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	10.044s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	29.275s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	2.173s
+--- FAIL: TestInstallGoodRelease (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 8 [running]:
+testing.tRunner.func1.2({0x1049d9820, 0x6cfecb0683d0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1049d9820?, 0x6cfecb0683d0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewTLSServer({0x104a69160, 0x6cfecb198140})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:219 +0x28
+github.com/sunholo-data/ailang-world/host/pinfetch.serveRelease(0x6cfecb190488, {{0x6cfecb0c8400, 0x75, 0x80}, {0x6cfecb0640c0, 0x5d}, {0x6cfecb058120, 0x1b, 0x1b}})
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/host/pinfetch/pinfetch_test.go:96 +0xc8
+github.com/sunholo-data/ailang-world/host/pinfetch.TestInstallGoodRelease(0x6cfecb190488)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/host/pinfetch/pinfetch_test.go:140 +0xd0
+testing.tRunner(0x6cfecb190488, 0x104a64cc0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/host/pinfetch	3.386s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.612s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	44.184s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.731s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.815s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.274s
+--- FAIL: TestTheTwoShapesOfControllingTerminal (10.03s)
+    ptytest_test.go:32: ptytest: "prompt> " did not appear on the pty within 10s; transcript ""
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/ptytest	13.755s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.785s
+ok  	github.com/sunholo-data/ailang-world/host/replay	47.703s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	7.372s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.524s
+ok  	github.com/sunholo-data/ailang-world/host/surface	3.190s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.810s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	3.238s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	47.697s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	181.708s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	3.637s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	11.140s
+--- FAIL: TestMarketingCapturePassFakeChrome (19.89s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 81 [running]:
+testing.tRunner.func1.2({0x10553bd40, 0x6b136df1e110})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x10553bd40?, 0x6b136df1e110?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1055d3c60, 0x6b136df36030})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x6b136df34008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x6b136df34008, 0x1055cf0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	23.794s
+FAIL
+
+--- stderr ---
+
+===== END all-tests =====
+
+===== verify-ail =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=./scripts/verify_ail.sh
+bound_s=1200
+{
+  "id": "verify-ail",
+  "rc": 0,
+  "status": "PASS",
+  "seconds": 25.04,
+  "fails": [],
+  "passes": 0,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+── legs 1-2 AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0)
+── Leg 1: ai-check required-check manifest
+   ✓ swept .ail module set equals the LEG1_MODULES allowlist (24 modules)
+   ai-check design_docs/sketches/decisionpacket.ail
+   ai-check design_docs/sketches/effectbroker.ail
+   ai-check design_docs/sketches/effectplan.ail
+   ai-check design_docs/sketches/execargs.ail
+   ai-check design_docs/sketches/logepoch.ail
+   ai-check design_docs/sketches/storejournal.ail
+   ai-check design_docs/sketches/transitions.ail
+   ai-check design_docs/sketches/worlddapi.ail
+   ai-check design_docs/sketches/worldkernel.ail
+   ai-check design_docs/sketches/worldtypes.ail
+   ai-check world/contracts.ail
+   ai-check world/logepoch.ail
+   ai-check world/transitions.ail
+   ai-check world/types.ail
+   ai-check packages/se-tools/se_tools/builtins_search.ail
+   ai-check packages/se-tools/se_tools/check.ail
+   ai-check packages/se-tools/se_tools/cli.ail
+   ai-check packages/se-tools/se_tools/delete.ail
+   ai-check packages/se-tools/se_tools/edit.ail
+   ai-check packages/se-tools/se_tools/examples_search.ail
+   ai-check packages/se-tools/se_tools/exec.ail
+   ai-check packages/se-tools/se_tools/read.ail
+   ai-check packages/se-tools/se_tools/run.ail
+   ai-check packages/se-tools/se_tools/write.ail
+   ✓ 16/16 required world/ identities verified across 24 module(s)
+── Leg 2c: execargs sketch named inline tests
+   ✓ all 138 execargs sketch named tests pass
+── Leg 2: named inline tests
+   ✓ all 40 required named tests pass (failed_tests=0)
+── Leg 2b: se-tools named inline tests (per module)
+   ✓ all 503 se-tools named tests pass across 10 modules
+── Leg 3: world package nine-step gate
+── World package step 1/9: required paths
+   ✓ package, manifest, smoke, and 4 allowlisted modules exist
+── World package step 2/9: exact .ail allowlist
+   ✓ find observed exactly 5 expected .ail files; no unexpected .ail file exists
+── World package step 3/9: projection SHA-256 equality
+   ✓ 4/4 projection hashes equal their canonical sources
+── World package step 4/9: frozen manifest
+   ✓ exact package fields, 4 exports, and empty effects
+── World package step 5/9: package check and tests
+   ✓ package check passed and tests reported 43 activity line(s)
+   ✓ exactly 9 skips, all no-generator, all named (upstream M4 / cross-file derive gap)
+── World package step 6/9: bounded smoke execution
+   ✓ plan → verify → commit smoke completed within 30s
+── World package step 7/9: dry-run identity and full pkgproj hashes
+   ✓ dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees
+── World package step 8/9: exact tar entry allowlist
+   cache control fired on 41 non-.ail file(s); observed zero cached .ail files
+   ✓ tar contains exactly 7 allowlisted entries
+── World package step 9/9: canonical ready-packet golden
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+
+--- stderr ---
+
+===== END verify-ail =====
+
+===== Sandbox diagnostics for repository-wide ancillary reds =====
+ps diagnostic PermissionError(1, 'Operation not permitted')
+/dev/tty read-only open diagnostic OSError(6, 'Device not configured')
+Interpretation: host/broker and host/capsule TestOrdinaryOverflowCarriesNoESRCH report no zombie; zombieWithin runs ps and silently ignores execution errors (cleanup_test.go:31 and :30). The direct ps diagnostic is denied with EPERM. This makes the sandbox the inferred cause, not an outside-sandbox result.
+host/ptytest TestTheTwoShapesOfControllingTerminal reports no prompt on the PTY. Its child writes to /dev/tty; cmd/world-publish explicitly reports opening /dev/tty operation not permitted. The executor read-only /dev/tty diagnostic returned ENXIO (no controlling terminal), which does not independently prove EPERM for the test child. PTY attribution to the sandbox is inferred; retain it and the zombie failures as ancillary observations for controller review. No tests were retried.
+No row-247 exact flake signature occurred; no fence reruns performed. All commands completed; no deadline expired.
+
+READ-ONLY CHECK ['git', 'diff', '--name-only', '2c51c581', '--', '.', ':!design_docs']
+scripts/marketingcheck/position.go
+
+rc=0
+
+READ-ONLY CHECK ['git', 'diff', '2c51c581', '--', 'scripts/marketingcheck/position.go']
+diff --git a/scripts/marketingcheck/position.go b/scripts/marketingcheck/position.go
+index 6360dcf9..1196666f 100644
+--- a/scripts/marketingcheck/position.go
++++ b/scripts/marketingcheck/position.go
+@@ -126,7 +126,7 @@ func PositionJudge(base, cand Rectangles) (reasons []string, regions int) {
+ 			gb := b.Y - (pb.Y + pb.H)
+ 			gc := c.Y - (pc.Y + pc.H)
+ 			e := gc - gb
+-			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e
++			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+ 			if posFreeGap(s, b.Name) {
+ 				okGap = gc >= 0 && posLineStep(e) && posAbs(posLines(e)) <= positionFreeGapLines
+ 				gRes = e - posLines(e)*positionLine
+
+rc=0
+
+READ-ONLY CHECK ['git', 'diff', '--numstat', '2c51c581', '--', 'scripts/marketingcheck/position.go']
+1	1	scripts/marketingcheck/position.go
+
+rc=0
+
+READ-ONLY CHECK ['git', 'diff', '--quiet', '2c51c581', '--', 'scripts/marketingcheck/phone.go', 'scripts/marketingcheck/main.go']
+
+rc=0
+
+READ-ONLY CHECK ['git', 'diff', '--name-only', '2c51c581', '--', '.', ':!design_docs']
+scripts/marketingcheck/position.go
+
+rc=0
+
+READ-ONLY CHECK ['git', 'ls-files', '--others', '--exclude-standard', '--', '.', ':!design_docs']
+scripts/marketingcheck/tolerance_test.go
+
+rc=0
+
+READ-ONLY CHECK ['cmp', 'design_docs/verification/world-iter338/controller-r3-tolerance_test.go.txt', 'scripts/marketingcheck/tolerance_test.go']
+
+rc=0
+FINAL SHA256 OK design_docs/verification/world-iter338/plan-M1.diff.txt 733b40d11d7be70cdf5a0dfbade0a79e46ea7652fa9929390d733f2efc2201e0
+FINAL SHA256 OK scripts/marketingcheck/tolerance_test.go c6e5fb0ba113886c0e1f05015425552cdecc122fb17c6911fc409c66e51b27ed
+FINAL SHA256 OK scripts/marketingcheck/position.go af0429fd70cdce9843c04bba18f800b7216f4a778234a7bbb2a158b4ef1fdb3a
+Step 6: PASS. Only position.go:129 changed, trailing comment only; phone.go and main.go unchanged. New tolerance_test.go untracked by design; union of tracked and untracked non-doc code scope exact. Scratch absent.
+
+FINAL git status --porcelain:
+ M scripts/marketingcheck/position.go
+?? design_docs/verification/world-iter338/executor-M1-acceptance.txt
+?? design_docs/verification/world-iter338/executor-M1-gates.txt
+?? design_docs/verification/world-iter338/executor-M1-mutants.txt
+?? scripts/marketingcheck/tolerance_test.go
+
+Cleanup complete: .exec-scratch absent; /tmp/world-iter338-executor.Ria3BF removed. All bounded foreground commands exited. No git write operations performed.

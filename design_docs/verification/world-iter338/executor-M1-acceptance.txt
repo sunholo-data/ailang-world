@@ -1,0 +1,153 @@
+scripts/marketingcheck/position.go 9029dbabd574761050399864cdd45f399ae9a3682ff1523e547479e75f8c669d OK
+scripts/marketingcheck/phone.go 9540d55a323640edab4933e0a4d8f8445be5046a5f8d6c1b0596035b1f0c0770 OK
+scripts/marketingcheck/main.go 24448bb78265726f66085833b8b61ec5b28f16f9743cf6926a5c12e4cd189268 OK
+design_docs/planned/w-marketing-checker-tolerance-pins.md 59ae0dc3bf666cd92fb84e9cd971e2357cfb15cb47b076f2ae8a5609c6d4aab1 OK
+design_docs/verification/world-iter338/controller-r3-tolerance_test.go.txt c6e5fb0ba113886c0e1f05015425552cdecc122fb17c6911fc409c66e51b27ed OK
+design_docs/verification/world-iter338/plan-M1.diff.txt 733b40d11d7be70cdf5a0dfbade0a79e46ea7652fa9929390d733f2efc2201e0 OK
+patching file 'scripts/marketingcheck/position.go'
+patching file 'scripts/marketingcheck/tolerance_test.go'
+POST scripts/marketingcheck/tolerance_test.go c6e5fb0ba113886c0e1f05015425552cdecc122fb17c6911fc409c66e51b27ed OK
+POST scripts/marketingcheck/position.go af0429fd70cdce9843c04bba18f800b7216f4a778234a7bbb2a158b4ef1fdb3a OK
+
+Environment: {"AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang", "WORLD_TOOL_AILANG_BIN": "/Users/voightkampff/.pinned-ailang-tools/v0.54.15/ailang", "WORLD_PHONE_CORPUS": "/Users/voightkampff/.ailang/state/world-iter328-phone-corpus"}
+go version
+go version go1.26.6 darwin/arm64
+
+rc=0
+/Users/voightkampff/.pinned-ailang/ailang --version
+AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026
+
+rc=0
+/Users/voightkampff/.pinned-ailang-tools/v0.54.15/ailang --version
+AILANG v0.54.15
+Commit: 0384450
+Full:   0384450a6b5cb2d852df7e7b04fdb754772a6f25
+Built:  2026-10-17T08:51:16Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026
+
+rc=0
+
+===== tolerance-pins =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=go test -count=1 -v -run '^TestMarketing(PositionTolerancePins|PhoneEntryTolerancePins|RunRoutesPositionPhone)$' ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "tolerance-pins",
+  "rc": 0,
+  "status": "PASS",
+  "seconds": 1.61,
+  "fails": [],
+  "passes": 19,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+=== RUN   TestMarketingPositionTolerancePins
+=== RUN   TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin
+=== RUN   TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2
+=== RUN   TestMarketingPositionTolerancePins/bg-x0+2
+=== RUN   TestMarketingPositionTolerancePins/bg-x0+3
+=== RUN   TestMarketingPositionTolerancePins/bg-y+2
+=== RUN   TestMarketingPositionTolerancePins/bg-y+3
+=== RUN   TestMarketingPositionTolerancePins/bg-right-2
+=== RUN   TestMarketingPositionTolerancePins/bg-right-3
+=== RUN   TestMarketingPositionTolerancePins/bg-bottom-2
+=== RUN   TestMarketingPositionTolerancePins/bg-bottom-3
+=== RUN   TestMarketingPositionTolerancePins/a4-graph-svg-h+2
+=== RUN   TestMarketingPositionTolerancePins/a4-graph-svg-h+3
+=== RUN   TestMarketingPositionTolerancePins/a3-timeline-gap+2
+=== RUN   TestMarketingPositionTolerancePins/a3-timeline-gap+3
+--- PASS: TestMarketingPositionTolerancePins (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-x0+2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-x0+3 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-y+2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-y+3 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-right-2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-right-3 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-bottom-2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/bg-bottom-3 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/a4-graph-svg-h+2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/a4-graph-svg-h+3 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/a3-timeline-gap+2 (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/a3-timeline-gap+3 (0.00s)
+=== RUN   TestMarketingPhoneEntryTolerancePins
+=== RUN   TestMarketingPhoneEntryTolerancePins/entry+4
+    tolerance_test.go:132: entry {41 432 364 614} ACCEPT []
+=== RUN   TestMarketingPhoneEntryTolerancePins/entry+5
+    tolerance_test.go:132: entry {41 433 364 615} REFUSE (i) ["(i) header {25 45 370 68} entry {41 433 364 615} vs R1 {25 45 370 68} {41 428 364 610} ±4"]
+--- PASS: TestMarketingPhoneEntryTolerancePins (0.02s)
+    --- PASS: TestMarketingPhoneEntryTolerancePins/entry+4 (0.01s)
+    --- PASS: TestMarketingPhoneEntryTolerancePins/entry+5 (0.01s)
+=== RUN   TestMarketingRunRoutesPositionPhone
+a                                      ACCEPT regions=17
+TOTAL candidates=1 accept=1 refuse=0
+a                            ACCEPT 390x844 bands=21 header={25 45 370 68} entry={41 428 364 610} thumb={6 833 333 841} titleRight=389
+TOTAL candidates=1 accept=1 refuse=0
+--- PASS: TestMarketingRunRoutesPositionPhone (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.332s
+
+--- stderr ---
+
+===== END tolerance-pins =====
+Count assertions OK: 19 PASS = 3 parents + 14 position + 2 phone; 0 FAIL; 0 SKIP.
+
+===== marketingcheck =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240
+command=go test -count=1 ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "marketingcheck",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.94,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 0,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+--- FAIL: TestMarketingCapturePassFakeChrome (2.34s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 97 [running]:
+testing.tRunner.func1.2({0x104d97d40, 0x35593d914110})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x104d97d40?, 0x35593d914110?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x104e2fc60, 0x35593d926030})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x35593d924008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x35593d924008, 0x104e2b0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 20
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.516s
+FAIL
+
+--- stderr ---
+
+===== END marketingcheck =====

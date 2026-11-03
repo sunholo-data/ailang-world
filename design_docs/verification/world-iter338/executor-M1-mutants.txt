@@ -1,0 +1,1768 @@
+
+===== mutation-control =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "mutation-control",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.62,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 0,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+--- FAIL: TestMarketingCapturePassFakeChrome (1.86s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 82 [running]:
+testing.tRunner.func1.2({0x1012a3d40, 0x17d8d2996190})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1012a3d40?, 0x17d8d2996190?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x10133bc60, 0x17d8d29ac078})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x17d8d29ae248)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x17d8d29ae248, 0x1013370d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.167s
+FAIL
+
+--- stderr ---
+
+===== END mutation-control =====
+
+Mutation T1: sed -i '' '150s/posAbs(c.X-b.X) <= 2/posAbs(c.X-b.X) <= 200/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 200 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== T1 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T1",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.76,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.85s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.46s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.82s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 14 [running]:
+testing.tRunner.func1.2({0x10165fd40, 0x12a05a5646f0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x10165fd40?, 0x12a05a5646f0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1016f7c60, 0x12a05a6240a8})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x12a05a662488)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x12a05a662488, 0x1016f30d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.149s
+FAIL
+
+--- stderr ---
+
+===== END T1 =====
+T1: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T1: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-x0+3"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T2: sed -i '' '150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= 200/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 200 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== T2 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T2",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.75,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.85s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.48s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.80s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 66 [running]:
+testing.tRunner.func1.2({0x1010cfd40, 0x449cc631e6f0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1010cfd40?, 0x449cc631e6f0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x101167c60, 0x449cc62f6240})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x449cc63c6b48)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x449cc63c6b48, 0x1011630d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.143s
+FAIL
+
+--- stderr ---
+
+===== END T2 =====
+T2: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T2: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-y+3"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T3: sed -i '' '150s/posAbs(c.X+c.W-b.X-b.W) <= 2/posAbs(c.X+c.W-b.X-b.W) <= 200/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 200 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== T3 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T3",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.62,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.81s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.46s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.76s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 84 [running]:
+testing.tRunner.func1.2({0x102d77d40, 0x689ef820c2a0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x102d77d40?, 0x689ef820c2a0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x102e0fc60, 0x689ef8220108})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x689ef82226c8)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x689ef82226c8, 0x102e0b0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.089s
+FAIL
+
+--- stderr ---
+
+===== END T3 =====
+T3: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T3: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-right-3"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T4: sed -i '' '150s/posAbs(c.Y+c.H-b.Y-b.H) <= 2/posAbs(c.Y+c.H-b.Y-b.H) <= 200/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 200) {
+
+===== T4 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T4",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.71,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.84s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.50s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.77s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 52 [running]:
+testing.tRunner.func1.2({0x10523fd40, 0xca4dc1fe370})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x10523fd40?, 0xca4dc1fe370?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1052d7c60, 0xca4dc0aa318})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0xca4dc17b208)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0xca4dc17b208, 0x1052d30d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.159s
+FAIL
+
+--- stderr ---
+
+===== END T4 =====
+T4: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T4: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-bottom-3"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T5: sed -i '' '150s/posAbs(c.X-b.X) <= 2/posAbs(c.X-b.X) <= 1/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 1 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== T5 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T5",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.83,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.91s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.46s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.87s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 69 [running]:
+testing.tRunner.func1.2({0x10485fd40, 0x5f8f99c84940})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x10485fd40?, 0x5f8f99c84940?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1048f7c60, 0x5f8f99c5c330})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x5f8f99e58b48)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x5f8f99e58b48, 0x1048f30d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.210s
+FAIL
+
+--- stderr ---
+
+===== END T5 =====
+T5: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T5: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-x0+2"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T6: sed -i '' '150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= 1/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 1 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== T6 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T6",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.67,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.89s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.49s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.81s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 82 [running]:
+testing.tRunner.func1.2({0x100bc7d40, 0x68807ab6210})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x100bc7d40?, 0x68807ab6210?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x100c5fc60, 0x68807cc8078})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x68807cca248)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x68807cca248, 0x100c5b0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.183s
+FAIL
+
+--- stderr ---
+
+===== END T6 =====
+T6: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T6: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-y+2"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T7: sed -i '' '150s/posAbs(c.X+c.W-b.X-b.W) <= 2/posAbs(c.X+c.W-b.X-b.W) <= 1/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 1 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== T7 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T7",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.73,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.86s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.47s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.82s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 52 [running]:
+testing.tRunner.func1.2({0x1034c3d40, 0x2a96577fc910})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1034c3d40?, 0x2a96577fc910?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x10355bc60, 0x2a96577d4330})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x2a9657925208)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x2a9657925208, 0x1035570d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.162s
+FAIL
+
+--- stderr ---
+
+===== END T7 =====
+T7: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T7: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-right-2"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T8: sed -i '' '150s/posAbs(c.Y+c.H-b.Y-b.H) <= 2/posAbs(c.Y+c.H-b.Y-b.H) <= 1/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 1) {
+
+===== T8 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T8",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.59,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.83s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.48s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.79s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 52 [running]:
+testing.tRunner.func1.2({0x104867d40, 0x287e353562a0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x104867d40?, 0x287e353562a0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1048ffc60, 0x287e352a4138})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x287e35332fc8)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x287e35332fc8, 0x1048fb0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.120s
+FAIL
+
+--- stderr ---
+
+===== END T8 =====
+T8: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T8: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-bottom-2"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T9: sed -i '' '101s/posAbs(dh) > 2/posAbs(dh) > 3/' scripts/marketingcheck/position.go
+BEFORE 			} else if posAbs(dh) > 2 {
+AFTER 			} else if posAbs(dh) > 3 {
+
+===== T9 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T9",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.73,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.80s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.46s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.76s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 83 [running]:
+testing.tRunner.func1.2({0x10481bd40, 0x9e1f3162c0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x10481bd40?, 0x9e1f3162c0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1048b3c60, 0x9e1f15a288})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x9e1f2aad88)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x9e1f2aad88, 0x1048af0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.094s
+FAIL
+
+--- stderr ---
+
+===== END T9 =====
+T9: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T9: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/a4-graph-svg-h+3"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T10: sed -i '' '101s/posAbs(dh) > 2/posAbs(dh) > 1/' scripts/marketingcheck/position.go
+BEFORE 			} else if posAbs(dh) > 2 {
+AFTER 			} else if posAbs(dh) > 1 {
+
+===== T10 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T10",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.83,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.89s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.59s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.50s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.81s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 27 [running]:
+testing.tRunner.func1.2({0x102d7fd40, 0xc7452c70480})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x102d7fd40?, 0xc7452c70480?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x102e17c60, 0xc7452d12318})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0xc7452e14b48)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0xc7452e14b48, 0x102e130d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 19
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.186s
+FAIL
+
+--- stderr ---
+
+===== END T10 =====
+T10: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T10: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionCorpus",
+    "TestMarketingPositionCorpus/new/bnd-nonpara-drift-2",
+    "TestMarketingPositionCorpus/new/bnd-nonpara-drift-3",
+    "TestMarketingPositionParity",
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/a4-graph-svg-h+2"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T11: sed -i '' '129s/posAbs(e) <= 2/posAbs(e) <= 3/' scripts/marketingcheck/position.go
+BEFORE 			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+AFTER 			okGap, gRes := gc >= 0 && posAbs(e) <= 3, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+
+===== T11 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T11",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.72,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.81s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.49s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.75s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 65 [running]:
+testing.tRunner.func1.2({0x102757d40, 0x61b3cf9d4140})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x102757d40?, 0x61b3cf9d4140?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1027efc60, 0x61b3cf85e048})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x61b3cf9e6008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x61b3cf9e6008, 0x1027eb0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.108s
+FAIL
+
+--- stderr ---
+
+===== END T11 =====
+T11: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T11: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/a3-timeline-gap+3",
+    "TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T12: sed -i '' '129s/posAbs(e) <= 2/posAbs(e) <= 1/' scripts/marketingcheck/position.go
+BEFORE 			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+AFTER 			okGap, gRes := gc >= 0 && posAbs(e) <= 1, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+
+===== T12 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T12",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.81,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.98s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.55s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.85s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 83 [running]:
+testing.tRunner.func1.2({0x104c5bd40, 0x1577977e8780})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x104c5bd40?, 0x1577977e8780?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x104cf3c60, 0x1577977c0288})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x157797910d88)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x157797910d88, 0x104cef0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.277s
+FAIL
+
+--- stderr ---
+
+===== END T12 =====
+T12: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T12: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionCorpus",
+    "TestMarketingPositionCorpus/new/perm-roster-drift-2px",
+    "TestMarketingPositionParity",
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/a3-timeline-gap+2",
+    "TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T13: sed -i '' '168s/phoneR1Entry, 4)/phoneR1Entry, 40)/' scripts/marketingcheck/phone.go
+BEFORE 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 4)) {
+AFTER 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 40)) {
+
+===== T13 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T13",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.65,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.87s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.56s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.52s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.78s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 67 [running]:
+testing.tRunner.func1.2({0x100993d40, 0x7ce62fe962a0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x100993d40?, 0x7ce62fe962a0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x100a2bc60, 0x7ce62fe6e108})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x7ce62ffbe488)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x7ce62ffbe488, 0x100a270d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 20
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.170s
+FAIL
+
+--- stderr ---
+
+===== END T13 =====
+T13: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T13: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPhoneEntryTolerancePins",
+    "TestMarketingPhoneEntryTolerancePins/entry+5"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T14: sed -i '' '168s/phoneR1Entry, 4)/phoneR1Entry, 3)/' scripts/marketingcheck/phone.go
+BEFORE 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 4)) {
+AFTER 	if !(phoneNear(s.Header, phoneR1Header, 4) && phoneNear(s.FirstEntry, phoneR1Entry, 3)) {
+
+===== T14 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T14",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.78,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.93s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.52s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.84s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 66 [running]:
+testing.tRunner.func1.2({0x1026bfd40, 0x749d43a78260})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1026bfd40?, 0x749d43a78260?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x102757c60, 0x749d43a500d8})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x749d43c586c8)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x749d43c586c8, 0x1027530d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 20
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.226s
+FAIL
+
+--- stderr ---
+
+===== END T14 =====
+T14: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T14: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPhoneArms",
+    "TestMarketingPhoneArms/v67/shift-4",
+    "TestMarketingPhoneParity",
+    "TestMarketingPhoneEntryTolerancePins",
+    "TestMarketingPhoneEntryTolerancePins/entry+4"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T15: sed -i '' '51s/case "position":/case "position-unrouted":/' scripts/marketingcheck/main.go
+BEFORE 	case "position":
+AFTER 	case "position-unrouted":
+
+===== T15 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T15",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.63,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.85s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.49s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.78s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 41 [running]:
+testing.tRunner.func1.2({0x1046b3d40, 0x72bef24363d0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x1046b3d40?, 0x72bef24363d0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x10474bc60, 0x72bef2424168})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x72bef2464908)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x72bef2464908, 0x1047470d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.139s
+FAIL
+
+--- stderr ---
+
+===== END T15 =====
+T15: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T15: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingRunbookMatchesHelp",
+    "TestMarketingRunbookMatchesHelp/position-lines",
+    "TestMarketingRunRoutesPositionPhone"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T16: sed -i '' '53s/case "phone":/case "phone-unrouted":/' scripts/marketingcheck/main.go
+BEFORE 	case "phone":
+AFTER 	case "phone-unrouted":
+
+===== T16 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T16",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.73,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.92s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.59s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.49s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.83s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 38 [running]:
+testing.tRunner.func1.2({0x102e1bd40, 0x49b454054140})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x102e1bd40?, 0x49b454054140?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x102eb3c60, 0x49b45400e048})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x49b4541ce008)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x49b4541ce008, 0x102eaf0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.213s
+FAIL
+
+--- stderr ---
+
+===== END T16 =====
+T16: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T16: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingRunbookMatchesHelp",
+    "TestMarketingRunbookMatchesHelp/phone-lines",
+    "TestMarketingRunRoutesPositionPhone"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T17: sed -i '' '52s/runPosition(args\[1:\], os\.Stdout, os\.Stderr)/runPhone(args[1:], os.Stdout, os.Stderr)/' scripts/marketingcheck/main.go
+BEFORE 		return runPosition(args[1:], os.Stdout, os.Stderr)
+AFTER 		return runPhone(args[1:], os.Stdout, os.Stderr)
+
+===== T17 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T17",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 3.37,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (2.43s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.48s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (1.37s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 67 [running]:
+testing.tRunner.func1.2({0x100bf7d40, 0x6563e86da7d0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x100bf7d40?, 0x6563e86da7d0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x100c8fc60, 0x6563e88b60a8})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x6563e88b8488)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x6563e88b8488, 0x100c8b0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.727s
+FAIL
+
+--- stderr ---
+
+===== END T17 =====
+T17: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T17: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingRunbookMatchesHelp",
+    "TestMarketingRunbookMatchesHelp/position-lines",
+    "TestMarketingRunRoutesPositionPhone"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T17b: sed -i '' '54s/runPhone(args\[1:\], os\.Stdout, os\.Stderr)/runPosition(args[1:], os.Stdout, os.Stderr)/' scripts/marketingcheck/main.go
+BEFORE 		return runPhone(args[1:], os.Stdout, os.Stderr)
+AFTER 		return runPosition(args[1:], os.Stdout, os.Stderr)
+
+===== T17b =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T17b",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 3.58,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.94s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.49s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.86s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 56 [running]:
+testing.tRunner.func1.2({0x102cc7d40, 0x40f2e43a46c0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x102cc7d40?, 0x40f2e43a46c0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x102d5fc60, 0x40f2e449c090})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x40f2e43e6b48)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x40f2e43e6b48, 0x102d5b0d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 20
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.420s
+FAIL
+
+--- stderr ---
+
+===== END T17b =====
+T17b: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T17b: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingRunbookMatchesHelp",
+    "TestMarketingRunbookMatchesHelp/phone-lines",
+    "TestMarketingRunRoutesPositionPhone"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation T18: sed -i '' '129s/gc >= 0 && posAbs(e) <= 2/posAbs(e) <= 2/' scripts/marketingcheck/position.go
+BEFORE 			okGap, gRes := gc >= 0 && posAbs(e) <= 2, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+AFTER 			okGap, gRes := posAbs(e) <= 2, e // gc >= 0 is banked as equivalent on R1 (premise pinned by TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2); editing this clause re-opens T18
+
+===== T18 =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "T18",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.69,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.88s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.57s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.50s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.81s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 84 [running]:
+testing.tRunner.func1.2({0x104ddfd40, 0x45bd75dfe290})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x104ddfd40?, 0x45bd75dfe290?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x104e77c60, 0x45bd75f92108})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x45bd75f946c8)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x45bd75f946c8, 0x104e730d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.174s
+FAIL
+
+--- stderr ---
+
+===== END T18 =====
+T18: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON T18: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/gc-a3-conjunct-source-pin"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+Mutation PG: sed -i '' '162s/"y": 423,/"y": 324,/' design_docs/verification/world-iter312/r1-rects.json
+BEFORE           "y": 423,
+AFTER           "y": 324,
+
+===== PG =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise-nonfree-gaps-ge-2$' ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "PG",
+  "rc": 1,
+  "status": "RED",
+  "seconds": 0.51,
+  "fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2"
+  ],
+  "passes": 0,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+=== RUN   TestMarketingPositionTolerancePins
+=== RUN   TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2
+    tolerance_test.go:57: workbench-light.png/timeline-first: non-free baseline gap 1 < 2; `gc >= 0` is no longer implied (re-derive design §2.5)
+--- FAIL: TestMarketingPositionTolerancePins (0.00s)
+    --- FAIL: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.171s
+FAIL
+
+--- stderr ---
+
+===== END PG =====
+PG: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON PG: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2"
+  ],
+  "expected_fails": [
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2"
+  ],
+  "matches_expected": "yes",
+  "restored": true
+}
+
+Mutation PG-boundary: sed -i '' '162s/"y": 423,/"y": 325,/' design_docs/verification/world-iter312/r1-rects.json
+BEFORE           "y": 423,
+AFTER           "y": 325,
+
+===== PG-boundary =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v -run '^TestMarketingPositionTolerancePins$/^gc-premise-nonfree-gaps-ge-2$' ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "PG-boundary",
+  "rc": 0,
+  "status": "PASS",
+  "seconds": 0.58,
+  "fails": [],
+  "passes": 2,
+  "skips": 0,
+  "evidence": []
+}
+--- stdout ---
+=== RUN   TestMarketingPositionTolerancePins
+=== RUN   TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2
+--- PASS: TestMarketingPositionTolerancePins (0.00s)
+    --- PASS: TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	0.166s
+
+--- stderr ---
+
+===== END PG-boundary =====
+PG-boundary: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON PG-boundary: {
+  "rc": 0,
+  "fails": [],
+  "expected_fails": [],
+  "matches_expected": "yes",
+  "restored": true
+}
+
+Mutation C: sed -i '' '150s/posAbs(c.Y-b.Y) <= 2/posAbs(c.Y-b.Y) <= -1/' scripts/marketingcheck/position.go
+BEFORE 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= 2 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+AFTER 		if !(posAbs(c.X-b.X) <= 2 && posAbs(c.Y-b.Y) <= -1 && posAbs(c.X+c.W-b.X-b.W) <= 2 && posAbs(c.Y+c.H-b.Y-b.H) <= 2) {
+
+===== C =====
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch
+command=go test -count=1 -v ./scripts/marketingcheck/
+bound_s=600
+{
+  "id": "C",
+  "rc": 1,
+  "status": "UNINFORMATIVE UNDER SANDBOX",
+  "seconds": 2.7,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "passes": 3,
+  "skips": 0,
+  "evidence": [
+    "panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]"
+  ]
+}
+--- stdout ---
+=== RUN   TestMarketingCapturePassFakeChrome
+=== RUN   TestMarketingCapturePassFakeChrome/routes
+=== RUN   TestMarketingCapturePassFakeChrome/pass-six
+=== RUN   TestMarketingCapturePassFakeChrome/version
+=== RUN   TestMarketingCapturePassFakeChrome/ready
+--- FAIL: TestMarketingCapturePassFakeChrome (1.84s)
+    --- PASS: TestMarketingCapturePassFakeChrome/routes (0.58s)
+    --- PASS: TestMarketingCapturePassFakeChrome/pass-six (0.49s)
+    --- PASS: TestMarketingCapturePassFakeChrome/version (0.77s)
+    --- FAIL: TestMarketingCapturePassFakeChrome/ready (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 68 [running]:
+testing.tRunner.func1.2({0x10141fd40, 0x247aa7d10320})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x1a0
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x318
+panic({0x10141fd40?, 0x247aa7d10320?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0xd4
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x1014b7c60, 0x247aa7ca2108})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x28
+github.com/sunholo-data/ailang-world/scripts/marketingcheck.TestMarketingCapturePassFakeChrome.func4(0x247aa7cae6c8)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240/.exec-scratch/scripts/marketingcheck/capture_test.go:191 +0x8c
+testing.tRunner(0x247aa7cae6c8, 0x1014b30d0)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0xc4
+created by testing.(*T).Run in goroutine 8
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x3a8
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	2.138s
+FAIL
+
+--- stderr ---
+
+===== END C =====
+C: restored byte-identical (cp; cmp backup; cmp pristine all rc 0)
+COMPARISON C: {
+  "rc": 1,
+  "fails": [
+    "TestMarketingCapturePassFakeChrome",
+    "TestMarketingCapturePassFakeChrome/ready"
+  ],
+  "expected_fails": [
+    "TestMarketingRunbookMatchesHelp",
+    "TestMarketingRunbookMatchesHelp/position-lines",
+    "TestMarketingPositionCorpus",
+    "TestMarketingPositionCorpus/stores/r1-seed1",
+    "TestMarketingPositionCorpus/stores/r1-seed2",
+    "TestMarketingPositionCorpus/stores/r1-seed1-blockconverted",
+    "TestMarketingPositionCorpus/stores/r1-seed2-blockconverted",
+    "TestMarketingPositionCorpus/stores/r1b-seed3",
+    "TestMarketingPositionCorpus/stores/r1b-seed4",
+    "TestMarketingPositionCorpus/stores/r1c-seed5",
+    "TestMarketingPositionCorpus/stores/r1c-seed6",
+    "TestMarketingPositionCorpus/stores/eval-p1",
+    "TestMarketingPositionCorpus/stores/eval-p2",
+    "TestMarketingPositionCorpus/stores/eval-p3",
+    "TestMarketingPositionCorpus/v65/neg-attested+14",
+    "TestMarketingPositionCorpus/v65/neg-attested-dropped",
+    "TestMarketingPositionCorpus/v65/neg-dark-timeline-first+24",
+    "TestMarketingPositionCorpus/v65/neg-graph-svg-at-timeline",
+    "TestMarketingPositionCorpus/v65/neg-light-header+40",
+    "TestMarketingPositionCorpus/v65/neg-light-header-whole-view",
+    "TestMarketingPositionCorpus/v65/neg-packet-all+14",
+    "TestMarketingPositionCorpus/v65/neg-packet-stack-down-6-lines",
+    "TestMarketingPositionCorpus/v65/neg-payload+14",
+    "TestMarketingPositionCorpus/v65/neg-proven-grows-6-lines-below-fold",
+    "TestMarketingPositionCorpus/v65/neg-rows-reordered-tested-claimed",
+    "TestMarketingPositionCorpus/v65/neg-tested-64x16-glyphs",
+    "TestMarketingPositionCorpus/v65/neg-tested-at-attested-row",
+    "TestMarketingPositionCorpus/v65/neg-tested-at-proven-row",
+    "TestMarketingPositionCorpus/v65/neg-tested-height+14",
+    "TestMarketingPositionCorpus/v65/syn-pos-createdAt-wraps",
+    "TestMarketingPositionCorpus/v65/syn-pos-proven-5-lines",
+    "TestMarketingPositionCorpus/v65/syn-pos-tested-wraps-3-lines",
+    "TestMarketingPositionCorpus/v65-p1/neg-packet-all+14",
+    "TestMarketingPositionCorpus/v65-p1/neg-proven-grows-6-lines-below-fold",
+    "TestMarketingPositionCorpus/v65-p1/neg-tested-at-attested-row",
+    "TestMarketingPositionCorpus/v65-p1/syn-pos-tested-wraps-3-lines",
+    "TestMarketingPositionCorpus/new/iso-a1-tested-w-3",
+    "TestMarketingPositionCorpus/new/iso-freegap-validation-h+240",
+    "TestMarketingPositionCorpus/new/iso-minh-approvals-h-1",
+    "TestMarketingPositionCorpus/new/iso-nonpara-graph-svg-h+24",
+    "TestMarketingPositionCorpus/new/iso-nonpara-payload-h+24",
+    "TestMarketingPositionCorpus/new/acc-tested-w-2",
+    "TestMarketingPositionCorpus/new/perm-approvals-y+48",
+    "TestMarketingPositionCorpus/new/perm-approvals-y-48",
+    "TestMarketingPositionCorpus/new/perm-validation-h+216",
+    "TestMarketingPositionCorpus/new/perm-roster-drift-2px",
+    "TestMarketingPositionCorpus/new/bnd-drift-sum-2",
+    "TestMarketingPositionCorpus/new/bnd-drift-sum-3",
+    "TestMarketingPositionCorpus/new/bnd-createdAt-wraps-2-lines",
+    "TestMarketingPositionCorpus/new/perm-approvals-y+24",
+    "TestMarketingPositionCorpus/new/perm-approvals-y-24",
+    "TestMarketingPositionCorpus/new/bnd-nonpara-drift-2",
+    "TestMarketingPositionCorpus/new/bnd-nonpara-drift-3",
+    "TestMarketingPositionParity",
+    "TestMarketingPositionCLI",
+    "TestMarketingPositionCLI/accept-rc",
+    "TestMarketingPositionTolerancePins",
+    "TestMarketingPositionTolerancePins/bg-x0+2",
+    "TestMarketingPositionTolerancePins/bg-x0+3",
+    "TestMarketingPositionTolerancePins/bg-y+2",
+    "TestMarketingPositionTolerancePins/bg-y+3",
+    "TestMarketingPositionTolerancePins/bg-right-2",
+    "TestMarketingPositionTolerancePins/bg-right-3",
+    "TestMarketingPositionTolerancePins/bg-bottom-2",
+    "TestMarketingPositionTolerancePins/bg-bottom-3",
+    "TestMarketingPositionTolerancePins/a4-graph-svg-h+2",
+    "TestMarketingPositionTolerancePins/a4-graph-svg-h+3",
+    "TestMarketingPositionTolerancePins/a3-timeline-gap+2",
+    "TestMarketingPositionTolerancePins/a3-timeline-gap+3",
+    "TestMarketingRunRoutesPositionPhone"
+  ],
+  "matches_expected": "UNINFORMATIVE UNDER SANDBOX",
+  "restored": true
+}
+
+===== FINAL MUTANT TABLE =====
+Literal FAIL-list equality is recorded separately from the sandbox verdict; No under a sandbox denial does not classify a mutation as failed.
+| ID | rc | exact FAIL list | matches-expected yes/no (literal list and rc) | verdict |
+|---|---|---|---|---|
+| T1 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T2 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T3 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T4 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T5 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T6 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T7 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T8 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T9 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T10 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T11 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T12 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T13 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T14 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T15 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T16 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T17 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T17b | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| T18 | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
+| PG | 1 | TestMarketingPositionTolerancePins, TestMarketingPositionTolerancePins/gc-premise-nonfree-gaps-ge-2 | yes | RED |
+| PG-boundary | 0 |  | yes | PASS |
+| C | 1 | TestMarketingCapturePassFakeChrome, TestMarketingCapturePassFakeChrome/ready | no | UNINFORMATIVE UNDER SANDBOX |
