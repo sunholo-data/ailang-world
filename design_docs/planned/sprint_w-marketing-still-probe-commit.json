@@ -1,0 +1,135 @@
+{
+  "id": "w-marketing-still-probe-commit",
+  "iteration": 337,
+  "row": "239",
+  "clause": "release hygiene: make P0 item (1) (route-level still determinism) a committed, asserting test on the capture store (checkMarketingStill, TestMarketingStillRoutes, called inside TestMarketingChromeSixShots) and point orchestration §4.4 item (1) at it; moves no clause; no .ail changes",
+  "status": "planned",
+  "authority": [
+    "design_docs/planned/w-marketing-still-probe-commit.md r3 (8ef19b14; controller narrow-refinement carve-out after quorum r2)",
+    "design_docs/planned/w-marketing-still-probe-commit-sprint-plan.md"
+  ],
+  "estimate": "1 executor run, about 15 min wall: M1 about 3 min (step 1 about 12 s, mutants about 100-160 s), M2 about 1 min (drill about 36 s), full gates about 7-10 min (go test ./... 386-542 s, verify_ail.sh 39-54 s)",
+  "scope": "The executor writes no Go code and no doc text: it applies two planner-banked unified diffs with git apply (its only git write operation), checks sha256, runs M1 then M2 acceptance under run_bounded.sh, runs the 11 design-section-2.5 mutant runs in the worktree through the banked runner (cp restore, sha256-checked), runs the Chrome drill once, runs the full gates on the final tree, banks executor-*.txt evidence, and leaves everything uncommitted for the controller.",
+  "base": {
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-row239",
+    "branch": "sprint/world-iter337-still-probe-commit",
+    "head": "8ef19b14",
+    "code_base": "2f2935701959f4c727d4974db057ce7d9e6dd3d3",
+    "sha256": {
+      "cmd/ailang-worldd/marketing_chrome_test.go": "04ab4310b2cb89779feed8e438a90c340551ce5b83e72e84e3685b3220e28259",
+      "host/workbench/render.go": "d0a108cf829b34348860cd85782c1cfd2db2675c1dedb6d3bbe16033952c7152",
+      "design_docs/planned/w-marketing-capture-orchestration.md": "aae1bdcdb5b6c3ba8a17df4a2a6579f0013818077365dbb022e8304b48761a27"
+    }
+  },
+  "environment": [
+    "X=/Users/voightkampff/dev/sunholo-data/.scratch-iter337-executor (never inside the worktree)",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0)",
+    "export WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang (AILANG v0.54.15 = daemon.ToolBinaryRelease)",
+    "CHROME=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome (156.0.8078.80) and RECTS=design_docs/verification/world-iter312/r1-rects.json: NOT exported; set as WORLD_CHROME/WORLD_MARKETING_RECTS on the one drill command line only",
+    "RB=$X/run_bounded.sh (copy of world-iter336/run_bounded.sh.txt, sha256 1635f8d7308e03a6bc02eeacd4bd6eb723ce76405c4c1d28f2c45ef93d8e2082)"
+  ],
+  "limits_s": {
+    "focused_go_test": 600, "chrome_drill": 1300, "mutant_each": 300,
+    "go_vet": 600, "gofmt": 600, "go_build": 600,
+    "go_test_all": 2400, "verify_ail": 1200
+  },
+  "banked_sources_sha256": {
+    "design_docs/verification/world-iter337/plan-M1.diff.txt": "08542390e97ddd9adfde675449a211aa7355155540aac46f0163320aca8d29e0",
+    "design_docs/verification/world-iter337/plan-M2.diff.txt": "29d81e47bc8914c5c82d0020361ed46c376cada3a3f662bf339ac5df0be43243",
+    "design_docs/verification/world-iter337/plan-mutate.py.txt": "71fb8f14f9d3ea25cfc64276b1ffeecb93fcdae48320414197ee26ac0c81c304",
+    "design_docs/verification/world-iter337/plan-run_mutants.sh.txt": "506ba8b9ee1bcb002633aec233a2823d03637afaf8a61cbf9cb864232fdda2e0",
+    "design_docs/verification/world-iter337/plan-mutants-expected.txt": "ce3964b200a11d235005602174203d968badfacd18c65bcbb86152d8e7b145ba",
+    "design_docs/verification/world-iter336/run_bounded.sh.txt": "1635f8d7308e03a6bc02eeacd4bd6eb723ce76405c4c1d28f2c45ef93d8e2082"
+  },
+  "executor_rules": [
+    "only git write operation: git apply (no add, commit, checkout, restore, stash, reset, push, PR, amend)",
+    "leave every change uncommitted; the controller commits",
+    "deliver M1 then M2, then the full gates on the final tree, then the section-6 state check",
+    "run the full gate list and report every rc and count",
+    "every command under run_bounded.sh; rc 124 is a STOP; long runs via run_in_background plus a bounded poll, never nohup",
+    "any expected value that does not match is a STOP; never edit the test, the patches or the plan"
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "the test: checkMarketingStill + TestMarketingStillRoutes, called inside TestMarketingChromeSixShots",
+      "files": [
+        "cmd/ailang-worldd/marketing_still_test.go (new, 142 lines)",
+        "cmd/ailang-worldd/marketing_chrome_test.go (+5)"
+      ],
+      "precheck": "git diff --name-only 2f293570 HEAD -- . ':!design_docs' = 0 lines; porcelain on cmd host scripts and the orchestration doc = 0; marketing_still_test.go absent; base sha256 as in base.sha256",
+      "apply": "git apply --check then git apply design_docs/verification/world-iter337/plan-M1.diff.txt (2 files, +147)",
+      "post_sha256": {
+        "cmd/ailang-worldd/marketing_still_test.go": "e38f4ccac76ae66857af1a597b6f8bc1c8e25ab9ed4f16536347da46058a71ff",
+        "cmd/ailang-worldd/marketing_chrome_test.go": "70ef39226db6a71f9647e5a4ce52eb43d01975ff1889eb8c6a01dbc5b4eefb9f"
+      },
+      "acceptance": [
+        "both pins: bash $RB 600 LOG go test -count=1 -timeout 540s -v -run '^TestMarketingStillRoutes$' ./cmd/ailang-worldd -> rc 0; grep -c '^--- PASS: TestMarketingStillRoutes' = 1; grep -c -- '--- SKIP' = 0; grep -cE 'STILL .* repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 ' = 4; grep -c 'P0 item (1)' = 0",
+        "AILANG_BIN only (env -u WORLD_TOOL_AILANG_BIN): same command -> rc 0 and '--- SKIP: TestMarketingStillRoutes' with 'WORLD_TOOL_AILANG_BIN set=false' (CI-shaped control)",
+        "gofmt -l cmd/ailang-worldd rc 0 and empty; go vet ./cmd/ailang-worldd rc 0; go build ./... rc 0",
+        "render.go and marketing_still_test.go sha256 prefixes d0a108cf829b3434 and e38f4ccac76ae668 before and after the mutants"
+      ],
+      "mutants": {
+        "run": "bash $X/run_mutants.sh $WT $X $RB $X/mutate.py (run_in_background, bounded poll); each run: go test -count=1 -timeout 240s -v -run '^TestMarketingStillRoutes$' ./cmd/ailang-worldd under the runner (300 s); restore by cp, sha256-checked",
+        "runs": ["healthy", "MS1", "MS2", "MS3", "MS4", "MS5", "MT1", "MT2", "MT3+MS3", "MT4+MS4", "MT5+MS5"],
+        "expect": "cmp $X/logs/mutants-summary.txt $X/mutants-expected.txt rc 0; 11 restore=identical; rcs 0,1,1,1,1,1,1,1,0,0,0; a build failure is not a kill (it would print '!! BUILD FAILED: not a kill' and break the cmp)",
+        "table": {
+          "MS1": "A2 'script_tags=1, want 0' x4 + A3 'still HTML is not the default minus exactly the live.js tag' x4, rc 1",
+          "MS2": "A2 'script_tags=1, want 0' x4 only, rc 1",
+          "MS3": "A3 'still HTML is not the default minus exactly the live.js tag' x4 only, rc 1",
+          "MS4": "A1 'repeat_equal=false (still HTML changed across 2 s)' x4 only, rc 1",
+          "MS5": "A0 'control ...: default HTML has 0 live.js tags, want 1' x4 only, rc 1",
+          "MT1": "A4 'P0 item (1): want 4 distinct capture routes, got 0: []' x1, rc 1",
+          "MT2": "A1 'repeat_equal=false ...' x4 on healthy code, rc 1",
+          "MT3+MS3": "PASS rc 0 (A3 is MS3's sole killer)",
+          "MT4+MS4": "PASS rc 0 (the 2 s sleep is load-bearing)",
+          "MT5+MS5": "PASS rc 0 (A0 is MS5's sole killer)"
+        }
+      },
+      "commit": "none by the executor (controller)"
+    },
+    {
+      "id": "M2",
+      "title": "orchestration section 4.4 item (1): one line",
+      "files": ["design_docs/planned/w-marketing-capture-orchestration.md"],
+      "precheck": "grep -cF '  1. **Route-level still determinism.**' = 1; misspelled control = 0; checkMarketingStill 0; zz_iter305_probe_test.go 2; TestIter305SeededStillCaptureProbe 2; doc sha256 aae1bdcd...; any other count is a STOP; never paste by line number",
+      "apply": "git apply --check then git apply design_docs/verification/world-iter337/plan-M2.diff.txt (numstat 1 1; the anchor line replaced by design line 226 byte-exact); post sha256 50d8ef34143e930cdf188aaaa27bf4baef3c08c8542c79c844db3785ec6507ee",
+      "acceptance": [
+        "git diff --numstat -- design_docs/planned/w-marketing-capture-orchestration.md = '1\t1\tdesign_docs/planned/w-marketing-capture-orchestration.md'",
+        "grep -cF = 1 for each of: checkMarketingStill, zz_iter305_probe_test.go, TestIter305SeededStillCaptureProbe, '  1. **Route-level still determinism.**', '  2. **Six-shot two-pass.**'",
+        "bash $RB 600 LOG go test -count=1 -timeout 300s -v -run '^TestMarketing(Position|Phone)Parity$' ./scripts/marketingcheck -> rc 0, both pin-registry subtests PASS",
+        "drill (the pasted command): WORLD_CHROME=$CHROME WORLD_MARKETING_RECTS=$RECTS bash $RB 1300 LOG go test -count=1 -timeout 1200s -v -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd -> rc 0; one '--- PASS: TestMarketingChromeSixShots'; grep -cE 'STILL .* repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 ' = 4; 'P0 item (1)' = 0",
+        "pass-rule control: the same STILL grep on the M1 mutant log mutlogs/MS1.log = 0"
+      ],
+      "commit": "none by the executor (controller; whether the orchestration quorum reviews the line is the controller's call)"
+    }
+  ],
+  "final_gates": {
+    "when": "after M2, on the final tree (M1 + M2), both pins exported, WORLD_CHROME unset",
+    "commands": [
+      "bash $RB 600 LOG go build ./... -> rc 0",
+      "bash $RB 2400 LOG go test ./... -> rc 0; ok=35 notest=2 FAILpkg=0 failtests=0 (planner P11: 386 s)",
+      "bash $RB 1200 LOG ./scripts/verify_ail.sh -> rc 0; last line '✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass'"
+    ],
+    "known_base_failure": "host/verifygate TestMissionConfigDefaultFlowIntegration (valid_ledger, invalid_ledger: 'default-flow fixture timed out'; 10 s fixture deadline at mission_config_gate_test.go:38) failed in the planner's UNPATCHED baseline under host load (P09) and passed alone (P10) and in the patched suite (P11). If it is the only failure: run it alone once as a diagnostic, report both, do not re-run the suite; the controller decides. Any other failure is a STOP."
+  },
+  "planner_baseline_unpatched": {
+    "tree": "8ef19b14, porcelain 0, both pins",
+    "go_build": "rc 0",
+    "go_test_all": "rc 1, 542 s: ok 34, no-test 2, FAIL 1 package (host/verifygate; 3 --- FAIL lines, TestMissionConfigDefaultFlowIntegration + 2 subtests)",
+    "verify_ail": "rc 0, 54 s, 16 identities / 40 named / 503 se-tools named"
+  },
+  "measured_deviations_from_design": [
+    "header comment cites host/daemon/workbench_still_test.go:53,82,95 (design: 52,82,95); line 53 is the strings.Count(body, \"<script\") predicate, 52 is 'first[i] = body'",
+    "TIMING log kept (design: optional) with the routes local, so MT1's anchor is unique; one doc comment added on TestMarketingStillRoutes",
+    "STILL / P0 item (1) lines are reported at the call site (t.Helper): marketing_still_test.go:140 standalone, marketing_chrome_test.go:128 in the drill",
+    "design M1 step 5 (git diff --name-only 2f293570 -- . ':!design_docs') cannot list the untracked new file; replaced by M1.0's committed-diff = 0 and section 6's git status --porcelain",
+    "full suite at the base is rc 1 on a load-dependent host/verifygate fixture timeout (unrelated package); patched suite rc 0"
+  ],
+  "unmeasured": [
+    "R1: GitHub CI never exports WORLD_TOOL_AILANG_BIN, so TestMarketingStillRoutes SKIPs there; demo seed on the Linux runner is not measured",
+    "flake rate of TestMarketingStillRoutes and of the drill (5 healthy standalone runs and 2 drill runs by the planner are not a rate)",
+    "rate of the host/verifygate fixture timeout under load"
+  ]
+}

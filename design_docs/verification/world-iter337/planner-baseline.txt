@@ -1,0 +1,74 @@
+# planner baseline on the UNPATCHED tree (worktree at 8ef19b14, porcelain 0), both pins exported, runner world-iter336/run_bounded.sh.txt
+start 2026-11-03T00:29:20Z HEAD 8ef19b14 porcelain=0 AILANG_BIN=AILANG v0.41.0 TOOL=AILANG v0.54.15
+go build ./... rc=0 1s
+go test ./... rc=1 542s
+verify_ail.sh rc=0 54s
+DONE 2026-11-03T00:39:17Z
+counts: ok=34 notest=2 FAILpkg=1 failtests=3
+# go test ./... non-ok lines
+--- FAIL: TestMissionConfigDefaultFlowIntegration (20.27s)
+    --- FAIL: TestMissionConfigDefaultFlowIntegration/valid_ledger (10.17s)
+        mission_config_gate_test.go:286: default-flow fixture timed out
+            instrument failure: context deadline exceeded
+            ── AILANG_BIN=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestMissionConfigDefaultFlowIntegrationvalid_ledger4028934569/001/world/bin/ailang (AILANG v0.41.0)
+            ── legs: all (race bound 1500s)
+    --- FAIL: TestMissionConfigDefaultFlowIntegration/invalid_ledger (10.09s)
+        mission_config_gate_test.go:286: default-flow fixture timed out
+            instrument failure: context deadline exceeded
+            ── AILANG_BIN=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestMissionConfigDefaultFlowIntegrationinvalid_ledger940727424/001/world/bin/ailang (AILANG v0.41.0)
+            ── legs: all (race bound 1500s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	417.728s
+FAIL
+# go test ./... package lines
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	404.659s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	83.987s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	36.868s
+ok  	github.com/sunholo-data/ailang-world/host/agui	11.138s
+ok  	github.com/sunholo-data/ailang-world/host/archive	24.332s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.094s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	7.109s
+ok  	github.com/sunholo-data/ailang-world/host/broker	402.779s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.110s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	94.302s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	1.917s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.407s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	96.077s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	523.843s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	37.178s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.064s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	2.558s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.006s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	44.786s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.450s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.346s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.003s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.387s
+ok  	github.com/sunholo-data/ailang-world/host/registry	2.479s
+ok  	github.com/sunholo-data/ailang-world/host/replay	54.595s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.608s
+ok  	github.com/sunholo-data/ailang-world/host/store	15.083s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.935s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	2.698s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.580s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	66.441s
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	417.728s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.386s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	13.399s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	121.037s
+FAIL
+# verify_ail.sh tail
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+# diagnostic: the failing test alone, same tree, once (not a substitute for the suite)
+$ bash run_bounded.sh 600 LOG go test -count=1 -v -run '^TestMissionConfigDefaultFlowIntegration$' ./host/verifygate -> rc=0 wall=11s
+--- PASS: TestMissionConfigDefaultFlowIntegration (10.32s)
+    --- PASS: TestMissionConfigDefaultFlowIntegration/valid_ledger (4.90s)
+    --- PASS: TestMissionConfigDefaultFlowIntegration/invalid_ledger (5.42s)
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	10.593s
+host: load averages 11.24 10.88 9.20 at the diagnostic; 12.11 11.00 9.13 just after the suite; a local Ollama llama-server was using ~80% CPU
+fixture deadline: host/verifygate/mission_config_gate_test.go:38 runMissionCommand uses context.WithTimeout(..., 10*time.Second); the subtest t.Fatalf("default-flow fixture timed out") is :286. Patched-tree suite (planner-M1-acceptance.txt): host/verifygate ok, 365.419s

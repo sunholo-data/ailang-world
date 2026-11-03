@@ -1,0 +1,41 @@
+#!/bin/bash
+# run_mutants.sh <worktree> <scratch> <runner> <mutate.py>: row 239 design §2.5 runs on the APPLIED M1 tree.
+# Each run applies its mutants (mutate.py, anchors asserted = 1), runs TestMarketingStillRoutes under
+# the runner (300 s), restores render.go and marketing_still_test.go from pristine copies (cp, no git),
+# and checks the restore by sha256. Summary -> <scratch>/logs/mutants-summary.txt (normalized, deterministic).
+set -u
+export LC_ALL=C
+WT=$1; X=$2; RB=$3; MUT=$4
+R=host/workbench/render.go; T=cmd/ailang-worldd/marketing_still_test.go
+cd "$WT" || exit 2
+mkdir -p "$X/pristine" "$X/mutlogs"
+cp "$R" "$X/pristine/render.go"; cp "$T" "$X/pristine/marketing_still_test.go"
+HR=$(shasum -a 256 "$R" | cut -c1-16); HT=$(shasum -a 256 "$T" | cut -c1-16)
+SUM=$X/logs/mutants-summary.txt; RAW=$X/logs/mutants-raw.txt; : > "$SUM"; : > "$RAW"
+echo "pristine render.go=$HR marketing_still_test.go=$HT" >> "$RAW"
+for spec in healthy MS1 MS2 MS3 MS4 MS5 MT1 MT2 MT3+MS3 MT4+MS4 MT5+MS5; do
+  ok=1
+  if [ "$spec" != healthy ]; then
+    for m in ${spec//+/ }; do python3 -I "$MUT" "$WT" "$m" >> "$RAW" 2>&1 || { ok=0; echo "NOT-APPLIED $m" >> "$RAW"; }; done
+  fi
+  L=$X/mutlogs/$spec.log
+  if [ $ok = 1 ]; then
+    s=$(date +%s)
+    bash "$RB" 300 "$L" go test -count=1 -timeout 240s -v -run '^TestMarketingStillRoutes$' ./cmd/ailang-worldd; rc=$?
+    echo "RUN $spec rc=$rc wall=$(( $(date +%s)-s ))s" >> "$RAW"
+  else
+    rc=NA
+  fi
+  cp "$X/pristine/render.go" "$R"; cp "$X/pristine/marketing_still_test.go" "$T"
+  rr=$(shasum -a 256 "$R" | cut -c1-16); rt=$(shasum -a 256 "$T" | cut -c1-16)
+  [ "$rr" = "$HR" ] && [ "$rt" = "$HT" ] && rs=identical || rs=DIFFERENT
+  echo "== $spec rc=$rc restore=$rs" >> "$SUM"
+  if [ $ok = 1 ]; then
+    grep -q 'build failed\|\[setup failed\]' "$L" && echo "!! BUILD FAILED: not a kill" >> "$SUM"
+    grep -E -- '^--- (PASS|FAIL|SKIP)|P0 item \(1\)|build failed|^panic' "$L" \
+      | sed -E -e 's/sha256:[0-9a-f]{64}/sha256:<h>/g' -e 's/ \([0-9.]+s\)$//' -e 's/^ +//' \
+      | sort | uniq -c | sed -E 's/^ +//' >> "$SUM"
+  fi
+  [ "$rc" = 124 ] && { echo "TIMEOUT: STOP" >> "$SUM"; break; }
+done
+cat "$SUM"

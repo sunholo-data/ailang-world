@@ -1,0 +1,40 @@
+# mutate.py <worktree> <mutant-id>: row 239 mutants (design §2.5), one anchored edit each.
+# Every anchor must occur exactly once, else exit 2 with the file untouched.
+import sys
+root, mid = sys.argv[1], sys.argv[2]
+R = root + '/host/workbench/render.go'
+T = root + '/cmd/ailang-worldd/marketing_still_test.go'
+LIVE = '{{if .Still}}{{else}}<script src="/workbench/live.js" defer></script>{{end}}'
+def edit(path, old, new):
+    s = open(path).read()
+    if s.count(old) != 1:
+        sys.stderr.write('ANCHOR %s %s count=%d\n' % (mid, path, s.count(old)))
+        sys.exit(2)
+    open(path, 'w').write(s.replace(old, new))
+if mid == 'MS1':
+    edit(R, LIVE, '<script src="/workbench/live.js" defer></script>')
+elif mid == 'MS2':
+    edit(R, LIVE, LIVE + '<script type="application/json">{}</script>')
+elif mid == 'MS3':
+    # an element, not an HTML comment: html/template strips comments (design §2.5)
+    edit(R, LIVE, '{{if .Still}}<meta name="still" content="1">{{else}}<script src="/workbench/live.js" defer></script>{{end}}')
+elif mid == 'MS4':
+    edit(R, 'import (\n\t"errors"\n', 'import (\n\t"errors"\n\t"time"\n')
+    edit(R, 'func Render(w io.Writer, p Page) error { return pageTemplate.Execute(w, p) }',
+         'var stillFirst time.Time\n\nfunc Render(w io.Writer, p Page) error {\n\tif p.Still {\n\t\tif stillFirst.IsZero() {\n\t\t\tstillFirst = time.Now()\n\t\t}\n\t\tif time.Since(stillFirst) > time.Second {\n\t\t\tp.Title += " "\n\t\t}\n\t}\n\treturn pageTemplate.Execute(w, p)\n}')
+elif mid == 'MS5':
+    edit(R, LIVE, '')
+elif mid == 'MT1':
+    edit(T, 'routes := marketingStillRoutes(t, check, rig.manifest)\n', 'routes := marketingStillRoutes(t, check, rig.manifest)[:0]\n')
+elif mid == 'MT2':
+    edit(T, '\t\tif !repeat {', '\t\tif repeat {')
+elif mid == 'MT3':
+    edit(T, '\t\tif !stripped {', '\t\tif false && !stripped {')
+elif mid == 'MT4':
+    edit(T, '\t\ttime.Sleep(2 * time.Second)\n', '')
+elif mid == 'MT5':
+    edit(T, '\t\tif tags != 1 {', '\t\tif false && tags != 1 {')
+else:
+    sys.stderr.write('unknown mutant %s\n' % mid)
+    sys.exit(2)
+print('applied', mid)

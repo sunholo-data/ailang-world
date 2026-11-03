@@ -1,0 +1,118 @@
+# planner executor dry run: the plan's bash blocks extracted verbatim (python re over the plan), only the executor scratch path replaced by .scratch-iter337-dryrun, run in the worktree in order: §2, M1.0, M1.1, M1.2, M1.3, M1.4, M1.5 (launch, poll, check), M2.1, M2.2, M2.3, §6. Not dry-run: §5 full gate + diagnostic (measured directly: planner-M1-acceptance.txt full gate, planner-baseline.txt)
+######## block 01
+1635f8d7308e03a6bc02eeacd4bd6eb723ce76405c4c1d28f2c45ef93d8e2082  run_bounded.sh
+71fb8f14f9d3ea25cfc64276b1ffeecb93fcdae48320414197ee26ac0c81c304  mutate.py
+506ba8b9ee1bcb002633aec233a2823d03637afaf8a61cbf9cb864232fdda2e0  run_mutants.sh
+ce3964b200a11d235005602174203d968badfacd18c65bcbb86152d8e7b145ba  mutants-expected.txt
+08542390e97ddd9adfde675449a211aa7355155540aac46f0163320aca8d29e0  plan-M1.diff.txt
+29d81e47bc8914c5c82d0020361ed46c376cada3a3f662bf339ac5df0be43243  plan-M2.diff.txt
+AILANG v0.41.0
+AILANG v0.54.15
+Google Chrome 156.0.8078.80 
+go version go1.26.6 darwin/arm64
+ba7c83ce4e31c86a
+######## block 02
+0
+0
+1
+04ab4310b2cb89779feed8e438a90c340551ce5b83e72e84e3685b3220e28259  cmd/ailang-worldd/marketing_chrome_test.go
+d0a108cf829b34348860cd85782c1cfd2db2675c1dedb6d3bbe16033952c7152  host/workbench/render.go
+aae1bdcdb5b6c3ba8a17df4a2a6579f0013818077365dbb022e8304b48761a27  design_docs/planned/w-marketing-capture-orchestration.md
+######## block 03
+check rc=0
+apply rc=0
+5	0	cmd/ailang-worldd/marketing_chrome_test.go
+142
+e38f4ccac76ae66857af1a597b6f8bc1c8e25ab9ed4f16536347da46058a71ff  cmd/ailang-worldd/marketing_still_test.go
+70ef39226db6a71f9647e5a4ce52eb43d01975ff1889eb8c6a01dbc5b4eefb9f  cmd/ailang-worldd/marketing_chrome_test.go
+######## block 04
+step1 rc=0
+pass=1
+skip=0
+still4=4
+p0err=0
+step2 rc=0
+skip2=1 toolset=1
+######## block 05
+gofmt rc=0 lines=0
+vet rc=0
+build rc=0
+######## block 06
+d0a108cf829b3434
+e38f4ccac76ae668
+######## block 07
+######## block 08
+run_mutants rc=0
+DONE
+######## block 09
+mutants cmp rc=0
+11
+== healthy rc=0 restore=identical
+== MS1 rc=1 restore=identical
+== MS2 rc=1 restore=identical
+== MS3 rc=1 restore=identical
+== MS4 rc=1 restore=identical
+== MS5 rc=1 restore=identical
+== MT1 rc=1 restore=identical
+== MT2 rc=1 restore=identical
+== MT3+MS3 rc=0 restore=identical
+== MT4+MS4 rc=0 restore=identical
+== MT5+MS5 rc=0 restore=identical
+0
+d0a108cf829b3434
+e38f4ccac76ae668
+wall=96s
+######## block 10
+1	anchor
+0	control misspelled
+0	checkMarketingStill
+2	zz_iter305_probe_test.go
+2	TestIter305SeededStillCaptureProbe
+aae1bdcdb5b6c3ba8a17df4a2a6579f0013818077365dbb022e8304b48761a27  design_docs/planned/w-marketing-capture-orchestration.md
+######## block 11
+check rc=0
+apply rc=0
+1	1	design_docs/planned/w-marketing-capture-orchestration.md
+50d8ef34143e930cdf188aaaa27bf4baef3c08c8542c79c844db3785ec6507ee  design_docs/planned/w-marketing-capture-orchestration.md
+######## block 12
+1	1	design_docs/planned/w-marketing-capture-orchestration.md
+1	checkMarketingStill
+1	zz_iter305_probe_test.go
+1	TestIter305SeededStillCaptureProbe
+1	  1. **Route-level still determinism.**
+1	  2. **Six-shot two-pass.**
+parity rc=0
+--- PASS: TestMarketingPhoneParity
+    --- PASS: TestMarketingPhoneParity/pin-registry
+--- PASS: TestMarketingPositionParity
+    --- PASS: TestMarketingPositionParity/pin-registry
+drill rc=0
+drill pass=1 still=4 p0err=0
+control MS1 log still=0
+wall=23s
+######## block 17
+cat: /Users/voightkampff/dev/sunholo-data/.scratch-iter337-dryrun/logs/fullgate.status: No such file or directory
+grep: /Users/voightkampff/dev/sunholo-data/.scratch-iter337-dryrun/logs/gotest-all.txt: No such file or directory
+tail: /Users/voightkampff/dev/sunholo-data/.scratch-iter337-dryrun/logs/verify_ail.txt: No such file or directory
+    7141 total
+ M cmd/ailang-worldd/marketing_chrome_test.go
+ M design_docs/planned/w-marketing-capture-orchestration.md
+?? cmd/ailang-worldd/marketing_still_test.go
+?? design_docs/verification/world-iter337/executor-M1-acceptance.txt
+?? design_docs/verification/world-iter337/executor-M1-mutants.txt
+?? design_docs/verification/world-iter337/executor-M2-acceptance.txt
+?? design_docs/verification/world-iter337/executor-fullgate.txt
+?? design_docs/verification/world-iter337/plan-M1.diff.txt
+?? design_docs/verification/world-iter337/plan-M2.diff.txt
+?? design_docs/verification/world-iter337/plan-mutants-expected.txt
+?? design_docs/verification/world-iter337/plan-mutate.py.txt
+?? design_docs/verification/world-iter337/plan-run_mutants.sh.txt
+?? design_docs/verification/world-iter337/planner-M1-acceptance.txt
+?? design_docs/verification/world-iter337/planner-M2-acceptance.txt
+?? design_docs/verification/world-iter337/planner-baseline.txt
+?? design_docs/verification/world-iter337/planner-mutants.txt
+e38f4ccac76ae668
+70ef39226db6a71f
+d0a108cf829b3434
+50d8ef34143e930c
+# §6 errors above are expected in the dry run only (no §5 logs). After the dry run: executor-*.txt and the new test file removed, the two patched files restored with git checkout; worktree back to 8ef19b14 (sha prefixes 04ab4310b2cb8977 d0a108cf829b3434 aae1bdcdb5b6c3ba)

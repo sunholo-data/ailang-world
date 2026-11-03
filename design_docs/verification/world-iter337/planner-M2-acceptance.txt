@@ -1,0 +1,17 @@
+# planner M2 in the worktree
+pre-paste: anchor=1 misspelled=0; doc sha256 aae1bdcdb5b6c3ba8a17df4a2a6579f0013818077365dbb022e8304b48761a27; git apply --check rc=0; git apply rc=0
+1	1	design_docs/planned/w-marketing-capture-orchestration.md
+1	checkMarketingStill
+1	zz_iter305_probe_test.go
+1	TestIter305SeededStillCaptureProbe
+1	  1. **Route-level still determinism.**
+1	  2. **Six-shot two-pass.**
+50d8ef34143e930cdf188aaaa27bf4baef3c08c8542c79c844db3785ec6507ee  design_docs/planned/w-marketing-capture-orchestration.md
+parity rc=0
+--- PASS: TestMarketingPhoneParity
+    --- PASS: TestMarketingPhoneParity/pin-registry
+--- PASS: TestMarketingPositionParity
+    --- PASS: TestMarketingPositionParity/pin-registry
+passrule drill: rc-line=1 pass=1 still=4
+passrule control MS1 log: still=0
+# authoring (scratch clone at 8ef19b14): the anchor line replaced by design line 226 (python, anchor count asserted = 1) -> 'replaced line 221'; cmp <(sed -n 221p doc) <(sed -n 226p design) equal
