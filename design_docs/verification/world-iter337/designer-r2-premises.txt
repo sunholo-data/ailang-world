@@ -1,0 +1,41 @@
+## V18 drill pin check: FATAL, but only after the WORLD_CHROME skip (52–54) and the Chrome checks (56–67)
+$ sed -n '69,71p' cmd/ailang-worldd/marketing_chrome_test.go
+	interp, tool := os.Getenv("AILANG_BIN"), os.Getenv("WORLD_TOOL_AILANG_BIN")
+	if interp == "" || tool == "" {
+		t.Fatal("AILANG_BIN and WORLD_TOOL_AILANG_BIN are required")
+$ awk 'NR>=52 && NR<=71 && /Fatal|Skip/' cmd/ailang-worldd/marketing_chrome_test.go
+54: 		t.Skip("WORLD_CHROME unset: controller runs the real Chrome drill")
+58: 		t.Fatalf("WORLD_CHROME must be an executable file: %q (%v)", chrome, err)
+62: 		t.Fatal(err)
+67: 		t.Fatalf("Chrome version must be ok: %s (%v)", out, err)
+71: 		t.Fatal("AILANG_BIN and WORLD_TOOL_AILANG_BIN are required")
+$ exercised: AILANG_BIN set, WORLD_CHROME=<Chrome>, WORLD_TOOL_AILANG_BIN unset: go test -count=1 -timeout 240s -v -run "^TestMarketingChromeSixShots$" ./cmd/ailang-worldd
+rc=1
+    marketing_chrome_test.go:71: AILANG_BIN and WORLD_TOOL_AILANG_BIN are required
+--- FAIL: TestMarketingChromeSixShots (0.23s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.624s
+FAIL
+
+## V19 capture_marketing.sh serve invocation (the whole command) and the bind guard
+$ sed -n '114,120p' scripts/capture_marketing.sh; sed -n '101p' scripts/capture_marketing.sh
+started_file="$out/daemon-started.json"
+python3 "$supervisor" daemon --ready-url "http://$bind" --started-file "$started_file" --lifetime "$lifetime" -- \
+    "$worldd_bin" serve --db "$db" --bind "$bind" --workbench-still \
+    --ailang-bin "$ailang_bin" --workspace-root "$workspace_root" --tool-ailang-bin "$tool_ailang_bin" \
+    --proof-key-file "$proof_key_file" --proof-required-identity sameRef --proof-required-identity servesEntry \
+    > "$out/daemon-verdict.json" &
+supervisor_pid=$!
+[[ $bind =~ ^127\.0\.0\.1:([0-9]+)$ ]] || fail "invalid loopback bind: $bind"
+
+## V20 the iter305 probe: assertions vs logs, and where its store comes from
+$ grep -n -E 't\.(Logf|Errorf|Fatalf)\("(DEFAULT|STILL)|t\.Errorf|TempDir|"demo", "seed"|repeat_equal|script_tags' design_docs/verification/world-iter305/iter305-seeded-still-chrome-probe_test.go.txt
+59:	t.Setenv("TMPDIR", t.TempDir())
+65:	base, err := filepath.EvalSymlinks(t.TempDir())
+84:	private := t.TempDir()
+139:	code, stdout, stderr := demoRun(t, &demoTestRig{addr: srv.URL}, []string{"demo", "seed", "--db", db, "--session", session, "--ailang-bin", interp, "--proof-key-file"
+219:		t.Logf("DEFAULT %s status=%d bytes=%d script_tags=%d", p, code, len(b), bytes.Count(b, []byte("<script")))
+241:			t.Errorf("STILL %s status %d", p, code)
+249:		t.Logf("STILL %s bytes=%d repeat_equal=%v script_tags=%d style_tags=%d equals_default_minus_tag=%v html_sha256=%x",
+$ grep -c 't.Errorf' <probe>
+1

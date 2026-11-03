@@ -1,0 +1,61 @@
+{
+  "doc": "design_docs/planned/w-marketing-still-probe-commit.md",
+  "iso_ts": "2026-11-03T00:23:09Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.019674,
+      "tokens_in": 8582,
+      "tokens_out": 251,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The conflict-surface analysis does not justify duplicating the existing still-mode assertion machinery. V14 shows that TestWorkbenchStillAllRegions already detects MS1–MS4, with existing tests detecting MS5. The document explains why a real capture-store invocation is needed, but not why those assertions cannot be reused or extracted rather than independently reimplemented in checkMarketingStill.",
+        "catch": "Section 4 inventories file collisions and concurrent work, but does not analyze implementation overlap with TestWorkbenchStillAllRegions, TestWorkbenchStillDefaultLiveScript, and TestServeWorkbenchStillFlag. A different store and route source justify another caller, not necessarily another assertion implementation.",
+        "proposed_fix": "Add a verified machinery-overlap subsection citing the existing tests' setup, assertion, timing, and teardown code. Map A0–A4 to that machinery and identify any reusable helpers. Either reuse a shared checker for the synthetic and capture-store callers, or document concrete package, dependency, or lifecycle constraints that make extraction disproportionate. If keeping separate implementations, explicitly justify that choice and identify which assertions must remain synchronized."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.042179999999999995,
+      "tokens_in": 9690,
+      "tokens_out": 171,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "MI1 (deleting the checkMarketingStill call from the Chrome drill) is marked 'Derived, not run' in §2.5 rather than empirically exercised as a test mutant against the M2 pass rule, unlike MT1–MT5.",
+        "catch": "In M1 acceptance step 3, the executor runs MS1–MS5 and MT1–MT5, which leaves MI1 unverified by mutation execution; however, the M2 acceptance step explicitly verifies that the `grep -cE 'STILL ...'` count equals 4 on the drill log, which directly guards the call site."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.10871460000000001,
+      "tokens_in": 8655,
+      "tokens_out": 21954,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "Every measurement (V08–V21) ran against the deleted prototype `zz_iter337_still_proto_test.go`; the committed artifact exists only as 'prototype plus three enumerated deltas' (§2.4). M1/M2 acceptance re-verifies the pass-rule greps, the mutation matrix, and the full suite on the final file, but nothing re-runs V21's serve-parity control against the committed `marketing_still_test.go`. So a transcription slip in the committed `daemon.Config` mapping that leaves the helper's HTML self-consistent (proof identities and workspace-root gate requests, not rendered bytes) would clear every M1 and M2 gate while silently falsifying §2.2's premise that the helper's in-process daemons mirror the capture `serve` flags — the one load-bearing premise whose sole evidence (V21, with its 0/4 control) is prototype-only and never re-established on the artifact that lands.",
+        "catch": "V21's helper↔serve byte-parity (4/4, `contains_bind=false contains_port=false`, control 0/4) is measured only on the prototype; no M1 or M2 acceptance step gates it on the committed file, so §2.2's flag→field fidelity table is asserted rather than gated for the final artifact. Secondary: `marketing_chrome_test.go:162` (rig `t.TempDir()`) and `workbench_still_test.go:95–98` are cited without V rows.",
+        "proposed_fix": "Add an M1 acceptance step (log it as V22): after writing `marketing_still_test.go`, re-run the V21 serve-parity control against the committed file — start the real `ailang-worldd serve` with `capture_marketing.sh`'s exact flags (V19) on the rig db immediately after `checkMarketingStill` returns and require 4/4 byte-equal still HTML plus `contains_bind=false contains_port=false`, with the `PROTO_SERVE_DEFAULT`-shaped control still 0/4 (+48 B); gate M2 on this step. Optionally fold the two unlogged line citations into V22's grep set or drop the bare line numbers."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 applies sol fix verbatim, adds V18-V21 for glm (controller pre-measured 69-71 Fatal, serve flags 115-118, probe Logf lines, V13=14 runs), and gemini teardown requirement. Pass."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-1-sol: The conflict-surface analysis does not justify duplicating the existing still-mode assertion machinery. V14 shows that TestWorkbenchStillAllRegions already detects MS1–MS4, with existing tests detecting MS5. The document explains why a real capture-store invocation is needed, but not why those assertions cannot be reused or extracted rather than independently reimplemented in checkMarketingStill."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.17056860000000001,
+    "total_tokens_in": 26927,
+    "total_tokens_out": 22376
+  }
+}

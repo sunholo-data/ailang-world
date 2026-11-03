@@ -1,0 +1,151 @@
+## V13 mutants. Runner: run.sh applies the listed mutants (mutate.py, one anchored edit each, anchor count asserted = 1), runs TestIter337StillRoutes under run_bounded 300 s, restores render.go with git checkout and the prototype from a pristine copy.
+### mutate.py
+import sys, re
+# usage: mutate.py <worktree> <mutant-id>   (applies exactly one edit; asserts its anchor occurs once)
+root, mid = sys.argv[1], sys.argv[2]
+R = root + '/host/workbench/render.go'
+P = root + '/cmd/ailang-worldd/zz_iter337_still_proto_test.go'
+LIVE = '{{if .Still}}{{else}}<script src="/workbench/live.js" defer></script>{{end}}'
+def edit(path, old, new):
+    s = open(path).read()
+    assert s.count(old) == 1, (mid, path, s.count(old))
+    open(path, 'w').write(s.replace(old, new))
+if mid == 'MS1-still-keeps-livejs':
+    edit(R, LIVE, '<script src="/workbench/live.js" defer></script>')
+elif mid == 'MS2-extra-script-both-modes':
+    edit(R, LIVE, LIVE + '<script type="application/json">{}</script>')
+elif mid == 'MS3-still-constant-marker':
+    # html/template strips comments, so the marker is an element (a <!--still--> variant was a no-op: PASS)
+    edit(R, LIVE, '{{if .Still}}<meta name="still" content="1">{{else}}<script src="/workbench/live.js" defer></script>{{end}}')
+elif mid == 'MS4-still-varies-after-1s':
+    edit(R, 'import (\n\t"errors"\n', 'import (\n\t"errors"\n\t"time"\n')
+    edit(R, 'func Render(w io.Writer, p Page) error { return pageTemplate.Execute(w, p) }',
+         'var stillFirst time.Time\n\nfunc Render(w io.Writer, p Page) error {\n\tif p.Still {\n\t\tif stillFirst.IsZero() {\n\t\t\tstillFirst = time.Now()\n\t\t}\n\t\tif time.Since(stillFirst) > time.Second {\n\t\t\tp.Title += " "\n\t\t}\n\t}\n\treturn pageTemplate.Execute(w, p)\n}')
+elif mid == 'MS5-livejs-removed-everywhere':
+    edit(R, LIVE, '')
+elif mid == 'MT1-routes-nil':
+    edit(P, 'routes := marketingStillRoutes(t, check, rig.manifest)\n', 'routes := marketingStillRoutes(t, check, rig.manifest)[:0]\n')
+elif mid == 'MT2-invert-repeat':
+    edit(P, '\t\tif !repeat {', '\t\tif repeat {')
+elif mid == 'MT3-drop-minus-tag':
+    edit(P, '\t\tif !stripped {', '\t\tif false && !stripped {')
+elif mid == 'MT4-drop-sleep':
+    edit(P, '\t\ttime.Sleep(2 * time.Second)\n', '')
+elif mid == 'MT5-drop-default-control':
+    edit(P, '\t\tif tags != 1 {', '\t\tif false && tags != 1 {')
+else:
+    sys.exit('unknown mutant ' + mid)
+print('applied', mid)
+### run.sh
+#!/bin/bash
+# run.sh <worktree> <label> <mutant-id>...   applies the mutants together, runs the prototype test, restores.
+wt=$1; label=$2; shift 2
+cd "$wt" || exit 2
+for m in "$@"; do python3 /tmp/iter337-mut/mutate.py "$wt" "$m" || { git checkout -- host/workbench/render.go; exit 2; }; done
+cp cmd/ailang-worldd/zz_iter337_still_proto_test.go /tmp/iter337-mut/cur_test.go
+bash /tmp/iter337-rb.sh 300 /tmp/iter337-mut/$label.log go test -count=1 -timeout 240s -v -run '^TestIter337StillRoutes$' ./cmd/ailang-worldd
+rc=$?
+git checkout -- host/workbench/render.go
+cp /tmp/iter337-mut/pristine_test.go cmd/ailang-worldd/zz_iter337_still_proto_test.go
+grep -q "build failed" /tmp/iter337-mut/$label.log && echo "!! BUILD FAILED: not a kill"
+echo "== $label [$*] rc=$rc"
+grep -E -- '--- (PASS|FAIL|SKIP)|P0 item \(1\)|build failed' /tmp/iter337-mut/$label.log | sed -E 's/sha256:[0-9a-f]{64}/sha256:<h>/g' | sort | uniq -c | sed -E 's/^ +//'
+### round 1 (MS3 then used an HTML comment marker; MT1 then emptied routes via `if true {`)
+== healthy-control [] rc=0
+1 --- PASS: TestIter337StillRoutes (7.96s)
+applied MS1-still-keeps-livejs
+== MS1-still-keeps-livejs [MS1-still-keeps-livejs] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench: still HTML is not the default minus exactly the live.js tag
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?from=9&entry=9: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?from=9&entry=9: still HTML is not the default minus exactly the live.js tag
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>&payload=1: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>&payload=1: still HTML is not the default minus exactly the live.js tag
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>: still HTML is not the default minus exactly the live.js tag
+1 --- FAIL: TestIter337StillRoutes (8.25s)
+applied MS2-extra-script-both-modes
+== MS2-extra-script-both-modes [MS2-extra-script-both-modes] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?from=9&entry=9: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>&payload=1: script_tags=1, want 0
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>: script_tags=1, want 0
+1 --- FAIL: TestIter337StillRoutes (7.89s)
+applied MS3-still-constant-marker
+== MS3-still-constant-marker [MS3-still-constant-marker] rc=0
+1 --- PASS: TestIter337StillRoutes (9.72s)
+applied MS4-still-varies-after-1s
+== MS4-still-varies-after-1s [MS4-still-varies-after-1s] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench: repeat_equal=false (still HTML changed across 2 s)
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?from=9&entry=9: repeat_equal=false (still HTML changed across 2 s)
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>&payload=1: repeat_equal=false (still HTML changed across 2 s)
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>: repeat_equal=false (still HTML changed across 2 s)
+1 --- FAIL: TestIter337StillRoutes (8.35s)
+applied MS5-livejs-removed-everywhere
+== MS5-livejs-removed-everywhere [MS5-livejs-removed-everywhere] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) control /workbench: default HTML has 0 live.js tags, want 1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) control /workbench?from=9&entry=9: default HTML has 0 live.js tags, want 1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) control /workbench?object=sha256:<h>&payload=1: default HTML has 0 live.js tags, want 1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) control /workbench?object=sha256:<h>: default HTML has 0 live.js tags, want 1
+1 --- FAIL: TestIter337StillRoutes (8.32s)
+applied MT1-routes-nil
+== MT1-routes-nil [MT1-routes-nil] rc=1
+applied MT2-invert-repeat
+== MT2-invert-repeat [MT2-invert-repeat] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench: repeat_equal=false (still HTML changed across 2 s)
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?from=9&entry=9: repeat_equal=false (still HTML changed across 2 s)
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>&payload=1: repeat_equal=false (still HTML changed across 2 s)
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>: repeat_equal=false (still HTML changed across 2 s)
+1 --- FAIL: TestIter337StillRoutes (9.58s)
+applied MT3-drop-minus-tag
+applied MS3-still-constant-marker
+== MT3+MS3 [MT3-drop-minus-tag MS3-still-constant-marker] rc=0
+1 --- PASS: TestIter337StillRoutes (8.17s)
+applied MT4-drop-sleep
+applied MS4-still-varies-after-1s
+== MT4+MS4 [MT4-drop-sleep MS4-still-varies-after-1s] rc=0
+1 --- PASS: TestIter337StillRoutes (6.03s)
+applied MT5-drop-default-control
+applied MS5-livejs-removed-everywhere
+== MT5+MS5 [MT5-drop-default-control MS5-livejs-removed-everywhere] rc=0
+1 --- PASS: TestIter337StillRoutes (8.64s)
+### round 2 (MS3 = <meta> element marker, because html/template strips comments: round-1 MS3 PASSED; MT1 = routes[:0], because round-1 MT1 was a BUILD FAILURE ("os" imported and not used), not a kill)
+applied MS3-still-constant-marker
+== MS3-still-constant-marker [MS3-still-constant-marker] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench: still HTML is not the default minus exactly the live.js tag
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?from=9&entry=9: still HTML is not the default minus exactly the live.js tag
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>&payload=1: still HTML is not the default minus exactly the live.js tag
+1     zz_iter337_still_proto_test.go:130: P0 item (1) /workbench?object=sha256:<h>: still HTML is not the default minus exactly the live.js tag
+1 --- FAIL: TestIter337StillRoutes (8.20s)
+applied MT1-routes-nil
+== MT1-routes-nil [MT1-routes-nil] rc=1
+1     zz_iter337_still_proto_test.go:130: P0 item (1): want 4 distinct capture routes, got 0: []
+1 --- FAIL: TestIter337StillRoutes (5.41s)
+applied MT3-drop-minus-tag
+applied MS3-still-constant-marker
+== MT3+MS3 [MT3-drop-minus-tag MS3-still-constant-marker] rc=0
+1 --- PASS: TestIter337StillRoutes (8.38s)
+
+## V14 the same production mutants against the existing ungated CI test TestWorkbenchStillAllRegions (host/daemon)
+== MS1-still-keeps-livejs TestWorkbenchStillAllRegions rc=1
+    workbench_still_test.go:54: still page must have zero script tags: got 1 on /workbench
+--- FAIL: TestWorkbenchStillAllRegions (0.06s)
+== MS2-extra-script-both-modes TestWorkbenchStillAllRegions rc=1
+    workbench_still_test.go:54: still page must have zero script tags: got 1 on /workbench
+--- FAIL: TestWorkbenchStillAllRegions (0.04s)
+== MS3-still-constant-marker TestWorkbenchStillAllRegions rc=1
+    workbench_still_test.go:83: still mode changed HTML beyond the script on /workbench
+--- FAIL: TestWorkbenchStillAllRegions (0.03s)
+== MS4-still-varies-after-1s TestWorkbenchStillAllRegions rc=1
+    workbench_still_test.go:106: repeat GET /workbench varies at byte 161: first "rt\" content=\"width=device-width, initial-scale=1\">\n<title>AILANG World Wor
+--- FAIL: TestWorkbenchStillAllRegions (2.07s)
+== MS5-livejs-removed-everywhere TestWorkbenchStillAllRegions rc=0
+    workbench_still_test.go:109: repeat GETs byte-identical on all three routes after 2.005421167s (real sleep)
+--- PASS: TestWorkbenchStillAllRegions (2.07s)
+### MS5 against TestWorkbenchStillDefaultLiveScript + TestServeWorkbenchStillFlag (both run ungated in CI)
+rc=1
+    render_test.go:662: field census: Page.Still is not referenced by the template
+    render_test.go:675: default live script count = 0, want one
+--- FAIL: TestWorkbenchStillDefaultLiveScript (0.00s)
+    main_test.go:217: default configuration must emit exactly one live script
+--- FAIL: TestServeWorkbenchStillFlag (0.00s)

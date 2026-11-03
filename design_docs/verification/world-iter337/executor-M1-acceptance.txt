@@ -1,0 +1,12 @@
+# executor M1 acceptance, 2026-11-03T01:11:56Z, HEAD 3f5b052d + plan-M1.diff.txt
+    marketing_still_test.go:140: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:140: STILL /workbench?object=sha256:<h> bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:140: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:140: STILL /workbench?object=sha256:<h>&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:141: TIMING seed=5.27s build=0.26s still=2.66s total=8.18s
+--- PASS: TestMarketingStillRoutes (8.22s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	8.651s
+step 2 (AILANG_BIN only):
+    marketing_still_test.go:131: the CLI se-tools e2e needs both real binaries: AILANG_BIN (pinned AILANG v0.41.0) and WORLD_TOOL_AILANG_BIN (AILANG v0.54.15); AILANG_BIN set=true, WORLD_TOOL_AILANG_BIN set=false; skipping
+--- SKIP: TestMarketingStillRoutes (0.01s)
+gofmt/vet/build:

@@ -1,0 +1,66 @@
+# planner M1 acceptance in the worktree with plan-M1.diff.txt + plan-M2.diff.txt applied (check rc 0, apply rc 0 each)
+post-apply sha256: marketing_still_test.go e38f4ccac76ae66857af1a597b6f8bc1c8e25ab9ed4f16536347da46058a71ff; marketing_chrome_test.go 70ef39226db6a71f9647e5a4ce52eb43d01975ff1889eb8c6a01dbc5b4eefb9f; orchestration 50d8ef34143e930cdf188aaaa27bf4baef3c08c8542c79c844db3785ec6507ee
+## step 1 (both pins): rc=0
+    marketing_still_test.go:140: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:140: STILL /workbench?object=sha256:<h> bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:140: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:140: STILL /workbench?object=sha256:<h>&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_still_test.go:141: TIMING seed=8.78s build=0.50s still=2.91s total=12.19s
+--- PASS: TestMarketingStillRoutes (12.23s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	12.619s
+## step 2 (AILANG_BIN only): rc=0
+    marketing_still_test.go:131: the CLI se-tools e2e needs both real binaries: AILANG_BIN (pinned AILANG v0.41.0) and WORLD_TOOL_AILANG_BIN (AILANG v0.54.15); AILANG_BIN set=true, WORLD_TOOL_AILANG_BIN set=false; skipping
+--- SKIP: TestMarketingStillRoutes (0.03s)
+## gofmt -l cmd/ailang-worldd rc=0 lines=0; go vet ./cmd/ailang-worldd rc=0 (no output); go build ./... rc=0
+## Chrome drill (the pasted M2 command): WORLD_CHROME=<Chrome 156.0.8078.80> WORLD_MARKETING_RECTS=world-iter312/r1-rects.json go test -count=1 -timeout 1200s -v -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd under run_bounded 1300 -> rc=0 wall=36s
+    marketing_chrome_test.go:128: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_chrome_test.go:128: STILL /workbench?object=sha256:<h> bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_chrome_test.go:128: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_chrome_test.go:128: STILL /workbench?object=sha256:<h>&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+--- PASS: TestMarketingChromeSixShots (34.49s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	34.769s
+## full gate on the patched tree (M1+M2), both pins
+start 2026-11-03T00:44:18Z
+go build ./... rc=0 1s
+go test ./... rc=0 386s
+verify_ail.sh rc=0 39s
+DONE 2026-11-03T00:53:09Z
+counts: ok=35 notest=2 FAILpkg=0 failtests=0
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	341.094s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	57.864s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/agui	15.729s
+ok  	github.com/sunholo-data/ailang-world/host/archive	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/authority	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/boundary	9.658s
+ok  	github.com/sunholo-data/ailang-world/host/broker	328.882s
+ok  	github.com/sunholo-data/ailang-world/host/canon	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/capsule	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/childenv	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	89.164s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/evidence	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/hashref	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/pins	1.854s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	(cached)
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/proctest	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/projection	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/registry	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/replay	29.182s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	4.307s
+ok  	github.com/sunholo-data/ailang-world/host/store	18.977s
+ok  	github.com/sunholo-data/ailang-world/host/surface	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	(cached)
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	365.419s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	(cached)
+ok  	github.com/sunholo-data/ailang-world/host/worktree	(cached)
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	99.166s
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass

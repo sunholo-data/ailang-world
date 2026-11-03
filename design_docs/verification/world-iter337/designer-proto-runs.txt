@@ -1,0 +1,55 @@
+## V08 healthy prototype, both pins, no Chrome
+$ AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang bash run_bounded.sh 600 <log> go test -count=1 -timeout 540s -v -run '^TestIter337StillRoutes$' ./cmd/ailang-worldd
+rc=0 wall=13s (run_bounded, includes compile)
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    zz_iter337_still_proto_test.go:130: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=426279f4c5c351e13d9904f9aa0b3c845a629cbbf54371105a1a27294cee69c8
+    zz_iter337_still_proto_test.go:130: STILL /workbench?object=sha256:9416341d60f38fbe008dee0f94ce979210f3f08928bacd38b767f241fb9d5876 bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=11d8e851e72cdd7d349758f219fb028c3285a89d4373d2429614de731d4b8b49
+    zz_iter337_still_proto_test.go:130: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=8cbabd5af04df16508118b2aa538d68f7b77d537cd7d8ef2d7c9f5346f0b2ea1
+    zz_iter337_still_proto_test.go:130: STILL /workbench?object=sha256:13fefc7d9ab2861a2c9be1273d07675aa0f0a74cdf48cbc6cade921829381524&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=c1a85b4424533229cb8dad8f208372eb0db19f2b650d7beaf8acd3c66ed5abe8
+    zz_iter337_still_proto_test.go:131: TIMING seed=5.73s build=0.32s still=2.72s total=8.77s
+--- PASS: TestIter337StillRoutes (8.81s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	9.240s
+
+## V09 CI-shaped env: AILANG_BIN only (WORLD_TOOL_AILANG_BIN and WORLD_CHROME unset)
+$ ... go test -count=1 -timeout 240s -v -run '^(TestIter337StillRoutes|TestMarketingChromeSixShots)$' ./cmd/ailang-worldd
+rc=0
+    marketing_chrome_test.go:54: WORLD_CHROME unset: controller runs the real Chrome drill
+--- SKIP: TestMarketingChromeSixShots (0.00s)
+    zz_iter337_still_proto_test.go:118: the CLI se-tools e2e needs both real binaries: AILANG_BIN (pinned AILANG v0.41.0) and WORLD_TOOL_AILANG_BIN (AILANG v0.54.15); AILANG_BIN set=true, WORLD_TOOL_AILANG_BIN set=false; skipping
+--- SKIP: TestIter337StillRoutes (0.02s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.311s
+
+## V10 the existing ungated CI test, CI-shaped env (AILANG_BIN only)
+$ ... go test -count=1 -timeout 240s -v -run '^TestWorkbenchStillAllRegions$' ./host/daemon
+rc=0
+    workbench_still_test.go:109: repeat GETs byte-identical on all three routes after 2.00646075s (real sleep)
+--- PASS: TestWorkbenchStillAllRegions (2.04s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	2.404s
+
+## V11 cold-cache build of scripts/marketingcheck (GOCACHE=$(mktemp -d)), and go vet with the prototype present
+cold build rc=0 wall=7s
+go vet ./cmd/ailang-worldd rc=0

@@ -1,0 +1,77 @@
+== healthy rc=0 restore=identical
+1 --- PASS: TestMarketingStillRoutes
+== MS1 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1) /workbench: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench: still HTML is not the default minus exactly the live.js tag
+1 marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: still HTML is not the default minus exactly the live.js tag
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>&payload=1: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>&payload=1: still HTML is not the default minus exactly the live.js tag
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>: still HTML is not the default minus exactly the live.js tag
+== MS2 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1) /workbench: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>&payload=1: script_tags=1, want 0
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>: script_tags=1, want 0
+== MS3 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1) /workbench: still HTML is not the default minus exactly the live.js tag
+1 marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: still HTML is not the default minus exactly the live.js tag
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>&payload=1: still HTML is not the default minus exactly the live.js tag
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>: still HTML is not the default minus exactly the live.js tag
+== MS4 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1) /workbench: repeat_equal=false (still HTML changed across 2 s)
+1 marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: repeat_equal=false (still HTML changed across 2 s)
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>&payload=1: repeat_equal=false (still HTML changed across 2 s)
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>: repeat_equal=false (still HTML changed across 2 s)
+== MS5 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1) control /workbench: default HTML has 0 live.js tags, want 1
+1 marketing_still_test.go:140: P0 item (1) control /workbench?from=9&entry=9: default HTML has 0 live.js tags, want 1
+1 marketing_still_test.go:140: P0 item (1) control /workbench?object=sha256:<h>&payload=1: default HTML has 0 live.js tags, want 1
+1 marketing_still_test.go:140: P0 item (1) control /workbench?object=sha256:<h>: default HTML has 0 live.js tags, want 1
+== MT1 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1): want 4 distinct capture routes, got 0: []
+== MT2 rc=1 restore=identical
+1 --- FAIL: TestMarketingStillRoutes
+1 marketing_still_test.go:140: P0 item (1) /workbench: repeat_equal=false (still HTML changed across 2 s)
+1 marketing_still_test.go:140: P0 item (1) /workbench?from=9&entry=9: repeat_equal=false (still HTML changed across 2 s)
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>&payload=1: repeat_equal=false (still HTML changed across 2 s)
+1 marketing_still_test.go:140: P0 item (1) /workbench?object=sha256:<h>: repeat_equal=false (still HTML changed across 2 s)
+== MT3+MS3 rc=0 restore=identical
+1 --- PASS: TestMarketingStillRoutes
+== MT4+MS4 rc=0 restore=identical
+1 --- PASS: TestMarketingStillRoutes
+== MT5+MS5 rc=0 restore=identical
+1 --- PASS: TestMarketingStillRoutes
+# raw
+pristine render.go=d0a108cf829b3434 marketing_still_test.go=e38f4ccac76ae668
+RUN healthy rc=0 wall=9s
+applied MS1
+RUN MS1 rc=1 wall=9s
+applied MS2
+RUN MS2 rc=1 wall=9s
+applied MS3
+RUN MS3 rc=1 wall=9s
+applied MS4
+RUN MS4 rc=1 wall=9s
+applied MS5
+RUN MS5 rc=1 wall=9s
+applied MT1
+RUN MT1 rc=1 wall=7s
+applied MT2
+RUN MT2 rc=1 wall=9s
+applied MT3
+applied MS3
+RUN MT3+MS3 rc=0 wall=9s
+applied MT4
+applied MS4
+RUN MT4+MS4 rc=0 wall=9s
+applied MT5
+applied MS5
+RUN MT5+MS5 rc=0 wall=10s

@@ -1,0 +1,31 @@
+=== RUN   TestMarketingStillRoutes
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    marketing_still_test.go:140: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=c976186dc7efc30c808b9ce564d98d37d6f95416a9884028dd47d94850ae3330
+    marketing_still_test.go:140: STILL /workbench?object=sha256:e0d4b4d823a4b1f8bad355e854b7ae68cf41473cba3b8a518e48fef3d6c92f91 bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=6f515973c8f4609b3e9713e9ae0fd722bbde1a550a5d02ed47d1f862976193af
+    marketing_still_test.go:140: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=8c69711e6dbe222068e5edfa07d4dd9b836885094b2dbe93964765d95cff520d
+    marketing_still_test.go:140: STILL /workbench?object=sha256:48b6b750bf88f81b601adeca0694e51efe854b7f2a2b45d4ede83efc37b41c23&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=8af9104843ecd47c6ac0856c497e211b859c156f1ef6298e9cd67190da058209
+    marketing_still_test.go:141: TIMING seed=5.79s build=0.27s still=2.75s total=8.81s
+--- PASS: TestMarketingStillRoutes (8.85s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	9.238s

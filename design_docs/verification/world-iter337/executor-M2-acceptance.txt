@@ -1,0 +1,21 @@
+1	1	design_docs/planned/w-marketing-capture-orchestration.md
+1	checkMarketingStill
+1	zz_iter305_probe_test.go
+1	TestIter305SeededStillCaptureProbe
+1	  1. **Route-level still determinism.**
+1	  2. **Six-shot two-pass.**
+parity rc=0
+--- PASS: TestMarketingPhoneParity
+    --- PASS: TestMarketingPhoneParity/pin-registry
+--- PASS: TestMarketingPositionParity
+    --- PASS: TestMarketingPositionParity/pin-registry
+drill rc=0
+drill pass=1 still=4 p0err=0
+control MS1 log still=0
+# drill
+    marketing_chrome_test.go:128: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_chrome_test.go:128: STILL /workbench?object=sha256:<h> bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_chrome_test.go:128: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+    marketing_chrome_test.go:128: STILL /workbench?object=sha256:<h>&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=<h>
+--- PASS: TestMarketingChromeSixShots (18.89s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	19.177s

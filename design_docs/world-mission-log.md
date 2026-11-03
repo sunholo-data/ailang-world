@@ -2538,3 +2538,89 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Landing (iteration 336):** PR #461 merged as `98934b0e` (merge commit, `--match-head-commit 7a0fd120`). Head `7a0fd120` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `37100a43`, right before the merge. **Merge CI:** `commits/98934b0e/check-runs` → 3, all success on attempt 1 (run 41533693122: ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA. Fleet `harness-resolved` messages (6) and the fleet `[fyi]` acknowledged after the merge.
 **Landing-note PR #462 CI:** attempt 1 of run 41536157598 failed `go host build + test gate` on `TestMarketingCaptureFakeChromeSixShots/version-changed` (its fixed 120 s context deadline; package 152 s) on a text-only diff, while the same code's merge run gave the whole package 41.7 s. That is a load-timing flake, not a content red, filed as row 247 (outside D-WORLD-106's scope). The failed job was re-run, then superseded by this commit's fresh run.
+
+## 337 — 2026-11-03 — row 239 built: P0 item (1) becomes a committed, asserting still check (TestMarketingStillRoutes + the six-shot drill on its own store); design r3 via a controller carve-out; judge PASS 91 [RELEASE-HYGIENE]
+
+**Pick:** row 239 `w-marketing-still-probe-commit`, next in queue order under D-WORLD-106 = A (attended 2026-11-02), the fourth pick.
+- Clause map 1–7 MET, no UNMET clause.
+- Release rows not routable, re-measured at `2f293570`:
+  - Row 150 waits on the attended A1: subjects `37100a43..2f293570` matching `row ?150|A1\b|marketing` → 5 of 9. All five are row 238's own commits, whose "A1–A7" is its amendment label, not the attended capture.
+  - Row 151 needs row 188 N2d/N4a: `-E --grep='N2d|N4a'` since 2026-10-01 → the same 4 records/designs. N2c control 4.
+- Dev green at `2f293570`: check-runs 3/3 (ailang-code verify gate, go race gate, go host build + test gate); parent `98934b0e` 3/3.
+- Gate 0:
+  - 0 allowlisted directives on #449 (watermark file absent, so every comment was read) or #366.
+  - Self-notice script rc 0 (control 107:4); no crash notices.
+  - Billing CLEAN.
+  - Running skill and all 13 resource files byte-identical to `origin/dev` (resolved symlink target and the pin's copy both checked).
+- Gate 2 died-mid-flight traces: 0 open PRs; no iteration-337 worktree or branch existed; main checkout carries only the two long-standing untracked dirs.
+- Premise measured first-party: `git grep -E 'repeat_equal|script_tags' origin/dev` hits only design docs and `verification/world-iter305/*.txt`; no committed Go test asserts either.
+
+**Design** (`w-marketing-still-probe-commit`; resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the 318–336 precedent and the operator's standing request; rotation pointer unchanged):
+- **r1** (240 lines, V01–V17). Decisions:
+  - gate on the two AILANG pins, not Chrome (item (1) is server HTML; 8.81 s with no Chrome); this is a superset of where the Chrome drill can run. CI never exports `WORLD_TOOL_AILANG_BIN`, so it SKIPs there like every real-seed test (residual R1);
+  - call the same helper inside `TestMarketingChromeSixShots` before capture, so P0 items (1) and (2) are one run on one store (V12: drill PASS 20.00 s, 4 STILL lines);
+  - keep the 2 s sleep (MT4+MS4 measured: without it the delayed-variation mutant survives);
+  - 5 production + 5 test mutants with sole-killer controls; an HTML-comment marker is a no-op under `html/template`, so MS3 uses a `<meta>`.
+- **Quorum r1 BLOCKED** ($0.1369; seats gpt6-1-sol, gemini-4-argon, oc-glm-5-3; claude benched; `absent_reviewers` `[]`).
+  - sol: §2.3 "the render path reads no clock" overclaims a two-glob grep;
+  - glm: drill `:69–71`, serve flags `:116–118`, the probe's log-only nature and V13's count were unverified;
+  - gemini (pass): require daemon teardown before capture; inline the helper.
+  - The controller measured glm's premises itself (`:69–71` is `t.Fatal` after the WORLD_CHROME skip; the serve command spans `:115–118` and the prototype config maps every flag; the probe's only `t.Errorf` is `:241`; V13 is 11 + 3 = 14 runs, glm miscounted) and handed over the data.
+- **r2** (269 lines): sol's text verbatim; V18–V21 (V21: real `serve` with the script's exact flags is byte-equal to the helper on 4/4 routes, control 0/4 at +48 B); per-mode `defer` teardown required; §6 dispositions.
+- **Quorum r2 BLOCKED** ($0.1706; same seats, none absent): glm and gemini PASS; sol rejects on reuse-vs-duplication of the existing still-test assertions, with its own fix (a verified overlap subsection; reuse or justify; name the synchronized invariants).
+- **r3, controller narrow-refinement carve-out.** The one remaining objection had a reviewer-authored fix and did not dispute direction. §2.6 + V22: `workbench_still_test.go` declares 1 function (control 33), its assertions are inline in package `daemon` using unexported helpers, so `package main` cannot call it; extraction would need a new helper package plus an edit to a CI test, for ~10 shared lines; the live.js tag literal sits at `render.go:203` + 5 test sites, and drift reds A0 and `workbench_still_test.go:82`; M1 adds a header comment naming the invariants.
+
+**Plan** (resolver `agent-tool opus fail-closed:env-pin`; `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`), `3f5b052d`:
+- `plan-M1.diff.txt` sha256 `08542390…`, `plan-M2.diff.txt` `29d81e47…`, both proved applied in the worktree and reverted.
+- 11 mutant runs on the APPLIED file, identical across three runs → `plan-mutants-expected.txt`.
+- Baseline on the unpatched tree: `go test ./...` rc 1, only `host/verifygate` `TestMissionConfigDefaultFlowIntegration` "default-flow fixture timed out" (10 s fixture) at load 11–12 with a local llama-server; alone it passed in 11 s. Patched suite rc 0 (386 s). `verify_ail.sh` rc 0.
+- Deviations from the design, measured: header comment cites `:53` (the `<script` predicate line), scope check via committed diff + `git status`, `TIMING` log kept for MT1's anchor.
+
+**Executor** (resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku` per the operator's request):
+- Both patch sha256s verified, applied byte-exact (controller re-applied both to a `git archive` copy: 3/3 files IDENTICAL).
+- M1: PASS 1, SKIP 0, STILL 4; CI-shaped control SKIP; gofmt/vet/build rc 0; 11/11 mutants `cmp`-identical to the expected table, restores identical.
+- M2: anchor 1, numstat `1 1`, parity rc 0 (both `pin-registry` PASS), drill rc 0 STILL 4, MS1 control 0.
+- Full gate on the final tree: `go build ./...` rc 0; `go test ./...` rc 0 (35 ok, 0 FAIL); `verify_ail.sh` rc 0 (16 identities, 40 named tests, 503 se-tools).
+- Left uncommitted; the controller committed M1 `1ec46753` and M2 `9e88e94f` (M1 boundary compiles).
+
+**Controller checks before the judge:**
+- `TestMarketingStillRoutes` re-run: rc 0, PASS 1, SKIP 0, STILL 4.
+- Unplanned mutant CM1 (a still-only `class="still"` on `<body>`): rc 1, A3 on all 4 routes; `render.go` restored identical (`controller-cm1-mutant.txt`).
+- M2 quorum coverage by content (row 238's V27 standard): the pasted line occurs verbatim once in `f8bc4a32` (r1) and `ca61e793` (r2), the two versions the quorum reviewed; old-line control 0. So no separate orchestration-doc round.
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), in its own detached worktree `.judge-wt-iter337` at `9e88e94f`, foreground.
+- **PASS 91/100, zero blocking** (33/17/15/13/13).
+- Re-ran `TestMarketingStillRoutes` (rc 0, 4 STILL), the CI-shaped control (SKIP), the drill (rc 0, 22 s, 4 STILL), `verify_ail.sh` (rc 0).
+- Its own mutants: 8 production mutants all caught (incl. one-route-only variation, `defer`→`async` tag drift, 1.5 s-late variation); test-helper mutants: still daemon without `WorkbenchStill`, `routes[:3]` and nil proof identities caught; self-compare, disabled control, one-route loop and removed sleep survive (edits to the test itself; no meta-test).
+- M2: verified by content that the line is in both reviewed versions; skipping the orchestration round "sound on content".
+- Process claims: recorded quorum verdicts match both JSONs; "no direction dispute" fair.
+- Its full `go test ./...` under its own concurrent mutation load was rc 1 in three untouched packages (timeouts/bound overruns); each passed alone; `host/daemon` `TestSeToolsRunBenchmarkTasksEndToEnd` (a mock saw an extra GET) failed once more in a four-package run and passes alone at HEAD and at base `2f293570`.
+- Report: `verification/world-iter337/evaluator-r1.md`.
+
+**Routing evidence:** base=2f2935701959f4c727d4974db057ce7d9e6dd3d3@2026-11-03T01:39:07Z (Gate 4; Gate 1 read the same SHA at 2026-11-02T23:58:12Z).
+- Driver env:
+  - `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`;
+  - `MISSION_PLANNER_RESOLVED=opus` (codex `gpt-6.1-sol` over daily ration, probe rc 75);
+  - `MISSION_EXECUTOR_RESOLVED=claude:claude-haiku-5-5` (codex over ration);
+  - `MISSION_EVALUATOR_RESOLVED=sonnet`;
+  - `MISSION_OVER_RATION=codex`.
+- Controller `claude:claude-opus-5-5` (tok: not reported) · designer Agent `opus` (183,567 + 234,291 tok over two runs: r1, r2) · planner Agent `opus` (179,809 tok) · executor Agent `haiku` (58,341 tok) · evaluator Agent `sonnet` (67,292 tok).
+- Generator ≠ judge: opus designer and planner and haiku executor vs the sonnet judge. All four roles spawned through the Agent tool; none fell back.
+- Designer diet: 1 doc, initial run + 1 protocol-mandated revision; r3 was the controller's carve-out, not a designer run. Opus, not Fable.
+- Metered **$0.3075**, all quorum (r1 $0.1369 + r2 $0.1706, `jq` sum of `.reviewers[].cost_usd`), under the $5 budget.
+
+**Ruled out:**
+- A third quorum round on r3: the only r2 objection carried its own fix and accepted a justified separate implementation (iteration-95 carve-out).
+- A separate orchestration-doc quorum for M2: the exact line was content-reviewed in both rounds (unlike row 238's V27 case, where 0 of 16 pasted lines were in the reviewed versions).
+- Extracting a shared still checker: measured disproportionate (§2.6).
+- Filing the judge's `host/daemon` failure as a row: one instance, under the judge's own concurrent load, passing alone at HEAD and base. Recorded here so a second instance is recognisable.
+- Treating the planner's baseline `host/verifygate` timeout as a regression: unpatched tree, load 11–12, passes alone; the executor's full gate on the final tree was rc 0.
+
+**Retro:**
+1. **Row 238's retro predicted this row would hit the orchestration doc's quorum path, and it did not — because the design quoted the exact pasted line, so the design quorum content-reviewed it.** A one-line, design-quoted amendment is covered; row 238's was not. The discriminating test is V27's content grep, now applied twice. Instance 2 of the content-not-date rule.
+2. **Handing the designer measured premises instead of objections closed glm's four points in one round** (Gate 3 designer rule (b)); the remaining r2 reject was a new objection, not a re-assertion.
+3. **Haiku again applied a byte-pinned patch exactly.** Two for two on codex-over-ration fires.
+- No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 239 BUILT in PR #463.
+**Next:** row 239 lands on PR CI + merge CI green (landing note). Then row 240 under D-WORLD-106 = A, then 241 → 242, stopping as soon as a release row is routable; a dev red still outranks.

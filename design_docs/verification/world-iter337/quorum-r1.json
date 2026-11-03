@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-marketing-still-probe-commit.md",
+  "iso_ts": "2026-11-03T00:14:32Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.016220000000000002,
+      "tokens_in": 6805,
+      "tokens_out": 261,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The claim in §2.3 that “the render path reads no clock” is not verified by V06. Searching two file globs for direct time.Now/time.Since calls does not establish that rendering's transitive callees, template functions, or other clock sources are time-independent. This violates the premise-verification gate even though the repeat-check mutation results remain useful.",
+        "catch": "V06 establishes a narrow textual-search result, not the broader behavioral claim made in §2.3. Its positive control validates that the search can find direct calls, not that its scope covers the render path.",
+        "proposed_fix": "Replace §2.3's opening with: “V06 found no direct time.Now/time.Since calls in non-test files matching host/workbench/*.go or host/daemon/workbench*.go. This is not a transitive audit of clock dependence. We retain the 2 s delay because the measured MS4/MT4 comparison shows that this test detects the injected delayed variation only with the delay present; it does not prove independence from all possible time-dependent behavior.” Narrow V06's stated conclusion accordingly."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.03676,
+      "tokens_in": 7745,
+      "tokens_out": 289,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "M1 delegates the implementation of `cmd/ailang-worldd/marketing_still_test.go` to an external verification artifact (`designer-still-proto_test.go.txt` lines 20–112) rather than inlining the helper code in the design doc, meaning the exact HTTP client timeout and in-process daemon teardown mechanics are only inspectable via the sidecar file.",
+        "catch": "In M1 step 1, verify that `designer-still-proto_test.go.txt` is present and untracked/committed as expected in the executor's checkout before copying, and ensure the in-process daemons started by `checkMarketingStill` are deterministically closed via `defer` before `TestMarketingChromeSixShots` proceeds to launch `capture_marketing.sh` on `rig.db` so SQLite locks or file descriptors cannot leak across the item (1) -\u003e item (2) boundary.",
+        "proposed_fix": "In §2.4, add an explicit requirement that `checkMarketingStill` must close both in-process daemons via `defer` inside the helper scope before returning so `rig.db` has zero open handles when `TestMarketingChromeSixShots` invokes `capture_marketing.sh`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.08393160000000001,
+      "tokens_in": 6862,
+      "tokens_out": 16892,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate 1 failure: the doc's most load-bearing config premise is asserted, not verified. §2.2 states 'The helper's in-process daemons mirror the capture script's serve flags (capture_marketing.sh:116–118)' — the premise that makes item (1) check 'exactly the pages captured' — yet V04's recorded output shows only line 116 ('serve --db … --workbench-still'). If the serve invocation continues on 117–118 with any flag the helper does not mirror, the committed test can pass on still pages that differ from what capture_marketing.sh actually captures, defeating the row's stated purpose. The same gap hits §2.1's headline decision: 'the drill FATALs without both pins (marketing_chrome_test.go:69–71)' appears in no V row — V03's observed column lists 52/54, 73, 122, 125–126, 136, 155, 159, 245 and never 69–71, and the FATAL path was never exercised (V09 hits the WORLD_CHROME skip first), so FATAL-vs-SKIP there is unverified. Likewise §1's characterization of the iter305 probe ('only t.LogFs … lines 249–250', 'mints its own store') is appealed to iteration-315 judge NB4 rather than observed in this log. Under a doc whose own standard is that every behavioral claim carries a V row, these are unverified premises.",
+        "catch": "Record the unobserved lines before M1: capture_marketing.sh:116–118 (are 117–118 continuations of the serve command carrying flags the helper must mirror?), marketing_chrome_test.go:69–71 (t.Fatalf or t.Skipf on missing pins?), and the iter305 probe's lines 249–250 plus its store construction. Separately, reconcile V13's arithmetic: it claims '14 run.sh runs' but enumerates only 13 results (healthy, MS1–MS5, MT1–MT5, plus the two round-1 redos of MS3 and MT1) — name the 14th run or correct the count.",
+        "proposed_fix": "Re-issue as r2 with three added V rows: V18 `sed -n '69,71p' cmd/ailang-worldd/marketing_chrome_test.go` (plus `grep -n -E 'Fatalf|Skipf'` over 52–71) recording whether the pin checks are t.Fatalf or t.Skipf — if Skipf, weaken §2.1's sentence to 'the drill does not run without both pins'; the superset argument and the strictly-stronger conclusion are unaffected either way. V19 `sed -n '114,120p' scripts/capture_marketing.sh` recording every flag of the serve invocation, plus one added sentence in §2.2 mapping each recorded flag to the helper's in-process daemon config (mirror any 117–118 flag, or justify why it cannot alter still HTML). V20 `grep -n -E 't\\.(Logf|Errorf|Fatalf)|seed|TempDir|--db' \u003citer305 probe .txt path\u003e` recording that lines 249–250 are t.Logf-only and that the probe constructs its own store, replacing the appeal to iteration-315 judge NB4 with direct observation. Also correct V13's run count or enumerate the 14th run."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read r1 in full: premise measured at base (0 asserting Go tests, control 13); gating stronger than the row; mutants with sole-killer controls; M2 confined to one line of 4.4 item (1). Pass."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-1-sol: The claim in §2.3 that “the render path reads no clock” is not verified by V06. Searching two file globs for direct time.Now/time.Since calls does not establish that rendering's transitive callees, template functions, or other clock sources are time-independent. This violates the premise-verification gate even though the repeat-check mutation results remain useful.",
+      "oc-glm-5-3: Gate 1 failure: the doc's most load-bearing config premise is asserted, not verified. §2.2 states 'The helper's in-process daemons mirror the capture script's serve flags (capture_marketing.sh:116–118)' — the premise that makes item (1) check 'exactly the pages captured' — yet V04's recorded output shows only line 116 ('serve --db … --workbench-still'). If the serve invocation continues on 117–118 with any flag the helper does not mirror, the committed test can pass on still pages that differ from what capture_marketing.sh actually captures, defeating the row's stated purpose. The same gap hits §2.1's headline decision: 'the drill FATALs without both pins (marketing_chrome_test.go:69–71)' appears in no V row — V03's observed column lists 52/54, 73, 122, 125–126, 136, 155, 159, 245 and never 69–71, and the FATAL path was never exercised (V09 hits the WORLD_CHROME skip first), so FATAL-vs-SKIP there is unverified. Likewise §1's characterization of the iter305 probe ('only t.LogFs … lines 249–250', 'mints its own store') is appealed to iteration-315 judge NB4 rather than observed in this log. Under a doc whose own standard is that every behavioral claim carries a V row, these are unverified premises."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.13691160000000002,
+    "total_tokens_in": 21412,
+    "total_tokens_out": 17442
+  }
+}

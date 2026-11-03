@@ -1,0 +1,6 @@
+start 2026-11-03T01:02:41Z AILANG_BIN=AILANG v0.41.0 TOOL=AILANG v0.54.15 WORLD_CHROME=unset
+go build ./... rc=0
+go test ./... rc=0
+verify_ail.sh rc=0
+DONE 2026-11-03T01:11:37Z
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass

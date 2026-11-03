@@ -1,0 +1,132 @@
+package main
+
+// Iteration-337 designer prototype for row 239; never committed as a .go file.
+// Banked as design_docs/verification/world-iter337/designer-still-proto_test.go.txt.
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/daemon"
+)
+
+// marketingStillLiveTag is the one byte string WorkbenchStill removes (render.go:203).
+const marketingStillLiveTag = `<script src="/workbench/live.js" defer></script>`
+
+// marketingStillRoutes asks the committed `marketingcheck routes` (ShotRoutes,
+// the exact derivation capture_marketing.sh feeds the supervisor) for the six
+// shot routes and returns them de-duplicated in shot order.
+func marketingStillRoutes(t *testing.T, check, manifest string) []string {
+	t.Helper()
+	var rows []struct {
+		Route string `json:"route"`
+	}
+	out := marketingChromeCommand(t, 60*time.Second, check, "routes", "--manifest", manifest)
+	if err := json.Unmarshal([]byte(out), &rows); err != nil || len(rows) != 6 {
+		t.Fatalf("marketingcheck routes: want 6 rows: %s (%v)", out, err)
+	}
+	var routes []string
+	seen := map[string]bool{}
+	for _, r := range rows {
+		if !seen[r.Route] {
+			seen[r.Route] = true
+			routes = append(routes, r.Route)
+		}
+	}
+	return routes
+}
+
+// checkMarketingStill is P0 item (1) on the rig's store: a default daemon's
+// HTML is the control; a WorkbenchStill daemon is GET twice per route, 2 s apart.
+func checkMarketingStill(t *testing.T, rig marketingChromeRig, routes []string) {
+	t.Helper()
+	if len(routes) != 4 {
+		t.Fatalf("P0 item (1): want 4 distinct capture routes, got %d: %q", len(routes), routes)
+	}
+	cfg := daemon.Config{DBPath: rig.db, BindHost: daemon.DefaultBindHost, AilangBin: rig.interp, WorkspaceRoot: rig.ws,
+		ToolAilangBin: rig.tool, ProofKeyFile: rig.key, ProofRequiredIdentities: []string{"sameRef", "servesEntry"}}
+	serve := func(still bool, visit func(get func(string) []byte)) {
+		c := cfg
+		c.WorkbenchStill = still
+		d, err := daemon.New(boundedTestContext(t), c)
+		if err != nil {
+			t.Fatalf("daemon.New (still=%v): %v", still, err)
+		}
+		srv := httptest.NewServer(d.Handler())
+		defer func() { srv.Close(); _ = d.Close() }()
+		visit(func(p string) []byte {
+			resp, err := http.Get(srv.URL + p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+			b, err := io.ReadAll(resp.Body)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				t.Fatalf("GET %s (still=%v): status %d (%v)", p, still, resp.StatusCode, err)
+			}
+			return b
+		})
+	}
+	defaults, first, second := map[string][]byte{}, map[string][]byte{}, map[string][]byte{}
+	serve(false, func(get func(string) []byte) {
+		for _, p := range routes {
+			defaults[p] = get(p)
+		}
+	})
+	serve(true, func(get func(string) []byte) {
+		for _, p := range routes {
+			first[p] = get(p)
+		}
+		// No request clock is injectable: any time-dependent byte must have 2 s to change.
+		time.Sleep(2 * time.Second)
+		for _, p := range routes {
+			second[p] = get(p)
+		}
+	})
+	for _, p := range routes {
+		d, a, b := defaults[p], first[p], second[p]
+		tags, minus := bytes.Count(d, []byte(marketingStillLiveTag)), bytes.Replace(d, []byte(marketingStillLiveTag), nil, 1)
+		repeat, scripts, stripped := bytes.Equal(a, b), bytes.Count(b, []byte("<script")), bytes.Equal(a, minus)
+		t.Logf("STILL %s bytes=%d repeat_equal=%v script_tags=%d equals_default_minus_tag=%v default_live_tags=%d html_sha256=%x",
+			p, len(b), repeat, scripts, stripped, tags, sha256.Sum256(b))
+		if tags != 1 {
+			t.Errorf("P0 item (1) control %s: default HTML has %d live.js tags, want 1", p, tags)
+		}
+		if !repeat {
+			t.Errorf("P0 item (1) %s: repeat_equal=false (still HTML changed across 2 s)", p)
+		}
+		if scripts != 0 {
+			t.Errorf("P0 item (1) %s: script_tags=%d, want 0", p, scripts)
+		}
+		if !stripped {
+			t.Errorf("P0 item (1) %s: still HTML is not the default minus exactly the live.js tag", p)
+		}
+	}
+}
+
+func TestIter337StillRoutes(t *testing.T) {
+	start := time.Now()
+	interp := requireProofPin(t)
+	_, tool := cliSeBins(t)
+	requireBinaryRelease(t, tool, daemon.ToolBinaryRelease)
+	rig := newMarketingChromeRig(t, interp, tool)
+	seeded := time.Now()
+	check := filepath.Join(t.TempDir(), "marketingcheck")
+	root, _ := filepath.Abs(filepath.Join("..", ".."))
+	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", check, filepath.Join(root, "scripts", "marketingcheck"))
+	built := time.Now()
+	routes := marketingStillRoutes(t, check, rig.manifest)
+	if os.Getenv("PROTO_ROUTES_NIL") == "1" {
+		routes = nil
+	}
+	checkMarketingStill(t, rig, routes)
+	t.Logf("TIMING seed=%.2fs build=%.2fs still=%.2fs total=%.2fs", seeded.Sub(start).Seconds(), built.Sub(seeded).Seconds(), time.Since(built).Seconds(), time.Since(start).Seconds())
+}

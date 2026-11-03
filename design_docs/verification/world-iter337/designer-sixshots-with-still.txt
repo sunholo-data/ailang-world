@@ -1,0 +1,48 @@
+## V12 TestMarketingChromeSixShots with the helper called on its own rig (temporary patch, reverted with git checkout afterwards)
+diff --git a/cmd/ailang-worldd/marketing_chrome_test.go b/cmd/ailang-worldd/marketing_chrome_test.go
+index 1bc70c50..983cfd49 100644
+--- a/cmd/ailang-worldd/marketing_chrome_test.go
++++ b/cmd/ailang-worldd/marketing_chrome_test.go
+@@ -124,6 +124,11 @@ func TestMarketingChromeSixShots(t *testing.T) {
+ 	worldd, check := filepath.Join(dir, "ailang-worldd"), filepath.Join(dir, "marketingcheck")
+ 	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", worldd, ".")
+ 	marketingChromeCommand(t, 120*time.Second, "go", "build", "-o", check, filepath.Join(root, "scripts", "marketingcheck"))
++	// P0 item (1) on this store, before capture (row 239).
++	checkMarketingStill(t, rig, marketingStillRoutes(t, check, rig.manifest))
++	if t.Failed() {
++		t.FailNow()
++	}
+ 	listener, err := net.Listen("tcp", "127.0.0.1:0")
+ 	if err != nil {
+ 		t.Fatal(err)
+$ AILANG_BIN=... WORLD_TOOL_AILANG_BIN=... WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" WORLD_MARKETING_RECTS=$PWD/design_docs/verification/world-iter312/r1-rects.json bash run_bounded.sh 700 <log> go test -count=1 -timeout 660s -v -run '^TestMarketingChromeSixShots$' ./cmd/ailang-worldd
+rc=0 wall=22s
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+ailang-worldd: capsule template ailang-check: ready
+ailang-worldd: capsule template ailang-cli: ready
+ailang-worldd: capsule template ailang-delete: ready
+ailang-worldd: capsule template ailang-edit: ready
+ailang-worldd: capsule template ailang-read: ready
+ailang-worldd: capsule template ailang-run: ready
+ailang-worldd: capsule template ailang-write: ready
+ailang-worldd: capsule template builtins-search: ready
+ailang-worldd: capsule template demo-approve: ready
+ailang-worldd: capsule template examples-search: ready
+ailang-worldd: capsule template workspace-exec: ready
+    marketing_chrome_test.go:128: STILL /workbench bytes=19197 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=e342c1058cb78d70172b03b7476c1f5bca9c8468c19b4c746f0fcf390173b567
+    marketing_chrome_test.go:128: STILL /workbench?object=sha256:d1015105bf16cf9a9f7e077895984bcfdf4b3ed1b98f43301cbfb14047bef0bf bytes=18654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=0c81372e8d0b0cfa8037c0ee1616d01d925cd3ec7202d377561b4b612da99a1d
+    marketing_chrome_test.go:128: STILL /workbench?from=9&entry=9 bytes=10275 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=ef51de324325b8e47e7c61792d4f88739c669cf496cea4127399add18495e940
+    marketing_chrome_test.go:128: STILL /workbench?object=sha256:8f04c5ef81fcdc1414b762a98bd6a3e3d1cd830ed91f4d89399992a2ac0a063e&payload=1 bytes=16654 repeat_equal=true script_tags=0 equals_default_minus_tag=true default_live_tags=1 html_sha256=4e781ed06d494405e51695ac77d4f06d806b40b49b0fdb42271c3fd2c3b648dd
+--- PASS: TestMarketingChromeSixShots (20.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	20.395s

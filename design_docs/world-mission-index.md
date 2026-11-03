@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 337 | 2026-11-03 | row 239 built: P0 item (1) becomes a committed, asserting still check (TestMarketingStillRoutes + the six-shot drill on its own store); design r3 v... |
 | 336 | 2026-11-02 | row 238 built: marketingcheck bounds free gaps to one line, adds (a5) cumulative drift, bridges a 1 px thumb split; orchestration §4.4 amended thro... |
 | 335 | 2026-11-02 | row 237 built: a new host/daemon test pins the finish approve guard's Record != nil arm (403, no approval written, a 200 control); judge PASS 92 [P... |
 | 334 | 2026-11-02 | row 235 built: AC8's probe waits on events, proves the daemon mutex held with TryLock, and replays the CI gap anchored on the first probe entry; th... |
