@@ -2705,7 +2705,7 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Landing (iteration 338):** PR #465 merged as `13d3a3fb` (merge commit, `--match-head-commit 6839c767`). Head `6839c767` was 3/3 green and was re-read MERGEABLE/CLEAN, with `origin/dev` still at `2c51c581`, right before the merge. **Merge CI:** `commits/13d3a3fb/check-runs` → 3, all success on attempt 1 (ailang-code verify gate, go race gate, go host build + test gate). Dev green. Pollers ran under `/bin/bash` from a script file, one per SHA, each verdict line naming its SHA.
 
-## 339 — 2026-11-03 — row 241 built: T12 pins pollLoopback's real dial cadence to execProbePollEvery through the dial seam; T10's ceiling measured from setAt; one CI name; design r1 PROCEED 3/3; judge PASS 88 [CLAUSE-3 HYGIENE]
+## 339 — 2026-11-03 — row 241 built: T12 pins pollLoopback's real dial cadence to execProbePollEvery through the dial seam; T10's ceiling measured from setAt; one CI name; design r1 PROCEED 3/3; judge PASS 88 [PRODUCT-HYGIENE]
 
 **Pick:** row 241 `w-exec-probe-hello-wait-pin-survivors`, next in queue order under D-WORLD-106 = A (attended 2026-11-02), the sixth pick.
 - Clause map 1–7 MET, no UNMET clause.
