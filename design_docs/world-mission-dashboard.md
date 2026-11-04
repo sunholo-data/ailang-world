@@ -1,14 +1,14 @@
-# World mission dashboard — iteration 344 (2026-11-04)
+# World mission dashboard — iteration 345 (2026-11-04)
 
-- **This fire:** no pick. This is a rule-(d) block report (the 16th overall; it repeats iterations 341–343). Nothing moved since iteration 343 but its own record, and nothing is loop-routable.
+- **This fire:** no pick. This is a rule-(d) block report (the 17th overall; it repeats iterations 341–344). Nothing moved since iteration 344 but its own record, and nothing is loop-routable.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `800eb842` (3/3 on attempt 2; attempt 1 hit the row-251 flake).
+- **Dev:** green at `38b9f627` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
 - **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
-- **Row 251 (new, iteration 344):** a `host/broker` load flake (4 s post-dispatch budget) that reddened merge `800eb842`; attempt 2 green. Filed only; no decision covers it.
+- **Row 251 (iteration 344):** a `host/broker` load flake (4 s post-dispatch budget). It is filed only. D-WORLD-108 does not list it, so an A answer would not cover it unless it says so.
 - **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
   - **D-WORLD-108:** may the loop take rows 250, then 244 → 249?
@@ -25,4 +25,5 @@
   - designer, planner and executor: not spawned (no pick);
   - independent judge: Agent sonnet.
 - **Cost:** $0 metered.
-- **Record and evidence:** world-mission-log.md entry 344; verification/world-iter344/gate1-2-readings.txt.
+- **Log:** rotated this fire (`rotate-log --keep 20`).
+- **Record and evidence:** world-mission-log.md entry 345; verification/world-iter345/gate1-2-readings.txt.
