@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 344 | 2026-11-04 | no pick: rule (d) block report 16 (repeats 341–343); rows 250 and 244–249 wait on D-WORLD-108; row 233 parked on D-WORLD-105; release rows 150/151 ... |
 | 343 | 2026-11-04 | no pick: rule (d) block report 15 (repeats 341–342); rows 250 and 244–249 wait on D-WORLD-108; row 233 parked on D-WORLD-105; release rows 150/151 ... |
 | 342 | 2026-11-03 | no pick: rule (d) block report 14 (repeats 341); rows 250 and 244–249 wait on D-WORLD-108; row 233 parked on D-WORLD-105; release rows 150/151 stil... |
 | 341 | 2026-11-03 | no pick: rule (d) block report 13; D-WORLD-106's scope used up at 340, rows 250 and 244–249 wait on D-WORLD-108; row 233 parked on D-WORLD-105; rel... |
