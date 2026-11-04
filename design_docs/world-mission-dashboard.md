@@ -1,8 +1,8 @@
-# World mission dashboard — iteration 343 (2026-11-04)
+# World mission dashboard — iteration 344 (2026-11-04)
 
-- **This fire:** no pick. This is a rule-(d) block report (the 15th overall; it repeats iterations 341–342). Nothing moved since iteration 342 but its own record, and nothing is loop-routable.
+- **This fire:** no pick. This is a rule-(d) block report (the 16th overall; it repeats iterations 341–343). Nothing moved since iteration 343 but its own record, and nothing is loop-routable.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `e74cd740` (3/3). The last eight dev CI runs were all success.
+- **Dev:** green at `e8027417` (3/3). The last eight dev CI runs were all success.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
@@ -24,4 +24,4 @@
   - designer, planner and executor: not spawned (no pick);
   - independent judge: Agent sonnet.
 - **Cost:** $0 metered.
-- **Record and evidence:** world-mission-log.md entry 343; verification/world-iter343/gate1-2-readings.txt.
+- **Record and evidence:** world-mission-log.md entry 344; verification/world-iter344/gate1-2-readings.txt.
