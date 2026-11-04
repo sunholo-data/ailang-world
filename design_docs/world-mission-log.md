@@ -1617,3 +1617,8 @@ No r2: the only edit is the wording fix above, which is not a finding the judge 
 - **NB3** (21 live entries): the judge's own count agrees. No change.
 - **NB4** (the post-fetch drift re-run could not be verified from the record): true, it is in the controller transcript only (`git fetch` in the driver clone, then `files=14 drift=0`, control fired, `origin/dev` = `12fd504c0`). No change.
 No r2: there is no edit to judge.
+
+**Landing (iteration 346):** PR #481 merged as `c7e7a7eb` (merge commit, `--match-head-commit b5f423ac`). The PR head `b5f423ac` was 3/3 green before the merge. Right before it, origin/dev was re-read (`3683ac60`, MERGEABLE/CLEAN), and #449 still had 0 directives. The merge tree is byte-identical to the head tree (`git diff --stat b5f423ac c7e7a7eb` → empty). Merge CI on `c7e7a7eb` was **3/3 success on attempt 1**. #449 stays OPEN after the merge, as expected.
+- Every poll ran under `/bin/bash` from a script file, wrote to a per-SHA log, carried the subject SHA in its verdict line, and had a 1,800 s deadline. The controller waited in-turn with chained bounded reads. Gate stamps `gate-3b` and `gate-5` ran rc=0 as those gates began; `complete` runs after both reports are sent.
+- The main checkout was fast-forwarded to `c7e7a7eb` (`git merge --ff-only`, untracked residue only).
+- Harness share over the 20 live log headings (327–346): 0 `[HARNESS]` (10 ADMIN, 6 PRODUCT-HYGIENE, 3 RELEASE-HYGIENE, 1 PRODUCT; 0 untagged). Drift alarm (2c): not raised, because the clause map has no UNMET clause and so no routable critical-path row.
