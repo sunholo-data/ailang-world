@@ -1,8 +1,8 @@
-# World mission dashboard — iteration 347 (2026-11-04)
+# World mission dashboard — iteration 348 (2026-11-04)
 
-- **This fire:** no pick. This is a rule-(d) block report (the 19th overall; it repeats iterations 341–346). Nothing moved since iteration 346 but its own record, and nothing is loop-routable.
+- **This fire:** no pick. This is a rule-(d) block report (the 20th overall; it repeats iterations 341–347). Nothing moved since iteration 347 but its own record, and nothing is loop-routable.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `62d362ce` (3/3 on attempt 1).
+- **Dev:** green at `46e6de13` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
@@ -25,5 +25,5 @@
   - designer, planner and executor: not spawned (no pick);
   - independent judge: Agent sonnet.
 - **Cost:** $0 metered.
-- **Log:** 22 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
-- **Record and evidence:** world-mission-log.md entry 347; verification/world-iter347/gate1-2-readings.txt.
+- **Log:** 23 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
+- **Record and evidence:** world-mission-log.md entry 348; verification/world-iter348/gate1-2-readings.txt.
