@@ -3081,3 +3081,12 @@ It reported every gate green and 4/4 directive mutants killed (M8a-filename, M8a
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105). Rows 250, 244–249: wait on D-WORLD-108.
 **Next:** rule (d) block report unless D-WORLD-108 is answered A or B, D-WORLD-105 is answered A or B, or a release row (150, 151) becomes routable; a dev red still outranks. Monday 2026-11-09's first fire also runs the weekly sweep and thread rotation.
+
+**Record follow-through (iteration 343):** the independent evaluator judged record commit `fc1834c1` on `e74cd740`: **r1 PASS 95/100, zero blocking** (35/23/25/12). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context on a detached worktree at the record commit (47,308 tok, 34 s, 4 tool uses). It re-ran the no-pick premise: `05b5b05e..e74cd740` = 5 commits, all 342's own; `MarkEdmondson1234` has 0 comments on #449 (control: 11 by the loop's account, 11 total) and none on #366; D-WORLD-105 and D-WORLD-108 OPEN; ledger valid at 95 rows; dev 3/3 green at `e74cd740`. It re-read D-WORLD-46, -102, -106 and -108 and found no routable row the record missed. It checked the rotation (3 stamps; the 340 stamp in the archive once, md5-identical to the removed line; charter net delta 0) and found no auto-close keyword or secret.
+- **NB1** (record worktree on origin/dev): confirmation. No change.
+- **NB2** (the 0-ledger-lines grep was not re-run): it is printed with its command in the readings. No change.
+- **NB3** (the readings' queue-tag grep stops at the tag opening): by design; the judge read the full tags in the charter. No change.
+- **NB4** (log rotation estimate): confirmation. No change.
+- **NB5** (the CURRENT GOAL clause's long "Earlier" tail): pre-existing; this fire only widened its range. No change.
+- **NB6** (the 46-unread inbox count was not in the readings file): accepted. An addendum at the end of `verification/world-iter343/gate1-2-readings.txt` now prints the per-sender count with its command, re-run at the follow-through. No r2: nothing else to fix.
+- Gate stamps after the record: `gate-3b` and `gate-5` run as those gates begin; confirmed in the landing note.

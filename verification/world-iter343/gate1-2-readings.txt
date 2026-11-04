@@ -147,3 +147,9 @@ CI 41298533 success
 CI 1af4fe90 success
 CI e22e0794 success
 CI a1a1bc6a success
+
+## Addendum at the record follow-through (2026-11-04T00:54:11Z) — inbox reading, added because the judge's NB found it missing above
+$ ailang messages list --unread -inbox mission-world --limit 100 | senders, counted
+  46   ● [mission-world] mission-world
+$ (control: total line) ailang messages list --unread -inbox mission-world | grep Unread
+  Unread: 46
