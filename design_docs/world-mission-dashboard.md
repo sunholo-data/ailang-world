@@ -2,12 +2,13 @@
 
 - **This fire:** no pick. This is a rule-(d) block report (the 16th overall; it repeats iterations 341–343). Nothing moved since iteration 343 but its own record, and nothing is loop-routable.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `e8027417` (3/3). The last eight dev CI runs were all success.
+- **Dev:** green at `800eb842` (3/3 on attempt 2; attempt 1 hit the row-251 flake).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
 - **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
+- **Row 251 (new, iteration 344):** a `host/broker` load flake (4 s post-dispatch budget) that reddened merge `800eb842`; attempt 2 green. Filed only; no decision covers it.
 - **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
   - **D-WORLD-108:** may the loop take rows 250, then 244 → 249?

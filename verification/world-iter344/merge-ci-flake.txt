@@ -1,0 +1,38 @@
+# World iteration 344 — merge-CI red on 800eb842, attributed by measurement (controller, 2026-11-04T05:35:39Z)
+
+## Check set on merge 800eb842 (attempt 1), run 41777426175
+go host build + test gate: failure (job 126400921151); ailang-code verify gate: success; go race gate: success
+
+## Failing test, from the job log (gh api --allow-escape-sequences, ANSI stripped; log 170,306 B; '--- PASS' count 142)
+--- FAIL: TestEpisodeLiveReplayThreeArmsAndEvidence (7.21s)
+    episode_test.go:222: live poll: broker: put effect result: store: put object outcome is uncertain (reconcile before any retry): context deadline exceeded
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	220.537s
+
+## Tree identity: PR head 42a03d4f was 3/3 green; merge tree vs head tree
+$ git diff 42a03d4f 800eb842 | wc -l
+0
+
+## Budget that expired
+$ grep -n "const PostDispatchBudget" host/broker/broker.go
+338:const PostDispatchBudget = 4 * time.Second
+$ grep -n "WithTimeout" host/broker/m7b_deadline_test.go
+12:	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+## Re-run (gh run rerun 41777426175 --failed) — attempt 2 on the same SHA
+checks=3
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
+
+## History: every failed CI run in the last 200 (gh run list --workflow CI --limit 200), failing tests and the signature count
+run=41428947990 job=125222357455 bytes=  169554 uncertain=0 fails=[--- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter ]
+run=41024179284 job=123958254452 bytes=   40028 uncertain=0 fails=[--- FAIL: TestMarketingCaptureFakeChromeSixShots --- FAIL: TestMarketingCaptureFakeChromeSixShots/inventory ]
+run=40911404613 job=123588924379 bytes=  169388 uncertain=0 fails=[--- FAIL: TestExecToolSymlinkInsideWorkspaceRefuses ]
+run=40909036384 job=123571625279 bytes=   35564 uncertain=0 fails=[--- FAIL: TestExecToolCellarProfilePathRefusesByName ]
+run=40879632521 job=123467369127 bytes=   39746 uncertain=0 fails=[--- FAIL: TestMarketingSupervisorFakeDaemonCleanup --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell ]
+run=40853596929 job=123378886910 bytes=   35062 uncertain=0 fails=[--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset ]
+run=40851432834 job=123371602535 bytes=  165345 uncertain=0 fails=[--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset ]
+run=40849527968 job=123365231634 bytes=  166601 uncertain=0 fails=[--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset ]
+run=40769031350 job=123100883590 bytes=  166421 uncertain=0 fails=[--- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset ]
+(control: this run's job 126400921151 — signature count 1)
