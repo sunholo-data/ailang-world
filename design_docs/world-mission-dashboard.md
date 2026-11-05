@@ -1,15 +1,15 @@
-# World mission dashboard — iteration 350 (2026-11-05)
+# World mission dashboard — iteration 351 (2026-11-05)
 
-- **This fire:** bookkeeping only. The fleet fixed row 252 (driver #2127, `9ea8adcf4`), and the fix is in this fire's driver, so the row is RESOLVED. A Gate-0 gap went to the fleet as row 253. Then a rule-(d) block report (the 22nd overall; it repeats iterations 341–349): nothing else is loop-routable.
+- **This fire:** no pick. This is a rule-(d) block report (the 23rd overall; it repeats iterations 341–350). Nothing moved since iteration 350 but its own record, and nothing is loop-routable. Row 252's fix was confirmed: the scan after iteration 350's fire read clean.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `f17fe6bf` (3/3 on attempt 1).
+- **Dev:** green at `9d50ac63` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
 - **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
 - **Row 251 (iteration 344):** a `host/broker` load flake (4 s post-dispatch budget). It is filed only. D-WORLD-108 does not list it, so an A answer would not cover it unless it says so.
-- **Row 252:** RESOLVED at iteration 350. The driver's transcript scan now reads only bytes written during the fire. The old exposure is still the fleet's D-FLEET-42 ask.
+- **Row 252:** RESOLVED at iteration 350 and verified at 351 (the next post-fire scan read clean, with a baseline). The driver's transcript scan now reads only bytes written during the fire. The old exposure is still the fleet's D-FLEET-42 ask.
 - **Row 253 (iteration 350):** a fleet ticket. Gate 0's scripts do not report the driver's transcript-scan notices; until it is fixed, #449's comment count is compared with the prediction by hand.
 - **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
@@ -24,8 +24,8 @@
 - **Attended actions:** schedule row 150's A1. The 219 → 217 → 218 track unblocks row 151.
 - **Roles this fire:**
   - controller: opus;
-  - designer, planner and executor: not spawned (no build);
+  - designer, planner and executor: not spawned (no pick);
   - independent judge: Agent sonnet.
 - **Cost:** $0 metered.
-- **Log:** 25 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
-- **Record and evidence:** world-mission-log.md entry 350; verification/world-iter350/gate1-2-readings.txt.
+- **Log:** 26 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
+- **Record and evidence:** world-mission-log.md entry 351; verification/world-iter351/gate1-2-readings.txt.
