@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 350 | 2026-11-05 | bookkeeping pick: row 252 resolved on the fleet's harness-resolved reply (driver #2127 `9ea8adcf4`, in this fire's pin); Gate 0's missing read for ... |
 | 349 | 2026-11-05 | no pick: rule (d) block report 21 (repeats 341–348); rows 250 and 244–249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |
 | 348 | 2026-11-04 | no pick: rule (d) block report 20 (repeats 341–347); rows 250 and 244–249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |
 | 347 | 2026-11-04 | no pick: rule (d) block report 19 (repeats 341–346); rows 250 and 244–249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |
