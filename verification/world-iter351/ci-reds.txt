@@ -1,0 +1,56 @@
+# World iteration 351 — CI reds on this iteration's two SHAs, attributed by measurement (controller, 2026-11-05T10:04:28Z). bash.
+
+## 1. PR head d6a18c5d (run 41998348210): release-download HTTP 504, attempts 1 and 2
+$ gh run view 41998348210 --log-failed | grep -E "curl: |##\[error\]"  (attempt 1)
+go race gate (go test -race, own job)	2026-11-05T08:57:19.6716448Z curl: (22) The requested URL returned error: 504
+go race gate (go test -race, own job)	2026-11-05T08:57:19.6749860Z ##[error]Process completed with exit code 22.
+go host build + test gate	2026-11-05T08:57:19.6620671Z curl: (22) The requested URL returned error: 504
+go host build + test gate	2026-11-05T08:57:19.6657837Z ##[error]Process completed with exit code 22.
+$ (attempt 2)
+Install PINNED v0.54.15 ailang tool binary (floor grader $TOOL)	2026-11-05T09:15:08.6488684Z curl: (22) The requested URL returned error: 504
+Install PINNED v0.54.15 ailang tool binary (floor grader $TOOL)	2026-11-05T09:15:08.6530706Z ##[error]Process completed with exit code 22.
+$ gh run view 41998348210 --json attempt,conclusion
+attempt=3 conclusion=success
+$ gh api commits/d6a18c5d/check-runs (after attempt 3)
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
+
+## 2. Merge 7e22489c (run 42003311905): TestMarketingSupervisorFakeDaemonCleanup/shell-wait, attempt 1
+$ gh run view 42003311905 --log-failed | grep FAIL/supervisor_test lines
+go build + test gate (replay tests run against pinned AILANG_BIN)	2026-11-05T09:46:42.9124722Z --- FAIL: TestMarketingSupervisorFakeDaemonCleanup (38.01s)
+go build + test gate (replay tests run against pinned AILANG_BIN)	2026-11-05T09:46:42.9125287Z     --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell-wait (35.01s)
+go build + test gate (replay tests run against pinned AILANG_BIN)	2026-11-05T09:46:42.9128139Z         supervisor_test.go:706: terminated trap must exit 143 after supervised cleanup: signal: killed
+go build + test gate (replay tests run against pinned AILANG_BIN)	2026-11-05T09:46:42.9129081Z         supervisor_test.go:710: shell trap cleanup exceeded bound: 29.88462059s
+go build + test gate (replay tests run against pinned AILANG_BIN)	2026-11-05T09:46:42.9129864Z         supervisor_test.go:716: shell wait daemon must be dead after bounded cleanup (pid 42618)
+$ (the DATA RACE lines in the same log are the gate's known-positive race control: design_docs/verification/w-race-gate-blindspot/racecontrol/main.go)
+8
+$ sed -n 709,711p scripts/marketingcheck/supervisor_test.go
+			if elapsed := time.Since(start); elapsed > 10*time.Second {
+				t.Errorf("shell trap cleanup exceeded bound: %s", elapsed)
+			}
+$ git rev-parse 7e22489c^{tree} d6a18c5d^{tree}
+954ec5abc6989fc8ca1a83a61ae42439f6148d1e
+954ec5abc6989fc8ca1a83a61ae42439f6148d1e
+$ git diff d6a18c5d 7e22489c | wc -l
+0
+$ gh run view 42003311905 --json attempt,conclusion
+attempt=2 conclusion=success
+$ gh api commits/7e22489c/check-runs (after attempt 2)
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
+
+## 3. History: failed jobs among the last 200 CI runs (runs with conclusion failure or attempt > 1; logs fetched before run 42003311905)
+$ (runs selected) / (failed-job logs fetched)
+19 / 22
+$ grep -l "returned error: 50[234]" scan/*.log | wc -l   (all three are run 41998348210)
+3
+$ grep -l TestMarketingSupervisorFakeDaemonCleanup scan/*.log -> subtests
+  123467369127.log 2026-10-29T13:11:18 --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell-hup 
+  123524229152.log 2026-10-29T14:52:01 --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell-hup 
+  124335729162.log 2026-10-30T22:00:55 --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell-hup 
+$ grep -l "FakeDaemonCleanup/shell-wait" scan/*.log | wc -l
+0
+$ (control: logs with any Go test failure) grep -lE -- "--- FAIL" scan/*.log | wc -l
+17
