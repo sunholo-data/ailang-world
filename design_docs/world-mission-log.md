@@ -2232,3 +2232,14 @@ Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the la
 - NB2 (row 247 hedge) and NB3 (the 25-comment prediction is not yet checkable) need no change: both are true as written, and NB3 is checked at the next Gate 0.
 
 Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the landing note.
+
+**Landing (iteration 354):**
+- **Gate 3b:** the record PR [#498](https://github.com/sunholo-data/ailang-world/pull/498) head `a6a1f50f` (record `b14eebf7` + judge follow-through) went green 3/3 over two bounded polls (the first 540 s poll hit its deadline with 2 jobs pending; the second read `ALL GREEN`). `origin/dev` was still `8cce2218` right before the merge, and the PR read `MERGEABLE`/`CLEAN` on that head. Merge `44d1d7db` went green 3/3 on attempt 1, again over two bounded polls, confirmed by a direct `check-runs` read. The record is LANDED.
+- **Stamps:** `gate-3b` ran before the PR-head poll, rc=0. `gate-5` ran after the merge went green, rc=0. `complete` runs after this landing merges.
+- **Reports sent:**
+  - #449: comment count 24 → 25 (`--body-file`; the count was re-read after posting).
+  - `controlplane`: tagged `[fyi]` because neither ask changed (`inbox_1793914160022_c8eaab89`). `read --peek` shows the body matches the digest byte-for-byte after trimming.
+  - Digest: 13 lines, 1,796 chars.
+- **Harness share** over log headings 335–354: 0 `[HARNESS]` of 20 (14 `[ADMIN]`, 3 `[PRODUCT-HYGIENE]`, 3 `[RELEASE-HYGIENE]`).
+- **Bar-moving check:** the last 3 landings (352, 353, 354) moved no clause. No DRIFT line, because no UNMET clause has a routable row: all 7 are MET.
+- **Next fire:** #449 should read 25 at Gate 0 (this report was the 25th comment; the landing posts none), with `transcript=2`. Entry 354's **Next** line already says 25.
