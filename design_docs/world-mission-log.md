@@ -1891,3 +1891,19 @@ No r2: there is no edit to judge.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105). Rows 250, 244–249: wait on D-WORLD-108. Row 251: filed, no scope. Row 252: RESOLVED (fleet #2127). Row 253: fleet ticket, no loop action.
 **Next:** rule (d) block report unless D-WORLD-108 is answered A or B, D-WORLD-105 is answered A or B, or a release row (150, 151) becomes routable; a dev red still outranks. Check row 252 on the next fire: fire `world-1793854144-27678`'s post-fire scan verdict should carry a numeric `baseline=`. Monday 2026-11-09's first fire also runs the weekly sweep and thread rotation.
+
+**Record follow-through (iteration 350):** the independent evaluator judged record commit `a14fdf5f` on `f17fe6bf`: **r1 PASS 94/100, zero blocking** (accuracy 38/40, completeness 24/25, safety 20/20, clarity 12/15). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context (48,692 tok, 44 s, 9 tool uses). It re-derived each load-bearing claim from primary sources and not from the readings file:
+- the reply's id, category, time, sha, signature and `slots_lost`, from `messages list -json`, without `read`;
+- `9ea8adcf4` as an ancestor of the pin `d49e0e01e`, with its own non-ancestor control;
+- the baseline file's mode, size and 24,142 NULs, and that the pre-fix fire has no baseline;
+- #449's 20 comments and its 2 scan notices;
+- the same key and file hashes on both LEAK lines, printing hashes only;
+- 3 STATUS stamps with 347 in the archive, the canonical stamp form, and the ledger valid at 95 rows;
+- the ticket list (new signature 1, old signature 0);
+- 0 auto-closing keywords in the diff and the PR #489 title and body, with a firing control.
+It judged resolving row 252 consistent with Gate 0 step 4, and filing row 253 as a ticket consistent with Gate 2's admissibility steps. It found the rule-(d) conclusion supported by the readings.
+- **NB1** (the readings' "53 + 1" unread now reads 53, because the fleet reply was marked read): already stated in the Gate 0 bullet's "Instrument note" (`messages read` marked it read when first opened). No change.
+- **NB2** (the readings file carries home-directory state and worktree paths): these are watermark and worktree paths, not a transcript path or key. Iteration 349's tracked readings carry 8 such lines by the same script. No change.
+- **NB3** (PR body said "JUDGE_PENDING"): updated with this verdict.
+- **NB4** (the clean post-fire scan can only be seen next fire): already the written check in row 252 and in **Next**. No change.
+No r2: the only edit is this note and the PR body.
