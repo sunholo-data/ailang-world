@@ -2071,3 +2071,15 @@ The judge found no key, transcript path or address in the added lines; the `~/.a
 - NB4: it confirmed the public-record scan.
 
 Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the landing note.
+
+**Landing (iteration 352):**
+- **Gate 3b:** the record PR [#493](https://github.com/sunholo-data/ailang-world/pull/493) head `bc1f410a` went green 3/3. `origin/dev` was still `d01503c5` right before the merge. Merge `ae5aa91b` went green 3/3 on attempt 1. Row 253's resolution is LANDED.
+- **Stamps:** `gate-3b` ran before the PR-head poll, rc=0. `gate-5` ran after the merge went green, rc=0. `complete` runs after this landing merges.
+- **Fleet reply acked:** `inbox_1793876397043_4014c228` was marked read only after the merge (Gate 0 step 4's order). It now lists as `read`, and the unread `mission-fleet` list is empty.
+- **Reports sent:**
+  - #449: comment count 22 → 23.
+  - `controlplane`: tagged `[fyi]` because neither ask changed (`inbox_1793885061981_f82f499f`). `read --peek` shows the body matches the digest.
+  - Digest: 13 lines, 1,799 chars.
+- **Harness share** over log headings 333–352: 0 `[HARNESS]` of 20 (13 `[ADMIN]`, 4 `[PRODUCT-HYGIENE]`, 3 with no trailing tag).
+- **Bar-moving check:** the last 3 landings (350, 351, 352) moved no clause. No DRIFT line, because no UNMET clause has a routable row: all 7 are MET.
+- **Next fire:** #449 should read 23 at Gate 0 (this report was the 23rd comment; the landing posts none), with `transcript=2`. Entry 352's **Next** line still says 23.
