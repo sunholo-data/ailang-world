@@ -2051,3 +2051,23 @@ No r2: the only edit is this note and the PR body.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105). Rows 250, 244–249: wait on D-WORLD-108. Rows 251, 254: filed, no scope. Rows 252, 253: RESOLVED and verified.
 **Next:** rule (d) block report unless D-WORLD-108 is answered A or B, D-WORLD-105 is answered A or B, or a release row (150, 151) becomes routable; a dev red still outranks. #449 should read 23 at the next Gate 0, with `transcript=2` (more only if the driver posts a notice). Monday 2026-11-09's first fire also runs the weekly sweep and thread rotation.
+
+**Record follow-through (iteration 352):** the independent evaluator judged record commit `276f4208` on `d01503c5`: **r1 PASS 93/100, zero blocking** (accuracy 38/40, routing and disposition 24/25, record integrity 18/20, clarity 13/15). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context on a detached worktree at the record commit (36,778 tok, 37 s, 7 tool uses). It re-ran these from primary sources:
+- the 6 commits in `9d50ac63..d01503c5`, all iteration 351's;
+- the ancestry of `7e9e9192b` against the pin `c39576ef3` (rc 0) and `HEAD~200` (rc 1);
+- the wording grep on the pinned script (2) and on the fix's parent (0);
+- the comment authors on #449 (22) and #366 (35), all this loop's, so 0 directives;
+- #449's 2 "Transcript secret" comments, with the same fire ids;
+- the fleet reply's id, category, signature and time;
+- `ticket open` (0 for the signature; control 25);
+- the ledger (valid, 95 rows; OPEN exactly D-WORLD-105 and D-WORLD-108) and dev CI 3/3 at `d01503c5`;
+- the latest post-fire scan verdict (`clean … leaks=0 baseline=12135`; no key or file field printed);
+- the STATUS rotation: 3 stamps remain, and 349 is at the top of the archive, byte-identical (`cmp`, 2,410 B). The charter diff is exactly 3 hunks.
+
+The judge found no key, transcript path or address in the added lines; the `~/.ailang/state` paths follow the iteration-351 precedent. Notes, none acted on:
+- NB1: it did not re-run the release-row subject counts (6, 2, 109). They are in the readings file.
+- NB2: it checked the 2 notices' dates against the "old, fires 348/349" claim, but not against row 252's wording.
+- NB3: it confirmed the 6-commit claim.
+- NB4: it confirmed the public-record scan.
+
+Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the landing note.
