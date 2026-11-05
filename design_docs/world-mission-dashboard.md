@@ -2,7 +2,7 @@
 
 - **This fire:** no pick. This is a rule-(d) block report (the 23rd overall; it repeats iterations 341–350). Nothing moved since iteration 350 but its own record, and nothing is loop-routable. Row 252's fix was confirmed: the scan after iteration 350's fire read clean.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `9d50ac63` (3/3 on attempt 1).
+- **Dev:** green at `7e22489c` (this fire's record merge; 3/3 on attempt 2, after a flake on attempt 1, row 254).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
@@ -11,6 +11,7 @@
 - **Row 251 (iteration 344):** a `host/broker` load flake (4 s post-dispatch budget). It is filed only. D-WORLD-108 does not list it, so an A answer would not cover it unless it says so.
 - **Row 252:** RESOLVED at iteration 350 and verified at 351 (the next post-fire scan read clean, with a baseline). The driver's transcript scan now reads only bytes written during the fire. The old exposure is still the fleet's D-FLEET-42 ask.
 - **Row 253 (iteration 350):** a fleet ticket. Gate 0's scripts do not report the driver's transcript-scan notices; until it is fixed, #449's comment count is compared with the prediction by hand.
+- **Row 254 (iteration 351):** a `scripts/marketingcheck` load flake (`TestMarketingSupervisorFakeDaemonCleanup/shell-wait`, 10 s cleanup bound) that went red once on this fire's merge CI. It is filed only. No decision covers it.
 - **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
   - **D-WORLD-108:** may the loop take rows 250, then 244 → 249?
