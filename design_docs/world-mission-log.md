@@ -1824,3 +1824,8 @@ No r2: there is no edit to judge.
 - **NB4** (the commit trailer names Claude Opus 5.5): attribution only; the controller is `claude:claude-opus-5-5`. No change.
 - The ticket body (filed by the controller, private fleet inbox) was written to name neither the key nor its value; it cites the driver log line numbers instead.
 No r2: there is no edit to judge.
+
+**Landing (iteration 349):** PR #487 merged as `29f02857` (merge commit, `--match-head-commit 8580ecf1`). The PR head `8580ecf1` was 3/3 green before the merge. Right before it, origin/dev was re-read (`e47129f7`, MERGEABLE/CLEAN), and #449 still had 0 directives. The merge tree is byte-identical to the head tree (`git diff 8580ecf1 29f02857` → 0 lines). Merge CI on `29f02857` was **3/3 success on attempt 1** (run `41947138488`). #449 stays OPEN after the merge, as expected.
+- Every poll ran under `/bin/bash` from a script file, wrote to a per-SHA log (a second poll used a fresh `_p2` path), carried the subject SHA in its verdict line, and was bounded (560 s per call, chained in-turn). Both the head poll and the merge poll hit their first deadline with the two Go gates still running; the head's job steps were read before re-polling (the Go test steps were genuinely in progress), and the second bounded poll reached ALL GREEN in each case.
+- Gate stamps `gate-3b` and `gate-5` ran rc=0 as those gates began; `complete` runs after both reports are sent.
+- Harness share over the 20 live log headings (330–349): 0 `[HARNESS]`-class iterations (this fire is `[ADMIN]`; its one fleet ticket is an escalation, recorded as row 252). Drift alarm (2c): not raised, because the clause map has no UNMET clause and so no routable critical-path row.
