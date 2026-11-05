@@ -1907,3 +1907,8 @@ It judged resolving row 252 consistent with Gate 0 step 4, and filing row 253 as
 - **NB3** (PR body said "JUDGE_PENDING"): updated with this verdict.
 - **NB4** (the clean post-fire scan can only be seen next fire): already the written check in row 252 and in **Next**. No change.
 No r2: the only edit is this note and the PR body.
+
+**Landing (iteration 350):** PR #489 merged as `646ae3f5` (merge commit, `--match-head-commit 9a0f166d`). The PR head `9a0f166d` was 3/3 green before the merge. Right before the merge, the PR read MERGEABLE/CLEAN with origin/dev still at `f17fe6bf`. The merge tree is byte-identical to the PR head tree (`5657ff98`). Merge CI on `646ae3f5`: 3/3 success on attempt 1 (run 41972382662; go race gate, go host build + test gate, ailang-code verify gate).
+- Every poll ran under `/bin/bash` from a script file, wrote to a per-SHA log, carried the subject SHA in its verdict line, and was bounded (560 s per call, chained in-turn). The merge poll's target was taken from `git rev-parse origin/dev` in the same command as the fetch, never typed.
+- Gate stamps `gate-3b` and `gate-5` ran rc=0 as those gates began. `complete` runs after both reports are sent.
+- Harness share over the 20 live log headings (331–350): 0 `[HARNESS]`-class iterations; 13 carry `[ADMIN]`, including this one. Its fleet ticket (row 253) and its ticket-row resolution (row 252) are escalations, not loop harness work. Drift alarm (2c): not raised, because the clause map has no UNMET clause and so no routable critical-path row.
