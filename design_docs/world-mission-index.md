@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 352 | 2026-11-05 | bookkeeping pick: row 253 resolved on the fleet's harness-resolved reply (ailang #2132 `7e9e9192b`, in this fire's pin; Gate 0's self-notice script... |
 | 351 | 2026-11-05 | no pick: rule (d) block report 23 (repeats 341–350); row 252's next-fire check passed (fire world-1793854144-27678 scanned clean with baseline=1207... |
 | 350 | 2026-11-05 | bookkeeping pick: row 252 resolved on the fleet's harness-resolved reply (driver #2127 `9ea8adcf4`, in this fire's pin); Gate 0's missing read for ... |
 | 349 | 2026-11-05 | no pick: rule (d) block report 21 (repeats 341–348); rows 250 and 244–249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |

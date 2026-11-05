@@ -1,8 +1,8 @@
-# World mission dashboard — iteration 351 (2026-11-05)
+# World mission dashboard — iteration 352 (2026-11-05)
 
-- **This fire:** no pick. This is a rule-(d) block report (the 23rd overall; it repeats iterations 341–350). Nothing moved since iteration 350 but its own record, and nothing is loop-routable. Row 252's fix was confirmed: the scan after iteration 350's fire read clean.
+- **This fire:** bookkeeping only. The fleet fixed row 253 (ailang #2132, `7e9e9192b`), and the fix is in this fire's driver, so the row is RESOLVED: Gate 0's script now counts the driver's transcript-scan notices. Then a rule-(d) block report (the 24th overall; it repeats iterations 341–351): nothing else is loop-routable.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `7e22489c` (this fire's record merge; 3/3 on attempt 2, after a flake on attempt 1, row 254).
+- **Dev:** green at `d01503c5` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
@@ -10,7 +10,7 @@
 - **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
 - **Row 251 (iteration 344):** a `host/broker` load flake (4 s post-dispatch budget). It is filed only. D-WORLD-108 does not list it, so an A answer would not cover it unless it says so.
 - **Row 252:** RESOLVED at iteration 350 and verified at 351 (the next post-fire scan read clean, with a baseline). The driver's transcript scan now reads only bytes written during the fire. The old exposure is still the fleet's D-FLEET-42 ask.
-- **Row 253 (iteration 350):** a fleet ticket. Gate 0's scripts do not report the driver's transcript-scan notices; until it is fixed, #449's comment count is compared with the prediction by hand.
+- **Row 253:** RESOLVED at iteration 352. `mission_gate0_self_notices.sh` now reports transcript-scan notices (`transcript=` count, fire id, hits; never a key or path). It reads 2 on #449: the old notices for fires 348 and 349. A 3rd would be new.
 - **Row 254 (iteration 351):** a `scripts/marketingcheck` load flake (`TestMarketingSupervisorFakeDaemonCleanup/shell-wait`, 10 s cleanup bound) that went red once on this fire's merge CI. It is filed only. No decision covers it.
 - **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
@@ -25,8 +25,8 @@
 - **Attended actions:** schedule row 150's A1. The 219 → 217 → 218 track unblocks row 151.
 - **Roles this fire:**
   - controller: opus;
-  - designer, planner and executor: not spawned (no pick);
+  - designer, planner and executor: not spawned (no build);
   - independent judge: Agent sonnet.
 - **Cost:** $0 metered.
-- **Log:** 26 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
-- **Record and evidence:** world-mission-log.md entry 351; verification/world-iter351/gate1-2-readings.txt.
+- **Log:** 27 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
+- **Record and evidence:** world-mission-log.md entry 352; verification/world-iter352/gate1-2-readings.txt.
