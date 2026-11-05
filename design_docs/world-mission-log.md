@@ -1988,3 +1988,86 @@ No r2: the only edit is this note and the PR body.
 - Harness share over the 20 live log headings (332–351): 0 `[HARNESS]`-class iterations; 13 carry `[ADMIN]`, including this one. Drift alarm (2c): not raised, because the clause map has no UNMET clause and so no routable critical-path row.
 - #449 prediction for the next fire's Gate 0: 22 (21 plus this iteration's report), more only if the driver posts a notice.
 - **Landing judge:** a second independent evaluator (Agent `sonnet`, read-only, detached worktree at `c91417ca`; 39,128 tok, 45 s, 5 tool uses) judged this note and row 254: **PASS 90/100, zero blocking** (attributions 37/40, calls 23/25, integrity 20/20, clarity 10/15). It re-read both runs' attempts and failed logs, the identical trees, one `shell-hup` job log (job 124335729162: the same `:706`/`:710` signature, 29.93 s), the harness-share tags and the ledger. NB1 (row 254 cited iteration 311; the claim starts at 308) and NB2 (308 already recorded the same `shell wait daemon must be dead` assertion locally at load 40+) are applied to the row. NB3 (the 19-run window predates this merge's run, which now makes 20) is applied as "before this merge's run". NB4 (the Dev line describes a red-then-green merge) needs no change. No r2: the edits are wording in the row it judged.
+
+## 352 — 2026-11-05 — bookkeeping pick: row 253 resolved on the fleet's harness-resolved reply (ailang #2132 `7e9e9192b`, in this fire's pin; Gate 0's self-notice script now counts transcript-scan notices); then rule (d) block report 24 (repeats 341–351); dev green at d01503c5 [ADMIN]
+
+**Kind:** bookkeeping-only iteration. Gate 0 step 4 requires a queue update when a fleet `harness-resolved` reply arrives. After that, standing rule (d) (D-WORLD-46) applies: nothing else is loop-routable. There is no design, plan, code or product acceptance. The record is the STATUS stamp (349 moved to the archive), the widened CURRENT GOAL clause, queue row 253 (RESOLVED), this entry, the regenerated index, the dashboard, and `verification/world-iter352/gate1-2-readings.txt`. An independent judge reviews the record before merge.
+
+**Pick and why:** row 253, bookkeeping only. It is the one new input since iteration 351, and Gate 0 step 4 names the action: "find the queue rows tagged `[HARNESS] ticket:<signature>` and unpark them, citing the commit in the payload's `sha`."
+- **The reply:** `inbox_1793876397043_4014c228` from `mission-fleet`, category `harness-resolved`, created 2026-11-05T10:59:57Z. Signature `gate0:self-notices-skip-transcript-scan-notice`, `sha` `7e9e9192b`, `slots_lost` 1. It says `mission_gate0_self_notices.sh` now recognises both public wordings of the driver's notice, limited to this loop's own account. It prints metadata-only `transcript:` rows, adds `transcript=<k>` to each issue row (other = self − crash − transcript), and carries the in-window count in both verdicts. Exit codes are unchanged. Fixed in ailang #2132, fleet iteration 87.
+- **Checked first-party, not taken on the reply's word** (addendum in the readings file). It was listed with `messages list -json`, not opened with `messages read`, so it stayed unread until the rows were updated:
+  - `7e9e9192b` is an ancestor of this fire's pinned driver `c39576ef3` (`merge-base --is-ancestor` rc 0). Control: it is not an ancestor of `HEAD~200` (rc 1, fired).
+  - The pinned script matches both wordings (`grep -cE 'Transcript secret (scan after|exposure on) fire'` → 2). Control: the same grep on the fix's parent → 0.
+  - Run live at this Gate 0, it printed two `transcript:` rows: fires `world-1793825318-10110` (2026-11-04T22:00:52Z) and `world-1793839743-21731` (2026-11-05T01:43:10Z), 1 hit each, plus `issue: 449 comments=22 self=22 crash=0 transcript=2 other=20`. An independent ruler agrees: #449 comments whose body starts "Transcript secret" → 2. Only metadata was printed; the `url=` field was stripped from the evidence copy.
+  - `ailang mission ticket open | grep -c` the signature → 0. Control: 25 open lines (26 at iteration 351).
+- **What those 2 notices are:** the old ones for fires 348 and 349, which row 252 already explains. They read `in-window=yes` only because #449 has no watermark file yet (no directive has been marked on it), so the script's window opens at #366's `2026-10-27T09:03:42Z`. They are not new exposures. The script's count therefore reads 2 every fire until a #449 watermark exists or the thread rotates. A 3rd row would be a new notice.
+- **Disposition:** row 253 → `[RESOLVED 2026-11-05 (iter-352)]`, citing ailang #2132 / `7e9e9192b`, with a check for later fires: `transcript=` should stay 2 on #449. The fleet reply is acked by reading it after this record merges (see the follow-through).
+- **Row 252 still holds:** the post-fire scan for iteration 351's fire reads `verdict=clean files=81 keys=7 leaks=0 baseline=12135` (the latest of the last 3 verdict lines; the `since=` path was stripped and no key or file field was read). All-time `verdict=LEAK` lines in the driver log → 2, both from before row 252's fix.
+- **Then, rule (d) block report, unchanged from 351.** Clause map at `d01503c5`: clauses 1–7 MET; no UNMET clause, no critical-path row.
+  - **What moved since iteration 351's Gate-1 base (`9d50ac63`):** only 351's own record. 6 commits: the record `7896fb55`, the judge follow-through `d6a18c5d`, merge `7e22489c` of #491, the landing note `c91417ca`, the landing judge follow-through `b43607c1` and merge `d01503c5` of #492.
+  - **150** waits only on the attended A1. Over the 6 subjects in range, `grep -ciE 'row ?150|A1\b|marketing'` → **0**; control `iteration|record|merge|row 233|landed` → **6**.
+  - **151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **2**. The full-message form returns the same eight commits as 345–351, none a build. Non-test `.go` files naming N2d's `file.json` route → **0** (control: `grep -rln surface --include='*.go' host` → **109**, copied from `readings.out`). Rows 217, 218 and 219 are still `[NEXT]` on the attended track.
+  - **Rows 250 and 244–249** wait on **D-WORLD-108** (OPEN, default C). **Rows 251 and 254** are outside every granted scope. **Row 233** stays `[PARKED iteration 330]` on **D-WORLD-105** (OPEN, default C).
+  - **External predicates:** 31 distinct upstream numbers in the charter before this record, all 31 closed. Controls: row 53's `ailang#941` matched; `gh issue list -R sunholo-data/ailang --state open --limit 3` → 3. This record adds `ailang #2132` (row 253), so the next fire should read 32, all closed.
+
+**Gate 0:**
+- Stamps: `gate-0` ran first, rc=0. `gate-1` ran after the Gate 0–1 readings script rather than before it (rc=0); `gate-2`, `gate-3` and `gate-4` ran as their gates began, each rc=0. `gate-3b` and `gate-5` come after this commit and are recorded in the follow-through.
+- Kill switch armed (`mission-world.disabled` absent). gh `sunholo-voight-kampff`. Billing tripwire CLEAN. The env was read by NAME (`env | cut -d= -f1`) from the first call, then specific non-secret values by name. No secret value was printed.
+- `mission_directives.sh`: 0 allowlisted directives on #449 (22 comments, all this loop's own; `mission-449-last-seen` does not exist yet, so every comment was read, which fails safe). 0 on #366 since `2026-10-27T09:03:42Z` (35 comments). Nothing to mark, so no watermark moved.
+- `mission_gate0_self_notices.sh`: 0 crash notices since `2026-10-27T09:03:42Z` on #449 and #366; control 107:4 ok; DEGRADED single-watermark read (no #449 watermark file yet). Transcript notices: 2, the old ones above. Died-mid-flight traces: 0 open PRs; no iteration-352 branch on origin before this record; the iter-351/352 worktrees are 351's record and landing worktrees and this record's own. `.wt-world-iter306-r0` and `.claude/worktrees/` are the known untracked residue.
+- **#449's comment count matched iteration 351's prediction:** 22.
+- Unread inbox (`-inbox mission-world`, `-limit 1000 -compact`): 55. 54 are from `mission-world` itself (this loop's `[claim]` notes) and 1 from `mission-fleet` (the reply above). Nothing `github-untrusted:`.
+- `mission_decisions.sh --check`: valid, 95 rows, 2 OPEN (D-WORLD-105, D-WORLD-108). No `| D-WORLD` line changed in `9d50ac63..d01503c5` (count 0).
+- The weekly external-issue sweep and the thread rotation are not due (both ran at iteration 333; next boundary Monday 2026-11-09). Open issues today: `[449]`.
+
+**Gate 1:**
+- The main checkout's `dev` is at `e47129f7`, behind `origin/dev` `d01503c5`, with only untracked residue. Following Gate 1, state was read from origin and the record was written in its own worktree (`mission/world-iter352-record` on `origin/dev`). 0 open PRs. Gate-1 base `d01503c54b0160856df409b9b1169a0397902caa@2026-11-05T12:49:34Z`.
+- Skill drift: Gate 1 rule (d)'s snippet, run in the driver clone after `git fetch -q origin dev` (rc 0; `origin/dev` = `c39576ef3`): `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target match (files=14, drift=0). World has no CWD-relative `.claude/skills/`, so the rules were read from the resolved target. Negative control: origin `SKILL.md` against the running `gate-1-observe.md` → differ (fired).
+- Dev CI: `commits/d01503c5/check-runs` → 3, all success. The last eight dev CI runs (`d01503c5`, `7e22489c`, `9d50ac63`, `646ae3f5`, `f17fe6bf`, `29f02857`, `e47129f7`, `e92b7489`) all read success.
+
+**Designer / planner / executor:** not spawned. A bookkeeping pick has no design, plan or code, so the routing table has nothing to send them. No spawn was attempted, so none failed. The operator's standing request for Agent-tool roles is met through the evaluator.
+
+**Independent evaluator (record):** REQUIRED. It runs through the Agent tool on `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`), in a fresh, read-only, foreground context, and judges the record commit before merge. See the follow-through below.
+
+**Routing evidence:** base=d01503c54b0160856df409b9b1169a0397902caa@2026-11-05T12:49:34Z (Gate 1).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EVALUATOR_RESOLVED=sonnet`; `MISSION_OVER_RATION=openrouter`; `MISSION_ROUTING_NOTE` empty. The driver log probed the opus and sonnet lanes as UNREADABLE-not-exhausted, so both stayed live. No role this fire uses openrouter.
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner and executor were unused.
+- Evaluator: Agent `sonnet`, tokens recorded in the follow-through. Generator ≠ judge: opus controller vs sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150, 151, 233, 250, 244–249, 251 or 254: the measured reasons are above.
+- Treating the script's `transcript notice(s) since watermark: 2` as new exposure: both rows name fires 348 and 349, already explained by row 252, and the post-fire scans since the fix all read clean.
+- Re-asking D-WORLD-108 or D-WORLD-105: both asks are already in the digest, unchanged.
+- Acking the 54 self-posted `[claim]` notes: they are this loop's own record. Leaving them is the behaviour of 341–351.
+- Rotating the log: 27 live entries with this one, below the ~40 threshold. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. **The fleet closed both tickets this loop filed in two days (rows 252 and 253), each within about 8 hours.** Both were checked against the running pin rather than taken on the reply's word. Listing the reply with `messages list -json` instead of `messages read` kept the ack where Gate 0 step 4 puts it: after the rows are updated. That fixes iteration 350's instrument note (the reply was acked by being opened).
+2. **The new script's transcript count includes old notices while #449 has no watermark.** That is correct (the window is the oldest watermark it has), but it means "2" is the steady value, not an alarm. Recorded in row 253's check so the next controller does not treat it as new exposure. No ticket: the script is doing what it says.
+3. **Stamp order slipped once.** `gate-1` ran after the readings script instead of before it. The readings are the same either way, but the stamp is the attribution contract. Next fire: stamp `gate-1` before running readings.sh.
+4. **Twenty-fourth block report.** The asks that would change this (D-WORLD-108, D-WORLD-105, row 150's A1) are already in the digest, so the report repeats them rather than filing new ones.
+- Harness share: 0 tickets filed, 1 resolved (row 253). No skill edit.
+
+**Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105). Rows 250, 244–249: wait on D-WORLD-108. Rows 251, 254: filed, no scope. Rows 252, 253: RESOLVED and verified.
+**Next:** rule (d) block report unless D-WORLD-108 is answered A or B, D-WORLD-105 is answered A or B, or a release row (150, 151) becomes routable; a dev red still outranks. #449 should read 23 at the next Gate 0, with `transcript=2` (more only if the driver posts a notice). Monday 2026-11-09's first fire also runs the weekly sweep and thread rotation.
+
+**Record follow-through (iteration 352):** the independent evaluator judged record commit `276f4208` on `d01503c5`: **r1 PASS 93/100, zero blocking** (accuracy 38/40, routing and disposition 24/25, record integrity 18/20, clarity 13/15). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context on a detached worktree at the record commit (36,778 tok, 37 s, 7 tool uses). It re-ran these from primary sources:
+- the 6 commits in `9d50ac63..d01503c5`, all iteration 351's;
+- the ancestry of `7e9e9192b` against the pin `c39576ef3` (rc 0) and `HEAD~200` (rc 1);
+- the wording grep on the pinned script (2) and on the fix's parent (0);
+- the comment authors on #449 (22) and #366 (35), all this loop's, so 0 directives;
+- #449's 2 "Transcript secret" comments, with the same fire ids;
+- the fleet reply's id, category, signature and time;
+- `ticket open` (0 for the signature; control 25);
+- the ledger (valid, 95 rows; OPEN exactly D-WORLD-105 and D-WORLD-108) and dev CI 3/3 at `d01503c5`;
+- the latest post-fire scan verdict (`clean … leaks=0 baseline=12135`; no key or file field printed);
+- the STATUS rotation: 3 stamps remain, and 349 is at the top of the archive, byte-identical (`cmp`, 2,410 B). The charter diff is exactly 3 hunks.
+
+The judge found no key, transcript path or address in the added lines; the `~/.ailang/state` paths follow the iteration-351 precedent. Notes, none acted on:
+- NB1: it did not re-run the release-row subject counts (6, 2, 109). They are in the readings file.
+- NB2: it checked the 2 notices' dates against the "old, fires 348/349" claim, but not against row 252's wording.
+- NB3: it confirmed the 6-commit claim.
+- NB4: it confirmed the public-record scan.
+
+Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the landing note.
