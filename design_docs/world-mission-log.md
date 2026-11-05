@@ -1966,3 +1966,16 @@ No r2: the only edit is this note and the PR body.
 
 **Progress:** 1.0 clauses 7/7 MET; goal unmoved (release rows). Row 150: the attended A1 remains. Row 151: behind row 188 N2d/N4a. Row 233: PARKED (D-WORLD-105). Rows 250, 244–249: wait on D-WORLD-108. Row 251: filed, no scope. Row 252: RESOLVED and verified. Row 253: fleet ticket, no loop action.
 **Next:** rule (d) block report unless D-WORLD-108 is answered A or B, D-WORLD-105 is answered A or B, or a release row (150, 151) becomes routable; a dev red still outranks. #449 should read 22 at the next Gate 0. Monday 2026-11-09's first fire also runs the weekly sweep and thread rotation.
+
+**Record follow-through (iteration 351):** the independent evaluator judged record commit `7896fb55` on `9d50ac63`: **r1 PASS 96/100, zero blocking** (accuracy 38/40, no-pick routing 25/25, record integrity 19/20, clarity 14/15). It ran through the Agent tool on `sonnet`, in a fresh, read-only, foreground context on a detached worktree at the record commit (41,772 tok, 47 s, 5 tool uses). It re-ran from primary sources:
+- the ledger (valid, 95 rows; `--open` lists exactly D-WORLD-105 and D-WORLD-108);
+- the comment authors on #449 (21, all this loop's) and #366 (35, all this loop's), so 0 directives;
+- the 5 commits in `f17fe6bf..9d50ac63`, all iteration 350's record, judge follow-through and landing;
+- #449's 2 transcript-scan notices, dev CI 3/3 at `9d50ac63`, 31 upstream predicates with 0 open, and the row-253 ticket (1; control 26);
+- row 252's check (1) and its pre-fix control (0), without printing any key or file field;
+- 3 STATUS stamps with 348 in the archive (339 → 340), a charter diff of only the intended hunks, and 0 secret, transcript-path or address matches in the added lines.
+- **NB1** (commit trailer model name): the trailer names the controller that wrote the record (opus), and that is the attribution this run's instructions set. No change.
+- **NB2** (the #449 watermark file is absent, so the read is DEGRADED; "22" is a forecast): both are already stated as such in the Gate 0 bullets and **Next**. No change.
+- **NB3** (it did not re-run the row 150/151 subject greps or the `file.json` scan): those readings are in the evidence file with their controls. It verified the same 5-commit range they run over. No change.
+- **NB4** (the predicate regex catches only the prefixed reference forms): this is the same scope as iterations 341–350, and the readings print the regex. No change.
+No r2: the only edit is this note and the PR body.
