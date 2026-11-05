@@ -2148,3 +2148,14 @@ Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the la
 - **Judge precision note:** its consistency check says the next-fire prediction of 24 #449 comments appears "in the log, stamp and dashboard (all say 24)". Only log entry 353's **Next** line carries that prediction; the stamp and dashboard make none (`grep -n "should read 24"` → the log only). That is not an inconsistency in the record, but the judge's claim was wider than what it checked, so it is recorded rather than banked.
 
 Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the landing note.
+
+**Landing (iteration 353):**
+- **Gate 3b:** the record PR [#495](https://github.com/sunholo-data/ailang-world/pull/495) head `7811b79b` went green 3/3 (the first 560 s poll hit its deadline with 2 jobs still `in_progress`; the job states were read, and the second poll read green). `origin/dev` was still `a691bb9b` right before the merge. Merge `7b24c787` went green 3/3 on attempt 1, again over two bounded polls. The record is LANDED.
+- **Stamps:** `gate-3b` ran before the PR-head poll, rc=0. `gate-5` ran after the merge went green, rc=0. `complete` runs after this landing merges.
+- **Reports sent:**
+  - #449: comment count 23 → 24 (`--body-file`; the count was re-read after posting).
+  - `controlplane`: tagged `[fyi]` because neither ask changed (`inbox_1793899560626_6089e059`). `read --peek` shows the body matches the digest.
+  - Digest: 13 lines, 1,747 chars.
+- **Harness share** over log headings 334–353: 0 `[HARNESS]` of 20 (13 `[ADMIN]`, 4 `[PRODUCT-HYGIENE]`, 3 with no trailing tag).
+- **Bar-moving check:** the last 3 landings (351, 352, 353) moved no clause. No DRIFT line, because no UNMET clause has a routable row: all 7 are MET.
+- **Next fire:** #449 should read 24 at Gate 0 (this report was the 24th comment; the landing posts none), with `transcript=2`. Entry 353's **Next** line already says 24.
