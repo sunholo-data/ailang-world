@@ -1,0 +1,43 @@
+# World iteration 353 — row 247 instance 3 (controller, 2026-11-05T18:14:31Z); every line produced by the command above it, bash
+
+## Poll of merge db4623e7 (check-runs, attempt 1)
+  go host build + test gate: failure
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+RED for db4623e747c3a0e7f99609aaffb0d56e5a7f78d4
+
+## Failing lines, run 42077208770 attempt 1 (gh run view --log-failed; job/step/timestamp columns stripped, cut at 230 chars)
+--- FAIL: TestMarketingCaptureFakeChromeSixShots (130.22s)
+    --- FAIL: TestMarketingCaptureFakeChromeSixShots/inventory-single-pass (120.00s)
+        capture_test.go:366: capture must compare inventories: rc=-1 stderr="progress: 1/6 workbench-light.png ok\nprogress: 2/6 workbench-dark.png ok\nprogress: 3/6 packet.png ok\nprogress: 4/6 graph.png ok\nprogress: 5/6 provena
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	158.103s
+
+## Shared deadline
+$ grep -n WithTimeout scripts/marketingcheck/capture_test.go
+25:	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+
+## scripts/marketingcheck package duration per job
+run=42074660859 attempt=1 (PR-head-a56d1bec)
+  go host build + test gate | ok   | 37.710s
+  go race gate (go test -race, own job) | ok   | 205.718s
+run=42077208770 attempt=1 (merge-db4623e7)
+  go race gate (go test -race, own job) | ok   | 202.594s
+  go host build + test gate | FAIL | 158.103s
+run=42077208770 attempt=2 (merge-db4623e7-rerun)
+  go host build + test gate | ok   | 41.594s
+  go race gate (go test -race, own job) | ok   | 202.594s
+
+## Diff of the red merge
+$ git diff --stat 7b24c787 db4623e7
+ design_docs/world-mission-log.md | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+## Re-run poll (gh run rerun --failed; polled by run id)
+18:12:37 run=42077208770 2 in_progress 
+18:13:08 run=42077208770 2 completed success
+SETTLED attempt=2 conclusion=success for run 42077208770 (db4623e7)
+
+## check-runs after re-run
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
