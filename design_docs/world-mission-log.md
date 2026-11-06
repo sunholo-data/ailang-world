@@ -2721,6 +2721,12 @@ Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the 
 
 **CI:** PR for `sprint/world-iter360-exec-reason`. Gate 3b's verdict on the merge is recorded in the follow-through.
 
+**Landing follow-through (Gate 3b):**
+- PR #513 head `d1776bc3` (the record plus the record judge's fixes): CI 3/3 green on attempt 1. The first head `33c8cd41` was superseded before its run finished, and its poller was stopped.
+- Mergeability was read as its own call (`MERGEABLE CLEAN`), then the PR was merged with `--match-head-commit`.
+- **Merge `2dc94fc2`: CI 3/3 green on attempt 1** (run 42309256230: host gate, race gate, verify gate). Row 255 is **LANDED**.
+- **Next fire:** row 256 (`w-daemon-startup-under-load`) under D-WORLD-108 = B; it needs its own design and quorum. #449 should read 32 comments after this fire's report. The upstream predicate count stays 33, all closed.
+
 **Routing evidence:** base=`77c9e3d4e232e543c2c4b9ddb774a156231d93a2@2026-11-06T20:49:34Z` (Gate 1).
 - Controller: `claude:claude-opus-5-5` (tok: not reported).
 - Designer: Agent `opus` (r1 336,756 tok; r2 452,286 tok). Under the diet that is the initial run plus one protocol-mandated revision; the revision fired because quorum r1 blocked. r3 was the controller's.

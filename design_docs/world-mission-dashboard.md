@@ -1,8 +1,8 @@
 # World mission dashboard — iteration 360 (2026-11-06)
 
-- **This fire:** row 255 BUILT (`w-exec-failure-carries-a-reason`), M1 `fa5b9183`. It is the second pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). A failed `workspace-exec` call now records, returns and logs one bounded line saying why (10 classes, ≤200 bytes, never Go error text). The line is in the effect record, the agent's result, `why`, `call` and the daemon log. A store holding such a record refuses older World binaries at open.
+- **This fire:** row 255 LANDED (`w-exec-failure-carries-a-reason`), PR #513, merge `2dc94fc2`, with CI 3/3 on attempt 1. It is the second pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). A failed `workspace-exec` call now records, returns and logs one bounded line saying why (10 classes, ≤200 bytes, never Go error text). The line is in the effect record, the agent's result, `why`, `call` and the daemon log. A store holding such a record refuses older World binaries at open.
 - **Review:** design quorum r1 and r2 BLOCKED, then an r3 controller carve-out. The independent judge, Agent `sonnet`, gave PASS 88 with zero blocking findings. All 212 mutation expectations match.
-- **Dev:** green at `77c9e3d4` (3/3 on attempt 1) before this fire. The PR's CI is the landing gate.
+- **Dev:** green at `2dc94fc2` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
