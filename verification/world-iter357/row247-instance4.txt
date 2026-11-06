@@ -1,0 +1,56 @@
+# Row 247 instance 4 — iteration 357 record merge (controller, 2026-11-06T09:40:51Z)
+
+$ gh pr view 504 --json files --jq "[.files[].path]"
+["design_docs/world-mission-dashboard.md","design_docs/world-mission-index.md","design_docs/world-mission-log.md","design_docs/world-mission-status-archive.md","design_docs/world-mission.md","verification/world-iter357/gate1-2-readings.txt"]
+
+$ gh run view 42193249375 --json headSha,attempt,conclusion
+head=6abccce08dea99a4c301c75dd3fb5007b49950be attempt=2 conclusion=success
+
+## Attempt 1 (failed): failing lines
+$ gh run view 42193249375 --attempt 1 --log-failed | grep -E 'FAIL|capture_test.go:366'
+2026-11-06T09:25:27.5850236Z --- FAIL: TestMarketingCaptureFakeChromeSixShots (129.72s)
+2026-11-06T09:25:27.5851398Z     --- FAIL: TestMarketingCaptureFakeChromeSixShots/inventory-single-pass (120.00s)
+2026-11-06T09:25:27.5855827Z         capture_test.go:366: capture must compare inventories: rc=-1 stderr="progress: 1/6 workbench-light.png ok\nprogress: 2/6 workbench-dark.png ok\nprogress: 3/6 packe
+2026-11-06T09:25:27.5896376Z FAIL
+2026-11-06T09:25:27.5896713Z FAIL
+2026-11-06T09:25:27.5897091Z FAIL
+
+## Attempt 2 (re-run of the failed job): marketingcheck package line
+$ gh run view 42193249375 --attempt 2 --log | grep 'scripts/marketingcheck'
+2026-11-06T09:37:27.2645850Z ok   github.com/sunholo-data/ailang-world/scripts/marketingcheck 35.490s
+2026-11-06T09:25:46.1953801Z ok   github.com/sunholo-data/ailang-world/scripts/marketingcheck 170.633s
+$ gh api runs/42193249375/attempts/2/jobs --jq conclusions
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+
+## PR head 1f2a83f8 (same tree as the merge's docs-only diff): marketingcheck package line
+$ gh run list --workflow CI --commit 1f2a83f8 → run 42191228693
+2026-11-06T09:09:01.0447202Z ok   github.com/sunholo-data/ailang-world/scripts/marketingcheck 40.761s
+2026-11-06T09:07:47.3437006Z ok   github.com/sunholo-data/ailang-world/scripts/marketingcheck 148.250s
+
+## Mechanism: the one fixed context deadline
+$ grep -n 'context.WithTimeout' scripts/marketingcheck/capture_test.go
+25:	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+$ gh run view 42193249375 --attempt 2 --log | grep marketingcheck package line (job name, time)
+  go host build + test gate | 35.490s
+  go race gate (go test -race, own job) | 170.633s
+$ gh run view 42191228693 --log | grep marketingcheck package line (job name, time)
+  go host build + test gate | 40.761s
+  go race gate (go test -race, own job) | 148.250s
+
+## Dev red window (controller poll logs, UTC)
+09:25:44 sha=6abccce0 total=3 pending=1 bad=1
+09:26:15 sha=6abccce0 total=3 pending=0 bad=1
+DONE run=42193249375 attempt=2 conclusion=success
+
+## Judge-2 NB follow-up (controller, 2026-11-06T09:43:03Z)
+$ gh run view 42193249375 --json updatedAt,attempt,conclusion
+updatedAt=2026-11-06T09:39:55Z attempt=2 conclusion=success
+$ git rev-parse 6abccce0^{tree} 1f2a83f8^{tree}  # merge tree vs PR head tree
+201c3e638f15c05dda9a515b08b7e7bdee8739ce
+201c3e638f15c05dda9a515b08b7e7bdee8739ce
+$ git rev-parse 6abccce0^1  # merge first parent = PR base
+69bf81a23441950399661392d1d49e68feb6efb0
+$ grep -n "^## 353 — " design_docs/world-mission-log.md | cut -c1-30
+2087:## 353 — 2026-11-05 —
