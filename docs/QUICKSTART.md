@@ -230,6 +230,10 @@ Returns the daemon version, DB path, and the pinned `interpreter_ref` + version.
 
 ### Start a whole episode in one act
 
+A preset's optional `committer` names the approving operator as `Name <email>`; absent it, git uses the repository config.
+Unsandboxed finish checks receive the pinned exec profile's `env` and `path`.
+New preset starts derive the title from the task's first non-empty line or heading, shortened to 72 characters.
+
 `episode start` (row 189) is attended like §0's two steps: run it yourself in a terminal. With a
 daemon of the same build already serving, it validates everything, checks the daemon, runs the
 same fence, y/N and mint as `session new`, and prints the agent's launch line. It never starts,

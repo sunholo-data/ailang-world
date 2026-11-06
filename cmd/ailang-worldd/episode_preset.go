@@ -209,8 +209,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		if err != nil {
 			return fail(err)
 		}
-		title := strings.TrimSpace(strings.SplitN(string(taskData), "\n", 2)[0])
-		title = strings.TrimSpace(strings.TrimLeft(title, "#"))
+		title := taskTitle(taskData)
 		taskRecord = &store.StartTask{Path: path, SHA256: serviceHash(taskData), Title: title}
 	}
 	req, err := prepareMint(mintOptions{verb: "episode start", episode: ep, db: p.Daemon.DB, credsDB: p.Daemon.CredentialsDB,
@@ -253,6 +252,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	if taskRecord != nil {
 		fmt.Fprintf(&prompt, "  task      %s %q (%s)\n", taskRecord.Path, taskRecord.Title, taskRecord.SHA256)
 	}
+	fmt.Fprintf(&prompt, "  committer %s\n", displayCommitter(p.Preset.Committer))
 	fmt.Fprintf(&prompt, "  profile   %s %s\n", p.Preset.Profile, p.ProfileDigest)
 	for _, c := range p.Checks {
 		class := "UNSANDBOXED: finish asks again"

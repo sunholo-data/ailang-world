@@ -82,7 +82,7 @@ func launchSessionUUID() (string, error) {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[:4], b[4:6], b[6:8], b[8:10], b[10:]), nil
 }
 
-func interactiveLaunchArgv(host, agent, model, sessionID, context, prompt string, grants []broker.Capability) []string {
+func interactiveLaunchArgv(host, agent, model, sessionID, context, prompt, dir string, grants []broker.Capability) []string {
 	a := []string{host}
 	if agent == "claude" {
 		a = append(a, "--session-id", sessionID, "--allowedTools", strings.Join(allowedTools(grants), ","))
@@ -95,6 +95,11 @@ func interactiveLaunchArgv(host, agent, model, sessionID, context, prompt string
 			a = append(a, "-m", model)
 		}
 		a = append(a, "-c", "developer_instructions="+pythonJSONString(context))
+		real, err := filepath.EvalSymlinks(dir)
+		if err != nil {
+			real = filepath.Clean(dir)
+		}
+		a = append(a, "-c", "projects={ "+tomlBasicString(real)+` = { trust_level = "trusted" } }`)
 	}
 	if prompt != "" {
 		a = append(a, prompt)

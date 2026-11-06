@@ -250,6 +250,7 @@ func TestEpisodeFinishProtected(t *testing.T) {
 			raw, _ := json.Marshal(map[string]any{
 				"profile":    broker.ExecProfileVersion,
 				"project":    "fixture",
+				"env":        map[string]string{"AILANG_BIN": "/fixture/ailang", "GOFLAGS": "-mod=readonly"},
 				"path":       []string{"/usr/bin", "/bin"},
 				"timeout_ms": 9000,
 				"protected":  []string{"*_test.go"},
@@ -275,12 +276,17 @@ func TestEpisodeFinishProtected(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			f.rep.Start.Preset.Bytes = `{"profile":"fixture"}`
+			t.Setenv("AILANG_BIN", "")
+			if err := os.Unsetenv("AILANG_BIN"); err != nil {
+				t.Fatal(err)
+			}
+			f.rep.Start.Preset.Bytes = `{"profile":"fixture","committer":"Test Operator <operator@example.invalid>"}`
+			f.rep.Start.Checks = []store.StartCheck{{Name: "profile-env", Argv: []string{"/bin/sh", "-c", `test -n "$AILANG_BIN"`}, Cwd: ".", TimeoutS: 1, Unsandboxed: true}}
 			f.write("a_test.go", "protected edit\n")
 			if changedDigest {
 				os.WriteFile(file, append(raw, '\n'), 0o600)
 			}
-			terminal := &captureFinishTerminal{Reader: strings.NewReader("y\n")}
+			terminal := &captureFinishTerminal{Reader: strings.NewReader("y\ny\n")}
 			env := testMintEnv("", 1)
 			env.openTerminal = func() (io.ReadWriteCloser, error) { return terminal, nil }
 			rc, _, errs := f.run(env, "--include-unattributed", "--exec-profiles-dir", profiles)
@@ -299,6 +305,11 @@ func TestEpisodeFinishProtected(t *testing.T) {
 			} {
 				if !strings.Contains(text, "rotected paths changed: a_test.go") {
 					t.Errorf("%s: %s", where, text)
+				}
+			}
+			for _, want := range []string{"  with profile fixture env: AILANG_BIN, GOFLAGS and PATH +2", "committer: Test Operator <operator@example.invalid>"} {
+				if !strings.Contains(terminal.String(), want) {
+					t.Errorf("missing %q: %s", want, terminal.String())
 				}
 			}
 			t.Log("prompt:\n" + terminal.String())

@@ -130,7 +130,7 @@ func TestLaunchInteractiveCodexAC10(t *testing.T) {
 		t.Fatal(env)
 	}
 	args := strings.Split(f.contents(filepath.Join(f.facts, "argv")), "\x00")
-	if len(args) < 8 || args[2] != "-m" || args[3] != "fixture-model" || args[4] != "-c" || !strings.HasPrefix(args[5], "developer_instructions=") || !strings.HasPrefix(args[6], "# AC9 fixture") {
+	if len(args) < 8 || args[2] != "-m" || args[3] != "fixture-model" || args[4] != "-c" || !strings.HasPrefix(args[5], "developer_instructions=") || args[6] != "-c" || !strings.HasPrefix(args[7], "projects=") || !strings.HasPrefix(args[8], "# AC9 fixture") {
 		t.Fatal(args)
 	}
 	t.Logf("codex argv: %q", entry.ArgvRedacted)
@@ -160,7 +160,7 @@ func TestLaunchInteractiveMissingAndNoTask(t *testing.T) {
 		t.Fatal(code, errOut)
 	}
 	entry := f.read().Launches[0]
-	if entry.TranscriptState != "missing" || !strings.Contains(entry.TranscriptReason, filepath.Join(hosts, "codex", "sessions")) || f.contents(path) != "previous\n" || len(entry.ArgvRedacted) != 3 {
+	if entry.TranscriptState != "missing" || !strings.Contains(entry.TranscriptReason, filepath.Join(hosts, "codex", "sessions")) || f.contents(path) != "previous\n" || len(entry.ArgvRedacted) != 5 {
 		t.Fatal(entry)
 	}
 }
