@@ -1,0 +1,8 @@
+=== RUN   TestMCPEffectFailureLineReturnedAndLoggedOnce
+--- PASS: TestMCPEffectFailureLineReturnedAndLoggedOnce (0.01s)
+=== RUN   TestMCPEffectFailureLineReturnedAndLoggedOnce
+--- PASS: TestMCPEffectFailureLineReturnedAndLoggedOnce (0.00s)
+=== RUN   TestMCPEffectFailureLineReturnedAndLoggedOnce
+--- PASS: TestMCPEffectFailureLineReturnedAndLoggedOnce (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.238s

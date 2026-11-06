@@ -1,0 +1,8 @@
+=== RUN   TestMarkFailureLinesRaisesFiveToSixOnce
+--- PASS: TestMarkFailureLinesRaisesFiveToSixOnce (0.01s)
+=== RUN   TestMarkFailureLinesRaisesFiveToSixOnce
+--- PASS: TestMarkFailureLinesRaisesFiveToSixOnce (0.01s)
+=== RUN   TestMarkFailureLinesRaisesFiveToSixOnce
+--- PASS: TestMarkFailureLinesRaisesFiveToSixOnce (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/store	0.228s

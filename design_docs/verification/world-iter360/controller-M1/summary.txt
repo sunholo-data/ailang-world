@@ -1,0 +1,37 @@
+# World iteration 360 — row 255 M1, controller gates OUTSIDE the codex sandbox
+
+Tree: sprint/world-iter360-exec-reason at fa5b9183 (M1 applied byte-exact from
+plan-M1.diff.txt sha256 83ef9f9d…; 22/22 pinned post-apply sha256 verified by the controller
+with `shasum -a 256 -c` before the commit and again after every gate below).
+TMPDIR left at its default throughout. AILANG_BIN=$HOME/.pinned-ailang/ailang (v0.41.0).
+
+Base (77c9e3d4, before apply): gofmt -l on the 5 touched package dirs → empty; go vet → rc 0;
+go test -count=1 on host/broker, host/coordinator, host/projection, host/store, cmd/ailang-worldd
+→ rc 0, all 5 ok (240 s).
+
+| Gate | Command source | Result |
+|---|---|---|
+| A2 | plan §A2, verbatim | rc 0 — gofmt.log empty; build + vet rc 0; runner `bash -n` ok |
+| A3 | plan §A3, verbatim | rc 0 — 18 named identities, each `--- PASS` once, 0 SKIP/FAIL (5 *-named.log) |
+| A4 | plan §A4, verbatim | rc 0 — the 10 new tests, `-count=3`, each PASS ×3 (5 *-stability.log) |
+| A5 run 1 | plan §A5, verbatim | rc 1 — INSTRUMENT RED, not a verdict. 27 mismatches, all host/broker, starting with the unmutated CONTROL row (see A5-instrument below). Summary kept: A5-run1-instrument-red.summary.txt |
+| A5 run 2 | plan §A5 with the controller runner copy `plan-mutants-ctl.sh.txt` (one change: the `GOTMPDIR` export removed; `diff` is 2 lines) | rc 0 — 212/212 `EXPECTATION MATCH`, 0 MISMATCH, 212 `RESTORE cmp ok`, GO FILE CENSUS unchanged, 22/22 pinned sha256 OK after (mutants.log) |
+| A6 | plan §A6, verbatim | rc 0 — a lined record marks the store to user_version 6; the base-adc03d42 binary refuses it on both Open and OpenReadOnly with `schema version future … binary supports 5; use a compatible binary` |
+| A7 | plan §A7, verbatim | rc 0 — 5 touched packages ok; verify_ail.sh PASSED (9/9 steps); VERIFY_GO_LEGS=plain verify_go.sh PASSED; 22/22 sha256 OK |
+
+## A5-instrument — why run 1 was red, measured
+
+The planner's runner exports `GOTMPDIR="$state/runtime/buildtmp"` under the tree root. The
+test binary's temp files then land under that long path, and in
+`TestExecFailureClassesReachTheRecord/exec-stack-drift_node` the stub node's absolute path pushes
+the line past `FailureLineMax` (200 bytes), so the product correctly cuts it with `…` while the
+test's expected string is the uncut line. Paired control at fa5b9183, same test alone:
+- `GOTMPDIR=<tree>/.ctl-longtmp-iter360/runtime/buildtmp` → rc 1, the `dig…` cut present
+  (A5-instrument-control-long-gotmpdir.txt);
+- default environment → rc 0 (A5-instrument-control-default.txt).
+So run 1's CONTROL red made every host/broker row's verdict meaningless (an expected-red row
+"matched" for the wrong reason). Run 2 removes only the GOTMPDIR export and re-runs all 212 rows.
+
+Finding carried to the log (not filed; D-WORLD-109): the test's expected line assumes the temp
+path is short. CI's temp path is short, so CI is unaffected; a developer with a long TMPDIR sees
+this test red. Fix shape: build the expected value with `FailureLine(class, detail)`.

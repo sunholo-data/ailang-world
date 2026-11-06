@@ -1,0 +1,6 @@
+--- FAIL: TestExecFailureClassesReachTheRecord (0.30s)
+    --- FAIL: TestExecFailureClassesReachTheRecord/exec-stack-drift_node (0.02s)
+        failure_test.go:262: EffectFailedError.Reason = "exec-stack-drift: /Users/voightkampff/dev/sunholo-data/.wt-world-iter360/.ctl-longtmp-iter360/runtime/buildtmp/TestExecFailureClassesReachTheRecordexec-stack-drift_node2341923387/001/stub-node: dig…", want "exec-stack-drift: /Users/voightkampff/dev/sunholo-data/.wt-world-iter360/.ctl-longtmp-iter360/runtime/buildtmp/TestExecFailureClassesReachTheRecordexec-stack-drift_node2341923387/001/stub-node: digest changed" (cause: broker: exec confinement stack drifted: /Users/voightkampff/dev/sunholo-data/.wt-world-iter360/.ctl-longtmp-iter360/runtime/buildtmp/TestExecFailureClassesReachTheRecordexec-stack-drift_node2341923387/001/stub-node: sha256 c1e4bf28261eac69cfc663c691ac61dcf53c6e7e40b2cb48473d0afbd91a58d5, verified as a2cb5ce8c6218144fc8d9af980aeb8493e5069bd4cbd97304c21dbafa9170aad)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.649s
+FAIL

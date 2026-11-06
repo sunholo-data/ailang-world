@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-exec-failure-carries-a-reason.md",
+  "iso_ts": "2026-11-06T21:55:19Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.11181900000000002,
+      "tokens_in": 21818,
+      "tokens_out": 3091,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§3.7/Claim F's mark-failure path is a deliberately designed SILENT FALLBACK, in direct violation of the stated axiom. When `MarkFailureLines` fails, the broker sets `reason = \"\"` and proceeds: the record carries no line, `EffectFailedError.Reason` is empty, the world block is `{}`, and `logEffectFailures` (which only logs effects with a non-empty reason) emits nothing. Every surface this row exists to fix — record, return, log, `why` — goes silent simultaneously, and the operator is not even told that a reason WAS available and was suppressed for compatibility. Worse, the mutation program enforces the silence: MUT-MARK-ERROR-IGNORED (a failed mark still writes the line) is pinned red on TV, and TV's third row ('a store whose mark fails gets a record with no line and an empty Reason') asserts the suppression with no observability assertion attached. The design is correct that the record must be written line-free (Claim D's replay byte-equality requires it), but replay constrains only the record and committed output bytes — it permits, and the axiom demands, an out-of-band signal on the live path.",
+        "catch": "Verify by re-reading Claim F and its proof: 'If the mark fails, it sets reason = \"\", so the record is written without a line and EffectFailedError.Reason is empty.' No sentence in §3.5, §3.7, the test table, or R1–R7 names any log, error text, or status hint emitted when this happens. TV (`TestFailureLineMarksTheStoreFirst`) asserts the line-free record and empty Reason but asserts nothing about operator visibility. So the one path where this row's machinery decides not to deliver the line is the one path that produces the row 255 symptom (a failed call with no explanation anywhere) plus a new, invisible second fact: an older-binary gate was armed but couldn't be raised, meaning the NEXT failed exec will attempt MarkFailureLines again.",
+        "proposed_fix": "Keep the compatibility behavior but make the suppression loud on the live path only, preserving Claims A, C and D. Concretely: (1) When the mark fails, the broker still computes `classified.Line()` and returns `EffectFailedError{Reason: line, ReasonSuppressed: true}` while writing the record without the line — both new fields stay out of the record codec. (2) `requestEffect` copies them to `EffectResult.Reason` (json:\"-\", unchanged) plus `EffectResult.ReasonSuppressed` (json:\"-\"); `composeEffectOutput` must NOT emit a `reason` key when `ReasonSuppressed` is set, so committed output bytes and the line-free record still replay byte-identically (add a TC row proving this). (3) `logEffectFailures` gains a suppression branch: one line `ailang-worldd: \u003csurface\u003e effect failed: \u003cinvocation\u003e \u003ceffect\u003e: failure line not recorded (\u003cline\u003e): store could not be marked: \u003cmark error\u003e` — bounded, since `\u003cline\u003e` is already a fixed point and the mark error is a fixed-store error. (4) Tests: add to TV 'a failed mark yields a line-free record AND `ReasonSuppressed: true` with the line retained'; add a TP row asserting exactly one suppression log line per such call; add a new mutation MUT-MARK-FAIL-SILENT (suppress without logging) and re-run V25. (5) Amend Claim F's proof to: 'the record and committed output are written line-free, and the suppression is logged once per call (Claim E applies unchanged), so the fallback is observable.' This satisfies the no-silent-fallbacks axiom while keeping every r2 measurement (TS, TV's mark ordering, V20) valid."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.047156,
+      "tokens_in": 22038,
+      "tokens_out": 308,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§3.7 and Claim F explicitly introduce a silent fallback: when MarkFailureLines fails, the broker clears the classified reason and commits an ordinary reasonless failure. The agent, record readers and failure logger then lose the explanation precisely when storage or compatibility enforcement fails. Preserving legacy bytes does not justify violating the mission's no-silent-fallback axiom.",
+        "catch": "TV and MUT-MARK-ERROR-IGNORED currently enforce the wrong contract: marker failure must erase the reason. Neither the marker error nor the deliberate diagnostic loss is surfaced. This also contradicts the document's stated guarantee that a failed workspace-exec call records, returns and logs its bounded failure line.",
+        "proposed_fix": "Replace the marker-error paragraph with: 'If MarkFailureLines fails, the broker must not downgrade the record to the legacy shape or report a normally committed classified failure. It surfaces an explicit persistence/compatibility error through the broker's verified storage-error path. Because the handler may already have executed, this path must preserve debit/accounting invariants and must not automatically rerun the effect.' Add a verification-log row identifying that existing error path and its post-execution behavior. Replace TV's reasonless-fallback assertion with fault-injection assertions that the marker error is observable, no misleading legacy failure is committed, accounting remains correct, and the handler executes only once."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.10256000000000001,
+      "tokens_in": 23675,
+      "tokens_out": 393,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Violates the 'no silent fallbacks' axiom in §3.7 and §4 Claim F: 'If the mark fails, the broker writes the record without the line, which is exactly today's record (Claim F).' Silently dropping the failure reason and swallowing a database schema-mark failure (`MarkFailureLines` returning an error) masks an underlying storage or state invariant failure and reverts to the broken pre-patch behavior without alerting the caller or failing the transaction.",
+        "catch": "In `host/broker/broker.go` (§3.7, §4 Claim F, and test TV / `MUT-MARK-ERROR-IGNORED`), when `MarkFailureLines` returns an error, the broker sets `reason = \"\"` and proceeds to call `putRecord`. Additionally, in §10 UNMEASURED, the final sentence stale-references r1 ('V11 ran on r1; V15 ran the five touched packages in full on the final patch') contradicting V24 which ran `verify_go.sh` on r2.",
+        "proposed_fix": "Remove the silent fallback in `broker.go`: if `MarkFailureLines` fails when a non-empty `reason` is present, fail the broker record-write path and return the store error (just as a failed `putRecord` does) rather than clearing `reason = \"\"` and continuing. Update §3.7, §4 Claim F, test TV, and `MUT-MARK-ERROR-IGNORED` so that a failed schema mark aborts the record write instead of silently stripping the failure line. Also clean up the stale r1 note in §10's UNMEASURED row."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 answers r1: kimi's single-effect premise now proven by construction (L1 V-log row with control); gpt's unsupported no-downgrade assertion replaced by an enforced lazy store schema marker plus a version-combination table, with the remaining policy points (Q1, Q2) addressed to Mark with defaults."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: §3.7/Claim F's mark-failure path is a deliberately designed SILENT FALLBACK, in direct violation of the stated axiom. When `MarkFailureLines` fails, the broker sets `reason = \"\"` and proceeds: the record carries no line, `EffectFailedError.Reason` is empty, the world block is `{}`, and `logEffectFailures` (which only logs effects with a non-empty reason) emits nothing. Every surface this row exists to fix — record, return, log, `why` — goes silent simultaneously, and the operator is not even told that a reason WAS available and was suppressed for compatibility. Worse, the mutation program enforces the silence: MUT-MARK-ERROR-IGNORED (a failed mark still writes the line) is pinned red on TV, and TV's third row ('a store whose mark fails gets a record with no line and an empty Reason') asserts the suppression with no observability assertion attached. The design is correct that the record must be written line-free (Claim D's replay byte-equality requires it), but replay constrains only the record and committed output bytes — it permits, and the axiom demands, an out-of-band signal on the live path.",
+      "gpt6-1-sol: §3.7 and Claim F explicitly introduce a silent fallback: when MarkFailureLines fails, the broker clears the classified reason and commits an ordinary reasonless failure. The agent, record readers and failure logger then lose the explanation precisely when storage or compatibility enforcement fails. Preserving legacy bytes does not justify violating the mission's no-silent-fallback axiom.",
+      "gemini-4-argon: Violates the 'no silent fallbacks' axiom in §3.7 and §4 Claim F: 'If the mark fails, the broker writes the record without the line, which is exactly today's record (Claim F).' Silently dropping the failure reason and swallowing a database schema-mark failure (`MarkFailureLines` returning an error) masks an underlying storage or state invariant failure and reverts to the broken pre-patch behavior without alerting the caller or failing the transaction."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2615350000000001,
+    "total_tokens_in": 67531,
+    "total_tokens_out": 3792
+  }
+}

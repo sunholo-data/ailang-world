@@ -1,0 +1,333 @@
+#!/bin/bash
+# Controller only, OUTSIDE the planner sandbox. Bash 3.2 compatible.
+# Usage: bash /absolute/path/plan-mutants.sh.txt TREE_ROOT
+# Sequential execution only; no concurrent source edits or test processes.
+# Runner artifacts/caches stay under TREE_ROOT; existing test t.TempDir() calls
+# still use the unchanged process TMPDIR (plan finding F1).
+set -euo pipefail
+[ "$#" -eq 1 ] || { echo 'usage: bash plan-mutants.sh.txt TREE_ROOT' >&2; exit 2; }
+root=$(cd "$1" && pwd -P)
+cd "$root"
+[ -f go.mod ] && [ -f host/broker/failure_test.go ]
+command -v python3 >/dev/null
+command -v go >/dev/null
+state=$(mktemp -d "$root/.plan-mutants.XXXXXX")
+mkdir "$state/pristine" "$state/runtime"
+# No TMPDIR assignment and no GOTOOLCHAIN pin. go.mod requires go1.26.6.
+export GOCACHE="$state/runtime/gocache" GOMODCACHE="$state/runtime/modcache"
+export GOPATH="$state/runtime/gopath"  # controller copy, iteration 360: GOTMPDIR export removed (see controller-M1/A5-instrument.txt)
+export XDG_CACHE_HOME="$state/runtime/xdg-cache" XDG_CONFIG_HOME="$state/runtime/config"
+export GOTELEMETRYDIR="$state/runtime/telemetry"
+export GOENV=off GOWORK=off GOFLAGS= GOCACHEPROG=
+mkdir -p "$GOCACHE" "$GOMODCACHE" "$GOPATH" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$GOTELEMETRYDIR"
+python3 -I - "$root" "$state" <<'SETUP'
+from pathlib import Path
+import hashlib,json,shutil,sys
+root,state=map(Path,sys.argv[1:])
+PINS={'cmd/ailang-worldd/mcpclient.go': '291703f0184eb0ef21a12e597aaa5a46f48fa58487a32fb4abc36459fbb6c96d', 'cmd/ailang-worldd/why.go': 'd5b2abb7732ce3355b95c9b2a07e959aeefc26aba3a1b531313cad698f918844', 'host/broker/broker.go': '4684030cfd3d438ca3fa4031b7744e2290db303c1e207943665eacafd46f43ee', 'host/broker/failure.go': 'fe5a82c7840f2143dfdb27e235c4728b33d214868a5681d77cf404b9ac38c92c', 'host/broker/handlers_exec.go': '996c5ee11daed4b94f982c3eccebe11ca458f41c2d5fa1ff041887ebf96c9697', 'host/broker/record.go': '184009f5fbcebb04e97bdfb70cd28c9dbfeab670f75e93f3de6476cadb4203b8', 'host/coordinator/effectful.go': 'b6422dfeae92ec0cac6b31f228d93c4f73bd154f5b43e75231bc3f6e9a4c09d4', 'host/projection/mcp.go': 'f6ffddc79c7a2c0850d6db449cfde495a8921ba3066aba486627bc6ea4908301', 'host/projection/projection.go': '8dbe67ec63254d42e8bbafe038dba5d0aaaa8e11bf968cefd144f7a9e0dc4533', 'host/store/store.go': 'e0e10bcd97a80aa8213a8a63ce03bf76d3eef12a91bd6156570063db49dcc340'}
+for rel,want in PINS.items():
+    src=root/rel
+    if src.is_symlink() or any(p.is_symlink() for p in src.parents if p!=root):
+        raise SystemExit('symlink source refused: '+rel)
+    got=hashlib.sha256(src.read_bytes()).hexdigest()
+    if got!=want: raise SystemExit('input sha256 mismatch: '+rel)
+    dst=state/'pristine'/(rel+'.pristine')
+    dst.parent.mkdir(parents=True,exist_ok=True); shutil.copyfile(src,dst)
+(state/'paths.txt').write_text(''.join(p+'\n' for p in PINS))
+(state/'go-before.json').write_text(json.dumps(sorted(str(p.relative_to(root)) for p in root.rglob('*.go') if p.is_file())))
+SETUP
+restore() {
+  while IFS= read -r rel; do
+    cp "$state/pristine/$rel.pristine" "$root/$rel" || return 1
+    cmp "$state/pristine/$rel.pristine" "$root/$rel" || return 1
+  done < "$state/paths.txt"
+}
+finish() {
+  saved_rc=$?
+  trap - EXIT HUP INT TERM
+  if restore; then echo 'RESTORE cmp ok: exit cleanup'; else saved_rc=3; fi
+  chmod -R u+w "$state/runtime" 2>/dev/null || true
+  rm -rf "$state/runtime" "$state/pristine" || saved_rc=3
+  if ! python3 -I - "$root" "$state/go-before.json" <<'CENSUS'
+from pathlib import Path
+import json,sys
+root=Path(sys.argv[1]); before=set(json.loads(Path(sys.argv[2]).read_text()))
+after={str(p.relative_to(root)) for p in root.rglob('*.go') if p.is_file()}
+if before!=after: raise SystemExit('GO FILE CENSUS MISMATCH: added=%r removed=%r'%(sorted(after-before),sorted(before-after)))
+print('GO FILE CENSUS unchanged; no extra .go files remain')
+CENSUS
+  then saved_rc=3; fi
+  echo "Mutation evidence: $state (logs retained; pristine and runtime removed)"
+  exit "$saved_rc"
+}
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+mutate() {
+  python3 -I - "$root" "$1" <<'MUTATE'
+from pathlib import Path
+import sys
+root,name=Path(sys.argv[1]),sys.argv[2]
+M={'MUT-NO-OMITEMPTY': [('host/broker/record.go', '`json:"failure,omitempty"`', '`json:"failure"`')], 'MUT-RECORD-DROPS-LINE': [('host/broker/broker.go', 'RequestRef: requestRef, Failure: reason,', 'RequestRef: requestRef,')], 'MUT-REPLAY-DROPS-REASON': [('host/broker/broker.go', 'RecordRef: recordRef, Reason: rec.Failure,', 'RecordRef: recordRef,')], 'MUT-COORD-DROPS-REASON': [('host/coordinator/effectful.go', 'res.Status, res.Reason, ref = StatusFailed, failed.Reason, failed.RecordRef', 'res.Status, ref = StatusFailed, failed.RecordRef')], 'MUT-WORLD-NO-OMITEMPTY': [('host/coordinator/effectful.go', '`json:"reason,omitempty"`', '`json:"reason"`')], 'MUT-ERR-TEXT': [('host/broker/failure.go', 'return &HandlerFailure{Class: class, Detail: detail, Err: err}', 'return &HandlerFailure{Class: class, Detail: err.Error(), Err: err}')], 'MUT-RAW-PATH': [('host/broker/failure.go', 'func (d execDisclosed) name(p string) string {', 'func (d execDisclosed) name(p string) string {\n\treturn p')], 'MUT-DRIFT-WHY-RAW': [('host/broker/failure.go', 'func driftWhat(why string) string {', 'func driftWhat(why string) string {\n\treturn why')], 'MUT-NO-SANITISE': [('host/broker/failure.go', 'if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {', 'if unicode.IsControl(r) && false {')], 'MUT-CONTROL-ONLY': [('host/broker/failure.go', 'if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {', 'if unicode.IsControl(r) {')], 'MUT-NO-BOUND': [('host/broker/failure.go', 'if len(line) <= FailureLineMax {', 'if true {')], 'MUT-CLASS-OPEN': [('host/broker/failure.go', '\tif !failureClasses[class] {\n\t\treturn ""\n\t}\n\tline := class', '\tline := class')], 'MUT-DECODE-NO-CHECK': [('host/broker/record.go', '\tif !FailureConsistent(rec) {\n\t\treturn EffectRecord{}, fmt.Errorf(', '\tif false {\n\t\treturn EffectRecord{}, fmt.Errorf(')], 'MUT-FAILURE-ANY-ARM': [('host/broker/record.go', 'rec.Failure == "" || rec.Allowed && rec.Failed && ValidFailureLine(rec.Failure)', 'rec.Failure == "" || ValidFailureLine(rec.Failure)')], 'MUT-PUT-NO-CHECK': [('host/broker/broker.go', 'if !RecordConsistent(rec) || !FailureConsistent(rec) {', 'if !RecordConsistent(rec) {')], 'MUT-HF-ERROR-IS-LINE': [('host/broker/failure.go', '\tif f.Err == nil {\n\t\treturn f.Line()\n\t}\n\treturn f.Err.Error()', '\treturn f.Line()')], 'MUT-SEED-UNCLASSIFIED': [('host/broker/handlers_exec.go', 'return &HandlerFailure{Class: FailSeedCache, Detail: name + ": " + seedWhat(err),\n\t\t\t\tErr: fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)}', 'return fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)')], 'MUT-SEED-TIMEOUT-AS-EXIT': [('host/broker/failure.go', '\tcase errors.As(err, &timeout):\n\t\treturn "timed out after "', '\tcase false && errors.As(err, &timeout):\n\t\treturn "timed out after "')], 'MUT-LOG-MCP-NONE': [('host/projection/mcp.go', '\ta.h.logEffectFailures("mcp", result)\n', '')], 'MUT-LOG-A2A-NONE': [('host/projection/projection.go', '\t\t\th.logEffectFailures("a2a", result)\n', '')], 'MUT-LOG-RECONCILED': [('host/projection/projection.go', '\tif result.Reconciled {\n\t\treturn\n\t}\n\tvar out struct {', '\tvar out struct {')], 'MUT-WHY-NO-LINE': [('cmd/ailang-worldd/why.go', '\t\t\tif d.Failure != "" {\n', '\t\t\tif false {\n')], 'MUT-CALL-NO-LINE': [('cmd/ailang-worldd/mcpclient.go', '\t\tif e.Reason != "" {\n', '\t\tif false {\n')], 'MUT-CLEANUP-UNWIRED': [('host/broker/handlers_exec.go', 'return nil, execFailure(FailCleanupIncomplete, "the command\'s processes were not all reaped", runErr, seen)', 'return nil, runErr')], 'MUT-NO-MARK': [('host/broker/broker.go', '\t\tif reason != "" {\n\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n\t\t\t\treturn nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope,\n\t\t\t\t\tErr: fmt.Errorf("broker: mark store for failure lines: %w", markErr)}\n\t\t\t}\n\t\t}', '')], 'MUT-MARK-ERROR-IGNORED': [('host/broker/broker.go', '\t\tif reason != "" {\n\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n\t\t\t\treturn nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope,\n\t\t\t\t\tErr: fmt.Errorf("broker: mark store for failure lines: %w", markErr)}\n\t\t\t}\n\t\t}', '\t\tif reason != "" {\n\t\t\t_ = s.store.MarkFailureLines(post)\n\t\t}')], 'MUT-MARK-AFTER-RECORD': [('host/broker/broker.go', '\t\tif reason != "" {\n\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n\t\t\t\treturn nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope,\n\t\t\t\t\tErr: fmt.Errorf("broker: mark store for failure lines: %w", markErr)}\n\t\t\t}\n\t\t}', ''), ('host/broker/broker.go', '\t\tref, putErr := s.putRecord(post, rec)\n', '\t\tref, putErr := s.putRecord(post, rec)\n\t\tif reason != "" {\n\t\t\t_ = s.store.MarkFailureLines(post)\n\t\t}\n')], 'MUT-STORE-REJECTS-6': [('host/store/store.go', 'version == preSplitSchemaVersion || version == failureLineSchemaVersion {', 'version == preSplitSchemaVersion {')], 'MUT-FUTURE-BOUND-5': [('host/store/store.go', 'if version > failureLineSchemaVersion {', 'if version > currentSchemaVersion {')], 'MUT-MARK-NOOP': [('host/store/store.go', '\tcase failureLineSchemaVersion:\n\t\treturn nil\n\tcase currentSchemaVersion:\n', '\tcase failureLineSchemaVersion, currentSchemaVersion:\n\t\treturn nil\n')], 'MUT-MARK-ANY-VERSION': [('host/store/store.go', '\tdefault:\n\t\treturn fmt.Errorf("store: mark failure lines: user_version %d is not %d or %d"', '\tcase -12345:\n\t\treturn fmt.Errorf("store: mark failure lines: user_version %d is not %d or %d"')], 'MUT-HEAD-SHAPE': [('host/broker/broker.go', 'RequestRef: requestRef, Failure: reason,', 'RequestRef: requestRef,'), ('host/coordinator/effectful.go', 'res.Status, res.Reason, ref = StatusFailed, failed.Reason, failed.RecordRef', 'res.Status, ref = StatusFailed, failed.RecordRef')], 'MUT-MARK-FAIL-SILENT': [('host/broker/broker.go', '\t\tif reason != "" {\n\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n\t\t\t\treturn nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope,\n\t\t\t\t\tErr: fmt.Errorf("broker: mark store for failure lines: %w", markErr)}\n\t\t\t}\n\t\t}', '\t\tif reason != "" && s.store.MarkFailureLines(post) != nil {\n\t\t\treason = ""\n\t\t}')], 'MUT-MARK-REFUNDS-GRANT': [('host/broker/broker.go', '\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n', '\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n\t\t\t\ts.grants[grantIndex].Budget = budgetBefore\n')], 'MUT-MARK-RERUNS-HANDLER': [('host/broker/broker.go', '\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n', '\t\t\tif markErr := s.store.MarkFailureLines(post); markErr != nil {\n\t\t\t\t_, _ = handler.Execute(ctx, req, payload)\n')]}
+for rel,old,new in ([] if name=='CONTROL' else M[name]):
+    p=root/rel; s=p.read_text()
+    if s.count(old)!=1: raise SystemExit('mutation anchor mismatch: %s %s count=%d'%(name,rel,s.count(old)))
+    p.write_text(s.replace(old,new))
+MUTATE
+}
+# Warm the private module/toolchain caches before JSON-only test logs.
+go version
+go mod download
+rows=0
+mismatches=0
+run_row() { # mutant package tests expected_rc label
+  mut=$1; pkg=$2; names=$3; expected=$4; label=$5
+  rows=$((rows+1))
+  restore
+  mutate "$mut"
+  log="$state/row-$rows.jsonl"
+  rc=0
+  go test -count=1 -run "^($names)$" -json -timeout 300s "./$pkg/" > "$log" 2>&1 || rc=$?
+  # Reject build/setup failures, absent tests and SKIP; every named identity
+  # must end in the expected state. An unrelated failure cannot kill a mutant.
+  valid=0
+  python3 -I - "$log" "$names" "$expected" <<'CHECK' || valid=$?
+from pathlib import Path
+import collections,json,sys
+log,names,expected=Path(sys.argv[1]),sys.argv[2].split('|'),int(sys.argv[3])
+try: events=[json.loads(line) for line in log.read_text().splitlines() if line.strip()]
+except Exception as exc: raise SystemExit('invalid go-test JSON: '+str(exc))
+want='fail' if expected else 'pass'
+terminal=collections.defaultdict(list)
+for e in events:
+    test=e.get('Test','')
+    if test in names and e.get('Action') in ('pass','fail','skip'): terminal[test].append(e['Action'])
+if any(terminal[n]!=[want] for n in names): raise SystemExit('named terminal mismatch: '+str(dict(terminal)))
+if not any(e.get('Action')==want and not e.get('Test') for e in events): raise SystemExit('missing package terminal')
+CHECK
+  if [ "$rc" -eq "$expected" ] && [ "$valid" -eq 0 ]; then
+    echo "EXPECTATION MATCH: $mut package=$pkg tests=$names label=$label expected_rc=$expected rc=$rc"
+  else
+    echo "EXPECTATION MISMATCH: $mut package=$pkg tests=$names label=$label expected_rc=$expected rc=$rc identities_rc=$valid"
+    cat "$log"
+    mismatches=$((mismatches+1))
+  fi
+  restore
+  echo "RESTORE cmp ok: $mut package=$pkg tests=$names"
+}
+# All 18 named tests per scenario, grouped by package and expected rc.
+run_row 'CONTROL' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'CONTROL'
+run_row 'CONTROL' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'CONTROL'
+run_row 'CONTROL' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'CONTROL'
+run_row 'CONTROL' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'CONTROL'
+run_row 'CONTROL' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'CONTROL'
+run_row 'MUT-NO-OMITEMPTY' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-NO-OMITEMPTY' 'host/broker' 'TestRecordGoldenBytes' '1' 'MUTANT'
+run_row 'MUT-NO-OMITEMPTY' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-NO-OMITEMPTY' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-NO-OMITEMPTY' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-NO-OMITEMPTY' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'host/broker' 'TestExecFailureClassesReachTheRecord|TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'host/coordinator' 'TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays' '1' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-RECORD-DROPS-LINE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-REPLAY-DROPS-REASON' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-REPLAY-DROPS-REASON' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-REPLAY-DROPS-REASON' 'host/coordinator' 'TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-REPLAY-DROPS-REASON' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays' '1' 'MUTANT'
+run_row 'MUT-REPLAY-DROPS-REASON' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-REPLAY-DROPS-REASON' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-COORD-DROPS-REASON' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-COORD-DROPS-REASON' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-COORD-DROPS-REASON' 'host/coordinator' 'TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-COORD-DROPS-REASON' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays' '1' 'MUTANT'
+run_row 'MUT-COORD-DROPS-REASON' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '1' 'MUTANT'
+run_row 'MUT-COORD-DROPS-REASON' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-WORLD-NO-OMITEMPTY' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-WORLD-NO-OMITEMPTY' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-WORLD-NO-OMITEMPTY' 'host/coordinator' 'TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-WORLD-NO-OMITEMPTY' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays' '1' 'MUTANT'
+run_row 'MUT-WORLD-NO-OMITEMPTY' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-WORLD-NO-OMITEMPTY' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-ERR-TEXT' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-ERR-TEXT' 'host/broker' 'TestExecFailureClassifies|TestExecFailureClassesReachTheRecord' '1' 'MUTANT'
+run_row 'MUT-ERR-TEXT' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-ERR-TEXT' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-ERR-TEXT' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-ERR-TEXT' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-RAW-PATH' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-RAW-PATH' 'host/broker' 'TestExecFailureClassifies|TestExecFailureClassesReachTheRecord' '1' 'MUTANT'
+run_row 'MUT-RAW-PATH' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-RAW-PATH' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-RAW-PATH' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-RAW-PATH' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-DRIFT-WHY-RAW' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-DRIFT-WHY-RAW' 'host/broker' 'TestExecFailureClassifies|TestExecFailureClassesReachTheRecord' '1' 'MUTANT'
+run_row 'MUT-DRIFT-WHY-RAW' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-DRIFT-WHY-RAW' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-DRIFT-WHY-RAW' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-DRIFT-WHY-RAW' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-NO-SANITISE' 'host/broker' 'TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-NO-SANITISE' 'host/broker' 'TestFailureLineBoundsAndSanitises' '1' 'MUTANT'
+run_row 'MUT-NO-SANITISE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-NO-SANITISE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-NO-SANITISE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-NO-SANITISE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-CONTROL-ONLY' 'host/broker' 'TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-CONTROL-ONLY' 'host/broker' 'TestFailureLineBoundsAndSanitises' '1' 'MUTANT'
+run_row 'MUT-CONTROL-ONLY' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-CONTROL-ONLY' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-CONTROL-ONLY' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-CONTROL-ONLY' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-NO-BOUND' 'host/broker' 'TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-NO-BOUND' 'host/broker' 'TestFailureLineBoundsAndSanitises' '1' 'MUTANT'
+run_row 'MUT-NO-BOUND' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-NO-BOUND' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-NO-BOUND' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-NO-BOUND' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-CLASS-OPEN' 'host/broker' 'TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-CLASS-OPEN' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes' '1' 'MUTANT'
+run_row 'MUT-CLASS-OPEN' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-CLASS-OPEN' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-CLASS-OPEN' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-CLASS-OPEN' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-DECODE-NO-CHECK' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-DECODE-NO-CHECK' 'host/broker' 'TestRecordFailureGoldenBytes' '1' 'MUTANT'
+run_row 'MUT-DECODE-NO-CHECK' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-DECODE-NO-CHECK' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-DECODE-NO-CHECK' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-DECODE-NO-CHECK' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-FAILURE-ANY-ARM' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-FAILURE-ANY-ARM' 'host/broker' 'TestRecordFailureGoldenBytes' '1' 'MUTANT'
+run_row 'MUT-FAILURE-ANY-ARM' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-FAILURE-ANY-ARM' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-FAILURE-ANY-ARM' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-FAILURE-ANY-ARM' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-PUT-NO-CHECK' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'SURVIVOR'
+run_row 'MUT-PUT-NO-CHECK' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'SURVIVOR'
+run_row 'MUT-PUT-NO-CHECK' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'SURVIVOR'
+run_row 'MUT-PUT-NO-CHECK' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'SURVIVOR'
+run_row 'MUT-PUT-NO-CHECK' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'SURVIVOR'
+run_row 'MUT-HF-ERROR-IS-LINE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestRecordGoldenBytes|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-HF-ERROR-IS-LINE' 'host/broker' 'TestExecFailureClassesReachTheRecord|TestExecHandlerReverifiesTheStackBeforeEachCall' '1' 'MUTANT'
+run_row 'MUT-HF-ERROR-IS-LINE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-HF-ERROR-IS-LINE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-HF-ERROR-IS-LINE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-HF-ERROR-IS-LINE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-SEED-UNCLASSIFIED' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-SEED-UNCLASSIFIED' 'host/broker' 'TestExecFailureClassesReachTheRecord' '1' 'MUTANT'
+run_row 'MUT-SEED-UNCLASSIFIED' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-SEED-UNCLASSIFIED' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-SEED-UNCLASSIFIED' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-SEED-UNCLASSIFIED' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-SEED-TIMEOUT-AS-EXIT' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-SEED-TIMEOUT-AS-EXIT' 'host/broker' 'TestExecFailureClassifies|TestExecFailureClassesReachTheRecord' '1' 'MUTANT'
+run_row 'MUT-SEED-TIMEOUT-AS-EXIT' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-SEED-TIMEOUT-AS-EXIT' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-SEED-TIMEOUT-AS-EXIT' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-SEED-TIMEOUT-AS-EXIT' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-LOG-MCP-NONE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-LOG-MCP-NONE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-LOG-MCP-NONE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-LOG-MCP-NONE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '1' 'MUTANT'
+run_row 'MUT-LOG-MCP-NONE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-LOG-A2A-NONE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-LOG-A2A-NONE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-LOG-A2A-NONE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-LOG-A2A-NONE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '1' 'MUTANT'
+run_row 'MUT-LOG-A2A-NONE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-LOG-RECONCILED' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-LOG-RECONCILED' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-LOG-RECONCILED' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-LOG-RECONCILED' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '1' 'MUTANT'
+run_row 'MUT-LOG-RECONCILED' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-WHY-NO-LINE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-WHY-NO-LINE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-WHY-NO-LINE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-WHY-NO-LINE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-WHY-NO-LINE' 'cmd/ailang-worldd' 'TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-WHY-NO-LINE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine' '1' 'MUTANT'
+run_row 'MUT-CALL-NO-LINE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-CALL-NO-LINE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-CALL-NO-LINE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-CALL-NO-LINE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-CALL-NO-LINE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-CALL-NO-LINE' 'cmd/ailang-worldd' 'TestCallPrintsTheFailureLine' '1' 'MUTANT'
+run_row 'MUT-CLEANUP-UNWIRED' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'SURVIVOR'
+run_row 'MUT-CLEANUP-UNWIRED' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'SURVIVOR'
+run_row 'MUT-CLEANUP-UNWIRED' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'SURVIVOR'
+run_row 'MUT-CLEANUP-UNWIRED' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'SURVIVOR'
+run_row 'MUT-CLEANUP-UNWIRED' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'SURVIVOR'
+run_row 'MUT-NO-MARK' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-NO-MARK' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-NO-MARK' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-NO-MARK' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-NO-MARK' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-NO-MARK' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-MARK-ERROR-IGNORED' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-MARK-ERROR-IGNORED' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-MARK-ERROR-IGNORED' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-ERROR-IGNORED' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-ERROR-IGNORED' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-ERROR-IGNORED' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-MARK-AFTER-RECORD' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-MARK-AFTER-RECORD' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-MARK-AFTER-RECORD' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-AFTER-RECORD' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-AFTER-RECORD' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-AFTER-RECORD' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-STORE-REJECTS-6' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-STORE-REJECTS-6' 'host/store' 'TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-STORE-REJECTS-6' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce' '1' 'MUTANT'
+run_row 'MUT-STORE-REJECTS-6' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-STORE-REJECTS-6' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-STORE-REJECTS-6' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-FUTURE-BOUND-5' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'SURVIVOR'
+run_row 'MUT-FUTURE-BOUND-5' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'SURVIVOR'
+run_row 'MUT-FUTURE-BOUND-5' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'SURVIVOR'
+run_row 'MUT-FUTURE-BOUND-5' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'SURVIVOR'
+run_row 'MUT-FUTURE-BOUND-5' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'SURVIVOR'
+run_row 'MUT-MARK-NOOP' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-MARK-NOOP' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-MARK-NOOP' 'host/store' 'TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-NOOP' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce' '1' 'MUTANT'
+run_row 'MUT-MARK-NOOP' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-NOOP' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-NOOP' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-MARK-ANY-VERSION' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestFailureLineMarksTheStoreFirst' '0' 'MUTANT'
+run_row 'MUT-MARK-ANY-VERSION' 'host/store' 'TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-ANY-VERSION' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce' '1' 'MUTANT'
+run_row 'MUT-MARK-ANY-VERSION' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-ANY-VERSION' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-ANY-VERSION' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'host/broker' 'TestExecFailureClassesReachTheRecord|TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'host/coordinator' 'TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays' '1' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '1' 'MUTANT'
+run_row 'MUT-HEAD-SHAPE' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-MARK-FAIL-SILENT' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-MARK-FAIL-SILENT' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-MARK-FAIL-SILENT' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-FAIL-SILENT' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-FAIL-SILENT' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-FAIL-SILENT' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-MARK-REFUNDS-GRANT' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-MARK-REFUNDS-GRANT' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-MARK-REFUNDS-GRANT' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-REFUNDS-GRANT' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-REFUNDS-GRANT' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-REFUNDS-GRANT' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+run_row 'MUT-MARK-RERUNS-HANDLER' 'host/broker' 'TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows' '0' 'MUTANT'
+run_row 'MUT-MARK-RERUNS-HANDLER' 'host/broker' 'TestFailureLineMarksTheStoreFirst' '1' 'MUTANT'
+run_row 'MUT-MARK-RERUNS-HANDLER' 'host/store' 'TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic' '0' 'MUTANT'
+run_row 'MUT-MARK-RERUNS-HANDLER' 'host/coordinator' 'TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay' '0' 'MUTANT'
+run_row 'MUT-MARK-RERUNS-HANDLER' 'host/projection' 'TestMCPEffectFailureLineReturnedAndLoggedOnce' '0' 'MUTANT'
+run_row 'MUT-MARK-RERUNS-HANDLER' 'cmd/ailang-worldd' 'TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine' '0' 'MUTANT'
+echo "Mutation rows=$rows expected=212 mismatches=$mismatches"
+[ "$rows" -eq 212 ] && [ "$mismatches" -eq 0 ]
