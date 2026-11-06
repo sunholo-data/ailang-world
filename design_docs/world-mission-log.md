@@ -2633,6 +2633,16 @@ Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the 
 
 **CI:** PR #511. The Linux real-srt step is acceptance gate A9. Gate 3b's verdict on the merge is recorded in the follow-through.
 
+**Landing follow-through (Gate 3b):**
+- PR head `27affeff`: CI 3/3 green on attempt 1 (run 42272728028).
+- **A9 met.** The step "Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)" succeeded. Its log shows `--- PASS` once and `--- SKIP` zero times for each of `TestExecSrtStartupProbePasses`, `TestExecProbeNet6ForeignDialIsRetriedNotRefused`, `TestExecProbeNet6ChildOrSilentAcceptStillFails`, `TestExecProbeNet6ForeignEveryAttemptRefuses`, `TestExecProbeNet6DialClassifier` and `TestExecProbePassThroughShimFailsEveryConfinementArm`. This is the first dynamic Linux real-srt run of the new client line (`controller-M1/A9-linux-ci.txt`).
+- Mergeability was read as its own call (`MERGEABLE CLEAN`), then the PR was merged with `--match-head-commit`.
+- **Merge `e2e2c7cc`: CI 3/3 green on attempt 1** (run 42275318828: host gate, race gate, verify gate). Row 250 is **LANDED**.
+- Gate stamps `gate-3b` and `gate-5` both ran rc 0.
+- The fleet `harness-resolved` reply is acked after this note merges.
+- The main checkout's `dev` was level with `origin/dev` at Gate 1, with only untracked residue.
+- **Next fire:** row 255 (`w-exec-failure-carries-a-reason`) under D-WORLD-108 = B; it needs its own design. #449 should read 30 comments after this fire's report. The upstream predicate count should read 33, all closed.
+
 **Routing evidence:** base=`1835d8be3cdaf107a84db5edd8c00dcf4b689289@2026-11-06T16:50:56Z` (Gate 1).
 - Controller: `claude:claude-opus-5-5` (tok: not reported).
 - Designer: Agent `opus` (r1 211,585 tok; r2 160,828 tok).
