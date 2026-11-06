@@ -1,6 +1,6 @@
 # w-exec-failure-carries-a-reason — a failed `workspace-exec` call records, returns and logs one bounded failure line
 
-- **Status**: Planned (designed iteration 360, **r2**: r1 after quorum round 1 BLOCKED, §11). Queue row 255, in D-WORLD-108's scope after
+- **Status**: Planned (designed iteration 360, **r3**: r2 by the designer after quorum round 1 BLOCKED; r3 is the controller's narrow-refinement carve-out after round 2, §11). Queue row 255, in D-WORLD-108's scope after
   row 250 (attended 2026-11-06: rows 250, then 255 → 257). Rows 256 (`w-daemon-startup-under-load`)
   and 257 (`w-exec-cache-seed-at-bind`) are separate rows. §9 says how this row's classes serve
   them, and designs neither.
@@ -281,9 +281,16 @@ before it misreads the record.
   `Store.MarkFailureLines`. That method raises `user_version` from 5 to 6 under the writer and
   re-reads it. It is idempotent at 6, and it refuses any other version, including a read-only
   handle.
-- If the mark fails, the broker writes the record **without** the line, which is exactly today's
-  record (Claim F). A record with a line therefore never sits in a store that an older binary
-  would still open.
+- **[r3]** If `MarkFailureLines` fails, the broker must not downgrade the record to the legacy
+  shape or report a normally committed classified failure. It surfaces an explicit
+  persistence/compatibility error through the broker's verified storage-error path: it writes no
+  record and returns `&OutcomeWriteError{Effect, Scope, Err: <the mark error>}`, exactly as a failed
+  `putRecord` does at `broker.go:297–300`. Because the handler has already executed, this path
+  preserves the debit/accounting invariants (the grant was debited at `broker.go:260`, before
+  `Execute`, and is not refunded) and does not automatically rerun the effect. A record with a line
+  therefore never sits in a store that an older binary would still open (Claim F), and no failure
+  is ever committed without its line. (r2 wrote the record without the line here; all three r2
+  reviewers rejected that as a silent fallback, §11 round 2.)
 
 The gate needs no new enforcement code in old binaries. It uses the refusal they already ship.
 The marker is a version number only: no table, index or row changes. It extends what
@@ -363,13 +370,17 @@ So a call logs at most one line. If L1 is ever widened (R-SE-10 reserves that), 
 is still one line per failed effect that carries a line. ∎ TP sends the same A2A task twice, which
 runs once, and expects exactly one line.
 
-**Claim F [r2] (no lined record in a store an older binary would open).** *Proof.* The broker
-computes `reason` and then, before `putRecord`, calls `MarkFailureLines`. If the mark fails, it
-sets `reason = ""`, so the record is written without a line and `EffectFailedError.Reason` is
-empty. `MarkFailureLines` returns nil only when the store's `user_version` reads 6 after the call.
-Every binary from before this change refuses a store at 6 at open (`store.go:464`, V20). ∎ TV pins
-the order (`mark,record`), the unmarked fallback and the unchanged version for a failure with no
-line. TS pins the marker itself.
+**Claim F [r2, r3] (no lined record in a store an older binary would open, and no silent
+fallback).** *Proof.* The broker computes `reason` and then, before `putRecord`, calls
+`MarkFailureLines`. **[r3]** If the mark fails, the broker writes no record and returns
+`*OutcomeWriteError` wrapping the mark error, through the same path a failed `putRecord` takes
+(`broker.go:297–300`); the coordinator handles that type at `effectful.go:184`, and a `Dispatch`
+error is logged by `logRefusal` (`mcp.go:131–133`), so the failure is loud. `MarkFailureLines`
+returns nil only when the store's `user_version` reads 6 after the call. Every binary from before
+this change refuses a store at 6 at open (`store.go:464`, V20). ∎ TV pins the order
+(`mark,record`), the mark-failure error (no record written, `*OutcomeWriteError` returned, the
+handler executed exactly once, the grant still debited) and the unchanged version for a failure
+with no line. TS pins the marker itself.
 
 ## 5. Test plan and mutation table
 
@@ -383,7 +394,7 @@ line. TS pins the marker itself.
 | **TP** | `TestMCPEffectFailureLineReturnedAndLoggedOnce` (`host/projection/effect_failure_log_test.go`) | a real MCP `tools/call` over the projection: the tool result carries the line and no cause text, and the error log holds exactly one line matching `^ailang-worldd: mcp effect failed: mcp:ep-a:<64 hex> e1 sha256:<64 hex>: <line>\n$`. Then the same A2A task sent twice: both answers carry the line, and the log holds exactly one `a2a` line |
 | **TW** | `TestWhyShowsTheFailureLine` (`cmd/ailang-worldd/why_test.go`) | with a committed failed `Workspace.Exec` invocation whose record carries a line, `why` verifies all 7 links and prints `no result: <line>` on the effect link; with a failed record without a line, it prints as before. The `walkRig` helper gains a `failure` argument; existing callers pass `nil` |
 | **TR** | `TestCallPrintsTheFailureLine` (`cmd/ailang-worldd/call_failure_line_test.go`) | `printCallResult` prints `effect e1 failed sha256:1111 — <line>`, and without a reason prints as before |
-| **TV** [r2] | `TestFailureLineMarksTheStoreFirst` (`host/broker/failure_test.go`) | over a file-backed store: a lined failure raises `user_version` to 6, with the call order exactly `mark,record`; a plain failure leaves it at 5; a store whose mark fails gets a record with no line and an empty `Reason` |
+| **TV** [r2] | `TestFailureLineMarksTheStoreFirst` (`host/broker/failure_test.go`) | over a file-backed store: a lined failure raises `user_version` to 6, with the call order exactly `mark,record`; a plain failure leaves it at 5; **[r3]** a store whose mark fails (fault-injected) gets **no** record and no committed legacy failure, the call returns `*OutcomeWriteError` wrapping the mark error, the handler executed exactly once, and the grant stays debited |
 | **TS** [r2] | `TestMarkFailureLinesRaisesFiveToSixOnce` (`host/store/schema_version_test.go`) | a fresh store is 5; a read-only handle cannot mark (it stays 5); marking twice gives 6 both times; `WorldSchemaVersion` reads 6; a writer and a reader of this build reopen it without rewriting the version; a schema-4 store refuses to be marked |
 | edited [r2] | `TestFutureVersionIsRejected`, `TestOpenReadOnlyEnforcesVersionFive` (via `frozenFutureSchemaVersion` 6 → 7, `Current` 5 → 6); `TestStoreDeadlineGuardDynamic` (one fixture: the new method is quarantine- and deadline-guarded like every store method); 4 broker test stores delegate `MarkFailureLines` | the store still refuses a version above what it supports, now 7 and up |
 
@@ -434,6 +445,7 @@ the tests that went red. `Gold` = `TestRecordGoldenBytes` and `Reverify` =
 | MUT-CLEANUP-UNWIRED | `:356`'s return goes back to the bare `runErr` | — | **SURVIVES.** No seam leaves a child unreaped inside `Execute` without a process-kill fault injector, which this item does not add. The class's text is pinned by TK, and the wiring is one line in the same pattern as the 9 sites TX covers (R3) |
 | **MUT-NO-MARK** [r2] | the broker never calls `MarkFailureLines` | TV | red → red |
 | **MUT-MARK-ERROR-IGNORED** [r2] | a failed mark still writes the line | TV | red → red |
+| **MUT-MARK-FAIL-SILENT** [r3] | a failed mark writes the record without the line and returns the ordinary `*EffectFailedError` (r2's fallback) | TV | red → red (the planner re-runs it on the r3 patch) |
 | **MUT-MARK-AFTER-RECORD** [r2] | the mark moves after `putRecord` (a crash between them would leave a lined record in a version-5 store) | TV | red → red (`call order = [record mark]`) |
 | **MUT-STORE-REJECTS-6** [r2] | `enforceSchemaVersion` does not accept 6 | TS | red → red |
 | **MUT-MARK-NOOP** [r2] | `MarkFailureLines` returns nil without writing | TS, TV | red → red |
@@ -611,7 +623,7 @@ switching.
 | V24 | [r2] The r2 prototype passes the full plain gate | `VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh` → `/tmp/iter360-designer/r2-verify_go.txt`. The prototype is byte-identical to the r2 patch: no source edit came between this run and `git diff`, except the mutation run, whose restore V25 checks | `✓ go gate PASSED (plain): …`; `RC=0`; 35 packages `ok`, including `host/broker 315.957s`, `host/store 15.408s`, `host/daemon 347.692s`, `host/verifygate 311.481s`, `cmd/ailang-worldd 197.173s` |
 | V25 | [r2] The mutation table on r2 | `/tmp/iter360-designer/mutate.py` (r2: 18 tests over `host/broker`, `host/coordinator`, `host/projection`, `cmd/ailang-worldd`, `host/store`; multi-edit mutants) → `/tmp/iter360-designer/r2-mutants.txt`; then `git diff` compared with its pre-run copy | `CONTROL: rc=0 pass=18 red=-`; every r1 mutant's reds as in V12, plus TV on `MUT-RECORD-DROPS-LINE` (`red=TC,TV,TX`) and `MUT-HEAD-SHAPE` (`red=TC,TP,TV,TX`); `MUT-NO-MARK`, `MUT-MARK-ERROR-IGNORED`, `MUT-MARK-AFTER-RECORD: red=TV`; `MUT-STORE-REJECTS-6`, `MUT-MARK-ANY-VERSION: red=TS`; `MUT-MARK-NOOP: red=TS,TV`; survivors `MUT-PUT-NO-CHECK`, `MUT-CLEANUP-UNWIRED`, `MUT-FUTURE-BOUND-5` (`rc=0 pass=18`); `tracked diff identical after mutants`; `-count=3` of TV, TX, TC, TP, TW, TS and `Future` → `ok` ×5 |
 | V26 | [r2] The r2 patch applies at HEAD and on a fresh archive, and its 18 named tests pass there | `git add -N <5 new files>; git diff -- . ':(exclude)<patch>' > <patch>; git reset -q`; `git checkout --` the 17 modified files; `rm` the 5 new; `git status --porcelain`; `git apply --check <patch>` in the worktree; then in `/tmp/iter360-designer/applied2` (`git archive 77c9e3d4`): `git apply --check`, `git apply`, `go build ./...`, `go vet` (5 packages), `gofmt -l host cmd`, `go test -count=1 -v -run '^(<18 names>)$'` (5 packages) | patch 1538 lines, sha256 prefix `02259c3bdc1c942b`, 22 `diff --git` sections; numstat `store.go 45/5`, `broker.go 22/5`, `schema_version_test.go 71/3`, `deadline_guard_test.go 1/0`, the four test stores `4/0` each, `QUICKSTART.md 15/0`, and the r1 rows unchanged; `failure_test.go` 361 lines; the worktree is back to `?? <patch>` only; `apply-check-rc=0`; `APPLY-CHECK-ARCHIVE rc=0`, `APPLY-OK`, `BUILD-VET-OK`, `GOFMT-OK`; 18 `--- PASS` and 5 `ok` |
-| — | **UNMEASURED** | — | **[r2]** a live `service upgrade` with its rollback onto a marked store (§3.7 reads the code path, V23; launchd was not driven); an older **CLI** against a daemon of this build (derived from V16 and `why.go:896–899`, not run); Linux (R6: GNU `cp` exit code and `EACCES` on the CI runner; the acceptance gate is the PR's CI); the home store's entries 54–64 for episode `worldd-2611031015` (row claim 8); `verify_go.sh` on the **final** patch (V11 ran on r1; V15 ran the five touched packages in full on the final patch); a `-race` run |
+| — | **UNMEASURED** | — | **[r2]** a live `service upgrade` with its rollback onto a marked store (§3.7 reads the code path, V23; launchd was not driven); an older **CLI** against a daemon of this build (derived from V16 and `why.go:896–899`, not run); Linux (R6: GNU `cp` exit code and `EACCES` on the CI runner; the acceptance gate is the PR's CI); the home store's entries 54–64 for episode `worldd-2611031015` (row claim 8); [r3] the r3 delta to the patch (the mark-failure arm, TV's fault-injection rows and MUT-MARK-FAIL-SILENT) is specified here and pinned by the sprint plan, not by the r2 patch file; the r2 patch was gated by V24 (`verify_go.sh` on r2) and V15; a `-race` run |
 
 ## 11. Quorum log
 
@@ -646,3 +658,36 @@ author's vendor; no seat was absent. Artifact:
 r2 changes the patch (r1 `b7dcb7821c3b389a`, 1184 lines → r2 `02259c3bdc1c942b`, 1538 lines). The
 r1 carrier, classes, bounding rule and surfaces are unchanged. r2 adds the store marker, its
 broker call and tests, and one QUICKSTART sentence block.
+
+**Round 2 (r2, `dad6beae`): BLOCKED, $0.2615.** Seats unchanged: oc-kimi-k3 **REJECT** ($0.1118),
+gpt6-1-sol **REJECT** ($0.0472), gemini-4-argon **REJECT** ($0.1026); claude benched; no seat absent.
+Artifact: `~/.ailang/state/mission-quorum-world/w-exec-failure-carries-a-reason-2026-11-06T21-55-19Z.json`.
+All three objections land on **one surface**, §3.7's mark-failure arm (r2: write the record without
+the line), as a silent fallback. None disputes the design direction (the `failure` field, the
+classes, the bounding rule, the lazy schema marker), and r1's two objections were not re-raised.
+
+- **gpt6-1-sol, verbatim fix:** "If MarkFailureLines fails, the broker must not downgrade the record
+  to the legacy shape or report a normally committed classified failure. It surfaces an explicit
+  persistence/compatibility error through the broker's verified storage-error path. Because the
+  handler may already have executed, this path must preserve debit/accounting invariants and must
+  not automatically rerun the effect." Plus fault-injection assertions in TV.
+- **gemini-4-argon, verbatim fix:** "if `MarkFailureLines` fails when a non-empty `reason` is present,
+  fail the broker record-write path and return the store error (just as a failed `putRecord` does)
+  rather than clearing `reason = ""` and continuing. Update §3.7, §4 Claim F, test TV, and
+  `MUT-MARK-ERROR-IGNORED` ... Also clean up the stale r1 note in §10's UNMEASURED row."
+- **oc-kimi-k3:** the same silent fallback; its fix keeps the line-free record but logs the
+  suppression. Its objection is the silence, which the gpt/gemini fix removes, because no record is
+  written and the error reaches the logged `Dispatch` error path.
+
+**r3 — controller narrow-refinement carve-out (iteration 360).** Every remaining objection carries a
+concrete reviewer-authored fix and none disputes the direction, so the controller applied the
+gpt/gemini fix (two of three seats, the same text) verbatim to §3.7, Claim F, TV and the mutation
+table, added MUT-MARK-FAIL-SILENT, and fixed the stale §10 note. Premise measured first-party by
+the controller at `77c9e3d4`: a failed `putRecord` after `Execute` returns `*OutcomeWriteError`
+(`broker.go:297–300`) with the grant already debited (`debitGrant`, `broker.go:260`, before
+`Execute` at `:261`) and nothing re-run; the coordinator handles `*OutcomeWriteError`
+(`effectful.go:184`), and a `Dispatch` error is logged (`mcp.go:131–133`). kimi's alternative
+(keep a line-free record and log a suppression) was not applied: it would still commit a failure
+without its line, which is what the other two seats rejected. The patch file stays at r2
+(`02259c3bdc1c942b`); the r3 delta (the mark-failure arm, TV's fault-injection rows and the new
+mutant) is pinned by the sprint plan. No re-quorum: the carve-out routes straight to the planner.
