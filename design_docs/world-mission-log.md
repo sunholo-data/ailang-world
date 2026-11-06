@@ -2380,3 +2380,15 @@ Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the 
 - NB1 (stamp 355 noted `db4623e7` green on attempt 2; 356 says only "all success") needs no change: both are true, and 355's stamp still says it. NB3 (the two retro slips have no evidence in the readings file) needs no change: they are self-reported, read-only and already-known classes, as the entry says.
 
 Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the record merge are recorded in the landing note.
+
+**Landing (iteration 356):**
+- **Gate 3b:** the record PR [#502](https://github.com/sunholo-data/ailang-world/pull/502) head `aa0867a6` (record `4aef6424` + judge follow-through) went green 3/3 over two bounded polls (the first 560 s poll hit its deadline with 2 jobs pending; the second read `ALL GREEN for aa0867a6…`). A first poller watching the superseded head `4aef6424` was stopped when the follow-through was pushed. Merge `0916628e` went green 3/3 on attempt 1, again over two bounded polls, confirmed by `gh run list` (`0916628e success attempt=1`). Issue #449 is still OPEN after the merge. The record is LANDED.
+- **Controller slip at merge:** the pre-merge `mergeable`/`mergeStateStatus` read failed (a jq quoting error under nested `bash -c` quotes) and the merge ran in the same call, so the merge rested on the green PR head and GitHub's own merge check rather than on a read of `MERGEABLE`/`CLEAN`. GitHub accepted it, and the merge commit went green, so nothing was harmed. The fix is to run that read as its own call before merging, as iteration 355 did.
+- **Stamps:** `gate-3b` ran before the follow-through commit, rc=0. `gate-5` ran after the merge went green, rc=0. `complete` runs after this landing merges.
+- **Reports sent:**
+  - #449: comment count 26 → 27 (`--body-file`; the count was re-read after posting).
+  - `controlplane`: tagged `[fyi]` because neither ask changed (`inbox_1793942938781_c8255f1d`). `read -peek -json` shows the body matches the digest exactly after trimming, and the message is still unread.
+  - Digest: 13 lines, 1,796 chars.
+- **Harness share** over log headings 337–356: 0 `[HARNESS]` of 20 (16 `[ADMIN]`, 2 `[PRODUCT-HYGIENE]`, 2 `[RELEASE-HYGIENE]`).
+- **Bar-moving check:** the last 3 landings (354, 355, 356) moved no clause. No DRIFT line, because no UNMET clause has a routable row: all 7 are MET.
+- **Next fire:** #449 should read 27 at Gate 0 (this report was the 27th comment; the landing posts none), with `transcript=2`. Entry 356's **Next** line already says 27.
