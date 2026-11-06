@@ -2306,3 +2306,14 @@ Gate stamps `gate-3b` and `gate-5`, and the record merge, are recorded in the la
 - NB1 (row 150's `[IN-SPRINT]` tag read as waiting on an attended step) needs no change: earlier iterations read it the same way and the entry says why. The inbox control (1,000 across all inboxes) is a different kind of reading from the 54 in `mission-world`; it only shows the reader works.
 
 Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the record merge are recorded in the landing note.
+
+**Landing (iteration 355):**
+- **Gate 3b:** the record PR [#500](https://github.com/sunholo-data/ailang-world/pull/500) head `68a1476f` (record `7a02abf7` + judge follow-through) went green 3/3 over two bounded polls (the first 560 s poll hit its deadline with 2 jobs pending; the second read `ALL GREEN`). The PR read `MERGEABLE`/`CLEAN` on that head right before the merge. Merge `36a8bb67` went green 3/3 on attempt 1, again over two bounded polls, confirmed by `gh run list` (`36a8bb67 success attempt=1`). Issue #449 is still OPEN after the merge. The record is LANDED.
+- **Stamps:** `gate-3b` ran before the follow-through commit, rc=0. `gate-5` ran after the merge went green, rc=0. `complete` runs after this landing merges.
+- **Reports sent:**
+  - #449: comment count 25 → 26 (`--body-file`; the count was re-read after posting).
+  - `controlplane`: tagged `[fyi]` because neither ask changed (`inbox_1793928402786_805197b0`). `read --peek` shows the body matches the digest exactly after trimming, and the message is still unread.
+  - Digest: 13 lines, 1,796 chars.
+- **Harness share** over log headings 336–355: 0 `[HARNESS]` of 20 (15 `[ADMIN]`, 2 `[PRODUCT-HYGIENE]`, 3 `[RELEASE-HYGIENE]`).
+- **Bar-moving check:** the last 3 landings (353, 354, 355) moved no clause. No DRIFT line, because no UNMET clause has a routable row: all 7 are MET.
+- **Next fire:** #449 should read 26 at Gate 0 (this report was the 26th comment; the landing posts none), with `transcript=2`. Entry 355's **Next** line already says 26.
