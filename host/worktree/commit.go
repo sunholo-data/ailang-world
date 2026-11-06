@@ -8,9 +8,17 @@ import (
 )
 
 // Commit stages only the named local paths, in bounded literal-pathspec
-// batches. Hooks and fsmonitor are disabled; signing and committer identity
-// remain the repository's own configuration.
+// batches. Hooks and fsmonitor are disabled.
 func Commit(ctx context.Context, git, dir, agent string, paths []string, messageParts ...string) (string, error) {
+	return CommitWithCommitter(ctx, git, dir, agent, "", paths, messageParts...)
+}
+
+// CommitWithCommitter applies an optional operator identity to this commit only.
+func CommitWithCommitter(ctx context.Context, git, dir, agent, committer string, paths []string, messageParts ...string) (string, error) {
+	name, email, err := ParseCommitter(committer)
+	if err != nil {
+		return "", err
+	}
 	if len(paths) == 0 {
 		return "", fmt.Errorf("worktree: no paths to commit")
 	}
@@ -33,8 +41,11 @@ func Commit(ctx context.Context, git, dir, agent string, paths []string, message
 			return "", err
 		}
 	}
-	args := []string{"-C", dir, "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null",
-		"commit", "--allow-empty", "--cleanup=verbatim", "--author", agent + " via AILANG World <ailang-world@invalid>"}
+	args := []string{"-C", dir, "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null"}
+	if committer != "" {
+		args = append(args, "-c", "user.name="+name, "-c", "user.email="+email)
+	}
+	args = append(args, "commit", "--allow-empty", "--cleanup=verbatim", "--author", agent+" via AILANG World <ailang-world@invalid>")
 	for _, part := range messageParts {
 		args = append(args, "-m", part)
 	}

@@ -55,19 +55,20 @@ type presetLaunch struct {
 	DeadlineS float64 `json:"deadline_s,omitempty"`
 }
 type launchPreset struct {
-	Schema  string            `json:"schema"`
-	Name    string            `json:"name"`
-	Repo    string            `json:"repo"`
-	Remote  string            `json:"remote"`
-	Base    string            `json:"base"`
-	Profile string            `json:"profile,omitempty"`
-	Agent   string            `json:"agent"`
-	Model   string            `json:"model,omitempty"`
-	TTLS    int64             `json:"ttl_s"`
-	Grants  []presetGrant     `json:"grants"`
-	Daemon  json.RawMessage   `json:"daemon,omitempty"`
-	Launch  *presetLaunch     `json:"launch,omitempty"`
-	Checks  []json.RawMessage `json:"checks,omitempty"`
+	Committer string            `json:"committer,omitempty"`
+	Schema    string            `json:"schema"`
+	Name      string            `json:"name"`
+	Repo      string            `json:"repo"`
+	Remote    string            `json:"remote"`
+	Base      string            `json:"base"`
+	Profile   string            `json:"profile,omitempty"`
+	Agent     string            `json:"agent"`
+	Model     string            `json:"model,omitempty"`
+	TTLS      int64             `json:"ttl_s"`
+	Grants    []presetGrant     `json:"grants"`
+	Daemon    json.RawMessage   `json:"daemon,omitempty"`
+	Launch    *presetLaunch     `json:"launch,omitempty"`
+	Checks    []json.RawMessage `json:"checks,omitempty"`
 }
 type resolvedPreset struct {
 	Name          string              `json:"name"`
@@ -379,6 +380,9 @@ func loadLaunchPreset(ctx context.Context, name, dir, profilesDir, workspaceRoot
 		return nil, err
 	}
 	if err := presetLayout(path, d.WorkspaceRoot); err != nil {
+		return nil, err
+	}
+	if _, _, err := worktree.ParseCommitter(p.Committer); err != nil {
 		return nil, err
 	}
 	if p.Agent != "claude" && p.Agent != "codex" {

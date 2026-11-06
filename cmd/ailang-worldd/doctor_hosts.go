@@ -148,9 +148,20 @@ func doctorHost(r *doctorReport, host, dir string) {
 		b, e := os.ReadFile(filepath.Join(dir, name))
 		sum := fmt.Sprintf("sha256:%x", sha256.Sum256(b))
 		expectedSum := fmt.Sprintf("sha256:%x", sha256.Sum256(expected[name]))
+		detail := name + ": launch config missing or digest differs; launch would be observed, not confined"
+		if name == "codex/config.toml" && e == nil && manifest.Files[name] == expectedSum {
+			lines, badLine := codexStateSuffix(expected[name], b)
+			if badLine == 0 {
+				if lines > 0 {
+					r.add(markOK, "host", fmt.Sprintf("codex/config.toml: World's config plus Codex state (%d lines)", lines), "")
+				}
+				continue
+			}
+			detail += fmt.Sprintf(" (line %d)", badLine)
+		}
 		if e != nil || manifest.Files[name] != sum || sum != expectedSum {
 			drift = true
-			r.add(markWarn, "host", name+": launch config missing or digest differs; launch would be observed, not confined", fix)
+			r.add(markWarn, "host", detail, fix)
 		}
 	}
 	if !drift {

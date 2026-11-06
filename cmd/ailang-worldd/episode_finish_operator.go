@@ -95,7 +95,7 @@ func finishOperatorPost(ctx context.Context, c *client, credentials, ep string, 
 	return nil
 }
 
-func finishProtected(ctx context.Context, start *store.EpisodeStart, credentials, profilesDir string, changed []string) ([]string, error) {
+func finishProfile(ctx context.Context, start *store.EpisodeStart, credentials, profilesDir string) (*broker.ExecProfile, error) {
 	var pinned launchPreset
 	if start.Preset.Bytes == "" || json.Unmarshal([]byte(start.Preset.Bytes), &pinned) != nil {
 		return nil, fmt.Errorf("the start record has no valid pinned preset bytes")
@@ -128,16 +128,35 @@ func finishProtected(ctx context.Context, start *store.EpisodeStart, credentials
 	if !found {
 		return nil, fmt.Errorf("episode %s has no live profile-bound credential", start.Episode)
 	}
-	var paths []string
-	for _, path := range changed {
-		if broker.MatchProtected(profile.Protected, path) {
-			paths = append(paths, path)
-		}
-	}
-	return paths, nil
+	return profile, nil
 }
 
-func finishPrompt(tty io.Writer, scope broker.FinishApprovalScope, title, body string, protected []string) {
+func finishProtectedPaths(profile *broker.ExecProfile, changed []string) []string {
+	var paths []string
+	if profile != nil {
+		for _, path := range changed {
+			if broker.MatchProtected(profile.Protected, path) {
+				paths = append(paths, path)
+			}
+		}
+	}
+	return paths
+}
+
+func finishProtected(ctx context.Context, start *store.EpisodeStart, credentials, profilesDir string, changed []string) ([]string, error) {
+	profile, err := finishProfile(ctx, start, credentials, profilesDir)
+	if err != nil {
+		return nil, err
+	}
+	return finishProtectedPaths(profile, changed), nil
+}
+
+func finishPrompt(tty io.Writer, scope broker.FinishApprovalScope, title, body string, protected []string, committer ...string) {
+	identity := ""
+	if len(committer) > 0 {
+		identity = committer[0]
+	}
+	fmt.Fprintf(tty, "committer: %s\n", displayCommitter(identity))
 	lines := strings.Split(body, "\n")
 	preview := strings.Join(lines[:min(6, len(lines))], "\n")
 	state := "draft"

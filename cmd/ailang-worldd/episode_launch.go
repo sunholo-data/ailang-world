@@ -413,7 +413,7 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 				return fail(err)
 			}
 		}
-		argv = interactiveLaunchArgv(host, start.Agent, start.Model, sessionID, contextText, prompt, grants)
+		argv = interactiveLaunchArgv(host, start.Agent, start.Model, sessionID, contextText, prompt, dir, grants)
 	}
 	for _, a := range append(append([]string{}, argv...), host) {
 		if strings.Contains(a, token) {

@@ -121,6 +121,13 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		return fail("episode "+ep+" has no start record", "finish runs the checks pinned at start", "start the next episode with ailang-worldd episode start --preset <name>")
 	}
 	start := rep.Start
+	var pinned launchPreset
+	if err := json.Unmarshal([]byte(start.Preset.Bytes), &pinned); err != nil {
+		return fail(err.Error(), "finish needs the pinned preset bytes", "inspect the start record")
+	}
+	if _, _, err := worktree.ParseCommitter(pinned.Committer); err != nil {
+		return fail(err.Error(), "finish needs a valid pinned committer", "inspect the start record")
+	}
 	if start.Preset.Name != *preset {
 		return fail(fmt.Sprintf("preset %s does not match start preset %s", *preset, start.Preset.Name), "finish must use the start preset", "use --preset "+start.Preset.Name)
 	}
@@ -243,17 +250,28 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		if err := validateFinishChecks(start.Checks, allowed, wt); err != nil {
 			return fail(err.Error(), "all checks must be valid before any runs", "fix checks in the next episode's preset")
 		}
+		profile, err := finishProfile(ctx, start, credentials, *profilesDir)
+		if err != nil {
+			return fail(err.Error(), "finish must use the start profile binding", "restore the pinned exec profile")
+		}
+		var checkEnv map[string]string
+		var checkPath []string
+		if profile != nil {
+			checkEnv, checkPath = profile.Env, profile.Path
+		}
 		for _, check := range start.Checks {
 			var r checkrun.Result
 			var runErr error
 			if check.Unsandboxed {
 				cwd := filepath.Join(wt, check.Cwd)
-				fmt.Fprintf(tty, "check %s runs the agent's code outside the sandbox: %s in %s\nRun this check? [y/N] ", check.Name, strings.Join(check.Argv, " "), cwd)
+				fmt.Fprintf(tty, "check %s runs the agent's code outside the sandbox: %s in %s\n", check.Name, strings.Join(check.Argv, " "), cwd)
+				fmt.Fprint(tty, finishProfileEnvLine(pinned.Profile, checkEnv, checkPath))
+				fmt.Fprint(tty, "Run this check? [y/N] ")
 				answer, _ := reader.ReadString('\n')
 				if strings.TrimSpace(answer) != "y" {
 					return fail("check "+check.Name+" declined", "unsandboxed code requires its own typed y", "run finish again when ready")
 				}
-				r, runErr = checkrun.Run(ctx, check.Argv, cwd, time.Duration(check.TimeoutS*float64(time.Second)))
+				r, runErr = checkrun.RunEnv(ctx, check.Argv, cwd, time.Duration(check.TimeoutS*float64(time.Second)), checkEnv, checkPath)
 			} else {
 				r, runErr = finishSandboxCheck(ctx, c, token, check)
 			}
@@ -310,10 +328,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 				passed++
 			}
 		}
-		protected, err = finishProtected(ctx, start, credentials, *profilesDir, changed)
-		if err != nil {
-			return fail(err.Error(), "finish must use the start profile binding", "restore the pinned exec profile")
-		}
+		protected = finishProtectedPaths(profile, changed)
 		paragraph := fmt.Sprintf("%s %s; %d calls; %d/%d checks passed; %d files changed.", start.Agent, start.Model, rep.TotalCalls, passed, len(results), len(changed))
 		if len(protected) > 0 {
 			paragraph += " Protected paths changed: " + strings.Join(protected, ", ") + "."
@@ -329,7 +344,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 				return fail(err.Error(), "the commit must pass the trial scrub", "choose safe commit text")
 			}
 		}
-		sha, err = worktree.Commit(ctx, git, wt, start.Agent, changed, actualTitle, paragraph, trailer)
+		sha, err = worktree.CommitWithCommitter(ctx, git, wt, start.Agent, pinned.Committer, changed, actualTitle, paragraph, trailer)
 		if err != nil {
 			return fail(err.Error(), "local git commit failed", "inspect git status before retrying")
 		}
@@ -391,7 +406,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		approval.Approval = rep.Finish.Approval
 		fmt.Fprintf(tty, "resuming under approval %s, expires in %d s\n", approval.Approval, scope.ExpiresAt-time.Now().Unix())
 	} else {
-		finishPrompt(tty, scope, actualTitle, rendered, protected)
+		finishPrompt(tty, scope, actualTitle, rendered, protected, pinned.Committer)
 		answer, _ := reader.ReadString('\n')
 		if strings.TrimSpace(answer) != "y" {
 			return fail("pull request declined", "opening a PR requires typed y at the terminal; commit kept at "+sha, steps(sha))
