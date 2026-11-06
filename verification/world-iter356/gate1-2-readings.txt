@@ -194,3 +194,11 @@ a6e112f9c
 count 0
 $ (control) unread from mission-world
 54
+
+## Driver move since iteration 355 (judge NB2 follow-through, 2026-11-06T04:55:42Z)
+$ git -C $AILANG_DRIVER_SRC log --oneline e4fcc15f6..a6e112f9c | wc -l
+1
+$ git -C $AILANG_DRIVER_SRC diff --stat e4fcc15f6 a6e112f9c -- .claude/skills/mission-control/ tools/launchd/ "scripts/mission_*.sh" | wc -l
+0
+$ (control) git -C $AILANG_DRIVER_SRC diff --stat e4fcc15f6 a6e112f9c | tail -1
+ 16 files changed, 912 insertions(+), 108 deletions(-)
