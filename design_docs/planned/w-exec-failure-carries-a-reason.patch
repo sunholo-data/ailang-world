@@ -1,0 +1,1184 @@
+diff --git a/cmd/ailang-worldd/call_failure_line_test.go b/cmd/ailang-worldd/call_failure_line_test.go
+new file mode 100644
+index 00000000..e235a8a2
+--- /dev/null
++++ b/cmd/ailang-worldd/call_failure_line_test.go
+@@ -0,0 +1,32 @@
++package main
++
++// Row 255 (design_docs/planned/w-exec-failure-carries-a-reason.md §5, TR):
++// `ailang-worldd call` prints a failed effect's failure line beside its
++// record, and an effect with no line prints as before.
++
++import (
++	"bytes"
++	"encoding/json"
++	"strings"
++	"testing"
++)
++
++func TestCallPrintsTheFailureLine(t *testing.T) {
++	const line = "seed-cache: GOCACHE: timed out after 9s"
++	for _, tc := range []struct{ text, want string }{
++		{`{"world":{"effects":[{"id":"e1","reason":"` + line + `","record":"sha256:1111","status":"failed"}],"plan":"sha256:2222"}}`,
++			"  effect     e1 failed sha256:1111 — " + line + "\n"},
++		{`{"world":{"effects":[{"id":"e1","record":"sha256:1111","status":"failed"}],"plan":"sha256:2222"}}`,
++			"  effect     e1 failed sha256:1111\n"},
++	} {
++		var fields map[string]json.RawMessage
++		if err := json.Unmarshal([]byte(tc.text), &fields); err != nil {
++			t.Fatal(err)
++		}
++		var out bytes.Buffer
++		printCallResult(&out, tc.text, fields)
++		if !strings.Contains(out.String(), tc.want) {
++			t.Fatalf("call printed:\n%s\nwant the line %q", out.String(), tc.want)
++		}
++	}
++}
+diff --git a/cmd/ailang-worldd/mcpclient.go b/cmd/ailang-worldd/mcpclient.go
+index c14886be..44c762de 100644
+--- a/cmd/ailang-worldd/mcpclient.go
++++ b/cmd/ailang-worldd/mcpclient.go
+@@ -624,6 +624,7 @@ func printCallResult(w io.Writer, text string, fields map[string]json.RawMessage
+ 			ID     string  `json:"id"`
+ 			Status string  `json:"status"`
+ 			Record *string `json:"record"`
++			Reason string  `json:"reason"`
+ 		} `json:"effects"`
+ 	}
+ 	if raw, ok := fields["world"]; !ok || json.Unmarshal(raw, &wb) != nil {
+@@ -639,6 +640,9 @@ func printCallResult(w io.Writer, text string, fields map[string]json.RawMessage
+ 		if e.Record != nil {
+ 			rec = *e.Record
+ 		}
++		if e.Reason != "" {
++			rec += " — " + elide(e.Reason) // row 255: the failure line
++		}
+ 		fmt.Fprintf(w, "  effect     %s %s %s\n", e.ID, e.Status, rec)
+ 	}
+ }
+diff --git a/cmd/ailang-worldd/why.go b/cmd/ailang-worldd/why.go
+index ddf8fa7a..472fcf08 100644
+--- a/cmd/ailang-worldd/why.go
++++ b/cmd/ailang-worldd/why.go
+@@ -909,6 +909,10 @@ func (r worldReader) buildChain(e wireEntry, result []byte) (whyChain, error) {
+ 			req, reqOK, _ := r.checkedObject(d.RequestRef.String(), broker.EffectRequestV1)
+ 			okAll = okAll && reqOK
+ 			resText := "no result"
++			if d.Failure != "" {
++				// Row 255: the failed record's bounded failure line.
++				resText = "no result: " + d.Failure
++			}
+ 			var delta *broker.WorktreeDelta
+ 			var protected json.RawMessage
+ 			execResult := false
+diff --git a/cmd/ailang-worldd/why_test.go b/cmd/ailang-worldd/why_test.go
+index 7f380beb..a48a01d3 100644
+--- a/cmd/ailang-worldd/why_test.go
++++ b/cmd/ailang-worldd/why_test.go
+@@ -125,6 +125,14 @@ func (r *walkRig) invokeResult(surface coordinator.Surface, episode, skill, task
+ }
+ 
+ func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill, task, content string, result []byte, effect string) synthInv {
++	r.t.Helper()
++	return r.invokeEffect(surface, episode, skill, task, content, result, effect, nil)
++}
++
++// invokeEffect is invokeEffectResult; a non-nil failure commits the effect as
++// failed instead (row 255): no result object, the record's failure line set to
++// *failure, and the world block's status "failed" with that reason.
++func (r *walkRig) invokeEffect(surface coordinator.Surface, episode, skill, task, content string, result []byte, effect string, failure *string) synthInv {
+ 	t := r.t
+ 	t.Helper()
+ 	by := "coordinator:" + string(surface)
+@@ -138,9 +146,21 @@ func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill
+ 	resObj := synthObject(broker.EffectResultV1, "host/broker", result)
+ 	rec := broker.EffectRecord{Effect: effect, Scope: "worktree", Cost: 1, BudgetBefore: 20, BudgetAfter: 19, Allowed: true,
+ 		RequestRef: hashref.MustParse(reqObj.Hash), ResultRef: hashref.MustParse(resObj.Hash)}
++	effects := []cliObject{reqObj, resObj}
++	if failure != nil {
++		rec.Failed, rec.ResultRef, rec.Failure = true, hashref.HashRef{}, *failure
++		effects = []cliObject{reqObj}
++	}
+ 	recObj := synthObject(broker.EffectRecordV1, "host/broker", broker.EncodeRecord(rec))
+ 	outputText := string(mustJSONT(t, map[string]any{"ok": true, "content": content,
+ 		"world": map[string]any{"plan": plan.Hash, "effects": []map[string]any{{"id": "e1", "status": "ok", "record": recObj.Hash}}}}))
++	if failure != nil {
++		fx := map[string]any{"id": "e1", "status": "failed", "record": recObj.Hash}
++		if *failure != "" {
++			fx["reason"] = *failure
++		}
++		outputText = string(mustJSONT(t, map[string]any{"world": map[string]any{"plan": plan.Hash, "effects": []map[string]any{fx}}}))
++	}
+ 	out := synthObject(coordinator.OutputV1, by, []byte(outputText))
+ 	id := coordinator.InvocationID(surface, episode, task)
+ 	fn := hashref.SumSHA256([]byte("fn-" + skill)).String()
+@@ -173,7 +193,8 @@ func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill
+ 		StateRoot string `json:"stateRoot"`
+ 		LogHead   string `json:"logHead"`
+ 	}{next.Revision, next.StateRoot, next.LogHead})).String()
+-	r.post(cliCommit{ObservedHead: r.tip.Ref, Objects: []cliObject{in, out, plan, reqObj, resObj, recObj, record}, NextWorld: next,
++	objects := append(append([]cliObject{in, out, plan}, effects...), recObj, record)
++	r.post(cliCommit{ObservedHead: r.tip.Ref, Objects: objects, NextWorld: next,
+ 		Entry: cliEntry{Header: hdr, EntryHash: entryHash, TransitionRef: record.Hash}})
+ 	inv := synthInv{id: id, episode: episode, record: record.Hash, input: in.Hash, output: out.Hash, plan: plan.Hash,
+ 		effect: recObj.Hash, result: resObj.Hash, outputText: outputText}
+@@ -421,6 +442,28 @@ func TestWhyShowsTheWorktreeDelta(t *testing.T) {
+ 	}
+ }
+ 
++// TestWhyShowsTheFailureLine is row 255's why arm (TW): a failed effect's
++// record line is printed on its effect link, the chain still verifies, and a
++// failed record from before row 255 (no line) prints exactly as before.
++func TestWhyShowsTheFailureLine(t *testing.T) {
++	r := newWalkRig(t)
++	line := "exec-stack-drift: srt archive @anthropic-ai/sandbox-runtime/dist/cli.js: changed since it was archived"
++	none := ""
++	withLine := r.invokeEffect(coordinator.SurfaceMCP, "ep1", "workspace-exec", "task-1", "", nil, broker.EffectWorkspaceExec, &line)
++	old := r.invokeEffect(coordinator.SurfaceMCP, "ep1", "workspace-exec", "task-2", "", nil, broker.EffectWorkspaceExec, &none)
++
++	code, stdout, stderr := whyRun(t, r.url, "", withLine.id)
++	assertChainOK(t, "failure line", code, stdout, stderr, 1)
++	if !strings.Contains(stdout, "e1 failed Workspace.Exec@worktree cost 1 budget 20→19") || !strings.Contains(stdout, "no result: "+line) {
++		t.Fatalf("why did not print the failure line %q on the effect link:\n%s", line, stdout)
++	}
++	code, stdout, stderr = whyRun(t, r.url, "", old.id)
++	assertChainOK(t, "no failure line", code, stdout, stderr, 2)
++	if !strings.Contains(stdout, "e1 failed Workspace.Exec@worktree") || strings.Contains(stdout, "no result:") {
++		t.Fatalf("a failed record with no line changed its why text:\n%s", stdout)
++	}
++}
++
+ // TestLogTailFollowPrintsEachCommitOnce is AC2.4 (kills MUT-FOLLOW-SKIP):
+ // with --follow running from the head, three commits made one at a time are
+ // each printed exactly once, in order.
+diff --git a/docs/QUICKSTART.md b/docs/QUICKSTART.md
+index 2fb87fd6..bc58a0aa 100644
+--- a/docs/QUICKSTART.md
++++ b/docs/QUICKSTART.md
+@@ -893,6 +893,17 @@ the sandbox:
+ A command runs for at most `timeout_ms`, which is at most 9000, inside the 10-second handler cap.
+ So a profile names targeted commands (one package, one test file, a type check), not full suites.
+ 
++**When a call fails** (row 255). A call World could not run answers with no output fields. Its
++`world.effects[0]` has `"status": "failed"` and a `"reason"`: one line of at most 200 bytes, a
++class and then a detail, for example `seed-cache: GOCACHE: timed out after 9s`. The classes are
++`exec-misrouted`, `exec-tools`, `exec-stack-drift`, `exec-settings-drift`, `project-root`,
++`exec-cache`, `seed-cache`, `time-budget-spent`, `cleanup-incomplete` and `sandbox-start`. The
++same line is the effect record's `failure` field, ends `why`'s effect link (`no result: <line>`)
++and is logged once per call (`ailang-worldd: mcp effect failed: <call> e1 <record>: <line>`). It
++names a file only as a successful result already does (`argv0`, `node`), relative to the srt
++archive, or by its base name. A refusal is different: `{"ok": false, "refused": …}` means World
++would not run the command, and nothing failed.
++
+ **Install and pin srt.** World accepts exactly srt 0.0.78 whose `dist/cli.js` hashes to the pin
+ below (`design_docs/verification/world-row140-m0/pin.json`). `serve` refuses any other. Keep srt,
+ your profiles and your cache seeds **outside** the workspace root and the state dir:
+diff --git a/host/broker/broker.go b/host/broker/broker.go
+index 2e19494e..dd889417 100644
+--- a/host/broker/broker.go
++++ b/host/broker/broker.go
+@@ -138,11 +138,14 @@ func (e *DenialError) Error() string {
+ 
+ // EffectFailedError reports a dispatched handler failure after its immutable
+ // failure record has been persisted. Live errors unwrap the handler's detail;
+-// replay errors are reconstructed from the record alone and do not.
++// replay errors are reconstructed from the record alone and do not. Reason is
++// the record's failure line (row 255), live and on replay alike: "" unless
++// the handler returned a *HandlerFailure.
+ type EffectFailedError struct {
+ 	Effect    string
+ 	Scope     string
+ 	RecordRef hashref.HashRef
++	Reason    string
+ 	cause     error
+ }
+ 
+@@ -289,10 +292,15 @@ func (s *Session) invoke(
+ 			// SM.C's read-only reconciliation may resolve the receipt.
+ 			return nil, hashref.HashRef{}, err
+ 		}
++		reason := ""
++		var classified *HandlerFailure
++		if errors.As(err, &classified) {
++			reason = classified.Line()
++		}
+ 		rec := EffectRecord{
+ 			Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
+ 			BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining,
+-			Allowed: true, Failed: true, RequestRef: requestRef,
++			Allowed: true, Failed: true, RequestRef: requestRef, Failure: reason,
+ 		}
+ 		ref, putErr := s.putRecord(post, rec)
+ 		if putErr != nil {
+@@ -305,7 +313,7 @@ func (s *Session) invoke(
+ 				Err: fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)}
+ 		}
+ 		return nil, ref, &EffectFailedError{
+-			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, cause: err,
++			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, Reason: reason, cause: err,
+ 		}
+ 	}
+ 	resultObj := resultObject(result)
+@@ -388,7 +396,7 @@ func requestObject(req EffectRequest, payload []byte) store.Object {
+ }
+ 
+ func (s *Session) putRecord(ctx context.Context, rec EffectRecord) (hashref.HashRef, error) {
+-	if !RecordConsistent(rec) {
++	if !RecordConsistent(rec) || !FailureConsistent(rec) {
+ 		return hashref.HashRef{}, errors.New("broker: refuses inconsistent effect record")
+ 	}
+ 	obj := recordObject(rec)
+@@ -440,7 +448,7 @@ func (s *Session) invokeReplay(
+ 			s.debitGrant(grantIndex, decision.Remaining)
+ 			s.next++
+ 			return nil, recordRef, &EffectFailedError{
+-				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef,
++				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef, Reason: rec.Failure,
+ 			}
+ 		}
+ 		resultObj, ok, err := s.store.GetObject(ctx, rec.ResultRef)
+diff --git a/host/broker/failure.go b/host/broker/failure.go
+new file mode 100644
+index 00000000..bc8ae0b0
+--- /dev/null
++++ b/host/broker/failure.go
+@@ -0,0 +1,189 @@
++package broker
++
++// Row 255 (design_docs/planned/w-exec-failure-carries-a-reason.md): a handler
++// failure that carries a bounded, recordable reason. The broker records
++// Line() in the failed effect record's `failure` field; the coordinator
++// returns the same line in the caller's world block, and `why` prints it.
++// Only a *HandlerFailure has a line: any other handler error records as
++// before, byte for byte.
++
++import (
++	"errors"
++	"path/filepath"
++	"strconv"
++	"strings"
++	"time"
++	"unicode"
++	"unicode/utf8"
++)
++
++// FailureLineMax bounds a failure line in bytes, ellipsis included.
++const FailureLineMax = 200
++
++// The Workspace.Exec failure classes (§3.2). The set is closed: FailureLine
++// answers "" for any other class, so nothing unclassified is recorded.
++const (
++	FailExecMisrouted     = "exec-misrouted"
++	FailExecTools         = "exec-tools"
++	FailExecStackDrift    = "exec-stack-drift"
++	FailExecSettingsDrift = "exec-settings-drift"
++	FailProjectRoot       = "project-root"
++	FailExecCache         = "exec-cache"
++	FailSeedCache         = "seed-cache"
++	FailTimeBudgetSpent   = "time-budget-spent"
++	FailCleanupIncomplete = "cleanup-incomplete"
++	FailSandboxStart      = "sandbox-start"
++)
++
++var failureClasses = map[string]bool{
++	FailExecMisrouted: true, FailExecTools: true, FailExecStackDrift: true, FailExecSettingsDrift: true,
++	FailProjectRoot: true, FailExecCache: true, FailSeedCache: true, FailTimeBudgetSpent: true,
++	FailCleanupIncomplete: true, FailSandboxStart: true,
++}
++
++// HandlerFailure is a handler error with a class and a detail built from
++// World's own words and disclosed paths. Error and Unwrap are the cause's, so
++// every caller that matches on the cause is unchanged; only Line is recorded.
++type HandlerFailure struct {
++	Class  string
++	Detail string
++	Err    error
++}
++
++func (f *HandlerFailure) Error() string {
++	if f.Err == nil {
++		return f.Line()
++	}
++	return f.Err.Error()
++}
++
++func (f *HandlerFailure) Unwrap() error { return f.Err }
++
++// Line is the recorded, returned and logged reason.
++func (f *HandlerFailure) Line() string { return FailureLine(f.Class, f.Detail) }
++
++// FailureLine is the pure bounding rule: a known class, then ": " and the
++// detail on one line (control and format characters, such as a bidi
++// override, and runs of spaces become one space; invalid UTF-8 becomes "?"),
++// cut at a rune boundary to
++// FailureLineMax bytes with a trailing "…". An unknown class gives "".
++func FailureLine(class, detail string) string {
++	if !failureClasses[class] {
++		return ""
++	}
++	line := class
++	clean := strings.Map(func(r rune) rune {
++		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {
++			return ' '
++		}
++		return r
++	}, strings.ToValidUTF8(detail, "?"))
++	if d := strings.Join(strings.Fields(clean), " "); d != "" {
++		line += ": " + d
++	}
++	if len(line) <= FailureLineMax {
++		return line
++	}
++	const ellipsis = "…"
++	cut := FailureLineMax - len(ellipsis)
++	for cut > 0 && !utf8.RuneStart(line[cut]) {
++		cut--
++	}
++	return strings.TrimRight(line[:cut], " ") + ellipsis
++}
++
++// ValidFailureLine is true when s is a line FailureLine can produce: it is a
++// fixed point of the rule. A record whose line is not refuses to decode.
++func ValidFailureLine(s string) bool {
++	class, detail, _ := strings.Cut(s, ": ")
++	return s != "" && FailureLine(class, detail) == s
++}
++
++// execDisclosed is what an exec failure line may name verbatim: the paths a
++// successful Workspace.Exec result already returns to the agent (§4.5:
++// profile.argv0 and argv0_target, sandbox.node and node_target). A path under
++// the srt archive is named relative to it; any other path by its base name.
++type execDisclosed struct {
++	archive string
++	paths   []string
++}
++
++func (h *ExecHandler) disclosed(sb *ExecSandbox, cmd ExecProfileCommand) execDisclosed {
++	if sb == nil {
++		sb = h.sandbox
++	}
++	return execDisclosed{archive: sb.Dir, paths: []string{sb.Node, sb.NodeConfigured, cmd.Argv0, cmd.ConfiguredArgv0}}
++}
++
++func (d execDisclosed) name(p string) string {
++	for _, k := range d.paths {
++		if k != "" && p == k {
++			return p
++		}
++	}
++	if d.archive != "" {
++		if p == d.archive {
++			return "srt archive"
++		}
++		if rel, err := filepath.Rel(d.archive, p); err == nil && rel != ".." && !strings.HasPrefix(rel, "../") {
++			return "srt archive " + filepath.ToSlash(rel)
++		}
++	}
++	return filepath.Base(p)
++}
++
++// execFailure is Execute's one classification point. class and detail name
++// the step that stopped; a typed cause overrides them with its own class and a
++// detail from fixed words and disclosed paths. err's text never reaches the line.
++func execFailure(class, detail string, err error, d execDisclosed) *HandlerFailure {
++	var hf *HandlerFailure
++	var drift *ExecStackDriftError
++	var settings *ExecSettingsError
++	switch {
++	case errors.As(err, &hf):
++		return hf
++	case errors.As(err, &drift):
++		return &HandlerFailure{Class: FailExecStackDrift, Detail: d.name(drift.Path) + ": " + driftWhat(drift.Why), Err: err}
++	case errors.As(err, &settings):
++		return &HandlerFailure{Class: FailExecSettingsDrift, Detail: filepath.Base(settings.Path) + ": " + settingsWhat(settings.Why), Err: err}
++	}
++	return &HandlerFailure{Class: class, Detail: detail, Err: err}
++}
++
++// driftWhat maps an ExecStackDriftError's Why to fixed words: verifyArchive's
++// three own phrases pass, a digest mismatch is "digest changed", and anything
++// else (an OS error, which names host paths) is "unreadable".
++func driftWhat(why string) string {
++	switch {
++	case why == "changed since it was archived", why == "missing from the archive", why == "not in the archived manifest":
++		return why
++	case strings.HasPrefix(why, "sha256 "):
++		return "digest changed"
++	}
++	return "unreadable"
++}
++
++func settingsWhat(why string) string {
++	switch {
++	case strings.HasPrefix(why, "mode "):
++		return "not a regular 0600 file"
++	case why == "its bytes differ from the canonical rendering":
++		return "bytes differ from World's rendering"
++	}
++	return "unreadable"
++}
++
++// seedWhat names how a seed copy failed, from the run error's type only.
++func seedWhat(err error) string {
++	var timeout *HandlerTimeoutError
++	code, exited := handlerExitStatus(err)
++	switch {
++	case errors.As(err, &timeout):
++		return "timed out after " + timeout.Timeout.Round(time.Millisecond).String()
++	case cleanupIncomplete(err):
++		return "the copy was not reaped"
++	case exited:
++		return "the copy exited " + strconv.Itoa(code)
++	}
++	return "the copy could not run"
++}
+diff --git a/host/broker/failure_test.go b/host/broker/failure_test.go
+new file mode 100644
+index 00000000..f0860593
+--- /dev/null
++++ b/host/broker/failure_test.go
+@@ -0,0 +1,278 @@
++package broker
++
++// Row 255 (design_docs/planned/w-exec-failure-carries-a-reason.md §5): the
++// failure line's pure rule (TL), its record codec (TG), the classifier (TK)
++// and one Execute-driven case per reachable class through a live broker
++// session (TX).
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++	"time"
++	"unicode/utf8"
++
++	"github.com/sunholo-data/ailang-world/host/hashref"
++	"github.com/sunholo-data/ailang-world/host/procbound"
++)
++
++// TL: the bounding rule.
++func TestFailureLineBoundsAndSanitises(t *testing.T) {
++	if len(failureClasses) != 10 {
++		t.Fatalf("failure classes = %d, want the closed set of 10", len(failureClasses))
++	}
++	long := strings.Repeat("é", 300)
++	for _, tc := range []struct{ class, detail, want string }{
++		{FailExecStackDrift, "/opt/node: digest changed", "exec-stack-drift: /opt/node: digest changed"},
++		{FailTimeBudgetSpent, "", "time-budget-spent"},
++		{FailSeedCache, "  GOCACHE:\n timed\tout\x00 after 9s \r", "seed-cache: GOCACHE: timed out after 9s"},
++		{FailExecTools, "bad \xff byte", "exec-tools: bad ? byte"},
++		{FailProjectRoot, "evil\u202egnp.txt\u2028next", "project-root: evil gnp.txt next"},
++		{"not-a-class", "anything", ""},
++		{"", "", ""},
++	} {
++		if got := FailureLine(tc.class, tc.detail); got != tc.want {
++			t.Errorf("FailureLine(%q, %q) = %q, want %q", tc.class, tc.detail, got, tc.want)
++		}
++		if tc.want != "" && !ValidFailureLine(tc.want) {
++			t.Errorf("ValidFailureLine(%q) = false for a line the rule produced", tc.want)
++		}
++	}
++	cut := FailureLine(FailProjectRoot, long)
++	if len(cut) > FailureLineMax || !strings.HasSuffix(cut, "…") || !utf8.ValidString(cut) || !ValidFailureLine(cut) {
++		t.Fatalf("long line = %d bytes %q; want ≤ %d, ending …, valid UTF-8, a fixed point", len(cut), cut, FailureLineMax)
++	}
++	for _, bad := range []string{"", "nope: x", "exec-tools: a\nb", "exec-tools:  two spaces", "exec-tools: " + long} {
++		if ValidFailureLine(bad) {
++			t.Errorf("ValidFailureLine(%q) = true", bad)
++		}
++	}
++}
++
++// TG: the record codec. A failed record's line rides in an optional last
++// field; every other record keeps its bytes (TestRecordGoldenBytes).
++func TestRecordFailureGoldenBytes(t *testing.T) {
++	rec := EffectRecord{
++		Effect: "Workspace.Exec", Scope: "worktree", Cost: 1, BudgetBefore: 5, BudgetAfter: 4,
++		Allowed: true, Failed: true, RequestRef: hashref.SumSHA256([]byte("request")),
++		Failure: "seed-cache: GOCACHE: timed out after 9s",
++	}
++	const want = `{"effect":"Workspace.Exec","scope":"worktree","cost":1,"budgetBefore":5,"budgetAfter":4,"allowed":true,"failed":true,"denial":"","requestRef":"sha256:1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047","resultRef":"","failure":"seed-cache: GOCACHE: timed out after 9s"}`
++	if got := string(EncodeRecord(rec)); got != want {
++		t.Fatalf("golden bytes differ:\ngot  %s\nwant %s", got, want)
++	}
++	back, err := DecodeRecord([]byte(want))
++	if err != nil || back != rec {
++		t.Fatalf("round trip = %#v, %v", back, err)
++	}
++	for name, payload := range map[string]string{
++		"on a success": strings.Replace(strings.Replace(want, `"failed":true`, `"failed":false`, 1), `"resultRef":""`,
++			`"resultRef":"sha256:f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68"`, 1),
++		"on a denial":       strings.Replace(strings.Replace(want, `"allowed":true,"failed":true,"denial":""`, `"allowed":false,"failed":false,"denial":"denied:budget"`, 1), `"budgetAfter":4`, `"budgetAfter":5`, 1),
++		"not a fixed point": strings.Replace(want, `GOCACHE: timed`, `GOCACHE:  timed`, 1),
++		"unknown class":     strings.Replace(want, `"failure":"seed-cache:`, `"failure":"seed-cash:`, 1),
++	} {
++		if _, err := DecodeRecord([]byte(payload)); err == nil || !strings.Contains(err.Error(), "failure") {
++			t.Errorf("%s: DecodeRecord(%s) = %v, want a failure-line refusal", name, payload, err)
++		}
++	}
++}
++
++// TK: the classifier, with no process run. A typed cause overrides the step;
++// the line names only disclosed paths; err's text never reaches it.
++func TestExecFailureClassifies(t *testing.T) {
++	d := execDisclosed{archive: "/state/archive/x/node_modules", paths: []string{"/opt/node", "", "/usr/bin/go", ""}}
++	secret := errors.New("open /Users/op/.secret/token: permission denied")
++	for _, tc := range []struct {
++		name          string
++		class, detail string
++		err           error
++		want          string
++	}{
++		{"archive file", FailExecStackDrift, "unreadable",
++			&ExecStackDriftError{Path: "/state/archive/x/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js", Why: "changed since it was archived"},
++			"exec-stack-drift: srt archive @anthropic-ai/sandbox-runtime/dist/cli.js: changed since it was archived"},
++		{"node digest", FailExecStackDrift, "unreadable", &ExecStackDriftError{Path: "/opt/node", Why: "sha256 sha256:aa, verified as sha256:bb"},
++			"exec-stack-drift: /opt/node: digest changed"},
++		{"undisclosed path, os error", FailExecStackDrift, "unreadable", &ExecStackDriftError{Path: "/Users/op/lib/libnode.dylib", Why: secret.Error()},
++			"exec-stack-drift: libnode.dylib: unreadable"},
++		{"drift through resolve", FailExecTools, "the per-call re-check of the exec tools failed",
++			fmt.Errorf("wrapped: %w", &ExecStackDriftError{Path: "/usr/bin/go", Why: "missing from the archive"}),
++			"exec-stack-drift: /usr/bin/go: missing from the archive"},
++		{"settings mode", FailExecSettingsDrift, "unreadable", &ExecSettingsError{Path: "/state/exec/ep1.proj.srt.json", Why: "mode -rw-r--r--, want a regular 0600 file"},
++			"exec-settings-drift: ep1.proj.srt.json: not a regular 0600 file"},
++		{"already classified", FailExecCache, "the episode cache cannot be prepared",
++			&HandlerFailure{Class: FailSeedCache, Detail: "GOCACHE: " + seedWhat(&HandlerTimeoutError{Timeout: 9200 * time.Millisecond}), Err: secret},
++			"seed-cache: GOCACHE: timed out after 9.2s"},
++		{"cleanup incomplete", FailCleanupIncomplete, "the command's processes were not all reaped",
++			fmt.Errorf("run: %w", procbound.ErrCleanupIncomplete), "cleanup-incomplete: the command's processes were not all reaped"},
++		{"untyped cause", FailSandboxStart, "the sandbox could not be started", secret, "sandbox-start: the sandbox could not be started"},
++	} {
++		got := execFailure(tc.class, tc.detail, tc.err, d)
++		if got.Line() != tc.want || strings.Contains(got.Line(), "/Users/op") {
++			t.Errorf("%s: line %q, want %q", tc.name, got.Line(), tc.want)
++		}
++		if !errors.Is(got, tc.err) && got != tc.err {
++			t.Errorf("%s: the failure does not unwrap to its cause", tc.name)
++		}
++	}
++	for _, tc := range []struct {
++		err  error
++		want string
++	}{
++		{&HandlerTimeoutError{Timeout: time.Millisecond}, "timed out after 1ms"},
++		{errors.Join(&HandlerTimeoutError{Timeout: 9 * time.Second}, procbound.ErrCleanupIncomplete), "timed out after 9s"},
++		{procbound.ErrCleanupIncomplete, "the copy was not reaped"},
++		{errors.New("start: no such file"), "the copy could not run"},
++	} {
++		if got := seedWhat(tc.err); got != tc.want {
++			t.Errorf("seedWhat(%v) = %q, want %q", tc.err, got, tc.want)
++		}
++	}
++}
++
++// expiredCtx answers Execute with an already-expired context, so the budget
++// and seed classes are reached through a live broker session (whose own
++// store writes need a live context).
++type expiredCtx struct{ h *ExecHandler }
++
++func (e expiredCtx) Execute(_ context.Context, req EffectRequest, payload []byte) ([]byte, error) {
++	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
++	defer cancel()
++	return e.h.Execute(ctx, req, payload)
++}
++
++// TX: one Execute-driven case per reachable class. Each failure is recorded
++// with its line, returned as EffectFailedError.Reason, and keeps the cause's
++// own error text; no line names the state dir or the operator HOME.
++func TestExecFailureClassesReachTheRecord(t *testing.T) {
++	seedProfile := func(seed string) func(m map[string]any) {
++		return func(m map[string]any) { m["caches"] = map[string]any{"GOCACHE": map[string]any{"seed": seed}} }
++	}
++	for _, tc := range []struct {
++		name    string
++		opts    func(t *testing.T) execFixtureOpts
++		build   func(t *testing.T) *execFixture // instead of newExecFixture(opts)
++		mutate  func(t *testing.T, f *execFixture) Handler
++		scope   string
++		want    func(f *execFixture) string
++		errText func(f *execFixture) string // a substring the cause's own text keeps
++	}{
++		{name: "exec-misrouted", scope: "/",
++			want: func(*execFixture) string { return "exec-misrouted: Workspace.Exec@/" }},
++		{name: "exec-tools", build: func(t *testing.T) *execFixture {
++			m := newMovingExec(t, execFixtureOpts{})
++			m.state.Close()
++			return m.f
++		}, want: func(*execFixture) string { return "exec-tools: the per-call re-check of the exec tools failed" },
++			errText: func(*execFixture) string { return "closed" }},
++		{name: "exec-stack-drift archive", mutate: func(t *testing.T, f *execFixture) Handler {
++			flipByte(t, f.sandbox.CLI())
++			return f.h
++		}, want: func(*execFixture) string {
++			return "exec-stack-drift: srt archive @anthropic-ai/sandbox-runtime/dist/cli.js: changed since it was archived"
++		}, errText: func(f *execFixture) string { return f.sandbox.CLI() }},
++		{name: "exec-stack-drift node", mutate: func(t *testing.T, f *execFixture) Handler {
++			flipByte(t, f.sandbox.Node)
++			return f.h
++		}, want: func(f *execFixture) string { return "exec-stack-drift: " + f.sandbox.Node + ": digest changed" },
++			errText: func(f *execFixture) string { return f.sandbox.Node }},
++		{name: "exec-settings-drift", mutate: func(t *testing.T, f *execFixture) Handler {
++			if err := os.WriteFile(filepath.Join(f.state, "exec", "ep1.proj.srt.json"), []byte(`{"filesystem":{}}`), 0o600); err != nil {
++				t.Fatal(err)
++			}
++			return f.h
++		}, want: func(*execFixture) string {
++			return "exec-settings-drift: ep1.proj.srt.json: bytes differ from World's rendering"
++		}, errText: func(f *execFixture) string { return filepath.Join(f.state, "exec", "ep1.proj.srt.json") }},
++		{name: "project-root", opts: func(*testing.T) execFixtureOpts {
++			return execFixtureOpts{profile: func(m map[string]any) { m["root"] = "missing" }}
++		}, want: func(*execFixture) string {
++			return `project-root: root "missing" is not a directory inside the worktree`
++		}},
++		{name: "exec-cache", mutate: func(t *testing.T, f *execFixture) Handler {
++			if err := os.MkdirAll(filepath.Dir(f.cache), 0o700); err != nil {
++				t.Fatal(err)
++			}
++			if err := os.WriteFile(f.cache, []byte("a file where the cache dir goes"), 0o600); err != nil {
++				t.Fatal(err)
++			}
++			return f.h
++		}, want: func(*execFixture) string { return "exec-cache: home: cannot be created" }},
++		{name: "seed-cache exited", opts: func(t *testing.T) execFixtureOpts {
++			return execFixtureOpts{profile: seedProfile(filepath.Join(canonicalTempDir(t), "no-such-seed"))}
++		}, want: func(*execFixture) string { return "seed-cache: GOCACHE: the copy exited 1" }},
++		{name: "seed-cache timed out", opts: func(t *testing.T) execFixtureOpts {
++			seed := filepath.Join(canonicalTempDir(t), "seed")
++			if err := os.MkdirAll(seed, 0o755); err != nil {
++				t.Fatal(err)
++			}
++			return execFixtureOpts{profile: seedProfile(seed)}
++		}, mutate: func(_ *testing.T, f *execFixture) Handler { return expiredCtx{f.h} },
++			want: func(*execFixture) string { return "seed-cache: GOCACHE: timed out after 1ms" }},
++		{name: "time-budget-spent", mutate: func(_ *testing.T, f *execFixture) Handler { return expiredCtx{f.h} },
++			want: func(*execFixture) string {
++				return `time-budget-spent: the call's time was spent before "test" could start`
++			}, errText: func(*execFixture) string { return "budget is spent" }},
++		{name: "sandbox-start", mutate: func(t *testing.T, f *execFixture) Handler {
++			if err := os.Chmod(f.sandbox.Node, 0o644); err != nil {
++				t.Fatal(err)
++			}
++			return f.h
++		}, want: func(*execFixture) string { return "sandbox-start: the sandbox could not be started" },
++			errText: func(*execFixture) string { return "start handler subprocess" }},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			opts := execFixtureOpts{}
++			if tc.opts != nil {
++				opts = tc.opts(t)
++			}
++			var f *execFixture
++			if tc.build != nil {
++				f = tc.build(t)
++			} else {
++				f = newExecFixture(t, opts)
++			}
++			var h Handler = f.h
++			if tc.mutate != nil {
++				h = tc.mutate(t, f)
++			}
++			scope := WorkspaceScope
++			if tc.scope != "" {
++				scope = tc.scope
++			}
++			st := openTestStore(t)
++			recording := &cfj2RecordingStore{base: st}
++			s := newSession(recording, "ep1", []Capability{{Effect: EffectWorkspaceExec, Scope: scope, ExpiresAt: 100, Budget: 5}},
++				Registry{EffectWorkspaceExec: h}, Live, nil)
++			payload, _ := json.Marshal(map[string]any{"command": "test", "args": []string{"a"}})
++			_, ref, err := s.Invoke(boundedTestContext(t), EffectRequest{Effect: EffectWorkspaceExec, Scope: scope, Cost: 1, Now: 1}, payload)
++			var failed *EffectFailedError
++			if !errors.As(err, &failed) {
++				t.Fatalf("Invoke = %v, want *EffectFailedError", err)
++			}
++			want := tc.want(f)
++			if failed.Reason != want {
++				t.Fatalf("EffectFailedError.Reason = %q, want %q (cause: %v)", failed.Reason, want, errors.Unwrap(failed))
++			}
++			if len(recording.records) != 1 || recording.records[0].Hash != ref {
++				t.Fatalf("records %d, want the one failure record %s", len(recording.records), ref)
++			}
++			rec, err := DecodeRecord(recording.records[0].Payload)
++			if err != nil || !rec.Allowed || !rec.Failed || rec.Failure != want || !RecordConsistent(rec) {
++				t.Fatalf("record = %#v, %v; want failed with failure %q", rec, err, want)
++			}
++			if strings.Contains(want, f.state) || strings.Contains(want, f.home) {
++				t.Fatalf("line %q names the state dir or the operator HOME", want)
++			}
++			if tc.errText != nil && !strings.Contains(errors.Unwrap(failed).Error(), tc.errText(f)) {
++				t.Fatalf("cause text %q lost %q", errors.Unwrap(failed).Error(), tc.errText(f))
++			}
++		})
++	}
++}
+diff --git a/host/broker/handlers_exec.go b/host/broker/handlers_exec.go
+index d771be3c..60d2fcf4 100644
+--- a/host/broker/handlers_exec.go
++++ b/host/broker/handlers_exec.go
+@@ -248,12 +248,16 @@ type execResultSandbox struct {
+ 	Network        string `json:"network"`
+ }
+ 
++// Execute answers one Workspace.Exec call. Every error it returns is a
++// *HandlerFailure (row 255): the broker records its bounded line, and the
++// caller's world block and `why` carry the same line.
+ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []byte) ([]byte, error) {
+-	if req.Effect != EffectWorkspaceExec {
+-		return nil, fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
+-	}
+-	if req.Scope != WorkspaceScope {
+-		return nil, fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
++	if req.Effect != EffectWorkspaceExec || req.Scope != WorkspaceScope {
++		err := fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
++		if req.Effect == EffectWorkspaceExec {
++			err = fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
++		}
++		return nil, execFailure(FailExecMisrouted, req.Effect+"@"+req.Scope, err, h.disclosed(nil, ExecProfileCommand{}))
+ 	}
+ 	// Gate 2 (§4.2): the profile and the grammar, before anything runs.
+ 	id, args, why := parseExecPayload(payload)
+@@ -274,7 +278,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
+ 		var why string
+ 		sandbox, profile, why, err = h.tools.resolve(ctx, h.profile.Project, h.worktree)
+ 		if err != nil {
+-			return nil, err
++			return nil, execFailure(FailExecTools, "the per-call re-check of the exec tools failed", err, h.disclosed(nil, cmd))
+ 		}
+ 		if why != "" {
+ 			return execRefusal(why)
+@@ -287,21 +291,22 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
+ 	emitted := EmitExecArgs(cmd.ExecCommand, normalized)
+ 	// §4.6: the stack that sets up the fence is re-verified before EACH call;
+ 	// a mismatch is a failure naming the file, with nothing spawned.
++	seen := h.disclosed(sandbox, cmd)
+ 	if err := sandbox.Verify(); err != nil {
+-		return nil, err
++		return nil, execFailure(FailExecStackDrift, "unreadable", err, seen)
+ 	}
+ 	if err := verifyFileDigest(cmd.Argv0, cmd.Argv0SHA256); err != nil {
+-		return nil, err
++		return nil, execFailure(FailExecStackDrift, "unreadable", err, seen)
+ 	}
+ 	if err := verifyExecSettings(h.settingsPath, h.settings); err != nil {
+-		return nil, err
++		return nil, execFailure(FailExecSettingsDrift, "unreadable", err, seen)
+ 	}
+ 	cwd, err := h.projectDir()
+ 	if err != nil {
+-		return nil, err
++		return nil, execFailure(FailProjectRoot, fmt.Sprintf("root %q is not a directory inside the worktree", h.profile.Root), err, seen)
+ 	}
+ 	if err := h.prepareCache(ctx); err != nil {
+-		return nil, err
++		return nil, execFailure(FailExecCache, "the episode cache cannot be prepared", err, seen)
+ 	}
+ 	deadline, hasDeadline := ctx.Deadline()
+ 	var before protectedCheck
+@@ -312,7 +317,8 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
+ 	}
+ 	budget := execChildBudget(time.Duration(h.profile.TimeoutMS)*time.Millisecond, deadline, hasDeadline, time.Now(), reserve)
+ 	if budget <= 0 {
+-		return nil, fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id)
++		return nil, execFailure(FailTimeBudgetSpent, fmt.Sprintf("the call's time was spent before %q could start", id),
++			fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id), seen)
+ 	}
+ 	launch := h.launch(append(append([]string{cmd.Argv0}, cmd.Argv[1:]...), emitted...), true)
+ 	capture := newCaptureHeadTail(execHeadBytes, execTailBytes, h.maxOutput)
+@@ -353,7 +359,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
+ 			Runtime: ExecSandboxPackage, Version: sandbox.Version, CLISHA256: sandbox.CLISHA256,
+ 			SettingsDigest: h.settingsDigest, ReadFence: true, Network: "none"}}
+ 	if cleanupIncomplete(runErr) {
+-		return nil, runErr
++		return nil, execFailure(FailCleanupIncomplete, "the command's processes were not all reaped", runErr, seen)
+ 	}
+ 	switch code, exited := handlerExitStatus(runErr); {
+ 	case runErr == nil:
+@@ -367,7 +373,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
+ 	case exited:
+ 		res.ExitCode = &code
+ 	default:
+-		return nil, runErr
++		return nil, execFailure(FailSandboxStart, "the sandbox could not be started", runErr, seen)
+ 	}
+ 	out, errOut := capture.stdout.snapshot(), capture.stderr.snapshot()
+ 	res.Stdout, res.StdoutBytes, res.StdoutTruncated, res.StdoutSHA256 = out.Text, out.Bytes, out.Truncated, out.SHA256
+@@ -524,7 +530,7 @@ func (h *ExecHandler) prepareCache(ctx context.Context) error {
+ 	defer h.seedMu.Unlock()
+ 	for _, d := range []string{"home", "tmp", "pycache", "npm"} {
+ 		if err := os.MkdirAll(filepath.Join(h.cache, d), 0o700); err != nil {
+-			return err
++			return &HandlerFailure{Class: FailExecCache, Detail: d + ": cannot be created", Err: err}
+ 		}
+ 	}
+ 	for _, name := range sortedKeys(h.profile.Caches) {
+@@ -535,7 +541,7 @@ func (h *ExecHandler) prepareCache(ctx context.Context) error {
+ 		seed := h.profile.Caches[name].Seed
+ 		if seed == "" {
+ 			if err := os.MkdirAll(dst, 0o700); err != nil {
+-				return err
++				return &HandlerFailure{Class: FailExecCache, Detail: name + ": cannot be created", Err: err}
+ 			}
+ 			continue
+ 		}
+@@ -548,7 +554,8 @@ func (h *ExecHandler) prepareCache(ctx context.Context) error {
+ 			path: "/bin/cp", args: args, dir: h.cache, env: execHostEnv(),
+ 		}); err != nil {
+ 			_ = os.RemoveAll(dst)
+-			return fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)
++			return &HandlerFailure{Class: FailSeedCache, Detail: name + ": " + seedWhat(err),
++				Err: fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)}
+ 		}
+ 	}
+ 	return nil
+diff --git a/host/broker/record.go b/host/broker/record.go
+index 93c1a760..1ea30a87 100644
+--- a/host/broker/record.go
++++ b/host/broker/record.go
+@@ -27,6 +27,10 @@ type EffectRecord struct {
+ 	Denial       string
+ 	RequestRef   hashref.HashRef
+ 	ResultRef    hashref.HashRef
++	// Failure is row 255's bounded failure line (FailureLine), set only on a
++	// failed record whose handler returned a *HandlerFailure. It is omitted
++	// from the wire when empty, so every other record keeps its bytes.
++	Failure string
+ }
+ 
+ type recordWire struct {
+@@ -40,13 +44,14 @@ type recordWire struct {
+ 	Denial       string `json:"denial"`
+ 	RequestRef   string `json:"requestRef"`
+ 	ResultRef    string `json:"resultRef"`
++	Failure      string `json:"failure,omitempty"`
+ }
+ 
+ // EncodeRecord is the single fixed-field-order record codec.
+ func EncodeRecord(rec EffectRecord) []byte {
+ 	payload, err := json.Marshal(recordWire{
+ 		rec.Effect, rec.Scope, rec.Cost, rec.BudgetBefore, rec.BudgetAfter,
+-		rec.Allowed, rec.Failed, rec.Denial, rec.RequestRef.String(), rec.ResultRef.String(),
++		rec.Allowed, rec.Failed, rec.Denial, rec.RequestRef.String(), rec.ResultRef.String(), rec.Failure,
+ 	})
+ 	if err != nil {
+ 		panic("broker: fixed effect record cannot fail JSON encoding: " + err.Error())
+@@ -73,10 +78,14 @@ func DecodeRecord(payload []byte) (EffectRecord, error) {
+ 			return EffectRecord{}, err
+ 		}
+ 	}
+-	return EffectRecord{
++	rec := EffectRecord{
+ 		wire.Effect, wire.Scope, wire.Cost, wire.BudgetBefore, wire.BudgetAfter,
+-		wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef,
+-	}, nil
++		wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef, wire.Failure,
++	}
++	if !FailureConsistent(rec) {
++		return EffectRecord{}, fmt.Errorf("broker: decode effect record failure: %q is not a bounded failure line of a failed record", wire.Failure)
++	}
++	return rec, nil
+ }
+ 
+ func parseRequiredRef(field, text string) (hashref.HashRef, error) {
+@@ -104,6 +113,14 @@ func RecordConsistent(rec EffectRecord) bool {
+ 	}
+ }
+ 
++// FailureConsistent is row 255's rule for the failure line: only an allowed,
++// failed record carries one, and it is a fixed point of FailureLine. It sits
++// beside RecordConsistent, not inside it: RecordConsistent mirrors the
++// accounting law of sketches/effectbroker.ail, which the line does not touch.
++func FailureConsistent(rec EffectRecord) bool {
++	return rec.Failure == "" || rec.Allowed && rec.Failed && ValidFailureLine(rec.Failure)
++}
++
+ func recordObject(rec EffectRecord) store.Object {
+ 	return brokerObject(EffectRecordV1, EncodeRecord(rec))
+ }
+diff --git a/host/coordinator/effect_failure_reason_test.go b/host/coordinator/effect_failure_reason_test.go
+new file mode 100644
+index 00000000..d01aa2ab
+--- /dev/null
++++ b/host/coordinator/effect_failure_reason_test.go
+@@ -0,0 +1,62 @@
++package coordinator
++
++// Row 255 (design_docs/planned/w-exec-failure-carries-a-reason.md §5, TC): a
++// handler's failure line reaches the caller's world block and the effect
++// record, never the cause's text, and the committed output replays byte for
++// byte from the record alone. A failure with no line keeps today's bytes.
++
++import (
++	"context"
++	"errors"
++	"strings"
++	"testing"
++
++	"github.com/sunholo-data/ailang-world/host/broker"
++	"github.com/sunholo-data/ailang-world/host/hashref"
++)
++
++func TestEffectFailureReasonReachesTheWorldBlockAndReplays(t *testing.T) {
++	const line = "seed-cache: GOCACHE: timed out after 9s"
++	for _, tc := range []struct {
++		name  string
++		err   error
++		want  string
++		bytes string // a substring the output must (reason) or must not (no reason) carry
++	}{
++		{"classified", &broker.HandlerFailure{Class: broker.FailSeedCache, Detail: "GOCACHE: timed out after 9s",
++			Err: errors.New("cp /Users/op/secret: boom")}, line, `"reason":"` + line + `"`},
++		{"unclassified", errors.New("handler failed /Users/op/secret"), "", ""},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			r, _ := fxRig(t, false)
++			h := &probe{delay: func(context.Context) error { return tc.err }}
++			c := r.fxCoordinator(r.st, &phaseRunner{plan: readPlan(false)}, broker.Registry{fxRead: h})
++			res, err := c.Dispatch(boundedTestContext(t), r.call("fx", "t1", fxGrants(5)))
++			if err != nil {
++				t.Fatalf("Dispatch: %v", err)
++			}
++			out := string(res.OutputBytes)
++			if strings.Contains(out, "/Users/op/secret") {
++				t.Fatalf("the cause's text reached the output: %s", out)
++			}
++			if tc.want != "" && !strings.Contains(out, tc.bytes) {
++				t.Fatalf("output %s lacks %s", out, tc.bytes)
++			}
++			if tc.want == "" && strings.Contains(out, `"reason"`) {
++				t.Fatalf("a failure with no line grew a reason key: %s", out)
++			}
++			wo := decodeWorld(t, res.OutputBytes)
++			if len(wo.World.Effects) != 1 || wo.World.Effects[0].Status != StatusFailed {
++				t.Fatalf("world block = %+v, want one failed effect", wo.World)
++			}
++			rec := r.recordV2(res.RecordRef)
++			if er := r.effectRecord(hashref.MustParse(rec.Effects[0])); !er.Failed || er.Failure != tc.want {
++				t.Fatalf("effect record failure = %q, want %q", er.Failure, tc.want)
++			}
++			replayed, err := c.Replay(boundedTestContext(t), res.InvocationID, r.replayBinder())
++			if err != nil || string(replayed) != out {
++				t.Fatalf("replay = %s, %v\nwant     %s", replayed, err, out)
++			}
++		})
++	}
++}
+diff --git a/host/coordinator/effectful.go b/host/coordinator/effectful.go
+index 9ba2db2f..17cd3085 100644
+--- a/host/coordinator/effectful.go
++++ b/host/coordinator/effectful.go
+@@ -72,12 +72,19 @@ type EffectResult struct {
+ 	Status string          `json:"status"`
+ 	Record *string         `json:"record"`
+ 	Output json.RawMessage `json:"output"`
++	// Reason is a failed effect's recorded failure line (row 255). It reaches
++	// the caller in the world block, not the finish phase, so every finish
++	// phase's input keeps its bytes.
++	Reason string `json:"-"`
+ }
+ 
+ type worldEffect struct {
+ 	ID     string  `json:"id"`
+ 	Status string  `json:"status"`
+ 	Record *string `json:"record"`
++	// Reason is omitted when empty, so every output without a failure line,
++	// and every committed output before row 255, keeps its bytes.
++	Reason string `json:"reason,omitempty"`
+ }
+ 
+ // worldBlock is the reserved `world` provenance member of every effectful
+@@ -189,7 +196,7 @@ func requestEffect(ctx context.Context, inv requester, e PlannedEffect, now int6
+ 	case errors.As(err, &denial):
+ 		res.Status, ref = StatusDenied, denial.RecordRef
+ 	case errors.As(err, &failed):
+-		res.Status, ref = StatusFailed, failed.RecordRef
++		res.Status, res.Reason, ref = StatusFailed, failed.Reason, failed.RecordRef
+ 	case errors.As(err, &unwritten):
+ 		return res, unwritten.RecordRef, true, err
+ 	case errors.As(err, &indeterminate):
+@@ -210,7 +217,7 @@ func (c *Coordinator) composeEffectOutput(finishCtx context.Context, interp hash
+ 	pl Plan, planRef hashref.HashRef, results []EffectResult) ([]byte, map[string]any, error) {
+ 	wb := worldBlock{Effects: []worldEffect{}, Plan: planRef.String()}
+ 	for _, r := range results {
+-		wb.Effects = append(wb.Effects, worldEffect{ID: r.ID, Status: r.Status, Record: r.Record})
++		wb.Effects = append(wb.Effects, worldEffect{ID: r.ID, Status: r.Status, Record: r.Record, Reason: r.Reason})
+ 	}
+ 	var body []byte
+ 	switch {
+diff --git a/host/projection/effect_failure_log_test.go b/host/projection/effect_failure_log_test.go
+new file mode 100644
+index 00000000..d3e7e7ca
+--- /dev/null
++++ b/host/projection/effect_failure_log_test.go
+@@ -0,0 +1,106 @@
++package projection
++
++// Row 255 (design_docs/planned/w-exec-failure-carries-a-reason.md §5, TP): an
++// MCP tools/call whose effect failed with a failure line returns that line in
++// the tool result's world block and logs it exactly once on the operator's
++// error log. On A2A, the same task sent twice runs once and logs once: the
++// resend is read back from the journal (Reconciled) and logs nothing.
++
++import (
++	"bytes"
++	"context"
++	"errors"
++	"regexp"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/sunholo-data/ailang-world/host/broker"
++	"github.com/sunholo-data/ailang-world/host/canon"
++	"github.com/sunholo-data/ailang-world/host/capsule"
++	"github.com/sunholo-data/ailang-world/host/coordinator"
++	"github.com/sunholo-data/ailang-world/host/hashref"
++	"github.com/sunholo-data/ailang-world/host/store"
++	"github.com/sunholo-data/ailang-world/host/transitionreg"
++)
++
++const failureLine = "exec-stack-drift: /opt/node: digest changed"
++
++// planRunner answers the plan phase with one alpha@world effect.
++type planRunner struct{}
++
++func (planRunner) RunContext(context.Context, capsule.Entry) (capsule.Result, error) {
++	return capsule.Result{Stdout: []byte(`{"plan":"world/effect-plan/v1","effects":[{"id":"e1","effect":"alpha","scope":"world","cost":1,"payload":{}}],"finish":false,"result":null}` + "\n")}, nil
++}
++
++type classifiedFailure struct{}
++
++func (classifiedFailure) Execute(context.Context, broker.EffectRequest, []byte) ([]byte, error) {
++	return nil, &broker.HandlerFailure{Class: broker.FailExecStackDrift, Detail: "/opt/node: digest changed",
++		Err: errors.New("broker: exec confinement stack drifted: /Users/op/secret/node: sha256 …")}
++}
++
++func TestMCPEffectFailureLineReturnedAndLoggedOnce(t *testing.T) {
++	st := openStore(t)
++	genesis := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
++		SemanticID: "test/genesis", Provenance: "projection-test", Payload: []byte("genesis-state")}
++	entryHash := hashref.SumSHA256([]byte("genesis-entry"))
++	world := store.World{Ref: hashref.SumSHA256([]byte("genesis-world")), Revision: 0, StateRoot: genesis.Hash, LogHead: entryHash}
++	interp := hashref.SumSHA256([]byte("interpreter"))
++	if err := st.Commit(boundedTestContext(t), store.Commit{Objects: []store.Object{genesis}, NextWorld: world,
++		Entry: store.LogEntry{Header: store.LogHeader{EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")),
++			Interpreter: interp, PrevEntryHash: hashref.SumSHA256([]byte("genesis-prev")), WrittenBy: "projection-test"},
++			EntryHash: entryHash, TransitionRef: genesis.Hash}}); err != nil {
++		t.Fatal(err)
++	}
++	source, err := canon.Source([]byte("module transitions/echo\nexport func main(input: string) -> string { input }\n"))
++	if err != nil {
++		t.Fatal(err)
++	}
++	src := store.Object{Hash: hashref.SumSHA256(source), InterfaceHash: hashref.SumSHA256([]byte("world/transition-source/v1")),
++		SemanticID: "world/transition-source/v1", Provenance: "projection-test", Payload: source}
++	if err := st.PutObject(boundedTestContext(t), src); err != nil {
++		t.Fatal(err)
++	}
++	d := descriptor("tools.fx", "alpha") // declares alpha@world, cost 1
++	d.TransitionFn, d.Interpreter = src.Hash, interp
++	seedRegistry(t, st, d)
++	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: planRunner{},
++		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
++			return broker.OpenBinder(st, ep, grants, broker.Registry{"alpha": classifiedFailure{}})
++		},
++		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
++	if err != nil {
++		t.Fatal(err)
++	}
++	var log bytes.Buffer
++	cfg := testConfig(st)
++	cfg.Coordinator, cfg.ErrorLog = coord, &log
++	// The handler's budget is what the call has left after HandlerHeadroom (6 s).
++	cfg.InvokeWait, cfg.CallbackTimeout = 20*time.Second, 20*time.Second
++	h := mustHandler(t, cfg)
++	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
++
++	w := postMCP(t, h, "Bearer "+tok, `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"tools_dfx","arguments":{"x":1}}}`)
++	payload := mcpPayload(t, w)
++	result := string(payload["result"])
++	if len(payload["error"]) != 0 || !strings.Contains(result, `\"reason\":\"`+failureLine+`\"`) || strings.Contains(result, "/Users/op") {
++		t.Fatalf("tools/call result %s, want the failure line in the world block and no cause text", w.Body)
++	}
++	want := regexp.MustCompile(`^ailang-worldd: mcp effect failed: mcp:ep-a:[0-9a-f]{64} e1 sha256:[0-9a-f]{64}: ` + regexp.QuoteMeta(failureLine) + "\n$")
++	if !want.MatchString(log.String()) {
++		t.Fatalf("error log = %q, want exactly one line naming the call, e1, its record and the failure line", log.String())
++	}
++
++	log.Reset()
++	body := `{"jsonrpc":"2.0","id":8,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.fx"},"message":{"parts":[{"type":"data","data":{"x":1}}]}}}`
++	for i := 0; i < 2; i++ {
++		if rec := postA2A(t, h, "Bearer "+tok, body); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"reason":"`+failureLine+`"`) {
++			t.Fatalf("a2a send %d: %d %s", i, rec.Code, rec.Body)
++		}
++	}
++	once := regexp.MustCompile(`^ailang-worldd: a2a effect failed: a2a:ep-a:t1 e1 sha256:[0-9a-f]{64}: ` + regexp.QuoteMeta(failureLine) + "\n$")
++	if !once.MatchString(log.String()) {
++		t.Fatalf("error log after the same a2a task twice = %q, want exactly one line", log.String())
++	}
++}
+diff --git a/host/projection/mcp.go b/host/projection/mcp.go
+index 96605171..ade64c9f 100644
+--- a/host/projection/mcp.go
++++ b/host/projection/mcp.go
+@@ -132,6 +132,7 @@ func (a mcpAdapter) Invoke(ctx context.Context, session protocol.Session, inv pr
+ 		a.h.logRefusal("mcp", "tools/call", coordinator.InvocationID(coordinator.SurfaceMCP, binding.EpisodeID, task), err)
+ 		return protocol.InvocationResult{}, err
+ 	}
++	a.h.logEffectFailures("mcp", result)
+ 	return protocol.InvocationResult{Value: result.OutputBytes}, nil
+ }
+ func mintMCPTask() (string, error) {
+diff --git a/host/projection/projection.go b/host/projection/projection.go
+index 448a3037..49209d6d 100644
+--- a/host/projection/projection.go
++++ b/host/projection/projection.go
+@@ -376,6 +376,7 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
+ 				protocol.A2AError(w, req.ID, code, msg)
+ 				return
+ 			}
++			h.logEffectFailures("a2a", result)
+ 			task := map[string]any{"id": params.ID, "status": map[string]any{"state": "completed"},
+ 				"artifacts": []any{map[string]any{"parts": []any{map[string]any{"type": "data", "data": result.Output}}}},
+ 				"metadata":  map[string]any{"invocation_id": result.InvocationID, "world_ref": result.WorldRef, "entry_index": result.EntryIndex}}
+@@ -510,3 +511,34 @@ func (h *Handler) writeUnavailable(w http.ResponseWriter, err error) {
+ func (h *Handler) logRefusal(surface, method, id string, err error) {
+ 	fmt.Fprintf(h.errorLog, "ailang-worldd: %s refusal: %s %s: %q\n", surface, method, id, err.Error())
+ }
++
++// logEffectFailures writes one operator line per effect of a dispatched call
++// whose world block carries a failure line (row 255). A reconciled result
++// re-ran nothing and was logged when it ran, so it logs nothing: once per call.
++func (h *Handler) logEffectFailures(surface string, result coordinator.Result) {
++	if result.Reconciled {
++		return
++	}
++	var out struct {
++		World struct {
++			Effects []struct {
++				ID     string  `json:"id"`
++				Record *string `json:"record"`
++				Reason string  `json:"reason"`
++			} `json:"effects"`
++		} `json:"world"`
++	}
++	if json.Unmarshal(result.OutputBytes, &out) != nil {
++		return
++	}
++	for _, e := range out.World.Effects {
++		if e.Reason == "" {
++			continue
++		}
++		rec := "-"
++		if e.Record != nil {
++			rec = *e.Record
++		}
++		fmt.Fprintf(h.errorLog, "ailang-worldd: %s effect failed: %s %s %s: %s\n", surface, result.InvocationID, e.ID, rec, e.Reason)
++	}
++}
