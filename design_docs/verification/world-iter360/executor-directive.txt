@@ -1,0 +1,25 @@
+MISSION-ROLE: executor
+
+You are the SPRINT EXECUTOR for Ailang World mission iteration 360, running unattended under a codex workspace-write sandbox. Your working directory is the sprint worktree (branch sprint/world-iter360-exec-reason, HEAD 33890124). Implement milestone M1 of the approved sprint plan, and nothing else.
+
+GIT: run NO git write operations at all (no add, commit, stash, checkout, reset, branch, restore). The CONTROLLER builds the commit from your uncommitted worktree diff. Read-only git (status, diff, log, show, rev-parse) is fine. A `git apply` of the plan diff onto the working tree is the one allowed write-to-tree git command (it writes files, not git state).
+
+READ FIRST
+- design_docs/planned/w-exec-failure-carries-a-reason-sprint-plan.md (the plan; M1)
+- design_docs/planned/sprint_w-exec-failure-carries-a-reason.json
+- design_docs/planned/w-exec-failure-carries-a-reason.md §3, §7 and §11 (the design, r3)
+
+DO
+1. Verify the pre-change sha256 of every file the plan lists (new files must be ABSENT). If any differs, STOP and report; do not proceed.
+2. Verify `shasum -a 256 design_docs/verification/world-iter360/plan-M1.diff.txt` equals 83ef9f9db480ed5f9488fbcf7e043fde29daea1622605b45fc541b5896c1fdb0 (the plan's value), then `git apply design_docs/verification/world-iter360/plan-M1.diff.txt` at the worktree root.
+3. Verify the post-change sha256 of every touched file equals the plan's value. Do NOT run gofmt -w, and do not edit, reformat or "improve" any applied file; the bytes are pinned.
+4. Run, and report each rc: `gofmt -l host/broker host/coordinator host/projection host/store cmd/ailang-worldd` (expect no output); `go vet ./host/broker/ ./host/coordinator/ ./host/projection/ ./host/store/ ./cmd/ailang-worldd/`; `go build ./...`; and the plan's named new tests that open no socket (TL, TG, TK, TV, TS and the others the planner ran in its sandbox: see the plan). Any test that opens a listener is UNINFORMATIVE UNDER SANDBOX: label it that way and never report it as pass or fail.
+5. Write design_docs/verification/world-iter360/executor-M1.txt: every command you ran in steps 1–4 with its rc and the relevant output lines.
+
+SANDBOX RULES
+- Loopback socket binds are denied inside your sandbox. Do NOT run full package suites or the mutation runner; the controller runs both outside the sandbox.
+- Do not set TMPDIR.
+- A gate you find red BEFORE applying the diff is a finding to report, not an obstacle to work around.
+- Write nothing outside this worktree except Go's build caches. Do not touch tools/launchd/, any skill file, or ~/.ailang.
+
+FINAL MESSAGE (short): pre/post sha256 match (yes/no per file, or a count with any mismatch named); each gate rc; which tests ran and their rc; anything that surprised you.

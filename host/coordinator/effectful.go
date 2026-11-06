@@ -72,12 +72,19 @@ type EffectResult struct {
 	Status string          `json:"status"`
 	Record *string         `json:"record"`
 	Output json.RawMessage `json:"output"`
+	// Reason is a failed effect's recorded failure line (row 255). It reaches
+	// the caller in the world block, not the finish phase, so every finish
+	// phase's input keeps its bytes.
+	Reason string `json:"-"`
 }
 
 type worldEffect struct {
 	ID     string  `json:"id"`
 	Status string  `json:"status"`
 	Record *string `json:"record"`
+	// Reason is omitted when empty, so every output without a failure line,
+	// and every committed output before row 255, keeps its bytes.
+	Reason string `json:"reason,omitempty"`
 }
 
 // worldBlock is the reserved `world` provenance member of every effectful
@@ -189,7 +196,7 @@ func requestEffect(ctx context.Context, inv requester, e PlannedEffect, now int6
 	case errors.As(err, &denial):
 		res.Status, ref = StatusDenied, denial.RecordRef
 	case errors.As(err, &failed):
-		res.Status, ref = StatusFailed, failed.RecordRef
+		res.Status, res.Reason, ref = StatusFailed, failed.Reason, failed.RecordRef
 	case errors.As(err, &unwritten):
 		return res, unwritten.RecordRef, true, err
 	case errors.As(err, &indeterminate):
@@ -210,7 +217,7 @@ func (c *Coordinator) composeEffectOutput(finishCtx context.Context, interp hash
 	pl Plan, planRef hashref.HashRef, results []EffectResult) ([]byte, map[string]any, error) {
 	wb := worldBlock{Effects: []worldEffect{}, Plan: planRef.String()}
 	for _, r := range results {
-		wb.Effects = append(wb.Effects, worldEffect{ID: r.ID, Status: r.Status, Record: r.Record})
+		wb.Effects = append(wb.Effects, worldEffect{ID: r.ID, Status: r.Status, Record: r.Record, Reason: r.Reason})
 	}
 	var body []byte
 	switch {

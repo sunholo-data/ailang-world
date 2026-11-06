@@ -41,6 +41,9 @@ type objectStore interface {
 	AppendNextEffectIntent(context.Context, string, store.EffectIntent) (string, int64, error)
 	AppendClaimedEffectIntent(context.Context, string, store.EffectIntent, hashref.HashRef, hashref.HashRef) (string, int64, error)
 	AppendEffectOutcome(context.Context, string, store.EffectOutcome) (int64, hashref.HashRef, error)
+	// MarkFailureLines (row 255 §3.7) raises the store's schema version
+	// before the first effect record that carries a failure line.
+	MarkFailureLines(context.Context) error
 }
 
 // Session is one serial capability ledger and effect-record stream.
@@ -138,11 +141,14 @@ func (e *DenialError) Error() string {
 
 // EffectFailedError reports a dispatched handler failure after its immutable
 // failure record has been persisted. Live errors unwrap the handler's detail;
-// replay errors are reconstructed from the record alone and do not.
+// replay errors are reconstructed from the record alone and do not. Reason is
+// the record's failure line (row 255), live and on replay alike: "" unless
+// the handler returned a *HandlerFailure.
 type EffectFailedError struct {
 	Effect    string
 	Scope     string
 	RecordRef hashref.HashRef
+	Reason    string
 	cause     error
 }
 
@@ -289,10 +295,24 @@ func (s *Session) invoke(
 			// SM.C's read-only reconciliation may resolve the receipt.
 			return nil, hashref.HashRef{}, err
 		}
+		reason := ""
+		var classified *HandlerFailure
+		if errors.As(err, &classified) {
+			reason = classified.Line()
+		}
+		// Row 255 §3.7: no record carries a line until the store says so, so a
+		// binary that cannot decode the line refuses the store at open. A store
+		// that cannot be marked reports a write error; the debit stands.
+		if reason != "" {
+			if markErr := s.store.MarkFailureLines(post); markErr != nil {
+				return nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope,
+					Err: fmt.Errorf("broker: mark store for failure lines: %w", markErr)}
+			}
+		}
 		rec := EffectRecord{
 			Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
 			BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining,
-			Allowed: true, Failed: true, RequestRef: requestRef,
+			Allowed: true, Failed: true, RequestRef: requestRef, Failure: reason,
 		}
 		ref, putErr := s.putRecord(post, rec)
 		if putErr != nil {
@@ -305,7 +325,7 @@ func (s *Session) invoke(
 				Err: fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)}
 		}
 		return nil, ref, &EffectFailedError{
-			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, cause: err,
+			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, Reason: reason, cause: err,
 		}
 	}
 	resultObj := resultObject(result)
@@ -388,7 +408,7 @@ func requestObject(req EffectRequest, payload []byte) store.Object {
 }
 
 func (s *Session) putRecord(ctx context.Context, rec EffectRecord) (hashref.HashRef, error) {
-	if !RecordConsistent(rec) {
+	if !RecordConsistent(rec) || !FailureConsistent(rec) {
 		return hashref.HashRef{}, errors.New("broker: refuses inconsistent effect record")
 	}
 	obj := recordObject(rec)
@@ -440,7 +460,7 @@ func (s *Session) invokeReplay(
 			s.debitGrant(grantIndex, decision.Remaining)
 			s.next++
 			return nil, recordRef, &EffectFailedError{
-				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef,
+				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef, Reason: rec.Failure,
 			}
 		}
 		resultObj, ok, err := s.store.GetObject(ctx, rec.ResultRef)

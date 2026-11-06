@@ -893,6 +893,21 @@ the sandbox:
 A command runs for at most `timeout_ms`, which is at most 9000, inside the 10-second handler cap.
 So a profile names targeted commands (one package, one test file, a type check), not full suites.
 
+**When a call fails** (row 255). A call World could not run answers with no output fields. Its
+`world.effects[0]` has `"status": "failed"` and a `"reason"`: one line of at most 200 bytes, a
+class and then a detail, for example `seed-cache: GOCACHE: timed out after 9s`. The classes are
+`exec-misrouted`, `exec-tools`, `exec-stack-drift`, `exec-settings-drift`, `project-root`,
+`exec-cache`, `seed-cache`, `time-budget-spent`, `cleanup-incomplete` and `sandbox-start`. The
+same line is the effect record's `failure` field, ends `why`'s effect link (`no result: <line>`)
+and is logged once per call (`ailang-worldd: mcp effect failed: <call> e1 <record>: <line>`). It
+names a file only as a successful result already does (`argv0`, `node`), relative to the srt
+archive, or by its base name. A refusal is different: `{"ok": false, "refused": …}` means World
+would not run the command, and nothing failed. Before the first such line is written, World raises
+the store's schema version from 5 to 6 (the tables do not change). An `ailang-worldd` built before
+this change then refuses that store at open (`schema version future … use a compatible binary`)
+rather than misreading it. So once a line exists, a `service upgrade` rollback to such a build
+stops the service instead of serving.
+
 **Install and pin srt.** World accepts exactly srt 0.0.78 whose `dist/cli.js` hashes to the pin
 below (`design_docs/verification/world-row140-m0/pin.json`). `serve` refuses any other. Keep srt,
 your profiles and your cache seeds **outside** the workspace root and the state dir:

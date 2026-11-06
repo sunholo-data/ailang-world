@@ -64,6 +64,10 @@ func (s *handlerRecordingStore) AppendClaimedEffectIntent(
 	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
 }
 
+func (s *handlerRecordingStore) MarkFailureLines(ctx context.Context) error {
+	return s.base.MarkFailureLines(ctx)
+}
+
 func (s *handlerRecordingStore) AppendEffectOutcome(
 	ctx context.Context, id string,
 	outcome store.EffectOutcome,

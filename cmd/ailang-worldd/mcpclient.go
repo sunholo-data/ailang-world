@@ -624,6 +624,7 @@ func printCallResult(w io.Writer, text string, fields map[string]json.RawMessage
 			ID     string  `json:"id"`
 			Status string  `json:"status"`
 			Record *string `json:"record"`
+			Reason string  `json:"reason"`
 		} `json:"effects"`
 	}
 	if raw, ok := fields["world"]; !ok || json.Unmarshal(raw, &wb) != nil {
@@ -638,6 +639,9 @@ func printCallResult(w io.Writer, text string, fields map[string]json.RawMessage
 		rec := "-"
 		if e.Record != nil {
 			rec = *e.Record
+		}
+		if e.Reason != "" {
+			rec += " — " + elide(e.Reason) // row 255: the failure line
 		}
 		fmt.Fprintf(w, "  effect     %s %s %s\n", e.ID, e.Status, rec)
 	}

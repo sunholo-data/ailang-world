@@ -1,0 +1,573 @@
+Iteration 360 executor M1
+Pinned implementation only; sandbox-safe checks.
+TMPDIR unchanged; no Git state writes.
+
+$ git rev-parse HEAD
+338901249b00522d129abef8efc13de15a395d94
+rc=0
+
+$ git status --short
+?? design_docs/verification/world-iter360/executor-M1.txt
+rc=0
+
+$ python3 -I - <<'INPUT'
+from pathlib import Path
+import hashlib,re,json,os,sys
+plan=Path('design_docs/planned/w-exec-failure-carries-a-reason-sprint-plan.md').read_text()
+rows=re.findall(r'^\| `([^`]+)` \| .*? \| `(ABSENT|[0-9a-f]{64})` \| `([0-9a-f]{64})` \|',plan,re.M)
+files=json.loads(Path('design_docs/planned/sprint_w-exec-failure-carries-a-reason.json').read_text())['milestones'][0]['files']
+assert len(rows)==22 and [r[0] for r in rows]==files, 'plan path census differs'
+failed=[]
+for name,want,post in rows:
+    p=Path(name)
+    actual=hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else ('PRESENT' if os.path.lexists(p) else 'ABSENT')
+    match=actual==want
+    print(('MATCH' if match else 'MISMATCH')+' '+name+' expected='+want+' actual='+actual)
+    if not match: failed.append(name)
+print('Pre-change: '+str(len(rows)-len(failed))+'/22 match')
+sys.exit(bool(failed))
+INPUT
+MATCH cmd/ailang-worldd/call_failure_line_test.go expected=ABSENT actual=ABSENT
+MATCH cmd/ailang-worldd/mcpclient.go expected=91be874ff41288331eaa078ef432011afac93f0382a1a824f48b609a9a56ddaa actual=91be874ff41288331eaa078ef432011afac93f0382a1a824f48b609a9a56ddaa
+MATCH cmd/ailang-worldd/why.go expected=47080a095198489b3acaddce150f4095b3bdfd2a24f17393cb308f271252cdd1 actual=47080a095198489b3acaddce150f4095b3bdfd2a24f17393cb308f271252cdd1
+MATCH cmd/ailang-worldd/why_test.go expected=48b7089c74259df09ab206dc48e5f1630464651e544546ac09a55348ceef31ef actual=48b7089c74259df09ab206dc48e5f1630464651e544546ac09a55348ceef31ef
+MATCH docs/QUICKSTART.md expected=48f09b67a0e8cb6504fb5c23a3ca69826471e69c54d98361f7db8c43baaaa7a4 actual=48f09b67a0e8cb6504fb5c23a3ca69826471e69c54d98361f7db8c43baaaa7a4
+MATCH host/broker/broker.go expected=788f6eaef667182abc4f671ca3abc57a78afce56981d4706340f19601b8dcc7f actual=788f6eaef667182abc4f671ca3abc57a78afce56981d4706340f19601b8dcc7f
+MATCH host/broker/broker_test.go expected=85a8e1cc0688370aee575292d56bfe04122966c956058cf8545ceda77f7ac1ac actual=85a8e1cc0688370aee575292d56bfe04122966c956058cf8545ceda77f7ac1ac
+MATCH host/broker/failure.go expected=ABSENT actual=ABSENT
+MATCH host/broker/failure_test.go expected=ABSENT actual=ABSENT
+MATCH host/broker/handler_error_repro_test.go expected=14eb30e43b49db7e46cb1e53c157ea1acd059c87c009ce46202a6a6dc8dcd67e actual=14eb30e43b49db7e46cb1e53c157ea1acd059c87c009ce46202a6a6dc8dcd67e
+MATCH host/broker/handlers_exec.go expected=d85457256d78add86ac475fc0eb77bcf8cc373082c27139ba3d9f7fd023b2ad0 actual=d85457256d78add86ac475fc0eb77bcf8cc373082c27139ba3d9f7fd023b2ad0
+MATCH host/broker/handlers_test.go expected=fbf7ddc4805d14b530c7c5a2e98dac076952b570ebeaf4db27a40cedbd943b17 actual=fbf7ddc4805d14b530c7c5a2e98dac076952b570ebeaf4db27a40cedbd943b17
+MATCH host/broker/record.go expected=57a0ec0e8b09c0ea47223f2465681590773bc9d75a2076cda6349898202cd187 actual=57a0ec0e8b09c0ea47223f2465681590773bc9d75a2076cda6349898202cd187
+MATCH host/broker/registry_publish_test.go expected=cdc43738affc360676267bc396005be797d9c57e2193d88982e54f20fe29d6ce actual=cdc43738affc360676267bc396005be797d9c57e2193d88982e54f20fe29d6ce
+MATCH host/coordinator/effect_failure_reason_test.go expected=ABSENT actual=ABSENT
+MATCH host/coordinator/effectful.go expected=f003b0de143c9dae175e07378ad659361dc9cd819476bc1d61a127c2d0a8e70b actual=f003b0de143c9dae175e07378ad659361dc9cd819476bc1d61a127c2d0a8e70b
+MATCH host/projection/effect_failure_log_test.go expected=ABSENT actual=ABSENT
+MATCH host/projection/mcp.go expected=e456f9656b5c49fa04c38dca13a922c7bbf9a90da824f9bea43bbb11a7a9289b actual=e456f9656b5c49fa04c38dca13a922c7bbf9a90da824f9bea43bbb11a7a9289b
+MATCH host/projection/projection.go expected=9aa265f9bd9a33635fa53aa23fd326f91b3bb50b387126de5f1d3c2878dbfad1 actual=9aa265f9bd9a33635fa53aa23fd326f91b3bb50b387126de5f1d3c2878dbfad1
+MATCH host/store/deadline_guard_test.go expected=9219a4aa634b01d514ecef747d45f0d931329df484297a9327d9a16fe3a4b24c actual=9219a4aa634b01d514ecef747d45f0d931329df484297a9327d9a16fe3a4b24c
+MATCH host/store/schema_version_test.go expected=d9413412818a85c4c987e2d28fcd2e306772304304203a9c5464839d611bbd73 actual=d9413412818a85c4c987e2d28fcd2e306772304304203a9c5464839d611bbd73
+MATCH host/store/store.go expected=050f46a6643204272be9f4542db2174c13c9fea4192381214320c6eb6ff0cee3 actual=050f46a6643204272be9f4542db2174c13c9fea4192381214320c6eb6ff0cee3
+Pre-change: 22/22 match
+rc=0
+
+$ shasum -a 256 design_docs/verification/world-iter360/plan-M1.diff.txt
+83ef9f9db480ed5f9488fbcf7e043fde29daea1622605b45fc541b5896c1fdb0  design_docs/verification/world-iter360/plan-M1.diff.txt
+rc=0
+
+$ shasum -a 256 -c <<'INPUT'
+83ef9f9db480ed5f9488fbcf7e043fde29daea1622605b45fc541b5896c1fdb0  design_docs/verification/world-iter360/plan-M1.diff.txt
+02259c3bdc1c942bf94b62b5e527a6ee95492430fd59878d449b98152c050dd4  design_docs/planned/w-exec-failure-carries-a-reason.patch
+INPUT
+design_docs/verification/world-iter360/plan-M1.diff.txt: OK
+design_docs/planned/w-exec-failure-carries-a-reason.patch: OK
+rc=0
+
+$ git apply --check design_docs/verification/world-iter360/plan-M1.diff.txt
+(no output)
+rc=0
+
+$ git apply design_docs/verification/world-iter360/plan-M1.diff.txt
+(no output)
+rc=0
+
+$ shasum -a 256 -c <<'INPUT'
+52651e7e6387d07dffa4d9b7450246058a3c3669742f187b0e0ffdebc9fe89fc  cmd/ailang-worldd/call_failure_line_test.go
+291703f0184eb0ef21a12e597aaa5a46f48fa58487a32fb4abc36459fbb6c96d  cmd/ailang-worldd/mcpclient.go
+d5b2abb7732ce3355b95c9b2a07e959aeefc26aba3a1b531313cad698f918844  cmd/ailang-worldd/why.go
+79730a25230b5ab404348aed626066ac8c5305f6ff5b679ed35d7300fc2ec3ac  cmd/ailang-worldd/why_test.go
+715d845827cac15fbdb6f0f7dd80146b28ddda9fc342087133683e0da8833387  docs/QUICKSTART.md
+4684030cfd3d438ca3fa4031b7744e2290db303c1e207943665eacafd46f43ee  host/broker/broker.go
+6090016bd96d4e311f16af7f6cd2fa3f2770db809c559205e86d51348ad11c39  host/broker/broker_test.go
+fe5a82c7840f2143dfdb27e235c4728b33d214868a5681d77cf404b9ac38c92c  host/broker/failure.go
+6263ffc560dafc552aecb6d51cac4f3f4af2ee41b25e928840fc19797634c7c2  host/broker/failure_test.go
+984a307ab1c2a3493fa3c01ab35e2287a6909a5fa8171ac7b7948c2f87b50af6  host/broker/handler_error_repro_test.go
+996c5ee11daed4b94f982c3eccebe11ca458f41c2d5fa1ff041887ebf96c9697  host/broker/handlers_exec.go
+ecbf80d29ada65310e9e9fe7bdf47f4db286e020ea27dd76b85050b657ce902e  host/broker/handlers_test.go
+184009f5fbcebb04e97bdfb70cd28c9dbfeab670f75e93f3de6476cadb4203b8  host/broker/record.go
+e09bc1d24d48d191b50c12af35759f8cd523655c372a0478bb9de3495b188ea5  host/broker/registry_publish_test.go
+5cbc93c6c94efff8574eb09e6d910dac269428051db8e3877eb4f9e2acad8132  host/coordinator/effect_failure_reason_test.go
+b6422dfeae92ec0cac6b31f228d93c4f73bd154f5b43e75231bc3f6e9a4c09d4  host/coordinator/effectful.go
+4e77608a9d9c88154976121f0cef9aa70fa654ed2c7bfbcf75eb4b409cee6a13  host/projection/effect_failure_log_test.go
+f6ffddc79c7a2c0850d6db449cfde495a8921ba3066aba486627bc6ea4908301  host/projection/mcp.go
+8dbe67ec63254d42e8bbafe038dba5d0aaaa8e11bf968cefd144f7a9e0dc4533  host/projection/projection.go
+6803bd2044eeaa9118d96c90797022512aa0b367f89b1aad37d9a6e83997356d  host/store/deadline_guard_test.go
+6aa056dc27ddfce6e29cd2d4c143e25afffecf9233a1ee853b10d3662f20c23f  host/store/schema_version_test.go
+e0e10bcd97a80aa8213a8a63ce03bf76d3eef12a91bd6156570063db49dcc340  host/store/store.go
+INPUT
+cmd/ailang-worldd/call_failure_line_test.go: OK
+cmd/ailang-worldd/mcpclient.go: OK
+cmd/ailang-worldd/why.go: OK
+cmd/ailang-worldd/why_test.go: OK
+docs/QUICKSTART.md: OK
+host/broker/broker.go: OK
+host/broker/broker_test.go: OK
+host/broker/failure.go: OK
+host/broker/failure_test.go: OK
+host/broker/handler_error_repro_test.go: OK
+host/broker/handlers_exec.go: OK
+host/broker/handlers_test.go: OK
+host/broker/record.go: OK
+host/broker/registry_publish_test.go: OK
+host/coordinator/effect_failure_reason_test.go: OK
+host/coordinator/effectful.go: OK
+host/projection/effect_failure_log_test.go: OK
+host/projection/mcp.go: OK
+host/projection/projection.go: OK
+host/store/deadline_guard_test.go: OK
+host/store/schema_version_test.go: OK
+host/store/store.go: OK
+rc=0
+
+Pre-change 22/22 match (including 5 ABSENT); post-change 22/22 match.
+Planner base adc03d4223a2ff89412d49d1499420684f1b2ccb differs from expected executor HEAD 33890124; no per-file mismatch.
+
+$ go version
+go version go1.26.6 darwin/arm64
+rc=0
+
+$ gofmt -l host/broker host/coordinator host/projection host/store cmd/ailang-worldd
+(no output)
+rc=0
+
+$ go vet ./host/broker/ ./host/coordinator/ ./host/projection/ ./host/store/ ./cmd/ailang-worldd/
+(no output)
+rc=0
+
+$ go build ./...
+(no output)
+rc=0
+
+$ /bin/bash -n design_docs/verification/world-iter360/plan-mutants.sh.txt
+(no output)
+rc=0
+
+$ go test -count=1 -run '^(TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestFailureLineMarksTheStoreFirst)$' -v -timeout 300s ./host/broker/
+=== RUN   TestFailureLineBoundsAndSanitises
+--- PASS: TestFailureLineBoundsAndSanitises (0.00s)
+=== RUN   TestRecordFailureGoldenBytes
+--- PASS: TestRecordFailureGoldenBytes (0.00s)
+=== RUN   TestExecFailureClassifies
+--- PASS: TestExecFailureClassifies (0.00s)
+=== RUN   TestFailureLineMarksTheStoreFirst
+=== RUN   TestFailureLineMarksTheStoreFirst/line_marks
+=== RUN   TestFailureLineMarksTheStoreFirst/no_line,_no_mark
+=== RUN   TestFailureLineMarksTheStoreFirst/mark_refused,_write_error
+--- PASS: TestFailureLineMarksTheStoreFirst (0.02s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/line_marks (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/no_line,_no_mark (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/mark_refused,_write_error (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.409s
+rc=0
+Expected named terminal passes, no skips: yes
+
+$ go test -count=1 -run '^(TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic)$' -v -timeout 300s ./host/store/
+=== RUN   TestStoreDeadlineGuardDynamic
+=== RUN   TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendEffectOutcome/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendEffectOutcome/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendEffectOutcome/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendIntent/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendIntent/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendIntent/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendOutcome/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendOutcome/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendOutcome/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/Commit/nil
+=== RUN   TestStoreDeadlineGuardDynamic/Commit/background
+=== RUN   TestStoreDeadlineGuardDynamic/Commit/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/CommitLanded/nil
+=== RUN   TestStoreDeadlineGuardDynamic/CommitLanded/background
+=== RUN   TestStoreDeadlineGuardDynamic/CommitLanded/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/EffectSpend/nil
+=== RUN   TestStoreDeadlineGuardDynamic/EffectSpend/background
+=== RUN   TestStoreDeadlineGuardDynamic/EffectSpend/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetEffectReceipt/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetEffectReceipt/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetEffectReceipt/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetLogEntry/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetLogEntry/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetLogEntry/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetObject/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetObject/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetObject/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetReceipt/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetReceipt/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetReceipt/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetRegistryHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetRegistryHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetRegistryHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetVerifyResult/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetVerifyResult/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetVerifyResult/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetWorld/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetWorld/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetWorld/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/InvocationIntents/nil
+=== RUN   TestStoreDeadlineGuardDynamic/InvocationIntents/background
+=== RUN   TestStoreDeadlineGuardDynamic/InvocationIntents/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesAfter/nil
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesAfter/background
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesAfter/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesLatest/nil
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesLatest/background
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesLatest/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/MarkFailureLines/nil
+=== RUN   TestStoreDeadlineGuardDynamic/MarkFailureLines/background
+=== RUN   TestStoreDeadlineGuardDynamic/MarkFailureLines/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectCommits/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectCommits/background
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectCommits/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectReferences/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectReferences/background
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectReferences/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/background
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PendingEffectIntents/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PendingEffectIntents/background
+=== RUN   TestStoreDeadlineGuardDynamic/PendingEffectIntents/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PendingIntents/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PendingIntents/background
+=== RUN   TestStoreDeadlineGuardDynamic/PendingIntents/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PutObject/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PutObject/background
+=== RUN   TestStoreDeadlineGuardDynamic/PutObject/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PutVerifyResult/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PutVerifyResult/background
+=== RUN   TestStoreDeadlineGuardDynamic/PutVerifyResult/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PutWorld/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PutWorld/background
+=== RUN   TestStoreDeadlineGuardDynamic/PutWorld/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ReadObject/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ReadObject/background
+=== RUN   TestStoreDeadlineGuardDynamic/ReadObject/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableLog/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableLog/background
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableLog/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/background
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/SelectHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/SelectHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/SelectHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/SelectedHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/SelectedHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/SelectedHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/SetRegistryHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/SetRegistryHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/SetRegistryHead/deadline
+--- PASS: TestStoreDeadlineGuardDynamic (0.08s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/nil (0.01s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendEffectOutcome/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendEffectOutcome/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendEffectOutcome/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendIntent/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendIntent/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendIntent/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendOutcome/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendOutcome/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendOutcome/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/Commit/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/Commit/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/Commit/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CommitLanded/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CommitLanded/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CommitLanded/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/EffectSpend/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/EffectSpend/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/EffectSpend/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetEffectReceipt/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetEffectReceipt/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetEffectReceipt/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetLogEntry/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetLogEntry/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetLogEntry/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetObject/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetObject/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetObject/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetReceipt/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetReceipt/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetReceipt/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetRegistryHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetRegistryHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetRegistryHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetVerifyResult/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetVerifyResult/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetVerifyResult/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetWorld/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetWorld/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetWorld/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/InvocationIntents/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/InvocationIntents/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/InvocationIntents/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesAfter/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesAfter/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesAfter/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesLatest/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesLatest/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesLatest/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/MarkFailureLines/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/MarkFailureLines/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/MarkFailureLines/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectCommits/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectCommits/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectCommits/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectReferences/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectReferences/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectReferences/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingEffectIntents/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingEffectIntents/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingEffectIntents/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingIntents/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingIntents/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingIntents/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutObject/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutObject/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutObject/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutVerifyResult/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutVerifyResult/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutVerifyResult/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutWorld/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutWorld/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutWorld/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ReadObject/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ReadObject/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ReadObject/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableLog/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableLog/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableLog/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectedHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectedHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectedHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SetRegistryHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SetRegistryHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SetRegistryHead/deadline (0.00s)
+=== RUN   TestFutureVersionIsRejected
+--- PASS: TestFutureVersionIsRejected (0.01s)
+=== RUN   TestOpenReadOnlyEnforcesVersionFive
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/version5
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/version4
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/version3
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/legacy
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/sqliteX_probe
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/future
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/negative1
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/int32min
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/empty
+--- PASS: TestOpenReadOnlyEnforcesVersionFive (0.03s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/version5 (0.01s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/version4 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/version3 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/legacy (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/sqliteX_probe (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/future (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/negative1 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/int32min (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/empty (0.00s)
+=== RUN   TestMarkFailureLinesRaisesFiveToSixOnce
+--- PASS: TestMarkFailureLinesRaisesFiveToSixOnce (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/store	0.429s
+rc=0
+Expected named terminal passes, no skips: yes
+
+$ go test -count=1 -run '^(TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay)$' -v -timeout 300s ./host/coordinator/
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified
+--- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays (0.03s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified (0.02s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified (0.01s)
+=== RUN   TestEffectReplay
+=== RUN   TestEffectReplay/no_finish
+=== RUN   TestEffectReplay/finish
+=== RUN   TestEffectReplay/denied_and_failed_records_replay
+=== RUN   TestEffectReplay/pure_record_is_not_replayed_as_effectful
+--- PASS: TestEffectReplay (0.04s)
+    --- PASS: TestEffectReplay/no_finish (0.01s)
+    --- PASS: TestEffectReplay/finish (0.01s)
+    --- PASS: TestEffectReplay/denied_and_failed_records_replay (0.01s)
+    --- PASS: TestEffectReplay/pure_record_is_not_replayed_as_effectful (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	0.382s
+rc=0
+Expected named terminal passes, no skips: yes
+
+$ go test -count=1 -run '^(TestMCPEffectFailureLineReturnedAndLoggedOnce)$' -v -timeout 300s ./host/projection/
+=== RUN   TestMCPEffectFailureLineReturnedAndLoggedOnce
+--- PASS: TestMCPEffectFailureLineReturnedAndLoggedOnce (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.321s
+rc=0
+Expected named terminal passes, no skips: yes
+
+$ go test -count=1 -run '^(TestCallPrintsTheFailureLine)$' -v -timeout 300s ./cmd/ailang-worldd/
+=== RUN   TestCallPrintsTheFailureLine
+--- PASS: TestCallPrintsTheFailureLine (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.375s
+rc=0
+Expected named terminal passes, no skips: yes
+
+$ go test -count=3 -run '^(TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestFailureLineMarksTheStoreFirst)$' -v -timeout 300s ./host/broker/
+=== RUN   TestFailureLineBoundsAndSanitises
+--- PASS: TestFailureLineBoundsAndSanitises (0.00s)
+=== RUN   TestRecordFailureGoldenBytes
+--- PASS: TestRecordFailureGoldenBytes (0.00s)
+=== RUN   TestExecFailureClassifies
+--- PASS: TestExecFailureClassifies (0.00s)
+=== RUN   TestFailureLineMarksTheStoreFirst
+=== RUN   TestFailureLineMarksTheStoreFirst/line_marks
+=== RUN   TestFailureLineMarksTheStoreFirst/no_line,_no_mark
+=== RUN   TestFailureLineMarksTheStoreFirst/mark_refused,_write_error
+--- PASS: TestFailureLineMarksTheStoreFirst (0.03s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/line_marks (0.02s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/no_line,_no_mark (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/mark_refused,_write_error (0.01s)
+=== RUN   TestFailureLineBoundsAndSanitises
+--- PASS: TestFailureLineBoundsAndSanitises (0.00s)
+=== RUN   TestRecordFailureGoldenBytes
+--- PASS: TestRecordFailureGoldenBytes (0.00s)
+=== RUN   TestExecFailureClassifies
+--- PASS: TestExecFailureClassifies (0.00s)
+=== RUN   TestFailureLineMarksTheStoreFirst
+=== RUN   TestFailureLineMarksTheStoreFirst/line_marks
+=== RUN   TestFailureLineMarksTheStoreFirst/no_line,_no_mark
+=== RUN   TestFailureLineMarksTheStoreFirst/mark_refused,_write_error
+--- PASS: TestFailureLineMarksTheStoreFirst (0.02s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/line_marks (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/no_line,_no_mark (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/mark_refused,_write_error (0.01s)
+=== RUN   TestFailureLineBoundsAndSanitises
+--- PASS: TestFailureLineBoundsAndSanitises (0.00s)
+=== RUN   TestRecordFailureGoldenBytes
+--- PASS: TestRecordFailureGoldenBytes (0.00s)
+=== RUN   TestExecFailureClassifies
+--- PASS: TestExecFailureClassifies (0.00s)
+=== RUN   TestFailureLineMarksTheStoreFirst
+=== RUN   TestFailureLineMarksTheStoreFirst/line_marks
+=== RUN   TestFailureLineMarksTheStoreFirst/no_line,_no_mark
+=== RUN   TestFailureLineMarksTheStoreFirst/mark_refused,_write_error
+--- PASS: TestFailureLineMarksTheStoreFirst (0.02s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/line_marks (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/no_line,_no_mark (0.01s)
+    --- PASS: TestFailureLineMarksTheStoreFirst/mark_refused,_write_error (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.319s
+rc=0
+Expected named terminal passes, no skips: yes
+
+Listener tests: UNINFORMATIVE UNDER SANDBOX; TestWhyShowsTheFailureLine not run.
+TX/Reverify, full package suites, full mutation runner, old-binary probe, repository gates and Linux/CI acceptance remain controller-owned; not run here.
+Known plan finding F1: default-TMPDIR test temporary files are not literally confined to the worktree. TMPDIR was left unchanged as instructed.
+No applied implementation file edited or reformatted after application.
+
+$ shasum -a 256 -c <<'INPUT'
+52651e7e6387d07dffa4d9b7450246058a3c3669742f187b0e0ffdebc9fe89fc  cmd/ailang-worldd/call_failure_line_test.go
+291703f0184eb0ef21a12e597aaa5a46f48fa58487a32fb4abc36459fbb6c96d  cmd/ailang-worldd/mcpclient.go
+d5b2abb7732ce3355b95c9b2a07e959aeefc26aba3a1b531313cad698f918844  cmd/ailang-worldd/why.go
+79730a25230b5ab404348aed626066ac8c5305f6ff5b679ed35d7300fc2ec3ac  cmd/ailang-worldd/why_test.go
+715d845827cac15fbdb6f0f7dd80146b28ddda9fc342087133683e0da8833387  docs/QUICKSTART.md
+4684030cfd3d438ca3fa4031b7744e2290db303c1e207943665eacafd46f43ee  host/broker/broker.go
+6090016bd96d4e311f16af7f6cd2fa3f2770db809c559205e86d51348ad11c39  host/broker/broker_test.go
+fe5a82c7840f2143dfdb27e235c4728b33d214868a5681d77cf404b9ac38c92c  host/broker/failure.go
+6263ffc560dafc552aecb6d51cac4f3f4af2ee41b25e928840fc19797634c7c2  host/broker/failure_test.go
+984a307ab1c2a3493fa3c01ab35e2287a6909a5fa8171ac7b7948c2f87b50af6  host/broker/handler_error_repro_test.go
+996c5ee11daed4b94f982c3eccebe11ca458f41c2d5fa1ff041887ebf96c9697  host/broker/handlers_exec.go
+ecbf80d29ada65310e9e9fe7bdf47f4db286e020ea27dd76b85050b657ce902e  host/broker/handlers_test.go
+184009f5fbcebb04e97bdfb70cd28c9dbfeab670f75e93f3de6476cadb4203b8  host/broker/record.go
+e09bc1d24d48d191b50c12af35759f8cd523655c372a0478bb9de3495b188ea5  host/broker/registry_publish_test.go
+5cbc93c6c94efff8574eb09e6d910dac269428051db8e3877eb4f9e2acad8132  host/coordinator/effect_failure_reason_test.go
+b6422dfeae92ec0cac6b31f228d93c4f73bd154f5b43e75231bc3f6e9a4c09d4  host/coordinator/effectful.go
+4e77608a9d9c88154976121f0cef9aa70fa654ed2c7bfbcf75eb4b409cee6a13  host/projection/effect_failure_log_test.go
+f6ffddc79c7a2c0850d6db449cfde495a8921ba3066aba486627bc6ea4908301  host/projection/mcp.go
+8dbe67ec63254d42e8bbafe038dba5d0aaaa8e11bf968cefd144f7a9e0dc4533  host/projection/projection.go
+6803bd2044eeaa9118d96c90797022512aa0b367f89b1aad37d9a6e83997356d  host/store/deadline_guard_test.go
+6aa056dc27ddfce6e29cd2d4c143e25afffecf9233a1ee853b10d3662f20c23f  host/store/schema_version_test.go
+e0e10bcd97a80aa8213a8a63ce03bf76d3eef12a91bd6156570063db49dcc340  host/store/store.go
+INPUT
+cmd/ailang-worldd/call_failure_line_test.go: OK
+cmd/ailang-worldd/mcpclient.go: OK
+cmd/ailang-worldd/why.go: OK
+cmd/ailang-worldd/why_test.go: OK
+docs/QUICKSTART.md: OK
+host/broker/broker.go: OK
+host/broker/broker_test.go: OK
+host/broker/failure.go: OK
+host/broker/failure_test.go: OK
+host/broker/handler_error_repro_test.go: OK
+host/broker/handlers_exec.go: OK
+host/broker/handlers_test.go: OK
+host/broker/record.go: OK
+host/broker/registry_publish_test.go: OK
+host/coordinator/effect_failure_reason_test.go: OK
+host/coordinator/effectful.go: OK
+host/projection/effect_failure_log_test.go: OK
+host/projection/mcp.go: OK
+host/projection/projection.go: OK
+host/store/deadline_guard_test.go: OK
+host/store/schema_version_test.go: OK
+host/store/store.go: OK
+rc=0
+
+$ git diff --check
+(no output)
+rc=0
+
+$ git status --short
+ M cmd/ailang-worldd/mcpclient.go
+ M cmd/ailang-worldd/why.go
+ M cmd/ailang-worldd/why_test.go
+ M docs/QUICKSTART.md
+ M host/broker/broker.go
+ M host/broker/broker_test.go
+ M host/broker/handler_error_repro_test.go
+ M host/broker/handlers_exec.go
+ M host/broker/handlers_test.go
+ M host/broker/record.go
+ M host/broker/registry_publish_test.go
+ M host/coordinator/effectful.go
+ M host/projection/mcp.go
+ M host/projection/projection.go
+ M host/store/deadline_guard_test.go
+ M host/store/schema_version_test.go
+ M host/store/store.go
+?? cmd/ailang-worldd/call_failure_line_test.go
+?? design_docs/verification/world-iter360/executor-M1.txt
+?? host/broker/failure.go
+?? host/broker/failure_test.go
+?? host/coordinator/effect_failure_reason_test.go
+?? host/projection/effect_failure_log_test.go
+rc=0
+
+FINAL: pre 22/22; bank matches; post 22/22, including final recheck. Apply/check rc 0; gofmt rc 0 (empty); vet rc 0; go build ./... rc 0; mutation-script syntax rc 0; diff whitespace rc 0.
+12 named socket-free tests passed at count=1; broker TL/TG/TK/TV also passed at count=3, all command rc 0, no missing identities or skips.
+M1 acceptance remains with controller A3-A8; no Git state written.
