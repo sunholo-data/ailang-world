@@ -1,0 +1,185 @@
+# World iteration 360 — Gate 0–2 readings (controller, 2026-11-06T20:49:41Z)
+# Every line below was produced by the command printed above it, in this run (bash, not zsh).
+
+## origin/dev
+$ git rev-parse origin/dev
+77c9e3d4e232e543c2c4b9ddb774a156231d93a2
+
+## What moved since iteration 359 base (1835d8be)
+$ git log --format="%h %s" 1835d8be..origin/dev
+77c9e3d4 Merge pull request #512 from sunholo-data/mission/world-iter359-landed
+9d0b8b05 docs(mission): iteration 359 landed — row 250 merge e2e2c7cc, merge CI 3/3 attempt 1; A9 met (Linux real-srt step PASSes the new tests and TestExecSrtStartupProbePasses)
+e2e2c7cc Merge pull request #511 from sunholo-data/sprint/world-iter359-foreign-dial
+27affeff docs(mission): record World iteration 359 — row 250 built under D-WORLD-108 = B (attended; first row in scope); judge sonnet PASS 91, zero blocking; X3 survivor reproduced and logged (D-WORLD-109)
+adc19bd7 docs(row 250): bank the controller out-of-sandbox M1 gate round — A1 hashes, A2 fmt/vet/build, A3 relay receipt, A4 19/19, A6 -count=3, A7 broker ok + verify_ail rc 0 + verify_go plain rc 0 (first run red on the controller TMPDIR override, proven), A8 wiring, A5 mutation 177/177 match
+d29c4155 feat(row 250 M1): classify each arm-6 forward-leg accept by its first line (child / foreign / silent); a foreign-only window is retried (at most 3 attempts), child and silent fail at once; one shared line reader, judge, deadline and attempt bound with the reverse leg
+f832533d plan(row 250): w-exec-probe-foreign-dial-false-refusal sprint plan — M1 byte-pinned diff (= designer r2 patch, 5 files), acceptance A0-A9 incl. the r3 relay check and the Linux real-srt CI gate, 177-row mutation runner
+b6a35f04 design(row 250): r3 — correct V20 line numbers (exec_probe.go:663/:668, measured by grep -n)
+4b5607a0 design(row 250): r3 — controller narrow-refinement carve-out applying quorum r2 verbatim fixes (kimi executor relay check + fallback, glm V20 control bound + §5 wording, gemini -count=3); record quorum r2 BLOCKED (kimi reject; gemini, glm pass; none absent; $0.3735)
+50afe67e design(row 250): w-exec-probe-foreign-dial-false-refusal r2 — answer quorum r1: factor one shared line reader, judge, deadline and attempt bound for forward and reverse legs; name the window bound; cite the measured CI real-srt list
+4721da68 design(row 250): w-exec-probe-foreign-dial-false-refusal r1 — classify each arm-6 accept by its first line (child / foreign / silent), retry a foreign-only window, silent fails closed
+
+## Row 150 blocker (attended A1) — commit subjects in range
+$ git log --format=%s 1835d8be..origin/dev | grep -ciE "row ?150|A1\b|marketing"
+1
+$ (control) ... | grep -ciE "iteration|record|merge|row 233|landed"
+5
+$ (range size) ... | wc -l
+11
+
+## Row 151 blocker (row 188 N2d + N4a)
+$ git log origin/dev --since=2026-10-01 --format="%h %s" | grep -ciE "N2d|N4a"
+0
+$ (control) ... | grep -ciE "N2c"
+2
+$ git log origin/dev --since=2026-10-01 -i -E --grep="N2d|N4a" --format="%h %s"
+0148cddb docs(mission): record World iteration 344 — no pick, rule (d) block report 16; rows 250/244–249 wait on D-WORLD-108; dev green at e8027417
+fc1834c1 docs(mission): record World iteration 343 — no pick, rule (d) block report 15; rows 250/244–249 wait on D-WORLD-108; dev green at e74cd740
+5c92bc2e docs(mission): record World iteration 342 — no pick, rule (d) block report 14; rows 250/244–249 wait on D-WORLD-108; dev green at 05b5b05e
+09e8f032 docs(mission): record World iteration 341 — no pick, rule (d) block report 13; rows 250/244–249 wait on D-WORLD-108; dev green at 41298533
+fe9c891e docs(mission): record World iteration 319 — no pick (rule (d) block report 2); release rows wait on attended steps; dev green
+92495b60 docs(mission): record World iteration 317 — no pick (rule (d) block report); row 232 premise re-measured; D-WORLD-102 filed
+be184351 roadmap: all of Mark's agent work through World — goal doc, rows 217-222 NEXT; file D-WORLD-94/95 OPEN
+dc719822 docs(design): w-world-surface-outputs r0 — the front card's outputs, every file type, and work in other programs
+
+## Queue tags: attended track 217-219, release 150/151, parked 233, hygiene 244-254
+150. **[IN-SPRINT 
+151. **[v1
+217. **[NEXT 
+218. **[NEXT 
+219. **[NEXT 
+233. **[PARKED iteration 330 
+244. **[FOLDED into row 258 
+245. **[FOLDED into row 258 
+246. **[FOLDED into row 258 
+247. **[FOLDED into row 258 
+248. **[FOLDED into row 258 
+249. **[FOLDED into row 258 
+250. **[LANDED iteration 359 
+251. **[FOLDED into row 258 
+252. **[RESOLVED 2026-11-05 
+253. **[RESOLVED 2026-11-05 
+254. **[FOLDED into row 258 
+
+## External predicates: every upstream ailang issue/PR number the charter names (all spellings)
+$ grep -oE "(ailang ?#|ailang/(issues|pull)/|upstream (issue )?#)[0-9]+" design_docs/world-mission.md | grep -oE "[0-9]+$" | sort -un
+count=33
+476:closed 477:closed 486:closed 493:closed 498:closed 517:closed 611:closed 633:closed 764:closed 885:closed 941:closed 984:closed 1036:closed 1037:closed 1042:closed 1043:closed 1096:closed 1160:closed 1424:closed 1542:closed 1547:closed 1557:closed 1558:closed 1559:closed 1580:closed 1602:closed 1607:closed 1635:closed 1843:closed 2053:closed 2127:closed 2132:closed 2160:closed 
+results=33 not-closed=0
+$ (positive control: row 53 names ailang#941)
+ailang#941
+$ (instrument control) gh issue list -R sunholo-data/ailang --state open --limit 3 --json number --jq length
+3
+
+## Dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+$ gh run list -R sunholo-data/ailang-world --branch dev --workflow CI --limit 5 --json headSha,conclusion,attempt
+77c9e3d4 success attempt=1
+e2e2c7cc success attempt=1
+1835d8be success attempt=1
+8712ffc5 success attempt=1
+68c29960 success attempt=1
+
+## Open PRs (repo)
+0
+
+## Directives (allowlisted) on #449 (current) and #366 (prev)
+$ ls ~/.ailang/state/mission-449-last-seen ~/.ailang/state/mission-366-last-seen
+ls: /Users/voightkampff/.ailang/state/mission-449-last-seen: No such file or directory
+/Users/voightkampff/.ailang/state/mission-366-last-seen
+[1;33m⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-449-last-seen is absent — reading every allowlisted comment on #449; the first --mark creates it[0m
+[1;33mmission_directives: #449 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 31 comments; the rest are public feedback, never directives)[0m
+[1;33m⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it[0m
+[1;33mmission_directives: #366 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 35 comments; the rest are public feedback, never directives)[0m
+
+## Self crash notices (Gate 0 step 6a)
+watermark: /Users/voightkampff/.ailang/state/mission-449-last-seen ABSENT — DEGRADED: single-watermark read (iter-52 rule wants two)
+watermark: /Users/voightkampff/.ailang/state/mission-366-last-seen = 2026-10-27T09:03:42Z ok
+issue: 449 comments=31 self=31 crash=0 transcript=2 other=29
+issue: 366 comments=35 self=35 crash=0 transcript=0 other=35
+control: issue=107 expect=4 got=4 ok
+verdict: 0 crash notice(s) since 2026-10-27T09:03:42Z on #449,#366 — no death signal from the driver; Gate 2's traces (a)-(c) still run [mission_gate0_self_notices.sh, control 107:4, watermarks 1/2]; transcript notice(s) since watermark: 2; exposure reported: key names are in the private controlplane notice; report the count and fire id, never a value or path
+
+## Died-mid-flight traces
+$ gh pr list --state open
+$ git worktree list | grep -E "iter3(59|60)"
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter360                                                                               77c9e3d4 [mission/world-iter360-record]
+$ git ls-remote --heads origin "*iter360*"
+
+## Decision ledger
+decision ledger valid: 96 rows
+D-WORLD-105	OPEN
+$ git diff 1835d8be origin/dev -- design_docs/world-mission.md | grep -c "^[-+]| D-WORLD"
+0
+
+## Weekly sweep / rotation predicates (not due: both ran at iteration 333, first fire after the 2026-11-02 boundary; next boundary Monday 2026-11-09)
+$ date  # local
+Fri Nov  6 21:50:10 CET 2026
+$ gh issue view 449 --json createdAt,comments
+createdAt=2026-11-02T08:01:35Z comments=31
+$ gh issue list --state open --json number
+[449]
+
+## Live log entries before this record
+34
+
+## Skill drift (Gate 1 rule (d) snippet, run in the driver clone against its origin/dev)
+$ git -C $AILANG_DRIVER_SRC fetch -q origin dev
+fetch rc=0
+$ git -C $AILANG_DRIVER_SRC rev-parse --short origin/dev
+7c95c938d
+same .claude/skills/mission-control/SKILL.md
+same .claude/skills/mission-control/resources/ci-health.md
+same .claude/skills/mission-control/resources/codex-lane-false-greens.md
+same .claude/skills/mission-control/resources/gate-0-preflight.md
+same .claude/skills/mission-control/resources/gate-1-observe.md
+same .claude/skills/mission-control/resources/gate-2-pick.md
+same .claude/skills/mission-control/resources/gate-3-route.md
+same .claude/skills/mission-control/resources/gate-3-triage.md
+same .claude/skills/mission-control/resources/gate-3b-ci-green.md
+same .claude/skills/mission-control/resources/gate-4-record.md
+same .claude/skills/mission-control/resources/gate-5-retro.md
+same .claude/skills/mission-control/resources/ref-drift.md
+same .claude/skills/mission-control/resources/role-spawn-routing.md
+same .claude/skills/mission-control/resources/verification-protocol.md
+files=14
+absent (no copy to read): /Users/voightkampff/dev/sunholo-data/ailang-world/.claude/skills/mission-control
+$ (negative control) origin SKILL.md vs running gate-1-observe.md
+control fired (differ)
+
+## Dev CI per workflow (Gate 1 loop)
+CI: success @ 77c9e3d4e
+CI 77c9e3d4 success
+CI e2e2c7cc success
+CI 1835d8be success
+CI 8712ffc5 success
+CI 68c29960 success
+CI e853ca38 success
+CI 374eca52 success
+CI 2606f155 success
+
+## Unread inbox per sender (Gate 0 step 4)
+$ ailang messages list --unread -inbox mission-world -limit 1000 -compact | cut -f2 | sort | uniq -c
+  54 mission-world
+$ (control: all inboxes, unread, any sender) ailang messages list --unread -limit 1000 -compact | wc -l
+1000
+
+## Row 151 artifact check (iteration 347 judge NB1): N2d's GET /surface/file.json route built?
+$ grep -rln 'file\.json' --include='*.go' . | grep -v _test.go | wc -l
+0
+$ (control) grep -rln surface --include='*.go' host | wc -l
+109
+
+## Attended-ruling provenance (Gate 0 step 6 rule (b)) for ledger rows changed since base
+$ git diff 1835d8be origin/dev -- design_docs/world-mission.md | grep -oE "^[-+]\| D-WORLD-[0-9]+" | sort | uniq -c
+$ mission_ledger_provenance.sh --id D-WORLD-108
+D-WORLD-108 verdict=attended flip=cd15c9dce6cd020266acd2a9ff99b384cf610421 creation=e9ec30595407531121ac02a52dfd24395dc411ab
+rc=0
+$ mission_ledger_provenance.sh --id D-WORLD-109
+D-WORLD-109 verdict=attended flip=61e2411aaa8c02bbc2058a5c8cafa1431454baf6 creation=89a92ea028464466542277f72ce69f809b42b7e8
+rc=0
+$ (control) mission_ledger_provenance.sh --id D-WORLD-105
+D-WORLD-105 verdict=never-resolved flip=none creation=c59fab19b735f5066fa9a4e8269af19f9400127e

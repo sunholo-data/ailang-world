@@ -45,6 +45,15 @@ var schemaSQL string
 // to the credentials store (row 189, credentials.go / credentials_migrate.go).
 const currentSchemaVersion = 5
 
+// failureLineSchemaVersion 6 is schema 5's DDL with one more meaning (row 255,
+// design_docs/planned/w-exec-failure-carries-a-reason.md §3.7): the store may
+// hold an effect record carrying a `failure` line, which a binary that knows
+// only version 5 cannot decode. MarkFailureLines raises 5 to 6 before the first
+// such record is written, so that binary refuses the store at open with
+// FutureSchemaVersionError instead of failing on the record mid-read. Fresh
+// stores still start at 5, and a store with no failure line stays at 5.
+const failureLineSchemaVersion = 6
+
 // ErrApprovalAlreadyConsumed reports that an approval reference has already
 // been bound to a durable effect intent. Approval claims are single-use and
 // have no update, delete, or refund path.
@@ -437,7 +446,7 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 			return &PreSplitStoreError{Path: display}
 		}
 	}
-	if version == currentSchemaVersion || version == preSplitSchemaVersion {
+	if version == currentSchemaVersion || version == preSplitSchemaVersion || version == failureLineSchemaVersion {
 		// Only fresh initialization may create commit_objects; check it before
 		// schemaSQL's CREATE IF NOT EXISTS could bring it back empty.
 		var membershipTables int
@@ -455,16 +464,47 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 			if err := db.QueryRow("PRAGMA user_version").Scan(&after); err != nil {
 				return fmt.Errorf("store: re-read schema version: %w", err)
 			}
-			if after != currentSchemaVersion {
-				return fmt.Errorf("store: schema version drift: %q reported user_version %d after applying the current schema; want %d", display, after, currentSchemaVersion)
+			if after != version {
+				return fmt.Errorf("store: schema version drift: %q reported user_version %d after applying the current schema; want %d", display, after, version)
 			}
 		}
 		return nil
 	}
-	if version > currentSchemaVersion {
-		return &FutureSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
+	if version > failureLineSchemaVersion {
+		return &FutureSchemaVersionError{Path: display, Found: version, Current: failureLineSchemaVersion}
 	}
 	return &LegacySchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
+}
+
+// MarkFailureLines raises a version-5 store to failureLineSchemaVersion; a
+// version-6 store is left as it is. The broker calls it before it writes the
+// first effect record that carries a failure line. A read-only handle cannot
+// write the pragma, so it fails, and the broker then records no line.
+func (s *Store) MarkFailureLines(ctx context.Context) error {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
+	var version int
+	if err := s.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		return fmt.Errorf("store: mark failure lines: read schema version: %w", err)
+	}
+	switch version {
+	case failureLineSchemaVersion:
+		return nil
+	case currentSchemaVersion:
+	default:
+		return fmt.Errorf("store: mark failure lines: user_version %d is not %d or %d", version, currentSchemaVersion, failureLineSchemaVersion)
+	}
+	if _, err := s.db.ExecContext(ctx, fmt.Sprintf("PRAGMA user_version = %d", failureLineSchemaVersion)); err != nil {
+		return fmt.Errorf("store: mark failure lines: %w", err)
+	}
+	if err := s.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil || version != failureLineSchemaVersion {
+		return fmt.Errorf("store: mark failure lines: user_version is %d after marking (%v); want %d", version, err, failureLineSchemaVersion)
+	}
+	return nil
 }
 
 func freshInitTx(db *sql.DB, writeVersion func(*sql.Tx) error) error {

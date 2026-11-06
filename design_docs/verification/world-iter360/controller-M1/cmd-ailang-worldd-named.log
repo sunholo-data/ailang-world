@@ -1,0 +1,6 @@
+=== RUN   TestCallPrintsTheFailureLine
+--- PASS: TestCallPrintsTheFailureLine (0.00s)
+=== RUN   TestWhyShowsTheFailureLine
+--- PASS: TestWhyShowsTheFailureLine (0.03s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.322s

@@ -248,12 +248,16 @@ type execResultSandbox struct {
 	Network        string `json:"network"`
 }
 
+// Execute answers one Workspace.Exec call. Every error it returns is a
+// *HandlerFailure (row 255): the broker records its bounded line, and the
+// caller's world block and `why` carry the same line.
 func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []byte) ([]byte, error) {
-	if req.Effect != EffectWorkspaceExec {
-		return nil, fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
-	}
-	if req.Scope != WorkspaceScope {
-		return nil, fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
+	if req.Effect != EffectWorkspaceExec || req.Scope != WorkspaceScope {
+		err := fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
+		if req.Effect == EffectWorkspaceExec {
+			err = fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
+		}
+		return nil, execFailure(FailExecMisrouted, req.Effect+"@"+req.Scope, err, h.disclosed(nil, ExecProfileCommand{}))
 	}
 	// Gate 2 (§4.2): the profile and the grammar, before anything runs.
 	id, args, why := parseExecPayload(payload)
@@ -274,7 +278,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 		var why string
 		sandbox, profile, why, err = h.tools.resolve(ctx, h.profile.Project, h.worktree)
 		if err != nil {
-			return nil, err
+			return nil, execFailure(FailExecTools, "the per-call re-check of the exec tools failed", err, h.disclosed(nil, cmd))
 		}
 		if why != "" {
 			return execRefusal(why)
@@ -287,21 +291,22 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	emitted := EmitExecArgs(cmd.ExecCommand, normalized)
 	// §4.6: the stack that sets up the fence is re-verified before EACH call;
 	// a mismatch is a failure naming the file, with nothing spawned.
+	seen := h.disclosed(sandbox, cmd)
 	if err := sandbox.Verify(); err != nil {
-		return nil, err
+		return nil, execFailure(FailExecStackDrift, "unreadable", err, seen)
 	}
 	if err := verifyFileDigest(cmd.Argv0, cmd.Argv0SHA256); err != nil {
-		return nil, err
+		return nil, execFailure(FailExecStackDrift, "unreadable", err, seen)
 	}
 	if err := verifyExecSettings(h.settingsPath, h.settings); err != nil {
-		return nil, err
+		return nil, execFailure(FailExecSettingsDrift, "unreadable", err, seen)
 	}
 	cwd, err := h.projectDir()
 	if err != nil {
-		return nil, err
+		return nil, execFailure(FailProjectRoot, fmt.Sprintf("root %q is not a directory inside the worktree", h.profile.Root), err, seen)
 	}
 	if err := h.prepareCache(ctx); err != nil {
-		return nil, err
+		return nil, execFailure(FailExecCache, "the episode cache cannot be prepared", err, seen)
 	}
 	deadline, hasDeadline := ctx.Deadline()
 	var before protectedCheck
@@ -312,7 +317,8 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	}
 	budget := execChildBudget(time.Duration(h.profile.TimeoutMS)*time.Millisecond, deadline, hasDeadline, time.Now(), reserve)
 	if budget <= 0 {
-		return nil, fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id)
+		return nil, execFailure(FailTimeBudgetSpent, fmt.Sprintf("the call's time was spent before %q could start", id),
+			fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id), seen)
 	}
 	launch := h.launch(append(append([]string{cmd.Argv0}, cmd.Argv[1:]...), emitted...), true)
 	capture := newCaptureHeadTail(execHeadBytes, execTailBytes, h.maxOutput)
@@ -353,7 +359,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 			Runtime: ExecSandboxPackage, Version: sandbox.Version, CLISHA256: sandbox.CLISHA256,
 			SettingsDigest: h.settingsDigest, ReadFence: true, Network: "none"}}
 	if cleanupIncomplete(runErr) {
-		return nil, runErr
+		return nil, execFailure(FailCleanupIncomplete, "the command's processes were not all reaped", runErr, seen)
 	}
 	switch code, exited := handlerExitStatus(runErr); {
 	case runErr == nil:
@@ -367,7 +373,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	case exited:
 		res.ExitCode = &code
 	default:
-		return nil, runErr
+		return nil, execFailure(FailSandboxStart, "the sandbox could not be started", runErr, seen)
 	}
 	out, errOut := capture.stdout.snapshot(), capture.stderr.snapshot()
 	res.Stdout, res.StdoutBytes, res.StdoutTruncated, res.StdoutSHA256 = out.Text, out.Bytes, out.Truncated, out.SHA256
@@ -524,7 +530,7 @@ func (h *ExecHandler) prepareCache(ctx context.Context) error {
 	defer h.seedMu.Unlock()
 	for _, d := range []string{"home", "tmp", "pycache", "npm"} {
 		if err := os.MkdirAll(filepath.Join(h.cache, d), 0o700); err != nil {
-			return err
+			return &HandlerFailure{Class: FailExecCache, Detail: d + ": cannot be created", Err: err}
 		}
 	}
 	for _, name := range sortedKeys(h.profile.Caches) {
@@ -535,7 +541,7 @@ func (h *ExecHandler) prepareCache(ctx context.Context) error {
 		seed := h.profile.Caches[name].Seed
 		if seed == "" {
 			if err := os.MkdirAll(dst, 0o700); err != nil {
-				return err
+				return &HandlerFailure{Class: FailExecCache, Detail: name + ": cannot be created", Err: err}
 			}
 			continue
 		}
@@ -548,7 +554,8 @@ func (h *ExecHandler) prepareCache(ctx context.Context) error {
 			path: "/bin/cp", args: args, dir: h.cache, env: execHostEnv(),
 		}); err != nil {
 			_ = os.RemoveAll(dst)
-			return fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)
+			return &HandlerFailure{Class: FailSeedCache, Detail: name + ": " + seedWhat(err),
+				Err: fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)}
 		}
 	}
 	return nil

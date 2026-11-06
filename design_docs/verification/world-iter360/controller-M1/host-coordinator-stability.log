@@ -1,0 +1,20 @@
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified
+--- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays (0.03s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified (0.02s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified (0.01s)
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified
+--- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays (0.02s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified (0.01s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified (0.01s)
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified
+--- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays (0.02s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified (0.01s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	0.270s

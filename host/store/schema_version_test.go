@@ -15,7 +15,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const frozenFutureSchemaVersion = 6
+// frozenFutureSchemaVersion is the first version this binary refuses. Row 255
+// made 6 a supported version (failureLineSchemaVersion), so it moved 6 → 7.
+const frozenFutureSchemaVersion = 7
 
 const expectedCurrentSchemaVersion = 5
 
@@ -415,8 +417,8 @@ func TestFutureVersionIsRejected(t *testing.T) {
 		t.Fatal("future Open returned a store")
 	}
 	var future *FutureSchemaVersionError
-	if !errors.As(err, &future) || future.Found != frozenFutureSchemaVersion || future.Current != 5 {
-		t.Fatalf("Open error = %#v, want future Found=6 Current=5", err)
+	if !errors.As(err, &future) || future.Found != frozenFutureSchemaVersion || future.Current != failureLineSchemaVersion {
+		t.Fatalf("Open error = %#v, want future Found=7 Current=6", err)
 	}
 	if !strings.Contains(err.Error(), "schema version future") {
 		t.Fatalf("future message = %q", err)
@@ -766,5 +768,71 @@ func TestSqliteXProbeVersionZeroStoreIsLegacy(t *testing.T) {
 	}
 	if _, ok := tableDDL(t, db)["sqliteX_probe"]; !ok {
 		t.Fatal("sqliteX_probe did not survive rejected Open")
+	}
+}
+
+// TestMarkFailureLinesRaisesFiveToSixOnce is row 255's store half
+// (design_docs/planned/w-exec-failure-carries-a-reason.md §3.7, TS): a writer
+// raises 5 to 6 once and keeps 6; a marked store opens for writers and
+// readers of this build; a read-only handle cannot mark; anything else refuses.
+func TestMarkFailureLinesRaisesFiveToSixOnce(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "mark.db")
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	version := func(s *Store) int {
+		var v int
+		if err := s.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil {
+			t.Fatal(err)
+		}
+		return v
+	}
+	if v := version(s); v != currentSchemaVersion {
+		t.Fatalf("fresh store user_version = %d, want %d (marking is lazy)", v, currentSchemaVersion)
+	}
+	ro, err := OpenReadOnly(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ro.MarkFailureLines(boundedTestContext(t)); err == nil || version(s) != currentSchemaVersion {
+		t.Fatalf("read-only MarkFailureLines = %v, version %d; want an error and 5", err, version(s))
+	}
+	_ = ro.Close()
+	for i := 0; i < 2; i++ {
+		if err := s.MarkFailureLines(boundedTestContext(t)); err != nil || version(s) != failureLineSchemaVersion {
+			t.Fatalf("MarkFailureLines #%d = %v, version %d; want nil and %d", i+1, err, version(s), failureLineSchemaVersion)
+		}
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if v, err := WorldSchemaVersion(path); err != nil || v != failureLineSchemaVersion {
+		t.Fatalf("WorldSchemaVersion = %d, %v; want %d", v, err, failureLineSchemaVersion)
+	}
+	for name, open := range map[string]func(string) (*Store, error){"writer": Open, "reader": OpenReadOnly} {
+		re, err := open(path)
+		if err != nil {
+			t.Fatalf("%s reopen of a marked store: %v", name, err)
+		}
+		if v := version(re); v != failureLineSchemaVersion {
+			t.Fatalf("%s reopen rewrote user_version to %d", name, v)
+		}
+		_ = re.Close()
+	}
+	legacy := filepath.Join(t.TempDir(), "legacy.db")
+	db := rawDB(t, legacy)
+	if _, err := db.Exec(schemaSQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, db, preSplitSchemaVersion)
+	_ = db.Close()
+	if pre, err := OpenReadOnly(legacy); err != nil {
+		t.Fatal(err)
+	} else {
+		if err := pre.MarkFailureLines(boundedTestContext(t)); err == nil || !strings.Contains(err.Error(), "is not 5 or 6") {
+			t.Fatalf("MarkFailureLines on a schema-4 store = %v, want a refusal", err)
+		}
+		_ = pre.Close()
 	}
 }

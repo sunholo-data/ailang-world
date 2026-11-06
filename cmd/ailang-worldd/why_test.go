@@ -125,6 +125,14 @@ func (r *walkRig) invokeResult(surface coordinator.Surface, episode, skill, task
 }
 
 func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill, task, content string, result []byte, effect string) synthInv {
+	r.t.Helper()
+	return r.invokeEffect(surface, episode, skill, task, content, result, effect, nil)
+}
+
+// invokeEffect is invokeEffectResult; a non-nil failure commits the effect as
+// failed instead (row 255): no result object, the record's failure line set to
+// *failure, and the world block's status "failed" with that reason.
+func (r *walkRig) invokeEffect(surface coordinator.Surface, episode, skill, task, content string, result []byte, effect string, failure *string) synthInv {
 	t := r.t
 	t.Helper()
 	by := "coordinator:" + string(surface)
@@ -138,9 +146,21 @@ func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill
 	resObj := synthObject(broker.EffectResultV1, "host/broker", result)
 	rec := broker.EffectRecord{Effect: effect, Scope: "worktree", Cost: 1, BudgetBefore: 20, BudgetAfter: 19, Allowed: true,
 		RequestRef: hashref.MustParse(reqObj.Hash), ResultRef: hashref.MustParse(resObj.Hash)}
+	effects := []cliObject{reqObj, resObj}
+	if failure != nil {
+		rec.Failed, rec.ResultRef, rec.Failure = true, hashref.HashRef{}, *failure
+		effects = []cliObject{reqObj}
+	}
 	recObj := synthObject(broker.EffectRecordV1, "host/broker", broker.EncodeRecord(rec))
 	outputText := string(mustJSONT(t, map[string]any{"ok": true, "content": content,
 		"world": map[string]any{"plan": plan.Hash, "effects": []map[string]any{{"id": "e1", "status": "ok", "record": recObj.Hash}}}}))
+	if failure != nil {
+		fx := map[string]any{"id": "e1", "status": "failed", "record": recObj.Hash}
+		if *failure != "" {
+			fx["reason"] = *failure
+		}
+		outputText = string(mustJSONT(t, map[string]any{"world": map[string]any{"plan": plan.Hash, "effects": []map[string]any{fx}}}))
+	}
 	out := synthObject(coordinator.OutputV1, by, []byte(outputText))
 	id := coordinator.InvocationID(surface, episode, task)
 	fn := hashref.SumSHA256([]byte("fn-" + skill)).String()
@@ -173,7 +193,8 @@ func (r *walkRig) invokeEffectResult(surface coordinator.Surface, episode, skill
 		StateRoot string `json:"stateRoot"`
 		LogHead   string `json:"logHead"`
 	}{next.Revision, next.StateRoot, next.LogHead})).String()
-	r.post(cliCommit{ObservedHead: r.tip.Ref, Objects: []cliObject{in, out, plan, reqObj, resObj, recObj, record}, NextWorld: next,
+	objects := append(append([]cliObject{in, out, plan}, effects...), recObj, record)
+	r.post(cliCommit{ObservedHead: r.tip.Ref, Objects: objects, NextWorld: next,
 		Entry: cliEntry{Header: hdr, EntryHash: entryHash, TransitionRef: record.Hash}})
 	inv := synthInv{id: id, episode: episode, record: record.Hash, input: in.Hash, output: out.Hash, plan: plan.Hash,
 		effect: recObj.Hash, result: resObj.Hash, outputText: outputText}
@@ -418,6 +439,28 @@ func TestWhyShowsTheWorktreeDelta(t *testing.T) {
 	assertChainOK(t, "snapshot error", code, stdout, stderr, 3)
 	if !strings.Contains(stdout, "worktree: not recorded — worktree snapshot before the call failed: boom") {
 		t.Fatalf("the snapshot error is not shown:\n%s", stdout)
+	}
+}
+
+// TestWhyShowsTheFailureLine is row 255's why arm (TW): a failed effect's
+// record line is printed on its effect link, the chain still verifies, and a
+// failed record from before row 255 (no line) prints exactly as before.
+func TestWhyShowsTheFailureLine(t *testing.T) {
+	r := newWalkRig(t)
+	line := "exec-stack-drift: srt archive @anthropic-ai/sandbox-runtime/dist/cli.js: changed since it was archived"
+	none := ""
+	withLine := r.invokeEffect(coordinator.SurfaceMCP, "ep1", "workspace-exec", "task-1", "", nil, broker.EffectWorkspaceExec, &line)
+	old := r.invokeEffect(coordinator.SurfaceMCP, "ep1", "workspace-exec", "task-2", "", nil, broker.EffectWorkspaceExec, &none)
+
+	code, stdout, stderr := whyRun(t, r.url, "", withLine.id)
+	assertChainOK(t, "failure line", code, stdout, stderr, 1)
+	if !strings.Contains(stdout, "e1 failed Workspace.Exec@worktree cost 1 budget 20→19") || !strings.Contains(stdout, "no result: "+line) {
+		t.Fatalf("why did not print the failure line %q on the effect link:\n%s", line, stdout)
+	}
+	code, stdout, stderr = whyRun(t, r.url, "", old.id)
+	assertChainOK(t, "no failure line", code, stdout, stderr, 2)
+	if !strings.Contains(stdout, "e1 failed Workspace.Exec@worktree") || strings.Contains(stdout, "no result:") {
+		t.Fatalf("a failed record with no line changed its why text:\n%s", stdout)
 	}
 }
 

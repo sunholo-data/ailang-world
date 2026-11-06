@@ -1,0 +1,9 @@
+M1 applied exactly as pinned.
+
+- Pre/post hashes: **22/22 match**; diff hash matches.
+- Apply, gofmt (empty), vet, build, syntax and whitespace checks: **rc 0 each**.
+- Tests TL, TG, TK, TV, TS, Future, ROFive, Guard, TC, Replay, TP, TR: **rc 0**. TL/TG/TK/TV also passed at count=3.
+- Listener tests unrun: **UNINFORMATIVE UNDER SANDBOX**.
+- No unexpected failures. Known plan F1 applies: default test temporary files extend outside the worktree; TMPDIR remained unchanged.
+
+Commands, return codes and output recorded in [executor-M1.txt](/Users/voightkampff/dev/sunholo-data/.wt-world-iter360/design_docs/verification/world-iter360/executor-M1.txt).

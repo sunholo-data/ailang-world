@@ -1,0 +1,6 @@
+marked.db.writer.lock
+    zz_make_marked_store_test.go:18: record sha256:53633d27d22a6c97dc2f7e5bca5c426ff4d0d209963b707ea3bf345ebd2b5ccc err broker: effect "Workspace.Exec" failed for scope "worktree" (record sha256:53633d27d22a6c97dc2f7e5bca5c426ff4d0d209963b707ea3bf345ebd2b5ccc)
+    zz_make_marked_store_test.go:21: marked store user_version = 6 <nil>
+    zz_old_binary_probe_test.go:7: HEAD Open(marked) = false, err = store: schema version future: "/tmp/iter360-designer/marked.db" has user_version 6; binary supports 5; use a compatible binary
+    zz_old_binary_probe_test.go:9: HEAD OpenReadOnly(marked) = false, err = store: schema version future: "/tmp/iter360-designer/marked.db" has user_version 6; binary supports 5; use a compatible binary
+ok  	github.com/sunholo-data/ailang-world/host/store	0.253s

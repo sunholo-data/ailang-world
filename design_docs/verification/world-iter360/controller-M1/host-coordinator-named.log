@@ -1,0 +1,18 @@
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified
+=== RUN   TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified
+--- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays (0.02s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/classified (0.01s)
+    --- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays/unclassified (0.01s)
+=== RUN   TestEffectReplay
+=== RUN   TestEffectReplay/no_finish
+=== RUN   TestEffectReplay/finish
+=== RUN   TestEffectReplay/denied_and_failed_records_replay
+=== RUN   TestEffectReplay/pure_record_is_not_replayed_as_effectful
+--- PASS: TestEffectReplay (0.03s)
+    --- PASS: TestEffectReplay/no_finish (0.01s)
+    --- PASS: TestEffectReplay/finish (0.01s)
+    --- PASS: TestEffectReplay/denied_and_failed_records_replay (0.01s)
+    --- PASS: TestEffectReplay/pure_record_is_not_replayed_as_effectful (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	0.265s

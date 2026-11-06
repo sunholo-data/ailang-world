@@ -1,0 +1,232 @@
+=== RUN   TestStoreDeadlineGuardDynamic
+=== RUN   TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendEffectOutcome/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendEffectOutcome/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendEffectOutcome/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendIntent/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendIntent/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendIntent/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/AppendOutcome/nil
+=== RUN   TestStoreDeadlineGuardDynamic/AppendOutcome/background
+=== RUN   TestStoreDeadlineGuardDynamic/AppendOutcome/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/Commit/nil
+=== RUN   TestStoreDeadlineGuardDynamic/Commit/background
+=== RUN   TestStoreDeadlineGuardDynamic/Commit/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/CommitLanded/nil
+=== RUN   TestStoreDeadlineGuardDynamic/CommitLanded/background
+=== RUN   TestStoreDeadlineGuardDynamic/CommitLanded/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/EffectSpend/nil
+=== RUN   TestStoreDeadlineGuardDynamic/EffectSpend/background
+=== RUN   TestStoreDeadlineGuardDynamic/EffectSpend/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetEffectReceipt/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetEffectReceipt/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetEffectReceipt/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetLogEntry/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetLogEntry/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetLogEntry/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetObject/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetObject/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetObject/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetReceipt/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetReceipt/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetReceipt/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetRegistryHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetRegistryHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetRegistryHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetVerifyResult/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetVerifyResult/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetVerifyResult/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/GetWorld/nil
+=== RUN   TestStoreDeadlineGuardDynamic/GetWorld/background
+=== RUN   TestStoreDeadlineGuardDynamic/GetWorld/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/InvocationIntents/nil
+=== RUN   TestStoreDeadlineGuardDynamic/InvocationIntents/background
+=== RUN   TestStoreDeadlineGuardDynamic/InvocationIntents/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesAfter/nil
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesAfter/background
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesAfter/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesLatest/nil
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesLatest/background
+=== RUN   TestStoreDeadlineGuardDynamic/LogEntriesLatest/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/MarkFailureLines/nil
+=== RUN   TestStoreDeadlineGuardDynamic/MarkFailureLines/background
+=== RUN   TestStoreDeadlineGuardDynamic/MarkFailureLines/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectCommits/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectCommits/background
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectCommits/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectReferences/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectReferences/background
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectReferences/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/background
+=== RUN   TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PendingEffectIntents/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PendingEffectIntents/background
+=== RUN   TestStoreDeadlineGuardDynamic/PendingEffectIntents/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PendingIntents/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PendingIntents/background
+=== RUN   TestStoreDeadlineGuardDynamic/PendingIntents/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PutObject/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PutObject/background
+=== RUN   TestStoreDeadlineGuardDynamic/PutObject/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PutVerifyResult/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PutVerifyResult/background
+=== RUN   TestStoreDeadlineGuardDynamic/PutVerifyResult/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/PutWorld/nil
+=== RUN   TestStoreDeadlineGuardDynamic/PutWorld/background
+=== RUN   TestStoreDeadlineGuardDynamic/PutWorld/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ReadObject/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ReadObject/background
+=== RUN   TestStoreDeadlineGuardDynamic/ReadObject/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableLog/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableLog/background
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableLog/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/nil
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/background
+=== RUN   TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/SelectHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/SelectHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/SelectHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/SelectedHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/SelectedHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/SelectedHead/deadline
+=== RUN   TestStoreDeadlineGuardDynamic/SetRegistryHead/nil
+=== RUN   TestStoreDeadlineGuardDynamic/SetRegistryHead/background
+=== RUN   TestStoreDeadlineGuardDynamic/SetRegistryHead/deadline
+--- PASS: TestStoreDeadlineGuardDynamic (0.07s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendClaimedEffectIntent/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendEffectOutcome/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendEffectOutcome/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendEffectOutcome/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendIntent/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendIntent/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendIntent/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendNextEffectIntent/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendOutcome/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendOutcome/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/AppendOutcome/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/Commit/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/Commit/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/Commit/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CommitLanded/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CommitLanded/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CommitLanded/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/CompareAndSetRegistryHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/EffectSpend/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/EffectSpend/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/EffectSpend/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetEffectReceipt/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetEffectReceipt/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetEffectReceipt/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetLogEntry/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetLogEntry/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetLogEntry/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetObject/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetObject/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetObject/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetReceipt/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetReceipt/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetReceipt/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetRegistryHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetRegistryHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetRegistryHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetVerifyResult/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetVerifyResult/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetVerifyResult/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetWorld/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetWorld/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/GetWorld/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/InvocationIntents/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/InvocationIntents/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/InvocationIntents/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesAfter/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesAfter/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesAfter/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesLatest/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesLatest/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/LogEntriesLatest/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/MarkFailureLines/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/MarkFailureLines/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/MarkFailureLines/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectCommits/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectCommits/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectCommits/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectReferences/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectReferences/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectReferences/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ObjectsBySemanticID/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingEffectIntents/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingEffectIntents/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingEffectIntents/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingIntents/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingIntents/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PendingIntents/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutObject/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutObject/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutObject/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutVerifyResult/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutVerifyResult/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutVerifyResult/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutWorld/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutWorld/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/PutWorld/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ReadObject/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ReadObject/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ReadObject/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableLog/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableLog/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableLog/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/ScanUnreadableWorlds/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectedHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectedHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SelectedHead/deadline (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SetRegistryHead/nil (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SetRegistryHead/background (0.00s)
+    --- PASS: TestStoreDeadlineGuardDynamic/SetRegistryHead/deadline (0.00s)
+=== RUN   TestFutureVersionIsRejected
+--- PASS: TestFutureVersionIsRejected (0.01s)
+=== RUN   TestOpenReadOnlyEnforcesVersionFive
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/version5
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/version4
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/version3
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/legacy
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/sqliteX_probe
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/future
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/negative1
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/int32min
+=== RUN   TestOpenReadOnlyEnforcesVersionFive/empty
+--- PASS: TestOpenReadOnlyEnforcesVersionFive (0.03s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/version5 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/version4 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/version3 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/legacy (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/sqliteX_probe (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/future (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/negative1 (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/int32min (0.00s)
+    --- PASS: TestOpenReadOnlyEnforcesVersionFive/empty (0.00s)
+=== RUN   TestMarkFailureLinesRaisesFiveToSixOnce
+--- PASS: TestMarkFailureLinesRaisesFiveToSixOnce (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/store	0.323s

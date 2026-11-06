@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 360 | 2026-11-06 | row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; desig... |
 | 359 | 2026-11-06 | row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design... |
 | 358 | 2026-11-06 | no pick: rule (d) block report 30 (repeats 341–357); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12299; Gat... |
 | 357 | 2026-11-06 | no pick: rule (d) block report 29 (repeats 341–356); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12190; Gat... |

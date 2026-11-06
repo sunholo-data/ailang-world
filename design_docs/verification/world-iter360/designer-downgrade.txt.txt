@@ -1,0 +1,3 @@
+    zz_downgrade_probe_test.go:7: HEAD DecodeRecord(row-255 failed record) err = broker: decode effect record: json: unknown field "failure"
+    zz_downgrade_probe_test.go:9: HEAD DecodeRecord(same record without failure) err = <nil>
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.355s

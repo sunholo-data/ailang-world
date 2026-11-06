@@ -27,6 +27,10 @@ type EffectRecord struct {
 	Denial       string
 	RequestRef   hashref.HashRef
 	ResultRef    hashref.HashRef
+	// Failure is row 255's bounded failure line (FailureLine), set only on a
+	// failed record whose handler returned a *HandlerFailure. It is omitted
+	// from the wire when empty, so every other record keeps its bytes.
+	Failure string
 }
 
 type recordWire struct {
@@ -40,13 +44,14 @@ type recordWire struct {
 	Denial       string `json:"denial"`
 	RequestRef   string `json:"requestRef"`
 	ResultRef    string `json:"resultRef"`
+	Failure      string `json:"failure,omitempty"`
 }
 
 // EncodeRecord is the single fixed-field-order record codec.
 func EncodeRecord(rec EffectRecord) []byte {
 	payload, err := json.Marshal(recordWire{
 		rec.Effect, rec.Scope, rec.Cost, rec.BudgetBefore, rec.BudgetAfter,
-		rec.Allowed, rec.Failed, rec.Denial, rec.RequestRef.String(), rec.ResultRef.String(),
+		rec.Allowed, rec.Failed, rec.Denial, rec.RequestRef.String(), rec.ResultRef.String(), rec.Failure,
 	})
 	if err != nil {
 		panic("broker: fixed effect record cannot fail JSON encoding: " + err.Error())
@@ -73,10 +78,14 @@ func DecodeRecord(payload []byte) (EffectRecord, error) {
 			return EffectRecord{}, err
 		}
 	}
-	return EffectRecord{
+	rec := EffectRecord{
 		wire.Effect, wire.Scope, wire.Cost, wire.BudgetBefore, wire.BudgetAfter,
-		wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef,
-	}, nil
+		wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef, wire.Failure,
+	}
+	if !FailureConsistent(rec) {
+		return EffectRecord{}, fmt.Errorf("broker: decode effect record failure: %q is not a bounded failure line of a failed record", wire.Failure)
+	}
+	return rec, nil
 }
 
 func parseRequiredRef(field, text string) (hashref.HashRef, error) {
@@ -102,6 +111,14 @@ func RecordConsistent(rec EffectRecord) bool {
 	default: // !Allowed
 		return !rec.Failed && rec.Denial != "" && rec.BudgetAfter == rec.BudgetBefore && rec.ResultRef.IsZero()
 	}
+}
+
+// FailureConsistent is row 255's rule for the failure line: only an allowed,
+// failed record carries one, and it is a fixed point of FailureLine. It sits
+// beside RecordConsistent, not inside it: RecordConsistent mirrors the
+// accounting law of sketches/effectbroker.ail, which the line does not touch.
+func FailureConsistent(rec EffectRecord) bool {
+	return rec.Failure == "" || rec.Allowed && rec.Failed && ValidFailureLine(rec.Failure)
 }
 
 func recordObject(rec EffectRecord) store.Object {

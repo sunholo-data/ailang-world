@@ -1,27 +1,30 @@
-# World mission dashboard — iteration 359 (2026-11-06)
+# World mission dashboard — iteration 360 (2026-11-06)
 
-- **This fire:** row 250 LANDED (`w-exec-probe-foreign-dial-false-refusal`), PR #511, merge `e2e2c7cc`, with CI 3/3 on attempt 1. The Linux real-srt step passes the new tests. It is the first pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). Arm 6 of the exec startup probe now classifies each accept on its loopback listener as child, foreign or silent. A local dialer that sends bytes (the rig's start page) no longer refuses startup. The probe still fails closed on a child or silent reach.
-- **Review:** design quorum r1 and r2 BLOCKED, then an r3 controller carve-out. The independent judge, Agent `sonnet`, gave PASS 91 with zero blocking findings.
-- **Dev:** green at `e2e2c7cc` (3/3 on attempt 1).
+- **This fire:** row 255 BUILT (`w-exec-failure-carries-a-reason`), M1 `fa5b9183`. It is the second pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). A failed `workspace-exec` call now records, returns and logs one bounded line saying why (10 classes, ≤200 bytes, never Go error text). The line is in the effect record, the agent's result, `why`, `call` and the daemon log. A store holding such a record refuses older World binaries at open.
+- **Review:** design quorum r1 and r2 BLOCKED, then an r3 controller carve-out. The independent judge, Agent `sonnet`, gave PASS 88 with zero blocking findings. All 212 mutation expectations match.
+- **Dev:** green at `77c9e3d4` (3/3 on attempt 1) before this fire. The PR's CI is the landing gate.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
-- **Loop's next rows:** 255 → 256 → 257, the rest of D-WORLD-108's scope. Then 201 → 243 (D-WORLD-109 = A: built against fakes and test keys; Mark's exit runs stay attended). The loop stops as soon as a release row is routable, and a dev red still outranks.
-- **Row 258 `w-hygiene-triage`:** holds the folded rows 244–249, 251 and 254. It stays under rule (d). Under D-WORLD-109, single CI reds and judges' notes go into the log entry, and a flake becomes a row only at its 3rd instance.
-- **Rows 252 and 253:** RESOLVED. `transcript=2` on #449 still, the two old notices.
+- **Loop's next rows:** 256 → 257, the rest of D-WORLD-108's scope. Then 201 → 243 (D-WORLD-109 = A: built against fakes and test keys; Mark's exit runs stay attended). The loop stops as soon as a release row is routable, and a dev red still outranks.
+- **Row 258 `w-hygiene-triage`:** holds the folded rows 244–249, 251 and 254, under rule (d). Judges' notes and single CI reds go into the log entry.
 - **Parked on Mark:**
   - **D-WORLD-105:** should World excuse the holder-exit reset in the fail-closed probe?
     - **A:** build it.
     - **B:** measure first.
     - **C (recommended, default):** close row 233 and keep failing closed.
+  - **D-WORLD-110 (new):** ratify row 255's compatibility policy.
+    - **A (recommended, default):** as built. After a store's first failure line, a rollback to an older build stops the service rather than serving.
+    - **B:** A, plus `why`/`call` refuse a daemon of a different build.
+    - **C:** revert the record field before the next release.
 - **Attended actions:** schedule row 150's A1. The 219 → 217 → 218 track unblocks row 151.
 - **Roles this fire:**
   - controller: opus;
   - designer: Agent opus (r1 and r2);
   - planner and executor: codex `gpt-6.1-sol`;
-  - quorum: gemini-4-argon, oc-glm-5-3, oc-kimi-k3 (claude benched as the author's vendor);
+  - quorum: oc-kimi-k3, gpt6-1-sol, gemini-4-argon (claude benched as the author's vendor);
   - independent judge: Agent sonnet.
-- **Cost:** quorum $0.68 metered (two rounds). Everything else ran on subscriptions.
-- **Log:** 34 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
-- **Record and evidence:** world-mission-log.md entry 359; `verification/world-iter359/` (gate1-2-readings.txt, controller-M1/summary.txt, evaluator-r1.md).
+- **Cost:** quorum $0.54 metered (two rounds). Everything else ran on subscriptions.
+- **Log:** 35 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
+- **Record and evidence:** world-mission-log.md entry 360; `verification/world-iter360/` (gate1-2-readings.txt, controller-M1/summary.txt, evaluator-r1.md).

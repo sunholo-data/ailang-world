@@ -1,0 +1,107 @@
+== V2 caller chain at 77c9e3d4
+-- host/broker/broker.go
+146:	cause     error
+154:	return e.cause
+261:	result, err = handler.Execute(ctx, req, payload)
+295:			Allowed: true, Failed: true, RequestRef: requestRef,
+307:		return nil, ref, &EffectFailedError{
+442:			return nil, recordRef, &EffectFailedError{
+443:				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef,
+-- host/coordinator/effectful.go
+191:	case errors.As(err, &failed):
+192:		res.Status, ref = StatusFailed, failed.RecordRef
+213:		wb.Effects = append(wb.Effects, worldEffect{ID: r.ID, Status: r.Status, Record: r.Record})
+245:		body = []byte(`{}`) // denied or failed: the world block carries the status and record
+308:		res, ref, ran, err := requestEffect(hctx, bound, e, now)
+-- host/projection/mcp.go
+130:	result, err := a.h.coord.Dispatch(ctx, coordinator.Call{Surface: coordinator.SurfaceMCP, Request: request, EpisodeID: binding.EpisodeID, Grants: binding.Caps, SkillID: id, TaskID: task, Input: input})
+132:		a.h.logRefusal("mcp", "tools/call", coordinator.InvocationID(coordinator.SurfaceMCP, binding.EpisodeID, task), err)
+135:	return protocol.InvocationResult{Value: result.OutputBytes}, nil
+-- host/projection/projection.go
+167:	errorLog       io.Writer
+363:			result, err := h.coord.Dispatch(ctx, coordinator.Call{Surface: coordinator.SurfaceA2A, Request: admitted, EpisodeID: out.Success.EpisodeID,
+510:func (h *Handler) logRefusal(surface, method, id string, err error) {
+-- cmd/ailang-worldd/why.go
+528:	d, err := broker.DecodeRecord(obj.Payload)
+896:			d, err := broker.DecodeRecord(obj.Payload)
+906:				verdict = "failed"
+911:			resText := "no result"
+-- cmd/ailang-worldd/mcpclient.go
+642:		fmt.Fprintf(w, "  effect     %s %s %s\n", e.ID, e.Status, rec)
+== V3 record codec at 77c9e3d4
+-- host/broker/record.go
+42:	ResultRef    string `json:"resultRef"`
+46:func EncodeRecord(rec EffectRecord) []byte {
+60:	dec.DisallowUnknownFields()
+78:		wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef,
+100:	case rec.Allowed && rec.Failed:
+101:		return rec.Denial == "" && rec.BudgetAfter == rec.BudgetBefore-rec.Cost && rec.ResultRef.IsZero()
+-- design_docs/sketches/effectbroker.ail
+154:export type EffectRecord = {
+164:  resultRef: HashRef
+170:export func recordConsistent(rec: EffectRecord) -> bool ! {}
+172:    || (rec.allowed && rec.failed && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest == "")
+214:    || (rec.allowed && rec.failed && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest == "")
+-- host/broker/broker_test.go
+300:		const want = "broker: manifest access cost must be non-negative: -1"
+307:		const want = "broker: manifest declared cost at index 0 must be non-negative: -2"
+315:		const want = `broker: duplicate declared requirement at indexes 0 and 1: effect "probe" scope "/ok" cost 1`
+349:		const want = `broker: undeclared effect request: effect "probe" scope "/evil" cost 1`
+598:func TestRecordGoldenBytes(t *testing.T) {
+605:	const want = `{"effect":"FS.Read","scope":"/project/a","cost":2,"budgetBefore":5,"budgetAfter":3,"allowed":true,"failed":false,"denial"
+622:	const wantFailed = `{"effect":"FS.Read","scope":"/project/a","cost":2,"budgetBefore":5,"budgetAfter":3,"allowed":true,"failed":true,"de
+-- host/broker/decide_test.go
+88:		{187, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, Failed: true}, true},
+-- record-shape field-list drift test? (grep effectbroker in *_test.go)
+77c9e3d4:host/coordinator/effectplan_drift_test.go:23:// the effectbroker pattern (host/broker/decide_test.go TestSketchRows) with
+77c9e3d4:host/verifygate/module_manifest_gate_test.go:566:  design_docs/sketches/effectbroker.ail
+== V4 refusal vs denial vs failure at 77c9e3d4
+-- host/broker/handlers_exec.go
+96:func execRefusal(why string) ([]byte, error) {
+97:	return json.Marshal(map[string]any{"ok": false, "refused": why})
+-- host/broker/broker.go
+198:			Denial: decision.Label, RequestRef: requestRef,
+311:	resultObj := resultObject(result)
+-- host/broker/decide.go
+11:	LabelDeniedBudget     = "denied:budget"
+-- host/daemon/episode_report.go
+155:	reportReasonMax     = 240
+533:func handlerRefusal(ctx context.Context, reads objectWorldReader, ref hashref.HashRef) (string, error) {
+== V5 replay byte-equality at 77c9e3d4
+485:	if !bytes.Equal(outBytes, committed.OutputBytes) {
+521:	t.Run("denied_and_failed_records_replay", func(t *testing.T) {
+== V6 workspace-exec plans have finish:false
+30:		payload + `}],"finish":false,"result":null}`
+== V7 Execute's bare error returns at 77c9e3d4 (lines 251-391 and prepareCache 522-555)
+253:		return nil, fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
+256:		return nil, fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
+315:		return nil, fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id)
+551:			return fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)
+== V8 typed error texts carry host paths
+107:	return fmt.Sprintf("broker: exec confinement stack drifted: %s: %s", e.Path, e.Why)
+208:		return &ExecStackDriftError{Path: s.Dir, Why: err.Error()}
+248:		return &ExecStackDriftError{Path: path, Why: err.Error()}
+147:	return fmt.Sprintf("broker: exec settings %s is not World's rendering: %s", e.Path, e.Why)
+74:	return fmt.Sprintf("broker: handler subprocess failed: %v (output %q)", e.Err, e.Output)
+== V9 disclosed paths in a success result
+231:	Argv0       string `json:"argv0"`
+232:	Argv0Target string `json:"argv0_target"`
+240:	Node           string `json:"node"`
+241:	NodeTarget     string `json:"node_target"`
+== V10 positive control: a grep for a field that does not exist at HEAD
+failure field in record.go: 0  (control json:"denial": 1)
+reason in worldEffect: 0  (control json:"record": 2)
+253:		return nil, fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
+256:		return nil, fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
+277:			return nil, err
+291:		return nil, err
+294:		return nil, err
+297:		return nil, err
+301:		return nil, err
+304:		return nil, err
+315:		return nil, fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id)
+356:		return nil, runErr
+370:		return nil, runErr
+527:			return err
+538:				return err
+551:			return fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)

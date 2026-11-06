@@ -909,6 +909,10 @@ func (r worldReader) buildChain(e wireEntry, result []byte) (whyChain, error) {
 			req, reqOK, _ := r.checkedObject(d.RequestRef.String(), broker.EffectRequestV1)
 			okAll = okAll && reqOK
 			resText := "no result"
+			if d.Failure != "" {
+				// Row 255: the failed record's bounded failure line.
+				resText = "no result: " + d.Failure
+			}
 			var delta *broker.WorktreeDelta
 			var protected json.RawMessage
 			execResult := false

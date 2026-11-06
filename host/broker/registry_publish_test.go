@@ -715,6 +715,10 @@ func (s *publishRecordingStore) AppendClaimedEffectIntent(
 	return id, ordinal, err
 }
 
+func (s *publishRecordingStore) MarkFailureLines(ctx context.Context) error {
+	return s.base.MarkFailureLines(ctx)
+}
+
 func (s *publishRecordingStore) AppendEffectOutcome(
 	ctx context.Context, id string, outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {

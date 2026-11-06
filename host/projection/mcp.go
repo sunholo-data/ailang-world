@@ -132,6 +132,7 @@ func (a mcpAdapter) Invoke(ctx context.Context, session protocol.Session, inv pr
 		a.h.logRefusal("mcp", "tools/call", coordinator.InvocationID(coordinator.SurfaceMCP, binding.EpisodeID, task), err)
 		return protocol.InvocationResult{}, err
 	}
+	a.h.logEffectFailures("mcp", result)
 	return protocol.InvocationResult{Value: result.OutputBytes}, nil
 }
 func mintMCPTask() (string, error) {

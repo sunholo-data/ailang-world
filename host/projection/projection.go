@@ -376,6 +376,7 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 				protocol.A2AError(w, req.ID, code, msg)
 				return
 			}
+			h.logEffectFailures("a2a", result)
 			task := map[string]any{"id": params.ID, "status": map[string]any{"state": "completed"},
 				"artifacts": []any{map[string]any{"parts": []any{map[string]any{"type": "data", "data": result.Output}}}},
 				"metadata":  map[string]any{"invocation_id": result.InvocationID, "world_ref": result.WorldRef, "entry_index": result.EntryIndex}}
@@ -509,4 +510,35 @@ func (h *Handler) writeUnavailable(w http.ResponseWriter, err error) {
 // logRefusal keeps arbitrary cause text on one physical operator-only line.
 func (h *Handler) logRefusal(surface, method, id string, err error) {
 	fmt.Fprintf(h.errorLog, "ailang-worldd: %s refusal: %s %s: %q\n", surface, method, id, err.Error())
+}
+
+// logEffectFailures writes one operator line per effect of a dispatched call
+// whose world block carries a failure line (row 255). A reconciled result
+// re-ran nothing and was logged when it ran, so it logs nothing: once per call.
+func (h *Handler) logEffectFailures(surface string, result coordinator.Result) {
+	if result.Reconciled {
+		return
+	}
+	var out struct {
+		World struct {
+			Effects []struct {
+				ID     string  `json:"id"`
+				Record *string `json:"record"`
+				Reason string  `json:"reason"`
+			} `json:"effects"`
+		} `json:"world"`
+	}
+	if json.Unmarshal(result.OutputBytes, &out) != nil {
+		return
+	}
+	for _, e := range out.World.Effects {
+		if e.Reason == "" {
+			continue
+		}
+		rec := "-"
+		if e.Record != nil {
+			rec = *e.Record
+		}
+		fmt.Fprintf(h.errorLog, "ailang-worldd: %s effect failed: %s %s %s: %s\n", surface, result.InvocationID, e.ID, rec, e.Reason)
+	}
 }
