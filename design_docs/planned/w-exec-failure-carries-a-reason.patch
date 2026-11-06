@@ -154,10 +154,10 @@ index 7f380beb..a48a01d3 100644
  // with --follow running from the head, three commits made one at a time are
  // each printed exactly once, in order.
 diff --git a/docs/QUICKSTART.md b/docs/QUICKSTART.md
-index 2fb87fd6..bc58a0aa 100644
+index 2fb87fd6..e07d6c31 100644
 --- a/docs/QUICKSTART.md
 +++ b/docs/QUICKSTART.md
-@@ -893,6 +893,17 @@ the sandbox:
+@@ -893,6 +893,21 @@ the sandbox:
  A command runs for at most `timeout_ms`, which is at most 9000, inside the 10-second handler cap.
  So a profile names targeted commands (one package, one test file, a type check), not full suites.
  
@@ -170,16 +170,30 @@ index 2fb87fd6..bc58a0aa 100644
 +and is logged once per call (`ailang-worldd: mcp effect failed: <call> e1 <record>: <line>`). It
 +names a file only as a successful result already does (`argv0`, `node`), relative to the srt
 +archive, or by its base name. A refusal is different: `{"ok": false, "refused": …}` means World
-+would not run the command, and nothing failed.
++would not run the command, and nothing failed. Before the first such line is written, World raises
++the store's schema version from 5 to 6 (the tables do not change). An `ailang-worldd` built before
++this change then refuses that store at open (`schema version future … use a compatible binary`)
++rather than misreading it. So once a line exists, a `service upgrade` rollback to such a build
++stops the service instead of serving.
 +
  **Install and pin srt.** World accepts exactly srt 0.0.78 whose `dist/cli.js` hashes to the pin
  below (`design_docs/verification/world-row140-m0/pin.json`). `serve` refuses any other. Keep srt,
  your profiles and your cache seeds **outside** the workspace root and the state dir:
 diff --git a/host/broker/broker.go b/host/broker/broker.go
-index 2e19494e..dd889417 100644
+index 2e19494e..8e0f2734 100644
 --- a/host/broker/broker.go
 +++ b/host/broker/broker.go
-@@ -138,11 +138,14 @@ func (e *DenialError) Error() string {
+@@ -41,6 +41,9 @@ type objectStore interface {
+ 	AppendNextEffectIntent(context.Context, string, store.EffectIntent) (string, int64, error)
+ 	AppendClaimedEffectIntent(context.Context, string, store.EffectIntent, hashref.HashRef, hashref.HashRef) (string, int64, error)
+ 	AppendEffectOutcome(context.Context, string, store.EffectOutcome) (int64, hashref.HashRef, error)
++	// MarkFailureLines (row 255 §3.7) raises the store's schema version
++	// before the first effect record that carries a failure line.
++	MarkFailureLines(context.Context) error
+ }
+ 
+ // Session is one serial capability ledger and effect-record stream.
+@@ -138,11 +141,14 @@ func (e *DenialError) Error() string {
  
  // EffectFailedError reports a dispatched handler failure after its immutable
  // failure record has been persisted. Live errors unwrap the handler's detail;
@@ -195,7 +209,7 @@ index 2e19494e..dd889417 100644
  	cause     error
  }
  
-@@ -289,10 +292,15 @@ func (s *Session) invoke(
+@@ -289,10 +295,21 @@ func (s *Session) invoke(
  			// SM.C's read-only reconciliation may resolve the receipt.
  			return nil, hashref.HashRef{}, err
  		}
@@ -203,6 +217,12 @@ index 2e19494e..dd889417 100644
 +		var classified *HandlerFailure
 +		if errors.As(err, &classified) {
 +			reason = classified.Line()
++		}
++		// Row 255 §3.7: no record carries a line until the store says so, so a
++		// binary that cannot decode the line refuses the store at open. A store
++		// that cannot be marked gets the record without the line, as before.
++		if reason != "" && s.store.MarkFailureLines(post) != nil {
++			reason = ""
 +		}
  		rec := EffectRecord{
  			Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
@@ -212,7 +232,7 @@ index 2e19494e..dd889417 100644
  		}
  		ref, putErr := s.putRecord(post, rec)
  		if putErr != nil {
-@@ -305,7 +313,7 @@ func (s *Session) invoke(
+@@ -305,7 +322,7 @@ func (s *Session) invoke(
  				Err: fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)}
  		}
  		return nil, ref, &EffectFailedError{
@@ -221,7 +241,7 @@ index 2e19494e..dd889417 100644
  		}
  	}
  	resultObj := resultObject(result)
-@@ -388,7 +396,7 @@ func requestObject(req EffectRequest, payload []byte) store.Object {
+@@ -388,7 +405,7 @@ func requestObject(req EffectRequest, payload []byte) store.Object {
  }
  
  func (s *Session) putRecord(ctx context.Context, rec EffectRecord) (hashref.HashRef, error) {
@@ -230,7 +250,7 @@ index 2e19494e..dd889417 100644
  		return hashref.HashRef{}, errors.New("broker: refuses inconsistent effect record")
  	}
  	obj := recordObject(rec)
-@@ -440,7 +448,7 @@ func (s *Session) invokeReplay(
+@@ -440,7 +457,7 @@ func (s *Session) invokeReplay(
  			s.debitGrant(grantIndex, decision.Remaining)
  			s.next++
  			return nil, recordRef, &EffectFailedError{
@@ -239,6 +259,21 @@ index 2e19494e..dd889417 100644
  			}
  		}
  		resultObj, ok, err := s.store.GetObject(ctx, rec.ResultRef)
+diff --git a/host/broker/broker_test.go b/host/broker/broker_test.go
+index 99f3d8ce..879fc1d5 100644
+--- a/host/broker/broker_test.go
++++ b/host/broker/broker_test.go
+@@ -480,6 +480,10 @@ func (s *failRecordStore) AppendClaimedEffectIntent(
+ 	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
+ }
+ 
++func (s *failRecordStore) MarkFailureLines(ctx context.Context) error {
++	return s.base.MarkFailureLines(ctx)
++}
++
+ func (s *failRecordStore) AppendEffectOutcome(
+ 	ctx context.Context, id string,
+ 	outcome store.EffectOutcome,
 diff --git a/host/broker/failure.go b/host/broker/failure.go
 new file mode 100644
 index 00000000..bc8ae0b0
@@ -436,16 +471,16 @@ index 00000000..bc8ae0b0
 +}
 diff --git a/host/broker/failure_test.go b/host/broker/failure_test.go
 new file mode 100644
-index 00000000..f0860593
+index 00000000..25c4b82a
 --- /dev/null
 +++ b/host/broker/failure_test.go
-@@ -0,0 +1,278 @@
+@@ -0,0 +1,361 @@
 +package broker
 +
 +// Row 255 (design_docs/planned/w-exec-failure-carries-a-reason.md §5): the
-+// failure line's pure rule (TL), its record codec (TG), the classifier (TK)
-+// and one Execute-driven case per reachable class through a live broker
-+// session (TX).
++// failure line's pure rule (TL), its record codec (TG), the classifier (TK),
++// one Execute-driven case per reachable class through a live broker
++// session (TX), and the store marker's order (TV).
 +
 +import (
 +	"context"
@@ -461,6 +496,7 @@ index 00000000..f0860593
 +
 +	"github.com/sunholo-data/ailang-world/host/hashref"
 +	"github.com/sunholo-data/ailang-world/host/procbound"
++	"github.com/sunholo-data/ailang-world/host/store"
 +)
 +
 +// TL: the bounding rule.
@@ -718,6 +754,103 @@ index 00000000..f0860593
 +		})
 +	}
 +}
++
++type lineFailure struct{ err error }
++
++func (h lineFailure) Execute(context.Context, EffectRequest, []byte) ([]byte, error) {
++	return nil, h.err
++}
++
++// markRefusingStore is a store whose schema version cannot be raised.
++type markRefusingStore struct{ *cfj2RecordingStore }
++
++func (markRefusingStore) MarkFailureLines(context.Context) error { return errors.New("read-only") }
++
++// orderStore logs the order of the mark and the effect-record put.
++type orderStore struct {
++	*cfj2RecordingStore
++	order []string
++}
++
++func (o *orderStore) MarkFailureLines(ctx context.Context) error {
++	o.order = append(o.order, "mark")
++	return o.cfj2RecordingStore.MarkFailureLines(ctx)
++}
++
++func (o *orderStore) PutObject(ctx context.Context, obj store.Object) error {
++	if obj.SemanticID == EffectRecordV1 {
++		o.order = append(o.order, "record")
++	}
++	return o.cfj2RecordingStore.PutObject(ctx, obj)
++}
++
++// TV (§3.7): the store is raised to schema 6 before the first lined record;
++// a failure with no line leaves it at 5; a store that cannot be raised gets
++// today's record, with no line and no Reason.
++func TestFailureLineMarksTheStoreFirst(t *testing.T) {
++	classified := &HandlerFailure{Class: FailSeedCache, Detail: "GOCACHE: timed out after 9s", Err: errors.New("boom")}
++	for _, tc := range []struct {
++		name        string
++		err         error
++		refuse      bool
++		wantVersion int
++		wantLine    string
++	}{
++		{"line marks", classified, false, 6, "seed-cache: GOCACHE: timed out after 9s"},
++		{"no line, no mark", errors.New("plain"), false, 5, ""},
++		{"mark refused, no line", classified, true, 5, ""},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			path := filepath.Join(t.TempDir(), "world.db")
++			st, err := store.Open(path)
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer st.Close()
++			recording := &cfj2RecordingStore{base: st}
++			ordered := &orderStore{cfj2RecordingStore: recording}
++			var backing objectStore = ordered
++			if tc.refuse {
++				backing = markRefusingStore{recording}
++			}
++			s := newSession(backing, "ep1", []Capability{{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, ExpiresAt: 100, Budget: 5}},
++				Registry{EffectWorkspaceExec: lineFailure{tc.err}}, Live, nil)
++			_, _, err = s.Invoke(boundedTestContext(t), EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, Cost: 1, Now: 1}, []byte(`{}`))
++			var failed *EffectFailedError
++			if !errors.As(err, &failed) {
++				t.Fatalf("Invoke = %v, want *EffectFailedError", err)
++			}
++			if failed.Reason != tc.wantLine {
++				t.Fatalf("EffectFailedError.Reason = %q, want %q", failed.Reason, tc.wantLine)
++			}
++			rec, err := DecodeRecord(recording.records[0].Payload)
++			if err != nil || rec.Failure != tc.wantLine {
++				t.Fatalf("record failure = %q, %v; want %q", rec.Failure, err, tc.wantLine)
++			}
++			if v, err := store.WorldSchemaVersion(path); err != nil || v != tc.wantVersion {
++				t.Fatalf("store user_version = %d, %v; want %d", v, err, tc.wantVersion)
++			}
++			if tc.wantLine != "" && strings.Join(ordered.order, ",") != "mark,record" {
++				t.Fatalf("call order = %v, want the mark before the lined record", ordered.order)
++			}
++		})
++	}
++}
+diff --git a/host/broker/handler_error_repro_test.go b/host/broker/handler_error_repro_test.go
+index c803f4bb..e4e218f2 100644
+--- a/host/broker/handler_error_repro_test.go
++++ b/host/broker/handler_error_repro_test.go
+@@ -54,6 +54,10 @@ func (s *cfj2RecordingStore) AppendClaimedEffectIntent(
+ 	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
+ }
+ 
++func (s *cfj2RecordingStore) MarkFailureLines(ctx context.Context) error {
++	return s.base.MarkFailureLines(ctx)
++}
++
+ func (s *cfj2RecordingStore) AppendEffectOutcome(
+ 	ctx context.Context, id string,
+ 	outcome store.EffectOutcome,
 diff --git a/host/broker/handlers_exec.go b/host/broker/handlers_exec.go
 index d771be3c..60d2fcf4 100644
 --- a/host/broker/handlers_exec.go
@@ -837,6 +970,21 @@ index d771be3c..60d2fcf4 100644
  		}
  	}
  	return nil
+diff --git a/host/broker/handlers_test.go b/host/broker/handlers_test.go
+index af3817d5..3527eb24 100644
+--- a/host/broker/handlers_test.go
++++ b/host/broker/handlers_test.go
+@@ -64,6 +64,10 @@ func (s *handlerRecordingStore) AppendClaimedEffectIntent(
+ 	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
+ }
+ 
++func (s *handlerRecordingStore) MarkFailureLines(ctx context.Context) error {
++	return s.base.MarkFailureLines(ctx)
++}
++
+ func (s *handlerRecordingStore) AppendEffectOutcome(
+ 	ctx context.Context, id string,
+ 	outcome store.EffectOutcome,
 diff --git a/host/broker/record.go b/host/broker/record.go
 index 93c1a760..1ea30a87 100644
 --- a/host/broker/record.go
@@ -901,6 +1049,21 @@ index 93c1a760..1ea30a87 100644
  func recordObject(rec EffectRecord) store.Object {
  	return brokerObject(EffectRecordV1, EncodeRecord(rec))
  }
+diff --git a/host/broker/registry_publish_test.go b/host/broker/registry_publish_test.go
+index 42c943b9..ed5e1ad7 100644
+--- a/host/broker/registry_publish_test.go
++++ b/host/broker/registry_publish_test.go
+@@ -715,6 +715,10 @@ func (s *publishRecordingStore) AppendClaimedEffectIntent(
+ 	return id, ordinal, err
+ }
+ 
++func (s *publishRecordingStore) MarkFailureLines(ctx context.Context) error {
++	return s.base.MarkFailureLines(ctx)
++}
++
+ func (s *publishRecordingStore) AppendEffectOutcome(
+ 	ctx context.Context, id string, outcome store.EffectOutcome,
+ ) (int64, hashref.HashRef, error) {
 diff --git a/host/coordinator/effect_failure_reason_test.go b/host/coordinator/effect_failure_reason_test.go
 new file mode 100644
 index 00000000..d01aa2ab
@@ -1182,3 +1345,194 @@ index 448a3037..49209d6d 100644
 +		fmt.Fprintf(h.errorLog, "ailang-worldd: %s effect failed: %s %s %s: %s\n", surface, result.InvocationID, e.ID, rec, e.Reason)
 +	}
 +}
+diff --git a/host/store/deadline_guard_test.go b/host/store/deadline_guard_test.go
+index b82b3d07..112c5baa 100644
+--- a/host/store/deadline_guard_test.go
++++ b/host/store/deadline_guard_test.go
+@@ -103,6 +103,7 @@ func guardFixtures() map[string]guardFixture {
+ 		"LogEntriesAfter":      simple(int64(-1), 1),
+ 		"LogEntriesLatest":     simple(1),
+ 		"GetWorld":             simple(ref("missing")),
++		"MarkFailureLines":     simple(),
+ 		"InvocationIntents":    simple("mcp:episode:", int64(0), 1),
+ 		"ObjectCommits":        simple(ref("missing"), int64(0), 1),
+ 		"ObjectReferences":     simple(ref("missing"), (*ObjectReferenceCursor)(nil), 1),
+diff --git a/host/store/schema_version_test.go b/host/store/schema_version_test.go
+index bf725b76..2949ab62 100644
+--- a/host/store/schema_version_test.go
++++ b/host/store/schema_version_test.go
+@@ -15,7 +15,9 @@ import (
+ 	_ "modernc.org/sqlite"
+ )
+ 
+-const frozenFutureSchemaVersion = 6
++// frozenFutureSchemaVersion is the first version this binary refuses. Row 255
++// made 6 a supported version (failureLineSchemaVersion), so it moved 6 → 7.
++const frozenFutureSchemaVersion = 7
+ 
+ const expectedCurrentSchemaVersion = 5
+ 
+@@ -415,8 +417,8 @@ func TestFutureVersionIsRejected(t *testing.T) {
+ 		t.Fatal("future Open returned a store")
+ 	}
+ 	var future *FutureSchemaVersionError
+-	if !errors.As(err, &future) || future.Found != frozenFutureSchemaVersion || future.Current != 5 {
+-		t.Fatalf("Open error = %#v, want future Found=6 Current=5", err)
++	if !errors.As(err, &future) || future.Found != frozenFutureSchemaVersion || future.Current != failureLineSchemaVersion {
++		t.Fatalf("Open error = %#v, want future Found=7 Current=6", err)
+ 	}
+ 	if !strings.Contains(err.Error(), "schema version future") {
+ 		t.Fatalf("future message = %q", err)
+@@ -768,3 +770,69 @@ func TestSqliteXProbeVersionZeroStoreIsLegacy(t *testing.T) {
+ 		t.Fatal("sqliteX_probe did not survive rejected Open")
+ 	}
+ }
++
++// TestMarkFailureLinesRaisesFiveToSixOnce is row 255's store half
++// (design_docs/planned/w-exec-failure-carries-a-reason.md §3.7, TS): a writer
++// raises 5 to 6 once and keeps 6; a marked store opens for writers and
++// readers of this build; a read-only handle cannot mark; anything else refuses.
++func TestMarkFailureLinesRaisesFiveToSixOnce(t *testing.T) {
++	path := filepath.Join(t.TempDir(), "mark.db")
++	s, err := Open(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	version := func(s *Store) int {
++		var v int
++		if err := s.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil {
++			t.Fatal(err)
++		}
++		return v
++	}
++	if v := version(s); v != currentSchemaVersion {
++		t.Fatalf("fresh store user_version = %d, want %d (marking is lazy)", v, currentSchemaVersion)
++	}
++	ro, err := OpenReadOnly(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := ro.MarkFailureLines(boundedTestContext(t)); err == nil || version(s) != currentSchemaVersion {
++		t.Fatalf("read-only MarkFailureLines = %v, version %d; want an error and 5", err, version(s))
++	}
++	_ = ro.Close()
++	for i := 0; i < 2; i++ {
++		if err := s.MarkFailureLines(boundedTestContext(t)); err != nil || version(s) != failureLineSchemaVersion {
++			t.Fatalf("MarkFailureLines #%d = %v, version %d; want nil and %d", i+1, err, version(s), failureLineSchemaVersion)
++		}
++	}
++	if err := s.Close(); err != nil {
++		t.Fatal(err)
++	}
++	if v, err := WorldSchemaVersion(path); err != nil || v != failureLineSchemaVersion {
++		t.Fatalf("WorldSchemaVersion = %d, %v; want %d", v, err, failureLineSchemaVersion)
++	}
++	for name, open := range map[string]func(string) (*Store, error){"writer": Open, "reader": OpenReadOnly} {
++		re, err := open(path)
++		if err != nil {
++			t.Fatalf("%s reopen of a marked store: %v", name, err)
++		}
++		if v := version(re); v != failureLineSchemaVersion {
++			t.Fatalf("%s reopen rewrote user_version to %d", name, v)
++		}
++		_ = re.Close()
++	}
++	legacy := filepath.Join(t.TempDir(), "legacy.db")
++	db := rawDB(t, legacy)
++	if _, err := db.Exec(schemaSQL); err != nil {
++		t.Fatal(err)
++	}
++	setPositiveFixtureVersion(t, db, preSplitSchemaVersion)
++	_ = db.Close()
++	if pre, err := OpenReadOnly(legacy); err != nil {
++		t.Fatal(err)
++	} else {
++		if err := pre.MarkFailureLines(boundedTestContext(t)); err == nil || !strings.Contains(err.Error(), "is not 5 or 6") {
++			t.Fatalf("MarkFailureLines on a schema-4 store = %v, want a refusal", err)
++		}
++		_ = pre.Close()
++	}
++}
+diff --git a/host/store/store.go b/host/store/store.go
+index 1cf3c348..04d7e2f8 100644
+--- a/host/store/store.go
++++ b/host/store/store.go
+@@ -45,6 +45,15 @@ var schemaSQL string
+ // to the credentials store (row 189, credentials.go / credentials_migrate.go).
+ const currentSchemaVersion = 5
+ 
++// failureLineSchemaVersion 6 is schema 5's DDL with one more meaning (row 255,
++// design_docs/planned/w-exec-failure-carries-a-reason.md §3.7): the store may
++// hold an effect record carrying a `failure` line, which a binary that knows
++// only version 5 cannot decode. MarkFailureLines raises 5 to 6 before the first
++// such record is written, so that binary refuses the store at open with
++// FutureSchemaVersionError instead of failing on the record mid-read. Fresh
++// stores still start at 5, and a store with no failure line stays at 5.
++const failureLineSchemaVersion = 6
++
+ // ErrApprovalAlreadyConsumed reports that an approval reference has already
+ // been bound to a durable effect intent. Approval claims are single-use and
+ // have no update, delete, or refund path.
+@@ -437,7 +446,7 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
+ 			return &PreSplitStoreError{Path: display}
+ 		}
+ 	}
+-	if version == currentSchemaVersion || version == preSplitSchemaVersion {
++	if version == currentSchemaVersion || version == preSplitSchemaVersion || version == failureLineSchemaVersion {
+ 		// Only fresh initialization may create commit_objects; check it before
+ 		// schemaSQL's CREATE IF NOT EXISTS could bring it back empty.
+ 		var membershipTables int
+@@ -455,18 +464,49 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
+ 			if err := db.QueryRow("PRAGMA user_version").Scan(&after); err != nil {
+ 				return fmt.Errorf("store: re-read schema version: %w", err)
+ 			}
+-			if after != currentSchemaVersion {
+-				return fmt.Errorf("store: schema version drift: %q reported user_version %d after applying the current schema; want %d", display, after, currentSchemaVersion)
++			if after != version {
++				return fmt.Errorf("store: schema version drift: %q reported user_version %d after applying the current schema; want %d", display, after, version)
+ 			}
+ 		}
+ 		return nil
+ 	}
+-	if version > currentSchemaVersion {
+-		return &FutureSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
++	if version > failureLineSchemaVersion {
++		return &FutureSchemaVersionError{Path: display, Found: version, Current: failureLineSchemaVersion}
+ 	}
+ 	return &LegacySchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
+ }
+ 
++// MarkFailureLines raises a version-5 store to failureLineSchemaVersion; a
++// version-6 store is left as it is. The broker calls it before it writes the
++// first effect record that carries a failure line. A read-only handle cannot
++// write the pragma, so it fails, and the broker then records no line.
++func (s *Store) MarkFailureLines(ctx context.Context) error {
++	if err := s.checkQuarantine(); err != nil {
++		return err
++	}
++	if err := requireDeadline(ctx); err != nil {
++		return err
++	}
++	var version int
++	if err := s.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
++		return fmt.Errorf("store: mark failure lines: read schema version: %w", err)
++	}
++	switch version {
++	case failureLineSchemaVersion:
++		return nil
++	case currentSchemaVersion:
++	default:
++		return fmt.Errorf("store: mark failure lines: user_version %d is not %d or %d", version, currentSchemaVersion, failureLineSchemaVersion)
++	}
++	if _, err := s.db.ExecContext(ctx, fmt.Sprintf("PRAGMA user_version = %d", failureLineSchemaVersion)); err != nil {
++		return fmt.Errorf("store: mark failure lines: %w", err)
++	}
++	if err := s.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil || version != failureLineSchemaVersion {
++		return fmt.Errorf("store: mark failure lines: user_version is %d after marking (%v); want %d", version, err, failureLineSchemaVersion)
++	}
++	return nil
++}
++
+ func freshInitTx(db *sql.DB, writeVersion func(*sql.Tx) error) error {
+ 	tx, err := db.Begin()
+ 	if err != nil {

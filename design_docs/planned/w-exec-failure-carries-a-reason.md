@@ -1,19 +1,28 @@
 # w-exec-failure-carries-a-reason — a failed `workspace-exec` call records, returns and logs one bounded failure line
 
-- **Status**: Planned (designed iteration 360, **r1**). Queue row 255, in D-WORLD-108's scope after
+- **Status**: Planned (designed iteration 360, **r2**: r1 after quorum round 1 BLOCKED, §11). Queue row 255, in D-WORLD-108's scope after
   row 250 (attended 2026-11-06: rows 250, then 255 → 257). Rows 256 (`w-daemon-startup-under-load`)
   and 257 (`w-exec-cache-seed-at-bind`) are separate rows. §9 says how this row's classes serve
   them, and designs neither.
 - **Item**: Clause 5 (MET; operator and agent UX). It adds an optional field to the
   `world/effect-record/v1` wire, so its codec choice (§3.1) is the decision a quorum should check.
+  **[r2]** Because a binary from before this change cannot decode that field, r2 also raises the
+  world store's schema version from 5 to 6 just before the first such record is written. Every
+  already-shipped binary refuses a version-6 store at open, so an older binary stops cleanly
+  instead of failing mid-read (§3.7).
 - **Designer lane**: `claude:claude-opus-5-5` via Agent opus.
-- **Estimated**: ~0.5 day. A complete patch is
-  `design_docs/planned/w-exec-failure-carries-a-reason.patch` (1184 lines, 15 files, sha256
-  prefix `b7dcb7821c3b389a`). It applies with `git apply --check` at `77c9e3d4`, and its tests pass
-  on a fresh `git archive` of `77c9e3d4` with the patch applied (V14, V15). Production code is
-  +108/−28 lines in 8 files plus one new 189-line file, `host/broker/failure.go`, of which about a
-  third is comments. There are four new test files (478 lines), and `why_test.go` changes by +44/−1.
-  `docs/QUICKSTART.md` gains one paragraph (S7).
+- **Estimated**: ~0.75 day. A complete patch is
+  `design_docs/planned/w-exec-failure-carries-a-reason.patch`. **[r2]** It is 1538 lines over 22
+  files, sha256 prefix `02259c3bdc1c942b`. It applies with `git apply --check` at `77c9e3d4`. Its
+  18 named tests pass on a fresh `git archive` of `77c9e3d4` with the patch applied (V26). The full
+  plain gate `verify_go.sh` passes on the byte-identical prototype (V24).
+  - **Production code**: +162/−33 lines in 9 files. r2 adds +45/−5 in `host/store/store.go` and
+    +9 in `broker.go`. There is also one new 189-line file, `host/broker/failure.go`, of which
+    about a third is comments.
+  - **Tests**: four new test files (561 lines). Edited tests: `why_test.go` +44/−1,
+    `schema_version_test.go` +71/−3, `deadline_guard_test.go` +1, and four broker test stores
+    +4 each.
+  - **Docs**: one `docs/QUICKSTART.md` paragraph (S7).
 - **Measurement base**: `77c9e3d4` (= origin/dev), worktree `sprint/world-iter360-exec-reason`.
   `handlers_exec.go` sha256 prefix `d85457256d78add8`, `record.go` `57a0ec0e8b09c0ea`, `broker.go`
   `788f6eaef667182a` (V1).
@@ -83,10 +92,10 @@ object hash is the sha256 of those bytes (`brokerObject`, `:115–122`).
 
 | Option | Verdict | Why (measured) |
 |---|---|---|
-| **(a) A new field `failure`, `omitempty`, last in `recordWire`** | **CHOSEN** | `encoding/json` omits an empty string, so every record without a line encodes to the bytes it has today. That covers every success, every denial, and every failure of a handler that is not `ExecHandler`. Both existing goldens stay green (`TestRecordGoldenBytes`, V15), and `MUT-NO-OMITEMPTY` reddens them (§5). A stored record without the field decodes to `Failure: ""`. No stored object's hash changes, because content-addressed objects are never re-encoded. Only failed `Workspace.Exec` records written from now on carry it |
+| **(a) A new field `failure`, `omitempty`, last in `recordWire`, plus the store schema marker of §3.7 [r2]** | **CHOSEN** | `encoding/json` omits an empty string, so every record without a line encodes to the bytes it has today. That covers every success, every denial, and every failure of a handler that is not `ExecHandler`. Both existing goldens stay green (`TestRecordGoldenBytes`, V15), and `MUT-NO-OMITEMPTY` reddens them (§5). A stored record without the field decodes to `Failure: ""`. No stored object's hash changes, because content-addressed objects are never re-encoded. Only failed `Workspace.Exec` records written from now on carry it |
 | (b) Reuse `denial` | **Rejected** | It breaks the record law. `RecordConsistent` requires `Denial == ""` on every allowed record, failed ones included (`record.go:100–101`), mirroring the sketch's ensures clause (`effectbroker.ail:172`). Replay refuses an allowed record with a non-empty denial (`broker.go:433`). It also blurs a capability denial with a handler failure (§3.4) |
 | (c) A failure object referenced by `resultRef` | **Rejected** | It also breaks the law: a failed record must have a zero `resultRef` (`record.go:101`, `effectbroker.ail:172`). Readers treat a non-zero `resultRef` as a success result: `why` prints `result N B` and reads its worktree delta (`why.go:915–923`), and the episode report reads it as a handler answer (`episode_report.go:533`) |
-| (d) A `world/effect-record/v2` | **Rejected** | It has the same downgrade property as (a) (R1) and costs much more. Ten non-test call sites decode records (V10), and several check `SemanticID == EffectRecordV1` (`why.go:525`, `broker.go:418`, `workbench_packet_evidence.go`, `episode_report.go`), so a v2 would need a dual-version reader in each. (a) keeps one codec, and old records stay valid v1 |
+| (d) A `world/effect-record/v2` | **Rejected** | An older binary cannot read a v2 record either, so (d) would need the same marker (§3.7), and it costs much more. Ten non-test call sites decode records (V10), and several check `SemanticID == EffectRecordV1` (`why.go:525`, `broker.go:418`, `workbench_packet_evidence.go`, `episode_report.go`), so a v2 would need a dual-version reader in each. (a) keeps one codec, and old records stay valid v1 |
 
 **What (a) does to existing state and tests** (V3, V15, V16):
 
@@ -105,10 +114,13 @@ object hash is the sha256 of those bytes (`brokerObject`, `:115–122`).
   is a separate Go predicate, `FailureConsistent`, next to `RecordConsistent`, not inside it:
   `Failure == "" || (Allowed && Failed && ValidFailureLine(Failure))`. `putRecord` refuses a record
   that breaks it, and `DecodeRecord` refuses to decode one. **No `.ail` file is touched.** Whether
-  the sketch should gain the field for documentation parity is open question Q3.
-- **The one cost: downgrade.** A binary from before this change cannot decode a record that
-  carries `failure`. `DecodeRecord` at `77c9e3d4` answers `json: unknown field "failure"`, and the
-  same record without the field decodes (V16). This is R1.
+  the sketch should gain the field for documentation parity is open question Q4.
+- **The one cost: an older binary cannot decode the field.** `DecodeRecord` at `77c9e3d4`
+  answers `json: unknown field "failure"`, and the same record without the field decodes (V16).
+  **[r2]** r1 called this acceptable on the assertion that World never downgrades against a live
+  store. No Verification Log row backed that assertion, and it is false: `service upgrade` rolls
+  back to the previous build automatically (V23). §3.7 replaces the assertion with a measured
+  answer and an enforced gate.
 
 ### 3.2 The classes (a closed set of 10)
 
@@ -200,7 +212,9 @@ should not have to ask which of the two budgets ran out.
   (`mcp.go`) and A2A (`projection.go`), one line per effect that has a reason:
   `ailang-worldd: <surface> effect failed: <invocation id> <effect id> <record>: <line>`. It
   writes to the same `errorLog` as `logRefusal`. A `Reconciled` result (a resent A2A task, read back
-  from the journal) logs nothing, so each call that ran logs exactly once.
+  from the journal) logs nothing. **[r2]** The helper writes one line per failed effect that
+  carries a line. A call has at most one effect **by construction**, because plan law L1 refuses
+  a second one before any effect runs (V22). So each call that ran logs at most once (Claim E).
 - **`why`** (`why.go`): a record with a line prints `no result: <line>` where it printed
   `no result`. A record without one prints exactly as before.
 - **`ailang-worldd call`** (`mcpclient.go`): `effect e1 failed sha256:… — <line>`.
@@ -216,6 +230,87 @@ touched**. S1's Z3 contracts bind `world/` and `.ail` code, so they do not apply
 change is in the effect handler and its broker, which are the host boundary (S2), not the
 `world/` kernel. A package cannot hold it, because the line is made where the Go error is made
 (S3).
+
+### 3.7 [r2] Compatibility: who can read a store that holds a failure line
+
+**What was measured** (V19–V23, V25). The facts that decide the design:
+
+- **No written policy.** No store-compatibility, downgrade or rollback policy is written down. A
+  search of the charter, `DESIGN.md`, the coding standards, `docs/` and `CLAUDE.md` finds one
+  unrelated hit, the word "downgraded" used about an AC's claim (V19).
+- **One enforced gate.** Every shipped binary checks the world store's SQLite `user_version` at
+  open. Version 5 is current. Any higher version is refused with
+  `store: schema version future: … has user_version N; binary supports 5; use a compatible
+  binary` (`store.go:464–465`, message `:68`). HEAD's own test opens a store at version **6** and
+  asserts exactly that refusal (`TestFutureVersionIsRejected`, `frozenFutureSchemaVersion = 6`,
+  V21). `schema.sql` never sets the version (0 hits).
+- **Rollback is real.** `service upgrade` keeps the old build as `.prev`
+  (`service_upgrade.go:210`, `:219`). If the new build does not come up, or its upgrade cannot be
+  recorded, it restores `.prev` over the binary and waits for that build to serve the **same
+  store** (`:240`, `:256`, `:262`). If that also fails it reports
+  `rollback failed too: the service is stopped` (`:287`). An operator can also put `.prev` back by
+  hand.
+- **One binary, read over HTTP.** The daemon (`serve`) and the reader verbs (`call`, `why`,
+  `episode`) are one binary, `cmd/ailang-worldd` (`main.go:354, 395, 398, 434`). `why` and `call`
+  do not open the store. They read the daemon's `/v1/objects/…` (`why.go:136`) and decode records
+  in the CLI process. Only `episode start` refuses a CLI build that differs from the installed one
+  (`episode.go:330`).
+- **Replay has no production caller.** `Coordinator.Replay`, `OpenReplayBinder` and `host/replay`
+  have no non-test caller (V21: 0 `.Replay(` calls, 0 importers of `host/replay`, against 58
+  importers of `host/store`).
+
+**Why a carrier that old readers tolerate does not exist.** Two facts close it:
+
+- Every record reader decodes with `DisallowUnknownFields` (`record.go:60`), and the record law
+  forbids reusing `denial` or `resultRef` (§3.1). So no record carrier exists that an old binary
+  can read.
+- Leaving the record unchanged and putting the line only in the committed output fails the other
+  way. The output must be recomposable from the records, byte for byte (`effectful.go:485`), so a
+  reason present only in the output could not be replayed.
+
+The row asks for the line in the record, so the remaining question is how to stop an old binary
+before it misreads the record.
+
+**The gate: raise the existing schema version, lazily.**
+
+- A new constant, `failureLineSchemaVersion = 6`, means "schema 5's tables, and the store may hold
+  an effect record with a `failure` line". New binaries open 5 and 6, both writable and read-only,
+  and refuse 7 and above with `binary supports 6`.
+- Fresh stores still start at 5.
+- Before the broker writes the **first** record that carries a line, it calls
+  `Store.MarkFailureLines`. That method raises `user_version` from 5 to 6 under the writer and
+  re-reads it. It is idempotent at 6, and it refuses any other version, including a read-only
+  handle.
+- If the mark fails, the broker writes the record **without** the line, which is exactly today's
+  record (Claim F). A record with a line therefore never sits in a store that an older binary
+  would still open.
+
+The gate needs no new enforcement code in old binaries. It uses the refusal they already ship.
+The marker is a version number only: no table, index or row changes. It extends what
+`user_version` means, from "the DDL" to "the DDL, and which record shapes may be present". Q2
+asks Mark to ratify that extension.
+
+**Supported combinations** (V20 is a live measurement; the rest are from code and tests):
+
+| Readers × store | Store at 5 (no line written yet) | Store at 6 (a line written) | How it is held |
+|---|---|---|---|
+| this build: daemon, `doctor`, `session list`, `call`, `why` | reads and writes as today | reads and writes; `why` and `call` print the line | TS (reopen as writer and reader at 6) |
+| a build from **before** this change, opening the store (`serve`, `doctor`, read-only verbs) | works: no record can carry a line | **refused at open**: `store: schema version future: "…" has user_version 6; binary supports 5; use a compatible binary`, as writer and as reader | the shipped binary's own gate (`store.go:464`); measured with HEAD code on a store the patched broker marked (V20) |
+| `service upgrade` **to** this build, then the automatic **rollback** | works: a build that never came up wrote no line | the old build refuses the store, so the rollback ends `rollback failed too: the service is stopped`, with both builds kept and named. A line exists only if the new build served a failed exec call before the rollback | the same gate. This is the trade-off Q2 names |
+| a CLI from **before** this change (`why`, `call`) against a daemon of this build, over HTTP | unchanged | **not prevented**: `call` prints the effect without the reason (its decode is not strict). `why` marks that one effect link ✗ with `broker: decode effect record: json: unknown field "failure"`; the other links still verify | no gate: a CLI does not open the store. Q1 |
+| a CLI of this build against an older daemon | unchanged | not reachable: an older daemon refuses a version-6 store | — |
+| `Coordinator.Replay` of this build | old and new invocations replay byte-identically (TC, `TestEffectReplay`) | the same | no production caller (V21) |
+| a future build, at 7 or above | refused by this build with `binary supports 6` | refused | `TestFutureVersionIsRejected`, its future version moved from 6 to 7 |
+
+**Rejected alternatives.**
+
+- **Raise 5 to 6 at every writer open.** It is simpler, but it would break every `service upgrade`
+  rollback to an older build, including rollbacks where no line was ever written. The lazy mark
+  breaks only the ones where a line exists.
+- **A policy with no enforcement** ("a downgrade is unsupported"). That would be a policy change
+  that only Mark can ratify, and it would leave old readers failing mid-read.
+- **A new table or flag that an old binary does not check.** Old binaries check only
+  `user_version`, so it would not be enforced.
 
 ## 4. The by-construction argument
 
@@ -248,10 +343,33 @@ record. The coordinator composes the output from `Reason` in both modes, so the 
 equals the committed one. ∎ TC (`Replay` equals the committed bytes) kills
 `MUT-REPLAY-DROPS-REASON` and `MUT-RECORD-DROPS-LINE`.
 
-**Claim E (logged once per call).** *Proof.* The log line is written only after a `Dispatch`
-that returned a result that is not `Reconciled`, once per effect with a non-empty `reason`, and a
-`workspace-exec` plan has exactly one effect. ∎ TP sends the same A2A task twice, which runs once,
-and expects exactly one line.
+**Claim E (logged at most once per call).** *Proof.* `logEffectFailures` writes only after a
+`Dispatch` whose result is not `Reconciled`, and writes one line per world-block effect with a
+non-empty `reason`. **[r2]** That world block has at most one effect, by construction:
+
+- The only non-test code that builds a plan's effect list is `parsePlan`'s loop
+  (`effectplan.go:135`).
+- That loop runs only after `if !effectCountOk(n)` has refused n > 1 under law L1 (`:125–126`;
+  `maxPlanEffectsV1 = 1`, `:32`).
+- `parsePlan` is the gate for both the live path (`effectful.go:289`) and replay (`:430`).
+- L1 is a Z3-verified contract in `design_docs/sketches/effectplan.ail`
+  (`ensures { result == (n >= 0 && n <= 1) }`, `:40–41`), bound to the Go by the drift test
+  (`effectplan_drift_test.go:35`).
+- The control shows the search is not empty: two existing tests submit two-effect plans and get L1
+  refusals (`TestParsePlanLaws/L1/two-effects`, `TestProducerMintsNoPacketForMultiEffectPlan`;
+  both PASS at HEAD, V22).
+
+So a call logs at most one line. If L1 is ever widened (R-SE-10 reserves that), the helper's rule
+is still one line per failed effect that carries a line. ∎ TP sends the same A2A task twice, which
+runs once, and expects exactly one line.
+
+**Claim F [r2] (no lined record in a store an older binary would open).** *Proof.* The broker
+computes `reason` and then, before `putRecord`, calls `MarkFailureLines`. If the mark fails, it
+sets `reason = ""`, so the record is written without a line and `EffectFailedError.Reason` is
+empty. `MarkFailureLines` returns nil only when the store's `user_version` reads 6 after the call.
+Every binary from before this change refuses a store at 6 at open (`store.go:464`, V20). ∎ TV pins
+the order (`mark,record`), the unmarked fallback and the unchanged version for a failure with no
+line. TS pins the marker itself.
 
 ## 5. Test plan and mutation table
 
@@ -265,6 +383,9 @@ and expects exactly one line.
 | **TP** | `TestMCPEffectFailureLineReturnedAndLoggedOnce` (`host/projection/effect_failure_log_test.go`) | a real MCP `tools/call` over the projection: the tool result carries the line and no cause text, and the error log holds exactly one line matching `^ailang-worldd: mcp effect failed: mcp:ep-a:<64 hex> e1 sha256:<64 hex>: <line>\n$`. Then the same A2A task sent twice: both answers carry the line, and the log holds exactly one `a2a` line |
 | **TW** | `TestWhyShowsTheFailureLine` (`cmd/ailang-worldd/why_test.go`) | with a committed failed `Workspace.Exec` invocation whose record carries a line, `why` verifies all 7 links and prints `no result: <line>` on the effect link; with a failed record without a line, it prints as before. The `walkRig` helper gains a `failure` argument; existing callers pass `nil` |
 | **TR** | `TestCallPrintsTheFailureLine` (`cmd/ailang-worldd/call_failure_line_test.go`) | `printCallResult` prints `effect e1 failed sha256:1111 — <line>`, and without a reason prints as before |
+| **TV** [r2] | `TestFailureLineMarksTheStoreFirst` (`host/broker/failure_test.go`) | over a file-backed store: a lined failure raises `user_version` to 6, with the call order exactly `mark,record`; a plain failure leaves it at 5; a store whose mark fails gets a record with no line and an empty `Reason` |
+| **TS** [r2] | `TestMarkFailureLinesRaisesFiveToSixOnce` (`host/store/schema_version_test.go`) | a fresh store is 5; a read-only handle cannot mark (it stays 5); marking twice gives 6 both times; `WorldSchemaVersion` reads 6; a writer and a reader of this build reopen it without rewriting the version; a schema-4 store refuses to be marked |
+| edited [r2] | `TestFutureVersionIsRejected`, `TestOpenReadOnlyEnforcesVersionFive` (via `frozenFutureSchemaVersion` 6 → 7, `Current` 5 → 6); `TestStoreDeadlineGuardDynamic` (one fixture: the new method is quarantine- and deadline-guarded like every store method); 4 broker test stores delegate `MarkFailureLines` | the store still refuses a version above what it supports, now 7 and up |
 
 The row asks for "one test per failure class in `Execute`, showing that the record, the MCP result
 and `why` each carry it". The design meets it in two layers. **TX runs once per class** at the
@@ -274,8 +395,10 @@ carries the line it is given. Past the broker the line is an opaque string, so r
 three per class would test the same carrier ten times. `MUT-COORD-DROPS-REASON`,
 `MUT-WHY-NO-LINE` and `MUT-LOG-MCP-NONE` show each carrier is pinned.
 
-**Mutation run** (V12; the harness is quoted in V12). Each mutant is one exact-string edit of the
-prototype. The 13 tests run once (`-count=1`) across the four packages, and then the file is
+**Mutation run** (V12 for r1; **[r2]** V25 re-ran every mutant on r2 with 18 tests across 5
+packages, adding TV, TS, `Future`, `ROFive` and `Guard`. Every r1 kill pattern reproduced; the
+only changes are that TV joins the reds of MUT-RECORD-DROPS-LINE and MUT-HEAD-SHAPE). Each mutant
+is one exact-string edit of the prototype (MUT-MARK-AFTER-RECORD is two). The 13 r1 tests run once (`-count=1`) across the four packages, and then the file is
 restored, with the tracked diff compared to its pre-run copy (`cmp`: identical). The columns list
 the tests that went red. `Gold` = `TestRecordGoldenBytes` and `Reverify` =
 `TestExecHandlerReverifiesTheStackBeforeEachCall`, both existing. `CFJ2`, `Sketch` and `Replay`
@@ -284,7 +407,7 @@ the tests that went red. `Gold` = `TestRecordGoldenBytes` and `Reverify` =
 | Mutant | Edit | Red | Expected → observed |
 |---|---|---|---|
 | CONTROL | none | — (13 of 13 PASS) | green → green |
-| **MUT-HEAD-SHAPE** (positive control) | the record drops the line **and** the coordinator drops the reason: today's behaviour inside the new structure | **TX, TC, TP** | red → red. TX's text: `record = broker.EffectRecord{… Failed:true, Denial:"" …}` with no failure, 11 of 11 rows; TC's output `{"world":{"effects":[{"id":"e1","record":"sha256:…","status":"failed"}],…}` |
+| **MUT-HEAD-SHAPE** (positive control) | the record drops the line **and** the coordinator drops the reason: today's behaviour inside the new structure | **TX, TC, TP** (r2: **and TV**) | red → red. TX's text: `record = broker.EffectRecord{… Failed:true, Denial:"" …}` with no failure, 11 of 11 rows; TC's output `{"world":{"effects":[{"id":"e1","record":"sha256:…","status":"failed"}],…}` |
 | MUT-NO-OMITEMPTY | `json:"failure,omitempty"` → `json:"failure"` | **Gold** | red → red: the two existing goldens move, so every existing record's bytes are pinned |
 | MUT-RECORD-DROPS-LINE | the failed record omits `Failure: reason` | TX, TC | red → red (TC through replay divergence) |
 | MUT-REPLAY-DROPS-REASON | `invokeReplay` omits `Reason: rec.Failure` | TC | red → red |
@@ -309,21 +432,29 @@ the tests that went red. `Gold` = `TestRecordGoldenBytes` and `Reverify` =
 | MUT-CALL-NO-LINE | `call` ignores `reason` | TR | red → red |
 | MUT-PUT-NO-CHECK | `putRecord` skips `FailureConsistent` | — | **SURVIVES.** Unreachable by construction: the only writer passes `Line()`, which is always `""` or a fixed point (TL). The check stays as a guard against a future writer; decoding is pinned by TG |
 | MUT-CLEANUP-UNWIRED | `:356`'s return goes back to the bare `runErr` | — | **SURVIVES.** No seam leaves a child unreaped inside `Execute` without a process-kill fault injector, which this item does not add. The class's text is pinned by TK, and the wiring is one line in the same pattern as the 9 sites TX covers (R3) |
+| **MUT-NO-MARK** [r2] | the broker never calls `MarkFailureLines` | TV | red → red |
+| **MUT-MARK-ERROR-IGNORED** [r2] | a failed mark still writes the line | TV | red → red |
+| **MUT-MARK-AFTER-RECORD** [r2] | the mark moves after `putRecord` (a crash between them would leave a lined record in a version-5 store) | TV | red → red (`call order = [record mark]`) |
+| **MUT-STORE-REJECTS-6** [r2] | `enforceSchemaVersion` does not accept 6 | TS | red → red |
+| **MUT-MARK-NOOP** [r2] | `MarkFailureLines` returns nil without writing | TS, TV | red → red |
+| **MUT-MARK-ANY-VERSION** [r2] | `MarkFailureLines` tries to mark any version | TS | red → red (the schema-4 row) |
+| MUT-FUTURE-BOUND-5 [r2] | the future check reads `> currentSchemaVersion` | — | **SURVIVES, equivalent.** Version 6 returns from the branch above it, so `> 5` and `> 6` refuse the same set (7 and up). No test can tell them apart |
 
 ## 6. Residuals and risks
 
-- **R1, downgrade (stated, not fixed).** After this lands, a daemon or CLI from before it cannot
-  decode a failed `Workspace.Exec` record that carries a line (V16). In that store, an older
-  `why` marks that link ✗, an older episode report stops at that entry, and an older replay of that
-  invocation is a replay gap. Records without a line are unaffected. World ships forward-only
-  binaries against one store, and no item downgrades the daemon over a live store. A v2 record
-  (option (d)) has the same property, because an old binary cannot read v2. Q1 asks the quorum to
-  accept this.
+- **R1 [r2, replaces r1's R1], older binaries.** r1 asserted that World never downgrades. That
+  was unsupported, and false (V23). r2 makes an older build **refuse** a store that holds a line,
+  at open, through the gate it already ships (§3.7, V20). Two costs remain, both stated in §3.7's
+  table:
+  - Once a line exists, a `service upgrade` rollback to a build from before this change ends with
+    the service stopped and both builds kept. Before this change it would have served. Q2.
+  - An older **CLI** reading a newer daemon over HTTP is not prevented. Its `why` marks one link ✗
+    naming the unknown field. Q1.
 - **R2, the operator log carries the bounded line, not the full Go error.** The row says "the same
   line … logged". The full cause stays in `HandlerFailure.Err` and is dropped at `requestEffect`,
   as at HEAD. When a line is not enough (for example `exec-tools` or `sandbox-start`), the operator
   still has to reproduce the failure. Plumbing the cause to the projection's operator-only log is
-  Q2.
+  Q3.
 - **R3, `cleanup-incomplete` is not driven through `Execute`** (`MUT-CLEANUP-UNWIRED` survives).
   TK pins its class and text. A seam would need a child that survives the group kill past the
   cleanup deadline.
@@ -349,11 +480,11 @@ TMPDIR under `~/dev` makes an unrelated test red.
 cd <worktree>
 git apply --check design_docs/planned/w-exec-failure-carries-a-reason.patch && git apply design_docs/planned/w-exec-failure-carries-a-reason.patch
 # expect: rc 0, no output
-go build ./... && go vet ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/ && test -z "$(gofmt -l host cmd)" && echo OK
+go build ./... && go vet ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/ ./host/store/ && test -z "$(gofmt -l host cmd)" && echo OK
 # expect: OK
-go test -count=1 -v -run '^(TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay|TestMCPEffectFailureLineReturnedAndLoggedOnce|TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine)$' \
-  ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/ | grep -E '^(--- |ok|FAIL)'
-# expect: 13 lines "--- PASS: <name>", 4 "ok", no FAIL (V15)
+go test -count=1 -v -run '^(TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestFailureLineMarksTheStoreFirst|TestRecordGoldenBytes|TestExecHandlerReverifiesTheStackBeforeEachCall|TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord|TestSketchRows|TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay|TestMCPEffectFailureLineReturnedAndLoggedOnce|TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine|TestMarkFailureLinesRaisesFiveToSixOnce|TestFutureVersionIsRejected|TestOpenReadOnlyEnforcesVersionFive|TestStoreDeadlineGuardDynamic)$' \
+  ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/ ./host/store/ | grep -E '^(--- |ok|FAIL)'
+# expect: 18 lines "--- PASS: <name>", 5 "ok", no FAIL (V26)
 go test -count=3 -run '^(TestFailureLineBoundsAndSanitises|TestRecordFailureGoldenBytes|TestExecFailureClassifies|TestExecFailureClassesReachTheRecord|TestRecordGoldenBytes|TestEffectFailureReasonReachesTheWorldBlockAndReplays|TestEffectReplay|TestMCPEffectFailureLineReturnedAndLoggedOnce|TestWhyShowsTheFailureLine|TestCallPrintsTheFailureLine)$' \
   ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/
 # expect: 4 "ok" (V13)
@@ -365,8 +496,14 @@ VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.
 
 Then reproduce at least these kill patterns from §5, each red on its named test:
 `MUT-HEAD-SHAPE` (TX, TC, TP), `MUT-NO-OMITEMPTY` (Gold), `MUT-REPLAY-DROPS-REASON` (TC),
-`MUT-ERR-TEXT` (TK, TX), `MUT-RAW-PATH` (TK, TX), `MUT-LOG-RECONCILED` (TP) and
-`MUT-HF-ERROR-IS-LINE` (Reverify). Record the two survivors with their reasons.
+`MUT-ERR-TEXT` (TK, TX), `MUT-RAW-PATH` (TK, TX), `MUT-LOG-RECONCILED` (TP),
+`MUT-HF-ERROR-IS-LINE` (Reverify) and, **[r2]**, `MUT-NO-MARK` (TV), `MUT-MARK-AFTER-RECORD` (TV)
+and `MUT-STORE-REJECTS-6` (TS). Record the three survivors with their reasons.
+
+**[r2] Old-binary refusal, on the applied patch:** reproduce V20. Mark a store with the patched
+broker, then open it with a `git archive 77c9e3d4` build's `store.Open` and `store.OpenReadOnly`.
+Both must return `store: schema version future: … has user_version 6; binary supports 5; use a
+compatible binary`. Record the output in the sprint's Verification Log.
 
 **Acceptance gate: CI on the PR.** The plain `go build + test gate` step (`verify_go.sh`) runs TX
 on Linux (R6). The item is not accepted until that step is green on the PR head. A local green is
@@ -378,13 +515,16 @@ not a substitute.
 |---|---|
 | `host/broker/failure.go` | **new**, 189 lines: `FailureLineMax`, the 10 class constants and their closed set, `HandlerFailure` (`Error`/`Unwrap` = the cause's, `Line`), `FailureLine`, `ValidFailureLine`, `execDisclosed` and `name`, `execFailure`, `driftWhat`, `settingsWhat`, `seedWhat` |
 | `host/broker/record.go` | +21/−4: `EffectRecord.Failure`, `recordWire.Failure` (`omitempty`, last), the codec's two positional literals, `DecodeRecord`'s check, new `FailureConsistent` |
-| `host/broker/broker.go` | +13/−5: `EffectFailedError.Reason`; the failed record and error carry `classified.Line()`; replay sets `Reason: rec.Failure`; `putRecord` checks `FailureConsistent` |
+| `host/broker/broker.go` | +22/−5: `EffectFailedError.Reason`; the failed record and error carry `classified.Line()`; **[r2]** `objectStore` gains `MarkFailureLines`, which is called before a lined record (a failed mark drops the line); replay sets `Reason: rec.Failure`; `putRecord` checks `FailureConsistent` |
+| `host/store/store.go` [r2] | +45/−5: `failureLineSchemaVersion = 6`; `enforceSchemaVersion` accepts 6 like 5, re-reads the version it found after applying the schema, and refuses only above 6; new guarded `(*Store).MarkFailureLines` |
+| `host/store/schema_version_test.go`, `deadline_guard_test.go` [r2] | +71/−3, +1: TS; `frozenFutureSchemaVersion` 6 → 7 and the future `Current` 5 → 6; the guard fixture for the new method |
+| `host/broker/{broker,handlers,handler_error_repro,registry_publish}_test.go` [r2] | +4 each: the test stores delegate `MarkFailureLines` |
 | `host/broker/handlers_exec.go` | +24/−17: the 11 `Execute` returns go through `execFailure` (the effect and scope guards merge into one); `prepareCache`'s 3 returns build `*HandlerFailure` |
 | `host/coordinator/effectful.go` | +9/−2: `EffectResult.Reason` (`json:"-"`), `worldEffect.Reason` (`omitempty`), the copy in `requestEffect` and `composeEffectOutput` |
 | `host/projection/projection.go`, `mcp.go` | +32, +1: `logEffectFailures`, called after a successful `Dispatch` on A2A and MCP |
 | `cmd/ailang-worldd/why.go`, `mcpclient.go` | +4, +4: `no result: <line>`; `call`'s `— <line>` |
-| `docs/QUICKSTART.md` | +11: the "When a call fails" paragraph (S7) |
-| `host/broker/failure_test.go` | new, 278 lines: TL, TG, TK, TX and the `expiredCtx` wrapper |
+| `docs/QUICKSTART.md` | +15: the "When a call fails" paragraph (S7); **[r2]** it names the 5 → 6 marker and the rollback consequence |
+| `host/broker/failure_test.go` | new, 361 lines: TL, TG, TK, TX, **[r2]** TV, and the `expiredCtx` wrapper |
 | `host/coordinator/effect_failure_reason_test.go` | new, 62 lines: TC |
 | `host/projection/effect_failure_log_test.go` | new, 106 lines: TP |
 | `cmd/ailang-worldd/call_failure_line_test.go` | new, 32 lines: TR |
@@ -402,7 +542,7 @@ not a substitute.
   The per-call check it keeps would then report `exec-cache` or `seed-cache` lines.
 - No change to which calls fail and which are refused, to budgets, or to the CF-J-2 debit law.
 - No change to the sketch `effectbroker.ail`, to any `.ail`, to `RecordConsistent`, or to
-  the record's semantic id (Q3).
+  the record's semantic id (Q4).
 - No episode-report change. It still counts `failed` effects without their class. Row 257's test
   for a visible bind-time failure is that row's.
 - No reason for handlers other than `ExecHandler`. Their failed records keep today's bytes
@@ -413,14 +553,26 @@ not a substitute.
 - No change to `tools/launchd/*`, skills, `~/.ailang/state/*` or `HOST_CHANGELOG.md` (that belongs
   to the release that ships this).
 
-**Open questions for the quorum.**
+- **[r2]** No build-skew check for the read verbs (`why`, `call`). Today only `episode start`
+  refuses a CLI build other than the installed one. Q1.
 
-- **Q1.** Accept R1, the one-way decode of new failed exec records by older binaries? (Default:
-  yes, as for any additive record field; (d) has the same property.)
-- **Q2.** Should the operator-only log also carry the full cause, `%q`-quoted like `logRefusal`?
+**Open questions.** Q1 and Q2 are **for Mark**: they touch compatibility policy, which no written
+document states (V19).
+
+- **Q1 (Mark).** Should the read verbs (`why`, `call`) refuse to read a daemon of a different
+  build, as `episode start` does (`episode.go:330`)? Without that, an older CLI reading a newer
+  daemon marks the failed effect's link ✗ naming the unknown field. (Default for this row: no
+  enforcement. The effect is one visible ✗ link, and a build check for every read verb is a
+  separate change.)
+- **Q2 (Mark).** Ratify §3.7's use of the world store's `user_version`. It would mean "which
+  record shapes may be present" as well as the DDL. The consequence: after the first failure line,
+  the store refuses builds from before this change, so a `service upgrade` rollback across this
+  change stops the service instead of serving. (Default: yes. It is the only refusal the shipped
+  binaries already enforce, and the alternative is old readers failing mid-read.)
+- **Q3.** Should the operator-only log also carry the full cause, `%q`-quoted like `logRefusal`?
   It would need `EffectFailedError`'s cause carried past `requestEffect`. (Default: no, the row
   says "the same line".)
-- **Q3.** Should `effectbroker.ail`'s `EffectRecord` gain `failure: string` for documentation
+- **Q4.** Should `effectbroker.ail`'s `EffectRecord` gain `failure: string` for documentation
   parity (S4)? That is an `.ail` change with sketch-test churn and no change to the law. (Default:
   no.)
 
@@ -443,16 +595,54 @@ switching.
 | V8 | Cause texts carry host paths and OS or child text | same script | `exec_sandbox.go:107 "exec confinement stack drifted: %s: %s"`, `:208` and `:248 Why: err.Error()`; `exec_settings.go:147 "exec settings %s is not World's rendering: %s"`; `handlers.go:74 "handler subprocess failed: %v (output %q)"` |
 | V9 | The paths a success result already discloses | same script | `handlers_exec.go:231 Argv0 json:"argv0"`, `:232 Argv0Target json:"argv0_target"`, `:240 Node json:"node"`, `:241 NodeTarget json:"node_target"` |
 | V10 | Nothing at HEAD can hold a reason (the search has a positive control); the record's readers | same script, last section; `git grep -n "DecodeRecord(" 77c9e3d4 -- "*.go" \| grep -v _test.go \| grep -v "func DecodeRecord" \| wc -l`; `git show 77c9e3d4:cmd/ailang-worldd/why.go \| sed -n 912,925p` | `failure field in record.go: 0 (control json:"denial": 1)`; `reason in worldEffect: 0 (control json:"record": 2)`; `10` decode call sites; `why.go:915 if !d.ResultRef.IsZero() {`, `:918 resText = fmt.Sprintf("result %d B", …)`, `:920 delta = resultWorktreeDelta(res.Payload)`; `why.go:525 … obj.SemanticID != broker.EffectRecordV1`; `broker.go:433 rec.Allowed && (rec.Denial != "" \|\| …)` |
-| V11 | The prototype passes the full gate (r1, before the U+202E mapping and the A2A half of TP) | `VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh` → `/tmp/iter360-designer/verify_go.txt` (a first run without `AILANG_BIN` was red only on the tests that require it, e.g. `demo_test.go:292: required AILANG_BIN absent`; it is discarded) | `✓ go gate PASSED (plain): build clean; legs run pass with pinned AILANG_BIN (AILANG v0.41.0`; every package `ok`, including `host/broker 306.763s`, `host/daemon 341.595s`, `host/verifygate 321.620s`, `cmd/ailang-worldd 189.658s`; `RC=0` |
-| V12 | The mutation table | `/tmp/iter360-designer/mutate.py`: for each mutant, exact-string replace (anchor count must be 1), then `go test -count=1 -timeout 300s -v -run '^(<13 names>)$' ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/`, then parse `--- FAIL:`/`--- PASS:` and restore → `/tmp/iter360-designer/mutants.txt`; loads 6.0–9.0 | `CONTROL: rc=0 pass=13 red=-`; `MUT-HEAD-SHAPE: rc=1 pass=10 red=TC,TP,TX`; `MUT-NO-OMITEMPTY: red=Gold`; `MUT-RECORD-DROPS-LINE: red=TC,TX`; `MUT-REPLAY-DROPS-REASON: red=TC`; `MUT-COORD-DROPS-REASON: red=TC,TP`; `MUT-WORLD-NO-OMITEMPTY: red=TC`; `MUT-ERR-TEXT`, `MUT-RAW-PATH`, `MUT-DRIFT-WHY-RAW: red=TK,TX`; `MUT-CONTROL-ONLY`, `MUT-NO-BOUND: red=TL`; `MUT-CLASS-OPEN: red=TG,TL`; `MUT-DECODE-NO-CHECK`, `MUT-FAILURE-ANY-ARM: red=TG`; `MUT-HF-ERROR-IS-LINE: red=Reverify,TX`; `MUT-SEED-UNCLASSIFIED: red=TX`; `MUT-SEED-TIMEOUT-AS-EXIT: red=TK,TX`; `MUT-LOG-MCP-NONE`, `MUT-LOG-A2A-NONE`, `MUT-LOG-RECONCILED: red=TP`; `MUT-WHY-NO-LINE: red=TW`; `MUT-CALL-NO-LINE: red=TR`; `MUT-PUT-NO-CHECK: rc=0 pass=13 red=-`; `MUT-CLEANUP-UNWIRED: rc=0 pass=13 red=-`. `MUT-NO-SANITISE`'s first anchor (`if false {`) left `unicode` unused (`BUILD-FAIL`); re-anchored as `if unicode.IsControl(r) && false {` → `red=TL`. Restore: `cmp proto-before-mutants.diff proto-after-mutants.diff` → `tracked diff identical after mutants`; `failure.go identical` |
-| V13 | Stability and package runs on the final prototype | `go test -count=3 -run '^(<10 names>)$' ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/`; `go test -count=1 ./host/projection/`; `gofmt -l host cmd`; `go vet` of the four packages | `ok` ×4 (broker 0.728s, coordinator 0.761s, projection 0.398s, cmd 0.802s); projection package `ok 13.596s`; gofmt empty; `VET-OK` |
-| V14 | The patch applies at HEAD, and the tree went back to the doc state | `git add -N <5 new files> && git diff > design_docs/planned/w-exec-failure-carries-a-reason.patch && git reset -q <5 new files>`; `git checkout -- <10 modified files>`; `rm <5 new files>`; `git status --porcelain`; `git apply --check -v design_docs/planned/w-exec-failure-carries-a-reason.patch` | patch 1184 lines, sha256 prefix `b7dcb7821c3b389a`, 15 `diff --git` sections; numstat `mcpclient.go 4/0`, `why.go 4/0`, `why_test.go 44/1`, `QUICKSTART.md 11/0`, `broker.go 13/5`, `handlers_exec.go 24/17`, `record.go 21/4`, `effectful.go 9/2`, `mcp.go 1/0`, `projection.go 32/0`; new files 189 + 278 + 62 + 106 + 32 lines; `git status --porcelain` → `?? design_docs/planned/w-exec-failure-carries-a-reason.patch` only; `Checking patch …` ×15, `apply-check rc=0` at `77c9e3d4` |
-| V15 | The patch, applied to a fresh `git archive 77c9e3d4`, builds and its tests pass | in `/tmp/iter360-designer/applied`: `git apply <patch>`; `go build ./... && go vet <4 pkgs>`; `test -z "$(gofmt -l host cmd)"`; `go test -count=1 -v -run '^(<13 names>)$' <4 pkgs>`; then `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/ ./host/daemon/` | `APPLY-OK`, `BUILD-VET-OK`, `GOFMT-OK`; 13 `--- PASS` (TL, TG, TK, TX 0.18s, Gold, Sketch, CFJ2, Reverify 2.04s, TC, Replay, TP, TW, TR) and `ok` ×4; full packages `ok host/broker 244.644s`, `ok host/coordinator 65.213s`, `ok host/projection 13.905s`, `ok cmd/ailang-worldd 125.260s`, `ok host/daemon 291.581s` (it holds the QUICKSTART-bound tests), `RC=0` |
+| V11 | (r1) The prototype passes the full gate (r1, before the U+202E mapping and the A2A half of TP) | `VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh` → `/tmp/iter360-designer/verify_go.txt` (a first run without `AILANG_BIN` was red only on the tests that require it, e.g. `demo_test.go:292: required AILANG_BIN absent`; it is discarded) | `✓ go gate PASSED (plain): build clean; legs run pass with pinned AILANG_BIN (AILANG v0.41.0`; every package `ok`, including `host/broker 306.763s`, `host/daemon 341.595s`, `host/verifygate 321.620s`, `cmd/ailang-worldd 189.658s`; `RC=0` |
+| V12 | (r1) The mutation table | `/tmp/iter360-designer/mutate.py`: for each mutant, exact-string replace (anchor count must be 1), then `go test -count=1 -timeout 300s -v -run '^(<13 names>)$' ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/`, then parse `--- FAIL:`/`--- PASS:` and restore → `/tmp/iter360-designer/mutants.txt`; loads 6.0–9.0 | `CONTROL: rc=0 pass=13 red=-`; `MUT-HEAD-SHAPE: rc=1 pass=10 red=TC,TP,TX`; `MUT-NO-OMITEMPTY: red=Gold`; `MUT-RECORD-DROPS-LINE: red=TC,TX`; `MUT-REPLAY-DROPS-REASON: red=TC`; `MUT-COORD-DROPS-REASON: red=TC,TP`; `MUT-WORLD-NO-OMITEMPTY: red=TC`; `MUT-ERR-TEXT`, `MUT-RAW-PATH`, `MUT-DRIFT-WHY-RAW: red=TK,TX`; `MUT-CONTROL-ONLY`, `MUT-NO-BOUND: red=TL`; `MUT-CLASS-OPEN: red=TG,TL`; `MUT-DECODE-NO-CHECK`, `MUT-FAILURE-ANY-ARM: red=TG`; `MUT-HF-ERROR-IS-LINE: red=Reverify,TX`; `MUT-SEED-UNCLASSIFIED: red=TX`; `MUT-SEED-TIMEOUT-AS-EXIT: red=TK,TX`; `MUT-LOG-MCP-NONE`, `MUT-LOG-A2A-NONE`, `MUT-LOG-RECONCILED: red=TP`; `MUT-WHY-NO-LINE: red=TW`; `MUT-CALL-NO-LINE: red=TR`; `MUT-PUT-NO-CHECK: rc=0 pass=13 red=-`; `MUT-CLEANUP-UNWIRED: rc=0 pass=13 red=-`. `MUT-NO-SANITISE`'s first anchor (`if false {`) left `unicode` unused (`BUILD-FAIL`); re-anchored as `if unicode.IsControl(r) && false {` → `red=TL`. Restore: `cmp proto-before-mutants.diff proto-after-mutants.diff` → `tracked diff identical after mutants`; `failure.go identical` |
+| V13 | (r1) Stability and package runs on the r1 prototype | `go test -count=3 -run '^(<10 names>)$' ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/`; `go test -count=1 ./host/projection/`; `gofmt -l host cmd`; `go vet` of the four packages | `ok` ×4 (broker 0.728s, coordinator 0.761s, projection 0.398s, cmd 0.802s); projection package `ok 13.596s`; gofmt empty; `VET-OK` |
+| V14 | (r1) The r1 patch applies at HEAD, and the tree went back to the doc state | `git add -N <5 new files> && git diff > design_docs/planned/w-exec-failure-carries-a-reason.patch && git reset -q <5 new files>`; `git checkout -- <10 modified files>`; `rm <5 new files>`; `git status --porcelain`; `git apply --check -v design_docs/planned/w-exec-failure-carries-a-reason.patch` | patch 1184 lines, sha256 prefix `b7dcb7821c3b389a`, 15 `diff --git` sections; numstat `mcpclient.go 4/0`, `why.go 4/0`, `why_test.go 44/1`, `QUICKSTART.md 11/0`, `broker.go 13/5`, `handlers_exec.go 24/17`, `record.go 21/4`, `effectful.go 9/2`, `mcp.go 1/0`, `projection.go 32/0`; new files 189 + 278 + 62 + 106 + 32 lines; `git status --porcelain` → `?? design_docs/planned/w-exec-failure-carries-a-reason.patch` only; `Checking patch …` ×15, `apply-check rc=0` at `77c9e3d4` |
+| V15 | (r1) The r1 patch, applied to a fresh `git archive 77c9e3d4`, builds and its tests pass | in `/tmp/iter360-designer/applied`: `git apply <patch>`; `go build ./... && go vet <4 pkgs>`; `test -z "$(gofmt -l host cmd)"`; `go test -count=1 -v -run '^(<13 names>)$' <4 pkgs>`; then `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 ./host/broker/ ./host/coordinator/ ./host/projection/ ./cmd/ailang-worldd/ ./host/daemon/` | `APPLY-OK`, `BUILD-VET-OK`, `GOFMT-OK`; 13 `--- PASS` (TL, TG, TK, TX 0.18s, Gold, Sketch, CFJ2, Reverify 2.04s, TC, Replay, TP, TW, TR) and `ok` ×4; full packages `ok host/broker 244.644s`, `ok host/coordinator 65.213s`, `ok host/projection 13.905s`, `ok cmd/ailang-worldd 125.260s`, `ok host/daemon 291.581s` (it holds the QUICKSTART-bound tests), `RC=0` |
 | V16 | Downgrade: HEAD cannot decode a record carrying `failure` (R1), but decodes one without it | in `/tmp/iter360-designer/head` (`git archive 77c9e3d4`) a throwaway `zz_downgrade_probe_test.go` calls HEAD's `DecodeRecord` on TG's golden, with and without the field; `go test ./host/broker/ -run '^TestZZHeadDecodesRow255Record$' -v` | `err = broker: decode effect record: json: unknown field "failure"`; without the field `err = <nil>` |
 | V17 | Every `Execute` error is classified; `HandlerFailure` is built only in two files | in `applied`: `awk 'NR>=254 && NR<=400' host/broker/handlers_exec.go \| grep "return nil, " \| grep -vc "execFailure\|execRefusal"`, with the classified count as control; `grep -rn "HandlerFailure{" --include="*.go" host cmd \| grep -v _test.go \| grep -v "failure.go\|handlers_exec.go" \| wc -l`, with test files as control | `unclassified returns in Execute: 0 (control, classified: 10)`; `prepareCache` bare returns 0; other non-test constructors `0`; control: `failure_test.go`, `effect_failure_reason_test.go`, `effect_failure_log_test.go` |
 | V18 | No `.ail` change; the `.ail` gate is unaffected | `AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh` (worktree at HEAD plus the untracked patch); `grep -c "^diff --git.*\.ail" <patch>` with control `"^diff --git.*\.go"` | `✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass`; rc 0. `.ail` paths in the patch `0` (control `.go` paths `14`) |
-| — | **UNMEASURED** | — | Linux (R6: GNU `cp` exit code and `EACCES` on the CI runner; the acceptance gate is the PR's CI); the home store's entries 54–64 for episode `worldd-2611031015` (row claim 8); `verify_go.sh` on the **final** patch (V11 ran on r1; V15 ran the five touched packages in full on the final patch); a `-race` run |
+| V19 | [r2] No written store-compatibility, downgrade or rollback policy exists | `grep -rniEc "downgrade\|older binary\|newer binary\|store (format\|schema) version\|forward.compat\|backward.compat\|roll ?back to\|compatible binary" design_docs/world-mission.md design_docs/DESIGN.md design_docs/coding-standards.md docs/*.md CLAUDE.md`, control `grep -c " the " design_docs/world-mission.md` | `world-mission.md:1` (line 2379: "AC11's claim is downgraded in-doc", unrelated); every other file `0`; control `3214`. The controller's narrower search found the same (0 hits; control `the` in DESIGN.md = 236) |
+| V20 | [r2] An older binary refuses a store that this change has marked, as writer and as reader | a throwaway test in the r2 prototype opens `/tmp/iter360-designer/marked.db` with `store.Open` and drives one lined failure through a live broker session; then, in a `git archive 77c9e3d4` copy, a throwaway test calls HEAD's `store.Open` and `store.OpenReadOnly` on that file → `/tmp/iter360-designer/old-binary-probe.txt` (both throwaway files deleted) | prototype: `record sha256:53633d27…`, `marked store user_version = 6`; HEAD: `Open(marked) = false, err = store: schema version future: "/tmp/iter360-designer/marked.db" has user_version 6; binary supports 5; use a compatible binary`; `OpenReadOnly(marked) = false`, the same error. (A first attempt under zsh aborted on a glob before the store was made, so HEAD opened a fresh path. That run was discarded and the probe was redone under `bash` with the file deleted first) |
+| V21 | [r2] The shipped gate, its own test at version 6, and no production replay | run under `bash`, output in `/tmp/iter360-designer/compat-greps.txt`: `git show 77c9e3d4:host/store/store.go \| grep -n …`; `git show 77c9e3d4:host/store/schema_version_test.go \| grep -n …`; `git show 77c9e3d4:host/store/schema.sql \| grep -c user_version`; `git grep -n "\.Replay(\|OpenReplayBinder(" 77c9e3d4 -- "*.go" \| grep -v _test.go`; importers of `host/replay` with control `host/store` | `store.go:46 const currentSchemaVersion = 5`, `:464 if version > currentSchemaVersion {`, `:68 "… binary supports %d; use a compatible binary"`; `schema_version_test.go:18 const frozenFutureSchemaVersion = 6`, `:418 … future.Current != 5`; `schema.sql` user_version `0`; the only `.Replay(`/`OpenReplayBinder(` hit is the definition `binder.go:37`; `host/replay` non-test importers `0` (control `host/store` `58`) |
+| V22 | [r2] A plan has at most one effect, by construction (kimi's fix), with a control | `/tmp/iter360-designer/l1-greps.txt`: `git show 77c9e3d4:host/coordinator/effectplan.go \| grep -n …`; the same over `effectful.go`, `design_docs/sketches/effectplan.ail` and `effectplan_drift_test.go`; `git grep -n "\.Effects = append\|Effects: \[\]PlannedEffect" 77c9e3d4 -- "host/coordinator/*.go" \| grep -v _test.go`; control: `git grep -n "L1/two-effects\|func TestProducerMintsNoPacketForMultiEffectPlan"`, and in the `77c9e3d4` copy `go test ./host/coordinator/ -run '^(TestProducerMintsNoPacketForMultiEffectPlan\|TestParsePlanLaws.*)$' -v` | `effectplan.go:32 maxPlanEffectsV1 = 1 // L1`, `:125 if !effectCountOk(n) {`, `:126 lawErr(LawL1, "%d effects; a v1 plan carries at most %d", …)`, `:323 func effectCountOk(n int) bool { return n >= 0 && n <= maxPlanEffectsV1 }`; `effectful.go:289` (live) and `:430` (replay) `parsePlan`, `:307` and `:469` iterate `pl.Effects`, `:246 default: // unreachable under L1`; sketch `effectplan.ail:38` "L1: a v1 plan carries at most ONE effect", `:40 export func effectCountOk`, `:41 ensures { result == (n >= 0 && n <= 1) }`; drift test `:35` binds `effectCountOk`; the only non-test construction of a plan's effects is `effectplan.go:135 plan.Effects = append(plan.Effects, e)` (the other hit, `effectful.go:213`, is the world block); control: `effectplan_test.go:63 "L1/two-effects"` and `decisionpacket_producer_test.go:316`, both `--- PASS` (each submits a two-effect plan and gets the L1 refusal) |
+| V23 | [r2] Rollback is real; one binary; the CLI reads over HTTP | `git show 77c9e3d4:cmd/ailang-worldd/{service_upgrade,main,why,episode}.go \| grep -n …` | `service_upgrade.go:210 fresh, previous := …".new", …".prev"`, `:219 os.Link(e.paths.Binary, previous)`, `:240 return e.rollbackUpgrade(…)`, `:256 err = os.Rename(previous, e.paths.Binary)`, `:262 e.waitForBuild(r.Address, from)`, `:287 "rollback failed too: the service is stopped"`; `main.go:354 case "serve":`, `:395 case "call":`, `:398 case "why":`, `:434 case "episode":` (one `package main`); `why.go:136 r.getJSON("/v1/objects/"+…)`; `episode.go:330 if self.ExecutableSHA256 != installed {` |
+| V24 | [r2] The r2 prototype passes the full plain gate | `VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh` → `/tmp/iter360-designer/r2-verify_go.txt`. The prototype is byte-identical to the r2 patch: no source edit came between this run and `git diff`, except the mutation run, whose restore V25 checks | `✓ go gate PASSED (plain): …`; `RC=0`; 35 packages `ok`, including `host/broker 315.957s`, `host/store 15.408s`, `host/daemon 347.692s`, `host/verifygate 311.481s`, `cmd/ailang-worldd 197.173s` |
+| V25 | [r2] The mutation table on r2 | `/tmp/iter360-designer/mutate.py` (r2: 18 tests over `host/broker`, `host/coordinator`, `host/projection`, `cmd/ailang-worldd`, `host/store`; multi-edit mutants) → `/tmp/iter360-designer/r2-mutants.txt`; then `git diff` compared with its pre-run copy | `CONTROL: rc=0 pass=18 red=-`; every r1 mutant's reds as in V12, plus TV on `MUT-RECORD-DROPS-LINE` (`red=TC,TV,TX`) and `MUT-HEAD-SHAPE` (`red=TC,TP,TV,TX`); `MUT-NO-MARK`, `MUT-MARK-ERROR-IGNORED`, `MUT-MARK-AFTER-RECORD: red=TV`; `MUT-STORE-REJECTS-6`, `MUT-MARK-ANY-VERSION: red=TS`; `MUT-MARK-NOOP: red=TS,TV`; survivors `MUT-PUT-NO-CHECK`, `MUT-CLEANUP-UNWIRED`, `MUT-FUTURE-BOUND-5` (`rc=0 pass=18`); `tracked diff identical after mutants`; `-count=3` of TV, TX, TC, TP, TW, TS and `Future` → `ok` ×5 |
+| V26 | [r2] The r2 patch applies at HEAD and on a fresh archive, and its 18 named tests pass there | `git add -N <5 new files>; git diff -- . ':(exclude)<patch>' > <patch>; git reset -q`; `git checkout --` the 17 modified files; `rm` the 5 new; `git status --porcelain`; `git apply --check <patch>` in the worktree; then in `/tmp/iter360-designer/applied2` (`git archive 77c9e3d4`): `git apply --check`, `git apply`, `go build ./...`, `go vet` (5 packages), `gofmt -l host cmd`, `go test -count=1 -v -run '^(<18 names>)$'` (5 packages) | patch 1538 lines, sha256 prefix `02259c3bdc1c942b`, 22 `diff --git` sections; numstat `store.go 45/5`, `broker.go 22/5`, `schema_version_test.go 71/3`, `deadline_guard_test.go 1/0`, the four test stores `4/0` each, `QUICKSTART.md 15/0`, and the r1 rows unchanged; `failure_test.go` 361 lines; the worktree is back to `?? <patch>` only; `apply-check-rc=0`; `APPLY-CHECK-ARCHIVE rc=0`, `APPLY-OK`, `BUILD-VET-OK`, `GOFMT-OK`; 18 `--- PASS` and 5 `ok` |
+| — | **UNMEASURED** | — | **[r2]** a live `service upgrade` with its rollback onto a marked store (§3.7 reads the code path, V23; launchd was not driven); an older **CLI** against a daemon of this build (derived from V16 and `why.go:896–899`, not run); Linux (R6: GNU `cp` exit code and `EACCES` on the CI runner; the acceptance gate is the PR's CI); the home store's entries 54–64 for episode `worldd-2611031015` (row claim 8); `verify_go.sh` on the **final** patch (V11 ran on r1; V15 ran the five touched packages in full on the final patch); a `-race` run |
 
 ## 11. Quorum log
 
-*(empty: r1, awaiting quorum)*
+**Round 1 (r1, `89c1967e`): BLOCKED, $0.2805.** Seats: gemini-4-argon **PASS** ($0.0706),
+oc-kimi-k3 **REJECT** ($0.1767), gpt6-1-sol **REJECT** ($0.0332). claude was benched as the
+author's vendor; no seat was absent. Artifact:
+`~/.ailang/state/mission-quorum-world/w-exec-failure-carries-a-reason-2026-11-06T21-30-57Z.json`
+(read through the controller's message).
+
+- **kimi: "logged once per call" rested on one fixture** (V6, a `"finish":false` hit). Its fix:
+  show by construction that the effects array has one element, with a control; otherwise rewrite
+  Claim E and add a two-effect test. **r2's answer:** construction is shown. L1 (`effectplan.go:32`,
+  `:125–126`) gates the only non-test builder of a plan's effects (`:135`). It runs on the live and
+  replay paths and is a Z3-verified sketch contract bound by a drift test. The control is the two
+  existing two-effect refusals, both PASS (V22). Claim E and §3.5 now cite it and say "at most once
+  per call". They also state the helper's per-effect rule, so a future widened L1 logs once per
+  failed effect. No two-effect TP fixture is added, because L1 makes that plan unconstructible.
+- **gpt: R1's "World never downgrades" had no V-log row, and Q1 defaulted to accepting it.** Its
+  fix: a compatibility gate with cited policy and enumerated combinations, or a redesign. **r2's
+  answer:**
+  - Measured: no written policy exists (V19), and rollback is a shipped feature (V23), so r1's
+    assertion was false and is withdrawn.
+  - New §3.7 shows that no carrier is tolerated by old readers, then adds the smallest enforced
+    gate: the store's existing `user_version` refusal, raised lazily from 5 to 6 just before the
+    first lined record. It is measured end to end against HEAD code (V20) and pinned by TS, TV and
+    6 new mutants (V25).
+  - §3.7's table enumerates daemon, CLI, replay and rollback combinations.
+  - The two remaining policy points become Q1 and Q2, addressed to Mark with defaults, not
+    asserted.
+- **gemini (pass):** no change requested.
+
+r2 changes the patch (r1 `b7dcb7821c3b389a`, 1184 lines → r2 `02259c3bdc1c942b`, 1538 lines). The
+r1 carrier, classes, bounding rule and surfaces are unchanged. r2 adds the store marker, its
+broker call and tests, and one QUICKSTART sentence block.
