@@ -1,0 +1,20 @@
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/none
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 55.914084ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49539:f2e47a529d516024523061fb4b539e2b" "proxy 49539:f2e47a529d516024523061fb4b539e2b"] dials ["" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 55.75325ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49545:9f953809a8c8c11792ba5778229380b7" "connect 49545:9f953809a8c8c11792ba5778229380b7" "proxy 49545:9f953809a8c8c11792ba5778229380b7"] dials ["foreign:ok" "" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.101667ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49552:0bfa39a1b143f577203a8fbdf1718e18" "proxy 49552:0bfa39a1b143f577203a8fbdf1718e18" "proxy 49552:0bfa39a1b143f577203a8fbdf1718e18"] dials ["" "foreign:ok" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.488042ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49559:de29161c1631976b7fb77408892a66c8" "connect 49559:de29161c1631976b7fb77408892a66c8" "connect 49559:de29161c1631976b7fb77408892a66c8" "proxy 49559:de29161c1631976b7fb77408892a66c8" "proxy 49559:de29161c1631976b7fb77408892a66c8"] dials ["foreign:ok" "foreign:ok+foreign:ok" "" "foreign:ok" ""]
+--- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused (6.28s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/none (1.11s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw (1.52s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy (1.50s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy (2.15s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	6.528s

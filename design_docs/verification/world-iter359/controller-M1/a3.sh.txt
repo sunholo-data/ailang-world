@@ -1,0 +1,60 @@
+#!/bin/bash
+# A3 — relay verification receipt (collection per the plan; review conclusions by the controller,
+# cross-checked against the executor's executor-relay-check.txt and the controller's V21).
+set -euo pipefail
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter359-sprint
+NM=/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/node_modules
+mkdir -p "$NM/@anthropic-ai"
+[ -e "$NM/@anthropic-ai/sandbox-runtime" ] || ln -s ../../pkg/package "$NM/@anthropic-ai/sandbox-runtime"
+export WORLD_EXEC_SRT_NODE_MODULES="$NM"
+export EVIDENCE="$WT/design_docs/verification/world-iter359/controller-M1"
+mkdir -p "$EVIDENCE"
+cd "$WT"
+python3 -I - "$WORLD_EXEC_SRT_NODE_MODULES" "$EVIDENCE" <<'PYCODE'
+from pathlib import Path
+import hashlib,json,sys
+pkg=Path(sys.argv[1])/'@anthropic-ai/sandbox-runtime'
+e=Path(sys.argv[2])
+pin=json.loads(Path('design_docs/verification/world-row140-m0/pin.json').read_text())
+assert json.loads((pkg/'package.json').read_text())['version']==pin['version']
+assert hashlib.sha256((pkg/'dist/cli.js').read_bytes()).hexdigest()==pin['cli_sha256']
+parts=[]; hashes={}
+for name in ('http-proxy.js','sandbox-manager.js','mux-proxy.js'):
+    matches=list((pkg/'dist').rglob(name))
+    assert len(matches)==1,(name,matches)
+    p=matches[0]; hashes[str(p.relative_to(pkg))]=hashlib.sha256(p.read_bytes()).hexdigest()
+    parts.append('\nFILE '+str(p.relative_to(pkg))+'\n'+'\n'.join('%d: %s'%(i,l) for i,l in enumerate(p.read_text().splitlines(),1)))
+settings=Path('host/broker/exec_settings.go')
+parts.append('\nWORLD SETTINGS\n'+settings.read_text())
+for folder in ('host','cmd'):
+    for p in Path(folder).rglob('*.go'):
+        if p.name.endswith('_test.go'): continue
+        for i,line in enumerate(p.read_text().splitlines(),1):
+            if any(k in line for k in ('tlsTerminate','mitmProxy','parentProxy','allowedDomains')):
+                parts.append('%s:%d: %s'%(p,i,line))
+(e/'relay-source.txt').write_text('\n'.join(parts)+'\n')
+(e/'relay-inputs.json').write_text(json.dumps({'version':pin['version'],'cli_sha256':pin['cli_sha256'],'sources':hashes},indent=2)+'\n')
+print('collected', len(parts), 'parts')
+PYCODE
+cat > "$EVIDENCE/relay-review.json" <<'JSON'
+{
+  "verbatim_both_directions": true,
+  "upstream_header_or_banner": false,
+  "world_config_enables_altering_route": false,
+  "reviewer": "controller (claude-opus-5-5), iteration 359, outside the sandbox; agrees with the executor (codex gpt-6.1-sol) executor-relay-check.txt and the controller's design V21",
+  "evidence": "dist/sandbox/http-proxy.js (CONNECT handler; the plain-HTTP request handler at :423+ is not the tunnel path): the CONNECT route is TLS-terminated only when options.mitmCA is set AND the sniffed first bytes are a TLS ClientHello (:268, :284; a non-TLS stream falls through to the opaque tunnel), sent to a MITM socket only when getMitmSocketPath(host) (:311), and to a parent proxy only when options.parentProxy (:312, :329); otherwise dialDirect (:332). After the 200 (:357) it forwards `head` (:369) and relays with upstream.pipe(socket) and socket.pipe(upstream) (:371-372): no transform, no header or banner written upstream. Those options come only from srt config keys network.tlsTerminate / network.mitmProxy / network.parentProxy (sandbox-manager.js). World's srt settings network struct (host/broker/exec_settings.go:44-49) has exactly allowedDomains, deniedDomains, allowLocalBinding, allowAllUnixSockets; no non-test .go file under host/ or cmd/ names any of the three keys (relay-source.txt lists only the allowedDomains positive). The SOCKS path is client.pipe(upstream) / upstream.pipe(client) (mux-proxy.js:73-74). Static source read of the pinned 0.0.78 package (cli.js digest equal to pin.json); not exercised dynamically on Linux here, which is A9's job."
+}
+JSON
+python3 -I - "$EVIDENCE" <<'PYCODE'
+from pathlib import Path
+import json,sys
+e=Path(sys.argv[1]); r=json.loads((e/'relay-review.json').read_text())
+assert r['verbatim_both_directions'] is True
+assert r['upstream_header_or_banner'] is False
+assert r['world_config_enables_altering_route'] is False
+assert r['reviewer'].strip() and r['evidence'].strip()
+with (e/'verification-log.md').open('a') as out:
+    out.write('\nExecutor relay verification (blocking r3 gate):\n'+(e/'relay-inputs.json').read_text()+(e/'relay-review.json').read_text()+'\n')
+print('A3 receipt ok')
+PYCODE
+grep -nE "tlsTerminate|mitmProxy|parentProxy|allowedDomains" "$EVIDENCE/relay-source.txt" | grep -E "^[0-9]+:host|^[0-9]+:cmd" || true

@@ -1,0 +1,10 @@
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/silent-client
+    exec_probe_test.go:631: TIMING ArchiveExecSandbox took 2.631083ms
+=== RUN   TestExecProbeReverseLegNoTokenIsNotRetried/clean
+    exec_probe_test.go:631: TIMING ArchiveExecSandbox took 5.054334ms
+--- PASS: TestExecProbeReverseLegNoTokenIsNotRetried (0.36s)
+    --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried/silent-client (0.23s)
+    --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried/clean (0.14s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.608s

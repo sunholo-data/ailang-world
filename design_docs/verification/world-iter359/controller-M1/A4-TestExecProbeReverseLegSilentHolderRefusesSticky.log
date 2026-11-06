@@ -1,0 +1,13 @@
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 2.732917ms
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 5.403416ms
+=== RUN   TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+    exec_probe_test.go:662: TIMING ArchiveExecSandbox took 8.346667ms
+--- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky (1.36s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1 (0.53s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty (0.67s)
+    --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder (0.16s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.616s

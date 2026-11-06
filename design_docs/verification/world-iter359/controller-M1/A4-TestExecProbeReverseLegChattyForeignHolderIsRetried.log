@@ -1,0 +1,28 @@
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.494083ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 1.8955ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 5.104417ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.098917ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.978625ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 2.500833ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 1.948167ms
+=== RUN   TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close
+    exec_probe_test.go:592: TIMING ArchiveExecSandbox took 3.584834ms
+--- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried (1.51s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-http-400 (0.24s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-forged-nonce (0.26s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-garbage (0.17s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/linux-bound-clean-close (0.15s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-http-400 (0.24s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-forged-nonce (0.15s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-garbage (0.16s)
+    --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried/darwin-eperm-clean-close (0.15s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.765s

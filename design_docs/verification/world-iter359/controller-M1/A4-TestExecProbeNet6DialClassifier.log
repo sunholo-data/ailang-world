@@ -1,0 +1,24 @@
+=== RUN   TestExecProbeNet6DialClassifier
+=== RUN   TestExecProbeNet6DialClassifier/control
+=== RUN   TestExecProbeNet6DialClassifier/child
+=== RUN   TestExecProbeNet6DialClassifier/child-then-more
+=== RUN   TestExecProbeNet6DialClassifier/http-get
+=== RUN   TestExecProbeNet6DialClassifier/wrong-nonce
+=== RUN   TestExecProbeNet6DialClassifier/preamble-then-child
+=== RUN   TestExecProbeNet6DialClassifier/connect-close
+=== RUN   TestExecProbeNet6DialClassifier/held-silent
+=== RUN   TestExecProbeNet6DialClassifier/prefix-then-close
+=== RUN   TestExecProbeNet6DialClassifier/prefix-held
+--- PASS: TestExecProbeNet6DialClassifier (1.01s)
+    --- PASS: TestExecProbeNet6DialClassifier/control (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child-then-more (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/http-get (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/wrong-nonce (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/preamble-then-child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/connect-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/held-silent (0.50s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-then-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-held (0.50s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.253s

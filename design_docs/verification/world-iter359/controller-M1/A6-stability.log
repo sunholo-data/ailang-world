@@ -1,0 +1,248 @@
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/none
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 56.231292ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49965:c1bf0016f02bc82db4d720e1d42145be" "proxy 49965:c1bf0016f02bc82db4d720e1d42145be"] dials ["" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.690292ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49970:f00e3c2ae6cc4d13749da8c4a1e8161c" "connect 49970:f00e3c2ae6cc4d13749da8c4a1e8161c" "proxy 49970:f00e3c2ae6cc4d13749da8c4a1e8161c"] dials ["foreign:ok" "" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 52.919417ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49977:1491ca9db99625377114d34188bb0813" "proxy 49977:1491ca9db99625377114d34188bb0813" "proxy 49977:1491ca9db99625377114d34188bb0813"] dials ["" "foreign:ok" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.969042ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 49983:7a4de94c9f34d94a8386a658a7796ef7" "connect 49983:7a4de94c9f34d94a8386a658a7796ef7" "connect 49983:7a4de94c9f34d94a8386a658a7796ef7" "proxy 49983:7a4de94c9f34d94a8386a658a7796ef7" "proxy 49983:7a4de94c9f34d94a8386a658a7796ef7"] dials ["foreign:ok" "foreign:ok+foreign:ok" "" "foreign:ok" ""]
+--- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused (6.01s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/none (1.09s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw (1.46s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy (1.39s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy (2.07s)
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.875917ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49993:7a00d7a0f63efe717a385d5e6f7f7a72" "proxy 49993:7a00d7a0f63efe717a385d5e6f7f7a72"] dials ["child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.338208ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49999:d6e78d885bb49e6f6cb15e6028e5e4e0" "proxy 49999:d6e78d885bb49e6f6cb15e6028e5e4e0"] dials ["" "child:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.795ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50006:cb22c8a7c3e0bd95291006380732c79e" "proxy 50006:cb22c8a7c3e0bd95291006380732c79e"] dials ["silent:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.900417ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50013:2586834d171f09d7aae5a53c354fbc1e" "proxy 50013:2586834d171f09d7aae5a53c354fbc1e"] dials ["scan:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.187667ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50020:1fd07af83b86ffdfbeebce98deff1b36" "proxy 50020:1fd07af83b86ffdfbeebce98deff1b36"] dials ["" "silent:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.848083ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50041:ec8a518d554b14bfb4caf78ab336681a" "proxy 50041:ec8a518d554b14bfb4caf78ab336681a"] dials ["foreign:ok+child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 1 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.105041ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50049:b25b540d3afef977b41acb2b2d20e7f9" "connect 50049:b25b540d3afef977b41acb2b2d20e7f9" "proxy 50049:b25b540d3afef977b41acb2b2d20e7f9" "proxy 50049:b25b540d3afef977b41acb2b2d20e7f9"] dials ["foreign:ok" "child:ok" "" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 2; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+--- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails (9.63s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child (1.05s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child (1.15s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent (1.74s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan (1.10s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent (1.81s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child (1.08s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry (1.70s)
+=== RUN   TestExecProbeNet6ForeignEveryAttemptRefuses
+    exec_probe_net6_dial_test.go:241: TIMING ArchiveExecSandbox took 53.245708ms
+--- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses (1.73s)
+=== RUN   TestExecProbeNet6DialClassifier
+=== RUN   TestExecProbeNet6DialClassifier/control
+=== RUN   TestExecProbeNet6DialClassifier/child
+=== RUN   TestExecProbeNet6DialClassifier/child-then-more
+=== RUN   TestExecProbeNet6DialClassifier/http-get
+=== RUN   TestExecProbeNet6DialClassifier/wrong-nonce
+=== RUN   TestExecProbeNet6DialClassifier/preamble-then-child
+=== RUN   TestExecProbeNet6DialClassifier/connect-close
+=== RUN   TestExecProbeNet6DialClassifier/held-silent
+=== RUN   TestExecProbeNet6DialClassifier/prefix-then-close
+=== RUN   TestExecProbeNet6DialClassifier/prefix-held
+--- PASS: TestExecProbeNet6DialClassifier (1.01s)
+    --- PASS: TestExecProbeNet6DialClassifier/control (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child-then-more (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/http-get (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/wrong-nonce (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/preamble-then-child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/connect-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/held-silent (0.50s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-then-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-held (0.50s)
+=== RUN   TestExecProbeNet6BoundBeforeAnyPick
+    exec_probe_net6_test.go:63: TIMING ArchiveExecSandbox took 68.737917ms
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.81s)
+=== RUN   TestExecProbeNet6BindSiteIsBeforeTheFanOut
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+=== RUN   TestExecProbePassThroughShimFailsEveryConfinementArm
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 54.847417ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /Users/voightkampff/dev/sunholo-data/.ctl-tmp-iter359/TestExecProbePassThroughShimFailsEveryConfinementArm2701312792/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-9c057ff1aa094368: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:50186
+--- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm (1.84s)
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/none
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 54.814542ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50210:0fc11bdbd833e8548ec5377c47601d9a" "proxy 50210:0fc11bdbd833e8548ec5377c47601d9a"] dials ["" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 56.004792ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50215:69e23e65ac025c71b68058740133654e" "connect 50215:69e23e65ac025c71b68058740133654e" "proxy 50215:69e23e65ac025c71b68058740133654e"] dials ["foreign:ok" "" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.595959ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50222:e0fa7883757e712d6a9d68c8820b99ff" "proxy 50222:e0fa7883757e712d6a9d68c8820b99ff" "proxy 50222:e0fa7883757e712d6a9d68c8820b99ff"] dials ["" "foreign:ok" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.328875ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50229:d26feab2185b720e9ba923e43fdcd99d" "connect 50229:d26feab2185b720e9ba923e43fdcd99d" "connect 50229:d26feab2185b720e9ba923e43fdcd99d" "proxy 50229:d26feab2185b720e9ba923e43fdcd99d" "proxy 50229:d26feab2185b720e9ba923e43fdcd99d"] dials ["foreign:ok" "foreign:ok+foreign:ok" "" "foreign:ok" ""]
+--- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused (6.01s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/none (1.08s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw (1.43s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy (1.44s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy (2.05s)
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 54.124291ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50238:3d09789d69aceec0f0ea6d62c2dee88b" "proxy 50238:3d09789d69aceec0f0ea6d62c2dee88b"] dials ["child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 55.528959ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50245:677bfeb3fd6034046b40ac61d7e3068a" "proxy 50245:677bfeb3fd6034046b40ac61d7e3068a"] dials ["" "child:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.733959ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50251:3195fdffbf76729203284bb9ac6cbc8f" "proxy 50251:3195fdffbf76729203284bb9ac6cbc8f"] dials ["silent:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.741791ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50258:16327f46d83f3186da5ee5221e16e4a5" "proxy 50258:16327f46d83f3186da5ee5221e16e4a5"] dials ["scan:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 55.594166ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50264:8a94ab3620fee03a49f71be67e7b38d9" "proxy 50264:8a94ab3620fee03a49f71be67e7b38d9"] dials ["" "silent:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.083416ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50284:307f812ad03806fda39085533bc8f88b" "proxy 50284:307f812ad03806fda39085533bc8f88b"] dials ["foreign:ok+child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 1 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.488375ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50291:e54c0ef42ff211f7e58492888a2782b1" "connect 50291:e54c0ef42ff211f7e58492888a2782b1" "proxy 50291:e54c0ef42ff211f7e58492888a2782b1"] dials ["foreign:ok" "child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 2; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+--- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails (9.33s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child (1.08s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child (1.00s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent (1.78s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan (1.09s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent (1.81s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child (1.08s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry (1.48s)
+=== RUN   TestExecProbeNet6ForeignEveryAttemptRefuses
+    exec_probe_net6_dial_test.go:241: TIMING ArchiveExecSandbox took 54.181084ms
+--- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses (1.74s)
+=== RUN   TestExecProbeNet6DialClassifier
+=== RUN   TestExecProbeNet6DialClassifier/control
+=== RUN   TestExecProbeNet6DialClassifier/child
+=== RUN   TestExecProbeNet6DialClassifier/child-then-more
+=== RUN   TestExecProbeNet6DialClassifier/http-get
+=== RUN   TestExecProbeNet6DialClassifier/wrong-nonce
+=== RUN   TestExecProbeNet6DialClassifier/preamble-then-child
+=== RUN   TestExecProbeNet6DialClassifier/connect-close
+=== RUN   TestExecProbeNet6DialClassifier/held-silent
+=== RUN   TestExecProbeNet6DialClassifier/prefix-then-close
+=== RUN   TestExecProbeNet6DialClassifier/prefix-held
+--- PASS: TestExecProbeNet6DialClassifier (1.01s)
+    --- PASS: TestExecProbeNet6DialClassifier/control (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child-then-more (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/http-get (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/wrong-nonce (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/preamble-then-child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/connect-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/held-silent (0.50s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-then-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-held (0.50s)
+=== RUN   TestExecProbeNet6BoundBeforeAnyPick
+    exec_probe_net6_test.go:63: TIMING ArchiveExecSandbox took 69.420041ms
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (3.27s)
+=== RUN   TestExecProbeNet6BindSiteIsBeforeTheFanOut
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+=== RUN   TestExecProbePassThroughShimFailsEveryConfinementArm
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 73.2665ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /Users/voightkampff/dev/sunholo-data/.ctl-tmp-iter359/TestExecProbePassThroughShimFailsEveryConfinementArm3762097047/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-4feaa50096ed9406: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:50384
+--- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm (1.98s)
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/none
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.085709ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50411:95c6c0d118068157e62b26e64704f294" "connect 50411:95c6c0d118068157e62b26e64704f294" "proxy 50411:95c6c0d118068157e62b26e64704f294"] dials ["" "" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.806625ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50457:311b0f90ffb04cb0fca212e7dc6315ef" "connect 50457:311b0f90ffb04cb0fca212e7dc6315ef" "proxy 50457:311b0f90ffb04cb0fca212e7dc6315ef"] dials ["foreign:ok" "" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 52.811041ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50463:3f9bb37bdfb0d9c9629a3256f10aa7bb" "proxy 50463:3f9bb37bdfb0d9c9629a3256f10aa7bb" "proxy 50463:3f9bb37bdfb0d9c9629a3256f10aa7bb"] dials ["" "foreign:ok" ""]
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 53.801584ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 50470:142c41fe0c84c85c6ea7ca6894a44910" "connect 50470:142c41fe0c84c85c6ea7ca6894a44910" "connect 50470:142c41fe0c84c85c6ea7ca6894a44910" "proxy 50470:142c41fe0c84c85c6ea7ca6894a44910" "proxy 50470:142c41fe0c84c85c6ea7ca6894a44910"] dials ["foreign:ok" "foreign:ok+foreign:ok" "" "foreign:ok" ""]
+--- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused (6.25s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/none (1.48s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw (1.41s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy (1.30s)
+    --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy (2.07s)
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.0445ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50479:505c37a06ff434830bff2ad3fe5bffca" "proxy 50479:505c37a06ff434830bff2ad3fe5bffca"] dials ["child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.001833ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50485:39158237e46c49c14f7af70e616bad34" "proxy 50485:39158237e46c49c14f7af70e616bad34"] dials ["" "child:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.215792ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50492:98c61460adaa5dc7b049652c659e7e38" "proxy 50492:98c61460adaa5dc7b049652c659e7e38"] dials ["silent:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.270292ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50499:91cbb2eb94365ec353eba94a462f0b58" "proxy 50499:91cbb2eb94365ec353eba94a462f0b58"] dials ["scan:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.700375ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50505:13102db40d23475a6d929f6e54155871" "proxy 50505:13102db40d23475a6d929f6e54155871"] dials ["" "silent:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.548375ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50525:4d94222cd79b2522260ce96729fb2735" "proxy 50525:4d94222cd79b2522260ce96729fb2735"] dials ["foreign:ok+child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 1 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.416083ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 50532:cdca0d542a680b2c2f33b9740c055c42" "connect 50532:cdca0d542a680b2c2f33b9740c055c42" "proxy 50532:cdca0d542a680b2c2f33b9740c055c42"] dials ["foreign:ok" "child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 2; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+--- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails (9.28s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child (1.08s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child (1.15s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent (1.83s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan (1.00s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent (1.72s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child (1.09s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry (1.41s)
+=== RUN   TestExecProbeNet6ForeignEveryAttemptRefuses
+    exec_probe_net6_dial_test.go:241: TIMING ArchiveExecSandbox took 52.957875ms
+--- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses (1.86s)
+=== RUN   TestExecProbeNet6DialClassifier
+=== RUN   TestExecProbeNet6DialClassifier/control
+=== RUN   TestExecProbeNet6DialClassifier/child
+=== RUN   TestExecProbeNet6DialClassifier/child-then-more
+=== RUN   TestExecProbeNet6DialClassifier/http-get
+=== RUN   TestExecProbeNet6DialClassifier/wrong-nonce
+=== RUN   TestExecProbeNet6DialClassifier/preamble-then-child
+=== RUN   TestExecProbeNet6DialClassifier/connect-close
+=== RUN   TestExecProbeNet6DialClassifier/held-silent
+=== RUN   TestExecProbeNet6DialClassifier/prefix-then-close
+=== RUN   TestExecProbeNet6DialClassifier/prefix-held
+--- PASS: TestExecProbeNet6DialClassifier (1.01s)
+    --- PASS: TestExecProbeNet6DialClassifier/control (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/child-then-more (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/http-get (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/wrong-nonce (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/preamble-then-child (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/connect-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/held-silent (0.50s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-then-close (0.00s)
+    --- PASS: TestExecProbeNet6DialClassifier/prefix-held (0.50s)
+=== RUN   TestExecProbeNet6BoundBeforeAnyPick
+    exec_probe_net6_test.go:63: TIMING ArchiveExecSandbox took 72.265458ms
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.79s)
+=== RUN   TestExecProbeNet6BindSiteIsBeforeTheFanOut
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+=== RUN   TestExecProbePassThroughShimFailsEveryConfinementArm
+    exec_probe_test.go:187: TIMING ArchiveExecSandbox took 53.001042ms
+    exec_probe_test.go:190: pass-through: exec startup probe failed for profile "proj" (4 of 7 arms): arm2-write-outside: a write to a sibling episode: token "WORLD-PROBE-WROTE" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=true (exit 0; stderr ""); arm3-read-fence: a read of decoy /Users/voightkampff/dev/sunholo-data/.ctl-tmp-iter359/TestExecProbePassThroughShimFailsEveryConfinementArm345774291/002/home/.ailang-worldd-exec-probe-decoy: token "WORLD-PROBE-READ", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (exit 0; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-f10346f68e500f59: token "WORLD-PROBE-WROTE", on the host: present=true (exit 0; stderr ""); arm6-network: a raw connect to World's live listener: token "WORLD-PROBE-CONNECTED" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr ""); a connect through srt's proxy environment: token "WORLD-PROBE-CONNECTED" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr ""); reverse leg: the host reached the listener the child bound on 127.0.0.1:50626
+--- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm (1.84s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	69.676s

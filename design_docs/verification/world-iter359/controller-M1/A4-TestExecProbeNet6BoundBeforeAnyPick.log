@@ -1,0 +1,5 @@
+=== RUN   TestExecProbeNet6BoundBeforeAnyPick
+    exec_probe_net6_test.go:63: TIMING ArchiveExecSandbox took 55.836625ms
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.77s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	3.013s

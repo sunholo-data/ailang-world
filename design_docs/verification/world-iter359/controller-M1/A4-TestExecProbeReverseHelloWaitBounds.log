@@ -1,0 +1,8 @@
+=== RUN   TestExecProbeReverseHelloWaitBounds
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-child
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-mux
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+    --- PASS: TestExecProbeReverseHelloWaitBounds/slow-mux (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.244s

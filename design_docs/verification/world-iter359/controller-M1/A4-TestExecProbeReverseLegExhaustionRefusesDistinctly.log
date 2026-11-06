@@ -1,0 +1,10 @@
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time
+    exec_probe_test.go:612: TIMING ArchiveExecSandbox took 2.046584ms
+=== RUN   TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse
+    exec_probe_test.go:612: TIMING ArchiveExecSandbox took 2.877542ms
+--- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly (0.42s)
+    --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time (0.16s)
+    --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse (0.26s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.659s

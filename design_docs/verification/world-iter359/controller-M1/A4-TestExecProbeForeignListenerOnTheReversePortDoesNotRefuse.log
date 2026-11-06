@@ -1,0 +1,16 @@
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty
+    exec_probe_test.go:718: TIMING ArchiveExecSandbox took 54.450167ms
+    exec_probe_test.go:729: chatty: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent
+    exec_probe_test.go:718: TIMING ArchiveExecSandbox took 53.597791ms
+    exec_probe_test.go:729: silent: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\"); reverse leg: a listener on 127.0.0.1:49908 accepted the host's dial and answered nothing to World's hello within 500 ms; World cannot tell it from the child's listener, so it refuses"
+=== RUN   TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control
+    exec_probe_test.go:718: TIMING ArchiveExecSandbox took 52.990458ms
+    exec_probe_test.go:729: control: arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+--- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (5.43s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/chatty (1.86s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent (1.79s)
+    --- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/control (1.78s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	5.682s
