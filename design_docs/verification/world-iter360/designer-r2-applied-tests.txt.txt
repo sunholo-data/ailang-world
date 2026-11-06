@@ -1,0 +1,23 @@
+--- PASS: TestRecordGoldenBytes (0.00s)
+--- PASS: TestSketchRows (0.00s)
+--- PASS: TestFailureLineBoundsAndSanitises (0.00s)
+--- PASS: TestRecordFailureGoldenBytes (0.00s)
+--- PASS: TestExecFailureClassifies (0.00s)
+--- PASS: TestExecFailureClassesReachTheRecord (0.18s)
+--- PASS: TestFailureLineMarksTheStoreFirst (0.01s)
+--- PASS: TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord (0.00s)
+--- PASS: TestExecHandlerReverifiesTheStackBeforeEachCall (2.23s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	2.758s
+--- PASS: TestEffectFailureReasonReachesTheWorldBlockAndReplays (0.03s)
+--- PASS: TestEffectReplay (0.05s)
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	0.670s
+--- PASS: TestMCPEffectFailureLineReturnedAndLoggedOnce (0.01s)
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.842s
+--- PASS: TestCallPrintsTheFailureLine (0.00s)
+--- PASS: TestWhyShowsTheFailureLine (0.03s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.887s
+--- PASS: TestStoreDeadlineGuardDynamic (0.08s)
+--- PASS: TestFutureVersionIsRejected (0.01s)
+--- PASS: TestOpenReadOnlyEnforcesVersionFive (0.03s)
+--- PASS: TestMarkFailureLinesRaisesFiveToSixOnce (0.01s)
+ok  	github.com/sunholo-data/ailang-world/host/store	1.219s

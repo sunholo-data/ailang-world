@@ -1,0 +1,82 @@
+CONTROL: rc=0 pass=18 red=-
+MUT-NO-OMITEMPTY: rc=1 pass=17 red=Gold
+   restored host/broker/record.go
+MUT-RECORD-DROPS-LINE: rc=1 pass=15 red=TC,TV,TX
+   restored host/broker/broker.go
+MUT-REPLAY-DROPS-REASON: rc=1 pass=17 red=TC
+   restored host/broker/broker.go
+MUT-COORD-DROPS-REASON: rc=1 pass=16 red=TC,TP
+   restored host/coordinator/effectful.go
+MUT-WORLD-NO-OMITEMPTY: rc=1 pass=17 red=TC
+   restored host/coordinator/effectful.go
+MUT-ERR-TEXT: rc=1 pass=16 red=TK,TX
+   restored host/broker/failure.go
+MUT-RAW-PATH: rc=1 pass=16 red=TK,TX
+   restored host/broker/failure.go
+MUT-DRIFT-WHY-RAW: rc=1 pass=16 red=TK,TX
+   restored host/broker/failure.go
+MUT-NO-SANITISE: rc=1 pass=17 red=TL
+   restored host/broker/failure.go
+MUT-CONTROL-ONLY: rc=1 pass=17 red=TL
+   restored host/broker/failure.go
+MUT-NO-BOUND: rc=1 pass=17 red=TL
+   restored host/broker/failure.go
+MUT-CLASS-OPEN: rc=1 pass=16 red=TG,TL
+   restored host/broker/failure.go
+MUT-DECODE-NO-CHECK: rc=1 pass=17 red=TG
+   restored host/broker/record.go
+MUT-FAILURE-ANY-ARM: rc=1 pass=17 red=TG
+   restored host/broker/record.go
+MUT-PUT-NO-CHECK: rc=0 pass=18 red=-
+   restored host/broker/broker.go
+MUT-HF-ERROR-IS-LINE: rc=1 pass=16 red=Reverify,TX
+   restored host/broker/failure.go
+MUT-SEED-UNCLASSIFIED: rc=1 pass=17 red=TX
+   restored host/broker/handlers_exec.go
+MUT-SEED-TIMEOUT-AS-EXIT: rc=1 pass=16 red=TK,TX
+   restored host/broker/failure.go
+MUT-LOG-MCP-NONE: rc=1 pass=17 red=TP
+   restored host/projection/mcp.go
+MUT-LOG-A2A-NONE: rc=1 pass=17 red=TP
+   restored host/projection/projection.go
+MUT-LOG-RECONCILED: rc=1 pass=17 red=TP
+   restored host/projection/projection.go
+MUT-WHY-NO-LINE: rc=1 pass=17 red=TW
+   restored cmd/ailang-worldd/why.go
+MUT-CALL-NO-LINE: rc=1 pass=17 red=TR
+   restored cmd/ailang-worldd/mcpclient.go
+MUT-CLEANUP-UNWIRED: rc=0 pass=18 red=-
+   restored host/broker/handlers_exec.go
+MUT-NO-MARK: rc=1 pass=17 red=TV
+   restored host/broker/broker.go
+MUT-MARK-ERROR-IGNORED: rc=1 pass=17 red=TV
+   restored host/broker/broker.go
+MUT-MARK-AFTER-RECORD: rc=1 pass=17 red=TV
+   restored host/broker/broker.go
+MUT-STORE-REJECTS-6: rc=1 pass=17 red=TS
+   restored host/store/store.go
+MUT-FUTURE-BOUND-5: rc=0 pass=18 red=-
+   restored host/store/store.go
+MUT-MARK-NOOP: rc=1 pass=16 red=TS,TV
+   restored host/store/store.go
+MUT-MARK-ANY-VERSION: rc=1 pass=17 red=TS
+   restored host/store/store.go
+MUT-HEAD-SHAPE: rc=1 pass=14 red=TC,TP,TV,TX
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"/", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"657918c
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:269: record = broker.EffectRecord{Effect:"Workspace.Exec", Scope:"worktree", Cost:1, BudgetBefore:5, BudgetAfter:4, Allowed:true, Failed:true, Denial:"", RequestRef:hashref.HashRef{algo:"sha256", digest:"
+    failure_test.go:351: record failure = "", <nil>; want "seed-cache: GOCACHE: timed out after 9s"
+    effect_failure_reason_test.go:43: output {"world":{"effects":[{"id":"e1","record":"sha256:2397404a34a7bcebcef769050df3b7206091064ac82fa563f3bfda6b6c58eae0","status":"failed"}],"plan":"sha256:e3120adea7b59e12ff786f74adf1b
+    effect_failure_log_test.go:88: tools/call result event: message
+   restored host/broker/broker.go
+   restored host/coordinator/effectful.go
+# git diff vs prototype stash check:  17 files changed, 309 insertions(+), 37 deletions(-)
+DONE

@@ -1,0 +1,44 @@
+MISSION-ROLE: planner
+
+You are the SPRINT PLANNER for Ailang World mission iteration 360, running unattended under a codex workspace-write sandbox. Your working directory is a detached planner worktree of the sprint branch at commit adc03d42. You produce a sprint plan and one byte-pinned diff. You do NOT implement the change in this worktree's tracked files.
+
+GIT: run NO git write operations at all (no add, commit, stash, checkout, reset, apply-to-the-worktree, or worktree changes). The controller commits. Read-only git (log, show, diff, status, rev-parse, archive) is fine.
+
+READ FIRST
+- CLAUDE.md and design_docs/coding-standards.md.
+- The approved design: design_docs/planned/w-exec-failure-carries-a-reason.md (r3). Read all of it, especially §3 (incl. §3.7 compatibility and its r3 mark-failure paragraph), §4 (claims, esp. Claim F as amended in r3), §5 (test plan + mutation table incl. MUT-MARK-FAIL-SILENT), §6 residuals, §7 milestones and acceptance, §10 Verification Log, §11 quorum log incl. the r3 carve-out.
+- The designer's prototype patch: design_docs/planned/w-exec-failure-carries-a-reason.patch (sha256 prefix 02259c3bdc1c942b, 22 files). It is the r2 patch. It does NOT yet contain r3.
+- The designer's tooling and results, banked at design_docs/verification/world-iter360/designer-*.txt: designer-mutate.py.txt (its mutation harness), designer-r2-mutants.txt.txt (33 mutants, 3 known survivors), designer-r2-applied-tests.txt.txt, designer-applycheck.txt.txt.
+- The previous plan of the same shape: design_docs/planned/w-exec-probe-foreign-dial-false-refusal-sprint-plan.md, design_docs/planned/sprint_w-exec-probe-foreign-dial-false-refusal.json, design_docs/verification/world-iter359/plan-mutants.sh.txt.
+
+THE r3 DELTA YOU MUST AUTHOR (the only code you write, and only in the scratch copy and the diff file)
+The r2 patch's host/broker/broker.go failure arm does `if reason != "" && s.store.MarkFailureLines(post) != nil { reason = "" }` and then writes a line-free record. r3 (design §3.7, Claim F) replaces that: when `reason != ""` and `MarkFailureLines(post)` returns an error, write NO record, append NO outcome, and return `nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope, Err: <the mark error, wrapped with a short "broker: mark store for failure lines: %w">}` — the same path a failed putRecord takes at HEAD broker.go:297-300. Do not refund the grant and do not re-run anything. Then update test TV (`TestFailureLineMarksTheStoreFirst` in host/broker/failure_test.go): replace its "mark fails → line-free record, empty Reason" row with fault-injection assertions that (a) the call returns *OutcomeWriteError wrapping the mark error, (b) no effect record object was written and no outcome appended, (c) the handler ran exactly once, (d) the grant stays debited. Keep the mark-before-record call-order row and the plain-failure-stays-at-5 row. Adjust anything else the r2 patch asserted about the old fallback (grep the patch for it).
+
+DELIVERABLES (write each into this worktree at exactly these paths)
+1. design_docs/planned/w-exec-failure-carries-a-reason-sprint-plan.md
+   A single milestone, M1, with: the exact file list; pre-change sha256 for every touched file (new file = ABSENT) and post-change sha256 measured on a scratch apply of deliverable 3; the acceptance gates as runnable commands (named `go test -count=1 -run '^(...)$'` per package, `gofmt -l`, `go vet` on the touched packages, `./scripts/verify_ail.sh` with AILANG_BIN=$HOME/.pinned-ailang/ailang, `VERIFY_GO_LEGS=plain ./scripts/verify_go.sh` if that script exists — check); a -count=3 stability step for the new tests; the mutation table mirroring design §5 with expected red/green per named test, incl. MUT-MARK-FAIL-SILENT; residuals from §6; the PR's CI (3 checks) as the final acceptance gate the controller verifies after push; an explicit list of what M1 must NOT touch (rows 256 and 257 scope, tools/launchd, skills, any .ail file).
+2. design_docs/planned/sprint_w-exec-failure-carries-a-reason.json
+   Valid JSON with fields: sprint_id, design_doc, base_commit (full SHA from `git rev-parse HEAD`), milestones[] each with {id, title, files[], acceptance[], status:"planned"}.
+3. design_docs/verification/world-iter360/plan-M1.diff.txt
+   The designer patch PLUS your r3 delta, as one unified diff against HEAD that `git apply --check` accepts. Prove it: make a scratch copy with `git archive HEAD | tar -x -C <dir>`, where <dir> is a subdirectory of THIS worktree named .plan-scratch/ (delete it when done; never /tmp), apply, build, and record post-apply sha256 per file in the plan. Also record, in the plan, `diff <(designer patch applied) <(your diff applied)` as a per-file statement: which files differ from the designer patch, and why (should be broker.go and failure_test.go only, unless you justify more).
+4. design_docs/verification/world-iter360/plan-mutants.sh.txt
+   A bash-3.2-compatible mutation runner the CONTROLLER will execute OUTSIDE the sandbox on an applied tree. Requirements, each learned the hard way:
+   - takes the tree root as $1, never assumes CWD, writes nothing outside that root, and leaves NO extra .go files anywhere under the root (keep pristine copies with a non-.go suffix and remove them at the end);
+   - does NOT pin GOTOOLCHAIN=local (go.mod needs go 1.26.6);
+   - does NOT set TMPDIR (a TMPDIR under ~/dev makes an unrelated test red);
+   - for each row: apply one mutation (python3 -I or perl), run the named test(s) alone in their package with `go test -count=1 -run '^(<names>)$' ./<pkg>/`, compare rc with the expected rc, print `EXPECTATION MATCH` or `EXPECTATION MISMATCH` with the mutant id, package and tests in the line, restore the file and verify the restore with cmp against the saved pristine copy;
+   - rows: an unmutated CONTROL row per touched test package, MUT-HEAD-SHAPE (the positive control: today's behaviour), every killed mutant in designer-r2-mutants.txt.txt with its expectation, the three known survivors as expected-green rows labelled SURVIVOR, MUT-MARK-FAIL-SILENT (r2's fallback restored: expected red on TV), plus any mutant you believe the design missed.
+   Reuse designer-mutate.py.txt's mutation texts where you can, adjusted for your r3 delta.
+
+SANDBOX RULES
+- Loopback socket binds are denied inside your sandbox, so any test that opens a listener is UNINFORMATIVE UNDER SANDBOX. Label any such result exactly that way, never as pass or fail. You MAY run the named new tests on the scratch copy if they do not open sockets (TV uses a file-backed store) — report rc and say which ran. Do NOT run full package suites or the mutation runner; the controller runs both outside the sandbox. You MAY run gofmt -l, go vet and go build on the scratch copy for the touched packages. Anything red at base is a finding to report, not something to work around.
+- Write nothing outside this worktree except Go's build caches.
+
+FINAL MESSAGE (short):
+- the four paths and their line counts;
+- the plan-M1.diff.txt sha256;
+- pre/post-apply sha256 per file;
+- which files your diff changes relative to the designer patch, and why;
+- the mutation row count;
+- which tests you ran in the sandbox and their rc;
+- anything in the design you believe is wrong or under-specified (a finding, not a fix).

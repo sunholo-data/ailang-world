@@ -527,7 +527,7 @@ not a substitute.
 |---|---|
 | `host/broker/failure.go` | **new**, 189 lines: `FailureLineMax`, the 10 class constants and their closed set, `HandlerFailure` (`Error`/`Unwrap` = the cause's, `Line`), `FailureLine`, `ValidFailureLine`, `execDisclosed` and `name`, `execFailure`, `driftWhat`, `settingsWhat`, `seedWhat` |
 | `host/broker/record.go` | +21/−4: `EffectRecord.Failure`, `recordWire.Failure` (`omitempty`, last), the codec's two positional literals, `DecodeRecord`'s check, new `FailureConsistent` |
-| `host/broker/broker.go` | +22/−5: `EffectFailedError.Reason`; the failed record and error carry `classified.Line()`; **[r2]** `objectStore` gains `MarkFailureLines`, which is called before a lined record (a failed mark drops the line); replay sets `Reason: rec.Failure`; `putRecord` checks `FailureConsistent` |
+| `host/broker/broker.go` | +22/−5: `EffectFailedError.Reason`; the failed record and error carry `classified.Line()`; **[r2]** `objectStore` gains `MarkFailureLines`, which is called before a lined record ([r3] a failed mark returns `*OutcomeWriteError` and writes no record); replay sets `Reason: rec.Failure`; `putRecord` checks `FailureConsistent` |
 | `host/store/store.go` [r2] | +45/−5: `failureLineSchemaVersion = 6`; `enforceSchemaVersion` accepts 6 like 5, re-reads the version it found after applying the schema, and refuses only above 6; new guarded `(*Store).MarkFailureLines` |
 | `host/store/schema_version_test.go`, `deadline_guard_test.go` [r2] | +71/−3, +1: TS; `frozenFutureSchemaVersion` 6 → 7 and the future `Current` 5 → 6; the guard fixture for the new method |
 | `host/broker/{broker,handlers,handler_error_repro,registry_publish}_test.go` [r2] | +4 each: the test stores delegate `MarkFailureLines` |

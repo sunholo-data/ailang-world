@@ -1,0 +1,20 @@
+== L1 at 77c9e3d4
+32:	maxPlanEffectsV1  = 1       // L1
+125:	if !effectCountOk(n) {
+126:		return Plan{}, lawErr(LawL1, "%d effects; a v1 plan carries at most %d", n, maxPlanEffectsV1)
+323:func effectCountOk(n int) bool     { return n >= 0 && n <= maxPlanEffectsV1 }
+246:	default: // unreachable under L1; kept so a widened L1 cannot silently drop results
+289:	pl, err := parsePlan(planOut, d.DeclaredEffects)
+307:	for _, e := range pl.Effects {
+430:	pl, err := parsePlan(planOut, declared)
+469:	for i, e := range pl.Effects {
+38:-- L1: a v1 plan carries at most ONE effect (one call, one deadline, V47;
+40:export func effectCountOk(n: int) -> bool ! {}
+41:ensures { result == (n >= 0 && n <= 1) }
+35:	"effectCountOk":     func(t *testing.T, a []any) any { return effectCountOk(int(argInt(t, a, 0))) },
+-- control: multi-effect plan fixtures (refused by L1)
+77c9e3d4:host/coordinator/decisionpacket_producer_test.go:316:func TestProducerMintsNoPacketForMultiEffectPlan(t *testing.T) {
+77c9e3d4:host/coordinator/effectplan_test.go:63:		{"L1/two-effects", planJSON(readEffect+","+effectJSON("e2", "Workspace.Read", "worktree", "1", `{}`), "false", "null"), LawL1},
+-- Plan.Effects assignments outside parsePlan (non-test):
+77c9e3d4:host/coordinator/effectful.go:213:		wb.Effects = append(wb.Effects, worldEffect{ID: r.ID, Status: r.Status, Record: r.Record})
+77c9e3d4:host/coordinator/effectplan.go:135:		plan.Effects = append(plan.Effects, e)

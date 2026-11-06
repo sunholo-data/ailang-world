@@ -1,0 +1,16 @@
+Created:
+
+- [Sprint plan](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter360/design_docs/planned/w-exec-failure-carries-a-reason-sprint-plan.md) — 440 lines.
+- [Sprint JSON](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter360/design_docs/planned/sprint_w-exec-failure-carries-a-reason.json) — 47 lines.
+- [Combined diff](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter360/design_docs/verification/world-iter360/plan-M1.diff.txt) — 1,578 lines.
+- [Mutation runner](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter360/design_docs/verification/world-iter360/plan-mutants.sh.txt) — 333 lines; **212 rows**.
+
+Diff SHA256: `83ef9f9db480ed5f9488fbcf7e043fde29daea1622605b45fc541b5896c1fdb0`
+
+All 22 files’ measured pre/post SHA256 values appear in the plan’s [byte table](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter360/design_docs/planned/w-exec-failure-carries-a-reason-sprint-plan.md:11). Relative to r2, only `broker.go` and `failure_test.go` differ: explicit mark-write failure and TV’s persistence/accounting assertions.
+
+Sandbox tests TL, TG, TK, TV, TC, Replay, TP, TR, TS, Future, ROFive and Guard returned **rc 0**. TL/TG/TK/TV also passed `-count=3`. Manual MUT-MARK-FAIL-SILENT returned expected **rc 1**. Build, vet, formatting and apply-check passed. Full suites and the runner remain controller-owned.
+
+Findings: unchanged `TMPDIR` conflicts with literal descendant-write confinement; §8 retains stale fallback wording; the bank contains 32 mutants plus CONTROL. Discarded instrumentation attempts are documented.
+
+Scratch removed; tracked implementation files remain unchanged.

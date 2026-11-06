@@ -1,0 +1,23 @@
+== V21 production callers of Coordinator.Replay / OpenReplayBinder / host/replay
+77c9e3d4:host/broker/binder.go:37:func OpenReplayBinder(s *store.Store, grants []Capability, recordRefs []hashref.HashRef) *SessionBinder {
+host/replay importers (non-test):        0 (control: host/store importers       58)
+== V23 one binary; CLI reads over HTTP; rollback
+354:	case "serve":
+395:	case "call":
+398:	case "why":
+434:	case "episode":
+136:	ok, err := r.getJSON("/v1/objects/"+url.PathEscape(ref)+"?payload=true", &o)
+210:	fresh, previous := e.paths.Binary+".new", e.paths.Binary+".prev"
+219:	if err = os.Link(e.paths.Binary, previous); err != nil {
+240:	return e.rollbackUpgrade(r, from, to, candidate, errOut)
+256:		err = os.Rename(previous, e.paths.Binary)
+262:	if err == nil && e.waitForBuild(r.Address, from) {
+287:	what := "rollback failed too: the service is stopped"
+330:		if self.ExecutableSHA256 != installed {
+== store gate at HEAD
+46:const currentSchemaVersion = 5
+68:	return fmt.Sprintf("store: schema version future: %q has user_version %d; binary supports %d; use a compatible binary", e.Path, e.Found, e.Current)
+464:	if version > currentSchemaVersion {
+18:const frozenFutureSchemaVersion = 6
+418:	if !errors.As(err, &future) || future.Found != frozenFutureSchemaVersion || future.Current != 5 {
+0

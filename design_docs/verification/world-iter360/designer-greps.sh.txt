@@ -1,0 +1,38 @@
+#!/bin/bash
+cd /Users/voightkampff/dev/sunholo-data/.wt-world-iter360 || exit 1
+B=77c9e3d4
+echo "== V2 caller chain at $B"
+echo "-- host/broker/broker.go"; git show $B:host/broker/broker.go | grep -n "result, err = handler.Execute\|Allowed: true, Failed: true, RequestRef\|&EffectFailedError{\|cause     error\|return e.cause\|Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef"
+echo "-- host/coordinator/effectful.go"; git show $B:host/coordinator/effectful.go | grep -n 'case errors.As(err, &failed):\|res.Status, ref = StatusFailed, failed.RecordRef\|body = \[\]byte(`{}`)\|worldEffect{ID: r.ID\|res, ref, ran, err := requestEffect(hctx'
+echo "-- host/projection/mcp.go"; git show $B:host/projection/mcp.go | grep -n 'coord.Dispatch\|a.h.logRefusal("mcp", "tools/call", coordinator\|return protocol.InvocationResult{Value: result.OutputBytes}'
+echo "-- host/projection/projection.go"; git show $B:host/projection/projection.go | grep -n 'func (h \*Handler) logRefusal\|h.coord.Dispatch(ctx, coordinator.Call{Surface: coordinator.SurfaceA2A\|errorLog       io.Writer'
+echo "-- cmd/ailang-worldd/why.go"; git show $B:cmd/ailang-worldd/why.go | grep -n 'd, err := broker.DecodeRecord(obj.Payload)\|verdict = "failed"\|resText := "no result"'
+echo "-- cmd/ailang-worldd/mcpclient.go"; git show $B:cmd/ailang-worldd/mcpclient.go | grep -n 'effect     %s %s %s'
+echo "== V3 record codec at $B"
+echo "-- host/broker/record.go"; git show $B:host/broker/record.go | grep -n 'json:"resultRef"\|DisallowUnknownFields\|case rec.Allowed && rec.Failed:\|return rec.Denial == "" && rec.BudgetAfter == rec.BudgetBefore-rec.Cost && rec.ResultRef.IsZero()\|func EncodeRecord\|wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef,'
+echo "-- design_docs/sketches/effectbroker.ail"; git show $B:design_docs/sketches/effectbroker.ail | grep -n 'export type EffectRecord\|^  resultRef: HashRef\|export func recordConsistent\|^    || (rec.allowed && rec.failed && rec.denial == ""'
+echo "-- host/broker/broker_test.go"; git show $B:host/broker/broker_test.go | grep -n 'func TestRecordGoldenBytes\|const want = \|const wantFailed = ' | cut -c1-140
+echo "-- host/broker/decide_test.go"; git show $B:host/broker/decide_test.go | grep -n '{187, EffectRecord'
+echo "-- record-shape field-list drift test? (grep effectbroker in *_test.go)"; git grep -n "effectbroker" $B -- '*_test.go' | cut -c1-160
+echo "== V4 refusal vs denial vs failure at $B"
+echo "-- host/broker/handlers_exec.go"; git show $B:host/broker/handlers_exec.go | grep -n 'func execRefusal\|"ok": false, "refused": why'
+echo "-- host/broker/broker.go"; git show $B:host/broker/broker.go | grep -n 'Denial: decision.Label, RequestRef: requestRef\|resultObj := resultObject(result)'
+echo "-- host/broker/decide.go"; git show $B:host/broker/decide.go | grep -n 'LabelDeniedBudget     = '
+echo "-- host/daemon/episode_report.go"; git show $B:host/daemon/episode_report.go | grep -n 'func handlerRefusal\|reportReasonMax     = '
+echo "== V5 replay byte-equality at $B"
+git show $B:host/coordinator/effectful.go | grep -n 'if !bytes.Equal(outBytes, committed.OutputBytes)'
+git show $B:host/coordinator/effectful_test.go | grep -n 't.Run("denied_and_failed_records_replay"'
+echo "== V6 workspace-exec plans have finish:false"
+git show $B:host/coordinator/setools_exec_test.go | grep -n '"finish":false'
+echo "== V7 Execute's bare error returns at $B (lines 251-391 and prepareCache 522-555)"
+git show $B:host/broker/handlers_exec.go | awk 'NR>=251 && NR<=391 || NR>=522 && NR<=555' >/dev/null
+git show $B:host/broker/handlers_exec.go | grep -n 'return nil, err$\|return nil, runErr$\|return nil, fmt.Errorf\|return err$\|return fmt.Errorf' | awk -F: '$1>=251 && $1<=391 || $1>=522 && $1<=555'
+echo "== V8 typed error texts carry host paths"
+git show $B:host/broker/exec_sandbox.go | grep -n 'exec confinement stack drifted: %s: %s\|Why: err.Error()'
+git show $B:host/broker/exec_settings.go | grep -n 'is not World.s rendering: %s'
+git show $B:host/broker/handlers.go | grep -n 'handler subprocess failed: %v (output %q)'
+echo "== V9 disclosed paths in a success result"
+git show $B:host/broker/handlers_exec.go | grep -n 'json:"argv0"\|json:"argv0_target"\|json:"node"\|json:"node_target"'
+echo "== V10 positive control: a grep for a field that does not exist at HEAD"
+echo "failure field in record.go: $(git show $B:host/broker/record.go | grep -c 'json:"failure')  (control json:\"denial\": $(git show $B:host/broker/record.go | grep -c 'json:"denial"'))"
+echo "reason in worldEffect: $(git show $B:host/coordinator/effectful.go | grep -c 'json:"reason')  (control json:\"record\": $(git show $B:host/coordinator/effectful.go | grep -c 'json:"record"'))"

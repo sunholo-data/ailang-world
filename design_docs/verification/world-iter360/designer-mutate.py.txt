@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Row 255 designer mutation run: each mutant edits one file of the prototype,
+runs the named tests once, records which went red, restores and cmp-checks."""
+import filecmp, re, shutil, subprocess, sys, os
+W = "/Users/voightkampff/dev/sunholo-data/.wt-world-iter360"
+TESTS = {
+ "./host/broker/": ["TestFailureLineBoundsAndSanitises", "TestRecordFailureGoldenBytes", "TestExecFailureClassifies",
+                    "TestExecFailureClassesReachTheRecord", "TestRecordGoldenBytes", "TestExecHandlerReverifiesTheStackBeforeEachCall",
+                    "TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord", "TestSketchRows", "TestFailureLineMarksTheStoreFirst"],
+ "./host/store/": ["TestMarkFailureLinesRaisesFiveToSixOnce", "TestFutureVersionIsRejected", "TestOpenReadOnlyEnforcesVersionFive", "TestStoreDeadlineGuardDynamic"],
+ "./host/coordinator/": ["TestEffectFailureReasonReachesTheWorldBlockAndReplays", "TestEffectReplay"],
+ "./host/projection/": ["TestMCPEffectFailureLineReturnedAndLoggedOnce"],
+ "./cmd/ailang-worldd/": ["TestWhyShowsTheFailureLine", "TestCallPrintsTheFailureLine"],
+}
+SHORT = {"TestFailureLineBoundsAndSanitises": "TL", "TestRecordFailureGoldenBytes": "TG", "TestExecFailureClassifies": "TK",
+ "TestExecFailureClassesReachTheRecord": "TX", "TestRecordGoldenBytes": "Gold", "TestExecHandlerReverifiesTheStackBeforeEachCall": "Reverify",
+ "TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord": "CFJ2", "TestSketchRows": "Sketch",
+ "TestEffectFailureReasonReachesTheWorldBlockAndReplays": "TC", "TestEffectReplay": "Replay",
+ "TestMCPEffectFailureLineReturnedAndLoggedOnce": "TP", "TestWhyShowsTheFailureLine": "TW", "TestCallPrintsTheFailureLine": "TR", "TestFailureLineMarksTheStoreFirst": "TV",
+ "TestMarkFailureLinesRaisesFiveToSixOnce": "TS", "TestFutureVersionIsRejected": "Future", "TestOpenReadOnlyEnforcesVersionFive": "ROFive", "TestStoreDeadlineGuardDynamic": "Guard"}
+M = [
+ ("CONTROL", None, None, None),
+ ("MUT-NO-OMITEMPTY", "host/broker/record.go", '`json:"failure,omitempty"`', '`json:"failure"`'),
+ ("MUT-RECORD-DROPS-LINE", "host/broker/broker.go", "RequestRef: requestRef, Failure: reason,", "RequestRef: requestRef,"),
+ ("MUT-REPLAY-DROPS-REASON", "host/broker/broker.go", "RecordRef: recordRef, Reason: rec.Failure,", "RecordRef: recordRef,"),
+ ("MUT-COORD-DROPS-REASON", "host/coordinator/effectful.go", "res.Status, res.Reason, ref = StatusFailed, failed.Reason, failed.RecordRef", "res.Status, ref = StatusFailed, failed.RecordRef"),
+ ("MUT-WORLD-NO-OMITEMPTY", "host/coordinator/effectful.go", '`json:"reason,omitempty"`', '`json:"reason"`'),
+ ("MUT-ERR-TEXT", "host/broker/failure.go", "return &HandlerFailure{Class: class, Detail: detail, Err: err}", "return &HandlerFailure{Class: class, Detail: err.Error(), Err: err}"),
+ ("MUT-RAW-PATH", "host/broker/failure.go", "func (d execDisclosed) name(p string) string {", "func (d execDisclosed) name(p string) string {\n\treturn p"),
+ ("MUT-DRIFT-WHY-RAW", "host/broker/failure.go", "func driftWhat(why string) string {", "func driftWhat(why string) string {\n\treturn why"),
+ ("MUT-NO-SANITISE", "host/broker/failure.go", "if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {", "if unicode.IsControl(r) && false {"),
+ ("MUT-CONTROL-ONLY", "host/broker/failure.go", "if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {", "if unicode.IsControl(r) {"),
+ ("MUT-NO-BOUND", "host/broker/failure.go", "if len(line) <= FailureLineMax {", "if true {"),
+ ("MUT-CLASS-OPEN", "host/broker/failure.go", "\tif !failureClasses[class] {\n\t\treturn \"\"\n\t}\n\tline := class", "\tline := class"),
+ ("MUT-DECODE-NO-CHECK", "host/broker/record.go", "\tif !FailureConsistent(rec) {\n\t\treturn EffectRecord{}, fmt.Errorf(", "\tif false {\n\t\treturn EffectRecord{}, fmt.Errorf("),
+ ("MUT-FAILURE-ANY-ARM", "host/broker/record.go", "rec.Failure == \"\" || rec.Allowed && rec.Failed && ValidFailureLine(rec.Failure)", "rec.Failure == \"\" || ValidFailureLine(rec.Failure)"),
+ ("MUT-PUT-NO-CHECK", "host/broker/broker.go", "if !RecordConsistent(rec) || !FailureConsistent(rec) {", "if !RecordConsistent(rec) {"),
+ ("MUT-HF-ERROR-IS-LINE", "host/broker/failure.go", "\tif f.Err == nil {\n\t\treturn f.Line()\n\t}\n\treturn f.Err.Error()", "\treturn f.Line()"),
+ ("MUT-SEED-UNCLASSIFIED", "host/broker/handlers_exec.go", "return &HandlerFailure{Class: FailSeedCache, Detail: name + \": \" + seedWhat(err),\n\t\t\t\tErr: fmt.Errorf(\"broker: exec handler: seed cache %s from %s: %w\", name, seed, err)}", "return fmt.Errorf(\"broker: exec handler: seed cache %s from %s: %w\", name, seed, err)"),
+ ("MUT-SEED-TIMEOUT-AS-EXIT", "host/broker/failure.go", "\tcase errors.As(err, &timeout):\n\t\treturn \"timed out after \"", "\tcase false && errors.As(err, &timeout):\n\t\treturn \"timed out after \""),
+ ("MUT-LOG-MCP-NONE", "host/projection/mcp.go", "\ta.h.logEffectFailures(\"mcp\", result)\n", ""),
+ ("MUT-LOG-A2A-NONE", "host/projection/projection.go", "\t\t\th.logEffectFailures(\"a2a\", result)\n", ""),
+ ("MUT-LOG-RECONCILED", "host/projection/projection.go", "\tif result.Reconciled {\n\t\treturn\n\t}\n\tvar out struct {", "\tvar out struct {"),
+ ("MUT-WHY-NO-LINE", "cmd/ailang-worldd/why.go", "\t\t\tif d.Failure != \"\" {\n", "\t\t\tif false {\n"),
+ ("MUT-CALL-NO-LINE", "cmd/ailang-worldd/mcpclient.go", "\t\tif e.Reason != \"\" {\n", "\t\tif false {\n"),
+ ("MUT-CLEANUP-UNWIRED", "host/broker/handlers_exec.go", "return nil, execFailure(FailCleanupIncomplete, \"the command's processes were not all reaped\", runErr, seen)", "return nil, runErr"),
+ ("MUT-NO-MARK", "host/broker/broker.go", "if reason != \"\" && s.store.MarkFailureLines(post) != nil {", "if false {"),
+ ("MUT-MARK-ERROR-IGNORED", "host/broker/broker.go", "if reason != \"\" && s.store.MarkFailureLines(post) != nil {", "if reason != \"\" && s.store.MarkFailureLines(post) != nil && false {"),
+ ("MUT-MARK-AFTER-RECORD", [("host/broker/broker.go", "if reason != \"\" && s.store.MarkFailureLines(post) != nil {", "if false {"),
+                           ("host/broker/broker.go", "\t\tref, putErr := s.putRecord(post, rec)\n", "\t\tref, putErr := s.putRecord(post, rec)\n\t\tif reason != \"\" {\n\t\t\t_ = s.store.MarkFailureLines(post)\n\t\t}\n")], None, None),
+ ("MUT-STORE-REJECTS-6", "host/store/store.go", "version == preSplitSchemaVersion || version == failureLineSchemaVersion {", "version == preSplitSchemaVersion {"),
+ ("MUT-FUTURE-BOUND-5", "host/store/store.go", "if version > failureLineSchemaVersion {", "if version > currentSchemaVersion {"),
+ ("MUT-MARK-NOOP", "host/store/store.go", "\tcase failureLineSchemaVersion:\n\t\treturn nil\n\tcase currentSchemaVersion:\n", "\tcase failureLineSchemaVersion, currentSchemaVersion:\n\t\treturn nil\n"),
+ ("MUT-MARK-ANY-VERSION", "host/store/store.go", "\tdefault:\n\t\treturn fmt.Errorf(\"store: mark failure lines: user_version %d is not %d or %d\"", "\tcase -12345:\n\t\treturn fmt.Errorf(\"store: mark failure lines: user_version %d is not %d or %d\""),
+ ("MUT-HEAD-SHAPE", None, None, None),  # MUT-RECORD-DROPS-LINE + MUT-COORD-DROPS-REASON together: today's behaviour
+]
+names = [n for v in TESTS.values() for n in v]
+regex = "^(" + "|".join(names) + ")$"
+only = sys.argv[1:]
+for name, path, old, new in M:
+    if only and name not in only:
+        continue
+    edits = []
+    if name == "MUT-HEAD-SHAPE":
+        edits = [(p, o, n) for (nm, p, o, n) in M if nm in ("MUT-RECORD-DROPS-LINE", "MUT-COORD-DROPS-REASON")]
+    elif isinstance(path, list):
+        edits = path
+    elif path:
+        edits = [(path, old, new)]
+    saved = {}
+    ok = True
+    for p, o, n in edits:
+        full = os.path.join(W, p)
+        s = open(full).read()
+        if full in saved:
+            pass
+        if s.count(o) != 1:
+            print(f"{name}: anchor not unique/absent in {p} ({s.count(o)})"); ok = False; break
+        if full not in saved:
+            shutil.copy(full, full + ".orig")
+            saved[full] = True
+        open(full, "w").write(s.replace(o, n))
+    if ok:
+        r = subprocess.run(["go", "test", "-count=1", "-timeout", "300s", "-v", "-run", regex] + list(TESTS.keys()),
+                           cwd=W, capture_output=True, text=True)
+        out = r.stdout + r.stderr
+        red = sorted({SHORT[m] for m in re.findall(r"^--- FAIL: (\w+) ", out, re.M) if m in SHORT})
+        passed = len({m for m in re.findall(r"^--- PASS: (\w+) ", out, re.M) if m in SHORT})
+        build = "BUILD-FAIL " if re.search(r"\[build failed\]|\[setup failed\]", out) else ""
+        print(f"{name}: rc={r.returncode} {build}pass={passed} red={','.join(red) or '-'}", flush=True)
+        if name in ("MUT-HEAD-SHAPE",) or build:
+            for line in out.splitlines():
+                if re.search(r"_test\.go:\d+:|cannot|undefined", line):
+                    print("   ", line.strip()[:220])
+    for full in saved:
+        shutil.move(full + ".orig", full)
+        print(f"   restored {os.path.relpath(full, W)}")
+print("# git diff vs prototype stash check:", subprocess.run(["git", "diff", "--stat"], cwd=W, capture_output=True, text=True).stdout.strip().splitlines()[-1])
