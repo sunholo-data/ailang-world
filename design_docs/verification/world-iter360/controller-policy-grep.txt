@@ -1,0 +1,7 @@
+# Controller measurement, iteration 360 (Gate 3, quorum r1 premise check; re-run at record time on 77c9e3d4 docs)
+$ grep -rniE "downgrade|older binary|store (format|schema) version|forward.compat|backward.compat" design_docs/DESIGN.md design_docs/coding-standards.md docs | wc -l
+0
+$ (control) grep -c the design_docs/DESIGN.md
+236
+$ (control) grep -rliE "compat" docs | wc -l
+1
