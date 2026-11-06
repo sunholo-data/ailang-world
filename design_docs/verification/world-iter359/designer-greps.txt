@@ -1,0 +1,61 @@
+# iter-359 designer greps at 1835d8be (worktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter359-sprint), bash
+$ shasum -a 256 host/broker/exec_probe.go host/broker/exec_probe_test.go host/broker/exec_probe_net6_test.go | cut -c1-16
+19de369381579387
+bbfccede19236d17
+400faf0ffc25a3f0
+$ grep -n "accepts" host/broker/exec_probe.go
+503:	acceptsA := net6.accepts.Load()
+544:	acceptsC := net6.accepts.Load()
+552:	if !strings.HasPrefix(raw, "WORLD-PROBE-REFUSED ") || acceptsA != 1 {
+553:		legs = append(legs, fmt.Sprintf("a raw connect to World's live listener: token %q, accepts %d (want a refusal and still 1; %s)",
+554:			raw, acceptsA, a.describe()))
+556:	if !strings.HasPrefix(proxy, "WORLD-PROBE-REFUSED ") || acceptsC != 1 {
+557:		legs = append(legs, fmt.Sprintf("a connect through srt's proxy environment: token %q, accepts %d (want a refusal and still 1; %s)",
+558:			proxy, acceptsC, c.describe()))
+633:	accepts atomic.Int64
+651:			l.accepts.Add(1)
+669:		if l.accepts.Load() == 1 {
+673:	return fmt.Errorf("accept count %d after one connect, want 1", l.accepts.Load())
+$ grep -n "\"connect\", strconv\|\"proxy\", strconv\|reverseLeg(ctx" host/broker/exec_probe.go
+500:	argv = append(argv, "write", tmpClaude, "connect", strconv.Itoa(net6.port))
+542:	c, revWhy := pp.reverseLeg(ctx, net6.port)
+579:func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first execProbeRun, why string) {
+584:	proxyArgv := []string{pp.client, "-e", execProbeScript, "--", "proxy", strconv.Itoa(proxyPort)}
+$ grep -n "s.destroy();r(.WORLD-PROBE-CONNECTED\|clearTimeout(t);s.destroy();const st" host/broker/exec_probe.go
+81:s.on('connect',()=>{clearTimeout(t);s.destroy();r('WORLD-PROBE-CONNECTED')});
+89:s.on('data',d=>{b+=d;const i=b.indexOf('\r\n');if(i<0)return;clearTimeout(t);s.destroy();const st=b.slice(0,i).split(' ')[1]||'';
+$ grep -n "func newProbeListener\|func (l \*probeListener)\|func classifyReverseDial\|func (pp \*execProber) reverseLeg\|func (pp \*execProber) probe(\|netCtl := net6.control()\|time.Sleep(200" host/broker/exec_probe.go
+475:func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeListener, worktree, sibling, id string) {
+493:	netCtl := net6.control()
+502:	time.Sleep(200 * time.Millisecond)
+543:	time.Sleep(200 * time.Millisecond)
+579:func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first execProbeRun, why string) {
+637:func newProbeListener() *probeListener {
+659:func (l *probeListener) control() error {
+676:func (l *probeListener) close() {
+697:func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+## tests: which test files mention arm-6 accept counts (positive control: the TP literal) and which dial a probe listener
+$ grep -rn "accepts [0-9]" host/ --include=*_test.go
+host/broker/exec_probe_test.go:204:		for _, leg := range []string{"a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2",
+host/broker/exec_probe_test.go:205:			"a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3", "reverse leg: the host reached"} {
+$ grep -rln "newProbeListener\|probeListener" host/ --include=*_test.go
+host/broker/exec_probe_net6_test.go
+$ grep -rn "WORLD-PROBE-DIAL" host/ | wc -l   (control: WORLD-PROBE-NONCE)
+       0
+       8
+## callers of the functions the patch changes
+$ grep -rn "reverseLeg(\|\.control()\|newProbeListener(" host/ --include=*.go
+host/broker/exec_probe.go:257:		net6[i] = newProbeListener()
+host/broker/exec_probe.go:493:	netCtl := net6.control()
+host/broker/exec_probe.go:542:	c, revWhy := pp.reverseLeg(ctx, net6.port)
+host/broker/exec_probe.go:579:func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first execProbeRun, why string) {
+host/broker/exec_probe.go:637:func newProbeListener() *probeListener {
+host/broker/exec_probe_test.go:580:	_, why := pp.reverseLeg(ctx, 1) // port 1: nothing listens there
+## CI verbose list
+$ grep -n "TestExecProbeNet6" .github/workflows/ci.yml
+247:          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvives
+## the start page sends an HTTP GET with its own UA
+$ grep -n "User-Agent\|def probe\|connection.request" ~/.config/sunholo-platform/homepage/services.py
+59:def probe(proxy):
+76:        connection.request("GET", target.path or "/", headers={
+77:            "User-Agent": "SunholoHome/1.0", "Accept-Encoding": "identity", "Connection": "close",

@@ -1,0 +1,9 @@
+# iter-359 designer: the first CONTROL run of the mutation script (prototype unmutated, load 9.80) went red on ONE subtest because a live rig dialer landed in the proxy-child window and was classified foreign (the exact pin foreign 0 then failed). Verbatim lines from that run log:
+    exec_probe_net6_dial_test.go:226: ops ["connect 50223:dcecb93fd4068a61120145069a2b284f" "proxy 50223:dcecb93fd4068a61120145069a2b284f"] dials ["child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+    exec_probe_net6_dial_test.go:224: TIMING ArchiveExecSandbox took 44.348ms
+    exec_probe_net6_dial_test.go:226: ops ["connect 50230:f44f0a3b87abde17f6c9e86d5e52096c" "proxy 50230:f44f0a3b87abde17f6c9e86d5e52096c"] dials ["" "child:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 1 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+    exec_probe_net6_dial_test.go:228: arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 1 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")", want it to contain "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0"
+--
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child (1.18s)
+    --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child (1.17s)

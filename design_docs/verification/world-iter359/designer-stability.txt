@@ -1,0 +1,14 @@
+# iter-359 designer: prototype stability (43bfd807641f4fd1), load averages: 5.23 4.43 3.90
+$ go test -count=3 -run ^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6.*)$ -v ./host/broker/
+   3 --- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut
+   3 --- PASS: TestExecProbeNet6BoundBeforeAnyPick
+   3 --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   3 --- PASS: TestExecProbeNet6DialClassifier
+   3 --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   3 --- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses
+   3 --- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm
+   1 ok github.com/sunholo-data/ailang-world/host/broker 70.415s
+$ go test -count=1 -run ExecProbe ./host/broker/   load averages: 4.35 4.26 3.88
+ok  	github.com/sunholo-data/ailang-world/host/broker	46.682s
+$ go vet ./host/broker/
+vet-ok

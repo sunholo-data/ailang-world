@@ -1,0 +1,29 @@
+# iter-359 designer: apply one named mutant to the proto copy's exec_probe.go (row 250 prototype).
+import sys
+P = '/Users/voightkampff/dev/sunholo-data/.designer-scratch-iter359/proto/host/broker/exec_probe.go'
+M = {
+ 'MUT-SILENT-AS-FOREIGN': [("\t\treturn net6Child\n\t}\n\treturn net6Silent\n}", "\t\treturn net6Child\n\t}\n\treturn net6Foreign\n}")],
+ 'MUT-PREFIX-AS-FOREIGN': [("\t\treturn net6Child\n\t}\n\treturn net6Silent\n}", "\t\treturn net6Child\n\t}\n\tif len(buf) > 0 {\n\t\treturn net6Foreign\n\t}\n\treturn net6Silent\n}")],
+ 'MUT-CHILD-AS-FOREIGN': [("\tcase wantChild:\n\t\treturn net6Child", "\tcase wantChild:\n\t\treturn net6Foreign")],
+ 'MUT-NO-NONCE': [("\tcase wantChild:\n\t\treturn net6Child\n\t}\n\treturn net6Silent", "\tcase wantChild:\n\t\treturn net6Child\n\t}\n\tif strings.HasPrefix(string(buf), execProbeDialPrefix) || len(buf) > 0 {\n\t\treturn net6Foreign\n\t}\n\treturn net6Silent"),
+                  ("\t\t\tif !strings.HasPrefix(wantCtl, string(buf)) && !strings.HasPrefix(wantChild, string(buf)) {", "\t\t\tif !strings.HasPrefix(wantCtl, string(buf)) && !strings.HasPrefix(execProbeDialPrefix, string(buf)) && !strings.HasPrefix(string(buf), execProbeDialPrefix) {")],
+ 'MUT-TOKEN-ONLY': [("\t\tw, next := l.window(*from)\n", "\t\t_, next := l.window(*from)\n\t\tvar w net6Window\n")],
+ 'MUT-RETRY-CHILD': [("|| w.child > 0 || w.silent > 0:", "|| w.silent > 0:"), ("\t\tcase w.foreign == 0:", "\t\tcase w.foreign+w.child == 0:")],
+ 'MUT-RETRY-SILENT': [("|| w.child > 0 || w.silent > 0:", "|| w.child > 0:"), ("\t\tcase w.foreign == 0:", "\t\tcase w.foreign+w.silent == 0:")],
+ 'MUT-EXHAUST-PASSES': [("\t\tif attempt == execProbeNet6Attempts {\n", "\t\tif attempt == execProbeNet6Attempts {\n\t\t\tif true {\n\t\t\t\treturn \"\"\n\t\t\t}\n")],
+ 'MUT-UNBOUNDED': [("\t\tif attempt == execProbeNet6Attempts {\n", "\t\tif attempt == execProbeNet6Attempts && false {\n")],
+ 'MUT-FROM-NOT-ADVANCED': [("\t\t*from = next\n", "\t\t_ = next\n")],
+ 'MUT-WINDOW-AT-JUDGE': [("\t\tw, next := l.window(*from)\n", "\t\tw, next := l.window(max(*from, l.mark()))\n")],
+ 'MUT-PENDING-AS-FOREIGN': [("\t\t\t\tcase net6Foreign:\n\t\t\t\t\tw.foreign++", "\t\t\t\tcase net6Foreign, net6Pending:\n\t\t\t\t\tw.foreign++")],
+ 'MUT-CONTROL-ANY-ACCEPT': [("\t\tok := slices.Contains(l.seen, net6Control)\n", "\t\tok := len(l.seen) >= 1\n")],
+ 'MUT-CLIENT-NO-LINE': [("s.on('connect',()=>{clearTimeout(t);s.end(dial(nonce));", "s.on('connect',()=>{clearTimeout(t);s.destroy();")],
+ 'MUT-CHILD-AS-CONTROL': [("\tcase wantChild:\n\t\treturn net6Child", "\tcase wantChild:\n\t\treturn net6Control")],
+ 'MUT-RAW-COUNT': [("\t\tcase !strings.HasPrefix(tok, \"WORLD-PROBE-REFUSED \") || w.child > 0 || w.silent > 0:", "\t\tcase !strings.HasPrefix(tok, \"WORLD-PROBE-REFUSED \") || w.child+w.silent+w.foreign > 0:")],
+}
+name = sys.argv[1]
+s = open(P).read()
+for a, b in M[name]:
+    assert s.count(a) == 1, (name, a[:80], s.count(a))
+    s = s.replace(a, b)
+open(P, 'w').write(s)
+print('applied', name)

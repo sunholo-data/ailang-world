@@ -1,0 +1,15 @@
+#!/bin/bash
+# iter-359 designer: run each mutant against the row-250 prototype; restore and cmp after each.
+S=/Users/voightkampff/dev/sunholo-data/.designer-scratch-iter359
+cd $S/proto
+cp host/broker/exec_probe.go $S/exec_probe.go.proto
+TESTS='^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6ForeignDialIsRetriedNotRefused|TestExecProbeNet6ChildOrSilentAcceptStillFails|TestExecProbeNet6ForeignEveryAttemptRefuses|TestExecProbeNet6DialClassifier)$'
+for m in CONTROL MUT-RAW-COUNT MUT-SILENT-AS-FOREIGN MUT-PREFIX-AS-FOREIGN MUT-CHILD-AS-FOREIGN MUT-NO-NONCE MUT-TOKEN-ONLY MUT-RETRY-CHILD MUT-RETRY-SILENT MUT-EXHAUST-PASSES MUT-UNBOUNDED MUT-FROM-NOT-ADVANCED MUT-WINDOW-AT-JUDGE MUT-PENDING-AS-FOREIGN MUT-CONTROL-ANY-ACCEPT MUT-CLIENT-NO-LINE; do
+  cp $S/exec_probe.go.proto host/broker/exec_probe.go
+  [ $m != CONTROL ] && python3 -I $S/mutate.py $m
+  echo "== $m $(uptime | sed 's/.*load/load/')"
+  go test -count=1 -timeout 300s -run "$TESTS" -v ./host/broker/ > $S/mut-$m.log 2>&1; echo "rc=$?"
+  grep -E '^--- (PASS|FAIL)|^    --- FAIL' $S/mut-$m.log | sed 's/ (.*//' | sort | uniq -c
+done
+cp $S/exec_probe.go.proto host/broker/exec_probe.go
+cmp $S/exec_probe.go.proto host/broker/exec_probe.go && echo "# restored proto exec_probe.go (cmp ok)"
