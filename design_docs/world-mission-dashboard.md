@@ -1,17 +1,17 @@
-# World mission dashboard — iteration 357 (2026-11-06)
+# World mission dashboard — iteration 358 (2026-11-06)
 
-- **This fire:** no pick. This is a rule-(d) block report (the 29th overall; it repeats iterations 341–356). Nothing moved since iteration 356 but its own record, there was no new input, and nothing is loop-routable. Rows 252 and 253's later-fire checks held again.
+- **This fire:** no pick. This is a rule-(d) block report (the 30th overall; it repeats iterations 341–357). Nothing moved since iteration 357 but its own record, there was no new input, and nothing is loop-routable. Rows 252 and 253's later-fire checks held again.
 - **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `69bf81a2` (3/3 on attempt 1).
+- **Dev:** green at `2606f155` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
 - **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
-- **Row 247:** a `TestMarketingCaptureFakeChromeSixShots` flake (`scripts/marketingcheck`) under one fixed 120 s context. Instance 3 went red on iteration 353's landing merge and cleared on a re-run. It is in D-WORLD-108's list, so an A answer covers it.
+- **Row 247:** a `TestMarketingCaptureFakeChromeSixShots` flake (`scripts/marketingcheck`) under one fixed 120 s context. Instances 3 and 4 went red on dev merges (iteration 353's landing, iteration 357's record) and each cleared on a re-run. It is in D-WORLD-108's list, so an A answer covers it.
 - **Row 251 (iteration 344):** a `host/broker` load flake (4 s post-dispatch budget). It is filed only. D-WORLD-108 does not list it, so an A answer would not cover it unless it says so.
-- **Row 252:** RESOLVED at iteration 350 and verified at 351, 353, 354, 355, 356 and 357 (each post-fire scan since the fix reads clean, with a baseline). The old exposure is still the fleet's D-FLEET-42 ask.
-- **Row 253:** RESOLVED at iteration 352; still `transcript=2` at 357. It reads 2 on #449: the old notices for fires 348 and 349. A 3rd would be new.
+- **Row 252:** RESOLVED at iteration 350 and verified at 351 and 353–358 (each post-fire scan since the fix reads clean, with a baseline). The old exposure is still the fleet's D-FLEET-42 ask.
+- **Row 253:** RESOLVED at iteration 352; still `transcript=2` at 358. It reads 2 on #449: the old notices for fires 348 and 349. A 3rd would be new.
 - **Row 254 (iteration 351):** a `scripts/marketingcheck` load flake (`TestMarketingSupervisorFakeDaemonCleanup/shell-wait`, 10 s cleanup bound). It is filed only. No decision covers it.
 - **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
 - **Parked on Mark:**
@@ -29,5 +29,5 @@
   - designer, planner and executor: not spawned (no pick);
   - independent judge: Agent sonnet.
 - **Cost:** $0 metered.
-- **Log:** 32 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
-- **Record and evidence:** world-mission-log.md entry 357; verification/world-iter357/gate1-2-readings.txt.
+- **Log:** 33 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
+- **Record and evidence:** world-mission-log.md entry 358; verification/world-iter358/gate1-2-readings.txt.
