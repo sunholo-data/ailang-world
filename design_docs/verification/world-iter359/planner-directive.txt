@@ -1,0 +1,40 @@
+MISSION-ROLE: planner
+
+You are the SPRINT PLANNER for Ailang World mission iteration 359, running unattended under a codex workspace-write sandbox. Your working directory is a detached planner worktree of the sprint branch at commit b6a35f04. You produce a sprint plan. You do NOT implement it.
+
+GIT: run NO git write operations at all (no add, commit, stash, checkout, reset, apply-to-the-worktree, or worktree changes). The controller commits. Read-only git (log, show, diff, status, rev-parse, archive) is fine.
+
+READ FIRST
+- CLAUDE.md and design_docs/coding-standards.md.
+- The approved design: design_docs/planned/w-exec-probe-foreign-dial-false-refusal.md (r3). Read all of it, especially §3 (the change, incl. §3.6 reuse analysis), §4 (by-construction claims), §5 (test plan + mutation table), §6 (residuals, esp. R2), §7 (M1 incl. the r3 executor relay check, the -count=3 step and the Linux CI acceptance gate), §10 (Verification Log) and §11 (quorum log + r3 carve-out).
+- The byte-exact prototype patch: design_docs/verification/world-iter359/designer-proto.patch.txt (sha256 prefix 7fb2537268498db0). It touches FIVE files: .github/workflows/ci.yml, host/broker/exec_probe.go, host/broker/exec_probe_net6_dial_test.go (new), host/broker/exec_probe_net6_test.go, host/broker/exec_probe_test.go. The quorum approved it as-is; the executor applies it byte-exact. It already contains the ci.yml edit, so the plan's diff is the designer patch byte-for-byte with NO extra hunk.
+- The designer's mutation tooling: design_docs/verification/world-iter359/designer-r2-run-mutants.sh.txt and designer-r2-mutate.py.txt, results in designer-r2-mutants.txt (20 mutants incl. MUT-RAW-COUNT, MUT-SILENT-AS-FOREIGN, MUT-TOKEN-ONLY, MUT-RETRY-CHILD, MUT-RETRY-SILENT, MUT-EXHAUST-PASSES, MUT-SHARED-*; two known survivors MUT-PENDING-AS-FOREIGN and MUT-CONTROL-ANY-ACCEPT).
+- Code at HEAD: host/broker/exec_probe.go, the three test files above, .github/workflows/ci.yml lines 238-262 (the real-srt verbose step).
+- The previous plan of the same shape: design_docs/planned/w-exec-probe-cross-profile-net6-hoist-sprint-plan.md and design_docs/planned/sprint_w-exec-probe-cross-profile-net6-hoist.json, and design_docs/verification/world-iter340/plan-mutants.sh.txt.
+
+DELIVERABLES (write each into this worktree at exactly these paths)
+1. design_docs/planned/w-exec-probe-foreign-dial-false-refusal-sprint-plan.md
+   A single milestone, M1, with: the exact file list (5 files); pre-change sha256 for every touched file (new file = ABSENT) and post-change sha256 measured on a scratch apply; the acceptance gates as runnable commands; the mutation table mirroring design §5 with expected red/green per named test; the design's r3 executor relay check (kimi's text in §7) and the -count=3 stability step; the Linux real-srt CI step as the acceptance gate the controller verifies after push; residuals from §6; an explicit list of what M1 must NOT touch.
+2. design_docs/planned/sprint_w-exec-probe-foreign-dial-false-refusal.json
+   Valid JSON with fields: sprint_id, design_doc, base_commit (full SHA of b6a35f04 from git rev-parse), milestones[] each with {id, title, files[], acceptance[], status:"planned"}.
+3. design_docs/verification/world-iter359/plan-M1.diff.txt
+   Byte-identical copy of designer-proto.patch.txt (cmp must say identical). Prove it applies: `git apply --check` on a scratch copy made with `git archive HEAD | tar -x -C <dir>`, where <dir> is a subdirectory of THIS worktree named .plan-scratch/ (delete it when done; never /tmp). Record post-apply sha256 per file in the plan.
+4. design_docs/verification/world-iter359/plan-mutants.sh.txt
+   A bash-3.2-compatible mutation runner the CONTROLLER will execute OUTSIDE the sandbox on an applied tree. Requirements, each learned the hard way:
+   - takes the tree root as $1, never assumes CWD, writes nothing outside that root, and leaves NO extra .go files anywhere under the root (keep pristine copies with a non-.go suffix, e.g. exec_probe.go.pristine, and remove them at the end);
+   - does NOT pin GOTOOLCHAIN=local (go.mod needs go 1.26.6; leave toolchain selection to the default);
+   - for each row: apply one mutation (python3 -I or perl), run the named test(s) alone with `go test -count=1 -run '^(<names>)$' ./host/broker/`, compare rc with the expected rc, print `EXPECTATION MATCH` or `EXPECTATION MISMATCH` with the mutant id and tests in the line, restore the file and verify the restore with cmp against the saved pristine copy;
+   - rows: an unmutated CONTROL row, MUT-RAW-COUNT (the HEAD positive control), MUT-SILENT-AS-FOREIGN, MUT-TOKEN-ONLY, MUT-RETRY-CHILD, MUT-RETRY-SILENT, MUT-EXHAUST-PASSES, MUT-SHARED-READ-SHORT and MUT-SHARED-JUDGE-SILENT-RETRIED (each expected red from BOTH a forward-leg and a reverse-leg test, as two rows), MUT-SHARED-ATTEMPTS-2, MUT-WINDOW-WAIT-NOT-ABOVE, plus any mutant you believe the design missed;
+   - keep TestExecProbePassThroughShimFailsEveryConfinementArm OUT of expected-red sets except where the designer measured it red.
+   Reuse the designer's mutate.py logic where you can, but make the expectations match designer-r2-mutants.txt.
+
+SANDBOX RULES
+- Loopback socket binds are denied inside your sandbox, so every host/broker test that opens a listener is UNINFORMATIVE UNDER SANDBOX. Label any such result exactly that way, never as pass or fail. Do NOT run the package suite or the mutation runner; the controller runs both outside the sandbox. You MAY run gofmt -l, go vet ./host/broker/ and go build ./... on the scratch copy; the controller measured all three rc 0 on base. Report their rc; anything red at base is a finding to report, not something to work around.
+- Write nothing outside this worktree except Go's build caches.
+
+FINAL MESSAGE (short):
+- the four paths and their line counts;
+- the plan-M1.diff.txt sha256;
+- pre/post-apply sha256 per file;
+- the mutation row count;
+- anything in the design you believe is wrong or under-specified (a finding, not a fix).
