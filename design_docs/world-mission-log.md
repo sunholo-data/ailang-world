@@ -2665,3 +2665,86 @@ Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the 
 1. **The controller's own TMPDIR override produced a false red** (`verify_go` MOD010). A planner gate set `TMPDIR` inside the tree, and the controller moved it to a sibling under `~/dev`. ailang's module-path check reads that location. Proven by control and not filed (instance 1). Next time, leave TMPDIR at its default for `verify_go`.
 2. **A carve-out premise check was cheap and decisive.** kimi's r2 objection named a premise ("srt alters tunnel bytes?") that the pinned package source answers in a few minutes with `npm pack`, not executed. Measuring it turned a third round, or a park, into a verified r3. This is the gate-3-route rule (b) working.
 3. **The quorum asked for re-runs on r2 code.** The r1 stability run (V12) and the HEAD positive control (V8) did not cover r2's refactor. MUT-RAW-COUNT on r2's tests is the HEAD rule in the new structure; cite it rather than re-running the whole HEAD file, which no longer compiles against r2's tests.
+
+## 360 — 2026-11-06 — row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; design r3 via a controller carve-out; judge PASS 88 [PRODUCT]
+
+**Pick:** row 255 `w-exec-failure-carries-a-reason`, the second row under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257, stopping as soon as a release row is routable).
+- Clause map: 1–7 MET, no UNMET clause.
+- Release rows are not routable at `77c9e3d4`:
+  - Row 150: subjects in `1835d8be..77c9e3d4` matching `row ?150|A1\b|marketing` → 1 of 11, `adc19bd7`, whose "A1" is row 250's own acceptance gate (control 5).
+  - Row 151: `N2d|N4a` since 2026-10-01 → 0 (N2c control 2). Non-test `.go` files naming `file.json` → 0 (control 109).
+- Dev was green at `77c9e3d4` (3/3 on attempt 1; the last 8 dev CI runs were all success).
+- **Progress:** 1.0 clauses 1–7 MET; goal unmoved (clause 5, already MET: operator and agent UX).
+
+**Gate 0:**
+- Stamped first (rc 0). `gh` is `sunholo-voight-kampff`. Billing check CLEAN. No kill switch.
+- Directives: 0 allowlisted on #449 (31 comments; no watermark file, so all were read) and 0 on #366 since `2026-10-27T09:03:42Z` (35 comments).
+- Self-notices: 0 crash notices (control 107:4); `transcript=2`, the two old notices.
+- **#449 read 31, not the 30 that iteration 359 predicted.** The 31st comment is the driver's `⚠️ Mission slot verdict: REAPED at=gate-5 (rc=0, attempt=1/3)` for fire `world-1793983750-23042`. Attributed by residue: that fire's landing PR #512 merged at 19:32:56Z, before the notice (19:34:01Z), and its log entry, landing note and report are all on `dev`. The driver's classifier (`mission-control.sh`, the `case "$RC:$_mc_slot_last"` block) reads `REAPED` when the heartbeat's last stamp is `gate-5` rather than `complete`, and the driver log shows `stamps=8 last_age_s=1154`. So iteration 359's work was complete and its controller never ran Gate 5's final `stamp complete`. Not an orphan; nothing to credit. This fire runs `stamp complete` last.
+- Inbox: 54 unread, all this loop's own earlier `[claim]` notes; none `github-untrusted:`, no `mission-fleet` reply.
+- Ledger valid, 96 rows, OPEN: D-WORLD-105 only. Provenance: D-WORLD-108 and 109 `verdict=attended`; control D-WORLD-105 `never-resolved`.
+- Upstream predicates: 33/33 closed (controls fired), as iteration 359 predicted.
+- Skill drift: 0 of 14 files against the driver clone's `origin/dev` `7c95c938d`, fetched first (negative control fired). The pin is `7c95c938d`.
+- Weekly sweep and thread rotation are not due (next boundary Monday 2026-11-09 07:00 local).
+
+**Premise (Gate 2), measured at `77c9e3d4`:** `EffectRecord` (`host/broker/record.go:19–30`) has `Failed` and `Denial` and no field that could hold a reason, and its wire decoder uses `DisallowUnknownFields`. `Execute` (`host/broker/handlers_exec.go:251`) returns bare Go errors from its pre-spawn checks. The designer then measured the rest: 14 error returns (not the row's 7), and the reason is dropped in the coordinator (`effectful.go:191–192`), not the broker, so it must live in the record for replay to reproduce it.
+
+**Design** (`w-exec-failure-carries-a-reason`). Resolver: `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` (318–359 precedent; rotation pointer unchanged).
+- r1 (38 min): a new `omitempty` `failure` field on effect-record v1, a closed set of 10 classes, a pure `FailureLine` rule (200-byte cap, control/bidi characters replaced, Go error text never enters), and four carriers (record, world block `reason`, `why`/`call`, one log line). Complete 15-file patch, `git apply --check` rc 0.
+- **Quorum r1 BLOCKED** ($0.2805): gemini-4-argon pass; oc-kimi-k3 rejects ("logged once per call" rested on one fixture); gpt6-1-sol rejects (R1's "World never downgrades" had no V-log row). Claude benched as the author's vendor; none absent.
+- The controller measured gpt's premise first (rule 3f): no store-compatibility or downgrade policy in DESIGN.md, coding-standards or docs (0 hits; control 236). Precedent `09d5692d` added `failed,omitempty` to `episode_starts.go`, but that decoder is not strict.
+- r2 (22 min, the designer resumed by `SendMessage`): plan law L1 proves at most one effect per call (`effectplan.go:32`, `:125–126`, a Z3-verified sketch contract; control: two existing two-effect refusals PASS). r1's downgrade claim is withdrawn as false (`service upgrade` rollback is a shipped feature). New §3.7: a lazy store schema mark raises `user_version` 5 → 6 just before the first lined record, so older binaries refuse the store at open (measured against HEAD code). Q1 and Q2 go to Mark.
+- **Quorum r2 BLOCKED** ($0.2615): all three seats reject, all on **one surface**. When the mark fails, r2 wrote the record without the line, a silent fallback. None disputes the direction, and r1's objections were not re-raised.
+- **r3, a controller narrow-refinement carve-out:** every remaining objection carries a concrete fix and none disputes the direction. gpt6-1-sol and gemini-4-argon gave the same fix: on a failed mark, return the storage error the way a failed `putRecord` does. The controller measured that path first: `*OutcomeWriteError` at `broker.go:297–300`, the grant already debited at `:260`, the coordinator handling it at `effectful.go:184`, and a `Dispatch` error logged at `mcp.go:131–133`. That fix also answers kimi's objection, which is about silence. kimi's own fix (keep a line-free record and log the suppression) was not applied, because it still commits a failure without its line. r3 also added MUT-MARK-FAIL-SILENT and fixed a stale §10 note. No re-quorum. The carve-out has been ratified since iteration 95.
+
+**Plan:** `derive-planner-lane.sh` → `codex:gpt-6.1-sol declared:planner-lane-default-pin`. Probe rc 0. Detached sibling worktree `.planner-wt-iter360` (removed afterwards).
+- Outputs: a 440-line plan; `plan-M1.diff.txt` (sha256 `83ef9f9d…`) = the designer patch + the r3 arm; a 212-row mutation runner.
+- Controller check: both diffs `git apply --check` rc 0. Applied to two `git archive` copies, they differ only in `host/broker/broker.go` and `host/broker/failure_test.go`, and the broker diff is exactly the r3 arm.
+- The planner's finding that §8 still said "a failed mark drops the line" was fixed in the plan commit.
+
+**Executor:** codex `gpt-6.1-sol` applied the diff byte-exact. Its in-sandbox gates (gofmt, vet, build, the socket-free named tests) all rc 0. The controller re-verified all 22 pinned hashes with `shasum -c` (0 mismatches) and committed M1 `fa5b9183`.
+
+**Controller gates outside the sandbox** (`verification/world-iter360/controller-M1/summary.txt`), TMPDIR left at its default:
+- Base `77c9e3d4`: the 5 touched packages rc 0 (240 s); gofmt and vet clean.
+- A2 rc 0. A3: 18 named identities PASS once each. A4: the 10 new tests PASS ×3.
+- A6: a lined record marks the store to 6. The base binary refuses that store on both `Open` and `OpenReadOnly` with `schema version future … binary supports 5; use a compatible binary`.
+- A7: the 5 packages ok; `verify_ail.sh` PASSED (9/9); `VERIFY_GO_LEGS=plain verify_go.sh` PASSED.
+- **A5 run 1 was instrument-red, not a verdict.** 27 mismatches, all `host/broker`, starting with the **unmutated CONTROL**. The planner's runner exports `GOTMPDIR` under the tree root. The long temp path puts the stub node's absolute path past the 200-byte cap in `TestExecFailureClassesReachTheRecord/exec-stack-drift_node`, so the product correctly cuts the line with `…` while the test expects it uncut. Paired control on that test alone at `fa5b9183`: a long `GOTMPDIR` gives rc 1 with the cut; the default gives rc 0. Every broker row in run 1 was meaningless, including the ones that "matched".
+- **A5 run 2:** a controller copy of the runner with only the `GOTMPDIR` export removed (a 2-line `diff`, banked). Result: 212/212 `EXPECTATION MATCH`, 0 mismatches, 212 restores `cmp ok`, Go file census unchanged, 22/22 hashes OK afterwards.
+
+**Judge:** Agent `sonnet`, foreground, against an isolated `git archive fa5b9183` copy (the A5 runner was mutating the worktree in place at the time). The directive gave questions and files, not the controller's numbers. **PASS 88/100, zero blocking** (`evaluator-r1.md`). It ran 10 mutations of its own, and 9 went red.
+- **NB1, reproduced by the controller:** raising the keep-whole threshold to `FailureLineMax+50` (`failure.go:84`) leaves `TestFailureLineBoundsAndSanitises` green, so no test covers lines of 201–250 bytes.
+- **Controller addition to NB1:** the judge called that length "not reachable in production". A5 run 1 shows the cap IS reachable in a test fixture, through a long temp path, and that `TestExecFailureClassesReachTheRecord`'s expected string ignores the cap. CI's temp path is short, so CI is unaffected. Fix shape: build the expected value with `FailureLine`. Logged, not filed (D-WORLD-109: judges' notes go in the log; instance 1).
+- NB2 (effect/scope names verbatim in `exec-misrouted`) and NB3 (a failed mark leaves an intent with no outcome; the r3 design) are accepted as stated. NB4 is the copy having no `.git`.
+
+**New decision, D-WORLD-110 (OPEN, filed by this unattended iteration):** ratify row 255's compatibility policy, the design's Q1 and Q2. No written store-compatibility policy exists, so the loop does not assert one. **A (recommended, default):** as built. **B:** as built, plus a row so `why`/`call` refuse a daemon of a different build. **C:** revert row 255's record field before the next release. The ledger row carries each option's consequence.
+
+**CI:** PR for `sprint/world-iter360-exec-reason`. Gate 3b's verdict on the merge is recorded in the follow-through.
+
+**Routing evidence:** base=`77c9e3d4e232e543c2c4b9ddb774a156231d93a2@2026-11-06T20:49:34Z` (Gate 1).
+- Controller: `claude:claude-opus-5-5` (tok: not reported).
+- Designer: Agent `opus` (r1 336,756 tok; r2 452,286 tok). Under the diet that is the initial run plus one protocol-mandated revision; the revision fired because quorum r1 blocked. r3 was the controller's.
+- Planner: `codex:gpt-6.1-sol` (144,407 tok).
+- Executor: `codex:gpt-6.1-sol` (69,162 tok).
+- Evaluator: Agent `sonnet` (54,802 tok).
+- Quorum: oc-kimi-k3, gpt6-1-sol, gemini-4-argon in both rounds; reserve oc-glm-5-3 unused ($0.5420 over two rounds).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EVALUATOR_RESOLVED=sonnet`, `MISSION_ROUTING_NOTE` empty.
+- Generator ≠ judge: the opus designer and the codex planner and executor, against the sonnet judge.
+
+**Ruled out:**
+- Rows 256 and 257 before 255: D-WORLD-108 fixes the order.
+- Rows 201 and 243: D-WORLD-109 places them after 255 → 257.
+- Row 258: under rule (d).
+- Row 233: D-WORLD-105 is still OPEN.
+- Rows 150 and 151: re-measured above.
+- kimi's r2 fix: it would still commit a line-free failure (see r3 above).
+- Asserting a downgrade policy in the doc: none is written, so it goes to Mark as D-WORLD-110.
+- Treating 359's REAPED notice as a died fire: its residue shows it completed.
+
+**Retro:**
+1. **A temp directory placed under the tree flipped a test, for the second fire running.** In 359 the controller's TMPDIR override made `verify_go` red (MOD010). In 360 the planner's runner set `GOTMPDIR` under the tree, and the 200-byte cap made a CONTROL row red. This fire's planner directive said "does NOT set TMPDIR", and the runner set `GOTMPDIR` instead. Process fix, applied in this record to World's routing notes: a directive's temp rule names **TMPDIR and GOTMPDIR**, and every runner's CONTROL row is read before any mutant verdict. This is instance 2 of the class. It meets the ≥2-friction bar for the shared skill's codex-lane gate list, but World cannot edit that skill, so it is PROPOSED to the fleet (controlplane `[fyi]`).
+2. **Read the CONTROL row first.** The runner printed 158 "matches" alongside 23 mismatches while the control was red. A count of matches is not a verdict until the control row is green.
+3. **Narrow-refinement carve-out, second fire running.** Both 359 and 360 needed r3 after two blocked rounds. In 360 the r2 objections all landed on one surface, the design's own new fallback, which is the carve-out's intended case. Both rounds' objections were real.
+4. **359's missing `stamp complete`** turned a completed fire into a `REAPED` notice on Mark's thread. This fire runs the stamp as its last action.
+
+**Next:** row 256 (`w-daemon-startup-under-load`) under D-WORLD-108 = B; it needs its own design and quorum, because it touches the fail-closed probe. Then 257, then 201 → 243 under D-WORLD-109. #449 should read 32 at the next Gate 0 (this report is the 32nd comment, and the landing posts none), with `transcript=2`. The upstream predicate count stays 33. Monday 2026-11-09's first fire owes the weekly sweep and thread rotation.
