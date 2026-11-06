@@ -1,24 +1,16 @@
-# World mission dashboard — iteration 358 (2026-11-06)
+# World mission dashboard — iteration 359 (2026-11-06)
 
-- **This fire:** no pick. This is a rule-(d) block report (the 30th overall; it repeats iterations 341–357). Nothing moved since iteration 357 but its own record, there was no new input, and nothing is loop-routable. Rows 252 and 253's later-fire checks held again.
-- **Review:** the record is judged by an independent Agent `sonnet` evaluator before merge.
-- **Dev:** green at `2606f155` (3/3 on attempt 1).
+- **This fire:** row 250 BUILT (`w-exec-probe-foreign-dial-false-refusal`), PR #511. It is the first pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). Arm 6 of the exec startup probe now classifies each accept on its loopback listener as child, foreign or silent. A local dialer that sends bytes (the rig's start page) no longer refuses startup. The probe still fails closed on a child or silent reach.
+- **Review:** design quorum r1 and r2 BLOCKED, then an r3 controller carve-out. The independent judge, Agent `sonnet`, gave PASS 91 with zero blocking findings.
+- **Dev:** green at `1835d8be` (3/3 on attempt 1) before this fire. PR #511's CI is the acceptance gate for the Linux real-srt step.
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
 - **Row 233:** PARKED on D-WORLD-105 (default C).
-- **Rows 250, 244–249:** hygiene outside every scope Mark has granted. They wait on D-WORLD-108.
-- **Row 247:** a `TestMarketingCaptureFakeChromeSixShots` flake (`scripts/marketingcheck`) under one fixed 120 s context. Instances 3 and 4 went red on dev merges (iteration 353's landing, iteration 357's record) and each cleared on a re-run. It is in D-WORLD-108's list, so an A answer covers it.
-- **Row 251 (iteration 344):** a `host/broker` load flake (4 s post-dispatch budget). It is filed only. D-WORLD-108 does not list it, so an A answer would not cover it unless it says so.
-- **Row 252:** RESOLVED at iteration 350 and verified at 351 and 353–358 (each post-fire scan since the fix reads clean, with a baseline). The old exposure is still the fleet's D-FLEET-42 ask.
-- **Row 253:** RESOLVED at iteration 352; still `transcript=2` at 358. It reads 2 on #449: the old notices for fires 348 and 349. A 3rd would be new.
-- **Row 254 (iteration 351):** a `scripts/marketingcheck` load flake (`TestMarketingSupervisorFakeDaemonCleanup/shell-wait`, 10 s cleanup bound). It is filed only. No decision covers it.
-- **Loop's next row:** none. Rule-(d) block reports continue unless Mark answers **D-WORLD-108** or **D-WORLD-105**, or a release row becomes routable. A dev red still outranks.
+- **Loop's next rows:** 255 → 256 → 257, the rest of D-WORLD-108's scope. Then 201 → 243 (D-WORLD-109 = A: built against fakes and test keys; Mark's exit runs stay attended). The loop stops as soon as a release row is routable, and a dev red still outranks.
+- **Row 258 `w-hygiene-triage`:** holds the folded rows 244–249, 251 and 254. It stays under rule (d). Under D-WORLD-109, single CI reds and judges' notes go into the log entry, and a flake becomes a row only at its 3rd instance.
+- **Rows 252 and 253:** RESOLVED. `transcript=2` on #449 still, the two old notices.
 - **Parked on Mark:**
-  - **D-WORLD-108:** may the loop take rows 250, then 244 → 249?
-    - **A (recommended):** yes, in queue order.
-    - **B:** row 250 only.
-    - **C (default):** keep rule (d).
   - **D-WORLD-105:** should World excuse the holder-exit reset in the fail-closed probe?
     - **A:** build it.
     - **B:** measure first.
@@ -26,8 +18,10 @@
 - **Attended actions:** schedule row 150's A1. The 219 → 217 → 218 track unblocks row 151.
 - **Roles this fire:**
   - controller: opus;
-  - designer, planner and executor: not spawned (no pick);
+  - designer: Agent opus (r1 and r2);
+  - planner and executor: codex `gpt-6.1-sol`;
+  - quorum: gemini-4-argon, oc-glm-5-3, oc-kimi-k3 (claude benched as the author's vendor);
   - independent judge: Agent sonnet.
-- **Cost:** $0 metered.
-- **Log:** 33 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
-- **Record and evidence:** world-mission-log.md entry 358; verification/world-iter358/gate1-2-readings.txt.
+- **Cost:** quorum $0.68 metered (two rounds). Everything else ran on subscriptions.
+- **Log:** 34 live entries; not due for rotation (index regenerated with `rotate-log --index-only`).
+- **Record and evidence:** world-mission-log.md entry 359; `verification/world-iter359/` (gate1-2-readings.txt, controller-M1/summary.txt, evaluator-r1.md).

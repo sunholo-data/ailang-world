@@ -1,0 +1,21 @@
+# Controller reproduction of the judge survivor X3 (delete tok = r.token(0) in net6Leg retry loop, exec_probe.go:689) on git archive adc19bd7, 2026-11-06T18:36:21Z, load { 5.61 4.00 4.48 }
+				what, tok, attempt, w.child, w.silent, w.foreign, r.describe())
+		}
+		foreign = append(foreign, strconv.Itoa(w.foreign))
+		if attempt == execProbeAttempts {
+			return fmt.Sprintf("%s: inconclusive after %d attempts: every attempt's window held an accept that was not the child's (foreign %s)",
+				what, attempt, strings.Join(foreign, ", "))
+		}
+		r = pp.run(ctx, []string{pp.client, "-e", execProbeScript, "--", op, l.arg()}, trampoline, execProbeRunBudget)
+		time.Sleep(200 * time.Millisecond)
+		tok = r.token(0)
+	}
+}
+
+// net6Class is what one accept on arm 6's live listener carried.
+type net6Class int
+
+$ (unmutated control) go test -count=1 -run ^(TestExecProbeNet6.*|TestExecProbePassThroughShimFailsEveryConfinementArm)$ ./host/broker/
+ok  	github.com/sunholo-data/ailang-world/host/broker	24.143s
+$ (X3 applied) same command
+ok  	github.com/sunholo-data/ailang-world/host/broker	24.026s
